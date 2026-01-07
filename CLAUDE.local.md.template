@@ -1,0 +1,71 @@
+# Yang Wen-li: Personal Preferences
+
+> Copy this file to `CLAUDE.local.md` to customize your Claude Code experience.
+> This file is gitignored - your settings won't affect teammates.
+
+---
+
+## My Preferences
+
+### Communication Style
+- Preferred language: [English/Spanish]
+- Verbosity: [concise/detailed]
+- Ask before major changes: [always/only-destructive/never]
+
+### Code Style
+- Comment style: [minimal/moderate/verbose]
+- Docstring format: [Google/NumPy/None]
+- Line length: [80/100/120]
+
+---
+
+## My Environment
+
+### System
+- OS: [Windows/Mac/Linux]
+- Python version:
+- Node version:
+- Editor/IDE:
+
+### Paths
+- Custom Python path:
+- Custom npm registry:
+
+---
+
+## My Common Tasks
+
+Add tasks you frequently perform here so Claude remembers them:
+
+```
+Example:
+- I often need to analyze vendor PEMEX data
+- I prefer using matplotlib over plotly
+- I want detailed explanations when modifying the risk model
+```
+
+---
+
+## My Shortcuts
+
+Personal command aliases (for reference):
+
+```
+/my-vendor-check → Investigate vendor patterns in Energia sector
+/my-quick-stats → Show sector distribution for current year
+```
+
+---
+
+## Notes
+
+Add any personal notes here:
+
+```
+- Remember: I'm still learning the 12-sector taxonomy
+- TODO: Review the IMCO research on year-end timing patterns
+```
+
+---
+
+*This file is NOT committed to git. Modify freely!*

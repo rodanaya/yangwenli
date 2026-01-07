@@ -1,21 +1,29 @@
 """
-RUBLI Normalized Database Schema Creation
-==========================================
+Yang Wen-li: Normalized Database Schema Creation
+=================================================
 Creates the RUBLI_NORMALIZED.db with a 3-level sector taxonomy
 optimized for fraud detection analytics.
+
+Schema Design Decisions (documented in docs/SCHEMA_DECISIONS.md):
+1. risk_scores: Separate table for model versioning
+2. financial_metrics: Separate table for USD/inflation adjustments
+3. vendors: Normalized, aggregates computed via views
 
 Tables:
 - sectors: 12 main government sectors
 - sub_sectors: ~40 sub-sector classifications
 - categories: Partida-based granular categories
 - ramos: Government branch reference
-- vendors: Normalized vendor entities
+- vendors: Normalized vendor entities (no aggregates)
 - institutions: Normalized government institutions
 - contracting_units: Contracting unit entities
-- contracts: Main fact table
+- contracts: Main fact table (no risk scores)
+- risk_scores: Model-versioned risk calculations
+- financial_metrics: USD conversion and inflation data
+- exchange_rates: Reference table for rates
 
-Author: RUBLI Project
-Date: 2026-01-05
+Author: Yang Wen-li Project
+Date: 2026-01-06
 """
 
 import sqlite3
@@ -106,10 +114,55 @@ CREATE TABLE IF NOT EXISTS ramos (
 );
 
 -- =============================================================================
+-- BILINGUAL LOOKUP TABLES (Spanish/English translations)
+-- =============================================================================
+
+-- Procedure Types (Tipo de Procedimiento)
+CREATE TABLE IF NOT EXISTS procedure_types (
+    id INTEGER PRIMARY KEY,
+    code VARCHAR(50) UNIQUE NOT NULL,
+    name_es VARCHAR(100) NOT NULL,
+    name_en VARCHAR(100),
+    description_es TEXT,
+    description_en TEXT,
+    is_direct_award INTEGER DEFAULT 0,
+    is_competitive INTEGER DEFAULT 1,
+    display_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Contract Types (Tipo de Contrato)
+CREATE TABLE IF NOT EXISTS contract_types (
+    id INTEGER PRIMARY KEY,
+    code VARCHAR(50) UNIQUE NOT NULL,
+    name_es VARCHAR(100) NOT NULL,
+    name_en VARCHAR(100),
+    description_es TEXT,
+    description_en TEXT,
+    display_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Status Codes (Estatus del Contrato)
+CREATE TABLE IF NOT EXISTS status_codes (
+    id INTEGER PRIMARY KEY,
+    code VARCHAR(50) UNIQUE NOT NULL,
+    name_es VARCHAR(100) NOT NULL,
+    name_en VARCHAR(100),
+    description_es TEXT,
+    description_en TEXT,
+    is_active INTEGER DEFAULT 1,
+    display_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =============================================================================
 -- ENTITY TABLES (Normalized Vendors and Institutions)
 -- =============================================================================
 
 -- Normalized Vendors Table
+-- NOTE: Aggregates also computed via v_vendor_stats view for real-time queries
+-- These columns are updated by ETL for performance on large result sets
 CREATE TABLE IF NOT EXISTS vendors (
     id INTEGER PRIMARY KEY,
     rfc VARCHAR(13),
@@ -120,11 +173,11 @@ CREATE TABLE IF NOT EXISTS vendors (
     is_verified_sat INTEGER DEFAULT 0,
     is_ghost_company INTEGER DEFAULT 0,
     ghost_probability REAL DEFAULT 0.0,
-    first_contract_date DATE,
-    last_contract_date DATE,
+    -- Aggregate columns (updated by ETL pipeline)
     total_contracts INTEGER DEFAULT 0,
     total_amount_mxn REAL DEFAULT 0.0,
-    avg_risk_score REAL DEFAULT 0.0,
+    first_contract_date DATE,
+    last_contract_date DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -221,11 +274,8 @@ CREATE TABLE IF NOT EXISTS contracts (
     is_high_value INTEGER DEFAULT 0,
     is_year_end INTEGER DEFAULT 0,
 
-    -- Risk scoring
-    risk_score REAL DEFAULT 0.0,
-    price_anomaly_score REAL DEFAULT 0.0,
-    temporal_anomaly_score REAL DEFAULT 0.0,
-    vendor_risk_score REAL DEFAULT 0.0,
+    -- NOTE: Risk scores moved to separate risk_scores table
+    -- This enables model versioning, A/B testing, and recalculation
 
     -- Metadata
     url VARCHAR(1000),
@@ -240,6 +290,87 @@ CREATE TABLE IF NOT EXISTS contracts (
     FOREIGN KEY (sub_sector_id) REFERENCES sub_sectors(id),
     FOREIGN KEY (category_id) REFERENCES categories(id),
     FOREIGN KEY (ramo_id) REFERENCES ramos(id)
+);
+
+-- =============================================================================
+-- RISK SCORES TABLE (Separate for model versioning)
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS risk_scores (
+    id INTEGER PRIMARY KEY,
+    contract_id INTEGER NOT NULL UNIQUE,
+    model_version VARCHAR(20) DEFAULT 'v1.0',
+    calculated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- Overall score
+    risk_score REAL DEFAULT 0.0,
+    risk_level VARCHAR(20),  -- 'low', 'medium', 'high', 'critical'
+
+    -- 10-factor breakdown (IMF CRI aligned)
+    single_bid_score REAL DEFAULT 0.0,        -- 15%: Competitive with 1 bidder
+    direct_award_score REAL DEFAULT 0.0,      -- 15%: Non-open procedure
+    price_anomaly_score REAL DEFAULT 0.0,     -- 15%: Z-score deviation
+    vendor_concentration_score REAL DEFAULT 0.0,  -- 10%: Vendor dominance
+    short_ad_period_score REAL DEFAULT 0.0,   -- 10%: < 15 day advertisement
+    short_decision_score REAL DEFAULT 0.0,    -- 10%: Quick award decision
+    year_end_score REAL DEFAULT 0.0,          -- 5%: Nov/Dec spending surge
+    modification_score REAL DEFAULT 0.0,      -- 10%: Contract amendments
+    threshold_split_score REAL DEFAULT 0.0,   -- 5%: Just-under threshold
+    network_risk_score REAL DEFAULT 0.0,      -- 5%: Relationship patterns
+
+    FOREIGN KEY (contract_id) REFERENCES contracts(id)
+);
+
+-- =============================================================================
+-- FINANCIAL METRICS TABLE (Separate for recalculation)
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS financial_metrics (
+    id INTEGER PRIMARY KEY,
+    contract_id INTEGER NOT NULL UNIQUE,
+    calculated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- USD conversion
+    amount_usd REAL,
+    exchange_rate_used REAL,
+    exchange_rate_date DATE,
+
+    -- Inflation adjustment (to 2024 base)
+    amount_mxn_2024 REAL,       -- Inflation-adjusted MXN
+    amount_usd_2024 REAL,       -- Inflation-adjusted USD
+    inpc_factor REAL,           -- INEGI INPC multiplier
+    cpi_factor REAL,            -- US CPI multiplier (for USD)
+
+    -- Loss estimation (based on risk score)
+    estimated_loss_mxn REAL,
+    estimated_loss_usd REAL,
+    loss_rate_applied REAL,     -- Risk-based loss rate
+
+    FOREIGN KEY (contract_id) REFERENCES contracts(id)
+);
+
+-- =============================================================================
+-- EXCHANGE RATES REFERENCE TABLE
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS exchange_rates (
+    id INTEGER PRIMARY KEY,
+    year INTEGER NOT NULL,
+    month INTEGER NOT NULL,
+
+    -- Banxico FIX rate (MXN per USD)
+    mxn_usd_fix REAL,
+
+    -- INEGI INPC (Mexico Consumer Price Index, base Dec 2024 = 100)
+    mxn_inpc REAL,
+
+    -- US BLS CPI (for USD inflation, base Dec 2024 = 100)
+    us_cpi REAL,
+
+    source VARCHAR(100),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE(year, month)
 );
 
 -- =============================================================================
@@ -261,19 +392,29 @@ CREATE INDEX IF NOT EXISTS idx_contracts_date ON contracts(contract_date);
 
 -- Analytical indexes
 CREATE INDEX IF NOT EXISTS idx_contracts_amount ON contracts(amount_mxn);
-CREATE INDEX IF NOT EXISTS idx_contracts_risk ON contracts(risk_score);
 CREATE INDEX IF NOT EXISTS idx_contracts_direct_award ON contracts(is_direct_award);
 CREATE INDEX IF NOT EXISTS idx_contracts_single_bid ON contracts(is_single_bid);
 CREATE INDEX IF NOT EXISTS idx_contracts_high_value ON contracts(is_high_value);
 
+-- Risk scores indexes
+CREATE INDEX IF NOT EXISTS idx_risk_scores_contract ON risk_scores(contract_id);
+CREATE INDEX IF NOT EXISTS idx_risk_scores_score ON risk_scores(risk_score);
+CREATE INDEX IF NOT EXISTS idx_risk_scores_level ON risk_scores(risk_level);
+CREATE INDEX IF NOT EXISTS idx_risk_scores_version ON risk_scores(model_version);
+
+-- Financial metrics indexes
+CREATE INDEX IF NOT EXISTS idx_financial_contract ON financial_metrics(contract_id);
+CREATE INDEX IF NOT EXISTS idx_financial_loss ON financial_metrics(estimated_loss_mxn);
+
+-- Exchange rates indexes
+CREATE INDEX IF NOT EXISTS idx_exchange_year_month ON exchange_rates(year, month);
+
 -- Composite indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_contracts_sector_year ON contracts(sector_id, contract_year);
-CREATE INDEX IF NOT EXISTS idx_contracts_sector_risk ON contracts(sector_id, risk_score);
 CREATE INDEX IF NOT EXISTS idx_contracts_vendor_year ON contracts(vendor_id, contract_year);
 CREATE INDEX IF NOT EXISTS idx_contracts_institution_year ON contracts(institution_id, contract_year);
 
--- Vendor analytics
-CREATE INDEX IF NOT EXISTS idx_vendors_risk ON vendors(avg_risk_score);
+-- Vendor analytics (no avg_risk_score - computed via view)
 CREATE INDEX IF NOT EXISTS idx_vendors_ghost ON vendors(ghost_probability);
 CREATE INDEX IF NOT EXISTS idx_vendors_rfc ON vendors(rfc);
 CREATE INDEX IF NOT EXISTS idx_vendors_name_normalized ON vendors(name_normalized);
@@ -301,6 +442,46 @@ VIEWS_DDL = """
 -- VIEWS FOR COMMON ANALYTICS
 -- =============================================================================
 
+-- Unified Contracts View (joins contracts + risk_scores + financial_metrics)
+CREATE VIEW IF NOT EXISTS v_contracts_full AS
+SELECT
+    c.*,
+    r.risk_score,
+    r.risk_level,
+    r.model_version,
+    r.single_bid_score,
+    r.direct_award_score,
+    r.price_anomaly_score,
+    r.vendor_concentration_score,
+    r.network_risk_score,
+    f.amount_usd,
+    f.amount_mxn_2024,
+    f.amount_usd_2024,
+    f.estimated_loss_mxn,
+    f.estimated_loss_usd
+FROM contracts c
+LEFT JOIN risk_scores r ON c.id = r.contract_id
+LEFT JOIN financial_metrics f ON c.id = f.contract_id;
+
+-- Vendor Stats View (computed aggregates, not stored)
+CREATE VIEW IF NOT EXISTS v_vendor_stats AS
+SELECT
+    v.id,
+    v.rfc,
+    v.name,
+    v.name_normalized,
+    COUNT(c.id) as total_contracts,
+    SUM(c.amount_mxn) as total_amount_mxn,
+    AVG(r.risk_score) as avg_risk_score,
+    MIN(c.contract_date) as first_contract,
+    MAX(c.contract_date) as last_contract,
+    COUNT(DISTINCT c.sector_id) as sector_count,
+    COUNT(DISTINCT c.institution_id) as institution_count
+FROM vendors v
+LEFT JOIN contracts c ON v.id = c.vendor_id
+LEFT JOIN risk_scores r ON c.id = r.contract_id
+GROUP BY v.id, v.rfc, v.name, v.name_normalized;
+
 -- Sector Summary View
 CREATE VIEW IF NOT EXISTS v_sector_summary AS
 SELECT
@@ -310,16 +491,17 @@ SELECT
     s.color as sector_color,
     COUNT(c.id) as total_contracts,
     COALESCE(SUM(c.amount_mxn), 0) as total_amount_mxn,
-    COALESCE(AVG(c.risk_score), 0) as avg_risk_score,
+    COALESCE(AVG(r.risk_score), 0) as avg_risk_score,
     SUM(CASE WHEN c.is_direct_award = 1 THEN 1 ELSE 0 END) as direct_award_count,
     SUM(CASE WHEN c.is_single_bid = 1 THEN 1 ELSE 0 END) as single_bid_count,
-    SUM(CASE WHEN c.risk_score >= 0.7 THEN 1 ELSE 0 END) as high_risk_count,
+    SUM(CASE WHEN r.risk_score >= 0.7 THEN 1 ELSE 0 END) as high_risk_count,
     COUNT(DISTINCT c.vendor_id) as unique_vendors,
     COUNT(DISTINCT c.institution_id) as unique_institutions,
     MIN(c.contract_year) as earliest_year,
     MAX(c.contract_year) as latest_year
 FROM sectors s
 LEFT JOIN contracts c ON s.id = c.sector_id
+LEFT JOIN risk_scores r ON c.id = r.contract_id
 GROUP BY s.id, s.code, s.name_es, s.color;
 
 -- Vendor Risk Profile View
@@ -335,8 +517,8 @@ SELECT
     COUNT(c.id) as contract_count,
     COALESCE(SUM(c.amount_mxn), 0) as total_amount_mxn,
     COALESCE(AVG(c.amount_mxn), 0) as avg_contract_value,
-    COALESCE(AVG(c.risk_score), 0) as avg_risk_score,
-    COALESCE(MAX(c.risk_score), 0) as max_risk_score,
+    COALESCE(AVG(r.risk_score), 0) as avg_risk_score,
+    COALESCE(MAX(r.risk_score), 0) as max_risk_score,
     SUM(CASE WHEN c.is_direct_award = 1 THEN 1 ELSE 0 END) as direct_award_count,
     SUM(CASE WHEN c.is_single_bid = 1 THEN 1 ELSE 0 END) as single_bid_count,
     COUNT(DISTINCT c.institution_id) as institution_count,
@@ -345,24 +527,26 @@ SELECT
     MAX(c.contract_year) as last_year
 FROM vendors v
 LEFT JOIN contracts c ON v.id = c.vendor_id
+LEFT JOIN risk_scores r ON c.id = r.contract_id
 GROUP BY v.id, v.rfc, v.name, v.name_normalized, v.size_stratification,
          v.is_ghost_company, v.ghost_probability;
 
 -- Year-over-Year Trends View
 CREATE VIEW IF NOT EXISTS v_yearly_trends AS
 SELECT
-    contract_year,
-    sector_id,
+    c.contract_year,
+    c.sector_id,
     COUNT(*) as contract_count,
-    SUM(amount_mxn) as total_amount_mxn,
-    AVG(risk_score) as avg_risk_score,
-    SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) as direct_awards,
-    ROUND(100.0 * SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) as direct_award_pct,
-    SUM(CASE WHEN risk_score >= 0.7 THEN 1 ELSE 0 END) as high_risk_count
-FROM contracts
-WHERE contract_year IS NOT NULL
-GROUP BY contract_year, sector_id
-ORDER BY contract_year, sector_id;
+    SUM(c.amount_mxn) as total_amount_mxn,
+    AVG(r.risk_score) as avg_risk_score,
+    SUM(CASE WHEN c.is_direct_award = 1 THEN 1 ELSE 0 END) as direct_awards,
+    ROUND(100.0 * SUM(CASE WHEN c.is_direct_award = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) as direct_award_pct,
+    SUM(CASE WHEN r.risk_score >= 0.7 THEN 1 ELSE 0 END) as high_risk_count
+FROM contracts c
+LEFT JOIN risk_scores r ON c.id = r.contract_id
+WHERE c.contract_year IS NOT NULL
+GROUP BY c.contract_year, c.sector_id
+ORDER BY c.contract_year, c.sector_id;
 
 -- Institution Summary View
 CREATE VIEW IF NOT EXISTS v_institution_summary AS
@@ -375,21 +559,22 @@ SELECT
     i.gobierno_nivel,
     s.code as sector_code,
     s.name_es as sector_name,
-    r.clave as ramo_clave,
-    r.descripcion as ramo_descripcion,
+    rm.clave as ramo_clave,
+    rm.descripcion as ramo_descripcion,
     COUNT(c.id) as total_contracts,
     COALESCE(SUM(c.amount_mxn), 0) as total_amount_mxn,
-    COALESCE(AVG(c.risk_score), 0) as avg_risk_score,
+    COALESCE(AVG(rs.risk_score), 0) as avg_risk_score,
     SUM(CASE WHEN c.is_direct_award = 1 THEN 1 ELSE 0 END) as direct_award_count,
     COUNT(DISTINCT c.vendor_id) as unique_vendors,
     MIN(c.contract_year) as first_year,
     MAX(c.contract_year) as last_year
 FROM institutions i
 LEFT JOIN sectors s ON i.sector_id = s.id
-LEFT JOIN ramos r ON i.ramo_id = r.id
+LEFT JOIN ramos rm ON i.ramo_id = rm.id
 LEFT JOIN contracts c ON i.id = c.institution_id
+LEFT JOIN risk_scores rs ON c.id = rs.contract_id
 GROUP BY i.id, i.siglas, i.name, i.name_normalized, i.tipo, i.gobierno_nivel,
-         s.code, s.name_es, r.clave, r.descripcion;
+         s.code, s.name_es, rm.clave, rm.descripcion;
 
 -- Sub-Sector Summary View
 CREATE VIEW IF NOT EXISTS v_sub_sector_summary AS
@@ -401,12 +586,24 @@ SELECT
     s.name_es as sector_name,
     COUNT(c.id) as total_contracts,
     COALESCE(SUM(c.amount_mxn), 0) as total_amount_mxn,
-    COALESCE(AVG(c.risk_score), 0) as avg_risk_score,
+    COALESCE(AVG(rs.risk_score), 0) as avg_risk_score,
     COUNT(DISTINCT c.vendor_id) as unique_vendors
 FROM sub_sectors ss
 JOIN sectors s ON ss.sector_id = s.id
 LEFT JOIN contracts c ON ss.id = c.sub_sector_id
+LEFT JOIN risk_scores rs ON c.id = rs.contract_id
 GROUP BY ss.id, ss.code, ss.name_es, s.code, s.name_es;
+
+-- Data Quality View
+CREATE VIEW IF NOT EXISTS v_data_quality AS
+SELECT
+    source_structure,
+    contract_year,
+    COUNT(*) as contracts,
+    SUM(CASE WHEN amount_mxn > 10e9 THEN 1 ELSE 0 END) as flagged_high_value,
+    SUM(CASE WHEN amount_mxn = 0 OR amount_mxn IS NULL THEN 1 ELSE 0 END) as rejected_outliers
+FROM contracts
+GROUP BY source_structure, contract_year;
 """
 
 # =============================================================================
@@ -570,6 +767,200 @@ CATEGORIES_DATA = [
 ]
 
 # =============================================================================
+# BILINGUAL LOOKUP SEED DATA
+# =============================================================================
+
+PROCEDURE_TYPES_DATA = [
+    {
+        "code": "directa",
+        "name_es": "Adjudicacion Directa",
+        "name_en": "Direct Award",
+        "description_es": "Contratacion sin competencia, asignada directamente a un proveedor",
+        "description_en": "Non-competitive procurement, directly assigned to a vendor",
+        "is_direct_award": 1,
+        "is_competitive": 0,
+        "display_order": 1
+    },
+    {
+        "code": "licitacion",
+        "name_es": "Licitacion Publica",
+        "name_en": "Public Tender",
+        "description_es": "Procedimiento abierto con convocatoria publica",
+        "description_en": "Open procedure with public announcement",
+        "is_direct_award": 0,
+        "is_competitive": 1,
+        "display_order": 2
+    },
+    {
+        "code": "licitacion_nacional",
+        "name_es": "Licitacion Publica Nacional",
+        "name_en": "National Public Tender",
+        "description_es": "Licitacion abierta solo para proveedores nacionales",
+        "description_en": "Open tender for domestic vendors only",
+        "is_direct_award": 0,
+        "is_competitive": 1,
+        "display_order": 3
+    },
+    {
+        "code": "licitacion_internacional",
+        "name_es": "Licitacion Publica Internacional",
+        "name_en": "International Public Tender",
+        "description_es": "Licitacion abierta para proveedores nacionales e internacionales",
+        "description_en": "Open tender for domestic and international vendors",
+        "is_direct_award": 0,
+        "is_competitive": 1,
+        "display_order": 4
+    },
+    {
+        "code": "invitacion",
+        "name_es": "Invitacion a Cuando Menos 3 Personas",
+        "name_en": "Restricted Tender",
+        "description_es": "Procedimiento restringido con invitacion a minimo 3 proveedores",
+        "description_en": "Restricted procedure with invitation to at least 3 vendors",
+        "is_direct_award": 0,
+        "is_competitive": 1,
+        "display_order": 5
+    },
+    {
+        "code": "otro",
+        "name_es": "Otro",
+        "name_en": "Other",
+        "description_es": "Otro tipo de procedimiento no clasificado",
+        "description_en": "Other unclassified procedure type",
+        "is_direct_award": 0,
+        "is_competitive": 0,
+        "display_order": 99
+    },
+    {
+        "code": "desconocido",
+        "name_es": "Desconocido",
+        "name_en": "Unknown",
+        "description_es": "Tipo de procedimiento no especificado en los datos originales",
+        "description_en": "Procedure type not specified in original data",
+        "is_direct_award": 0,
+        "is_competitive": 0,
+        "display_order": 100
+    },
+]
+
+CONTRACT_TYPES_DATA = [
+    {
+        "code": "adquisicion",
+        "name_es": "Adquisiciones",
+        "name_en": "Procurement",
+        "description_es": "Compra de bienes y productos",
+        "description_en": "Purchase of goods and products",
+        "display_order": 1
+    },
+    {
+        "code": "servicio",
+        "name_es": "Servicios",
+        "name_en": "Services",
+        "description_es": "Contratacion de servicios profesionales o generales",
+        "description_en": "Contracting of professional or general services",
+        "display_order": 2
+    },
+    {
+        "code": "obra_publica",
+        "name_es": "Obra Publica",
+        "name_en": "Public Works",
+        "description_es": "Construccion, remodelacion o mantenimiento de infraestructura",
+        "description_en": "Construction, remodeling, or infrastructure maintenance",
+        "display_order": 3
+    },
+    {
+        "code": "servicio_obra",
+        "name_es": "Servicios Relacionados con Obra",
+        "name_en": "Works-Related Services",
+        "description_es": "Servicios de consultoria, diseno o supervision de obra",
+        "description_en": "Consulting, design, or construction supervision services",
+        "display_order": 4
+    },
+    {
+        "code": "arrendamiento",
+        "name_es": "Arrendamiento",
+        "name_en": "Leasing",
+        "description_es": "Renta de bienes muebles o inmuebles",
+        "description_en": "Rental of movable or immovable property",
+        "display_order": 5
+    },
+    {
+        "code": "otro",
+        "name_es": "Otro",
+        "name_en": "Other",
+        "description_es": "Otro tipo de contrato no clasificado",
+        "description_en": "Other unclassified contract type",
+        "display_order": 99
+    },
+]
+
+STATUS_CODES_DATA = [
+    {
+        "code": "activo",
+        "name_es": "Activo",
+        "name_en": "Active",
+        "description_es": "Contrato en ejecucion",
+        "description_en": "Contract in execution",
+        "is_active": 1,
+        "display_order": 1
+    },
+    {
+        "code": "terminado",
+        "name_es": "Terminado",
+        "name_en": "Completed",
+        "description_es": "Contrato finalizado satisfactoriamente",
+        "description_en": "Contract completed successfully",
+        "is_active": 0,
+        "display_order": 2
+    },
+    {
+        "code": "cancelado",
+        "name_es": "Cancelado",
+        "name_en": "Cancelled",
+        "description_es": "Contrato cancelado antes de su conclusion",
+        "description_en": "Contract cancelled before completion",
+        "is_active": 0,
+        "display_order": 3
+    },
+    {
+        "code": "en_proceso",
+        "name_es": "En Proceso",
+        "name_en": "In Progress",
+        "description_es": "Procedimiento de contratacion en curso",
+        "description_en": "Procurement procedure in progress",
+        "is_active": 1,
+        "display_order": 4
+    },
+    {
+        "code": "adjudicado",
+        "name_es": "Adjudicado",
+        "name_en": "Awarded",
+        "description_es": "Contrato adjudicado pero no iniciado",
+        "description_en": "Contract awarded but not yet started",
+        "is_active": 1,
+        "display_order": 5
+    },
+    {
+        "code": "suspendido",
+        "name_es": "Suspendido",
+        "name_en": "Suspended",
+        "description_es": "Contrato temporalmente suspendido",
+        "description_en": "Contract temporarily suspended",
+        "is_active": 0,
+        "display_order": 6
+    },
+    {
+        "code": "desconocido",
+        "name_es": "Desconocido",
+        "name_en": "Unknown",
+        "description_es": "Estatus no especificado en los datos originales",
+        "description_en": "Status not specified in original data",
+        "is_active": 0,
+        "display_order": 100
+    },
+]
+
+# =============================================================================
 # SCHEMA CREATION FUNCTIONS
 # =============================================================================
 
@@ -662,6 +1053,67 @@ def seed_categories(conn: sqlite3.Connection) -> None:
     print(f"  Inserted {len(CATEGORIES_DATA)} categories")
 
 
+def seed_procedure_types(conn: sqlite3.Connection) -> None:
+    """Insert bilingual procedure type reference data."""
+    print("Seeding procedure types (bilingual)...")
+    cursor = conn.cursor()
+
+    for i, pt in enumerate(PROCEDURE_TYPES_DATA, 1):
+        cursor.execute("""
+            INSERT OR REPLACE INTO procedure_types
+            (id, code, name_es, name_en, description_es, description_en,
+             is_direct_award, is_competitive, display_order)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            i, pt["code"], pt["name_es"], pt["name_en"],
+            pt.get("description_es"), pt.get("description_en"),
+            pt["is_direct_award"], pt["is_competitive"], pt["display_order"]
+        ))
+
+    conn.commit()
+    print(f"  Inserted {len(PROCEDURE_TYPES_DATA)} procedure types")
+
+
+def seed_contract_types(conn: sqlite3.Connection) -> None:
+    """Insert bilingual contract type reference data."""
+    print("Seeding contract types (bilingual)...")
+    cursor = conn.cursor()
+
+    for i, ct in enumerate(CONTRACT_TYPES_DATA, 1):
+        cursor.execute("""
+            INSERT OR REPLACE INTO contract_types
+            (id, code, name_es, name_en, description_es, description_en, display_order)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            i, ct["code"], ct["name_es"], ct["name_en"],
+            ct.get("description_es"), ct.get("description_en"), ct["display_order"]
+        ))
+
+    conn.commit()
+    print(f"  Inserted {len(CONTRACT_TYPES_DATA)} contract types")
+
+
+def seed_status_codes(conn: sqlite3.Connection) -> None:
+    """Insert bilingual status code reference data."""
+    print("Seeding status codes (bilingual)...")
+    cursor = conn.cursor()
+
+    for i, sc in enumerate(STATUS_CODES_DATA, 1):
+        cursor.execute("""
+            INSERT OR REPLACE INTO status_codes
+            (id, code, name_es, name_en, description_es, description_en,
+             is_active, display_order)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            i, sc["code"], sc["name_es"], sc["name_en"],
+            sc.get("description_es"), sc.get("description_en"),
+            sc["is_active"], sc["display_order"]
+        ))
+
+    conn.commit()
+    print(f"  Inserted {len(STATUS_CODES_DATA)} status codes")
+
+
 def verify_schema(conn: sqlite3.Connection) -> None:
     """Verify schema was created correctly."""
     print("\nVerifying schema...")
@@ -670,10 +1122,22 @@ def verify_schema(conn: sqlite3.Connection) -> None:
     # Check tables
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
     tables = [row[0] for row in cursor.fetchall()]
-    print(f"  Tables: {', '.join(tables)}")
+    print(f"  Tables ({len(tables)}): {', '.join(tables)}")
 
-    # Check counts
-    for table in ['sectors', 'sub_sectors', 'ramos', 'categories']:
+    # Verify expected tables exist
+    expected_tables = [
+        'sectors', 'sub_sectors', 'categories', 'ramos',
+        'procedure_types', 'contract_types', 'status_codes',
+        'vendors', 'institutions', 'contracting_units', 'contracts',
+        'risk_scores', 'financial_metrics', 'exchange_rates'
+    ]
+    missing = [t for t in expected_tables if t not in tables]
+    if missing:
+        print(f"  WARNING: Missing tables: {', '.join(missing)}")
+
+    # Check reference data counts
+    for table in ['sectors', 'sub_sectors', 'ramos', 'categories',
+                  'procedure_types', 'contract_types', 'status_codes']:
         cursor.execute(f"SELECT COUNT(*) FROM {table}")
         count = cursor.fetchone()[0]
         print(f"  {table}: {count} records")
@@ -681,7 +1145,7 @@ def verify_schema(conn: sqlite3.Connection) -> None:
     # Check views
     cursor.execute("SELECT name FROM sqlite_master WHERE type='view' ORDER BY name")
     views = [row[0] for row in cursor.fetchall()]
-    print(f"  Views: {', '.join(views)}")
+    print(f"  Views ({len(views)}): {', '.join(views)}")
 
 
 # =============================================================================
@@ -691,7 +1155,7 @@ def verify_schema(conn: sqlite3.Connection) -> None:
 def main():
     """Main entry point."""
     print("=" * 70)
-    print("RUBLI NORMALIZED DATABASE SCHEMA CREATION")
+    print("YANG WEN-LI: NORMALIZED DATABASE SCHEMA CREATION")
     print("=" * 70)
     print(f"\nDatabase path: {DB_PATH}")
 
@@ -715,6 +1179,11 @@ def main():
         seed_sub_sectors(conn)
         seed_ramos(conn)
         seed_categories(conn)
+
+        # Seed bilingual lookup tables
+        seed_procedure_types(conn)
+        seed_contract_types(conn)
+        seed_status_codes(conn)
 
         # Verify
         verify_schema(conn)

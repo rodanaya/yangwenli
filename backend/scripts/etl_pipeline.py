@@ -16,9 +16,25 @@ import pandas as pd
 import os
 import re
 import sys
+import json
+import logging
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple, Set
 from collections import defaultdict
+from pathlib import Path
+
+# =============================================================================
+# LOGGING CONFIGURATION
+# =============================================================================
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+    ]
+)
+logger = logging.getLogger('etl_pipeline')
 
 # Import our modules
 from etl_create_schema import main as create_schema_main, DB_PATH
@@ -204,7 +220,40 @@ MAPPING_D = {
 
 
 # =============================================================================
-# STRUCTURE DETECTION
+# STRUCTURE VALIDATION CONFIGURATION
+# =============================================================================
+
+# Required columns for each structure (at least one from each group must exist)
+STRUCTURE_REQUIRED_COLUMNS = {
+    'A': {
+        'institution': ['DEPENDENCIA / ENTIDAD', 'DEPENDENCIA'],
+        'vendor': ['RAZÓN SOCIAL', 'RAZON SOCIAL'],
+        'amount': ['IMPORTE MN SIN IVA'],
+        'procedure': ['TIPO DE PROCEDIMIENTO'],
+    },
+    'B': {
+        'institution': ['DEPENDENCIA'],
+        'vendor': ['PROVEEDOR_CONTRATISTA'],
+        'amount': ['IMPORTE_CONTRATO'],
+        'procedure': ['TIPO_PROCEDIMIENTO'],
+    },
+    'C': {
+        'institution': ['Institución', 'Institucion'],
+        'vendor': ['Proveedor o contratista'],
+        'amount': ['Importe del contrato'],
+        'procedure': ['Tipo de procedimiento'],
+    },
+    'D': {
+        'institution': ['Institución', 'Institucion'],
+        'vendor': ['Proveedor o contratista'],
+        'amount': ['Importe DRC', 'Monto sin imp./mínimo', 'Monto sin imp./minimo'],
+        'procedure': ['Tipo Procedimiento'],
+        'ramo': ['Clave Ramo'],  # Structure D specific
+    },
+}
+
+# =============================================================================
+# STRUCTURE DETECTION AND VALIDATION
 # =============================================================================
 
 def detect_structure(df: pd.DataFrame) -> str:
@@ -238,6 +287,59 @@ def detect_structure(df: pd.DataFrame) -> str:
     return 'B' if col_count >= 40 else 'A'
 
 
+def validate_structure(df: pd.DataFrame, structure: str) -> Tuple[bool, List[str]]:
+    """
+    Validate that a DataFrame has the expected columns for its detected structure.
+
+    Args:
+        df: The DataFrame to validate
+        structure: The detected structure ('A', 'B', 'C', or 'D')
+
+    Returns:
+        Tuple of (is_valid, list_of_missing_groups)
+    """
+    if structure not in STRUCTURE_REQUIRED_COLUMNS:
+        logger.warning(f"Unknown structure '{structure}', skipping validation")
+        return True, []
+
+    required = STRUCTURE_REQUIRED_COLUMNS[structure]
+    cols = set(df.columns)
+
+    # Also check with normalized column names (handle encoding issues)
+    cols_normalized = set()
+    for col in cols:
+        cols_normalized.add(col)
+        # Add normalized version without accents
+        normalized = col.replace('ó', 'o').replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ú', 'u').replace('ñ', 'n')
+        cols_normalized.add(normalized)
+
+    missing_groups = []
+
+    for group_name, group_cols in required.items():
+        # Check if at least one column from the group exists
+        found = False
+        for col_option in group_cols:
+            if col_option in cols:
+                found = True
+                break
+            # Check normalized version
+            col_normalized = col_option.replace('ó', 'o').replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ú', 'u').replace('ñ', 'n')
+            if col_normalized in cols_normalized:
+                found = True
+                break
+
+        if not found:
+            missing_groups.append(group_name)
+
+    is_valid = len(missing_groups) == 0
+
+    if not is_valid:
+        logger.warning(f"Structure {structure} validation failed. Missing groups: {missing_groups}")
+        logger.debug(f"Available columns: {sorted(list(cols)[:20])}...")  # Show first 20
+
+    return is_valid, missing_groups
+
+
 def find_column(df_columns: List[str], options: List[str]) -> Optional[str]:
     """Find the first matching column from options."""
     for opt in options:
@@ -252,13 +354,52 @@ def find_column(df_columns: List[str], options: List[str]) -> Optional[str]:
     return None
 
 
-def get_value(row: pd.Series, df_columns: List[str], options: List[str]) -> Optional[str]:
-    """Get value from row using first matching column."""
+def normalize_string_value(val: Optional[str], strip_whitespace: bool = True) -> Optional[str]:
+    """
+    Normalize a string value.
+
+    Args:
+        val: The value to normalize
+        strip_whitespace: Whether to strip leading/trailing whitespace
+
+    Returns:
+        Normalized string or None
+    """
+    if val is None:
+        return None
+
+    if not isinstance(val, str):
+        val = str(val)
+
+    if strip_whitespace:
+        val = val.strip()
+
+    # Return None for empty strings after stripping
+    if not val:
+        return None
+
+    return val
+
+
+def get_value(row: pd.Series, df_columns: List[str], options: List[str], strip: bool = True) -> Optional[str]:
+    """
+    Get value from row using first matching column.
+
+    Args:
+        row: DataFrame row
+        df_columns: List of column names in the DataFrame
+        options: List of possible column names to try
+        strip: Whether to strip whitespace from the result
+
+    Returns:
+        String value or None
+    """
     col = find_column(df_columns, options)
     if col and col in row.index:
         val = row[col]
         if pd.notna(val):
-            return str(val) if not isinstance(val, str) else val
+            str_val = str(val) if not isinstance(val, str) else val
+            return normalize_string_value(str_val, strip_whitespace=strip)
     return None
 
 
@@ -287,8 +428,17 @@ def parse_date(value) -> Optional[str]:
         return None
 
 
-def parse_amount(value) -> float:
-    """Parse various amount formats to float."""
+def parse_amount(value, context: str = "") -> float:
+    """
+    Parse various amount formats to float.
+
+    Args:
+        value: The value to parse
+        context: Optional context string for logging (e.g., field name)
+
+    Returns:
+        Parsed float amount, or 0.0 if invalid/rejected
+    """
     if pd.isna(value):
         return 0.0
 
@@ -299,6 +449,8 @@ def parse_amount(value) -> float:
         try:
             amount = float(cleaned)
         except ValueError:
+            if cleaned:  # Only log if there was actual content
+                logger.debug(f"Could not parse amount value: '{value}' {context}")
             return 0.0
     else:
         return 0.0
@@ -308,12 +460,13 @@ def parse_amount(value) -> float:
 
     if amount > MAX_CONTRACT_VALUE:
         # Reject values over 100B MXN - these are data entry errors
-        print(f"    [REJECTED] Contract value {amount:,.0f} MXN exceeds maximum ({MAX_CONTRACT_VALUE:,.0f})")
+        logger.warning(f"[REJECTED] Contract value {amount:,.0f} MXN exceeds maximum ({MAX_CONTRACT_VALUE:,.0f}) {context}")
         VALIDATION_STATS['rejected'] += 1
         return 0.0  # Return 0 to exclude from analytics
 
     if amount > FLAG_THRESHOLD:
         # Flag values over 10B for review (but include them)
+        logger.info(f"[FLAGGED] High value contract: {amount:,.0f} MXN {context}")
         VALIDATION_STATS['flagged'] += 1
 
     return amount
@@ -344,15 +497,76 @@ def is_bool_true(value) -> bool:
 # =============================================================================
 
 class EntityCache:
-    """Cache for vendors and institutions to enable deduplication."""
+    """Cache for vendors and institutions to enable deduplication with checkpoint support."""
 
-    def __init__(self, conn: sqlite3.Connection):
+    CHECKPOINT_INTERVAL = 50000  # Save checkpoint every N operations
+
+    def __init__(self, conn: sqlite3.Connection, checkpoint_dir: Optional[str] = None):
         self.conn = conn
         self.vendor_cache: Dict[str, int] = {}  # normalized_name -> id
         self.vendor_rfc_cache: Dict[str, int] = {}  # rfc -> id
         self.institution_cache: Dict[str, int] = {}  # normalized_name -> id
         self.next_vendor_id = 1
         self.next_institution_id = 1
+        self.operations_since_checkpoint = 0
+        self.checkpoint_dir = checkpoint_dir or os.path.dirname(DB_PATH)
+        self.checkpoint_file = os.path.join(self.checkpoint_dir, '.etl_cache_checkpoint.json')
+
+    def save_checkpoint(self) -> None:
+        """Save cache state to disk for recovery."""
+        checkpoint_data = {
+            'vendor_cache': self.vendor_cache,
+            'vendor_rfc_cache': self.vendor_rfc_cache,
+            'institution_cache': self.institution_cache,
+            'next_vendor_id': self.next_vendor_id,
+            'next_institution_id': self.next_institution_id,
+            'timestamp': datetime.now().isoformat()
+        }
+        try:
+            with open(self.checkpoint_file, 'w', encoding='utf-8') as f:
+                json.dump(checkpoint_data, f)
+            logger.debug(f"Saved cache checkpoint: {len(self.vendor_cache)} vendors, "
+                        f"{len(self.institution_cache)} institutions")
+        except Exception as e:
+            logger.warning(f"Failed to save cache checkpoint: {e}")
+
+    def load_checkpoint(self) -> bool:
+        """Load cache state from disk. Returns True if loaded successfully."""
+        if not os.path.exists(self.checkpoint_file):
+            return False
+
+        try:
+            with open(self.checkpoint_file, 'r', encoding='utf-8') as f:
+                checkpoint_data = json.load(f)
+
+            self.vendor_cache = checkpoint_data.get('vendor_cache', {})
+            self.vendor_rfc_cache = checkpoint_data.get('vendor_rfc_cache', {})
+            self.institution_cache = checkpoint_data.get('institution_cache', {})
+            self.next_vendor_id = checkpoint_data.get('next_vendor_id', 1)
+            self.next_institution_id = checkpoint_data.get('next_institution_id', 1)
+
+            logger.info(f"Loaded cache checkpoint from {checkpoint_data.get('timestamp', 'unknown')}: "
+                       f"{len(self.vendor_cache)} vendors, {len(self.institution_cache)} institutions")
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to load cache checkpoint: {e}")
+            return False
+
+    def clear_checkpoint(self) -> None:
+        """Remove checkpoint file."""
+        if os.path.exists(self.checkpoint_file):
+            try:
+                os.remove(self.checkpoint_file)
+                logger.debug("Cleared cache checkpoint file")
+            except Exception as e:
+                logger.warning(f"Failed to clear checkpoint file: {e}")
+
+    def _maybe_checkpoint(self) -> None:
+        """Save checkpoint if interval reached."""
+        self.operations_since_checkpoint += 1
+        if self.operations_since_checkpoint >= self.CHECKPOINT_INTERVAL:
+            self.save_checkpoint()
+            self.operations_since_checkpoint = 0
 
     def get_or_create_vendor(
         self,
@@ -365,6 +579,12 @@ class EntityCache:
         """Get vendor ID, creating if needed."""
         if not name:
             return None
+
+        # Normalize RFC (strip whitespace, uppercase)
+        if rfc:
+            rfc = normalize_string_value(rfc)
+            if rfc:
+                rfc = rfc.upper()
 
         # Check RFC first (highest priority for deduplication)
         if rfc and rfc in self.vendor_rfc_cache:
@@ -394,6 +614,9 @@ class EntityCache:
         self.vendor_cache[normalized] = vendor_id
         if rfc:
             self.vendor_rfc_cache[rfc] = vendor_id
+
+        # Checkpoint periodically
+        self._maybe_checkpoint()
 
         return vendor_id
 
@@ -428,6 +651,10 @@ class EntityCache:
               ramo_id, sector_id, clave, nivel))
 
         self.institution_cache[normalized] = inst_id
+
+        # Checkpoint periodically
+        self._maybe_checkpoint()
+
         return inst_id
 
 
@@ -516,18 +743,28 @@ def normalize_row(
     award_date = parse_date(get_value(row, df_columns, mapping.get('award_date', [])))
     publication_date = parse_date(get_value(row, df_columns, mapping.get('publication_date', [])))
 
-    # Parse amount - try multiple fields for Structure D
+    # Parse amount - try multiple fields for Structure D with logging
     amount = 0.0
+    amount_field_used = None
     if structure == 'D':
-        for amount_field in ['amount_drc', 'amount_min', 'amount_max', 'amount']:
+        # Priority order for Structure D amount fields
+        amount_fields_priority = ['amount_drc', 'amount_min', 'amount_max', 'amount']
+        for amount_field in amount_fields_priority:
             if amount_field in mapping:
                 val = get_value(row, df_columns, mapping[amount_field])
                 if val:
-                    amount = parse_amount(val)
+                    amount = parse_amount(val, context=f"(field: {amount_field})")
                     if amount > 0:
+                        amount_field_used = amount_field
+                        # Log if using fallback field (not the primary amount_drc)
+                        if amount_field != 'amount_drc':
+                            procedure_num = get_value(row, df_columns, mapping.get('procedure_number', []))
+                            logger.debug(f"Structure D: Using fallback amount field '{amount_field}' "
+                                       f"for procedure {procedure_num}")
                         break
     else:
-        amount = parse_amount(get_value(row, df_columns, mapping.get('amount', [])))
+        amount = parse_amount(get_value(row, df_columns, mapping.get('amount', [])),
+                            context=f"(structure: {structure})")
 
     # Normalize procedure type
     proc_type_norm, is_direct = normalize_procedure_type(procedure_type)
@@ -611,10 +848,78 @@ def normalize_row(
 # DATABASE OPERATIONS
 # =============================================================================
 
-def insert_batch(conn: sqlite3.Connection, records: List[Dict]):
-    """Insert a batch of contracts."""
+def validate_fk_references(conn: sqlite3.Connection, records: List[Dict]) -> List[Dict]:
+    """
+    Validate foreign key references exist before batch insert.
+
+    Args:
+        conn: Database connection
+        records: List of record dictionaries
+
+    Returns:
+        List of valid records (with invalid FK references logged and corrected)
+    """
+    cursor = conn.cursor()
+
+    # Get valid IDs for each FK table
+    cursor.execute("SELECT id FROM sectors")
+    valid_sectors = {row[0] for row in cursor.fetchall()}
+
+    cursor.execute("SELECT id FROM sub_sectors")
+    valid_sub_sectors = {row[0] for row in cursor.fetchall()}
+
+    cursor.execute("SELECT id FROM categories")
+    valid_categories = {row[0] for row in cursor.fetchall()}
+
+    cursor.execute("SELECT id FROM ramos")
+    valid_ramos = {row[0] for row in cursor.fetchall()}
+
+    invalid_count = 0
+    for record in records:
+        # Validate sector_id
+        if record.get('sector_id') and record['sector_id'] not in valid_sectors:
+            logger.debug(f"Invalid sector_id {record['sector_id']}, setting to 12 (otros)")
+            record['sector_id'] = 12  # Default to "otros"
+            invalid_count += 1
+
+        # Validate sub_sector_id
+        if record.get('sub_sector_id') and record['sub_sector_id'] not in valid_sub_sectors:
+            logger.debug(f"Invalid sub_sector_id {record['sub_sector_id']}, setting to None")
+            record['sub_sector_id'] = None
+            invalid_count += 1
+
+        # Validate category_id
+        if record.get('category_id') and record['category_id'] not in valid_categories:
+            logger.debug(f"Invalid category_id {record['category_id']}, setting to None")
+            record['category_id'] = None
+            invalid_count += 1
+
+        # Validate ramo_id
+        if record.get('ramo_id') and record['ramo_id'] not in valid_ramos:
+            logger.debug(f"Invalid ramo_id {record['ramo_id']}, setting to None")
+            record['ramo_id'] = None
+            invalid_count += 1
+
+    if invalid_count > 0:
+        logger.info(f"Corrected {invalid_count} invalid FK references in batch")
+
+    return records
+
+
+def insert_batch(conn: sqlite3.Connection, records: List[Dict], use_savepoint: bool = True) -> int:
+    """
+    Insert a batch of contracts with savepoint-based error recovery.
+
+    Args:
+        conn: Database connection
+        records: List of record dictionaries
+        use_savepoint: Whether to use savepoints for error recovery
+
+    Returns:
+        Number of records successfully inserted
+    """
     if not records:
-        return
+        return 0
 
     columns = [
         'source_file', 'source_structure', 'source_year',
@@ -630,7 +935,7 @@ def insert_batch(conn: sqlite3.Connection, records: List[Dict]):
         'contract_year', 'contract_month',
         'is_direct_award', 'is_single_bid', 'is_framework',
         'is_consolidated', 'is_multiannual', 'is_high_value', 'is_year_end',
-        'risk_score', 'price_anomaly_score', 'temporal_anomaly_score', 'vendor_risk_score',
+        # NOTE: risk_score columns moved to separate risk_scores table (see etl_create_schema.py)
         'url', 'contract_status'
     ]
 
@@ -638,9 +943,43 @@ def insert_batch(conn: sqlite3.Connection, records: List[Dict]):
     sql = f"INSERT INTO contracts ({', '.join(columns)}) VALUES ({placeholders})"
 
     cursor = conn.cursor()
+
+    # Validate FK references before insert
+    records = validate_fk_references(conn, records)
+
     values = [tuple(r.get(c) for c in columns) for r in records]
-    cursor.executemany(sql, values)
-    conn.commit()
+
+    if use_savepoint:
+        # Use savepoint for error recovery
+        savepoint_name = f"batch_{datetime.now().strftime('%H%M%S%f')}"
+        try:
+            cursor.execute(f"SAVEPOINT {savepoint_name}")
+            cursor.executemany(sql, values)
+            cursor.execute(f"RELEASE SAVEPOINT {savepoint_name}")
+            conn.commit()
+            return len(records)
+        except sqlite3.Error as e:
+            logger.error(f"Batch insert failed: {e}")
+            cursor.execute(f"ROLLBACK TO SAVEPOINT {savepoint_name}")
+            cursor.execute(f"RELEASE SAVEPOINT {savepoint_name}")
+
+            # Try inserting records one by one to identify problematic records
+            logger.info("Attempting row-by-row insert to recover...")
+            successful = 0
+            for i, value_tuple in enumerate(values):
+                try:
+                    cursor.execute(sql, value_tuple)
+                    successful += 1
+                except sqlite3.Error as row_error:
+                    logger.warning(f"Failed to insert row {i}: {row_error}")
+
+            conn.commit()
+            logger.info(f"Recovered {successful}/{len(records)} records")
+            return successful
+    else:
+        cursor.executemany(sql, values)
+        conn.commit()
+        return len(records)
 
 
 # =============================================================================
@@ -655,20 +994,26 @@ def process_xlsx_file(
 ) -> Tuple[int, str]:
     """Process a single XLSX file."""
     filename = os.path.basename(filepath)
-    print(f"\nProcessing {filename}...")
+    logger.info(f"Processing {filename}...")
 
     try:
         df = pd.read_excel(filepath, engine='openpyxl')
         row_count = len(df)
 
         if row_count == 0:
-            print(f"  WARNING: Empty file")
+            logger.warning(f"Empty file: {filename}")
             return 0, 'empty'
 
-        print(f"  Loaded {row_count:,} rows")
+        logger.info(f"  Loaded {row_count:,} rows from {filename}")
 
         structure = detect_structure(df)
-        print(f"  Detected structure: {structure}")
+        logger.info(f"  Detected structure: {structure}")
+
+        # Validate structure
+        is_valid, missing_groups = validate_structure(df, structure)
+        if not is_valid:
+            logger.warning(f"  Structure validation failed for {filename}. "
+                         f"Missing: {missing_groups}. Proceeding with caution.")
 
         df_columns = list(df.columns)
         source_year = extract_year_from_filename(filename) or 2000
@@ -684,20 +1029,20 @@ def process_xlsx_file(
             records.append(record)
 
             if len(records) >= BATCH_SIZE:
-                insert_batch(conn, records)
-                processed += len(records)
-                print(f"  Processed {processed:,}/{row_count:,} rows...")
+                inserted = insert_batch(conn, records)
+                processed += inserted
+                logger.info(f"  Processed {processed:,}/{row_count:,} rows...")
                 records = []
 
         if records:
-            insert_batch(conn, records)
-            processed += len(records)
+            inserted = insert_batch(conn, records)
+            processed += inserted
 
-        print(f"  Completed: {processed:,} rows")
+        logger.info(f"  Completed {filename}: {processed:,} rows")
         return processed, structure
 
     except Exception as e:
-        print(f"  ERROR: {e}")
+        logger.error(f"  ERROR processing {filename}: {e}")
         import traceback
         traceback.print_exc()
         return 0, 'error'
@@ -711,28 +1056,38 @@ def process_csv_file(
 ) -> Tuple[int, str]:
     """Process a single CSV file (2023-2025 format)."""
     filename = os.path.basename(filepath)
-    print(f"\nProcessing {filename}...")
+    logger.info(f"Processing {filename}...")
 
     try:
-        # Try different encodings
-        for encoding in ['latin-1', 'utf-8', 'cp1252']:
+        # Try different encodings - latin-1 is most common for COMPRANET CSVs
+        encoding_used = None
+        for encoding in ['latin-1', 'utf-8', 'cp1252', 'iso-8859-1']:
             try:
                 df = pd.read_csv(filepath, encoding=encoding, low_memory=False)
+                encoding_used = encoding
+                logger.info(f"  Successfully read with encoding: {encoding}")
                 break
             except UnicodeDecodeError:
+                logger.debug(f"  Encoding {encoding} failed for {filename}")
                 continue
         else:
-            print(f"  ERROR: Could not decode file")
+            logger.error(f"Could not decode file {filename} with any supported encoding")
             return 0, 'error'
 
         row_count = len(df)
 
         if row_count == 0:
-            print(f"  WARNING: Empty file")
+            logger.warning(f"Empty file: {filename}")
             return 0, 'empty'
 
-        print(f"  Loaded {row_count:,} rows")
-        print(f"  Structure: D (CSV 2023-2025)")
+        logger.info(f"  Loaded {row_count:,} rows from {filename}")
+        logger.info(f"  Structure: D (CSV 2023-2025)")
+
+        # Validate structure
+        is_valid, missing_groups = validate_structure(df, 'D')
+        if not is_valid:
+            logger.warning(f"  Structure validation failed for {filename}. "
+                         f"Missing: {missing_groups}. Proceeding with caution.")
 
         df_columns = list(df.columns)
         source_year = extract_year_from_filename(filename) or 2023
@@ -748,20 +1103,20 @@ def process_csv_file(
             records.append(record)
 
             if len(records) >= BATCH_SIZE:
-                insert_batch(conn, records)
-                processed += len(records)
-                print(f"  Processed {processed:,}/{row_count:,} rows...")
+                inserted = insert_batch(conn, records)
+                processed += inserted
+                logger.info(f"  Processed {processed:,}/{row_count:,} rows...")
                 records = []
 
         if records:
-            insert_batch(conn, records)
-            processed += len(records)
+            inserted = insert_batch(conn, records)
+            processed += inserted
 
-        print(f"  Completed: {processed:,} rows")
+        logger.info(f"  Completed {filename}: {processed:,} rows")
         return processed, 'D'
 
     except Exception as e:
-        print(f"  ERROR: {e}")
+        logger.error(f"ERROR processing {filename}: {e}")
         import traceback
         traceback.print_exc()
         return 0, 'error'
@@ -773,7 +1128,7 @@ def process_csv_file(
 
 def update_vendor_stats(conn: sqlite3.Connection):
     """Update aggregate statistics on vendors."""
-    print("\nUpdating vendor statistics...")
+    logger.info("Updating vendor statistics...")
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -793,12 +1148,12 @@ def update_vendor_stats(conn: sqlite3.Connection):
     """)
 
     conn.commit()
-    print("  Vendor statistics updated")
+    logger.info("  Vendor statistics updated")
 
 
 def update_institution_stats(conn: sqlite3.Connection):
     """Update aggregate statistics on institutions."""
-    print("Updating institution statistics...")
+    logger.info("Updating institution statistics...")
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -812,7 +1167,7 @@ def update_institution_stats(conn: sqlite3.Connection):
     """)
 
     conn.commit()
-    print("  Institution statistics updated")
+    logger.info("  Institution statistics updated")
 
 
 # =============================================================================
@@ -821,16 +1176,16 @@ def update_institution_stats(conn: sqlite3.Connection):
 
 def main():
     """Main ETL pipeline."""
-    print("=" * 70)
-    print("RUBLI UNIFIED ETL PIPELINE")
-    print("=" * 70)
-    print(f"\nData directory: {DATA_DIR}")
-    print(f"Database: {DB_PATH}")
+    logger.info("=" * 70)
+    logger.info("RUBLI UNIFIED ETL PIPELINE")
+    logger.info("=" * 70)
+    logger.info(f"Data directory: {DATA_DIR}")
+    logger.info(f"Database: {DB_PATH}")
 
     # Step 1: Create schema
-    print("\n" + "=" * 70)
-    print("STEP 1: Creating database schema")
-    print("=" * 70)
+    logger.info("=" * 70)
+    logger.info("STEP 1: Creating database schema")
+    logger.info("=" * 70)
     create_schema_main()
 
     # Step 2: Connect and load ramo lookup
@@ -843,9 +1198,9 @@ def main():
     entity_cache = EntityCache(conn)
 
     # Step 3: Process XLSX files
-    print("\n" + "=" * 70)
-    print("STEP 2: Processing XLSX files (2002-2022)")
-    print("=" * 70)
+    logger.info("=" * 70)
+    logger.info("STEP 2: Processing XLSX files (2002-2022)")
+    logger.info("=" * 70)
 
     xlsx_files = sorted([
         os.path.join(DATA_DIR, f)
@@ -853,7 +1208,7 @@ def main():
         if f.endswith('.xlsx')
     ])
 
-    print(f"\nFound {len(xlsx_files)} XLSX files")
+    logger.info(f"Found {len(xlsx_files)} XLSX files")
 
     total_xlsx = 0
     structure_counts = defaultdict(int)
@@ -865,12 +1220,15 @@ def main():
         structure_counts[structure] += 1
 
     xlsx_elapsed = datetime.now() - start_time
-    print(f"\nXLSX processing complete: {total_xlsx:,} records in {xlsx_elapsed}")
+    logger.info(f"XLSX processing complete: {total_xlsx:,} records in {xlsx_elapsed}")
+
+    # Save checkpoint after XLSX processing
+    entity_cache.save_checkpoint()
 
     # Step 4: Process CSV files
-    print("\n" + "=" * 70)
-    print("STEP 3: Processing CSV files (2023-2025)")
-    print("=" * 70)
+    logger.info("=" * 70)
+    logger.info("STEP 3: Processing CSV files (2023-2025)")
+    logger.info("=" * 70)
 
     csv_files = sorted([
         os.path.join(DATA_DIR, f)
@@ -878,7 +1236,7 @@ def main():
         if f.endswith('.csv')
     ])
 
-    print(f"\nFound {len(csv_files)} CSV files")
+    logger.info(f"Found {len(csv_files)} CSV files")
 
     total_csv = 0
     csv_start = datetime.now()
@@ -889,18 +1247,21 @@ def main():
         structure_counts[structure] += 1
 
     csv_elapsed = datetime.now() - csv_start
-    print(f"\nCSV processing complete: {total_csv:,} records in {csv_elapsed}")
+    logger.info(f"CSV processing complete: {total_csv:,} records in {csv_elapsed}")
+
+    # Save final checkpoint
+    entity_cache.save_checkpoint()
 
     # Step 5: Update statistics
-    print("\n" + "=" * 70)
-    print("STEP 4: Updating aggregate statistics")
-    print("=" * 70)
+    logger.info("=" * 70)
+    logger.info("STEP 4: Updating aggregate statistics")
+    logger.info("=" * 70)
 
     update_vendor_stats(conn)
     update_institution_stats(conn)
 
     # Step 5b: Calculate single bid (competitive procedures with only 1 vendor)
-    print("\n  Calculating single bid indicators...")
+    logger.info("Calculating single bid indicators...")
     cursor = conn.cursor()
     cursor.execute('''
         UPDATE contracts
@@ -918,18 +1279,18 @@ def main():
     ''')
     single_bid_count = cursor.rowcount
     conn.commit()
-    print(f"  Marked {single_bid_count:,} contracts as single_bid")
+    logger.info(f"Marked {single_bid_count:,} contracts as single_bid")
 
     # Print validation stats
-    print(f"\n  Data Quality Stats:")
-    print(f"    Total amounts processed: {VALIDATION_STATS['total']:,}")
-    print(f"    Rejected (>100B MXN): {VALIDATION_STATS['rejected']:,}")
-    print(f"    Flagged (>10B MXN): {VALIDATION_STATS['flagged']:,}")
+    logger.info("Data Quality Stats:")
+    logger.info(f"  Total amounts processed: {VALIDATION_STATS['total']:,}")
+    logger.info(f"  Rejected (>100B MXN): {VALIDATION_STATS['rejected']:,}")
+    logger.info(f"  Flagged (>10B MXN): {VALIDATION_STATS['flagged']:,}")
 
     # Final verification
-    print("\n" + "=" * 70)
-    print("FINAL VERIFICATION")
-    print("=" * 70)
+    logger.info("=" * 70)
+    logger.info("FINAL VERIFICATION")
+    logger.info("=" * 70)
 
     cursor = conn.cursor()
 
@@ -952,10 +1313,10 @@ def main():
         GROUP BY s.id, s.code, s.name_es
         ORDER BY COUNT(c.id) DESC
     """)
-    print("\nContracts by sector:")
+    logger.info("Contracts by sector:")
     for code, name, count, amount in cursor.fetchall():
         pct = 100 * count / contract_count if contract_count > 0 else 0
-        print(f"  {code:20} {count:>10,} ({pct:>5.1f}%) ${amount:>15,.0f}")
+        logger.info(f"  {code:20} {count:>10,} ({pct:>5.1f}%) ${amount:>15,.0f}")
 
     cursor.execute("""
         SELECT contract_year, COUNT(*), SUM(amount_mxn)
@@ -964,23 +1325,26 @@ def main():
         GROUP BY contract_year
         ORDER BY contract_year
     """)
-    print("\nContracts by year:")
+    logger.info("Contracts by year:")
     for year, count, amount in cursor.fetchall():
-        print(f"  {year}: {count:>10,} contracts, ${amount:>15,.0f}")
+        logger.info(f"  {year}: {count:>10,} contracts, ${amount:>15,.0f}")
+
+    # Clean up checkpoint file on successful completion
+    entity_cache.clear_checkpoint()
 
     conn.close()
 
     total_elapsed = datetime.now() - start_time
 
-    print("\n" + "=" * 70)
-    print("ETL PIPELINE COMPLETE")
-    print("=" * 70)
-    print(f"\nTotal contracts: {contract_count:,}")
-    print(f"Unique vendors: {vendor_count:,}")
-    print(f"Unique institutions: {inst_count:,}")
-    print(f"Total value: ${total_amount:,.2f} MXN")
-    print(f"\nTotal time: {total_elapsed}")
-    print(f"\nDatabase ready at: {DB_PATH}")
+    logger.info("=" * 70)
+    logger.info("ETL PIPELINE COMPLETE")
+    logger.info("=" * 70)
+    logger.info(f"Total contracts: {contract_count:,}")
+    logger.info(f"Unique vendors: {vendor_count:,}")
+    logger.info(f"Unique institutions: {inst_count:,}")
+    logger.info(f"Total value: ${total_amount:,.2f} MXN")
+    logger.info(f"Total time: {total_elapsed}")
+    logger.info(f"Database ready at: {DB_PATH}")
 
 
 if __name__ == '__main__':
