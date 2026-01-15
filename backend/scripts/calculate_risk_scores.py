@@ -184,20 +184,111 @@ def calculate_vendor_concentration(conn: sqlite3.Connection) -> dict:
     return concentration
 
 
+def calculate_threshold_splitting_patterns(conn: sqlite3.Connection) -> dict:
+    """
+    Detect threshold splitting: same vendor + same institution + same day = suspicious.
+
+    Returns dict mapping (vendor_id, institution_id, contract_date) -> count
+    """
+    cursor = conn.cursor()
+
+    print("Detecting threshold splitting patterns...")
+
+    cursor.execute("""
+        SELECT vendor_id, institution_id, contract_date, COUNT(*) as same_day_count
+        FROM contracts
+        WHERE vendor_id IS NOT NULL
+          AND institution_id IS NOT NULL
+          AND contract_date IS NOT NULL
+        GROUP BY vendor_id, institution_id, contract_date
+        HAVING COUNT(*) >= 2
+    """)
+
+    patterns = {}
+    for row in cursor.fetchall():
+        vendor_id, institution_id, contract_date, count = row
+        patterns[(vendor_id, institution_id, contract_date)] = count
+
+    # Stats
+    splits_2 = sum(1 for c in patterns.values() if c == 2)
+    splits_3_4 = sum(1 for c in patterns.values() if 3 <= c <= 4)
+    splits_5_plus = sum(1 for c in patterns.values() if c >= 5)
+
+    print(f"  Found {len(patterns):,} potential splitting patterns:")
+    print(f"    2 contracts same day: {splits_2:,}")
+    print(f"    3-4 contracts same day: {splits_3_4:,}")
+    print(f"    5+ contracts same day: {splits_5_plus:,}")
+
+    return patterns
+
+
+def load_vendor_network_groups(conn: sqlite3.Connection) -> dict:
+    """
+    Load vendor groups for network risk calculation.
+
+    Vendors in the same group have network exposure (potential coordinated bidding).
+    Returns dict mapping vendor_id -> {'group_id': X, 'member_count': Y}
+    """
+    cursor = conn.cursor()
+
+    print("Loading vendor network groups...")
+
+    # Get group sizes
+    cursor.execute("""
+        SELECT group_id, COUNT(*) as member_count
+        FROM vendor_aliases
+        GROUP BY group_id
+    """)
+    group_sizes = {row[0]: row[1] for row in cursor.fetchall()}
+
+    # Map vendors to their groups
+    cursor.execute("""
+        SELECT vendor_id, group_id
+        FROM vendor_aliases
+    """)
+
+    vendor_groups = {}
+    for row in cursor.fetchall():
+        vendor_id, group_id = row
+        vendor_groups[vendor_id] = {
+            'group_id': group_id,
+            'member_count': group_sizes.get(group_id, 1)
+        }
+
+    # Stats
+    total_vendors = len(vendor_groups)
+    large_groups = sum(1 for v in vendor_groups.values() if v['member_count'] >= 5)
+    medium_groups = sum(1 for v in vendor_groups.values() if 3 <= v['member_count'] < 5)
+    small_groups = sum(1 for v in vendor_groups.values() if v['member_count'] == 2)
+
+    print(f"  Loaded {total_vendors:,} vendors in network groups:")
+    print(f"    Large groups (5+): {large_groups:,} vendors")
+    print(f"    Medium groups (3-4): {medium_groups:,} vendors")
+    print(f"    Small groups (2): {small_groups:,} vendors")
+
+    return vendor_groups
+
+
 def calculate_risk_batch(
     conn: sqlite3.Connection,
     contracts: list[dict],
     sector_stats: dict,
     vendor_concentration: dict,
-    vendor_industries: dict = None
+    vendor_industries: dict = None,
+    splitting_patterns: dict = None,
+    vendor_network: dict = None
 ) -> list[tuple]:
     """Calculate risk scores for a batch of contracts.
 
     Args:
         vendor_industries: Dict mapping vendor_id to industry info with sector_affinity
+        splitting_patterns: Dict mapping (vendor_id, institution_id, date) -> count
+        vendor_network: Dict mapping vendor_id -> {'group_id': X, 'member_count': Y}
     """
     results = []
     vendor_industries = vendor_industries or {}
+    splitting_patterns = splitting_patterns or {}
+    vendor_network = vendor_network or {}
 
     for c in contracts:
         factors = []
@@ -242,12 +333,31 @@ def calculate_risk_batch(
                 factors.append('vendor_concentration_low')
 
         # Factor 5: Short Advertisement Period (10%)
-        # Not directly available - would need publication_date - close_date
-        # Skip for now
+        # Days between publication_date and contract_date
+        pub_date = c.get('publication_date')
+        contract_date = c.get('contract_date')
+        if pub_date and contract_date and pub_date != '' and contract_date != '':
+            try:
+                from datetime import datetime as dt
+                pub = dt.strptime(pub_date, '%Y-%m-%d')
+                con = dt.strptime(contract_date, '%Y-%m-%d')
+                days = (con - pub).days
+                if days >= 0:  # Valid date range
+                    if days < 5:
+                        score += WEIGHTS['short_ad_period']  # 0.10 - extremely short
+                        factors.append('short_ad_<5d')
+                    elif days < 15:
+                        score += WEIGHTS['short_ad_period'] * 0.7  # 0.07 - very short
+                        factors.append('short_ad_<15d')
+                    elif days < 30:
+                        score += WEIGHTS['short_ad_period'] * 0.3  # 0.03 - short
+                        factors.append('short_ad_<30d')
+            except (ValueError, TypeError):
+                pass  # Invalid date format, skip
 
         # Factor 6: Short Decision Period (10%)
-        # Not directly available - would need bid_close_date - award_date
-        # Skip for now
+        # Not available - would need bid_close_date to award_date
+        # Skip (no reliable data)
 
         # Factor 7: Year-End Timing (5%)
         if c.get('is_year_end'):
@@ -259,12 +369,38 @@ def calculate_risk_batch(
         # Skip
 
         # Factor 9: Threshold Splitting (5%)
-        # Would require window analysis - simplified check
-        # Skip for now
+        # Same vendor + same institution + same day = suspicious
+        vendor_id = c.get('vendor_id')
+        institution_id = c.get('institution_id')
+        contract_date = c.get('contract_date')
+        if vendor_id and institution_id and contract_date:
+            key = (vendor_id, institution_id, contract_date)
+            same_day_count = splitting_patterns.get(key, 1)
+            if same_day_count >= 5:
+                score += WEIGHTS['threshold_split']  # 0.05 - definite splitting
+                factors.append(f'split_{same_day_count}')
+            elif same_day_count >= 3:
+                score += WEIGHTS['threshold_split'] * 0.6  # 0.03 - likely splitting
+                factors.append(f'split_{same_day_count}')
+            elif same_day_count >= 2:
+                score += WEIGHTS['threshold_split'] * 0.3  # 0.015 - possible splitting
+                factors.append(f'split_{same_day_count}')
 
         # Factor 10: Network Risk (5%)
-        # Requires full network analysis
-        # Skip for now
+        # Vendors in vendor_groups have network exposure
+        vendor_id = c.get('vendor_id')
+        if vendor_id in vendor_network:
+            group_info = vendor_network[vendor_id]
+            member_count = group_info['member_count']
+            if member_count >= 5:
+                score += WEIGHTS['network_risk']  # 0.05 - large network
+                factors.append(f'network_{member_count}')
+            elif member_count >= 3:
+                score += WEIGHTS['network_risk'] * 0.6  # 0.03 - medium network
+                factors.append(f'network_{member_count}')
+            elif member_count >= 2:
+                score += WEIGHTS['network_risk'] * 0.3  # 0.015 - small network
+                factors.append(f'network_{member_count}')
 
         # ADDITIONAL: Industry-Sector Mismatch (+3%)
         # Flags when vendor's verified industry doesn't match contract sector
@@ -330,6 +466,8 @@ def main():
     sector_stats = calculate_sector_stats(conn)
     vendor_concentration = calculate_vendor_concentration(conn)
     vendor_industries = load_vendor_industries(conn)
+    splitting_patterns = calculate_threshold_splitting_patterns(conn)
+    vendor_network = load_vendor_network_groups(conn)
 
     # Get total contracts
     cursor.execute("SELECT COUNT(*) FROM contracts")
@@ -347,7 +485,8 @@ def main():
         cursor.execute(f"""
             SELECT id, vendor_id, institution_id, sector_id,
                    amount_mxn, is_direct_award, is_single_bid,
-                   is_year_end, procedure_type_normalized
+                   is_year_end, procedure_type_normalized,
+                   publication_date, contract_date
             FROM contracts
             ORDER BY id
             LIMIT {args.batch_size} OFFSET {offset}
@@ -356,7 +495,8 @@ def main():
         contracts = [dict(zip(
             ['id', 'vendor_id', 'institution_id', 'sector_id',
              'amount_mxn', 'is_direct_award', 'is_single_bid',
-             'is_year_end', 'procedure_type_normalized'],
+             'is_year_end', 'procedure_type_normalized',
+             'publication_date', 'contract_date'],
             row
         )) for row in cursor.fetchall()]
 
@@ -365,7 +505,8 @@ def main():
 
         # Calculate risk scores
         results = calculate_risk_batch(
-            conn, contracts, sector_stats, vendor_concentration, vendor_industries
+            conn, contracts, sector_stats, vendor_concentration,
+            vendor_industries, splitting_patterns, vendor_network
         )
 
         # Update database

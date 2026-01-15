@@ -2,9 +2,9 @@
 
 ## Aligning with International Procurement Integrity Standards
 
-**Version:** 1.0.0
-**Last Updated:** January 2026
-**Database:** RUBLI_NORMALIZED.db (3,110,072 contracts, 2002-2025)
+**Version:** 2.0.0
+**Last Updated:** January 15, 2026
+**Database:** RUBLI_NORMALIZED.db (3,110,017 contracts, 2002-2025)
 
 ---
 
@@ -12,11 +12,17 @@
 
 RUBLI implements a **10-factor risk scoring methodology** aligned with international procurement integrity standards from the United Nations, World Bank, IMF, OECD, EU, and G20. This document provides full transparency on our scoring methodology, thresholds, and academic sources.
 
-**Key Statistics:**
-- Total Contracts Analyzed: 3,110,072
-- Contracts with Risk > 0: 2,721,497 (87.5%)
-- High Risk (>=0.7): 1,999 (0.06%)
-- Medium Risk (>=0.5): 238,382 (7.7%)
+**Key Statistics (v2.0.0):**
+- Total Contracts Analyzed: 3,110,017
+- Low Risk (<0.2): 2,476,550 (79.6%)
+- Medium Risk (0.2-0.4): 631,062 (20.3%)
+- High Risk (0.4-0.6): 2,405 (0.08%)
+- Critical Risk (>=0.6): 0 (0%)
+
+**Implementation Status:**
+- 8 of 10 factors fully implemented
+- 2 factors inactive (no data available: Decision Period, Contract Modification)
+- 3 factors added in v2.0.0: Short Ad Period, Threshold Splitting, Network Risk
 
 ---
 

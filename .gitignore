@@ -65,3 +65,13 @@ Thumbs.db
 *.tmp
 *.temp
 .claude/
+tmpclaude-*/
+backend/tmpclaude-*/
+nul
+
+# Database backups (keep in separate location)
+*.db.backup_*
+
+# Analysis output files (regeneratable)
+*_output.txt
+structure_analysis.json
