@@ -1,0 +1,25 @@
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+.git
+.gitignore
+*.md
+.env*
+.vscode
+.idea
+*.log
+.DS_Store
+.pytest_cache
+.coverage
+htmlcov
+*.egg-info
+dist
+build
+venv
+.venv
+tests/__pycache__
+
+# Don't ignore the database - we need it!
+# RUBLI_NORMALIZED.db

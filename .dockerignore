@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# IDE
+.vscode
+.idea
+
+# Environment
+.env*
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python cache (backend has its own)
+__pycache__
+
+# Node modules (frontend has its own)
+node_modules
+
+# Test artifacts
+.pytest_cache
+.coverage
+coverage/
+
+# Build outputs (we rebuild in Docker)
+dist/
+build/
+
+# Original data files (large)
+original_data/

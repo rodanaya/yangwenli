@@ -1,0 +1,46 @@
+# Yang Wen-li - Development Docker Compose
+# Use: docker-compose -f docker-compose.dev.yml up
+
+services:
+  # Backend API with hot reload
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: yangwenli-backend-dev
+    ports:
+      - "8001:8001"
+    volumes:
+      # Mount entire backend for hot reload
+      - ./backend:/app
+      # Mount database read-write for development
+      - ./backend/RUBLI_NORMALIZED.db:/app/RUBLI_NORMALIZED.db
+    environment:
+      - PYTHONPATH=/app
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8001 --reload
+    restart: unless-stopped
+    networks:
+      - yangwenli-network
+
+  # Frontend with Vite dev server
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: yangwenli-frontend-dev
+    ports:
+      - "3009:3009"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://backend:8001
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - yangwenli-network
+
+networks:
+  yangwenli-network:
+    driver: bridge

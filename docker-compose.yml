@@ -1,0 +1,51 @@
+# Yang Wen-li - Mexican Government Procurement Analysis Platform
+# Docker Compose Configuration
+
+services:
+  # Backend API (FastAPI + SQLite)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: yangwenli-backend
+    ports:
+      - "8001:8001"
+    volumes:
+      # Mount the database file (read-only for safety in production)
+      - ./backend/RUBLI_NORMALIZED.db:/app/RUBLI_NORMALIZED.db:ro
+      # For development, mount as read-write:
+      # - ./backend/RUBLI_NORMALIZED.db:/app/RUBLI_NORMALIZED.db
+    environment:
+      - PYTHONPATH=/app
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8001/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - yangwenli-network
+
+  # Frontend (React + Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: yangwenli-frontend
+    ports:
+      - "3009:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - yangwenli-network
+
+networks:
+  yangwenli-network:
+    driver: bridge
+
+# Volume for persistent data (optional, for future use)
+volumes:
+  yangwenli-data:
