@@ -12,6 +12,10 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Network,
+  Eye,
+  Columns,
+  Calendar,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -39,6 +43,13 @@ const mainNavItems: NavItem[] = [
 const analysisNavItems: NavItem[] = [
   { title: 'Risk Analysis', href: '/analysis/risk', icon: AlertTriangle },
   { title: 'Export Data', href: '/export', icon: Download },
+]
+
+const investigationNavItems: NavItem[] = [
+  { title: 'Network Graph', href: '/network', icon: Network },
+  { title: 'Watchlist', href: '/watchlist', icon: Eye },
+  { title: 'Comparison', href: '/comparison', icon: Columns },
+  { title: 'Timeline', href: '/timeline', icon: Calendar },
 ]
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
@@ -97,6 +108,25 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   item={item}
                   collapsed={collapsed}
                   isActive={location.pathname.startsWith(item.href)}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Investigation section */}
+          <div>
+            {!collapsed && (
+              <h3 className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                Investigation
+              </h3>
+            )}
+            <div className="space-y-1">
+              {investigationNavItems.map((item) => (
+                <NavItem
+                  key={item.href}
+                  item={item}
+                  collapsed={collapsed}
+                  isActive={location.pathname === item.href}
                 />
               ))}
             </div>

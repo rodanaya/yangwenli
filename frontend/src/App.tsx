@@ -26,6 +26,10 @@ const SectorProfile = lazy(() => import('@/pages/SectorProfile'))
 const RiskAnalysis = lazy(() => import('@/pages/RiskAnalysis'))
 const Export = lazy(() => import('@/pages/Export'))
 const Settings = lazy(() => import('@/pages/Settings'))
+const NetworkGraph = lazy(() => import('@/pages/NetworkGraph'))
+const Watchlist = lazy(() => import('@/pages/Watchlist'))
+const Comparison = lazy(() => import('@/pages/Comparison'))
+const Timeline = lazy(() => import('@/pages/Timeline'))
 
 // Enhanced QueryClient configuration for better caching and UX
 const queryClient = new QueryClient({
@@ -133,6 +137,38 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <Settings />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="network"
+                element={
+                  <SuspenseBoundary fallback={<DashboardSkeleton />}>
+                    <NetworkGraph />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="watchlist"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <Watchlist />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="comparison"
+                element={
+                  <SuspenseBoundary fallback={<DashboardSkeleton />}>
+                    <Comparison />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="timeline"
+                element={
+                  <SuspenseBoundary fallback={<DashboardSkeleton />}>
+                    <Timeline />
                   </SuspenseBoundary>
                 }
               />
