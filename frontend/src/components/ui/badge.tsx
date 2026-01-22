@@ -45,11 +45,23 @@ interface RiskBadgeProps extends Omit<BadgeProps, 'variant'> {
 function RiskBadge({ score, level, className, children, ...props }: RiskBadgeProps) {
   const riskLevel = level ?? getRiskLevelFromScore(score ?? 0)
   const label = children ?? riskLevel.toUpperCase()
+  const scoreDisplay = score !== undefined ? `${(score * 100).toFixed(0)}%` : undefined
+
+  // Create accessible label
+  const ariaLabel = score !== undefined
+    ? `Risk level: ${riskLevel}, score: ${scoreDisplay}`
+    : `Risk level: ${riskLevel}`
 
   return (
-    <Badge variant={riskLevel} className={cn('tabular-nums', className)} {...props}>
+    <Badge
+      variant={riskLevel}
+      className={cn('tabular-nums', className)}
+      role="status"
+      aria-label={ariaLabel}
+      {...props}
+    >
       {label}
-      {score !== undefined && <span className="ml-1 opacity-75">({(score * 100).toFixed(0)}%)</span>}
+      {scoreDisplay && <span className="ml-1 opacity-75" aria-hidden="true">({scoreDisplay})</span>}
     </Badge>
   )
 }

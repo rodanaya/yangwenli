@@ -1,25 +1,41 @@
+import { lazy } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider, keepPreviousData } from '@tanstack/react-query'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { ToastProvider } from '@/components/ui/toast'
 import { MainLayout } from '@/components/layout/MainLayout'
+import { SuspenseBoundary } from '@/components/SuspenseBoundary'
 import {
-  Dashboard,
-  Contracts,
-  Vendors,
-  Institutions,
-  Sectors,
-  RiskAnalysis,
-  Export,
-  Settings,
-} from '@/pages'
+  DashboardSkeleton,
+  TablePageSkeleton,
+  CardGridSkeleton,
+  DetailPageSkeleton,
+  SectorsSkeleton,
+  GenericPageSkeleton,
+} from '@/components/LoadingSkeleton'
 
-// Create a client
+// Lazy load all page components for code splitting
+const Dashboard = lazy(() => import('@/pages/Dashboard'))
+const Contracts = lazy(() => import('@/pages/Contracts'))
+const Vendors = lazy(() => import('@/pages/Vendors'))
+const VendorProfile = lazy(() => import('@/pages/VendorProfile'))
+const Institutions = lazy(() => import('@/pages/Institutions'))
+const InstitutionProfile = lazy(() => import('@/pages/InstitutionProfile'))
+const Sectors = lazy(() => import('@/pages/Sectors'))
+const SectorProfile = lazy(() => import('@/pages/SectorProfile'))
+const RiskAnalysis = lazy(() => import('@/pages/RiskAnalysis'))
+const Export = lazy(() => import('@/pages/Export'))
+const Settings = lazy(() => import('@/pages/Settings'))
+
+// Enhanced QueryClient configuration for better caching and UX
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
+      gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache after unmount
       retry: 2,
       refetchOnWindowFocus: false,
+      placeholderData: keepPreviousData, // Keep previous data while fetching
     },
   },
 })
@@ -27,55 +43,106 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider delayDuration={300}>
-        <BrowserRouter>
+      <ToastProvider>
+        <TooltipProvider delayDuration={300}>
+          <BrowserRouter>
           <Routes>
             <Route path="/" element={<MainLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="contracts" element={<Contracts />} />
-              <Route path="vendors" element={<Vendors />} />
-              <Route path="vendors/:id" element={<VendorDetailPlaceholder />} />
-              <Route path="institutions" element={<Institutions />} />
-              <Route path="institutions/:id" element={<InstitutionDetailPlaceholder />} />
-              <Route path="sectors" element={<Sectors />} />
-              <Route path="sectors/:id" element={<SectorDetailPlaceholder />} />
-              <Route path="analysis/risk" element={<RiskAnalysis />} />
-              <Route path="export" element={<Export />} />
-              <Route path="settings" element={<Settings />} />
+              <Route
+                index
+                element={
+                  <SuspenseBoundary fallback={<DashboardSkeleton />}>
+                    <Dashboard />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="contracts"
+                element={
+                  <SuspenseBoundary fallback={<TablePageSkeleton />}>
+                    <Contracts />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="vendors"
+                element={
+                  <SuspenseBoundary fallback={<CardGridSkeleton />}>
+                    <Vendors />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="vendors/:id"
+                element={
+                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
+                    <VendorProfile />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="institutions"
+                element={
+                  <SuspenseBoundary fallback={<CardGridSkeleton />}>
+                    <Institutions />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="institutions/:id"
+                element={
+                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
+                    <InstitutionProfile />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="sectors"
+                element={
+                  <SuspenseBoundary fallback={<SectorsSkeleton />}>
+                    <Sectors />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="sectors/:id"
+                element={
+                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
+                    <SectorProfile />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="analysis/risk"
+                element={
+                  <SuspenseBoundary fallback={<DashboardSkeleton />}>
+                    <RiskAnalysis />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="export"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <Export />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="settings"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <Settings />
+                  </SuspenseBoundary>
+                }
+              />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ToastProvider>
     </QueryClientProvider>
-  )
-}
-
-// Placeholder components for detail pages
-function VendorDetailPlaceholder() {
-  return (
-    <div className="p-8 text-center text-text-muted">
-      <h2 className="text-lg font-semibold mb-2">Vendor Details</h2>
-      <p>Detailed vendor profile page coming soon.</p>
-    </div>
-  )
-}
-
-function InstitutionDetailPlaceholder() {
-  return (
-    <div className="p-8 text-center text-text-muted">
-      <h2 className="text-lg font-semibold mb-2">Institution Details</h2>
-      <p>Detailed institution profile page coming soon.</p>
-    </div>
-  )
-}
-
-function SectorDetailPlaceholder() {
-  return (
-    <div className="p-8 text-center text-text-muted">
-      <h2 className="text-lg font-semibold mb-2">Sector Details</h2>
-      <p>Detailed sector analysis page coming soon.</p>
-    </div>
   )
 }
 

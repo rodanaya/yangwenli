@@ -8,6 +8,7 @@ import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { institutionApi } from '@/api/client'
 import type { InstitutionFilterParams, InstitutionResponse } from '@/api/types'
 import { Building2, Search, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react'
+import { usePrefetchOnHover } from '@/hooks/usePrefetchOnHover'
 
 export function Institutions() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -134,8 +135,15 @@ export function Institutions() {
 }
 
 function InstitutionCard({ institution }: { institution: InstitutionResponse }) {
+  // Prefetch institution details on hover for instant page transitions
+  const prefetch = usePrefetchOnHover({
+    queryKey: ['institution', institution.id],
+    queryFn: () => institutionApi.getById(institution.id),
+    delay: 150,
+  })
+
   return (
-    <Card className="hover:border-border-hover transition-colors">
+    <Card className="hover:border-border-hover transition-colors" {...prefetch}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -191,3 +199,5 @@ function InstitutionCard({ institution }: { institution: InstitutionResponse }) 
     </Card>
   )
 }
+
+export default Institutions

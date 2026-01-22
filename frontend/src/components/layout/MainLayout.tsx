@@ -9,6 +9,11 @@ export function MainLayout() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Skip to content link for keyboard users (Item 70) */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
       {/* Sidebar */}
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
@@ -23,7 +28,7 @@ export function MainLayout() {
         <Header />
 
         {/* Page content */}
-        <main className="flex-1 p-6">
+        <main id="main-content" className="flex-1 p-6" tabIndex={-1}>
           <Outlet />
         </main>
 

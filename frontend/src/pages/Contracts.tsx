@@ -1,3 +1,4 @@
+import { useCallback, useMemo, useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
@@ -5,9 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge, Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { formatCompactMXN, formatNumber, formatDate } from '@/lib/utils'
-import { contractApi } from '@/api/client'
+import { formatCompactMXN, formatNumber, formatDate, getPaginationRange, clampPage } from '@/lib/utils'
+import { contractApi, exportApi } from '@/api/client'
 import { SECTORS } from '@/lib/constants'
+import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 import type { ContractFilterParams, ContractListItem } from '@/api/types'
 import {
   FileText,
@@ -15,28 +17,59 @@ import {
   ChevronRight,
   Search,
   Download,
+  Loader2,
 } from 'lucide-react'
+import { useToast } from '@/components/ui/toast'
 
 export function Contracts() {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  // Parse filters from URL
-  const filters: ContractFilterParams = {
+  // Debounced search - reduces API calls from 13+ to 1 per search term
+  const {
+    inputValue: searchInput,
+    setInputValue: setSearchInput,
+    debouncedValue: debouncedSearch,
+    isPending: isSearchPending,
+  } = useDebouncedSearch(searchParams.get('search') || '', { delay: 300, minLength: 2 })
+
+  // Parse filters from URL, using debounced search value for API calls
+  const filters: ContractFilterParams = useMemo(() => ({
     page: Number(searchParams.get('page')) || 1,
     per_page: Number(searchParams.get('per_page')) || 50,
     sector_id: searchParams.get('sector_id') ? Number(searchParams.get('sector_id')) : undefined,
     year: searchParams.get('year') ? Number(searchParams.get('year')) : undefined,
     risk_level: searchParams.get('risk_level') as ContractFilterParams['risk_level'],
-    search: searchParams.get('search') || undefined,
-  }
+    search: debouncedSearch || undefined,
+  }), [searchParams, debouncedSearch])
+
+  // Sync URL when debounced search changes
+  useEffect(() => {
+    const currentSearch = searchParams.get('search') || ''
+    if (debouncedSearch !== currentSearch) {
+      const newParams = new URLSearchParams(searchParams)
+      if (debouncedSearch) {
+        newParams.set('search', debouncedSearch)
+        newParams.set('page', '1')
+      } else {
+        newParams.delete('search')
+      }
+      setSearchParams(newParams, { replace: true })
+    }
+  }, [debouncedSearch, searchParams, setSearchParams])
 
   // Fetch contracts
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, isFetching } = useQuery({
     queryKey: ['contracts', filters],
     queryFn: () => contractApi.getAll(filters),
   })
 
-  const updateFilter = (key: string, value: string | number | undefined) => {
+  const updateFilter = useCallback((key: string, value: string | number | undefined) => {
+    if (key === 'search') {
+      // Search is handled by the debounced hook
+      setSearchInput(String(value || ''))
+      return
+    }
+
     const newParams = new URLSearchParams(searchParams)
     if (value === undefined || value === '') {
       newParams.delete(key)
@@ -48,6 +81,37 @@ export function Contracts() {
       newParams.set('page', '1')
     }
     setSearchParams(newParams)
+  }, [searchParams, setSearchParams, setSearchInput])
+
+  // Show loading indicator when search is pending or fetching
+  const showSearchLoading = isSearchPending || (isFetching && searchInput !== debouncedSearch)
+
+  // Toast notifications
+  const toast = useToast()
+
+  // Export state
+  const [isExporting, setIsExporting] = useState(false)
+
+  // Handle export
+  const handleExport = async () => {
+    setIsExporting(true)
+    try {
+      const blob = await exportApi.exportContracts(filters)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `contracts_export_${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      toast.success('Export complete', `Downloaded ${data?.pagination.total || 0} contracts`)
+    } catch (err) {
+      console.error('Export failed:', err)
+      toast.error('Export failed', 'Unable to export contracts. Please try again.')
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   return (
@@ -62,15 +126,19 @@ export function Contracts() {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Search input */}
+          {/* Search input with debouncing */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+            {showSearchLoading ? (
+              <Loader2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted animate-spin" />
+            ) : (
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+            )}
             <input
               type="text"
               placeholder="Search contracts..."
               className="h-9 rounded-md border border-border bg-background-card pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-              value={filters.search || ''}
-              onChange={(e) => updateFilter('search', e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
             />
           </div>
 
@@ -115,9 +183,19 @@ export function Contracts() {
             <option value="low">Low</option>
           </select>
 
-          <Button variant="outline" size="sm">
-            <Download className="mr-2 h-4 w-4" />
-            Export
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExport}
+            disabled={isExporting || !data || data.pagination.total === 0}
+            aria-label={isExporting ? 'Exporting contracts...' : 'Export contracts to CSV'}
+          >
+            {isExporting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 h-4 w-4" />
+            )}
+            {isExporting ? 'Exporting...' : 'Export'}
           </Button>
         </div>
       </div>
@@ -174,12 +252,45 @@ export function Contracts() {
             </div>
           ) : error ? (
             <div className="p-8 text-center text-text-muted">
-              <p>Failed to load contracts</p>
-              <p className="text-sm">{(error as Error).message}</p>
+              <p className="font-medium">Failed to load contracts</p>
+              <p className="text-sm mt-1">
+                {(error as Error).message === 'Network Error'
+                  ? 'Unable to connect to server. Please check if the backend is running.'
+                  : 'An unexpected error occurred. Please try again.'}
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4"
+                onClick={() => window.location.reload()}
+              >
+                Try again
+              </Button>
+            </div>
+          ) : data?.data.length === 0 ? (
+            <div className="p-8 text-center text-text-muted">
+              <FileText className="h-12 w-12 mx-auto mb-4 opacity-30" />
+              <p className="font-medium">No contracts found</p>
+              <p className="text-sm mt-1">
+                {filters.search || filters.sector_id || filters.year || filters.risk_level
+                  ? 'Try adjusting your filters to see more results.'
+                  : 'No contracts are available in the database.'}
+              </p>
+              {(filters.search || filters.sector_id || filters.year || filters.risk_level) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-4"
+                  onClick={() => setSearchParams({})}
+                >
+                  Clear all filters
+                </Button>
+              )}
             </div>
           ) : (
             <ScrollArea className="h-[600px]">
-              <table className="w-full">
+              <div className="overflow-x-auto min-w-full">
+              <table className="w-full min-w-[800px]">
                 <thead className="sticky top-0 bg-background-card border-b border-border">
                   <tr className="text-left text-xs font-medium text-text-muted">
                     <th className="p-3">Contract</th>
@@ -197,36 +308,51 @@ export function Contracts() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </ScrollArea>
           )}
         </CardContent>
       </Card>
 
       {/* Pagination */}
-      {data && (
+      {data && data.pagination.total > 0 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-text-muted">
-            Showing {(filters.page! - 1) * filters.per_page! + 1} -{' '}
-            {Math.min(filters.page! * filters.per_page!, data.pagination.total)} of {formatNumber(data.pagination.total)}
+            {(() => {
+              const { start, end } = getPaginationRange(
+                filters.page || 1,
+                filters.per_page || 50,
+                data.pagination.total
+              )
+              return `Showing ${formatNumber(start)} - ${formatNumber(end)} of ${formatNumber(data.pagination.total)}`
+            })()}
           </p>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              disabled={filters.page === 1}
-              onClick={() => updateFilter('page', filters.page! - 1)}
+              disabled={filters.page === 1 || data.pagination.total_pages === 0}
+              onClick={() => updateFilter('page', Math.max(1, (filters.page || 1) - 1))}
             >
               <ChevronLeft className="h-4 w-4" />
               Previous
             </Button>
             <span className="text-sm text-text-muted">
-              Page {filters.page} of {data.pagination.total_pages}
+              Page {clampPage(filters.page || 1, data.pagination.total_pages)} of{' '}
+              {Math.max(1, data.pagination.total_pages)}
             </span>
             <Button
               variant="outline"
               size="sm"
-              disabled={filters.page === data.pagination.total_pages}
-              onClick={() => updateFilter('page', filters.page! + 1)}
+              disabled={
+                filters.page === data.pagination.total_pages || data.pagination.total_pages === 0
+              }
+              onClick={() =>
+                updateFilter(
+                  'page',
+                  Math.min(data.pagination.total_pages, (filters.page || 1) + 1)
+                )
+              }
             >
               Next
               <ChevronRight className="h-4 w-4" />
@@ -288,3 +414,5 @@ function ContractRow({ contract }: { contract: ContractListItem }) {
     </tr>
   )
 }
+
+export default Contracts

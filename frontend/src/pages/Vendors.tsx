@@ -1,3 +1,4 @@
+import { useCallback, useMemo, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams, Link } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
@@ -6,26 +7,56 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
 import { formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
 import { vendorApi } from '@/api/client'
+import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 import type { VendorFilterParams, VendorListItem } from '@/api/types'
-import { Users, Search, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react'
+import { Users, Search, ChevronLeft, ChevronRight, ExternalLink, Loader2 } from 'lucide-react'
+import { usePrefetchOnHover } from '@/hooks/usePrefetchOnHover'
 
 export function Vendors() {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const filters: VendorFilterParams = {
+  // Debounced search - reduces API calls from 13+ to 1 per search term
+  const {
+    inputValue: searchInput,
+    setInputValue: setSearchInput,
+    debouncedValue: debouncedSearch,
+    isPending: isSearchPending,
+  } = useDebouncedSearch(searchParams.get('search') || '', { delay: 300, minLength: 2 })
+
+  const filters: VendorFilterParams = useMemo(() => ({
     page: Number(searchParams.get('page')) || 1,
     per_page: Number(searchParams.get('per_page')) || 50,
-    search: searchParams.get('search') || undefined,
+    search: debouncedSearch || undefined,
     risk_level: searchParams.get('risk_level') as VendorFilterParams['risk_level'],
     min_contracts: searchParams.get('min_contracts') ? Number(searchParams.get('min_contracts')) : undefined,
-  }
+  }), [searchParams, debouncedSearch])
 
-  const { data, isLoading, error } = useQuery({
+  // Sync URL when debounced search changes
+  useEffect(() => {
+    const currentSearch = searchParams.get('search') || ''
+    if (debouncedSearch !== currentSearch) {
+      const newParams = new URLSearchParams(searchParams)
+      if (debouncedSearch) {
+        newParams.set('search', debouncedSearch)
+        newParams.set('page', '1')
+      } else {
+        newParams.delete('search')
+      }
+      setSearchParams(newParams, { replace: true })
+    }
+  }, [debouncedSearch, searchParams, setSearchParams])
+
+  const { data, isLoading, error, isFetching } = useQuery({
     queryKey: ['vendors', filters],
     queryFn: () => vendorApi.getAll(filters),
   })
 
-  const updateFilter = (key: string, value: string | number | undefined) => {
+  const updateFilter = useCallback((key: string, value: string | number | undefined) => {
+    if (key === 'search') {
+      setSearchInput(String(value || ''))
+      return
+    }
+
     const newParams = new URLSearchParams(searchParams)
     if (value === undefined || value === '') {
       newParams.delete(key)
@@ -36,7 +67,9 @@ export function Vendors() {
       newParams.set('page', '1')
     }
     setSearchParams(newParams)
-  }
+  }, [searchParams, setSearchParams, setSearchInput])
+
+  const showSearchLoading = isSearchPending || (isFetching && searchInput !== debouncedSearch)
 
   return (
     <div className="space-y-4">
@@ -50,14 +83,19 @@ export function Vendors() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Search input with debouncing */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+            {showSearchLoading ? (
+              <Loader2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted animate-spin" />
+            ) : (
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+            )}
             <input
               type="text"
               placeholder="Search vendors..."
               className="h-9 rounded-md border border-border bg-background-card pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-              value={filters.search || ''}
-              onChange={(e) => updateFilter('search', e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
             />
           </div>
 
@@ -99,6 +137,15 @@ export function Vendors() {
           <CardContent className="p-8 text-center text-text-muted">
             <p>Failed to load vendors</p>
             <p className="text-sm">{(error as Error).message}</p>
+            <pre className="mt-2 text-xs text-left bg-background-elevated p-2 rounded overflow-auto max-h-40">
+              {JSON.stringify(error, null, 2)}
+            </pre>
+          </CardContent>
+        </Card>
+      ) : !data?.data?.length ? (
+        <Card>
+          <CardContent className="p-8 text-center text-text-muted">
+            <p>No vendors found</p>
           </CardContent>
         </Card>
       ) : (
@@ -147,8 +194,15 @@ export function Vendors() {
 }
 
 function VendorCard({ vendor }: { vendor: VendorListItem }) {
+  // Prefetch vendor details on hover for instant page transitions
+  const prefetch = usePrefetchOnHover({
+    queryKey: ['vendor', vendor.id],
+    queryFn: () => vendorApi.getById(vendor.id),
+    delay: 150,
+  })
+
   return (
-    <Card className="hover:border-border-hover transition-colors">
+    <Card className="hover:border-border-hover transition-colors" {...prefetch}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -207,3 +261,5 @@ function VendorCard({ vendor }: { vendor: VendorListItem }) {
     </Card>
   )
 }
+
+export default Vendors

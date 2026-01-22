@@ -8,6 +8,7 @@ import { sectorApi } from '@/api/client'
 import { SECTOR_COLORS } from '@/lib/constants'
 import type { SectorStatistics } from '@/api/types'
 import { BarChart3, ExternalLink } from 'lucide-react'
+import { usePrefetchOnHover } from '@/hooks/usePrefetchOnHover'
 import {
   ResponsiveContainer,
   BarChart,
@@ -123,8 +124,15 @@ export function Sectors() {
 function SectorCard({ sector }: { sector: SectorStatistics }) {
   const sectorColor = SECTOR_COLORS[sector.sector_code] || '#64748b'
 
+  // Prefetch sector details on hover for instant page transitions
+  const prefetch = usePrefetchOnHover({
+    queryKey: ['sector', sector.sector_id],
+    queryFn: () => sectorApi.getById(sector.sector_id),
+    delay: 150,
+  })
+
   return (
-    <Card className="hover:border-border-hover transition-colors">
+    <Card className="hover:border-border-hover transition-colors" {...prefetch}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -206,3 +214,5 @@ function SectorCard({ sector }: { sector: SectorStatistics }) {
     </Card>
   )
 }
+
+export default Sectors
