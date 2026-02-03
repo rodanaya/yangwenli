@@ -12,6 +12,8 @@ sqlalchemy>=2.0.0
 fastapi>=0.100.0
 uvicorn>=0.23.0
 pydantic>=2.0.0
+slowapi>=0.1.9              # Rate limiting for FastAPI
+httpx>=0.25.0               # HTTP client (required by TestClient)
 
 # HYPERION: Entity Resolution System
 splink>=4.0.0              # Entity resolution framework (UK Civil Service Award)
@@ -20,6 +22,9 @@ unidecode>=1.3.0           # Unicode to ASCII transliteration (accent removal)
 networkx>=3.0              # Graph algorithms for clustering
 scikit-learn>=1.3.0        # ML classifier for ambiguous cases
 
+# ML Explainability
+shap>=0.45.0               # SHAP values for model interpretability
+
 # Data Processing
 openpyxl>=3.1.0            # Excel file support
 chardet>=5.0.0             # Character encoding detection
@@ -27,3 +32,8 @@ chardet>=5.0.0             # Character encoding detection
 # Utilities
 python-dateutil>=2.8.0
 tqdm>=4.65.0               # Progress bars
+
+# Testing
+pytest>=7.4.0              # Test framework
+pytest-asyncio>=0.21.0     # Async test support
+pytest-cov>=4.1.0          # Coverage reporting (70% threshold target)
