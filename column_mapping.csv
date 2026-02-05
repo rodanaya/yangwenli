@@ -1,0 +1,43 @@
+﻿category,unified_field,structure_a,structure_b,structure_c,structure_d,data_type,required,notes
+Contract ID,procedure_number,NÚMERO DE PROCEDIMIENTO,NÚMERO DE PROCEDIMIENTO,Número del procedimiento,Número de procedimiento,string,True,Primary key for grouping contract awards
+Contract ID,contract_code,NÚMERO DE CONTRATO,NÚMERO DE CONTRATO,Código del contrato,Código del contrato,string,True,Unique contract identifier
+Contract ID,contract_reference,REFERENCIA DE LA CONTRATACIÓN,REFERENCIA DE LA CONTRATACIÓN,Referencia del expediente,Referencia del expediente,string,False,Internal reference number
+Contract ID,expediente_code,,,Código del expediente,Código del expediente,string,False,File/dossier code
+Institution,institution_name,DEPENDENCIA / ENTIDAD,DEPENDENCIA / ENTIDAD,Institución,Institución,string,True,Government institution name
+Institution,institution_acronym,,,Siglas de la Institución,Siglas de la Institución,string,False,Institution abbreviation
+Institution,uc_code,CLAVE UC,CLAVE UC,Clave de la UC,Clave de la UC,string,True,Purchasing unit code
+Institution,uc_name,NOMBRE UC,NOMBRE UC,Nombre de la UC,Nombre de la UC,string,True,Purchasing unit name
+Institution,ramo_code,,,,Clave Ramo,integer,False,Budget ramo code - ONLY IN 2023+
+Institution,ramo_description,,,,Descripción Ramo,string,False,Budget ramo description - ONLY IN 2023+
+Institution,government_level,,,Orden de gobierno,Orden de gobierno,string,False,Federal/State/Municipal
+Amount,contract_amount,IMPORTE MN SIN IVA,IMPORTE MN SIN IVA,Importe del contrato,Importe DRC,float,True,CRITICAL: Validate < 100B MXN
+Amount,currency,MXN (implicit),MXN (implicit),Moneda del contrato,Moneda,string,True,Default to MXN for A/B
+Dates,signature_date,FECHA DE SUSCRIPCIÓN DE CONTRATO,FECHA DE SUSCRIPCIÓN DE CONTRATO,Fecha de firma del contrato,Fecha de firma del contrato,datetime,True,Contract signature date
+Dates,start_date,,,Fecha de inicio del contrato,Fecha de inicio del contrato,date,False,Contract start date
+Dates,end_date,,,Fecha de fin del contrato,Fecha de fin del contrato,date,False,Contract end date
+Dates,publication_date,,,Fecha de publicación,Fecha de publicación,datetime,False,Tender publication date
+Dates,apertura_date,,,Fecha de apertura,Fecha de apertura,datetime,False,Bid opening date (null for direct awards)
+Dates,fallo_date,,,Fecha de fallo,Fecha de fallo,datetime,False,Award decision date (null for direct awards)
+Vendor,vendor_name,RAZÓN SOCIAL,RAZÓN SOCIAL,Proveedor o contratista,Proveedor o contratista,string,True,Normalize to UPPERCASE
+Vendor,vendor_rfc,,,RFC,rfc,string,False,"Note case change: RFC -> rfc. 0% in A/B, 66% in C, ~100% in D"
+Vendor,rupc_folio,,,Folio en el RUPC,Folio en el RUPC,string,False,Public registry folio
+Vendor,vendor_size,,,Estratificación de la empresa,Estratificación,string,False,Micro/Pequeña/Mediana/Grande
+Vendor,vendor_country,,,Clave del país de la empresa,País de la empresa,string,False,Vendor country
+Procedure,procedure_type,TIPO DE PROCEDIMIENTO,TIPO DE PROCEDIMIENTO,Tipo de procedimiento,Tipo Procedimiento,string,True,Licitación Pública/Invitación/Adjudicación Directa
+Procedure,procurement_type,TIPO CONTRATACIÓN,TIPO CONTRATACIÓN,Tipo de contratación,Tipo de contratación,string,True,Obra/Servicios/Adquisiciones
+Procedure,character,CARACTER,CARACTER,Carácter del procedimiento,Carácter del procedimiento,string,True,Nacional/Internacional
+Procedure,participation_form,,,Forma de participación,Forma de participación,string,False,Presencial/Electrónica/Mixta (82% null in D)
+Procedure,legal_basis,,,Fundamento legal,,string,False,Legal article citation
+Procedure,exception_article,,,,Artículo de excepción,string,False,Exception article for direct awards
+Procedure,exception_description,,,,Descripción excepción,string,False,Exception reason description
+Classification,partida_especifica,,,,Partida específica,string,False,Budget line item - ONLY IN 2023+ (100% coverage)
+Classification,cucop_code,,,Clave CUCOP,,string,False,Product/service classification (2018-2022 only)
+Classification,contract_title,,,Título del contrato,Título del contrato,string,False,Contract title/subject
+Classification,contract_description,,,Descripción del contrato,Descripción del contrato,string,False,Detailed contract description
+Flags,is_framework_agreement,,,Contrato marco,Contrato marco,boolean,False,Framework/umbrella contract flag
+Flags,is_consolidated,,,Compra consolidada,Compra consolidada,boolean,False,Consolidated purchase flag
+Flags,is_multiyear,,,Contrato plurianual,Contrato plurianual,boolean,False,Multi-year contract flag
+Flags,has_modification,,,Convenio modificatorio,Convenio modificatorio,boolean,False,Contract modification flag (72% null in D)
+Flags,rfc_verified_sat,,,RFC verificado en el SAT,,boolean,False,RFC verified in tax authority (Structure C only)
+Reference,contract_url,URL DEL CONTRATO,URL DEL CONTRATO,,,string,False,Contract document URL (only A/B)
+Reference,announcement_url,,,Dirección del anuncio,Dirección del anuncio,string,False,Tender announcement URL

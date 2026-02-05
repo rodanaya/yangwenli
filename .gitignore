@@ -88,3 +88,8 @@ frontend/.env
 # Claude local settings (personal preferences)
 CLAUDE.local.md
 .claude/settings.local.json
+
+# Temporary/debug files
+backend/DEBUG_LOG.txt
+frontend/npm-cache/
+=0.45.0
