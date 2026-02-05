@@ -4,7 +4,7 @@
  * Reveals collusion patterns, bid rigging rings, and shell company networks
  */
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -12,7 +12,8 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge, Badge } from '@/components/ui/badge'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
-import { vendorApi, institutionApi } from '@/api/client'
+import { networkApi, type NetworkNode, type NetworkLink } from '@/api/client'
+import * as echarts from 'echarts'
 import {
   Network,
   ZoomIn,
@@ -25,22 +26,16 @@ import {
   AlertTriangle,
   Eye,
   Search,
+  RefreshCw,
 } from 'lucide-react'
 
-interface NetworkNode {
-  id: string
-  type: 'vendor' | 'institution'
-  name: string
-  value: number
-  risk?: number
-  connections: number
-}
-
-interface NetworkLink {
-  source: string
-  target: string
-  value: number
-  contracts: number
+// Color constants matching project palette
+const COLORS = {
+  vendor: '#3b82f6',      // Blue
+  vendorHighRisk: '#dc2626', // Red
+  institution: '#be123c', // Gobernacion color
+  link: '#64748b',        // Gray
+  linkHighRisk: '#ea580c', // Orange
 }
 
 export function NetworkGraph() {
@@ -48,82 +43,246 @@ export function NetworkGraph() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [selectedNode, setSelectedNode] = useState<NetworkNode | null>(null)
   const [zoomLevel, setZoomLevel] = useState(1)
+  const [showVendors, setShowVendors] = useState(true)
+  const [showInstitutions, setShowInstitutions] = useState(true)
+  const [highRiskOnly, setHighRiskOnly] = useState(false)
+  const chartRef = useRef<HTMLDivElement>(null)
+  const chartInstance = useRef<echarts.ECharts | null>(null)
 
   const view = searchParams.get('view') || 'overview'
-  const focusId = searchParams.get('focus')
+  const focusVendorId = searchParams.get('vendor_id')
+  const focusInstitutionId = searchParams.get('institution_id')
 
-  // Fetch top vendors for network
-  const { data: topVendors, isLoading: vendorsLoading } = useQuery({
-    queryKey: ['vendors', 'top', 20],
-    queryFn: () => vendorApi.getAll({ per_page: 20, min_contracts: 100 }),
+  // Fetch network graph data from API
+  const { data: networkData, isLoading, error, refetch } = useQuery({
+    queryKey: ['network-graph', focusVendorId, focusInstitutionId],
+    queryFn: () => networkApi.getGraph({
+      vendor_id: focusVendorId ? parseInt(focusVendorId) : undefined,
+      institution_id: focusInstitutionId ? parseInt(focusInstitutionId) : undefined,
+      min_contracts: 10,
+      limit: 50,
+    }),
   })
 
-  // Fetch top institutions
-  const { data: topInstitutions, isLoading: institutionsLoading } = useQuery({
-    queryKey: ['institutions', 'top', 15],
-    queryFn: () => institutionApi.getAll({ per_page: 15 }),
-  })
+  // Filter nodes based on user selections
+  const filteredData = useMemo(() => {
+    if (!networkData) return { nodes: [], links: [] }
 
-  const isLoading = vendorsLoading || institutionsLoading
+    let nodes = networkData.nodes
+    let links = networkData.links
 
-  // Build network data
-  const networkData = useMemo(() => {
-    if (!topVendors?.data || !topInstitutions?.data) return { nodes: [], links: [] }
+    // Filter by node type
+    if (!showVendors) {
+      const vendorIds = new Set(nodes.filter(n => n.type === 'vendor').map(n => n.id))
+      nodes = nodes.filter(n => n.type !== 'vendor')
+      links = links.filter(l => !vendorIds.has(l.source) && !vendorIds.has(l.target))
+    }
 
-    const nodes: NetworkNode[] = [
-      ...topVendors.data.map((v) => ({
-        id: `v-${v.id}`,
-        type: 'vendor' as const,
+    if (!showInstitutions) {
+      const instIds = new Set(nodes.filter(n => n.type === 'institution').map(n => n.id))
+      nodes = nodes.filter(n => n.type !== 'institution')
+      links = links.filter(l => !instIds.has(l.source) && !instIds.has(l.target))
+    }
+
+    // Filter by risk level
+    if (highRiskOnly) {
+      const highRiskIds = new Set(
+        nodes.filter(n => n.risk_score !== null && n.risk_score >= 0.4).map(n => n.id)
+      )
+      nodes = nodes.filter(n => highRiskIds.has(n.id))
+      links = links.filter(l => highRiskIds.has(l.source) || highRiskIds.has(l.target))
+    }
+
+    return { nodes, links }
+  }, [networkData, showVendors, showInstitutions, highRiskOnly])
+
+  // Identify suspicious patterns from the data
+  const suspiciousPatterns = useMemo(() => {
+    if (!networkData?.nodes) return []
+
+    return networkData.nodes
+      .filter(n => n.type === 'vendor' && n.risk_score !== null && n.risk_score > 0.4)
+      .sort((a, b) => (b.risk_score || 0) - (a.risk_score || 0))
+      .slice(0, 5)
+      .map(v => ({
+        id: v.id.replace('v-', ''),
         name: v.name,
-        value: v.total_value_mxn,
-        risk: v.avg_risk_score,
-        connections: v.total_contracts,
-      })),
-      ...topInstitutions.data.map((i) => ({
-        id: `i-${i.id}`,
-        type: 'institution' as const,
-        name: i.name,
-        value: i.total_amount_mxn || 0,
-        connections: i.total_contracts || 0,
-      })),
-    ]
+        risk: v.risk_score || 0,
+        contracts: v.contracts,
+        value: v.value,
+        type: (v.risk_score || 0) >= 0.6 ? 'critical_risk' : 'high_risk',
+        description: `${formatNumber(v.contracts)} contracts, ${formatCompactMXN(v.value)}`,
+      }))
+  }, [networkData])
 
-    // Generate sample links (in real implementation, this would come from API)
-    const links: NetworkLink[] = []
-    topVendors.data.forEach((vendor, vi) => {
-      // Connect each vendor to 2-4 random institutions
-      const numConnections = 2 + Math.floor(Math.random() * 3)
-      for (let i = 0; i < numConnections && i < topInstitutions.data.length; i++) {
-        const instIndex = (vi + i) % topInstitutions.data.length
-        links.push({
-          source: `v-${vendor.id}`,
-          target: `i-${topInstitutions.data[instIndex].id}`,
-          value: vendor.total_value_mxn / numConnections,
-          contracts: Math.floor(vendor.total_contracts / numConnections),
-        })
+  // Initialize and update ECharts graph
+  useEffect(() => {
+    if (!chartRef.current || filteredData.nodes.length === 0) return
+
+    // Initialize chart if needed
+    if (!chartInstance.current) {
+      chartInstance.current = echarts.init(chartRef.current, 'dark')
+    }
+
+    // Prepare nodes for ECharts
+    const nodes = filteredData.nodes.map(node => {
+      const isHighRisk = node.risk_score !== null && node.risk_score >= 0.35
+      const isCritical = node.risk_score !== null && node.risk_score >= 0.50
+      const symbolSize = Math.min(60, Math.max(20, Math.log10(node.value + 1) * 5))
+
+      return {
+        id: node.id,
+        name: node.name,
+        value: node.value,
+        symbolSize,
+        category: node.type === 'vendor'
+          ? (isCritical ? 2 : isHighRisk ? 1 : 0)
+          : 3,
+        itemStyle: {
+          color: node.type === 'vendor'
+            ? (isCritical ? '#dc2626' : isHighRisk ? '#ea580c' : COLORS.vendor)
+            : COLORS.institution,
+          borderColor: isCritical ? '#dc2626' : isHighRisk ? '#ea580c' : undefined,
+          borderWidth: isHighRisk ? 2 : 0,
+        },
+        label: {
+          show: symbolSize > 30,
+          formatter: (node.name.length > 20 ? node.name.substring(0, 18) + '...' : node.name),
+        },
+        // Store original data for tooltip
+        originalData: node,
       }
     })
 
-    return { nodes, links }
-  }, [topVendors, topInstitutions])
+    // Prepare links for ECharts
+    const links = filteredData.links.map(link => ({
+      source: link.source,
+      target: link.target,
+      value: link.value,
+      lineStyle: {
+        width: Math.min(5, Math.max(1, Math.log10(link.contracts + 1))),
+        color: link.avg_risk && link.avg_risk >= 0.35 ? COLORS.linkHighRisk : COLORS.link,
+        opacity: 0.6,
+        curveness: 0.1,
+      },
+      originalData: link,
+    }))
 
-  // Suspicious patterns detection
-  const suspiciousPatterns = useMemo(() => {
-    if (!topVendors?.data) return []
-    return topVendors.data
-      .filter((v) => v.avg_risk_score && v.avg_risk_score > 0.4)
-      .slice(0, 5)
-      .map((v) => ({
-        id: v.id,
-        name: v.name,
-        risk: v.avg_risk_score,
-        type: v.direct_award_pct > 0.8 ? 'high_direct_award' : 'concentration',
-        description:
-          v.direct_award_pct > 0.8
-            ? `${(v.direct_award_pct * 100).toFixed(0)}% direct awards`
-            : `${v.total_contracts} contracts, high concentration`,
-      }))
-  }, [topVendors])
+    // Chart options
+    const option: echarts.EChartsOption = {
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'item',
+        formatter: (params: any) => {
+          if (params.dataType === 'node') {
+            const data = params.data.originalData as NetworkNode
+            const riskLabel = data.risk_score !== null
+              ? (data.risk_score >= 0.50 ? 'Critical' : data.risk_score >= 0.35 ? 'High' : data.risk_score >= 0.20 ? 'Medium' : 'Low')
+              : 'N/A'
+            return `
+              <div style="padding: 8px;">
+                <strong>${data.name}</strong><br/>
+                <span style="color: #999;">Type:</span> ${data.type === 'vendor' ? 'Vendor' : 'Institution'}<br/>
+                <span style="color: #999;">Contracts:</span> ${formatNumber(data.contracts)}<br/>
+                <span style="color: #999;">Value:</span> ${formatCompactMXN(data.value)}<br/>
+                <span style="color: #999;">Risk:</span> <span style="color: ${data.risk_score && data.risk_score >= 0.35 ? '#ea580c' : '#16a34a'}">${riskLabel}</span>
+              </div>
+            `
+          } else if (params.dataType === 'edge') {
+            const data = params.data.originalData as NetworkLink
+            return `
+              <div style="padding: 8px;">
+                <span style="color: #999;">Contracts:</span> ${formatNumber(data.contracts)}<br/>
+                <span style="color: #999;">Value:</span> ${formatCompactMXN(data.value)}<br/>
+                <span style="color: #999;">Avg Risk:</span> ${data.avg_risk?.toFixed(2) || 'N/A'}
+              </div>
+            `
+          }
+          return ''
+        },
+      },
+      legend: {
+        data: ['Vendors', 'High Risk', 'Critical', 'Institutions'],
+        orient: 'horizontal',
+        bottom: 10,
+        textStyle: { color: '#94a3b8' },
+      },
+      series: [{
+        type: 'graph',
+        layout: 'force',
+        animation: true,
+        animationDuration: 1000,
+        data: nodes,
+        links: links,
+        categories: [
+          { name: 'Vendors', itemStyle: { color: COLORS.vendor } },
+          { name: 'High Risk', itemStyle: { color: '#ea580c' } },
+          { name: 'Critical', itemStyle: { color: '#dc2626' } },
+          { name: 'Institutions', itemStyle: { color: COLORS.institution } },
+        ],
+        roam: true,
+        draggable: true,
+        force: {
+          repulsion: 300,
+          gravity: 0.1,
+          edgeLength: [50, 200],
+          friction: 0.6,
+        },
+        emphasis: {
+          focus: 'adjacency',
+          lineStyle: { width: 4 },
+        },
+        label: {
+          color: '#e2e8f0',
+          fontSize: 10,
+          position: 'right',
+        },
+        lineStyle: {
+          curveness: 0.1,
+        },
+      }],
+    }
+
+    chartInstance.current.setOption(option, true)
+
+    // Handle click events
+    chartInstance.current.off('click')
+    chartInstance.current.on('click', (params: any) => {
+      if (params.dataType === 'node') {
+        const node = params.data.originalData as NetworkNode
+        if (node.type === 'vendor') {
+          navigate(`/vendors/${node.id.replace('v-', '')}`)
+        } else {
+          navigate(`/institutions/${node.id.replace('i-', '')}`)
+        }
+      }
+    })
+
+    // Handle resize
+    const handleResize = () => chartInstance.current?.resize()
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [filteredData, navigate])
+
+  // Apply zoom level to chart
+  useEffect(() => {
+    if (chartInstance.current) {
+      chartInstance.current.dispatchAction({
+        type: 'graphRoam',
+        zoom: zoomLevel,
+      })
+    }
+  }, [zoomLevel])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      chartInstance.current?.dispose()
+    }
+  }, [])
 
   const handleNodeClick = useCallback(
     (node: NetworkNode) => {
@@ -136,6 +295,17 @@ export function NetworkGraph() {
     },
     [navigate]
   )
+
+  const handleFocusVendor = useCallback((vendorId: string) => {
+    setSearchParams({ vendor_id: vendorId })
+  }, [setSearchParams])
+
+  const handleClearFocus = useCallback(() => {
+    setSearchParams({})
+  }, [setSearchParams])
+
+  const vendorCount = filteredData.nodes.filter(n => n.type === 'vendor').length
+  const institutionCount = filteredData.nodes.filter(n => n.type === 'institution').length
 
   return (
     <div className="space-y-6">
@@ -151,6 +321,10 @@ export function NetworkGraph() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setZoomLevel((z) => Math.max(0.5, z - 0.25))}>
             <ZoomOut className="h-4 w-4" />
           </Button>
@@ -165,6 +339,20 @@ export function NetworkGraph() {
         </div>
       </div>
 
+      {/* Focus indicator */}
+      {(focusVendorId || focusInstitutionId) && (
+        <Card className="border-accent/30 bg-accent/5">
+          <CardContent className="p-3 flex items-center justify-between">
+            <span className="text-sm">
+              Focused on {focusVendorId ? 'vendor' : 'institution'} ID: {focusVendorId || focusInstitutionId}
+            </span>
+            <Button variant="outline" size="sm" onClick={handleClearFocus}>
+              Clear Focus
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-4">
         {/* Main Network Visualization */}
         <Card className="lg:col-span-3">
@@ -174,74 +362,36 @@ export function NetworkGraph() {
               Vendor-Institution Network
             </CardTitle>
             <CardDescription>
-              {networkData.nodes.length} entities, {networkData.links.length} connections
+              {isLoading ? 'Loading...' : `${filteredData.nodes.length} entities, ${filteredData.links.length} connections`}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
+            {error ? (
+              <div className="h-[500px] flex items-center justify-center">
+                <div className="text-center">
+                  <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-risk-critical opacity-50" />
+                  <p className="text-text-muted mb-4">Failed to load network data</p>
+                  <Button variant="outline" onClick={() => refetch()}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Retry
+                  </Button>
+                </div>
+              </div>
+            ) : isLoading ? (
               <Skeleton className="h-[500px]" />
             ) : (
-              <div
-                className="relative h-[500px] bg-background-elevated rounded-lg overflow-hidden"
-                style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center' }}
-              >
-                {/* Network visualization placeholder - would use D3.js or react-force-graph */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <Network className="h-16 w-16 mx-auto mb-4 text-text-muted opacity-50" />
-                    <p className="text-text-muted mb-2">Interactive Network Visualization</p>
-                    <p className="text-xs text-text-muted max-w-md">
-                      Force-directed graph showing {networkData.nodes.filter((n) => n.type === 'vendor').length} vendors
-                      connected to {networkData.nodes.filter((n) => n.type === 'institution').length} institutions
-                    </p>
-                    <div className="mt-4 flex justify-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-accent" />
-                        <span className="text-xs text-text-muted">Vendors</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-sector-gobernacion" />
-                        <span className="text-xs text-text-muted">Institutions</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-risk-high" />
-                        <span className="text-xs text-text-muted">High Risk</span>
-                      </div>
+              <div className="relative h-[500px] bg-background-elevated rounded-lg overflow-hidden">
+                {filteredData.nodes.length === 0 ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <Network className="h-16 w-16 mx-auto mb-4 text-text-muted opacity-50" />
+                      <p className="text-text-muted mb-2">No network data available</p>
+                      <p className="text-xs text-text-muted">Try adjusting filters or clearing focus</p>
                     </div>
                   </div>
-                </div>
-
-                {/* Node list as temporary visualization */}
-                <div className="absolute top-4 left-4 right-4 bottom-4 overflow-auto">
-                  <div className="grid grid-cols-2 gap-2">
-                    {networkData.nodes.slice(0, 12).map((node) => (
-                      <button
-                        key={node.id}
-                        onClick={() => handleNodeClick(node)}
-                        className={`p-2 rounded-lg text-left transition-colors ${
-                          node.type === 'vendor'
-                            ? 'bg-accent/10 hover:bg-accent/20 border border-accent/30'
-                            : 'bg-sector-gobernacion/10 hover:bg-sector-gobernacion/20 border border-sector-gobernacion/30'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          {node.type === 'vendor' ? (
-                            <Users className="h-3 w-3 text-accent" />
-                          ) : (
-                            <Building2 className="h-3 w-3 text-sector-gobernacion" />
-                          )}
-                          <span className="text-xs font-medium truncate">{node.name}</span>
-                        </div>
-                        <div className="flex items-center justify-between mt-1">
-                          <span className="text-[10px] text-text-muted">
-                            {formatCompactMXN(node.value)}
-                          </span>
-                          {node.risk !== undefined && <RiskBadge score={node.risk} className="text-[8px] px-1" />}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                ) : (
+                  <div ref={chartRef} className="w-full h-full" />
+                )}
               </div>
             )}
           </CardContent>
@@ -257,8 +407,13 @@ export function NetworkGraph() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {suspiciousPatterns.length === 0 ? (
-                <p className="text-sm text-text-muted">No suspicious patterns detected</p>
+              {isLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-16" />
+                  <Skeleton className="h-16" />
+                </div>
+              ) : suspiciousPatterns.length === 0 ? (
+                <p className="text-sm text-text-muted">No high-risk vendors in current view</p>
               ) : (
                 suspiciousPatterns.map((pattern) => (
                   <button
@@ -294,16 +449,31 @@ export function NetworkGraph() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="flex items-center gap-2 text-xs">
-                  <input type="checkbox" defaultChecked className="rounded" />
-                  Show vendors
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showVendors}
+                    onChange={(e) => setShowVendors(e.target.checked)}
+                    className="rounded"
+                  />
+                  Show vendors ({networkData?.nodes.filter(n => n.type === 'vendor').length || 0})
                 </label>
-                <label className="flex items-center gap-2 text-xs">
-                  <input type="checkbox" defaultChecked className="rounded" />
-                  Show institutions
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showInstitutions}
+                    onChange={(e) => setShowInstitutions(e.target.checked)}
+                    className="rounded"
+                  />
+                  Show institutions ({networkData?.nodes.filter(n => n.type === 'institution').length || 0})
                 </label>
-                <label className="flex items-center gap-2 text-xs">
-                  <input type="checkbox" className="rounded" />
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={highRiskOnly}
+                    onChange={(e) => setHighRiskOnly(e.target.checked)}
+                    className="rounded"
+                  />
                   High risk only
                 </label>
               </div>
@@ -332,6 +502,29 @@ export function NetworkGraph() {
               </Button>
             </CardContent>
           </Card>
+
+          {/* Network Statistics */}
+          {networkData && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm">Network Statistics</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-text-muted">Total Nodes</span>
+                  <span>{networkData.total_nodes}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-text-muted">Total Links</span>
+                  <span>{networkData.total_links}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-text-muted">Total Value</span>
+                  <span>{formatCompactMXN(networkData.total_value)}</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

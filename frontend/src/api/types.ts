@@ -145,6 +145,7 @@ export interface ContractFilterParams {
   vendor_id?: number
   institution_id?: number
   risk_level?: RiskLevel
+  risk_factor?: string  // v3.2: Filter by specific risk factor (e.g., co_bid, price_hyp, direct_award)
   is_direct_award?: boolean
   is_single_bid?: boolean
   min_amount?: number
@@ -155,6 +156,20 @@ export interface ContractFilterParams {
   sort_by?: string
   sort_order?: 'asc' | 'desc'
 }
+
+// v3.2 Risk factors for filtering
+export const RISK_FACTORS = [
+  { value: 'co_bid', label: 'Co-Bidding Pattern', icon: 'users', description: 'Vendors frequently bidding together' },
+  { value: 'price_hyp', label: 'Price Anomaly', icon: 'dollar-sign', description: 'Statistical price outlier' },
+  { value: 'direct_award', label: 'Direct Award', icon: 'zap', description: 'Non-competitive procedure' },
+  { value: 'single_bid', label: 'Single Bidder', icon: 'user', description: 'Only one vendor bid' },
+  { value: 'year_end', label: 'Year-End', icon: 'calendar', description: 'December contract' },
+  { value: 'short_ad', label: 'Short Ad Period', icon: 'clock', description: 'Brief advertisement window' },
+  { value: 'split', label: 'Threshold Splitting', icon: 'scissors', description: 'Multiple same-day contracts' },
+  { value: 'network', label: 'Network Risk', icon: 'git-branch', description: 'Related vendor group' },
+  { value: 'inst_risk', label: 'Institution Risk', icon: 'building', description: 'Higher-risk institution type' },
+  { value: 'industry_mismatch', label: 'Industry Mismatch', icon: 'alert-triangle', description: 'Vendor outside their sector' },
+] as const
 
 export interface ContractStatistics {
   total_contracts: number

@@ -1,7 +1,7 @@
 """
-RUBLI Risk Scoring: 10-Factor Model + Industry Analysis
+RUBLI Risk Scoring: 10-Factor Model v3.2 + Co-Bidding Integration
 
-Implements IMF CRI-aligned risk scoring methodology with industry classification:
+Implements IMF CRI-aligned risk scoring methodology with bonus factors:
 
 | Factor | Weight | Data Field |
 |--------|--------|------------|
@@ -16,12 +16,24 @@ Implements IMF CRI-aligned risk scoring methodology with industry classification
 | Threshold splitting | 5% | same-day/week contracts |
 | Network risk | 5% | (requires network analysis) |
 | Industry-sector mismatch* | +3% | vendor_classifications |
+| Institution risk baseline* | +3% | institution_type (taxonomy v2.0) |
+| Price hypothesis* | +5% | price_hypothesis_confidence (v3.1) |
+| Co-bidding risk* | +5% | co-bidding patterns (v3.2) |
 
-*Industry-sector mismatch is an ADDITIONAL risk factor (not part of base 100%)
-for vendors with verified industry classifications working outside their sector.
+*Additional risk factors (bonus, not part of base 100%) based on statistical analysis.
+
+v3.2 Changes:
+- Added co_bidding factor for vendors in suspicious co-bidding pairs
+- Lowered thresholds: critical >= 0.5 (was 0.6), high >= 0.35 (was 0.4)
+- Targets OECD expected 2-15% high-risk distribution
+
+v3.1 Changes:
+- Added price_hypothesis factor from IQR-based outlier detection
+- Tiered bonus: very_high (>=0.85) = +5%, high (0.65-0.85) = +3%
+- Integrated with price_hypotheses table for statistical validation
 
 Usage:
-    python -m scripts.calculate_risk_scores [--batch-size 10000]
+    python -m scripts.calculate_risk_scores [--batch-size 10000] [--version v3.2]
 """
 
 import sys
@@ -33,6 +45,10 @@ from collections import defaultdict
 
 # Database path
 DB_PATH = Path(__file__).parent.parent / "RUBLI_NORMALIZED.db"
+
+# Amount validation thresholds (from CLAUDE.md data validation rules)
+MAX_CONTRACT_VALUE = 100_000_000_000  # 100B MXN - reject above this
+FLAG_THRESHOLD = 10_000_000_000       # 10B MXN - flag for review
 
 # Risk factor weights (sum to 1.0)
 WEIGHTS = {
@@ -48,9 +64,44 @@ WEIGHTS = {
     'network_risk': 0.05,  # Not implemented - will be 0
 }
 
-# Additional industry-based risk weights (not part of base 100%)
-INDUSTRY_WEIGHTS = {
+# Additional risk weights (bonus factors, not part of base 100%)
+ADDITIONAL_WEIGHTS = {
     'industry_mismatch': 0.03,  # Vendor industry doesn't match contract sector
+    'institution_baseline': 0.03,  # Institution type risk baseline (0-100% of 0.03)
+    'price_hypothesis': 0.05,  # v3.1: High-confidence price hypothesis from IQR analysis
+    'co_bidding': 0.05,  # v3.2: Vendors in suspicious co-bidding patterns (bid-rigging indicator)
+}
+
+# v3.2: Adjusted risk level thresholds (lowered to increase high-risk detection)
+# OECD benchmark expects 2-15% high-risk; we were at 0.30%
+RISK_THRESHOLDS = {
+    'critical': 0.50,  # Was 0.60
+    'high': 0.35,      # Was 0.40
+    'medium': 0.20,    # Unchanged
+}
+
+# Institution type risk baselines (from taxonomy v2.0)
+# Lower values = lower risk institutions, higher values = higher risk
+INSTITUTION_RISK_BASELINES = {
+    'autonomous_constitutional': 0.10,
+    'judicial': 0.10,
+    'regulatory_agency': 0.15,
+    'federal_secretariat': 0.15,
+    'legislative': 0.15,
+    'military': 0.15,
+    'research_education': 0.18,
+    'federal_agency': 0.20,
+    'educational': 0.20,
+    'state_enterprise_finance': 0.22,
+    'health_institution': 0.25,
+    'state_enterprise_infra': 0.25,
+    'social_security': 0.25,
+    'other': 0.25,
+    'state_enterprise_energy': 0.28,
+    'social_program': 0.30,
+    'state_government': 0.30,
+    'state_agency': 0.30,
+    'municipal': 0.35,
 }
 
 
@@ -269,6 +320,134 @@ def load_vendor_network_groups(conn: sqlite3.Connection) -> dict:
     return vendor_groups
 
 
+def load_institution_risk_baselines(conn: sqlite3.Connection) -> dict:
+    """
+    Load institution type for risk baseline calculation.
+
+    Returns dict mapping institution_id -> institution_type
+    """
+    cursor = conn.cursor()
+
+    print("Loading institution risk baselines...")
+
+    cursor.execute("""
+        SELECT id, institution_type
+        FROM institutions
+        WHERE institution_type IS NOT NULL
+    """)
+
+    institution_types = {}
+    type_counts = defaultdict(int)
+
+    for row in cursor.fetchall():
+        inst_id, inst_type = row
+        institution_types[inst_id] = inst_type
+        type_counts[inst_type] += 1
+
+    # Stats
+    total = len(institution_types)
+    high_risk = sum(1 for t in institution_types.values()
+                    if INSTITUTION_RISK_BASELINES.get(t, 0.25) >= 0.30)
+    low_risk = sum(1 for t in institution_types.values()
+                   if INSTITUTION_RISK_BASELINES.get(t, 0.25) <= 0.15)
+
+    print(f"  Loaded {total:,} institutions with type info:")
+    print(f"    High risk baseline (>=0.30): {high_risk:,} institutions")
+    print(f"    Low risk baseline (<=0.15): {low_risk:,} institutions")
+
+    return institution_types
+
+
+def calculate_co_bidding_risk(conn: sqlite3.Connection, min_co_bids: int = 10, min_rate: float = 0.50) -> dict:
+    """
+    Calculate co-bidding risk for vendors in suspicious co-bidding patterns.
+
+    Vendors that frequently appear in the same procedures may be engaged in bid-rigging.
+
+    Args:
+        min_co_bids: Minimum co-bids to be flagged (default: 10)
+        min_rate: Minimum co-bid rate to be flagged (default: 50%)
+
+    Returns:
+        Dict mapping vendor_id -> {'co_bid_count': X, 'max_rate': Y, 'partners': [ids]}
+    """
+    cursor = conn.cursor()
+
+    print("Calculating co-bidding risk patterns...")
+
+    # Find procedure participation for vendors with enough history
+    cursor.execute("""
+        SELECT vendor_id, procedure_number
+        FROM contracts
+        WHERE vendor_id IS NOT NULL
+          AND procedure_number IS NOT NULL
+          AND procedure_number != ''
+    """)
+
+    # Build vendor -> procedures mapping
+    vendor_procedures = defaultdict(set)
+    procedure_vendors = defaultdict(set)
+
+    for row in cursor.fetchall():
+        vendor_id, proc = row
+        vendor_procedures[vendor_id].add(proc)
+        procedure_vendors[proc].add(vendor_id)
+
+    # Filter vendors with enough procedures (>= 5)
+    active_vendors = {v for v, procs in vendor_procedures.items() if len(procs) >= 5}
+    print(f"  Active vendors (>= 5 procedures): {len(active_vendors):,}")
+
+    # Find co-bidding pairs
+    co_bid_counts = defaultdict(int)
+    vendor_total_procs = {}
+
+    for vendor_id in active_vendors:
+        procs = vendor_procedures[vendor_id]
+        vendor_total_procs[vendor_id] = len(procs)
+
+        # Find all other vendors that appeared in the same procedures
+        for proc in procs:
+            for other_vendor in procedure_vendors[proc]:
+                if other_vendor != vendor_id and other_vendor in active_vendors:
+                    pair = tuple(sorted([vendor_id, other_vendor]))
+                    co_bid_counts[pair] += 1
+
+    # Identify suspicious pairs (high co-bid rate)
+    suspicious_vendors = defaultdict(lambda: {'co_bid_count': 0, 'max_rate': 0, 'partners': []})
+
+    for (v1, v2), count in co_bid_counts.items():
+        if count >= min_co_bids:
+            # Calculate co-bid rates
+            rate_v1 = count / vendor_total_procs[v1] if vendor_total_procs[v1] > 0 else 0
+            rate_v2 = count / vendor_total_procs[v2] if vendor_total_procs[v2] > 0 else 0
+
+            # Flag if either vendor has high co-bid rate
+            if rate_v1 >= min_rate or rate_v2 >= min_rate:
+                max_rate = max(rate_v1, rate_v2)
+
+                # Update vendor 1
+                if max_rate > suspicious_vendors[v1]['max_rate']:
+                    suspicious_vendors[v1]['max_rate'] = max_rate
+                suspicious_vendors[v1]['co_bid_count'] += count
+                suspicious_vendors[v1]['partners'].append(v2)
+
+                # Update vendor 2
+                if max_rate > suspicious_vendors[v2]['max_rate']:
+                    suspicious_vendors[v2]['max_rate'] = max_rate
+                suspicious_vendors[v2]['co_bid_count'] += count
+                suspicious_vendors[v2]['partners'].append(v1)
+
+    # Stats
+    high_risk = sum(1 for v in suspicious_vendors.values() if v['max_rate'] >= 0.80)
+    medium_risk = sum(1 for v in suspicious_vendors.values() if 0.50 <= v['max_rate'] < 0.80)
+
+    print(f"  Suspicious co-bidding vendors: {len(suspicious_vendors):,}")
+    print(f"    High risk (>= 80% co-bid rate): {high_risk:,}")
+    print(f"    Medium risk (50-80% co-bid rate): {medium_risk:,}")
+
+    return dict(suspicious_vendors)
+
+
 def calculate_risk_batch(
     conn: sqlite3.Connection,
     contracts: list[dict],
@@ -276,7 +455,9 @@ def calculate_risk_batch(
     vendor_concentration: dict,
     vendor_industries: dict = None,
     splitting_patterns: dict = None,
-    vendor_network: dict = None
+    vendor_network: dict = None,
+    institution_types: dict = None,
+    co_bidding_risk: dict = None
 ) -> list[tuple]:
     """Calculate risk scores for a batch of contracts.
 
@@ -284,11 +465,15 @@ def calculate_risk_batch(
         vendor_industries: Dict mapping vendor_id to industry info with sector_affinity
         splitting_patterns: Dict mapping (vendor_id, institution_id, date) -> count
         vendor_network: Dict mapping vendor_id -> {'group_id': X, 'member_count': Y}
+        institution_types: Dict mapping institution_id -> institution_type
+        co_bidding_risk: Dict mapping vendor_id -> {'max_rate': X, 'co_bid_count': Y}
     """
     results = []
     vendor_industries = vendor_industries or {}
     splitting_patterns = splitting_patterns or {}
     vendor_network = vendor_network or {}
+    institution_types = institution_types or {}
+    co_bidding_risk = co_bidding_risk or {}
 
     for c in contracts:
         factors = []
@@ -310,6 +495,15 @@ def calculate_risk_batch(
         # Factor 3: Price Anomaly (15%)
         sector_id = c.get('sector_id')
         amount = c.get('amount_mxn') or 0
+
+        # CRITICAL: Amount validation (from data validation rules)
+        # Amounts > 100B MXN are data errors (decimal point mistakes)
+        if amount > MAX_CONTRACT_VALUE:
+            amount = 0.0  # Treat as rejected data error
+            factors.append('data_error:amount_rejected')
+        elif amount > FLAG_THRESHOLD:
+            factors.append('data_flag:amount_flagged')
+
         if sector_id in sector_stats and amount > 0:
             threshold = sector_stats[sector_id]['upper_threshold']
             if amount > threshold:
@@ -411,15 +605,58 @@ def calculate_risk_batch(
             actual_sector = c.get('sector_id')
             # Check if vendor is working outside their expected sector
             if expected_sector and actual_sector and expected_sector != actual_sector:
-                score += INDUSTRY_WEIGHTS['industry_mismatch']
+                score += ADDITIONAL_WEIGHTS['industry_mismatch']
                 factors.append(f'industry_mismatch:{industry_info["industry_code"]}->s{actual_sector}')
 
-        # Determine risk level
-        if score >= 0.6:
+        # ADDITIONAL: Institution Risk Baseline (+3% scaled)
+        # Higher-risk institution types (municipal, state_agency) add more risk
+        institution_id = c.get('institution_id')
+        if institution_id in institution_types:
+            inst_type = institution_types[institution_id]
+            baseline = INSTITUTION_RISK_BASELINES.get(inst_type, 0.25)
+            # Scale baseline (0.10-0.35) to contribution (0-100% of 0.03)
+            # Baseline 0.25 = neutral, >0.25 adds risk, <0.25 no additional risk
+            if baseline > 0.25:
+                # Scale from 0.25->0.35 to 0->0.03
+                contribution = (baseline - 0.25) / 0.10 * ADDITIONAL_WEIGHTS['institution_baseline']
+                score += min(contribution, ADDITIONAL_WEIGHTS['institution_baseline'])
+                factors.append(f'inst_risk:{inst_type}')
+
+        # ADDITIONAL (v3.1): Price Hypothesis (+5% max)
+        # Adds risk based on high-confidence price hypotheses from IQR analysis
+        # Tiered: very_high (>=0.85) = +5%, high (0.65-0.85) = +3%, else no bonus
+        price_hyp_conf = c.get('price_hypothesis_confidence')
+        price_hyp_type = c.get('price_hypothesis_type')
+        if price_hyp_conf is not None:
+            if price_hyp_conf >= 0.85:  # very_high confidence
+                score += ADDITIONAL_WEIGHTS['price_hypothesis']  # +5%
+                factors.append(f'price_hyp:{price_hyp_type}:{price_hyp_conf:.2f}')
+            elif price_hyp_conf >= 0.65:  # high confidence
+                score += ADDITIONAL_WEIGHTS['price_hypothesis'] * 0.6  # +3%
+                factors.append(f'price_hyp:{price_hyp_type}:{price_hyp_conf:.2f}')
+            # Below 0.65: no bonus (medium/low confidence)
+
+        # ADDITIONAL (v3.2): Co-Bidding Risk (+5% max)
+        # Vendors in suspicious co-bidding patterns (potential bid-rigging)
+        # Tiered: >= 80% co-bid rate = +5%, 50-80% = +3%
+        vendor_id = c.get('vendor_id')
+        if vendor_id in co_bidding_risk:
+            co_bid_info = co_bidding_risk[vendor_id]
+            max_rate = co_bid_info['max_rate']
+            partner_count = len(co_bid_info.get('partners', []))
+            if max_rate >= 0.80:  # High co-bidding risk
+                score += ADDITIONAL_WEIGHTS['co_bidding']  # +5%
+                factors.append(f'co_bid_high:{max_rate:.0%}:{partner_count}p')
+            elif max_rate >= 0.50:  # Medium co-bidding risk
+                score += ADDITIONAL_WEIGHTS['co_bidding'] * 0.6  # +3%
+                factors.append(f'co_bid_med:{max_rate:.0%}:{partner_count}p')
+
+        # Determine risk level (v3.2: lowered thresholds)
+        if score >= RISK_THRESHOLDS['critical']:
             risk_level = 'critical'
-        elif score >= 0.4:
+        elif score >= RISK_THRESHOLDS['high']:
             risk_level = 'high'
-        elif score >= 0.2:
+        elif score >= RISK_THRESHOLDS['medium']:
             risk_level = 'medium'
         else:
             risk_level = 'low'
@@ -437,7 +674,7 @@ def calculate_risk_batch(
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='RUBLI Risk Scoring: 10-Factor Model'
+        description='RUBLI Risk Scoring: 10-Factor Model v3.1'
     )
     parser.add_argument(
         '--batch-size',
@@ -445,133 +682,190 @@ def main():
         default=50000,
         help='Batch size for processing'
     )
+    parser.add_argument(
+        '--version',
+        type=str,
+        default='v3.2',
+        help='Model version (default: v3.2)'
+    )
     args = parser.parse_args()
 
     print("=" * 60)
-    print("RUBLI Risk Scoring: 10-Factor IMF CRI Model")
+    print(f"RUBLI Risk Scoring: IMF CRI Model {args.version}")
     print("=" * 60)
+    print(f"\nModel version: {args.version}")
+    if args.version >= 'v3.2':
+        print("  - Co-bidding risk integration: ENABLED")
+        print(f"  - Adjusted thresholds: critical >= {RISK_THRESHOLDS['critical']}, high >= {RISK_THRESHOLDS['high']}")
+    if args.version >= 'v3.1':
+        print("  - Price hypothesis integration: ENABLED")
+    print(f"  - Additional factors: industry_mismatch, institution_baseline, co_bidding")
 
     if not DB_PATH.exists():
         print(f"ERROR: Database not found: {DB_PATH}")
         return 1
 
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    print(f"\nDatabase: {DB_PATH}")
+    conn = None
+    try:
+        conn = sqlite3.connect(DB_PATH, timeout=60)  # 60 second timeout
+        cursor = conn.cursor()
+        # Enable WAL mode for better concurrency
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA busy_timeout=60000")  # 60 second busy timeout
+        print(f"\nDatabase: {DB_PATH}")
 
-    # Ensure columns exist
-    ensure_risk_columns(conn)
+        # Ensure columns exist
+        ensure_risk_columns(conn)
 
-    # Calculate helper statistics
-    sector_stats = calculate_sector_stats(conn)
-    vendor_concentration = calculate_vendor_concentration(conn)
-    vendor_industries = load_vendor_industries(conn)
-    splitting_patterns = calculate_threshold_splitting_patterns(conn)
-    vendor_network = load_vendor_network_groups(conn)
+        # Calculate helper statistics
+        sector_stats = calculate_sector_stats(conn)
+        vendor_concentration = calculate_vendor_concentration(conn)
+        vendor_industries = load_vendor_industries(conn)
+        splitting_patterns = calculate_threshold_splitting_patterns(conn)
+        vendor_network = load_vendor_network_groups(conn)
+        institution_types = load_institution_risk_baselines(conn)
+        co_bidding_risk = calculate_co_bidding_risk(conn)
 
-    # Get total contracts
-    cursor.execute("SELECT COUNT(*) FROM contracts")
-    total = cursor.fetchone()[0]
-    print(f"\nTotal contracts to process: {total:,}")
+        # Get total contracts
+        cursor.execute("SELECT COUNT(*) FROM contracts")
+        total = cursor.fetchone()[0]
+        print(f"\nTotal contracts to process: {total:,}")
 
-    # Process in batches
-    print(f"\nProcessing in batches of {args.batch_size:,}...")
-    start_time = datetime.now()
+        # Process in batches with explicit transaction handling
+        print(f"\nProcessing in batches of {args.batch_size:,}...")
+        start_time = datetime.now()
 
-    processed = 0
-    offset = 0
+        processed = 0
+        offset = 0
 
-    while offset < total:
-        cursor.execute(f"""
-            SELECT id, vendor_id, institution_id, sector_id,
-                   amount_mxn, is_direct_award, is_single_bid,
-                   is_year_end, procedure_type_normalized,
-                   publication_date, contract_date
+        while offset < total:
+            # Use parameterized query for LIMIT/OFFSET
+            cursor.execute("""
+                SELECT id, vendor_id, institution_id, sector_id,
+                       amount_mxn, is_direct_award, is_single_bid,
+                       is_year_end, procedure_type_normalized,
+                       publication_date, contract_date,
+                       price_hypothesis_confidence, price_hypothesis_type
+                FROM contracts
+                ORDER BY id
+                LIMIT ? OFFSET ?
+            """, (args.batch_size, offset))
+
+            contracts = [dict(zip(
+                ['id', 'vendor_id', 'institution_id', 'sector_id',
+                 'amount_mxn', 'is_direct_award', 'is_single_bid',
+                 'is_year_end', 'procedure_type_normalized',
+                 'publication_date', 'contract_date',
+                 'price_hypothesis_confidence', 'price_hypothesis_type'],
+                row
+            )) for row in cursor.fetchall()]
+
+            if not contracts:
+                break
+
+            # Calculate risk scores
+            results = calculate_risk_batch(
+                conn, contracts, sector_stats, vendor_concentration,
+                vendor_industries, splitting_patterns, vendor_network,
+                institution_types, co_bidding_risk
+            )
+
+            # Update database with retry logic for lock handling
+            import time
+            max_retries = 5
+            retry_delay = 2
+            for attempt in range(max_retries):
+                try:
+                    cursor.execute("BEGIN IMMEDIATE TRANSACTION")
+                    cursor.executemany("""
+                        UPDATE contracts
+                        SET risk_score = ?, risk_level = ?, risk_factors = ?
+                        WHERE id = ?
+                    """, [(r[1], r[2], r[3], r[0]) for r in results])
+                    cursor.execute("COMMIT")
+                    break  # Success
+                except sqlite3.OperationalError as e:
+                    if "locked" in str(e) and attempt < max_retries - 1:
+                        try:
+                            cursor.execute("ROLLBACK")
+                        except:
+                            pass
+                        print(f"  Database locked, retry {attempt + 1}/{max_retries}...")
+                        time.sleep(retry_delay)
+                    else:
+                        try:
+                            cursor.execute("ROLLBACK")
+                        except:
+                            pass
+                        print(f"ERROR: Batch update failed at offset {offset}: {e}")
+                        raise
+                except Exception as e:
+                    try:
+                        cursor.execute("ROLLBACK")
+                    except:
+                        pass
+                    print(f"ERROR: Batch update failed at offset {offset}: {e}")
+                    raise
+
+            processed += len(contracts)
+            offset += args.batch_size
+
+            elapsed = (datetime.now() - start_time).total_seconds()
+            rate = processed / elapsed if elapsed > 0 else 0
+            print(f"  Processed {processed:,} / {total:,} ({100*processed/total:.1f}%) - {rate:.0f} contracts/sec")
+
+        # Summary statistics
+        print("\n" + "=" * 60)
+        print("Risk Scoring Summary:")
+        print("=" * 60)
+
+        cursor.execute("""
+            SELECT risk_level, COUNT(*) as cnt, SUM(amount_mxn) as value
             FROM contracts
-            ORDER BY id
-            LIMIT {args.batch_size} OFFSET {offset}
+            GROUP BY risk_level
+            ORDER BY
+                CASE risk_level
+                    WHEN 'critical' THEN 1
+                    WHEN 'high' THEN 2
+                    WHEN 'medium' THEN 3
+                    WHEN 'low' THEN 4
+                    ELSE 5
+                END
         """)
 
-        contracts = [dict(zip(
-            ['id', 'vendor_id', 'institution_id', 'sector_id',
-             'amount_mxn', 'is_direct_award', 'is_single_bid',
-             'is_year_end', 'procedure_type_normalized',
-             'publication_date', 'contract_date'],
-            row
-        )) for row in cursor.fetchall()]
+        print(f"\n{'Risk Level':<12} {'Contracts':>12} {'Value (B MXN)':>15} {'%':>8}")
+        print("-" * 50)
+        for row in cursor.fetchall():
+            level, cnt, value = row
+            value = value or 0
+            pct = 100 * cnt / total
+            print(f"{level or 'NULL':<12} {cnt:>12,} {value/1e9:>15,.1f} {pct:>7.1f}%")
 
-        if not contracts:
-            break
+        # Top risk factors
+        cursor.execute("""
+            SELECT risk_factors, COUNT(*) as cnt
+            FROM contracts
+            WHERE risk_factors IS NOT NULL AND risk_factors != ''
+            GROUP BY risk_factors
+            ORDER BY cnt DESC
+            LIMIT 10
+        """)
 
-        # Calculate risk scores
-        results = calculate_risk_batch(
-            conn, contracts, sector_stats, vendor_concentration,
-            vendor_industries, splitting_patterns, vendor_network
-        )
-
-        # Update database
-        cursor.executemany("""
-            UPDATE contracts
-            SET risk_score = ?, risk_level = ?, risk_factors = ?
-            WHERE id = ?
-        """, [(r[1], r[2], r[3], r[0]) for r in results])
-
-        conn.commit()
-
-        processed += len(contracts)
-        offset += args.batch_size
+        print("\nTop Risk Factor Combinations:")
+        for row in cursor.fetchall():
+            factors, cnt = row
+            print(f"  {factors}: {cnt:,}")
 
         elapsed = (datetime.now() - start_time).total_seconds()
-        rate = processed / elapsed if elapsed > 0 else 0
-        print(f"  Processed {processed:,} / {total:,} ({100*processed/total:.1f}%) - {rate:.0f} contracts/sec")
+        print(f"\nTotal time: {elapsed:.1f} seconds")
+        print(f"Rate: {total/elapsed:.0f} contracts/second")
 
-    # Summary statistics
-    print("\n" + "=" * 60)
-    print("Risk Scoring Summary:")
-    print("=" * 60)
-
-    cursor.execute("""
-        SELECT risk_level, COUNT(*) as cnt, SUM(amount_mxn) as value
-        FROM contracts
-        GROUP BY risk_level
-        ORDER BY
-            CASE risk_level
-                WHEN 'critical' THEN 1
-                WHEN 'high' THEN 2
-                WHEN 'medium' THEN 3
-                WHEN 'low' THEN 4
-                ELSE 5
-            END
-    """)
-
-    print(f"\n{'Risk Level':<12} {'Contracts':>12} {'Value (B MXN)':>15} {'%':>8}")
-    print("-" * 50)
-    for row in cursor.fetchall():
-        level, cnt, value = row
-        value = value or 0
-        pct = 100 * cnt / total
-        print(f"{level or 'NULL':<12} {cnt:>12,} {value/1e9:>15,.1f} {pct:>7.1f}%")
-
-    # Top risk factors
-    cursor.execute("""
-        SELECT risk_factors, COUNT(*) as cnt
-        FROM contracts
-        WHERE risk_factors IS NOT NULL AND risk_factors != ''
-        GROUP BY risk_factors
-        ORDER BY cnt DESC
-        LIMIT 10
-    """)
-
-    print("\nTop Risk Factor Combinations:")
-    for row in cursor.fetchall():
-        factors, cnt = row
-        print(f"  {factors}: {cnt:,}")
-
-    elapsed = (datetime.now() - start_time).total_seconds()
-    print(f"\nTotal time: {elapsed:.1f} seconds")
-    print(f"Rate: {total/elapsed:.0f} contracts/second")
-
-    conn.close()
+    except Exception as e:
+        print(f"\nFATAL ERROR: {e}")
+        raise
+    finally:
+        if conn:
+            conn.close()
 
     print("\n" + "=" * 60)
     print("Risk scoring complete!")

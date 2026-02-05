@@ -52,6 +52,7 @@ async def list_contracts(
     risk_level: Optional[str] = Query(None, description="Filter by risk level (low/medium/high/critical)"),
     is_direct_award: Optional[bool] = Query(None, description="Filter direct awards"),
     is_single_bid: Optional[bool] = Query(None, description="Filter single-bid contracts"),
+    risk_factor: Optional[str] = Query(None, description="Filter by risk factor (e.g., co_bid, price_hyp, direct_award)"),
     min_amount: Optional[float] = Query(None, ge=0, description="Minimum contract amount"),
     max_amount: Optional[float] = Query(None, le=100_000_000_000, description="Maximum contract amount"),
     search: Optional[str] = Query(None, min_length=3, description="Search in title/description"),
@@ -130,6 +131,11 @@ async def list_contracts(
                 search_pattern = f"%{search}%"
                 params.extend([search_pattern, search_pattern])
 
+            if risk_factor:
+                # Filter by specific risk factor (supports partial match)
+                conditions.append("c.risk_factors LIKE ?")
+                params.append(f"%{risk_factor}%")
+
             where_clause = " AND ".join(conditions) if conditions else "1=1"
 
             # Strict whitelist mapping for sort fields - maps user input to safe SQL expressions
@@ -171,7 +177,7 @@ async def list_contracts(
                     c.contract_date,
                     c.contract_year,
                     c.sector_id,
-                    s.name as sector_name,
+                    s.name_es as sector_name,
                     c.risk_score,
                     c.risk_level,
                     c.is_direct_award,
@@ -319,7 +325,7 @@ async def get_contract(
             query = """
                 SELECT
                     c.*,
-                    s.name as sector_name,
+                    s.name_es as sector_name,
                     v.name as vendor_name,
                     v.rfc as vendor_rfc,
                     i.name as institution_name,
@@ -432,20 +438,26 @@ async def get_contract_risk(
             factors_str = row[4] or ""
             factors = []
 
-            # Map factor codes to descriptions and weights
+            # Map factor codes to descriptions and weights (v3.2)
             factor_info = {
+                # Base factors
                 "direct_award": ("Direct Award (Non-competitive)", 0.15),
                 "single_bid": ("Single Bidder", 0.15),
                 "restricted_procedure": ("Restricted Procedure", 0.08),
                 "year_end": ("Year-End Timing (December)", 0.05),
+                "price_anomaly": ("Price Anomaly", 0.15),
                 "price_outlier": ("Price Anomaly", 0.15),
-                "high_concentration": ("Vendor Concentration", 0.10),
+                "vendor_concentration_high": ("High Vendor Concentration (>30%)", 0.10),
+                "vendor_concentration_med": ("Medium Vendor Concentration (20-30%)", 0.07),
+                "vendor_concentration_low": ("Low Vendor Concentration (10-20%)", 0.05),
                 "short_ad_<5d": ("Very Short Ad Period (<5 days)", 0.10),
                 "short_ad_<15d": ("Short Ad Period (<15 days)", 0.07),
                 "short_ad_<30d": ("Moderately Short Ad Period", 0.03),
+                # Threshold splitting
                 "split_5+": ("Threshold Splitting (5+ same day)", 0.05),
                 "split_3-4": ("Threshold Splitting (3-4 same day)", 0.03),
                 "split_2": ("Threshold Splitting (2 same day)", 0.015),
+                # Network risk
                 "network_5+": ("Network Risk (Large Group)", 0.05),
                 "network_3-4": ("Network Risk (Medium Group)", 0.03),
                 "network_2": ("Network Risk (Small Group)", 0.015),
@@ -471,6 +483,64 @@ async def get_contract_risk(
                         "name": "Institution Risk Baseline",
                         "description": f"Higher risk institution type: {inst_type}",
                         "weight": 0.03,
+                    })
+                elif factor.startswith("co_bid_high:"):
+                    # v3.2: Co-bidding high risk - e.g., co_bid_high:85%:3p
+                    parts = factor.split(":")
+                    rate = parts[1] if len(parts) > 1 else "?"
+                    partners = parts[2] if len(parts) > 2 else "?"
+                    factors.append({
+                        "code": factor,
+                        "name": "High Co-Bidding Risk",
+                        "description": f"Vendor appears in {rate} of procedures with same partners ({partners})",
+                        "weight": 0.05,
+                        "icon": "users",
+                        "severity": "high",
+                    })
+                elif factor.startswith("co_bid_med:"):
+                    parts = factor.split(":")
+                    rate = parts[1] if len(parts) > 1 else "?"
+                    partners = parts[2] if len(parts) > 2 else "?"
+                    factors.append({
+                        "code": factor,
+                        "name": "Medium Co-Bidding Risk",
+                        "description": f"Vendor appears in {rate} of procedures with same partners ({partners})",
+                        "weight": 0.03,
+                        "icon": "users",
+                        "severity": "medium",
+                    })
+                elif factor.startswith("price_hyp:"):
+                    # v3.1: Price hypothesis - e.g., price_hyp:extreme_overpricing:0.95
+                    parts = factor.split(":")
+                    hyp_type = parts[1] if len(parts) > 1 else "unknown"
+                    confidence = parts[2] if len(parts) > 2 else "?"
+                    factors.append({
+                        "code": factor,
+                        "name": "Price Anomaly Detected",
+                        "description": f"Statistical outlier: {hyp_type.replace('_', ' ')} (confidence: {confidence})",
+                        "weight": 0.05,
+                        "icon": "dollar-sign",
+                        "severity": "high",
+                    })
+                elif factor.startswith("split_"):
+                    # Dynamic split factors - e.g., split_5, split_3
+                    count = factor.split("_")[1] if "_" in factor else "?"
+                    factors.append({
+                        "code": factor,
+                        "name": f"Threshold Splitting ({count} contracts)",
+                        "description": f"{count} contracts to same vendor on same day",
+                        "weight": 0.05 if int(count) >= 5 else 0.03,
+                        "icon": "scissors",
+                    })
+                elif factor.startswith("network_"):
+                    # Dynamic network factors - e.g., network_5
+                    count = factor.split("_")[1] if "_" in factor else "?"
+                    factors.append({
+                        "code": factor,
+                        "name": f"Network Risk ({count} related vendors)",
+                        "description": f"Vendor is in a group of {count} related entities",
+                        "weight": 0.05 if int(count) >= 5 else 0.03,
+                        "icon": "git-branch",
                     })
                 elif factor in factor_info:
                     name, weight = factor_info[factor]

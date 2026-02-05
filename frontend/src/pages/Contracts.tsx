@@ -11,6 +11,7 @@ import { contractApi, exportApi } from '@/api/client'
 import { SECTORS } from '@/lib/constants'
 import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 import type { ContractFilterParams, ContractListItem } from '@/api/types'
+import { RISK_FACTORS } from '@/api/types'
 import {
   FileText,
   ChevronLeft,
@@ -18,6 +19,11 @@ import {
   Search,
   Download,
   Loader2,
+  AlertCircle,
+  RefreshCw,
+  Copy,
+  Check,
+  Eye,
 } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 
@@ -39,6 +45,7 @@ export function Contracts() {
     sector_id: searchParams.get('sector_id') ? Number(searchParams.get('sector_id')) : undefined,
     year: searchParams.get('year') ? Number(searchParams.get('year')) : undefined,
     risk_level: searchParams.get('risk_level') as ContractFilterParams['risk_level'],
+    risk_factor: searchParams.get('risk_factor') || undefined,
     search: debouncedSearch || undefined,
   }), [searchParams, debouncedSearch])
 
@@ -57,11 +64,21 @@ export function Contracts() {
     }
   }, [debouncedSearch, searchParams, setSearchParams])
 
+  // Toast notifications
+  const toast = useToast()
+
   // Fetch contracts
-  const { data, isLoading, error, isFetching } = useQuery({
+  const { data, isLoading, error, isFetching, refetch } = useQuery({
     queryKey: ['contracts', filters],
     queryFn: () => contractApi.getAll(filters),
   })
+
+  // Show toast on error
+  useEffect(() => {
+    if (error) {
+      toast.error('Failed to load contracts', (error as Error).message)
+    }
+  }, [error, toast])
 
   const updateFilter = useCallback((key: string, value: string | number | undefined) => {
     if (key === 'search') {
@@ -86,11 +103,23 @@ export function Contracts() {
   // Show loading indicator when search is pending or fetching
   const showSearchLoading = isSearchPending || (isFetching && searchInput !== debouncedSearch)
 
-  // Toast notifications
-  const toast = useToast()
-
   // Export state
   const [isExporting, setIsExporting] = useState(false)
+
+  // Copy link state
+  const [linkCopied, setLinkCopied] = useState(false)
+
+  // Handle copy link for sharing filters
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      setLinkCopied(true)
+      toast.success('Link copied', 'Filter URL copied to clipboard')
+      setTimeout(() => setLinkCopied(false), 2000)
+    } catch (err) {
+      toast.error('Copy failed', 'Unable to copy link to clipboard')
+    }
+  }
 
   // Handle export
   const handleExport = async () => {
@@ -183,6 +212,36 @@ export function Contracts() {
             <option value="low">Low</option>
           </select>
 
+          {/* Risk Factor filter (v3.2) */}
+          <select
+            className="h-9 rounded-md border border-border bg-background-card px-3 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+            value={filters.risk_factor || ''}
+            onChange={(e) => updateFilter('risk_factor', e.target.value || undefined)}
+            title="Filter by specific risk factor"
+          >
+            <option value="">All Risk Factors</option>
+            {RISK_FACTORS.map((f) => (
+              <option key={f.value} value={f.value} title={f.description}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopyLink}
+            aria-label={linkCopied ? 'Link copied' : 'Copy shareable link with current filters'}
+            title="Copy shareable link"
+          >
+            {linkCopied ? (
+              <Check className="mr-2 h-4 w-4 text-risk-low" />
+            ) : (
+              <Copy className="mr-2 h-4 w-4" />
+            )}
+            {linkCopied ? 'Copied!' : 'Share'}
+          </Button>
+
           <Button
             variant="outline"
             size="sm"
@@ -201,12 +260,16 @@ export function Contracts() {
       </div>
 
       {/* Active filters */}
-      {(filters.sector_id || filters.year || filters.risk_level || filters.search) && (
+      {(filters.sector_id || filters.year || filters.risk_level || filters.risk_factor || filters.search) && (
         <div className="flex flex-wrap gap-2">
           {filters.search && (
             <Badge variant="secondary" className="gap-1">
               Search: {filters.search}
-              <button onClick={() => updateFilter('search', undefined)} className="ml-1 hover:text-text-primary">
+              <button
+                onClick={() => updateFilter('search', undefined)}
+                className="ml-1 hover:text-text-primary"
+                aria-label="Remove search filter"
+              >
                 ×
               </button>
             </Badge>
@@ -214,7 +277,11 @@ export function Contracts() {
           {filters.sector_id && (
             <Badge variant="secondary" className="gap-1">
               Sector: {SECTORS.find((s) => s.id === filters.sector_id)?.name}
-              <button onClick={() => updateFilter('sector_id', undefined)} className="ml-1 hover:text-text-primary">
+              <button
+                onClick={() => updateFilter('sector_id', undefined)}
+                className="ml-1 hover:text-text-primary"
+                aria-label="Remove sector filter"
+              >
                 ×
               </button>
             </Badge>
@@ -222,7 +289,11 @@ export function Contracts() {
           {filters.year && (
             <Badge variant="secondary" className="gap-1">
               Year: {filters.year}
-              <button onClick={() => updateFilter('year', undefined)} className="ml-1 hover:text-text-primary">
+              <button
+                onClick={() => updateFilter('year', undefined)}
+                className="ml-1 hover:text-text-primary"
+                aria-label="Remove year filter"
+              >
                 ×
               </button>
             </Badge>
@@ -230,10 +301,26 @@ export function Contracts() {
           {filters.risk_level && (
             <RiskBadge level={filters.risk_level} className="gap-1">
               {filters.risk_level}
-              <button onClick={() => updateFilter('risk_level', undefined)} className="ml-1 hover:text-text-primary">
+              <button
+                onClick={() => updateFilter('risk_level', undefined)}
+                className="ml-1 hover:text-text-primary"
+                aria-label="Remove risk level filter"
+              >
                 ×
               </button>
             </RiskBadge>
+          )}
+          {filters.risk_factor && (
+            <Badge variant="secondary" className="gap-1 bg-amber-500/20 text-amber-600">
+              Factor: {RISK_FACTORS.find((f) => f.value === filters.risk_factor)?.label || filters.risk_factor}
+              <button
+                onClick={() => updateFilter('risk_factor', undefined)}
+                className="ml-1 hover:text-text-primary"
+                aria-label="Remove risk factor filter"
+              >
+                ×
+              </button>
+            </Badge>
           )}
           <Button variant="ghost" size="sm" onClick={() => setSearchParams({})}>
             Clear all
@@ -251,19 +338,16 @@ export function Contracts() {
               ))}
             </div>
           ) : error ? (
-            <div className="p-8 text-center text-text-muted">
-              <p className="font-medium">Failed to load contracts</p>
-              <p className="text-sm mt-1">
+            <div className="p-8 text-center" role="alert" aria-live="polite">
+              <AlertCircle className="h-12 w-12 text-risk-high mx-auto mb-4" aria-hidden="true" />
+              <h3 className="text-lg font-medium text-text-primary mb-2">Failed to load contracts</h3>
+              <p className="text-sm text-text-muted mb-4">
                 {(error as Error).message === 'Network Error'
                   ? 'Unable to connect to server. Please check if the backend is running.'
-                  : 'An unexpected error occurred. Please try again.'}
+                  : (error as Error).message || 'An unexpected error occurred.'}
               </p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-4"
-                onClick={() => window.location.reload()}
-              >
+              <Button variant="outline" size="sm" onClick={() => refetch()}>
+                <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
                 Try again
               </Button>
             </div>
@@ -300,6 +384,7 @@ export function Contracts() {
                     <th className="p-3">Date</th>
                     <th className="p-3">Risk</th>
                     <th className="p-3">Flags</th>
+                    <th className="p-3 text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -365,11 +450,26 @@ export function Contracts() {
 }
 
 function ContractRow({ contract }: { contract: ContractListItem }) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      // Navigate to contract details when implemented
+      // For now, focus the row to indicate selection
+      ;(e.target as HTMLElement).focus()
+    }
+  }
+
   return (
-    <tr className="hover:bg-background-elevated/50 transition-colors">
+    <tr
+      className="hover:bg-background-elevated/50 transition-colors focus:bg-background-elevated focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      role="row"
+      aria-label={`Contract ${contract.contract_number || contract.id}: ${contract.title || 'Untitled'}, ${formatCompactMXN(contract.amount_mxn)}`}
+    >
       <td className="p-3">
         <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-text-muted" />
+          <FileText className="h-4 w-4 text-text-muted" aria-hidden="true" />
           <div>
             <p className="text-sm font-medium truncate max-w-[200px]">{contract.title || 'Untitled'}</p>
             <p className="text-xs text-text-muted">{contract.contract_number || `ID: ${contract.id}`}</p>
@@ -400,16 +500,31 @@ function ContractRow({ contract }: { contract: ContractListItem }) {
       <td className="p-3">
         <div className="flex gap-1">
           {contract.is_direct_award && (
-            <Badge variant="outline" className="text-[10px]">
+            <Badge variant="outline" className="text-[10px]" title="Direct Award">
               DA
             </Badge>
           )}
           {contract.is_single_bid && (
-            <Badge variant="outline" className="text-[10px]">
+            <Badge variant="outline" className="text-[10px]" title="Single Bid">
               SB
             </Badge>
           )}
         </div>
+      </td>
+      <td className="p-3 text-center">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0"
+          title="View contract details"
+          aria-label={`View details for contract ${contract.contract_number || contract.id}`}
+          onClick={() => {
+            // Open contract details - could navigate to detail page or open modal
+            console.log('View contract:', contract.id)
+          }}
+        >
+          <Eye className="h-4 w-4" aria-hidden="true" />
+        </Button>
       </td>
     </tr>
   )
