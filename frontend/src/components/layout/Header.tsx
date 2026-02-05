@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Bell, Search, Moon, Sun, X } from 'lucide-react'
+import { Bell, Search, Moon, Sun, X, Database } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { SmartSearch } from '@/components/SmartSearch'
@@ -16,8 +16,13 @@ const ROUTE_TITLES: Record<string, string> = {
   '/institutions': 'Institutions',
   '/sectors': 'Sectors',
   '/analysis/risk': 'Risk Analysis',
+  '/data-quality': 'Data Quality',
   '/export': 'Export Data',
   '/settings': 'Settings',
+  '/network': 'Network Graph',
+  '/watchlist': 'Watchlist',
+  '/comparison': 'Comparison',
+  '/timeline': 'Timeline',
 }
 
 export function Header() {
@@ -34,7 +39,45 @@ export function Header() {
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   })
 
+  // Fetch data quality score for indicator
+  const { data: dataQuality } = useQuery({
+    queryKey: ['data-quality'],
+    queryFn: () => analysisApi.getDataQuality(),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  })
+
   const alertCount = anomalies?.total || 0
+  const qualityScore = dataQuality?.overall_score
+  const qualityGrade = qualityScore
+    ? qualityScore >= 90
+      ? 'A'
+      : qualityScore >= 75
+        ? 'B'
+        : qualityScore >= 60
+          ? 'C'
+          : qualityScore >= 40
+            ? 'D'
+            : 'F'
+    : null
+
+  // Global Cmd+K / Ctrl+K keyboard shortcut to open search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd+K on Mac, Ctrl+K on Windows/Linux
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setSearchOpen((prev) => !prev)
+      }
+      // Escape to close search
+      if (e.key === 'Escape' && searchOpen) {
+        setSearchOpen(false)
+        setSearchValue('')
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [searchOpen])
 
   // Get current page title
   const currentPath = location.pathname
@@ -138,6 +181,49 @@ export function Header() {
             <p>{alertCount > 0 ? `${alertCount} high-risk alerts` : 'No alerts'}</p>
           </TooltipContent>
         </Tooltip>
+
+        {/* Data Quality Indicator */}
+        {qualityGrade && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 md:h-8 px-2 gap-1.5 hidden sm:flex"
+                onClick={() => navigate('/data-quality')}
+                aria-label={`Data quality: Grade ${qualityGrade} (${qualityScore?.toFixed(0)}%)`}
+              >
+                <Database className="h-3.5 w-3.5 text-text-muted" />
+                <span
+                  className="text-xs font-semibold px-1.5 py-0.5 rounded"
+                  style={{
+                    backgroundColor:
+                      qualityGrade === 'A'
+                        ? '#22c55e20'
+                        : qualityGrade === 'B'
+                          ? '#3b82f620'
+                          : qualityGrade === 'C'
+                            ? '#eab30820'
+                            : '#f9731620',
+                    color:
+                      qualityGrade === 'A'
+                        ? '#22c55e'
+                        : qualityGrade === 'B'
+                          ? '#3b82f6'
+                          : qualityGrade === 'C'
+                            ? '#eab308'
+                            : '#f97316',
+                  }}
+                >
+                  {qualityGrade}
+                </span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Data Quality: Grade {qualityGrade} ({qualityScore?.toFixed(1)}%)</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
 
         {/* Theme toggle */}
         <Tooltip>

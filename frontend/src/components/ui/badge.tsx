@@ -2,6 +2,7 @@ import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 import type { RiskLevel } from '@/api/types'
+import { AlertTriangle, AlertCircle, AlertOctagon, CheckCircle } from 'lucide-react'
 
 const badgeVariants = cva(
   'inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium transition-colors',
@@ -36,6 +37,14 @@ function Badge({ className, variant, ...props }: BadgeProps) {
   return <div className={cn(badgeVariants({ variant }), className)} {...props} />
 }
 
+// Risk level icons for accessibility - provides visual distinction beyond color
+const RiskIcons: Record<RiskLevel, React.ElementType> = {
+  critical: AlertOctagon,
+  high: AlertTriangle,
+  medium: AlertCircle,
+  low: CheckCircle,
+}
+
 // Specialized risk badge component
 interface RiskBadgeProps extends Omit<BadgeProps, 'variant'> {
   score?: number
@@ -46,6 +55,7 @@ function RiskBadge({ score, level, className, children, ...props }: RiskBadgePro
   const riskLevel = level ?? getRiskLevelFromScore(score ?? 0)
   const label = children ?? riskLevel.toUpperCase()
   const scoreDisplay = score !== undefined ? `${(score * 100).toFixed(0)}%` : undefined
+  const Icon = RiskIcons[riskLevel]
 
   // Create accessible label
   const ariaLabel = score !== undefined
@@ -55,13 +65,14 @@ function RiskBadge({ score, level, className, children, ...props }: RiskBadgePro
   return (
     <Badge
       variant={riskLevel}
-      className={cn('tabular-nums', className)}
+      className={cn('tabular-nums gap-1', className)}
       role="status"
       aria-label={ariaLabel}
       {...props}
     >
+      <Icon className="h-3 w-3" aria-hidden="true" />
       {label}
-      {scoreDisplay && <span className="ml-1 opacity-75" aria-hidden="true">({scoreDisplay})</span>}
+      {scoreDisplay && <span className="ml-0.5 opacity-75" aria-hidden="true">({scoreDisplay})</span>}
     </Badge>
   )
 }

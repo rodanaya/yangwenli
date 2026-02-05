@@ -16,6 +16,8 @@ import {
   Eye,
   Columns,
   Calendar,
+  Database,
+  DollarSign,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -42,14 +44,16 @@ const mainNavItems: NavItem[] = [
 
 const analysisNavItems: NavItem[] = [
   { title: 'Risk Analysis', href: '/analysis/risk', icon: AlertTriangle },
+  { title: 'Price Analysis', href: '/analysis/price', icon: DollarSign, badge: 'New' },
+  { title: 'Data Quality', href: '/data-quality', icon: Database },
   { title: 'Export Data', href: '/export', icon: Download },
 ]
 
 const investigationNavItems: NavItem[] = [
-  { title: 'Network Graph', href: '/network', icon: Network },
+  { title: 'Network Graph', href: '/network', icon: Network, badge: 'Beta' },
   { title: 'Watchlist', href: '/watchlist', icon: Eye },
-  { title: 'Comparison', href: '/comparison', icon: Columns },
-  { title: 'Timeline', href: '/timeline', icon: Calendar },
+  { title: 'Comparison', href: '/comparison', icon: Columns, badge: 'Beta' },
+  { title: 'Timeline', href: '/timeline', icon: Calendar, badge: 'Beta' },
 ]
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
@@ -62,16 +66,16 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         collapsed ? 'w-16' : 'w-56'
       )}
     >
-      {/* Logo */}
-      <div className="flex h-14 items-center border-b border-border px-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-white font-bold text-sm">
+      {/* Logo - Professional branding */}
+      <div className="flex h-16 items-center border-b border-border/50 px-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-accent/70 text-white font-bold text-sm shadow-sm">
             YW
           </div>
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="text-sm font-semibold text-text-primary">Yang Wen-li</span>
-              <span className="text-[10px] text-text-muted">Procurement Analysis</span>
+              <span className="text-sm font-semibold tracking-tight text-text-primary">Yang Wen-li</span>
+              <span className="text-[10px] text-text-muted tracking-wide">PROCUREMENT INTEL</span>
             </div>
           )}
         </div>
@@ -167,16 +171,18 @@ function NavItem({ item, collapsed, isActive }: { item: NavItem; collapsed: bool
       to={item.href}
       className={cn(
         'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+        'focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-sidebar',
         isActive
           ? 'bg-sidebar-active text-text-primary'
           : 'text-text-secondary hover:bg-sidebar-hover hover:text-text-primary',
         collapsed && 'justify-center px-2'
       )}
+      aria-current={isActive ? 'page' : undefined}
     >
-      <Icon className="h-4 w-4 flex-shrink-0" />
+      <Icon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
       {!collapsed && <span>{item.title}</span>}
       {!collapsed && item.badge && (
-        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-medium text-white">
+        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-medium text-white" aria-label={`${item.badge} notifications`}>
           {item.badge}
         </span>
       )}

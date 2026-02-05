@@ -2,42 +2,42 @@
 
 /* Yang Wen-li Theme Configuration */
 @theme {
-  /* Sector Colors (WCAG AA Compliant) */
-  --color-sector-salud: #dc2626;
-  --color-sector-educacion: #60a5fa;
-  --color-sector-infraestructura: #ea580c;
-  --color-sector-energia: #fbbf24;
-  --color-sector-defensa: #1e3a5f;
-  --color-sector-tecnologia: #a78bfa;
-  --color-sector-hacienda: #16a34a;
-  --color-sector-gobernacion: #be123c;
-  --color-sector-agricultura: #4ade80;
-  --color-sector-ambiente: #34d399;
-  --color-sector-trabajo: #fb923c;
-  --color-sector-otros: #64748b;
+  /* Professional Sector Colors - Distinct & Sophisticated */
+  --color-sector-salud: #e63946;         /* Coral Red - Healthcare */
+  --color-sector-educacion: #457b9d;     /* Steel Blue - Education */
+  --color-sector-infraestructura: #9d4edd; /* Violet - Infrastructure */
+  --color-sector-energia: #f4a261;       /* Sandy Orange - Energy */
+  --color-sector-defensa: #2d3142;       /* Charcoal Blue - Defense */
+  --color-sector-tecnologia: #00b4d8;    /* Cyan - Technology */
+  --color-sector-hacienda: #2a9d8f;      /* Teal - Treasury */
+  --color-sector-gobernacion: #7b2cbf;   /* Deep Purple - Governance */
+  --color-sector-agricultura: #80b918;   /* Lime Green - Agriculture */
+  --color-sector-ambiente: #06d6a0;      /* Mint - Environment */
+  --color-sector-trabajo: #ff6b6b;       /* Salmon - Labor */
+  --color-sector-otros: #8d99ae;         /* Cool Gray - Others */
 
-  /* Risk Colors */
-  --color-risk-critical: #dc2626;
-  --color-risk-high: #ea580c;
+  /* Risk Colors - Clear severity indication */
+  --color-risk-critical: #ef4444;
+  --color-risk-high: #f97316;
   --color-risk-medium: #eab308;
-  --color-risk-low: #16a34a;
+  --color-risk-low: #22c55e;
 
-  /* Dark Theme Colors (Default) */
-  --color-background: #0f0f0f;
-  --color-background-card: #1a1a1a;
-  --color-background-elevated: #262626;
-  --color-border: #2e2e2e;
-  --color-border-hover: #404040;
-  --color-text-primary: #f5f5f5;
-  --color-text-secondary: #a3a3a3;
-  --color-text-muted: #737373;
-  --color-accent: #3b82f6;
-  --color-accent-hover: #2563eb;
+  /* Dark Theme Colors (Default) - Refined dark mode */
+  --color-background: #09090b;
+  --color-background-card: #18181b;
+  --color-background-elevated: #27272a;
+  --color-border: #3f3f46;
+  --color-border-hover: #52525b;
+  --color-text-primary: #fafafa;
+  --color-text-secondary: #a1a1aa;
+  --color-text-muted: #71717a;
+  --color-accent: #6366f1;
+  --color-accent-hover: #4f46e5;
 
-  /* Sidebar */
-  --color-sidebar: #141414;
-  --color-sidebar-hover: #1f1f1f;
-  --color-sidebar-active: #262626;
+  /* Sidebar - Subtle distinction */
+  --color-sidebar: #0c0c0e;
+  --color-sidebar-hover: #18181b;
+  --color-sidebar-active: #27272a;
 
   /* Typography */
   --font-family-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
@@ -77,22 +77,22 @@
     color-scheme: dark;
   }
 
-  /* Light theme */
+  /* Light theme - Clean & Professional */
   html:not(.dark) {
     color-scheme: light;
-    --color-background: #ffffff;
-    --color-background-card: #f8fafc;
-    --color-background-elevated: #f1f5f9;
-    --color-border: #e2e8f0;
-    --color-border-hover: #cbd5e1;
-    --color-text-primary: #0f172a;
-    --color-text-secondary: #475569;
-    --color-text-muted: #64748b;
-    --color-accent: #2563eb;
-    --color-accent-hover: #1d4ed8;
-    --color-sidebar: #f8fafc;
-    --color-sidebar-hover: #f1f5f9;
-    --color-sidebar-active: #e2e8f0;
+    --color-background: #fafafa;
+    --color-background-card: #ffffff;
+    --color-background-elevated: #f4f4f5;
+    --color-border: #e4e4e7;
+    --color-border-hover: #d4d4d8;
+    --color-text-primary: #09090b;
+    --color-text-secondary: #52525b;
+    --color-text-muted: #71717a;
+    --color-accent: #4f46e5;
+    --color-accent-hover: #4338ca;
+    --color-sidebar: #ffffff;
+    --color-sidebar-hover: #f4f4f5;
+    --color-sidebar-active: #e4e4e7;
   }
 
   body {
@@ -194,11 +194,16 @@
 /* Utility Classes */
 @layer utilities {
   .card {
-    @apply bg-background-card border border-border rounded-lg;
+    @apply bg-background-card border border-border rounded-xl shadow-sm;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  .card:hover {
+    @apply shadow-md border-border-hover;
   }
 
   .card-elevated {
-    @apply bg-background-elevated border border-border rounded-lg;
+    @apply bg-background-elevated border border-border rounded-xl shadow-md;
   }
 
   .text-gradient {
@@ -255,7 +260,7 @@
   }
 
   .animate-slide-up {
-    animation: slideUp 0.3s ease-out;
+    animation: slideUp 0.3s ease-out forwards;
   }
 
   .animate-slide-in-right {

@@ -295,6 +295,8 @@ export const SmartSearch = memo(function SmartSearch({
           id={listboxId}
           role="listbox"
           aria-label="Search suggestions"
+          aria-live="polite"
+          aria-atomic="false"
           className="absolute top-full left-0 right-0 mt-1 rounded-lg border border-border bg-background-card shadow-lg z-50 overflow-hidden animate-slide-up"
         >
           {/* Loading state */}

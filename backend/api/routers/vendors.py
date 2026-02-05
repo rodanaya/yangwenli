@@ -26,6 +26,8 @@ from ..models.vendor import (
     VendorRelatedListResponse,
     VendorTopItem,
     VendorTopListResponse,
+    VendorComparisonItem,
+    VendorComparisonResponse,
 )
 from ..models.common import PaginationMeta
 from ..models.contract import ContractListItem, ContractListResponse, PaginationMeta as ContractPaginationMeta
@@ -81,57 +83,42 @@ async def list_vendors(
 
             where_clause = " AND ".join(conditions)
 
-            # HAVING conditions for aggregate filters
-            having_conditions = []
-            having_params = []
-
-            if sector_id is not None:
-                # Filter by primary sector (the sector with most contracts)
-                having_conditions.append("""
-                    (SELECT sector_id FROM contracts
-                     WHERE vendor_id = v.id
-                     GROUP BY sector_id
-                     ORDER BY COUNT(*) DESC LIMIT 1) = ?
-                """)
-                having_params.append(sector_id)
-
-            if min_contracts is not None:
-                having_conditions.append("COUNT(c.id) >= ?")
-                having_params.append(min_contracts)
-
-            if min_value is not None:
-                having_conditions.append("COALESCE(SUM(c.amount_mxn), 0) >= ?")
-                having_params.append(min_value)
-
-            having_clause = " AND ".join(having_conditions) if having_conditions else "1=1"
-
-            # Sort field mapping
+            # Sort field mapping - now using pre-computed vendor_stats table
             SORT_FIELD_MAPPING = {
-                "total_contracts": "COUNT(c.id)",
-                "total_value": "COALESCE(SUM(c.amount_mxn), 0)",
-                "avg_risk": "COALESCE(AVG(c.risk_score), 0)",
+                "total_contracts": "s.total_contracts",
+                "total_value": "s.total_value_mxn",
+                "avg_risk": "s.avg_risk_score",
                 "name": "v.name",
             }
-            sort_expr = SORT_FIELD_MAPPING.get(sort_by, "COUNT(c.id)")
+            sort_expr = SORT_FIELD_MAPPING.get(sort_by, "s.total_contracts")
             order_direction = "DESC" if sort_order.lower() == "desc" else "ASC"
 
-            # Count total (without HAVING for accurate count is complex, so we use a subquery)
+            # HAVING conditions adapted for pre-computed stats
+            stats_conditions = []
+            stats_params = []
+
+            if min_contracts is not None:
+                stats_conditions.append("s.total_contracts >= ?")
+                stats_params.append(min_contracts)
+
+            if min_value is not None:
+                stats_conditions.append("s.total_value_mxn >= ?")
+                stats_params.append(min_value)
+
+            stats_where = " AND ".join(stats_conditions) if stats_conditions else "1=1"
+
+            # Count total using vendor_stats
             count_query = f"""
-                SELECT COUNT(*) FROM (
-                    SELECT v.id
-                    FROM vendors v
-                    LEFT JOIN contracts c ON v.id = c.vendor_id
-                        AND (c.amount_mxn IS NULL OR c.amount_mxn <= ?)
-                    WHERE {where_clause}
-                    GROUP BY v.id
-                    HAVING {having_clause}
-                ) sub
+                SELECT COUNT(*)
+                FROM vendors v
+                JOIN vendor_stats s ON v.id = s.vendor_id
+                WHERE {where_clause} AND {stats_where}
             """
-            cursor.execute(count_query, [MAX_CONTRACT_VALUE] + params + having_params)
+            cursor.execute(count_query, params + stats_params)
             total = cursor.fetchone()[0]
             total_pages = math.ceil(total / per_page) if total > 0 else 1
 
-            # Get paginated results
+            # Get paginated results using pre-computed vendor_stats
             offset = (page - 1) * per_page
             query = f"""
                 SELECT
@@ -139,32 +126,27 @@ async def list_vendors(
                     v.name,
                     v.rfc,
                     v.name_normalized,
-                    COUNT(c.id) as total_contracts,
-                    COALESCE(SUM(c.amount_mxn), 0) as total_value_mxn,
-                    COALESCE(AVG(c.risk_score), 0) as avg_risk_score,
-                    COALESCE(SUM(CASE WHEN c.risk_level IN ('high', 'critical') THEN 1.0 ELSE 0 END) /
-                        NULLIF(COUNT(c.id), 0) * 100, 0) as high_risk_pct,
-                    COALESCE(SUM(CASE WHEN c.is_direct_award = 1 THEN 1.0 ELSE 0 END) /
-                        NULLIF(COUNT(c.id), 0) * 100, 0) as direct_award_pct,
-                    MIN(c.contract_year) as first_contract_year,
-                    MAX(c.contract_year) as last_contract_year
+                    s.total_contracts,
+                    s.total_value_mxn,
+                    s.avg_risk_score,
+                    s.high_risk_pct,
+                    s.direct_award_pct,
+                    s.first_contract_year,
+                    s.last_contract_year
                 FROM vendors v
-                LEFT JOIN contracts c ON v.id = c.vendor_id
-                    AND (c.amount_mxn IS NULL OR c.amount_mxn <= ?)
-                WHERE {where_clause}
-                GROUP BY v.id, v.name, v.rfc, v.name_normalized
-                HAVING {having_clause}
+                JOIN vendor_stats s ON v.id = s.vendor_id
+                WHERE {where_clause} AND {stats_where}
                 ORDER BY {sort_expr} {order_direction} NULLS LAST
                 LIMIT ? OFFSET ?
             """
-            cursor.execute(query, [MAX_CONTRACT_VALUE] + params + having_params + [per_page, offset])
+            cursor.execute(query, params + stats_params + [per_page, offset])
             rows = cursor.fetchall()
 
             vendors = [
                 VendorListItem(
                     id=row["id"],
                     name=row["name"],
-                    rfc=row["rfc"],
+                    # RFC intentionally excluded from list for privacy (PII protection)
                     name_normalized=row["name_normalized"],
                     total_contracts=row["total_contracts"],
                     total_value_mxn=row["total_value_mxn"],
@@ -201,6 +183,125 @@ async def list_vendors(
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
+@router.get("/compare", response_model=VendorComparisonResponse)
+async def compare_vendors(
+    ids: str = Query(..., description="Comma-separated list of vendor IDs to compare"),
+):
+    """
+    Compare multiple vendors side-by-side.
+
+    Returns comprehensive metrics for each vendor including:
+    - avg_risk_score: Average risk score of all contracts
+    - direct_award_rate: Percentage of direct award contracts
+    - high_risk_count: Number of high/critical risk contracts
+    - single_bid_rate: Percentage of single-bid contracts
+
+    Accepts up to 10 vendors for comparison.
+    """
+    try:
+        # Parse vendor IDs
+        try:
+            vendor_ids = [int(id.strip()) for id in ids.split(",") if id.strip()]
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid vendor IDs. Must be comma-separated integers.")
+
+        if not vendor_ids:
+            raise HTTPException(status_code=400, detail="At least one vendor ID is required")
+
+        if len(vendor_ids) > 10:
+            raise HTTPException(status_code=400, detail="Maximum 10 vendors can be compared at once")
+
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # Build placeholders for IN clause
+            placeholders = ",".join("?" * len(vendor_ids))
+
+            # Get vendor info with aggregated metrics in a single efficient query
+            query = f"""
+                SELECT
+                    v.id,
+                    v.name,
+                    v.rfc,
+                    COALESCE(metrics.total_contracts, 0) as total_contracts,
+                    COALESCE(metrics.total_value, 0) as total_value,
+                    metrics.avg_risk_score,
+                    COALESCE(metrics.direct_award_count, 0) as direct_award_count,
+                    COALESCE(metrics.high_risk_count, 0) as high_risk_count,
+                    COALESCE(metrics.single_bid_count, 0) as single_bid_count,
+                    metrics.first_year,
+                    metrics.last_year,
+                    COALESCE(metrics.institution_count, 0) as institution_count
+                FROM vendors v
+                LEFT JOIN (
+                    SELECT
+                        vendor_id,
+                        COUNT(*) as total_contracts,
+                        SUM(amount_mxn) as total_value,
+                        AVG(risk_score) as avg_risk_score,
+                        SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) as direct_award_count,
+                        SUM(CASE WHEN risk_level IN ('high', 'critical') THEN 1 ELSE 0 END) as high_risk_count,
+                        SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) as single_bid_count,
+                        MIN(contract_year) as first_year,
+                        MAX(contract_year) as last_year,
+                        COUNT(DISTINCT institution_id) as institution_count
+                    FROM contracts
+                    WHERE vendor_id IN ({placeholders})
+                    AND (amount_mxn IS NULL OR amount_mxn <= ?)
+                    GROUP BY vendor_id
+                ) metrics ON v.id = metrics.vendor_id
+                WHERE v.id IN ({placeholders})
+            """
+
+            # Parameters: vendor_ids for subquery, MAX_CONTRACT_VALUE, vendor_ids for main query
+            params = vendor_ids + [MAX_CONTRACT_VALUE] + vendor_ids
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+
+            # Build comparison items
+            items = []
+            for row in rows:
+                total_contracts = row["total_contracts"] or 0
+                total_value = row["total_value"] or 0
+
+                # Calculate rates
+                direct_award_rate = (row["direct_award_count"] / total_contracts * 100) if total_contracts > 0 else 0.0
+                high_risk_pct = (row["high_risk_count"] / total_contracts * 100) if total_contracts > 0 else 0.0
+                single_bid_rate = (row["single_bid_count"] / total_contracts * 100) if total_contracts > 0 else 0.0
+                avg_contract_value = (total_value / total_contracts) if total_contracts > 0 else None
+
+                items.append(VendorComparisonItem(
+                    id=row["id"],
+                    name=row["name"],
+                    rfc=row["rfc"],
+                    total_contracts=total_contracts,
+                    total_value_mxn=total_value,
+                    avg_risk_score=round(row["avg_risk_score"], 4) if row["avg_risk_score"] else None,
+                    direct_award_rate=round(direct_award_rate, 2),
+                    direct_award_count=row["direct_award_count"],
+                    high_risk_count=row["high_risk_count"],
+                    high_risk_percentage=round(high_risk_pct, 2),
+                    single_bid_rate=round(single_bid_rate, 2),
+                    avg_contract_value=round(avg_contract_value, 2) if avg_contract_value else None,
+                    first_year=row["first_year"],
+                    last_year=row["last_year"],
+                    institution_count=row["institution_count"],
+                ))
+
+            # Sort to match input order
+            id_order = {id: i for i, id in enumerate(vendor_ids)}
+            items.sort(key=lambda x: id_order.get(x.id, 999))
+
+            return VendorComparisonResponse(
+                data=items,
+                total=len(items),
+            )
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error in compare_vendors: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
 @router.get("/top", response_model=VendorTopListResponse)
 async def get_top_vendors(
     by: str = Query("value", description="Ranking metric: value, count, risk"),
@@ -212,12 +313,58 @@ async def get_top_vendors(
     Get top vendors by value, contract count, or risk score.
 
     Returns vendors ranked by the specified metric with aggregate statistics.
+    Uses precomputed aggregates when no filters applied for better performance.
     """
     try:
         with get_db() as conn:
             cursor = conn.cursor()
 
-            # Build filters
+            # Validate metric
+            valid_metrics = {"value", "count", "risk"}
+            if by not in valid_metrics:
+                raise HTTPException(status_code=400, detail=f"Invalid metric '{by}'. Use: value, count, risk")
+
+            # Fast path: use precomputed aggregates when no filters
+            if sector_id is None and year is None and by != "risk":
+                # Use precomputed fields in vendors table
+                sort_field = "total_amount_mxn" if by == "value" else "total_contracts"
+                query = f"""
+                    SELECT
+                        id,
+                        name,
+                        rfc,
+                        {sort_field} as metric_value,
+                        total_contracts,
+                        COALESCE(total_amount_mxn, 0) as total_value_mxn
+                    FROM vendors
+                    WHERE total_contracts > 0
+                    ORDER BY {sort_field} DESC NULLS LAST
+                    LIMIT ?
+                """
+                cursor.execute(query, (limit,))
+                rows = cursor.fetchall()
+
+                vendors = [
+                    VendorTopItem(
+                        rank=i + 1,
+                        vendor_id=row["id"],
+                        vendor_name=row["name"],
+                        rfc=row["rfc"],
+                        metric_value=row["metric_value"] or 0,
+                        total_contracts=row["total_contracts"],
+                        total_value_mxn=row["total_value_mxn"],
+                        avg_risk_score=None,  # Not available in fast path
+                    )
+                    for i, row in enumerate(rows)
+                ]
+
+                return VendorTopListResponse(
+                    data=vendors,
+                    metric=by,
+                    total=len(vendors),
+                )
+
+            # Slow path: compute aggregates with filters
             conditions = ["(c.amount_mxn IS NULL OR c.amount_mxn <= ?)"]
             params = [MAX_CONTRACT_VALUE]
 
@@ -237,9 +384,6 @@ async def get_top_vendors(
                 "count": ("COUNT(c.id)", "DESC"),
                 "risk": ("AVG(c.risk_score)", "DESC"),
             }
-            if by not in metric_mapping:
-                raise HTTPException(status_code=400, detail=f"Invalid metric '{by}'. Use: value, count, risk")
-
             sort_expr, sort_dir = metric_mapping[by]
 
             query = f"""
@@ -305,14 +449,14 @@ async def get_vendor(
             cursor.execute("""
                 SELECT
                     v.id, v.name, v.rfc, v.name_normalized, v.phonetic_code,
-                    v.vendor_group_id,
+                    v.group_id,
                     vc.industry_id, vc.industry_code, vc.industry_confidence,
                     vi.name_es as industry_name, vi.sector_affinity,
                     vg.name as group_name
                 FROM vendors v
                 LEFT JOIN vendor_classifications vc ON v.id = vc.vendor_id
                 LEFT JOIN vendor_industries vi ON vc.industry_id = vi.id
-                LEFT JOIN vendor_groups vg ON v.vendor_group_id = vg.id
+                LEFT JOIN vendor_groups vg ON v.group_id = vg.id
                 WHERE v.id = ?
             """, (vendor_id,))
 
@@ -345,7 +489,7 @@ async def get_vendor(
 
             # Get primary sector
             cursor.execute("""
-                SELECT c.sector_id, s.name as sector_name, COUNT(*) as cnt
+                SELECT c.sector_id, s.name_es as sector_name, COUNT(*) as cnt
                 FROM contracts c
                 LEFT JOIN sectors s ON c.sector_id = s.id
                 WHERE c.vendor_id = ?
@@ -454,7 +598,7 @@ async def get_vendor_contracts(
                 SELECT
                     c.id, c.contract_number, c.title, c.amount_mxn,
                     c.contract_date, c.contract_year, c.sector_id,
-                    s.name as sector_name, c.risk_score, c.risk_level,
+                    s.name_es as sector_name, c.risk_score, c.risk_level,
                     c.is_direct_award, c.is_single_bid,
                     v.name as vendor_name, i.name as institution_name,
                     c.procedure_type
@@ -755,10 +899,10 @@ async def get_vendor_related(
                     FROM vendors v
                     LEFT JOIN contracts c ON v.id = c.vendor_id
                         AND (c.amount_mxn IS NULL OR c.amount_mxn <= ?)
-                    WHERE v.vendor_group_id = ? AND v.id != ?
+                    WHERE v.group_id = ? AND v.id != ?
                     GROUP BY v.id, v.name, v.rfc
                     LIMIT ?
-                """, (MAX_CONTRACT_VALUE, vendor["vendor_group_id"], vendor_id, limit))
+                """, (MAX_CONTRACT_VALUE, vendor["group_id"], vendor_id, limit))
 
                 for row in cursor.fetchall():
                     related.append(VendorRelatedItem(

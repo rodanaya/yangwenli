@@ -25,14 +25,53 @@ export default defineConfig({
     },
   },
   build: {
+    target: 'esnext', // Modern browsers for smaller bundle
+    sourcemap: false, // Disable sourcemaps in production
+    minify: 'esbuild', // Fast minification
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          charts: ['recharts'],
-          tanstack: ['@tanstack/react-query', '@tanstack/react-table'],
+          // Core React + routing
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          // Heavy charting library - loaded only when needed
+          'vendor-charts': ['recharts'],
+          // TanStack family - used across many pages
+          'vendor-tanstack': [
+            '@tanstack/react-query',
+            '@tanstack/react-table',
+            '@tanstack/react-virtual',
+          ],
+          // UI library components
+          'vendor-radix': [
+            '@radix-ui/react-checkbox',
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-scroll-area',
+            '@radix-ui/react-select',
+            '@radix-ui/react-slot',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-tooltip',
+          ],
+          // Utilities
+          'vendor-utils': ['axios', 'clsx', 'tailwind-merge', 'class-variance-authority', 'zustand'],
+          // Icons - often large
+          'vendor-icons': ['lucide-react'],
         },
       },
     },
+  },
+  // Optimize dependencies for faster dev server
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      '@tanstack/react-query',
+      '@tanstack/react-table',
+      '@tanstack/react-virtual',
+      'recharts',
+      'axios',
+      'lucide-react',
+    ],
   },
 })

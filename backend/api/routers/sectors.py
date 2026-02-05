@@ -5,10 +5,77 @@ Provides sector statistics, trends, and cross-cutting analysis.
 """
 import sqlite3
 import logging
-from typing import Optional, List
-from fastapi import APIRouter, Query, HTTPException, Path
+from typing import Optional, List, Any, Dict
+from datetime import datetime, timedelta
+from fastapi import APIRouter, Query, HTTPException, Path, Request
 
 from ..dependencies import get_db
+
+
+# =============================================================================
+# SIMPLE IN-MEMORY CACHE
+# =============================================================================
+
+class SimpleCache:
+    """Simple in-memory cache with TTL support for expensive queries."""
+
+    def __init__(self):
+        self._cache: Dict[str, Dict[str, Any]] = {}
+
+    def get(self, key: str) -> Any:
+        """Get cached value if not expired."""
+        if key in self._cache:
+            entry = self._cache[key]
+            if datetime.now() < entry["expires_at"]:
+                return entry["value"]
+            else:
+                del self._cache[key]
+        return None
+
+    def set(self, key: str, value: Any, ttl_seconds: int = 3600) -> None:
+        """Set cached value with TTL."""
+        self._cache[key] = {
+            "value": value,
+            "expires_at": datetime.now() + timedelta(seconds=ttl_seconds),
+        }
+
+    def invalidate(self, pattern: str = None) -> None:
+        """Invalidate cache entries matching pattern (or all if None)."""
+        if pattern is None:
+            self._cache.clear()
+        else:
+            keys_to_delete = [k for k in self._cache if pattern in k]
+            for k in keys_to_delete:
+                del self._cache[k]
+
+
+# Global cache instance
+_cache = SimpleCache()
+
+# Cache TTL constants
+SECTORS_CACHE_TTL = 7200      # 2 hours for sector statistics
+ANALYSIS_CACHE_TTL = 3600     # 1 hour for analysis overview
+CONCENTRATION_CACHE_TTL = 7200  # 2 hours for vendor concentration
+
+# Optional rate limiting - gracefully degrade if not available
+try:
+    from slowapi import Limiter
+    from slowapi.util import get_remote_address
+    limiter = Limiter(key_func=get_remote_address)
+    RATE_LIMITING_ENABLED = True
+except ImportError:
+    limiter = None
+    RATE_LIMITING_ENABLED = False
+
+
+def rate_limit(limit_string: str):
+    """Decorator factory for rate limiting. Returns no-op if slowapi not installed."""
+    if RATE_LIMITING_ENABLED and limiter:
+        return limiter.limit(limit_string)
+    else:
+        def noop_decorator(func):
+            return func
+        return noop_decorator
 from ..models.sector import (
     SectorBase,
     SectorStatistics,
@@ -59,7 +126,14 @@ async def list_sectors(
     List all sectors with statistics.
 
     Returns the 12-sector taxonomy with contract counts, values, and risk metrics.
+    Response is cached for 2 hours to improve performance.
     """
+    # Check cache first
+    cache_key = f"sectors_list:{year or 'all'}"
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     try:
         with get_db() as conn:
             cursor = conn.cursor()
@@ -71,7 +145,7 @@ async def list_sectors(
                 SELECT
                     s.id,
                     s.code,
-                    s.name,
+                    s.name_es as name,
                     COUNT(c.id) as total_contracts,
                     COALESCE(SUM(c.amount_mxn), 0) as total_value,
                     COUNT(DISTINCT c.vendor_id) as total_vendors,
@@ -86,7 +160,7 @@ async def list_sectors(
                     SUM(CASE WHEN c.is_single_bid = 1 THEN 1 ELSE 0 END) as single_bids
                 FROM sectors s
                 LEFT JOIN contracts c ON s.id = c.sector_id {year_filter}
-                GROUP BY s.id, s.code, s.name
+                GROUP BY s.id, s.code, s.name_es
                 ORDER BY total_contracts DESC
             """
 
@@ -126,11 +200,15 @@ async def list_sectors(
                     single_bid_pct=round((row[14] or 0) / total * 100, 2) if total > 0 else 0,
                 ))
 
-            return SectorListResponse(
+            response = SectorListResponse(
                 data=sectors,
                 total_contracts=total_contracts,
                 total_value_mxn=total_value,
             )
+
+            # Cache the response for 2 hours
+            _cache.set(cache_key, response, SECTORS_CACHE_TTL)
+            return response
 
     except sqlite3.Error as e:
         logger.error(f"Database error in list_sectors: {e}")
@@ -151,7 +229,7 @@ async def get_sector(
             cursor = conn.cursor()
 
             # Get sector info
-            cursor.execute("SELECT id, code, name FROM sectors WHERE id = ?", (sector_id,))
+            cursor.execute("SELECT id, code, name_es as name FROM sectors WHERE id = ?", (sector_id,))
             sector_row = cursor.fetchone()
 
             if not sector_row:
@@ -313,7 +391,14 @@ async def get_analysis_overview():
     Get high-level analysis overview.
 
     Returns aggregate statistics across all contracts, vendors, and institutions.
+    Response is cached for 1 hour to improve performance.
     """
+    # Check cache first
+    cache_key = "analysis_overview"
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     try:
         with get_db() as conn:
             cursor = conn.cursor()
@@ -338,7 +423,7 @@ async def get_analysis_overview():
 
             # Top sector by value
             cursor.execute("""
-                SELECT s.name
+                SELECT s.name_es
                 FROM contracts c
                 JOIN sectors s ON c.sector_id = s.id
                 GROUP BY c.sector_id
@@ -349,7 +434,7 @@ async def get_analysis_overview():
 
             # Top sector by risk
             cursor.execute("""
-                SELECT s.name
+                SELECT s.name_es
                 FROM contracts c
                 JOIN sectors s ON c.sector_id = s.id
                 GROUP BY c.sector_id
@@ -361,7 +446,7 @@ async def get_analysis_overview():
             total = main_row[0] or 0
             high_risk = main_row[5] or 0
 
-            return AnalysisOverview(
+            response = AnalysisOverview(
                 total_contracts=total,
                 total_value_mxn=main_row[1] or 0,
                 total_vendors=main_row[2] or 0,
@@ -379,6 +464,10 @@ async def get_analysis_overview():
                 top_sector_by_value=top_value_row[0] if top_value_row else "Unknown",
                 top_sector_by_risk=top_risk_row[0] if top_risk_row else "Unknown",
             )
+
+            # Cache the response for 1 hour
+            _cache.set(cache_key, response, ANALYSIS_CACHE_TTL)
+            return response
 
     except sqlite3.Error as e:
         logger.error(f"Database error in get_analysis_overview: {e}")
@@ -524,7 +613,14 @@ async def get_vendor_concentration(
     Get vendor concentration analysis.
 
     Returns sectors ranked by concentration of contracts among top vendors.
+    Response is cached for 2 hours to improve performance.
     """
+    # Check cache first
+    cache_key = f"vendor_concentration:{top_n}"
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     try:
         with get_db() as conn:
             cursor = conn.cursor()
@@ -554,7 +650,7 @@ async def get_vendor_concentration(
                 )
                 SELECT
                     s.id,
-                    s.name,
+                    s.name_es,
                     ROUND(COALESCE(t.top_vendor_total * 100.0 / st.total, 0), 2) as concentration_pct
                 FROM sectors s
                 LEFT JOIN sector_totals st ON s.id = st.sector_id
@@ -575,7 +671,11 @@ async def get_vendor_concentration(
                 for i, row in enumerate(rows)
             ]
 
-            return SectorComparisonListResponse(data=items)
+            response = SectorComparisonListResponse(data=items)
+
+            # Cache the response for 2 hours
+            _cache.set(cache_key, response, CONCENTRATION_CACHE_TTL)
+            return response
 
     except sqlite3.Error as e:
         logger.error(f"Database error in get_vendor_concentration: {e}")
@@ -596,11 +696,11 @@ async def get_direct_award_rate():
             query = """
                 SELECT
                     s.id,
-                    s.name,
+                    s.name_es,
                     ROUND(SUM(CASE WHEN c.is_direct_award = 1 THEN 1.0 ELSE 0 END) / COUNT(*) * 100, 2) as rate
                 FROM sectors s
                 LEFT JOIN contracts c ON s.id = c.sector_id
-                GROUP BY s.id, s.name
+                GROUP BY s.id, s.name_es
                 ORDER BY rate DESC
             """
             cursor.execute(query)
@@ -639,11 +739,11 @@ async def get_single_bid_rate():
             query = """
                 SELECT
                     s.id,
-                    s.name,
+                    s.name_es,
                     ROUND(SUM(CASE WHEN c.is_single_bid = 1 THEN 1.0 ELSE 0 END) / COUNT(*) * 100, 2) as rate
                 FROM sectors s
                 LEFT JOIN contracts c ON s.id = c.sector_id
-                GROUP BY s.id, s.name
+                GROUP BY s.id, s.name_es
                 ORDER BY rate DESC
             """
             cursor.execute(query)
@@ -668,7 +768,9 @@ async def get_single_bid_rate():
 
 
 @router.get("/analysis/anomalies", response_model=AnomalyListResponse)
+@rate_limit("5/minute")
 async def detect_anomalies(
+    request: Request,  # Required for rate limiting
     sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector ID (1-12)"),
     year: Optional[int] = Query(None, ge=2002, le=2026, description="Filter by year"),
     min_severity: Optional[str] = Query(None, description="Minimum severity: low, medium, high, critical"),
@@ -702,37 +804,45 @@ async def detect_anomalies(
 
             base_where = " AND ".join(base_conditions)
 
-            # 1. Price outliers - contracts > 3x sector median
-            price_query = f"""
-                WITH sector_medians AS (
+            # 1. Price outliers - contracts > 3x sector median (using precomputed baselines)
+            # First check if sector_price_baselines exists
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='sector_price_baselines'")
+            has_baselines = cursor.fetchone() is not None
+
+            if has_baselines:
+                price_query = f"""
                     SELECT
-                        sector_id,
-                        (SELECT amount_mxn FROM contracts
-                         WHERE sector_id = c.sector_id
-                         AND amount_mxn > 0
-                         AND (amount_mxn IS NULL OR amount_mxn <= ?)
-                         ORDER BY amount_mxn
-                         LIMIT 1 OFFSET (SELECT COUNT(*)/2 FROM contracts WHERE sector_id = c.sector_id AND amount_mxn > 0)
-                        ) as median_amount
+                        c.sector_id,
+                        s.name_es as sector_name,
+                        COUNT(*) as outlier_count,
+                        SUM(c.amount_mxn) as outlier_value
                     FROM contracts c
+                    JOIN sectors s ON c.sector_id = s.id
+                    JOIN sector_price_baselines spb ON c.sector_id = spb.sector_id
+                        AND spb.contract_type = 'all' AND spb.year IS NULL
                     WHERE {base_where}
-                    GROUP BY sector_id
-                )
-                SELECT
-                    c.sector_id,
-                    s.name as sector_name,
-                    COUNT(*) as outlier_count,
-                    SUM(c.amount_mxn) as outlier_value
-                FROM contracts c
-                JOIN sector_medians sm ON c.sector_id = sm.sector_id
-                JOIN sectors s ON c.sector_id = s.id
-                WHERE {base_where}
-                AND c.amount_mxn > sm.median_amount * 3
-                AND sm.median_amount > 0
-                GROUP BY c.sector_id, s.name
-                HAVING outlier_count >= 5
-            """
-            cursor.execute(price_query, [MAX_CONTRACT_VALUE] + base_params + base_params)
+                    AND c.amount_mxn > spb.percentile_50 * 3
+                    AND spb.percentile_50 > 0
+                    GROUP BY c.sector_id, s.name_es
+                    HAVING outlier_count >= 5
+                """
+                cursor.execute(price_query, base_params)
+            else:
+                # Fallback: use simpler average-based detection
+                price_query = f"""
+                    SELECT
+                        c.sector_id,
+                        s.name_es as sector_name,
+                        COUNT(*) as outlier_count,
+                        SUM(c.amount_mxn) as outlier_value
+                    FROM contracts c
+                    JOIN sectors s ON c.sector_id = s.id
+                    WHERE {base_where}
+                    AND c.amount_mxn > (SELECT AVG(amount_mxn) * 3 FROM contracts WHERE sector_id = c.sector_id AND amount_mxn > 0)
+                    GROUP BY c.sector_id, s.name_es
+                    HAVING outlier_count >= 5
+                """
+                cursor.execute(price_query, base_params)
             for row in cursor.fetchall():
                 anomalies.append(AnomalyItem(
                     anomaly_type="price_outlier",
@@ -783,10 +893,10 @@ async def detect_anomalies(
             # 3. Vendor concentration - single vendor >30% of sector
             concentration_query = f"""
                 WITH sector_totals AS (
-                    SELECT sector_id, COUNT(*) as total, SUM(amount_mxn) as total_value
-                    FROM contracts
+                    SELECT c.sector_id, COUNT(*) as total, SUM(c.amount_mxn) as total_value
+                    FROM contracts c
                     WHERE {base_where}
-                    GROUP BY sector_id
+                    GROUP BY c.sector_id
                 ),
                 vendor_sector AS (
                     SELECT
@@ -802,7 +912,7 @@ async def detect_anomalies(
                 )
                 SELECT
                     vs.sector_id,
-                    s.name as sector_name,
+                    s.name_es as sector_name,
                     vs.vendor_id,
                     vs.vendor_name,
                     vs.vendor_contracts,
@@ -841,23 +951,23 @@ async def detect_anomalies(
             yearend_query = f"""
                 WITH yearly_stats AS (
                     SELECT
-                        contract_year,
+                        c.contract_year,
                         COUNT(*) as total_contracts,
-                        SUM(amount_mxn) as total_value
-                    FROM contracts
+                        SUM(c.amount_mxn) as total_value
+                    FROM contracts c
                     WHERE {base_where}
-                    AND contract_year IS NOT NULL
-                    GROUP BY contract_year
+                    AND c.contract_year IS NOT NULL
+                    GROUP BY c.contract_year
                 ),
                 december_stats AS (
                     SELECT
-                        contract_year,
+                        c.contract_year,
                         COUNT(*) as dec_contracts,
-                        SUM(amount_mxn) as dec_value
-                    FROM contracts
+                        SUM(c.amount_mxn) as dec_value
+                    FROM contracts c
                     WHERE {base_where}
-                    AND strftime('%m', contract_date) = '12'
-                    GROUP BY contract_year
+                    AND strftime('%m', c.contract_date) = '12'
+                    GROUP BY c.contract_year
                 )
                 SELECT
                     y.contract_year,

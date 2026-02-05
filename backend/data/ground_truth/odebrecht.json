@@ -1,0 +1,116 @@
+{
+  "case": {
+    "case_id": "ODEBRECHT_PEMEX_2010_2016",
+    "case_name": "Odebrecht-PEMEX Bribery Scheme",
+    "case_type": "bribery",
+    "year_start": 2010,
+    "year_end": 2016,
+    "estimated_fraud_mxn": 2100000000,
+    "source_asf": "ASF Auditorias PEMEX 2012-2016",
+    "source_news": "DOJ Press Release Dec 2016, Reuters, Wall Street Journal",
+    "source_legal": "DOJ Case 1:16-cr-00643-RJD, FGR Expediente FED/SEIDF/CGI-CDMX/0000716/2017",
+    "confidence_level": "high",
+    "notes": "Brazilian construction conglomerate Odebrecht paid bribes to PEMEX officials in exchange for contracts. Part of broader Lava Jato investigation. DOJ documents confirm $10.5M USD in bribes to Mexican officials. Emilio Lozoya (PEMEX CEO 2012-2016) is key defendant."
+  },
+  "institutions": [
+    {
+      "institution_name_source": "PEMEX",
+      "full_name": "Petroleos Mexicanos",
+      "role": "awarding_entity",
+      "evidence_strength": "high",
+      "notes": "Primary target of bribery - awarded contracts to Odebrecht and partners"
+    },
+    {
+      "institution_name_source": "PEMEX Exploracion y Produccion",
+      "full_name": "PEP",
+      "role": "awarding_entity",
+      "evidence_strength": "high",
+      "notes": "Subsidiary that awarded exploration/production contracts"
+    },
+    {
+      "institution_name_source": "PEMEX Transformacion Industrial",
+      "full_name": "PTRI",
+      "role": "awarding_entity",
+      "evidence_strength": "medium",
+      "notes": "Refinery subsidiary"
+    }
+  ],
+  "vendors": [
+    {
+      "vendor_name_source": "CONSTRUCTORA NORBERTO ODEBRECHT SA DE CV",
+      "rfc_source": null,
+      "role": "beneficiary",
+      "evidence_strength": "high",
+      "notes": "Mexican subsidiary of Brazilian Odebrecht - primary bribe payer"
+    },
+    {
+      "vendor_name_source": "ODEBRECHT MEXICO SA DE CV",
+      "rfc_source": null,
+      "role": "beneficiary",
+      "evidence_strength": "high",
+      "notes": "Alternative name/entity for Mexican operations"
+    },
+    {
+      "vendor_name_source": "BRASKEM SA DE CV",
+      "rfc_source": null,
+      "role": "co-conspirator",
+      "evidence_strength": "high",
+      "notes": "Odebrecht petrochemical subsidiary - joint venture partner"
+    },
+    {
+      "vendor_name_source": "ETILENO XXI SA DE CV",
+      "rfc_source": null,
+      "role": "beneficiary",
+      "evidence_strength": "high",
+      "notes": "Braskem/PEMEX joint venture that received favorable treatment"
+    },
+    {
+      "vendor_name_source": "ALTOS HORNOS DE MEXICO SA DE CV",
+      "rfc_source": "AHM530518C10",
+      "role": "co-conspirator",
+      "evidence_strength": "medium",
+      "notes": "AHMSA - alleged to have participated in related bribery (Agronitrogenados plant)"
+    },
+    {
+      "vendor_name_source": "GRUPO TRADECO SA DE CV",
+      "rfc_source": null,
+      "role": "intermediary",
+      "evidence_strength": "medium",
+      "notes": "Local partner company"
+    }
+  ],
+  "contracts": [
+    {
+      "description": "Etileno XXI petrochemical complex Coatzacoalcos",
+      "year_source": 2013,
+      "amount_source": 4500000000,
+      "evidence_strength": "high",
+      "notes": "Major petrochemical project - Braskem/PEMEX joint venture"
+    },
+    {
+      "description": "PEMEX Tula refinery rehabilitation",
+      "year_source": 2014,
+      "amount_source": 1200000000,
+      "evidence_strength": "medium",
+      "notes": "Refinery maintenance contract"
+    },
+    {
+      "description": "PEMEX offshore platform services",
+      "year_source": 2012,
+      "amount_source": 800000000,
+      "evidence_strength": "medium",
+      "notes": "Offshore services contract"
+    }
+  ],
+  "metadata": {
+    "data_version": "1.0",
+    "last_updated": "2026-02-04",
+    "compiled_by": "Yang Wen-li Validation Framework",
+    "primary_sources": [
+      "DOJ Plea Agreement - Odebrecht S.A. Dec 2016",
+      "DOJ Criminal Information 1:16-cr-00643",
+      "FGR Comunicado 416/17",
+      "Emilio Lozoya arrest warrant 2020"
+    ]
+  }
+}

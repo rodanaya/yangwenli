@@ -30,7 +30,16 @@ if RATE_LIMITING_ENABLED:
     limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
 else:
     limiter = None
-from .routers import industries_router, vendors_router, stats_router
+from .routers import (
+    industries_router,
+    vendors_router,
+    stats_router,
+    network_router,
+    analysis_router,
+    watchlist_router,
+    reports_router,
+    investigation_router,
+)
 from .routers.institutions import router as institutions_router
 from .routers.contracts import router as contracts_router
 from .routers.sectors import router as sectors_router
@@ -85,7 +94,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3009", "http://127.0.0.1:3009"],
     allow_credentials=True,
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
     allow_headers=["*"],
 )
 
@@ -97,6 +106,11 @@ app.include_router(institutions_router, prefix="/api/v1")
 app.include_router(contracts_router, prefix="/api/v1")
 app.include_router(sectors_router, prefix="/api/v1")
 app.include_router(export_router, prefix="/api/v1")
+app.include_router(network_router, prefix="/api/v1")
+app.include_router(analysis_router, prefix="/api/v1")
+app.include_router(watchlist_router, prefix="/api/v1")
+app.include_router(reports_router, prefix="/api/v1")
+app.include_router(investigation_router, prefix="/api/v1")
 
 
 @app.get("/", tags=["root"])
@@ -114,17 +128,32 @@ async def root():
             "risk_distribution": "/api/v1/analysis/risk-distribution",
             "industries": "/api/v1/industries",
             "vendors": "/api/v1/vendors",
+            "vendors_compare": "/api/v1/vendors/compare",
             "vendors_verified": "/api/v1/vendors/verified",
             "vendors_top": "/api/v1/vendors/top",
             "statistics": "/api/v1/stats/classifications",
             "institutions": "/api/v1/institutions",
             "institutions_search": "/api/v1/institutions/search",
+            "institutions_compare": "/api/v1/institutions/compare",
             "institutions_top": "/api/v1/institutions/top",
             "institutions_hierarchy": "/api/v1/institutions/hierarchy",
             "institution_types": "/api/v1/institutions/types",
             "export_contracts_csv": "/api/v1/export/contracts/csv",
             "export_contracts_excel": "/api/v1/export/contracts/excel",
             "export_vendors_csv": "/api/v1/export/vendors/csv",
+            "network_graph": "/api/v1/network/graph",
+            "network_co_bidders": "/api/v1/network/co-bidders/{vendor_id}",
+            "network_institution_vendors": "/api/v1/network/institution-vendors/{institution_id}",
+            "analysis_monthly_breakdown": "/api/v1/analysis/monthly-breakdown/{year}",
+            "analysis_year_over_year": "/api/v1/analysis/year-over-year",
+            "analysis_temporal_events": "/api/v1/analysis/temporal-events",
+            "analysis_compare_periods": "/api/v1/analysis/compare-periods",
+            "watchlist": "/api/v1/watchlist",
+            "reports": "/api/v1/reports",
+            "reports_vendor": "/api/v1/reports/vendor/{vendor_id}",
+            "reports_institution": "/api/v1/reports/institution/{institution_id}",
+            "reports_sector": "/api/v1/reports/sector/{sector_id}",
+            "reports_thematic": "/api/v1/reports/thematic/{theme}",
         }
     }
 

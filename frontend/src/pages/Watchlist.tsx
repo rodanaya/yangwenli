@@ -6,11 +6,14 @@
 
 import { useState, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { RiskBadge, Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { formatCompactMXN, formatNumber, formatDate } from '@/lib/utils'
+import { Skeleton } from '@/components/ui/skeleton'
+import { formatDate } from '@/lib/utils'
+import { watchlistApi, type WatchlistItem, type WatchlistItemUpdate } from '@/api/client'
 import {
   Eye,
   EyeOff,
@@ -28,152 +31,78 @@ import {
   Download,
   Bell,
   BellOff,
-  MoreVertical,
+  Loader2,
+  RefreshCw,
 } from 'lucide-react'
-
-interface WatchlistItem {
-  id: string
-  type: 'vendor' | 'institution' | 'contract'
-  entityId: number
-  name: string
-  reason: string
-  addedAt: Date
-  priority: 'high' | 'medium' | 'low'
-  status: 'watching' | 'investigating' | 'resolved'
-  notes?: string
-  riskScore?: number
-  alertsEnabled: boolean
-  starred: boolean
-}
-
-// Mock data - in real app this would be persisted
-const MOCK_WATCHLIST: WatchlistItem[] = [
-  {
-    id: '1',
-    type: 'vendor',
-    entityId: 12345,
-    name: 'CONSTRUCCIONES AZTECA S.A. DE C.V.',
-    reason: 'High concentration of direct awards with IMSS',
-    addedAt: new Date('2024-01-15'),
-    priority: 'high',
-    status: 'investigating',
-    riskScore: 0.72,
-    alertsEnabled: true,
-    starred: true,
-  },
-  {
-    id: '2',
-    type: 'vendor',
-    entityId: 23456,
-    name: 'SERVICIOS INTEGRALES DEL NORTE',
-    reason: 'Unusual bidding patterns with related companies',
-    addedAt: new Date('2024-01-10'),
-    priority: 'high',
-    status: 'watching',
-    riskScore: 0.65,
-    alertsEnabled: true,
-    starred: false,
-  },
-  {
-    id: '3',
-    type: 'institution',
-    entityId: 101,
-    name: 'INSTITUTO MEXICANO DEL SEGURO SOCIAL',
-    reason: 'Year-end spending spike investigation',
-    addedAt: new Date('2024-01-08'),
-    priority: 'medium',
-    status: 'watching',
-    alertsEnabled: false,
-    starred: false,
-  },
-  {
-    id: '4',
-    type: 'vendor',
-    entityId: 34567,
-    name: 'DISTRIBUIDORA FARMACEUTICA NACIONAL',
-    reason: 'Price anomaly detected in medical supplies',
-    addedAt: new Date('2024-01-05'),
-    priority: 'medium',
-    status: 'resolved',
-    riskScore: 0.45,
-    notes: 'Investigated - pricing within acceptable range for emergency procurement',
-    alertsEnabled: false,
-    starred: false,
-  },
-  {
-    id: '5',
-    type: 'contract',
-    entityId: 987654,
-    name: 'Contrato AD-2024-001234 - Servicios de TI',
-    reason: 'Direct award exceeds threshold without justification',
-    addedAt: new Date('2024-01-03'),
-    priority: 'low',
-    status: 'watching',
-    riskScore: 0.38,
-    alertsEnabled: true,
-    starred: false,
-  },
-]
 
 export function Watchlist() {
   const navigate = useNavigate()
-  const [items, setItems] = useState<WatchlistItem[]>(MOCK_WATCHLIST)
+  const queryClient = useQueryClient()
   const [filter, setFilter] = useState<'all' | 'watching' | 'investigating' | 'resolved'>('all')
   const [typeFilter, setTypeFilter] = useState<'all' | 'vendor' | 'institution' | 'contract'>('all')
 
-  const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      if (filter !== 'all' && item.status !== filter) return false
-      if (typeFilter !== 'all' && item.type !== typeFilter) return false
-      return true
-    })
-  }, [items, filter, typeFilter])
+  // Fetch watchlist items from API
+  const { data: watchlistData, isLoading, error, refetch } = useQuery({
+    queryKey: ['watchlist', filter === 'all' ? undefined : filter, typeFilter === 'all' ? undefined : typeFilter],
+    queryFn: () => watchlistApi.getAll({
+      status: filter === 'all' ? undefined : filter,
+      item_type: typeFilter === 'all' ? undefined : typeFilter,
+    }),
+  })
 
+  // Update mutation
+  const updateMutation = useMutation({
+    mutationFn: ({ id, update }: { id: number; update: WatchlistItemUpdate }) =>
+      watchlistApi.update(id, update),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['watchlist'] })
+    },
+  })
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => watchlistApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['watchlist'] })
+    },
+  })
+
+  const items = watchlistData?.data || []
   const stats = useMemo(() => ({
-    total: items.length,
-    watching: items.filter((i) => i.status === 'watching').length,
-    investigating: items.filter((i) => i.status === 'investigating').length,
-    resolved: items.filter((i) => i.status === 'resolved').length,
-    highPriority: items.filter((i) => i.priority === 'high' && i.status !== 'resolved').length,
-  }), [items])
+    total: watchlistData?.total || 0,
+    watching: watchlistData?.by_status?.watching || 0,
+    investigating: watchlistData?.by_status?.investigating || 0,
+    resolved: watchlistData?.by_status?.resolved || 0,
+    highPriority: watchlistData?.high_priority_count || 0,
+  }), [watchlistData])
 
-  const toggleStar = useCallback((id: string) => {
-    setItems((prev) => prev.map((item) =>
-      item.id === id ? { ...item, starred: !item.starred } : item
-    ))
-  }, [])
+  const toggleAlerts = useCallback((id: number, currentValue: boolean) => {
+    updateMutation.mutate({ id, update: { alerts_enabled: !currentValue } })
+  }, [updateMutation])
 
-  const toggleAlerts = useCallback((id: string) => {
-    setItems((prev) => prev.map((item) =>
-      item.id === id ? { ...item, alertsEnabled: !item.alertsEnabled } : item
-    ))
-  }, [])
+  const updateStatus = useCallback((id: number, status: WatchlistItem['status']) => {
+    updateMutation.mutate({ id, update: { status } })
+  }, [updateMutation])
 
-  const updateStatus = useCallback((id: string, status: WatchlistItem['status']) => {
-    setItems((prev) => prev.map((item) =>
-      item.id === id ? { ...item, status } : item
-    ))
-  }, [])
-
-  const removeItem = useCallback((id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id))
-  }, [])
+  const removeItem = useCallback((id: number) => {
+    deleteMutation.mutate(id)
+  }, [deleteMutation])
 
   const handleItemClick = useCallback((item: WatchlistItem) => {
-    switch (item.type) {
+    switch (item.item_type) {
       case 'vendor':
-        navigate(`/vendors/${item.entityId}`)
+        navigate(`/vendors/${item.item_id}`)
         break
       case 'institution':
-        navigate(`/institutions/${item.entityId}`)
+        navigate(`/institutions/${item.item_id}`)
         break
       case 'contract':
-        navigate(`/contracts?id=${item.entityId}`)
+        navigate(`/contracts?id=${item.item_id}`)
         break
     }
   }, [navigate])
 
-  const getTypeIcon = (type: WatchlistItem['type']) => {
+  const getTypeIcon = (type: WatchlistItem['item_type']) => {
     switch (type) {
       case 'vendor': return Users
       case 'institution': return Building2
@@ -197,6 +126,32 @@ export function Watchlist() {
     }
   }
 
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Eye className="h-5 w-5 text-accent" />
+              Watchlist
+            </h2>
+            <p className="text-sm text-text-muted">Track and investigate suspicious patterns</p>
+          </div>
+        </div>
+        <Card className="border-risk-critical/30 bg-risk-critical/5">
+          <CardContent className="p-6 text-center">
+            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-risk-critical opacity-50" />
+            <p className="text-text-muted mb-4">Failed to load watchlist data</p>
+            <Button variant="outline" onClick={() => refetch()}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -211,6 +166,10 @@ export function Watchlist() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
           <Button variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" />
             Export
@@ -229,7 +188,11 @@ export function Watchlist() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-text-muted">Total Items</p>
-                <p className="text-2xl font-bold">{stats.total}</p>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-12" />
+                ) : (
+                  <p className="text-2xl font-bold">{stats.total}</p>
+                )}
               </div>
               <Eye className="h-8 w-8 text-text-muted opacity-50" />
             </div>
@@ -240,7 +203,11 @@ export function Watchlist() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-text-muted">Watching</p>
-                <p className="text-2xl font-bold text-accent">{stats.watching}</p>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-12" />
+                ) : (
+                  <p className="text-2xl font-bold text-accent">{stats.watching}</p>
+                )}
               </div>
               <Eye className="h-8 w-8 text-accent opacity-50" />
             </div>
@@ -251,7 +218,11 @@ export function Watchlist() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-text-muted">Investigating</p>
-                <p className="text-2xl font-bold text-risk-high">{stats.investigating}</p>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-12" />
+                ) : (
+                  <p className="text-2xl font-bold text-risk-high">{stats.investigating}</p>
+                )}
               </div>
               <AlertTriangle className="h-8 w-8 text-risk-high opacity-50" />
             </div>
@@ -262,7 +233,11 @@ export function Watchlist() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-text-muted">Resolved</p>
-                <p className="text-2xl font-bold text-risk-low">{stats.resolved}</p>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-12" />
+                ) : (
+                  <p className="text-2xl font-bold text-risk-low">{stats.resolved}</p>
+                )}
               </div>
               <CheckCircle className="h-8 w-8 text-risk-low opacity-50" />
             </div>
@@ -273,7 +248,11 @@ export function Watchlist() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-text-muted">High Priority</p>
-                <p className="text-2xl font-bold text-risk-critical">{stats.highPriority}</p>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-12" />
+                ) : (
+                  <p className="text-2xl font-bold text-risk-critical">{stats.highPriority}</p>
+                )}
               </div>
               <AlertTriangle className="h-8 w-8 text-risk-critical opacity-50" />
             </div>
@@ -306,43 +285,45 @@ export function Watchlist() {
               <Eye className="h-4 w-4" />
               Tracked Items
             </span>
-            <Badge variant="secondary">{filteredItems.length} items</Badge>
+            <Badge variant="secondary">{items.length} items</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <ScrollArea className="h-[500px]">
             <div className="divide-y divide-border">
-              {filteredItems.length === 0 ? (
+              {isLoading ? (
+                <div className="p-4 space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-start gap-4">
+                      <Skeleton className="h-10 w-10 rounded-lg" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : items.length === 0 ? (
                 <div className="p-8 text-center text-text-muted">
                   <EyeOff className="h-12 w-12 mx-auto mb-4 opacity-30" />
                   <p>No items match your filters</p>
+                  <p className="text-xs mt-2">Add vendors, institutions, or contracts to track suspicious patterns</p>
                 </div>
               ) : (
-                filteredItems.map((item) => {
-                  const TypeIcon = getTypeIcon(item.type)
+                items.map((item) => {
+                  const TypeIcon = getTypeIcon(item.item_type)
                   const StatusIcon = getStatusIcon(item.status)
+                  const isUpdating = updateMutation.isPending || deleteMutation.isPending
                   return (
                     <div
                       key={item.id}
                       className="p-4 hover:bg-background-elevated/50 transition-colors"
                     >
                       <div className="flex items-start gap-4">
-                        {/* Star */}
-                        <button
-                          onClick={() => toggleStar(item.id)}
-                          className="mt-1 text-text-muted hover:text-risk-medium transition-colors"
-                        >
-                          {item.starred ? (
-                            <Star className="h-4 w-4 fill-risk-medium text-risk-medium" />
-                          ) : (
-                            <StarOff className="h-4 w-4" />
-                          )}
-                        </button>
-
                         {/* Icon */}
                         <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                          item.type === 'vendor' ? 'bg-accent/10 text-accent' :
-                          item.type === 'institution' ? 'bg-sector-gobernacion/10 text-sector-gobernacion' :
+                          item.item_type === 'vendor' ? 'bg-accent/10 text-accent' :
+                          item.item_type === 'institution' ? 'bg-sector-gobernacion/10 text-sector-gobernacion' :
                           'bg-text-muted/10 text-text-muted'
                         }`}>
                           <TypeIcon className="h-5 w-5" />
@@ -355,17 +336,17 @@ export function Watchlist() {
                               onClick={() => handleItemClick(item)}
                               className="font-medium text-sm hover:text-accent transition-colors truncate"
                             >
-                              {item.name}
+                              {item.item_name}
                             </button>
-                            {item.riskScore !== undefined && (
-                              <RiskBadge score={item.riskScore} className="flex-shrink-0" />
+                            {item.risk_score !== null && item.risk_score !== undefined && (
+                              <RiskBadge score={item.risk_score} className="flex-shrink-0" />
                             )}
                           </div>
                           <p className="text-xs text-text-muted mb-2">{item.reason}</p>
                           <div className="flex items-center gap-3 text-xs text-text-muted">
                             <span className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              Added {formatDate(item.addedAt.toISOString())}
+                              Added {formatDate(item.created_at)}
                             </span>
                             <Badge variant="outline" className={`text-[10px] ${getPriorityColor(item.priority)}`}>
                               {item.priority}
@@ -386,10 +367,11 @@ export function Watchlist() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={() => toggleAlerts(item.id)}
-                            title={item.alertsEnabled ? 'Disable alerts' : 'Enable alerts'}
+                            onClick={() => toggleAlerts(item.id, item.alerts_enabled)}
+                            title={item.alerts_enabled ? 'Disable alerts' : 'Enable alerts'}
+                            disabled={isUpdating}
                           >
-                            {item.alertsEnabled ? (
+                            {item.alerts_enabled ? (
                               <Bell className="h-4 w-4 text-accent" />
                             ) : (
                               <BellOff className="h-4 w-4 text-text-muted" />
@@ -401,8 +383,13 @@ export function Watchlist() {
                             className="h-8 w-8"
                             onClick={() => removeItem(item.id)}
                             title="Remove from watchlist"
+                            disabled={isUpdating}
                           >
-                            <Trash2 className="h-4 w-4 text-text-muted hover:text-risk-critical" />
+                            {deleteMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4 text-text-muted hover:text-risk-critical" />
+                            )}
                           </Button>
                         </div>
                       </div>
@@ -416,6 +403,7 @@ export function Watchlist() {
                               size="sm"
                               className="text-xs h-7"
                               onClick={() => updateStatus(item.id, 'investigating')}
+                              disabled={isUpdating}
                             >
                               <AlertTriangle className="h-3 w-3 mr-1" />
                               Start Investigation
@@ -426,6 +414,7 @@ export function Watchlist() {
                             size="sm"
                             className="text-xs h-7"
                             onClick={() => updateStatus(item.id, 'resolved')}
+                            disabled={isUpdating}
                           >
                             <CheckCircle className="h-3 w-3 mr-1" />
                             Mark Resolved

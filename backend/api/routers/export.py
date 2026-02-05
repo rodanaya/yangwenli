@@ -49,13 +49,43 @@ MAX_EXPORT_ROWS = 100_000
 router = APIRouter(prefix="/export", tags=["export"])
 
 
+def sanitize_csv_cell(value):
+    """Sanitize a CSV cell to prevent formula injection.
+
+    CSV formula injection occurs when cells start with =, +, -, @, or tab/CR/LF
+    followed by these characters. These can execute commands when opened in Excel.
+
+    We prefix dangerous values with a single quote to neutralize them.
+    """
+    if value is None:
+        return value
+
+    # Convert to string if needed
+    str_value = str(value) if not isinstance(value, str) else value
+
+    # Check for formula injection patterns
+    # Characters that can trigger formula execution in Excel/Google Sheets
+    dangerous_prefixes = ('=', '+', '-', '@', '\t', '\r', '\n')
+
+    if str_value and str_value[0] in dangerous_prefixes:
+        # Prefix with single quote to neutralize (Excel displays it as text)
+        return f"'{str_value}"
+
+    return value
+
+
 def generate_csv(rows, columns):
-    """Generate CSV content from rows and columns."""
+    """Generate CSV content from rows and columns with formula injection protection."""
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(columns)
+
+    # Sanitize column headers
+    writer.writerow([sanitize_csv_cell(col) for col in columns])
+
+    # Sanitize data rows
     for row in rows:
-        writer.writerow(row)
+        writer.writerow([sanitize_csv_cell(cell) for cell in row])
+
     output.seek(0)
     return output
 
@@ -141,7 +171,7 @@ async def export_contracts_csv(
                     c.start_date,
                     c.end_date,
                     c.sector_id,
-                    s.name as sector_name,
+                    s.name_es as sector_name,
                     c.vendor_id,
                     v.name as vendor_name,
                     v.rfc as vendor_rfc,
@@ -289,7 +319,7 @@ async def export_contracts_excel(
                     c.currency,
                     c.contract_date,
                     c.contract_year,
-                    s.name as sector_name,
+                    s.name_es as sector_name,
                     v.name as vendor_name,
                     v.rfc as vendor_rfc,
                     i.name as institution_name,
@@ -331,9 +361,10 @@ async def export_contracts_excel(
                 cell = ws.cell(row=1, column=col)
                 cell.font = cell.font.copy(bold=True)
 
-            # Data rows
+            # Data rows - sanitize all cells to prevent formula injection
             for row in rows:
-                ws.append(list(row))
+                sanitized_row = [sanitize_csv_cell(cell) for cell in row]
+                ws.append(sanitized_row)
 
             # Auto-width columns (approximate)
             for i, col in enumerate(headers, 1):

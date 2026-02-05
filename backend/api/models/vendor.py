@@ -1,6 +1,6 @@
 """Pydantic models for vendor classification endpoints."""
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 from .common import PaginationMeta
 
@@ -28,11 +28,15 @@ class VendorClassificationResponse(BaseModel):
 
 
 class VendorListItem(BaseModel):
-    """Vendor item for list responses."""
+    """Vendor item for list responses.
+
+    Note: RFC (tax ID) is intentionally excluded from list responses for privacy.
+    RFC is only available in VendorDetailResponse when viewing a specific vendor.
+    """
 
     id: int = Field(..., description="Vendor ID")
     name: str = Field(..., description="Vendor name")
-    rfc: Optional[str] = Field(None, description="RFC (Mexican tax ID)")
+    # RFC intentionally excluded from list for privacy - available in detail view
     name_normalized: Optional[str] = Field(None, description="Normalized name")
     total_contracts: int = Field(0, description="Total contract count")
     total_value_mxn: float = Field(0, description="Total contract value (MXN)")
@@ -120,7 +124,7 @@ class VendorRiskProfile(BaseModel):
     )
 
     # Risk factors
-    top_risk_factors: List[Dict[str, any]] = Field(
+    top_risk_factors: List[Dict[str, Any]] = Field(
         default_factory=list,
         description="Most common risk factors for this vendor"
     )
@@ -238,4 +242,32 @@ class VerifiedVendorListResponse(BaseModel):
     filters_applied: dict = Field(
         default_factory=dict, description="Filters that were applied"
     )
+    generated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class VendorComparisonItem(BaseModel):
+    """Vendor data optimized for comparison view."""
+
+    id: int
+    name: str
+    rfc: Optional[str] = Field(None, description="RFC (tax ID)")
+    total_contracts: int = 0
+    total_value_mxn: float = 0
+    avg_risk_score: Optional[float] = Field(None, description="Average risk score of contracts")
+    direct_award_rate: Optional[float] = Field(None, description="Percentage of direct award contracts")
+    direct_award_count: int = 0
+    high_risk_count: int = Field(0, description="Count of high/critical risk contracts")
+    high_risk_percentage: Optional[float] = Field(None, description="Percentage of high risk contracts")
+    single_bid_rate: Optional[float] = Field(None, description="Percentage of single-bid contracts")
+    avg_contract_value: Optional[float] = Field(None, description="Average contract value")
+    first_year: Optional[int] = Field(None, description="Year of first contract")
+    last_year: Optional[int] = Field(None, description="Year of last contract")
+    institution_count: int = Field(0, description="Number of unique institutions")
+
+
+class VendorComparisonResponse(BaseModel):
+    """Response for vendor comparison."""
+
+    data: List[VendorComparisonItem]
+    total: int
     generated_at: datetime = Field(default_factory=datetime.utcnow)

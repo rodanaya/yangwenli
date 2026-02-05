@@ -1,3 +1,4 @@
+import { useCallback, useMemo, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams, Link } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
@@ -7,25 +8,55 @@ import { Badge } from '@/components/ui/badge'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { institutionApi } from '@/api/client'
 import type { InstitutionFilterParams, InstitutionResponse } from '@/api/types'
-import { Building2, Search, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react'
+import { Building2, Search, ChevronLeft, ChevronRight, ExternalLink, AlertCircle, RefreshCw, Building, Loader2 } from 'lucide-react'
+import { useToast } from '@/components/ui/toast'
 import { usePrefetchOnHover } from '@/hooks/usePrefetchOnHover'
+import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 
 export function Institutions() {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const filters: InstitutionFilterParams = {
+  // Debounced search - reduces API calls
+  const {
+    inputValue: searchInput,
+    setInputValue: setSearchInput,
+    debouncedValue: debouncedSearch,
+    isPending: isSearchPending,
+  } = useDebouncedSearch(searchParams.get('search') || '', { delay: 300, minLength: 2 })
+
+  const filters: InstitutionFilterParams = useMemo(() => ({
     page: Number(searchParams.get('page')) || 1,
     per_page: Number(searchParams.get('per_page')) || 50,
-    search: searchParams.get('search') || undefined,
+    search: debouncedSearch || undefined,
     institution_type: searchParams.get('type') || undefined,
-  }
+  }), [searchParams, debouncedSearch])
 
-  const { data, isLoading, error } = useQuery({
+  // Sync URL when debounced search changes
+  useEffect(() => {
+    const currentSearch = searchParams.get('search') || ''
+    if (debouncedSearch !== currentSearch) {
+      const newParams = new URLSearchParams(searchParams)
+      if (debouncedSearch) {
+        newParams.set('search', debouncedSearch)
+        newParams.set('page', '1')
+      } else {
+        newParams.delete('search')
+      }
+      setSearchParams(newParams, { replace: true })
+    }
+  }, [debouncedSearch, searchParams, setSearchParams])
+
+  const { data, isLoading, error, isFetching, refetch } = useQuery({
     queryKey: ['institutions', filters],
     queryFn: () => institutionApi.getAll(filters),
   })
 
-  const updateFilter = (key: string, value: string | number | undefined) => {
+  const updateFilter = useCallback((key: string, value: string | number | undefined) => {
+    if (key === 'search') {
+      setSearchInput(String(value || ''))
+      return
+    }
+
     const newParams = new URLSearchParams(searchParams)
     if (value === undefined || value === '') {
       newParams.delete(key)
@@ -36,7 +67,9 @@ export function Institutions() {
       newParams.set('page', '1')
     }
     setSearchParams(newParams)
-  }
+  }, [searchParams, setSearchParams, setSearchInput])
+
+  const showSearchLoading = isSearchPending || (isFetching && searchInput !== debouncedSearch)
 
   return (
     <div className="space-y-4">
@@ -51,20 +84,26 @@ export function Institutions() {
 
         <div className="flex items-center gap-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+            {showSearchLoading ? (
+              <Loader2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted animate-spin" />
+            ) : (
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+            )}
             <input
               type="text"
               placeholder="Search institutions..."
-              className="h-9 rounded-md border border-border bg-background-card pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-              value={filters.search || ''}
-              onChange={(e) => updateFilter('search', e.target.value)}
+              className="h-9 rounded-md border border-border bg-background-card pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              aria-label="Search institutions by name or abbreviation"
             />
           </div>
 
           <select
-            className="h-9 rounded-md border border-border bg-background-card px-3 text-sm"
+            className="h-9 rounded-md border border-border bg-background-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
             value={filters.institution_type || ''}
             onChange={(e) => updateFilter('type', e.target.value || undefined)}
+            aria-label="Filter by institution type"
           >
             <option value="">All Types</option>
             <option value="federal_secretariat">Federal Secretariat</option>
@@ -86,15 +125,45 @@ export function Institutions() {
         </div>
       ) : error ? (
         <Card>
-          <CardContent className="p-8 text-center text-text-muted">
-            <p>Failed to load institutions</p>
-            <p className="text-sm">{(error as Error).message}</p>
+          <CardContent className="p-8 text-center">
+            <AlertCircle className="h-12 w-12 text-risk-high mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-text-primary mb-2">Failed to load institutions</h3>
+            <p className="text-sm text-text-muted mb-4">
+              {(error as Error).message === 'Network Error'
+                ? 'Unable to connect to server. Please check if the backend is running.'
+                : (error as Error).message || 'An unexpected error occurred.'}
+            </p>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Try again
+            </Button>
+          </CardContent>
+        </Card>
+      ) : !data?.data?.length ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Building className="h-12 w-12 text-text-muted mx-auto mb-4 opacity-50" />
+            <h3 className="text-lg font-medium text-text-primary mb-2">No institutions found</h3>
+            <p className="text-sm text-text-muted mb-4">
+              {filters.search || filters.institution_type
+                ? 'Try adjusting your filters to see more results.'
+                : 'No institutions are available in the database.'}
+            </p>
+            {(filters.search || filters.institution_type) && (
+              <Button variant="outline" size="sm" onClick={() => setSearchParams({})}>
+                Clear all filters
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {data?.data.map((institution) => (
-            <InstitutionCard key={institution.id} institution={institution} />
+          {data?.data.map((institution, index) => (
+            <InstitutionCard
+              key={institution.id}
+              institution={institution}
+              style={{ animationDelay: `${index * 30}ms` }}
+            />
           ))}
         </div>
       )}
@@ -134,7 +203,7 @@ export function Institutions() {
   )
 }
 
-function InstitutionCard({ institution }: { institution: InstitutionResponse }) {
+function InstitutionCard({ institution, style }: { institution: InstitutionResponse; style?: React.CSSProperties }) {
   // Prefetch institution details on hover for instant page transitions
   const prefetch = usePrefetchOnHover({
     queryKey: ['institution', institution.id],
@@ -143,7 +212,11 @@ function InstitutionCard({ institution }: { institution: InstitutionResponse }) 
   })
 
   return (
-    <Card className="hover:border-border-hover transition-colors" {...prefetch}>
+    <Card
+      className="hover:border-border-hover transition-colors animate-slide-up opacity-0"
+      style={style}
+      {...prefetch}
+    >
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">

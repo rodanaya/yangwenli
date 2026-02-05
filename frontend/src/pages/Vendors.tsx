@@ -9,7 +9,8 @@ import { formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
 import { vendorApi } from '@/api/client'
 import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 import type { VendorFilterParams, VendorListItem } from '@/api/types'
-import { Users, Search, ChevronLeft, ChevronRight, ExternalLink, Loader2 } from 'lucide-react'
+import { Users, Search, ChevronLeft, ChevronRight, ExternalLink, Loader2, AlertCircle, RefreshCw, UserX } from 'lucide-react'
+import { useToast } from '@/components/ui/toast'
 import { usePrefetchOnHover } from '@/hooks/usePrefetchOnHover'
 
 export function Vendors() {
@@ -46,10 +47,19 @@ export function Vendors() {
     }
   }, [debouncedSearch, searchParams, setSearchParams])
 
-  const { data, isLoading, error, isFetching } = useQuery({
+  const toast = useToast()
+
+  const { data, isLoading, error, isFetching, refetch } = useQuery({
     queryKey: ['vendors', filters],
     queryFn: () => vendorApi.getAll(filters),
   })
+
+  // Show toast on error
+  useEffect(() => {
+    if (error) {
+      toast.error('Failed to load vendors', (error as Error).message)
+    }
+  }, [error, toast])
 
   const updateFilter = useCallback((key: string, value: string | number | undefined) => {
     if (key === 'search') {
@@ -134,24 +144,45 @@ export function Vendors() {
         </div>
       ) : error ? (
         <Card>
-          <CardContent className="p-8 text-center text-text-muted">
-            <p>Failed to load vendors</p>
-            <p className="text-sm">{(error as Error).message}</p>
-            <pre className="mt-2 text-xs text-left bg-background-elevated p-2 rounded overflow-auto max-h-40">
-              {JSON.stringify(error, null, 2)}
-            </pre>
+          <CardContent className="p-8 text-center">
+            <AlertCircle className="h-12 w-12 text-risk-high mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-text-primary mb-2">Failed to load vendors</h3>
+            <p className="text-sm text-text-muted mb-4">
+              {(error as Error).message === 'Network Error'
+                ? 'Unable to connect to server. Please check if the backend is running.'
+                : (error as Error).message || 'An unexpected error occurred.'}
+            </p>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Try again
+            </Button>
           </CardContent>
         </Card>
       ) : !data?.data?.length ? (
         <Card>
-          <CardContent className="p-8 text-center text-text-muted">
-            <p>No vendors found</p>
+          <CardContent className="p-8 text-center">
+            <UserX className="h-12 w-12 text-text-muted mx-auto mb-4 opacity-50" />
+            <h3 className="text-lg font-medium text-text-primary mb-2">No vendors found</h3>
+            <p className="text-sm text-text-muted mb-4">
+              {filters.search || filters.risk_level || filters.min_contracts
+                ? 'Try adjusting your filters to see more results.'
+                : 'No vendors are available in the database.'}
+            </p>
+            {(filters.search || filters.risk_level || filters.min_contracts) && (
+              <Button variant="outline" size="sm" onClick={() => setSearchParams({})}>
+                Clear all filters
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {data?.data.map((vendor) => (
-            <VendorCard key={vendor.id} vendor={vendor} />
+          {data?.data.map((vendor, index) => (
+            <VendorCard
+              key={vendor.id}
+              vendor={vendor}
+              style={{ animationDelay: `${index * 30}ms` }}
+            />
           ))}
         </div>
       )}
@@ -193,7 +224,7 @@ export function Vendors() {
   )
 }
 
-function VendorCard({ vendor }: { vendor: VendorListItem }) {
+function VendorCard({ vendor, style }: { vendor: VendorListItem; style?: React.CSSProperties }) {
   // Prefetch vendor details on hover for instant page transitions
   const prefetch = usePrefetchOnHover({
     queryKey: ['vendor', vendor.id],
@@ -202,7 +233,11 @@ function VendorCard({ vendor }: { vendor: VendorListItem }) {
   })
 
   return (
-    <Card className="hover:border-border-hover transition-colors" {...prefetch}>
+    <Card
+      className="hover:border-border-hover transition-colors animate-slide-up opacity-0"
+      style={style}
+      {...prefetch}
+    >
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -245,15 +280,44 @@ function VendorCard({ vendor }: { vendor: VendorListItem }) {
 
         {vendor.first_contract_year && vendor.last_contract_year && (
           <div className="mt-3 pt-3 border-t border-border flex items-center justify-between text-xs text-text-muted">
-            <span>
-              Active: {vendor.first_contract_year} - {vendor.last_contract_year}
-            </span>
+            <div className="flex items-center gap-2">
+              <span>
+                {vendor.first_contract_year} - {vendor.last_contract_year}
+              </span>
+              {/* Activity status badge */}
+              {(() => {
+                const currentYear = new Date().getFullYear()
+                const yearsInactive = currentYear - vendor.last_contract_year
+                if (yearsInactive <= 1) {
+                  return (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-risk-low/20 text-risk-low">
+                      <span className="w-1.5 h-1.5 rounded-full bg-risk-low animate-pulse" aria-hidden="true" />
+                      Active
+                    </span>
+                  )
+                } else if (yearsInactive <= 3) {
+                  return (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-risk-medium/20 text-risk-medium">
+                      <span className="w-1.5 h-1.5 rounded-full bg-risk-medium" aria-hidden="true" />
+                      Dormant
+                    </span>
+                  )
+                } else {
+                  return (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-background-elevated text-text-muted">
+                      <span className="w-1.5 h-1.5 rounded-full bg-text-muted" aria-hidden="true" />
+                      Inactive
+                    </span>
+                  )
+                }
+              })()}
+            </div>
             <Link
               to={`/vendors/${vendor.id}`}
               className="flex items-center gap-1 text-accent hover:underline"
             >
               View details
-              <ExternalLink className="h-3 w-3" />
+              <ExternalLink className="h-3 w-3" aria-hidden="true" />
             </Link>
           </div>
         )}

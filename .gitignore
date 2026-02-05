@@ -71,7 +71,20 @@ nul
 
 # Database backups (keep in separate location)
 *.db.backup_*
+*.backup_*
+backend/*.backup_*
 
 # Analysis output files (regeneratable)
 *_output.txt
 structure_analysis.json
+
+# Local environment files
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+
+# Claude local settings (personal preferences)
+CLAUDE.local.md
+.claude/settings.local.json

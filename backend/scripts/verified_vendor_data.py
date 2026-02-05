@@ -1047,7 +1047,7 @@ VERIFIED_VENDORS = [
         'notes': 'US tech (split 2015 into HP Inc and HPE), computer/printer manufacturing'
     },
     {
-        'vendor_pattern': '%CISCO%',
+        'vendor_pattern': '%CISCO SYSTEMS%',
         'industry_id': 34,
         'industry_code': 'sistemas',
         'corporate_group': 'Cisco Systems',
@@ -1057,7 +1057,7 @@ VERIFIED_VENDORS = [
         'notes': 'US networking, in Mexico since 1993, 1K employees, Juarez manufacturing, $1.35B investment, 50K Networking Academy students'
     },
     {
-        'vendor_pattern': '%INTEL%',
+        'vendor_pattern': '%INTEL CORPORATION%',
         'industry_id': 34,
         'industry_code': 'sistemas',
         'corporate_group': 'Intel Corporation',
@@ -1171,7 +1171,7 @@ VERIFIED_VENDORS = [
         'notes': 'German automaker, COMPAS JV with Nissan in Aguascalientes, GLB production, also Freightliner trucks in Saltillo'
     },
     {
-        'vendor_pattern': '%AUDI%',
+        'vendor_pattern': '%AUDI MEXICO%',
         'industry_id': 105,
         'industry_code': 'automotriz',
         'corporate_group': 'Volkswagen AG',
@@ -12737,7 +12737,7 @@ VERIFIED_VENDORS = [
     # Source: Wikipedia (ADO), busbud.com, culturestraveled.com
     # ========================================
     {
-        'vendor_pattern': '%ADO%',
+        'vendor_pattern': '%AUTOBUSES DE ORIENTE%',
         'industry_id': 606,
         'industry_code': 'transporte_terrestre',
         'corporate_group': 'Autobuses de Oriente SA de CV',
@@ -13082,7 +13082,7 @@ VERIFIED_VENDORS = [
         'notes': 'San Luis Potosi plant, 85,000 jobs in state automotive industry'
     },
     {
-        'vendor_pattern': '%AUDI%',
+        'vendor_pattern': '%AUDI DE MEXICO%',
         'industry_id': 611,
         'industry_code': 'automotriz',
         'corporate_group': 'Volkswagen AG',
@@ -13537,7 +13537,7 @@ VERIFIED_VENDORS = [
         'notes': 'EY, Big Four, EY-Parthenon strategy, USD 250M AI tools investment 2025'
     },
     {
-        'vendor_pattern': '%EY%',
+        'vendor_pattern': '%ERNST%YOUNG%',
         'industry_id': 616,
         'industry_code': 'consultoria',
         'corporate_group': 'Ernst & Young Global Limited',
@@ -13997,7 +13997,9 @@ VERIFIED_VENDORS = [
         'notes': 'Industrial/institutional cleaning products'
     },
     {
-        'vendor_pattern': '%ZEP%',
+        # REMOVED: '%ZEP%' pattern matches ZEPEDA surname (293 individuals)
+        # 'vendor_pattern': '%ZEP%',
+        'vendor_pattern': '%ZEP MANUFACTURING%',  # More specific pattern
         'industry_id': 622,
         'industry_code': 'limpieza_industrial',
         'corporate_group': 'Zep Inc',
@@ -34173,7 +34175,7 @@ VERIFIED_VENDORS = [
 
     # ====== INDUSTRIAL LAUNDRY / LINEN SERVICES (824) - Verified 2026-01-12 ======
     {
-        'vendor_pattern': '%ELIS%',
+        'vendor_pattern': '%ELIS S%A%',
         'industry_id': 824,
         'industry_code': 'lavanderia_industrial',
         'corporate_group': 'Elis SA',
@@ -41883,7 +41885,7 @@ VERIFIED_VENDORS = [
         'notes': '20%+ market share Mexico'
     },
     {
-        'vendor_pattern': '%LEGO%',
+        'vendor_pattern': '%LEGO DE MEXICO%',
         'industry_id': 900,
         'industry_code': 'juguetes',
         'corporate_group': 'Lego Group',
@@ -42649,7 +42651,7 @@ VERIFIED_VENDORS = [
         'notes': '38% Mexico market share, Danone owned'
     },
     {
-        'vendor_pattern': '%CIEL%',
+        'vendor_pattern': '%AGUA CIEL%',
         'industry_id': 909,
         'industry_code': 'agua_embotellada',
         'corporate_group': 'Coca-Cola FEMSA',

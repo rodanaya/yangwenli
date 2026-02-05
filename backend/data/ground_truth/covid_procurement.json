@@ -1,0 +1,179 @@
+{
+  "case": {
+    "case_id": "COVID_PROCUREMENT_2020_2021",
+    "case_name": "COVID-19 Emergency Procurement Irregularities",
+    "case_type": "embezzlement",
+    "year_start": 2020,
+    "year_end": 2021,
+    "estimated_fraud_mxn": 3500000000,
+    "source_asf": "ASF Cuenta Publica 2020 - Auditorias al sector salud, ASF Informe Especial COVID-19",
+    "source_news": "IMCO, Transparencia Mexicana, El Economista",
+    "source_legal": "Denuncias FGR 2021-2022",
+    "confidence_level": "medium",
+    "notes": "Emergency procurement during COVID-19 pandemic saw widespread irregularities including: overpricing of medical supplies, direct awards without justification, contracts to newly created companies, and delivery failures. ASF identified over 500 observations across health sector. Confidence is medium because investigations are ongoing and some may have legitimate emergency justifications."
+  },
+  "institutions": [
+    {
+      "institution_name_source": "IMSS",
+      "full_name": "Instituto Mexicano del Seguro Social",
+      "role": "awarding_entity",
+      "evidence_strength": "high",
+      "notes": "Largest health procurement entity - multiple ASF observations"
+    },
+    {
+      "institution_name_source": "ISSSTE",
+      "full_name": "Instituto de Seguridad y Servicios Sociales de los Trabajadores del Estado",
+      "role": "awarding_entity",
+      "evidence_strength": "high",
+      "notes": "Second largest health system - emergency procurements flagged"
+    },
+    {
+      "institution_name_source": "Secretaria de Salud",
+      "full_name": "SSA",
+      "role": "awarding_entity",
+      "evidence_strength": "high",
+      "notes": "Federal health ministry - coordinated emergency purchases"
+    },
+    {
+      "institution_name_source": "INSABI",
+      "full_name": "Instituto de Salud para el Bienestar",
+      "role": "awarding_entity",
+      "evidence_strength": "medium",
+      "notes": "Replaced Seguro Popular - procurement irregularities during transition"
+    },
+    {
+      "institution_name_source": "BIRMEX",
+      "full_name": "Laboratorios de Biologicos y Reactivos de Mexico",
+      "role": "intermediary",
+      "evidence_strength": "medium",
+      "notes": "State pharmaceutical lab - vaccine distribution irregularities"
+    }
+  ],
+  "vendors": [
+    {
+      "vendor_name_source": "CYBER ROBOTICS SOLUTIONS SA DE CV",
+      "rfc_source": null,
+      "role": "shell_company",
+      "evidence_strength": "high",
+      "notes": "Tech company awarded ventilator contracts with no medical experience. Company was months old, products never delivered."
+    },
+    {
+      "vendor_name_source": "GRUPO FERSEO SA DE CV",
+      "rfc_source": null,
+      "role": "beneficiary",
+      "evidence_strength": "medium",
+      "notes": "Medical equipment supplier - price anomalies flagged"
+    },
+    {
+      "vendor_name_source": "LOMEDIC SA DE CV",
+      "rfc_source": null,
+      "role": "beneficiary",
+      "evidence_strength": "medium",
+      "notes": "Medical supply company - direct award concentration"
+    },
+    {
+      "vendor_name_source": "FARMACEUTICOS MAYPO SA DE CV",
+      "rfc_source": null,
+      "role": "beneficiary",
+      "evidence_strength": "medium",
+      "notes": "Pharmaceutical distributor - overpricing flagged"
+    },
+    {
+      "vendor_name_source": "DISTRIBUIDORA INTERNACIONAL DE MEDICAMENTOS SA DE CV",
+      "rfc_source": null,
+      "role": "beneficiary",
+      "evidence_strength": "medium",
+      "notes": "Drug distributor - delivery compliance issues"
+    },
+    {
+      "vendor_name_source": "IMPORTADORA Y MANUFACTURERA BRULUART SA DE CV",
+      "rfc_source": null,
+      "role": "beneficiary",
+      "evidence_strength": "medium",
+      "notes": "Medical equipment importer - price above market"
+    },
+    {
+      "vendor_name_source": "EQUIPOS MEDICOS VIZCARRA SA DE CV",
+      "rfc_source": null,
+      "role": "beneficiary",
+      "evidence_strength": "medium",
+      "notes": "Medical equipment - high concentration of direct awards"
+    },
+    {
+      "vendor_name_source": "COMERCIALIZADORA LEMANS SA DE CV",
+      "rfc_source": null,
+      "role": "shell_company",
+      "evidence_strength": "medium",
+      "notes": "Trading company with minimal history awarded large contracts"
+    }
+  ],
+  "contracts": [
+    {
+      "description": "IMSS ventilator emergency purchase 2020",
+      "year_source": 2020,
+      "amount_source": 1500000000,
+      "evidence_strength": "high",
+      "notes": "Emergency ventilator procurement - significant overpricing identified"
+    },
+    {
+      "description": "IMSS PPE direct award batch 2020",
+      "year_source": 2020,
+      "amount_source": 800000000,
+      "evidence_strength": "medium",
+      "notes": "Personal protective equipment - prices above international benchmarks"
+    },
+    {
+      "description": "SSA rapid test kits 2020",
+      "year_source": 2020,
+      "amount_source": 500000000,
+      "evidence_strength": "medium",
+      "notes": "COVID test kits - delivery compliance issues"
+    },
+    {
+      "description": "ISSSTE medication emergency 2021",
+      "year_source": 2021,
+      "amount_source": 600000000,
+      "evidence_strength": "medium",
+      "notes": "Emergency medication purchases during shortage"
+    }
+  ],
+  "patterns": [
+    {
+      "pattern_type": "price_anomaly",
+      "description": "Ventilators purchased at 3-5x international market price",
+      "evidence_strength": "high"
+    },
+    {
+      "pattern_type": "new_vendor_large_contract",
+      "description": "Companies created in 2019-2020 winning contracts >100M MXN",
+      "evidence_strength": "medium"
+    },
+    {
+      "pattern_type": "delivery_failure",
+      "description": "Multiple contracts with partial or no delivery",
+      "evidence_strength": "high"
+    },
+    {
+      "pattern_type": "direct_award_concentration",
+      "description": "Same vendors receiving multiple direct awards within weeks",
+      "evidence_strength": "medium"
+    }
+  ],
+  "metadata": {
+    "data_version": "1.0",
+    "last_updated": "2026-02-04",
+    "compiled_by": "Yang Wen-li Validation Framework",
+    "primary_sources": [
+      "ASF Informe Especial COVID-19 (2021)",
+      "ASF Cuenta Publica 2020 - Sector Salud",
+      "IMCO Compras COVID Tracker",
+      "Transparencia Mexicana COVID procurement analysis"
+    ],
+    "caveats": [
+      "COVID emergency context may justify some direct awards",
+      "Ongoing investigations - not all vendors are proven fraudulent",
+      "Price benchmarks complicated by global supply chain disruption",
+      "Evidence strength varies significantly between cases"
+    ]
+  }
+}

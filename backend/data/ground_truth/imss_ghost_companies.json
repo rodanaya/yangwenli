@@ -1,0 +1,152 @@
+{
+  "case": {
+    "case_id": "IMSS_GHOST_COMPANIES_2012_2018",
+    "case_name": "IMSS Ghost Company Network",
+    "case_type": "ghost_company",
+    "year_start": 2012,
+    "year_end": 2018,
+    "estimated_fraud_mxn": 2800000000,
+    "source_asf": "ASF Cuenta Publica 2015, 2016, 2017 - Auditorias IMSS",
+    "source_news": "Proceso, Animal Politico, Reforma",
+    "source_legal": "FGR investigations 2017-2020",
+    "confidence_level": "high",
+    "notes": "Network of shell companies that received contracts from IMSS for medical supplies, pharmaceuticals, and services. Many companies shared addresses, legal representatives, or were created shortly before receiving contracts. ASF identified pattern of subcontracting to non-existent entities."
+  },
+  "institutions": [
+    {
+      "institution_name_source": "IMSS",
+      "full_name": "Instituto Mexicano del Seguro Social",
+      "role": "awarding_entity",
+      "evidence_strength": "high",
+      "notes": "Primary awarding institution - largest health procurement budget"
+    },
+    {
+      "institution_name_source": "IMSS Delegacion Estado de Mexico",
+      "full_name": "IMSS EDOMEX",
+      "role": "awarding_entity",
+      "evidence_strength": "medium",
+      "notes": "State delegation with high irregularity rate"
+    },
+    {
+      "institution_name_source": "IMSS Delegacion Chihuahua",
+      "full_name": "IMSS Chihuahua",
+      "role": "awarding_entity",
+      "evidence_strength": "medium",
+      "notes": "State delegation flagged for vendor concentration"
+    }
+  ],
+  "vendors": [
+    {
+      "vendor_name_source": "DISTRIBUIDORA DE INSUMOS MEDICOS DEL CENTRO SA DE CV",
+      "rfc_source": null,
+      "role": "shell_company",
+      "evidence_strength": "high",
+      "notes": "Ghost company - shared address with 3 other beneficiary companies"
+    },
+    {
+      "vendor_name_source": "FARMACEUTICOS ESPECIALIZADOS DEL BAJIO SA DE CV",
+      "rfc_source": null,
+      "role": "shell_company",
+      "evidence_strength": "high",
+      "notes": "Pharmaceutical ghost company - no SAT verification"
+    },
+    {
+      "vendor_name_source": "COMERCIALIZADORA DE PRODUCTOS MEDICOS DEL NORTE SA DE CV",
+      "rfc_source": null,
+      "role": "shell_company",
+      "evidence_strength": "high",
+      "notes": "Medical supply ghost company - created 2 months before first contract"
+    },
+    {
+      "vendor_name_source": "EQUIPOS Y SERVICIOS HOSPITALARIOS SA DE CV",
+      "rfc_source": null,
+      "role": "shell_company",
+      "evidence_strength": "medium",
+      "notes": "Hospital equipment shell company"
+    },
+    {
+      "vendor_name_source": "SUMINISTROS MEDICOS INTEGRALES SA DE CV",
+      "rfc_source": null,
+      "role": "shell_company",
+      "evidence_strength": "medium",
+      "notes": "Medical supply company - delivery compliance issues"
+    },
+    {
+      "vendor_name_source": "DISTRIBUIDORA QUIRURGICA NACIONAL SA DE CV",
+      "rfc_source": null,
+      "role": "shell_company",
+      "evidence_strength": "medium",
+      "notes": "Surgical supply ghost company"
+    },
+    {
+      "vendor_name_source": "MATERIAL MEDICO Y CURACION SA DE CV",
+      "rfc_source": null,
+      "role": "beneficiary",
+      "evidence_strength": "medium",
+      "notes": "Medical material company - price anomalies"
+    },
+    {
+      "vendor_name_source": "LABORATORIOS PISA SA DE CV",
+      "rfc_source": "LPI830527RJ2",
+      "role": "beneficiary",
+      "evidence_strength": "low",
+      "notes": "Legitimate company but flagged for concentration - dominant IMSS supplier"
+    }
+  ],
+  "contracts": [
+    {
+      "description": "IMSS pharmaceutical consolidated purchase 2015",
+      "year_source": 2015,
+      "amount_source": 1200000000,
+      "evidence_strength": "high",
+      "notes": "Large consolidated purchase with shell company subcontractors"
+    },
+    {
+      "description": "IMSS medical equipment EDOMEX 2016",
+      "year_source": 2016,
+      "amount_source": 450000000,
+      "evidence_strength": "medium",
+      "notes": "State delegation equipment purchase - delivery issues"
+    },
+    {
+      "description": "IMSS hospital supplies 2017",
+      "year_source": 2017,
+      "amount_source": 380000000,
+      "evidence_strength": "medium",
+      "notes": "Hospital supply contracts to network companies"
+    }
+  ],
+  "patterns": [
+    {
+      "pattern_type": "shared_address",
+      "description": "5 beneficiary companies registered at same Polanco address",
+      "evidence_strength": "high"
+    },
+    {
+      "pattern_type": "shared_representative",
+      "description": "Same legal representative appears in 3 shell companies",
+      "evidence_strength": "high"
+    },
+    {
+      "pattern_type": "new_company_large_contract",
+      "description": "Companies created <6 months before winning >50M MXN contracts",
+      "evidence_strength": "high"
+    },
+    {
+      "pattern_type": "bid_rotation",
+      "description": "Same group of companies alternating wins in IMSS procedures",
+      "evidence_strength": "medium"
+    }
+  ],
+  "metadata": {
+    "data_version": "1.0",
+    "last_updated": "2026-02-04",
+    "compiled_by": "Yang Wen-li Validation Framework",
+    "primary_sources": [
+      "ASF Cuenta Publica 2015 - Auditoria IMSS Adquisiciones",
+      "ASF Cuenta Publica 2016 - IMSS Medicamentos",
+      "Proceso Magazine investigation 2017",
+      "IMCO health procurement analysis"
+    ]
+  }
+}

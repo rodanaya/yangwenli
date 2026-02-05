@@ -83,6 +83,9 @@ class InstitutionDetailResponse(InstitutionResponse):
     avg_contract_value: Optional[float] = Field(None, description="Average contract value")
     high_risk_contract_count: Optional[int] = Field(None, description="Count of high/critical risk contracts")
     high_risk_percentage: Optional[float] = Field(None, description="Percentage of contracts that are high risk")
+    avg_risk_score: Optional[float] = Field(None, description="Average risk score of contracts")
+    direct_award_rate: Optional[float] = Field(None, description="Percentage of direct award contracts")
+    direct_award_count: Optional[int] = Field(None, description="Count of direct award contracts")
 
 
 class InstitutionRiskProfile(BaseModel):
@@ -226,5 +229,32 @@ class InstitutionSearchResponse(BaseModel):
 
     data: List[InstitutionSearchResult]
     query: str
+    total: int
+    generated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class InstitutionComparisonItem(BaseModel):
+    """Institution data optimized for comparison view."""
+
+    id: int
+    name: str
+    siglas: Optional[str] = None
+    institution_type: Optional[str] = None
+    sector_id: Optional[int] = None
+    total_contracts: int = 0
+    total_value_mxn: float = 0
+    avg_risk_score: Optional[float] = Field(None, description="Average risk score of contracts")
+    direct_award_rate: Optional[float] = Field(None, description="Percentage of direct award contracts")
+    direct_award_count: int = 0
+    high_risk_count: int = Field(0, description="Count of high/critical risk contracts")
+    high_risk_percentage: Optional[float] = Field(None, description="Percentage of high risk contracts")
+    single_bid_rate: Optional[float] = Field(None, description="Percentage of single-bid contracts")
+    avg_contract_value: Optional[float] = Field(None, description="Average contract value")
+
+
+class InstitutionComparisonResponse(BaseModel):
+    """Response for institution comparison."""
+
+    data: List[InstitutionComparisonItem]
     total: int
     generated_at: datetime = Field(default_factory=datetime.utcnow)

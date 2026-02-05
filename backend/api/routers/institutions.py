@@ -25,6 +25,8 @@ from ..models.institution import (
     InstitutionHierarchyResponse,
     InstitutionSearchResult,
     InstitutionSearchResponse,
+    InstitutionComparisonItem,
+    InstitutionComparisonResponse,
 )
 from ..models.common import PaginationMeta
 from ..models.contract import ContractListItem, ContractListResponse, PaginationMeta as ContractPaginationMeta
@@ -211,7 +213,8 @@ async def get_institution(institution_id: int):
     """
     Get details for a specific institution.
 
-    Returns institution information with risk profile data.
+    Returns institution information with risk profile data including
+    avg_risk_score, direct_award_rate, and high_risk metrics for comparison.
     """
     with get_db() as conn:
         cursor = conn.cursor()
@@ -242,21 +245,35 @@ async def get_institution(institution_id: int):
                 detail=f"Institution {institution_id} not found"
             )
 
-        # Get high risk contract count
+        # Get comprehensive risk metrics in one query
         cursor.execute("""
             SELECT
-                COUNT(*) as high_risk_count,
-                COUNT(*) * 1.0 / NULLIF(?, 0) as high_risk_pct
+                COUNT(*) as total,
+                SUM(CASE WHEN risk_level IN ('high', 'critical') THEN 1 ELSE 0 END) as high_risk_count,
+                SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) as direct_award_count,
+                AVG(risk_score) as avg_risk_score
             FROM contracts
             WHERE institution_id = ?
-            AND risk_level IN ('high', 'critical')
-        """, (row["total_contracts"], institution_id))
-        risk_row = cursor.fetchone()
+            AND (amount_mxn IS NULL OR amount_mxn <= ?)
+        """, (institution_id, MAX_CONTRACT_VALUE))
+        metrics_row = cursor.fetchone()
 
-        # Calculate average contract value
+        total_contracts = row["total_contracts"] or 0
+
+        # Calculate derived metrics
         avg_value = None
-        if row["total_contracts"] and row["total_contracts"] > 0 and row["total_amount_mxn"]:
-            avg_value = row["total_amount_mxn"] / row["total_contracts"]
+        if total_contracts > 0 and row["total_amount_mxn"]:
+            avg_value = row["total_amount_mxn"] / total_contracts
+
+        high_risk_count = metrics_row["high_risk_count"] or 0 if metrics_row else 0
+        high_risk_pct = (high_risk_count / total_contracts * 100) if total_contracts > 0 else 0.0
+
+        direct_award_count = metrics_row["direct_award_count"] or 0 if metrics_row else 0
+        direct_award_rate = (direct_award_count / total_contracts * 100) if total_contracts > 0 else 0.0
+
+        avg_risk_score = metrics_row["avg_risk_score"] if metrics_row else None
+        if avg_risk_score is not None:
+            avg_risk_score = round(avg_risk_score, 4)
 
         return InstitutionDetailResponse(
             id=row["id"],
@@ -271,7 +288,7 @@ async def get_institution(institution_id: int):
             sector_id=row["sector_id"],
             state_code=row["state_code"],
             geographic_scope=row["geographic_scope"],
-            total_contracts=row["total_contracts"],
+            total_contracts=total_contracts,
             total_amount_mxn=row["total_amount_mxn"],
             classification_confidence=row["classification_confidence"],
             data_quality_grade=row["data_quality_grade"],
@@ -279,8 +296,11 @@ async def get_institution(institution_id: int):
             size_risk_adjustment=row["size_risk_adjustment"],
             autonomy_risk_baseline=row["autonomy_risk_baseline"],
             avg_contract_value=avg_value,
-            high_risk_contract_count=risk_row["high_risk_count"] if risk_row else 0,
-            high_risk_percentage=risk_row["high_risk_pct"] if risk_row else 0.0
+            high_risk_contract_count=high_risk_count,
+            high_risk_percentage=round(high_risk_pct, 2),
+            avg_risk_score=avg_risk_score,
+            direct_award_rate=round(direct_award_rate, 2),
+            direct_award_count=direct_award_count
         )
 
 
@@ -426,6 +446,118 @@ async def search_institutions(
 
     except sqlite3.Error as e:
         logger.error(f"Database error in search_institutions: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
+@router.get("/compare", response_model=InstitutionComparisonResponse)
+async def compare_institutions(
+    ids: str = Query(..., description="Comma-separated list of institution IDs to compare"),
+):
+    """
+    Compare multiple institutions side-by-side.
+
+    Returns comprehensive metrics for each institution including:
+    - avg_risk_score: Average risk score of all contracts
+    - direct_award_rate: Percentage of direct award contracts
+    - high_risk_count: Number of high/critical risk contracts
+    - single_bid_rate: Percentage of single-bid contracts
+
+    Accepts up to 10 institutions for comparison.
+    """
+    try:
+        # Parse institution IDs
+        try:
+            institution_ids = [int(id.strip()) for id in ids.split(",") if id.strip()]
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid institution IDs. Must be comma-separated integers.")
+
+        if not institution_ids:
+            raise HTTPException(status_code=400, detail="At least one institution ID is required")
+
+        if len(institution_ids) > 10:
+            raise HTTPException(status_code=400, detail="Maximum 10 institutions can be compared at once")
+
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # Build placeholders for IN clause
+            placeholders = ",".join("?" * len(institution_ids))
+
+            # Get institution info with aggregated metrics in a single efficient query
+            query = f"""
+                SELECT
+                    i.id,
+                    i.name,
+                    i.siglas,
+                    i.institution_type,
+                    i.sector_id,
+                    i.total_contracts,
+                    i.total_amount_mxn,
+                    COALESCE(metrics.avg_risk_score, 0) as avg_risk_score,
+                    COALESCE(metrics.direct_award_count, 0) as direct_award_count,
+                    COALESCE(metrics.high_risk_count, 0) as high_risk_count,
+                    COALESCE(metrics.single_bid_count, 0) as single_bid_count
+                FROM institutions i
+                LEFT JOIN (
+                    SELECT
+                        institution_id,
+                        AVG(risk_score) as avg_risk_score,
+                        SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) as direct_award_count,
+                        SUM(CASE WHEN risk_level IN ('high', 'critical') THEN 1 ELSE 0 END) as high_risk_count,
+                        SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) as single_bid_count
+                    FROM contracts
+                    WHERE institution_id IN ({placeholders})
+                    AND (amount_mxn IS NULL OR amount_mxn <= ?)
+                    GROUP BY institution_id
+                ) metrics ON i.id = metrics.institution_id
+                WHERE i.id IN ({placeholders})
+            """
+
+            # Parameters: institution_ids for subquery, MAX_CONTRACT_VALUE, institution_ids for main query
+            params = institution_ids + [MAX_CONTRACT_VALUE] + institution_ids
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+
+            # Build comparison items
+            items = []
+            for row in rows:
+                total_contracts = row["total_contracts"] or 0
+                total_value = row["total_amount_mxn"] or 0
+
+                # Calculate rates
+                direct_award_rate = (row["direct_award_count"] / total_contracts * 100) if total_contracts > 0 else 0.0
+                high_risk_pct = (row["high_risk_count"] / total_contracts * 100) if total_contracts > 0 else 0.0
+                single_bid_rate = (row["single_bid_count"] / total_contracts * 100) if total_contracts > 0 else 0.0
+                avg_contract_value = (total_value / total_contracts) if total_contracts > 0 else None
+
+                items.append(InstitutionComparisonItem(
+                    id=row["id"],
+                    name=row["name"],
+                    siglas=row["siglas"],
+                    institution_type=row["institution_type"],
+                    sector_id=row["sector_id"],
+                    total_contracts=total_contracts,
+                    total_value_mxn=total_value,
+                    avg_risk_score=round(row["avg_risk_score"], 4) if row["avg_risk_score"] else None,
+                    direct_award_rate=round(direct_award_rate, 2),
+                    direct_award_count=row["direct_award_count"],
+                    high_risk_count=row["high_risk_count"],
+                    high_risk_percentage=round(high_risk_pct, 2),
+                    single_bid_rate=round(single_bid_rate, 2),
+                    avg_contract_value=round(avg_contract_value, 2) if avg_contract_value else None,
+                ))
+
+            # Sort to match input order
+            id_order = {id: i for i, id in enumerate(institution_ids)}
+            items.sort(key=lambda x: id_order.get(x.id, 999))
+
+            return InstitutionComparisonResponse(
+                data=items,
+                total=len(items),
+            )
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error in compare_institutions: {e}")
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
@@ -629,7 +761,7 @@ async def get_institution_contracts(
                 SELECT
                     c.id, c.contract_number, c.title, c.amount_mxn,
                     c.contract_date, c.contract_year, c.sector_id,
-                    s.name as sector_name, c.risk_score, c.risk_level,
+                    s.name_es as sector_name, c.risk_score, c.risk_level,
                     c.is_direct_award, c.is_single_bid,
                     v.name as vendor_name, i.name as institution_name,
                     c.procedure_type

@@ -1,0 +1,221 @@
+{
+  "case": {
+    "case_id": "ESTAFA_MAESTRA_2013_2018",
+    "case_name": "La Estafa Maestra",
+    "case_type": "ghost_company",
+    "year_start": 2013,
+    "year_end": 2018,
+    "estimated_fraud_mxn": 7670000000,
+    "source_asf": "ASF Cuenta Publica 2015, 2016, 2017 - Auditorias de Desempeno",
+    "source_news": "Animal Politico / Mexicanos Contra la Corrupcion y la Impunidad - https://www.animalpolitico.com/estafa-maestra/",
+    "source_legal": "Expedientes PGR/FGR 2017-2021",
+    "confidence_level": "high",
+    "notes": "Largest documented public procurement fraud scheme in Mexican history. Federal agencies contracted with public universities, which then subcontracted to shell companies that provided no services. Scheme documented extensively by ASF audits and investigative journalism."
+  },
+  "institutions": [
+    {
+      "institution_name_source": "SEDESOL",
+      "full_name": "Secretaria de Desarrollo Social",
+      "role": "source",
+      "evidence_strength": "high",
+      "notes": "Primary source of diverted funds - 7 convenience agreements identified"
+    },
+    {
+      "institution_name_source": "SEDATU",
+      "full_name": "Secretaria de Desarrollo Agrario Territorial y Urbano",
+      "role": "source",
+      "evidence_strength": "high",
+      "notes": "Second major source of diverted funds"
+    },
+    {
+      "institution_name_source": "BANSEFI",
+      "full_name": "Banco del Ahorro Nacional y Servicios Financieros",
+      "role": "source",
+      "evidence_strength": "high",
+      "notes": "Handled financial transfers"
+    },
+    {
+      "institution_name_source": "PEMEX",
+      "full_name": "Petroleos Mexicanos",
+      "role": "source",
+      "evidence_strength": "medium",
+      "notes": "Smaller amounts identified in related schemes"
+    },
+    {
+      "institution_name_source": "Universidad Autonoma del Estado de Mexico",
+      "full_name": "UAEMEX",
+      "role": "intermediary",
+      "evidence_strength": "high",
+      "notes": "Primary university intermediary - received contracts, subcontracted to shell companies"
+    },
+    {
+      "institution_name_source": "Universidad Autonoma del Estado de Morelos",
+      "full_name": "UAEMOR",
+      "role": "intermediary",
+      "evidence_strength": "high",
+      "notes": "Second major university intermediary"
+    },
+    {
+      "institution_name_source": "Universidad Politecnica del Golfo de Mexico",
+      "full_name": "UPGM",
+      "role": "intermediary",
+      "evidence_strength": "high",
+      "notes": "University intermediary identified in ASF audits"
+    },
+    {
+      "institution_name_source": "Universidad Tecnologica del Sur del Estado de Mexico",
+      "full_name": "UTSEM",
+      "role": "intermediary",
+      "evidence_strength": "high",
+      "notes": "University intermediary"
+    },
+    {
+      "institution_name_source": "Universidad Popular de la Chontalpa",
+      "full_name": "UPCH",
+      "role": "intermediary",
+      "evidence_strength": "high",
+      "notes": "University intermediary"
+    },
+    {
+      "institution_name_source": "Universidad Tecnologica de Nezahualcoyotl",
+      "full_name": "UTN",
+      "role": "intermediary",
+      "evidence_strength": "high",
+      "notes": "University intermediary"
+    },
+    {
+      "institution_name_source": "Universidad Autonoma del Carmen",
+      "full_name": "UNACAR",
+      "role": "intermediary",
+      "evidence_strength": "medium",
+      "notes": "University intermediary"
+    },
+    {
+      "institution_name_source": "Universidad Intercultural del Estado de Mexico",
+      "full_name": "UIEM",
+      "role": "intermediary",
+      "evidence_strength": "medium",
+      "notes": "University intermediary"
+    }
+  ],
+  "vendors": [
+    {
+      "vendor_name_source": "ESGER SA DE CV",
+      "rfc_source": null,
+      "role": "shell_company",
+      "evidence_strength": "high",
+      "notes": "Shell company - no employees, no facilities, received large payments"
+    },
+    {
+      "vendor_name_source": "CONSTRUCTORA Y URBANIZADORA ARA SA DE CV",
+      "rfc_source": null,
+      "role": "shell_company",
+      "evidence_strength": "high",
+      "notes": "Ghost company identified in UAEMEX subcontracts"
+    },
+    {
+      "vendor_name_source": "PUBLICIDAD GRAFICA INTEGRAL SA DE CV",
+      "rfc_source": null,
+      "role": "shell_company",
+      "evidence_strength": "high",
+      "notes": "Shell company for advertising services never rendered"
+    },
+    {
+      "vendor_name_source": "DESARROLLOS INMOBILIARIOS CADIZ SA DE CV",
+      "rfc_source": null,
+      "role": "shell_company",
+      "evidence_strength": "high",
+      "notes": "Ghost company with fake address"
+    },
+    {
+      "vendor_name_source": "GRUPO CONSTRUCTOR ROGU SA DE CV",
+      "rfc_source": null,
+      "role": "shell_company",
+      "evidence_strength": "high",
+      "notes": "Construction shell company - no projects completed"
+    },
+    {
+      "vendor_name_source": "COMERCIALIZADORA UYMA SA DE CV",
+      "rfc_source": null,
+      "role": "shell_company",
+      "evidence_strength": "high",
+      "notes": "Trading shell company"
+    },
+    {
+      "vendor_name_source": "DESARROLLO INMOBILIARIO LEGARIA SA DE CV",
+      "rfc_source": null,
+      "role": "shell_company",
+      "evidence_strength": "medium",
+      "notes": "Real estate ghost company"
+    },
+    {
+      "vendor_name_source": "PRODUCTOS Y MATERIALES TEXTILES SA DE CV",
+      "rfc_source": null,
+      "role": "shell_company",
+      "evidence_strength": "medium",
+      "notes": "Textile trading ghost company"
+    },
+    {
+      "vendor_name_source": "ARTBOX PUBLICIDAD SA DE CV",
+      "rfc_source": null,
+      "role": "shell_company",
+      "evidence_strength": "high",
+      "notes": "Advertising shell company"
+    },
+    {
+      "vendor_name_source": "INTELISIS SA DE CV",
+      "rfc_source": null,
+      "role": "shell_company",
+      "evidence_strength": "medium",
+      "notes": "IT services ghost company"
+    },
+    {
+      "vendor_name_source": "GRUPO CONSTRUCTOR CINCO SA DE CV",
+      "rfc_source": null,
+      "role": "shell_company",
+      "evidence_strength": "medium",
+      "notes": "Construction shell company"
+    },
+    {
+      "vendor_name_source": "PUBLICIDAD Y ARTICULOS PROMOCIONALES SA DE CV",
+      "rfc_source": null,
+      "role": "shell_company",
+      "evidence_strength": "medium",
+      "notes": "Promotional items ghost company"
+    }
+  ],
+  "contracts": [
+    {
+      "description": "SEDESOL-UAEMEX convenience agreement 2015",
+      "year_source": 2015,
+      "amount_source": 2500000000,
+      "evidence_strength": "high",
+      "notes": "Primary SEDESOL diversion through UAEMEX"
+    },
+    {
+      "description": "SEDATU-UAEMEX convenience agreement 2016",
+      "year_source": 2016,
+      "amount_source": 1800000000,
+      "evidence_strength": "high",
+      "notes": "SEDATU funds through UAEMEX"
+    },
+    {
+      "description": "SEDESOL-UAEMOR convenience agreement 2016",
+      "year_source": 2016,
+      "amount_source": 1200000000,
+      "evidence_strength": "high",
+      "notes": "SEDESOL through Morelos university"
+    }
+  ],
+  "metadata": {
+    "data_version": "1.0",
+    "last_updated": "2026-02-04",
+    "compiled_by": "Yang Wen-li Validation Framework",
+    "primary_sources": [
+      "ASF Cuenta Publica 2015 Auditoria 14-0-20100-02-0398",
+      "ASF Cuenta Publica 2016 Auditoria 15-0-20100-02-0465",
+      "Animal Politico - La Estafa Maestra investigation 2017",
+      "MCCI - Mexicanos Contra la Corrupcion reports"
+    ]
+  }
+}

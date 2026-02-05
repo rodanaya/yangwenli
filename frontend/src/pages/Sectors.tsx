@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
-import { formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
+import { formatCompactMXN, formatNumber, formatPercentSafe } from '@/lib/utils'
 import { sectorApi } from '@/api/client'
-import { SECTOR_COLORS } from '@/lib/constants'
+import { SECTOR_COLORS, getSectorNameEN } from '@/lib/constants'
 import type { SectorStatistics } from '@/api/types'
 import { BarChart3, ExternalLink } from 'lucide-react'
 import { usePrefetchOnHover } from '@/hooks/usePrefetchOnHover'
@@ -56,7 +56,7 @@ export function Sectors() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-lg font-semibold">Sectors</h2>
+        <h2 className="text-lg font-semibold">Sectors Overview</h2>
         <p className="text-sm text-text-muted">12 sectors covering {formatNumber(data?.total_contracts || 0)} contracts</p>
       </div>
 
@@ -80,8 +80,9 @@ export function Sectors() {
                 />
                 <YAxis
                   type="category"
-                  dataKey="sector_name"
+                  dataKey="sector_code"
                   tick={{ fill: '#a3a3a3', fontSize: 11 }}
+                  tickFormatter={(code) => getSectorNameEN(code)}
                   width={100}
                 />
                 <RechartsTooltip
@@ -90,7 +91,7 @@ export function Sectors() {
                       const data = payload[0].payload as SectorStatistics
                       return (
                         <div className="rounded-lg border border-border bg-background-card p-3 shadow-lg">
-                          <p className="font-medium">{data.sector_name}</p>
+                          <p className="font-medium">{getSectorNameEN(data.sector_code)}</p>
                           <p className="text-sm text-text-muted">Value: {formatCompactMXN(data.total_value_mxn)}</p>
                           <p className="text-sm text-text-muted">Contracts: {formatNumber(data.total_contracts)}</p>
                           <p className="text-sm text-text-muted">Avg Risk: {(data.avg_risk_score * 100).toFixed(1)}%</p>
@@ -147,7 +148,7 @@ function SectorCard({ sector }: { sector: SectorStatistics }) {
                 to={`/sectors/${sector.sector_id}`}
                 className="text-sm font-medium hover:text-accent transition-colors"
               >
-                {sector.sector_name}
+                {getSectorNameEN(sector.sector_code)}
               </Link>
               <p className="text-xs text-text-muted">{formatNumber(sector.total_contracts)} contracts</p>
             </div>
@@ -167,11 +168,11 @@ function SectorCard({ sector }: { sector: SectorStatistics }) {
           </div>
           <div>
             <p className="text-text-muted text-xs">Direct Awards</p>
-            <p className="font-medium tabular-nums">{formatPercent(sector.direct_award_pct)}</p>
+            <p className="font-medium tabular-nums">{formatPercentSafe(sector.direct_award_pct, false)}</p>
           </div>
           <div>
             <p className="text-text-muted text-xs">Single Bids</p>
-            <p className="font-medium tabular-nums">{formatPercent(sector.single_bid_pct)}</p>
+            <p className="font-medium tabular-nums">{formatPercentSafe(sector.single_bid_pct, false)}</p>
           </div>
         </div>
 

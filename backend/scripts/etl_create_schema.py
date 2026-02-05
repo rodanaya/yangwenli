@@ -157,6 +157,53 @@ CREATE TABLE IF NOT EXISTS status_codes (
 );
 
 -- =============================================================================
+-- INSTITUTION CLASSIFICATION TABLES (18-Type Taxonomy v2.0)
+-- =============================================================================
+
+-- Institution Types (19 types including 'other')
+-- Aligned with IMF CRI and OECD corruption risk baselines
+CREATE TABLE IF NOT EXISTS institution_types (
+    id INTEGER PRIMARY KEY,
+    code VARCHAR(30) UNIQUE NOT NULL,
+    name_es VARCHAR(100) NOT NULL,
+    name_en VARCHAR(100),
+    description_es TEXT,
+    description_en TEXT,
+    risk_baseline REAL DEFAULT 0.25,
+    display_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Size Tiers (based on procurement volume)
+-- Risk adjustments based on oversight capacity vs. procurement volume
+CREATE TABLE IF NOT EXISTS size_tiers (
+    id INTEGER PRIMARY KEY,
+    code VARCHAR(20) UNIQUE NOT NULL,
+    name_es VARCHAR(50) NOT NULL,
+    name_en VARCHAR(50),
+    min_contracts INTEGER,
+    max_contracts INTEGER,
+    risk_adjustment REAL DEFAULT 0.0,
+    description TEXT,
+    display_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Autonomy Levels (budget independence)
+-- Based on Mexican constitutional/legal structure
+CREATE TABLE IF NOT EXISTS autonomy_levels (
+    id INTEGER PRIMARY KEY,
+    code VARCHAR(30) UNIQUE NOT NULL,
+    name_es VARCHAR(100) NOT NULL,
+    name_en VARCHAR(100),
+    description_es TEXT,
+    description_en TEXT,
+    risk_baseline REAL DEFAULT 0.20,
+    display_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =============================================================================
 -- ENTITY TABLES (Normalized Vendors and Institutions)
 -- =============================================================================
 
@@ -183,6 +230,7 @@ CREATE TABLE IF NOT EXISTS vendors (
 );
 
 -- Normalized Institutions Table
+-- Enhanced with 18-type taxonomy v2.0 dimensions
 CREATE TABLE IF NOT EXISTS institutions (
     id INTEGER PRIMARY KEY,
     siglas VARCHAR(50),
@@ -193,11 +241,30 @@ CREATE TABLE IF NOT EXISTS institutions (
     sector_id INTEGER,
     clave_institucion VARCHAR(20),
     gobierno_nivel VARCHAR(50),
+
+    -- Institution Classification (v2.0 taxonomy)
+    institution_type_id INTEGER,           -- FK to institution_types (19 types)
+    institution_type VARCHAR(30),          -- Denormalized code for fast queries
+    size_tier_id INTEGER,                  -- FK to size_tiers
+    size_tier VARCHAR(20),                 -- Denormalized code for fast queries
+    autonomy_level_id INTEGER,             -- FK to autonomy_levels
+    autonomy_level VARCHAR(30),            -- Denormalized code for fast queries
+    is_legally_decentralized INTEGER DEFAULT 0,  -- Mexican legal "organismo descentralizado"
+    classification_method VARCHAR(100),    -- How classification was determined
+    classification_confidence REAL DEFAULT 0.0,  -- Confidence score 0.0-1.0
+
+    -- Aggregate stats (updated by ETL pipeline)
     total_contracts INTEGER DEFAULT 0,
     total_amount_mxn REAL DEFAULT 0.0,
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
     FOREIGN KEY (ramo_id) REFERENCES ramos(id),
-    FOREIGN KEY (sector_id) REFERENCES sectors(id)
+    FOREIGN KEY (sector_id) REFERENCES sectors(id),
+    FOREIGN KEY (institution_type_id) REFERENCES institution_types(id),
+    FOREIGN KEY (size_tier_id) REFERENCES size_tiers(id),
+    FOREIGN KEY (autonomy_level_id) REFERENCES autonomy_levels(id)
 );
 
 -- Contracting Units (UC) Table
@@ -374,6 +441,34 @@ CREATE TABLE IF NOT EXISTS exchange_rates (
 );
 
 -- =============================================================================
+-- VENDOR STATS TABLE (Pre-computed aggregates for fast vendor queries)
+-- =============================================================================
+
+-- Physical vendor_stats table for O(1) vendor list queries
+-- Replaces slow v_vendor_stats view that recalculates across 3.1M contracts
+CREATE TABLE IF NOT EXISTS vendor_stats (
+    vendor_id INTEGER PRIMARY KEY,
+    total_contracts INTEGER DEFAULT 0,
+    total_value_mxn REAL DEFAULT 0.0,
+    avg_risk_score REAL DEFAULT 0.0,
+    high_risk_pct REAL DEFAULT 0.0,
+    direct_award_pct REAL DEFAULT 0.0,
+    single_bid_pct REAL DEFAULT 0.0,
+    first_contract_year INTEGER,
+    last_contract_year INTEGER,
+    sector_count INTEGER DEFAULT 0,
+    institution_count INTEGER DEFAULT 0,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (vendor_id) REFERENCES vendors(id)
+);
+
+-- Indexes for fast sorting and filtering on vendor_stats
+CREATE INDEX IF NOT EXISTS idx_vendor_stats_contracts ON vendor_stats(total_contracts);
+CREATE INDEX IF NOT EXISTS idx_vendor_stats_value ON vendor_stats(total_value_mxn);
+CREATE INDEX IF NOT EXISTS idx_vendor_stats_risk ON vendor_stats(avg_risk_score);
+CREATE INDEX IF NOT EXISTS idx_vendor_stats_high_risk ON vendor_stats(high_risk_pct);
+
+-- =============================================================================
 -- INDEXES FOR FAST ANALYTICS
 -- =============================================================================
 
@@ -409,6 +504,13 @@ CREATE INDEX IF NOT EXISTS idx_financial_loss ON financial_metrics(estimated_los
 -- Exchange rates indexes
 CREATE INDEX IF NOT EXISTS idx_exchange_year_month ON exchange_rates(year, month);
 
+-- Risk level indexes (for fast filtering by risk)
+CREATE INDEX IF NOT EXISTS idx_contracts_risk_level ON contracts(risk_level);
+CREATE INDEX IF NOT EXISTS idx_contracts_sector_risk ON contracts(sector_id, risk_level);
+CREATE INDEX IF NOT EXISTS idx_contracts_vendor_risk ON contracts(vendor_id, risk_level);
+CREATE INDEX IF NOT EXISTS idx_contracts_year_risk ON contracts(contract_year, risk_level);
+CREATE INDEX IF NOT EXISTS idx_contracts_risk_score ON contracts(risk_score);
+
 -- Composite indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_contracts_sector_year ON contracts(sector_id, contract_year);
 CREATE INDEX IF NOT EXISTS idx_contracts_vendor_year ON contracts(vendor_id, contract_year);
@@ -424,6 +526,14 @@ CREATE INDEX IF NOT EXISTS idx_institutions_sector ON institutions(sector_id);
 CREATE INDEX IF NOT EXISTS idx_institutions_ramo ON institutions(ramo_id);
 CREATE INDEX IF NOT EXISTS idx_institutions_name_normalized ON institutions(name_normalized);
 
+-- Institution classification indexes (v2.0 taxonomy)
+CREATE INDEX IF NOT EXISTS idx_institutions_type ON institutions(institution_type);
+CREATE INDEX IF NOT EXISTS idx_institutions_type_id ON institutions(institution_type_id);
+CREATE INDEX IF NOT EXISTS idx_institutions_size_tier ON institutions(size_tier);
+CREATE INDEX IF NOT EXISTS idx_institutions_autonomy ON institutions(autonomy_level);
+CREATE INDEX IF NOT EXISTS idx_institutions_type_sector ON institutions(institution_type, sector_id);
+CREATE INDEX IF NOT EXISTS idx_institutions_decentralized ON institutions(is_legally_decentralized);
+
 -- Sub-sector indexes
 CREATE INDEX IF NOT EXISTS idx_sub_sectors_sector ON sub_sectors(sector_id);
 
@@ -431,6 +541,122 @@ CREATE INDEX IF NOT EXISTS idx_sub_sectors_sector ON sub_sectors(sector_id);
 CREATE INDEX IF NOT EXISTS idx_categories_sector ON categories(sector_id);
 CREATE INDEX IF NOT EXISTS idx_categories_sub_sector ON categories(sub_sector_id);
 CREATE INDEX IF NOT EXISTS idx_categories_partida ON categories(partida_pattern);
+
+-- =============================================================================
+-- GROUND TRUTH VALIDATION TABLES (v3.2 - Risk Model Validation)
+-- =============================================================================
+
+-- Known corruption cases for model validation
+-- Sources: ASF Cuenta Publica, DOJ filings, FGR investigations, media investigations
+CREATE TABLE IF NOT EXISTS ground_truth_cases (
+    id INTEGER PRIMARY KEY,
+    case_id VARCHAR(50) UNIQUE NOT NULL,
+    case_name VARCHAR(200) NOT NULL,
+    case_type VARCHAR(50) NOT NULL,              -- estafa_maestra, bribery, ghost_company, bid_rigging, embezzlement
+    year_start INTEGER,
+    year_end INTEGER,
+    estimated_fraud_mxn REAL,
+    source_asf TEXT,                             -- ASF audit report reference
+    source_news TEXT,                            -- News/media source
+    source_legal TEXT,                           -- Legal/court documents
+    confidence_level VARCHAR(20) DEFAULT 'medium', -- high, medium, low (based on evidence quality)
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Known bad vendors linked to corruption cases
+CREATE TABLE IF NOT EXISTS ground_truth_vendors (
+    id INTEGER PRIMARY KEY,
+    case_id INTEGER NOT NULL,
+    vendor_id INTEGER,                           -- FK to vendors table (after matching)
+    vendor_name_source VARCHAR(500) NOT NULL,    -- Name as reported in source
+    rfc_source VARCHAR(13),                      -- RFC if available from source
+    role VARCHAR(50),                            -- beneficiary, shell_company, intermediary, co-conspirator
+    evidence_strength VARCHAR(20) DEFAULT 'medium', -- high, medium, low
+    match_method VARCHAR(50),                    -- rfc_exact, name_exact, name_fuzzy, manual
+    match_confidence REAL,                       -- 0-1 confidence score
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (case_id) REFERENCES ground_truth_cases(id),
+    FOREIGN KEY (vendor_id) REFERENCES vendors(id)
+);
+
+-- Known bad institutions linked to corruption cases
+CREATE TABLE IF NOT EXISTS ground_truth_institutions (
+    id INTEGER PRIMARY KEY,
+    case_id INTEGER NOT NULL,
+    institution_id INTEGER,                      -- FK to institutions table (after matching)
+    institution_name_source VARCHAR(500) NOT NULL, -- Name as reported in source
+    role VARCHAR(50),                            -- source, awarding_entity, co-conspirator
+    evidence_strength VARCHAR(20) DEFAULT 'medium',
+    match_method VARCHAR(50),
+    match_confidence REAL,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (case_id) REFERENCES ground_truth_cases(id),
+    FOREIGN KEY (institution_id) REFERENCES institutions(id)
+);
+
+-- Known bad contracts from corruption cases (for precise validation)
+CREATE TABLE IF NOT EXISTS ground_truth_contracts (
+    id INTEGER PRIMARY KEY,
+    case_id INTEGER NOT NULL,
+    contract_id INTEGER,                         -- FK to contracts table (after matching)
+    contract_number_source VARCHAR(200),         -- Contract number from source
+    procedure_number_source VARCHAR(200),        -- Procedure number from source
+    amount_source REAL,                          -- Amount reported in source
+    year_source INTEGER,                         -- Year from source
+    evidence_strength VARCHAR(20) DEFAULT 'medium',
+    match_method VARCHAR(50),
+    match_confidence REAL,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (case_id) REFERENCES ground_truth_cases(id),
+    FOREIGN KEY (contract_id) REFERENCES contracts(id)
+);
+
+-- Validation run results for model performance tracking
+CREATE TABLE IF NOT EXISTS validation_results (
+    id INTEGER PRIMARY KEY,
+    run_id VARCHAR(50) NOT NULL,
+    model_version VARCHAR(20) NOT NULL,
+    run_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- Detection metrics
+    total_known_bad_contracts INTEGER,
+    total_known_bad_vendors INTEGER,
+    flagged_critical INTEGER,                    -- risk_level = 'critical'
+    flagged_high INTEGER,                        -- risk_level = 'high'
+    flagged_medium INTEGER,                      -- risk_level = 'medium'
+    flagged_low INTEGER,                         -- risk_level = 'low'
+
+    -- Key rates
+    detection_rate REAL,                         -- % of known bad flagged medium+
+    critical_detection_rate REAL,                -- % flagged critical or high
+    false_negative_count INTEGER,                -- Known bad with low risk
+
+    -- Factor analysis (JSON)
+    factor_trigger_counts TEXT,                  -- JSON: {factor: count triggered on known bad}
+    factor_effectiveness TEXT,                   -- JSON: {factor: precision/recall/F1}
+
+    -- Comparison to baseline
+    baseline_detection_rate REAL,                -- Detection rate on random sample
+    lift REAL,                                   -- Model lift over baseline
+
+    notes TEXT
+);
+
+-- Indexes for ground truth tables
+CREATE INDEX IF NOT EXISTS idx_gt_cases_type ON ground_truth_cases(case_type);
+CREATE INDEX IF NOT EXISTS idx_gt_cases_years ON ground_truth_cases(year_start, year_end);
+CREATE INDEX IF NOT EXISTS idx_gt_vendors_case ON ground_truth_vendors(case_id);
+CREATE INDEX IF NOT EXISTS idx_gt_vendors_vendor ON ground_truth_vendors(vendor_id);
+CREATE INDEX IF NOT EXISTS idx_gt_institutions_case ON ground_truth_institutions(case_id);
+CREATE INDEX IF NOT EXISTS idx_gt_institutions_inst ON ground_truth_institutions(institution_id);
+CREATE INDEX IF NOT EXISTS idx_gt_contracts_case ON ground_truth_contracts(case_id);
+CREATE INDEX IF NOT EXISTS idx_gt_contracts_contract ON ground_truth_contracts(contract_id);
+CREATE INDEX IF NOT EXISTS idx_validation_results_version ON validation_results(model_version);
+CREATE INDEX IF NOT EXISTS idx_validation_results_date ON validation_results(run_date);
 """
 
 # =============================================================================
@@ -548,7 +774,7 @@ WHERE c.contract_year IS NOT NULL
 GROUP BY c.contract_year, c.sector_id
 ORDER BY c.contract_year, c.sector_id;
 
--- Institution Summary View
+-- Institution Summary View (includes v2.0 taxonomy classification)
 CREATE VIEW IF NOT EXISTS v_institution_summary AS
 SELECT
     i.id as institution_id,
@@ -557,10 +783,23 @@ SELECT
     i.name_normalized,
     i.tipo,
     i.gobierno_nivel,
+    -- v2.0 Taxonomy Classification
+    i.institution_type,
+    it.name_es as institution_type_name,
+    it.risk_baseline as type_risk_baseline,
+    i.size_tier,
+    st.risk_adjustment as size_risk_adjustment,
+    i.autonomy_level,
+    al.risk_baseline as autonomy_risk_baseline,
+    i.is_legally_decentralized,
+    i.classification_method,
+    i.classification_confidence,
+    -- Sector/Ramo info
     s.code as sector_code,
     s.name_es as sector_name,
     rm.clave as ramo_clave,
     rm.descripcion as ramo_descripcion,
+    -- Aggregates
     COUNT(c.id) as total_contracts,
     COALESCE(SUM(c.amount_mxn), 0) as total_amount_mxn,
     COALESCE(AVG(rs.risk_score), 0) as avg_risk_score,
@@ -569,11 +808,18 @@ SELECT
     MIN(c.contract_year) as first_year,
     MAX(c.contract_year) as last_year
 FROM institutions i
+LEFT JOIN institution_types it ON i.institution_type_id = it.id
+LEFT JOIN size_tiers st ON i.size_tier_id = st.id
+LEFT JOIN autonomy_levels al ON i.autonomy_level_id = al.id
 LEFT JOIN sectors s ON i.sector_id = s.id
 LEFT JOIN ramos rm ON i.ramo_id = rm.id
 LEFT JOIN contracts c ON i.id = c.institution_id
 LEFT JOIN risk_scores rs ON c.id = rs.contract_id
 GROUP BY i.id, i.siglas, i.name, i.name_normalized, i.tipo, i.gobierno_nivel,
+         i.institution_type, it.name_es, it.risk_baseline,
+         i.size_tier, st.risk_adjustment,
+         i.autonomy_level, al.risk_baseline,
+         i.is_legally_decentralized, i.classification_method, i.classification_confidence,
          s.code, s.name_es, rm.clave, rm.descripcion;
 
 -- Sub-Sector Summary View
@@ -623,6 +869,109 @@ SECTORS_DATA = [
     {"id": 10, "code": "ambiente", "name_es": "Medio Ambiente", "name_en": "Environment", "acronym": "AMB", "color": "#10b981", "description_es": "Medio ambiente y recursos naturales", "display_order": 10},
     {"id": 11, "code": "trabajo", "name_es": "Trabajo", "name_en": "Labor", "acronym": "TRA", "color": "#f97316", "description_es": "Trabajo y prevision social", "display_order": 11},
     {"id": 12, "code": "otros", "name_es": "Otros", "name_en": "Other", "acronym": "OTR", "color": "#64748b", "description_es": "Otros sectores no clasificados", "display_order": 12},
+]
+
+# =============================================================================
+# INSTITUTION CLASSIFICATION SEED DATA (v2.0 Taxonomy)
+# =============================================================================
+
+# 19 Institution Types - Aligned with IMF CRI and OECD corruption risk baselines
+INSTITUTION_TYPES_DATA = [
+    {"id": 1, "code": "federal_secretariat", "name_es": "Secretaria Federal", "name_en": "Federal Secretariat",
+     "description_es": "Secretaria de estado del gabinete federal", "description_en": "Cabinet ministry",
+     "risk_baseline": 0.15, "display_order": 1},
+    {"id": 2, "code": "federal_agency", "name_es": "Agencia Federal", "name_en": "Federal Agency",
+     "description_es": "Comision, consejo o agencia federal", "description_en": "Federal commission/council/agency",
+     "risk_baseline": 0.20, "display_order": 2},
+    {"id": 3, "code": "autonomous_constitutional", "name_es": "Organismo Autonomo Constitucional", "name_en": "Constitutional Autonomous Body",
+     "description_es": "Autonomia constitucional con presupuesto propio", "description_en": "Constitutional autonomy with own budget",
+     "risk_baseline": 0.10, "display_order": 3},
+    {"id": 4, "code": "social_security", "name_es": "Seguridad Social", "name_en": "Social Security",
+     "description_es": "Sistemas de seguridad social (IMSS, ISSSTE)", "description_en": "Social security systems",
+     "risk_baseline": 0.25, "display_order": 4},
+    {"id": 5, "code": "state_enterprise_energy", "name_es": "Empresa Estatal de Energia", "name_en": "State Energy Enterprise",
+     "description_es": "Empresas productivas del estado en sector energetico", "description_en": "State energy enterprises (PEMEX, CFE)",
+     "risk_baseline": 0.28, "display_order": 5},
+    {"id": 6, "code": "state_enterprise_finance", "name_es": "Banca de Desarrollo", "name_en": "Development Bank",
+     "description_es": "Banca de desarrollo y financieras estatales", "description_en": "Development banks and state financial entities",
+     "risk_baseline": 0.22, "display_order": 6},
+    {"id": 7, "code": "state_enterprise_infra", "name_es": "Empresa Estatal de Infraestructura", "name_en": "State Infrastructure Enterprise",
+     "description_es": "Empresas de infraestructura y servicios publicos", "description_en": "Infrastructure and public service enterprises",
+     "risk_baseline": 0.25, "display_order": 7},
+    {"id": 8, "code": "research_education", "name_es": "Investigacion y Educacion", "name_en": "Research & Education",
+     "description_es": "Centros de investigacion y universidades publicas", "description_en": "Research centers and public universities",
+     "risk_baseline": 0.18, "display_order": 8},
+    {"id": 9, "code": "social_program", "name_es": "Programa Social", "name_en": "Social Program",
+     "description_es": "Programas de distribucion y bienestar social", "description_en": "Social distribution and welfare programs",
+     "risk_baseline": 0.30, "display_order": 9},
+    {"id": 10, "code": "regulatory_agency", "name_es": "Agencia Reguladora", "name_en": "Regulatory Agency",
+     "description_es": "Reguladores sectoriales con autonomia tecnica", "description_en": "Sector regulators with technical autonomy",
+     "risk_baseline": 0.15, "display_order": 10},
+    {"id": 11, "code": "state_government", "name_es": "Gobierno Estatal", "name_en": "State Government",
+     "description_es": "Ejecutivo estatal y dependencias directas", "description_en": "State executive and direct dependencies",
+     "risk_baseline": 0.30, "display_order": 11},
+    {"id": 12, "code": "state_agency", "name_es": "Dependencia Estatal", "name_en": "State Agency",
+     "description_es": "Secretarias y organismos estatales", "description_en": "State secretariats and agencies",
+     "risk_baseline": 0.30, "display_order": 12},
+    {"id": 13, "code": "municipal", "name_es": "Municipal", "name_en": "Municipal",
+     "description_es": "Ayuntamientos y gobiernos municipales", "description_en": "Municipalities and local governments",
+     "risk_baseline": 0.35, "display_order": 13},
+    {"id": 14, "code": "judicial", "name_es": "Judicial", "name_en": "Judicial",
+     "description_es": "Poder judicial y tribunales", "description_en": "Judiciary and courts",
+     "risk_baseline": 0.10, "display_order": 14},
+    {"id": 15, "code": "legislative", "name_es": "Legislativo", "name_en": "Legislative",
+     "description_es": "Poder legislativo federal y estatal", "description_en": "Federal and state legislature",
+     "risk_baseline": 0.15, "display_order": 15},
+    {"id": 16, "code": "military", "name_es": "Defensa", "name_en": "Military/Defense",
+     "description_es": "Secretarias de defensa y marina", "description_en": "Defense and navy secretariats",
+     "risk_baseline": 0.15, "display_order": 16},
+    {"id": 17, "code": "health_institution", "name_es": "Institucion de Salud", "name_en": "Health Institution",
+     "description_es": "Hospitales, institutos nacionales de salud", "description_en": "Hospitals, national health institutes",
+     "risk_baseline": 0.25, "display_order": 17},
+    {"id": 18, "code": "decentralized_legacy", "name_es": "Descentralizado (Legado)", "name_en": "Decentralized (Legacy)",
+     "description_es": "Organismo descentralizado no clasificado en nueva taxonomia", "description_en": "Decentralized entity not yet classified in new taxonomy",
+     "risk_baseline": 0.25, "display_order": 18},
+    {"id": 19, "code": "other", "name_es": "Otro", "name_en": "Other",
+     "description_es": "Institucion no clasificada", "description_en": "Unclassified institution",
+     "risk_baseline": 0.25, "display_order": 99},
+]
+
+# Size Tiers - Based on procurement volume with risk adjustments
+SIZE_TIERS_DATA = [
+    {"id": 1, "code": "mega", "name_es": "Mega (>100K contratos)", "name_en": "Mega (>100K contracts)",
+     "min_contracts": 100000, "max_contracts": None, "risk_adjustment": 0.05,
+     "description": "Massive procurement volume overwhelms oversight capacity", "display_order": 1},
+    {"id": 2, "code": "large", "name_es": "Grande (10K-100K)", "name_en": "Large (10K-100K)",
+     "min_contracts": 10000, "max_contracts": 99999, "risk_adjustment": 0.02,
+     "description": "High volume requires significant oversight resources", "display_order": 2},
+    {"id": 3, "code": "medium", "name_es": "Mediano (1K-10K)", "name_en": "Medium (1K-10K)",
+     "min_contracts": 1000, "max_contracts": 9999, "risk_adjustment": 0.00,
+     "description": "Baseline oversight capacity", "display_order": 3},
+    {"id": 4, "code": "small", "name_es": "Pequeno (100-1K)", "name_en": "Small (100-1K)",
+     "min_contracts": 100, "max_contracts": 999, "risk_adjustment": -0.02,
+     "description": "Lower volume allows more scrutiny per contract", "display_order": 4},
+    {"id": 5, "code": "micro", "name_es": "Micro (<100)", "name_en": "Micro (<100)",
+     "min_contracts": 0, "max_contracts": 99, "risk_adjustment": -0.05,
+     "description": "Very low volume enables detailed review", "display_order": 5},
+]
+
+# Autonomy Levels - Based on budget independence and oversight structure
+AUTONOMY_LEVELS_DATA = [
+    {"id": 1, "code": "full_autonomy", "name_es": "Autonomia Plena", "name_en": "Full Autonomy",
+     "description_es": "Autonomia constitucional con presupuesto propio", "description_en": "Constitutional autonomy with own budget",
+     "risk_baseline": 0.10, "display_order": 1},
+    {"id": 2, "code": "technical_autonomy", "name_es": "Autonomia Tecnica", "name_en": "Technical Autonomy",
+     "description_es": "Autonomia tecnica pero presupuesto federal", "description_en": "Technical autonomy but federal budget",
+     "risk_baseline": 0.15, "display_order": 2},
+    {"id": 3, "code": "operational_autonomy", "name_es": "Autonomia Operativa", "name_en": "Operational Autonomy",
+     "description_es": "Autonomia operativa con supervision sectorial", "description_en": "Operational autonomy with sector oversight",
+     "risk_baseline": 0.20, "display_order": 3},
+    {"id": 4, "code": "dependent", "name_es": "Dependiente", "name_en": "Dependent",
+     "description_es": "Dependencia directa del ejecutivo federal", "description_en": "Directly dependent on federal executive",
+     "risk_baseline": 0.25, "display_order": 4},
+    {"id": 5, "code": "subnational", "name_es": "Subnacional", "name_en": "Subnational",
+     "description_es": "Presupuesto estatal o municipal", "description_en": "State or municipal budget",
+     "risk_baseline": 0.30, "display_order": 5},
 ]
 
 SUB_SECTORS_DATA = [
@@ -999,6 +1348,66 @@ def seed_sectors(conn: sqlite3.Connection) -> None:
     print(f"  Inserted {len(SECTORS_DATA)} sectors")
 
 
+def seed_institution_types(conn: sqlite3.Connection) -> None:
+    """Insert institution type reference data (v2.0 taxonomy)."""
+    print("Seeding institution types (v2.0 taxonomy)...")
+    cursor = conn.cursor()
+
+    for it in INSTITUTION_TYPES_DATA:
+        cursor.execute("""
+            INSERT OR REPLACE INTO institution_types
+            (id, code, name_es, name_en, description_es, description_en, risk_baseline, display_order)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            it["id"], it["code"], it["name_es"], it["name_en"],
+            it.get("description_es"), it.get("description_en"),
+            it["risk_baseline"], it["display_order"]
+        ))
+
+    conn.commit()
+    print(f"  Inserted {len(INSTITUTION_TYPES_DATA)} institution types")
+
+
+def seed_size_tiers(conn: sqlite3.Connection) -> None:
+    """Insert size tier reference data."""
+    print("Seeding size tiers...")
+    cursor = conn.cursor()
+
+    for st in SIZE_TIERS_DATA:
+        cursor.execute("""
+            INSERT OR REPLACE INTO size_tiers
+            (id, code, name_es, name_en, min_contracts, max_contracts, risk_adjustment, description, display_order)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            st["id"], st["code"], st["name_es"], st["name_en"],
+            st["min_contracts"], st.get("max_contracts"),
+            st["risk_adjustment"], st.get("description"), st["display_order"]
+        ))
+
+    conn.commit()
+    print(f"  Inserted {len(SIZE_TIERS_DATA)} size tiers")
+
+
+def seed_autonomy_levels(conn: sqlite3.Connection) -> None:
+    """Insert autonomy level reference data."""
+    print("Seeding autonomy levels...")
+    cursor = conn.cursor()
+
+    for al in AUTONOMY_LEVELS_DATA:
+        cursor.execute("""
+            INSERT OR REPLACE INTO autonomy_levels
+            (id, code, name_es, name_en, description_es, description_en, risk_baseline, display_order)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            al["id"], al["code"], al["name_es"], al["name_en"],
+            al.get("description_es"), al.get("description_en"),
+            al["risk_baseline"], al["display_order"]
+        ))
+
+    conn.commit()
+    print(f"  Inserted {len(AUTONOMY_LEVELS_DATA)} autonomy levels")
+
+
 def seed_sub_sectors(conn: sqlite3.Connection) -> None:
     """Insert sub-sector reference data."""
     print("Seeding sub-sectors...")
@@ -1128,8 +1537,12 @@ def verify_schema(conn: sqlite3.Connection) -> None:
     expected_tables = [
         'sectors', 'sub_sectors', 'categories', 'ramos',
         'procedure_types', 'contract_types', 'status_codes',
+        'institution_types', 'size_tiers', 'autonomy_levels',  # v2.0 taxonomy tables
         'vendors', 'institutions', 'contracting_units', 'contracts',
-        'risk_scores', 'financial_metrics', 'exchange_rates'
+        'risk_scores', 'financial_metrics', 'exchange_rates',
+        # v3.2 validation tables
+        'ground_truth_cases', 'ground_truth_vendors', 'ground_truth_institutions',
+        'ground_truth_contracts', 'validation_results'
     ]
     missing = [t for t in expected_tables if t not in tables]
     if missing:
@@ -1137,7 +1550,8 @@ def verify_schema(conn: sqlite3.Connection) -> None:
 
     # Check reference data counts
     for table in ['sectors', 'sub_sectors', 'ramos', 'categories',
-                  'procedure_types', 'contract_types', 'status_codes']:
+                  'procedure_types', 'contract_types', 'status_codes',
+                  'institution_types', 'size_tiers', 'autonomy_levels']:
         cursor.execute(f"SELECT COUNT(*) FROM {table}")
         count = cursor.fetchone()[0]
         print(f"  {table}: {count} records")
@@ -1179,6 +1593,11 @@ def main():
         seed_sub_sectors(conn)
         seed_ramos(conn)
         seed_categories(conn)
+
+        # Seed institution classification tables (v2.0 taxonomy)
+        seed_institution_types(conn)
+        seed_size_tiers(conn)
+        seed_autonomy_levels(conn)
 
         # Seed bilingual lookup tables
         seed_procedure_types(conn)

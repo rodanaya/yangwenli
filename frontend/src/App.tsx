@@ -30,6 +30,8 @@ const NetworkGraph = lazy(() => import('@/pages/NetworkGraph'))
 const Watchlist = lazy(() => import('@/pages/Watchlist'))
 const Comparison = lazy(() => import('@/pages/Comparison'))
 const Timeline = lazy(() => import('@/pages/Timeline'))
+const DataQuality = lazy(() => import('@/pages/DataQuality'))
+const PriceAnalysis = lazy(() => import('@/pages/PriceAnalysis'))
 
 // Enhanced QueryClient configuration for better caching and UX
 const queryClient = new QueryClient({
@@ -125,6 +127,14 @@ function App() {
                 }
               />
               <Route
+                path="analysis/price"
+                element={
+                  <SuspenseBoundary fallback={<DashboardSkeleton />}>
+                    <PriceAnalysis />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
                 path="export"
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
@@ -169,6 +179,14 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<DashboardSkeleton />}>
                     <Timeline />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="data-quality"
+                element={
+                  <SuspenseBoundary fallback={<DashboardSkeleton />}>
+                    <DataQuality />
                   </SuspenseBoundary>
                 }
               />

@@ -1,12 +1,17 @@
-import { memo, useMemo } from 'react'
+import { memo, useMemo, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
 import { formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
-import { analysisApi, sectorApi, vendorApi } from '@/api/client'
-import { StackedAreaChart, AlertPanel, ProcedureBreakdown, Heatmap } from '@/components/charts'
+import { analysisApi, vendorApi } from '@/api/client'
+
+// Lazy load chart components for better initial load performance
+const StackedAreaChart = lazy(() => import('@/components/charts').then(m => ({ default: m.StackedAreaChart })))
+const AlertPanel = lazy(() => import('@/components/charts').then(m => ({ default: m.AlertPanel })))
+const ProcedureBreakdown = lazy(() => import('@/components/charts').then(m => ({ default: m.ProcedureBreakdown })))
+const Heatmap = lazy(() => import('@/components/charts').then(m => ({ default: m.Heatmap })))
 import {
   FileText,
   Users,
@@ -33,41 +38,70 @@ import {
   Line,
   CartesianGrid,
 } from 'recharts'
-import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
+import { SECTOR_COLORS, RISK_COLORS, getSectorNameEN } from '@/lib/constants'
 import type { SectorStatistics, VendorTopItem, RiskDistribution } from '@/api/types'
 
 export function Dashboard() {
   const navigate = useNavigate()
 
-  // Fetch overview data
-  const { data: overview, isLoading: overviewLoading } = useQuery({
-    queryKey: ['analysis', 'overview'],
-    queryFn: () => analysisApi.getOverview(),
+  // Fetch all dashboard data in ONE request (pre-computed, <100ms)
+  const { data: fastDashboard, isLoading: dashboardLoading } = useQuery({
+    queryKey: ['dashboard', 'fast'],
+    queryFn: () => analysisApi.getFastDashboard(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
-  // Fetch sectors data
-  const { data: sectors, isLoading: sectorsLoading } = useQuery({
-    queryKey: ['sectors'],
-    queryFn: () => sectorApi.getAll(),
-  })
+  // Transform fast dashboard data into expected formats
+  const overview = fastDashboard?.overview as any
+  const overviewLoading = dashboardLoading
 
-  // Fetch top vendors
+  const sectors = fastDashboard ? {
+    data: fastDashboard.sectors.map((s: any) => {
+      const total = s.total_contracts || 1
+      return {
+        sector_id: s.id,
+        sector_code: s.code,
+        sector_name: s.name,
+        total_contracts: s.total_contracts,
+        total_value_mxn: s.total_value_mxn,
+        total_vendors: s.total_vendors,
+        avg_risk_score: s.avg_risk_score || 0,
+        low_risk_count: s.low_risk_count,
+        medium_risk_count: s.medium_risk_count,
+        high_risk_count: s.high_risk_count,
+        critical_risk_count: s.critical_risk_count,
+        direct_award_count: s.direct_award_count,
+        single_bid_count: s.single_bid_count,
+        // Keep as decimals (0-1 scale) - formatPercent() will convert to display
+        direct_award_pct: (s.direct_award_count || 0) / total,
+        single_bid_pct: (s.single_bid_count || 0) / total,
+        high_risk_pct: ((s.high_risk_count || 0) + (s.critical_risk_count || 0)) / total,
+        // Add missing required fields with defaults
+        color: '',
+        total_institutions: 0,
+        avg_contract_value: s.total_value_mxn / total,
+      }
+    }),
+    total_contracts: (fastDashboard.overview as any)?.total_contracts || 0,
+    total_value_mxn: (fastDashboard.overview as any)?.total_value_mxn || 0,
+  } : undefined
+  const sectorsLoading = dashboardLoading
+
+  // Fetch top vendors separately (not in precomputed stats)
   const { data: topVendors, isLoading: vendorsLoading } = useQuery({
     queryKey: ['vendors', 'top', 'value'],
     queryFn: () => vendorApi.getTop('value', 10),
   })
 
-  // Fetch risk distribution
-  const { data: riskDist, isLoading: riskLoading } = useQuery({
-    queryKey: ['analysis', 'risk-distribution'],
-    queryFn: () => analysisApi.getRiskDistribution(),
-  })
+  const riskDist = fastDashboard ? {
+    data: fastDashboard.risk_distribution as unknown as RiskDistribution[]
+  } : undefined
+  const riskLoading = dashboardLoading
 
-  // Fetch year-over-year trends
-  const { data: trends, isLoading: trendsLoading } = useQuery({
-    queryKey: ['analysis', 'year-over-year'],
-    queryFn: () => analysisApi.getYearOverYear(),
-  })
+  const trends = fastDashboard ? {
+    data: fastDashboard.yearly_trends as Array<{ year: number; value_mxn: number; contracts: number }>
+  } : undefined
+  const trendsLoading = dashboardLoading
 
   // Fetch anomalies
   const { data: anomalies, isLoading: anomaliesLoading } = useQuery({
@@ -81,7 +115,7 @@ export function Dashboard() {
     if (!trends?.data || !riskDist?.data) return []
 
     // Calculate actual distribution percentages from riskDist data
-    const totalCount = riskDist.data.reduce((sum, d) => sum + d.count, 0)
+    const totalCount = riskDist.data.reduce((sum, d) => sum + (d.count || 0), 0)
     const distribution = {
       low: riskDist.data.find((d) => d.risk_level === 'low')?.count || 0,
       medium: riskDist.data.find((d) => d.risk_level === 'medium')?.count || 0,
@@ -99,23 +133,28 @@ export function Dashboard() {
       .filter((d) => d.year >= 2010)
       .map((d) => ({
         year: d.year,
-        low: Math.round(d.contracts * pct.low),
-        medium: Math.round(d.contracts * pct.medium),
-        high: Math.round(d.contracts * pct.high),
-        critical: Math.round(d.contracts * pct.critical),
+        low: Math.round((d.contracts || 0) * pct.low),
+        medium: Math.round((d.contracts || 0) * pct.medium),
+        high: Math.round((d.contracts || 0) * pct.high),
+        critical: Math.round((d.contracts || 0) * pct.critical),
       }))
   }, [trends, riskDist])
 
   // Transform sectors data for procedure breakdown
+  // Values are in 0-1 decimal scale
   const procedureData = useMemo(() => {
     if (!sectors?.data) return []
-    return sectors.data.map((s) => ({
-      sector_name: s.sector_name,
-      sector_code: s.sector_code,
-      direct_award_pct: s.direct_award_pct,
-      single_bid_pct: s.single_bid_pct,
-      open_tender_pct: 1 - s.direct_award_pct - s.single_bid_pct,
-    }))
+    return sectors.data.map((s) => {
+      const directPct = s.direct_award_pct || 0
+      const singlePct = s.single_bid_pct || 0
+      return {
+        sector_name: getSectorNameEN(s.sector_code),
+        sector_code: s.sector_code,
+        direct_award_pct: directPct,
+        single_bid_pct: singlePct,
+        open_tender_pct: Math.max(0, 1 - directPct - singlePct),
+      }
+    })
   }, [sectors])
 
   // Transform sectors data for heatmap
@@ -123,7 +162,7 @@ export function Dashboard() {
   const heatmapData = useMemo(() => {
     if (!sectors?.data) return { data: [], rows: [], columns: [] }
     const metrics = ['Direct Award %', 'Single Bid %', 'Avg Risk Score']
-    const rows = sectors.data.slice(0, 10).map((s) => s.sector_name) // Limit to top 10 for readability
+    const rows = sectors.data.slice(0, 10).map((s) => getSectorNameEN(s.sector_code)) // Limit to top 10 for readability
 
     // Calculate min/max for each metric to normalize colors
     const daValues = sectors.data.map((s) => s.direct_award_pct)
@@ -144,26 +183,29 @@ export function Dashboard() {
     }
 
     const sectorsSubset = sectors.data.slice(0, 10)
-    const data = sectorsSubset.flatMap((s) => [
-      {
-        row: s.sector_name,
-        col: 'Direct Award %',
-        value: normalize(s.direct_award_pct, 'Direct Award %'),
-        rawValue: s.direct_award_pct,
-      },
-      {
-        row: s.sector_name,
-        col: 'Single Bid %',
-        value: normalize(s.single_bid_pct, 'Single Bid %'),
-        rawValue: s.single_bid_pct,
-      },
-      {
-        row: s.sector_name,
-        col: 'Avg Risk Score',
-        value: normalize(s.avg_risk_score, 'Avg Risk Score'),
-        rawValue: s.avg_risk_score,
-      },
-    ])
+    const data = sectorsSubset.flatMap((s) => {
+      const sectorNameEN = getSectorNameEN(s.sector_code)
+      return [
+        {
+          row: sectorNameEN,
+          col: 'Direct Award %',
+          value: normalize(s.direct_award_pct, 'Direct Award %'),
+          rawValue: s.direct_award_pct,
+        },
+        {
+          row: sectorNameEN,
+          col: 'Single Bid %',
+          value: normalize(s.single_bid_pct, 'Single Bid %'),
+          rawValue: s.single_bid_pct,
+        },
+        {
+          row: sectorNameEN,
+          col: 'Avg Risk Score',
+          value: normalize(s.avg_risk_score, 'Avg Risk Score'),
+          rawValue: s.avg_risk_score,
+        },
+      ]
+    })
     return { data, rows, columns: metrics, ranges }
   }, [sectors])
 
@@ -182,8 +224,26 @@ export function Dashboard() {
     navigate('/analysis/risk')
   }
 
+  // Format the cached_at timestamp
+  const lastUpdated = fastDashboard?.cached_at
+    ? new Date(fastDashboard.cached_at).toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : null
+
   return (
     <div className="space-y-6">
+      {/* Last Updated Indicator */}
+      {lastUpdated && (
+        <div className="flex items-center justify-end text-xs text-text-muted">
+          <Activity className="h-3 w-3 mr-1" aria-hidden="true" />
+          <span>Data as of {lastUpdated}</span>
+        </div>
+      )}
+
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <KPICard
@@ -276,12 +336,14 @@ export function Dashboard() {
             {trendsLoading ? (
               <Skeleton className="h-[280px]" />
             ) : (
-              <StackedAreaChart
-                data={riskTrendsData}
-                height={280}
-                showPercentage={true}
-                onYearClick={(year) => navigate(`/contracts?year=${year}`)}
-              />
+              <Suspense fallback={<ChartSkeleton height={280} />}>
+                <StackedAreaChart
+                  data={riskTrendsData}
+                  height={280}
+                  showPercentage={true}
+                  onYearClick={(year) => navigate(`/contracts?year=${year}`)}
+                />
+              </Suspense>
             )}
           </CardContent>
         </Card>
@@ -302,11 +364,13 @@ export function Dashboard() {
                 ))}
               </div>
             ) : (
-              <AlertPanel
-                anomalies={anomalies?.data || []}
-                maxItems={4}
-                onInvestigate={handleInvestigateAnomaly}
-              />
+              <Suspense fallback={<div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20" />)}</div>}>
+                <AlertPanel
+                  anomalies={anomalies?.data || []}
+                  maxItems={4}
+                  onInvestigate={handleInvestigateAnomaly}
+                />
+              </Suspense>
             )}
           </CardContent>
         </Card>
@@ -326,11 +390,13 @@ export function Dashboard() {
             {sectorsLoading ? (
               <Skeleton className="h-[320px]" />
             ) : (
-              <ProcedureBreakdown
-                data={procedureData}
-                height={320}
-                onSectorClick={handleSectorClick}
-              />
+              <Suspense fallback={<ChartSkeleton height={320} />}>
+                <ProcedureBreakdown
+                  data={procedureData}
+                  height={320}
+                  onSectorClick={handleSectorClick}
+                />
+              </Suspense>
             )}
           </CardContent>
         </Card>
@@ -350,22 +416,29 @@ export function Dashboard() {
             {sectorsLoading ? (
               <Skeleton className="h-[320px]" />
             ) : (
-              <Heatmap
-                data={heatmapData.data}
-                rows={heatmapData.rows}
-                columns={heatmapData.columns}
-                height={320}
-                valueFormatter={(v, row, col) => {
-                  // Find the raw value for this cell
-                  const cell = heatmapData.data.find((d) => d.row === row && d.col === col)
-                  const rawValue = (cell as { rawValue?: number })?.rawValue ?? v
-                  // Format based on metric type
-                  if (col === 'Avg Risk Score') {
-                    return (rawValue * 100).toFixed(1)
-                  }
-                  return formatPercent(rawValue)
-                }}
-              />
+              <Suspense fallback={<ChartSkeleton height={320} />}>
+                <Heatmap
+                  data={heatmapData.data}
+                  rows={heatmapData.rows}
+                  columns={heatmapData.columns}
+                  height={320}
+                  valueFormatter={(v, row, col) => {
+                    // Find the raw value for this cell with proper type guard
+                    const cell = heatmapData.data.find((d) => d.row === row && d.col === col)
+                    const rawValue =
+                      cell && 'rawValue' in cell && typeof cell.rawValue === 'number'
+                        ? cell.rawValue
+                        : v
+                    // Format based on metric type - all values are now 0-1 scale
+                    if (col === 'Avg Risk Score') {
+                      // Risk scores: 0.27 -> "27.0"
+                      return (rawValue * 100).toFixed(1)
+                    }
+                    // Percentages: 0.65 -> "65.0%"
+                    return `${(rawValue * 100).toFixed(1)}%`
+                  }}
+                />
+              </Suspense>
             )}
           </CardContent>
         </Card>
@@ -450,6 +523,11 @@ export function Dashboard() {
 // Sub-components
 // ============================================================================
 
+// Chart loading fallback
+const ChartSkeleton = ({ height = 250 }: { height?: number }) => (
+  <Skeleton className={`h-[${height}px]`} style={{ height }} />
+)
+
 interface KPICardProps {
   title: string
   value?: number
@@ -458,6 +536,8 @@ interface KPICardProps {
   format?: 'number' | 'currency' | 'percent'
   subtitle?: string
   variant?: 'default' | 'warning'
+  trend?: number  // Percentage change (positive = up, negative = down)
+  trendLabel?: string
 }
 
 const KPICard = memo(function KPICard({
@@ -468,6 +548,8 @@ const KPICard = memo(function KPICard({
   format = 'number',
   subtitle,
   variant = 'default',
+  trend,
+  trendLabel,
 }: KPICardProps) {
   const formattedValue = useMemo(
     () =>
@@ -481,6 +563,12 @@ const KPICard = memo(function KPICard({
     [value, format]
   )
 
+  const trendColor = trend !== undefined
+    ? trend > 0
+      ? variant === 'warning' ? 'text-risk-high' : 'text-risk-low'
+      : variant === 'warning' ? 'text-risk-low' : 'text-risk-high'
+    : ''
+
   return (
     <Card className={`hover-lift ${variant === 'warning' ? 'border-risk-high/30' : ''}`}>
       <CardContent className="p-4">
@@ -490,7 +578,19 @@ const KPICard = memo(function KPICard({
             {loading ? (
               <Skeleton className="h-7 w-24" />
             ) : (
-              <p className="text-2xl font-bold tabular-nums text-text-primary">{formattedValue}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-2xl font-bold tabular-nums text-text-primary">{formattedValue}</p>
+                {trend !== undefined && (
+                  <span className={`flex items-center text-xs font-medium ${trendColor}`} aria-label={trendLabel || `${trend > 0 ? 'Up' : 'Down'} ${Math.abs(trend).toFixed(1)}%`}>
+                    {trend > 0 ? (
+                      <TrendingUp className="h-3 w-3 mr-0.5" aria-hidden="true" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3 mr-0.5" aria-hidden="true" />
+                    )}
+                    {Math.abs(trend).toFixed(1)}%
+                  </span>
+                )}
+              </div>
             )}
             {subtitle && <p className="text-xs text-text-muted">{subtitle}</p>}
           </div>
@@ -499,7 +599,7 @@ const KPICard = memo(function KPICard({
               variant === 'warning' ? 'bg-risk-high/10 text-risk-high' : 'bg-accent/10 text-accent'
             }`}
           >
-            <Icon className="h-5 w-5" />
+            <Icon className="h-5 w-5" aria-hidden="true" />
           </div>
         </div>
       </CardContent>
@@ -574,7 +674,7 @@ const SectorPieChart = memo(function SectorPieChart({
         .sort((a, b) => b.total_value_mxn - a.total_value_mxn)
         .slice(0, 8)
         .map((s) => ({
-          name: s.sector_name,
+          name: getSectorNameEN(s.sector_code),
           code: s.sector_code,
           value: s.total_value_mxn,
           color: SECTOR_COLORS[s.sector_code] || '#64748b',

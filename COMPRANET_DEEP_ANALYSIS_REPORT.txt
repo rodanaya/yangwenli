@@ -1,0 +1,219 @@
+================================================================================
+COMPRANET DATA DEEP ANALYSIS
+================================================================================
+
+1. VENDOR NAME VARIATIONS ANALYSIS
+--------------------------------------------------------------------------------
+
+Structure A (2002-2010) - Sample vendor names:
+  Columns in 2005: ['DEPENDENCIA / ENTIDAD', 'NOMBRE UC', 'CLAVE UC', 'NÚMERO DE PROCEDIMIENTO', 'TIPO DE PROCEDIMIENTO', 'TIPO CONTRATACIÓN', 'CARACTER', 'NÚMERO DE CONTRATO', 'REFERENCIA DE LA CONTRATACIÓN', 'FECHA DE SUSCRIPCIÓN DE CONTRATO', 'IMPORTE MN SIN IVA', 'RAZÓN SOCIAL', 'URL DEL CONTRATO']
+  Using vendor column: RAZÓN SOCIAL
+  - CONTINENTAL AUTOMOTRIZ, SA DE CV
+  - GRUPO CONSTRUCTOR EDSA, S.A. DE C.V.
+  - FLOMAC, S.A. DEC.V.
+  - FESTO PNEUMATIC S.A.
+  - LEON WEILL, S. A. DE C. V.
+  - URIBE RAMIREZ CONSTRUCCIONES S.A. DE C.V.
+  - EVALUACIÓN INTEGRAL DE OBRAS CIVILES, S.A. DE C.V.
+  - CONSTRUCTORA DOLPAREMA, S.A. DE C.V.
+  - AUTOMOTRIZ YUCATAN, S.A. DE C.V.
+  - GRUPO SIT, S.A. DE C.V.
+
+Structure B (2010-2017) - Sample vendor names:
+  - FRESENIUS KABI MEXICO, SA DE CV
+  - PROVEEDORA MEXICANA DE ARTICULOS DE CURACION Y LABORATORIO SA DE CV
+  - PRODIFAM S.A. DE C.V.
+  - CORPORACION ARMO, S.A. DE C.V. 
+  - Islas Villanueva Francina
+  - ABALAT S.A. DE C.V.
+  - SERVICIOS PREDICTIVOS E INSTRUMENTACION
+  - DISTRIBUIDORA SEVI, S.A. DE C.V.
+  - FARMACEUTICOS MAYPO, S.A. DE C.V.
+  - BRILLUM COMPANY SA DE CV
+
+Structure C (2018-2022) - Sample vendor names:
+  - 2166493
+  - 2177345
+  - 2161889
+  - 2126927
+  - 2151335
+  - 2129230
+  - 2169449
+  - 2129159
+  - 2156126
+  - 2161595
+
+Structure D (2023-2025) - Sample vendor names:
+  - INSTITUTO MEXICANO DEL SEGURO SOCIAL
+  - INSTITUTO MEXICANO DEL SEGURO SOCIAL
+  - INSTITUTO MEXICANO DEL SEGURO SOCIAL
+  - XE-IPN CANAL 11
+  - INSTITUTO MEXICANO DEL SEGURO SOCIAL
+  - INSTITUTO MEXICANO DEL SEGURO SOCIAL
+  - INSTITUTO NACIONAL DE ANTROPOLOGIA E HISTORIA
+  - INSTITUTO NACIONAL DE CIENCIAS MÉDICAS Y NUTRICIÓN SALVADOR ZUBIRÁN
+  - INSTITUTO MEXICANO DEL SEGURO SOCIAL
+  - INSTITUTO POLITECNICO NACIONAL
+
+RFC Coverage by Year:
+  2005: 0.00%
+  2015: 0.00%
+  2020: 68.02%
+  2024: 0.00%
+
+Common Legal Entity Suffix Patterns:
+  SA DE CV: 16300 occurrences
+  S DE RL: 551 occurrences
+  AC: 127 occurrences
+  SC: 121 occurrences
+
+
+2. INSTITUTION NAME ANALYSIS
+--------------------------------------------------------------------------------
+
+Sample institution names from Structure A (2005):
+  - 12141001-001-05
+  - 18164041-053-05
+  - 09120021-019-05
+  - 18164037-031-04
+  - 18164036-037-05
+  - 00620001-003-05
+  - 09085002-019-05
+  - 18164031-011-05
+  - 00620001-005-05
+  - 09085001-045-05
+
+Sample institution names from Structure B (2015):
+  - INNN-Departamento de Abastecimiento #012NCK001
+  - CFE-Jefatura del Área Regional Noroeste #018TOQ046
+  - ISSSTE-Jefatura de Servicios de Adquisición de Medicamentos #051GYN007
+  - YUC-Junta de Agua Potable y Alcantarillado de Yucatán-SUBDIRECCIÓN TÉCNICA #931045999
+  - TVMETRO-Dirección de Administración #048MHL001
+  - SENASICA-Dirección de Recursos Materiales y Servicios Generales #008B00001
+  - CFE-Central Geotermoeléctrica Los Azufres #018TOQ739
+  - IMSS-Coordinación de Abastecimiento y Equipamiento de la Delegación Sur del Distrito Federal #050GYR025
+  - SENASICA-Dirección de Recursos Materiales y Servicios Generales #008B00001
+  - CFE-Administrador de Central #018TOQ041
+
+Sample institution names from Structure D (2024):
+  - APF
+  - APF
+  - APF
+  - APF
+  - APF
+  - APF
+  - APF
+  - APF
+  - APF
+  - APF
+
+Institution Classification Patterns:
+  Other: 24029 (80.1%)
+  Decentralized - IMSS: 3055 (10.2%)
+  Decentralized - CFE: 2155 (7.2%)
+  Decentralized - ISSSTE: 404 (1.3%)
+  Decentralized - PEMEX: 174 (0.6%)
+  State - SERVICIOS DE SALUD: 115 (0.4%)
+  Municipal - AYUNTAMIENTO: 57 (0.2%)
+  Municipal - MUNICIPIO: 9 (0.0%)
+  Federal - SECRETARIA: 2 (0.0%)
+  Federal - SUBSECRETARIA: 0 (0.0%)
+  State - GOBIERNO DEL ESTADO: 0 (0.0%)
+
+
+3. AMOUNT DISTRIBUTION ANALYSIS
+--------------------------------------------------------------------------------
+
+2005.xlsx (IMPORTE MN SIN IVA): 49999 valid amounts
+
+2015.xlsx (IMPORTE_CONTRATO): 49991 valid amounts
+
+Total contracts analyzed: 99,990
+
+Descriptive Statistics:
+  Mean: 3,443,783.62 MXN
+  Median: 171,628.48 MXN
+  Std Dev: 85,527,425.37 MXN
+  Min: 0.03 MXN
+  Max: 16,071,819,812.56 MXN
+
+Percentiles:
+  50th: 171,628.48 MXN
+  75th: 789,419.18 MXN
+  90th: 2,999,528.78 MXN
+  95th: 6,710,628.10 MXN
+  99th: 35,723,199.89 MXN
+  99.5th: 72,327,290.41 MXN
+  99.9th: 373,401,372.48 MXN
+
+Amount Range Distribution:
+  < 10K: 9,345 (9.35%)
+  10K - 100K: 30,892 (30.90%)
+  100K - 1M: 37,975 (37.98%)
+  1M - 10M: 18,363 (18.36%)
+  10M - 100M: 3,061 (3.06%)
+  100M - 1B: 318 (0.32%)
+  1B - 10B: 34 (0.03%)
+  > 10B (FLAG): 2 (0.00%)
+
+Suspicious Patterns:
+  Exact 1M: 38
+  Exact 10M: 8
+  Exact 100M: 1
+  Exact 1B: 0
+
+
+4. DATE FIELD ANALYSIS
+--------------------------------------------------------------------------------
+
+Structure A (2005) - Date fields:
+  Date columns found: ['FECHA DE SUSCRIPCIÓN DE CONTRATO']
+    FECHA DE SUSCRIPCIÓN DE CONTRATO: 10000/10000 (100.0%)
+
+Structure B (2015) - Date fields:
+  Date columns found: ['FECHA_APERTURA_PROPOSICIONES', 'FECHA_INICIO', 'FECHA_FIN', 'FECHA_CELEBRACION']
+    FECHA_APERTURA_PROPOSICIONES: 8278/10000 (82.8%)
+    FECHA_INICIO: 10000/10000 (100.0%)
+    FECHA_FIN: 10000/10000 (100.0%)
+    FECHA_CELEBRACION: 4669/10000 (46.7%)
+
+Structure D (2024) - Date fields:
+  Date columns found: ['Fecha de publicación', 'Fecha de apertura', 'Fecha de fallo', 'Fecha de inicio del contrato', 'Fecha de fin del contrato', 'Fecha de firma del contrato', 'Fecha firma contrato', 'Fecha fin último conv', 'Fecha firma último conv']
+    Fecha de publicación: 9676/10000 (96.8%)
+    Fecha de apertura: 1968/10000 (19.7%)
+    Fecha de fallo: 7990/10000 (79.9%)
+    Fecha de inicio del contrato: 10000/10000 (100.0%)
+    Fecha de fin del contrato: 10000/10000 (100.0%)
+    Fecha de firma del contrato: 4379/10000 (43.8%)
+    Fecha firma contrato: 4379/10000 (43.8%)
+    Fecha fin último conv: 627/10000 (6.3%)
+    Fecha firma último conv: 627/10000 (6.3%)
+
+
+5. PROCEDURE TYPE ANALYSIS
+--------------------------------------------------------------------------------
+
+Structure A (2005) - Procedure types:
+  Columns available: ['DEPENDENCIA / ENTIDAD', 'NOMBRE UC', 'CLAVE UC', 'NÚMERO DE PROCEDIMIENTO', 'TIPO DE PROCEDIMIENTO', 'TIPO CONTRATACIÓN', 'CARACTER', 'NÚMERO DE CONTRATO', 'REFERENCIA DE LA CONTRATACIÓN', 'FECHA DE SUSCRIPCIÓN DE CONTRATO', 'IMPORTE MN SIN IVA', 'RAZÓN SOCIAL', 'URL DEL CONTRATO']
+
+Structure B (2015) - Procedure types:
+  Adjudicación Directa Federal: 11677 (58.4%)
+  Licitación Pública: 6041 (30.2%)
+  Invitación a Cuando Menos 3 Personas: 2209 (11.0%)
+  Adjudicación directa: 51 (0.3%)
+  Invitación a cuando menos 3 personas: 7 (0.0%)
+  Otro: 5 (0.0%)
+  Licitación Pública con OSD: 3 (0.0%)
+  Proyecto de Convocatoria: 1 (0.0%)
+
+  Direct award indicator (CARACTER):
+    Internacional: 13990 (70.0%)
+    Nacional: 5930 (29.6%)
+    Internacional bajo TLC: 24 (0.1%)
+
+Structure D (2024) - Procedure types:
+  Columns in 2024 (first 20): ['Orden de gobierno', 'Clave Ramo', 'Descripción Ramo', 'Tipo de Institución', 'Clave Institución', 'Siglas de la Institución', 'Institución', 'Clave de la UC', 'Nombre de la UC', 'Código del expediente', 'Referencia del expediente', 'Título del expediente', 'Partida específica', 'Ley', 'Tipo Procedimiento', 'Artículo de excepción', 'Descripción excepción', 'Contrato marco', 'Compra consolidada', 'Núm. Proc. Consolidación']
+
+================================================================================
+ANALYSIS COMPLETE
+================================================================================
