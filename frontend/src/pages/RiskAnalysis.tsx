@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { RiskBadge } from '@/components/ui/badge'
-import { formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
+import { formatCompactMXN, formatNumber, formatPercentSafe } from '@/lib/utils'
 import { analysisApi, sectorApi } from '@/api/client'
 import { Heatmap, AlertPanel } from '@/components/charts'
 import { RISK_COLORS, RISK_FACTORS, SECTORS } from '@/lib/constants'
@@ -98,7 +98,7 @@ export function RiskAnalysis() {
   const sectorHeatmapData = useMemo(() => {
     if (!sectors?.data) return { data: [], rows: [], columns: [] }
     const metrics = ['Avg Risk', 'Direct Award %', 'Single Bid %', 'High Risk %']
-    const sectorNames = sectors.data.slice(0, 8).map((s) => s.sector_name)
+    const sectorNames = sectors.data.slice(0, 12).map((s) => s.sector_name)
 
     // Calculate ranges for normalization
     const avgRiskValues = sectors.data.map((s) => s.avg_risk_score)
@@ -120,7 +120,7 @@ export function RiskAnalysis() {
     }
 
     // Use actual sector metrics instead of random year-by-year simulation
-    const sectorsSubset = sectors.data.slice(0, 8)
+    const sectorsSubset = sectors.data.slice(0, 12)
     const data = sectorsSubset.flatMap((sector) => [
       {
         row: sector.sector_name,
@@ -301,7 +301,7 @@ export function RiskAnalysis() {
           loading={riskLoading}
           icon={AlertTriangle}
           variant="high"
-          subtitle={`${formatPercent((overview?.high_risk_pct || 0) / 100)} of all contracts`}
+          subtitle={`${formatPercentSafe(overview?.high_risk_pct || 0, false)} of all contracts`}
         />
         <RiskKPICard
           title="Avg Risk Score"
@@ -360,6 +360,47 @@ export function RiskAnalysis() {
         </Card>
       </div>
 
+      {/* Risk Model Weights */}
+      <Card className="hover-lift">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Risk Model v3.3 Weights
+          </CardTitle>
+          <CardDescription>Factor contribution to composite risk score</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {[
+              { name: 'Single Bidding', weight: 18 },
+              { name: 'Non-Open Procedure', weight: 18 },
+              { name: 'Price Anomaly', weight: 18 },
+              { name: 'Vendor Concentration', weight: 12 },
+              { name: 'Short Ad Period', weight: 12 },
+              { name: 'Network Risk', weight: 8 },
+              { name: 'Year-End Timing', weight: 7 },
+              { name: 'Threshold Splitting', weight: 7 },
+            ].map((f) => (
+              <div key={f.name} className="flex items-center gap-2">
+                <span className="text-xs text-text-muted w-36">{f.name}</span>
+                <div className="flex-1 h-2 bg-background-elevated rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-accent rounded-full"
+                    style={{ width: `${(f.weight / 18) * 100}%` }}
+                  />
+                </div>
+                <span className="text-xs font-medium tabular-nums w-8 text-right">{f.weight}%</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 pt-3 border-t border-border">
+            <p className="text-xs text-text-muted">
+              Bonus factors: Co-bidding +5%, Price Hypothesis +5%, Industry Mismatch +3%, Institution Risk +3%
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Sector Risk Matrix & Trend Analysis */}
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Sector Risk Comparison Matrix */}
@@ -375,13 +416,13 @@ export function RiskAnalysis() {
           </CardHeader>
           <CardContent>
             {sectorsLoading ? (
-              <Skeleton className="h-[350px]" />
+              <Skeleton className="h-[450px]" />
             ) : (
               <Heatmap
                 data={sectorHeatmapData.data}
                 rows={sectorHeatmapData.rows}
                 columns={sectorHeatmapData.columns}
-                height={350}
+                height={450}
                 valueFormatter={(v, row, col) => {
                   // Find the raw value for this cell
                   const cell = sectorHeatmapData.data.find((d) => d.row === row && d.col === col)
@@ -517,7 +558,7 @@ const RiskKPICard = memo(function RiskKPICard({
     if (value === undefined) return '-'
     if (format === 'text') return value as string
     if (format === 'currency') return formatCompactMXN(value as number)
-    if (format === 'percent') return formatPercent(value as number)
+    if (format === 'percent') return formatPercentSafe(value as number, false)
     if (format === 'score') return ((value as number) * 100).toFixed(1)
     return formatNumber(value as number)
   }, [value, format])
@@ -594,7 +635,7 @@ const RiskFactorChart = memo(function RiskFactorChart({
                   <div className="chart-tooltip">
                     <p className="font-medium">{data.name}</p>
                     <p className="text-sm text-text-muted">
-                      {formatNumber(data.count)} contracts ({formatPercent(data.pct)})
+                      {formatNumber(data.count)} contracts ({formatPercentSafe(data.pct, true)})
                     </p>
                   </div>
                 )
@@ -644,7 +685,7 @@ const RiskDistributionChart = memo(function RiskDistributionChart({
                       {formatNumber(data.count)} contracts
                     </p>
                     <p className="text-sm text-text-muted">
-                      {formatPercent(data.percentage / 100)} of total
+                      {formatPercentSafe(data.percentage, false)} of total
                     </p>
                     <p className="text-sm text-text-muted">
                       Value: {formatCompactMXN(data.total_value_mxn)}
@@ -811,13 +852,13 @@ const SectorRiskTable = memo(function SectorRiskTable({
                 <RiskBadge score={sector.avg_risk_score} />
               </td>
               <td className="data-cell text-right tabular-nums">
-                {formatPercent(sector.high_risk_pct)}
+                {formatPercentSafe(sector.high_risk_pct, false)}
               </td>
               <td className="data-cell text-right tabular-nums">
-                {formatPercent(sector.direct_award_pct)}
+                {formatPercentSafe(sector.direct_award_pct, false)}
               </td>
               <td className="data-cell text-right tabular-nums">
-                {formatPercent(sector.single_bid_pct)}
+                {formatPercentSafe(sector.single_bid_pct, false)}
               </td>
             </tr>
           ))}

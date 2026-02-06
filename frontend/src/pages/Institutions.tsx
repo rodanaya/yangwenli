@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
-import { formatCompactMXN, formatNumber } from '@/lib/utils'
+import { formatCompactMXN, formatCompactUSD, formatNumber, toTitleCase } from '@/lib/utils'
 import { institutionApi } from '@/api/client'
 import type { InstitutionFilterParams, InstitutionResponse } from '@/api/types'
 import { Building2, Search, ChevronLeft, ChevronRight, ExternalLink, AlertCircle, RefreshCw, Building, Loader2 } from 'lucide-react'
@@ -230,7 +230,7 @@ function InstitutionCard({ institution, style }: { institution: InstitutionRespo
                 to={`/institutions/${institution.id}`}
                 className="text-sm font-medium hover:text-accent transition-colors line-clamp-2"
               >
-                {institution.name}
+                {toTitleCase(institution.name)}
               </Link>
               {institution.siglas && <p className="text-xs text-text-muted">{institution.siglas}</p>}
             </div>
@@ -258,6 +258,7 @@ function InstitutionCard({ institution, style }: { institution: InstitutionRespo
           <div>
             <p className="text-text-muted text-xs">Total Spending</p>
             <p className="font-medium tabular-nums">{formatCompactMXN(institution.total_amount_mxn || 0)}</p>
+            <p className="text-[10px] text-text-muted tabular-nums">{formatCompactUSD(institution.total_amount_mxn || 0)}</p>
           </div>
         </div>
 

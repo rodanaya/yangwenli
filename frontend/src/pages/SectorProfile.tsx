@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
-import { formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
+import { formatCompactMXN, formatCompactUSD, formatNumber, formatPercentSafe, toTitleCase } from '@/lib/utils'
 import { sectorApi, vendorApi } from '@/api/client'
 import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
 import {
@@ -162,9 +162,9 @@ export function SectorProfile() {
               <CardTitle className="text-sm">Procurement Patterns</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <StatRow label="Direct Awards" value={formatPercent(stats?.direct_award_pct || 0)} />
-              <StatRow label="Single Bids" value={formatPercent(stats?.single_bid_pct || 0)} />
-              <StatRow label="Avg Risk Score" value={formatPercent(stats?.avg_risk_score || 0)} />
+              <StatRow label="Direct Awards" value={formatPercentSafe(stats?.direct_award_pct, false) || '-'} />
+              <StatRow label="Single Bids" value={formatPercentSafe(stats?.single_bid_pct, false) || '-'} />
+              <StatRow label="Avg Risk Score" value={formatPercentSafe(stats?.avg_risk_score, true) || '-'} />
               <StatRow label="High Risk Count" value={formatNumber((stats?.high_risk_count || 0) + (stats?.critical_risk_count || 0))} />
             </CardContent>
           </Card>
@@ -284,8 +284,10 @@ function KPICard({ title, value, icon: Icon, format = 'number', color = '#3b82f6
       : format === 'currency'
         ? formatCompactMXN(value)
         : format === 'percent'
-          ? formatPercent(value)
+          ? formatPercentSafe(value, true)
           : formatNumber(value)
+
+  const usdSubtitle = format === 'currency' && value !== undefined ? formatCompactUSD(value) : undefined
 
   return (
     <Card>
@@ -294,6 +296,7 @@ function KPICard({ title, value, icon: Icon, format = 'number', color = '#3b82f6
           <div className="space-y-1">
             <p className="text-xs font-medium text-text-muted">{title}</p>
             <p className="text-2xl font-bold tabular-nums text-text-primary">{formattedValue}</p>
+            {usdSubtitle && <p className="text-[10px] text-text-muted tabular-nums">{usdSubtitle}</p>}
           </div>
           <div
             className="flex h-10 w-10 items-center justify-center rounded-lg"
@@ -339,7 +342,7 @@ function RiskDistributionChart({ data }: { data: Array<{ risk_level: string; cou
                   <div className="rounded-lg border border-border bg-background-card p-2 shadow-lg">
                     <p className="font-medium">{data.level}</p>
                     <p className="text-sm text-text-muted">
-                      {formatNumber(data.count)} ({formatPercent(data.percentage / 100)})
+                      {formatNumber(data.count)} ({formatPercentSafe(data.percentage, false)})
                     </p>
                   </div>
                 )
@@ -386,7 +389,7 @@ function RiskBreakdown({
           <div className="flex justify-between text-xs">
             <span className="text-text-muted">{item.label}</span>
             <span>
-              {formatNumber(item.count)} ({formatPercent(item.count / total)})
+              {formatNumber(item.count)} ({formatPercentSafe(item.count / total, true)})
             </span>
           </div>
           <div className="h-1.5 bg-background-elevated rounded-full overflow-hidden">
@@ -436,6 +439,9 @@ function TrendsChart({
                     <p className="text-sm text-text-muted">
                       Value: {formatCompactMXN(data.value * 1_000_000_000)}
                     </p>
+                    <p className="text-xs text-text-muted">
+                      {formatCompactUSD(data.value * 1_000_000_000, data.year)}
+                    </p>
                     <p className="text-sm text-text-muted">Contracts: {formatNumber(data.contracts)}</p>
                   </div>
                 )
@@ -469,12 +475,13 @@ function TopVendorsList({ data }: { data: any[] }) {
               to={`/vendors/${vendor.vendor_id}`}
               className="text-sm font-medium hover:text-accent transition-colors truncate block"
             >
-              {vendor.vendor_name}
+              {toTitleCase(vendor.vendor_name)}
             </Link>
             <p className="text-xs text-text-muted">{formatNumber(vendor.total_contracts)} contracts</p>
           </div>
           <div className="text-right">
             <p className="text-sm font-medium tabular-nums">{formatCompactMXN(vendor.total_value_mxn)}</p>
+            <p className="text-[10px] text-text-muted tabular-nums">{formatCompactUSD(vendor.total_value_mxn)}</p>
             {vendor.avg_risk_score !== undefined && vendor.avg_risk_score !== null && (
               <RiskBadge score={vendor.avg_risk_score} className="text-[10px]" />
             )}

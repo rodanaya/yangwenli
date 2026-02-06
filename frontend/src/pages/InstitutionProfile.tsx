@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge, Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { formatCompactMXN, formatNumber, formatPercent, formatDate } from '@/lib/utils'
+import { formatCompactMXN, formatCompactUSD, formatNumber, formatPercentSafe, formatDate, toTitleCase } from '@/lib/utils'
 import { institutionApi } from '@/api/client'
 import { RISK_COLORS } from '@/lib/constants'
 import type { ContractListItem } from '@/api/types'
@@ -88,7 +88,7 @@ export function InstitutionProfile() {
               <Building2 className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold">{institution.name}</h1>
+              <h1 className="text-xl font-semibold">{toTitleCase(institution.name)}</h1>
               <div className="flex items-center gap-2 text-sm text-text-muted">
                 {institution.siglas && <span className="font-medium">{institution.siglas}</span>}
                 {institution.institution_type && (
@@ -127,7 +127,7 @@ export function InstitutionProfile() {
           title="High Risk Contracts"
           value={institution.high_risk_contract_count}
           icon={AlertTriangle}
-          subtitle={institution.high_risk_percentage !== undefined ? `${(institution.high_risk_percentage * 100).toFixed(1)}% of total` : undefined}
+          subtitle={institution.high_risk_percentage !== undefined ? `${formatPercentSafe(institution.high_risk_percentage, true)} of total` : undefined}
         />
         <KPICard
           title="Risk Baseline"
@@ -161,9 +161,9 @@ export function InstitutionProfile() {
               <CardTitle className="text-sm">Risk Profile</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <StatRow label="Risk Baseline" value={formatPercent(institution.risk_baseline || 0)} />
-              <StatRow label="Size Risk Adj." value={formatPercent(institution.size_risk_adjustment || 0)} />
-              <StatRow label="High Risk %" value={formatPercent(institution.high_risk_percentage || 0)} />
+              <StatRow label="Risk Baseline" value={formatPercentSafe(institution.risk_baseline, true) || '-'} />
+              <StatRow label="Size Risk Adj." value={formatPercentSafe(institution.size_risk_adjustment, true) || '-'} />
+              <StatRow label="High Risk %" value={formatPercentSafe(institution.high_risk_percentage, true) || '-'} />
               <StatRow label="Data Quality" value={institution.data_quality_grade || '-'} />
             </CardContent>
           </Card>
@@ -282,8 +282,10 @@ function KPICard({ title, value, icon: Icon, format = 'number', subtitle, varian
       : format === 'currency'
         ? formatCompactMXN(value)
         : format === 'percent'
-          ? formatPercent(value)
+          ? formatPercentSafe(value, true)
           : formatNumber(value)
+
+  const usdSubtitle = format === 'currency' && value !== undefined ? formatCompactUSD(value) : undefined
 
   return (
     <Card className={variant === 'warning' ? 'border-risk-high/30' : undefined}>
@@ -292,6 +294,7 @@ function KPICard({ title, value, icon: Icon, format = 'number', subtitle, varian
           <div className="space-y-1">
             <p className="text-xs font-medium text-text-muted">{title}</p>
             <p className="text-2xl font-bold tabular-nums text-text-primary">{formattedValue}</p>
+            {usdSubtitle && <p className="text-[10px] text-text-muted tabular-nums">{usdSubtitle}</p>}
             {subtitle && <p className="text-xs text-text-muted">{subtitle}</p>}
           </div>
           <div
@@ -365,8 +368,8 @@ function RiskGauge({ score }: { score: number }) {
 
 function TopVendorsChart({ data }: { data: Array<{ vendor_id: number; vendor_name: string; total_value_mxn: number }> }) {
   const chartData = data.map((v) => ({
-    name: v.vendor_name.length > 20 ? v.vendor_name.substring(0, 20) + '...' : v.vendor_name,
-    fullName: v.vendor_name,
+    name: toTitleCase(v.vendor_name).length > 20 ? toTitleCase(v.vendor_name).substring(0, 20) + '...' : toTitleCase(v.vendor_name),
+    fullName: toTitleCase(v.vendor_name),
     value: v.total_value_mxn,
   }))
 
@@ -394,6 +397,7 @@ function TopVendorsChart({ data }: { data: Array<{ vendor_id: number; vendor_nam
                   <div className="rounded-lg border border-border bg-background-card p-2 shadow-lg">
                     <p className="font-medium text-sm">{data.fullName}</p>
                     <p className="text-sm text-text-muted">{formatCompactMXN(data.value)}</p>
+                    <p className="text-xs text-text-muted">{formatCompactUSD(data.value)}</p>
                   </div>
                 )
               }
@@ -419,7 +423,7 @@ function VendorConcentration({ data, total }: { data: any[]; total: number }) {
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-text-muted">Top 5 Vendors</span>
-          <span className="font-medium">{formatPercent(top5Pct)} of total</span>
+          <span className="font-medium">{formatPercentSafe(top5Pct, true)} of total</span>
         </div>
         <div className="h-2 bg-background-elevated rounded-full overflow-hidden">
           <div
@@ -431,7 +435,7 @@ function VendorConcentration({ data, total }: { data: any[]; total: number }) {
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-text-muted">Top 10 Vendors</span>
-          <span className="font-medium">{formatPercent(top10Pct)} of total</span>
+          <span className="font-medium">{formatPercentSafe(top10Pct, true)} of total</span>
         </div>
         <div className="h-2 bg-background-elevated rounded-full overflow-hidden">
           <div
@@ -462,14 +466,17 @@ function ContractRow({ contract }: { contract: ContractListItem }) {
             {contract.vendor_name && (
               <>
                 <span>•</span>
-                <span className="truncate max-w-[150px]">{contract.vendor_name}</span>
+                <span className="truncate max-w-[150px]">{toTitleCase(contract.vendor_name)}</span>
               </>
             )}
           </div>
         </div>
       </div>
       <div className="flex items-center gap-3 flex-shrink-0">
-        <p className="text-sm font-medium tabular-nums">{formatCompactMXN(contract.amount_mxn)}</p>
+        <div className="text-right">
+          <p className="text-sm font-medium tabular-nums">{formatCompactMXN(contract.amount_mxn)}</p>
+          <p className="text-[10px] text-text-muted tabular-nums">{formatCompactUSD(contract.amount_mxn)}</p>
+        </div>
         {contract.risk_score !== undefined && contract.risk_score !== null && (
           <RiskBadge score={contract.risk_score} />
         )}

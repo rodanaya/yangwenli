@@ -30,7 +30,7 @@ export const Heatmap = memo(function Heatmap({
   columns,
   title,
   valueFormatter = (v) => v.toFixed(2),
-  colorRange = ['#16a34a', '#eab308', '#dc2626'], // green -> yellow -> red
+  colorRange = ['#4ade80', '#fbbf24', '#f87171'], // green -> amber -> rose
   height = 300,
   onCellClick,
 }: HeatmapProps) {

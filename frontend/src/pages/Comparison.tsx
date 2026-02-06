@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge, Badge } from '@/components/ui/badge'
-import { formatCompactMXN, formatNumber, formatPercentSafe } from '@/lib/utils'
+import { formatCompactMXN, formatCompactUSD, formatNumber, formatPercentSafe, toTitleCase } from '@/lib/utils'
 import { sectorApi, vendorApi, institutionApi } from '@/api/client'
 import {
   Columns,
@@ -185,7 +185,7 @@ export function Comparison() {
   }, [comparisonData])
 
   const addItem = (item: CompareItem) => {
-    if (selectedItems.length < 4) {
+    if (selectedItems.length < 5) {
       setSelectedItems([...selectedItems, item])
     }
   }
@@ -198,7 +198,7 @@ export function Comparison() {
     setSelectedItems([])
   }
 
-  const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']
+  const colors = ['#58a6ff', '#fb923c', '#4ade80', '#f87171', '#c084fc']
 
   if (hasError) {
     return (
@@ -208,7 +208,7 @@ export function Comparison() {
             <Columns className="h-4.5 w-4.5 text-accent" />
             Comparison
           </h2>
-          <p className="text-xs text-text-muted mt-0.5">Compare up to 4 items side-by-side</p>
+          <p className="text-xs text-text-muted mt-0.5">Compare up to 5 items side-by-side</p>
         </div>
         <Card className="border-risk-critical/30 bg-risk-critical/5">
           <CardContent className="p-6 text-center">
@@ -234,7 +234,7 @@ export function Comparison() {
             Comparison
           </h2>
           <p className="text-xs text-text-muted mt-0.5">
-            Compare up to 4 items side-by-side
+            Compare up to 5 items side-by-side
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -284,14 +284,14 @@ export function Comparison() {
                   className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: colors[index] }}
                 />
-                {item.name.length > 30 ? item.name.slice(0, 30) + '...' : item.name}
+                {toTitleCase(item.name).length > 30 ? toTitleCase(item.name).slice(0, 30) + '...' : toTitleCase(item.name)}
                 <button onClick={() => removeItem(item.id)} className="ml-1 hover:text-risk-critical">
                   <X className="h-3 w-3" />
                 </button>
               </Badge>
             ))}
             {selectedItems.length === 0 && (
-              <p className="text-sm text-text-muted">No items selected. Choose up to 4 items below.</p>
+              <p className="text-sm text-text-muted">No items selected. Choose up to 5 items below.</p>
             )}
           </div>
 
@@ -319,10 +319,10 @@ export function Comparison() {
                   size="sm"
                   className="justify-start text-xs truncate"
                   onClick={() => addItem(item)}
-                  disabled={selectedItems.length >= 4}
+                  disabled={selectedItems.length >= 5}
                 >
                   <Plus className="h-3 w-3 mr-1 flex-shrink-0" />
-                  <span className="truncate">{item.name}</span>
+                  <span className="truncate">{toTitleCase(item.name)}</span>
                 </Button>
               ))
             )}
@@ -353,7 +353,7 @@ export function Comparison() {
                       dataKey="name"
                       tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
                       width={100}
-                      tickFormatter={(v) => v.length > 15 ? v.slice(0, 15) + '...' : v}
+                      tickFormatter={(v) => { const t = toTitleCase(v); return t.length > 15 ? t.slice(0, 15) + '...' : t }}
                     />
                     <RechartsTooltip
                       content={({ active, payload }) => {
@@ -361,8 +361,9 @@ export function Comparison() {
                           const data = payload[0].payload
                           return (
                             <div className="chart-tooltip">
-                              <p className="font-medium text-xs">{data.name}</p>
+                              <p className="font-medium text-xs">{toTitleCase(data.name)}</p>
                               <p className="text-xs text-text-muted">Value: {formatCompactMXN(data.value)}</p>
+                              <p className="text-xs text-text-muted">~{formatCompactUSD(data.value)}</p>
                               <p className="text-xs text-text-muted">Contracts: {formatNumber(data.contracts)}</p>
                             </div>
                           )
@@ -438,7 +439,7 @@ export function Comparison() {
                               className="w-2 h-2 rounded-full"
                               style={{ backgroundColor: colors[index] }}
                             />
-                            <span className="truncate max-w-[150px]">{item.name}</span>
+                            <span className="truncate max-w-[150px]">{toTitleCase(item.name)}</span>
                           </div>
                         </th>
                       ))}
@@ -458,6 +459,14 @@ export function Comparison() {
                       {comparisonData.map((item: any) => (
                         <td key={item.id} className="data-cell text-right tabular-nums">
                           {formatCompactMXN(item.value)}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td className="data-cell font-medium text-text-muted">Value (USD)</td>
+                      {comparisonData.map((item: any) => (
+                        <td key={item.id} className="data-cell text-right tabular-nums text-text-muted">
+                          ~{formatCompactUSD(item.value)}
                         </td>
                       ))}
                     </tr>
@@ -506,7 +515,7 @@ export function Comparison() {
             <Columns className="h-16 w-16 mx-auto mb-4 text-text-muted opacity-30" />
             <h3 className="text-lg font-medium mb-2">Select Items to Compare</h3>
             <p className="text-sm text-text-muted max-w-md mx-auto">
-              Choose up to 4 {compareType} from the list above to see a detailed side-by-side comparison
+              Choose up to 5 {compareType} from the list above to see a detailed side-by-side comparison
               of their metrics, risk profiles, and contract patterns.
             </p>
           </CardContent>

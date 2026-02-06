@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { formatCompactMXN, formatNumber, formatPercent, formatDate } from '@/lib/utils'
+import { formatCompactMXN, formatNumber, formatPercentSafe, formatDate, toTitleCase, formatCompactUSD, getRiskLevel } from '@/lib/utils'
 import { vendorApi, networkApi } from '@/api/client'
 import { RISK_COLORS } from '@/lib/constants'
 import type { ContractListItem } from '@/api/types'
@@ -98,7 +98,7 @@ export function VendorProfile() {
               <Users className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold">{vendor.name}</h1>
+              <h1 className="text-xl font-semibold">{toTitleCase(vendor.name)}</h1>
               <div className="flex items-center gap-2 text-sm text-text-muted">
                 {vendor.rfc && <span className="font-mono">{vendor.rfc}</span>}
                 {vendor.industry_name && (
@@ -129,7 +129,7 @@ export function VendorProfile() {
           value={vendor.total_value_mxn}
           icon={DollarSign}
           format="currency"
-          subtitle="Across all contracts"
+          subtitle={formatCompactUSD(vendor.total_value_mxn)}
         />
         <KPICard
           title="Institutions"
@@ -141,8 +141,8 @@ export function VendorProfile() {
           title="High Risk"
           value={vendor.high_risk_pct}
           icon={AlertTriangle}
-          format="percent"
-          variant={vendor.high_risk_pct > 0.2 ? 'warning' : 'default'}
+          format="percent_100"
+          variant={vendor.high_risk_pct > 20 ? 'warning' : 'default'}
         />
       </div>
 
@@ -270,8 +270,8 @@ export function VendorProfile() {
               <CardTitle className="text-sm">Procurement Patterns</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <StatRow label="Direct Awards" value={formatPercent(vendor.direct_award_pct)} />
-              <StatRow label="Single Bids" value={formatPercent(vendor.single_bid_pct)} />
+              <StatRow label="Direct Awards" value={formatPercentSafe(vendor.direct_award_pct, false)} />
+              <StatRow label="Single Bids" value={formatPercentSafe(vendor.single_bid_pct, false)} />
               <StatRow label="Avg Contract" value={formatCompactMXN(vendor.avg_contract_value || 0)} />
               <StatRow label="Sectors" value={String(vendor.sectors_count || 0)} />
             </CardContent>
@@ -401,7 +401,7 @@ interface KPICardProps {
   title: string
   value?: number
   icon: React.ElementType
-  format?: 'number' | 'currency' | 'percent'
+  format?: 'number' | 'currency' | 'percent' | 'percent_100'
   subtitle?: string
   variant?: 'default' | 'warning'
 }
@@ -413,8 +413,10 @@ function KPICard({ title, value, icon: Icon, format = 'number', subtitle, varian
       : format === 'currency'
         ? formatCompactMXN(value)
         : format === 'percent'
-          ? formatPercent(value)
-          : formatNumber(value)
+          ? formatPercentSafe(value, true)
+          : format === 'percent_100'
+            ? formatPercentSafe(value, false)
+            : formatNumber(value)
 
   return (
     <Card className={variant === 'warning' ? 'border-risk-high/30' : undefined}>
@@ -440,13 +442,9 @@ function KPICard({ title, value, icon: Icon, format = 'number', subtitle, varian
 
 function RiskGauge({ score }: { score: number }) {
   const percentage = Math.round(score * 100)
-  const getRiskLevel = (s: number) => {
-    if (s >= 0.6) return { label: 'Critical', color: RISK_COLORS.critical }
-    if (s >= 0.4) return { label: 'High', color: RISK_COLORS.high }
-    if (s >= 0.2) return { label: 'Medium', color: RISK_COLORS.medium }
-    return { label: 'Low', color: RISK_COLORS.low }
-  }
-  const { label, color } = getRiskLevel(score)
+  const level = getRiskLevel(score)
+  const label = level.charAt(0).toUpperCase() + level.slice(1)
+  const color = RISK_COLORS[level]
 
   return (
     <div className="flex flex-col items-center">

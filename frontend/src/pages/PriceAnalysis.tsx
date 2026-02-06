@@ -5,7 +5,7 @@
  * Part of the Price Manipulation Detection System.
  */
 
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -28,7 +28,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
-import { formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
+import { formatCompactMXN, formatNumber, formatPercentSafe, formatCompactUSD } from '@/lib/utils'
 import { priceApi, type PriceHypothesisItem, type PriceHypothesesSummary } from '@/api/client'
 import { SECTORS } from '@/lib/constants'
 import {
@@ -38,7 +38,6 @@ import {
   DollarSign,
   Search,
   Filter,
-  ChevronRight,
   CheckCircle,
   XCircle,
   Clock,
@@ -61,12 +60,12 @@ import {
   Legend,
 } from 'recharts'
 
-// Confidence level colors
+// Confidence level colors — Warm palette
 const CONFIDENCE_COLORS: Record<string, string> = {
-  very_high: '#dc2626', // red
-  high: '#ea580c',      // orange
-  medium: '#eab308',    // amber
-  low: '#64748b',       // slate
+  very_high: '#f87171', // rose
+  high: '#fb923c',      // orange
+  medium: '#fbbf24',    // amber
+  low: '#94a3b8',       // slate
 }
 
 // Hypothesis type labels
@@ -131,7 +130,7 @@ function ConfidenceBadge({ level, score }: { level: string; score: number }) {
       style={{ backgroundColor: color, color: 'white' }}
       className="gap-1"
     >
-      {formatPercent(score)}
+      {formatPercentSafe(score, true)}
     </Badge>
   )
 }
@@ -183,7 +182,7 @@ function SummaryCards({ summary }: { summary: PriceHypothesesSummary }) {
         <CardContent>
           <div className="text-2xl font-bold">{formatCompactMXN(overall.total_flagged_value)}</div>
           <p className="text-xs text-text-muted">
-            Total value of flagged contracts
+            ~{formatCompactUSD(overall.total_flagged_value)}
           </p>
         </CardContent>
       </Card>
@@ -195,7 +194,7 @@ function SummaryCards({ summary }: { summary: PriceHypothesesSummary }) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatPercent(overall.avg_confidence)}</div>
+          <div className="text-2xl font-bold">{formatPercentSafe(overall.avg_confidence, true)}</div>
           <p className="text-xs text-text-muted">
             Across all hypotheses
           </p>
@@ -321,6 +320,7 @@ function HypothesisCard({
                 <span className="flex items-center gap-1">
                   <DollarSign className="h-3 w-3" />
                   {formatCompactMXN(hypothesis.amount_mxn || 0)}
+                  <span className="text-text-muted/60">({formatCompactUSD(hypothesis.amount_mxn || 0)})</span>
                 </span>
                 <span>Sector: {sectorName}</span>
                 <span>Contract #{hypothesis.contract_id}</span>
@@ -514,6 +514,37 @@ export function PriceAnalysis() {
                 a calibrated model with known false positive rates.
               </p>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Investigation Guidance */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            Investigation Guidance
+          </CardTitle>
+          <CardDescription className="text-xs">
+            What to look for when reviewing each hypothesis type
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {[
+              { type: 'Extreme Overpricing', guidance: 'Compare contract amount to sector median. Check if vendor has pattern of above-market pricing. May indicate kickback or inflated billing.', icon: <AlertOctagon className="h-4 w-4 text-red-500" /> },
+              { type: 'Statistical Outlier', guidance: 'Amount exceeds IQR upper fence. Compare to similar contracts in same category. Check if scope justifies premium.', icon: <TrendingUp className="h-4 w-4 text-orange-500" /> },
+              { type: 'Round Number', guidance: 'Suspiciously round amounts may indicate estimates rather than competitive bids. Check if multiple contracts cluster at same round values.', icon: <DollarSign className="h-4 w-4 text-amber-500" /> },
+              { type: 'Vendor Price Anomaly', guidance: "This vendor's pricing deviates significantly from peers in the same category. Compare their win rate and average margins.", icon: <BarChart3 className="h-4 w-4 text-purple-500" /> },
+            ].map(item => (
+              <div key={item.type} className="p-3 rounded-lg bg-background-elevated">
+                <div className="flex items-center gap-2 mb-1">
+                  {item.icon}
+                  <span className="text-sm font-medium">{item.type}</span>
+                </div>
+                <p className="text-xs text-text-muted">{item.guidance}</p>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>

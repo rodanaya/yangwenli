@@ -9,7 +9,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { analysisApi } from '@/api/client'
 import type { GradeDistribution, StructureQuality, FieldCompleteness, KeyIssue } from '@/api/client'
 import { formatNumber } from '@/lib/utils'
-import { DATA_STRUCTURES } from '@/lib/constants'
 import {
   Database,
   AlertTriangle,
@@ -33,21 +32,21 @@ import {
   Pie,
 } from 'recharts'
 
-// Grade colors
+// Grade colors — Soft palette
 const GRADE_COLORS: Record<string, string> = {
-  A: '#22c55e', // Green
-  B: '#3b82f6', // Blue
-  C: '#eab308', // Yellow
-  D: '#f97316', // Orange
-  F: '#ef4444', // Red
+  A: '#4ade80', // green (best)
+  B: '#60a5fa', // blue
+  C: '#fbbf24', // amber
+  D: '#fb923c', // orange
+  F: '#f87171', // rose (worst)
 }
 
-// Severity colors
+// Severity colors — Soft red/yellow/green palette
 const SEVERITY_COLORS: Record<string, string> = {
-  critical: '#ef4444',
-  high: '#f97316',
-  medium: '#eab308',
-  low: '#22c55e',
+  critical: '#f87171',
+  high: '#fb923c',
+  medium: '#fbbf24',
+  low: '#4ade80',
 }
 
 export function DataQuality() {
@@ -171,6 +170,45 @@ export function DataQuality() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Data Structure Timeline */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Data Structure Timeline
+          </CardTitle>
+          <p className="text-xs text-text-muted mt-1">
+            COMPRANET data collection periods and their characteristics
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {[
+              { structure: 'A', years: '2002-2010', rfc: '0.1%', quality: 'Lowest', color: '#fb923c', desc: 'Legacy format, minimal RFC coverage, risk scores may be underestimated' },
+              { structure: 'B', years: '2010-2017', rfc: '15.7%', quality: 'Better', color: '#fbbf24', desc: 'Improved coverage, UPPERCASE text, 72.2% direct award flags' },
+              { structure: 'C', years: '2018-2022', rfc: '30.3%', quality: 'Good', color: '#60a5fa', desc: 'Mixed case text, 78.4% direct award flags, better field completeness' },
+              { structure: 'D', years: '2023-2025', rfc: '47.4%', quality: 'Best', color: '#4ade80', desc: '100% Partida codes, highest RFC coverage, most reliable risk scoring' },
+            ].map(s => (
+              <div key={s.structure} className="flex items-start gap-3 p-3 rounded-lg" style={{ backgroundColor: `${s.color}08` }}>
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg flex-shrink-0 font-bold text-sm" style={{ backgroundColor: `${s.color}20`, color: s.color }}>
+                  {s.structure}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-sm">{s.years}</span>
+                    <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: `${s.color}20`, color: s.color }}>
+                      RFC: {s.rfc}
+                    </span>
+                    <span className="text-xs text-text-muted">{s.quality} quality</span>
+                  </div>
+                  <p className="text-xs text-text-muted mt-0.5">{s.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Field Completeness & Issues */}
       <div className="grid gap-4 lg:grid-cols-2">
@@ -376,12 +414,12 @@ function StructureQualityChart({ data }: { data: StructureQuality[] }) {
     label: `${d.structure}\n(${d.years})`,
     color:
       d.quality_description === 'best'
-        ? '#22c55e'
+        ? '#4ade80'
         : d.quality_description === 'good'
-          ? '#3b82f6'
+          ? '#60a5fa'
           : d.quality_description === 'better'
-            ? '#eab308'
-            : '#f97316',
+            ? '#fbbf24'
+            : '#fb923c',
   }))
 
   return (
@@ -440,12 +478,12 @@ function FieldCompletenessTable({ data }: { data: FieldCompleteness[] }) {
                   width: `${field.fill_rate}%`,
                   backgroundColor:
                     field.fill_rate >= 90
-                      ? '#22c55e'
+                      ? '#4ade80'
                       : field.fill_rate >= 70
-                        ? '#3b82f6'
+                        ? '#60a5fa'
                         : field.fill_rate >= 50
-                          ? '#eab308'
-                          : '#ef4444',
+                          ? '#fbbf24'
+                          : '#f87171',
                 }}
               />
             </div>

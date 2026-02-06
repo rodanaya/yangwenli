@@ -18,8 +18,8 @@ import {
   Calendar,
   Database,
   DollarSign,
-  Radio,
 } from 'lucide-react'
+import { LOGHIcon } from '@/components/LOGHIcon'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
@@ -71,7 +71,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <div className="flex h-14 items-center border-b border-border/30 px-3">
         <div className="flex items-center gap-2.5 overflow-hidden">
           <div className="relative flex-shrink-0">
-            <Radio className="h-5 w-5 text-accent" />
+            <LOGHIcon size={20} className="text-accent" />
             <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-signal-live shadow-[0_0_6px_var(--color-signal-live)]" />
           </div>
           {!collapsed && (

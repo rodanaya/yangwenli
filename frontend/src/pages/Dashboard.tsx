@@ -5,11 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChartSkeleton } from '@/components/LoadingSkeleton'
 import { RiskBadge } from '@/components/ui/badge'
-import { formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
+import { formatCompactMXN, formatNumber, formatPercentSafe, formatCompactUSD } from '@/lib/utils'
 import { analysisApi, vendorApi } from '@/api/client'
 
 // Lazy load chart components for better initial load performance
-const StackedAreaChart = lazy(() => import('@/components/charts').then(m => ({ default: m.StackedAreaChart })))
 const AlertPanel = lazy(() => import('@/components/charts').then(m => ({ default: m.AlertPanel })))
 const ProcedureBreakdown = lazy(() => import('@/components/charts').then(m => ({ default: m.ProcedureBreakdown })))
 const Heatmap = lazy(() => import('@/components/charts').then(m => ({ default: m.Heatmap })))
@@ -40,6 +39,7 @@ import {
   LineChart,
   Line,
   CartesianGrid,
+  ComposedChart,
 } from 'recharts'
 import { SECTOR_COLORS, RISK_COLORS, getSectorNameEN } from '@/lib/constants'
 import type { SectorStatistics, VendorTopItem, RiskDistribution } from '@/api/types'
@@ -110,34 +110,18 @@ export function Dashboard() {
     queryFn: () => analysisApi.getAnomalies(),
   })
 
-  // Transform trends data for stacked area chart
-  const riskTrendsData = useMemo(() => {
-    if (!trends?.data || !riskDist?.data) return []
-
-    const totalCount = riskDist.data.reduce((sum, d) => sum + (d.count || 0), 0)
-    const distribution = {
-      low: riskDist.data.find((d) => d.risk_level === 'low')?.count || 0,
-      medium: riskDist.data.find((d) => d.risk_level === 'medium')?.count || 0,
-      high: riskDist.data.find((d) => d.risk_level === 'high')?.count || 0,
-      critical: riskDist.data.find((d) => d.risk_level === 'critical')?.count || 0,
-    }
-    const pct = {
-      low: totalCount > 0 ? distribution.low / totalCount : 0.796,
-      medium: totalCount > 0 ? distribution.medium / totalCount : 0.203,
-      high: totalCount > 0 ? distribution.high / totalCount : 0.0008,
-      critical: totalCount > 0 ? distribution.critical / totalCount : 0,
-    }
-
+  // Transform trends data for contracts + value chart (real per-year data)
+  const yearlyTrendsData = useMemo(() => {
+    if (!trends?.data) return []
     return trends.data
       .filter((d) => d.year >= 2010)
       .map((d) => ({
         year: d.year,
-        low: Math.round((d.contracts || 0) * pct.low),
-        medium: Math.round((d.contracts || 0) * pct.medium),
-        high: Math.round((d.contracts || 0) * pct.high),
-        critical: Math.round((d.contracts || 0) * pct.critical),
+        contracts: d.contracts,
+        valueBillions: d.value_mxn / 1_000_000_000,
+        value_mxn: d.value_mxn,
       }))
-  }, [trends, riskDist])
+  }, [trends])
 
   // Transform sectors data for procedure breakdown
   const procedureData = useMemo(() => {
@@ -238,7 +222,7 @@ export function Dashboard() {
           icon={DollarSign}
           loading={overviewLoading}
           format="currency"
-          subtitle="Mexican Pesos (MXN)"
+          subtitle={overview?.total_value_mxn ? `~${formatCompactUSD(overview.total_value_mxn)}` : 'Mexican Pesos (MXN)'}
         />
         <KPICard
           title="ACTIVE VENDORS"
@@ -299,24 +283,59 @@ export function Dashboard() {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
               <Activity className="h-3.5 w-3.5 text-accent" />
-              Risk Trend Over Time
+              Yearly Procurement Activity
             </CardTitle>
             <p className="text-[10px] text-text-muted mt-0.5">
-              Contract distribution by risk level
+              Contract count and total value per year
             </p>
           </CardHeader>
           <CardContent>
             {trendsLoading ? (
               <ChartSkeleton height={280} type="area" />
             ) : (
-              <Suspense fallback={<ChartSkeleton height={280} />}>
-                <StackedAreaChart
-                  data={riskTrendsData}
-                  height={280}
-                  showPercentage={true}
-                  onYearClick={(year) => navigate(`/contracts?year=${year}`)}
-                />
-              </Suspense>
+              <div className="h-[280px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={yearlyTrendsData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
+                    <XAxis dataKey="year" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
+                    <YAxis
+                      yAxisId="contracts"
+                      orientation="left"
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                      tickFormatter={(v) => formatNumber(v)}
+                      label={{ value: 'Contracts', angle: -90, position: 'insideLeft', fill: 'var(--color-text-muted)', fontSize: 10 }}
+                    />
+                    <YAxis
+                      yAxisId="value"
+                      orientation="right"
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                      tickFormatter={(v) => `${v.toFixed(0)}B`}
+                      label={{ value: 'Value (B MXN)', angle: 90, position: 'insideRight', fill: 'var(--color-text-muted)', fontSize: 10 }}
+                    />
+                    <RechartsTooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload
+                          return (
+                            <div className="chart-tooltip">
+                              <p className="font-medium text-xs">{data.year}</p>
+                              <p className="text-[11px] text-text-muted tabular-nums">
+                                Contracts: {formatNumber(data.contracts)}
+                              </p>
+                              <p className="text-[11px] text-text-muted tabular-nums">
+                                Value: {formatCompactMXN(data.value_mxn)}
+                              </p>
+                            </div>
+                          )
+                        }
+                        return null
+                      }}
+                    />
+                    <Bar yAxisId="contracts" dataKey="contracts" fill="var(--color-accent)" opacity={0.5} radius={[2, 2, 0, 0]} />
+                    <Line yAxisId="value" type="monotone" dataKey="valueBillions" stroke="var(--color-accent)" strokeWidth={2} dot={false} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -501,7 +520,7 @@ const KPICard = memo(function KPICard({
         : format === 'currency'
           ? formatCompactMXN(value)
           : format === 'percent'
-            ? formatPercent(value)
+            ? formatPercentSafe(value, false)
             : formatNumber(value),
     [value, format]
   )
@@ -567,7 +586,7 @@ const StatCard = memo(function StatCard({
 }: StatCardProps) {
   const formattedValue = useMemo(
     () =>
-      value === undefined ? '-' : format === 'percent' ? formatPercent(value) : (value * 100).toFixed(1),
+      value === undefined ? '-' : format === 'percent' ? formatPercentSafe(value, false) : (value * 100).toFixed(1),
     [value, format]
   )
 
@@ -609,7 +628,7 @@ const SectorPieChart = memo(function SectorPieChart({
       data
         .filter((s) => s.total_value_mxn > 0)
         .sort((a, b) => b.total_value_mxn - a.total_value_mxn)
-        .slice(0, 8)
+        .slice(0, 12)
         .map((s) => ({
           name: getSectorNameEN(s.sector_code),
           code: s.sector_code,
@@ -699,7 +718,7 @@ const RiskBarChart = memo(function RiskBarChart({ data }: { data: RiskDistributi
                   <div className="chart-tooltip">
                     <p className="font-medium text-xs">{data.level}</p>
                     <p className="text-[11px] text-text-muted tabular-nums">
-                      {formatNumber(data.count)} ({formatPercent(data.percentage / 100)})
+                      {formatNumber(data.count)} ({formatPercentSafe(data.percentage, false)})
                     </p>
                   </div>
                 )

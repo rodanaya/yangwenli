@@ -33,9 +33,9 @@ interface ProcedureBreakdownProps {
 }
 
 const PROCEDURE_COLORS = {
-  direct_award: '#dc2626', // Red - most restrictive
-  single_bid: '#ea580c', // Orange - concerning
-  open_tender: '#16a34a', // Green - most competitive
+  direct_award: '#f87171', // Rose - most restrictive
+  single_bid: '#fb923c', // Orange - concerning
+  open_tender: '#4ade80', // Green - most competitive
 }
 
 export const ProcedureBreakdown = memo(function ProcedureBreakdown({

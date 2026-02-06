@@ -16,11 +16,11 @@
   --color-sector-trabajo: #f97316;
   --color-sector-otros: #64748b;
 
-  /* Risk Colors */
-  --color-risk-critical: #ef4444;
-  --color-risk-high: #f97316;
-  --color-risk-medium: #eab308;
-  --color-risk-low: #22c55e;
+  /* Risk Colors — Soft Red/Yellow/Green palette */
+  --color-risk-critical: #f87171;
+  --color-risk-high: #fb923c;
+  --color-risk-medium: #fbbf24;
+  --color-risk-low: #4ade80;
 
   /* Dark Theme (Default) — Deep intelligence aesthetic */
   --color-background: #06080d;
@@ -167,7 +167,7 @@
 
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, var(--color-accent), #a78bfa);
+    background-image: linear-gradient(135deg, var(--color-accent), #60a5fa);
   }
 
   /* Risk badges */
@@ -176,10 +176,10 @@
   .risk-medium { @apply bg-risk-medium/20 text-risk-medium border border-risk-medium/30; }
   .risk-low { @apply bg-risk-low/15 text-risk-low border border-risk-low/30; }
 
-  html:not(.dark) .risk-critical { @apply bg-risk-critical/10 text-[#b91c1c] border-risk-critical/25; }
-  html:not(.dark) .risk-high { @apply bg-risk-high/10 text-[#c2410c] border-risk-high/25; }
-  html:not(.dark) .risk-medium { @apply bg-risk-medium/10 text-[#a16207] border-risk-medium/25; }
-  html:not(.dark) .risk-low { @apply bg-risk-low/10 text-[#15803d] border-risk-low/25; }
+  html:not(.dark) .risk-critical { @apply bg-risk-critical/10 text-[#dc2626] border-risk-critical/25; }
+  html:not(.dark) .risk-high { @apply bg-risk-high/10 text-[#ea580c] border-risk-high/25; }
+  html:not(.dark) .risk-medium { @apply bg-risk-medium/10 text-[#d97706] border-risk-medium/25; }
+  html:not(.dark) .risk-low { @apply bg-risk-low/10 text-[#16a34a] border-risk-low/25; }
 
   .sector-badge { @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium; }
   .chart-tooltip { @apply rounded-lg border border-border bg-background-card p-2 shadow-lg text-sm; }

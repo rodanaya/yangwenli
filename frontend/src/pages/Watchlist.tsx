@@ -4,7 +4,7 @@
  * Personal investigation dashboard for analysts
  */
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useReducer } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -31,6 +31,8 @@ import {
   BellOff,
   Loader2,
   RefreshCw,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react'
 
 export function Watchlist() {
@@ -38,6 +40,15 @@ export function Watchlist() {
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState<'all' | 'watching' | 'investigating' | 'resolved'>('all')
   const [typeFilter, setTypeFilter] = useState<'all' | 'vendor' | 'institution' | 'contract'>('all')
+  const [expandedNotes, toggleNote] = useReducer(
+    (state: Set<number>, id: number) => {
+      const next = new Set(state)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    },
+    new Set<number>()
+  )
 
   // Fetch watchlist items from API
   const { data: watchlistData, isLoading, error, refetch } = useQuery({
@@ -330,15 +341,15 @@ export function Watchlist() {
                         {/* Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
+                            {item.risk_score !== null && item.risk_score !== undefined && (
+                              <RiskBadge score={item.risk_score} className="flex-shrink-0" />
+                            )}
                             <button
                               onClick={() => handleItemClick(item)}
                               className="font-medium text-sm hover:text-accent transition-colors truncate"
                             >
                               {item.item_name}
                             </button>
-                            {item.risk_score !== null && item.risk_score !== undefined && (
-                              <RiskBadge score={item.risk_score} className="flex-shrink-0" />
-                            )}
                           </div>
                           <p className="text-xs text-text-muted mb-2">{item.reason}</p>
                           <div className="flex items-center gap-3 text-xs text-text-muted">
@@ -355,7 +366,20 @@ export function Watchlist() {
                             </span>
                           </div>
                           {item.notes && (
-                            <p className="text-xs text-text-muted mt-2 italic">Note: {item.notes}</p>
+                            <button
+                              onClick={() => toggleNote(item.id)}
+                              className="flex items-center gap-1 text-xs text-text-muted mt-2 hover:text-accent transition-colors"
+                            >
+                              {expandedNotes.has(item.id) ? (
+                                <ChevronDown className="h-3 w-3" />
+                              ) : (
+                                <ChevronRight className="h-3 w-3" />
+                              )}
+                              {expandedNotes.has(item.id) ? 'Hide note' : 'Show note'}
+                            </button>
+                          )}
+                          {item.notes && expandedNotes.has(item.id) && (
+                            <p className="text-xs text-text-muted mt-1 ml-4 italic">{item.notes}</p>
                           )}
                         </div>
 

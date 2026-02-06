@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
-import { formatCompactMXN, formatNumber, formatPercentSafe } from '@/lib/utils'
+import { formatCompactMXN, formatCompactUSD, formatNumber, formatPercentSafe } from '@/lib/utils'
 import { sectorApi } from '@/api/client'
 import { SECTOR_COLORS, getSectorNameEN } from '@/lib/constants'
 import type { SectorStatistics } from '@/api/types'
@@ -96,8 +96,9 @@ export function Sectors() {
                         <div className="rounded-lg border border-border bg-background-card p-3 shadow-lg">
                           <p className="font-medium">{getSectorNameEN(data.sector_code)}</p>
                           <p className="text-sm text-text-muted">Value: {formatCompactMXN(data.total_value_mxn)}</p>
+                          <p className="text-xs text-text-muted">{formatCompactUSD(data.total_value_mxn)}</p>
                           <p className="text-sm text-text-muted">Contracts: {formatNumber(data.total_contracts)}</p>
-                          <p className="text-sm text-text-muted">Avg Risk: {(data.avg_risk_score * 100).toFixed(1)}%</p>
+                          <p className="text-sm text-text-muted">Avg Risk: {formatPercentSafe(data.avg_risk_score, true)}</p>
                         </div>
                       )
                     }

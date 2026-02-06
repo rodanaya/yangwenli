@@ -5,7 +5,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
-import { formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
+import { formatCompactMXN, formatNumber, formatPercentSafe, toTitleCase, formatCompactUSD, getRiskLevel } from '@/lib/utils'
+import { RISK_COLORS } from '@/lib/constants'
 import { vendorApi } from '@/api/client'
 import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 import type { VendorFilterParams, VendorListItem } from '@/api/types'
@@ -242,10 +243,15 @@ function VendorCard({ vendor, style }: { vendor: VendorListItem; style?: React.C
 
   return (
     <Card
-      className="hover:border-accent/50 hover:shadow-lg hover:shadow-accent/5 transition-all duration-200 animate-slide-up opacity-0 group"
-      style={style}
+      className="border-l-4 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/5 transition-all duration-200 animate-slide-up opacity-0 group"
+      style={{
+        ...style,
+        borderLeftColor: vendor.avg_risk_score != null
+          ? RISK_COLORS[getRiskLevel(vendor.avg_risk_score)]
+          : 'var(--color-border)',
+      }}
       role="article"
-      aria-label={vendor.name}
+      aria-label={toTitleCase(vendor.name)}
       {...prefetch}
     >
       <CardContent className="p-4 group-hover:bg-accent/[0.02] transition-colors">
@@ -259,7 +265,7 @@ function VendorCard({ vendor, style }: { vendor: VendorListItem; style?: React.C
                 to={`/vendors/${vendor.id}`}
                 className="text-sm font-medium hover:text-accent transition-colors line-clamp-1"
               >
-                {vendor.name}
+                {toTitleCase(vendor.name)}
               </Link>
               {vendor.rfc && <p className="text-xs text-text-muted font-mono">{vendor.rfc}</p>}
             </div>
@@ -276,15 +282,18 @@ function VendorCard({ vendor, style }: { vendor: VendorListItem; style?: React.C
           </div>
           <div>
             <p className="text-text-muted text-xs">Total Value</p>
-            <p className="font-medium tabular-nums">{formatCompactMXN(vendor.total_value_mxn)}</p>
+            <p className="font-medium tabular-nums">
+              {formatCompactMXN(vendor.total_value_mxn)}
+              <span className="text-[10px] text-text-muted ml-1">({formatCompactUSD(vendor.total_value_mxn)})</span>
+            </p>
           </div>
           <div>
             <p className="text-text-muted text-xs">Direct Awards</p>
-            <p className="font-medium tabular-nums">{formatPercent(vendor.direct_award_pct)}</p>
+            <p className="font-medium tabular-nums">{formatPercentSafe(vendor.direct_award_pct, false)}</p>
           </div>
           <div>
             <p className="text-text-muted text-xs">High Risk</p>
-            <p className="font-medium tabular-nums">{formatPercent(vendor.high_risk_pct)}</p>
+            <p className="font-medium tabular-nums">{formatPercentSafe(vendor.high_risk_pct, false)}</p>
           </div>
         </div>
 

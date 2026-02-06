@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
-import { formatCompactMXN, formatNumber } from '@/lib/utils'
+import { formatCompactMXN, formatCompactUSD, formatNumber } from '@/lib/utils'
 import { analysisApi } from '@/api/client'
 import { RISK_COLORS } from '@/lib/constants'
 import {
@@ -31,11 +31,20 @@ import {
   CartesianGrid,
   Tooltip as RechartsTooltip,
   ReferenceLine,
+  ReferenceArea,
   ComposedChart,
   Bar,
   Line,
   Cell,
 } from 'recharts'
+
+const ADMINISTRATIONS = [
+  { name: 'Fox', start: 2001, end: 2006, color: 'rgba(59,130,246,0.08)' },
+  { name: 'Calderon', start: 2006, end: 2012, color: 'rgba(251,146,60,0.08)' },
+  { name: 'Pena Nieto', start: 2012, end: 2018, color: 'rgba(248,113,113,0.08)' },
+  { name: 'AMLO', start: 2018, end: 2024, color: 'rgba(74,222,128,0.08)' },
+  { name: 'Sheinbaum', start: 2024, end: 2030, color: 'rgba(96,165,250,0.08)' },
+]
 
 export function Timeline() {
   const [selectedYear, setSelectedYear] = useState(2024)
@@ -129,6 +138,8 @@ export function Timeline() {
 
   const years = timelineData.map((d) => d.year).sort((a, b) => b - a)
 
+  const currentAdmin = ADMINISTRATIONS.find(a => selectedYear >= a.start && selectedYear < a.end)
+
   // Monthly chart data from real API
   const monthlyChartData = useMemo(() => {
     if (!monthlyBreakdown?.months) return []
@@ -189,8 +200,8 @@ export function Timeline() {
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <div className="flex items-center gap-4 overflow-x-auto py-2">
-              {years.slice(0, 10).map((year) => (
+            <div className="flex items-center gap-2 overflow-x-auto py-2 scrollbar-thin">
+              {years.map((year) => (
                 <Button
                   key={year}
                   variant={selectedYear === year ? 'default' : 'ghost'}
@@ -211,6 +222,13 @@ export function Timeline() {
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
+          {currentAdmin && (
+            <div className="flex items-center justify-center mt-2">
+              <Badge variant="outline" className="text-xs text-text-muted border-border">
+                {currentAdmin.name} Administration ({currentAdmin.start}-{currentAdmin.end})
+              </Badge>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -243,6 +261,11 @@ export function Timeline() {
                 <p className="text-2xl font-bold">
                   {selectedYearData ? formatCompactMXN(selectedYearData.value) : '-'}
                 </p>
+                {selectedYearData && (
+                  <p className="text-xs text-text-muted">
+                    ~{formatCompactUSD(selectedYearData.value, selectedYear)}
+                  </p>
+                )}
                 {yoyChanges && (
                   <p className={`text-xs flex items-center gap-1 ${yoyChanges.value >= 0 ? 'text-risk-low' : 'text-risk-high'}`}>
                     {yoyChanges.value >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
@@ -340,6 +363,9 @@ export function Timeline() {
                                   Value: {formatCompactMXN(data.value)}
                                 </p>
                                 <p className="text-xs text-text-muted">
+                                  ~{formatCompactUSD(data.value, data.year)}
+                                </p>
+                                <p className="text-xs text-text-muted">
                                   Avg Risk: {data.avgRisk.toFixed(1)}%
                                 </p>
                               </div>
@@ -348,6 +374,22 @@ export function Timeline() {
                           return null
                         }}
                       />
+                      {/* Presidential administration bands */}
+                      {ADMINISTRATIONS.map((admin) => (
+                        <ReferenceArea
+                          key={admin.name}
+                          x1={admin.start}
+                          x2={admin.end}
+                          yAxisId="left"
+                          fill={admin.color}
+                          fillOpacity={1}
+                          label={{
+                            value: admin.name,
+                            position: 'insideTopLeft',
+                            style: { fill: 'var(--color-text-muted)', fontSize: 9, fontFamily: 'var(--font-mono)' },
+                          }}
+                        />
+                      ))}
                       {/* Mark election years */}
                       {electionEvents.map((event) => (
                         <ReferenceLine

@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
-import { formatCompactMXN, formatNumber } from '@/lib/utils'
+import { formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { networkApi, type NetworkNode, type NetworkLink } from '@/api/client'
 import * as echarts from 'echarts/core'
 import { GraphChart, type GraphSeriesOption } from 'echarts/charts'
@@ -42,19 +42,20 @@ import {
   RefreshCw,
 } from 'lucide-react'
 
-// Color constants matching project palette
+// Color constants — Soft risk palette
 const COLORS = {
-  vendor: '#3b82f6',      // Blue
-  vendorHighRisk: '#dc2626', // Red
-  institution: '#be123c', // Gobernacion color
+  vendor: '#58a6ff',      // Accent blue
+  vendorHighRisk: '#f87171', // Rose
+  institution: '#a78bfa', // Purple
   link: '#64748b',        // Gray
-  linkHighRisk: '#ea580c', // Orange
+  linkHighRisk: '#fb923c', // Orange
 }
 
 export function NetworkGraph() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [, setSelectedNode] = useState<NetworkNode | null>(null)
+  const [selectedNodeData, setSelectedNodeData] = useState<NetworkNode | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
   const [zoomLevel, setZoomLevel] = useState(1)
   const [showVendors, setShowVendors] = useState(true)
   const [showInstitutions, setShowInstitutions] = useState(true)
@@ -156,13 +157,13 @@ export function NetworkGraph() {
           : 3,
         itemStyle: {
           color: node.type === 'vendor'
-            ? (isCritical ? '#dc2626' : isHighRisk ? '#ea580c' : COLORS.vendor)
+            ? (isCritical ? '#f87171' : isHighRisk ? '#fb923c' : COLORS.vendor)
             : COLORS.institution,
-          borderColor: isCritical ? '#dc2626' : isHighRisk ? '#ea580c' : undefined,
+          borderColor: isCritical ? '#f87171' : isHighRisk ? '#fb923c' : undefined,
           borderWidth: isHighRisk ? 2 : 0,
         },
         label: {
-          show: symbolSize > 30,
+          show: symbolSize > 35,
           formatter: (node.name.length > 20 ? node.name.substring(0, 18) + '...' : node.name),
         },
         // Store original data for tooltip
@@ -197,11 +198,11 @@ export function NetworkGraph() {
               : 'N/A'
             return `
               <div style="padding: 8px;">
-                <strong>${data.name}</strong><br/>
+                <strong>${toTitleCase(data.name)}</strong><br/>
                 <span style="color: #999;">Type:</span> ${data.type === 'vendor' ? 'Vendor' : 'Institution'}<br/>
                 <span style="color: #999;">Contracts:</span> ${formatNumber(data.contracts)}<br/>
                 <span style="color: #999;">Value:</span> ${formatCompactMXN(data.value)}<br/>
-                <span style="color: #999;">Risk:</span> <span style="color: ${data.risk_score && data.risk_score >= 0.35 ? '#ea580c' : '#16a34a'}">${riskLabel}</span>
+                <span style="color: #999;">Risk:</span> <span style="color: ${data.risk_score && data.risk_score >= 0.50 ? '#f87171' : data.risk_score && data.risk_score >= 0.35 ? '#fb923c' : '#4ade80'}">${riskLabel}</span>
               </div>
             `
           } else if (params.dataType === 'edge') {
@@ -232,15 +233,15 @@ export function NetworkGraph() {
         links: links,
         categories: [
           { name: 'Vendors', itemStyle: { color: COLORS.vendor } },
-          { name: 'High Risk', itemStyle: { color: '#ea580c' } },
-          { name: 'Critical', itemStyle: { color: '#dc2626' } },
+          { name: 'High Risk', itemStyle: { color: '#fb923c' } },
+          { name: 'Critical', itemStyle: { color: '#f87171' } },
           { name: 'Institutions', itemStyle: { color: COLORS.institution } },
         ],
         roam: true,
         draggable: true,
         force: {
-          repulsion: 300,
-          gravity: 0.1,
+          repulsion: 500,
+          gravity: 0.08,
           edgeLength: [50, 200],
           friction: 0.6,
         },
@@ -252,6 +253,8 @@ export function NetworkGraph() {
           color: '#e2e8f0',
           fontSize: 10,
           position: 'right',
+          overflow: 'truncate',
+          width: 80,
         },
         lineStyle: {
           curveness: 0.1,
@@ -261,16 +264,12 @@ export function NetworkGraph() {
 
     chartInstance.current.setOption(option, true)
 
-    // Handle click events
+    // Handle click events — show detail panel instead of navigating
     chartInstance.current.off('click')
     chartInstance.current.on('click', (params: any) => {
       if (params.dataType === 'node') {
         const node = params.data.originalData as NetworkNode
-        if (node.type === 'vendor') {
-          navigate(`/vendors/${node.id.replace('v-', '')}`)
-        } else {
-          navigate(`/institutions/${node.id.replace('i-', '')}`)
-        }
+        setSelectedNodeData(node)
       }
     })
 
@@ -282,6 +281,29 @@ export function NetworkGraph() {
       window.removeEventListener('resize', handleResize)
     }
   }, [filteredData, navigate])
+
+  // Highlight nodes matching search query
+  useEffect(() => {
+    if (!chartInstance.current || filteredData.nodes.length === 0) return
+
+    // Downplay everything first
+    chartInstance.current.dispatchAction({ type: 'downplay', seriesIndex: 0 })
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      const matchingNames = filteredData.nodes
+        .filter(n => n.name.toLowerCase().includes(query))
+        .map(n => n.name)
+
+      if (matchingNames.length > 0) {
+        chartInstance.current.dispatchAction({
+          type: 'highlight',
+          seriesIndex: 0,
+          name: matchingNames,
+        })
+      }
+    }
+  }, [searchQuery, filteredData.nodes])
 
   // Apply zoom level to chart
   useEffect(() => {
@@ -304,9 +326,6 @@ export function NetworkGraph() {
   const handleClearFocus = useCallback(() => {
     setSearchParams({})
   }, [setSearchParams])
-
-  // Suppress unused warning - setSelectedNode is used in click handler setup
-  void setSelectedNode
 
   return (
     <div className="space-y-5">
@@ -387,19 +406,19 @@ export function NetworkGraph() {
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-text-muted mb-2">Legend</p>
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-full bg-[#3b82f6]" />
+                      <span className="w-3 h-3 rounded-full bg-[#58a6ff]" />
                       <span className="text-xs text-text-secondary">Vendor</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-full bg-[#ea580c]" />
-                      <span className="text-xs text-text-secondary">High Risk (0.4-0.6)</span>
+                      <span className="w-3 h-3 rounded-full bg-[#fb923c]" />
+                      <span className="text-xs text-text-secondary">High Risk (≥0.35)</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-full bg-[#dc2626]" />
-                      <span className="text-xs text-text-secondary">Critical Risk (≥0.6)</span>
+                      <span className="w-3 h-3 rounded-full bg-[#f87171]" />
+                      <span className="text-xs text-text-secondary">Critical Risk (≥0.50)</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-full bg-[#be123c]" />
+                      <span className="w-3 h-3 rounded-full bg-[#a78bfa]" />
                       <span className="text-xs text-text-secondary">Institution</span>
                     </div>
                     <div className="flex items-center gap-2 pt-1 border-t border-border mt-1">
@@ -459,6 +478,48 @@ export function NetworkGraph() {
             </CardContent>
           </Card>
 
+          {selectedNodeData && (
+            <Card className="border-accent/30">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm">Node Details</CardTitle>
+                  <button
+                    onClick={() => setSelectedNodeData(null)}
+                    className="text-text-muted hover:text-text-primary text-xs"
+                    aria-label="Close node details"
+                  >
+                    &times;
+                  </button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 text-xs">
+                  <p className="font-medium">{toTitleCase(selectedNodeData.name)}</p>
+                  <p className="text-text-muted">Type: {selectedNodeData.type === 'vendor' ? 'Vendor' : 'Institution'}</p>
+                  <p>Contracts: {formatNumber(selectedNodeData.contracts)}</p>
+                  <p>Value: {formatCompactMXN(selectedNodeData.value)}</p>
+                  {selectedNodeData.risk_score != null && (
+                    <div className="flex items-center gap-2">
+                      <span>Risk:</span>
+                      <RiskBadge score={selectedNodeData.risk_score} />
+                    </div>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full mt-2"
+                    onClick={() => {
+                      const id = selectedNodeData.id.replace(/^[vi]-/, '')
+                      navigate(selectedNodeData.type === 'vendor' ? `/vendors/${id}` : `/institutions/${id}`)
+                    }}
+                  >
+                    View Profile
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -472,6 +533,8 @@ export function NetworkGraph() {
                 <input
                   type="text"
                   placeholder="Search nodes..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full h-8 pl-7 pr-3 text-xs rounded-md border border-border bg-background-card"
                 />
               </div>

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge, Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { formatCompactMXN, formatNumber, formatDate, getPaginationRange, clampPage } from '@/lib/utils'
+import { formatCompactMXN, formatNumber, formatDate, getPaginationRange, clampPage, toTitleCase } from '@/lib/utils'
 import { contractApi, exportApi } from '@/api/client'
 import { VirtualizedTable } from '@/components/VirtualizedTable'
 import { SECTORS } from '@/lib/constants'
@@ -27,6 +27,7 @@ import {
   Eye,
 } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
+import { ContractDetailModal } from '@/components/ContractDetailModal'
 
 export function Contracts() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -67,6 +68,10 @@ export function Contracts() {
 
   // Toast notifications
   const toast = useToast()
+
+  // Contract detail modal state
+  const [selectedContractId, setSelectedContractId] = useState<number | null>(null)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
 
   // Fetch contracts
   const { data, isLoading, error, isFetching, refetch } = useQuery({
@@ -127,7 +132,7 @@ export function Contracts() {
       id: 'vendor',
       header: 'Vendor',
       accessor: (row: ContractListItem) => (
-        <span className="text-sm truncate">{row.vendor_name || '-'}</span>
+        <span className="text-sm truncate">{row.vendor_name ? toTitleCase(row.vendor_name) : '-'}</span>
       ),
       minWidth: 150,
     },
@@ -135,7 +140,7 @@ export function Contracts() {
       id: 'institution',
       header: 'Institution',
       accessor: (row: ContractListItem) => (
-        <span className="text-sm truncate">{row.institution_name || '-'}</span>
+        <span className="text-sm truncate">{row.institution_name ? toTitleCase(row.institution_name) : '-'}</span>
       ),
       minWidth: 150,
     },
@@ -174,10 +179,10 @@ export function Contracts() {
       accessor: (row: ContractListItem) => (
         <div className="flex gap-1">
           {row.is_direct_award && (
-            <Badge variant="outline" className="text-[10px]" title="Direct Award">DA</Badge>
+            <Badge className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30" title="Direct Award">DA</Badge>
           )}
           {row.is_single_bid && (
-            <Badge variant="outline" className="text-[10px]" title="Single Bid">SB</Badge>
+            <Badge className="text-[10px] bg-red-500/20 text-red-400 border border-red-500/30" title="Single Bid">SB</Badge>
           )}
         </div>
       ),
@@ -193,7 +198,7 @@ export function Contracts() {
           className="h-7 w-7 p-0"
           title="View contract details"
           aria-label={`View details for contract ${row.contract_number || row.id}`}
-          onClick={() => console.log('View contract:', row.id)}
+          onClick={() => { setSelectedContractId(row.id); setIsDetailOpen(true) }}
         >
           <Eye className="h-4 w-4" aria-hidden="true" />
         </Button>
@@ -503,7 +508,12 @@ export function Contracts() {
                 </thead>
                 <tbody className="divide-y divide-border/50">
                   {data?.data.map((contract, index) => (
-                    <ContractRow key={contract.id} contract={contract} isEven={index % 2 === 0} />
+                    <ContractRow
+                      key={contract.id}
+                      contract={contract}
+                      isEven={index % 2 === 0}
+                      onView={(id) => { setSelectedContractId(id); setIsDetailOpen(true) }}
+                    />
                   ))}
                 </tbody>
               </table>
@@ -561,11 +571,17 @@ export function Contracts() {
           </div>
         </div>
       )}
+
+      <ContractDetailModal
+        contractId={selectedContractId}
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+      />
     </div>
   )
 }
 
-function ContractRow({ contract, isEven }: { contract: ContractListItem; isEven?: boolean }) {
+function ContractRow({ contract, isEven, onView }: { contract: ContractListItem; isEven?: boolean; onView: (id: number) => void }) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
@@ -598,10 +614,10 @@ function ContractRow({ contract, isEven }: { contract: ContractListItem; isEven?
         </div>
       </td>
       <td className="p-3">
-        <p className="text-sm truncate max-w-[150px]">{contract.vendor_name || '-'}</p>
+        <p className="text-sm truncate max-w-[150px]">{contract.vendor_name ? toTitleCase(contract.vendor_name) : '-'}</p>
       </td>
       <td className="p-3">
-        <p className="text-sm truncate max-w-[150px]">{contract.institution_name || '-'}</p>
+        <p className="text-sm truncate max-w-[150px]">{contract.institution_name ? toTitleCase(contract.institution_name) : '-'}</p>
       </td>
       <td className="p-3 text-right">
         <p className="text-sm font-medium tabular-nums">{formatCompactMXN(contract.amount_mxn)}</p>
@@ -621,12 +637,12 @@ function ContractRow({ contract, isEven }: { contract: ContractListItem; isEven?
       <td className="p-3">
         <div className="flex gap-1">
           {contract.is_direct_award && (
-            <Badge variant="outline" className="text-[10px]" title="Direct Award">
+            <Badge className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30" title="Direct Award">
               DA
             </Badge>
           )}
           {contract.is_single_bid && (
-            <Badge variant="outline" className="text-[10px]" title="Single Bid">
+            <Badge className="text-[10px] bg-red-500/20 text-red-400 border border-red-500/30" title="Single Bid">
               SB
             </Badge>
           )}
@@ -639,10 +655,7 @@ function ContractRow({ contract, isEven }: { contract: ContractListItem; isEven?
           className="h-7 w-7 p-0"
           title="View contract details"
           aria-label={`View details for contract ${contract.contract_number || contract.id}`}
-          onClick={() => {
-            // Open contract details - could navigate to detail page or open modal
-            console.log('View contract:', contract.id)
-          }}
+          onClick={() => onView(contract.id)}
         >
           <Eye className="h-4 w-4" aria-hidden="true" />
         </Button>

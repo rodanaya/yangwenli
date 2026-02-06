@@ -449,7 +449,7 @@ async def get_vendor(
                     v.group_id,
                     vc.industry_id, vc.industry_code, vc.industry_confidence,
                     vi.name_es as industry_name, vi.sector_affinity,
-                    vg.name as group_name
+                    vg.canonical_name as group_name
                 FROM vendors v
                 LEFT JOIN vendor_classifications vc ON v.id = vc.vendor_id
                 LEFT JOIN vendor_industries vi ON vc.industry_id = vi.id
