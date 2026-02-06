@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChartSkeleton } from '@/components/LoadingSkeleton'
 import { RiskBadge } from '@/components/ui/badge'
-import { formatCompactMXN, formatNumber, formatPercentSafe, formatCompactUSD } from '@/lib/utils'
+import { cn, formatCompactMXN, formatNumber, formatPercentSafe, formatCompactUSD } from '@/lib/utils'
 import { analysisApi, vendorApi } from '@/api/client'
 
 // Lazy load chart components for better initial load performance
@@ -25,6 +25,7 @@ import {
   Layers,
   Crosshair,
   Radar,
+  ArrowRight,
 } from 'lucide-react'
 import {
   PieChart,
@@ -207,7 +208,7 @@ export function Dashboard() {
         )}
       </div>
 
-      {/* KPI Cards — Intelligence metrics */}
+      {/* KPI Cards — Intelligence metrics (clickable) */}
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4 stagger-animate">
         <KPICard
           title="TOTAL CONTRACTS"
@@ -215,6 +216,7 @@ export function Dashboard() {
           icon={FileText}
           loading={overviewLoading}
           subtitle={`${overview?.years_covered || 0} years of data`}
+          onClick={() => navigate('/contracts')}
         />
         <KPICard
           title="TOTAL VALUE"
@@ -223,6 +225,7 @@ export function Dashboard() {
           loading={overviewLoading}
           format="currency"
           subtitle={overview?.total_value_mxn ? `~${formatCompactUSD(overview.total_value_mxn)}` : 'Mexican Pesos (MXN)'}
+          onClick={() => navigate('/contracts?sort_by=amount_mxn&sort_order=desc')}
         />
         <KPICard
           title="ACTIVE VENDORS"
@@ -230,6 +233,7 @@ export function Dashboard() {
           icon={Users}
           loading={overviewLoading}
           subtitle="Unique suppliers"
+          onClick={() => navigate('/vendors')}
         />
         <KPICard
           title="HIGH RISK"
@@ -239,6 +243,7 @@ export function Dashboard() {
           format="percent"
           subtitle={`${formatNumber(overview?.high_risk_contracts || 0)} flagged`}
           variant="warning"
+          onClick={() => navigate('/contracts?risk_level=critical')}
         />
       </div>
 
@@ -500,6 +505,7 @@ interface KPICardProps {
   variant?: 'default' | 'warning'
   trend?: number
   trendLabel?: string
+  onClick?: () => void
 }
 
 const KPICard = memo(function KPICard({
@@ -512,6 +518,7 @@ const KPICard = memo(function KPICard({
   variant = 'default',
   trend,
   trendLabel,
+  onClick,
 }: KPICardProps) {
   const formattedValue = useMemo(
     () =>
@@ -532,7 +539,16 @@ const KPICard = memo(function KPICard({
     : ''
 
   return (
-    <Card className={variant === 'warning' ? 'border-risk-high/20' : ''}>
+    <Card
+      className={cn(
+        variant === 'warning' ? 'border-risk-high/20' : '',
+        onClick && 'cursor-pointer hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5 transition-all duration-200 group/kpi'
+      )}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } } : undefined}
+    >
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="space-y-1.5">
@@ -554,12 +570,17 @@ const KPICard = memo(function KPICard({
             )}
             {subtitle && <p className="text-[11px] text-text-muted">{subtitle}</p>}
           </div>
-          <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-            variant === 'warning'
-              ? 'bg-risk-high/10 text-risk-high'
-              : 'bg-accent/10 text-accent'
-          }`}>
-            <Icon className="h-4 w-4" aria-hidden="true" />
+          <div className="flex items-center gap-1.5">
+            <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+              variant === 'warning'
+                ? 'bg-risk-high/10 text-risk-high'
+                : 'bg-accent/10 text-accent'
+            }`}>
+              <Icon className="h-4 w-4" aria-hidden="true" />
+            </div>
+            {onClick && (
+              <ArrowRight className="h-3.5 w-3.5 text-text-muted opacity-0 -translate-x-1 group-hover/kpi:opacity-100 group-hover/kpi:translate-x-0 transition-all duration-200" aria-hidden="true" />
+            )}
           </div>
         </div>
       </CardContent>

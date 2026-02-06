@@ -42,10 +42,22 @@ const DialogTrigger = React.forwardRef<HTMLButtonElement, DialogTriggerProps>(
 )
 DialogTrigger.displayName = 'DialogTrigger'
 
-interface DialogContentProps extends React.HTMLAttributes<HTMLDivElement> {}
+type DialogSize = 'sm' | 'md' | 'lg' | 'xl' | 'full'
+
+const DIALOG_SIZE_CLASSES: Record<DialogSize, string> = {
+  sm: 'max-w-sm',
+  md: 'max-w-lg',
+  lg: 'max-w-2xl',
+  xl: 'max-w-4xl',
+  full: 'max-w-[90vw]',
+}
+
+interface DialogContentProps extends React.HTMLAttributes<HTMLDivElement> {
+  size?: DialogSize
+}
 
 const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
-  ({ className, children, ...props }, ref) => {
+  ({ className, children, size = 'md', ...props }, ref) => {
     const { open, onOpenChange } = React.useContext(DialogContext)
 
     if (!open) return null
@@ -61,7 +73,8 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
         <div
           ref={ref}
           className={cn(
-            'fixed z-50 grid w-full max-w-lg gap-4 border bg-background p-6 shadow-lg sm:rounded-lg',
+            'fixed z-50 grid w-full gap-4 border bg-background p-6 shadow-lg sm:rounded-lg',
+            DIALOG_SIZE_CLASSES[size],
             className
           )}
           {...props}

@@ -1,16 +1,16 @@
-import { useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams, Link } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
-import { formatCompactMXN, formatNumber, formatPercentSafe, toTitleCase, formatCompactUSD, getRiskLevel } from '@/lib/utils'
+import { cn, formatCompactMXN, formatNumber, formatPercentSafe, toTitleCase, formatCompactUSD, getRiskLevel } from '@/lib/utils'
 import { RISK_COLORS } from '@/lib/constants'
 import { vendorApi } from '@/api/client'
 import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
-import type { VendorFilterParams, VendorListItem } from '@/api/types'
-import { Users, Search, ChevronLeft, ChevronRight, ExternalLink, Loader2, AlertCircle, RefreshCw, UserX } from 'lucide-react'
+import type { VendorFilterParams, VendorListItem, VendorTopItem } from '@/api/types'
+import { Users, Search, ChevronLeft, ChevronRight, ExternalLink, Loader2, AlertCircle, RefreshCw, UserX, LayoutGrid, Layers, ChevronDown, ChevronUp } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 import { usePrefetchOnHover } from '@/hooks/usePrefetchOnHover'
 
@@ -82,6 +82,59 @@ export function Vendors() {
 
   const showSearchLoading = isSearchPending || (isFetching && searchInput !== debouncedSearch)
 
+  const hasNoFilters = !filters.search && !filters.risk_level && !filters.min_contracts
+
+  const { data: topRisk, isLoading: isLoadingRisk } = useQuery({
+    queryKey: ['vendors-top', 'risk', 5],
+    queryFn: () => vendorApi.getTop('risk', 5),
+    enabled: hasNoFilters,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const { data: topValue, isLoading: isLoadingValue } = useQuery({
+    queryKey: ['vendors-top', 'value', 5],
+    queryFn: () => vendorApi.getTop('value', 5),
+    enabled: hasNoFilters,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const { data: topCount, isLoading: isLoadingCount } = useQuery({
+    queryKey: ['vendors-top', 'count', 5],
+    queryFn: () => vendorApi.getTop('count', 5),
+    enabled: hasNoFilters,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  // View mode: grid (default) or triage
+  const [viewMode, setViewMode] = useState<'grid' | 'triage'>(
+    searchParams.get('view') === 'triage' ? 'triage' : 'grid'
+  )
+
+  // Triage view data
+  const { data: criticalVendors, isLoading: criticalLoading } = useQuery({
+    queryKey: ['vendors', 'triage', 'critical'],
+    queryFn: () => vendorApi.getAll({ risk_level: 'critical', per_page: 10, sort_by: 'total_value', sort_order: 'desc' }),
+    enabled: viewMode === 'triage',
+  })
+  const { data: highRiskVendors, isLoading: highLoading } = useQuery({
+    queryKey: ['vendors', 'triage', 'high'],
+    queryFn: () => vendorApi.getAll({ risk_level: 'high', per_page: 10, sort_by: 'total_value', sort_order: 'desc' }),
+    enabled: viewMode === 'triage',
+  })
+  const { data: topVolumeVendors, isLoading: volumeLoading } = useQuery({
+    queryKey: ['vendors', 'triage', 'volume'],
+    queryFn: () => vendorApi.getTop('value', 10),
+    enabled: viewMode === 'triage',
+  })
+
+  // Triage collapsible sections
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    critical: true,
+    high: false,
+    volume: false,
+  })
+  const toggleSection = (key: string) => setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }))
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -97,6 +150,34 @@ export function Vendors() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* View mode toggle */}
+          <div className="flex items-center rounded-md border border-border overflow-hidden">
+            <button
+              className={cn(
+                'flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium transition-colors',
+                viewMode === 'grid' ? 'bg-accent/10 text-accent' : 'text-text-muted hover:text-text-primary'
+              )}
+              onClick={() => { setViewMode('grid'); const p = new URLSearchParams(searchParams); p.delete('view'); setSearchParams(p) }}
+              aria-label="Grid view"
+              aria-pressed={viewMode === 'grid'}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              Grid
+            </button>
+            <button
+              className={cn(
+                'flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium transition-colors border-l border-border',
+                viewMode === 'triage' ? 'bg-accent/10 text-accent' : 'text-text-muted hover:text-text-primary'
+              )}
+              onClick={() => { setViewMode('triage'); const p = new URLSearchParams(searchParams); p.set('view', 'triage'); setSearchParams(p) }}
+              aria-label="Triage view"
+              aria-pressed={viewMode === 'triage'}
+            >
+              <Layers className="h-3.5 w-3.5" />
+              Triage
+            </button>
+          </div>
+
           {/* Search input with debouncing */}
           <div className="relative">
             {showSearchLoading ? (
@@ -142,93 +223,269 @@ export function Vendors() {
         </div>
       </div>
 
-      {/* Vendors grid */}
-      {isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[...Array(9)].map((_, i) => (
-            <Skeleton key={i} className="h-40" />
-          ))}
-        </div>
-      ) : error ? (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <AlertCircle className="h-12 w-12 text-risk-high mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-text-primary mb-2">Failed to load vendors</h3>
-            <p className="text-sm text-text-muted mb-4">
-              {(error as Error).message === 'Network Error'
-                ? 'Unable to connect to server. Please check if the backend is running.'
-                : (error as Error).message || 'An unexpected error occurred.'}
-            </p>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Try again
-            </Button>
-          </CardContent>
-        </Card>
-      ) : !data?.data?.length ? (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <UserX className="h-12 w-12 text-text-muted mx-auto mb-4 opacity-50" />
-            <h3 className="text-lg font-medium text-text-primary mb-2">No vendors found</h3>
-            <p className="text-sm text-text-muted mb-4">
-              {filters.search || filters.risk_level || filters.min_contracts
-                ? 'Try adjusting your filters to see more results.'
-                : 'No vendors are available in the database.'}
-            </p>
-            {(filters.search || filters.risk_level || filters.min_contracts) && (
-              <Button variant="outline" size="sm" onClick={() => setSearchParams({})}>
-                Clear all filters
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {data?.data.map((vendor, index) => (
-            <VendorCard
-              key={vendor.id}
-              vendor={vendor}
-              style={{ animationDelay: `${index * 30}ms` }}
-            />
-          ))}
-        </div>
+      {/* Featured strip — only visible when no filters are active */}
+      {hasNoFilters && (
+        <FeaturedStrip
+          topRisk={topRisk?.data}
+          topValue={topValue?.data}
+          topCount={topCount?.data}
+          isLoadingRisk={isLoadingRisk}
+          isLoadingValue={isLoadingValue}
+          isLoadingCount={isLoadingCount}
+        />
       )}
 
-      {/* Pagination */}
-      {data && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-text-muted">
-            Showing {(filters.page! - 1) * filters.per_page! + 1} -{' '}
-            {Math.min(filters.page! * filters.per_page!, data.pagination.total)} of{' '}
-            {formatNumber(data.pagination.total)}
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={filters.page === 1}
-              onClick={() => updateFilter('page', filters.page! - 1)}
-              aria-label="Go to previous page"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
-            </Button>
-            <span className="text-sm text-text-muted">
-              Page {filters.page} of {data.pagination.total_pages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={filters.page === data.pagination.total_pages}
-              onClick={() => updateFilter('page', filters.page! + 1)}
-              aria-label="Go to next page"
-            >
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+      {/* Triage view */}
+      {viewMode === 'triage' ? (
+        <div className="space-y-4">
+          <TriageSection
+            title="Critical Risk Vendors"
+            color="var(--color-risk-critical, #dc2626)"
+            count={criticalVendors?.pagination?.total}
+            loading={criticalLoading}
+            expanded={expandedSections.critical}
+            onToggle={() => toggleSection('critical')}
+            vendors={criticalVendors?.data || []}
+            onViewAll={() => { updateFilter('risk_level', 'critical'); setViewMode('grid') }}
+          />
+          <TriageSection
+            title="High Risk Vendors"
+            color="var(--color-risk-high, #ea580c)"
+            count={highRiskVendors?.pagination?.total}
+            loading={highLoading}
+            expanded={expandedSections.high}
+            onToggle={() => toggleSection('high')}
+            vendors={highRiskVendors?.data || []}
+            onViewAll={() => { updateFilter('risk_level', 'high'); setViewMode('grid') }}
+          />
+          <TriageSection
+            title="Top Volume Vendors"
+            color="var(--color-accent, #58a6ff)"
+            count={topVolumeVendors?.data?.length}
+            loading={volumeLoading}
+            expanded={expandedSections.volume}
+            onToggle={() => toggleSection('volume')}
+            vendors={(topVolumeVendors?.data || []).map(v => ({
+              id: v.vendor_id,
+              name: v.vendor_name,
+              total_contracts: v.total_contracts,
+              total_value_mxn: v.total_value_mxn,
+              avg_risk_score: v.avg_risk_score ?? null,
+              direct_award_pct: 0,
+              high_risk_pct: 0,
+            })) as VendorListItem[]}
+            onViewAll={() => { setViewMode('grid') }}
+          />
+        </div>
+      ) : (
+        <>
+          {/* Vendors grid */}
+          {isLoading ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {[...Array(9)].map((_, i) => (
+                <Skeleton key={i} className="h-40" />
+              ))}
+            </div>
+          ) : error ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <AlertCircle className="h-12 w-12 text-risk-high mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-text-primary mb-2">Failed to load vendors</h3>
+                <p className="text-sm text-text-muted mb-4">
+                  {(error as Error).message === 'Network Error'
+                    ? 'Unable to connect to server. Please check if the backend is running.'
+                    : (error as Error).message || 'An unexpected error occurred.'}
+                </p>
+                <Button variant="outline" size="sm" onClick={() => refetch()}>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Try again
+                </Button>
+              </CardContent>
+            </Card>
+          ) : !data?.data?.length ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <UserX className="h-12 w-12 text-text-muted mx-auto mb-4 opacity-50" />
+                <h3 className="text-lg font-medium text-text-primary mb-2">No vendors found</h3>
+                <p className="text-sm text-text-muted mb-4">
+                  {filters.search || filters.risk_level || filters.min_contracts
+                    ? 'Try adjusting your filters to see more results.'
+                    : 'No vendors are available in the database.'}
+                </p>
+                {(filters.search || filters.risk_level || filters.min_contracts) && (
+                  <Button variant="outline" size="sm" onClick={() => setSearchParams({})}>
+                    Clear all filters
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {data?.data.map((vendor, index) => (
+                <VendorCard
+                  key={vendor.id}
+                  vendor={vendor}
+                  style={{ animationDelay: `${index * 30}ms` }}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {data && (
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-text-muted">
+                Showing {(filters.page! - 1) * filters.per_page! + 1} -{' '}
+                {Math.min(filters.page! * filters.per_page!, data.pagination.total)} of{' '}
+                {formatNumber(data.pagination.total)}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={filters.page === 1}
+                  onClick={() => updateFilter('page', filters.page! - 1)}
+                  aria-label="Go to previous page"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+                <span className="text-sm text-text-muted">
+                  Page {filters.page} of {data.pagination.total_pages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={filters.page === data.pagination.total_pages}
+                  onClick={() => updateFilter('page', filters.page! + 1)}
+                  aria-label="Go to next page"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+function TriageSection({ title, color, count, loading, expanded, onToggle, vendors, onViewAll }: {
+  title: string
+  color: string
+  count?: number
+  loading: boolean
+  expanded: boolean
+  onToggle: () => void
+  vendors: VendorListItem[]
+  onViewAll: () => void
+}) {
+  return (
+    <div className="border border-border rounded-lg overflow-hidden">
+      <button
+        className="w-full flex items-center gap-3 p-3 hover:bg-accent/5 transition-colors"
+        onClick={onToggle}
+        style={{ borderLeft: `3px solid ${color}` }}
+        aria-expanded={expanded}
+      >
+        <span className="text-sm font-semibold flex-1 text-left">{title}</span>
+        {count !== undefined && (
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-background-elevated text-text-muted tabular-nums">
+            {formatNumber(count)}
+          </span>
+        )}
+        {expanded ? <ChevronUp className="h-4 w-4 text-text-muted" /> : <ChevronDown className="h-4 w-4 text-text-muted" />}
+      </button>
+      {expanded && (
+        <div className="border-t border-border p-3">
+          {loading ? (
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-40" />)}
+            </div>
+          ) : vendors.length === 0 ? (
+            <p className="text-sm text-text-muted text-center py-4">No vendors found</p>
+          ) : (
+            <>
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {vendors.slice(0, 9).map((vendor) => (
+                  <VendorCard key={vendor.id} vendor={vendor} />
+                ))}
+              </div>
+              {count && count > 9 && (
+                <button
+                  className="mt-3 text-xs text-accent hover:underline font-medium"
+                  onClick={onViewAll}
+                >
+                  View all {formatNumber(count)} vendors &rarr;
+                </button>
+              )}
+            </>
+          )}
         </div>
       )}
+    </div>
+  )
+}
+
+interface FeaturedStripProps {
+  topRisk?: VendorTopItem[]
+  topValue?: VendorTopItem[]
+  topCount?: VendorTopItem[]
+  isLoadingRisk: boolean
+  isLoadingValue: boolean
+  isLoadingCount: boolean
+}
+
+function FeaturedStrip({ topRisk, topValue, topCount, isLoadingRisk, isLoadingValue, isLoadingCount }: FeaturedStripProps) {
+  const sections: { label: string; data?: VendorTopItem[]; isLoading: boolean }[] = [
+    { label: 'HIGHEST RISK', data: topRisk, isLoading: isLoadingRisk },
+    { label: 'BIGGEST SPENDERS', data: topValue, isLoading: isLoadingValue },
+    { label: 'MOST ACTIVE', data: topCount, isLoading: isLoadingCount },
+  ]
+
+  return (
+    <div className="space-y-3">
+      {sections.map((section) => (
+        <div key={section.label}>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-text-muted font-[var(--font-family-mono)]">
+            {section.label}
+          </span>
+          <div className="mt-1.5 flex gap-3 overflow-x-auto pb-2">
+            {section.isLoading ? (
+              [...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-24 w-64 flex-shrink-0" />
+              ))
+            ) : section.data?.length ? (
+              section.data.map((vendor) => (
+                <Link
+                  key={vendor.vendor_id}
+                  to={`/vendors/${vendor.vendor_id}`}
+                  className="w-64 flex-shrink-0"
+                >
+                  <Card className="h-full hover:border-accent/50 hover:shadow-lg hover:shadow-accent/5 transition-all duration-200">
+                    <CardContent className="p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <span className="text-sm font-medium line-clamp-1 flex-1 mr-2">
+                          {toTitleCase(vendor.vendor_name)}
+                        </span>
+                        {vendor.avg_risk_score != null && (
+                          <RiskBadge score={vendor.avg_risk_score} />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-text-muted">
+                        <span className="tabular-nums">{formatCompactMXN(vendor.total_value_mxn)}</span>
+                        <span className="tabular-nums">{formatNumber(vendor.total_contracts)} contracts</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))
+            ) : null}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }

@@ -7,7 +7,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge, Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { formatCompactMXN, formatNumber, formatDate, getPaginationRange, clampPage, toTitleCase } from '@/lib/utils'
-import { contractApi, exportApi } from '@/api/client'
+import { contractApi, exportApi, watchlistApi } from '@/api/client'
+import type { WatchlistItem } from '@/api/client'
 import { VirtualizedTable } from '@/components/VirtualizedTable'
 import { SECTORS } from '@/lib/constants'
 import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
@@ -25,6 +26,9 @@ import {
   Copy,
   Check,
   Eye,
+  AlertTriangle,
+  TrendingUp,
+  Bookmark,
 } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 import { ContractDetailModal } from '@/components/ContractDetailModal'
@@ -72,6 +76,41 @@ export function Contracts() {
   // Contract detail modal state
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
+
+  // Determine if any filters are active (used to hide featured strip)
+  const hasActiveFilters = !!(filters.search || filters.sector_id || filters.year || filters.risk_level || filters.risk_factor)
+
+  // Featured strip queries (only fetch when no filters active)
+  const { data: recentHighRisk, isLoading: isLoadingHighRisk } = useQuery({
+    queryKey: ['contracts', 'featured', 'recent-high-risk'],
+    queryFn: () => contractApi.getAll({
+      risk_level: 'critical',
+      per_page: 5,
+      sort_by: 'contract_date',
+      sort_order: 'desc',
+    }),
+    enabled: !hasActiveFilters,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const { data: largestThisYear, isLoading: isLoadingLargest } = useQuery({
+    queryKey: ['contracts', 'featured', 'largest-2025'],
+    queryFn: () => contractApi.getAll({
+      year: 2025,
+      per_page: 5,
+      sort_by: 'amount_mxn',
+      sort_order: 'desc',
+    }),
+    enabled: !hasActiveFilters,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const { data: watchlistContracts, isLoading: isLoadingWatchlist } = useQuery({
+    queryKey: ['watchlist', 'contracts'],
+    queryFn: () => watchlistApi.getAll({ item_type: 'contract' }),
+    enabled: !hasActiveFilters,
+    staleTime: 5 * 60 * 1000,
+  })
 
   // Fetch contracts
   const { data, isLoading, error, isFetching, refetch } = useQuery({
@@ -440,6 +479,19 @@ export function Contracts() {
         </div>
       )}
 
+      {/* Featured contract strips - only shown when no filters active */}
+      {!hasActiveFilters && (
+        <FeaturedContractStrip
+          recentHighRisk={recentHighRisk?.data || []}
+          largestThisYear={largestThisYear?.data || []}
+          watchlistItems={watchlistContracts?.data || []}
+          isLoadingHighRisk={isLoadingHighRisk}
+          isLoadingLargest={isLoadingLargest}
+          isLoadingWatchlist={isLoadingWatchlist}
+          onViewContract={(id) => { setSelectedContractId(id); setIsDetailOpen(true) }}
+        />
+      )}
+
       {/* Contracts table */}
       <Card>
         <CardContent className="p-0">
@@ -580,6 +632,191 @@ export function Contracts() {
     </div>
   )
 }
+
+// ---------------------------------------------------------------------------
+// Featured Contract Strip
+// ---------------------------------------------------------------------------
+
+interface FeaturedContractStripProps {
+  recentHighRisk: ContractListItem[]
+  largestThisYear: ContractListItem[]
+  watchlistItems: WatchlistItem[]
+  isLoadingHighRisk: boolean
+  isLoadingLargest: boolean
+  isLoadingWatchlist: boolean
+  onViewContract: (id: number) => void
+}
+
+function FeaturedContractStrip({
+  recentHighRisk,
+  largestThisYear,
+  watchlistItems,
+  isLoadingHighRisk,
+  isLoadingLargest,
+  isLoadingWatchlist,
+  onViewContract,
+}: FeaturedContractStripProps) {
+  const hasAnyData =
+    recentHighRisk.length > 0 ||
+    largestThisYear.length > 0 ||
+    watchlistItems.length > 0 ||
+    isLoadingHighRisk ||
+    isLoadingLargest ||
+    isLoadingWatchlist
+
+  if (!hasAnyData) return null
+
+  return (
+    <div className="space-y-3">
+      {/* Recent High-Risk */}
+      {(isLoadingHighRisk || recentHighRisk.length > 0) && (
+        <FeaturedSection
+          icon={<AlertTriangle className="h-3.5 w-3.5 text-risk-critical" />}
+          title="Recent High-Risk"
+          isLoading={isLoadingHighRisk}
+        >
+          {recentHighRisk.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => onViewContract(c.id)}
+              className="w-72 flex-shrink-0 rounded-md border border-border bg-background-card p-3 text-left transition-colors hover:border-accent/50 hover:bg-accent/5 focus:outline-none focus:ring-1 focus:ring-accent"
+              aria-label={`View critical-risk contract: ${c.title || c.contract_number || c.id}`}
+            >
+              <p className="text-sm font-medium truncate">
+                {c.title ? toTitleCase(c.title) : c.contract_number || `Contract #${c.id}`}
+              </p>
+              <div className="mt-1.5 flex items-center justify-between gap-2">
+                <span className="text-xs font-mono tabular-nums text-accent">
+                  {formatCompactMXN(c.amount_mxn)}
+                </span>
+                {c.risk_score != null && <RiskBadge score={c.risk_score} />}
+              </div>
+              <p className="mt-1 text-xs text-text-muted truncate">
+                {c.vendor_name ? toTitleCase(c.vendor_name) : 'Unknown vendor'}
+              </p>
+              <p className="text-[10px] text-text-muted/70">
+                {c.contract_date ? formatDate(c.contract_date) : c.contract_year || ''}
+              </p>
+            </button>
+          ))}
+        </FeaturedSection>
+      )}
+
+      {/* Largest This Year */}
+      {(isLoadingLargest || largestThisYear.length > 0) && (
+        <FeaturedSection
+          icon={<TrendingUp className="h-3.5 w-3.5 text-accent" />}
+          title="Largest This Year"
+          isLoading={isLoadingLargest}
+        >
+          {largestThisYear.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => onViewContract(c.id)}
+              className="w-72 flex-shrink-0 rounded-md border border-border bg-background-card p-3 text-left transition-colors hover:border-accent/50 hover:bg-accent/5 focus:outline-none focus:ring-1 focus:ring-accent"
+              aria-label={`View contract: ${c.title || c.contract_number || c.id}`}
+            >
+              <p className="text-sm font-medium truncate">
+                {c.title ? toTitleCase(c.title) : c.contract_number || `Contract #${c.id}`}
+              </p>
+              <div className="mt-1.5 flex items-center justify-between gap-2">
+                <span className="text-xs font-mono tabular-nums text-accent">
+                  {formatCompactMXN(c.amount_mxn)}
+                </span>
+                {c.risk_score != null && <RiskBadge score={c.risk_score} />}
+              </div>
+              <p className="mt-1 text-xs text-text-muted truncate">
+                {c.vendor_name ? toTitleCase(c.vendor_name) : 'Unknown vendor'}
+              </p>
+              <p className="text-[10px] text-text-muted/70">
+                {c.contract_date ? formatDate(c.contract_date) : c.contract_year || ''}
+              </p>
+            </button>
+          ))}
+        </FeaturedSection>
+      )}
+
+      {/* Under Investigation (Watchlist) */}
+      {(isLoadingWatchlist || watchlistItems.length > 0) && (
+        <FeaturedSection
+          icon={<Bookmark className="h-3.5 w-3.5 text-amber-400" />}
+          title="Under Investigation"
+          isLoading={isLoadingWatchlist}
+        >
+          {watchlistItems.map((item) => (
+            <div
+              key={item.id}
+              className="w-72 flex-shrink-0 rounded-md border border-border bg-background-card p-3"
+            >
+              <p className="text-sm font-medium truncate">
+                {item.item_name ? toTitleCase(item.item_name) : `Contract #${item.item_id}`}
+              </p>
+              <div className="mt-1.5 flex items-center gap-2">
+                <Badge
+                  className={
+                    item.priority === 'high'
+                      ? 'text-[10px] bg-red-500/20 text-red-400 border border-red-500/30'
+                      : item.priority === 'medium'
+                        ? 'text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                        : 'text-[10px] bg-green-500/20 text-green-400 border border-green-500/30'
+                  }
+                >
+                  {item.priority}
+                </Badge>
+                <Badge
+                  className="text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                >
+                  {item.status}
+                </Badge>
+              </div>
+              {item.reason && (
+                <p className="mt-1 text-xs text-text-muted truncate" title={item.reason}>
+                  {item.reason}
+                </p>
+              )}
+            </div>
+          ))}
+        </FeaturedSection>
+      )}
+    </div>
+  )
+}
+
+function FeaturedSection({
+  icon,
+  title,
+  isLoading,
+  children,
+}: {
+  icon: React.ReactNode
+  title: string
+  isLoading: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <div>
+      <div className="flex items-center gap-1.5 mb-2">
+        {icon}
+        <span className="text-[11px] font-mono uppercase tracking-wider text-text-muted">
+          {title}
+        </span>
+      </div>
+      <div className="overflow-x-auto">
+        <div className="flex gap-3 pb-1">
+          {isLoading
+            ? Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="w-72 h-24 flex-shrink-0 rounded-md" />
+              ))
+            : children}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Contract Row
+// ---------------------------------------------------------------------------
 
 function ContractRow({ contract, isEven, onView }: { contract: ContractListItem; isEven?: boolean; onView: (id: number) => void }) {
   const handleKeyDown = (e: React.KeyboardEvent) => {

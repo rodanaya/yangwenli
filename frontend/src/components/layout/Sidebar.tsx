@@ -18,6 +18,7 @@ import {
   Calendar,
   Database,
   DollarSign,
+  Fingerprint,
 } from 'lucide-react'
 import { LOGHIcon } from '@/components/LOGHIcon'
 import { Button } from '@/components/ui/button'
@@ -53,6 +54,7 @@ const analysisNavItems: NavItem[] = [
 const investigationNavItems: NavItem[] = [
   { title: 'Network Graph', href: '/network', icon: Network },
   { title: 'Watchlist', href: '/watchlist', icon: Eye },
+  { title: 'Patterns', href: '/patterns', icon: Fingerprint },
   { title: 'Comparison', href: '/comparison', icon: Columns },
   { title: 'Timeline', href: '/timeline', icon: Calendar },
 ]

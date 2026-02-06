@@ -32,6 +32,7 @@ const Comparison = lazy(() => import('@/pages/Comparison'))
 const Timeline = lazy(() => import('@/pages/Timeline'))
 const DataQuality = lazy(() => import('@/pages/DataQuality'))
 const PriceAnalysis = lazy(() => import('@/pages/PriceAnalysis'))
+const DetectivePatterns = lazy(() => import('@/pages/DetectivePatterns'))
 
 // Enhanced QueryClient configuration for better caching and UX
 const queryClient = new QueryClient({
@@ -187,6 +188,14 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<DashboardSkeleton />}>
                     <DataQuality />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="patterns"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <DetectivePatterns />
                   </SuspenseBoundary>
                 }
               />
