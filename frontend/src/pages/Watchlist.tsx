@@ -25,8 +25,6 @@ import {
   AlertTriangle,
   Clock,
   CheckCircle,
-  Star,
-  StarOff,
   Filter,
   Download,
   Bell,
@@ -131,11 +129,11 @@ export function Watchlist() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <Eye className="h-5 w-5 text-accent" />
+            <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+              <Eye className="h-4.5 w-4.5 text-accent" />
               Watchlist
             </h2>
-            <p className="text-sm text-text-muted">Track and investigate suspicious patterns</p>
+            <p className="text-xs text-text-muted mt-0.5">Track and investigate suspicious patterns</p>
           </div>
         </div>
         <Card className="border-risk-critical/30 bg-risk-critical/5">
@@ -157,11 +155,11 @@ export function Watchlist() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Eye className="h-5 w-5 text-accent" />
+          <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+            <Eye className="h-4.5 w-4.5 text-accent" />
             Watchlist
           </h2>
-          <p className="text-sm text-text-muted">
+          <p className="text-xs text-text-muted mt-0.5">
             Track and investigate suspicious patterns
           </p>
         </div>

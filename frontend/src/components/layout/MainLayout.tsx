@@ -8,8 +8,11 @@ export function MainLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Skip to content link for keyboard users (Item 70) */}
+    <div className="min-h-screen bg-background relative">
+      {/* Subtle grid background — intelligence aesthetic */}
+      <div className="fixed inset-0 grid-pattern pointer-events-none" aria-hidden="true" />
+
+      {/* Skip to content link for keyboard users */}
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
@@ -20,23 +23,25 @@ export function MainLayout() {
       {/* Main content area */}
       <div
         className={cn(
-          'flex min-h-screen flex-col transition-all duration-300',
-          sidebarCollapsed ? 'pl-16' : 'pl-56'
+          'relative flex min-h-screen flex-col transition-all duration-300',
+          sidebarCollapsed ? 'pl-14' : 'pl-56'
         )}
       >
         {/* Header */}
         <Header />
 
         {/* Page content */}
-        <main id="main-content" className="flex-1 p-6" tabIndex={-1}>
-          <Outlet />
+        <main id="main-content" className="flex-1 px-5 py-5" tabIndex={-1}>
+          <div className="animate-fade-in">
+            <Outlet />
+          </div>
         </main>
 
-        {/* Footer */}
-        <footer className="border-t border-border px-6 py-4">
-          <div className="flex items-center justify-between text-xs text-text-muted">
-            <span>Yang Wen-li Procurement Analysis Platform</span>
-            <span>Data: 3.1M contracts (2002-2025)</span>
+        {/* Footer — minimal status bar */}
+        <footer className="border-t border-border/30 px-5 py-2.5">
+          <div className="flex items-center justify-between text-[10px] text-text-muted/50 font-[var(--font-family-mono)] tracking-wide">
+            <span>YANG WEN-LI // PROCUREMENT INTELLIGENCE</span>
+            <span>3.1M CONTRACTS // 2002-2025</span>
           </div>
         </footer>
       </div>

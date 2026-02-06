@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Query, HTTPException, Path, Request
 
 from ..dependencies import get_db
+from ..config.constants import MAX_CONTRACT_VALUE
 
 
 # =============================================================================
@@ -17,36 +18,41 @@ from ..dependencies import get_db
 # =============================================================================
 
 class SimpleCache:
-    """Simple in-memory cache with TTL support for expensive queries."""
+    """Thread-safe in-memory cache with TTL support for expensive queries."""
 
     def __init__(self):
+        import threading
         self._cache: Dict[str, Dict[str, Any]] = {}
+        self._lock = threading.Lock()
 
     def get(self, key: str) -> Any:
         """Get cached value if not expired."""
-        if key in self._cache:
-            entry = self._cache[key]
-            if datetime.now() < entry["expires_at"]:
-                return entry["value"]
-            else:
-                del self._cache[key]
-        return None
+        with self._lock:
+            if key in self._cache:
+                entry = self._cache[key]
+                if datetime.now() < entry["expires_at"]:
+                    return entry["value"]
+                else:
+                    del self._cache[key]
+            return None
 
     def set(self, key: str, value: Any, ttl_seconds: int = 3600) -> None:
         """Set cached value with TTL."""
-        self._cache[key] = {
-            "value": value,
-            "expires_at": datetime.now() + timedelta(seconds=ttl_seconds),
-        }
+        with self._lock:
+            self._cache[key] = {
+                "value": value,
+                "expires_at": datetime.now() + timedelta(seconds=ttl_seconds),
+            }
 
     def invalidate(self, pattern: str = None) -> None:
         """Invalidate cache entries matching pattern (or all if None)."""
-        if pattern is None:
-            self._cache.clear()
-        else:
-            keys_to_delete = [k for k in self._cache if pattern in k]
-            for k in keys_to_delete:
-                del self._cache[k]
+        with self._lock:
+            if pattern is None:
+                self._cache.clear()
+            else:
+                keys_to_delete = [k for k in self._cache if pattern in k]
+                for k in keys_to_delete:
+                    del self._cache[k]
 
 
 # Global cache instance
@@ -90,12 +96,7 @@ from ..models.sector import (
     RiskDistributionListResponse,
     YearOverYearListResponse,
     SectorComparisonListResponse,
-    AnomalyItem,
-    AnomalyListResponse,
 )
-
-# Amount validation thresholds (from CLAUDE.md data validation rules)
-MAX_CONTRACT_VALUE = 100_000_000_000  # 100B MXN - reject above this
 
 logger = logging.getLogger(__name__)
 
@@ -484,6 +485,11 @@ async def get_risk_distribution(
 
     Returns counts and percentages for each risk level.
     """
+    cache_key = f"risk_distribution:{sector_id}:{year}"
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     try:
         with get_db() as conn:
             cursor = conn.cursor()
@@ -535,7 +541,9 @@ async def get_risk_distribution(
                 for row in rows
             ]
 
-            return RiskDistributionListResponse(data=distribution)
+            result = RiskDistributionListResponse(data=distribution)
+            _cache.set(cache_key, result, ttl_seconds=7200)  # 2hr TTL
+            return result
 
     except sqlite3.Error as e:
         logger.error(f"Database error in get_risk_distribution: {e}")
@@ -551,6 +559,11 @@ async def get_year_over_year(
 
     Returns annual statistics with change percentages.
     """
+    cache_key = f"year_over_year:{sector_id}"
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     try:
         with get_db() as conn:
             cursor = conn.cursor()
@@ -598,7 +611,9 @@ async def get_year_over_year(
                 prev_contracts = row[1]
                 prev_value = row[2]
 
-            return YearOverYearListResponse(data=results)
+            result = YearOverYearListResponse(data=results)
+            _cache.set(cache_key, result, ttl_seconds=7200)  # 2hr TTL
+            return result
 
     except sqlite3.Error as e:
         logger.error(f"Database error in get_year_over_year: {e}")
@@ -767,259 +782,5 @@ async def get_single_bid_rate():
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
-@router.get("/analysis/anomalies", response_model=AnomalyListResponse)
-@rate_limit("5/minute")
-async def detect_anomalies(
-    request: Request,  # Required for rate limiting
-    sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector ID (1-12)"),
-    year: Optional[int] = Query(None, ge=2002, le=2026, description="Filter by year"),
-    min_severity: Optional[str] = Query(None, description="Minimum severity: low, medium, high, critical"),
-):
-    """
-    Detect statistical anomalies in procurement data.
-
-    Identifies potential issues such as:
-    - Price outliers (contracts significantly above sector median)
-    - Timing clusters (multiple contracts same day to same vendor)
-    - Vendor concentration (dominant vendors in sector)
-    - Year-end spending spikes (December rush)
-    """
-    try:
-        with get_db() as conn:
-            cursor = conn.cursor()
-
-            anomalies = []
-
-            # Build base filter
-            base_conditions = ["(c.amount_mxn IS NULL OR c.amount_mxn <= ?)"]
-            base_params = [MAX_CONTRACT_VALUE]
-
-            if sector_id is not None:
-                base_conditions.append("c.sector_id = ?")
-                base_params.append(sector_id)
-
-            if year is not None:
-                base_conditions.append("c.contract_year = ?")
-                base_params.append(year)
-
-            base_where = " AND ".join(base_conditions)
-
-            # 1. Price outliers - contracts > 3x sector median (using precomputed baselines)
-            # First check if sector_price_baselines exists
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='sector_price_baselines'")
-            has_baselines = cursor.fetchone() is not None
-
-            if has_baselines:
-                price_query = f"""
-                    SELECT
-                        c.sector_id,
-                        s.name_es as sector_name,
-                        COUNT(*) as outlier_count,
-                        SUM(c.amount_mxn) as outlier_value
-                    FROM contracts c
-                    JOIN sectors s ON c.sector_id = s.id
-                    JOIN sector_price_baselines spb ON c.sector_id = spb.sector_id
-                        AND spb.contract_type = 'all' AND spb.year IS NULL
-                    WHERE {base_where}
-                    AND c.amount_mxn > spb.percentile_50 * 3
-                    AND spb.percentile_50 > 0
-                    GROUP BY c.sector_id, s.name_es
-                    HAVING outlier_count >= 5
-                """
-                cursor.execute(price_query, base_params)
-            else:
-                # Fallback: use simpler average-based detection
-                price_query = f"""
-                    SELECT
-                        c.sector_id,
-                        s.name_es as sector_name,
-                        COUNT(*) as outlier_count,
-                        SUM(c.amount_mxn) as outlier_value
-                    FROM contracts c
-                    JOIN sectors s ON c.sector_id = s.id
-                    WHERE {base_where}
-                    AND c.amount_mxn > (SELECT AVG(amount_mxn) * 3 FROM contracts WHERE sector_id = c.sector_id AND amount_mxn > 0)
-                    GROUP BY c.sector_id, s.name_es
-                    HAVING outlier_count >= 5
-                """
-                cursor.execute(price_query, base_params)
-            for row in cursor.fetchall():
-                anomalies.append(AnomalyItem(
-                    anomaly_type="price_outlier",
-                    severity="high" if row["outlier_count"] > 50 else "medium",
-                    description=f"{row['outlier_count']} contracts in {row['sector_name']} exceed 3x sector median",
-                    affected_contracts=row["outlier_count"],
-                    affected_value_mxn=row["outlier_value"] or 0,
-                    details={
-                        "sector_id": row["sector_id"],
-                        "sector_name": row["sector_name"],
-                        "threshold_multiplier": 3,
-                    }
-                ))
-
-            # 2. Timing clusters - multiple contracts same day to same vendor
-            timing_query = f"""
-                SELECT
-                    contract_date,
-                    vendor_id,
-                    v.name as vendor_name,
-                    COUNT(*) as contract_count,
-                    SUM(c.amount_mxn) as total_value
-                FROM contracts c
-                JOIN vendors v ON c.vendor_id = v.id
-                WHERE {base_where}
-                AND c.contract_date IS NOT NULL
-                GROUP BY c.contract_date, c.vendor_id, v.name
-                HAVING contract_count >= 5
-                ORDER BY contract_count DESC
-                LIMIT 20
-            """
-            cursor.execute(timing_query, base_params)
-            for row in cursor.fetchall():
-                severity = "critical" if row["contract_count"] >= 10 else "high"
-                anomalies.append(AnomalyItem(
-                    anomaly_type="timing_cluster",
-                    severity=severity,
-                    description=f"{row['contract_count']} contracts to '{row['vendor_name']}' on {row['contract_date']}",
-                    affected_contracts=row["contract_count"],
-                    affected_value_mxn=row["total_value"] or 0,
-                    details={
-                        "vendor_id": row["vendor_id"],
-                        "vendor_name": row["vendor_name"],
-                        "contract_date": str(row["contract_date"]),
-                    }
-                ))
-
-            # 3. Vendor concentration - single vendor >30% of sector
-            concentration_query = f"""
-                WITH sector_totals AS (
-                    SELECT c.sector_id, COUNT(*) as total, SUM(c.amount_mxn) as total_value
-                    FROM contracts c
-                    WHERE {base_where}
-                    GROUP BY c.sector_id
-                ),
-                vendor_sector AS (
-                    SELECT
-                        c.sector_id,
-                        c.vendor_id,
-                        v.name as vendor_name,
-                        COUNT(*) as vendor_contracts,
-                        SUM(c.amount_mxn) as vendor_value
-                    FROM contracts c
-                    JOIN vendors v ON c.vendor_id = v.id
-                    WHERE {base_where}
-                    GROUP BY c.sector_id, c.vendor_id, v.name
-                )
-                SELECT
-                    vs.sector_id,
-                    s.name_es as sector_name,
-                    vs.vendor_id,
-                    vs.vendor_name,
-                    vs.vendor_contracts,
-                    vs.vendor_value,
-                    ROUND(vs.vendor_contracts * 100.0 / st.total, 2) as pct_contracts,
-                    ROUND(vs.vendor_value * 100.0 / st.total_value, 2) as pct_value
-                FROM vendor_sector vs
-                JOIN sector_totals st ON vs.sector_id = st.sector_id
-                JOIN sectors s ON vs.sector_id = s.id
-                WHERE vs.vendor_contracts * 100.0 / st.total > 30
-                OR vs.vendor_value * 100.0 / NULLIF(st.total_value, 0) > 30
-                ORDER BY pct_contracts DESC
-                LIMIT 20
-            """
-            cursor.execute(concentration_query, base_params + base_params)
-            for row in cursor.fetchall():
-                pct = row["pct_contracts"] or 0
-                severity = "critical" if pct > 50 else "high" if pct > 40 else "medium"
-                anomalies.append(AnomalyItem(
-                    anomaly_type="vendor_concentration",
-                    severity=severity,
-                    description=f"'{row['vendor_name']}' has {pct}% of {row['sector_name']} contracts",
-                    affected_contracts=row["vendor_contracts"],
-                    affected_value_mxn=row["vendor_value"] or 0,
-                    details={
-                        "sector_id": row["sector_id"],
-                        "sector_name": row["sector_name"],
-                        "vendor_id": row["vendor_id"],
-                        "vendor_name": row["vendor_name"],
-                        "pct_contracts": pct,
-                        "pct_value": row["pct_value"],
-                    }
-                ))
-
-            # 4. Year-end spending spike - December has >15% of annual contracts
-            yearend_query = f"""
-                WITH yearly_stats AS (
-                    SELECT
-                        c.contract_year,
-                        COUNT(*) as total_contracts,
-                        SUM(c.amount_mxn) as total_value
-                    FROM contracts c
-                    WHERE {base_where}
-                    AND c.contract_year IS NOT NULL
-                    GROUP BY c.contract_year
-                ),
-                december_stats AS (
-                    SELECT
-                        c.contract_year,
-                        COUNT(*) as dec_contracts,
-                        SUM(c.amount_mxn) as dec_value
-                    FROM contracts c
-                    WHERE {base_where}
-                    AND strftime('%m', c.contract_date) = '12'
-                    GROUP BY c.contract_year
-                )
-                SELECT
-                    y.contract_year,
-                    d.dec_contracts,
-                    d.dec_value,
-                    ROUND(d.dec_contracts * 100.0 / y.total_contracts, 2) as dec_pct
-                FROM yearly_stats y
-                JOIN december_stats d ON y.contract_year = d.contract_year
-                WHERE d.dec_contracts * 100.0 / y.total_contracts > 15
-                ORDER BY y.contract_year DESC
-                LIMIT 10
-            """
-            cursor.execute(yearend_query, base_params + base_params)
-            for row in cursor.fetchall():
-                pct = row["dec_pct"]
-                severity = "high" if pct > 25 else "medium"
-                anomalies.append(AnomalyItem(
-                    anomaly_type="year_end_spike",
-                    severity=severity,
-                    description=f"{pct}% of {row['contract_year']} contracts were in December",
-                    affected_contracts=row["dec_contracts"],
-                    affected_value_mxn=row["dec_value"] or 0,
-                    details={
-                        "year": row["contract_year"],
-                        "december_percentage": pct,
-                    }
-                ))
-
-            # Filter by minimum severity if requested
-            severity_order = {"low": 0, "medium": 1, "high": 2, "critical": 3}
-            if min_severity and min_severity.lower() in severity_order:
-                min_level = severity_order[min_severity.lower()]
-                anomalies = [a for a in anomalies if severity_order.get(a.severity, 0) >= min_level]
-
-            # Sort by severity (critical first)
-            anomalies.sort(key=lambda x: severity_order.get(x.severity, 0), reverse=True)
-
-            # Track filters
-            filters_applied = {}
-            if sector_id:
-                filters_applied["sector_id"] = sector_id
-            if year:
-                filters_applied["year"] = year
-            if min_severity:
-                filters_applied["min_severity"] = min_severity
-
-            return AnomalyListResponse(
-                data=anomalies,
-                total=len(anomalies),
-                filters_applied=filters_applied,
-            )
-
-    except sqlite3.Error as e:
-        logger.error(f"Database error in detect_anomalies: {e}")
-        raise HTTPException(status_code=500, detail="Database error occurred")
+# NOTE: /analysis/anomalies endpoint removed from sectors router to avoid
+# duplicate route conflict with analysis.py router (which has cached version)

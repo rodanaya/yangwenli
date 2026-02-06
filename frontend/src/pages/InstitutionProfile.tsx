@@ -50,11 +50,7 @@ export function InstitutionProfile() {
   // Fetch institution's top vendors
   const { data: vendors, isLoading: vendorsLoading } = useQuery({
     queryKey: ['institution', institutionId, 'vendors'],
-    queryFn: async () => {
-      const response = await fetch(`/api/v1/institutions/${institutionId}/vendors`)
-      if (!response.ok) throw new Error('Failed to fetch vendors')
-      return response.json()
-    },
+    queryFn: () => institutionApi.getVendors(institutionId),
     enabled: !!institutionId,
   })
 
@@ -378,16 +374,16 @@ function TopVendorsChart({ data }: { data: Array<{ vendor_id: number; vendor_nam
     <div className="h-48">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} layout="vertical">
-          <CartesianGrid strokeDasharray="3 3" stroke="#2e2e2e" horizontal={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} horizontal={false} />
           <XAxis
             type="number"
-            tick={{ fill: '#a3a3a3', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
             tickFormatter={(v) => formatCompactMXN(v)}
           />
           <YAxis
             type="category"
             dataKey="name"
-            tick={{ fill: '#a3a3a3', fontSize: 10 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
             width={120}
           />
           <RechartsTooltip
@@ -404,7 +400,7 @@ function TopVendorsChart({ data }: { data: Array<{ vendor_id: number; vendor_nam
               return null
             }}
           />
-          <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+          <Bar dataKey="value" fill="var(--color-accent)" radius={[0, 4, 4, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

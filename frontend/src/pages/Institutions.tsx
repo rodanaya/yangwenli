@@ -9,7 +9,6 @@ import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { institutionApi } from '@/api/client'
 import type { InstitutionFilterParams, InstitutionResponse } from '@/api/types'
 import { Building2, Search, ChevronLeft, ChevronRight, ExternalLink, AlertCircle, RefreshCw, Building, Loader2 } from 'lucide-react'
-import { useToast } from '@/components/ui/toast'
 import { usePrefetchOnHover } from '@/hooks/usePrefetchOnHover'
 import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 
@@ -74,11 +73,14 @@ export function Institutions() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Institutions</h2>
-          <p className="text-sm text-text-muted">
-            {data ? `${formatNumber(data.pagination.total)} institutions` : 'Loading...'}
+          <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+            <Building2 className="h-4.5 w-4.5 text-accent" />
+            Institutions
+          </h2>
+          <p className="text-xs text-text-muted mt-0.5">
+            {data ? `${formatNumber(data.pagination.total)} government entities` : 'Loading...'}
           </p>
         </div>
 
@@ -213,11 +215,11 @@ function InstitutionCard({ institution, style }: { institution: InstitutionRespo
 
   return (
     <Card
-      className="hover:border-border-hover transition-colors animate-slide-up opacity-0"
+      className="hover:border-accent/50 hover:shadow-lg hover:shadow-accent/5 transition-all duration-200 animate-slide-up opacity-0 group"
       style={style}
       {...prefetch}
     >
-      <CardContent className="p-4">
+      <CardContent className="p-4 group-hover:bg-accent/[0.02] transition-colors">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sector-gobernacion/10 text-sector-gobernacion">

@@ -11,6 +11,7 @@ from typing import Optional, List
 from fastapi import APIRouter, Query, HTTPException, Path
 
 from ..dependencies import get_db
+from ..config.constants import MAX_CONTRACT_VALUE, FLAG_THRESHOLD
 
 logger = logging.getLogger(__name__)
 from ..models.contract import (
@@ -21,10 +22,6 @@ from ..models.contract import (
     ContractRiskBreakdown,
     PaginationMeta,
 )
-
-# Amount validation thresholds (from CLAUDE.md data validation rules)
-MAX_CONTRACT_VALUE = 100_000_000_000  # 100B MXN - reject above this
-FLAG_THRESHOLD = 10_000_000_000       # 10B MXN - flag for review
 
 # Valid risk levels for validation
 VALID_RISK_LEVELS = {"low", "medium", "high", "critical"}

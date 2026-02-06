@@ -6,17 +6,38 @@ Provides vendor connection graphs, co-bidding analysis, and institution-vendor n
 
 import sqlite3
 import logging
+import threading
+import time
 from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, HTTPException, Query, Path
 from pydantic import BaseModel, Field
 from collections import defaultdict
 
 from ..dependencies import get_db
+from ..config.constants import MAX_CONTRACT_VALUE
 
 logger = logging.getLogger(__name__)
 
-# Amount validation threshold
-MAX_CONTRACT_VALUE = 100_000_000_000  # 100B MXN
+
+# Thread-safe cache for expensive network queries
+class _NetworkCache:
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._store: Dict[str, Any] = {}
+        self._expiry: Dict[str, float] = {}
+
+    def get(self, key: str):
+        with self._lock:
+            if key in self._store and time.time() < self._expiry.get(key, 0):
+                return self._store[key]
+            return None
+
+    def set(self, key: str, value: Any, ttl: int = 3600):
+        with self._lock:
+            self._store[key] = value
+            self._expiry[key] = time.time() + ttl
+
+_network_cache = _NetworkCache()
 
 router = APIRouter(prefix="/network", tags=["network"])
 
@@ -120,7 +141,16 @@ async def get_network_graph(
 
     Returns nodes and links representing vendor-institution relationships.
     Can be centered on a specific vendor or institution, or show top connections.
+    Cached for 1 hour for default queries (no specific vendor/institution).
     """
+    # Cache default queries (no specific vendor/institution focus)
+    cache_key = None
+    if not vendor_id and not institution_id:
+        cache_key = f"graph:{sector_id}:{year}:{min_value}:{min_contracts}:{depth}:{limit}"
+        cached = _network_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
     try:
         with get_db() as conn:
             cursor = conn.cursor()
@@ -348,13 +378,16 @@ async def get_network_graph(
                     if len(nodes) >= limit:
                         break
 
-            return NetworkGraphResponse(
+            result = NetworkGraphResponse(
                 nodes=list(nodes.values())[:limit],
                 links=links,
                 total_nodes=len(nodes),
                 total_links=len(links),
                 total_value=sum(n.value for n in nodes.values())
             )
+            if cache_key:
+                _network_cache.set(cache_key, result, ttl=3600)  # Cache 1 hour
+            return result
 
     except sqlite3.Error as e:
         logger.error(f"Database error in get_network_graph: {e}")
@@ -613,7 +646,7 @@ async def get_related_vendors(
 
             # Check if vendor exists and get basic info
             cursor.execute("""
-                SELECT id, name, rfc, vendor_group_id, name_normalized, phonetic_code
+                SELECT id, name, rfc, group_id, name_normalized, phonetic_code
                 FROM vendors WHERE id = ?
             """, (vendor_id,))
             vendor = cursor.fetchone()
@@ -623,7 +656,7 @@ async def get_related_vendors(
             related = []
 
             # 1. Same vendor group
-            if vendor["vendor_group_id"]:
+            if vendor["group_id"]:
                 cursor.execute("""
                     SELECT
                         v.id, v.name, v.rfc,
@@ -634,10 +667,10 @@ async def get_related_vendors(
                     FROM vendors v
                     LEFT JOIN contracts c ON v.id = c.vendor_id
                         AND (c.amount_mxn IS NULL OR c.amount_mxn <= ?)
-                    WHERE v.vendor_group_id = ? AND v.id != ?
+                    WHERE v.group_id = ? AND v.id != ?
                     GROUP BY v.id, v.name, v.rfc
                     LIMIT ?
-                """, (MAX_CONTRACT_VALUE, vendor["vendor_group_id"], vendor_id, limit))
+                """, (MAX_CONTRACT_VALUE, vendor["group_id"], vendor_id, limit))
                 for row in cursor.fetchall():
                     related.append({
                         "vendor_id": row["id"],
@@ -663,11 +696,11 @@ async def get_related_vendors(
                     LEFT JOIN contracts c ON v.id = c.vendor_id
                         AND (c.amount_mxn IS NULL OR c.amount_mxn <= ?)
                     WHERE v.rfc LIKE ? AND v.id != ?
-                    AND v.id NOT IN (SELECT id FROM vendors WHERE vendor_group_id = ?)
+                    AND v.id NOT IN (SELECT id FROM vendors WHERE group_id = ?)
                     GROUP BY v.id, v.name, v.rfc
                     LIMIT ?
                 """, (MAX_CONTRACT_VALUE, f"{rfc_root}%", vendor_id,
-                      vendor["vendor_group_id"] or -1, limit - len(related)))
+                      vendor["group_id"] or -1, limit - len(related)))
                 for row in cursor.fetchall():
                     if not any(r["vendor_id"] == row["id"] for r in related):
                         related.append({

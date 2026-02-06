@@ -1,11 +1,37 @@
 """API router for classification and database statistics endpoints."""
 import json
+import threading
+import time
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 from ..dependencies import get_db
+
+
+# =============================================================================
+# SIMPLE THREAD-SAFE CACHE
+# =============================================================================
+class _StatsCache:
+    """Thread-safe TTL cache for expensive stats queries."""
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._store: Dict[str, Any] = {}
+        self._expiry: Dict[str, float] = {}
+
+    def get(self, key: str):
+        with self._lock:
+            if key in self._store and time.time() < self._expiry.get(key, 0):
+                return self._store[key]
+            return None
+
+    def set(self, key: str, value: Any, ttl: int = 3600):
+        with self._lock:
+            self._store[key] = value
+            self._expiry[key] = time.time() + ttl
+
+_stats_cache = _StatsCache()
 from ..models.stats import (
     ClassificationStatsResponse,
     IndustryCoverage,
@@ -308,7 +334,12 @@ async def get_data_quality():
 
     Returns overall quality score, grade distribution, quality by data period,
     field completeness rates, and key issues to address.
+    Cached for 2 hours since data quality rarely changes.
     """
+    cached = _stats_cache.get("data_quality")
+    if cached is not None:
+        return cached
+
     with get_db() as conn:
         cursor = conn.cursor()
 
@@ -474,7 +505,7 @@ async def get_data_quality():
         if row and row["last_calc"]:
             last_calculated = str(row["last_calc"])
 
-        return DataQualityResponse(
+        result = DataQualityResponse(
             overall_score=round(overall_score, 1),
             total_contracts=total_contracts,
             grade_distribution=grade_distribution,
@@ -483,3 +514,5 @@ async def get_data_quality():
             key_issues=key_issues,
             last_calculated=last_calculated
         )
+        _stats_cache.set("data_quality", result, ttl=7200)  # Cache 2 hours
+        return result

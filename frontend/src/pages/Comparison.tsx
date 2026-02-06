@@ -10,26 +10,25 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge, Badge } from '@/components/ui/badge'
-import { formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
+import { formatCompactMXN, formatNumber, formatPercentSafe } from '@/lib/utils'
 import { sectorApi, vendorApi, institutionApi } from '@/api/client'
-import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
 import {
   Columns,
   Plus,
   X,
   ArrowUpDown,
   BarChart3,
-  TrendingUp,
-  TrendingDown,
-  Minus,
   Users,
   Building2,
   Search,
+  AlertTriangle,
+  RefreshCw,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -55,25 +54,26 @@ export function Comparison() {
   const [searchQuery, setSearchQuery] = useState('')
 
   // Fetch data based on compare type
-  const { data: sectors, isLoading: sectorsLoading } = useQuery({
+  const { data: sectors, isLoading: sectorsLoading, error: sectorsError } = useQuery({
     queryKey: ['sectors'],
     queryFn: () => sectorApi.getAll(),
     enabled: compareType === 'sectors',
   })
 
-  const { data: vendors, isLoading: vendorsLoading } = useQuery({
+  const { data: vendors, isLoading: vendorsLoading, error: vendorsError } = useQuery({
     queryKey: ['vendors', 'comparison'],
     queryFn: () => vendorApi.getAll({ per_page: 50, min_contracts: 50 }),
     enabled: compareType === 'vendors',
   })
 
-  const { data: institutions, isLoading: institutionsLoading } = useQuery({
+  const { data: institutions, isLoading: institutionsLoading, error: institutionsError } = useQuery({
     queryKey: ['institutions', 'comparison'],
     queryFn: () => institutionApi.getAll({ per_page: 50 }),
     enabled: compareType === 'institutions',
   })
 
   const isLoading = sectorsLoading || vendorsLoading || institutionsLoading
+  const hasError = sectorsError || vendorsError || institutionsError
 
   // Available items for selection
   const availableItems = useMemo(() => {
@@ -171,10 +171,12 @@ export function Comparison() {
             point[item.name] = (item.avgRisk || 0) * 100
             break
           case 'Direct Award':
-            point[item.name] = (item.directAward || 0) * 100
+            // API returns 0-100 scale already
+            point[item.name] = Math.min(100, item.directAward || 0)
             break
           case 'High Risk':
-            point[item.name] = (item.highRisk || 0) * 100
+            // API returns 0-100 scale already
+            point[item.name] = Math.min(100, item.highRisk || 0)
             break
         }
       })
@@ -198,16 +200,40 @@ export function Comparison() {
 
   const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']
 
+  if (hasError) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+            <Columns className="h-4.5 w-4.5 text-accent" />
+            Comparison
+          </h2>
+          <p className="text-xs text-text-muted mt-0.5">Compare up to 4 items side-by-side</p>
+        </div>
+        <Card className="border-risk-critical/30 bg-risk-critical/5">
+          <CardContent className="p-6 text-center">
+            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-risk-critical opacity-50" />
+            <p className="text-text-muted mb-4">Failed to load comparison data</p>
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Columns className="h-5 w-5 text-accent" />
+          <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+            <Columns className="h-4.5 w-4.5 text-accent" />
             Comparison
           </h2>
-          <p className="text-sm text-text-muted">
+          <p className="text-xs text-text-muted mt-0.5">
             Compare up to 4 items side-by-side
           </p>
         </div>
@@ -316,16 +342,16 @@ export function Comparison() {
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={comparisonData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#2e2e2e" horizontal={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} horizontal={false} />
                     <XAxis
                       type="number"
-                      tick={{ fill: '#a3a3a3', fontSize: 11 }}
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
                       tickFormatter={(v) => `${(v / 1_000_000_000_000).toFixed(1)}T`}
                     />
                     <YAxis
                       type="category"
                       dataKey="name"
-                      tick={{ fill: '#a3a3a3', fontSize: 10 }}
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
                       width={100}
                       tickFormatter={(v) => v.length > 15 ? v.slice(0, 15) + '...' : v}
                     />
@@ -345,8 +371,8 @@ export function Comparison() {
                       }}
                     />
                     <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                      {comparisonData.map((_, index) => (
-                        <rect key={index} fill={colors[index]} />
+                      {comparisonData.map((item: any, index) => (
+                        <Cell key={item.id} fill={colors[index]} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -365,15 +391,15 @@ export function Comparison() {
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart data={radarData}>
-                    <PolarGrid stroke="#2e2e2e" />
+                    <PolarGrid stroke="var(--color-border)" opacity={0.3} />
                     <PolarAngleAxis
                       dataKey="metric"
-                      tick={{ fill: '#a3a3a3', fontSize: 10 }}
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
                     />
                     <PolarRadiusAxis
                       angle={30}
                       domain={[0, 100]}
-                      tick={{ fill: '#a3a3a3', fontSize: 9 }}
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 9 }}
                     />
                     {comparisonData.map((item: any, index) => (
                       <Radar
@@ -451,7 +477,7 @@ export function Comparison() {
                           <td className="data-cell font-medium">Direct Award %</td>
                           {comparisonData.map((item: any) => (
                             <td key={item.id} className="data-cell text-right tabular-nums">
-                              {item.directAward !== undefined ? formatPercent(item.directAward) : '-'}
+                              {item.directAward !== undefined ? formatPercentSafe(item.directAward, false) : '-'}
                             </td>
                           ))}
                         </tr>
@@ -459,7 +485,7 @@ export function Comparison() {
                           <td className="data-cell font-medium">High Risk %</td>
                           {comparisonData.map((item: any) => (
                             <td key={item.id} className="data-cell text-right tabular-nums">
-                              {item.highRisk !== undefined ? formatPercent(item.highRisk) : '-'}
+                              {item.highRisk !== undefined ? formatPercentSafe(item.highRisk, false) : '-'}
                             </td>
                           ))}
                         </tr>

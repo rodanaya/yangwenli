@@ -96,8 +96,8 @@ export function SectorProfile() {
               <BarChart3 className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold capitalize">{sector.name}</h1>
-              <p className="text-sm text-text-muted">
+              <h1 className="text-lg font-bold tracking-tight capitalize">{sector.name}</h1>
+              <p className="text-xs text-text-muted mt-0.5">
                 Sector code: {sector.code}
               </p>
             </div>
@@ -328,9 +328,9 @@ function RiskDistributionChart({ data }: { data: Array<{ risk_level: string; cou
     <div className="h-48">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} layout="vertical">
-          <CartesianGrid strokeDasharray="3 3" stroke="#2e2e2e" horizontal={false} />
-          <XAxis type="number" tick={{ fill: '#a3a3a3', fontSize: 11 }} />
-          <YAxis type="category" dataKey="level" tick={{ fill: '#a3a3a3', fontSize: 11 }} width={60} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} horizontal={false} />
+          <XAxis type="number" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
+          <YAxis type="category" dataKey="level" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} width={60} />
           <RechartsTooltip
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
@@ -423,9 +423,9 @@ function TrendsChart({
     <div className="h-64">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#2e2e2e" />
-          <XAxis dataKey="year" tick={{ fill: '#a3a3a3', fontSize: 11 }} />
-          <YAxis tick={{ fill: '#a3a3a3', fontSize: 11 }} tickFormatter={(v) => `${v}B`} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
+          <XAxis dataKey="year" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
+          <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} tickFormatter={(v) => `${v}B`} />
           <RechartsTooltip
             content={({ active, payload }) => {
               if (active && payload && payload.length) {

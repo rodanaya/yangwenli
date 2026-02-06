@@ -146,11 +146,14 @@ export function Contracts() {
   return (
     <div className="space-y-4">
       {/* Header with filters */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Contracts</h2>
-          <p className="text-sm text-text-muted">
-            {data ? `${formatNumber(data.pagination.total)} contracts found` : 'Loading...'}
+          <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+            <FileText className="h-4.5 w-4.5 text-accent" />
+            Contracts
+          </h2>
+          <p className="text-xs text-text-muted mt-0.5">
+            {data ? `${formatNumber(data.pagination.total)} records found` : 'Loading...'}
           </p>
         </div>
 
@@ -375,21 +378,21 @@ export function Contracts() {
             <ScrollArea className="h-[600px]">
               <div className="overflow-x-auto min-w-full">
               <table className="w-full min-w-[800px]">
-                <thead className="sticky top-0 bg-background-card border-b border-border">
-                  <tr className="text-left text-xs font-medium text-text-muted">
-                    <th className="p-3">Contract</th>
+                <thead className="sticky top-0 z-10 bg-background-card/95 backdrop-blur-sm border-b-2 border-border shadow-sm">
+                  <tr className="text-left text-xs font-semibold uppercase tracking-wider text-text-muted">
+                    <th className="p-3 pl-4">Contract</th>
                     <th className="p-3">Vendor</th>
                     <th className="p-3">Institution</th>
                     <th className="p-3 text-right">Amount</th>
                     <th className="p-3">Date</th>
                     <th className="p-3">Risk</th>
                     <th className="p-3">Flags</th>
-                    <th className="p-3 text-center">Actions</th>
+                    <th className="p-3 pr-4 text-center">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
-                  {data?.data.map((contract) => (
-                    <ContractRow key={contract.id} contract={contract} />
+                <tbody className="divide-y divide-border/50">
+                  {data?.data.map((contract, index) => (
+                    <ContractRow key={contract.id} contract={contract} isEven={index % 2 === 0} />
                   ))}
                 </tbody>
               </table>
@@ -449,7 +452,7 @@ export function Contracts() {
   )
 }
 
-function ContractRow({ contract }: { contract: ContractListItem }) {
+function ContractRow({ contract, isEven }: { contract: ContractListItem; isEven?: boolean }) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
@@ -461,7 +464,12 @@ function ContractRow({ contract }: { contract: ContractListItem }) {
 
   return (
     <tr
-      className="hover:bg-background-elevated/50 transition-colors focus:bg-background-elevated focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent"
+      className={`
+        transition-colors duration-150
+        hover:bg-accent/5 hover:shadow-sm
+        focus:bg-accent/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent
+        ${isEven ? 'bg-background-card' : 'bg-background-elevated/30'}
+      `}
       tabIndex={0}
       onKeyDown={handleKeyDown}
       role="row"

@@ -6,20 +6,17 @@
 
 import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
-import { formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
+import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { analysisApi } from '@/api/client'
 import { RISK_COLORS } from '@/lib/constants'
 import {
   Calendar,
   ChevronLeft,
   ChevronRight,
-  ZoomIn,
-  ZoomOut,
   TrendingUp,
   TrendingDown,
   AlertTriangle,
@@ -29,8 +26,6 @@ import {
 } from 'lucide-react'
 import {
   ResponsiveContainer,
-  AreaChart,
-  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -39,30 +34,10 @@ import {
   ComposedChart,
   Bar,
   Line,
+  Cell,
 } from 'recharts'
 
-interface TimelineEvent {
-  id: string
-  date: string
-  type: 'election' | 'budget' | 'audit' | 'anomaly' | 'milestone'
-  title: string
-  description: string
-  impact?: 'high' | 'medium' | 'low'
-}
-
-// Key events in Mexican procurement/politics
-const TIMELINE_EVENTS: TimelineEvent[] = [
-  { id: '1', date: '2024-06', type: 'election', title: 'Presidential Election', description: 'Federal elections held', impact: 'high' },
-  { id: '2', date: '2023-01', type: 'budget', title: 'New Fiscal Year', description: '2023 budget enacted', impact: 'medium' },
-  { id: '3', date: '2022-12', type: 'audit', title: 'ASF Audit Report', description: 'Annual audit findings released', impact: 'medium' },
-  { id: '4', date: '2021-06', type: 'election', title: 'Midterm Elections', description: 'Congressional elections', impact: 'high' },
-  { id: '5', date: '2020-03', type: 'anomaly', title: 'COVID Emergency', description: 'Emergency procurement authorized', impact: 'high' },
-  { id: '6', date: '2018-12', type: 'milestone', title: 'Administration Change', description: 'New administration begins', impact: 'high' },
-  { id: '7', date: '2018-07', type: 'election', title: 'Presidential Election', description: 'AMLO elected president', impact: 'high' },
-]
-
 export function Timeline() {
-  const navigate = useNavigate()
   const [selectedYear, setSelectedYear] = useState(2024)
   const [viewMode, setViewMode] = useState<'yearly' | 'monthly'>('yearly')
 
@@ -72,27 +47,34 @@ export function Timeline() {
     queryFn: () => analysisApi.getYearOverYear(),
   })
 
-  // Process timeline data
+  // Fetch monthly breakdown for the selected year
+  const { data: monthlyBreakdown, isLoading: monthlyLoading } = useQuery({
+    queryKey: ['analysis', 'monthly-breakdown', selectedYear],
+    queryFn: () => analysisApi.getMonthlyBreakdown(selectedYear),
+    enabled: viewMode === 'monthly',
+  })
+
+  // Fetch all temporal events
+  const { data: eventsData } = useQuery({
+    queryKey: ['analysis', 'temporal-events'],
+    queryFn: () => analysisApi.getTemporalEvents(),
+    staleTime: 60 * 60 * 1000, // Events rarely change, cache 1 hour
+  })
+
+  const allEvents = eventsData?.events ?? []
+
+  // Process timeline data from year-over-year API
   const timelineData = useMemo(() => {
     if (!trends?.data) return []
-    return trends.data.map((d) => ({
+    return trends.data.map((d: any) => ({
       year: d.year,
       contracts: d.contracts,
-      value: d.total_value,
-      avgRisk: d.avg_risk * 100,
-      // Simulate monthly breakdown
-      months: Array.from({ length: 12 }, (_, i) => ({
-        month: i + 1,
-        contracts: Math.floor(d.contracts / 12 * (0.7 + Math.random() * 0.6)),
-        value: d.total_value / 12 * (0.7 + Math.random() * 0.6),
-        // December spike simulation
-        isYearEnd: i === 11,
-        spike: i === 11 ? 1.4 : 1,
-      })),
+      value: d.total_value ?? d.value_mxn ?? 0,
+      avgRisk: (d.avg_risk ?? 0) * 100,
     }))
   }, [trends])
 
-  // Selected year data
+  // Selected year summary from yearly data
   const selectedYearData = useMemo(() => {
     return timelineData.find((d) => d.year === selectedYear)
   }, [timelineData, selectedYear])
@@ -113,30 +95,56 @@ export function Timeline() {
 
   // Events for selected year
   const yearEvents = useMemo(() => {
-    return TIMELINE_EVENTS.filter((e) => e.date.startsWith(String(selectedYear)))
-  }, [selectedYear])
+    return allEvents.filter((e) => e.year === selectedYear)
+  }, [allEvents, selectedYear])
 
-  const getEventIcon = (type: TimelineEvent['type']) => {
+  // Election events for reference lines on yearly chart
+  const electionEvents = useMemo(() => {
+    return allEvents.filter((e) => e.type === 'election')
+  }, [allEvents])
+
+  const getEventIcon = (type: string) => {
     switch (type) {
       case 'election': return '🗳️'
       case 'budget': return '💰'
       case 'audit': return '📋'
+      case 'crisis': return '⚠️'
       case 'anomaly': return '⚠️'
       case 'milestone': return '🏛️'
+      default: return '📌'
     }
   }
 
-  const getEventColor = (type: TimelineEvent['type']) => {
+  const getEventColor = (type: string) => {
     switch (type) {
       case 'election': return 'bg-sector-gobernacion/20 border-sector-gobernacion/30 text-sector-gobernacion'
       case 'budget': return 'bg-sector-hacienda/20 border-sector-hacienda/30 text-sector-hacienda'
       case 'audit': return 'bg-accent/20 border-accent/30 text-accent'
+      case 'crisis': return 'bg-risk-high/20 border-risk-high/30 text-risk-high'
       case 'anomaly': return 'bg-risk-high/20 border-risk-high/30 text-risk-high'
       case 'milestone': return 'bg-sector-tecnologia/20 border-sector-tecnologia/30 text-sector-tecnologia'
+      default: return 'bg-accent/20 border-accent/30 text-accent'
     }
   }
 
   const years = timelineData.map((d) => d.year).sort((a, b) => b - a)
+
+  // Monthly chart data from real API
+  const monthlyChartData = useMemo(() => {
+    if (!monthlyBreakdown?.months) return []
+    return monthlyBreakdown.months.map((m) => ({
+      month: m.month,
+      month_name: m.month_name,
+      contracts: m.contracts,
+      value: m.value,
+      avg_risk: m.avg_risk,
+      isYearEnd: m.is_year_end,
+      direct_award_count: m.direct_award_count,
+      single_bid_count: m.single_bid_count,
+    }))
+  }, [monthlyBreakdown])
+
+  const isMonthlyChartLoading = viewMode === 'monthly' && monthlyLoading
 
   return (
     <div className="space-y-6">
@@ -290,28 +298,31 @@ export function Timeline() {
               {viewMode === 'yearly' ? 'Historical Trends' : `${selectedYear} Monthly Breakdown`}
             </CardTitle>
             <CardDescription className="text-xs">
-              Contract volume and average risk over time
+              {viewMode === 'yearly'
+                ? 'Contract volume and average risk over time'
+                : `Real monthly contract data for ${selectedYear}`
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {trendsLoading ? (
+            {(trendsLoading || isMonthlyChartLoading) ? (
               <Skeleton className="h-[350px]" />
             ) : (
               <div className="h-[350px]">
                 <ResponsiveContainer width="100%" height="100%">
                   {viewMode === 'yearly' ? (
                     <ComposedChart data={timelineData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#2e2e2e" />
-                      <XAxis dataKey="year" tick={{ fill: '#a3a3a3', fontSize: 11 }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
+                      <XAxis dataKey="year" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
                       <YAxis
                         yAxisId="left"
-                        tick={{ fill: '#a3a3a3', fontSize: 11 }}
+                        tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
                         tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`}
                       />
                       <YAxis
                         yAxisId="right"
                         orientation="right"
-                        tick={{ fill: '#a3a3a3', fontSize: 11 }}
+                        tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
                         tickFormatter={(v) => `${v}%`}
                         domain={[0, 50]}
                       />
@@ -338,47 +349,54 @@ export function Timeline() {
                         }}
                       />
                       {/* Mark election years */}
-                      {TIMELINE_EVENTS.filter((e) => e.type === 'election').map((event) => (
+                      {electionEvents.map((event) => (
                         <ReferenceLine
                           key={event.id}
-                          x={parseInt(event.date.slice(0, 4))}
+                          x={event.year}
                           stroke={RISK_COLORS.high}
                           strokeDasharray="3 3"
                           yAxisId="left"
                         />
                       ))}
-                      <Bar yAxisId="left" dataKey="contracts" fill="#3b82f6" opacity={0.7} radius={[2, 2, 0, 0]} />
+                      <Bar yAxisId="left" dataKey="contracts" fill="var(--color-accent)" opacity={0.7} radius={[2, 2, 0, 0]} />
                       <Line yAxisId="right" type="monotone" dataKey="avgRisk" stroke={RISK_COLORS.high} strokeWidth={2} dot />
                     </ComposedChart>
                   ) : (
-                    <ComposedChart data={selectedYearData?.months || []}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#2e2e2e" />
+                    <ComposedChart data={monthlyChartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
                       <XAxis
                         dataKey="month"
-                        tick={{ fill: '#a3a3a3', fontSize: 11 }}
+                        tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
                         tickFormatter={(m) => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m - 1]}
                       />
                       <YAxis
-                        tick={{ fill: '#a3a3a3', fontSize: 11 }}
+                        tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
                         tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`}
                       />
                       <RechartsTooltip
                         content={({ active, payload }) => {
                           if (active && payload && payload.length) {
                             const data = payload[0].payload
-                            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
                             return (
                               <div className="chart-tooltip">
-                                <p className="font-medium">{monthNames[data.month - 1]} {selectedYear}</p>
+                                <p className="font-medium">{data.month_name} {selectedYear}</p>
                                 <p className="text-xs text-text-muted">
                                   Contracts: {formatNumber(data.contracts)}
                                 </p>
                                 <p className="text-xs text-text-muted">
                                   Value: {formatCompactMXN(data.value)}
                                 </p>
+                                <p className="text-xs text-text-muted">
+                                  Avg Risk: {(data.avg_risk * 100).toFixed(1)}%
+                                </p>
+                                {data.direct_award_count > 0 && (
+                                  <p className="text-xs text-text-muted">
+                                    Direct Awards: {formatNumber(data.direct_award_count)}
+                                  </p>
+                                )}
                                 {data.isYearEnd && (
                                   <p className="text-xs text-risk-high mt-1">
-                                    ⚠️ Year-end spending spike
+                                    Year-end spending period
                                   </p>
                                 )}
                               </div>
@@ -388,8 +406,8 @@ export function Timeline() {
                         }}
                       />
                       <Bar dataKey="contracts" radius={[2, 2, 0, 0]}>
-                        {selectedYearData?.months.map((entry, index) => (
-                          <rect
+                        {monthlyChartData.map((entry, index) => (
+                          <Cell
                             key={index}
                             fill={entry.isYearEnd ? RISK_COLORS.high : '#3b82f6'}
                           />
@@ -399,6 +417,11 @@ export function Timeline() {
                   )}
                 </ResponsiveContainer>
               </div>
+            )}
+            {monthlyBreakdown?.december_spike != null && viewMode === 'monthly' && (
+              <p className="text-xs text-text-muted mt-2">
+                December spike ratio: {monthlyBreakdown.december_spike.toFixed(2)}x average monthly spending
+              </p>
             )}
           </CardContent>
         </Card>
@@ -435,7 +458,12 @@ export function Timeline() {
                     )}
                   </div>
                   <p className="text-xs text-text-muted">{event.description}</p>
-                  <p className="text-[10px] text-text-muted mt-1">{event.date}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-[10px] text-text-muted">{event.date}</p>
+                    {event.source && (
+                      <p className="text-[10px] text-text-muted">Source: {event.source}</p>
+                    )}
+                  </div>
                 </div>
               ))
             )}
@@ -443,12 +471,13 @@ export function Timeline() {
             {/* Historical Events */}
             <div className="pt-4 border-t border-border">
               <p className="text-xs font-medium text-text-muted mb-2">Historical Events</p>
-              {TIMELINE_EVENTS.filter((e) => !e.date.startsWith(String(selectedYear)))
+              {allEvents
+                .filter((e) => e.year !== selectedYear)
                 .slice(0, 3)
                 .map((event) => (
                   <button
                     key={event.id}
-                    onClick={() => setSelectedYear(parseInt(event.date.slice(0, 4)))}
+                    onClick={() => setSelectedYear(event.year)}
                     className="w-full p-2 rounded text-left hover:bg-background-elevated transition-colors"
                   >
                     <div className="flex items-center gap-2">

@@ -35,8 +35,11 @@ export function Settings() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h2 className="text-lg font-semibold">Settings</h2>
-        <p className="text-sm text-text-muted">Configure your dashboard preferences</p>
+        <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+          <Database className="h-4.5 w-4.5 text-accent" />
+          Settings
+        </h2>
+        <p className="text-xs text-text-muted mt-0.5">Configure your dashboard preferences</p>
       </div>
 
       {/* Theme settings */}

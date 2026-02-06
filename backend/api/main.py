@@ -6,6 +6,9 @@ Mexican Government Procurement Analysis platform.
 
 Run with: uvicorn api.main:app --port 8001 --reload
 """
+import logging
+import threading
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -45,6 +48,40 @@ from .routers.contracts import router as contracts_router
 from .routers.sectors import router as sectors_router
 from .routers.export import router as export_router
 
+logger = logging.getLogger(__name__)
+
+
+def _warmup_caches():
+    """Pre-populate expensive caches in a background thread so first requests are fast."""
+    import urllib.request
+    base = "http://127.0.0.1:8001"
+    endpoints = [
+        "/api/v1/stats/dashboard/fast",
+        "/api/v1/sectors",
+        "/api/v1/stats/data-quality",
+        "/api/v1/network/graph?min_contracts=10&limit=50",
+        "/api/v1/analysis/anomalies",
+        "/api/v1/analysis/risk-distribution",
+        "/api/v1/analysis/year-over-year",
+    ]
+    for ep in endpoints:
+        try:
+            urllib.request.urlopen(f"{base}{ep}", timeout=120)
+            logger.info(f"Cache warmed: {ep}")
+        except Exception as e:
+            logger.warning(f"Cache warmup failed for {ep}: {e}")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup: warm caches in background thread so the UI loads instantly."""
+    logger.info("Starting cache warmup in background...")
+    warmup_thread = threading.Thread(target=_warmup_caches, daemon=True)
+    warmup_thread.start()
+    yield
+    logger.info("Shutting down.")
+
+
 # API metadata
 API_TITLE = "Yang Wen-li Vendor Classification API"
 API_DESCRIPTION = """
@@ -82,6 +119,7 @@ app = FastAPI(
     version=API_VERSION,
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 # Attach rate limiter to app (if available)

@@ -298,6 +298,14 @@ export interface VendorTopListResponse {
   generated_at: string
 }
 
+export interface VendorInstitutionListResponse {
+  vendor_id: number
+  vendor_name: string
+  data: VendorInstitutionItem[]
+  total: number
+  generated_at: string
+}
+
 // ============================================================================
 // Institution Types
 // ============================================================================
@@ -387,6 +395,14 @@ export interface InstitutionListResponse extends PaginatedResponse<InstitutionRe
 export interface InstitutionTopListResponse {
   data: InstitutionTopItem[]
   metric: 'spending' | 'contracts' | 'risk'
+  total: number
+  generated_at: string
+}
+
+export interface InstitutionVendorListResponse {
+  institution_id: number
+  institution_name: string
+  data: InstitutionVendorItem[]
   total: number
   generated_at: string
 }

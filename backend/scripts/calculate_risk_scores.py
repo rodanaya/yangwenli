@@ -1,39 +1,46 @@
 """
-RUBLI Risk Scoring: 10-Factor Model v3.2 + Co-Bidding Integration
+RUBLI Risk Scoring: 8-Factor Model v3.3 (Unified)
 
-Implements IMF CRI-aligned risk scoring methodology with bonus factors:
+Implements IMF CRI-aligned risk scoring methodology.
+v3.3 merges the best of v3.0 (redistributed weights, IQR price, interactions)
+and v3.2 (co-bidding detection, lowered thresholds).
 
+BASE FACTORS (sum to 100%):
 | Factor | Weight | Data Field |
 |--------|--------|------------|
-| Single bidding | 15% | is_single_bid |
-| Non-open procedure | 15% | is_direct_award, procedure_type |
-| Price anomaly | 15% | amount_mxn vs sector median |
-| Vendor concentration | 10% | vendor's sector share |
-| Short ad period | 10% | days_advertised |
-| Short decision period | 10% | days_to_award |
-| Year-end timing | 5% | is_year_end |
-| Contract modification | 10% | (not available in data) |
-| Threshold splitting | 5% | same-day/week contracts |
-| Network risk | 5% | (requires network analysis) |
-| Industry-sector mismatch* | +3% | vendor_classifications |
-| Institution risk baseline* | +3% | institution_type (taxonomy v2.0) |
-| Price hypothesis* | +5% | price_hypothesis_confidence (v3.1) |
-| Co-bidding risk* | +5% | co-bidding patterns (v3.2) |
+| Single bidding | 18% | is_single_bid |
+| Non-open procedure | 18% | is_direct_award, procedure_type |
+| Price anomaly (IQR) | 18% | amount_mxn vs sector baselines |
+| Vendor concentration | 12% | vendor's sector share |
+| Short ad period | 12% | days_advertised |
+| Year-end timing | 7% | is_year_end |
+| Threshold splitting | 7% | same-day/week contracts |
+| Network risk | 8% | vendor groups / aliases |
 
-*Additional risk factors (bonus, not part of base 100%) based on statistical analysis.
+BONUS FACTORS (added on top):
+| Industry-sector mismatch | +3% | vendor_classifications |
+| Institution risk baseline | +3% | institution_type (taxonomy v2.0) |
+| Price hypothesis | +5% | price_hypothesis_confidence (v3.1) |
+| Co-bidding risk | +5% | co-bidding patterns (v3.2) |
 
-v3.2 Changes:
-- Added co_bidding factor for vendors in suspicious co-bidding pairs
-- Lowered thresholds: critical >= 0.5 (was 0.6), high >= 0.35 (was 0.4)
-- Targets OECD expected 2-15% high-risk distribution
+INTERACTION EFFECTS (up to +15%):
+| Pair | Bonus |
+|------|-------|
+| single_bid + short_ad | +5% |
+| non_open + year_end | +4% |
+| price_anomaly + vendor_conc | +5% |
+| threshold_split + network | +6% |
+| network + single_bid | +5% |
 
-v3.1 Changes:
-- Added price_hypothesis factor from IQR-based outlier detection
-- Tiered bonus: very_high (>=0.85) = +5%, high (0.65-0.85) = +3%
-- Integrated with price_hypotheses table for statistical validation
+v3.3 Changes (from v3.2):
+- Redistributed 20% wasted weight (short_decision + modification removed)
+- IQR-based price anomaly using sector_price_baselines when available
+- Added interaction effects from v3.0 (up to +15% bonus)
+- Kept co-bidding detection from v3.2
+- Kept v3.2 thresholds: critical >= 0.50, high >= 0.35
 
 Usage:
-    python -m scripts.calculate_risk_scores [--batch-size 10000] [--version v3.2]
+    python -m scripts.calculate_risk_scores [--batch-size 10000] [--version v3.3]
 """
 
 import sys
@@ -50,34 +57,44 @@ DB_PATH = Path(__file__).parent.parent / "RUBLI_NORMALIZED.db"
 MAX_CONTRACT_VALUE = 100_000_000_000  # 100B MXN - reject above this
 FLAG_THRESHOLD = 10_000_000_000       # 10B MXN - flag for review
 
-# Risk factor weights (sum to 1.0)
+# Base risk factor weights (sum to 1.0)
+# v3.3: Redistributed 20% from unimplemented short_decision + modification
 WEIGHTS = {
-    'single_bid': 0.15,
-    'non_open': 0.15,
-    'price_anomaly': 0.15,
-    'vendor_concentration': 0.10,
-    'short_ad_period': 0.10,
-    'short_decision': 0.10,
-    'year_end': 0.05,
-    'modification': 0.10,  # Not available - will be 0
-    'threshold_split': 0.05,
-    'network_risk': 0.05,  # Not implemented - will be 0
+    'single_bid': 0.18,           # 18% (was 15%)
+    'non_open': 0.18,             # 18% (was 15%)
+    'price_anomaly': 0.18,        # 18% (was 15%) - now IQR-based
+    'vendor_concentration': 0.12,  # 12% (was 10%)
+    'short_ad_period': 0.12,      # 12% (was 10%)
+    'year_end': 0.07,             # 7% (was 5%)
+    'threshold_split': 0.07,      # 7% (was 5%)
+    'network_risk': 0.08,         # 8% (was 5%)
 }
 
 # Additional risk weights (bonus factors, not part of base 100%)
 ADDITIONAL_WEIGHTS = {
-    'industry_mismatch': 0.03,  # Vendor industry doesn't match contract sector
+    'industry_mismatch': 0.03,     # Vendor industry doesn't match contract sector
     'institution_baseline': 0.03,  # Institution type risk baseline (0-100% of 0.03)
-    'price_hypothesis': 0.05,  # v3.1: High-confidence price hypothesis from IQR analysis
-    'co_bidding': 0.05,  # v3.2: Vendors in suspicious co-bidding patterns (bid-rigging indicator)
+    'price_hypothesis': 0.05,      # v3.1: High-confidence price hypothesis from IQR analysis
+    'co_bidding': 0.05,            # v3.2: Vendors in suspicious co-bidding patterns
 }
 
+# v3.3: Interaction effects — correlated risk factors amplify each other
+# When BOTH factors in a pair are triggered, add the bonus
+INTERACTION_EFFECTS = {
+    ('single_bid', 'short_ad_period'): 0.05,          # Single bid + rushed = suspicious
+    ('non_open', 'year_end'): 0.04,                    # Direct award in Dec = budget dump
+    ('price_anomaly', 'vendor_concentration'): 0.05,   # Overpriced + dominant vendor
+    ('threshold_split', 'network_risk'): 0.06,         # Split contracts + related entities
+    ('network_risk', 'single_bid'): 0.05,              # Network vendor wins alone
+}
+MAX_INTERACTION_BONUS = 0.15  # Cap total interaction bonus at 15%
+
 # v3.2: Adjusted risk level thresholds (lowered to increase high-risk detection)
-# OECD benchmark expects 2-15% high-risk; we were at 0.30%
+# OECD benchmark expects 2-15% high-risk
 RISK_THRESHOLDS = {
-    'critical': 0.50,  # Was 0.60
-    'high': 0.35,      # Was 0.40
-    'medium': 0.20,    # Unchanged
+    'critical': 0.50,
+    'high': 0.35,
+    'medium': 0.20,
 }
 
 # Institution type risk baselines (from taxonomy v2.0)
@@ -158,36 +175,63 @@ def load_vendor_industries(conn: sqlite3.Connection) -> dict:
 
 
 def calculate_sector_stats(conn: sqlite3.Connection) -> dict:
-    """Calculate sector-level statistics for price anomaly detection."""
+    """Calculate sector-level statistics for price anomaly detection.
+
+    v3.3: Tries to load IQR-based baselines from sector_price_baselines first.
+    Falls back to 3x mean if baselines table not available.
+    """
     cursor = conn.cursor()
 
     print("Calculating sector statistics...")
 
-    # Get sector stats - simplified without median (SQLite limitation)
+    stats = {}
+
+    # Try IQR-based baselines first (from sector_price_baselines table)
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='sector_price_baselines'")
+    has_baselines = cursor.fetchone() is not None
+
+    if has_baselines:
+        cursor.execute("""
+            SELECT sector_id, percentile_50, percentile_75, percentile_90,
+                   iqr, upper_fence
+            FROM sector_price_baselines
+            WHERE contract_type = 'all' AND year IS NULL
+              AND percentile_50 > 0
+        """)
+        for row in cursor.fetchall():
+            sector_id = row[0]
+            p50, p75, p90, iqr, upper_fence = row[1], row[2], row[3], row[4], row[5]
+            stats[sector_id] = {
+                'median': p50,
+                'p75': p75,
+                'p90': p90,
+                'iqr': iqr,
+                'upper_fence': upper_fence or (p75 + 1.5 * iqr if iqr else p50 * 3),
+                'method': 'iqr'
+            }
+        print(f"  Loaded IQR baselines for {len(stats)} sectors")
+
+    # Fallback: use 3x mean for any missing sectors
     cursor.execute("""
-        SELECT
-            sector_id,
-            COUNT(*) as count,
-            AVG(amount_mxn) as mean,
-            MIN(amount_mxn) as min_val,
-            MAX(amount_mxn) as max_val
+        SELECT sector_id, COUNT(*) as count, AVG(amount_mxn) as mean
         FROM contracts
         WHERE amount_mxn > 0 AND sector_id IS NOT NULL
         GROUP BY sector_id
     """)
-
-    stats = {}
+    fallback_count = 0
     for row in cursor.fetchall():
-        sector_id, count, mean, min_val, max_val = row
-        if sector_id and mean:
+        sector_id, count, mean = row
+        if sector_id and mean and sector_id not in stats:
             stats[sector_id] = {
-                'count': count,
-                'mean': mean,
-                # Use 3x mean as upper threshold (simplified approach)
-                'upper_threshold': mean * 3
+                'median': mean,
+                'upper_fence': mean * 3,
+                'method': 'mean_3x'
             }
+            fallback_count += 1
 
-    print(f"  Calculated stats for {len(stats)} sectors")
+    if fallback_count > 0:
+        print(f"  Used 3x mean fallback for {fallback_count} sectors")
+    print(f"  Total: {len(stats)} sectors with price baselines")
     return stats
 
 
@@ -475,95 +519,103 @@ def calculate_risk_batch(
     institution_types = institution_types or {}
     co_bidding_risk = co_bidding_risk or {}
 
+    from datetime import datetime as dt
+
     for c in contracts:
         factors = []
         score = 0.0
+        triggered = set()  # Track which base factors fired (for interaction effects)
 
-        # Factor 1: Single Bidding (15%)
+        # Factor 1: Single Bidding (18%)
         if c.get('is_single_bid'):
             score += WEIGHTS['single_bid']
             factors.append('single_bid')
+            triggered.add('single_bid')
 
-        # Factor 2: Non-Open Procedure (15%)
+        # Factor 2: Non-Open Procedure (18%)
         if c.get('is_direct_award'):
             score += WEIGHTS['non_open']
             factors.append('direct_award')
+            triggered.add('non_open')
         elif c.get('procedure_type_normalized') == 'invitacion':
-            score += WEIGHTS['non_open'] * 0.5  # Partial score for restricted
+            score += WEIGHTS['non_open'] * 0.5
             factors.append('restricted_procedure')
+            triggered.add('non_open')
 
-        # Factor 3: Price Anomaly (15%)
+        # Factor 3: Price Anomaly (18%) — IQR-based when available
         sector_id = c.get('sector_id')
         amount = c.get('amount_mxn') or 0
 
-        # CRITICAL: Amount validation (from data validation rules)
-        # Amounts > 100B MXN are data errors (decimal point mistakes)
+        # CRITICAL: Amount validation
         if amount > MAX_CONTRACT_VALUE:
-            amount = 0.0  # Treat as rejected data error
+            amount = 0.0
             factors.append('data_error:amount_rejected')
         elif amount > FLAG_THRESHOLD:
             factors.append('data_flag:amount_flagged')
 
         if sector_id in sector_stats and amount > 0:
-            threshold = sector_stats[sector_id]['upper_threshold']
-            if amount > threshold:
-                ratio = min(amount / threshold, 3.0)  # Cap at 3x
-                anomaly_score = WEIGHTS['price_anomaly'] * (ratio - 1) / 2
-                score += min(anomaly_score, WEIGHTS['price_anomaly'])
+            ss = sector_stats[sector_id]
+            fence = ss.get('upper_fence', ss.get('median', 1) * 3)
+            if fence > 0 and amount > fence:
+                ratio = amount / fence
+                # Gradient scoring based on how far above the fence
+                if ratio >= 3.0:
+                    score += WEIGHTS['price_anomaly']           # Full 18%
+                elif ratio >= 2.0:
+                    score += WEIGHTS['price_anomaly'] * 0.8     # ~14%
+                elif ratio >= 1.5:
+                    score += WEIGHTS['price_anomaly'] * 0.6     # ~11%
+                else:
+                    score += WEIGHTS['price_anomaly'] * 0.4     # ~7%
                 factors.append('price_anomaly')
+                triggered.add('price_anomaly')
 
-        # Factor 4: Vendor Concentration (10%)
+        # Factor 4: Vendor Concentration (12%)
         vendor_id = c.get('vendor_id')
         if vendor_id in vendor_concentration:
             conc = vendor_concentration[vendor_id]
-            if conc > 0.30:  # >30% = high concentration
+            if conc > 0.30:
                 score += WEIGHTS['vendor_concentration']
                 factors.append('vendor_concentration_high')
+                triggered.add('vendor_concentration')
             elif conc > 0.20:
                 score += WEIGHTS['vendor_concentration'] * 0.7
                 factors.append('vendor_concentration_med')
+                triggered.add('vendor_concentration')
             elif conc > 0.10:
                 score += WEIGHTS['vendor_concentration'] * 0.5
                 factors.append('vendor_concentration_low')
 
-        # Factor 5: Short Advertisement Period (10%)
-        # Days between publication_date and contract_date
+        # Factor 5: Short Advertisement Period (12%)
         pub_date = c.get('publication_date')
         contract_date = c.get('contract_date')
         if pub_date and contract_date and pub_date != '' and contract_date != '':
             try:
-                from datetime import datetime as dt
                 pub = dt.strptime(pub_date, '%Y-%m-%d')
                 con = dt.strptime(contract_date, '%Y-%m-%d')
                 days = (con - pub).days
-                if days >= 0:  # Valid date range
+                if days >= 0:
                     if days < 5:
-                        score += WEIGHTS['short_ad_period']  # 0.10 - extremely short
+                        score += WEIGHTS['short_ad_period']
                         factors.append('short_ad_<5d')
+                        triggered.add('short_ad_period')
                     elif days < 15:
-                        score += WEIGHTS['short_ad_period'] * 0.7  # 0.07 - very short
+                        score += WEIGHTS['short_ad_period'] * 0.7
                         factors.append('short_ad_<15d')
+                        triggered.add('short_ad_period')
                     elif days < 30:
-                        score += WEIGHTS['short_ad_period'] * 0.3  # 0.03 - short
+                        score += WEIGHTS['short_ad_period'] * 0.3
                         factors.append('short_ad_<30d')
             except (ValueError, TypeError):
-                pass  # Invalid date format, skip
+                pass
 
-        # Factor 6: Short Decision Period (10%)
-        # Not available - would need bid_close_date to award_date
-        # Skip (no reliable data)
-
-        # Factor 7: Year-End Timing (5%)
+        # Factor 6: Year-End Timing (7%)
         if c.get('is_year_end'):
             score += WEIGHTS['year_end']
             factors.append('year_end')
+            triggered.add('year_end')
 
-        # Factor 8: Contract Modification (10%)
-        # Not available in current data
-        # Skip
-
-        # Factor 9: Threshold Splitting (5%)
-        # Same vendor + same institution + same day = suspicious
+        # Factor 7: Threshold Splitting (7%)
         vendor_id = c.get('vendor_id')
         institution_id = c.get('institution_id')
         contract_date = c.get('contract_date')
@@ -571,87 +623,88 @@ def calculate_risk_batch(
             key = (vendor_id, institution_id, contract_date)
             same_day_count = splitting_patterns.get(key, 1)
             if same_day_count >= 5:
-                score += WEIGHTS['threshold_split']  # 0.05 - definite splitting
+                score += WEIGHTS['threshold_split']
                 factors.append(f'split_{same_day_count}')
+                triggered.add('threshold_split')
             elif same_day_count >= 3:
-                score += WEIGHTS['threshold_split'] * 0.6  # 0.03 - likely splitting
+                score += WEIGHTS['threshold_split'] * 0.6
                 factors.append(f'split_{same_day_count}')
+                triggered.add('threshold_split')
             elif same_day_count >= 2:
-                score += WEIGHTS['threshold_split'] * 0.3  # 0.015 - possible splitting
+                score += WEIGHTS['threshold_split'] * 0.3
                 factors.append(f'split_{same_day_count}')
 
-        # Factor 10: Network Risk (5%)
-        # Vendors in vendor_groups have network exposure
+        # Factor 8: Network Risk (8%)
         vendor_id = c.get('vendor_id')
         if vendor_id in vendor_network:
             group_info = vendor_network[vendor_id]
             member_count = group_info['member_count']
             if member_count >= 5:
-                score += WEIGHTS['network_risk']  # 0.05 - large network
+                score += WEIGHTS['network_risk']
                 factors.append(f'network_{member_count}')
+                triggered.add('network_risk')
             elif member_count >= 3:
-                score += WEIGHTS['network_risk'] * 0.6  # 0.03 - medium network
+                score += WEIGHTS['network_risk'] * 0.6
                 factors.append(f'network_{member_count}')
+                triggered.add('network_risk')
             elif member_count >= 2:
-                score += WEIGHTS['network_risk'] * 0.3  # 0.015 - small network
+                score += WEIGHTS['network_risk'] * 0.3
                 factors.append(f'network_{member_count}')
 
+        # v3.3: INTERACTION EFFECTS (up to +15%)
+        interaction_bonus = 0.0
+        for (f1, f2), bonus in INTERACTION_EFFECTS.items():
+            if f1 in triggered and f2 in triggered:
+                interaction_bonus += bonus
+                factors.append(f'interaction:{f1}+{f2}')
+        interaction_bonus = min(interaction_bonus, MAX_INTERACTION_BONUS)
+        score += interaction_bonus
+
         # ADDITIONAL: Industry-Sector Mismatch (+3%)
-        # Flags when vendor's verified industry doesn't match contract sector
         vendor_id = c.get('vendor_id')
         if vendor_id in vendor_industries:
             industry_info = vendor_industries[vendor_id]
             expected_sector = industry_info.get('sector_affinity')
             actual_sector = c.get('sector_id')
-            # Check if vendor is working outside their expected sector
             if expected_sector and actual_sector and expected_sector != actual_sector:
                 score += ADDITIONAL_WEIGHTS['industry_mismatch']
                 factors.append(f'industry_mismatch:{industry_info["industry_code"]}->s{actual_sector}')
 
         # ADDITIONAL: Institution Risk Baseline (+3% scaled)
-        # Higher-risk institution types (municipal, state_agency) add more risk
         institution_id = c.get('institution_id')
         if institution_id in institution_types:
             inst_type = institution_types[institution_id]
             baseline = INSTITUTION_RISK_BASELINES.get(inst_type, 0.25)
-            # Scale baseline (0.10-0.35) to contribution (0-100% of 0.03)
-            # Baseline 0.25 = neutral, >0.25 adds risk, <0.25 no additional risk
             if baseline > 0.25:
-                # Scale from 0.25->0.35 to 0->0.03
                 contribution = (baseline - 0.25) / 0.10 * ADDITIONAL_WEIGHTS['institution_baseline']
                 score += min(contribution, ADDITIONAL_WEIGHTS['institution_baseline'])
                 factors.append(f'inst_risk:{inst_type}')
 
         # ADDITIONAL (v3.1): Price Hypothesis (+5% max)
-        # Adds risk based on high-confidence price hypotheses from IQR analysis
-        # Tiered: very_high (>=0.85) = +5%, high (0.65-0.85) = +3%, else no bonus
         price_hyp_conf = c.get('price_hypothesis_confidence')
         price_hyp_type = c.get('price_hypothesis_type')
         if price_hyp_conf is not None:
-            if price_hyp_conf >= 0.85:  # very_high confidence
-                score += ADDITIONAL_WEIGHTS['price_hypothesis']  # +5%
+            if price_hyp_conf >= 0.85:
+                score += ADDITIONAL_WEIGHTS['price_hypothesis']
                 factors.append(f'price_hyp:{price_hyp_type}:{price_hyp_conf:.2f}')
-            elif price_hyp_conf >= 0.65:  # high confidence
-                score += ADDITIONAL_WEIGHTS['price_hypothesis'] * 0.6  # +3%
+            elif price_hyp_conf >= 0.65:
+                score += ADDITIONAL_WEIGHTS['price_hypothesis'] * 0.6
                 factors.append(f'price_hyp:{price_hyp_type}:{price_hyp_conf:.2f}')
-            # Below 0.65: no bonus (medium/low confidence)
 
         # ADDITIONAL (v3.2): Co-Bidding Risk (+5% max)
-        # Vendors in suspicious co-bidding patterns (potential bid-rigging)
-        # Tiered: >= 80% co-bid rate = +5%, 50-80% = +3%
         vendor_id = c.get('vendor_id')
         if vendor_id in co_bidding_risk:
             co_bid_info = co_bidding_risk[vendor_id]
             max_rate = co_bid_info['max_rate']
             partner_count = len(co_bid_info.get('partners', []))
-            if max_rate >= 0.80:  # High co-bidding risk
-                score += ADDITIONAL_WEIGHTS['co_bidding']  # +5%
+            if max_rate >= 0.80:
+                score += ADDITIONAL_WEIGHTS['co_bidding']
                 factors.append(f'co_bid_high:{max_rate:.0%}:{partner_count}p')
-            elif max_rate >= 0.50:  # Medium co-bidding risk
-                score += ADDITIONAL_WEIGHTS['co_bidding'] * 0.6  # +3%
+            elif max_rate >= 0.50:
+                score += ADDITIONAL_WEIGHTS['co_bidding'] * 0.6
                 factors.append(f'co_bid_med:{max_rate:.0%}:{partner_count}p')
 
-        # Determine risk level (v3.2: lowered thresholds)
+        # Determine risk level
         if score >= RISK_THRESHOLDS['critical']:
             risk_level = 'critical'
         elif score >= RISK_THRESHOLDS['high']:
@@ -674,7 +727,7 @@ def calculate_risk_batch(
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='RUBLI Risk Scoring: 10-Factor Model v3.1'
+        description='RUBLI Risk Scoring: 8-Factor Model v3.3 (Unified)'
     )
     parser.add_argument(
         '--batch-size',
@@ -685,8 +738,8 @@ def main():
     parser.add_argument(
         '--version',
         type=str,
-        default='v3.2',
-        help='Model version (default: v3.2)'
+        default='v3.3',
+        help='Model version (default: v3.3)'
     )
     args = parser.parse_args()
 
@@ -694,12 +747,13 @@ def main():
     print(f"RUBLI Risk Scoring: IMF CRI Model {args.version}")
     print("=" * 60)
     print(f"\nModel version: {args.version}")
-    if args.version >= 'v3.2':
-        print("  - Co-bidding risk integration: ENABLED")
-        print(f"  - Adjusted thresholds: critical >= {RISK_THRESHOLDS['critical']}, high >= {RISK_THRESHOLDS['high']}")
-    if args.version >= 'v3.1':
-        print("  - Price hypothesis integration: ENABLED")
-    print(f"  - Additional factors: industry_mismatch, institution_baseline, co_bidding")
+    print("  - 8 base factors (100% weight, no wasted stubs)")
+    print("  - IQR-based price anomaly with sector baselines")
+    print("  - Interaction effects: up to +15% bonus")
+    print("  - Co-bidding risk integration: ENABLED")
+    print(f"  - Thresholds: critical >= {RISK_THRESHOLDS['critical']}, high >= {RISK_THRESHOLDS['high']}")
+    print("  - Price hypothesis integration: ENABLED")
+    print(f"  - Bonus factors: industry_mismatch, institution_baseline, co_bidding, price_hypothesis")
 
     if not DB_PATH.exists():
         print(f"ERROR: Database not found: {DB_PATH}")

@@ -94,8 +94,11 @@ export function DataQuality() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Data Quality</h2>
-          <p className="text-sm text-text-muted">
+          <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+            <Database className="h-4.5 w-4.5 text-accent" />
+            Data Quality
+          </h2>
+          <p className="text-xs text-text-muted mt-0.5">
             Quality metrics for {formatNumber(data.total_contracts)} contracts
           </p>
         </div>
@@ -385,12 +388,12 @@ function StructureQualityChart({ data }: { data: StructureQuality[] }) {
     <div className="h-[250px]">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} layout="vertical">
-          <CartesianGrid strokeDasharray="3 3" stroke="#2e2e2e" horizontal={false} />
-          <XAxis type="number" domain={[0, 100]} tick={{ fill: '#a3a3a3', fontSize: 11 }} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} horizontal={false} />
+          <XAxis type="number" domain={[0, 100]} tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
           <YAxis
             type="category"
             dataKey="structure"
-            tick={{ fill: '#a3a3a3', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
             width={40}
             tickFormatter={(v) => `Period ${v}`}
           />

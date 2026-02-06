@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 
 from ..dependencies import get_db
+from ..config.constants import MAX_CONTRACT_VALUE
 from ..config.temporal_events import TEMPORAL_EVENTS, TemporalEventData
 from ..helpers.analysis_helpers import (
     build_where_clause,
@@ -25,9 +26,6 @@ from ..helpers.analysis_helpers import (
 )
 
 logger = logging.getLogger(__name__)
-
-# Amount validation threshold
-MAX_CONTRACT_VALUE = 100_000_000_000  # 100B MXN
 
 router = APIRouter(prefix="/analysis", tags=["analysis"])
 
@@ -2005,4 +2003,169 @@ async def get_institution_period_comparison(
         raise
     except sqlite3.Error as e:
         logger.error(f"Database error in get_institution_period_comparison: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
+# =============================================================================
+# ANOMALIES ENDPOINT (FAST VERSION)
+# =============================================================================
+
+class AnomalyItem(BaseModel):
+    """A detected anomaly in procurement data."""
+    anomaly_type: str = Field(..., description="Type: price_outlier, timing_cluster, concentration, etc.")
+    severity: str = Field(..., description="Severity: low, medium, high, critical")
+    description: str
+    affected_contracts: int
+    affected_value_mxn: float
+    details: dict = Field(default_factory=dict)
+
+
+class AnomalyListResponse(BaseModel):
+    """List of detected anomalies."""
+    data: List[AnomalyItem]
+    total: int
+    filters_applied: dict = Field(default_factory=dict)
+
+
+# Simple cache for anomalies
+_anomalies_cache: Dict[str, Any] = {}
+_anomalies_cache_time: Optional[datetime] = None
+ANOMALIES_CACHE_TTL = 300  # 5 minutes
+
+
+@router.get("/anomalies", response_model=AnomalyListResponse)
+async def get_anomalies(
+    severity: Optional[str] = Query(None, description="Filter by minimum severity: low, medium, high, critical"),
+):
+    """
+    Get detected anomalies in procurement data (fast cached version).
+
+    Returns precomputed anomalies for quick dashboard loading.
+    For detailed anomaly detection with filters, use /sectors/analysis/anomalies.
+    """
+    global _anomalies_cache, _anomalies_cache_time
+
+    cache_key = f"anomalies_{severity or 'all'}"
+
+    # Check cache first - return immediately if valid
+    if _anomalies_cache_time and (datetime.now() - _anomalies_cache_time).total_seconds() < ANOMALIES_CACHE_TTL:
+        if cache_key in _anomalies_cache:
+            return _anomalies_cache[cache_key]
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            anomalies = []
+
+            # 1. Use precomputed overview stats for summary anomalies
+            cursor.execute("""
+                SELECT stat_value FROM precomputed_stats WHERE stat_key = 'overview'
+            """)
+            overview_row = cursor.fetchone()
+            if overview_row:
+                overview = json.loads(overview_row['stat_value'])
+                high_risk_pct = overview.get('high_risk_pct', 0)
+                if high_risk_pct > 0.003:  # More than 0.3% high risk
+                    anomalies.append(AnomalyItem(
+                        anomaly_type="high_risk_concentration",
+                        severity="high",
+                        description=f"{overview.get('high_risk_contracts', 0):,} contracts flagged as high/critical risk ({high_risk_pct*100:.2f}%)",
+                        affected_contracts=overview.get('high_risk_contracts', 0),
+                        affected_value_mxn=overview.get('total_value_mxn', 0) * high_risk_pct,
+                        details={
+                            "high_risk_pct": round(high_risk_pct, 4),
+                            "total_contracts": overview.get('total_contracts', 0),
+                            "source": "precomputed_overview"
+                        }
+                    ))
+
+                # Direct award concentration
+                direct_award_pct = overview.get('direct_award_pct', 0)
+                if direct_award_pct > 0.7:  # More than 70% direct awards
+                    anomalies.append(AnomalyItem(
+                        anomaly_type="direct_award_concentration",
+                        severity="medium",
+                        description=f"{direct_award_pct*100:.1f}% of contracts awarded directly (no competition)",
+                        affected_contracts=int(overview.get('total_contracts', 0) * direct_award_pct),
+                        affected_value_mxn=overview.get('total_value_mxn', 0) * direct_award_pct,
+                        details={
+                            "direct_award_pct": round(direct_award_pct, 3),
+                            "source": "precomputed_overview"
+                        }
+                    ))
+
+            # 2. Sector-level anomalies from precomputed stats
+            cursor.execute("""
+                SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sectors'
+            """)
+            sectors_row = cursor.fetchone()
+            if sectors_row:
+                sectors = json.loads(sectors_row['stat_value'])
+                for sector in sectors[:5]:  # Top 5 sectors by risk
+                    high_risk = (sector.get('high_risk_count', 0) or 0) + (sector.get('critical_risk_count', 0) or 0)
+                    total = sector.get('total_contracts', 1)
+                    if high_risk > 100:
+                        anomalies.append(AnomalyItem(
+                            anomaly_type="sector_risk",
+                            severity="high" if high_risk > 500 else "medium",
+                            description=f"{sector.get('name', 'Unknown')}: {high_risk:,} high-risk contracts ({high_risk/total*100:.1f}%)",
+                            affected_contracts=high_risk,
+                            affected_value_mxn=sector.get('total_value_mxn', 0) * (high_risk / total),
+                            details={
+                                "sector_id": sector.get('id'),
+                                "sector_name": sector.get('name'),
+                                "avg_risk_score": sector.get('avg_risk_score', 0),
+                                "source": "precomputed_sectors"
+                            }
+                        ))
+
+            # 3. Year-end spike check using precomputed stats
+            cursor.execute("""
+                SELECT stat_value FROM precomputed_stats WHERE stat_key = 'yearly_trends'
+            """)
+            yearly_row = cursor.fetchone()
+            if yearly_row:
+                yearly_trends = json.loads(yearly_row['stat_value'])
+                # Check recent years for significant activity
+                for year_data in yearly_trends[-3:]:  # Last 3 years
+                    year = year_data.get('year', 0)
+                    contracts = year_data.get('contracts', 0)
+                    if year >= 2020 and contracts > 100000:
+                        anomalies.append(AnomalyItem(
+                            anomaly_type="year_activity",
+                            severity="low",
+                            description=f"{year}: {contracts:,} contracts worth ${year_data.get('value_mxn', 0)/1e9:.1f}B MXN",
+                            affected_contracts=contracts,
+                            affected_value_mxn=year_data.get('value_mxn', 0),
+                            details={
+                                "year": year,
+                                "source": "precomputed_trends"
+                            }
+                        ))
+
+            # Filter by severity if requested
+            if severity:
+                severity_order = {"critical": 4, "high": 3, "medium": 2, "low": 1}
+                min_level = severity_order.get(severity.lower(), 0)
+                anomalies = [a for a in anomalies if severity_order.get(a.severity, 0) >= min_level]
+
+            # Sort by severity
+            severity_sort = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+            anomalies.sort(key=lambda x: severity_sort.get(x.severity, 4))
+
+            response = AnomalyListResponse(
+                data=anomalies[:20],  # Limit to 20 for performance
+                total=len(anomalies),
+                filters_applied={"severity": severity} if severity else {}
+            )
+
+            # Update cache
+            _anomalies_cache[cache_key] = response
+            _anomalies_cache_time = datetime.now()
+
+            return response
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error in get_anomalies: {e}")
         raise HTTPException(status_code=500, detail="Database error occurred")

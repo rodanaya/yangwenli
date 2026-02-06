@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ChartSkeleton } from '@/components/LoadingSkeleton'
 import { RiskBadge } from '@/components/ui/badge'
 import { formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
 import { analysisApi, vendorApi } from '@/api/client'
@@ -23,6 +24,8 @@ import {
   BarChart3,
   Activity,
   Layers,
+  Crosshair,
+  Radar,
 } from 'lucide-react'
 import {
   PieChart,
@@ -48,7 +51,7 @@ export function Dashboard() {
   const { data: fastDashboard, isLoading: dashboardLoading } = useQuery({
     queryKey: ['dashboard', 'fast'],
     queryFn: () => analysisApi.getFastDashboard(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   })
 
   // Transform fast dashboard data into expected formats
@@ -72,11 +75,9 @@ export function Dashboard() {
         critical_risk_count: s.critical_risk_count,
         direct_award_count: s.direct_award_count,
         single_bid_count: s.single_bid_count,
-        // Keep as decimals (0-1 scale) - formatPercent() will convert to display
         direct_award_pct: (s.direct_award_count || 0) / total,
         single_bid_pct: (s.single_bid_count || 0) / total,
         high_risk_pct: ((s.high_risk_count || 0) + (s.critical_risk_count || 0)) / total,
-        // Add missing required fields with defaults
         color: '',
         total_institutions: 0,
         avg_contract_value: s.total_value_mxn / total,
@@ -110,11 +111,9 @@ export function Dashboard() {
   })
 
   // Transform trends data for stacked area chart
-  // Use actual risk distribution percentages instead of hardcoded estimates
   const riskTrendsData = useMemo(() => {
     if (!trends?.data || !riskDist?.data) return []
 
-    // Calculate actual distribution percentages from riskDist data
     const totalCount = riskDist.data.reduce((sum, d) => sum + (d.count || 0), 0)
     const distribution = {
       low: riskDist.data.find((d) => d.risk_level === 'low')?.count || 0,
@@ -141,7 +140,6 @@ export function Dashboard() {
   }, [trends, riskDist])
 
   // Transform sectors data for procedure breakdown
-  // Values are in 0-1 decimal scale
   const procedureData = useMemo(() => {
     if (!sectors?.data) return []
     return sectors.data.map((s) => {
@@ -158,13 +156,11 @@ export function Dashboard() {
   }, [sectors])
 
   // Transform sectors data for heatmap
-  // IMPORTANT: Normalize each metric to 0-1 scale for comparable color coding
   const heatmapData = useMemo(() => {
     if (!sectors?.data) return { data: [], rows: [], columns: [] }
     const metrics = ['Direct Award %', 'Single Bid %', 'Avg Risk Score']
-    const rows = sectors.data.slice(0, 10).map((s) => getSectorNameEN(s.sector_code)) // Limit to top 10 for readability
+    const rows = sectors.data.slice(0, 10).map((s) => getSectorNameEN(s.sector_code))
 
-    // Calculate min/max for each metric to normalize colors
     const daValues = sectors.data.map((s) => s.direct_award_pct)
     const sbValues = sectors.data.map((s) => s.single_bid_pct)
     const riskValues = sectors.data.map((s) => s.avg_risk_score)
@@ -175,7 +171,6 @@ export function Dashboard() {
       'Avg Risk Score': { min: Math.min(...riskValues), max: Math.max(...riskValues) },
     }
 
-    // Normalize values within each metric's range for color consistency
     const normalize = (value: number, metric: string) => {
       const range = ranges[metric as keyof typeof ranges]
       if (range.max === range.min) return 0.5
@@ -186,75 +181,59 @@ export function Dashboard() {
     const data = sectorsSubset.flatMap((s) => {
       const sectorNameEN = getSectorNameEN(s.sector_code)
       return [
-        {
-          row: sectorNameEN,
-          col: 'Direct Award %',
-          value: normalize(s.direct_award_pct, 'Direct Award %'),
-          rawValue: s.direct_award_pct,
-        },
-        {
-          row: sectorNameEN,
-          col: 'Single Bid %',
-          value: normalize(s.single_bid_pct, 'Single Bid %'),
-          rawValue: s.single_bid_pct,
-        },
-        {
-          row: sectorNameEN,
-          col: 'Avg Risk Score',
-          value: normalize(s.avg_risk_score, 'Avg Risk Score'),
-          rawValue: s.avg_risk_score,
-        },
+        { row: sectorNameEN, col: 'Direct Award %', value: normalize(s.direct_award_pct, 'Direct Award %'), rawValue: s.direct_award_pct },
+        { row: sectorNameEN, col: 'Single Bid %', value: normalize(s.single_bid_pct, 'Single Bid %'), rawValue: s.single_bid_pct },
+        { row: sectorNameEN, col: 'Avg Risk Score', value: normalize(s.avg_risk_score, 'Avg Risk Score'), rawValue: s.avg_risk_score },
       ]
     })
     return { data, rows, columns: metrics, ranges }
   }, [sectors])
 
-  const handleVendorClick = (vendorId: number) => {
-    navigate(`/vendors/${vendorId}`)
-  }
-
+  const handleVendorClick = (vendorId: number) => navigate(`/vendors/${vendorId}`)
   const handleSectorClick = (sectorCode: string) => {
     const sector = sectors?.data.find((s) => s.sector_code === sectorCode)
-    if (sector) {
-      navigate(`/sectors/${sector.sector_id}`)
-    }
+    if (sector) navigate(`/sectors/${sector.sector_id}`)
   }
+  const handleInvestigateAnomaly = () => navigate('/analysis/risk')
 
-  const handleInvestigateAnomaly = () => {
-    navigate('/analysis/risk')
-  }
-
-  // Format the cached_at timestamp
   const lastUpdated = fastDashboard?.cached_at
     ? new Date(fastDashboard.cached_at).toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
+        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
       })
     : null
 
   return (
-    <div className="space-y-6">
-      {/* Last Updated Indicator */}
-      {lastUpdated && (
-        <div className="flex items-center justify-end text-xs text-text-muted">
-          <Activity className="h-3 w-3 mr-1" aria-hidden="true" />
-          <span>Data as of {lastUpdated}</span>
+    <div className="space-y-5">
+      {/* Command Center Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-text-primary tracking-tight flex items-center gap-2">
+            <Crosshair className="h-5 w-5 text-accent" />
+            Command Center
+          </h1>
+          <p className="text-xs text-text-muted mt-0.5">
+            Real-time procurement intelligence overview
+          </p>
         </div>
-      )}
+        {lastUpdated && (
+          <div className="flex items-center gap-1.5 text-[10px] text-text-muted font-[var(--font-family-mono)]">
+            <Activity className="h-3 w-3 text-signal-live" aria-hidden="true" />
+            <span>SYNCED {lastUpdated.toUpperCase()}</span>
+          </div>
+        )}
+      </div>
 
-      {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* KPI Cards — Intelligence metrics */}
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4 stagger-animate">
         <KPICard
-          title="Total Contracts"
+          title="TOTAL CONTRACTS"
           value={overview?.total_contracts}
           icon={FileText}
           loading={overviewLoading}
           subtitle={`${overview?.years_covered || 0} years of data`}
         />
         <KPICard
-          title="Total Value"
+          title="TOTAL VALUE"
           value={overview?.total_value_mxn}
           icon={DollarSign}
           loading={overviewLoading}
@@ -262,56 +241,51 @@ export function Dashboard() {
           subtitle="Mexican Pesos (MXN)"
         />
         <KPICard
-          title="Active Vendors"
+          title="ACTIVE VENDORS"
           value={overview?.total_vendors}
           icon={Users}
           loading={overviewLoading}
           subtitle="Unique suppliers"
         />
         <KPICard
-          title="High Risk"
+          title="HIGH RISK"
           value={overview?.high_risk_pct}
           icon={AlertTriangle}
           loading={overviewLoading}
           format="percent"
-          subtitle={`${formatNumber(overview?.high_risk_contracts || 0)} contracts`}
+          subtitle={`${formatNumber(overview?.high_risk_contracts || 0)} flagged`}
           variant="warning"
         />
       </div>
 
-      {/* Charts Row 1: Sector Distribution & Risk Distribution */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        {/* Sector Distribution */}
-        <Card className="hover-lift">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
+      {/* Row 1: Sector Distribution & Risk Distribution */}
+      <div className="grid gap-3 lg:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Building2 className="h-3.5 w-3.5 text-accent" />
               Value by Sector
             </CardTitle>
           </CardHeader>
           <CardContent>
             {sectorsLoading ? (
-              <Skeleton className="h-[250px]" />
+              <ChartSkeleton height={250} type="pie" />
             ) : (
-              <SectorPieChart
-                data={sectors?.data || []}
-                onSectorClick={(code) => handleSectorClick(code)}
-              />
+              <SectorPieChart data={sectors?.data || []} onSectorClick={handleSectorClick} />
             )}
           </CardContent>
         </Card>
 
-        {/* Risk Distribution */}
-        <Card className="hover-lift">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" />
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Radar className="h-3.5 w-3.5 text-accent" />
               Risk Distribution
             </CardTitle>
           </CardHeader>
           <CardContent>
             {riskLoading ? (
-              <Skeleton className="h-[250px]" />
+              <ChartSkeleton height={250} type="bar" />
             ) : (
               <RiskBarChart data={riskDist?.data || []} />
             )}
@@ -319,22 +293,21 @@ export function Dashboard() {
         </Card>
       </div>
 
-      {/* Charts Row 2: Risk Trends & Anomalies */}
-      <div className="grid gap-4 lg:grid-cols-3">
-        {/* Risk Trend Timeline - NEW */}
-        <Card className="lg:col-span-2 hover-lift">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-4 w-4" />
+      {/* Row 2: Risk Trends & Anomalies */}
+      <div className="grid gap-3 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Activity className="h-3.5 w-3.5 text-accent" />
               Risk Trend Over Time
             </CardTitle>
-            <p className="text-xs text-text-muted mt-1">
-              Contract distribution by risk level (click year to view contracts)
+            <p className="text-[10px] text-text-muted mt-0.5">
+              Contract distribution by risk level
             </p>
           </CardHeader>
           <CardContent>
             {trendsLoading ? (
-              <Skeleton className="h-[280px]" />
+              <ChartSkeleton height={280} type="area" />
             ) : (
               <Suspense fallback={<ChartSkeleton height={280} />}>
                 <StackedAreaChart
@@ -348,73 +321,62 @@ export function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Top Anomalies Alert Panel - NEW */}
-        <Card className="hover-lift">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-risk-high" />
-              Top Anomalies
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <AlertTriangle className="h-3.5 w-3.5 text-risk-high" />
+              Active Alerts
             </CardTitle>
           </CardHeader>
           <CardContent>
             {anomaliesLoading ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {[...Array(3)].map((_, i) => (
-                  <Skeleton key={i} className="h-20" />
+                  <Skeleton key={i} className="h-16" />
                 ))}
               </div>
             ) : (
-              <Suspense fallback={<div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20" />)}</div>}>
-                <AlertPanel
-                  anomalies={anomalies?.data || []}
-                  maxItems={4}
-                  onInvestigate={handleInvestigateAnomaly}
-                />
+              <Suspense fallback={<div className="space-y-2">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-16" />)}</div>}>
+                <AlertPanel anomalies={anomalies?.data || []} maxItems={4} onInvestigate={handleInvestigateAnomaly} />
               </Suspense>
             )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts Row 3: Procedure Breakdown & Sector Heatmap */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        {/* Procedure Type Breakdown - NEW */}
-        <Card className="hover-lift">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
+      {/* Row 3: Procedure Breakdown & Sector Heatmap */}
+      <div className="grid gap-3 lg:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <BarChart3 className="h-3.5 w-3.5 text-accent" />
               Competition by Sector
             </CardTitle>
           </CardHeader>
           <CardContent>
             {sectorsLoading ? (
-              <Skeleton className="h-[320px]" />
+              <ChartSkeleton height={320} type="bar" />
             ) : (
               <Suspense fallback={<ChartSkeleton height={320} />}>
-                <ProcedureBreakdown
-                  data={procedureData}
-                  height={320}
-                  onSectorClick={handleSectorClick}
-                />
+                <ProcedureBreakdown data={procedureData} height={320} onSectorClick={handleSectorClick} />
               </Suspense>
             )}
           </CardContent>
         </Card>
 
-        {/* Sector Risk Heatmap - NEW */}
-        <Card className="hover-lift">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Layers className="h-4 w-4" />
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Layers className="h-3.5 w-3.5 text-accent" />
               Sector Risk Matrix
             </CardTitle>
-            <p className="text-xs text-text-muted mt-1">
-              Color intensity shows relative ranking within each metric (green=best, red=worst)
+            <p className="text-[10px] text-text-muted mt-0.5">
+              Relative ranking within each metric
             </p>
           </CardHeader>
           <CardContent>
             {sectorsLoading ? (
-              <Skeleton className="h-[320px]" />
+              <ChartSkeleton height={320} type="bar" />
             ) : (
               <Suspense fallback={<ChartSkeleton height={320} />}>
                 <Heatmap
@@ -423,18 +385,9 @@ export function Dashboard() {
                   columns={heatmapData.columns}
                   height={320}
                   valueFormatter={(v, row, col) => {
-                    // Find the raw value for this cell with proper type guard
                     const cell = heatmapData.data.find((d) => d.row === row && d.col === col)
-                    const rawValue =
-                      cell && 'rawValue' in cell && typeof cell.rawValue === 'number'
-                        ? cell.rawValue
-                        : v
-                    // Format based on metric type - all values are now 0-1 scale
-                    if (col === 'Avg Risk Score') {
-                      // Risk scores: 0.27 -> "27.0"
-                      return (rawValue * 100).toFixed(1)
-                    }
-                    // Percentages: 0.65 -> "65.0%"
+                    const rawValue = cell && 'rawValue' in cell && typeof cell.rawValue === 'number' ? cell.rawValue : v
+                    if (col === 'Avg Risk Score') return (rawValue * 100).toFixed(1)
                     return `${(rawValue * 100).toFixed(1)}%`
                   }}
                 />
@@ -444,52 +397,47 @@ export function Dashboard() {
         </Card>
       </div>
 
-      {/* Charts Row 4: Trends and Top Vendors */}
-      <div className="grid gap-4 lg:grid-cols-3">
-        {/* Year-over-Year Trends */}
-        <Card className="lg:col-span-2 hover-lift">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
+      {/* Row 4: Trends and Top Vendors */}
+      <div className="grid gap-3 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <TrendingUp className="h-3.5 w-3.5 text-accent" />
               Contract Value Trends
             </CardTitle>
           </CardHeader>
           <CardContent>
             {trendsLoading ? (
-              <Skeleton className="h-[250px]" />
+              <ChartSkeleton height={250} type="line" />
             ) : (
               <TrendsLineChart data={trends?.data || []} />
             )}
           </CardContent>
         </Card>
 
-        {/* Top Vendors */}
-        <Card className="hover-lift">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Top Vendors by Value
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Users className="h-3.5 w-3.5 text-accent" />
+              Top Vendors
             </CardTitle>
           </CardHeader>
           <CardContent>
             {vendorsLoading ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {[...Array(5)].map((_, i) => (
-                  <Skeleton key={i} className="h-12" />
+                  <Skeleton key={i} className="h-11" />
                 ))}
               </div>
             ) : (
-              <TopVendorsList
-                data={topVendors?.data || []}
-                onVendorClick={handleVendorClick}
-              />
+              <TopVendorsList data={topVendors?.data || []} onVendorClick={handleVendorClick} />
             )}
           </CardContent>
         </Card>
       </div>
 
       {/* Quick Stats Row */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-3">
         <StatCard
           title="Direct Awards"
           value={overview?.direct_award_pct}
@@ -523,11 +471,6 @@ export function Dashboard() {
 // Sub-components
 // ============================================================================
 
-// Chart loading fallback
-const ChartSkeleton = ({ height = 250 }: { height?: number }) => (
-  <Skeleton className={`h-[${height}px]`} style={{ height }} />
-)
-
 interface KPICardProps {
   title: string
   value?: number
@@ -536,7 +479,7 @@ interface KPICardProps {
   format?: 'number' | 'currency' | 'percent'
   subtitle?: string
   variant?: 'default' | 'warning'
-  trend?: number  // Percentage change (positive = up, negative = down)
+  trend?: number
   trendLabel?: string
 }
 
@@ -570,36 +513,34 @@ const KPICard = memo(function KPICard({
     : ''
 
   return (
-    <Card className={`hover-lift ${variant === 'warning' ? 'border-risk-high/30' : ''}`}>
+    <Card className={variant === 'warning' ? 'border-risk-high/20' : ''}>
       <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <p className="text-xs font-medium text-text-muted">{title}</p>
+        <div className="flex items-start justify-between">
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-text-muted font-[var(--font-family-mono)]">{title}</p>
             {loading ? (
               <Skeleton className="h-7 w-24" />
             ) : (
-              <div className="flex items-center gap-2">
-                <p className="text-2xl font-bold tabular-nums text-text-primary">{formattedValue}</p>
+              <div className="flex items-baseline gap-2">
+                <p className="text-2xl font-bold tabular-nums text-text-primary tracking-tight">{formattedValue}</p>
                 {trend !== undefined && (
-                  <span className={`flex items-center text-xs font-medium ${trendColor}`} aria-label={trendLabel || `${trend > 0 ? 'Up' : 'Down'} ${Math.abs(trend).toFixed(1)}%`}>
-                    {trend > 0 ? (
-                      <TrendingUp className="h-3 w-3 mr-0.5" aria-hidden="true" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3 mr-0.5" aria-hidden="true" />
-                    )}
-                    {Math.abs(trend).toFixed(1)}%
+                  <span
+                    className={`flex items-center text-[10px] font-semibold ${trendColor}`}
+                    aria-label={trendLabel || `${trend > 0 ? 'Up' : 'Down'} ${Math.abs(trend).toFixed(1)}%`}
+                  >
+                    {trend > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                   </span>
                 )}
               </div>
             )}
-            {subtitle && <p className="text-xs text-text-muted">{subtitle}</p>}
+            {subtitle && <p className="text-[11px] text-text-muted">{subtitle}</p>}
           </div>
-          <div
-            className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-              variant === 'warning' ? 'bg-risk-high/10 text-risk-high' : 'bg-accent/10 text-accent'
-            }`}
-          >
-            <Icon className="h-5 w-5" aria-hidden="true" />
+          <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+            variant === 'warning'
+              ? 'bg-risk-high/10 text-risk-high'
+              : 'bg-accent/10 text-accent'
+          }`}>
+            <Icon className="h-4 w-4" aria-hidden="true" />
           </div>
         </div>
       </CardContent>
@@ -631,28 +572,24 @@ const StatCard = memo(function StatCard({
   )
 
   return (
-    <Card className="hover-lift">
-      <CardContent className="p-4">
+    <Card>
+      <CardContent className="p-3.5">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-text-muted">{title}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-text-muted font-[var(--font-family-mono)]">{title}</p>
             {loading ? (
-              <Skeleton className="h-6 w-16 mt-1" />
+              <Skeleton className="h-5 w-14 mt-1" />
             ) : (
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-xl font-bold tabular-nums">{formattedValue}</span>
+              <div className="flex items-center gap-1.5 mt-1">
+                <span className="text-lg font-bold tabular-nums">{formattedValue}</span>
                 {trend && (
                   <span className={trend === 'up' ? 'text-risk-high' : 'text-risk-low'}>
-                    {trend === 'up' ? (
-                      <TrendingUp className="h-4 w-4" />
-                    ) : (
-                      <TrendingDown className="h-4 w-4" />
-                    )}
+                    {trend === 'up' ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                   </span>
                 )}
               </div>
             )}
-            <p className="text-xs text-text-muted mt-1">{description}</p>
+            <p className="text-[10px] text-text-muted mt-0.5">{description}</p>
           </div>
         </div>
       </CardContent>
@@ -682,12 +619,6 @@ const SectorPieChart = memo(function SectorPieChart({
     [data]
   )
 
-  const handleClick = (entry: { code: string }) => {
-    if (onSectorClick) {
-      onSectorClick(entry.code)
-    }
-  }
-
   return (
     <div className="h-[250px]">
       <ResponsiveContainer width="100%" height="100%">
@@ -698,11 +629,12 @@ const SectorPieChart = memo(function SectorPieChart({
             nameKey="name"
             cx="50%"
             cy="50%"
-            innerRadius={60}
-            outerRadius={90}
+            innerRadius={55}
+            outerRadius={85}
             paddingAngle={2}
-            onClick={(_, index) => handleClick(chartData[index])}
+            onClick={(_, index) => onSectorClick?.(chartData[index].code)}
             style={{ cursor: 'pointer' }}
+            stroke="none"
           >
             {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />
@@ -714,8 +646,8 @@ const SectorPieChart = memo(function SectorPieChart({
                 const data = payload[0].payload
                 return (
                   <div className="chart-tooltip">
-                    <p className="font-medium">{data.name}</p>
-                    <p className="text-sm text-text-muted">{formatCompactMXN(data.value)}</p>
+                    <p className="font-medium text-xs">{data.name}</p>
+                    <p className="text-[11px] text-text-muted tabular-nums">{formatCompactMXN(data.value)}</p>
                   </div>
                 )
               }
@@ -724,14 +656,14 @@ const SectorPieChart = memo(function SectorPieChart({
           />
         </PieChart>
       </ResponsiveContainer>
-      <div className="mt-2 flex flex-wrap justify-center gap-2">
-        {chartData.slice(0, 4).map((item) => (
+      <div className="mt-1 flex flex-wrap justify-center gap-x-3 gap-y-1">
+        {chartData.slice(0, 6).map((item) => (
           <button
             key={item.name}
-            className="flex items-center gap-1 text-xs interactive rounded px-1.5 py-0.5"
+            className="flex items-center gap-1 text-[10px] interactive rounded px-1 py-0.5"
             onClick={() => onSectorClick?.(item.code)}
           >
-            <div className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
+            <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: item.color }} />
             <span className="text-text-muted">{item.name}</span>
           </button>
         ))}
@@ -756,21 +688,17 @@ const RiskBarChart = memo(function RiskBarChart({ data }: { data: RiskDistributi
     <div className="h-[250px]">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} layout="vertical">
-          <CartesianGrid strokeDasharray="3 3" stroke="#2e2e2e" horizontal={false} />
-          <XAxis
-            type="number"
-            tick={{ fill: '#a3a3a3', fontSize: 12 }}
-            tickFormatter={(v) => formatNumber(v)}
-          />
-          <YAxis type="category" dataKey="level" tick={{ fill: '#a3a3a3', fontSize: 12 }} width={60} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" horizontal={false} opacity={0.3} />
+          <XAxis type="number" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} tickFormatter={(v) => formatNumber(v)} />
+          <YAxis type="category" dataKey="level" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} width={55} />
           <RechartsTooltip
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
                 const data = payload[0].payload
                 return (
                   <div className="chart-tooltip">
-                    <p className="font-medium">{data.level}</p>
-                    <p className="text-sm text-text-muted">
+                    <p className="font-medium text-xs">{data.level}</p>
+                    <p className="text-[11px] text-text-muted tabular-nums">
                       {formatNumber(data.count)} ({formatPercent(data.percentage / 100)})
                     </p>
                   </div>
@@ -779,7 +707,7 @@ const RiskBarChart = memo(function RiskBarChart({ data }: { data: RiskDistributi
               return null
             }}
           />
-          <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+          <Bar dataKey="count" radius={[0, 3, 3, 0]}>
             {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
@@ -801,7 +729,7 @@ const TrendsLineChart = memo(function TrendsLineChart({
         .filter((d) => d.year >= 2010)
         .map((d) => ({
           year: d.year,
-          value: d.value_mxn / 1_000_000_000, // Convert to billions
+          value: d.value_mxn / 1_000_000_000,
           contracts: d.contracts,
         })),
     [data]
@@ -811,27 +739,27 @@ const TrendsLineChart = memo(function TrendsLineChart({
     <div className="h-[250px]">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#2e2e2e" />
-          <XAxis dataKey="year" tick={{ fill: '#a3a3a3', fontSize: 12 }} />
-          <YAxis tick={{ fill: '#a3a3a3', fontSize: 12 }} tickFormatter={(v) => `${v}B`} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
+          <XAxis dataKey="year" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
+          <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} tickFormatter={(v) => `${v}B`} />
           <RechartsTooltip
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
                 const data = payload[0].payload
                 return (
                   <div className="chart-tooltip">
-                    <p className="font-medium">{data.year}</p>
-                    <p className="text-sm text-text-muted">
+                    <p className="font-medium text-xs">{data.year}</p>
+                    <p className="text-[11px] text-text-muted tabular-nums">
                       Value: {formatCompactMXN(data.value * 1_000_000_000)}
                     </p>
-                    <p className="text-sm text-text-muted">Contracts: {formatNumber(data.contracts)}</p>
+                    <p className="text-[11px] text-text-muted tabular-nums">Contracts: {formatNumber(data.contracts)}</p>
                   </div>
                 )
               }
               return null
             }}
           />
-          <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} dot={false} />
+          <Line type="monotone" dataKey="value" stroke="var(--color-accent)" strokeWidth={2} dot={false} />
         </LineChart>
       </ResponsiveContainer>
     </div>
@@ -846,24 +774,24 @@ const TopVendorsList = memo(function TopVendorsList({
   onVendorClick?: (id: number) => void
 }) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-1">
       {data.slice(0, 5).map((vendor, index) => (
         <button
           key={vendor.vendor_id}
-          className="flex items-center gap-3 w-full text-left interactive rounded-lg p-2 -m-2"
+          className="flex items-center gap-2.5 w-full text-left interactive rounded-md p-2 -mx-1"
           onClick={() => onVendorClick?.(vendor.vendor_id)}
         >
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-background-elevated text-xs font-medium">
+          <div className="flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold text-text-muted bg-background-elevated font-[var(--font-family-mono)]">
             {index + 1}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{vendor.vendor_name}</p>
-            <p className="text-xs text-text-muted">{formatNumber(vendor.total_contracts)} contracts</p>
+            <p className="text-xs font-medium truncate">{vendor.vendor_name}</p>
+            <p className="text-[10px] text-text-muted tabular-nums">{formatNumber(vendor.total_contracts)} contracts</p>
           </div>
-          <div className="text-right">
-            <p className="text-sm font-medium tabular-nums">{formatCompactMXN(vendor.total_value_mxn)}</p>
+          <div className="text-right flex-shrink-0">
+            <p className="text-xs font-medium tabular-nums">{formatCompactMXN(vendor.total_value_mxn)}</p>
             {vendor.avg_risk_score !== undefined && vendor.avg_risk_score !== null && (
-              <RiskBadge score={vendor.avg_risk_score} className="text-[10px]" />
+              <RiskBadge score={vendor.avg_risk_score} className="text-[9px]" />
             )}
           </div>
         </button>

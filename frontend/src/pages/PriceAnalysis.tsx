@@ -109,7 +109,7 @@ function StatusBadge({ isReviewed, isValid }: { isReviewed: boolean; isValid?: b
   }
   if (isValid) {
     return (
-      <Badge variant="default" className="gap-1 bg-green-600">
+      <Badge variant="default" className="gap-1 bg-risk-low">
         <CheckCircle className="h-3 w-3" />
         Confirmed
       </Badge>
@@ -140,14 +140,14 @@ function ConfidenceBadge({ level, score }: { level: string; score: number }) {
 function SummaryCards({ summary }: { summary: PriceHypothesesSummary }) {
   if (summary.status !== 'active' || !summary.overall) {
     return (
-      <Card className="bg-amber-50 border-amber-200">
+      <Card className="bg-risk-medium/10 border-risk-medium/30">
         <CardContent className="pt-6">
           <div className="flex items-center gap-3">
-            <AlertTriangle className="h-6 w-6 text-amber-600" />
+            <AlertTriangle className="h-6 w-6 text-risk-medium" />
             <div>
-              <p className="font-medium">No Hypotheses Generated</p>
-              <p className="text-sm text-muted-foreground">
-                Run <code className="bg-muted px-1 rounded">python backend/scripts/price_hypothesis_engine.py --all</code> to generate price hypotheses.
+              <p className="font-medium text-text-primary">No Hypotheses Generated</p>
+              <p className="text-sm text-text-muted">
+                Run <code className="bg-background-elevated px-1 rounded">python backend/scripts/price_hypothesis_engine.py --all</code> to generate price hypotheses.
               </p>
             </div>
           </div>
@@ -162,13 +162,13 @@ function SummaryCards({ summary }: { summary: PriceHypothesesSummary }) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-sm font-medium text-text-muted">
             Total Hypotheses
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{formatNumber(overall.total_hypotheses)}</div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-text-muted">
             {overall.pending_review} pending review
           </p>
         </CardContent>
@@ -176,13 +176,13 @@ function SummaryCards({ summary }: { summary: PriceHypothesesSummary }) {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-sm font-medium text-text-muted">
             Flagged Value
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{formatCompactMXN(overall.total_flagged_value)}</div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-text-muted">
             Total value of flagged contracts
           </p>
         </CardContent>
@@ -190,13 +190,13 @@ function SummaryCards({ summary }: { summary: PriceHypothesesSummary }) {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-sm font-medium text-text-muted">
             Avg Confidence
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{formatPercent(overall.avg_confidence)}</div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-text-muted">
             Across all hypotheses
           </p>
         </CardContent>
@@ -204,7 +204,7 @@ function SummaryCards({ summary }: { summary: PriceHypothesesSummary }) {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-sm font-medium text-text-muted">
             Review Progress
           </CardTitle>
         </CardHeader>
@@ -212,7 +212,7 @@ function SummaryCards({ summary }: { summary: PriceHypothesesSummary }) {
           <div className="text-2xl font-bold">
             {overall.confirmed + overall.dismissed} / {overall.total_hypotheses}
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-text-muted">
             {overall.confirmed} confirmed, {overall.dismissed} dismissed
           </p>
         </CardContent>
@@ -252,7 +252,7 @@ function DistributionCharts({ summary }: { summary: PriceHypothesesSummary }) {
               <RechartsTooltip
                 formatter={(value: number) => formatNumber(value)}
               />
-              <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="count" fill="var(--color-accent)" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -314,10 +314,10 @@ function HypothesisCard({
                 <ConfidenceBadge level={hypothesis.confidence_level} score={hypothesis.confidence} />
                 <StatusBadge isReviewed={hypothesis.is_reviewed} isValid={hypothesis.is_valid} />
               </div>
-              <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+              <p className="text-sm text-text-muted line-clamp-2 mb-2">
                 {hypothesis.explanation}
               </p>
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <div className="flex items-center gap-4 text-xs text-text-muted">
                 <span className="flex items-center gap-1">
                   <DollarSign className="h-3 w-3" />
                   {formatCompactMXN(hypothesis.amount_mxn || 0)}
@@ -405,7 +405,7 @@ function ReviewDialog({
           </Button>
           <Button
             variant="default"
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-risk-low hover:bg-risk-low/90"
             onClick={() => handleSubmit(true)}
           >
             <CheckCircle className="h-4 w-4 mr-1" />
@@ -486,8 +486,11 @@ export function PriceAnalysis() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Price Analysis</h1>
-          <p className="text-muted-foreground">
+          <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+            <DollarSign className="h-4.5 w-4.5 text-accent" />
+            Price Analysis
+          </h2>
+          <p className="text-xs text-text-muted mt-0.5">
             Review and validate price manipulation hypotheses
           </p>
         </div>
@@ -498,13 +501,13 @@ export function PriceAnalysis() {
       </div>
 
       {/* Methodology note */}
-      <Card className="bg-blue-50 border-blue-200">
+      <Card className="bg-accent/5 border-accent/20">
         <CardContent className="pt-4">
           <div className="flex items-start gap-3">
-            <BookOpen className="h-5 w-5 text-blue-600 mt-0.5" />
+            <BookOpen className="h-5 w-5 text-accent mt-0.5" />
             <div className="text-sm">
-              <p className="font-medium text-blue-900">About Price Hypotheses</p>
-              <p className="text-blue-700">
+              <p className="font-medium text-text-primary">About Price Hypotheses</p>
+              <p className="text-text-secondary">
                 These are <strong>hypotheses for review</strong>, not confirmed findings.
                 Each flag is generated using statistical methods (IQR outlier detection)
                 aligned with EU OLAF and IMF CRI methodology. Review each case to build
@@ -632,7 +635,7 @@ export function PriceAnalysis() {
           <h2 className="text-lg font-semibold">
             Hypotheses Queue
             {hypotheses && (
-              <span className="text-muted-foreground font-normal ml-2">
+              <span className="text-text-muted font-normal ml-2">
                 ({formatNumber(hypotheses.pagination.total)} total)
               </span>
             )}
@@ -651,7 +654,7 @@ export function PriceAnalysis() {
           </div>
         ) : hypotheses?.data.length === 0 ? (
           <Card>
-            <CardContent className="pt-6 text-center text-muted-foreground">
+            <CardContent className="pt-6 text-center text-text-muted">
               <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>No hypotheses found matching your filters.</p>
             </CardContent>
@@ -680,7 +683,7 @@ export function PriceAnalysis() {
             >
               Previous
             </Button>
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm text-text-muted">
               Page {page} of {totalPages}
             </span>
             <Button

@@ -17,11 +17,9 @@ from datetime import datetime
 from enum import Enum
 
 from ..dependencies import get_db
+from ..config.constants import MAX_CONTRACT_VALUE
 
 logger = logging.getLogger(__name__)
-
-# Amount validation threshold
-MAX_CONTRACT_VALUE = 100_000_000_000  # 100B MXN
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -197,7 +195,7 @@ async def get_vendor_report(
                     first_year = int(first_date[:4]) if first_date else 0
                     last_year = int(last_date[:4]) if last_date else 0
                     years_active = max(1, last_year - first_year + 1)
-                except:
+                except (ValueError, TypeError, IndexError):
                     years_active = 1
 
             profile = VendorReportProfile(

@@ -12,6 +12,7 @@ from fastapi import APIRouter, HTTPException, Query, Path
 from collections import Counter
 
 from ..dependencies import get_db
+from ..config.constants import MAX_CONTRACT_VALUE
 from ..models.vendor import (
     VendorClassificationResponse,
     VerifiedVendorResponse,
@@ -33,9 +34,6 @@ from ..models.common import PaginationMeta
 from ..models.contract import ContractListItem, ContractListResponse, PaginationMeta as ContractPaginationMeta
 
 logger = logging.getLogger(__name__)
-
-# Amount validation thresholds (from CLAUDE.md data validation rules)
-MAX_CONTRACT_VALUE = 100_000_000_000  # 100B MXN - reject above this
 
 router = APIRouter(prefix="/vendors", tags=["vendors"])
 
@@ -510,7 +508,7 @@ async def get_vendor(
                 industry_name=row["industry_name"],
                 industry_confidence=row["industry_confidence"],
                 sector_affinity=row["sector_affinity"],
-                vendor_group_id=row["vendor_group_id"],
+                vendor_group_id=row["group_id"],
                 group_name=row["group_name"],
                 total_contracts=total_contracts,
                 total_value_mxn=stats["total_value_mxn"] or 0,
@@ -880,7 +878,7 @@ async def get_vendor_related(
 
             # Verify vendor exists
             cursor.execute("""
-                SELECT id, name, rfc, vendor_group_id, name_normalized
+                SELECT id, name, rfc, group_id, name_normalized
                 FROM vendors WHERE id = ?
             """, (vendor_id,))
             vendor = cursor.fetchone()
@@ -890,7 +888,7 @@ async def get_vendor_related(
             related = []
 
             # 1. Same group members
-            if vendor["vendor_group_id"]:
+            if vendor["group_id"]:
                 cursor.execute("""
                     SELECT
                         v.id, v.name, v.rfc,
@@ -927,11 +925,11 @@ async def get_vendor_related(
                     LEFT JOIN contracts c ON v.id = c.vendor_id
                         AND (c.amount_mxn IS NULL OR c.amount_mxn <= ?)
                     WHERE v.rfc LIKE ? AND v.id != ?
-                    AND v.id NOT IN (SELECT id FROM vendors WHERE vendor_group_id = ?)
+                    AND v.id NOT IN (SELECT id FROM vendors WHERE group_id = ?)
                     GROUP BY v.id, v.name, v.rfc
                     LIMIT ?
                 """, (MAX_CONTRACT_VALUE, f"{rfc_root}%", vendor_id,
-                      vendor["vendor_group_id"] or -1, limit - len(related)))
+                      vendor["group_id"] or -1, limit - len(related)))
 
                 for row in cursor.fetchall():
                     if not any(r.vendor_id == row["id"] for r in related):

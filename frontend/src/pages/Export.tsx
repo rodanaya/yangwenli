@@ -34,8 +34,11 @@ export function Export() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold">Export Data</h2>
-        <p className="text-sm text-text-muted">Download procurement data in various formats</p>
+        <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+          <Download className="h-4.5 w-4.5 text-accent" />
+          Export Data
+        </h2>
+        <p className="text-xs text-text-muted mt-0.5">Download procurement data in various formats</p>
       </div>
 
       {/* Export size warning */}

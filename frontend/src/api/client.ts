@@ -13,11 +13,13 @@ import type {
   VendorDetailResponse,
   VendorRiskProfile,
   VendorTopListResponse,
+  VendorInstitutionListResponse,
   VendorFilterParams,
   InstitutionListResponse,
   InstitutionDetailResponse,
   InstitutionRiskProfile,
   InstitutionTopListResponse,
+  InstitutionVendorListResponse,
   InstitutionFilterParams,
   SectorListResponse,
   SectorDetailResponse,
@@ -195,6 +197,14 @@ export const vendorApi = {
   },
 
   /**
+   * Get vendor's institutions
+   */
+  async getInstitutions(vendorId: number, limit = 50): Promise<VendorInstitutionListResponse> {
+    const { data } = await api.get<VendorInstitutionListResponse>(`/vendors/${vendorId}/institutions?limit=${limit}`)
+    return data
+  },
+
+  /**
    * Search vendors by name
    */
   async search(query: string, limit = 10): Promise<VendorListResponse> {
@@ -250,6 +260,14 @@ export const institutionApi = {
     limit = 20
   ): Promise<InstitutionTopListResponse> {
     const { data } = await api.get<InstitutionTopListResponse>(`/institutions/top?metric=${metric}&limit=${limit}`)
+    return data
+  },
+
+  /**
+   * Get institution's vendors
+   */
+  async getVendors(institutionId: number, limit = 50): Promise<InstitutionVendorListResponse> {
+    const { data } = await api.get<InstitutionVendorListResponse>(`/institutions/${institutionId}/vendors?limit=${limit}`)
     return data
   },
 
@@ -318,6 +336,45 @@ export interface DataQualityResponse {
   last_calculated: string | null
 }
 
+// Monthly breakdown types
+export interface MonthlyDataPoint {
+  month: number
+  month_name: string
+  contracts: number
+  value: number
+  avg_risk: number
+  direct_award_count: number
+  single_bid_count: number
+  is_year_end: boolean
+}
+
+export interface MonthlyBreakdownResponse {
+  year: number
+  months: MonthlyDataPoint[]
+  total_contracts: number
+  total_value: number
+  avg_risk: number
+  december_spike: number | null
+}
+
+// Temporal events types
+export interface TemporalEvent {
+  id: string
+  date: string
+  year: number
+  month: number | null
+  type: string
+  title: string
+  description: string
+  impact: string
+  source: string | null
+}
+
+export interface TemporalEventsResponse {
+  events: TemporalEvent[]
+  total: number
+}
+
 export const analysisApi = {
   /**
    * Get fast pre-computed dashboard stats (single request, <100ms)
@@ -348,6 +405,25 @@ export const analysisApi = {
    */
   async getYearOverYear(): Promise<{ data: YearOverYearChange[] }> {
     const { data } = await api.get('/analysis/year-over-year')
+    return data
+  },
+
+  /**
+   * Get monthly breakdown for a specific year
+   */
+  async getMonthlyBreakdown(year: number, sectorId?: number): Promise<MonthlyBreakdownResponse> {
+    const params = sectorId ? `?sector_id=${sectorId}` : ''
+    const { data } = await api.get<MonthlyBreakdownResponse>(`/analysis/monthly-breakdown/${year}${params}`)
+    return data
+  },
+
+  /**
+   * Get temporal events affecting procurement
+   */
+  async getTemporalEvents(year?: number, eventType?: string): Promise<TemporalEventsResponse> {
+    const queryParams = buildQueryParams({ year, event_type: eventType } as Record<string, unknown>)
+    const paramStr = queryParams.toString()
+    const { data } = await api.get<TemporalEventsResponse>(`/analysis/temporal-events${paramStr ? `?${paramStr}` : ''}`)
     return data
   },
 

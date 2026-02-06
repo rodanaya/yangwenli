@@ -84,11 +84,14 @@ export function Vendors() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Vendors</h2>
-          <p className="text-sm text-text-muted">
-            {data ? `${formatNumber(data.pagination.total)} vendors` : 'Loading...'}
+          <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+            <Users className="h-4.5 w-4.5 text-accent" />
+            Vendors
+          </h2>
+          <p className="text-xs text-text-muted mt-0.5">
+            {data ? `${formatNumber(data.pagination.total)} registered suppliers` : 'Loading...'}
           </p>
         </div>
 
@@ -234,11 +237,11 @@ function VendorCard({ vendor, style }: { vendor: VendorListItem; style?: React.C
 
   return (
     <Card
-      className="hover:border-border-hover transition-colors animate-slide-up opacity-0"
+      className="hover:border-accent/50 hover:shadow-lg hover:shadow-accent/5 transition-all duration-200 animate-slide-up opacity-0 group"
       style={style}
       {...prefetch}
     >
-      <CardContent className="p-4">
+      <CardContent className="p-4 group-hover:bg-accent/[0.02] transition-colors">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10 text-accent">

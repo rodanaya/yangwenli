@@ -32,6 +32,7 @@ import {
   LineChart,
   Line,
   Legend,
+  Cell,
 } from 'recharts'
 import type { AnomalyItem, RiskDistribution } from '@/api/types'
 
@@ -156,8 +157,10 @@ export function RiskAnalysis() {
     if (!overview) return []
 
     const totalContracts = overview.total_contracts
-    const directAwardCount = Math.round(totalContracts * overview.direct_award_pct)
-    const singleBidCount = Math.round(totalContracts * overview.single_bid_pct)
+    const directAwardPct = overview.direct_award_pct / 100
+    const singleBidPct = overview.single_bid_pct / 100
+    const directAwardCount = Math.round(totalContracts * directAwardPct)
+    const singleBidCount = Math.round(totalContracts * singleBidPct)
 
     // Calculate estimated counts based on available overview data
     // Non-open includes direct awards (DA) - this is the largest category
@@ -171,12 +174,12 @@ export function RiskAnalysis() {
       {
         factor: 'non_open',
         count: directAwardCount,
-        pct: overview.direct_award_pct,
+        pct: directAwardPct,
       },
       {
         factor: 'single_bid',
         count: singleBidCount,
-        pct: overview.single_bid_pct,
+        pct: singleBidPct,
       },
       {
         factor: 'year_end',
@@ -262,11 +265,11 @@ export function RiskAnalysis() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Shield className="h-5 w-5 text-risk-high" />
+          <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+            <Shield className="h-4.5 w-4.5 text-accent" />
             Risk Analysis
           </h2>
-          <p className="text-sm text-text-muted">
+          <p className="text-xs text-text-muted mt-0.5">
             Comprehensive risk assessment and anomaly detection
           </p>
         </div>
@@ -298,7 +301,7 @@ export function RiskAnalysis() {
           loading={riskLoading}
           icon={AlertTriangle}
           variant="high"
-          subtitle={`${formatPercent((overview?.high_risk_pct || 0))} of all contracts`}
+          subtitle={`${formatPercent((overview?.high_risk_pct || 0) / 100)} of all contracts`}
         />
         <RiskKPICard
           title="Avg Risk Score"
@@ -383,8 +386,11 @@ export function RiskAnalysis() {
                   // Find the raw value for this cell
                   const cell = sectorHeatmapData.data.find((d) => d.row === row && d.col === col)
                   const rawValue = (cell as { rawValue?: number })?.rawValue ?? v
-                  // Format as percentage
-                  return `${(rawValue * 100).toFixed(1)}%`
+                  // Avg Risk is 0-1 scale, others are already percentages
+                  if (col === 'Avg Risk') {
+                    return `${(rawValue * 100).toFixed(1)}%`
+                  }
+                  return `${rawValue.toFixed(1)}%`
                 }}
                 onCellClick={(row) => handleSectorClick(row)}
               />
@@ -568,16 +574,16 @@ const RiskFactorChart = memo(function RiskFactorChart({
     <div className="h-[250px]">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} layout="vertical">
-          <CartesianGrid strokeDasharray="3 3" stroke="#2e2e2e" horizontal={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} horizontal={false} />
           <XAxis
             type="number"
-            tick={{ fill: '#a3a3a3', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
             tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`}
           />
           <YAxis
             type="category"
             dataKey="name"
-            tick={{ fill: '#a3a3a3', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
             width={110}
           />
           <RechartsTooltip
@@ -617,14 +623,14 @@ const RiskDistributionChart = memo(function RiskDistributionChart({
     <div className="h-[250px]">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#2e2e2e" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} vertical={false} />
           <XAxis
             dataKey="risk_level"
-            tick={{ fill: '#a3a3a3', fontSize: 12 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }}
             tickFormatter={(v) => v.charAt(0).toUpperCase() + v.slice(1)}
           />
           <YAxis
-            tick={{ fill: '#a3a3a3', fontSize: 12 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }}
             tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`}
           />
           <RechartsTooltip
@@ -652,11 +658,11 @@ const RiskDistributionChart = memo(function RiskDistributionChart({
           <Bar
             dataKey="count"
             radius={[4, 4, 0, 0]}
-            fill="#64748b"
+            fill="var(--color-text-muted)"
           >
             {chartData.map((entry, index) => (
-              <rect
-                key={`rect-${index}`}
+              <Cell
+                key={`cell-${index}`}
                 fill={RISK_COLORS[entry.risk_level as keyof typeof RISK_COLORS]}
               />
             ))}
@@ -676,17 +682,17 @@ const RiskTrendChart = memo(function RiskTrendChart({
     <div className="h-[350px]">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#2e2e2e" />
-          <XAxis dataKey="year" tick={{ fill: '#a3a3a3', fontSize: 12 }} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
+          <XAxis dataKey="year" tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }} />
           <YAxis
             yAxisId="left"
-            tick={{ fill: '#a3a3a3', fontSize: 12 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }}
             tickFormatter={(v) => `${v}%`}
           />
           <YAxis
             yAxisId="right"
             orientation="right"
-            tick={{ fill: '#a3a3a3', fontSize: 12 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }}
             tickFormatter={(v) => `${v}K`}
           />
           <RechartsTooltip
@@ -727,7 +733,7 @@ const RiskTrendChart = memo(function RiskTrendChart({
             yAxisId="right"
             type="monotone"
             dataKey="contracts"
-            stroke="#3b82f6"
+            stroke="var(--color-accent)"
             strokeWidth={2}
             dot={true}
           />

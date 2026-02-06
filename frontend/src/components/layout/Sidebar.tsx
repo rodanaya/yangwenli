@@ -18,6 +18,7 @@ import {
   Calendar,
   Database,
   DollarSign,
+  Radio,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -44,16 +45,16 @@ const mainNavItems: NavItem[] = [
 
 const analysisNavItems: NavItem[] = [
   { title: 'Risk Analysis', href: '/analysis/risk', icon: AlertTriangle },
-  { title: 'Price Analysis', href: '/analysis/price', icon: DollarSign, badge: 'New' },
+  { title: 'Price Analysis', href: '/analysis/price', icon: DollarSign },
   { title: 'Data Quality', href: '/data-quality', icon: Database },
   { title: 'Export Data', href: '/export', icon: Download },
 ]
 
 const investigationNavItems: NavItem[] = [
-  { title: 'Network Graph', href: '/network', icon: Network, badge: 'Beta' },
+  { title: 'Network Graph', href: '/network', icon: Network },
   { title: 'Watchlist', href: '/watchlist', icon: Eye },
-  { title: 'Comparison', href: '/comparison', icon: Columns, badge: 'Beta' },
-  { title: 'Timeline', href: '/timeline', icon: Calendar, badge: 'Beta' },
+  { title: 'Comparison', href: '/comparison', icon: Columns },
+  { title: 'Timeline', href: '/timeline', icon: Calendar },
 ]
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
@@ -62,87 +63,76 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-border bg-sidebar transition-all duration-300',
-        collapsed ? 'w-16' : 'w-56'
+        'fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-border/50 bg-sidebar transition-all duration-300',
+        collapsed ? 'w-14' : 'w-56'
       )}
     >
-      {/* Logo - Professional branding */}
-      <div className="flex h-16 items-center border-b border-border/50 px-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-accent/70 text-white font-bold text-sm shadow-sm">
-            YW
+      {/* Brand — Intelligence signal, no logo badge */}
+      <div className="flex h-14 items-center border-b border-border/30 px-3">
+        <div className="flex items-center gap-2.5 overflow-hidden">
+          <div className="relative flex-shrink-0">
+            <Radio className="h-5 w-5 text-accent" />
+            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-signal-live shadow-[0_0_6px_var(--color-signal-live)]" />
           </div>
           {!collapsed && (
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold tracking-tight text-text-primary">Yang Wen-li</span>
-              <span className="text-[10px] text-text-muted tracking-wide">PROCUREMENT INTEL</span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-text-primary font-[var(--font-family-mono)]">
+                YANG WEN-LI
+              </span>
+              <span className="text-[9px] tracking-[0.15em] uppercase text-accent/70">
+                INTEL PLATFORM
+              </span>
             </div>
           )}
         </div>
       </div>
 
       {/* Navigation */}
-      <ScrollArea className="flex-1 py-4">
-        <nav className="space-y-6 px-2">
+      <ScrollArea className="flex-1 py-3">
+        <nav className="space-y-5 px-2">
           {/* Main navigation */}
-          <div>
-            {!collapsed && (
-              <h3 className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
-                Navigation
-              </h3>
-            )}
-            <div className="space-y-1">
-              {mainNavItems.map((item) => (
-                <NavItem key={item.href} item={item} collapsed={collapsed} isActive={location.pathname === item.href} />
-              ))}
-            </div>
-          </div>
+          <NavSection title="RECON" collapsed={collapsed}>
+            {mainNavItems.map((item) => (
+              <SidebarNavItem
+                key={item.href}
+                item={item}
+                collapsed={collapsed}
+                isActive={location.pathname === item.href}
+              />
+            ))}
+          </NavSection>
 
           {/* Analysis section */}
-          <div>
-            {!collapsed && (
-              <h3 className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
-                Analysis
-              </h3>
-            )}
-            <div className="space-y-1">
-              {analysisNavItems.map((item) => (
-                <NavItem
-                  key={item.href}
-                  item={item}
-                  collapsed={collapsed}
-                  isActive={location.pathname.startsWith(item.href)}
-                />
-              ))}
-            </div>
-          </div>
+          <NavSection title="ANALYSIS" collapsed={collapsed}>
+            {analysisNavItems.map((item) => (
+              <SidebarNavItem
+                key={item.href}
+                item={item}
+                collapsed={collapsed}
+                isActive={location.pathname.startsWith(item.href)}
+              />
+            ))}
+          </NavSection>
 
           {/* Investigation section */}
-          <div>
-            {!collapsed && (
-              <h3 className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
-                Investigation
-              </h3>
-            )}
-            <div className="space-y-1">
-              {investigationNavItems.map((item) => (
-                <NavItem
-                  key={item.href}
-                  item={item}
-                  collapsed={collapsed}
-                  isActive={location.pathname === item.href}
-                />
-              ))}
-            </div>
-          </div>
+          <NavSection title="INVESTIGATION" collapsed={collapsed}>
+            {investigationNavItems.map((item) => (
+              <SidebarNavItem
+                key={item.href}
+                item={item}
+                collapsed={collapsed}
+                isActive={location.pathname === item.href}
+              />
+            ))}
+          </NavSection>
         </nav>
       </ScrollArea>
 
       {/* Bottom section */}
-      <div className="border-t border-border p-2">
+      <div className="border-t border-border/30 p-2">
         <div className="flex items-center justify-between">
           {!collapsed && (
-            <NavItem
+            <SidebarNavItem
               item={{ title: 'Settings', href: '/settings', icon: Settings }}
               collapsed={collapsed}
               isActive={location.pathname === '/settings'}
@@ -152,10 +142,13 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             variant="ghost"
             size="icon"
             onClick={onToggle}
-            className={cn('h-8 w-8', collapsed && 'mx-auto')}
+            className={cn(
+              'h-7 w-7 text-text-muted hover:text-text-primary',
+              collapsed && 'mx-auto'
+            )}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
-            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
           </Button>
         </div>
       </div>
@@ -163,26 +156,52 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   )
 }
 
-function NavItem({ item, collapsed, isActive }: { item: NavItem; collapsed: boolean; isActive: boolean }) {
+function NavSection({ title, collapsed, children }: { title: string; collapsed: boolean; children: React.ReactNode }) {
+  return (
+    <div>
+      {!collapsed && (
+        <div className="mb-1.5 px-2 flex items-center gap-2">
+          <span className="text-[9px] font-semibold tracking-[0.2em] text-text-muted/60 font-[var(--font-family-mono)]">
+            {title}
+          </span>
+          <div className="flex-1 h-px bg-border/30" />
+        </div>
+      )}
+      {collapsed && <div className="mb-1 mx-auto w-4 h-px bg-border/40" />}
+      <div className="space-y-0.5">
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function SidebarNavItem({ item, collapsed, isActive }: { item: NavItem; collapsed: boolean; isActive: boolean }) {
   const Icon = item.icon
 
   const linkContent = (
     <NavLink
       to={item.href}
       className={cn(
-        'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-        'focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-sidebar',
+        'group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-all duration-150',
+        'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
         isActive
-          ? 'bg-sidebar-active text-text-primary'
-          : 'text-text-secondary hover:bg-sidebar-hover hover:text-text-primary',
-        collapsed && 'justify-center px-2'
+          ? 'text-accent bg-accent/10'
+          : 'text-text-secondary hover:text-text-primary hover:bg-sidebar-hover',
+        collapsed && 'justify-center px-0'
       )}
       aria-current={isActive ? 'page' : undefined}
     >
-      <Icon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
-      {!collapsed && <span>{item.title}</span>}
+      {/* Active indicator — left accent bar */}
+      {isActive && (
+        <span className="absolute left-0 top-1 bottom-1 w-[2px] rounded-r bg-accent shadow-[0_0_6px_var(--color-accent-glow)]" />
+      )}
+      <Icon className={cn(
+        'h-4 w-4 flex-shrink-0 transition-colors',
+        isActive ? 'text-accent' : 'text-text-muted group-hover:text-text-secondary'
+      )} aria-hidden="true" />
+      {!collapsed && <span className="truncate">{item.title}</span>}
       {!collapsed && item.badge && (
-        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-medium text-white" aria-label={`${item.badge} notifications`}>
+        <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded px-1 text-[9px] font-bold tracking-wide uppercase bg-accent/15 text-accent">
           {item.badge}
         </span>
       )}
@@ -193,8 +212,8 @@ function NavItem({ item, collapsed, isActive }: { item: NavItem; collapsed: bool
     return (
       <Tooltip>
         <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-        <TooltipContent side="right">
-          <p>{item.title}</p>
+        <TooltipContent side="right" sideOffset={8}>
+          <p className="text-xs">{item.title}</p>
         </TooltipContent>
       </Tooltip>
     )

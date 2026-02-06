@@ -92,4 +92,5 @@ CLAUDE.local.md
 # Temporary/debug files
 backend/DEBUG_LOG.txt
 frontend/npm-cache/
+npm-cache/
 =0.45.0

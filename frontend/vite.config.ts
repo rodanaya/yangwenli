@@ -3,7 +3,8 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 // API target: use env var for Docker, default to localhost
-const API_TARGET = process.env.VITE_API_URL || 'http://localhost:8001'
+// Use 127.0.0.1 instead of localhost to avoid Windows DNS resolution delay (~2s)
+const API_TARGET = process.env.VITE_API_URL || 'http://127.0.0.1:8001'
 
 // https://vite.dev/config/
 export default defineConfig({

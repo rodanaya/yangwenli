@@ -13,6 +13,7 @@ from fastapi import APIRouter, Query, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 from ..dependencies import get_db
+from ..config.constants import MAX_CONTRACT_VALUE
 
 # Optional rate limiting - gracefully degrade if not available
 try:
@@ -39,9 +40,6 @@ def rate_limit(limit_string: str):
 
 
 logger = logging.getLogger(__name__)
-
-# Amount validation thresholds (from CLAUDE.md data validation rules)
-MAX_CONTRACT_VALUE = 100_000_000_000  # 100B MXN - reject above this
 
 # Export limits to prevent memory issues
 MAX_EXPORT_ROWS = 100_000

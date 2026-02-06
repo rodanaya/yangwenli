@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "rubli-procurement": {
+      "type": "stdio",
+      "command": "python",
+      "args": [
+        "D:/Python/yangwenli/backend/mcp_server.py"
+      ],
+      "env": {}
+    },
+    "shadcn": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "shadcn@latest", "mcp"]
+    },
+    "mcp-echarts": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "mcp-echarts"]
+    }
+  }
+}

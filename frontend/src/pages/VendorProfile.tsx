@@ -48,11 +48,7 @@ export function VendorProfile() {
   // Fetch vendor's institutions
   const { data: institutions, isLoading: institutionsLoading } = useQuery({
     queryKey: ['vendor', vendorId, 'institutions'],
-    queryFn: async () => {
-      const response = await fetch(`/api/v1/vendors/${vendorId}/institutions`)
-      if (!response.ok) throw new Error('Failed to fetch institutions')
-      return response.json()
-    },
+    queryFn: () => vendorApi.getInstitutions(vendorId),
     enabled: !!vendorId,
   })
 

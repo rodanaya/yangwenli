@@ -429,14 +429,21 @@ def calculate_vendor_risk_score(metrics: Dict) -> Tuple[float, List[str]]:
     score = 0.0
     factors = []
 
-    # 1. Win rate anomaly (using competitive procedure win rate as proxy)
-    # For now, use inverse of single-bid rate as win rate proxy
-    competitive_contracts = metrics['total_contracts'] - metrics['single_bid_count']
-    if competitive_contracts > 0:
-        # Assume all competitive contracts were "won" - this is a simplification
-        # A proper implementation would need bid participation data
-        estimated_win_rate = 0.5  # Default assumption
-        win_score = calculate_win_rate_score(estimated_win_rate, competitive_contracts)
+    # 1. Win rate anomaly
+    # Each contract in COMPRANET is an award (a win). Win rate = contracts won by
+    # vendor in competitive procedures / total unique competitive procedures they
+    # participated in. Since all records are wins, a vendor appearing in many
+    # unique competitive procedures with high contract count has a high win rate.
+    competitive_contracts = metrics['total_contracts'] - metrics['single_bid_count'] - metrics['direct_award_count']
+    total_contracts = metrics['total_contracts']
+    if total_contracts >= 5:
+        # Win rate proxy: non-direct, non-single-bid contracts as share of total
+        # A very high ratio means they win almost every competitive procedure
+        estimated_win_rate = total_contracts / max(total_contracts + competitive_contracts * 0.3, 1)
+        # Also factor in single-bid rate: high single-bid = inflated win rate
+        if metrics['single_bid_rate'] > 0.5:
+            estimated_win_rate = min(estimated_win_rate + metrics['single_bid_rate'] * 0.2, 1.0)
+        win_score = calculate_win_rate_score(estimated_win_rate, total_contracts)
         score += win_score * VENDOR_RISK_WEIGHTS['win_rate_anomaly']
         if win_score > 0.5:
             factors.append(f'win_rate:{estimated_win_rate:.2f}')

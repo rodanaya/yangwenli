@@ -53,18 +53,21 @@ export function Sectors() {
   const sortedSectors = [...(data?.data || [])].sort((a, b) => b.total_value_mxn - a.total_value_mxn)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
       <div>
-        <h2 className="text-lg font-semibold">Sectors Overview</h2>
-        <p className="text-sm text-text-muted">12 sectors covering {formatNumber(data?.total_contracts || 0)} contracts</p>
+        <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+          <BarChart3 className="h-4.5 w-4.5 text-accent" />
+          Sectors Overview
+        </h2>
+        <p className="text-xs text-text-muted mt-0.5">12 sectors covering {formatNumber(data?.total_contracts || 0)} contracts</p>
       </div>
 
       {/* Summary chart */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <BarChart3 className="h-3.5 w-3.5 text-accent" />
             Contract Value by Sector
           </CardTitle>
         </CardHeader>
@@ -72,16 +75,16 @@ export function Sectors() {
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={sortedSectors} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#2e2e2e" horizontal={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} horizontal={false} />
                 <XAxis
                   type="number"
-                  tick={{ fill: '#a3a3a3', fontSize: 12 }}
+                  tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }}
                   tickFormatter={(v) => `${(v / 1_000_000_000_000).toFixed(1)}T`}
                 />
                 <YAxis
                   type="category"
                   dataKey="sector_code"
-                  tick={{ fill: '#a3a3a3', fontSize: 11 }}
+                  tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
                   tickFormatter={(code) => getSectorNameEN(code)}
                   width={100}
                 />
@@ -133,8 +136,11 @@ function SectorCard({ sector }: { sector: SectorStatistics }) {
   })
 
   return (
-    <Card className="hover:border-border-hover transition-colors" {...prefetch}>
-      <CardContent className="p-4">
+    <Card
+      className="hover:border-accent/50 hover:shadow-lg hover:shadow-accent/5 transition-all duration-200 group"
+      {...prefetch}
+    >
+      <CardContent className="p-4 group-hover:bg-accent/[0.02] transition-colors">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
             <div

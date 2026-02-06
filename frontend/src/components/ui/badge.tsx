@@ -78,9 +78,9 @@ function RiskBadge({ score, level, className, children, ...props }: RiskBadgePro
 }
 
 function getRiskLevelFromScore(score: number): RiskLevel {
-  if (score >= 0.6) return 'critical'
-  if (score >= 0.4) return 'high'
-  if (score >= 0.2) return 'medium'
+  if (score >= 0.50) return 'critical'
+  if (score >= 0.35) return 'high'
+  if (score >= 0.20) return 'medium'
   return 'low'
 }
 

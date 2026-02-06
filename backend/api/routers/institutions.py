@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, Query, Path
 from typing import Optional
 
 from ..dependencies import get_db
+from ..config.constants import MAX_CONTRACT_VALUE
 from ..models.institution import (
     InstitutionResponse,
     InstitutionDetailResponse,
@@ -32,9 +33,6 @@ from ..models.common import PaginationMeta
 from ..models.contract import ContractListItem, ContractListResponse, PaginationMeta as ContractPaginationMeta
 
 logger = logging.getLogger(__name__)
-
-# Amount validation thresholds (from CLAUDE.md data validation rules)
-MAX_CONTRACT_VALUE = 100_000_000_000  # 100B MXN - reject above this
 
 router = APIRouter(prefix="/institutions", tags=["institutions"])
 
