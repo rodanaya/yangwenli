@@ -397,7 +397,6 @@ async def get_top_vendors(
                 JOIN contracts c ON v.id = c.vendor_id
                 WHERE {where_clause}
                 GROUP BY v.id, v.name, v.rfc
-                HAVING COUNT(c.id) > 0
                 ORDER BY metric_value {sort_dir} NULLS LAST
                 LIMIT ?
             """

@@ -8,6 +8,7 @@ import { RiskBadge, Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { formatCompactMXN, formatNumber, formatDate, getPaginationRange, clampPage } from '@/lib/utils'
 import { contractApi, exportApi } from '@/api/client'
+import { VirtualizedTable } from '@/components/VirtualizedTable'
 import { SECTORS } from '@/lib/constants'
 import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 import type { ContractFilterParams, ContractListItem } from '@/api/types'
@@ -102,6 +103,105 @@ export function Contracts() {
 
   // Show loading indicator when search is pending or fetching
   const showSearchLoading = isSearchPending || (isFetching && searchInput !== debouncedSearch)
+
+  // Use virtualized table for large page sizes
+  const useVirtualized = (filters.per_page || 50) > 100
+
+  // Columns definition for VirtualizedTable
+  const virtualizedColumns = useMemo(() => [
+    {
+      id: 'contract',
+      header: 'Contract',
+      accessor: (row: ContractListItem) => (
+        <div className="flex items-center gap-2">
+          <FileText className="h-4 w-4 text-text-muted shrink-0" aria-hidden="true" />
+          <div className="min-w-0">
+            <p className="text-sm font-medium truncate">{row.title || 'Untitled'}</p>
+            <p className="text-xs text-text-muted">{row.contract_number || `ID: ${row.id}`}</p>
+          </div>
+        </div>
+      ),
+      minWidth: 200,
+    },
+    {
+      id: 'vendor',
+      header: 'Vendor',
+      accessor: (row: ContractListItem) => (
+        <span className="text-sm truncate">{row.vendor_name || '-'}</span>
+      ),
+      minWidth: 150,
+    },
+    {
+      id: 'institution',
+      header: 'Institution',
+      accessor: (row: ContractListItem) => (
+        <span className="text-sm truncate">{row.institution_name || '-'}</span>
+      ),
+      minWidth: 150,
+    },
+    {
+      id: 'amount',
+      header: 'Amount',
+      accessor: (row: ContractListItem) => (
+        <span className="text-sm font-medium tabular-nums">{formatCompactMXN(row.amount_mxn)}</span>
+      ),
+      align: 'right' as const,
+      minWidth: 100,
+    },
+    {
+      id: 'date',
+      header: 'Date',
+      accessor: (row: ContractListItem) => (
+        <span className="text-sm text-text-muted">
+          {row.contract_date ? formatDate(row.contract_date) : row.contract_year || '-'}
+        </span>
+      ),
+      minWidth: 90,
+    },
+    {
+      id: 'risk',
+      header: 'Risk',
+      accessor: (row: ContractListItem) => (
+        row.risk_score !== undefined && row.risk_score !== null
+          ? <RiskBadge score={row.risk_score} />
+          : <span className="text-xs text-text-muted">-</span>
+      ),
+      minWidth: 80,
+    },
+    {
+      id: 'flags',
+      header: 'Flags',
+      accessor: (row: ContractListItem) => (
+        <div className="flex gap-1">
+          {row.is_direct_award && (
+            <Badge variant="outline" className="text-[10px]" title="Direct Award">DA</Badge>
+          )}
+          {row.is_single_bid && (
+            <Badge variant="outline" className="text-[10px]" title="Single Bid">SB</Badge>
+          )}
+        </div>
+      ),
+      minWidth: 70,
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      accessor: (row: ContractListItem) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0"
+          title="View contract details"
+          aria-label={`View details for contract ${row.contract_number || row.id}`}
+          onClick={() => console.log('View contract:', row.id)}
+        >
+          <Eye className="h-4 w-4" aria-hidden="true" />
+        </Button>
+      ),
+      align: 'center' as const,
+      minWidth: 60,
+    },
+  ], [])
 
   // Export state
   const [isExporting, setIsExporting] = useState(false)
@@ -378,6 +478,13 @@ export function Contracts() {
                 </Button>
               )}
             </div>
+          ) : useVirtualized ? (
+            <VirtualizedTable
+              data={data?.data || []}
+              columns={virtualizedColumns}
+              getRowKey={(row) => row.id}
+              height={600}
+            />
           ) : (
             <ScrollArea className="h-[600px]">
               <div className="overflow-x-auto min-w-full">

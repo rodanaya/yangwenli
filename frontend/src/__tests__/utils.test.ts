@@ -7,6 +7,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { formatNumber, formatCompactMXN, formatPercent } from '../lib/utils'
+import { RISK_THRESHOLDS } from '../lib/constants'
 
 describe('formatNumber', () => {
   it('formats integers with thousands separators', () => {
@@ -61,23 +62,16 @@ describe('formatPercent', () => {
 })
 
 describe('Risk thresholds', () => {
-  // Test risk level boundaries
+  // Test risk level boundaries (v3.3)
   it('defines correct risk thresholds', () => {
-    // Critical: >= 0.6
-    // High: 0.4 - 0.6
-    // Medium: 0.2 - 0.4
-    // Low: < 0.2
+    // Critical: >= 0.50
+    // High: 0.35 - 0.50
+    // Medium: 0.20 - 0.35
+    // Low: < 0.20
 
-    const thresholds = {
-      critical: 0.6,
-      high: 0.4,
-      medium: 0.2,
-      low: 0,
-    }
-
-    expect(thresholds.critical).toBe(0.6)
-    expect(thresholds.high).toBe(0.4)
-    expect(thresholds.medium).toBe(0.2)
+    expect(RISK_THRESHOLDS.critical).toBe(0.50)
+    expect(RISK_THRESHOLDS.high).toBe(0.35)
+    expect(RISK_THRESHOLDS.medium).toBe(0.20)
   })
 })
 
