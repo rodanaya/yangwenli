@@ -74,22 +74,22 @@ For detailed validation rules, see @.claude/rules/data-validation.md
 
 ## Risk Scoring Model
 
-10-factor model aligned with IMF CRI methodology:
+8-factor model aligned with IMF CRI methodology:
 
 | Factor | Weight |
 |--------|--------|
-| Single bidding | 15% |
-| Non-open procedure | 15% |
-| Price anomaly | 15% |
-| Vendor concentration | 10% |
-| Short ad period | 10% |
-| Short decision period | 10% |
-| Year-end timing | 5% |
-| Contract modification | 10% |
-| Threshold splitting | 5% |
-| Network risk | 5% |
+| Single bidding | 18% |
+| Non-open procedure | 18% |
+| Price anomaly | 18% |
+| Vendor concentration | 12% |
+| Short ad period | 12% |
+| Year-end timing | 7% |
+| Threshold splitting | 7% |
+| Network risk | 8% |
 
-**Risk Levels**: Critical (>=0.6), High (0.4-0.6), Medium (0.2-0.4), Low (<0.2)
+**Bonus factors** (added on top): Co-bidding +5%, Price hypothesis +5%, Industry mismatch +3%, Institution risk +3%
+
+**Risk Levels**: Critical (>=0.50), High (0.35-0.50), Medium (0.20-0.35), Low (<0.20)
 
 For methodology details, see @docs/RISK_METHODOLOGY.md
 

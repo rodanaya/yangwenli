@@ -1,31 +1,29 @@
 """
 Risk Scoring Model Tests
 
-Tests for the 10-factor risk scoring model aligned with IMF CRI methodology.
+Tests for the 8-factor risk scoring model v3.3 aligned with IMF CRI methodology.
 """
 import pytest
 from typing import Dict, List, Optional
 
 
-# Risk model configuration from RISK_METHODOLOGY.md
+# Risk model configuration v3.3 (8 factors)
 RISK_FACTORS = {
-    'single_bidding': {'weight': 0.15, 'description': 'Single bidder in competitive procedure'},
-    'non_open_procedure': {'weight': 0.15, 'description': 'Restricted or direct award'},
-    'price_anomaly': {'weight': 0.15, 'description': 'Price exceeds sector median'},
-    'vendor_concentration': {'weight': 0.10, 'description': 'High market share'},
-    'short_ad_period': {'weight': 0.10, 'description': 'Insufficient advertisement time'},
-    'short_decision_period': {'weight': 0.10, 'description': 'Suspiciously fast decision'},
-    'year_end_timing': {'weight': 0.05, 'description': 'December contract'},
-    'contract_modification': {'weight': 0.10, 'description': 'Post-award changes'},
-    'threshold_splitting': {'weight': 0.05, 'description': 'Multiple contracts near threshold'},
-    'network_risk': {'weight': 0.05, 'description': 'Suspicious vendor relationships'},
+    'single_bidding': {'weight': 0.18, 'description': 'Single bidder in competitive procedure'},
+    'non_open_procedure': {'weight': 0.18, 'description': 'Restricted or direct award'},
+    'price_anomaly': {'weight': 0.18, 'description': 'Price exceeds sector median'},
+    'vendor_concentration': {'weight': 0.12, 'description': 'High market share'},
+    'short_ad_period': {'weight': 0.12, 'description': 'Insufficient advertisement time'},
+    'year_end_timing': {'weight': 0.07, 'description': 'December contract'},
+    'threshold_splitting': {'weight': 0.07, 'description': 'Multiple contracts near threshold'},
+    'network_risk': {'weight': 0.08, 'description': 'Suspicious vendor relationships'},
 }
 
 RISK_THRESHOLDS = {
-    'low': (0.0, 0.2),
-    'medium': (0.2, 0.4),
-    'high': (0.4, 0.6),
-    'critical': (0.6, 1.0),
+    'low': (0.0, 0.20),
+    'medium': (0.20, 0.35),
+    'high': (0.35, 0.50),
+    'critical': (0.50, 1.0),
 }
 
 
@@ -44,7 +42,7 @@ def get_risk_level(score: float) -> str:
     for level, (low, high) in RISK_THRESHOLDS.items():
         if low <= score < high:
             return level
-    return 'critical' if score >= 0.6 else 'low'
+    return 'critical' if score >= 0.50 else 'low'
 
 
 class TestRiskWeights:
@@ -65,7 +63,7 @@ class TestRiskWeights:
         """Single bidding, non-open procedure, and price anomaly should have highest weights."""
         high_weight_factors = ['single_bidding', 'non_open_procedure', 'price_anomaly']
         for factor in high_weight_factors:
-            assert RISK_FACTORS[factor]['weight'] == 0.15
+            assert RISK_FACTORS[factor]['weight'] == 0.18
 
 
 class TestRiskScoreCalculation:
@@ -79,7 +77,7 @@ class TestRiskScoreCalculation:
     def test_single_factor(self):
         """Single factor should contribute its weight."""
         score = calculate_risk_score({'single_bidding': 1.0})
-        assert score == 0.15
+        assert score == 0.18
 
     def test_multiple_factors(self):
         """Multiple factors should accumulate."""
@@ -87,14 +85,14 @@ class TestRiskScoreCalculation:
             'single_bidding': 1.0,
             'non_open_procedure': 1.0,
         })
-        assert score == 0.30
+        assert score == 0.36
 
     def test_partial_factor_values(self):
         """Partial factor values should scale properly."""
         score = calculate_risk_score({
             'price_anomaly': 0.5,  # Mild anomaly
         })
-        assert score == 0.075  # 0.15 * 0.5
+        assert score == 0.09  # 0.18 * 0.5
 
     def test_all_factors_max(self):
         """All factors at maximum should give 1.0."""
@@ -114,26 +112,26 @@ class TestRiskLevels:
     """Test risk level classification."""
 
     def test_low_risk_boundary(self):
-        """Scores < 0.2 should be low risk."""
+        """Scores < 0.20 should be low risk."""
         assert get_risk_level(0.0) == 'low'
         assert get_risk_level(0.1) == 'low'
         assert get_risk_level(0.19) == 'low'
 
     def test_medium_risk_boundary(self):
-        """Scores 0.2-0.4 should be medium risk."""
-        assert get_risk_level(0.2) == 'medium'
-        assert get_risk_level(0.3) == 'medium'
-        assert get_risk_level(0.39) == 'medium'
+        """Scores 0.20-0.35 should be medium risk."""
+        assert get_risk_level(0.20) == 'medium'
+        assert get_risk_level(0.25) == 'medium'
+        assert get_risk_level(0.34) == 'medium'
 
     def test_high_risk_boundary(self):
-        """Scores 0.4-0.6 should be high risk."""
-        assert get_risk_level(0.4) == 'high'
-        assert get_risk_level(0.5) == 'high'
-        assert get_risk_level(0.59) == 'high'
+        """Scores 0.35-0.50 should be high risk."""
+        assert get_risk_level(0.35) == 'high'
+        assert get_risk_level(0.40) == 'high'
+        assert get_risk_level(0.49) == 'high'
 
     def test_critical_risk_boundary(self):
-        """Scores >= 0.6 should be critical risk."""
-        assert get_risk_level(0.6) == 'critical'
+        """Scores >= 0.50 should be critical risk."""
+        assert get_risk_level(0.50) == 'critical'
         assert get_risk_level(0.8) == 'critical'
         assert get_risk_level(1.0) == 'critical'
 
@@ -252,47 +250,44 @@ class TestRiskScoreScenarios:
         assert level == 'low'
 
     def test_medium_risk_scenario(self):
-        """Direct award should be medium risk."""
+        """Direct award + year-end should be medium risk."""
         factors = {
-            'non_open_procedure': 1.0,  # 0.15
-            'year_end_timing': 1.0,     # 0.05
+            'non_open_procedure': 1.0,  # 0.18
+            'year_end_timing': 1.0,     # 0.07
         }
 
         score = calculate_risk_score(factors)
         level = get_risk_level(score)
 
         assert level == 'medium'
-        assert score == 0.20
+        assert score == 0.25
 
     def test_high_risk_scenario(self):
-        """Single bid + price anomaly should be high risk."""
+        """Single bid + non-open should be high risk."""
         factors = {
-            'single_bidding': 1.0,      # 0.15
-            'non_open_procedure': 1.0,   # 0.15
-            'price_anomaly': 0.8,        # 0.12
+            'single_bidding': 1.0,       # 0.18
+            'non_open_procedure': 1.0,   # 0.18
         }
 
         score = calculate_risk_score(factors)
         level = get_risk_level(score)
 
         assert level == 'high'
-        assert 0.4 <= score < 0.6
+        assert 0.35 <= score < 0.50
 
     def test_critical_risk_scenario(self):
         """Multiple red flags should trigger critical risk."""
         factors = {
-            'single_bidding': 1.0,       # 0.15
-            'non_open_procedure': 1.0,    # 0.15
-            'price_anomaly': 1.0,         # 0.15
-            'vendor_concentration': 1.0,  # 0.10
-            'short_ad_period': 1.0,       # 0.10
+            'single_bidding': 1.0,       # 0.18
+            'non_open_procedure': 1.0,   # 0.18
+            'price_anomaly': 1.0,        # 0.18
         }
 
         score = calculate_risk_score(factors)
         level = get_risk_level(score)
 
         assert level == 'critical'
-        assert score >= 0.6
+        assert score >= 0.50
 
 
 if __name__ == '__main__':

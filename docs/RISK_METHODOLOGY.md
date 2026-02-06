@@ -1,6 +1,6 @@
-# Risk Scoring Methodology v3.2
+# Risk Scoring Methodology v3.3
 
-**Last Updated:** February 5, 2026 | **Contracts:** 3,110,017 | **Years:** 2002-2025
+**Last Updated:** February 6, 2026 | **Contracts:** 3,110,017 | **Years:** 2002-2025
 
 ---
 
@@ -13,7 +13,7 @@
 | **Medium** | ≥ 0.20 | 1,153,281 | 37.1% | Watch list |
 | **Low** | < 0.20 | 1,894,740 | 60.9% | Standard monitoring |
 
-**v3.2 achieves 2% high-risk rate** — within OECD benchmark of 2-15%.
+**v3.3 achieves 12.4% high-risk rate** (1.8% critical + 10.6% high) — within OECD benchmark of 2-15%.
 
 ---
 
@@ -23,16 +23,14 @@
 
 | Factor | Weight | Trigger |
 |--------|--------|---------|
-| Single Bidding | 15% | Only 1 vendor bid on competitive procedure |
-| Non-Open Procedure | 15% | Direct award or restricted tender |
-| Price Anomaly | 15% | Amount > 3x sector mean |
-| Vendor Concentration | 10% | Vendor holds >30% of sector contracts |
-| Short Ad Period | 10% | < 15 days between publication and award |
-| Year-End Timing | 5% | Contract signed in December |
-| Threshold Splitting | 5% | Multiple same-day contracts to same vendor |
-| Network Risk | 5% | Vendor in group of related entities |
-
-*Note: Short Decision Period (10%) and Contract Modification (10%) not implemented due to data gaps. Weights redistributed.*
+| Single Bidding | 18% | Only 1 vendor bid on competitive procedure |
+| Non-Open Procedure | 18% | Direct award or restricted tender |
+| Price Anomaly | 18% | Amount > 3x sector mean |
+| Vendor Concentration | 12% | Vendor holds >30% of sector contracts |
+| Short Ad Period | 12% | < 15 days between publication and award |
+| Year-End Timing | 7% | Contract signed in December |
+| Threshold Splitting | 7% | Multiple same-day contracts to same vendor |
+| Network Risk | 8% | Vendor in group of related entities |
 
 ### Bonus Factors (added on top)
 
@@ -45,7 +43,7 @@
 
 ---
 
-## Co-Bidding Detection (v3.2)
+## Co-Bidding Detection (v3.3)
 
 Identifies vendors that frequently bid in the same procedures — a key indicator of potential bid-rigging.
 
@@ -90,7 +88,7 @@ Extreme Fence = Q3 + 3.0 × IQR  (extreme overpricing)
 
 | Standard | How We Comply |
 |----------|---------------|
-| **IMF CRI** | 10-factor model weights based on IMF research |
+| **IMF CRI** | 8-factor model weights based on IMF research |
 | **OECD** | Single-bid and concentration indicators |
 | **EU ARACHNE** | Price anomaly and network analysis |
 | **World Bank INT** | Fraud red flags and collusion detection |
@@ -136,7 +134,8 @@ Extreme Fence = Q3 + 3.0 × IQR  (extreme overpricing)
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| **3.2.0** | 2026-02-05 | Co-bidding risk factor (+5%), lowered thresholds (critical ≥0.50, high ≥0.35), 1M+ contracts flagged |
+| **3.3.0** | 2026-02-06 | Reweighted to 8 base factors, updated thresholds (critical >=0.50, high >=0.35), 12.4% high-risk rate |
+| 3.2.0 | 2026-02-05 | Co-bidding risk factor (+5%), lowered thresholds (critical ≥0.50, high ≥0.35), 1M+ contracts flagged |
 | 3.1.0 | 2026-02-03 | Price hypothesis integration (+5%), 390K contracts flagged |
 | 3.0.0 | 2026-02 | Reweighted factors, interaction effects, sector baselines |
 | 2.0.0 | 2026-01 | Added short ad period, threshold splitting, network risk |

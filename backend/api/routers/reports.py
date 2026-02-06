@@ -285,16 +285,10 @@ async def get_vendor_report(
                 WHERE vendor_id = ? AND risk_factors IS NOT NULL AND risk_factors != ''
                 GROUP BY risk_factors ORDER BY cnt DESC LIMIT 10
             """, (vendor_id,))
-
+            rows = cursor.fetchall()
+            total_with_factors = sum(row['cnt'] for row in rows)
             factors_breakdown = []
-            total_with_factors = sum(row['cnt'] for row in cursor.fetchall())
-            cursor.execute("""
-                SELECT risk_factors, COUNT(*) as cnt
-                FROM contracts
-                WHERE vendor_id = ? AND risk_factors IS NOT NULL AND risk_factors != ''
-                GROUP BY risk_factors ORDER BY cnt DESC LIMIT 10
-            """, (vendor_id,))
-            for row in cursor.fetchall():
+            for row in rows:
                 factors_breakdown.append(RiskFactorBreakdown(
                     factor=row['risk_factors'],
                     count=row['cnt'],
@@ -441,7 +435,7 @@ async def get_vendor_report(
         raise
     except Exception as e:
         logger.error(f"Error generating vendor report: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal error generating report")
 
 
 # =============================================================================
@@ -648,7 +642,7 @@ async def get_institution_report(
         raise
     except Exception as e:
         logger.error(f"Error generating institution report: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal error generating report")
 
 
 # =============================================================================
@@ -889,7 +883,7 @@ async def get_sector_report(
         raise
     except Exception as e:
         logger.error(f"Error generating sector report: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal error generating report")
 
 
 # =============================================================================
@@ -1102,7 +1096,7 @@ async def get_thematic_report(
         raise
     except Exception as e:
         logger.error(f"Error generating thematic report: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal error generating report")
 
 
 # =============================================================================

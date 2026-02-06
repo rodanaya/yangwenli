@@ -18,7 +18,7 @@ Yang Wen-li is a transparency platform that analyzes **3.1+ million Mexican gove
 
 ### What It Does
 
-- **Risk Scoring**: 10-factor model aligned with IMF Corruption Risk Index methodology
+- **Risk Scoring**: 8-factor model aligned with IMF Corruption Risk Index methodology
 - **Vendor Analysis**: Entity resolution and network analysis to detect collusion patterns
 - **Sector Monitoring**: Track procurement patterns across 12 government sectors
 - **Anomaly Detection**: Statistical methods to identify suspicious contracts
@@ -32,7 +32,7 @@ Yang Wen-li is a transparency platform that analyzes **3.1+ million Mexican gove
 | Time Period | 2002-2025 |
 | Total Value | ~6-8 Trillion MXN |
 | Sectors Covered | 12 |
-| Risk Factors | 10 |
+| Risk Factors | 8 (+ 4 bonus) |
 
 ---
 
@@ -40,20 +40,18 @@ Yang Wen-li is a transparency platform that analyzes **3.1+ million Mexican gove
 
 ### Risk Scoring Model
 
-The platform implements a research-backed 10-factor risk model:
+The platform implements a research-backed 8-factor risk model:
 
 | Factor | Weight | Source |
 |--------|--------|--------|
-| Single bidding | 15% | OECD, EU ARACHNE |
-| Non-open procedure | 15% | UNCITRAL |
-| Price anomaly | 15% | World Bank INT |
-| Vendor concentration | 10% | G20 Guidelines |
-| Short ad period | 10% | EU Directive 2014/24 |
-| Short decision period | 10% | IMF CRI |
-| Year-end timing | 5% | IMCO Mexico |
-| Contract modification | 10% | UNODC |
-| Threshold splitting | 5% | ISO 37001 |
-| Network risk | 5% | OCDS |
+| Single bidding | 18% | OECD, EU ARACHNE |
+| Non-open procedure | 18% | UNCITRAL |
+| Price anomaly | 18% | World Bank INT |
+| Vendor concentration | 12% | G20 Guidelines |
+| Short ad period | 12% | EU Directive 2014/24 |
+| Year-end timing | 7% | IMCO Mexico |
+| Threshold splitting | 7% | ISO 37001 |
+| Network risk | 8% | OCDS |
 
 ### 12-Sector Taxonomy
 

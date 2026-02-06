@@ -9,7 +9,7 @@ Import from here instead of redefining.
 MAX_CONTRACT_VALUE = 100_000_000_000  # 100B MXN - reject above this
 FLAG_THRESHOLD = 10_000_000_000       # 10B MXN - flag for review
 
-# Risk level thresholds (v3.2+)
+# Risk level thresholds (v3.3)
 RISK_THRESHOLDS = {
     'critical': 0.50,
     'high': 0.35,

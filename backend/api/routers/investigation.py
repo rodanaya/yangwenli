@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 
 from ..dependencies import get_db_connection, get_db
+from ..config.constants import get_risk_level
 
 logger = logging.getLogger(__name__)
 
@@ -625,7 +626,7 @@ async def get_vendor_explanation(
             try:
                 shap_values = json.loads(row['shap_values'])
             except json.JSONDecodeError:
-                pass
+                logger.warning(f"Failed to parse SHAP values for vendor {row['vendor_id']}")
 
         # Parse top features
         top_features = []
@@ -641,18 +642,11 @@ async def get_vendor_explanation(
                         comparison=tf.get('comparison', '')
                     ))
             except json.JSONDecodeError:
-                pass
+                logger.warning(f"Failed to parse top features for vendor {row['vendor_id']}")
 
         # Determine risk level
         score = row['ensemble_score'] or 0
-        if score >= 0.6:
-            risk_level = "CRITICAL"
-        elif score >= 0.4:
-            risk_level = "HIGH"
-        elif score >= 0.2:
-            risk_level = "MEDIUM"
-        else:
-            risk_level = "LOW"
+        risk_level = get_risk_level(score).upper()
 
         return VendorExplanation(
             vendor_id=row['vendor_id'],
