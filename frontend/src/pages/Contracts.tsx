@@ -152,7 +152,7 @@ export function Contracts() {
             <FileText className="h-4.5 w-4.5 text-accent" />
             Contracts
           </h2>
-          <p className="text-xs text-text-muted mt-0.5">
+          <p className="text-xs text-text-muted mt-0.5" aria-live="polite">
             {data ? `${formatNumber(data.pagination.total)} records found` : 'Loading...'}
           </p>
         </div>
@@ -171,6 +171,7 @@ export function Contracts() {
               className="h-9 rounded-md border border-border bg-background-card pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
+              aria-label="Search contracts by name, number, or vendor"
             />
           </div>
 
@@ -179,6 +180,7 @@ export function Contracts() {
             className="h-9 rounded-md border border-border bg-background-card px-3 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
             value={filters.sector_id || ''}
             onChange={(e) => updateFilter('sector_id', e.target.value ? Number(e.target.value) : undefined)}
+            aria-label="Filter by sector"
           >
             <option value="">All Sectors</option>
             {SECTORS.map((s) => (
@@ -193,6 +195,7 @@ export function Contracts() {
             className="h-9 rounded-md border border-border bg-background-card px-3 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
             value={filters.year || ''}
             onChange={(e) => updateFilter('year', e.target.value ? Number(e.target.value) : undefined)}
+            aria-label="Filter by year"
           >
             <option value="">All Years</option>
             {Array.from({ length: 24 }, (_, i) => 2025 - i).map((year) => (
@@ -207,6 +210,7 @@ export function Contracts() {
             className="h-9 rounded-md border border-border bg-background-card px-3 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
             value={filters.risk_level || ''}
             onChange={(e) => updateFilter('risk_level', e.target.value || undefined)}
+            aria-label="Filter by risk level"
           >
             <option value="">All Risk Levels</option>
             <option value="critical">Critical</option>
@@ -377,7 +381,7 @@ export function Contracts() {
           ) : (
             <ScrollArea className="h-[600px]">
               <div className="overflow-x-auto min-w-full">
-              <table className="w-full min-w-[800px]">
+              <table className="w-full min-w-[800px]" role="table" aria-label="Contracts list">
                 <thead className="sticky top-0 z-10 bg-background-card/95 backdrop-blur-sm border-b-2 border-border shadow-sm">
                   <tr className="text-left text-xs font-semibold uppercase tracking-wider text-text-muted">
                     <th className="p-3 pl-4">Contract</th>
@@ -421,6 +425,7 @@ export function Contracts() {
               size="sm"
               disabled={filters.page === 1 || data.pagination.total_pages === 0}
               onClick={() => updateFilter('page', Math.max(1, (filters.page || 1) - 1))}
+              aria-label="Go to previous page"
             >
               <ChevronLeft className="h-4 w-4" />
               Previous
@@ -441,6 +446,7 @@ export function Contracts() {
                   Math.min(data.pagination.total_pages, (filters.page || 1) + 1)
                 )
               }
+              aria-label="Go to next page"
             >
               Next
               <ChevronRight className="h-4 w-4" />

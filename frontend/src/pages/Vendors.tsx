@@ -90,7 +90,7 @@ export function Vendors() {
             <Users className="h-4.5 w-4.5 text-accent" />
             Vendors
           </h2>
-          <p className="text-xs text-text-muted mt-0.5">
+          <p className="text-xs text-text-muted mt-0.5" aria-live="polite">
             {data ? `${formatNumber(data.pagination.total)} registered suppliers` : 'Loading...'}
           </p>
         </div>
@@ -109,6 +109,7 @@ export function Vendors() {
               className="h-9 rounded-md border border-border bg-background-card pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
+              aria-label="Search vendors by name or RFC"
             />
           </div>
 
@@ -116,6 +117,7 @@ export function Vendors() {
             className="h-9 rounded-md border border-border bg-background-card px-3 text-sm"
             value={filters.risk_level || ''}
             onChange={(e) => updateFilter('risk_level', e.target.value || undefined)}
+            aria-label="Filter by risk level"
           >
             <option value="">All Risk Levels</option>
             <option value="critical">Critical</option>
@@ -128,6 +130,7 @@ export function Vendors() {
             className="h-9 rounded-md border border-border bg-background-card px-3 text-sm"
             value={filters.min_contracts || ''}
             onChange={(e) => updateFilter('min_contracts', e.target.value ? Number(e.target.value) : undefined)}
+            aria-label="Filter by minimum contract count"
           >
             <option value="">Any Contracts</option>
             <option value="10">10+ contracts</option>
@@ -204,6 +207,7 @@ export function Vendors() {
               size="sm"
               disabled={filters.page === 1}
               onClick={() => updateFilter('page', filters.page! - 1)}
+              aria-label="Go to previous page"
             >
               <ChevronLeft className="h-4 w-4" />
               Previous
@@ -216,6 +220,7 @@ export function Vendors() {
               size="sm"
               disabled={filters.page === data.pagination.total_pages}
               onClick={() => updateFilter('page', filters.page! + 1)}
+              aria-label="Go to next page"
             >
               Next
               <ChevronRight className="h-4 w-4" />
@@ -239,6 +244,8 @@ function VendorCard({ vendor, style }: { vendor: VendorListItem; style?: React.C
     <Card
       className="hover:border-accent/50 hover:shadow-lg hover:shadow-accent/5 transition-all duration-200 animate-slide-up opacity-0 group"
       style={style}
+      role="article"
+      aria-label={vendor.name}
       {...prefetch}
     >
       <CardContent className="p-4 group-hover:bg-accent/[0.02] transition-colors">
