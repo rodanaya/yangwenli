@@ -59,13 +59,13 @@ def _warmup_caches():
     # Priority order: dashboard first (most critical), then supporting data
     endpoints = [
         "/api/v1/stats/dashboard/fast",          # Dashboard (highest priority)
+        "/api/v1/contracts/statistics",           # Contract stats (expensive aggregate)
         "/api/v1/analysis/anomalies",             # Dashboard alerts
         "/api/v1/vendors/top-all?limit=5",        # Vendors featured strips
         "/api/v1/sectors",                        # Sectors list
         "/api/v1/analysis/risk-distribution",     # Risk analysis
-        "/api/v1/analysis/year-over-year",        # Trends
+        "/api/v1/analysis/year-over-year",        # Trends (expensive GROUP BY)
         "/api/v1/stats/data-quality",             # Header quality badge
-        "/api/v1/network/graph?min_contracts=10&limit=50",  # Network (lowest priority)
     ]
     for ep in endpoints:
         try:

@@ -120,7 +120,7 @@ SECTOR_COLORS = {
 
 
 @router.get("/sectors", response_model=SectorListResponse)
-async def list_sectors(
+def list_sectors(
     year: Optional[int] = Query(None, ge=2002, le=2026, description="Filter by year"),
 ):
     """
@@ -217,7 +217,7 @@ async def list_sectors(
 
 
 @router.get("/sectors/{sector_id}", response_model=SectorDetailResponse)
-async def get_sector(
+def get_sector(
     sector_id: int = Path(..., ge=1, le=12, description="Sector ID (1-12)"),
 ):
     """
@@ -326,7 +326,7 @@ async def get_sector(
 
 
 @router.get("/sectors/{sector_id}/trends", response_model=SectorTrendListResponse)
-async def get_sector_trends(
+def get_sector_trends(
     sector_id: int = Path(..., ge=1, le=12, description="Sector ID"),
     start_year: Optional[int] = Query(None, ge=2002, description="Start year"),
     end_year: Optional[int] = Query(None, le=2026, description="End year"),
@@ -387,7 +387,7 @@ async def get_sector_trends(
 # =============================================================================
 
 @router.get("/analysis/overview", response_model=AnalysisOverview)
-async def get_analysis_overview():
+def get_analysis_overview():
     """
     Get high-level analysis overview.
 
@@ -476,7 +476,7 @@ async def get_analysis_overview():
 
 
 @router.get("/analysis/risk-distribution", response_model=RiskDistributionListResponse)
-async def get_risk_distribution(
+def get_risk_distribution(
     sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector ID (1-12)"),
     year: Optional[int] = Query(None, description="Filter by year"),
 ):
@@ -551,7 +551,7 @@ async def get_risk_distribution(
 
 
 @router.get("/analysis/year-over-year", response_model=YearOverYearListResponse)
-async def get_year_over_year(
+def get_year_over_year(
     sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector ID (1-12)"),
 ):
     """
@@ -621,7 +621,7 @@ async def get_year_over_year(
 
 
 @router.get("/analysis/vendor-concentration", response_model=SectorComparisonListResponse)
-async def get_vendor_concentration(
+def get_vendor_concentration(
     top_n: int = Query(10, ge=1, le=50, description="Number of top vendors"),
 ):
     """
@@ -698,7 +698,7 @@ async def get_vendor_concentration(
 
 
 @router.get("/analysis/direct-award-rate", response_model=SectorComparisonListResponse)
-async def get_direct_award_rate():
+def get_direct_award_rate():
     """
     Get direct award rate by sector.
 
@@ -740,7 +740,7 @@ async def get_direct_award_rate():
 
 
 @router.get("/analysis/single-bid-rate", response_model=SectorComparisonListResponse)
-async def get_single_bid_rate():
+def get_single_bid_rate():
     """
     Get single bid rate by sector.
 

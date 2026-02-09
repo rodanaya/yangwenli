@@ -331,7 +331,7 @@ async def search_contracts(args: dict) -> str:
     cursor = conn.cursor()
 
     try:
-        conditions = ["(c.amount_mxn IS NULL OR c.amount_mxn <= ?)"]
+        conditions = ["COALESCE(c.amount_mxn, 0) <= ?"]
         params = [MAX_CONTRACT_VALUE]
 
         if args.get("sector_id"):
@@ -638,7 +638,7 @@ async def get_vendor_profile(args: dict) -> str:
                 COUNT(DISTINCT institution_id) as institutions
             FROM contracts
             WHERE vendor_id = ?
-            AND (amount_mxn IS NULL OR amount_mxn <= ?)
+            AND COALESCE(amount_mxn, 0) <= ?
         """, (vendor_id, MAX_CONTRACT_VALUE))
 
         stats = cursor.fetchone()
@@ -650,7 +650,7 @@ async def get_vendor_profile(args: dict) -> str:
             FROM contracts c
             JOIN institutions i ON c.institution_id = i.id
             WHERE c.vendor_id = ?
-            AND (c.amount_mxn IS NULL OR c.amount_mxn <= ?)
+            AND COALESCE(c.amount_mxn, 0) <= ?
             GROUP BY i.id, i.name
             ORDER BY value DESC
             LIMIT 5
@@ -718,7 +718,7 @@ async def get_sector_risk_summary(args: dict) -> str:
     cursor = conn.cursor()
 
     try:
-        conditions = ["(amount_mxn IS NULL OR amount_mxn <= ?)"]
+        conditions = ["COALESCE(amount_mxn, 0) <= ?"]
         params = [MAX_CONTRACT_VALUE]
 
         sector_id = args.get("sector_id")
@@ -945,7 +945,7 @@ async def analyze_institution(args: dict) -> str:
             return f"Institution {institution_id} not found."
 
         # Build conditions
-        conditions = ["c.institution_id = ?", "(c.amount_mxn IS NULL OR c.amount_mxn <= ?)"]
+        conditions = ["c.institution_id = ?", "COALESCE(c.amount_mxn, 0) <= ?"]
         params = [institution_id, MAX_CONTRACT_VALUE]
 
         if args.get("year"):
@@ -1029,7 +1029,7 @@ async def get_network_graph(args: dict) -> str:
     cursor = conn.cursor()
 
     try:
-        conditions = ["(c.amount_mxn IS NULL OR c.amount_mxn <= ?)"]
+        conditions = ["COALESCE(c.amount_mxn, 0) <= ?"]
         params = [MAX_CONTRACT_VALUE]
 
         if args.get("sector_id"):
@@ -1172,7 +1172,7 @@ async def get_top_risk_contracts(args: dict) -> str:
     cursor = conn.cursor()
 
     try:
-        conditions = ["(c.amount_mxn IS NULL OR c.amount_mxn <= ?)", "c.risk_score IS NOT NULL"]
+        conditions = ["COALESCE(c.amount_mxn, 0) <= ?", "c.risk_score IS NOT NULL"]
         params = [MAX_CONTRACT_VALUE]
 
         if args.get("sector_id"):

@@ -77,7 +77,7 @@ AUTONOMY_BASELINES = {
 
 
 @router.get("", response_model=InstitutionListResponse)
-async def list_institutions(
+def list_institutions(
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     per_page: int = Query(50, ge=1, le=200, description="Items per page"),
     institution_type: Optional[str] = Query(None, description="Filter by institution type code"),
@@ -207,7 +207,7 @@ async def list_institutions(
 
 
 @router.get("/{institution_id}", response_model=InstitutionDetailResponse)
-async def get_institution(institution_id: int):
+def get_institution(institution_id: int):
     """
     Get details for a specific institution.
 
@@ -252,7 +252,7 @@ async def get_institution(institution_id: int):
                 AVG(risk_score) as avg_risk_score
             FROM contracts
             WHERE institution_id = ?
-            AND (amount_mxn IS NULL OR amount_mxn <= ?)
+            AND COALESCE(amount_mxn, 0) <= ?
         """, (institution_id, MAX_CONTRACT_VALUE))
         metrics_row = cursor.fetchone()
 
@@ -303,7 +303,7 @@ async def get_institution(institution_id: int):
 
 
 @router.get("/{institution_id}/risk-profile", response_model=InstitutionRiskProfile)
-async def get_institution_risk_profile(institution_id: int):
+def get_institution_risk_profile(institution_id: int):
     """
     Get detailed risk profile for an institution.
 
@@ -385,7 +385,7 @@ async def get_institution_risk_profile(institution_id: int):
 # =============================================================================
 
 @router.get("/search", response_model=InstitutionSearchResponse)
-async def search_institutions(
+def search_institutions(
     q: str = Query(..., min_length=2, description="Search query"),
     limit: int = Query(20, ge=1, le=100, description="Maximum results"),
 ):
@@ -448,7 +448,7 @@ async def search_institutions(
 
 
 @router.get("/compare", response_model=InstitutionComparisonResponse)
-async def compare_institutions(
+def compare_institutions(
     ids: str = Query(..., description="Comma-separated list of institution IDs to compare"),
 ):
     """
@@ -505,7 +505,7 @@ async def compare_institutions(
                         SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) as single_bid_count
                     FROM contracts
                     WHERE institution_id IN ({placeholders})
-                    AND (amount_mxn IS NULL OR amount_mxn <= ?)
+                    AND COALESCE(amount_mxn, 0) <= ?
                     GROUP BY institution_id
                 ) metrics ON i.id = metrics.institution_id
                 WHERE i.id IN ({placeholders})
@@ -560,7 +560,7 @@ async def compare_institutions(
 
 
 @router.get("/top", response_model=InstitutionTopListResponse)
-async def get_top_institutions(
+def get_top_institutions(
     by: str = Query("spending", description="Ranking metric: spending, contracts, risk"),
     limit: int = Query(20, ge=1, le=100, description="Number of results"),
     institution_type: Optional[str] = Query(None, description="Filter by institution type"),
@@ -576,7 +576,7 @@ async def get_top_institutions(
             cursor = conn.cursor()
 
             # Build filters
-            conditions = ["(c.amount_mxn IS NULL OR c.amount_mxn <= ?)"]
+            conditions = ["COALESCE(c.amount_mxn, 0) <= ?"]
             params = [MAX_CONTRACT_VALUE]
 
             if institution_type is not None:
@@ -647,7 +647,7 @@ async def get_top_institutions(
 
 
 @router.get("/hierarchy", response_model=InstitutionHierarchyResponse)
-async def get_institution_hierarchy():
+def get_institution_hierarchy():
     """
     Get institution hierarchy by type.
 
@@ -668,7 +668,7 @@ async def get_institution_hierarchy():
                 FROM institutions i
                 LEFT JOIN institution_types it ON i.institution_type = it.code
                 LEFT JOIN contracts c ON i.id = c.institution_id
-                    AND (c.amount_mxn IS NULL OR c.amount_mxn <= ?)
+                    AND COALESCE(c.amount_mxn, 0) <= ?
                 GROUP BY i.institution_type, it.name_es
                 ORDER BY total_contracts DESC
             """
@@ -703,7 +703,7 @@ async def get_institution_hierarchy():
 
 
 @router.get("/{institution_id}/contracts", response_model=ContractListResponse)
-async def get_institution_contracts(
+def get_institution_contracts(
     institution_id: int = Path(..., description="Institution ID"),
     page: int = Query(1, ge=1, description="Page number"),
     per_page: int = Query(50, ge=1, le=100, description="Items per page"),
@@ -726,7 +726,7 @@ async def get_institution_contracts(
                 raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
 
             # Build WHERE clause
-            conditions = ["c.institution_id = ?", "(c.amount_mxn IS NULL OR c.amount_mxn <= ?)"]
+            conditions = ["c.institution_id = ?", "COALESCE(c.amount_mxn, 0) <= ?"]
             params = [institution_id, MAX_CONTRACT_VALUE]
 
             if year is not None:
@@ -811,7 +811,7 @@ async def get_institution_contracts(
 
 
 @router.get("/{institution_id}/vendors", response_model=InstitutionVendorListResponse)
-async def get_institution_vendors(
+def get_institution_vendors(
     institution_id: int = Path(..., description="Institution ID"),
     limit: int = Query(50, ge=1, le=100, description="Maximum results"),
 ):
@@ -843,7 +843,7 @@ async def get_institution_vendors(
                 FROM contracts c
                 JOIN vendors v ON c.vendor_id = v.id
                 WHERE c.institution_id = ?
-                AND (c.amount_mxn IS NULL OR c.amount_mxn <= ?)
+                AND COALESCE(c.amount_mxn, 0) <= ?
                 GROUP BY v.id, v.name, v.rfc
                 ORDER BY contract_count DESC
                 LIMIT ?
@@ -882,7 +882,7 @@ async def get_institution_vendors(
 # =============================================================================
 
 @router.get("/types", response_model=InstitutionTypeListResponse)
-async def list_institution_types():
+def list_institution_types():
     """
     List all institution types.
 
@@ -922,7 +922,7 @@ async def list_institution_types():
 
 
 @router.get("/size-tiers", response_model=SizeTierListResponse)
-async def list_size_tiers():
+def list_size_tiers():
     """
     List all size tiers.
 
@@ -961,7 +961,7 @@ async def list_size_tiers():
 
 
 @router.get("/autonomy-levels", response_model=AutonomyLevelListResponse)
-async def list_autonomy_levels():
+def list_autonomy_levels():
     """
     List all autonomy levels.
 

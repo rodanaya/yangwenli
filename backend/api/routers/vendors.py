@@ -43,7 +43,7 @@ router = APIRouter(prefix="/vendors", tags=["vendors"])
 # =============================================================================
 
 @router.get("", response_model=VendorListResponse)
-async def list_vendors(
+def list_vendors(
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     per_page: int = Query(50, ge=1, le=100, description="Items per page"),
     search: Optional[str] = Query(None, min_length=2, description="Search vendor name or RFC"),
@@ -182,7 +182,7 @@ async def list_vendors(
 
 
 @router.get("/compare", response_model=VendorComparisonResponse)
-async def compare_vendors(
+def compare_vendors(
     ids: str = Query(..., description="Comma-separated list of vendor IDs to compare"),
 ):
     """
@@ -245,7 +245,7 @@ async def compare_vendors(
                         COUNT(DISTINCT institution_id) as institution_count
                     FROM contracts
                     WHERE vendor_id IN ({placeholders})
-                    AND (amount_mxn IS NULL OR amount_mxn <= ?)
+                    AND COALESCE(amount_mxn, 0) <= ?
                     GROUP BY vendor_id
                 ) metrics ON v.id = metrics.vendor_id
                 WHERE v.id IN ({placeholders})
@@ -302,7 +302,7 @@ async def compare_vendors(
 
 
 @router.get("/top-all")
-async def get_top_vendors_all(
+def get_top_vendors_all(
     limit: int = Query(5, ge=1, le=20, description="Number per category"),
 ):
     """
@@ -318,8 +318,8 @@ async def get_top_vendors_all(
                 cursor.execute(f"""
                     SELECT id, name, rfc, {sort_field} as metric_value,
                            total_contracts, COALESCE(total_amount_mxn, 0) as total_value_mxn
-                    FROM vendors WHERE total_contracts > 0
-                    ORDER BY {sort_field} DESC NULLS LAST LIMIT ?
+                    FROM vendors
+                    ORDER BY {sort_field} DESC LIMIT ?
                 """, (limit,))
                 result[metric] = [
                     {
@@ -335,19 +335,16 @@ async def get_top_vendors_all(
                     for i, row in enumerate(cursor.fetchall())
                 ]
 
-            # Risk requires a join
+            # Risk: use pre-computed avg_risk_score on vendors table
             cursor.execute("""
-                SELECT v.id, v.name, v.rfc,
-                       AVG(c.risk_score) as metric_value,
-                       COUNT(c.id) as total_contracts,
-                       COALESCE(SUM(c.amount_mxn), 0) as total_value_mxn,
-                       AVG(c.risk_score) as avg_risk_score
-                FROM vendors v
-                JOIN contracts c ON v.id = c.vendor_id
-                WHERE c.amount_mxn <= 100000000000
-                GROUP BY v.id, v.name, v.rfc
-                HAVING COUNT(c.id) >= 5
-                ORDER BY metric_value DESC NULLS LAST
+                SELECT id, name, rfc,
+                       avg_risk_score as metric_value,
+                       total_contracts,
+                       COALESCE(total_amount_mxn, 0) as total_value_mxn,
+                       avg_risk_score
+                FROM vendors
+                WHERE total_contracts >= 5 AND avg_risk_score IS NOT NULL
+                ORDER BY avg_risk_score DESC
                 LIMIT ?
             """, (limit,))
             result["risk"] = [
@@ -371,7 +368,7 @@ async def get_top_vendors_all(
 
 
 @router.get("/top", response_model=VendorTopListResponse)
-async def get_top_vendors(
+def get_top_vendors(
     by: str = Query("value", description="Ranking metric: value, count, risk"),
     limit: int = Query(20, ge=1, le=100, description="Number of results"),
     sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector"),
@@ -393,9 +390,18 @@ async def get_top_vendors(
                 raise HTTPException(status_code=400, detail=f"Invalid metric '{by}'. Use: value, count, risk")
 
             # Fast path: use precomputed aggregates when no filters
-            if sector_id is None and year is None and by != "risk":
+            if sector_id is None and year is None:
                 # Use precomputed fields in vendors table
-                sort_field = "total_amount_mxn" if by == "value" else "total_contracts"
+                if by == "risk":
+                    sort_field = "avg_risk_score"
+                elif by == "value":
+                    sort_field = "total_amount_mxn"
+                else:
+                    sort_field = "total_contracts"
+                if by == "risk":
+                    where_clause = "WHERE total_contracts >= 5 AND avg_risk_score IS NOT NULL"
+                else:
+                    where_clause = ""  # Index-only scan, top N by sort_field
                 query = f"""
                     SELECT
                         id,
@@ -403,10 +409,11 @@ async def get_top_vendors(
                         rfc,
                         {sort_field} as metric_value,
                         total_contracts,
-                        COALESCE(total_amount_mxn, 0) as total_value_mxn
+                        COALESCE(total_amount_mxn, 0) as total_value_mxn,
+                        avg_risk_score
                     FROM vendors
-                    WHERE total_contracts > 0
-                    ORDER BY {sort_field} DESC NULLS LAST
+                    {where_clause}
+                    ORDER BY {sort_field} DESC
                     LIMIT ?
                 """
                 cursor.execute(query, (limit,))
@@ -421,7 +428,7 @@ async def get_top_vendors(
                         metric_value=row["metric_value"] or 0,
                         total_contracts=row["total_contracts"],
                         total_value_mxn=row["total_value_mxn"],
-                        avg_risk_score=None,  # Not available in fast path
+                        avg_risk_score=row["avg_risk_score"],
                     )
                     for i, row in enumerate(rows)
                 ]
@@ -433,7 +440,7 @@ async def get_top_vendors(
                 )
 
             # Slow path: compute aggregates with filters
-            conditions = ["(c.amount_mxn IS NULL OR c.amount_mxn <= ?)"]
+            conditions = ["COALESCE(c.amount_mxn, 0) <= ?"]
             params = [MAX_CONTRACT_VALUE]
 
             if sector_id is not None:
@@ -500,7 +507,7 @@ async def get_top_vendors(
 
 
 @router.get("/{vendor_id}", response_model=VendorDetailResponse)
-async def get_vendor(
+def get_vendor(
     vendor_id: int = Path(..., description="Vendor ID"),
 ):
     """
@@ -551,7 +558,7 @@ async def get_vendor(
                     SUM(CASE WHEN mahalanobis_distance > 21.026 THEN 1 ELSE 0 END) as anomalous_count
                 FROM contracts
                 WHERE vendor_id = ?
-                AND (amount_mxn IS NULL OR amount_mxn <= ?)
+                AND COALESCE(amount_mxn, 0) <= ?
             """, (vendor_id, MAX_CONTRACT_VALUE))
 
             stats = cursor.fetchone()
@@ -610,7 +617,7 @@ async def get_vendor(
 
 
 @router.get("/{vendor_id}/contracts", response_model=ContractListResponse)
-async def get_vendor_contracts(
+def get_vendor_contracts(
     vendor_id: int = Path(..., description="Vendor ID"),
     page: int = Query(1, ge=1, description="Page number"),
     per_page: int = Query(50, ge=1, le=100, description="Items per page"),
@@ -634,7 +641,7 @@ async def get_vendor_contracts(
                 raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
 
             # Build WHERE clause
-            conditions = ["c.vendor_id = ?", "(c.amount_mxn IS NULL OR c.amount_mxn <= ?)"]
+            conditions = ["c.vendor_id = ?", "COALESCE(c.amount_mxn, 0) <= ?"]
             params = [vendor_id, MAX_CONTRACT_VALUE]
 
             if year is not None:
@@ -724,7 +731,7 @@ async def get_vendor_contracts(
 
 
 @router.get("/{vendor_id}/institutions", response_model=VendorInstitutionListResponse)
-async def get_vendor_institutions(
+def get_vendor_institutions(
     vendor_id: int = Path(..., description="Vendor ID"),
     limit: int = Query(50, ge=1, le=100, description="Maximum results"),
 ):
@@ -756,7 +763,7 @@ async def get_vendor_institutions(
                 FROM contracts c
                 JOIN institutions i ON c.institution_id = i.id
                 WHERE c.vendor_id = ?
-                AND (c.amount_mxn IS NULL OR c.amount_mxn <= ?)
+                AND COALESCE(c.amount_mxn, 0) <= ?
                 GROUP BY i.id, i.name, i.institution_type
                 ORDER BY contract_count DESC
                 LIMIT ?
@@ -791,7 +798,7 @@ async def get_vendor_institutions(
 
 
 @router.get("/{vendor_id}/risk-profile", response_model=VendorRiskProfile)
-async def get_vendor_risk_profile(
+def get_vendor_risk_profile(
     vendor_id: int = Path(..., description="Vendor ID"),
 ):
     """
@@ -814,7 +821,7 @@ async def get_vendor_risk_profile(
                 SELECT risk_level, COUNT(*) as count, COALESCE(SUM(amount_mxn), 0) as value
                 FROM contracts
                 WHERE vendor_id = ?
-                AND (amount_mxn IS NULL OR amount_mxn <= ?)
+                AND COALESCE(amount_mxn, 0) <= ?
                 GROUP BY risk_level
             """, (vendor_id, MAX_CONTRACT_VALUE))
 
@@ -830,7 +837,7 @@ async def get_vendor_risk_profile(
                 SELECT AVG(risk_score) as avg_risk
                 FROM contracts
                 WHERE vendor_id = ?
-                AND (amount_mxn IS NULL OR amount_mxn <= ?)
+                AND COALESCE(amount_mxn, 0) <= ?
             """, (vendor_id, MAX_CONTRACT_VALUE))
             avg_risk = cursor.fetchone()["avg_risk"]
 
@@ -845,7 +852,7 @@ async def get_vendor_risk_profile(
                            COUNT(*) OVER () as cnt
                     FROM contracts
                     WHERE vendor_id = ?
-                    AND (amount_mxn IS NULL OR amount_mxn <= ?)
+                    AND COALESCE(amount_mxn, 0) <= ?
                 ) sub
             """, (vendor_id, MAX_CONTRACT_VALUE))
             trend_row = cursor.fetchone()
@@ -864,7 +871,7 @@ async def get_vendor_risk_profile(
                 SELECT risk_factors FROM contracts
                 WHERE vendor_id = ?
                 AND risk_factors IS NOT NULL AND risk_factors != ''
-                AND (amount_mxn IS NULL OR amount_mxn <= ?)
+                AND COALESCE(amount_mxn, 0) <= ?
             """, (vendor_id, MAX_CONTRACT_VALUE))
 
             factor_counts = Counter()
@@ -896,7 +903,7 @@ async def get_vendor_risk_profile(
                     SELECT AVG(risk_score) as sector_avg
                     FROM contracts
                     WHERE sector_id = ?
-                    AND (amount_mxn IS NULL OR amount_mxn <= ?)
+                    AND COALESCE(amount_mxn, 0) <= ?
                 """, (primary_sector["sector_id"], MAX_CONTRACT_VALUE))
                 sector_avg = cursor.fetchone()["sector_avg"]
                 if sector_avg:
@@ -908,11 +915,11 @@ async def get_vendor_risk_profile(
                 cursor.execute("""
                     SELECT
                         (SELECT COUNT(DISTINCT vendor_id) FROM contracts
-                         WHERE (amount_mxn IS NULL OR amount_mxn <= ?)) as total_vendors,
+                         WHERE COALESCE(amount_mxn, 0) <= ?) as total_vendors,
                         (SELECT COUNT(*) FROM (
                             SELECT vendor_id, AVG(risk_score) as avg_r
                             FROM contracts
-                            WHERE (amount_mxn IS NULL OR amount_mxn <= ?)
+                            WHERE COALESCE(amount_mxn, 0) <= ?
                             GROUP BY vendor_id
                             HAVING avg_r < ?
                         )) as lower_count
@@ -939,7 +946,7 @@ async def get_vendor_risk_profile(
 
 
 @router.get("/{vendor_id}/related", response_model=VendorRelatedListResponse)
-async def get_vendor_related(
+def get_vendor_related(
     vendor_id: int = Path(..., description="Vendor ID"),
     limit: int = Query(20, ge=1, le=50, description="Maximum results"),
 ):
@@ -972,7 +979,7 @@ async def get_vendor_related(
                         COALESCE(SUM(c.amount_mxn), 0) as total_value_mxn
                     FROM vendors v
                     LEFT JOIN contracts c ON v.id = c.vendor_id
-                        AND (c.amount_mxn IS NULL OR c.amount_mxn <= ?)
+                        AND COALESCE(c.amount_mxn, 0) <= ?
                     WHERE v.group_id = ? AND v.id != ?
                     GROUP BY v.id, v.name, v.rfc
                     LIMIT ?
@@ -999,7 +1006,7 @@ async def get_vendor_related(
                         COALESCE(SUM(c.amount_mxn), 0) as total_value_mxn
                     FROM vendors v
                     LEFT JOIN contracts c ON v.id = c.vendor_id
-                        AND (c.amount_mxn IS NULL OR c.amount_mxn <= ?)
+                        AND COALESCE(c.amount_mxn, 0) <= ?
                     WHERE v.rfc LIKE ? AND v.id != ?
                     AND v.id NOT IN (SELECT id FROM vendors WHERE group_id = ?)
                     GROUP BY v.id, v.name, v.rfc
@@ -1032,7 +1039,7 @@ async def get_vendor_related(
                             COALESCE(SUM(c.amount_mxn), 0) as total_value_mxn
                         FROM vendors v
                         LEFT JOIN contracts c ON v.id = c.vendor_id
-                            AND (c.amount_mxn IS NULL OR c.amount_mxn <= ?)
+                            AND COALESCE(c.amount_mxn, 0) <= ?
                         WHERE v.name_normalized LIKE ? AND v.id != ?
                         GROUP BY v.id, v.name, v.rfc
                         LIMIT ?
@@ -1067,7 +1074,7 @@ async def get_vendor_related(
 # =============================================================================
 
 @router.get("/{vendor_id}/classification", response_model=VendorClassificationResponse)
-async def get_vendor_classification(vendor_id: int):
+def get_vendor_classification(vendor_id: int):
     """
     Get classification for a specific vendor.
 
@@ -1114,7 +1121,7 @@ async def get_vendor_classification(vendor_id: int):
 
 
 @router.get("/verified", response_model=VerifiedVendorListResponse)
-async def list_verified_vendors(
+def list_verified_vendors(
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     per_page: int = Query(50, ge=1, le=200, description="Items per page"),
     industry_id: Optional[int] = Query(None, description="Filter by industry ID"),

@@ -90,7 +90,7 @@ def generate_csv(rows, columns):
 
 @router.get("/contracts/csv")
 @rate_limit("10/minute")
-async def export_contracts_csv(
+def export_contracts_csv(
     request: Request,
     sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector ID (1-12)"),
     year: Optional[int] = Query(None, ge=2002, le=2026, description="Filter by contract year"),
@@ -114,7 +114,7 @@ async def export_contracts_csv(
             cursor = conn.cursor()
 
             # Build WHERE clause
-            conditions = ["(c.amount_mxn IS NULL OR c.amount_mxn <= ?)"]
+            conditions = ["COALESCE(c.amount_mxn, 0) <= ?"]
             params = [MAX_CONTRACT_VALUE]
 
             if sector_id is not None:
@@ -232,7 +232,7 @@ async def export_contracts_csv(
 
 @router.get("/contracts/excel")
 @rate_limit("10/minute")
-async def export_contracts_excel(
+def export_contracts_excel(
     request: Request,
     sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector ID (1-12)"),
     year: Optional[int] = Query(None, ge=2002, le=2026, description="Filter by contract year"),
@@ -266,7 +266,7 @@ async def export_contracts_excel(
             cursor = conn.cursor()
 
             # Build WHERE clause (same as CSV)
-            conditions = ["(c.amount_mxn IS NULL OR c.amount_mxn <= ?)"]
+            conditions = ["COALESCE(c.amount_mxn, 0) <= ?"]
             params = [MAX_CONTRACT_VALUE]
 
             if sector_id is not None:
@@ -395,7 +395,7 @@ async def export_contracts_excel(
 
 @router.get("/vendors/csv")
 @rate_limit("10/minute")
-async def export_vendors_csv(
+def export_vendors_csv(
     request: Request,
     sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by primary sector"),
     min_contracts: Optional[int] = Query(None, ge=1, description="Minimum contract count"),
@@ -467,7 +467,7 @@ async def export_vendors_csv(
                     COUNT(DISTINCT c.sector_id) as sectors_count
                 FROM vendors v
                 LEFT JOIN contracts c ON v.id = c.vendor_id
-                    AND (c.amount_mxn IS NULL OR c.amount_mxn <= ?)
+                    AND COALESCE(c.amount_mxn, 0) <= ?
                 WHERE {where_clause}
                 GROUP BY v.id, v.name, v.rfc, v.name_normalized
                 HAVING {having_clause}

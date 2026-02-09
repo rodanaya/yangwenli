@@ -56,7 +56,7 @@ class DatabaseStatsResponse(BaseModel):
 
 
 @router.get("/database", response_model=DatabaseStatsResponse)
-async def get_database_stats():
+def get_database_stats():
     """
     Get database-wide statistics.
 
@@ -125,7 +125,7 @@ SECTOR_NAMES = {
 
 
 @router.get("/classifications", response_model=ClassificationStatsResponse)
-async def get_classification_stats():
+def get_classification_stats():
     """
     Get comprehensive classification statistics.
 
@@ -230,7 +230,7 @@ class FastDashboardResponse(BaseModel):
 
 
 @router.get("/dashboard/fast", response_model=FastDashboardResponse)
-async def get_fast_dashboard(response: Response):
+def get_fast_dashboard(response: Response):
     """
     Get pre-computed dashboard statistics for instant loading.
 
@@ -329,7 +329,7 @@ class DataQualityResponse(BaseModel):
 
 
 @router.get("/data-quality", response_model=DataQualityResponse)
-async def get_data_quality(response: Response):
+def get_data_quality(response: Response):
     """
     Get comprehensive data quality metrics.
 

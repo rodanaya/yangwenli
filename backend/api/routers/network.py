@@ -126,7 +126,7 @@ class InstitutionNetworkResponse(BaseModel):
 # =============================================================================
 
 @router.get("/graph", response_model=NetworkGraphResponse)
-async def get_network_graph(
+def get_network_graph(
     vendor_id: Optional[int] = Query(None, description="Center graph on this vendor"),
     institution_id: Optional[int] = Query(None, description="Center graph on this institution"),
     sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector"),
@@ -158,7 +158,7 @@ async def get_network_graph(
             links = []
 
             # Build query conditions
-            conditions = ["(c.amount_mxn IS NULL OR c.amount_mxn <= ?)"]
+            conditions = ["COALESCE(c.amount_mxn, 0) <= ?"]
             params = [MAX_CONTRACT_VALUE]
 
             if sector_id:
@@ -395,7 +395,7 @@ async def get_network_graph(
 
 
 @router.get("/co-bidders/{vendor_id}", response_model=CoBiddersResponse)
-async def get_co_bidders(
+def get_co_bidders(
     vendor_id: int = Path(..., description="Vendor ID to analyze"),
     min_procedures: int = Query(3, ge=1, description="Minimum shared procedures"),
     limit: int = Query(20, ge=1, le=100, description="Maximum co-bidders to return"),
@@ -526,7 +526,7 @@ async def get_co_bidders(
 
 
 @router.get("/institution-vendors/{institution_id}", response_model=InstitutionNetworkResponse)
-async def get_institution_vendors(
+def get_institution_vendors(
     institution_id: int = Path(..., description="Institution ID"),
     year: Optional[int] = Query(None, ge=2002, le=2026, description="Filter by year"),
     min_contracts: int = Query(1, ge=1, description="Minimum contracts"),
@@ -552,7 +552,7 @@ async def get_institution_vendors(
                 raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
 
             # Build conditions
-            conditions = ["c.institution_id = ?", "(c.amount_mxn IS NULL OR c.amount_mxn <= ?)"]
+            conditions = ["c.institution_id = ?", "COALESCE(c.amount_mxn, 0) <= ?"]
             params = [institution_id, MAX_CONTRACT_VALUE]
 
             if year:
@@ -631,7 +631,7 @@ async def get_institution_vendors(
 
 
 @router.get("/related-vendors/{vendor_id}")
-async def get_related_vendors(
+def get_related_vendors(
     vendor_id: int = Path(..., description="Vendor ID"),
     limit: int = Query(20, ge=1, le=50, description="Maximum results"),
 ):
@@ -666,7 +666,7 @@ async def get_related_vendors(
                         COALESCE(SUM(c.amount_mxn), 0) as value
                     FROM vendors v
                     LEFT JOIN contracts c ON v.id = c.vendor_id
-                        AND (c.amount_mxn IS NULL OR c.amount_mxn <= ?)
+                        AND COALESCE(c.amount_mxn, 0) <= ?
                     WHERE v.group_id = ? AND v.id != ?
                     GROUP BY v.id, v.name, v.rfc
                     LIMIT ?
@@ -694,7 +694,7 @@ async def get_related_vendors(
                         COALESCE(SUM(c.amount_mxn), 0) as value
                     FROM vendors v
                     LEFT JOIN contracts c ON v.id = c.vendor_id
-                        AND (c.amount_mxn IS NULL OR c.amount_mxn <= ?)
+                        AND COALESCE(c.amount_mxn, 0) <= ?
                     WHERE v.rfc LIKE ? AND v.id != ?
                     AND v.id NOT IN (SELECT id FROM vendors WHERE group_id = ?)
                     GROUP BY v.id, v.name, v.rfc
@@ -724,7 +724,7 @@ async def get_related_vendors(
                         COALESCE(SUM(c.amount_mxn), 0) as value
                     FROM vendors v
                     LEFT JOIN contracts c ON v.id = c.vendor_id
-                        AND (c.amount_mxn IS NULL OR c.amount_mxn <= ?)
+                        AND COALESCE(c.amount_mxn, 0) <= ?
                     WHERE v.phonetic_code = ? AND v.id != ?
                     GROUP BY v.id, v.name, v.rfc
                     LIMIT ?

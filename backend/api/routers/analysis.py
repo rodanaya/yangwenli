@@ -198,7 +198,7 @@ MONTH_NAMES = [
 # =============================================================================
 
 @router.get("/risk-overview")
-async def get_risk_overview():
+def get_risk_overview():
     """
     Combined risk analysis data for the Risk Analysis page.
     Returns overview + risk distribution + yearly trends in one request.
@@ -240,7 +240,7 @@ _pattern_counts_cache: Dict[str, Any] = {}
 _pattern_counts_ts: float = 0
 
 @router.get("/patterns/counts")
-async def get_pattern_counts():
+def get_pattern_counts():
     """
     Return all pattern match counts in a single request.
     Replaces 4+ separate per_page=1 queries from DetectivePatterns page.
@@ -260,28 +260,28 @@ async def get_pattern_counts():
 
             # Critical-risk contracts (ghost vendors pattern)
             cursor.execute(
-                "SELECT COUNT(*) FROM contracts WHERE risk_level = 'critical' AND (amount_mxn IS NULL OR amount_mxn <= ?)",
+                "SELECT COUNT(*) FROM contracts WHERE risk_level = 'critical' AND COALESCE(amount_mxn, 0) <= ?",
                 (MAX_CONTRACT_VALUE,)
             )
             counts["critical"] = cursor.fetchone()[0]
 
             # Year-end high-risk (December rush)
             cursor.execute(
-                "SELECT COUNT(*) FROM contracts WHERE risk_level IN ('high', 'critical') AND contract_month = 12 AND (amount_mxn IS NULL OR amount_mxn <= ?)",
+                "SELECT COUNT(*) FROM contracts WHERE risk_level IN ('high', 'critical') AND contract_month = 12 AND COALESCE(amount_mxn, 0) <= ?",
                 (MAX_CONTRACT_VALUE,)
             )
             counts["december_rush"] = cursor.fetchone()[0]
 
             # Threshold splitting (risk_factors contains 'split_' entries like 'split_2', 'split_3')
             cursor.execute(
-                "SELECT COUNT(*) FROM contracts WHERE risk_factors LIKE '%split_%' AND (amount_mxn IS NULL OR amount_mxn <= ?)",
+                "SELECT COUNT(*) FROM contracts WHERE risk_factors LIKE '%split_%' AND COALESCE(amount_mxn, 0) <= ?",
                 (MAX_CONTRACT_VALUE,)
             )
             counts["split_contracts"] = cursor.fetchone()[0]
 
             # Co-bidding flagged (risk_factors contains 'co_bid' entries like 'co_bid_med:71%:2p')
             cursor.execute(
-                "SELECT COUNT(*) FROM contracts WHERE risk_factors LIKE '%co_bid%' AND (amount_mxn IS NULL OR amount_mxn <= ?)",
+                "SELECT COUNT(*) FROM contracts WHERE risk_factors LIKE '%co_bid%' AND COALESCE(amount_mxn, 0) <= ?",
                 (MAX_CONTRACT_VALUE,)
             )
             counts["co_bidding"] = cursor.fetchone()[0]
@@ -308,7 +308,7 @@ async def get_pattern_counts():
 # =============================================================================
 
 @router.get("/monthly-breakdown/{year}", response_model=MonthlyBreakdownResponse)
-async def get_monthly_breakdown(
+def get_monthly_breakdown(
     year: int = Path(..., ge=2002, le=2026, description="Year to analyze"),
     sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector"),
     institution_id: Optional[int] = Query(None, description="Filter by institution"),
@@ -318,7 +318,7 @@ async def get_monthly_breakdown(
         with get_db() as conn:
             cursor = conn.cursor()
 
-            conditions = ["contract_year = ?", "(amount_mxn IS NULL OR amount_mxn <= ?)"]
+            conditions = ["contract_year = ?", "COALESCE(amount_mxn, 0) <= ?"]
             params: List[Any] = [year, MAX_CONTRACT_VALUE]
 
             where_clause, params = build_where_clause(
@@ -385,19 +385,29 @@ async def get_monthly_breakdown(
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
+_yoy_cache: Dict[str, Any] = {}
+_YOY_CACHE_TTL = 600  # 10 minutes
+
+
 @router.get("/year-over-year", response_model=YearOverYearResponse)
-async def get_year_over_year(
+def get_year_over_year(
     sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector"),
     start_year: Optional[int] = Query(None, ge=2002, le=2026, description="Start year"),
     end_year: Optional[int] = Query(None, ge=2002, le=2026, description="End year"),
 ):
     """Get year-over-year trends."""
     try:
+        import time as _time
+        cache_key = f"yoy:{sector_id}:{start_year}:{end_year}"
+        cached = _yoy_cache.get(cache_key)
+        if cached and (_time.time() - cached["ts"]) < _YOY_CACHE_TTL:
+            return cached["data"]
+
         with get_db() as conn:
             cursor = conn.cursor()
 
-            conditions = ["contract_year IS NOT NULL", "(amount_mxn IS NULL OR amount_mxn <= ?)"]
-            params: List[Any] = [MAX_CONTRACT_VALUE]
+            conditions = ["contract_year IS NOT NULL"]
+            params: List[Any] = []
 
             where_clause, params = build_where_clause(
                 conditions, params,
@@ -435,11 +445,13 @@ async def get_year_over_year(
             ) for row in cursor.fetchall()]
 
             years = [d.year for d in data]
-            return YearOverYearResponse(
+            result = YearOverYearResponse(
                 data=data, total_years=len(data),
                 min_year=min(years) if years else 2002,
                 max_year=max(years) if years else 2025
             )
+            _yoy_cache[cache_key] = {"ts": _time.time(), "data": result}
+            return result
 
     except sqlite3.Error as e:
         logger.error(f"Database error in get_year_over_year: {e}")
@@ -447,7 +459,7 @@ async def get_year_over_year(
 
 
 @router.get("/temporal-events", response_model=TemporalEventsResponse)
-async def get_temporal_events(
+def get_temporal_events(
     year: Optional[int] = Query(None, ge=2002, le=2026, description="Filter by year"),
     event_type: Optional[str] = Query(None, description="Filter by type"),
     impact: Optional[str] = Query(None, description="Filter by impact"),
@@ -469,7 +481,7 @@ async def get_temporal_events(
 
 
 @router.get("/compare-periods", response_model=PeriodComparisonResponse)
-async def compare_periods(
+def compare_periods(
     period1_start: int = Query(..., ge=2002, le=2026),
     period1_end: int = Query(..., ge=2002, le=2026),
     period2_start: int = Query(..., ge=2002, le=2026),
@@ -484,7 +496,7 @@ async def compare_periods(
             def get_period_stats(start: int, end: int) -> dict:
                 conditions = [
                     "contract_year >= ?", "contract_year <= ?",
-                    "(amount_mxn IS NULL OR amount_mxn <= ?)"
+                    "COALESCE(amount_mxn, 0) <= ?"
                 ]
                 params: List[Any] = [start, end, MAX_CONTRACT_VALUE]
                 if sector_id:
@@ -563,7 +575,7 @@ async def compare_periods(
 
 
 @router.get("/december-spike-analysis")
-async def get_december_spike_analysis(
+def get_december_spike_analysis(
     start_year: int = Query(2015, ge=2002, le=2026),
     end_year: int = Query(2024, ge=2002, le=2026),
     sector_id: Optional[int] = Query(None, ge=1, le=12),
@@ -575,7 +587,7 @@ async def get_december_spike_analysis(
 
             conditions = [
                 "contract_year >= ?", "contract_year <= ?",
-                "(amount_mxn IS NULL OR amount_mxn <= ?)",
+                "COALESCE(amount_mxn, 0) <= ?",
                 "contract_date IS NOT NULL"
             ]
             params: List[Any] = [start_year, end_year, MAX_CONTRACT_VALUE]
@@ -638,7 +650,7 @@ async def get_december_spike_analysis(
 # =============================================================================
 
 @router.get("/price-hypotheses", response_model=PriceHypothesesResponse)
-async def list_price_hypotheses(
+def list_price_hypotheses(
     hypothesis_type: Optional[str] = Query(None),
     confidence_level: Optional[str] = Query(None),
     min_confidence: Optional[float] = Query(None, ge=0, le=1),
@@ -728,7 +740,7 @@ async def list_price_hypotheses(
 
 
 @router.get("/price-hypotheses/summary")
-async def get_price_hypotheses_summary():
+def get_price_hypotheses_summary():
     """Get summary statistics for price hypotheses."""
     try:
         with get_db() as conn:
@@ -802,7 +814,7 @@ async def get_price_hypotheses_summary():
 
 
 @router.get("/price-hypotheses/{hypothesis_id}", response_model=PriceHypothesisDetailResponse)
-async def get_price_hypothesis_detail(hypothesis_id: str = Path(...)):
+def get_price_hypothesis_detail(hypothesis_id: str = Path(...)):
     """Get detailed information about a specific price hypothesis."""
     try:
         with get_db() as conn:
@@ -912,7 +924,7 @@ async def get_price_hypothesis_detail(hypothesis_id: str = Path(...)):
 
 
 @router.put("/price-hypotheses/{hypothesis_id}/review")
-async def review_price_hypothesis(hypothesis_id: str = Path(...), review: HypothesisReviewRequest = None):
+def review_price_hypothesis(hypothesis_id: str = Path(...), review: HypothesisReviewRequest = None):
     """Review and validate a price hypothesis."""
     try:
         with get_db() as conn:
@@ -940,7 +952,7 @@ async def review_price_hypothesis(hypothesis_id: str = Path(...), review: Hypoth
 
 
 @router.get("/contracts/{contract_id}/price-analysis", response_model=ContractPriceAnalysisResponse)
-async def get_contract_price_analysis(contract_id: int = Path(...)):
+def get_contract_price_analysis(contract_id: int = Path(...)):
     """Get price analysis for a specific contract."""
     try:
         with get_db() as conn:
@@ -1044,7 +1056,7 @@ async def get_contract_price_analysis(contract_id: int = Path(...)):
 
 
 @router.get("/price-baselines", response_model=List[SectorPriceBaselineResponse])
-async def get_price_baselines(sector_id: Optional[int] = Query(None, ge=1, le=12)):
+def get_price_baselines(sector_id: Optional[int] = Query(None, ge=1, le=12)):
     """Get sector price baselines."""
     try:
         with get_db() as conn:
@@ -1154,7 +1166,7 @@ class FactorEffectivenessItem(BaseModel):
 
 
 @router.get("/validation/summary", response_model=ValidationSummaryResponse)
-async def get_validation_summary():
+def get_validation_summary():
     """Get summary of ground truth data and validation status."""
     try:
         with get_db() as conn:
@@ -1235,7 +1247,7 @@ async def get_validation_summary():
 
 
 @router.get("/validation/detection-rate")
-async def get_detection_rate(model_version: Optional[str] = Query(None)):
+def get_detection_rate(model_version: Optional[str] = Query(None)):
     """Get detection rate metrics from validation runs."""
     try:
         with get_db() as conn:
@@ -1309,7 +1321,7 @@ async def get_detection_rate(model_version: Optional[str] = Query(None)):
 
 
 @router.get("/validation/false-negatives")
-async def get_false_negatives(
+def get_false_negatives(
     limit: int = Query(50, ge=1, le=200),
     min_amount: Optional[float] = Query(None, description="Minimum contract amount")
 ):
@@ -1392,7 +1404,7 @@ async def get_false_negatives(
 
 
 @router.get("/validation/factor-analysis")
-async def get_factor_analysis():
+def get_factor_analysis():
     """Analyze which risk factors are most effective at detecting known bad contracts."""
     try:
         with get_db() as conn:
@@ -1590,7 +1602,7 @@ class InstitutionPeriodResponse(BaseModel):
 
 
 @router.get("/patterns/co-bidding", response_model=CoBiddingResponse)
-async def get_co_bidding_patterns(
+def get_co_bidding_patterns(
     min_co_bids: int = Query(5, ge=2, description="Minimum co-bid count"),
     min_rate: float = Query(50.0, ge=0, le=100, description="Minimum co-bid rate %"),
     limit: int = Query(100, ge=1, le=500, description="Maximum pairs to return"),
@@ -1700,7 +1712,7 @@ async def get_co_bidding_patterns(
 
 
 @router.get("/patterns/concentration", response_model=ConcentrationResponse)
-async def get_concentration_patterns(
+def get_concentration_patterns(
     min_share: float = Query(25.0, ge=10, le=100, description="Minimum value share %"),
     min_contracts: int = Query(100, ge=10, description="Minimum contracts per institution"),
     limit: int = Query(100, ge=1, le=500, description="Maximum alerts to return"),
@@ -1806,7 +1818,7 @@ async def get_concentration_patterns(
 
 
 @router.get("/patterns/year-end", response_model=YearEndResponse)
-async def get_year_end_patterns(
+def get_year_end_patterns(
     start_year: int = Query(2015, ge=2002, le=2026),
     end_year: int = Query(2024, ge=2002, le=2026),
     sector_id: Optional[int] = Query(None, ge=1, le=12),
@@ -1902,7 +1914,7 @@ async def get_year_end_patterns(
 
 
 @router.get("/leads", response_model=InvestigationLeadsResponse)
-async def get_investigation_leads(
+def get_investigation_leads(
     lead_type: Optional[str] = Query(None, description="Filter by type: risk, cluster, concentration, price, year_end"),
     priority: Optional[str] = Query(None, description="Filter by priority: HIGH, MEDIUM"),
     sector_id: Optional[int] = Query(None, ge=1, le=12),
@@ -2044,7 +2056,7 @@ async def get_investigation_leads(
 
 
 @router.get("/institution/{institution_id}/period-comparison")
-async def get_institution_period_comparison(
+def get_institution_period_comparison(
     institution_id: int = Path(..., description="Institution ID"),
     period1_start: int = Query(..., ge=2002, le=2026),
     period1_end: int = Query(..., ge=2002, le=2026),
@@ -2146,7 +2158,7 @@ ANOMALIES_CACHE_TTL = 300  # 5 minutes
 
 
 @router.get("/anomalies", response_model=AnomalyListResponse)
-async def get_anomalies(
+def get_anomalies(
     severity: Optional[str] = Query(None, description="Filter by minimum severity: low, medium, high, critical"),
 ):
     """
