@@ -714,6 +714,9 @@ def calculate_risk_batch(
         else:
             risk_level = 'low'
 
+        # Cap score at 1.0 — bonus/interaction effects can push above 1.0
+        score = min(score, 1.0)
+
         results.append((
             c['id'],
             round(score, 4),

@@ -84,47 +84,43 @@ export function Vendors() {
 
   const hasNoFilters = !filters.search && !filters.risk_level && !filters.min_contracts
 
-  const { data: topRisk, isLoading: isLoadingRisk } = useQuery({
-    queryKey: ['vendors-top', 'risk', 5],
-    queryFn: () => vendorApi.getTop('risk', 5),
+  // Combined featured strips query (3 calls -> 1)
+  const { data: topAll, isLoading: isLoadingTopAll } = useQuery({
+    queryKey: ['vendors-top-all', 5],
+    queryFn: () => vendorApi.getTopAll(5),
     enabled: hasNoFilters,
     staleTime: 5 * 60 * 1000,
   })
-
-  const { data: topValue, isLoading: isLoadingValue } = useQuery({
-    queryKey: ['vendors-top', 'value', 5],
-    queryFn: () => vendorApi.getTop('value', 5),
-    enabled: hasNoFilters,
-    staleTime: 5 * 60 * 1000,
-  })
-
-  const { data: topCount, isLoading: isLoadingCount } = useQuery({
-    queryKey: ['vendors-top', 'count', 5],
-    queryFn: () => vendorApi.getTop('count', 5),
-    enabled: hasNoFilters,
-    staleTime: 5 * 60 * 1000,
-  })
+  const topRisk = topAll ? { data: topAll.risk } : undefined
+  const topValue = topAll ? { data: topAll.value } : undefined
+  const topCount = topAll ? { data: topAll.count } : undefined
+  const isLoadingRisk = isLoadingTopAll
+  const isLoadingValue = isLoadingTopAll
+  const isLoadingCount = isLoadingTopAll
 
   // View mode: grid (default) or triage
   const [viewMode, setViewMode] = useState<'grid' | 'triage'>(
     searchParams.get('view') === 'triage' ? 'triage' : 'grid'
   )
 
-  // Triage view data
+  // Triage view data (cached so toggling grid/triage doesn't re-fetch)
   const { data: criticalVendors, isLoading: criticalLoading } = useQuery({
     queryKey: ['vendors', 'triage', 'critical'],
     queryFn: () => vendorApi.getAll({ risk_level: 'critical', per_page: 10, sort_by: 'total_value', sort_order: 'desc' }),
     enabled: viewMode === 'triage',
+    staleTime: 5 * 60 * 1000,
   })
   const { data: highRiskVendors, isLoading: highLoading } = useQuery({
     queryKey: ['vendors', 'triage', 'high'],
     queryFn: () => vendorApi.getAll({ risk_level: 'high', per_page: 10, sort_by: 'total_value', sort_order: 'desc' }),
     enabled: viewMode === 'triage',
+    staleTime: 5 * 60 * 1000,
   })
   const { data: topVolumeVendors, isLoading: volumeLoading } = useQuery({
     queryKey: ['vendors', 'triage', 'volume'],
     queryFn: () => vendorApi.getTop('value', 10),
     enabled: viewMode === 'triage',
+    staleTime: 5 * 60 * 1000,
   })
 
   // Triage collapsible sections

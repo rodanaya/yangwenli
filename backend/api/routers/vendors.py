@@ -300,6 +300,76 @@ async def compare_vendors(
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
+
+@router.get("/top-all")
+async def get_top_vendors_all(
+    limit: int = Query(5, ge=1, le=20, description="Number per category"),
+):
+    """
+    Get top vendors by all metrics in a single request.
+    Returns top by value, count, and risk in one call (3x fewer requests).
+    """
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            result = {}
+            for metric, sort_field in [("value", "total_amount_mxn"), ("count", "total_contracts")]:
+                cursor.execute(f"""
+                    SELECT id, name, rfc, {sort_field} as metric_value,
+                           total_contracts, COALESCE(total_amount_mxn, 0) as total_value_mxn
+                    FROM vendors WHERE total_contracts > 0
+                    ORDER BY {sort_field} DESC NULLS LAST LIMIT ?
+                """, (limit,))
+                result[metric] = [
+                    {
+                        "rank": i + 1,
+                        "vendor_id": row["id"],
+                        "vendor_name": row["name"],
+                        "rfc": row["rfc"],
+                        "metric_value": row["metric_value"] or 0,
+                        "total_contracts": row["total_contracts"],
+                        "total_value_mxn": row["total_value_mxn"],
+                        "avg_risk_score": None,
+                    }
+                    for i, row in enumerate(cursor.fetchall())
+                ]
+
+            # Risk requires a join
+            cursor.execute("""
+                SELECT v.id, v.name, v.rfc,
+                       AVG(c.risk_score) as metric_value,
+                       COUNT(c.id) as total_contracts,
+                       COALESCE(SUM(c.amount_mxn), 0) as total_value_mxn,
+                       AVG(c.risk_score) as avg_risk_score
+                FROM vendors v
+                JOIN contracts c ON v.id = c.vendor_id
+                WHERE c.amount_mxn <= 100000000000
+                GROUP BY v.id, v.name, v.rfc
+                HAVING COUNT(c.id) >= 5
+                ORDER BY metric_value DESC NULLS LAST
+                LIMIT ?
+            """, (limit,))
+            result["risk"] = [
+                {
+                    "rank": i + 1,
+                    "vendor_id": row["id"],
+                    "vendor_name": row["name"],
+                    "rfc": row["rfc"],
+                    "metric_value": row["metric_value"] or 0,
+                    "total_contracts": row["total_contracts"],
+                    "total_value_mxn": row["total_value_mxn"],
+                    "avg_risk_score": row["avg_risk_score"],
+                }
+                for i, row in enumerate(cursor.fetchall())
+            ]
+
+            return result
+    except Exception as e:
+        logger.error(f"Error in get_top_vendors_all: {e}")
+        raise HTTPException(status_code=500, detail="Database error")
+
+
 @router.get("/top", response_model=VendorTopListResponse)
 async def get_top_vendors(
     by: str = Query("value", description="Ranking metric: value, count, risk"),
@@ -475,7 +545,10 @@ async def get_vendor(
                     MAX(contract_year) as max_year,
                     COUNT(DISTINCT contract_year) as years_active,
                     COUNT(DISTINCT institution_id) as total_institutions,
-                    COUNT(DISTINCT sector_id) as sectors_count
+                    COUNT(DISTINCT sector_id) as sectors_count,
+                    AVG(mahalanobis_distance) as avg_mahalanobis,
+                    MAX(mahalanobis_distance) as max_mahalanobis,
+                    SUM(CASE WHEN mahalanobis_distance > 21.026 THEN 1 ELSE 0 END) as anomalous_count
                 FROM contracts
                 WHERE vendor_id = ?
                 AND (amount_mxn IS NULL OR amount_mxn <= ?)
@@ -526,6 +599,9 @@ async def get_vendor(
                 primary_sector_name=primary_sector["sector_name"] if primary_sector else None,
                 sectors_count=stats["sectors_count"] or 0,
                 total_institutions=stats["total_institutions"] or 0,
+                avg_mahalanobis=round(stats["avg_mahalanobis"], 4) if stats["avg_mahalanobis"] else None,
+                max_mahalanobis=round(stats["max_mahalanobis"], 4) if stats["max_mahalanobis"] else None,
+                pct_anomalous=round((stats["anomalous_count"] or 0) / total_contracts * 100, 2) if total_contracts > 0 else None,
             )
 
     except sqlite3.Error as e:
@@ -598,7 +674,7 @@ async def get_vendor_contracts(
                     s.name_es as sector_name, c.risk_score, c.risk_level,
                     c.is_direct_award, c.is_single_bid,
                     v.name as vendor_name, i.name as institution_name,
-                    c.procedure_type
+                    c.procedure_type, c.mahalanobis_distance
                 FROM contracts c
                 LEFT JOIN sectors s ON c.sector_id = s.id
                 LEFT JOIN vendors v ON c.vendor_id = v.id
@@ -627,6 +703,7 @@ async def get_vendor_contracts(
                     vendor_name=row["vendor_name"],
                     institution_name=row["institution_name"],
                     procedure_type=row["procedure_type"],
+                    mahalanobis_distance=row["mahalanobis_distance"],
                 )
                 for row in rows
             ]

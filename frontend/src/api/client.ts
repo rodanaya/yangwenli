@@ -13,6 +13,7 @@ import type {
   VendorDetailResponse,
   VendorRiskProfile,
   VendorTopListResponse,
+  VendorTopItem,
   VendorInstitutionListResponse,
   VendorFilterParams,
   InstitutionListResponse,
@@ -193,6 +194,18 @@ export const vendorApi = {
   ): Promise<VendorTopListResponse> {
     const queryParams = buildQueryParams({ ...params, by: metric, limit } as Record<string, unknown>)
     const { data } = await api.get<VendorTopListResponse>(`/vendors/top?${queryParams}`)
+    return data
+  },
+
+  /**
+   * Get top vendors by ALL metrics in a single request (3x fewer calls)
+   */
+  async getTopAll(limit = 5): Promise<{
+    value: VendorTopItem[]
+    count: VendorTopItem[]
+    risk: VendorTopItem[]
+  }> {
+    const { data } = await api.get(`/vendors/top-all?limit=${limit}`)
     return data
   },
 
@@ -381,6 +394,34 @@ export const analysisApi = {
    */
   async getFastDashboard(): Promise<FastDashboardResponse> {
     const { data } = await api.get<FastDashboardResponse>('/stats/dashboard/fast')
+    return data
+  },
+
+  /**
+   * Get combined risk overview (overview + risk distribution + trends in one call)
+   */
+  async getRiskOverview(): Promise<{
+    overview: Record<string, unknown>
+    risk_distribution: Array<Record<string, unknown>>
+    yearly_trends: Array<Record<string, unknown>>
+  }> {
+    const { data } = await api.get('/analysis/risk-overview')
+    return data
+  },
+
+  /**
+   * Get all pattern match counts in a single request (for DetectivePatterns page)
+   */
+  async getPatternCounts(): Promise<{
+    counts: {
+      critical: number
+      december_rush: number
+      split_contracts: number
+      co_bidding: number
+      price_outliers: number
+    }
+  }> {
+    const { data } = await api.get('/analysis/patterns/counts')
     return data
   },
 

@@ -77,6 +77,7 @@ export function NetworkGraph() {
       min_contracts: 10,
       limit: 50,
     }),
+    staleTime: 10 * 60 * 1000,
   })
 
   // Filter nodes based on user selections

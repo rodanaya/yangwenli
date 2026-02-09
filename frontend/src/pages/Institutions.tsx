@@ -48,6 +48,7 @@ export function Institutions() {
   const { data, isLoading, error, isFetching, refetch } = useQuery({
     queryKey: ['institutions', filters],
     queryFn: () => institutionApi.getAll(filters),
+    staleTime: 5 * 60 * 1000,
   })
 
   const updateFilter = useCallback((key: string, value: string | number | undefined) => {

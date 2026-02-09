@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge, Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { formatCompactMXN, formatNumber, formatDate, getPaginationRange, clampPage, toTitleCase } from '@/lib/utils'
+import { formatCompactMXN, formatNumber, formatDate, getPaginationRange, clampPage, toTitleCase, getAnomalyInfo } from '@/lib/utils'
 import { contractApi, exportApi, watchlistApi } from '@/api/client'
 import type { WatchlistItem } from '@/api/client'
 import { VirtualizedTable } from '@/components/VirtualizedTable'
@@ -116,6 +116,7 @@ export function Contracts() {
   const { data, isLoading, error, isFetching, refetch } = useQuery({
     queryKey: ['contracts', filters],
     queryFn: () => contractApi.getAll(filters),
+    staleTime: 2 * 60 * 1000,
   })
 
   // Show toast on error
@@ -211,6 +212,21 @@ export function Contracts() {
           : <span className="text-xs text-text-muted">-</span>
       ),
       minWidth: 80,
+    },
+    {
+      id: 'anomaly',
+      header: 'Anomaly',
+      accessor: (row: ContractListItem) => {
+        const info = getAnomalyInfo(row.mahalanobis_distance)
+        if (!info) return <span className="text-xs text-text-muted">-</span>
+        return (
+          <Badge className={`text-[10px] ${info.badgeClass}`} title={`D²=${row.mahalanobis_distance?.toFixed(1)}`}>
+            <span className={`inline-block h-1.5 w-1.5 rounded-full ${info.dotClass} mr-1`} />
+            {info.label}
+          </Badge>
+        )
+      },
+      minWidth: 90,
     },
     {
       id: 'flags',
@@ -554,6 +570,7 @@ export function Contracts() {
                     <th className="p-3 text-right">Amount</th>
                     <th className="p-3">Date</th>
                     <th className="p-3">Risk</th>
+                    <th className="p-3">Anomaly</th>
                     <th className="p-3">Flags</th>
                     <th className="p-3 pr-4 text-center">Actions</th>
                   </tr>
@@ -870,6 +887,18 @@ function ContractRow({ contract, isEven, onView }: { contract: ContractListItem;
         ) : (
           <span className="text-xs text-text-muted">-</span>
         )}
+      </td>
+      <td className="p-3">
+        {(() => {
+          const info = getAnomalyInfo(contract.mahalanobis_distance)
+          if (!info) return <span className="text-xs text-text-muted">-</span>
+          return (
+            <Badge className={`text-[10px] ${info.badgeClass}`} title={`D²=${contract.mahalanobis_distance?.toFixed(1)}`}>
+              <span className={`inline-block h-1.5 w-1.5 rounded-full ${info.dotClass} mr-1`} />
+              {info.label}
+            </Badge>
+          )
+        })()}
       </td>
       <td className="p-3">
         <div className="flex gap-1">

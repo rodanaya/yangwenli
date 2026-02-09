@@ -43,6 +43,35 @@
 
 ---
 
+## Interaction Effects (v3.3)
+
+When two correlated risk factors both trigger on the same contract, the combination is more suspicious than the sum of its parts. The model adds bonus points for these pairs:
+
+| Factor Pair | Bonus | Rationale |
+|-------------|-------|-----------|
+| Single Bid + Short Ad Period | +5% | Rushed procedure with no competition |
+| Non-Open + Year-End | +4% | Direct award in December budget dump |
+| Price Anomaly + Vendor Concentration | +5% | Overpriced contract from dominant vendor |
+| Threshold Splitting + Network Risk | +6% | Split contracts among related entities |
+| Network Risk + Single Bid | +5% | Network vendor wins uncontested |
+
+**Cap**: Total interaction bonus is capped at **+15%** regardless of how many pairs trigger.
+
+**Gradient scoring**: Each base factor uses gradient tiers rather than binary on/off:
+
+| Factor | Full Score | Partial Tiers |
+|--------|-----------|---------------|
+| Price Anomaly | ≥3x upper fence → 100% | ≥2x → 80%, ≥1.5x → 60%, >1x → 40% |
+| Vendor Concentration | >30% share → 100% | >20% → 70%, >10% → 50% |
+| Short Ad Period | <5 days → 100% | <15 days → 70%, <30 days → 30% |
+| Threshold Splitting | ≥5 same-day → 100% | ≥3 → 60%, ≥2 → 30% |
+| Network Risk | ≥5 members → 100% | ≥3 → 60%, ≥2 → 30% |
+| Non-Open Procedure | Direct award → 100% | Restricted → 50% |
+
+**Theoretical maximum score**: 1.0 (base) + 0.16 (bonuses) + 0.15 (interactions) = 1.31, capped to 1.0.
+
+---
+
 ## Co-Bidding Detection (v3.3)
 
 Identifies vendors that frequently bid in the same procedures — a key indicator of potential bid-rigging.
@@ -150,6 +179,22 @@ Extreme Fence = Q3 + 3.0 × IQR  (extreme overpricing)
 - EU ARACHNE: Risk scoring methodology
 - World Bank INT (2019): *Warning Signs of Fraud and Corruption*
 - Gallego et al. (2022): *Early warning model of malfeasance in public procurement*
+
+---
+
+---
+
+## Successor Model: v4.0
+
+v3.3 has been superseded by v4.0 (statistical framework) as the primary risk model. v3.3 scores are preserved in the `risk_score_v3` column for comparison and potential ensemble use.
+
+| Metric | v3.3 | v4.0 |
+|--------|------|------|
+| AUC-ROC | 0.584 | **0.951** |
+| Detection rate (med+) | 67.1% | **95.3%** |
+| Lift | 1.22x | **4.04x** |
+
+See `docs/RISK_METHODOLOGY_v4.md` for v4.0 methodology and `docs/MODEL_COMPARISON_REPORT.md` for detailed comparison.
 
 ---
 

@@ -38,6 +38,7 @@ export function InstitutionProfile() {
     queryKey: ['institution', institutionId],
     queryFn: () => institutionApi.getById(institutionId),
     enabled: !!institutionId,
+    staleTime: 5 * 60 * 1000,
   })
 
   // Fetch institution's contracts
@@ -45,6 +46,7 @@ export function InstitutionProfile() {
     queryKey: ['institution', institutionId, 'contracts'],
     queryFn: () => institutionApi.getContracts(institutionId, { per_page: 20 }),
     enabled: !!institutionId,
+    staleTime: 2 * 60 * 1000,
   })
 
   // Fetch institution's top vendors
@@ -52,6 +54,7 @@ export function InstitutionProfile() {
     queryKey: ['institution', institutionId, 'vendors'],
     queryFn: () => institutionApi.getVendors(institutionId),
     enabled: !!institutionId,
+    staleTime: 5 * 60 * 1000,
   })
 
   if (institutionLoading) {

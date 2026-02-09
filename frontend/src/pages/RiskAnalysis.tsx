@@ -40,34 +40,39 @@ export function RiskAnalysis() {
   const navigate = useNavigate()
   const [severityFilter, setSeverityFilter] = useState<string | undefined>(undefined)
 
-  // Fetch overview data
-  const { data: overview, isLoading: overviewLoading } = useQuery({
-    queryKey: ['analysis', 'overview'],
-    queryFn: () => analysisApi.getOverview(),
+  // Combined risk overview (overview + risk distribution + trends in ONE call)
+  const { data: riskOverview, isLoading: riskOverviewLoading } = useQuery({
+    queryKey: ['analysis', 'risk-overview'],
+    queryFn: () => analysisApi.getRiskOverview(),
+    staleTime: 5 * 60 * 1000,
   })
 
-  // Fetch risk distribution
-  const { data: riskDist, isLoading: riskLoading } = useQuery({
-    queryKey: ['analysis', 'risk-distribution'],
-    queryFn: () => analysisApi.getRiskDistribution(),
-  })
+  // Derive individual pieces from combined response
+  const overview = riskOverview?.overview as any
+  const overviewLoading = riskOverviewLoading
 
-  // Fetch sectors data
+  const riskDist = riskOverview ? {
+    data: riskOverview.risk_distribution as unknown as RiskDistribution[]
+  } : undefined
+  const riskLoading = riskOverviewLoading
+
+  const trends = riskOverview ? {
+    data: riskOverview.yearly_trends as Array<{ year: number; contracts: number; total_value: number; avg_risk: number; direct_award_pct: number; single_bid_pct: number; high_risk_pct: number; vendor_count: number; institution_count: number }>
+  } : undefined
+  const trendsLoading = riskOverviewLoading
+
+  // Fetch sectors data (shared cache with other pages)
   const { data: sectors, isLoading: sectorsLoading } = useQuery({
     queryKey: ['sectors'],
     queryFn: () => sectorApi.getAll(),
+    staleTime: 10 * 60 * 1000,
   })
 
-  // Fetch anomalies
+  // Fetch anomalies (separate because it has a severity filter)
   const { data: anomalies, isLoading: anomaliesLoading } = useQuery({
     queryKey: ['analysis', 'anomalies', severityFilter],
     queryFn: () => analysisApi.getAnomalies(severityFilter),
-  })
-
-  // Fetch year-over-year trends
-  const { data: trends, isLoading: trendsLoading } = useQuery({
-    queryKey: ['analysis', 'year-over-year'],
-    queryFn: () => analysisApi.getYearOverYear(),
+    staleTime: 5 * 60 * 1000,
   })
 
   // Calculate at-risk value

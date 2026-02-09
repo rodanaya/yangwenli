@@ -191,6 +191,118 @@ MONTH_NAMES = [
 ]
 
 
+
+
+# =============================================================================
+# COMBINED RISK OVERVIEW ENDPOINT
+# =============================================================================
+
+@router.get("/risk-overview")
+async def get_risk_overview():
+    """
+    Combined risk analysis data for the Risk Analysis page.
+    Returns overview + risk distribution + yearly trends in one request.
+    """
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # Get overview from precomputed_stats
+            cursor.execute("SELECT stat_value FROM precomputed_stats WHERE stat_key = 'overview'")
+            row = cursor.fetchone()
+            overview = json.loads(row['stat_value']) if row else {}
+
+            # Get risk distribution from precomputed_stats
+            cursor.execute("SELECT stat_value FROM precomputed_stats WHERE stat_key = 'risk_distribution'")
+            row = cursor.fetchone()
+            risk_distribution = json.loads(row['stat_value']) if row else []
+
+            # Get yearly trends from precomputed_stats
+            cursor.execute("SELECT stat_value FROM precomputed_stats WHERE stat_key = 'yearly_trends'")
+            row = cursor.fetchone()
+            yearly_trends = json.loads(row['stat_value']) if row else []
+
+            return {
+                "overview": overview,
+                "risk_distribution": risk_distribution,
+                "yearly_trends": yearly_trends,
+            }
+    except Exception as e:
+        logger.error(f"Error in get_risk_overview: {e}")
+        raise HTTPException(status_code=500, detail="Database error")
+
+
+# =============================================================================
+# PATTERN COUNTS ENDPOINT (for DetectivePatterns page)
+# =============================================================================
+
+_pattern_counts_cache: Dict[str, Any] = {}
+_pattern_counts_ts: float = 0
+
+@router.get("/patterns/counts")
+async def get_pattern_counts():
+    """
+    Return all pattern match counts in a single request.
+    Replaces 4+ separate per_page=1 queries from DetectivePatterns page.
+    Cached for 10 minutes.
+    """
+    import time
+    global _pattern_counts_cache, _pattern_counts_ts
+
+    now = time.time()
+    if _pattern_counts_cache and (now - _pattern_counts_ts) < 600:
+        return _pattern_counts_cache
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            counts: Dict[str, int] = {}
+
+            # Critical-risk contracts (ghost vendors pattern)
+            cursor.execute(
+                "SELECT COUNT(*) FROM contracts WHERE risk_level = 'critical' AND (amount_mxn IS NULL OR amount_mxn <= ?)",
+                (MAX_CONTRACT_VALUE,)
+            )
+            counts["critical"] = cursor.fetchone()[0]
+
+            # Year-end high-risk (December rush)
+            cursor.execute(
+                "SELECT COUNT(*) FROM contracts WHERE risk_level IN ('high', 'critical') AND contract_month = 12 AND (amount_mxn IS NULL OR amount_mxn <= ?)",
+                (MAX_CONTRACT_VALUE,)
+            )
+            counts["december_rush"] = cursor.fetchone()[0]
+
+            # Threshold splitting (risk_factors contains 'split_' entries like 'split_2', 'split_3')
+            cursor.execute(
+                "SELECT COUNT(*) FROM contracts WHERE risk_factors LIKE '%split_%' AND (amount_mxn IS NULL OR amount_mxn <= ?)",
+                (MAX_CONTRACT_VALUE,)
+            )
+            counts["split_contracts"] = cursor.fetchone()[0]
+
+            # Co-bidding flagged (risk_factors contains 'co_bid' entries like 'co_bid_med:71%:2p')
+            cursor.execute(
+                "SELECT COUNT(*) FROM contracts WHERE risk_factors LIKE '%co_bid%' AND (amount_mxn IS NULL OR amount_mxn <= ?)",
+                (MAX_CONTRACT_VALUE,)
+            )
+            counts["co_bidding"] = cursor.fetchone()[0]
+
+            # Price outliers (from price_hypotheses if exists)
+            if table_exists(cursor, "price_hypotheses"):
+                cursor.execute("SELECT COUNT(*) FROM price_hypotheses")
+                counts["price_outliers"] = cursor.fetchone()[0]
+            else:
+                counts["price_outliers"] = 0
+
+            result = {"counts": counts}
+            _pattern_counts_cache = result
+            _pattern_counts_ts = now
+            return result
+
+    except Exception as e:
+        logger.error(f"Error in get_pattern_counts: {e}")
+        raise HTTPException(status_code=500, detail="Database error")
+
+
 # =============================================================================
 # TEMPORAL ANALYSIS ENDPOINTS
 # =============================================================================

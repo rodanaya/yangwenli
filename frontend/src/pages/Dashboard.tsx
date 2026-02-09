@@ -93,6 +93,7 @@ export function Dashboard() {
   const { data: topVendors, isLoading: vendorsLoading } = useQuery({
     queryKey: ['vendors', 'top', 'value'],
     queryFn: () => vendorApi.getTop('value', 10),
+    staleTime: 5 * 60 * 1000,
   })
 
   const riskDist = fastDashboard ? {
@@ -109,6 +110,7 @@ export function Dashboard() {
   const { data: anomalies, isLoading: anomaliesLoading } = useQuery({
     queryKey: ['analysis', 'anomalies'],
     queryFn: () => analysisApi.getAnomalies(),
+    staleTime: 5 * 60 * 1000,
   })
 
   // Transform trends data for contracts + value chart (real per-year data)
@@ -245,6 +247,29 @@ export function Dashboard() {
           variant="warning"
           onClick={() => navigate('/contracts?risk_level=critical')}
         />
+      </div>
+
+      {/* Quick Investigation Links */}
+      <div className="grid gap-2 md:grid-cols-4">
+        {[
+          { label: 'Detective Patterns', icon: Crosshair, path: '/analysis/detective', desc: 'Investigate fraud patterns' },
+          { label: 'Network Graph', icon: Radar, path: '/network', desc: 'Vendor relationship map' },
+          { label: 'Price Analysis', icon: DollarSign, path: '/analysis/price', desc: 'Outlier detection' },
+          { label: 'Timeline', icon: Activity, path: '/timeline', desc: 'Temporal patterns' },
+        ].map((item) => (
+          <button
+            key={item.path}
+            onClick={() => navigate(item.path)}
+            className="flex items-center gap-2.5 px-3 py-2 rounded-md border border-border/50 bg-surface-card/50 hover:border-accent/40 hover:bg-accent/5 transition-all text-left group"
+          >
+            <item.icon className="h-3.5 w-3.5 text-text-muted group-hover:text-accent shrink-0" />
+            <div>
+              <p className="text-xs font-medium text-text-secondary group-hover:text-text-primary">{item.label}</p>
+              <p className="text-[10px] text-text-muted">{item.desc}</p>
+            </div>
+            <ArrowRight className="h-3 w-3 text-text-muted/50 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+          </button>
+        ))}
       </div>
 
       {/* Row 1: Sector Distribution & Risk Distribution */}
@@ -547,6 +572,7 @@ const KPICard = memo(function KPICard({
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? `${title}: ${loading ? 'Loading' : formattedValue}` : undefined}
       onKeyDown={onClick ? (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } } : undefined}
     >
       <CardContent className="p-4">

@@ -433,6 +433,7 @@ export function PriceAnalysis() {
   const { data: summary, isLoading: summaryLoading } = useQuery({
     queryKey: ['price-hypotheses', 'summary'],
     queryFn: () => priceApi.getSummary(),
+    staleTime: 10 * 60 * 1000,
   })
 
   // Fetch hypotheses
@@ -448,6 +449,7 @@ export function PriceAnalysis() {
       sort_by: 'confidence',
       sort_order: 'desc',
     }),
+    staleTime: 2 * 60 * 1000,
   })
 
   // Review mutation

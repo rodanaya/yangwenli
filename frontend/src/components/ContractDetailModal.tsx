@@ -123,9 +123,18 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                   ) : (
                     <span className="text-sm text-text-muted">No risk score available</span>
                   )}
-                  {contract.risk_confidence && (
+                  {contract.risk_confidence_lower != null && contract.risk_confidence_upper != null ? (
+                    <span className="text-xs text-text-muted font-mono tabular-nums">
+                      CI: [{(contract.risk_confidence_lower * 100).toFixed(1)}% – {(contract.risk_confidence_upper * 100).toFixed(1)}%]
+                    </span>
+                  ) : contract.risk_confidence ? (
                     <span className="text-xs text-text-muted">
                       Confidence: {contract.risk_confidence}
+                    </span>
+                  ) : null}
+                  {contract.risk_model_version && (
+                    <span className="text-[10px] text-text-muted font-mono">
+                      {contract.risk_model_version}
                     </span>
                   )}
                 </div>

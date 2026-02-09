@@ -58,18 +58,21 @@ export function Comparison() {
     queryKey: ['sectors'],
     queryFn: () => sectorApi.getAll(),
     enabled: compareType === 'sectors',
+    staleTime: 10 * 60 * 1000,
   })
 
   const { data: vendors, isLoading: vendorsLoading, error: vendorsError } = useQuery({
     queryKey: ['vendors', 'comparison'],
     queryFn: () => vendorApi.getAll({ per_page: 50, min_contracts: 50 }),
     enabled: compareType === 'vendors',
+    staleTime: 5 * 60 * 1000,
   })
 
   const { data: institutions, isLoading: institutionsLoading, error: institutionsError } = useQuery({
     queryKey: ['institutions', 'comparison'],
     queryFn: () => institutionApi.getAll({ per_page: 50 }),
     enabled: compareType === 'institutions',
+    staleTime: 5 * 60 * 1000,
   })
 
   const isLoading = sectorsLoading || vendorsLoading || institutionsLoading

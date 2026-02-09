@@ -54,6 +54,7 @@ export function Timeline() {
   const { data: trends, isLoading: trendsLoading } = useQuery({
     queryKey: ['analysis', 'year-over-year'],
     queryFn: () => analysisApi.getYearOverYear(),
+    staleTime: 10 * 60 * 1000,
   })
 
   // Fetch monthly breakdown for the selected year
@@ -61,6 +62,7 @@ export function Timeline() {
     queryKey: ['analysis', 'monthly-breakdown', selectedYear],
     queryFn: () => analysisApi.getMonthlyBreakdown(selectedYear),
     enabled: viewMode === 'monthly',
+    staleTime: 10 * 60 * 1000,
   })
 
   // Fetch all temporal events

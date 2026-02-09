@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatNumber, formatCompactMXN } from '@/lib/utils'
-import { contractApi, vendorApi, analysisApi } from '@/api/client'
+import { formatNumber } from '@/lib/utils'
+import { analysisApi } from '@/api/client'
 import {
   Fingerprint,
   UserX,
@@ -97,53 +97,27 @@ const PATTERNS: PatternCard[] = [
 export function DetectivePatterns() {
   const navigate = useNavigate()
 
-  // Fetch counts for pattern cards
-  const { data: criticalContracts } = useQuery({
-    queryKey: ['patterns', 'critical'],
-    queryFn: () => contractApi.getAll({ risk_level: 'critical', per_page: 1 }),
+  // Fetch all pattern counts in a single request (replaces 6 separate calls)
+  const { data: patternData } = useQuery({
+    queryKey: ['patterns', 'counts'],
+    queryFn: () => analysisApi.getPatternCounts(),
     staleTime: 10 * 60 * 1000,
   })
 
-  const { data: yearEndContracts } = useQuery({
-    queryKey: ['patterns', 'year_end'],
-    queryFn: () => contractApi.getAll({ risk_factor: 'year_end_timing', risk_level: 'high', per_page: 1 }),
-    staleTime: 10 * 60 * 1000,
-  })
-
-  const { data: splitContracts } = useQuery({
-    queryKey: ['patterns', 'split'],
-    queryFn: () => contractApi.getAll({ risk_factor: 'threshold_splitting', per_page: 1 }),
-    staleTime: 10 * 60 * 1000,
-  })
-
-  const { data: coBidContracts } = useQuery({
-    queryKey: ['patterns', 'cobid'],
-    queryFn: () => contractApi.getAll({ risk_factor: 'co_bid', per_page: 1 }),
-    staleTime: 10 * 60 * 1000,
-  })
-
-  const { data: highRiskVendors } = useQuery({
-    queryKey: ['patterns', 'high_risk_vendors'],
-    queryFn: () => vendorApi.getTop('risk', 5),
-    staleTime: 10 * 60 * 1000,
-  })
-
-  const { data: anomalies } = useQuery({
-    queryKey: ['patterns', 'anomalies'],
-    queryFn: () => analysisApi.getAnomalies(),
-    staleTime: 10 * 60 * 1000,
-  })
-
-  const counts: Record<string, number | undefined> = useMemo(() => ({
-    ghost: highRiskVendors?.data?.length ? highRiskVendors.data.length : undefined,
-    december: yearEndContracts?.pagination?.total,
-    split: splitContracts?.pagination?.total,
-    cobid: coBidContracts?.pagination?.total,
-    price: anomalies?.total,
-    monopoly: undefined,
-    new: undefined,
-    rubber: undefined,
-  }), [highRiskVendors, yearEndContracts, splitContracts, coBidContracts, anomalies])
+  const counts: Record<string, number | undefined> = useMemo(() => {
+    const c = patternData?.counts
+    if (!c) return {}
+    return {
+      ghost: c.critical,
+      december: c.december_rush,
+      split: c.split_contracts,
+      cobid: c.co_bidding,
+      price: c.price_outliers,
+      monopoly: undefined,
+      new: undefined,
+      rubber: undefined,
+    }
+  }, [patternData])
 
   return (
     <div className="space-y-5">

@@ -146,6 +146,7 @@ async def list_contracts(
                 "title": "c.title",
                 "vendor_name": "vendor_name",       # JOIN alias
                 "institution_name": "institution_name",  # JOIN alias
+                "mahalanobis_distance": "c.mahalanobis_distance",
             }
 
             # Get safe sort expression from whitelist (defaults to contract_date if invalid)
@@ -181,7 +182,8 @@ async def list_contracts(
                     c.is_single_bid,
                     v.name as vendor_name,
                     i.name as institution_name,
-                    c.procedure_type
+                    c.procedure_type,
+                    c.mahalanobis_distance
                 FROM contracts c
                 LEFT JOIN sectors s ON c.sector_id = s.id
                 LEFT JOIN vendors v ON c.vendor_id = v.id
@@ -213,6 +215,7 @@ async def list_contracts(
                     vendor_name=row[12],
                     institution_name=row[13],
                     procedure_type=row[14],
+                    mahalanobis_distance=row[15],
                 ))
 
             return ContractListResponse(

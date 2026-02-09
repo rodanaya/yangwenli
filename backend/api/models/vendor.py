@@ -99,6 +99,11 @@ class VendorDetailResponse(BaseModel):
     # Institution metrics
     total_institutions: int = Field(0, description="Number of institutions contracted")
 
+    # Mahalanobis anomaly metrics
+    avg_mahalanobis: Optional[float] = Field(None, description="Average Mahalanobis distance across contracts")
+    max_mahalanobis: Optional[float] = Field(None, description="Maximum Mahalanobis distance across contracts")
+    pct_anomalous: Optional[float] = Field(None, description="Percentage of contracts with Mahalanobis p-value < 0.05 (D² > 21.026 for k=12)")
+
     class Config:
         from_attributes = True
 

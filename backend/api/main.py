@@ -12,6 +12,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.middleware.gzip import GZipMiddleware
 
 # Optional rate limiting - gracefully degrade if slowapi not installed
 try:
@@ -55,18 +56,20 @@ def _warmup_caches():
     """Pre-populate expensive caches in a background thread so first requests are fast."""
     import urllib.request
     base = "http://127.0.0.1:8001"
+    # Priority order: dashboard first (most critical), then supporting data
     endpoints = [
-        "/api/v1/stats/dashboard/fast",
-        "/api/v1/sectors",
-        "/api/v1/stats/data-quality",
-        "/api/v1/network/graph?min_contracts=10&limit=50",
-        "/api/v1/analysis/anomalies",
-        "/api/v1/analysis/risk-distribution",
-        "/api/v1/analysis/year-over-year",
+        "/api/v1/stats/dashboard/fast",          # Dashboard (highest priority)
+        "/api/v1/analysis/anomalies",             # Dashboard alerts
+        "/api/v1/vendors/top-all?limit=5",        # Vendors featured strips
+        "/api/v1/sectors",                        # Sectors list
+        "/api/v1/analysis/risk-distribution",     # Risk analysis
+        "/api/v1/analysis/year-over-year",        # Trends
+        "/api/v1/stats/data-quality",             # Header quality badge
+        "/api/v1/network/graph?min_contracts=10&limit=50",  # Network (lowest priority)
     ]
     for ep in endpoints:
         try:
-            urllib.request.urlopen(f"{base}{ep}", timeout=120)
+            urllib.request.urlopen(f"{base}{ep}", timeout=30)
             logger.info(f"Cache warmed: {ep}")
         except Exception as e:
             logger.warning(f"Cache warmup failed for {ep}: {e}")
@@ -135,6 +138,9 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PATCH", "DELETE"],
     allow_headers=["*"],
 )
+
+# GZip compression for responses > 1KB
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Include routers
 app.include_router(industries_router, prefix="/api/v1")

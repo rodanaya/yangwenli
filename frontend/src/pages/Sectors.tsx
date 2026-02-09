@@ -24,6 +24,7 @@ export function Sectors() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['sectors'],
     queryFn: () => sectorApi.getAll(),
+    staleTime: 10 * 60 * 1000,
   })
 
   if (isLoading) {

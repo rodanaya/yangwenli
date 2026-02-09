@@ -29,6 +29,7 @@ export function VendorProfile() {
     queryKey: ['vendor', vendorId],
     queryFn: () => vendorApi.getById(vendorId),
     enabled: !!vendorId,
+    staleTime: 5 * 60 * 1000,
   })
 
   // Fetch vendor risk profile
@@ -36,6 +37,7 @@ export function VendorProfile() {
     queryKey: ['vendor', vendorId, 'risk-profile'],
     queryFn: () => vendorApi.getRiskProfile(vendorId),
     enabled: !!vendorId,
+    staleTime: 5 * 60 * 1000,
   })
 
   // Fetch vendor's contracts
@@ -43,6 +45,7 @@ export function VendorProfile() {
     queryKey: ['vendor', vendorId, 'contracts'],
     queryFn: () => vendorApi.getContracts(vendorId, { per_page: 20 }),
     enabled: !!vendorId,
+    staleTime: 2 * 60 * 1000,
   })
 
   // Fetch vendor's institutions
@@ -50,6 +53,7 @@ export function VendorProfile() {
     queryKey: ['vendor', vendorId, 'institutions'],
     queryFn: () => vendorApi.getInstitutions(vendorId),
     enabled: !!vendorId,
+    staleTime: 5 * 60 * 1000,
   })
 
   // Fetch co-bidding analysis (v3.2)
@@ -57,6 +61,7 @@ export function VendorProfile() {
     queryKey: ['vendor', vendorId, 'co-bidders'],
     queryFn: () => networkApi.getCoBidders(vendorId, 5, 10),
     enabled: !!vendorId,
+    staleTime: 10 * 60 * 1000,
   })
 
   // Determine if vendor has co-bidding risk
@@ -243,6 +248,37 @@ export function VendorProfile() {
               ) : null}
             </CardContent>
           </Card>
+
+          {/* Statistical Anomaly */}
+          {vendor.avg_mahalanobis != null && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  Statistical Anomaly
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-text-muted">Avg Mahalanobis D²</span>
+                  <span className="font-mono">{vendor.avg_mahalanobis.toFixed(1)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-text-muted">Max D²</span>
+                  <span className="font-mono">{vendor.max_mahalanobis?.toFixed(1) ?? '—'}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-text-muted">Anomalous Contracts</span>
+                  <span className={`font-mono ${(vendor.pct_anomalous ?? 0) > 20 ? 'text-red-400' : (vendor.pct_anomalous ?? 0) > 10 ? 'text-amber-400' : 'text-text-secondary'}`}>
+                    {vendor.pct_anomalous?.toFixed(1) ?? '0'}%
+                  </span>
+                </div>
+                <p className="text-xs text-text-muted pt-1">
+                  Based on chi-squared test (k=12, p&lt;0.05)
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Risk Factor Breakdown */}
           <Card>

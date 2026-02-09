@@ -97,6 +97,7 @@ export interface ContractListItem extends ContractBase {
   vendor_name?: string
   institution_name?: string
   procedure_type?: string
+  mahalanobis_distance?: number
 }
 
 export interface ContractDetail extends ContractBase {
@@ -129,6 +130,9 @@ export interface ContractDetail extends ContractBase {
   is_year_end: boolean
   risk_factors?: string[]
   risk_confidence?: string
+  risk_confidence_lower?: number
+  risk_confidence_upper?: number
+  risk_model_version?: string
   data_quality_score?: number
   data_quality_grade?: string
   source_structure?: string
@@ -236,6 +240,9 @@ export interface VendorDetailResponse {
   primary_sector_name?: string
   sectors_count: number
   total_institutions: number
+  avg_mahalanobis?: number
+  max_mahalanobis?: number
+  pct_anomalous?: number
 }
 
 export interface VendorRiskProfile {

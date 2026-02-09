@@ -74,7 +74,26 @@ For detailed validation rules, see @.claude/rules/data-validation.md
 
 ## Risk Scoring Model
 
-8-factor model aligned with IMF CRI methodology:
+**Two models available** — v3.3 (weighted checklist) and v4.0 (statistical framework):
+
+### v4.0: Statistical Framework (active, retrained 2026-02-09)
+
+Calibrated probabilities P(corrupt|z) with confidence intervals. **AUC-ROC: 0.951**, Lift: 4.04x.
+
+- 12 z-score features normalized by sector/year baselines
+- Mahalanobis distance for multivariate anomaly detection
+- Bayesian logistic regression (L2, C=0.1) trained on 21,252 known-bad contracts from 9 cases
+- PU-learning correction (c=0.890) for unlabeled data
+- 1,000 bootstrap 95% confidence intervals
+
+**Top predictors**: vendor_concentration (+1.85), industry_mismatch (+0.21), same_day_count (+0.14)
+**Reversed from v3.3**: direct_award (-0.20), ad_period_days (-0.22), network_member_count (-4.11)
+**Risk Levels (v4.0)**: Critical (>=0.50), High (>=0.20), Medium (>=0.05), Low (<0.05)
+**Distribution**: Critical 5.5%, High 17.7%, Medium 66.7%, Low 10.1%
+
+### v3.3: Weighted Checklist (preserved in risk_score_v3)
+
+8-factor model aligned with IMF CRI methodology. **AUC-ROC: 0.584**, Lift: 1.22x.
 
 | Factor | Weight |
 |--------|--------|
@@ -88,10 +107,10 @@ For detailed validation rules, see @.claude/rules/data-validation.md
 | Network risk | 8% |
 
 **Bonus factors** (added on top): Co-bidding +5%, Price hypothesis +5%, Industry mismatch +3%, Institution risk +3%
-
+**Interaction effects**: 5 pairs, up to +15% bonus. Score capped at 1.0.
 **Risk Levels**: Critical (>=0.50), High (0.35-0.50), Medium (0.20-0.35), Low (<0.20)
 
-For methodology details, see @docs/RISK_METHODOLOGY.md
+For methodology details, see @docs/RISK_METHODOLOGY.md (v3.3), @docs/RISK_METHODOLOGY_v4.md (v4.0), and @docs/MODEL_COMPARISON_REPORT.md (comparison)
 
 ---
 

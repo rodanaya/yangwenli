@@ -2,7 +2,7 @@
 import json
 import threading
 import time
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
@@ -230,7 +230,7 @@ class FastDashboardResponse(BaseModel):
 
 
 @router.get("/dashboard/fast", response_model=FastDashboardResponse)
-async def get_fast_dashboard():
+async def get_fast_dashboard(response: Response):
     """
     Get pre-computed dashboard statistics for instant loading.
 
@@ -269,6 +269,7 @@ async def get_fast_dashboard():
             if row['updated_at']:
                 cached_at = row['updated_at']
 
+        response.headers["Cache-Control"] = "public, max-age=300"  # 5 min browser cache
         return FastDashboardResponse(
             overview=stats.get('overview', {}),
             sectors=stats.get('sectors', []),
@@ -328,7 +329,7 @@ class DataQualityResponse(BaseModel):
 
 
 @router.get("/data-quality", response_model=DataQualityResponse)
-async def get_data_quality():
+async def get_data_quality(response: Response):
     """
     Get comprehensive data quality metrics.
 
@@ -338,6 +339,7 @@ async def get_data_quality():
     """
     cached = _stats_cache.get("data_quality")
     if cached is not None:
+        response.headers["Cache-Control"] = "public, max-age=3600"  # 1 hour browser cache
         return cached
 
     with get_db() as conn:
@@ -515,4 +517,5 @@ async def get_data_quality():
             last_calculated=last_calculated
         )
         _stats_cache.set("data_quality", result, ttl=7200)  # Cache 2 hours
+        response.headers["Cache-Control"] = "public, max-age=3600"  # 1 hour browser cache
         return result

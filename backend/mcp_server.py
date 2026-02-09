@@ -1287,8 +1287,8 @@ async def get_database_stats(args: dict) -> str:
 
         result += f"""
 ## Risk Model
-- **Version**: 3.2 (with co-bidding detection)
-- **Factors**: 10 base factors + 3 bonus factors
+- **Version**: 3.3 (with co-bidding detection)
+- **Factors**: 8 base factors + 4 bonus factors
 - **Last Updated**: {datetime.now().strftime('%Y-%m-%d')}
 """
 

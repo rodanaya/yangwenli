@@ -33,6 +33,7 @@ class ContractListItem(ContractBase):
     vendor_name: Optional[str] = None
     institution_name: Optional[str] = None
     procedure_type: Optional[str] = None
+    mahalanobis_distance: Optional[float] = None
 
 
 class ContractDetail(ContractBase):
@@ -79,6 +80,9 @@ class ContractDetail(ContractBase):
     # Risk details
     risk_factors: Optional[List[str]] = None
     risk_confidence: Optional[str] = None
+    risk_confidence_lower: Optional[float] = None
+    risk_confidence_upper: Optional[float] = None
+    risk_model_version: Optional[str] = None
 
     # Data quality
     data_quality_score: Optional[float] = None

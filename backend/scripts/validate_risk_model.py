@@ -9,9 +9,11 @@ Key metrics:
 - Critical detection rate: % flagged as high or critical risk
 - False negative analysis: Known bad contracts with low risk scores
 - Factor effectiveness: Which factors best identify known bad actors
+- AUC-ROC, Brier score, log loss (statistical validation)
+- Per-case detection breakdown
 
 Usage:
-    python backend/scripts/validate_risk_model.py [--dry-run] [--model-version v3.1]
+    python backend/scripts/validate_risk_model.py [--dry-run] [--model-version v3.3]
 
 Output:
     - Prints detailed validation report
@@ -19,6 +21,7 @@ Output:
 """
 
 import sqlite3
+import sys
 import os
 import json
 import argparse
@@ -26,17 +29,29 @@ import uuid
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple
 from collections import Counter
+import numpy as np
+
+try:
+    from sklearn.metrics import roc_auc_score, brier_score_loss, log_loss
+    from sklearn.calibration import calibration_curve
+    HAS_SKLEARN = True
+except ImportError:
+    HAS_SKLEARN = False
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 BACKEND_DIR = os.path.dirname(SCRIPT_DIR)
 DB_PATH = os.path.join(BACKEND_DIR, 'RUBLI_NORMALIZED.db')
 
-# Risk level thresholds (same as in calculate_risk_scores.py)
+# Import canonical thresholds from constants (v3.3+)
+sys.path.insert(0, BACKEND_DIR)
+from api.config.constants import RISK_THRESHOLDS as _THRESHOLDS
+
+# Build range-based lookup from canonical point thresholds
 RISK_THRESHOLDS = {
-    'low': (0.0, 0.2),
-    'medium': (0.2, 0.4),
-    'high': (0.4, 0.6),
-    'critical': (0.6, 1.0)
+    'low': (0.0, _THRESHOLDS['medium']),
+    'medium': (_THRESHOLDS['medium'], _THRESHOLDS['high']),
+    'high': (_THRESHOLDS['high'], _THRESHOLDS['critical']),
+    'critical': (_THRESHOLDS['critical'], 1.0),
 }
 
 
@@ -453,8 +468,173 @@ def run_validation(conn: sqlite3.Connection,
 
     print(f"\nModel lift (known bad vs baseline): {lift:.2f}x")
 
+
     print("\n" + "=" * 70)
-    print("PHASE 5: VENDOR-LEVEL ANALYSIS")
+    print("PHASE 5: STATISTICAL VALIDATION METRICS")
+    print("=" * 70)
+
+    if not HAS_SKLEARN:
+        print("\nsklearn not installed - skipping statistical metrics.")
+        print("  Install with: pip install scikit-learn")
+        results["statistical_metrics"] = None
+    else:
+        # Get random sample of contracts for negative class
+        cursor.execute("""
+            SELECT id, risk_score FROM contracts
+            WHERE risk_score IS NOT NULL
+            ORDER BY RANDOM()
+            LIMIT 10000
+        """)
+        random_rows = cursor.fetchall()
+        random_scores = [(row["id"], row["risk_score"]) for row in random_rows]
+
+        # Build binary classification arrays
+        known_bad_ids = set(c["id"] for c in known_bad_contracts)
+        # Filter random sample to exclude known-bad contracts (avoid label leakage)
+        random_scores = [(cid, s) for cid, s in random_scores if cid not in known_bad_ids]
+
+        # y_true: 1 for known bad, 0 for random sample
+        known_bad_scored = [
+            (c["id"], c.get("risk_score", 0) or 0)
+            for c in known_bad_contracts
+            if c.get("risk_score") is not None
+        ]
+
+        y_true = np.array([1] * len(known_bad_scored) + [0] * len(random_scores))
+        y_score = np.array([s for _, s in known_bad_scored] + [s for _, s in random_scores])
+
+        print(f"\nPositive samples (known bad): {len(known_bad_scored)}")
+        print(f"  Negative samples (random): {len(random_scores)}")
+        print(f"  Total evaluation set: {len(y_true)}")
+
+        stat_metrics = {}
+
+        # AUC-ROC
+        if len(set(y_true)) > 1:
+            auc = roc_auc_score(y_true, y_score)
+            stat_metrics["auc_roc"] = round(auc, 4)
+            print(f"\nAUC-ROC: {auc:.4f}")
+            if auc >= 0.8:
+                print("    Interpretation: GOOD discriminative ability")
+            elif auc >= 0.7:
+                print("    Interpretation: ACCEPTABLE discriminative ability")
+            elif auc >= 0.6:
+                print("    Interpretation: POOR - model barely better than random")
+            else:
+                print("    Interpretation: FAILING - model near random chance (0.5)")
+        else:
+            print("\nAUC-ROC: Cannot compute (only one class present)")
+            stat_metrics["auc_roc"] = None
+        # Brier Score (lower is better, 0 = perfect)
+        brier = brier_score_loss(y_true, np.clip(y_score, 0, 1))
+        stat_metrics["brier_score"] = round(brier, 4)
+        print(f"  Brier Score: {brier:.4f} (lower is better, 0 = perfect)")
+
+        # Log Loss (clip predictions to avoid log(0))
+        y_score_clipped = np.clip(y_score, 0.001, 0.999)
+        ll = log_loss(y_true, y_score_clipped)
+        stat_metrics["log_loss"] = round(ll, 4)
+        print(f"  Log Loss: {ll:.4f} (lower is better)")
+
+        # Calibration Curve
+        try:
+            fraction_pos, mean_pred = calibration_curve(
+                y_true, y_score, n_bins=10, strategy="uniform"
+            )
+            stat_metrics["calibration_curve"] = {
+                "fraction_of_positives": [round(float(v), 4) for v in fraction_pos],
+                "mean_predicted_value": [round(float(v), 4) for v in mean_pred]
+            }
+            print(f"  Calibration curve computed ({len(fraction_pos)} bins)")
+
+            calibration_error = float(np.mean(np.abs(fraction_pos - mean_pred)))
+            stat_metrics["mean_calibration_error"] = round(calibration_error, 4)
+            print(f"  Mean Calibration Error: {calibration_error:.4f}")
+        except Exception as e:
+            print(f"  Calibration curve failed: {e}")
+            stat_metrics["calibration_curve"] = None
+            stat_metrics["mean_calibration_error"] = None
+
+        # Score distribution comparison
+        known_bad_scores_arr = np.array([s for _, s in known_bad_scored])
+        random_sample_scores_arr = np.array([s for _, s in random_scores])
+
+        stat_metrics["score_distribution"] = {
+            "known_bad": {
+                "mean": round(float(np.mean(known_bad_scores_arr)), 4),
+                "median": round(float(np.median(known_bad_scores_arr)), 4),
+                "p75": round(float(np.percentile(known_bad_scores_arr, 75)), 4),
+                "p90": round(float(np.percentile(known_bad_scores_arr, 90)), 4),
+                "std": round(float(np.std(known_bad_scores_arr)), 4),
+            },
+            "random_sample": {
+                "mean": round(float(np.mean(random_sample_scores_arr)), 4),
+                "median": round(float(np.median(random_sample_scores_arr)), 4),
+                "p75": round(float(np.percentile(random_sample_scores_arr, 75)), 4),
+                "p90": round(float(np.percentile(random_sample_scores_arr, 90)), 4),
+                "std": round(float(np.std(random_sample_scores_arr)), 4),
+            }
+        }
+        kb_d = stat_metrics["score_distribution"]["known_bad"]
+        rs_d = stat_metrics["score_distribution"]["random_sample"]
+        print(f"\nScore Distribution Comparison:")
+        print(f"    {'Metric':<10} {'Known Bad':>12} {'Random':>12} {'Delta':>12}")
+        print(f"    {'-'*10} {'-'*12} {'-'*12} {'-'*12}")
+        for mn in ["mean", "median", "p75", "p90"]:
+            kb_v = kb_d[mn]
+            rs_v = rs_d[mn]
+            delta = kb_v - rs_v
+            print(f"    {mn:<10} {kb_v:>12.4f} {rs_v:>12.4f} {delta:>+12.4f}")
+
+        results["statistical_metrics"] = stat_metrics
+
+    print("\n" + "=" * 70)
+    print("PHASE 6: PER-CASE DETECTION")
+    print("=" * 70)
+
+    per_case_results = {}
+    for case_name, case_info in cases.items():
+        case_vendor_ids = [v["vendor_id"] for v in matched_vendors if v["case_name"] == case_name]
+        if not case_vendor_ids:
+            continue
+
+        case_contracts = [c for c in known_bad_contracts if c["vendor_id"] in case_vendor_ids]
+        if not case_contracts:
+            per_case_results[case_name] = {"contracts": 0, "detection_rate": 0.0}
+            continue
+
+        case_dist = calculate_risk_distribution(case_contracts)
+        case_det_metrics = calculate_detection_metrics(case_dist)
+        case_scores = [
+            c.get("risk_score", 0) or 0
+            for c in case_contracts
+            if c.get("risk_score") is not None
+        ]
+
+        per_case_results[case_name] = {
+            "contracts": len(case_contracts),
+            "vendors": len(case_vendor_ids),
+            "risk_distribution": case_dist,
+            "detection_rate": case_det_metrics["detection_rate"],
+            "high_plus_rate": case_det_metrics["high_plus_rate"],
+            "avg_score": round(float(np.mean(case_scores)), 4) if case_scores else 0.0,
+            "median_score": round(float(np.median(case_scores)), 4) if case_scores else 0.0,
+        }
+
+    results["per_case_detection"] = per_case_results
+
+    print(f"\n{'Case':<45} {'Contracts':>10} {'Detect%':>10} {'High+%':>10} {'AvgScore':>10}")
+    print(f"  {'-'*45} {'-'*10} {'-'*10} {'-'*10} {'-'*10}")
+    for case_name, case_data in per_case_results.items():
+        cname = case_name[:45]
+        ccount = case_data["contracts"]
+        drate = case_data["detection_rate"]
+        hrate = case_data["high_plus_rate"]
+        ascore = case_data.get("avg_score", 0)
+        print(f"  {cname:<45} {ccount:>10} {drate:>9.1f}% {hrate:>9.1f}% {ascore:>10.4f}")
+
+    print("\n" + "=" * 70)
+    print("PHASE 7: VENDOR-LEVEL ANALYSIS")
     print("=" * 70)
 
     # Analyze by vendor
@@ -545,6 +725,33 @@ def print_summary(results: Dict[str, Any]) -> None:
     else:
         print(f"  Low lift ({lift:.1f}x) suggests model may need improvement")
 
+    # Statistical metrics
+    stat_metrics = results.get("statistical_metrics")
+    if stat_metrics:
+        print(f"\nSTATISTICAL METRICS:")
+        if stat_metrics.get("auc_roc") is not None:
+            auc_val = stat_metrics["auc_roc"]
+            print(f"  AUC-ROC: {auc_val:.4f}")
+        brier_val = stat_metrics["brier_score"]
+        print(f"  Brier Score: {brier_val:.4f}")
+        ll_val = stat_metrics["log_loss"]
+        print(f"  Log Loss: {ll_val:.4f}")
+        if stat_metrics.get("mean_calibration_error") is not None:
+            mce_val = stat_metrics["mean_calibration_error"]
+            print(f"  Mean Calibration Error: {mce_val:.4f}")
+    elif stat_metrics is None and "statistical_metrics" in results:
+        print(f"\nSTATISTICAL METRICS: Skipped (sklearn not installed)")
+
+    # Per-case detection
+    per_case = results.get("per_case_detection")
+    if per_case:
+        print(f"\nPER-CASE DETECTION:")
+        for case_name, case_data in per_case.items():
+            dr = case_data["detection_rate"]
+            cc = case_data["contracts"]
+            avs = case_data.get("avg_score", 0)
+            print(f"  {case_name}: {dr:.1f}% detected ({cc} contracts, avg score {avs:.3f})")
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -558,7 +765,7 @@ def main():
     parser.add_argument(
         '--model-version',
         type=str,
-        default='v3.1',
+        default='v3.3',
         help='Model version being validated (default: v3.1)'
     )
     args = parser.parse_args()

@@ -22,6 +22,9 @@ def get_db_connection() -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     # Set busy timeout to handle concurrent access
     conn.execute(f"PRAGMA busy_timeout = {DB_QUERY_TIMEOUT * 1000}")
+    # WAL mode allows concurrent readers while one writer is active
+    conn.execute("PRAGMA journal_mode = WAL")
+    conn.execute("PRAGMA read_uncommitted = ON")
     return conn
 
 
