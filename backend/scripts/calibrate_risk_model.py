@@ -185,8 +185,7 @@ def fit_calibrated_model(X, y, n_bootstrap=1000):
 
     # Primary model: L2-regularized logistic regression
     base_model = LogisticRegression(
-        penalty='l2',
-        C=0.1,  # Strong regularization
+        C=0.1,  # Strong regularization (L2 is default)
         class_weight={0: 1, 1: min(weight_ratio, 20)},
         max_iter=1000,
         solver='lbfgs',
@@ -272,7 +271,7 @@ def fit_calibrated_model(X, y, n_bootstrap=1000):
 
         try:
             model_boot = LogisticRegression(
-                penalty='l2', C=0.1,
+                C=0.1,
                 class_weight={0: 1, 1: min(weight_ratio, 20)},
                 max_iter=500, solver='lbfgs', random_state=b
             )

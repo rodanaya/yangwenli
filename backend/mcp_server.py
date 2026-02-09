@@ -378,6 +378,8 @@ async def search_contracts(args: dict) -> str:
                 c.id, c.contract_number, c.title, c.amount_mxn,
                 c.contract_date, c.contract_year,
                 c.risk_score, c.risk_level, c.risk_factors,
+                c.risk_confidence_lower, c.risk_confidence_upper,
+                c.mahalanobis_distance, c.risk_model_version,
                 c.is_direct_award, c.is_single_bid,
                 v.name as vendor_name, v.id as vendor_id,
                 i.name as institution_name, i.id as institution_id,
@@ -405,6 +407,20 @@ async def search_contracts(args: dict) -> str:
             risk_emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}.get(row["risk_level"], "⚪")
             amount_str = format_currency(row["amount_mxn"] or 0)
 
+            # Format confidence interval if available
+            ci_str = ""
+            ci_lower = row["risk_confidence_lower"]
+            ci_upper = row["risk_confidence_upper"]
+            if ci_lower is not None and ci_upper is not None:
+                ci_str = f" [{ci_lower:.3f}, {ci_upper:.3f}]"
+
+            mahal_str = ""
+            mahal = row["mahalanobis_distance"]
+            if mahal is not None:
+                mahal_str = f"   Mahalanobis: {mahal:.2f}\n"
+
+            model_ver = row["risk_model_version"] or "unknown"
+
             results.append(f"""
 {i}. **{row['title'][:60]}...**
    Contract ID: {row['id']} | {row['contract_year']}
@@ -412,8 +428,8 @@ async def search_contracts(args: dict) -> str:
    Vendor: {row['vendor_name']} (ID: {row['vendor_id']})
    Institution: {row['institution_name']} (ID: {row['institution_id']})
    Sector: {row['sector_name']}
-   Risk: {risk_emoji} {row['risk_level'].upper()} ({row['risk_score']:.2f})
-   Flags: {'Direct Award ' if row['is_direct_award'] else ''}{'Single Bid' if row['is_single_bid'] else ''}
+   Risk: {risk_emoji} {row['risk_level'].upper()} ({row['risk_score']:.2f}){ci_str} [Model {model_ver}]
+{mahal_str}   Flags: {'Direct Award ' if row['is_direct_award'] else ''}{'Single Bid' if row['is_single_bid'] else ''}
    Factors: {row['risk_factors'] or 'None'}
 """)
 
@@ -479,7 +495,10 @@ async def get_contract_details(args: dict) -> str:
 ## Risk Assessment
 - **Risk Score**: {row['risk_score']:.3f}
 - **Risk Level**: {row['risk_level'].upper() if row['risk_level'] else 'Unknown'}
-- **Confidence**: {row['risk_confidence'] or 'N/A'}
+- **Model Version**: {row['risk_model_version'] or 'N/A'}
+- **95% Confidence Interval**: {f"[{row['risk_confidence_lower']:.3f}, {row['risk_confidence_upper']:.3f}]" if row['risk_confidence_lower'] is not None and row['risk_confidence_upper'] is not None else 'N/A'}
+- **Mahalanobis Distance**: {f"{row['mahalanobis_distance']:.2f}" if row['mahalanobis_distance'] is not None else 'N/A'}
+- **Legacy Confidence**: {row['risk_confidence'] or 'N/A'}
 
 ### Risk Factors Triggered:
 """
@@ -1175,6 +1194,8 @@ async def get_top_risk_contracts(args: dict) -> str:
             SELECT
                 c.id, c.title, c.amount_mxn, c.contract_year,
                 c.risk_score, c.risk_level, c.risk_factors,
+                c.risk_confidence_lower, c.risk_confidence_upper,
+                c.mahalanobis_distance, c.risk_model_version,
                 v.name as vendor_name, v.id as vendor_id,
                 i.name as institution_name,
                 s.name_es as sector_name
@@ -1197,9 +1218,17 @@ async def get_top_risk_contracts(args: dict) -> str:
         for i, row in enumerate(rows, 1):
             risk_emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}.get(row["risk_level"], "⚪")
 
+            ci_lower = row["risk_confidence_lower"]
+            ci_upper = row["risk_confidence_upper"]
+            ci_str = f" [{ci_lower:.3f}, {ci_upper:.3f}]" if ci_lower is not None and ci_upper is not None else ""
+            mahal = row["mahalanobis_distance"]
+            mahal_str = f"{mahal:.2f}" if mahal is not None else "N/A"
+            model_ver = row["risk_model_version"] or "unknown"
+
             result += f"""
 ## {i}. Contract ID: {row['id']} {risk_emoji}
-**Risk Score**: {row['risk_score']:.3f} ({row['risk_level'].upper()})
+**Risk Score**: {row['risk_score']:.3f}{ci_str} ({row['risk_level'].upper()}) [Model {model_ver}]
+**Mahalanobis Distance**: {mahal_str}
 
 - **Title**: {row['title'][:80]}...
 - **Amount**: {format_currency(row['amount_mxn'] or 0)}
@@ -1285,10 +1314,37 @@ async def get_database_stats(args: dict) -> str:
         for sector in sectors:
             result += f"- {sector['name_es']}: {sector['cnt']:,}\n"
 
+        # Detect active model version
+        cursor.execute("""
+            SELECT risk_model_version, COUNT(*) as cnt
+            FROM contracts
+            WHERE risk_model_version IS NOT NULL
+            GROUP BY risk_model_version
+            ORDER BY cnt DESC
+            LIMIT 1
+        """)
+        model_row = cursor.fetchone()
+        active_model = model_row["risk_model_version"] if model_row else "unknown"
+
+        # Get CI coverage stats
+        cursor.execute("""
+            SELECT
+                COUNT(*) as with_ci,
+                AVG(risk_confidence_upper - risk_confidence_lower) as avg_ci_width
+            FROM contracts
+            WHERE risk_confidence_lower IS NOT NULL AND risk_confidence_upper IS NOT NULL
+        """)
+        ci_stats = cursor.fetchone()
+        ci_count = ci_stats["with_ci"] or 0
+        avg_ci_width = ci_stats["avg_ci_width"] or 0
+
         result += f"""
 ## Risk Model
-- **Version**: 3.3 (with co-bidding detection)
-- **Factors**: 8 base factors + 4 bonus factors
+- **Active Version**: {active_model}
+- **AUC-ROC**: 0.951 (v4.0) / 0.584 (v3.3)
+- **Contracts with CI bounds**: {ci_count:,}
+- **Average CI Width**: {avg_ci_width:.3f}
+- **Framework**: 12 z-score features, Mahalanobis distance, Bayesian logistic regression
 - **Last Updated**: {datetime.now().strftime('%Y-%m-%d')}
 """
 

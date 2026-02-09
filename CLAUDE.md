@@ -76,20 +76,22 @@ For detailed validation rules, see @.claude/rules/data-validation.md
 
 **Two models available** — v3.3 (weighted checklist) and v4.0 (statistical framework):
 
-### v4.0: Statistical Framework (active, retrained 2026-02-09)
+### v4.0: Statistical Framework (active, dampened 2026-02-09)
 
-Calibrated probabilities P(corrupt|z) with confidence intervals. **AUC-ROC: 0.951**, Lift: 4.04x.
+Calibrated probabilities P(corrupt|z) with confidence intervals. **AUC-ROC: 0.942**, high-risk rate: 11.0%.
 
 - 12 z-score features normalized by sector/year baselines
 - Mahalanobis distance for multivariate anomaly detection
 - Bayesian logistic regression (L2, C=0.1) trained on 21,252 known-bad contracts from 9 cases
 - PU-learning correction (c=0.890) for unlabeled data
 - 1,000 bootstrap 95% confidence intervals
+- Post-hoc coefficient dampening to reduce overfitting
 
-**Top predictors**: vendor_concentration (+1.85), industry_mismatch (+0.21), same_day_count (+0.14)
-**Reversed from v3.3**: direct_award (-0.20), ad_period_days (-0.22), network_member_count (-4.11)
-**Risk Levels (v4.0)**: Critical (>=0.50), High (>=0.20), Medium (>=0.05), Low (<0.05)
-**Distribution**: Critical 5.5%, High 17.7%, Medium 66.7%, Low 10.1%
+**Top predictors**: vendor_concentration (+1.0, dampened from +1.85), industry_mismatch (+0.21), same_day_count (+0.14)
+**Reversed from v3.3**: direct_award (-0.20), ad_period_days (-0.22)
+**Zeroed**: network_member_count (was -4.11, training artifact), co_bid_rate (regularized to 0)
+**Risk Levels (v4.0)**: Critical (>=0.50), High (>=0.30), Medium (>=0.10), Low (<0.10)
+**Distribution**: Critical 3.3%, High 7.6%, Medium 77.0%, Low 12.0%
 
 ### v3.3: Weighted Checklist (preserved in risk_score_v3)
 

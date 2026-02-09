@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { formatNumber, formatCompactMXN, formatPercent } from '../lib/utils'
-import { RISK_THRESHOLDS } from '../lib/constants'
+import { formatNumber, formatCompactMXN, formatPercent, getRiskLevel } from '../lib/utils'
+import { RISK_THRESHOLDS, RISK_THRESHOLDS_V3, CURRENT_MODEL_VERSION } from '../lib/constants'
 
 describe('formatNumber', () => {
   it('formats integers with thousands separators', () => {
@@ -61,17 +61,56 @@ describe('formatPercent', () => {
   })
 })
 
-describe('Risk thresholds', () => {
-  // Test risk level boundaries (v3.3)
-  it('defines correct risk thresholds', () => {
-    // Critical: >= 0.50
-    // High: 0.35 - 0.50
-    // Medium: 0.20 - 0.35
-    // Low: < 0.20
+describe('Risk model version', () => {
+  it('is set to v4.0', () => {
+    expect(CURRENT_MODEL_VERSION).toBe('v4.0')
+  })
+})
+
+describe('Risk thresholds (v4.0)', () => {
+  it('defines correct v4.0 thresholds', () => {
+    // v4.0: calibrated probability thresholds
+    // Critical: >= 0.50 (>=50% corruption probability)
+    // High: >= 0.20 (>=20% probability)
+    // Medium: >= 0.05 (>=5% probability)
+    // Low: < 0.05
 
     expect(RISK_THRESHOLDS.critical).toBe(0.50)
-    expect(RISK_THRESHOLDS.high).toBe(0.35)
-    expect(RISK_THRESHOLDS.medium).toBe(0.20)
+    expect(RISK_THRESHOLDS.high).toBe(0.20)
+    expect(RISK_THRESHOLDS.medium).toBe(0.05)
+    expect(RISK_THRESHOLDS.low).toBe(0)
+  })
+
+  it('preserves v3.3 thresholds for reference', () => {
+    expect(RISK_THRESHOLDS_V3.critical).toBe(0.50)
+    expect(RISK_THRESHOLDS_V3.high).toBe(0.35)
+    expect(RISK_THRESHOLDS_V3.medium).toBe(0.20)
+  })
+})
+
+describe('getRiskLevel (v4.0 thresholds)', () => {
+  it('returns critical for scores >= 0.50', () => {
+    expect(getRiskLevel(0.50)).toBe('critical')
+    expect(getRiskLevel(0.75)).toBe('critical')
+    expect(getRiskLevel(1.0)).toBe('critical')
+  })
+
+  it('returns high for scores >= 0.20 and < 0.50', () => {
+    expect(getRiskLevel(0.20)).toBe('high')
+    expect(getRiskLevel(0.35)).toBe('high')
+    expect(getRiskLevel(0.49)).toBe('high')
+  })
+
+  it('returns medium for scores >= 0.05 and < 0.20', () => {
+    expect(getRiskLevel(0.05)).toBe('medium')
+    expect(getRiskLevel(0.10)).toBe('medium')
+    expect(getRiskLevel(0.19)).toBe('medium')
+  })
+
+  it('returns low for scores < 0.05', () => {
+    expect(getRiskLevel(0.0)).toBe('low')
+    expect(getRiskLevel(0.04)).toBe('low')
+    expect(getRiskLevel(0.049)).toBe('low')
   })
 })
 

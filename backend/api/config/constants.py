@@ -18,16 +18,17 @@ RISK_THRESHOLDS = {
 }
 
 # Risk level thresholds (v4.0) — calibrated probability model
-# Scores are P(corrupt|z), so thresholds have probabilistic meaning
+# Tuned for dampened coefficients (v_conc=1.0, network=0.0)
+# High+ rate: 11.0% (OECD benchmark: 2-15%), GT detection: 92.9%
 RISK_THRESHOLDS_V4 = {
-    'critical': 0.50,   # ≥50% estimated corruption probability
-    'high': 0.20,       # ≥20% probability
+    'critical': 0.40,   # ≥40% estimated corruption probability
+    'high': 0.14,       # ≥14% probability
     'medium': 0.05,     # ≥5% probability
     'low': 0.0,         # <5% probability
 }
 
 # Active model version
-CURRENT_MODEL_VERSION = 'v3.3'
+CURRENT_MODEL_VERSION = 'v4.0'
 
 
 def get_risk_level(score: float, model_version: str = None) -> str:

@@ -20,6 +20,7 @@ import {
   Filter,
   ArrowUpRight,
   ArrowDownRight,
+  ChevronDown,
 } from 'lucide-react'
 import {
   BarChart,
@@ -365,46 +366,8 @@ export function RiskAnalysis() {
         </Card>
       </div>
 
-      {/* Risk Model Weights */}
-      <Card className="hover-lift">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            Risk Model v3.3 Weights
-          </CardTitle>
-          <CardDescription>Factor contribution to composite risk score</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {[
-              { name: 'Single Bidding', weight: 18 },
-              { name: 'Non-Open Procedure', weight: 18 },
-              { name: 'Price Anomaly', weight: 18 },
-              { name: 'Vendor Concentration', weight: 12 },
-              { name: 'Short Ad Period', weight: 12 },
-              { name: 'Network Risk', weight: 8 },
-              { name: 'Year-End Timing', weight: 7 },
-              { name: 'Threshold Splitting', weight: 7 },
-            ].map((f) => (
-              <div key={f.name} className="flex items-center gap-2">
-                <span className="text-xs text-text-muted w-36">{f.name}</span>
-                <div className="flex-1 h-2 bg-background-elevated rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-accent rounded-full"
-                    style={{ width: `${(f.weight / 18) * 100}%` }}
-                  />
-                </div>
-                <span className="text-xs font-medium tabular-nums w-8 text-right">{f.weight}%</span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 pt-3 border-t border-border">
-            <p className="text-xs text-text-muted">
-              Bonus factors: Co-bidding +5%, Price Hypothesis +5%, Industry Mismatch +3%, Institution Risk +3%
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Risk Model v4.0 Methodology */}
+      <RiskModelCard />
 
       {/* Sector Risk Matrix & Trend Analysis */}
       <div className="grid gap-4 lg:grid-cols-2">
@@ -786,6 +749,146 @@ const RiskTrendChart = memo(function RiskTrendChart({
         </LineChart>
       </ResponsiveContainer>
     </div>
+  )
+})
+
+const V4_COEFFICIENTS = [
+  { name: 'Vendor Concentration', coeff: 1.850, direction: 'positive' as const },
+  { name: 'Industry Mismatch', coeff: 0.214, direction: 'positive' as const },
+  { name: 'Same-Day Contracts', coeff: 0.142, direction: 'positive' as const },
+  { name: 'Institution Risk', coeff: 0.119, direction: 'positive' as const },
+  { name: 'Single Bid', coeff: 0.100, direction: 'positive' as const },
+  { name: 'Price Ratio', coeff: 0.098, direction: 'positive' as const },
+  { name: 'Year-End', coeff: 0.023, direction: 'neutral' as const },
+  { name: 'Direct Award', coeff: -0.197, direction: 'negative' as const },
+  { name: 'Ad Period Days', coeff: -0.222, direction: 'negative' as const },
+  { name: 'Network Members', coeff: -4.114, direction: 'negative' as const },
+]
+
+const V33_WEIGHTS = [
+  { name: 'Single Bidding', weight: 18 },
+  { name: 'Non-Open Procedure', weight: 18 },
+  { name: 'Price Anomaly', weight: 18 },
+  { name: 'Vendor Concentration', weight: 12 },
+  { name: 'Short Ad Period', weight: 12 },
+  { name: 'Network Risk', weight: 8 },
+  { name: 'Year-End Timing', weight: 7 },
+  { name: 'Threshold Splitting', weight: 7 },
+]
+
+const RiskModelCard = memo(function RiskModelCard() {
+  const [showV33, setShowV33] = useState(false)
+
+  // Normalize coefficients for bar widths (relative to max absolute value)
+  const maxAbsCoeff = Math.max(...V4_COEFFICIENTS.map((c) => Math.abs(c.coeff)))
+
+  return (
+    <Card className="hover-lift">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Shield className="h-4 w-4" />
+          Risk Model v4.0 — Statistical Framework
+        </CardTitle>
+        <CardDescription>
+          Bayesian Logistic Regression with PU-learning correction
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {/* Validation metrics */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+          {[
+            { label: 'AUC-ROC', value: '0.951' },
+            { label: 'Lift', value: '4.04x' },
+            { label: 'Brier Score', value: '0.065' },
+            { label: 'Detection (High+)', value: '95.3%' },
+          ].map((m) => (
+            <div key={m.label} className="rounded-lg bg-background-elevated p-2.5 text-center">
+              <p className="text-lg font-bold tabular-nums text-text-primary">{m.value}</p>
+              <p className="text-xs text-text-muted">{m.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Learned coefficients */}
+        <p className="text-xs font-medium text-text-muted mb-2">
+          Data-derived coefficients (12 z-score features, L2-regularized)
+        </p>
+        <div className="space-y-1.5">
+          {V4_COEFFICIENTS.map((f) => (
+            <div key={f.name} className="flex items-center gap-2">
+              <span className="text-xs text-text-muted w-36 shrink-0">{f.name}</span>
+              <div className="flex-1 h-2 bg-background-elevated rounded-full overflow-hidden relative">
+                <div
+                  className={`h-full rounded-full ${
+                    f.direction === 'positive'
+                      ? 'bg-risk-high'
+                      : f.direction === 'negative'
+                        ? 'bg-accent'
+                        : 'bg-text-muted'
+                  }`}
+                  style={{ width: `${(Math.abs(f.coeff) / maxAbsCoeff) * 100}%` }}
+                />
+              </div>
+              <span
+                className={`text-xs font-medium tabular-nums w-14 text-right ${
+                  f.coeff > 0 ? 'text-risk-high' : f.coeff < 0 ? 'text-accent' : 'text-text-muted'
+                }`}
+              >
+                {f.coeff > 0 ? '+' : ''}{f.coeff.toFixed(3)}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Key insights */}
+        <div className="mt-4 pt-3 border-t border-border space-y-1.5">
+          <p className="text-xs text-text-muted">
+            Scores are calibrated P(corrupt|z) with 95% bootstrap confidence intervals.
+            Trained on 21,252 contracts from 9 documented corruption cases.
+          </p>
+          <p className="text-xs text-text-muted">
+            <span className="text-risk-high">Orange = increases risk</span>
+            {' / '}
+            <span className="text-accent">Blue = decreases risk</span>
+            {' '}(sign learned from data, not assumed)
+          </p>
+        </div>
+
+        {/* Collapsible v3.3 section */}
+        <div className="mt-4 pt-3 border-t border-border">
+          <button
+            onClick={() => setShowV33(!showV33)}
+            className="flex items-center gap-1.5 text-xs text-text-muted hover:text-text-primary transition-colors"
+          >
+            <ChevronDown
+              className={`h-3.5 w-3.5 transition-transform ${showV33 ? 'rotate-180' : ''}`}
+            />
+            Previous Model (v3.3) — Weighted Checklist
+          </button>
+          {showV33 && (
+            <div className="mt-3 space-y-2">
+              {V33_WEIGHTS.map((f) => (
+                <div key={f.name} className="flex items-center gap-2">
+                  <span className="text-xs text-text-muted w-36">{f.name}</span>
+                  <div className="flex-1 h-2 bg-background-elevated rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-text-muted/40 rounded-full"
+                      style={{ width: `${(f.weight / 18) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-medium tabular-nums w-8 text-right text-text-muted">
+                    {f.weight}%
+                  </span>
+                </div>
+              ))}
+              <p className="text-xs text-text-muted mt-2">
+                AUC-ROC: 0.584 | Lift: 1.22x — superseded by v4.0
+              </p>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   )
 })
 
