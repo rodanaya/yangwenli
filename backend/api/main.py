@@ -53,26 +53,33 @@ logger = logging.getLogger(__name__)
 
 
 def _warmup_caches():
-    """Pre-populate expensive caches in a background thread so first requests are fast."""
+    """Pre-populate expensive caches in a background thread so first requests are fast.
+
+    Uses short timeouts (5s) to avoid blocking the thread pool with slow queries.
+    Slow endpoints that miss the warmup window will be cached on first user request.
+    """
     import urllib.request
+    import time
     base = "http://127.0.0.1:8001"
+    # Wait briefly for server to be ready
+    time.sleep(1)
     # Priority order: dashboard first (most critical), then supporting data
+    # Short timeout: better to skip warmup than block the thread pool
     endpoints = [
         "/api/v1/stats/dashboard/fast",          # Dashboard (highest priority)
-        "/api/v1/contracts/statistics",           # Contract stats (expensive aggregate)
+        "/api/v1/contracts/statistics",           # Contract stats (cached)
         "/api/v1/analysis/anomalies",             # Dashboard alerts
         "/api/v1/vendors/top-all?limit=5",        # Vendors featured strips
         "/api/v1/sectors",                        # Sectors list
         "/api/v1/analysis/risk-distribution",     # Risk analysis
-        "/api/v1/analysis/year-over-year",        # Trends (expensive GROUP BY)
+        "/api/v1/analysis/year-over-year",        # Trends
         "/api/v1/stats/data-quality",             # Header quality badge
     ]
     for ep in endpoints:
         try:
-            urllib.request.urlopen(f"{base}{ep}", timeout=30)
-            logger.info(f"Cache warmed: {ep}")
+            urllib.request.urlopen(f"{base}{ep}", timeout=5)
         except Exception as e:
-            logger.warning(f"Cache warmup failed for {ep}: {e}")
+            logger.debug(f"Cache warmup skipped for {ep}: {e}")
 
 
 @asynccontextmanager

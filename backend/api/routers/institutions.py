@@ -243,33 +243,29 @@ def get_institution(institution_id: int):
                 detail=f"Institution {institution_id} not found"
             )
 
-        # Get comprehensive risk metrics in one query
+        # Use pre-computed institution_stats for performance (avoids scanning all contracts)
         cursor.execute("""
-            SELECT
-                COUNT(*) as total,
-                SUM(CASE WHEN risk_level IN ('high', 'critical') THEN 1 ELSE 0 END) as high_risk_count,
-                SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) as direct_award_count,
-                AVG(risk_score) as avg_risk_score
-            FROM contracts
+            SELECT total_contracts, total_value_mxn, avg_risk_score,
+                   high_risk_count, high_risk_pct, direct_award_count, direct_award_pct
+            FROM institution_stats
             WHERE institution_id = ?
-            AND COALESCE(amount_mxn, 0) <= ?
-        """, (institution_id, MAX_CONTRACT_VALUE))
-        metrics_row = cursor.fetchone()
+        """, (institution_id,))
+        stats_row = cursor.fetchone()
 
         total_contracts = row["total_contracts"] or 0
 
-        # Calculate derived metrics
+        # Calculate derived metrics from pre-computed stats
         avg_value = None
         if total_contracts > 0 and row["total_amount_mxn"]:
             avg_value = row["total_amount_mxn"] / total_contracts
 
-        high_risk_count = metrics_row["high_risk_count"] or 0 if metrics_row else 0
-        high_risk_pct = (high_risk_count / total_contracts * 100) if total_contracts > 0 else 0.0
+        high_risk_count = stats_row["high_risk_count"] if stats_row else 0
+        high_risk_pct = stats_row["high_risk_pct"] if stats_row else 0.0
 
-        direct_award_count = metrics_row["direct_award_count"] or 0 if metrics_row else 0
-        direct_award_rate = (direct_award_count / total_contracts * 100) if total_contracts > 0 else 0.0
+        direct_award_count = stats_row["direct_award_count"] if stats_row else 0
+        direct_award_rate = stats_row["direct_award_pct"] if stats_row else 0.0
 
-        avg_risk_score = metrics_row["avg_risk_score"] if metrics_row else None
+        avg_risk_score = stats_row["avg_risk_score"] if stats_row else None
         if avg_risk_score is not None:
             avg_risk_score = round(avg_risk_score, 4)
 
@@ -748,9 +744,17 @@ def get_institution_contracts(
             sort_expr = SORT_FIELD_MAPPING.get(sort_by, "c.contract_date")
             order_direction = "DESC" if sort_order.lower() == "desc" else "ASC"
 
-            # Count total
-            cursor.execute(f"SELECT COUNT(*) FROM contracts c WHERE {where_clause}", params)
-            total = cursor.fetchone()[0]
+            # Count total — use pre-computed stats when no filters active (fast path)
+            if year is None and risk_level is None:
+                cursor.execute(
+                    "SELECT total_contracts FROM institution_stats WHERE institution_id = ?",
+                    (institution_id,)
+                )
+                stats_row = cursor.fetchone()
+                total = stats_row["total_contracts"] if stats_row else 0
+            else:
+                cursor.execute(f"SELECT COUNT(*) FROM contracts c WHERE {where_clause}", params)
+                total = cursor.fetchone()[0]
             total_pages = math.ceil(total / per_page) if total > 0 else 1
 
             # Get paginated results
@@ -819,6 +823,7 @@ def get_institution_vendors(
     Get vendors that an institution has contracted with.
 
     Returns vendors ranked by contract count with this institution.
+    Uses pre-computed institution_top_vendors table for performance.
     """
     try:
         with get_db() as conn:
@@ -830,25 +835,17 @@ def get_institution_vendors(
             if not institution:
                 raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
 
-            query = """
+            # Use pre-computed materialized view (instant vs 54s)
+            cursor.execute("""
                 SELECT
-                    v.id as vendor_id,
-                    v.name as vendor_name,
-                    v.rfc,
-                    COUNT(c.id) as contract_count,
-                    COALESCE(SUM(c.amount_mxn), 0) as total_value_mxn,
-                    COALESCE(AVG(c.risk_score), 0) as avg_risk_score,
-                    MIN(c.contract_year) as first_year,
-                    MAX(c.contract_year) as last_year
-                FROM contracts c
-                JOIN vendors v ON c.vendor_id = v.id
-                WHERE c.institution_id = ?
-                AND COALESCE(c.amount_mxn, 0) <= ?
-                GROUP BY v.id, v.name, v.rfc
-                ORDER BY contract_count DESC
+                    vendor_id, vendor_name, rfc,
+                    contract_count, total_value_mxn, avg_risk_score,
+                    first_year, last_year
+                FROM institution_top_vendors
+                WHERE institution_id = ?
+                ORDER BY rank_by_count
                 LIMIT ?
-            """
-            cursor.execute(query, (institution_id, MAX_CONTRACT_VALUE, limit))
+            """, (institution_id, limit))
             rows = cursor.fetchall()
 
             vendors = [

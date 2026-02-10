@@ -11,7 +11,7 @@
     "sqlite": {
       "type": "stdio",
       "command": "cmd",
-      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-sqlite", "D:\\Python\\yangwenli\\backend\\RUBLI_NORMALIZED.db"]
+      "args": ["/c", "npx", "-y", "mcp-server-sqlite-npx", "D:\\Python\\yangwenli\\backend\\RUBLI_NORMALIZED.db"]
     },
     "shadcn": {
       "type": "stdio",

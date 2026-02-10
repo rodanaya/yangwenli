@@ -514,23 +514,38 @@ def get_vendor(
     Get detailed information for a specific vendor.
 
     Returns vendor details, classification, statistics, and metrics.
+    Uses pre-computed vendor_stats for performance.
     """
     try:
         with get_db() as conn:
             cursor = conn.cursor()
 
-            # Get vendor basic info with classification
+            # Get vendor basic info with classification + pre-computed stats in ONE query
             cursor.execute("""
                 SELECT
                     v.id, v.name, v.rfc, v.name_normalized, v.phonetic_code,
                     v.group_id,
                     vc.industry_id, vc.industry_code, vc.industry_confidence,
                     vi.name_es as industry_name, vi.sector_affinity,
-                    vg.canonical_name as group_name
+                    vg.canonical_name as group_name,
+                    COALESCE(vs.total_contracts, 0) as total_contracts,
+                    COALESCE(vs.total_value_mxn, 0) as total_value_mxn,
+                    vs.avg_risk_score,
+                    COALESCE(vs.high_risk_pct, 0) as high_risk_pct,
+                    COALESCE(vs.direct_award_pct, 0) as direct_award_pct,
+                    COALESCE(vs.single_bid_pct, 0) as single_bid_pct,
+                    vs.first_contract_year,
+                    vs.last_contract_year,
+                    COALESCE(vs.sector_count, 0) as sectors_count,
+                    COALESCE(vs.institution_count, 0) as total_institutions,
+                    vs.avg_mahalanobis,
+                    vs.max_mahalanobis,
+                    vs.anomalous_pct
                 FROM vendors v
                 LEFT JOIN vendor_classifications vc ON v.id = vc.vendor_id
                 LEFT JOIN vendor_industries vi ON vc.industry_id = vi.id
                 LEFT JOIN vendor_groups vg ON v.group_id = vg.id
+                LEFT JOIN vendor_stats vs ON v.id = vs.vendor_id
                 WHERE v.id = ?
             """, (vendor_id,))
 
@@ -538,33 +553,16 @@ def get_vendor(
             if not row:
                 raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
 
-            # Get contract statistics
-            cursor.execute("""
-                SELECT
-                    COUNT(*) as total_contracts,
-                    COALESCE(SUM(amount_mxn), 0) as total_value_mxn,
-                    COALESCE(AVG(amount_mxn), 0) as avg_contract_value,
-                    COALESCE(AVG(risk_score), 0) as avg_risk_score,
-                    SUM(CASE WHEN risk_level IN ('high', 'critical') THEN 1 ELSE 0 END) as high_risk_count,
-                    SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) as direct_award_count,
-                    SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) as single_bid_count,
-                    MIN(contract_year) as first_year,
-                    MAX(contract_year) as max_year,
-                    COUNT(DISTINCT contract_year) as years_active,
-                    COUNT(DISTINCT institution_id) as total_institutions,
-                    COUNT(DISTINCT sector_id) as sectors_count,
-                    AVG(mahalanobis_distance) as avg_mahalanobis,
-                    MAX(mahalanobis_distance) as max_mahalanobis,
-                    SUM(CASE WHEN mahalanobis_distance > 21.026 THEN 1 ELSE 0 END) as anomalous_count
-                FROM contracts
-                WHERE vendor_id = ?
-                AND COALESCE(amount_mxn, 0) <= ?
-            """, (vendor_id, MAX_CONTRACT_VALUE))
+            total_contracts = row["total_contracts"]
+            total_value = row["total_value_mxn"]
 
-            stats = cursor.fetchone()
-            total_contracts = stats["total_contracts"] or 0
+            # Compute derived values from pre-computed stats
+            avg_contract_value = (total_value / total_contracts) if total_contracts > 0 else None
+            high_risk_count = round(row["high_risk_pct"] * total_contracts / 100) if total_contracts > 0 else 0
+            direct_award_count = round(row["direct_award_pct"] * total_contracts / 100) if total_contracts > 0 else 0
+            single_bid_count = round(row["single_bid_pct"] * total_contracts / 100) if total_contracts > 0 else 0
 
-            # Get primary sector
+            # Get primary sector (small query, only groups vendor's contracts)
             cursor.execute("""
                 SELECT c.sector_id, s.name_es as sector_name, COUNT(*) as cnt
                 FROM contracts c
@@ -575,6 +573,11 @@ def get_vendor(
                 LIMIT 1
             """, (vendor_id,))
             primary_sector = cursor.fetchone()
+
+            # Years active from first/last year
+            first_year = row["first_contract_year"]
+            last_year = row["last_contract_year"]
+            years_active = (last_year - first_year + 1) if first_year and last_year else 0
 
             return VendorDetailResponse(
                 id=row["id"],
@@ -590,25 +593,25 @@ def get_vendor(
                 vendor_group_id=row["group_id"],
                 group_name=row["group_name"],
                 total_contracts=total_contracts,
-                total_value_mxn=stats["total_value_mxn"] or 0,
-                avg_contract_value=stats["avg_contract_value"] if total_contracts > 0 else None,
-                avg_risk_score=round(stats["avg_risk_score"], 4) if stats["avg_risk_score"] else None,
-                high_risk_count=stats["high_risk_count"] or 0,
-                high_risk_pct=round((stats["high_risk_count"] or 0) / total_contracts * 100, 2) if total_contracts > 0 else 0,
-                direct_award_count=stats["direct_award_count"] or 0,
-                direct_award_pct=round((stats["direct_award_count"] or 0) / total_contracts * 100, 2) if total_contracts > 0 else 0,
-                single_bid_count=stats["single_bid_count"] or 0,
-                single_bid_pct=round((stats["single_bid_count"] or 0) / total_contracts * 100, 2) if total_contracts > 0 else 0,
-                first_contract_year=stats["first_year"],
-                last_contract_year=stats["max_year"],
-                years_active=stats["years_active"] or 0,
+                total_value_mxn=total_value,
+                avg_contract_value=avg_contract_value,
+                avg_risk_score=round(row["avg_risk_score"], 4) if row["avg_risk_score"] else None,
+                high_risk_count=high_risk_count,
+                high_risk_pct=round(row["high_risk_pct"], 2),
+                direct_award_count=direct_award_count,
+                direct_award_pct=round(row["direct_award_pct"], 2),
+                single_bid_count=single_bid_count,
+                single_bid_pct=round(row["single_bid_pct"], 2),
+                first_contract_year=first_year,
+                last_contract_year=last_year,
+                years_active=years_active,
                 primary_sector_id=primary_sector["sector_id"] if primary_sector else None,
                 primary_sector_name=primary_sector["sector_name"] if primary_sector else None,
-                sectors_count=stats["sectors_count"] or 0,
-                total_institutions=stats["total_institutions"] or 0,
-                avg_mahalanobis=round(stats["avg_mahalanobis"], 4) if stats["avg_mahalanobis"] else None,
-                max_mahalanobis=round(stats["max_mahalanobis"], 4) if stats["max_mahalanobis"] else None,
-                pct_anomalous=round((stats["anomalous_count"] or 0) / total_contracts * 100, 2) if total_contracts > 0 else None,
+                sectors_count=row["sectors_count"],
+                total_institutions=row["total_institutions"],
+                avg_mahalanobis=round(row["avg_mahalanobis"], 4) if row["avg_mahalanobis"] else None,
+                max_mahalanobis=round(row["max_mahalanobis"], 4) if row["max_mahalanobis"] else None,
+                pct_anomalous=round(row["anomalous_pct"], 2) if row["anomalous_pct"] else None,
             )
 
     except sqlite3.Error as e:
@@ -805,125 +808,107 @@ def get_vendor_risk_profile(
     Get detailed risk profile for a vendor.
 
     Returns risk distribution, common risk factors, and comparison to sector average.
+    Optimized: uses vendor_stats for avg_risk/percentile, consolidates contract queries.
     """
     try:
         with get_db() as conn:
             cursor = conn.cursor()
 
-            # Verify vendor exists
-            cursor.execute("SELECT name FROM vendors WHERE id = ?", (vendor_id,))
+            # Q1: Get vendor info + pre-computed stats in one query
+            cursor.execute("""
+                SELECT v.name, vs.avg_risk_score, vs.total_contracts,
+                       vs.primary_sector_id
+                FROM vendors v
+                LEFT JOIN vendor_stats vs ON v.id = vs.vendor_id
+                WHERE v.id = ?
+            """, (vendor_id,))
             vendor = cursor.fetchone()
             if not vendor:
                 raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
 
-            # Get risk distribution
+            avg_risk = vendor["avg_risk_score"]
+            total_contracts = vendor["total_contracts"] or 0
+
+            # Q2: Single consolidated query for risk distribution + trend + factors
             cursor.execute("""
-                SELECT risk_level, COUNT(*) as count, COALESCE(SUM(amount_mxn), 0) as value
+                SELECT risk_level, risk_score, risk_factors, contract_date
                 FROM contracts
                 WHERE vendor_id = ?
-                AND COALESCE(amount_mxn, 0) <= ?
-                GROUP BY risk_level
-            """, (vendor_id, MAX_CONTRACT_VALUE))
+            """, (vendor_id,))
 
             contracts_by_level = {}
             value_by_level = {}
+            factor_counts = Counter()
+            scores_with_dates = []
+
             for row in cursor.fetchall():
                 level = row["risk_level"] or "unknown"
-                contracts_by_level[level] = row["count"]
-                value_by_level[level] = row["value"]
+                contracts_by_level[level] = contracts_by_level.get(level, 0) + 1
+                # risk_factors processing
+                rf = row["risk_factors"]
+                if rf:
+                    for f in rf.split(","):
+                        f = f.strip()
+                        if f:
+                            factor_counts[f] += 1
+                # collect for trend
+                if row["risk_score"] is not None and row["contract_date"]:
+                    scores_with_dates.append((row["contract_date"], row["risk_score"]))
 
-            # Get overall average risk
+            # Q3: Get value by risk level (needs SUM which is cheaper as separate aggregate)
             cursor.execute("""
-                SELECT AVG(risk_score) as avg_risk
+                SELECT risk_level, COALESCE(SUM(amount_mxn), 0) as value
                 FROM contracts
                 WHERE vendor_id = ?
-                AND COALESCE(amount_mxn, 0) <= ?
-            """, (vendor_id, MAX_CONTRACT_VALUE))
-            avg_risk = cursor.fetchone()["avg_risk"]
-
-            # Get risk trend (compare first half vs second half of contracts)
-            cursor.execute("""
-                SELECT
-                    AVG(CASE WHEN rn <= cnt/2 THEN risk_score END) as early_risk,
-                    AVG(CASE WHEN rn > cnt/2 THEN risk_score END) as late_risk
-                FROM (
-                    SELECT risk_score,
-                           ROW_NUMBER() OVER (ORDER BY contract_date) as rn,
-                           COUNT(*) OVER () as cnt
-                    FROM contracts
-                    WHERE vendor_id = ?
-                    AND COALESCE(amount_mxn, 0) <= ?
-                ) sub
-            """, (vendor_id, MAX_CONTRACT_VALUE))
-            trend_row = cursor.fetchone()
-            risk_trend = None
-            if trend_row["early_risk"] and trend_row["late_risk"]:
-                diff = (trend_row["late_risk"] or 0) - (trend_row["early_risk"] or 0)
-                if diff > 0.05:
-                    risk_trend = "worsening"
-                elif diff < -0.05:
-                    risk_trend = "improving"
-                else:
-                    risk_trend = "stable"
-
-            # Get risk factors
-            cursor.execute("""
-                SELECT risk_factors FROM contracts
-                WHERE vendor_id = ?
-                AND risk_factors IS NOT NULL AND risk_factors != ''
-                AND COALESCE(amount_mxn, 0) <= ?
-            """, (vendor_id, MAX_CONTRACT_VALUE))
-
-            factor_counts = Counter()
+                GROUP BY risk_level
+            """, (vendor_id,))
             for row in cursor.fetchall():
-                factors = row["risk_factors"].split(",")
-                for f in factors:
-                    f = f.strip()
-                    if f:
-                        factor_counts[f] += 1
+                level = row["risk_level"] or "unknown"
+                value_by_level[level] = row["value"]
+
+            # Compute risk trend from collected data (no window function needed)
+            risk_trend = None
+            if scores_with_dates:
+                scores_with_dates.sort(key=lambda x: x[0])
+                mid = len(scores_with_dates) // 2
+                if mid > 0:
+                    early_avg = sum(s for _, s in scores_with_dates[:mid]) / mid
+                    late_avg = sum(s for _, s in scores_with_dates[mid:]) / len(scores_with_dates[mid:])
+                    diff = late_avg - early_avg
+                    if diff > 0.05:
+                        risk_trend = "worsening"
+                    elif diff < -0.05:
+                        risk_trend = "improving"
+                    else:
+                        risk_trend = "stable"
 
             top_factors = [
-                {"factor": f, "count": c, "percentage": round(c / max(sum(contracts_by_level.values()), 1) * 100, 1)}
+                {"factor": f, "count": c, "percentage": round(c / max(total_contracts, 1) * 100, 1)}
                 for f, c in factor_counts.most_common(5)
             ]
 
-            # Get primary sector for comparison
-            cursor.execute("""
-                SELECT sector_id FROM contracts
-                WHERE vendor_id = ?
-                GROUP BY sector_id
-                ORDER BY COUNT(*) DESC
-                LIMIT 1
-            """, (vendor_id,))
-            primary_sector = cursor.fetchone()
-
+            # Q4: Sector comparison + percentile (both use pre-computed tables)
             risk_vs_sector = None
-            if primary_sector and avg_risk:
-                cursor.execute("""
-                    SELECT AVG(risk_score) as sector_avg
-                    FROM contracts
-                    WHERE sector_id = ?
-                    AND COALESCE(amount_mxn, 0) <= ?
-                """, (primary_sector["sector_id"], MAX_CONTRACT_VALUE))
-                sector_avg = cursor.fetchone()["sector_avg"]
-                if sector_avg:
-                    risk_vs_sector = round(avg_risk - sector_avg, 4)
-
-            # Calculate risk percentile
             risk_percentile = None
-            if avg_risk:
+            primary_sector_id = vendor["primary_sector_id"]
+
+            if avg_risk is not None:
+                if primary_sector_id:
+                    cursor.execute(
+                        "SELECT avg_risk_score FROM sectors WHERE id = ?",
+                        (primary_sector_id,)
+                    )
+                    sector_row = cursor.fetchone()
+                    if sector_row and sector_row["avg_risk_score"]:
+                        risk_vs_sector = round(avg_risk - sector_row["avg_risk_score"], 4)
+
                 cursor.execute("""
                     SELECT
-                        (SELECT COUNT(DISTINCT vendor_id) FROM contracts
-                         WHERE COALESCE(amount_mxn, 0) <= ?) as total_vendors,
-                        (SELECT COUNT(*) FROM (
-                            SELECT vendor_id, AVG(risk_score) as avg_r
-                            FROM contracts
-                            WHERE COALESCE(amount_mxn, 0) <= ?
-                            GROUP BY vendor_id
-                            HAVING avg_r < ?
-                        )) as lower_count
-                """, (MAX_CONTRACT_VALUE, MAX_CONTRACT_VALUE, avg_risk))
+                        COUNT(*) as total_vendors,
+                        SUM(CASE WHEN avg_risk_score < ? THEN 1 ELSE 0 END) as lower_count
+                    FROM vendor_stats
+                    WHERE total_contracts > 0
+                """, (avg_risk,))
                 pct_row = cursor.fetchone()
                 if pct_row["total_vendors"] > 0:
                     risk_percentile = round(pct_row["lower_count"] / pct_row["total_vendors"] * 100, 1)
