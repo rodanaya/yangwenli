@@ -61,8 +61,9 @@ export const StackedAreaChart = memo(function StackedAreaChart({
     })
   }, [data, showPercentage])
 
-  const handleClick = (data: { activePayload?: Array<{ payload: { year: number } }> }) => {
-    if (onYearClick && data.activePayload && data.activePayload.length > 0) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleClick = (data: any) => {
+    if (onYearClick && data?.activePayload && data.activePayload.length > 0) {
       onYearClick(data.activePayload[0].payload.year)
     }
   }

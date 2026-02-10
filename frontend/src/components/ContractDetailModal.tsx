@@ -4,8 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { RiskBadge, Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toTitleCase, formatCompactMXN, formatCompactUSD, formatDate } from '@/lib/utils'
-import { RISK_FACTORS as RISK_FACTOR_META } from '@/api/types'
-import { RISK_COLORS, RISK_FACTORS as RISK_FACTOR_LABELS } from '@/lib/constants'
+import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
 import { Link } from 'react-router-dom'
 import {
   Building2,
@@ -142,15 +141,14 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                 {contract.risk_factors && contract.risk_factors.length > 0 && (
                   <div className="space-y-1.5">
                     {contract.risk_factors.map((factor) => {
-                      const meta = RISK_FACTOR_META.find(f => f.value === factor)
-                      const label = RISK_FACTOR_LABELS[factor] || meta?.label || factor
+                      const parsed = parseFactorLabel(factor)
                       return (
-                        <div key={factor} className="flex items-center gap-2 text-xs">
+                        <div key={factor} className="flex items-center gap-2 text-xs" title={factor}>
                           <span
                             className="h-2 w-2 rounded-full shrink-0"
-                            style={{ backgroundColor: RISK_COLORS.high }}
+                            style={{ backgroundColor: getFactorCategoryColor(parsed.category) }}
                           />
-                          <span className="text-text-secondary">{label}</span>
+                          <span className="text-text-secondary">{parsed.label}</span>
                         </div>
                       )
                     })}

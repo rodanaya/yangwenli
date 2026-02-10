@@ -30,10 +30,13 @@ class ContractBase(BaseModel):
 
 class ContractListItem(ContractBase):
     """Contract item for list responses."""
+    vendor_id: Optional[int] = None
     vendor_name: Optional[str] = None
+    institution_id: Optional[int] = None
     institution_name: Optional[str] = None
     procedure_type: Optional[str] = None
     mahalanobis_distance: Optional[float] = None
+    risk_factors: Optional[List[str]] = None
 
 
 class ContractDetail(ContractBase):

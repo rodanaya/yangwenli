@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react'
+import { memo, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -7,6 +7,7 @@ import { ChartSkeleton } from '@/components/LoadingSkeleton'
 import { RiskBadge, Badge } from '@/components/ui/badge'
 import { cn, formatCompactMXN, formatNumber, formatPercentSafe, formatCompactUSD } from '@/lib/utils'
 import { analysisApi, vendorApi } from '@/api/client'
+import { SectionDescription } from '@/components/SectionDescription'
 import {
   FileText,
   AlertTriangle,
@@ -215,6 +216,8 @@ export function Dashboard() {
   const highRiskContracts = overview?.high_risk_contracts || 0
   const highRiskPct = overview?.high_risk_pct || 0
 
+  const [showIntro, setShowIntro] = useState(false)
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -226,6 +229,12 @@ export function Dashboard() {
           </h1>
           <p className="text-xs text-text-muted mt-0.5">
             AI-powered corruption detection across Mexican federal procurement
+            <button
+              onClick={() => setShowIntro(!showIntro)}
+              className="ml-2 text-accent hover:text-accent/80 transition-colors"
+            >
+              {showIntro ? 'Hide details' : 'About this platform'}
+            </button>
           </p>
         </div>
         {lastUpdated && (
@@ -235,6 +244,17 @@ export function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Collapsible intro */}
+      {showIntro && (
+        <SectionDescription variant="callout" title="About Yang Wen-li">
+          This platform analyzes 3.1 million Mexican government contracts (2002-2025) using AI-powered risk detection.
+          It identifies procurement patterns associated with corruption — from single-bidder contracts to vendor
+          concentration monopolies. Risk scores are calibrated probabilities (v4.0 model, AUC 0.942) based on
+          9 documented corruption cases and aligned with international standards (OECD, IMF CRI, EU ARACHNE).
+          Scores indicate statistical anomaly, not proof of wrongdoing.
+        </SectionDescription>
+      )}
 
       {/* Section 1: Hero KPI Cards */}
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4 stagger-animate">
@@ -273,7 +293,7 @@ export function Dashboard() {
           format="auc"
           subtitle={`${MODEL_INSIGHTS.lift}x lift vs random`}
           variant="accent"
-          onClick={() => navigate('/analysis/risk')}
+          onClick={() => navigate('/methodology')}
         />
       </div>
 
@@ -355,7 +375,7 @@ export function Dashboard() {
               </p>
 
               <button
-                onClick={() => navigate('/analysis/risk')}
+                onClick={() => navigate('/methodology')}
                 className="flex items-center gap-1.5 text-[11px] text-accent hover:text-accent/80 transition-colors group w-full"
               >
                 <span>View full methodology</span>
@@ -427,7 +447,7 @@ export function Dashboard() {
                 Investigation Targets
               </CardTitle>
               <button
-                onClick={() => navigate('/vendors?sort_by=avg_risk_score&sort_order=desc')}
+                onClick={() => navigate('/explore?tab=vendors&sort_by=avg_risk_score&sort_order=desc')}
                 className="text-[10px] text-accent hover:text-accent/80 transition-colors flex items-center gap-1"
               >
                 View all <ArrowUpRight className="h-3 w-3" />
@@ -493,10 +513,10 @@ export function Dashboard() {
       {/* Section 6: Quick Navigation */}
       <div className="grid gap-2 md:grid-cols-4">
         {[
-          { label: 'Detective Patterns', icon: Crosshair, path: '/analysis/detective', desc: 'Investigate fraud patterns' },
+          { label: 'Patterns', icon: Crosshair, path: '/patterns', desc: 'Investigate fraud patterns' },
           { label: 'Network Graph', icon: Radar, path: '/network', desc: 'Vendor relationship map' },
-          { label: 'Price Analysis', icon: DollarSign, path: '/analysis/price', desc: 'Statistical outlier detection' },
-          { label: 'Timeline', icon: Activity, path: '/timeline', desc: 'Temporal procurement patterns' },
+          { label: 'Explore Data', icon: Search, path: '/explore', desc: 'Vendors, institutions, trends' },
+          { label: 'Methodology', icon: Target, path: '/methodology', desc: 'Risk model documentation' },
         ].map((item) => (
           <button
             key={item.path}

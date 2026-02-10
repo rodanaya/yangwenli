@@ -7,7 +7,9 @@ import { RiskBadge, Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { formatCompactMXN, formatCompactUSD, formatNumber, formatPercentSafe, formatDate, toTitleCase } from '@/lib/utils'
 import { institutionApi } from '@/api/client'
-import { RISK_COLORS } from '@/lib/constants'
+import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { NarrativeCard } from '@/components/NarrativeCard'
+import { buildInstitutionNarrative } from '@/lib/narratives'
 import type { ContractListItem } from '@/api/types'
 import {
   Building2,
@@ -66,7 +68,7 @@ export function InstitutionProfile() {
       <div className="flex flex-col items-center justify-center py-20">
         <h2 className="text-lg font-semibold mb-2">Institution Not Found</h2>
         <p className="text-text-muted mb-4">The requested institution could not be found.</p>
-        <Link to="/institutions">
+        <Link to="/explore?tab=institutions">
           <Button variant="outline">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Institutions
@@ -81,7 +83,7 @@ export function InstitutionProfile() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
-          <Link to="/institutions">
+          <Link to="/explore?tab=institutions">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -110,6 +112,12 @@ export function InstitutionProfile() {
           <RiskBadge score={institution.risk_baseline} className="text-base px-3 py-1" />
         )}
       </div>
+
+      {/* Narrative Summary */}
+      <NarrativeCard
+        paragraphs={buildInstitutionNarrative(institution, vendors?.data ?? null)}
+        compact
+      />
 
       {/* KPI Row */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -324,13 +332,9 @@ function StatRow({ label, value }: { label: string; value: string }) {
 
 function RiskGauge({ score }: { score: number }) {
   const percentage = Math.round(score * 100)
-  const getRiskLevel = (s: number) => {
-    if (s >= 0.6) return { label: 'Critical', color: RISK_COLORS.critical }
-    if (s >= 0.4) return { label: 'High', color: RISK_COLORS.high }
-    if (s >= 0.2) return { label: 'Medium', color: RISK_COLORS.medium }
-    return { label: 'Low', color: RISK_COLORS.low }
-  }
-  const { label, color } = getRiskLevel(score)
+  const level = getRiskLevelFromScore(score)
+  const label = level.charAt(0).toUpperCase() + level.slice(1)
+  const color = RISK_COLORS[level]
 
   return (
     <div className="flex flex-col items-center">

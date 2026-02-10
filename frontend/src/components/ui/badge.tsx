@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
+import { getRiskLevelFromScore } from '@/lib/constants'
 import type { RiskLevel } from '@/api/types'
 import { AlertTriangle, AlertCircle, AlertOctagon, CheckCircle } from 'lucide-react'
 
@@ -75,13 +76,6 @@ function RiskBadge({ score, level, className, children, ...props }: RiskBadgePro
       {scoreDisplay && <span className="ml-0.5 opacity-75" aria-hidden="true">({scoreDisplay})</span>}
     </Badge>
   )
-}
-
-function getRiskLevelFromScore(score: number): RiskLevel {
-  if (score >= 0.50) return 'critical'
-  if (score >= 0.35) return 'high'
-  if (score >= 0.20) return 'medium'
-  return 'low'
 }
 
 export { Badge, RiskBadge, badgeVariants }

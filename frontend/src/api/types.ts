@@ -94,10 +94,13 @@ export interface ContractBase {
 }
 
 export interface ContractListItem extends ContractBase {
+  vendor_id?: number
   vendor_name?: string
+  institution_id?: number
   institution_name?: string
   procedure_type?: string
   mahalanobis_distance?: number
+  risk_factors?: string[]
 }
 
 export interface ContractDetail extends ContractBase {

@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider, keepPreviousData } from '@tanstack/react-query'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ToastProvider } from '@/components/ui/toast'
@@ -17,21 +17,15 @@ import {
 // Lazy load all page components for code splitting
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const Contracts = lazy(() => import('@/pages/Contracts'))
-const Vendors = lazy(() => import('@/pages/Vendors'))
+const Explore = lazy(() => import('@/pages/Explore'))
+const Methodology = lazy(() => import('@/pages/Methodology'))
 const VendorProfile = lazy(() => import('@/pages/VendorProfile'))
-const Institutions = lazy(() => import('@/pages/Institutions'))
 const InstitutionProfile = lazy(() => import('@/pages/InstitutionProfile'))
 const Sectors = lazy(() => import('@/pages/Sectors'))
 const SectorProfile = lazy(() => import('@/pages/SectorProfile'))
-const RiskAnalysis = lazy(() => import('@/pages/RiskAnalysis'))
-const Export = lazy(() => import('@/pages/Export'))
 const Settings = lazy(() => import('@/pages/Settings'))
 const NetworkGraph = lazy(() => import('@/pages/NetworkGraph'))
 const Watchlist = lazy(() => import('@/pages/Watchlist'))
-const Comparison = lazy(() => import('@/pages/Comparison'))
-const Timeline = lazy(() => import('@/pages/Timeline'))
-const DataQuality = lazy(() => import('@/pages/DataQuality'))
-const PriceAnalysis = lazy(() => import('@/pages/PriceAnalysis'))
 const DetectivePatterns = lazy(() => import('@/pages/DetectivePatterns'))
 
 // Enhanced QueryClient configuration for better caching and UX
@@ -64,90 +58,26 @@ function App() {
                 }
               />
               <Route
+                path="explore"
+                element={
+                  <SuspenseBoundary fallback={<CardGridSkeleton />}>
+                    <Explore />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="patterns"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <DetectivePatterns />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
                 path="contracts"
                 element={
                   <SuspenseBoundary fallback={<TablePageSkeleton />}>
                     <Contracts />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="vendors"
-                element={
-                  <SuspenseBoundary fallback={<CardGridSkeleton />}>
-                    <Vendors />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="vendors/:id"
-                element={
-                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
-                    <VendorProfile />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="institutions"
-                element={
-                  <SuspenseBoundary fallback={<CardGridSkeleton />}>
-                    <Institutions />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="institutions/:id"
-                element={
-                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
-                    <InstitutionProfile />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="sectors"
-                element={
-                  <SuspenseBoundary fallback={<SectorsSkeleton />}>
-                    <Sectors />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="sectors/:id"
-                element={
-                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
-                    <SectorProfile />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="analysis/risk"
-                element={
-                  <SuspenseBoundary fallback={<DashboardSkeleton />}>
-                    <RiskAnalysis />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="analysis/price"
-                element={
-                  <SuspenseBoundary fallback={<DashboardSkeleton />}>
-                    <PriceAnalysis />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="export"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <Export />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="settings"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <Settings />
                   </SuspenseBoundary>
                 }
               />
@@ -168,37 +98,65 @@ function App() {
                 }
               />
               <Route
-                path="comparison"
+                path="sectors"
                 element={
-                  <SuspenseBoundary fallback={<DashboardSkeleton />}>
-                    <Comparison />
+                  <SuspenseBoundary fallback={<SectorsSkeleton />}>
+                    <Sectors />
                   </SuspenseBoundary>
                 }
               />
               <Route
-                path="timeline"
+                path="sectors/:id"
                 element={
-                  <SuspenseBoundary fallback={<DashboardSkeleton />}>
-                    <Timeline />
+                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
+                    <SectorProfile />
                   </SuspenseBoundary>
                 }
               />
               <Route
-                path="data-quality"
-                element={
-                  <SuspenseBoundary fallback={<DashboardSkeleton />}>
-                    <DataQuality />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="patterns"
+                path="methodology"
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <DetectivePatterns />
+                    <Methodology />
                   </SuspenseBoundary>
                 }
               />
+              <Route
+                path="vendors/:id"
+                element={
+                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
+                    <VendorProfile />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="institutions/:id"
+                element={
+                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
+                    <InstitutionProfile />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="settings"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <Settings />
+                  </SuspenseBoundary>
+                }
+              />
+
+              {/* Redirects from old routes */}
+              <Route path="vendors" element={<Navigate to="/explore?tab=vendors" replace />} />
+              <Route path="institutions" element={<Navigate to="/explore?tab=institutions" replace />} />
+              <Route path="analysis/risk" element={<Navigate to="/methodology" replace />} />
+              <Route path="analysis/price" element={<Navigate to="/patterns" replace />} />
+              <Route path="analysis/detective" element={<Navigate to="/patterns" replace />} />
+              <Route path="timeline" element={<Navigate to="/explore?tab=trends" replace />} />
+              <Route path="comparison" element={<Navigate to="/sectors" replace />} />
+              <Route path="data-quality" element={<Navigate to="/settings?tab=quality" replace />} />
+              <Route path="export" element={<Navigate to="/settings?tab=export" replace />} />
+
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>

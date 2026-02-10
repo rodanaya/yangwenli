@@ -193,7 +193,10 @@ def list_contracts(
                     v.name as vendor_name,
                     i.name as institution_name,
                     c.procedure_type,
-                    c.mahalanobis_distance
+                    c.mahalanobis_distance,
+                    c.vendor_id,
+                    c.institution_id,
+                    c.risk_factors
                 FROM contracts c
                 LEFT JOIN sectors s ON c.sector_id = s.id
                 LEFT JOIN vendors v ON c.vendor_id = v.id
@@ -226,6 +229,9 @@ def list_contracts(
                     institution_name=row[13],
                     procedure_type=row[14],
                     mahalanobis_distance=row[15],
+                    vendor_id=row[16],
+                    institution_id=row[17],
+                    risk_factors=parse_risk_factors(row[18]),
                 ))
 
             return ContractListResponse(

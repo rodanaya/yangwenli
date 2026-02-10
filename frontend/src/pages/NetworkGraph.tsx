@@ -1,332 +1,548 @@
 /**
- * Network Graph Page
- * Interactive visualization of vendor-institution-official relationships
- * Reveals collusion patterns, bid rigging rings, and shell company networks
+ * Network Explorer Page
+ * Hierarchical tree: Sectors -> Institutions -> Vendors
+ * Lazy-loaded at each level with search and risk filtering
  */
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useSearchParams, useNavigate } from 'react-router-dom'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Link } from 'react-router-dom'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
-import { formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
-import { networkApi, type NetworkNode, type NetworkLink } from '@/api/client'
-import * as echarts from 'echarts/core'
-import { GraphChart, type GraphSeriesOption } from 'echarts/charts'
+import { SectionDescription } from '@/components/SectionDescription'
+import { formatCompactMXN, formatNumber, toTitleCase, cn } from '@/lib/utils'
+import { SECTORS, SECTOR_COLORS, SECTOR_NAMES_EN, getRiskLevelFromScore } from '@/lib/constants'
+import { sectorApi, institutionApi } from '@/api/client'
+import type { SectorStatistics, InstitutionResponse, InstitutionVendorItem } from '@/api/types'
 import {
-  TooltipComponent, type TooltipComponentOption,
-  LegendComponent, type LegendComponentOption,
-} from 'echarts/components'
-import { CanvasRenderer } from 'echarts/renderers'
-
-// Register only what we need (tree-shaking: ~200KB instead of ~1.1MB)
-echarts.use([GraphChart, TooltipComponent, LegendComponent, CanvasRenderer])
-
-// Compose the option type from only the registered components
-type ECOption = echarts.ComposeOption<
-  GraphSeriesOption | TooltipComponentOption | LegendComponentOption
->
-import {
-  Network,
-  ZoomIn,
-  ZoomOut,
-  Maximize2,
-  Filter,
-  Users,
-  Link2,
-  AlertTriangle,
-  Eye,
+  ChevronRight,
   Search,
-  RefreshCw,
+  ShieldAlert,
+  Network,
+  Building2,
+  Users,
+  X,
+  ExternalLink,
+  Loader2,
 } from 'lucide-react'
 
-// Color constants — Soft risk palette
-const COLORS = {
-  vendor: '#58a6ff',      // Accent blue
-  vendorHighRisk: '#f87171', // Rose
-  institution: '#a78bfa', // Purple
-  link: '#64748b',        // Gray
-  linkHighRisk: '#fb923c', // Orange
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface SelectedNode {
+  type: 'sector' | 'institution' | 'vendor'
+  id: number
+  name: string
+  data?: Record<string, unknown>
 }
 
-export function NetworkGraph() {
-  const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const [selectedNodeData, setSelectedNodeData] = useState<NetworkNode | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [zoomLevel, setZoomLevel] = useState(1)
-  const [showVendors, setShowVendors] = useState(true)
-  const [showInstitutions, setShowInstitutions] = useState(true)
-  const [highRiskOnly, setHighRiskOnly] = useState(false)
-  const chartRef = useRef<HTMLDivElement>(null)
-  const chartInstance = useRef<echarts.ECharts | null>(null)
+// ---------------------------------------------------------------------------
+// Chevron component (animated rotation)
+// ---------------------------------------------------------------------------
 
-  // View mode for future use
-  void searchParams.get('view')
-  const focusVendorId = searchParams.get('vendor_id')
-  const focusInstitutionId = searchParams.get('institution_id')
+function ExpandChevron({ expanded, className }: { expanded: boolean; className?: string }) {
+  return (
+    <ChevronRight
+      className={cn(
+        'h-4 w-4 shrink-0 text-text-muted transition-transform duration-150',
+        expanded && 'rotate-90',
+        className,
+      )}
+    />
+  )
+}
 
-  // Fetch network graph data from API
-  const { data: networkData, isLoading, error, refetch } = useQuery({
-    queryKey: ['network-graph', focusVendorId, focusInstitutionId],
-    queryFn: () => networkApi.getGraph({
-      vendor_id: focusVendorId ? parseInt(focusVendorId) : undefined,
-      institution_id: focusInstitutionId ? parseInt(focusInstitutionId) : undefined,
-      min_contracts: 10,
-      limit: 50,
-    }),
-    staleTime: 10 * 60 * 1000,
+// ---------------------------------------------------------------------------
+// Inline loading spinner for lazy rows
+// ---------------------------------------------------------------------------
+
+function RowSpinner() {
+  return (
+    <div className="flex items-center gap-2 py-2 pl-12 text-xs text-text-muted">
+      <Loader2 className="h-3 w-3 animate-spin" />
+      Loading...
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Vendor row (Level 2)
+// ---------------------------------------------------------------------------
+
+function VendorRow({
+  vendor,
+  onSelect,
+  isSelected,
+  matchesSearch,
+}: {
+  vendor: InstitutionVendorItem
+  onSelect: (node: SelectedNode) => void
+  isSelected: boolean
+  matchesSearch: boolean
+}) {
+  const riskLevel = vendor.avg_risk_score != null ? getRiskLevelFromScore(vendor.avg_risk_score) : null
+  const isHighRisk = riskLevel === 'high' || riskLevel === 'critical'
+
+  return (
+    <div
+      className={cn(
+        'flex items-center gap-3 py-1.5 pl-16 pr-4 text-xs border-l-2 border-transparent transition-colors',
+        isSelected && 'bg-accent/10 border-l-accent',
+        !isSelected && 'hover:bg-background-elevated/50',
+        !matchesSearch && 'opacity-40',
+      )}
+    >
+      <Users className="h-3 w-3 shrink-0 text-text-muted" />
+      <button
+        onClick={() =>
+          onSelect({
+            type: 'vendor',
+            id: vendor.vendor_id,
+            name: vendor.vendor_name,
+            data: vendor as unknown as Record<string, unknown>,
+          })
+        }
+        className="truncate text-left hover:text-accent transition-colors"
+        title={toTitleCase(vendor.vendor_name)}
+      >
+        {toTitleCase(vendor.vendor_name)}
+      </button>
+      <span className="ml-auto shrink-0 tabular-nums text-text-muted">
+        {formatNumber(vendor.contract_count)}
+      </span>
+      <span className="shrink-0 tabular-nums text-text-muted w-20 text-right">
+        {formatCompactMXN(vendor.total_value_mxn)}
+      </span>
+      {vendor.avg_risk_score != null && (
+        <RiskBadge
+          score={vendor.avg_risk_score}
+          className={cn('text-[9px] px-1.5 py-0', !isHighRisk && 'opacity-60')}
+        />
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Institution row (Level 1) + lazy vendor children
+// ---------------------------------------------------------------------------
+
+function InstitutionRow({
+  inst,
+  expandedInstitutions,
+  toggleInstitution,
+  onSelect,
+  selectedNode,
+  searchQuery,
+}: {
+  inst: InstitutionResponse
+  expandedInstitutions: Set<number>
+  toggleInstitution: (id: number) => void
+  onSelect: (node: SelectedNode) => void
+  selectedNode: SelectedNode | null
+  searchQuery: string
+}) {
+  const isExpanded = expandedInstitutions.has(inst.id)
+  const isSelected = selectedNode?.type === 'institution' && selectedNode?.id === inst.id
+  const query = searchQuery.toLowerCase()
+  const matchesSearch = !query || inst.name.toLowerCase().includes(query)
+
+  // Lazy load vendors when institution is expanded
+  const { data: vendorsData, isLoading: vendorsLoading } = useQuery({
+    queryKey: ['institution-vendors-tree', inst.id],
+    queryFn: () => institutionApi.getVendors(inst.id, 30),
+    enabled: isExpanded,
+    staleTime: 5 * 60 * 1000,
   })
 
-  // Filter nodes based on user selections
-  const filteredData = useMemo(() => {
-    if (!networkData) return { nodes: [], links: [] }
+  const vendors = vendorsData?.data ?? []
 
-    let nodes = networkData.nodes
-    let links = networkData.links
+  // If search active, check if any vendors match
+  const matchingVendors = query
+    ? vendors.filter((v) => v.vendor_name.toLowerCase().includes(query))
+    : vendors
 
-    // Filter by node type
-    if (!showVendors) {
-      const vendorIds = new Set(nodes.filter(n => n.type === 'vendor').map(n => n.id))
-      nodes = nodes.filter(n => n.type !== 'vendor')
-      links = links.filter(l => !vendorIds.has(l.source) && !vendorIds.has(l.target))
-    }
+  // high_risk_percentage may be returned even for list items depending on backend
+  const highRiskPct = (inst as unknown as Record<string, unknown>).high_risk_percentage as number | undefined
+  const hasHighRisk = highRiskPct != null && highRiskPct > 15
 
-    if (!showInstitutions) {
-      const instIds = new Set(nodes.filter(n => n.type === 'institution').map(n => n.id))
-      nodes = nodes.filter(n => n.type !== 'institution')
-      links = links.filter(l => !instIds.has(l.source) && !instIds.has(l.target))
-    }
-
-    // Filter by risk level
-    if (highRiskOnly) {
-      const highRiskIds = new Set(
-        nodes.filter(n => n.risk_score !== null && n.risk_score >= 0.35).map(n => n.id)
-      )
-      nodes = nodes.filter(n => highRiskIds.has(n.id))
-      links = links.filter(l => highRiskIds.has(l.source) || highRiskIds.has(l.target))
-    }
-
-    return { nodes, links }
-  }, [networkData, showVendors, showInstitutions, highRiskOnly])
-
-  // Identify suspicious patterns from the data
-  const suspiciousPatterns = useMemo(() => {
-    if (!networkData?.nodes) return []
-
-    return networkData.nodes
-      .filter(n => n.type === 'vendor' && n.risk_score !== null && n.risk_score > 0.4)
-      .sort((a, b) => (b.risk_score || 0) - (a.risk_score || 0))
-      .slice(0, 5)
-      .map(v => ({
-        id: v.id.replace('v-', ''),
-        name: v.name,
-        risk: v.risk_score || 0,
-        contracts: v.contracts,
-        value: v.value,
-        type: (v.risk_score || 0) >= 0.6 ? 'critical_risk' : 'high_risk',
-        description: `${formatNumber(v.contracts)} contracts, ${formatCompactMXN(v.value)}`,
-      }))
-  }, [networkData])
-
-  // Initialize and update ECharts graph
-  useEffect(() => {
-    if (!chartRef.current || filteredData.nodes.length === 0) return
-
-    // Initialize chart if needed
-    if (!chartInstance.current) {
-      chartInstance.current = echarts.init(chartRef.current, {
-        textStyle: { color: '#94a3b8' },
-      })
-    }
-
-    // Prepare nodes for ECharts
-    const nodes = filteredData.nodes.map(node => {
-      const isHighRisk = node.risk_score !== null && node.risk_score >= 0.35
-      const isCritical = node.risk_score !== null && node.risk_score >= 0.50
-      const symbolSize = Math.min(60, Math.max(20, Math.log10(node.value + 1) * 5))
-
-      return {
-        id: node.id,
-        name: node.name,
-        value: node.value,
-        symbolSize,
-        category: node.type === 'vendor'
-          ? (isCritical ? 2 : isHighRisk ? 1 : 0)
-          : 3,
-        itemStyle: {
-          color: node.type === 'vendor'
-            ? (isCritical ? '#f87171' : isHighRisk ? '#fb923c' : COLORS.vendor)
-            : COLORS.institution,
-          borderColor: isCritical ? '#f87171' : isHighRisk ? '#fb923c' : undefined,
-          borderWidth: isHighRisk ? 2 : 0,
-        },
-        label: {
-          show: symbolSize > 35,
-          formatter: (node.name.length > 20 ? node.name.substring(0, 18) + '...' : node.name),
-        },
-        // Store original data for tooltip
-        originalData: node,
-      }
-    })
-
-    // Prepare links for ECharts
-    const links = filteredData.links.map(link => ({
-      source: link.source,
-      target: link.target,
-      value: link.value,
-      lineStyle: {
-        width: Math.min(5, Math.max(1, Math.log10(link.contracts + 1))),
-        color: link.avg_risk && link.avg_risk >= 0.35 ? COLORS.linkHighRisk : COLORS.link,
-        opacity: 0.6,
-        curveness: 0.1,
-      },
-      originalData: link,
-    }))
-
-    // Chart options
-    const option: ECOption = {
-      backgroundColor: 'transparent',
-      tooltip: {
-        trigger: 'item',
-        formatter: (params: any) => {
-          if (params.dataType === 'node') {
-            const data = params.data.originalData as NetworkNode
-            const riskLabel = data.risk_score !== null
-              ? (data.risk_score >= 0.50 ? 'Critical' : data.risk_score >= 0.35 ? 'High' : data.risk_score >= 0.20 ? 'Medium' : 'Low')
-              : 'N/A'
-            return `
-              <div style="padding: 8px;">
-                <strong>${toTitleCase(data.name)}</strong><br/>
-                <span style="color: #999;">Type:</span> ${data.type === 'vendor' ? 'Vendor' : 'Institution'}<br/>
-                <span style="color: #999;">Contracts:</span> ${formatNumber(data.contracts)}<br/>
-                <span style="color: #999;">Value:</span> ${formatCompactMXN(data.value)}<br/>
-                <span style="color: #999;">Risk:</span> <span style="color: ${data.risk_score && data.risk_score >= 0.50 ? '#f87171' : data.risk_score && data.risk_score >= 0.35 ? '#fb923c' : '#4ade80'}">${riskLabel}</span>
-              </div>
-            `
-          } else if (params.dataType === 'edge') {
-            const data = params.data.originalData as NetworkLink
-            return `
-              <div style="padding: 8px;">
-                <span style="color: #999;">Contracts:</span> ${formatNumber(data.contracts)}<br/>
-                <span style="color: #999;">Value:</span> ${formatCompactMXN(data.value)}<br/>
-                <span style="color: #999;">Avg Risk:</span> ${data.avg_risk?.toFixed(2) || 'N/A'}
-              </div>
-            `
+  return (
+    <div>
+      {/* Institution header row */}
+      <div
+        className={cn(
+          'flex items-center gap-2 py-1.5 pl-10 pr-4 text-xs border-l-2 border-transparent transition-colors cursor-pointer',
+          isSelected && 'bg-accent/10 border-l-accent',
+          !isSelected && 'hover:bg-background-elevated/50',
+          !matchesSearch && !query && '',
+          !matchesSearch && query && matchingVendors.length === 0 && 'opacity-40',
+        )}
+      >
+        <button
+          onClick={() => toggleInstitution(inst.id)}
+          className="shrink-0 p-0.5 -m-0.5 rounded hover:bg-background-elevated"
+          aria-label={isExpanded ? 'Collapse' : 'Expand'}
+        >
+          <ExpandChevron expanded={isExpanded} />
+        </button>
+        <Building2 className="h-3 w-3 shrink-0 text-text-muted" />
+        <button
+          onClick={() =>
+            onSelect({
+              type: 'institution',
+              id: inst.id,
+              name: inst.name,
+              data: inst as unknown as Record<string, unknown>,
+            })
           }
-          return ''
-        },
-      },
-      legend: {
-        data: ['Vendors', 'High Risk', 'Critical', 'Institutions'],
-        orient: 'horizontal',
-        bottom: 10,
-        textStyle: { color: '#94a3b8' },
-      },
-      series: [{
-        type: 'graph',
-        layout: 'force',
-        animation: true,
-        animationDuration: 1000,
-        data: nodes,
-        links: links,
-        categories: [
-          { name: 'Vendors', itemStyle: { color: COLORS.vendor } },
-          { name: 'High Risk', itemStyle: { color: '#fb923c' } },
-          { name: 'Critical', itemStyle: { color: '#f87171' } },
-          { name: 'Institutions', itemStyle: { color: COLORS.institution } },
-        ],
-        roam: true,
-        draggable: true,
-        force: {
-          repulsion: 500,
-          gravity: 0.08,
-          edgeLength: [50, 200],
-          friction: 0.6,
-        },
-        emphasis: {
-          focus: 'adjacency',
-          lineStyle: { width: 4 },
-        },
-        label: {
-          color: '#e2e8f0',
-          fontSize: 10,
-          position: 'right',
-          overflow: 'truncate',
-          width: 80,
-        },
-        lineStyle: {
-          curveness: 0.1,
-        },
-      }],
-    }
+          className="truncate text-left hover:text-accent transition-colors font-medium"
+          title={toTitleCase(inst.name)}
+        >
+          {toTitleCase(inst.name)}
+        </button>
+        {inst.siglas && (
+          <span className="shrink-0 text-text-muted">({inst.siglas})</span>
+        )}
+        <span className="ml-auto shrink-0 tabular-nums text-text-muted">
+          {inst.total_contracts != null ? formatNumber(inst.total_contracts) : '-'}
+        </span>
+        <span className="shrink-0 tabular-nums text-text-muted w-20 text-right">
+          {inst.total_amount_mxn != null ? formatCompactMXN(inst.total_amount_mxn) : '-'}
+        </span>
+        {hasHighRisk && (
+          <ShieldAlert className="h-3 w-3 shrink-0 text-risk-high" aria-label="High risk concentration" />
+        )}
+      </div>
 
-    chartInstance.current.setOption(option, true)
+      {/* Vendor children */}
+      {isExpanded && (
+        <div>
+          {vendorsLoading ? (
+            <RowSpinner />
+          ) : vendors.length === 0 ? (
+            <div className="py-1.5 pl-16 text-[10px] text-text-muted italic">
+              No vendor data available
+            </div>
+          ) : (
+            (query ? matchingVendors : vendors).map((vendor) => (
+              <VendorRow
+                key={vendor.vendor_id}
+                vendor={vendor}
+                onSelect={onSelect}
+                isSelected={selectedNode?.type === 'vendor' && selectedNode?.id === vendor.vendor_id}
+                matchesSearch={!query || vendor.vendor_name.toLowerCase().includes(query)}
+              />
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
-    // Handle click events — show detail panel instead of navigating
-    chartInstance.current.off('click')
-    chartInstance.current.on('click', (params: any) => {
-      if (params.dataType === 'node') {
-        const node = params.data.originalData as NetworkNode
-        setSelectedNodeData(node)
-      }
+// ---------------------------------------------------------------------------
+// Sector row (Level 0) + lazy institution children
+// ---------------------------------------------------------------------------
+
+function SectorRow({
+  sector,
+  expandedSectors,
+  toggleSector,
+  expandedInstitutions,
+  toggleInstitution,
+  onSelect,
+  selectedNode,
+  searchQuery,
+  showHighRiskOnly,
+}: {
+  sector: SectorStatistics
+  expandedSectors: Set<number>
+  toggleSector: (id: number) => void
+  expandedInstitutions: Set<number>
+  toggleInstitution: (id: number) => void
+  onSelect: (node: SelectedNode) => void
+  selectedNode: SelectedNode | null
+  searchQuery: string
+  showHighRiskOnly: boolean
+}) {
+  const isExpanded = expandedSectors.has(sector.sector_id)
+  const isSelected = selectedNode?.type === 'sector' && selectedNode?.id === sector.sector_id
+  const sectorCode = sector.sector_code
+  const color = SECTOR_COLORS[sectorCode] ?? '#64748b'
+  const nameEN = SECTOR_NAMES_EN[sectorCode] ?? sectorCode
+  const highRiskPct = sector.high_risk_pct ?? 0
+
+  // Skip sector if risk filter is on and it has low risk
+  if (showHighRiskOnly && highRiskPct < 5) return null
+
+  // Lazy load institutions when sector is expanded
+  const { data: institutionsData, isLoading: institutionsLoading } = useQuery({
+    queryKey: ['sector-institutions-tree', sector.sector_id],
+    queryFn: () =>
+      institutionApi.getAll({
+        sector_id: sector.sector_id,
+        per_page: 50,
+        sort_by: 'total_amount_mxn',
+        sort_order: 'desc',
+      }),
+    enabled: isExpanded,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const institutions = institutionsData?.data ?? []
+  const query = searchQuery.toLowerCase()
+
+  // Filter institutions by search query
+  const filteredInstitutions = query
+    ? institutions.filter((inst) => inst.name.toLowerCase().includes(query))
+    : institutions
+
+  return (
+    <div className="border-b border-border/50 last:border-b-0">
+      {/* Sector header row */}
+      <div
+        className={cn(
+          'flex items-center gap-3 py-2.5 pl-4 pr-4 text-sm transition-colors cursor-pointer',
+          isSelected && 'bg-accent/10',
+          !isSelected && 'hover:bg-background-elevated/30',
+        )}
+        style={{ borderLeft: `3px solid ${color}` }}
+      >
+        <button
+          onClick={() => toggleSector(sector.sector_id)}
+          className="shrink-0 p-0.5 -m-0.5 rounded hover:bg-background-elevated"
+          aria-label={isExpanded ? 'Collapse' : 'Expand'}
+        >
+          <ExpandChevron expanded={isExpanded} />
+        </button>
+        <button
+          onClick={() =>
+            onSelect({
+              type: 'sector',
+              id: sector.sector_id,
+              name: nameEN,
+              data: sector as unknown as Record<string, unknown>,
+            })
+          }
+          className="font-semibold text-text-primary hover:text-accent transition-colors text-left"
+        >
+          {nameEN}
+        </button>
+        <span className="text-xs text-text-muted">
+          {formatNumber(sector.total_contracts)} contracts
+        </span>
+        <span className="text-xs text-text-muted">
+          {formatCompactMXN(sector.total_value_mxn)}
+        </span>
+        <span className="ml-auto text-xs tabular-nums">
+          {highRiskPct > 10 ? (
+            <span className="text-risk-high font-medium">
+              <ShieldAlert className="h-3 w-3 inline mr-0.5 -mt-0.5" />
+              {highRiskPct.toFixed(1)}% high risk
+            </span>
+          ) : (
+            <span className="text-text-muted">{highRiskPct.toFixed(1)}% high risk</span>
+          )}
+        </span>
+      </div>
+
+      {/* Institution children */}
+      {isExpanded && (
+        <div className="bg-background-elevated/20">
+          {institutionsLoading ? (
+            <RowSpinner />
+          ) : institutions.length === 0 ? (
+            <div className="py-2 pl-12 text-[10px] text-text-muted italic">
+              No institutions found
+            </div>
+          ) : filteredInstitutions.length === 0 ? (
+            <div className="py-2 pl-12 text-[10px] text-text-muted italic">
+              No institutions match "{searchQuery}"
+            </div>
+          ) : (
+            filteredInstitutions.map((inst) => (
+              <InstitutionRow
+                key={inst.id}
+                inst={inst}
+                expandedInstitutions={expandedInstitutions}
+                toggleInstitution={toggleInstitution}
+                onSelect={onSelect}
+                selectedNode={selectedNode}
+                searchQuery={searchQuery}
+              />
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Detail panel (sidebar)
+// ---------------------------------------------------------------------------
+
+function DetailPanel({
+  node,
+  onClose,
+}: {
+  node: SelectedNode
+  onClose: () => void
+}) {
+  const data = node.data ?? {}
+
+  const profileLink =
+    node.type === 'vendor'
+      ? `/vendors/${node.id}`
+      : node.type === 'institution'
+        ? `/institutions/${node.id}`
+        : `/sectors`
+
+  return (
+    <Card className="border-accent/30">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-sm truncate">{toTitleCase(node.name)}</CardTitle>
+          <button
+            onClick={onClose}
+            className="text-text-muted hover:text-text-primary shrink-0"
+            aria-label="Close details"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <span className="text-[10px] uppercase tracking-wider text-text-muted">{node.type}</span>
+      </CardHeader>
+      <CardContent className="space-y-2 text-xs">
+        {/* Sector detail */}
+        {node.type === 'sector' && (
+          <>
+            <StatRow label="Total contracts" value={formatNumber((data.total_contracts as number) ?? 0)} />
+            <StatRow label="Total value" value={formatCompactMXN((data.total_value_mxn as number) ?? 0)} />
+            <StatRow label="Vendors" value={formatNumber((data.total_vendors as number) ?? 0)} />
+            <StatRow label="Institutions" value={formatNumber((data.total_institutions as number) ?? 0)} />
+            <StatRow label="Avg risk" value={`${(((data.avg_risk_score as number) ?? 0) * 100).toFixed(1)}%`} />
+            <StatRow label="Direct awards" value={`${((data.direct_award_pct as number) ?? 0).toFixed(1)}%`} />
+            <StatRow label="Single bids" value={`${((data.single_bid_pct as number) ?? 0).toFixed(1)}%`} />
+          </>
+        )}
+
+        {/* Institution detail */}
+        {node.type === 'institution' && (
+          <>
+            {(data.siglas as string) && (
+              <StatRow label="Acronym" value={data.siglas as string} />
+            )}
+            <StatRow label="Type" value={toTitleCase((data.institution_type as string) ?? '-')} />
+            <StatRow label="Contracts" value={formatNumber((data.total_contracts as number) ?? 0)} />
+            <StatRow label="Value" value={formatCompactMXN((data.total_amount_mxn as number) ?? 0)} />
+            {(data.high_risk_percentage as number) != null && (
+              <StatRow label="High risk" value={`${((data.high_risk_percentage as number) ?? 0).toFixed(1)}%`} />
+            )}
+          </>
+        )}
+
+        {/* Vendor detail */}
+        {node.type === 'vendor' && (
+          <>
+            <StatRow label="Contracts" value={formatNumber((data.contract_count as number) ?? 0)} />
+            <StatRow label="Value" value={formatCompactMXN((data.total_value_mxn as number) ?? 0)} />
+            {(data.avg_risk_score as number) != null && (
+              <div className="flex items-center justify-between">
+                <span className="text-text-muted">Risk</span>
+                <RiskBadge score={(data.avg_risk_score as number) ?? 0} className="text-[9px]" />
+              </div>
+            )}
+            {(data.rfc as string) && <StatRow label="RFC" value={data.rfc as string} />}
+          </>
+        )}
+
+        <Link
+          to={profileLink}
+          className="flex items-center gap-1.5 mt-3 text-accent hover:underline text-xs"
+        >
+          <ExternalLink className="h-3 w-3" />
+          View full profile
+        </Link>
+      </CardContent>
+    </Card>
+  )
+}
+
+function StatRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-text-muted">{label}</span>
+      <span className="tabular-nums font-medium">{value}</span>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Main page component
+// ---------------------------------------------------------------------------
+
+export function NetworkGraph() {
+  // State
+  const [expandedSectors, setExpandedSectors] = useState<Set<number>>(new Set())
+  const [expandedInstitutions, setExpandedInstitutions] = useState<Set<number>>(new Set())
+  const [selectedNode, setSelectedNode] = useState<SelectedNode | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showHighRiskOnly, setShowHighRiskOnly] = useState(false)
+
+  // Fetch all sectors (always loaded)
+  const { data: sectorsData, isLoading: sectorsLoading } = useQuery({
+    queryKey: ['sectors-tree'],
+    queryFn: () => sectorApi.getAll(),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const sectors = useMemo(() => {
+    if (!sectorsData?.data) return []
+    // Sort by total_value_mxn descending
+    return [...sectorsData.data].sort((a, b) => b.total_value_mxn - a.total_value_mxn)
+  }, [sectorsData])
+
+  // Toggle helpers
+  const toggleSector = useCallback((id: number) => {
+    setExpandedSectors((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
     })
-
-    // Handle resize
-    const handleResize = () => chartInstance.current?.resize()
-    window.addEventListener('resize', handleResize)
-
-    return () => {
-      window.removeEventListener('resize', handleResize)
-    }
-  }, [filteredData, navigate])
-
-  // Highlight nodes matching search query
-  useEffect(() => {
-    if (!chartInstance.current || filteredData.nodes.length === 0) return
-
-    // Downplay everything first
-    chartInstance.current.dispatchAction({ type: 'downplay', seriesIndex: 0 })
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase()
-      const matchingNames = filteredData.nodes
-        .filter(n => n.name.toLowerCase().includes(query))
-        .map(n => n.name)
-
-      if (matchingNames.length > 0) {
-        chartInstance.current.dispatchAction({
-          type: 'highlight',
-          seriesIndex: 0,
-          name: matchingNames,
-        })
-      }
-    }
-  }, [searchQuery, filteredData.nodes])
-
-  // Apply zoom level to chart
-  useEffect(() => {
-    if (chartInstance.current) {
-      chartInstance.current.dispatchAction({
-        type: 'graphRoam',
-        zoom: zoomLevel,
-      })
-    }
-  }, [zoomLevel])
-
-  // Cleanup on unmount (set ref to null so StrictMode re-mount re-creates)
-  useEffect(() => {
-    return () => {
-      chartInstance.current?.dispose()
-      chartInstance.current = null
-    }
   }, [])
 
-  const handleClearFocus = useCallback(() => {
-    setSearchParams({})
-  }, [setSearchParams])
+  const toggleInstitution = useCallback((id: number) => {
+    setExpandedInstitutions((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
+
+  // When search changes, auto-expand sectors that match
+  const filteredSectors = useMemo(() => {
+    if (!searchQuery) return sectors
+    const q = searchQuery.toLowerCase()
+    return sectors.filter((s) => {
+      const nameEN = SECTOR_NAMES_EN[s.sector_code] ?? ''
+      return (
+        nameEN.toLowerCase().includes(q) ||
+        s.sector_code.toLowerCase().includes(q) ||
+        s.sector_name.toLowerCase().includes(q)
+      )
+    })
+  }, [sectors, searchQuery])
+
+  // Stats summary
+  const totalContracts = sectorsData?.total_contracts ?? 0
+  const totalValue = sectorsData?.total_value_mxn ?? 0
+  const expandedCount = expandedSectors.size + expandedInstitutions.size
 
   return (
     <div className="space-y-5">
@@ -335,287 +551,165 @@ export function NetworkGraph() {
         <div>
           <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
             <Network className="h-4.5 w-4.5 text-accent" />
-            Network Graph
+            Network Explorer
           </h2>
           <p className="text-xs text-text-muted mt-0.5">
-            Vendor-institution relationship mapping
+            {formatNumber(totalContracts)} contracts across {sectors.length} sectors ({formatCompactMXN(totalValue)})
           </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setZoomLevel((z) => Math.max(0.5, z - 0.25))}>
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          <span className="text-sm text-text-muted w-12 text-center">{Math.round(zoomLevel * 100)}%</span>
-          <Button variant="outline" size="sm" onClick={() => setZoomLevel((z) => Math.min(2, z + 0.25))}>
-            <ZoomIn className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="sm">
-            <Maximize2 className="h-4 w-4 mr-2" />
-            Fullscreen
-          </Button>
         </div>
       </div>
 
-      {/* Focus indicator */}
-      {(focusVendorId || focusInstitutionId) && (
-        <Card className="border-accent/30 bg-accent/5">
-          <CardContent className="p-3 flex items-center justify-between">
-            <span className="text-sm">
-              Focused on {focusVendorId ? 'vendor' : 'institution'} ID: {focusVendorId || focusInstitutionId}
-            </span>
-            <Button variant="outline" size="sm" onClick={handleClearFocus}>
-              Clear Focus
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+      <SectionDescription>
+        Explore the procurement network as a hierarchy: sectors, institutions, and vendors.
+        Expand any level to see relationships. Click an entity name to view details in the
+        side panel.
+      </SectionDescription>
 
-      <div className="grid gap-6 lg:grid-cols-4">
-        {/* Main Network Visualization */}
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Link2 className="h-4 w-4" />
-              Vendor-Institution Network
-            </CardTitle>
-            <CardDescription>
-              {isLoading ? 'Loading...' : `${filteredData.nodes.length} entities, ${filteredData.links.length} connections`}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {error ? (
-              <div className="h-[500px] flex items-center justify-center">
-                <div className="text-center">
-                  <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-risk-critical opacity-50" />
-                  <p className="text-text-muted mb-4">Failed to load network data</p>
-                  <Button variant="outline" onClick={() => refetch()}>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Retry
-                  </Button>
-                </div>
+      {/* Toolbar */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
+          <input
+            type="text"
+            placeholder="Search sectors, institutions, vendors..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full h-8 pl-8 pr-8 text-xs rounded-md border border-border bg-background-card focus:outline-none focus:ring-1 focus:ring-accent"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
+              aria-label="Clear search"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
+        </div>
+
+        <Button
+          variant={showHighRiskOnly ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setShowHighRiskOnly(!showHighRiskOnly)}
+          className="text-xs"
+        >
+          <ShieldAlert className="h-3.5 w-3.5 mr-1.5" />
+          High risk only
+        </Button>
+
+        {expandedCount > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setExpandedSectors(new Set())
+              setExpandedInstitutions(new Set())
+            }}
+            className="text-xs"
+          >
+            Collapse all
+          </Button>
+        )}
+      </div>
+
+      {/* Main content */}
+      <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
+        {/* Tree */}
+        <Card>
+          <CardContent className="p-0">
+            {sectorsLoading ? (
+              <div className="space-y-1 p-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-10" />
+                ))}
               </div>
-            ) : isLoading ? (
-              <Skeleton className="h-[500px]" />
-            ) : (
-              <div className="relative h-[500px] bg-background-elevated rounded-lg overflow-hidden">
-                {/* Floating Legend Panel */}
-                <div className="absolute top-3 left-3 z-10 bg-background-card/95 backdrop-blur-sm border border-border rounded-lg p-3 shadow-lg">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-text-muted mb-2">Legend</p>
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-full bg-[#58a6ff]" />
-                      <span className="text-xs text-text-secondary">Vendor</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-full bg-[#fb923c]" />
-                      <span className="text-xs text-text-secondary">High Risk (≥0.35)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-full bg-[#f87171]" />
-                      <span className="text-xs text-text-secondary">Critical Risk (≥0.50)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-full bg-[#a78bfa]" />
-                      <span className="text-xs text-text-secondary">Institution</span>
-                    </div>
-                    <div className="flex items-center gap-2 pt-1 border-t border-border mt-1">
-                      <span className="w-4 h-0.5 bg-[#64748b]" />
-                      <span className="text-xs text-text-muted">Contract link</span>
-                    </div>
-                  </div>
-                </div>
-                {filteredData.nodes.length === 0 ? (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <Network className="h-16 w-16 mx-auto mb-4 text-text-muted opacity-50" />
-                      <p className="text-text-muted mb-2">No network data available</p>
-                      <p className="text-xs text-text-muted">Try adjusting filters or clearing focus</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div ref={chartRef} className="w-full h-full" />
+            ) : filteredSectors.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-text-muted">
+                <Network className="h-10 w-10 mb-3 opacity-40" />
+                <p className="text-sm">No sectors match your filters</p>
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="mt-2 text-xs text-accent hover:underline"
+                  >
+                    Clear search
+                  </button>
                 )}
+              </div>
+            ) : (
+              <div className="divide-y divide-border/30">
+                {(searchQuery ? filteredSectors : sectors).map((sector) => (
+                  <SectorRow
+                    key={sector.sector_id}
+                    sector={sector}
+                    expandedSectors={expandedSectors}
+                    toggleSector={toggleSector}
+                    expandedInstitutions={expandedInstitutions}
+                    toggleInstitution={toggleInstitution}
+                    onSelect={setSelectedNode}
+                    selectedNode={selectedNode}
+                    searchQuery={searchQuery}
+                    showHighRiskOnly={showHighRiskOnly}
+                  />
+                ))}
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Sidebar - Suspicious Patterns */}
+        {/* Sidebar */}
         <div className="space-y-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-risk-high" />
-                Suspicious Patterns
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {isLoading ? (
-                <div className="space-y-2">
-                  <Skeleton className="h-16" />
-                  <Skeleton className="h-16" />
-                </div>
-              ) : suspiciousPatterns.length === 0 ? (
-                <p className="text-sm text-text-muted">No high-risk vendors in current view</p>
-              ) : (
-                suspiciousPatterns.map((pattern) => (
-                  <button
-                    key={pattern.id}
-                    onClick={() => navigate(`/vendors/${pattern.id}`)}
-                    className="w-full p-2 rounded-lg bg-risk-high/10 border border-risk-high/30 text-left hover:bg-risk-high/20 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium truncate pr-2">{pattern.name}</span>
-                      <RiskBadge score={pattern.risk} className="text-[8px] px-1 flex-shrink-0" />
-                    </div>
-                    <p className="text-[10px] text-text-muted mt-1">{pattern.description}</p>
-                  </button>
-                ))
-              )}
-            </CardContent>
-          </Card>
-
-          {selectedNodeData && (
-            <Card className="border-accent/30">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm">Node Details</CardTitle>
-                  <button
-                    onClick={() => setSelectedNodeData(null)}
-                    className="text-text-muted hover:text-text-primary text-xs"
-                    aria-label="Close node details"
-                  >
-                    &times;
-                  </button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-xs">
-                  <p className="font-medium">{toTitleCase(selectedNodeData.name)}</p>
-                  <p className="text-text-muted">Type: {selectedNodeData.type === 'vendor' ? 'Vendor' : 'Institution'}</p>
-                  <p>Contracts: {formatNumber(selectedNodeData.contracts)}</p>
-                  <p>Value: {formatCompactMXN(selectedNodeData.value)}</p>
-                  {selectedNodeData.risk_score != null && (
-                    <div className="flex items-center gap-2">
-                      <span>Risk:</span>
-                      <RiskBadge score={selectedNodeData.risk_score} />
-                    </div>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full mt-2"
-                    onClick={() => {
-                      const id = selectedNodeData.id.replace(/^[vi]-/, '')
-                      navigate(selectedNodeData.type === 'vendor' ? `/vendors/${id}` : `/institutions/${id}`)
-                    }}
-                  >
-                    View Profile
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                Filter Network
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="relative">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-text-muted" />
-                <input
-                  type="text"
-                  placeholder="Search nodes..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-8 pl-7 pr-3 text-xs rounded-md border border-border bg-background-card"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-xs cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={showVendors}
-                    onChange={(e) => setShowVendors(e.target.checked)}
-                    className="rounded"
-                  />
-                  Show vendors ({networkData?.nodes.filter(n => n.type === 'vendor').length || 0})
-                </label>
-                <label className="flex items-center gap-2 text-xs cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={showInstitutions}
-                    onChange={(e) => setShowInstitutions(e.target.checked)}
-                    className="rounded"
-                  />
-                  Show institutions ({networkData?.nodes.filter(n => n.type === 'institution').length || 0})
-                </label>
-                <label className="flex items-center gap-2 text-xs cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={highRiskOnly}
-                    onChange={(e) => setHighRiskOnly(e.target.checked)}
-                    className="rounded"
-                  />
-                  High risk only
-                </label>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Eye className="h-4 w-4" />
-                Quick Actions
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button variant="outline" size="sm" className="w-full justify-start text-xs">
-                <Users className="h-3 w-3 mr-2" />
-                Find connected vendors
-              </Button>
-              <Button variant="outline" size="sm" className="w-full justify-start text-xs">
-                <Link2 className="h-3 w-3 mr-2" />
-                Detect bid rotation
-              </Button>
-              <Button variant="outline" size="sm" className="w-full justify-start text-xs">
-                <AlertTriangle className="h-3 w-3 mr-2" />
-                Flag for investigation
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Network Statistics */}
-          {networkData && (
+          {selectedNode ? (
+            <DetailPanel node={selectedNode} onClose={() => setSelectedNode(null)} />
+          ) : (
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Network Statistics</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-text-muted">Total Nodes</span>
-                  <span>{networkData.total_nodes}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-text-muted">Total Links</span>
-                  <span>{networkData.total_links}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-text-muted">Total Value</span>
-                  <span>{formatCompactMXN(networkData.total_value)}</span>
+              <CardContent className="p-4">
+                <div className="text-center text-text-muted py-6">
+                  <Network className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                  <p className="text-xs">Click a sector, institution, or vendor to see details</p>
                 </div>
               </CardContent>
             </Card>
           )}
+
+          {/* Legend */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs">How to use</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-[10px] text-text-muted">
+              <div className="flex items-start gap-2">
+                <ExpandChevron expanded={false} className="h-3 w-3 mt-0.5" />
+                <span>Click the arrow to expand/collapse levels</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <Building2 className="h-3 w-3 mt-0.5 shrink-0" />
+                <span>Click a name to see details and link to its profile</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <ShieldAlert className="h-3 w-3 mt-0.5 shrink-0 text-risk-high" />
+                <span>Shield icon marks entities with elevated risk concentration</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Sector color reference */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs">Sectors</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              {SECTORS.map((s) => (
+                <div key={s.id} className="flex items-center gap-2 text-[10px]">
+                  <span
+                    className="w-2.5 h-2.5 rounded-sm shrink-0"
+                    style={{ backgroundColor: s.color }}
+                  />
+                  <span className="text-text-secondary">{s.nameEN}</span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

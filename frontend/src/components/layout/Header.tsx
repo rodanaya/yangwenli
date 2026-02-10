@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Bell, Search, Moon, Sun, X, Database, Activity, Shield } from 'lucide-react'
+import { Search, Moon, Sun, X, Database, Activity, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { SmartSearch } from '@/components/SmartSearch'
@@ -12,19 +12,14 @@ import { cn } from '@/lib/utils'
 // Breadcrumb mapping
 const ROUTE_TITLES: Record<string, string> = {
   '/': 'Dashboard',
+  '/explore': 'Explore',
+  '/patterns': 'Patterns',
   '/contracts': 'Contracts',
-  '/vendors': 'Vendors',
-  '/institutions': 'Institutions',
-  '/sectors': 'Sectors',
-  '/analysis/risk': 'Risk Analysis',
-  '/analysis/price': 'Price Analysis',
-  '/data-quality': 'Data Quality',
-  '/export': 'Export Data',
-  '/settings': 'Settings',
-  '/network': 'Network Graph',
+  '/network': 'Network',
   '/watchlist': 'Watchlist',
-  '/comparison': 'Comparison',
-  '/timeline': 'Timeline',
+  '/sectors': 'Sectors',
+  '/methodology': 'Methodology',
+  '/settings': 'Settings',
 }
 
 export function Header() {
@@ -167,7 +162,7 @@ export function Header() {
               variant="ghost"
               size="icon"
               className="h-7 w-7 relative"
-              onClick={() => navigate('/analysis/risk')}
+              onClick={() => navigate('/methodology')}
               aria-label={`${alertCount} high-risk alerts`}
             >
               <Shield className="h-3.5 w-3.5 text-text-muted" />
@@ -196,7 +191,7 @@ export function Header() {
                   qualityGrade === 'C' ? 'text-risk-medium' :
                   'text-risk-high'
                 )}
-                onClick={() => navigate('/data-quality')}
+                onClick={() => navigate('/settings?tab=quality')}
               >
                 <Database className="h-3 w-3" />
                 <span>{qualityGrade}</span>

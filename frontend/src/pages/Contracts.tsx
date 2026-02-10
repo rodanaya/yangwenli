@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, Link } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -32,6 +32,10 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 import { ContractDetailModal } from '@/components/ContractDetailModal'
+import { ExpandableProvider, ExpandableRow, ExpandChevron } from '@/components/ExpandableRow'
+import { NarrativeCard } from '@/components/NarrativeCard'
+import { buildFilterNarrative } from '@/lib/narratives'
+import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
 
 export function Contracts() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -495,6 +499,17 @@ export function Contracts() {
         </div>
       )}
 
+      {/* Filter narrative */}
+      {data && hasActiveFilters && (
+        <NarrativeCard
+          paragraphs={buildFilterNarrative(
+            data.pagination.total,
+            { sector_id: filters.sector_id, year: filters.year, risk_level: filters.risk_level, search: filters.search },
+          )}
+          compact
+        />
+      )}
+
       {/* Featured contract strips - only shown when no filters active */}
       {!hasActiveFilters && (
         <FeaturedContractStrip
@@ -559,12 +574,14 @@ export function Contracts() {
               height={600}
             />
           ) : (
+            <ExpandableProvider>
             <ScrollArea className="h-[600px]">
               <div className="overflow-x-auto min-w-full">
               <table className="w-full min-w-[800px]" role="table" aria-label="Contracts list">
                 <thead className="sticky top-0 z-10 bg-background-card/95 backdrop-blur-sm border-b-2 border-border shadow-sm">
                   <tr className="text-left text-xs font-semibold uppercase tracking-wider text-text-muted">
-                    <th className="p-3 pl-4">Contract</th>
+                    <th className="p-3 pl-2 w-8"></th>
+                    <th className="p-3">Contract</th>
                     <th className="p-3">Vendor</th>
                     <th className="p-3">Institution</th>
                     <th className="p-3 text-right">Amount</th>
@@ -588,6 +605,7 @@ export function Contracts() {
               </table>
               </div>
             </ScrollArea>
+            </ExpandableProvider>
           )}
         </CardContent>
       </Card>
@@ -699,7 +717,7 @@ function FeaturedContractStrip({
               className="w-72 flex-shrink-0 rounded-md border border-border bg-background-card p-3 text-left transition-colors hover:border-accent/50 hover:bg-accent/5 focus:outline-none focus:ring-1 focus:ring-accent"
               aria-label={`View critical-risk contract: ${c.title || c.contract_number || c.id}`}
             >
-              <p className="text-sm font-medium truncate">
+              <p className="text-sm font-medium line-clamp-2">
                 {c.title ? toTitleCase(c.title) : c.contract_number || `Contract #${c.id}`}
               </p>
               <div className="mt-1.5 flex items-center justify-between gap-2">
@@ -733,7 +751,7 @@ function FeaturedContractStrip({
               className="w-72 flex-shrink-0 rounded-md border border-border bg-background-card p-3 text-left transition-colors hover:border-accent/50 hover:bg-accent/5 focus:outline-none focus:ring-1 focus:ring-accent"
               aria-label={`View contract: ${c.title || c.contract_number || c.id}`}
             >
-              <p className="text-sm font-medium truncate">
+              <p className="text-sm font-medium line-clamp-2">
                 {c.title ? toTitleCase(c.title) : c.contract_number || `Contract #${c.id}`}
               </p>
               <div className="mt-1.5 flex items-center justify-between gap-2">
@@ -836,33 +854,18 @@ function FeaturedSection({
 // ---------------------------------------------------------------------------
 
 function ContractRow({ contract, isEven, onView }: { contract: ContractListItem; isEven?: boolean; onView: (id: number) => void }) {
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      // Navigate to contract details when implemented
-      // For now, focus the row to indicate selection
-      ;(e.target as HTMLElement).focus()
-    }
-  }
+  const anomalyInfo = getAnomalyInfo(contract.mahalanobis_distance)
 
-  return (
-    <tr
-      className={`
-        transition-colors duration-150
-        hover:bg-accent/5 hover:shadow-sm
-        focus:bg-accent/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent
-        ${isEven ? 'bg-background-card' : 'bg-background-elevated/30'}
-      `}
-      tabIndex={0}
-      onKeyDown={handleKeyDown}
-      role="row"
-      aria-label={`Contract ${contract.contract_number || contract.id}: ${contract.title || 'Untitled'}, ${formatCompactMXN(contract.amount_mxn)}`}
-    >
+  const cells = (
+    <>
+      <td className="p-3 pl-2 w-8">
+        <ExpandChevron id={contract.id} />
+      </td>
       <td className="p-3">
         <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-text-muted" aria-hidden="true" />
-          <div>
-            <p className="text-sm font-medium truncate max-w-[200px]">{contract.title || 'Untitled'}</p>
+          <FileText className="h-4 w-4 text-text-muted shrink-0" aria-hidden="true" />
+          <div className="min-w-0">
+            <p className="text-sm font-medium line-clamp-2">{contract.title || 'Untitled'}</p>
             <p className="text-xs text-text-muted">{contract.contract_number || `ID: ${contract.id}`}</p>
           </div>
         </div>
@@ -889,16 +892,14 @@ function ContractRow({ contract, isEven, onView }: { contract: ContractListItem;
         )}
       </td>
       <td className="p-3">
-        {(() => {
-          const info = getAnomalyInfo(contract.mahalanobis_distance)
-          if (!info) return <span className="text-xs text-text-muted">-</span>
-          return (
-            <Badge className={`text-[10px] ${info.badgeClass}`} title={`D²=${contract.mahalanobis_distance?.toFixed(1)}`}>
-              <span className={`inline-block h-1.5 w-1.5 rounded-full ${info.dotClass} mr-1`} />
-              {info.label}
-            </Badge>
-          )
-        })()}
+        {anomalyInfo ? (
+          <Badge className={`text-[10px] ${anomalyInfo.badgeClass}`} title={`D\u00B2=${contract.mahalanobis_distance?.toFixed(1)}`}>
+            <span className={`inline-block h-1.5 w-1.5 rounded-full ${anomalyInfo.dotClass} mr-1`} />
+            {anomalyInfo.label}
+          </Badge>
+        ) : (
+          <span className="text-xs text-text-muted">-</span>
+        )}
       </td>
       <td className="p-3">
         <div className="flex gap-1">
@@ -919,14 +920,101 @@ function ContractRow({ contract, isEven, onView }: { contract: ContractListItem;
           variant="ghost"
           size="sm"
           className="h-7 w-7 p-0"
-          title="View contract details"
+          title="View full contract details"
           aria-label={`View details for contract ${contract.contract_number || contract.id}`}
-          onClick={() => onView(contract.id)}
+          onClick={(e) => { e.stopPropagation(); onView(contract.id) }}
         >
           <Eye className="h-4 w-4" aria-hidden="true" />
         </Button>
       </td>
-    </tr>
+    </>
+  )
+
+  const factors = contract.risk_factors?.filter(Boolean) || []
+
+  const detail = (
+    <div className="space-y-3">
+      {/* Full title */}
+      {contract.title && (
+        <p className="text-sm text-text-primary font-medium">{contract.title}</p>
+      )}
+
+      {/* Risk factors */}
+      {factors.length > 0 && (
+        <div>
+          <p className="text-[11px] font-mono uppercase tracking-wider text-text-muted mb-1.5">Risk Factors</p>
+          <div className="flex flex-wrap gap-1.5">
+            {factors.map((raw) => {
+              const parsed = parseFactorLabel(raw)
+              return (
+                <Badge
+                  key={raw}
+                  className="text-[10px]"
+                  style={{ backgroundColor: `${getFactorCategoryColor(parsed.category)}20`, color: getFactorCategoryColor(parsed.category), borderColor: `${getFactorCategoryColor(parsed.category)}40` }}
+                  title={raw}
+                >
+                  {parsed.label}
+                </Badge>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Date & contract info */}
+      <div className="text-xs text-text-muted space-y-1">
+        {contract.contract_date && (
+          <p>Contract date: {formatDate(contract.contract_date)}</p>
+        )}
+        {contract.procedure_type && (
+          <p>Procedure: {contract.procedure_type}</p>
+        )}
+        {contract.contract_number && (
+          <p>Number: {contract.contract_number}</p>
+        )}
+      </div>
+
+      {/* Links to vendor / institution profiles */}
+      <div className="flex items-center gap-3 pt-1">
+        {contract.vendor_id && (
+          <Link
+            to={`/vendors/${contract.vendor_id}`}
+            className="text-xs text-accent hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            Vendor profile: {contract.vendor_name ? toTitleCase(contract.vendor_name) : `#${contract.vendor_id}`}
+          </Link>
+        )}
+        {contract.institution_id && (
+          <Link
+            to={`/institutions/${contract.institution_id}`}
+            className="text-xs text-accent hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            Institution profile: {contract.institution_name ? toTitleCase(contract.institution_name) : `#${contract.institution_id}`}
+          </Link>
+        )}
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs h-6 ml-auto"
+          onClick={(e) => { e.stopPropagation(); onView(contract.id) }}
+        >
+          <Eye className="h-3 w-3 mr-1" />
+          Full details
+        </Button>
+      </div>
+    </div>
+  )
+
+  return (
+    <ExpandableRow
+      id={contract.id}
+      cells={cells}
+      detail={detail}
+      colSpan={10}
+      className={isEven ? 'bg-background-card' : 'bg-background-elevated/30'}
+    />
   )
 }
 

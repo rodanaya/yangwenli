@@ -3,21 +3,15 @@ import { cn } from '@/lib/utils'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   LayoutDashboard,
+  Compass,
   FileText,
-  Building2,
-  Users,
   BarChart3,
-  AlertTriangle,
-  Download,
+  BookOpen,
   Settings,
   ChevronLeft,
   ChevronRight,
   Network,
   Eye,
-  Columns,
-  Calendar,
-  Database,
-  DollarSign,
   Fingerprint,
 } from 'lucide-react'
 import { LOGHIcon } from '@/components/LOGHIcon'
@@ -36,27 +30,21 @@ interface NavItem {
   badge?: string | number
 }
 
-const mainNavItems: NavItem[] = [
+const overviewNavItems: NavItem[] = [
   { title: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { title: 'Contracts', href: '/contracts', icon: FileText },
-  { title: 'Vendors', href: '/vendors', icon: Users },
-  { title: 'Institutions', href: '/institutions', icon: Building2 },
-  { title: 'Sectors', href: '/sectors', icon: BarChart3 },
+  { title: 'Explore', href: '/explore', icon: Compass },
 ]
 
-const analysisNavItems: NavItem[] = [
-  { title: 'Risk Analysis', href: '/analysis/risk', icon: AlertTriangle },
-  { title: 'Price Analysis', href: '/analysis/price', icon: DollarSign },
-  { title: 'Data Quality', href: '/data-quality', icon: Database },
-  { title: 'Export Data', href: '/export', icon: Download },
-]
-
-const investigationNavItems: NavItem[] = [
-  { title: 'Network Graph', href: '/network', icon: Network },
-  { title: 'Watchlist', href: '/watchlist', icon: Eye },
+const investigateNavItems: NavItem[] = [
   { title: 'Patterns', href: '/patterns', icon: Fingerprint },
-  { title: 'Comparison', href: '/comparison', icon: Columns },
-  { title: 'Timeline', href: '/timeline', icon: Calendar },
+  { title: 'Contracts', href: '/contracts', icon: FileText },
+  { title: 'Network', href: '/network', icon: Network },
+  { title: 'Watchlist', href: '/watchlist', icon: Eye },
+]
+
+const understandNavItems: NavItem[] = [
+  { title: 'Sectors', href: '/sectors', icon: BarChart3 },
+  { title: 'Methodology', href: '/methodology', icon: BookOpen },
 ]
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
@@ -92,9 +80,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       {/* Navigation */}
       <ScrollArea className="flex-1 py-3">
         <nav className="space-y-5 px-2">
-          {/* Main navigation */}
-          <NavSection title="RECON" collapsed={collapsed}>
-            {mainNavItems.map((item) => (
+          {/* Overview section */}
+          <NavSection title="OVERVIEW" collapsed={collapsed}>
+            {overviewNavItems.map((item) => (
               <SidebarNavItem
                 key={item.href}
                 item={item}
@@ -104,26 +92,26 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             ))}
           </NavSection>
 
-          {/* Analysis section */}
-          <NavSection title="ANALYSIS" collapsed={collapsed}>
-            {analysisNavItems.map((item) => (
-              <SidebarNavItem
-                key={item.href}
-                item={item}
-                collapsed={collapsed}
-                isActive={location.pathname.startsWith(item.href)}
-              />
-            ))}
-          </NavSection>
-
-          {/* Investigation section */}
-          <NavSection title="INVESTIGATION" collapsed={collapsed}>
-            {investigationNavItems.map((item) => (
+          {/* Investigate section */}
+          <NavSection title="INVESTIGATE" collapsed={collapsed}>
+            {investigateNavItems.map((item) => (
               <SidebarNavItem
                 key={item.href}
                 item={item}
                 collapsed={collapsed}
                 isActive={location.pathname === item.href}
+              />
+            ))}
+          </NavSection>
+
+          {/* Understand section */}
+          <NavSection title="UNDERSTAND" collapsed={collapsed}>
+            {understandNavItems.map((item) => (
+              <SidebarNavItem
+                key={item.href}
+                item={item}
+                collapsed={collapsed}
+                isActive={location.pathname === item.href || location.pathname.startsWith(item.href + '/')}
               />
             ))}
           </NavSection>

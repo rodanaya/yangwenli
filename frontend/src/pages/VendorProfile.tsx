@@ -1,14 +1,22 @@
+import { useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { RiskBadge } from '@/components/ui/badge'
+import { RiskBadge, Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { formatCompactMXN, formatNumber, formatPercentSafe, formatDate, toTitleCase, formatCompactUSD, getRiskLevel } from '@/lib/utils'
 import { vendorApi, networkApi } from '@/api/client'
-import { RISK_COLORS } from '@/lib/constants'
+import { RISK_COLORS, SECTOR_COLORS } from '@/lib/constants'
+import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
 import type { ContractListItem } from '@/api/types'
+import {
+  AreaChart,
+  Area,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+} from 'recharts'
 import {
   Users,
   Building2,
@@ -18,6 +26,11 @@ import {
   ExternalLink,
   DollarSign,
   BarChart3,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Activity,
+  Shield,
 } from 'lucide-react'
 
 export function VendorProfile() {
@@ -69,6 +82,23 @@ export function VendorProfile() {
     (cb) => cb.relationship_strength === 'very_strong' || cb.relationship_strength === 'strong'
   ) || (coBidders?.suspicious_patterns?.length ?? 0) > 0
 
+  // Compute yearly risk trend from contracts
+  const riskTrendData = useMemo(() => {
+    if (!contracts?.data?.length) return []
+    const yearMap = new Map<number, { sum: number; count: number }>()
+    for (const c of contracts.data) {
+      const yr = c.contract_year
+      if (!yr || c.risk_score == null) continue
+      const entry = yearMap.get(yr) || { sum: 0, count: 0 }
+      entry.sum += c.risk_score
+      entry.count += 1
+      yearMap.set(yr, entry)
+    }
+    return Array.from(yearMap.entries())
+      .map(([year, { sum, count }]) => ({ year, avg: sum / count }))
+      .sort((a, b) => a.year - b.year)
+  }, [contracts])
+
   if (vendorLoading) {
     return <VendorProfileSkeleton />
   }
@@ -78,7 +108,7 @@ export function VendorProfile() {
       <div className="flex flex-col items-center justify-center py-20">
         <h2 className="text-lg font-semibold mb-2">Vendor Not Found</h2>
         <p className="text-text-muted mb-4">The requested vendor could not be found.</p>
-        <Link to="/vendors">
+        <Link to="/explore?tab=vendors">
           <Button variant="outline">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Vendors
@@ -88,27 +118,54 @@ export function VendorProfile() {
     )
   }
 
+  const riskLevel = getRiskLevel(vendor.avg_risk_score ?? 0)
+  const riskColor = RISK_COLORS[riskLevel]
+  const sectorColor = vendor.primary_sector_name
+    ? SECTOR_COLORS[vendor.primary_sector_name.toLowerCase()] || SECTOR_COLORS.otros
+    : SECTOR_COLORS.otros
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
+    <div className="space-y-6 stagger-animate">
+      {/* Header — risk-colored left border */}
+      <div
+        className="flex items-start justify-between rounded-lg border bg-background-card p-4 animate-slide-up"
+        style={{ borderLeftWidth: '4px', borderLeftColor: riskColor }}
+      >
         <div className="flex items-center gap-4">
-          <Link to="/vendors">
+          <Link to="/explore?tab=vendors">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-accent/10 text-accent">
+            <div
+              className="flex h-12 w-12 items-center justify-center rounded-lg"
+              style={{ backgroundColor: `${riskColor}15`, color: riskColor }}
+            >
               <Users className="h-6 w-6" />
             </div>
             <div>
               <h1 className="text-xl font-semibold">{toTitleCase(vendor.name)}</h1>
               <div className="flex items-center gap-2 text-sm text-text-muted">
                 {vendor.rfc && <span className="font-mono">{vendor.rfc}</span>}
+                {vendor.primary_sector_name && (
+                  <>
+                    <span>·</span>
+                    <Badge
+                      className="text-[10px] border"
+                      style={{
+                        backgroundColor: `${sectorColor}20`,
+                        color: sectorColor,
+                        borderColor: `${sectorColor}40`,
+                      }}
+                    >
+                      {vendor.primary_sector_name}
+                    </Badge>
+                  </>
+                )}
                 {vendor.industry_name && (
                   <>
-                    <span>•</span>
+                    <span>·</span>
                     <span>{vendor.industry_name}</span>
                   </>
                 )}
@@ -121,13 +178,13 @@ export function VendorProfile() {
         )}
       </div>
 
-      {/* KPI Row */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* KPI Row — stagger + hover-lift + risk coloring */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 stagger-animate">
         <KPICard
           title="Total Contracts"
           value={vendor.total_contracts}
           icon={FileText}
-          subtitle={`${vendor.first_contract_year || '-'} - ${vendor.last_contract_year || '-'}`}
+          subtitle={`${vendor.first_contract_year || '-'} – ${vendor.last_contract_year || '-'}`}
         />
         <KPICard
           title="Total Value"
@@ -147,13 +204,13 @@ export function VendorProfile() {
           value={vendor.high_risk_pct}
           icon={AlertTriangle}
           format="percent_100"
-          variant={vendor.high_risk_pct > 20 ? 'warning' : 'default'}
+          variant={vendor.high_risk_pct > 20 ? 'critical' : vendor.high_risk_pct > 10 ? 'warning' : 'default'}
         />
       </div>
 
       {/* Co-Bidding Alert (v3.2) */}
       {!coBiddersLoading && hasCoBiddingRisk && (
-        <Card className="border-amber-500/50 bg-amber-500/5">
+        <Card className="border-amber-500/50 bg-amber-500/5 animate-slide-up">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-amber-600">
               <Users className="h-5 w-5" />
@@ -178,7 +235,7 @@ export function VendorProfile() {
                 </p>
                 <div className="divide-y divide-border rounded-lg border overflow-hidden">
                   {coBidders.co_bidders.slice(0, 5).map((partner) => (
-                    <div key={partner.vendor_id} className="flex items-center justify-between p-3 bg-background-card">
+                    <div key={partner.vendor_id} className="flex items-center justify-between p-3 bg-background-card interactive">
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-text-muted" />
                         <Link
@@ -189,13 +246,13 @@ export function VendorProfile() {
                         </Link>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-xs text-text-muted">
+                        <span className="text-xs text-text-muted tabular-nums">
                           {partner.co_bid_count} shared procedures
                         </span>
                         <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          partner.relationship_strength === 'very_strong' ? 'bg-red-500/20 text-red-600' :
-                          partner.relationship_strength === 'strong' ? 'bg-amber-500/20 text-amber-600' :
-                          'bg-gray-500/20 text-gray-600'
+                          partner.relationship_strength === 'very_strong' ? 'bg-red-500/20 text-red-400' :
+                          partner.relationship_strength === 'strong' ? 'bg-amber-500/20 text-amber-400' :
+                          'bg-gray-500/20 text-gray-400'
                         }`}>
                           {partner.relationship_strength.replace('_', ' ')}
                         </span>
@@ -214,9 +271,9 @@ export function VendorProfile() {
                 </p>
                 {coBidders.suspicious_patterns.map((pattern, idx) => (
                   <div key={idx} className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                    <p className="text-sm font-medium text-amber-600">
-                      {pattern.pattern === 'potential_cover_bidding' ? '⚠️ Potential Cover Bidding' :
-                       pattern.pattern === 'potential_bid_rotation' ? '⚠️ Potential Bid Rotation' :
+                    <p className="text-sm font-medium text-amber-400">
+                      {pattern.pattern === 'potential_cover_bidding' ? 'Potential Cover Bidding' :
+                       pattern.pattern === 'potential_bid_rotation' ? 'Potential Bid Rotation' :
                        pattern.pattern}
                     </p>
                     <p className="text-xs text-text-muted mt-1">{pattern.description}</p>
@@ -231,12 +288,12 @@ export function VendorProfile() {
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left Column - Risk Profile */}
-        <div className="space-y-6">
+        <div className="space-y-6 stagger-animate">
           {/* Risk Score Gauge */}
-          <Card>
+          <Card className="hover-lift">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4" />
+                <Shield className="h-4 w-4" />
                 Risk Profile
               </CardTitle>
             </CardHeader>
@@ -244,14 +301,83 @@ export function VendorProfile() {
               {riskLoading ? (
                 <Skeleton className="h-48" />
               ) : riskProfile?.avg_risk_score !== undefined ? (
-                <RiskGauge score={riskProfile.avg_risk_score} />
+                <RiskGauge
+                  score={riskProfile.avg_risk_score}
+                  riskVsSectorAvg={riskProfile.risk_vs_sector_avg}
+                  riskPercentile={riskProfile.risk_percentile}
+                  riskTrend={riskProfile.risk_trend}
+                />
               ) : null}
             </CardContent>
           </Card>
 
+          {/* Risk Trend Mini-Chart */}
+          {riskTrendData.length > 1 && (
+            <Card className="hover-lift">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  Risk Trend
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[100px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={riskTrendData}>
+                      <defs>
+                        <linearGradient id="riskGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={riskColor} stopOpacity={0.3} />
+                          <stop offset="95%" stopColor={riskColor} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <RechartsTooltip
+                        content={({ active, payload }) => {
+                          if (active && payload?.[0]) {
+                            const d = payload[0].payload
+                            return (
+                              <div className="rounded border border-border bg-background-card px-2 py-1 text-xs shadow-lg">
+                                <span className="font-medium">{d.year}</span>
+                                <span className="ml-2 tabular-nums">{(d.avg * 100).toFixed(1)}%</span>
+                              </div>
+                            )
+                          }
+                          return null
+                        }}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="avg"
+                        stroke={riskColor}
+                        fill="url(#riskGrad)"
+                        strokeWidth={2}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+                {riskProfile?.risk_trend && (
+                  <div className="flex items-center justify-center gap-1.5 mt-2 text-xs text-text-muted">
+                    {riskProfile.risk_trend === 'worsening' && <TrendingUp className="h-3 w-3 text-risk-high" />}
+                    {riskProfile.risk_trend === 'improving' && <TrendingDown className="h-3 w-3 text-risk-low" />}
+                    {riskProfile.risk_trend === 'stable' && <Minus className="h-3 w-3" />}
+                    <span className="capitalize">{riskProfile.risk_trend}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Statistical Anomaly */}
           {vendor.avg_mahalanobis != null && (
-            <Card>
+            <Card
+              className="hover-lift"
+              style={{
+                borderColor: (vendor.pct_anomalous ?? 0) > 20
+                  ? `${RISK_COLORS.critical}60`
+                  : (vendor.pct_anomalous ?? 0) > 10
+                    ? `${RISK_COLORS.high}60`
+                    : undefined,
+              }}
+            >
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <BarChart3 className="h-4 w-4" />
@@ -261,15 +387,19 @@ export function VendorProfile() {
               <CardContent className="space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-text-muted">Avg Mahalanobis D²</span>
-                  <span className="font-mono">{vendor.avg_mahalanobis.toFixed(1)}</span>
+                  <span className="font-mono tabular-nums">{vendor.avg_mahalanobis.toFixed(1)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-text-muted">Max D²</span>
-                  <span className="font-mono">{vendor.max_mahalanobis?.toFixed(1) ?? '—'}</span>
+                  <span className="font-mono tabular-nums">{vendor.max_mahalanobis?.toFixed(1) ?? '—'}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-text-muted">Anomalous Contracts</span>
-                  <span className={`font-mono ${(vendor.pct_anomalous ?? 0) > 20 ? 'text-red-400' : (vendor.pct_anomalous ?? 0) > 10 ? 'text-amber-400' : 'text-text-secondary'}`}>
+                  <span className={`font-mono tabular-nums ${
+                    (vendor.pct_anomalous ?? 0) > 20 ? 'text-risk-critical' :
+                    (vendor.pct_anomalous ?? 0) > 10 ? 'text-risk-high' :
+                    'text-text-secondary'
+                  }`}>
                     {vendor.pct_anomalous?.toFixed(1) ?? '0'}%
                   </span>
                 </div>
@@ -281,7 +411,7 @@ export function VendorProfile() {
           )}
 
           {/* Risk Factor Breakdown */}
-          <Card>
+          <Card className="hover-lift">
             <CardHeader>
               <CardTitle className="text-sm">Risk Factors</CardTitle>
             </CardHeader>
@@ -300,24 +430,38 @@ export function VendorProfile() {
             </CardContent>
           </Card>
 
-          {/* Quick Stats */}
-          <Card>
+          {/* Procurement Patterns */}
+          <Card className="hover-lift">
             <CardHeader>
               <CardTitle className="text-sm">Procurement Patterns</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <StatRow label="Direct Awards" value={formatPercentSafe(vendor.direct_award_pct, false)} />
-              <StatRow label="Single Bids" value={formatPercentSafe(vendor.single_bid_pct, false)} />
-              <StatRow label="Avg Contract" value={formatCompactMXN(vendor.avg_contract_value || 0)} />
-              <StatRow label="Sectors" value={String(vendor.sectors_count || 0)} />
+            <CardContent className="space-y-4">
+              <PatternBar
+                label="Direct Awards"
+                value={vendor.direct_award_pct}
+                isPercent100
+              />
+              <PatternBar
+                label="Single Bids"
+                value={vendor.single_bid_pct}
+                isPercent100
+              />
+              <div className="flex justify-between text-sm">
+                <span className="text-text-muted">Avg Contract</span>
+                <span className="font-medium tabular-nums">{formatCompactMXN(vendor.avg_contract_value || 0)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-text-muted">Sectors</span>
+                <span className="font-medium tabular-nums">{String(vendor.sectors_count || 0)}</span>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Center Column - Contracts */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* Right Column - Summary, Contracts, Institutions */}
+        <div className="lg:col-span-2 space-y-6 stagger-animate">
           {/* Vendor Summary */}
-          <Card>
+          <Card className="hover-lift">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="h-4 w-4" />
@@ -325,31 +469,19 @@ export function VendorProfile() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-3 rounded-lg bg-background-elevated">
-                  <span className="text-sm text-text-muted">Primary Sector</span>
-                  <span className="font-medium">{vendor.primary_sector_name || 'Not classified'}</span>
-                </div>
-                <div className="flex justify-between items-center p-3 rounded-lg bg-background-elevated">
-                  <span className="text-sm text-text-muted">Years Active</span>
-                  <span className="font-medium">{vendor.years_active}</span>
-                </div>
-                <div className="flex justify-between items-center p-3 rounded-lg bg-background-elevated">
-                  <span className="text-sm text-text-muted">Sectors Served</span>
-                  <span className="font-medium">{vendor.sectors_count}</span>
-                </div>
+              <div className="space-y-3">
+                <SummaryRow label="Primary Sector" value={vendor.primary_sector_name || 'Not classified'} />
+                <SummaryRow label="Years Active" value={String(vendor.years_active)} />
+                <SummaryRow label="Sectors Served" value={String(vendor.sectors_count)} />
                 {vendor.vendor_group_id && (
-                  <div className="flex justify-between items-center p-3 rounded-lg bg-background-elevated">
-                    <span className="text-sm text-text-muted">Vendor Group</span>
-                    <span className="font-medium">{vendor.group_name || `Group ${vendor.vendor_group_id}`}</span>
-                  </div>
+                  <SummaryRow label="Vendor Group" value={vendor.group_name || `Group ${vendor.vendor_group_id}`} />
                 )}
               </div>
             </CardContent>
           </Card>
 
           {/* Recent Contracts */}
-          <Card>
+          <Card className="hover-lift">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
@@ -384,7 +516,7 @@ export function VendorProfile() {
           </Card>
 
           {/* Top Institutions */}
-          <Card>
+          <Card className="hover-lift">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-4 w-4" />
@@ -399,25 +531,10 @@ export function VendorProfile() {
                   ))}
                 </div>
               ) : institutions?.data?.length ? (
-                <div className="space-y-3">
-                  {institutions.data.slice(0, 5).map((inst: any) => (
-                    <div key={inst.institution_id} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-text-muted" />
-                        <Link
-                          to={`/institutions/${inst.institution_id}`}
-                          className="text-sm hover:text-accent transition-colors truncate max-w-[250px]"
-                        >
-                          {inst.institution_name}
-                        </Link>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium tabular-nums">{formatCompactMXN(inst.total_value_mxn)}</p>
-                        <p className="text-xs text-text-muted">{inst.contract_count} contracts</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <InstitutionList
+                  data={institutions.data.slice(0, 5)}
+                  maxValue={Math.max(...institutions.data.slice(0, 5).map((i: any) => i.total_value_mxn))}
+                />
               ) : (
                 <p className="text-sm text-text-muted">No institutions found</p>
               )}
@@ -439,7 +556,7 @@ interface KPICardProps {
   icon: React.ElementType
   format?: 'number' | 'currency' | 'percent' | 'percent_100'
   subtitle?: string
-  variant?: 'default' | 'warning'
+  variant?: 'default' | 'warning' | 'critical'
 }
 
 function KPICard({ title, value, icon: Icon, format = 'number', subtitle, variant = 'default' }: KPICardProps) {
@@ -454,8 +571,18 @@ function KPICard({ title, value, icon: Icon, format = 'number', subtitle, varian
             ? formatPercentSafe(value, false)
             : formatNumber(value)
 
+  const borderClass =
+    variant === 'critical' ? 'border-risk-critical/40' :
+    variant === 'warning' ? 'border-risk-high/30' :
+    undefined
+
+  const iconBg =
+    variant === 'critical' ? 'bg-risk-critical/10 text-risk-critical' :
+    variant === 'warning' ? 'bg-risk-high/10 text-risk-high' :
+    'bg-accent/10 text-accent'
+
   return (
-    <Card className={variant === 'warning' ? 'border-risk-high/30' : undefined}>
+    <Card className={`hover-lift ${borderClass || ''}`}>
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
@@ -463,11 +590,7 @@ function KPICard({ title, value, icon: Icon, format = 'number', subtitle, varian
             <p className="text-2xl font-bold tabular-nums text-text-primary">{formattedValue}</p>
             {subtitle && <p className="text-xs text-text-muted">{subtitle}</p>}
           </div>
-          <div
-            className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-              variant === 'warning' ? 'bg-risk-high/10 text-risk-high' : 'bg-accent/10 text-accent'
-            }`}
-          >
+          <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${iconBg}`}>
             <Icon className="h-5 w-5" />
           </div>
         </div>
@@ -476,27 +599,56 @@ function KPICard({ title, value, icon: Icon, format = 'number', subtitle, varian
   )
 }
 
-function RiskGauge({ score }: { score: number }) {
+function RiskGauge({
+  score,
+  riskVsSectorAvg,
+  riskPercentile,
+  riskTrend,
+}: {
+  score: number
+  riskVsSectorAvg?: number
+  riskPercentile?: number
+  riskTrend?: 'improving' | 'stable' | 'worsening'
+}) {
   const percentage = Math.round(score * 100)
   const level = getRiskLevel(score)
   const label = level.charAt(0).toUpperCase() + level.slice(1)
   const color = RISK_COLORS[level]
 
+  // Gauge zone boundaries (as % of circumference)
+  const circumference = 2 * Math.PI * 40
+  const zones = [
+    { end: 10, color: RISK_COLORS.low },      // 0–10%
+    { end: 30, color: RISK_COLORS.medium },    // 10–30%
+    { end: 50, color: RISK_COLORS.high },      // 30–50%
+    { end: 100, color: RISK_COLORS.critical }, // 50–100%
+  ]
+
   return (
     <div className="flex flex-col items-center">
-      <div className="relative w-32 h-32">
+      <div className="relative w-36 h-36">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-          {/* Background circle */}
-          <circle
-            cx="50"
-            cy="50"
-            r="40"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="8"
-            className="text-background-elevated"
-          />
-          {/* Progress circle */}
+          {/* Zone segments */}
+          {zones.map((zone, i) => {
+            const prevEnd = i === 0 ? 0 : zones[i - 1].end
+            const start = (prevEnd / 100) * circumference
+            const length = ((zone.end - prevEnd) / 100) * circumference
+            return (
+              <circle
+                key={i}
+                cx="50"
+                cy="50"
+                r="40"
+                fill="none"
+                stroke={zone.color}
+                strokeWidth="8"
+                strokeDasharray={`${length} ${circumference - length}`}
+                strokeDashoffset={-start}
+                opacity={0.15}
+              />
+            )
+          })}
+          {/* Active arc */}
           <circle
             cx="50"
             cy="50"
@@ -506,83 +658,160 @@ function RiskGauge({ score }: { score: number }) {
             strokeWidth="8"
             strokeDasharray={`${percentage * 2.51} 251`}
             strokeLinecap="round"
+            style={{
+              filter: `drop-shadow(0 0 6px ${color}80)`,
+              transition: 'stroke-dasharray 0.8s ease-out',
+            }}
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-2xl font-bold">{percentage}</span>
-          <span className="text-xs text-text-muted">/ 100</span>
+          <span className="text-3xl font-bold tabular-nums">{percentage}</span>
+          <span className="text-[10px] text-text-muted">/ 100</span>
         </div>
       </div>
-      <div className="mt-2 flex items-center gap-2">
-        <div className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+      <div className="mt-3 flex items-center gap-2">
+        <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color, boxShadow: `0 0 6px ${color}80` }} />
         <span className="text-sm font-medium">{label} Risk</span>
+        {riskTrend && (
+          <>
+            {riskTrend === 'worsening' && <TrendingUp className="h-3.5 w-3.5 text-risk-high ml-1" />}
+            {riskTrend === 'improving' && <TrendingDown className="h-3.5 w-3.5 text-risk-low ml-1" />}
+            {riskTrend === 'stable' && <Minus className="h-3.5 w-3.5 text-text-muted ml-1" />}
+          </>
+        )}
+      </div>
+      {/* Comparison metrics */}
+      <div className="mt-3 space-y-1 text-center">
+        {riskPercentile != null && (
+          <p className="text-xs text-text-muted">
+            Higher than <span className="font-medium text-text-secondary tabular-nums">{riskPercentile.toFixed(0)}%</span> of vendors
+          </p>
+        )}
+        {riskVsSectorAvg != null && (
+          <p className="text-xs text-text-muted">
+            <span className={`font-medium tabular-nums ${riskVsSectorAvg > 0 ? 'text-risk-high' : 'text-risk-low'}`}>
+              {riskVsSectorAvg > 0 ? '+' : ''}{(riskVsSectorAvg * 100).toFixed(1)}
+            </span>
+            {' '}vs sector avg
+          </p>
+        )}
       </div>
     </div>
   )
 }
 
 function RiskFactorList({ factors }: { factors: Array<{ factor: string; count: number; percentage: number }> }) {
-  // v3.2 updated factor labels
-  const factorLabels: Record<string, string> = {
-    single_bid: 'Single Bid',
-    direct_award: 'Direct Award',
-    restricted_procedure: 'Restricted Procedure',
-    price_anomaly: 'Price Anomaly',
-    price_hyp: 'Price Hypothesis',
-    vendor_concentration: 'Vendor Concentration',
-    concentration: 'Concentration',
-    year_end: 'Year-End Timing',
-    short_ad: 'Short Ad Period',
-    short_ad_period: 'Short Ad Period',
-    threshold_split: 'Threshold Splitting',
-    split: 'Threshold Splitting',
-    network_risk: 'Network Risk',
-    network: 'Network Risk',
-    co_bid: 'Co-Bidding Pattern',
-    co_bid_high: 'High Co-Bidding Risk',
-    co_bid_med: 'Medium Co-Bidding Risk',
-    industry_mismatch: 'Industry Mismatch',
-    inst_risk: 'Institution Risk',
-  }
-
   if (factors.length === 0) {
     return <p className="text-sm text-text-muted">No risk factors triggered</p>
   }
 
   return (
-    <div className="space-y-2">
-      {factors.map((f) => (
-        <div key={f.factor} className="flex items-center gap-2">
-          <div className="flex-1">
-            <div className="flex justify-between text-xs mb-1">
-              <span>{factorLabels[f.factor] || f.factor}</span>
-              <span className="text-text-muted">{f.count} ({f.percentage.toFixed(1)}%)</span>
+    <div className="space-y-3 stagger-animate">
+      {factors.map((f) => {
+        const parsed = parseFactorLabel(f.factor)
+        const barColor = getFactorCategoryColor(parsed.category)
+        return (
+          <div key={f.factor} title={f.factor}>
+            <div className="flex justify-between text-xs mb-1.5">
+              <span className="text-text-secondary">{parsed.label}</span>
+              <span className="text-text-muted tabular-nums">{f.count} ({f.percentage.toFixed(1)}%)</span>
             </div>
-            <div className="h-1.5 bg-background-elevated rounded-full overflow-hidden">
+            <div className="h-2 bg-background-elevated rounded-full overflow-hidden">
               <div
-                className="h-full bg-risk-high rounded-full"
-                style={{ width: `${f.percentage}%` }}
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${Math.min(f.percentage, 100)}%`,
+                  backgroundColor: barColor,
+                }}
               />
             </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
 
-function StatRow({ label, value }: { label: string; value: string }) {
+function PatternBar({ label, value, isPercent100 = false }: { label: string; value?: number; isPercent100?: boolean }) {
+  const pct = value ?? 0
+  const displayPct = isPercent100 ? pct : pct * 100
+  const barPct = Math.min(displayPct, 100)
+  const isHigh = displayPct > 50
+
   return (
-    <div className="flex justify-between text-sm">
-      <span className="text-text-muted">{label}</span>
+    <div>
+      <div className="flex justify-between text-sm mb-1">
+        <span className="text-text-muted">{label}</span>
+        <span className={`font-medium tabular-nums ${isHigh ? 'text-risk-high' : 'text-text-secondary'}`}>
+          {displayPct.toFixed(1)}%
+        </span>
+      </div>
+      <div className="h-1.5 bg-background-elevated rounded-full overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{
+            width: `${barPct}%`,
+            backgroundColor: isHigh ? RISK_COLORS.high : 'var(--color-accent)',
+          }}
+        />
+      </div>
+    </div>
+  )
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between items-center p-3 rounded-lg bg-background-elevated">
+      <span className="text-sm text-text-muted">{label}</span>
       <span className="font-medium tabular-nums">{value}</span>
     </div>
   )
 }
 
-function ContractRow({ contract }: { contract: ContractListItem }) {
+function InstitutionList({ data, maxValue }: { data: any[]; maxValue: number }) {
   return (
-    <div className="flex items-center justify-between p-3 hover:bg-background-elevated/50 transition-colors">
+    <div className="space-y-2">
+      {data.map((inst: any) => {
+        const pct = maxValue > 0 ? (inst.total_value_mxn / maxValue) * 100 : 0
+        return (
+          <div
+            key={inst.institution_id}
+            className="relative flex items-center justify-between p-3 rounded-lg overflow-hidden interactive"
+          >
+            {/* Background proportion bar */}
+            <div
+              className="absolute inset-y-0 left-0 bg-accent/5 rounded-lg"
+              style={{ width: `${pct}%` }}
+            />
+            <div className="flex items-center gap-2 relative z-10 min-w-0">
+              <Building2 className="h-4 w-4 text-text-muted flex-shrink-0" />
+              <Link
+                to={`/institutions/${inst.institution_id}`}
+                className="text-sm hover:text-accent transition-colors truncate max-w-[250px]"
+              >
+                {inst.institution_name}
+              </Link>
+            </div>
+            <div className="text-right relative z-10 flex-shrink-0">
+              <p className="text-sm font-medium tabular-nums">{formatCompactMXN(inst.total_value_mxn)}</p>
+              <p className="text-xs text-text-muted tabular-nums">{inst.contract_count} contracts</p>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function ContractRow({ contract }: { contract: ContractListItem }) {
+  const riskLevel = contract.risk_score != null ? getRiskLevel(contract.risk_score) : null
+  const borderColor = riskLevel ? RISK_COLORS[riskLevel] : 'transparent'
+
+  return (
+    <div
+      className="flex items-center justify-between p-3 interactive"
+      style={{ borderLeft: `3px solid ${borderColor}` }}
+    >
       <div className="flex items-center gap-3 min-w-0">
         <FileText className="h-4 w-4 text-text-muted flex-shrink-0" />
         <div className="min-w-0">
@@ -591,7 +820,7 @@ function ContractRow({ contract }: { contract: ContractListItem }) {
             <span>{contract.contract_date ? formatDate(contract.contract_date) : contract.contract_year}</span>
             {contract.institution_name && (
               <>
-                <span>•</span>
+                <span>·</span>
                 <span className="truncate max-w-[150px]">{contract.institution_name}</span>
               </>
             )}
