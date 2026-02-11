@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChartSkeleton } from '@/components/LoadingSkeleton'
 import { RiskBadge, Badge } from '@/components/ui/badge'
-import { cn, formatCompactMXN, formatNumber, formatPercentSafe, formatCompactUSD } from '@/lib/utils'
+import { cn, formatCompactMXN, formatNumber, formatPercentSafe, formatCompactUSD, toTitleCase } from '@/lib/utils'
 import { analysisApi, vendorApi } from '@/api/client'
 import { SectionDescription } from '@/components/SectionDescription'
 import {
@@ -47,14 +47,14 @@ import type { VendorTopItem, RiskDistribution } from '@/api/types'
 // ============================================================================
 
 const CORRUPTION_CASES = [
-  { name: 'IMSS Ghost Companies', contracts: 9366, detected: 99.0, type: 'Ghost companies', sector: 'Health' },
-  { name: 'Segalmex Fraud', contracts: 6326, detected: 94.3, type: 'Procurement fraud', sector: 'Agriculture' },
-  { name: 'COVID-19 Procurement', contracts: 5371, detected: 91.8, type: 'Embezzlement', sector: 'Health' },
-  { name: 'Cyber Robotic IT', contracts: 139, detected: 43.2, type: 'Overpricing', sector: 'Technology' },
-  { name: 'Odebrecht-PEMEX', contracts: 35, detected: 68.6, type: 'Bribery', sector: 'Energy' },
-  { name: 'La Estafa Maestra', contracts: 10, detected: 70.0, type: 'Ghost companies', sector: 'Multiple' },
-  { name: 'Grupo Higa', contracts: 3, detected: 33.3, type: 'Conflict of interest', sector: 'Infrastructure' },
-  { name: 'Oceanografia', contracts: 2, detected: 100.0, type: 'Invoice fraud', sector: 'Energy' },
+  { name: 'IMSS Ghost Companies', contracts: 9366, detected: 99.0, type: 'Ghost companies', sector: 'Health', desc: 'Pisa Farmaceutica and related entities dominated IMSS pharmaceutical procurement through concentrated vendor positions.' },
+  { name: 'Segalmex Fraud', contracts: 6326, detected: 94.3, type: 'Procurement fraud', sector: 'Agriculture', desc: 'LICONSA and DICONSA diverted billions through food distribution contracts with inflated pricing.' },
+  { name: 'COVID-19 Procurement', contracts: 5371, detected: 91.8, type: 'Embezzlement', sector: 'Health', desc: 'Emergency procurement bypassed controls, with shell companies winning medical supply contracts.' },
+  { name: 'Cyber Robotic IT', contracts: 139, detected: 43.2, type: 'Overpricing', sector: 'Technology', desc: 'IT consulting contracts at 3-5x market rates across federal agencies.' },
+  { name: 'Odebrecht-PEMEX', contracts: 35, detected: 68.6, type: 'Bribery', sector: 'Energy', desc: 'Brazilian conglomerate paid bribes for PEMEX infrastructure contracts.' },
+  { name: 'La Estafa Maestra', contracts: 10, detected: 70.0, type: 'Ghost companies', sector: 'Multiple', desc: 'Government agencies funneled money through public universities to shell companies.' },
+  { name: 'Grupo Higa', contracts: 3, detected: 33.3, type: 'Conflict of interest', sector: 'Infrastructure', desc: 'Constructora Teya won infrastructure contracts while linked to senior officials.' },
+  { name: 'Oceanografia', contracts: 2, detected: 100.0, type: 'Invoice fraud', sector: 'Energy', desc: 'Falsified invoices worth billions to secure PEMEX maritime service contracts.' },
 ] as const
 
 const MODEL_INSIGHTS = {
@@ -830,7 +830,7 @@ const HighRiskVendorsList = memo(function HighRiskVendorsList({
             {index + 1}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium truncate text-text-primary">{vendor.vendor_name}</p>
+            <p className="text-xs font-medium truncate text-text-primary">{toTitleCase(vendor.vendor_name)}</p>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-[10px] text-text-muted tabular-nums">{formatNumber(vendor.total_contracts)} contracts</span>
               <span className="text-[10px] text-text-muted">|</span>
@@ -855,31 +855,43 @@ const CorruptionCasesList = memo(function CorruptionCasesList({
 }: {
   cases: readonly typeof CORRUPTION_CASES[number][]
 }) {
+  const [expandedCase, setExpandedCase] = useState<string | null>(null)
+
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       {cases.map((c) => (
-        <div key={c.name} className="flex items-center gap-2">
-          <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-medium text-text-primary truncate">{c.name}</p>
-            <p className="text-[9px] text-text-muted">{c.type} / {c.sector}</p>
-          </div>
-          {/* Detection bar */}
-          <div className="w-16 flex-shrink-0">
-            <div className="flex items-center gap-1">
-              <div className="flex-1 h-1.5 rounded-full bg-background-elevated overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: `${c.detected}%`,
-                    backgroundColor: c.detected >= 90 ? RISK_COLORS.low : c.detected >= 60 ? RISK_COLORS.medium : RISK_COLORS.high,
-                  }}
-                />
-              </div>
-              <span className="text-[9px] font-[var(--font-family-mono)] tabular-nums text-text-muted w-7 text-right">
-                {c.detected.toFixed(0)}%
-              </span>
+        <div key={c.name}>
+          <button
+            className="flex items-center gap-2 w-full text-left rounded-md p-1.5 -mx-1 hover:bg-background-elevated/50 transition-colors"
+            onClick={() => setExpandedCase(expandedCase === c.name ? null : c.name)}
+          >
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] font-medium text-text-primary truncate">{c.name}</p>
+              <p className="text-[9px] text-text-muted">{c.type} / {c.sector}</p>
             </div>
-          </div>
+            {/* Detection bar */}
+            <div className="w-16 flex-shrink-0">
+              <div className="flex items-center gap-1">
+                <div className="flex-1 h-1.5 rounded-full bg-background-elevated overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${c.detected}%`,
+                      backgroundColor: c.detected >= 90 ? RISK_COLORS.low : c.detected >= 60 ? RISK_COLORS.medium : RISK_COLORS.high,
+                    }}
+                  />
+                </div>
+                <span className="text-[9px] font-[var(--font-family-mono)] tabular-nums text-text-muted w-7 text-right">
+                  {c.detected.toFixed(0)}%
+                </span>
+              </div>
+            </div>
+          </button>
+          {expandedCase === c.name && (
+            <p className="text-[10px] text-text-muted leading-relaxed pl-1.5 pb-1.5 border-l-2 border-accent/20 ml-1">
+              {c.desc} <span className="tabular-nums text-text-muted/70">{formatNumber(c.contracts)} contracts analyzed.</span>
+            </p>
+          )}
         </div>
       ))}
       <div className="pt-1 border-t border-border/50">

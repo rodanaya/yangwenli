@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { formatNumber } from '@/lib/utils'
 import { analysisApi } from '@/api/client'
 import { AlertPanel } from '@/components/charts'
-import { SectionDescription } from '@/components/SectionDescription'
 import { PATTERN_DESCRIPTIONS } from '@/lib/pattern-descriptions'
 import type { AnomalyItem } from '@/api/types'
 import {
@@ -22,27 +21,27 @@ import {
   Stamp,
   AlertTriangle,
   ExternalLink,
-  ChevronRight,
+  ChevronDown,
   Brain,
+  ArrowRight,
 } from 'lucide-react'
 
-interface PatternCard {
+interface PatternDef {
   id: string
-  /** Key into PATTERN_DESCRIPTIONS for rich details */
   descriptionKey: string
   title: string
-  description: string
+  subtitle: string
   icon: React.ElementType
   color: string
   href: string
 }
 
-const PATTERNS: PatternCard[] = [
+const PATTERNS: PatternDef[] = [
   {
     id: 'ghost',
     descriptionKey: 'single_bid',
     title: 'Ghost Vendors',
-    description: 'Vendors winning >50% via single-bid procedures',
+    subtitle: 'Winning >50% via single-bid procedures',
     icon: UserX,
     color: '#dc2626',
     href: '/contracts?risk_factor=single_bid',
@@ -51,7 +50,7 @@ const PATTERNS: PatternCard[] = [
     id: 'december',
     descriptionKey: 'year_end',
     title: 'December Rush',
-    description: 'Year-end contracts with elevated risk scores',
+    subtitle: 'Year-end contracts with elevated risk',
     icon: CalendarDays,
     color: '#ea580c',
     href: '/contracts?risk_factor=year_end_timing&risk_level=high',
@@ -60,7 +59,7 @@ const PATTERNS: PatternCard[] = [
     id: 'split',
     descriptionKey: 'split',
     title: 'Split Contracts',
-    description: 'Same vendor + institution + day, multiple contracts',
+    subtitle: 'Same vendor + institution + day, multiple awards',
     icon: Scissors,
     color: '#eab308',
     href: '/contracts?risk_factor=threshold_splitting',
@@ -69,7 +68,7 @@ const PATTERNS: PatternCard[] = [
     id: 'cobid',
     descriptionKey: 'co_bid',
     title: 'Co-Bidding Rings',
-    description: 'Vendors with suspiciously high co-bid rates',
+    subtitle: 'Suspiciously high co-bid rates',
     icon: GitMerge,
     color: '#8b5cf6',
     href: '/contracts?risk_factor=co_bid',
@@ -78,7 +77,7 @@ const PATTERNS: PatternCard[] = [
     id: 'price',
     descriptionKey: 'price_anomaly',
     title: 'Price Outliers',
-    description: 'Extreme overpricing flagged by IQR analysis',
+    subtitle: 'Extreme overpricing flagged by IQR',
     icon: TrendingUp,
     color: '#dc2626',
     href: '/contracts?risk_factor=price_anomaly',
@@ -87,7 +86,7 @@ const PATTERNS: PatternCard[] = [
     id: 'monopoly',
     descriptionKey: 'monopoly',
     title: 'Sector Monopolies',
-    description: 'Vendors with >30% sector share',
+    subtitle: 'Vendors with >30% sector share',
     icon: Crown,
     color: '#ea580c',
     href: '/vendors?min_contracts=100',
@@ -96,7 +95,7 @@ const PATTERNS: PatternCard[] = [
     id: 'new',
     descriptionKey: 'new_vendor',
     title: 'New & Suspicious',
-    description: 'Recently registered vendors with high risk',
+    subtitle: 'Recently registered, high risk',
     icon: Sparkles,
     color: '#eab308',
     href: '/vendors?risk_level=high',
@@ -105,37 +104,10 @@ const PATTERNS: PatternCard[] = [
     id: 'rubber',
     descriptionKey: 'rubber',
     title: 'Rubber Stamp',
-    description: 'Institutions with >90% direct award rate',
+    subtitle: 'Institutions with >90% direct award rate',
     icon: Stamp,
     color: '#be123c',
     href: '/institutions',
-  },
-]
-
-const AI_INSIGHTS = [
-  {
-    html: '<strong>Vendor concentration</strong> is 18.7× more predictive of corruption than any other indicator — dominant vendors can extract rents through market power and captured relationships.',
-    dotClass: 'bg-risk-critical',
-  },
-  {
-    html: '<strong>Direct awards</strong> are actually <em>less</em> common in known corruption cases (coefficient: −0.20). Known-bad vendors tend to win through competitive procedures.',
-    dotClass: 'bg-accent',
-  },
-  {
-    html: '<strong>Short advertisement periods</strong> show a reversed signal — corrupt vendors use normal-length ad periods rather than rushed timelines.',
-    dotClass: 'bg-accent',
-  },
-  {
-    html: '<strong>Industry mismatch</strong> — vendors operating outside their registered sector — has a +0.21 coefficient. A travel agency winning pharma contracts is a meaningful red flag.',
-    dotClass: 'bg-risk-high',
-  },
-  {
-    html: '<strong>Co-bidding patterns</strong> provide no signal in current ground truth (coefficient: 0.00). This may change as ground truth diversifies beyond health sector cases.',
-    dotClass: 'bg-text-muted',
-  },
-  {
-    html: '<strong>Network membership</strong> shows a reversed sign — known-bad vendors tend NOT to appear in detected vendor networks. They operate as standalone dominant players.',
-    dotClass: 'bg-accent',
   },
 ]
 
@@ -144,14 +116,12 @@ export function DetectivePatterns() {
   const [severityFilter, setSeverityFilter] = useState<string | undefined>(undefined)
   const [expandedPattern, setExpandedPattern] = useState<string | null>(null)
 
-  // Fetch all pattern counts in a single request (replaces 6 separate calls)
   const { data: patternData } = useQuery({
     queryKey: ['patterns', 'counts'],
     queryFn: () => analysisApi.getPatternCounts(),
     staleTime: 10 * 60 * 1000,
   })
 
-  // Fetch anomalies (separate because it has a severity filter)
   const { data: anomalies, isLoading: anomaliesLoading } = useQuery({
     queryKey: ['analysis', 'anomalies', severityFilter],
     queryFn: () => analysisApi.getAnomalies(severityFilter),
@@ -175,11 +145,9 @@ export function DetectivePatterns() {
 
   const handleInvestigateAnomaly = (anomaly: AnomalyItem) => {
     const params = new URLSearchParams()
-
     if (anomaly.severity === 'critical' || anomaly.severity === 'high') {
       params.set('risk_level', anomaly.severity)
     }
-
     switch (anomaly.anomaly_type) {
       case 'single_bid_cluster':
       case 'high_single_bid':
@@ -194,12 +162,11 @@ export function DetectivePatterns() {
         params.set('month', '12')
         break
     }
-
     navigate(`/contracts?${params.toString()}`)
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold text-text-primary tracking-tight flex items-center gap-2">
@@ -207,133 +174,159 @@ export function DetectivePatterns() {
           Detective Patterns
         </h1>
         <p className="text-xs text-text-muted mt-0.5">
-          Pre-built investigation queries for common corruption patterns
+          Investigation queries for common corruption red flags — click any pattern to learn more
         </p>
       </div>
 
-      {/* Page description */}
-      <SectionDescription title="How patterns are detected">
-        Each pattern below represents a specific corruption red flag identified by international anti-corruption frameworks
-        (OECD, IMF CRI, EU ARACHNE). The platform scans 3.1 million contracts for these indicators, normalizing each
-        against sector and year baselines so that a "suspicious" pattern in Health is calibrated differently than in Energy.
-        Click any card to see how it works and explore the matching contracts.
-      </SectionDescription>
-
-      {/* Model Insight Strip */}
-      <Card className="border-accent/30 bg-accent/[0.04]">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/15 flex-shrink-0">
-              <Brain className="h-4.5 w-4.5 text-accent" aria-hidden="true" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-text-primary mb-2">
-                What the AI Learned
-              </h3>
-              <div className="space-y-2">
-                {AI_INSIGHTS.map((insight, i) => (
-                  <div key={i} className="flex items-start gap-2">
-                    <span className={`mt-1 inline-block h-1.5 w-1.5 rounded-full flex-shrink-0 ${insight.dotClass}`} />
-                    <p className="text-xs text-text-muted leading-relaxed" dangerouslySetInnerHTML={{ __html: insight.html }} />
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3">
-                <Link
-                  to="/methodology"
-                  className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
-                >
-                  View full methodology
-                  <ExternalLink className="h-3 w-3" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Pattern cards grid */}
-      <div className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 stagger-animate">
-          {PATTERNS.map((pattern) => (
-            <PatternCardComponent
-              key={pattern.id}
-              pattern={pattern}
-              count={counts[pattern.id]}
-              onClick={() => setExpandedPattern(expandedPattern === pattern.id ? null : pattern.id)}
-              isExpanded={expandedPattern === pattern.id}
-            />
-          ))}
-        </div>
-
-        {/* Expanded pattern detail */}
-        {expandedPattern && (() => {
-          const pattern = PATTERNS.find(p => p.id === expandedPattern)
-          if (!pattern) return null
+      {/* Pattern list — clean rows, not boxy cards */}
+      <div className="rounded-lg border border-border overflow-hidden">
+        {PATTERNS.map((pattern, i) => {
+          const Icon = pattern.icon
+          const count = counts[pattern.id]
+          const isExpanded = expandedPattern === pattern.id
           const desc = PATTERN_DESCRIPTIONS[pattern.descriptionKey]
-          if (!desc) return null
+
           return (
-            <Card className="border-accent/30 bg-accent/[0.02] animate-slide-up">
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-bold text-text-primary">{desc.title}</h3>
-                  <Link
-                    to={pattern.href}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
-                  >
-                    View all matches
-                    <ExternalLink className="h-3 w-3" />
-                  </Link>
+            <div key={pattern.id}>
+              {/* Row */}
+              <button
+                className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+                  i > 0 ? 'border-t border-border/50' : ''
+                } ${isExpanded ? 'bg-accent/[0.06]' : 'hover:bg-background-elevated/50'}`}
+                onClick={() => setExpandedPattern(isExpanded ? null : pattern.id)}
+                aria-expanded={isExpanded}
+              >
+                {/* Color dot + icon */}
+                <div
+                  className="flex h-8 w-8 items-center justify-center rounded-md shrink-0"
+                  style={{ backgroundColor: `${pattern.color}18`, color: pattern.color }}
+                >
+                  <Icon className="h-4 w-4" aria-hidden="true" />
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-3">
-                    <div>
-                      <h4 className="text-xs font-semibold text-text-secondary mb-1">What it is</h4>
-                      <p className="text-xs text-text-muted leading-relaxed">{desc.what}</p>
+
+                {/* Title + subtitle */}
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-medium text-text-primary">{pattern.title}</span>
+                  <span className="text-xs text-text-muted ml-2 hidden sm:inline">{pattern.subtitle}</span>
+                </div>
+
+                {/* Count */}
+                <div className="shrink-0 text-right mr-2">
+                  {count !== undefined ? (
+                    <span className="text-sm font-mono tabular-nums text-text-primary">
+                      {formatNumber(count)}
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-text-muted italic">—</span>
+                  )}
+                </div>
+
+                {/* Chevron */}
+                <ChevronDown
+                  className={`h-4 w-4 text-text-muted shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                  aria-hidden="true"
+                />
+              </button>
+
+              {/* Expanded detail */}
+              {isExpanded && desc && (
+                <div className="px-4 pb-4 pt-1 bg-accent/[0.03] border-t border-accent/10">
+                  <div className="grid gap-4 md:grid-cols-2 pl-11">
+                    <div className="space-y-2.5">
+                      <div>
+                        <h4 className="text-[11px] font-semibold uppercase tracking-wider text-text-muted mb-1">What it is</h4>
+                        <p className="text-xs text-text-secondary leading-relaxed">{desc.what}</p>
+                      </div>
+                      <div>
+                        <h4 className="text-[11px] font-semibold uppercase tracking-wider text-text-muted mb-1">Detection method</h4>
+                        <p className="text-xs text-text-secondary leading-relaxed">{desc.howDetected}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-xs font-semibold text-text-secondary mb-1">How we detect it</h4>
-                      <p className="text-xs text-text-muted leading-relaxed">{desc.howDetected}</p>
+                    <div className="space-y-2.5">
+                      <div>
+                        <h4 className="text-[11px] font-semibold uppercase tracking-wider text-text-muted mb-1">Real-world case</h4>
+                        <p className="text-xs text-text-secondary leading-relaxed italic">{desc.realExample}</p>
+                      </div>
+                      <div>
+                        <h4 className="text-[11px] font-semibold uppercase tracking-wider text-text-muted mb-1">Why it matters</h4>
+                        <p className="text-xs text-text-secondary leading-relaxed">{desc.whyItMatters}</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="space-y-3">
-                    <div>
-                      <h4 className="text-xs font-semibold text-text-secondary mb-1">Real-world example</h4>
-                      <p className="text-xs text-text-muted leading-relaxed italic">{desc.realExample}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-semibold text-text-secondary mb-1">Why it matters</h4>
-                      <p className="text-xs text-text-muted leading-relaxed">{desc.whyItMatters}</p>
-                    </div>
+                  <div className="pl-11 mt-3">
+                    <Link
+                      to={pattern.href}
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:underline"
+                    >
+                      View matching contracts
+                      <ArrowRight className="h-3 w-3" />
+                    </Link>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              )}
+            </div>
           )
-        })()}
+        })}
+      </div>
+
+      {/* AI Insights — compact horizontal strip */}
+      <div className="rounded-lg border border-accent/20 bg-accent/[0.03] p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Brain className="h-4 w-4 text-accent" aria-hidden="true" />
+          <h3 className="text-xs font-semibold text-text-primary uppercase tracking-wider">
+            What the Model Learned
+          </h3>
+          <Link
+            to="/methodology"
+            className="ml-auto inline-flex items-center gap-1 text-[11px] text-accent hover:underline"
+          >
+            Methodology
+            <ExternalLink className="h-3 w-3" />
+          </Link>
+        </div>
+        <div className="grid gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+          <Insight color="var(--risk-critical)">
+            <strong>Vendor concentration</strong> is 18.7x more predictive than any other indicator.
+          </Insight>
+          <Insight color="var(--accent)">
+            <strong>Direct awards</strong> are actually <em>less</em> common in known corruption cases.
+          </Insight>
+          <Insight color="var(--accent)">
+            <strong>Short ad periods</strong> show a reversed signal — corrupt vendors use normal timelines.
+          </Insight>
+          <Insight color="var(--risk-high)">
+            <strong>Industry mismatch</strong> has a +0.21 coefficient — out-of-sector work is a red flag.
+          </Insight>
+          <Insight color="var(--text-muted)">
+            <strong>Co-bidding</strong> provides zero signal in current ground truth.
+          </Insight>
+          <Insight color="var(--accent)">
+            <strong>Network membership</strong> is reversed — known-bad vendors operate as standalone players.
+          </Insight>
+        </div>
       </div>
 
       {/* Anomaly Investigation Queue */}
-      <Card className="hover-lift">
+      <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-risk-high" />
-                Anomaly Investigation Queue
+                Anomaly Queue
               </CardTitle>
               <CardDescription>
-                Detected patterns requiring investigation ({anomalies?.total || 0} total)
+                {anomalies?.total || 0} detected patterns requiring investigation
               </CardDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               {['all', 'critical', 'high', 'medium'].map((severity) => (
                 <Button
                   key={severity}
                   variant={severityFilter === (severity === 'all' ? undefined : severity) ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setSeverityFilter(severity === 'all' ? undefined : severity)}
-                  className="capitalize"
+                  className="capitalize h-7 text-xs px-2.5"
                 >
                   {severity}
                 </Button>
@@ -358,62 +351,24 @@ export function DetectivePatterns() {
         </CardContent>
       </Card>
 
-      {/* Methodology note */}
-      <div className="text-[11px] text-text-muted/60 font-[var(--font-family-mono)] text-center pt-4">
-        PATTERNS BASED ON OECD / IMF CRI / EU ARACHNE METHODOLOGIES
+      {/* Footer */}
+      <div className="text-[11px] text-text-muted/50 font-mono text-center">
+        OECD / IMF CRI / EU ARACHNE METHODOLOGIES
       </div>
     </div>
   )
 }
 
-const PatternCardComponent = memo(function PatternCardComponent({
-  pattern,
-  count,
-  onClick,
-  isExpanded,
-}: {
-  pattern: PatternCard
-  count?: number
-  onClick: () => void
-  isExpanded?: boolean
-}) {
-  const Icon = pattern.icon
+function Insight({ color, children }: { color: string; children: React.ReactNode }) {
   return (
-    <Card
-      className={`cursor-pointer hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5 transition-all duration-200 group animate-slide-up opacity-0 ${isExpanded ? 'border-accent/40 ring-1 ring-accent/20' : ''}`}
-      onClick={onClick}
-      role="button"
-      tabIndex={0}
-      aria-expanded={isExpanded}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }}
-    >
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between mb-3">
-          <div
-            className="flex h-10 w-10 items-center justify-center rounded-lg"
-            style={{ backgroundColor: `${pattern.color}15`, color: pattern.color }}
-          >
-            <Icon className="h-5 w-5" aria-hidden="true" />
-          </div>
-          <ChevronRight className={`h-4 w-4 text-text-muted transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} aria-hidden="true" />
-        </div>
-        <h3 className="text-sm font-semibold text-text-primary mb-1">{pattern.title}</h3>
-        <p className="text-[11px] text-text-muted leading-relaxed mb-3">{pattern.description}</p>
-        <div className="flex items-center justify-between pt-2 border-t border-border/50">
-          {count !== undefined ? (
-            <span className="text-xs font-bold tabular-nums text-text-primary">
-              {formatNumber(count)} <span className="font-normal text-text-muted">matches</span>
-            </span>
-          ) : (
-            <span className="text-[11px] text-text-muted italic">Detection in development</span>
-          )}
-          <span className="text-[10px] text-accent font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-            {isExpanded ? 'Details ↓' : 'Expand →'}
-          </span>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="flex items-start gap-2">
+      <span
+        className="mt-1.5 inline-block h-1.5 w-1.5 rounded-full shrink-0"
+        style={{ backgroundColor: color }}
+      />
+      <p className="text-[11px] text-text-muted leading-relaxed">{children}</p>
+    </div>
   )
-})
+}
 
 export default DetectivePatterns

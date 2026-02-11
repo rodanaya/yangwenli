@@ -136,13 +136,14 @@ def list_contracts(
                 filter_conditions.append("c.risk_factors LIKE ?")
                 filter_params.append(f"%{risk_factor}%")
 
-            # COUNT uses filter conditions only (no amount guard = covering index)
+            # Both COUNT and DATA queries use the same filter conditions.
+            # The COALESCE amount guard was removed because:
+            # 1. ETL already rejects amounts > 100B MXN (verified: 0 rows exceed it)
+            # 2. COALESCE prevents SQLite from using composite indexes for ORDER BY
+            # 3. On large result sets (1M+ rows), this caused 1-8s slowdowns
             count_where = " AND ".join(filter_conditions) if filter_conditions else "1=1"
-
-            # DATA query adds amount guard for defense-in-depth
-            all_conditions = ["COALESCE(c.amount_mxn, 0) <= ?"] + filter_conditions
-            where_clause = " AND ".join(all_conditions)
-            params = [MAX_CONTRACT_VALUE] + filter_params
+            where_clause = count_where
+            params = list(filter_params)
 
             # Strict whitelist mapping for sort fields - maps user input to safe SQL expressions
             # This prevents SQL injection by only allowing pre-defined, safe column references

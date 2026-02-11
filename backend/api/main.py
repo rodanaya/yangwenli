@@ -55,36 +55,35 @@ logger = logging.getLogger(__name__)
 def _warmup_caches():
     """Pre-populate expensive caches in a background thread so first requests are fast.
 
-    Uses short timeouts (5s) to avoid blocking the thread pool with slow queries.
+    Uses short timeouts (3s) to avoid blocking the thread pool with slow queries.
     Slow endpoints that miss the warmup window will be cached on first user request.
+    IMPORTANT: Each request here blocks a thread pool thread, so keep list short
+    and wait between requests to avoid starving user requests.
     """
     import urllib.request
     import time
     base = "http://127.0.0.1:8001"
-    # Wait briefly for server to be ready
-    time.sleep(1)
-    # Priority order: dashboard first (most critical), then supporting data
-    # Short timeout: better to skip warmup than block the thread pool
+    # Wait for server to be fully ready before hitting it
+    time.sleep(3)
+    # Only warm the fastest endpoints — heavy queries (contracts/statistics)
+    # are better left to first user request to avoid blocking the thread pool
     endpoints = [
-        "/api/v1/stats/dashboard/fast",          # Dashboard (highest priority)
-        "/api/v1/contracts/statistics",           # Contract stats (cached)
-        "/api/v1/analysis/anomalies",             # Dashboard alerts
-        "/api/v1/vendors/top-all?limit=5",        # Vendors featured strips
-        "/api/v1/sectors",                        # Sectors list
-        "/api/v1/analysis/risk-distribution",     # Risk analysis
-        "/api/v1/analysis/year-over-year",        # Trends
-        "/api/v1/stats/data-quality",             # Header quality badge
+        "/api/v1/stats/dashboard/fast",          # Dashboard (highest priority, pre-computed)
+        "/api/v1/sectors",                        # Sectors list (small table)
+        "/api/v1/stats/data-quality",             # Header quality badge (cached)
     ]
     for ep in endpoints:
         try:
-            urllib.request.urlopen(f"{base}{ep}", timeout=5)
+            urllib.request.urlopen(f"{base}{ep}", timeout=3)
         except Exception as e:
             logger.debug(f"Cache warmup skipped for {ep}: {e}")
+        # Breathe between requests so user requests aren't starved
+        time.sleep(0.5)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup: warm caches in background thread so the UI loads instantly."""
+    """Startup: warm fast caches in background thread."""
     logger.info("Starting cache warmup in background...")
     warmup_thread = threading.Thread(target=_warmup_caches, daemon=True)
     warmup_thread.start()

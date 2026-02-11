@@ -4,13 +4,20 @@ import { useSearchParams, Link } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { RiskBadge, Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { formatCompactMXN, formatNumber, formatDate, getPaginationRange, clampPage, toTitleCase, getAnomalyInfo } from '@/lib/utils'
-import { contractApi, exportApi, watchlistApi } from '@/api/client'
-import type { WatchlistItem } from '@/api/client'
-import { VirtualizedTable } from '@/components/VirtualizedTable'
-import { SECTORS } from '@/lib/constants'
+import {
+  cn,
+  formatCompactMXN,
+  formatNumber,
+  formatDate,
+  getPaginationRange,
+  clampPage,
+  toTitleCase,
+  getAnomalyInfo,
+  getRiskLevel,
+} from '@/lib/utils'
+import { contractApi, exportApi } from '@/api/client'
+import { SECTORS, RISK_COLORS } from '@/lib/constants'
 import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 import type { ContractFilterParams, ContractListItem } from '@/api/types'
 import { RISK_FACTORS } from '@/api/types'
@@ -18,6 +25,8 @@ import {
   FileText,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Search,
   Download,
   Loader2,
@@ -28,7 +37,14 @@ import {
   Eye,
   AlertTriangle,
   TrendingUp,
-  Bookmark,
+  ExternalLink,
+  Flame,
+  Crown,
+  Zap,
+  Target,
+  Scissors,
+  Users,
+  X,
 } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 import { ContractDetailModal } from '@/components/ContractDetailModal'
@@ -37,10 +53,48 @@ import { NarrativeCard } from '@/components/NarrativeCard'
 import { buildFilterNarrative } from '@/lib/narratives'
 import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
 
+// =============================================================================
+// Configuration
+// =============================================================================
+
+type ContractSortField = 'amount_mxn' | 'contract_date' | 'risk_score'
+
+const CONTRACT_PRESETS = [
+  { id: 'critical', label: 'Critical', icon: Flame, sort: 'risk_score' as ContractSortField, order: 'desc' as const, filters: { risk_level: 'critical' } },
+  { id: 'high-risk', label: 'High Risk', icon: AlertTriangle, sort: 'risk_score' as ContractSortField, order: 'desc' as const, filters: { risk_level: 'high' } },
+  { id: 'single-bid', label: 'Single Bidders', icon: Target, sort: 'amount_mxn' as ContractSortField, order: 'desc' as const, filters: { is_single_bid: 'true' } },
+  { id: 'direct-award', label: 'Direct Awards', icon: Zap, sort: 'amount_mxn' as ContractSortField, order: 'desc' as const, filters: { is_direct_award: 'true' } },
+  { id: 'price-outlier', label: 'Price Outliers', icon: TrendingUp, sort: 'amount_mxn' as ContractSortField, order: 'desc' as const, filters: { risk_factor: 'price_hyp' } },
+  { id: 'split', label: 'Split Contracts', icon: Scissors, sort: 'contract_date' as ContractSortField, order: 'desc' as const, filters: { risk_factor: 'split' } },
+  { id: 'co-bidding', label: 'Co-Bidding', icon: Users, sort: 'risk_score' as ContractSortField, order: 'desc' as const, filters: { risk_factor: 'co_bid' } },
+  { id: 'largest', label: 'Largest', icon: Crown, sort: 'amount_mxn' as ContractSortField, order: 'desc' as const, filters: {} },
+] as const
+
+interface ColumnDef {
+  key: string
+  label: string
+  align: 'left' | 'right'
+  sortField?: ContractSortField
+  hideBelow?: string
+}
+
+const CONTRACT_COLUMNS: ColumnDef[] = [
+  { key: 'contract', label: 'Contract', align: 'left' },
+  { key: 'parties', label: 'Parties', align: 'left' },
+  { key: 'amount', label: 'Amount', align: 'right', sortField: 'amount_mxn' },
+  { key: 'date', label: 'Date', align: 'right', sortField: 'contract_date' },
+  { key: 'risk', label: 'Risk', align: 'right', sortField: 'risk_score' },
+  { key: 'flags', label: 'Flags', align: 'left', hideBelow: 'lg' },
+]
+
+// =============================================================================
+// Main Component
+// =============================================================================
+
 export function Contracts() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const [activePreset, setActivePreset] = useState<string | null>(null)
 
-  // Debounced search - reduces API calls from 13+ to 1 per search term
   const {
     inputValue: searchInput,
     setInputValue: setSearchInput,
@@ -48,7 +102,9 @@ export function Contracts() {
     isPending: isSearchPending,
   } = useDebouncedSearch(searchParams.get('search') || '', { delay: 300, minLength: 2 })
 
-  // Parse filters from URL, using debounced search value for API calls
+  const sortBy = (searchParams.get('sort_by') as ContractSortField) || 'contract_date'
+  const sortOrder = (searchParams.get('sort_order') as 'asc' | 'desc') || 'desc'
+
   const filters: ContractFilterParams = useMemo(() => ({
     page: Number(searchParams.get('page')) || 1,
     per_page: Number(searchParams.get('per_page')) || 50,
@@ -56,10 +112,13 @@ export function Contracts() {
     year: searchParams.get('year') ? Number(searchParams.get('year')) : undefined,
     risk_level: searchParams.get('risk_level') as ContractFilterParams['risk_level'],
     risk_factor: searchParams.get('risk_factor') || undefined,
+    is_direct_award: searchParams.get('is_direct_award') === 'true' ? true : undefined,
+    is_single_bid: searchParams.get('is_single_bid') === 'true' ? true : undefined,
     search: debouncedSearch || undefined,
-  }), [searchParams, debouncedSearch])
+    sort_by: sortBy,
+    sort_order: sortOrder,
+  }), [searchParams, debouncedSearch, sortBy, sortOrder])
 
-  // Sync URL when debounced search changes
   useEffect(() => {
     const currentSearch = searchParams.get('search') || ''
     if (debouncedSearch !== currentSearch) {
@@ -74,218 +133,70 @@ export function Contracts() {
     }
   }, [debouncedSearch, searchParams, setSearchParams])
 
-  // Toast notifications
   const toast = useToast()
-
-  // Contract detail modal state
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
 
-  // Determine if any filters are active (used to hide featured strip)
-  const hasActiveFilters = !!(filters.search || filters.sector_id || filters.year || filters.risk_level || filters.risk_factor)
-
-  // Featured strip queries (only fetch when no filters active)
-  const { data: recentHighRisk, isLoading: isLoadingHighRisk } = useQuery({
-    queryKey: ['contracts', 'featured', 'recent-high-risk'],
-    queryFn: () => contractApi.getAll({
-      risk_level: 'critical',
-      per_page: 5,
-      sort_by: 'contract_date',
-      sort_order: 'desc',
-    }),
-    enabled: !hasActiveFilters,
-    staleTime: 5 * 60 * 1000,
-  })
-
-  const { data: largestThisYear, isLoading: isLoadingLargest } = useQuery({
-    queryKey: ['contracts', 'featured', 'largest-2025'],
-    queryFn: () => contractApi.getAll({
-      year: 2025,
-      per_page: 5,
-      sort_by: 'amount_mxn',
-      sort_order: 'desc',
-    }),
-    enabled: !hasActiveFilters,
-    staleTime: 5 * 60 * 1000,
-  })
-
-  const { data: watchlistContracts, isLoading: isLoadingWatchlist } = useQuery({
-    queryKey: ['watchlist', 'contracts'],
-    queryFn: () => watchlistApi.getAll({ item_type: 'contract' }),
-    enabled: !hasActiveFilters,
-    staleTime: 5 * 60 * 1000,
-  })
-
-  // Fetch contracts
   const { data, isLoading, error, isFetching, refetch } = useQuery({
     queryKey: ['contracts', filters],
     queryFn: () => contractApi.getAll(filters),
     staleTime: 2 * 60 * 1000,
   })
 
-  // Show toast on error
   useEffect(() => {
-    if (error) {
-      toast.error('Failed to load contracts', (error as Error).message)
-    }
+    if (error) toast.error('Failed to load contracts', (error as Error).message)
   }, [error, toast])
 
-  const updateFilter = useCallback((key: string, value: string | number | undefined) => {
-    if (key === 'search') {
-      // Search is handled by the debounced hook
-      setSearchInput(String(value || ''))
-      return
-    }
+  // --- Handlers ---
 
+  const updateFilter = useCallback((key: string, value: string | number | boolean | undefined) => {
+    if (key === 'search') { setSearchInput(String(value || '')); return }
     const newParams = new URLSearchParams(searchParams)
     if (value === undefined || value === '') {
       newParams.delete(key)
     } else {
       newParams.set(key, String(value))
     }
-    // Reset to page 1 when filters change
-    if (key !== 'page') {
-      newParams.set('page', '1')
-    }
+    if (key !== 'page') newParams.set('page', '1')
     setSearchParams(newParams)
+    setActivePreset(null)
   }, [searchParams, setSearchParams, setSearchInput])
 
-  // Show loading indicator when search is pending or fetching
-  const showSearchLoading = isSearchPending || (isFetching && searchInput !== debouncedSearch)
-
-  // Use virtualized table for large page sizes
-  const useVirtualized = (filters.per_page || 50) > 100
-
-  // Columns definition for VirtualizedTable
-  const virtualizedColumns = useMemo(() => [
-    {
-      id: 'contract',
-      header: 'Contract',
-      accessor: (row: ContractListItem) => (
-        <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-text-muted shrink-0" aria-hidden="true" />
-          <div className="min-w-0">
-            <p className="text-sm font-medium truncate">{row.title || 'Untitled'}</p>
-            <p className="text-xs text-text-muted">{row.contract_number || `ID: ${row.id}`}</p>
-          </div>
-        </div>
-      ),
-      minWidth: 200,
-    },
-    {
-      id: 'vendor',
-      header: 'Vendor',
-      accessor: (row: ContractListItem) => (
-        <span className="text-sm truncate">{row.vendor_name ? toTitleCase(row.vendor_name) : '-'}</span>
-      ),
-      minWidth: 150,
-    },
-    {
-      id: 'institution',
-      header: 'Institution',
-      accessor: (row: ContractListItem) => (
-        <span className="text-sm truncate">{row.institution_name ? toTitleCase(row.institution_name) : '-'}</span>
-      ),
-      minWidth: 150,
-    },
-    {
-      id: 'amount',
-      header: 'Amount',
-      accessor: (row: ContractListItem) => (
-        <span className="text-sm font-medium tabular-nums">{formatCompactMXN(row.amount_mxn)}</span>
-      ),
-      align: 'right' as const,
-      minWidth: 100,
-    },
-    {
-      id: 'date',
-      header: 'Date',
-      accessor: (row: ContractListItem) => (
-        <span className="text-sm text-text-muted">
-          {row.contract_date ? formatDate(row.contract_date) : row.contract_year || '-'}
-        </span>
-      ),
-      minWidth: 90,
-    },
-    {
-      id: 'risk',
-      header: 'Risk',
-      accessor: (row: ContractListItem) => (
-        row.risk_score !== undefined && row.risk_score !== null
-          ? <RiskBadge score={row.risk_score} />
-          : <span className="text-xs text-text-muted">-</span>
-      ),
-      minWidth: 80,
-    },
-    {
-      id: 'anomaly',
-      header: 'Anomaly',
-      accessor: (row: ContractListItem) => {
-        const info = getAnomalyInfo(row.mahalanobis_distance)
-        if (!info) return <span className="text-xs text-text-muted">-</span>
-        return (
-          <Badge className={`text-[10px] ${info.badgeClass}`} title={`D²=${row.mahalanobis_distance?.toFixed(1)}`}>
-            <span className={`inline-block h-1.5 w-1.5 rounded-full ${info.dotClass} mr-1`} />
-            {info.label}
-          </Badge>
-        )
-      },
-      minWidth: 90,
-    },
-    {
-      id: 'flags',
-      header: 'Flags',
-      accessor: (row: ContractListItem) => (
-        <div className="flex gap-1">
-          {row.is_direct_award && (
-            <Badge className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30" title="Direct Award">DA</Badge>
-          )}
-          {row.is_single_bid && (
-            <Badge className="text-[10px] bg-red-500/20 text-red-400 border border-red-500/30" title="Single Bid">SB</Badge>
-          )}
-        </div>
-      ),
-      minWidth: 70,
-    },
-    {
-      id: 'actions',
-      header: 'Actions',
-      accessor: (row: ContractListItem) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 w-7 p-0"
-          title="View contract details"
-          aria-label={`View details for contract ${row.contract_number || row.id}`}
-          onClick={() => { setSelectedContractId(row.id); setIsDetailOpen(true) }}
-        >
-          <Eye className="h-4 w-4" aria-hidden="true" />
-        </Button>
-      ),
-      align: 'center' as const,
-      minWidth: 60,
-    },
-  ], [])
-
-  // Export state
-  const [isExporting, setIsExporting] = useState(false)
-
-  // Copy link state
-  const [linkCopied, setLinkCopied] = useState(false)
-
-  // Handle copy link for sharing filters
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href)
-      setLinkCopied(true)
-      toast.success('Link copied', 'Filter URL copied to clipboard')
-      setTimeout(() => setLinkCopied(false), 2000)
-    } catch (err) {
-      toast.error('Copy failed', 'Unable to copy link to clipboard')
+  const handleSort = useCallback((field: ContractSortField) => {
+    const newParams = new URLSearchParams(searchParams)
+    if (sortBy === field) {
+      newParams.set('sort_order', sortOrder === 'desc' ? 'asc' : 'desc')
+    } else {
+      newParams.set('sort_by', field)
+      newParams.set('sort_order', 'desc')
     }
-  }
+    newParams.set('page', '1')
+    setSearchParams(newParams)
+    setActivePreset(null)
+  }, [searchParams, setSearchParams, sortBy, sortOrder])
 
-  // Handle export
+  const applyPreset = useCallback((presetId: string) => {
+    const preset = CONTRACT_PRESETS.find((p) => p.id === presetId)
+    if (!preset) return
+    const newParams = new URLSearchParams()
+    newParams.set('sort_by', preset.sort)
+    newParams.set('sort_order', preset.order)
+    for (const [k, v] of Object.entries(preset.filters)) {
+      newParams.set(k, v)
+    }
+    newParams.set('page', '1')
+    setSearchInput('')
+    setSearchParams(newParams)
+    setActivePreset(presetId)
+  }, [setSearchParams, setSearchInput])
+
+  const clearAllFilters = useCallback(() => {
+    setSearchInput('')
+    setSearchParams({})
+    setActivePreset(null)
+  }, [setSearchParams, setSearchInput])
+
+  const [isExporting, setIsExporting] = useState(false)
   const handleExport = async () => {
     setIsExporting(true)
     try {
@@ -299,205 +210,246 @@ export function Contracts() {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
       toast.success('Export complete', `Downloaded ${data?.pagination.total || 0} contracts`)
-    } catch (err) {
-      console.error('Export failed:', err)
-      toast.error('Export failed', 'Unable to export contracts. Please try again.')
+    } catch {
+      toast.error('Export failed', 'Unable to export contracts')
     } finally {
       setIsExporting(false)
     }
   }
 
+  const [linkCopied, setLinkCopied] = useState(false)
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      setLinkCopied(true)
+      toast.success('Link copied', 'Filter URL copied to clipboard')
+      setTimeout(() => setLinkCopied(false), 2000)
+    } catch {
+      toast.error('Copy failed', 'Unable to copy link')
+    }
+  }
+
+  // --- Computed ---
+
+  const showSearchLoading = isSearchPending || (isFetching && searchInput !== debouncedSearch)
+  const hasActiveFilters = !!(filters.search || filters.sector_id || filters.year || filters.risk_level || filters.risk_factor || filters.is_direct_award || filters.is_single_bid)
+
+  const pageStats = useMemo(() => {
+    if (!data?.data?.length) return null
+    const contracts = data.data
+    const totalValue = contracts.reduce((s, c) => s + c.amount_mxn, 0)
+    const avgRisk = contracts.reduce((s, c) => s + (c.risk_score || 0), 0) / contracts.length
+    const criticalCount = contracts.filter((c) => (c.risk_score || 0) >= 0.50).length
+    const highPlusCount = contracts.filter((c) => (c.risk_score || 0) >= 0.30).length
+    const daCount = contracts.filter((c) => c.is_direct_award).length
+    const daPct = contracts.length > 0 ? (daCount / contracts.length) * 100 : 0
+    return { totalValue, avgRisk, criticalCount, highPlusCount, daPct }
+  }, [data])
+
+  const activeFilterTags = useMemo(() => {
+    const tags: { key: string; label: string }[] = []
+    if (filters.search) tags.push({ key: 'search', label: `"${filters.search}"` })
+    if (filters.sector_id) {
+      const sec = SECTORS.find((s) => s.id === filters.sector_id)
+      tags.push({ key: 'sector_id', label: sec ? sec.nameEN : `Sector ${filters.sector_id}` })
+    }
+    if (filters.year) tags.push({ key: 'year', label: `Year ${filters.year}` })
+    if (filters.risk_level) tags.push({ key: 'risk_level', label: `Risk: ${filters.risk_level}` })
+    if (filters.risk_factor) {
+      const f = RISK_FACTORS.find((rf) => rf.value === filters.risk_factor)
+      tags.push({ key: 'risk_factor', label: f ? f.label : filters.risk_factor })
+    }
+    if (filters.is_direct_award) tags.push({ key: 'is_direct_award', label: 'Direct Awards' })
+    if (filters.is_single_bid) tags.push({ key: 'is_single_bid', label: 'Single Bidders' })
+    return tags
+  }, [filters])
+
+  // --- Render ---
+
   return (
-    <div className="space-y-4">
-      {/* Header with filters */}
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div className="space-y-3">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
             <FileText className="h-4.5 w-4.5 text-accent" />
             Contracts
           </h2>
           <p className="text-xs text-text-muted mt-0.5" aria-live="polite">
-            {data ? `${formatNumber(data.pagination.total)} records found` : 'Loading...'}
+            {data ? `${formatNumber(data.pagination.total)} records` : 'Loading...'}
+            {isFetching && !isLoading && (
+              <Loader2 className="inline h-3 w-3 ml-1.5 animate-spin text-accent" />
+            )}
           </p>
         </div>
-
-        <div className="flex items-center gap-2">
-          {/* Search input with debouncing */}
-          <div className="relative">
-            {showSearchLoading ? (
-              <Loader2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted animate-spin" />
-            ) : (
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
-            )}
-            <input
-              type="text"
-              placeholder="Search contracts..."
-              className="h-9 rounded-md border border-border bg-background-card pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              aria-label="Search contracts by name, number, or vendor"
-            />
-          </div>
-
-          {/* Sector filter */}
-          <select
-            className="h-9 rounded-md border border-border bg-background-card px-3 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-            value={filters.sector_id || ''}
-            onChange={(e) => updateFilter('sector_id', e.target.value ? Number(e.target.value) : undefined)}
-            aria-label="Filter by sector"
-          >
-            <option value="">All Sectors</option>
-            {SECTORS.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-
-          {/* Year filter */}
-          <select
-            className="h-9 rounded-md border border-border bg-background-card px-3 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-            value={filters.year || ''}
-            onChange={(e) => updateFilter('year', e.target.value ? Number(e.target.value) : undefined)}
-            aria-label="Filter by year"
-          >
-            <option value="">All Years</option>
-            {Array.from({ length: 24 }, (_, i) => 2025 - i).map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
-
-          {/* Risk filter */}
-          <select
-            className="h-9 rounded-md border border-border bg-background-card px-3 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-            value={filters.risk_level || ''}
-            onChange={(e) => updateFilter('risk_level', e.target.value || undefined)}
-            aria-label="Filter by risk level"
-          >
-            <option value="">All Risk Levels</option>
-            <option value="critical">Critical</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
-
-          {/* Risk Factor filter (v3.2) */}
-          <select
-            className="h-9 rounded-md border border-border bg-background-card px-3 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-            value={filters.risk_factor || ''}
-            onChange={(e) => updateFilter('risk_factor', e.target.value || undefined)}
-            title="Filter by specific risk factor"
-          >
-            <option value="">All Risk Factors</option>
-            {RISK_FACTORS.map((f) => (
-              <option key={f.value} value={f.value} title={f.description}>
-                {f.label}
-              </option>
-            ))}
-          </select>
-
+        <div className="flex items-center gap-1.5">
           <Button
             variant="outline"
             size="sm"
+            className="h-7 text-xs px-2"
             onClick={handleCopyLink}
-            aria-label={linkCopied ? 'Link copied' : 'Copy shareable link with current filters'}
-            title="Copy shareable link"
+            title={linkCopied ? 'Copied!' : 'Copy shareable link'}
           >
-            {linkCopied ? (
-              <Check className="mr-2 h-4 w-4 text-risk-low" />
-            ) : (
-              <Copy className="mr-2 h-4 w-4" />
-            )}
-            {linkCopied ? 'Copied!' : 'Share'}
+            {linkCopied ? <Check className="h-3.5 w-3.5 text-risk-low" /> : <Copy className="h-3.5 w-3.5" />}
           </Button>
-
           <Button
             variant="outline"
             size="sm"
+            className="h-7 text-xs px-2"
             onClick={handleExport}
             disabled={isExporting || !data || data.pagination.total === 0}
-            aria-label={isExporting ? 'Exporting contracts...' : 'Export contracts to CSV'}
+            title="Export to CSV"
           >
-            {isExporting ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Download className="mr-2 h-4 w-4" />
-            )}
-            {isExporting ? 'Exporting...' : 'Export'}
+            {isExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
           </Button>
         </div>
       </div>
 
-      {/* Active filters */}
-      {(filters.sector_id || filters.year || filters.risk_level || filters.risk_factor || filters.search) && (
-        <div className="flex flex-wrap gap-2">
-          {filters.search && (
-            <Badge variant="secondary" className="gap-1">
-              Search: {filters.search}
-              <button
-                onClick={() => updateFilter('search', undefined)}
-                className="ml-1 hover:text-text-primary"
-                aria-label="Remove search filter"
-              >
-                ×
-              </button>
-            </Badge>
+      {/* Preset chips */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+        {CONTRACT_PRESETS.map((preset) => {
+          const Icon = preset.icon
+          const isActive = activePreset === preset.id
+          return (
+            <button
+              key={preset.id}
+              onClick={() => isActive ? clearAllFilters() : applyPreset(preset.id)}
+              className={cn(
+                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap border transition-all',
+                isActive
+                  ? 'bg-accent/15 border-accent/40 text-accent'
+                  : 'bg-background-card border-border/50 text-text-muted hover:text-text-primary hover:border-border'
+              )}
+            >
+              <Icon className="h-3 w-3" />
+              {preset.label}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Filter bar */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="relative flex-1 min-w-[200px] max-w-[300px]">
+          {showSearchLoading ? (
+            <Loader2 className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted animate-spin" />
+          ) : (
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted" />
           )}
-          {filters.sector_id && (
-            <Badge variant="secondary" className="gap-1">
-              Sector: {SECTORS.find((s) => s.id === filters.sector_id)?.name}
-              <button
-                onClick={() => updateFilter('sector_id', undefined)}
-                className="ml-1 hover:text-text-primary"
-                aria-label="Remove sector filter"
-              >
-                ×
-              </button>
-            </Badge>
-          )}
-          {filters.year && (
-            <Badge variant="secondary" className="gap-1">
-              Year: {filters.year}
-              <button
-                onClick={() => updateFilter('year', undefined)}
-                className="ml-1 hover:text-text-primary"
-                aria-label="Remove year filter"
-              >
-                ×
-              </button>
-            </Badge>
-          )}
-          {filters.risk_level && (
-            <RiskBadge level={filters.risk_level} className="gap-1">
-              {filters.risk_level}
-              <button
-                onClick={() => updateFilter('risk_level', undefined)}
-                className="ml-1 hover:text-text-primary"
-                aria-label="Remove risk level filter"
-              >
-                ×
-              </button>
-            </RiskBadge>
-          )}
-          {filters.risk_factor && (
-            <Badge variant="secondary" className="gap-1 bg-amber-500/20 text-amber-600">
-              Factor: {RISK_FACTORS.find((f) => f.value === filters.risk_factor)?.label || filters.risk_factor}
-              <button
-                onClick={() => updateFilter('risk_factor', undefined)}
-                className="ml-1 hover:text-text-primary"
-                aria-label="Remove risk factor filter"
-              >
-                ×
-              </button>
-            </Badge>
-          )}
-          <Button variant="ghost" size="sm" onClick={() => setSearchParams({})}>
-            Clear all
-          </Button>
+          <input
+            type="text"
+            placeholder="Search contracts..."
+            className="h-8 w-full rounded-md border border-border bg-background-card pl-8 pr-3 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            aria-label="Search contracts"
+          />
         </div>
-      )}
+
+        <select
+          className="h-8 rounded-md border border-border bg-background-card px-2 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
+          value={filters.sector_id || ''}
+          onChange={(e) => updateFilter('sector_id', e.target.value ? Number(e.target.value) : undefined)}
+          aria-label="Filter by sector"
+        >
+          <option value="">All Sectors</option>
+          {SECTORS.map((s) => (
+            <option key={s.id} value={s.id}>{s.nameEN}</option>
+          ))}
+        </select>
+
+        <select
+          className="h-8 rounded-md border border-border bg-background-card px-2 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
+          value={filters.year || ''}
+          onChange={(e) => updateFilter('year', e.target.value ? Number(e.target.value) : undefined)}
+          aria-label="Filter by year"
+        >
+          <option value="">All Years</option>
+          {Array.from({ length: 24 }, (_, i) => 2025 - i).map((year) => (
+            <option key={year} value={year}>{year}</option>
+          ))}
+        </select>
+
+        <select
+          className="h-8 rounded-md border border-border bg-background-card px-2 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
+          value={filters.risk_level || ''}
+          onChange={(e) => updateFilter('risk_level', e.target.value || undefined)}
+          aria-label="Filter by risk"
+        >
+          <option value="">All Risk</option>
+          <option value="critical">Critical</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+
+        <select
+          className="h-8 rounded-md border border-border bg-background-card px-2 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
+          value={filters.risk_factor || ''}
+          onChange={(e) => updateFilter('risk_factor', e.target.value || undefined)}
+          aria-label="Filter by risk factor"
+        >
+          <option value="">All Factors</option>
+          {RISK_FACTORS.map((f) => (
+            <option key={f.value} value={f.value}>{f.label}</option>
+          ))}
+        </select>
+
+        <select
+          className="h-8 rounded-md border border-border bg-background-card px-2 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
+          value={filters.per_page || 50}
+          onChange={(e) => updateFilter('per_page', Number(e.target.value))}
+          aria-label="Results per page"
+        >
+          <option value={25}>25</option>
+          <option value={50}>50</option>
+          <option value={100}>100</option>
+        </select>
+
+        {hasActiveFilters && (
+          <Button variant="ghost" size="sm" className="h-8 text-xs px-2 text-text-muted hover:text-text-primary" onClick={clearAllFilters}>
+            <X className="h-3 w-3 mr-1" />
+            Clear
+          </Button>
+        )}
+      </div>
+
+      {/* Summary stats + Active filters */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        {pageStats && (
+          <div className="flex items-center gap-3 flex-wrap">
+            <StatPill label="Page total" value={formatCompactMXN(pageStats.totalValue)} />
+            <StatPill
+              label="Avg risk"
+              value={`${(pageStats.avgRisk * 100).toFixed(0)}%`}
+              color={RISK_COLORS[getRiskLevel(pageStats.avgRisk)]}
+            />
+            {pageStats.criticalCount > 0 && (
+              <StatPill label="Critical" value={String(pageStats.criticalCount)} color={RISK_COLORS.critical} />
+            )}
+            {pageStats.highPlusCount > 0 && (
+              <StatPill label="High+" value={String(pageStats.highPlusCount)} color={RISK_COLORS.high} />
+            )}
+            <StatPill label="Direct" value={`${pageStats.daPct.toFixed(0)}%`} />
+          </div>
+        )}
+
+        {activeFilterTags.length > 0 && (
+          <div className="flex items-center gap-1 flex-wrap">
+            {activeFilterTags.map((tag) => (
+              <button
+                key={tag.key}
+                onClick={() => updateFilter(tag.key, undefined)}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20 transition-colors"
+                title={`Remove ${tag.label} filter`}
+              >
+                {tag.label}
+                <X className="h-2.5 w-2.5" />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Filter narrative */}
       {data && hasActiveFilters && (
@@ -510,94 +462,76 @@ export function Contracts() {
         />
       )}
 
-      {/* Featured contract strips - only shown when no filters active */}
-      {!hasActiveFilters && (
-        <FeaturedContractStrip
-          recentHighRisk={recentHighRisk?.data || []}
-          largestThisYear={largestThisYear?.data || []}
-          watchlistItems={watchlistContracts?.data || []}
-          isLoadingHighRisk={isLoadingHighRisk}
-          isLoadingLargest={isLoadingLargest}
-          isLoadingWatchlist={isLoadingWatchlist}
-          onViewContract={(id) => { setSelectedContractId(id); setIsDetailOpen(true) }}
-        />
-      )}
-
       {/* Contracts table */}
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
             <div className="space-y-2 p-4">
               {[...Array(10)].map((_, i) => (
-                <Skeleton key={i} className="h-14" />
+                <Skeleton key={i} className="h-12" />
               ))}
             </div>
           ) : error ? (
-            <div className="p-8 text-center" role="alert" aria-live="polite">
-              <AlertCircle className="h-12 w-12 text-risk-high mx-auto mb-4" aria-hidden="true" />
-              <h3 className="text-lg font-medium text-text-primary mb-2">Failed to load contracts</h3>
-              <p className="text-sm text-text-muted mb-4">
+            <div className="p-8 text-center" role="alert">
+              <AlertCircle className="h-10 w-10 text-risk-high mx-auto mb-3" />
+              <h3 className="text-sm font-medium mb-1">Failed to load contracts</h3>
+              <p className="text-xs text-text-muted mb-3">
                 {(error as Error).message === 'Network Error'
-                  ? 'Unable to connect to server. Please check if the backend is running.'
+                  ? 'Unable to connect to server.'
                   : (error as Error).message || 'An unexpected error occurred.'}
               </p>
               <Button variant="outline" size="sm" onClick={() => refetch()}>
-                <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
-                Try again
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                Retry
               </Button>
             </div>
           ) : data?.data.length === 0 ? (
             <div className="p-8 text-center text-text-muted">
-              <FileText className="h-12 w-12 mx-auto mb-4 opacity-30" />
-              <p className="font-medium">No contracts found</p>
-              <p className="text-sm mt-1">
-                {filters.search || filters.sector_id || filters.year || filters.risk_level
-                  ? 'Try adjusting your filters to see more results.'
-                  : 'No contracts are available in the database.'}
-              </p>
-              {(filters.search || filters.sector_id || filters.year || filters.risk_level) && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-4"
-                  onClick={() => setSearchParams({})}
-                >
+              <FileText className="h-10 w-10 mx-auto mb-3 opacity-30" />
+              <p className="text-sm font-medium">No contracts found</p>
+              <p className="text-xs mt-1">Try adjusting your filters.</p>
+              {hasActiveFilters && (
+                <Button variant="outline" size="sm" className="mt-3" onClick={clearAllFilters}>
                   Clear all filters
                 </Button>
               )}
             </div>
-          ) : useVirtualized ? (
-            <VirtualizedTable
-              data={data?.data || []}
-              columns={virtualizedColumns}
-              getRowKey={(row) => row.id}
-              height={600}
-            />
           ) : (
             <ExpandableProvider>
             <ScrollArea className="h-[600px]">
               <div className="overflow-x-auto min-w-full">
-              <table className="w-full min-w-[800px]" role="table" aria-label="Contracts list">
-                <thead className="sticky top-0 z-10 bg-background-card/95 backdrop-blur-sm border-b-2 border-border shadow-sm">
-                  <tr className="text-left text-xs font-semibold uppercase tracking-wider text-text-muted">
-                    <th className="p-3 pl-2 w-8"></th>
-                    <th className="p-3">Contract</th>
-                    <th className="p-3">Vendor</th>
-                    <th className="p-3">Institution</th>
-                    <th className="p-3 text-right">Amount</th>
-                    <th className="p-3">Date</th>
-                    <th className="p-3">Risk</th>
-                    <th className="p-3">Anomaly</th>
-                    <th className="p-3">Flags</th>
-                    <th className="p-3 pr-4 text-center">Actions</th>
+              <table className="w-full min-w-[700px]" role="table" aria-label="Contracts list">
+                <thead className="sticky top-0 z-10 bg-background-card/95 backdrop-blur-sm border-b-2 border-border">
+                  <tr>
+                    <th className="px-2 py-2.5 w-8" />
+                    {CONTRACT_COLUMNS.map((col) => (
+                      <th
+                        key={col.key}
+                        className={cn(
+                          'px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider select-none',
+                          col.sortField && 'cursor-pointer hover:text-accent transition-colors',
+                          col.align === 'right' ? 'text-right' : 'text-left',
+                          col.hideBelow === 'lg' && 'hidden lg:table-cell',
+                          col.sortField && sortBy === col.sortField ? 'text-accent' : 'text-text-muted'
+                        )}
+                        onClick={col.sortField ? () => handleSort(col.sortField!) : undefined}
+                      >
+                        {col.label}
+                        {col.sortField && sortBy === col.sortField && (
+                          sortOrder === 'desc'
+                            ? <ChevronDown className="h-3 w-3 inline ml-0.5" />
+                            : <ChevronUp className="h-3 w-3 inline ml-0.5" />
+                        )}
+                      </th>
+                    ))}
+                    <th className="px-2 py-2.5 w-8" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">
-                  {data?.data.map((contract, index) => (
+                  {data?.data.map((contract) => (
                     <ContractRow
                       key={contract.id}
                       contract={contract}
-                      isEven={index % 2 === 0}
                       onView={(id) => { setSelectedContractId(id); setIsDetailOpen(true) }}
                     />
                   ))}
@@ -613,47 +547,35 @@ export function Contracts() {
       {/* Pagination */}
       {data && data.pagination.total > 0 && (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-text-muted">
+          <p className="text-[11px] text-text-muted tabular-nums">
             {(() => {
-              const { start, end } = getPaginationRange(
-                filters.page || 1,
-                filters.per_page || 50,
-                data.pagination.total
-              )
-              return `Showing ${formatNumber(start)} - ${formatNumber(end)} of ${formatNumber(data.pagination.total)}`
+              const { start, end } = getPaginationRange(filters.page || 1, filters.per_page || 50, data.pagination.total)
+              return `${formatNumber(start)}-${formatNumber(end)} of ${formatNumber(data.pagination.total)}`
             })()}
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <Button
               variant="outline"
               size="sm"
-              disabled={filters.page === 1 || data.pagination.total_pages === 0}
+              className="h-7 text-xs px-2"
+              disabled={filters.page === 1}
               onClick={() => updateFilter('page', Math.max(1, (filters.page || 1) - 1))}
-              aria-label="Go to previous page"
+              aria-label="Previous page"
             >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
+              <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
-            <span className="text-sm text-text-muted">
-              Page {clampPage(filters.page || 1, data.pagination.total_pages)} of{' '}
-              {Math.max(1, data.pagination.total_pages)}
+            <span className="text-[11px] text-text-muted tabular-nums px-1">
+              {clampPage(filters.page || 1, data.pagination.total_pages)}/{Math.max(1, data.pagination.total_pages)}
             </span>
             <Button
               variant="outline"
               size="sm"
-              disabled={
-                filters.page === data.pagination.total_pages || data.pagination.total_pages === 0
-              }
-              onClick={() =>
-                updateFilter(
-                  'page',
-                  Math.min(data.pagination.total_pages, (filters.page || 1) + 1)
-                )
-              }
-              aria-label="Go to next page"
+              className="h-7 text-xs px-2"
+              disabled={filters.page === data.pagination.total_pages || data.pagination.total_pages === 0}
+              onClick={() => updateFilter('page', Math.min(data.pagination.total_pages, (filters.page || 1) + 1))}
+              aria-label="Next page"
             >
-              Next
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
@@ -668,264 +590,162 @@ export function Contracts() {
   )
 }
 
-// ---------------------------------------------------------------------------
-// Featured Contract Strip
-// ---------------------------------------------------------------------------
+// =============================================================================
+// Helper Components
+// =============================================================================
 
-interface FeaturedContractStripProps {
-  recentHighRisk: ContractListItem[]
-  largestThisYear: ContractListItem[]
-  watchlistItems: WatchlistItem[]
-  isLoadingHighRisk: boolean
-  isLoadingLargest: boolean
-  isLoadingWatchlist: boolean
-  onViewContract: (id: number) => void
-}
-
-function FeaturedContractStrip({
-  recentHighRisk,
-  largestThisYear,
-  watchlistItems,
-  isLoadingHighRisk,
-  isLoadingLargest,
-  isLoadingWatchlist,
-  onViewContract,
-}: FeaturedContractStripProps) {
-  const hasAnyData =
-    recentHighRisk.length > 0 ||
-    largestThisYear.length > 0 ||
-    watchlistItems.length > 0 ||
-    isLoadingHighRisk ||
-    isLoadingLargest ||
-    isLoadingWatchlist
-
-  if (!hasAnyData) return null
-
+function StatPill({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div className="space-y-3">
-      {/* Recent High-Risk */}
-      {(isLoadingHighRisk || recentHighRisk.length > 0) && (
-        <FeaturedSection
-          icon={<AlertTriangle className="h-3.5 w-3.5 text-risk-critical" />}
-          title="Recent High-Risk"
-          isLoading={isLoadingHighRisk}
-        >
-          {recentHighRisk.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => onViewContract(c.id)}
-              className="w-72 flex-shrink-0 rounded-md border border-border bg-background-card p-3 text-left transition-colors hover:border-accent/50 hover:bg-accent/5 focus:outline-none focus:ring-1 focus:ring-accent"
-              aria-label={`View critical-risk contract: ${c.title || c.contract_number || c.id}`}
-            >
-              <p className="text-sm font-medium line-clamp-2">
-                {c.title ? toTitleCase(c.title) : c.contract_number || `Contract #${c.id}`}
-              </p>
-              <div className="mt-1.5 flex items-center justify-between gap-2">
-                <span className="text-xs font-mono tabular-nums text-accent">
-                  {formatCompactMXN(c.amount_mxn)}
-                </span>
-                {c.risk_score != null && <RiskBadge score={c.risk_score} />}
-              </div>
-              <p className="mt-1 text-xs text-text-muted truncate">
-                {c.vendor_name ? toTitleCase(c.vendor_name) : 'Unknown vendor'}
-              </p>
-              <p className="text-[10px] text-text-muted/70">
-                {c.contract_date ? formatDate(c.contract_date) : c.contract_year || ''}
-              </p>
-            </button>
-          ))}
-        </FeaturedSection>
-      )}
-
-      {/* Largest This Year */}
-      {(isLoadingLargest || largestThisYear.length > 0) && (
-        <FeaturedSection
-          icon={<TrendingUp className="h-3.5 w-3.5 text-accent" />}
-          title="Largest This Year"
-          isLoading={isLoadingLargest}
-        >
-          {largestThisYear.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => onViewContract(c.id)}
-              className="w-72 flex-shrink-0 rounded-md border border-border bg-background-card p-3 text-left transition-colors hover:border-accent/50 hover:bg-accent/5 focus:outline-none focus:ring-1 focus:ring-accent"
-              aria-label={`View contract: ${c.title || c.contract_number || c.id}`}
-            >
-              <p className="text-sm font-medium line-clamp-2">
-                {c.title ? toTitleCase(c.title) : c.contract_number || `Contract #${c.id}`}
-              </p>
-              <div className="mt-1.5 flex items-center justify-between gap-2">
-                <span className="text-xs font-mono tabular-nums text-accent">
-                  {formatCompactMXN(c.amount_mxn)}
-                </span>
-                {c.risk_score != null && <RiskBadge score={c.risk_score} />}
-              </div>
-              <p className="mt-1 text-xs text-text-muted truncate">
-                {c.vendor_name ? toTitleCase(c.vendor_name) : 'Unknown vendor'}
-              </p>
-              <p className="text-[10px] text-text-muted/70">
-                {c.contract_date ? formatDate(c.contract_date) : c.contract_year || ''}
-              </p>
-            </button>
-          ))}
-        </FeaturedSection>
-      )}
-
-      {/* Under Investigation (Watchlist) */}
-      {(isLoadingWatchlist || watchlistItems.length > 0) && (
-        <FeaturedSection
-          icon={<Bookmark className="h-3.5 w-3.5 text-amber-400" />}
-          title="Under Investigation"
-          isLoading={isLoadingWatchlist}
-        >
-          {watchlistItems.map((item) => (
-            <div
-              key={item.id}
-              className="w-72 flex-shrink-0 rounded-md border border-border bg-background-card p-3"
-            >
-              <p className="text-sm font-medium truncate">
-                {item.item_name ? toTitleCase(item.item_name) : `Contract #${item.item_id}`}
-              </p>
-              <div className="mt-1.5 flex items-center gap-2">
-                <Badge
-                  className={
-                    item.priority === 'high'
-                      ? 'text-[10px] bg-red-500/20 text-red-400 border border-red-500/30'
-                      : item.priority === 'medium'
-                        ? 'text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                        : 'text-[10px] bg-green-500/20 text-green-400 border border-green-500/30'
-                  }
-                >
-                  {item.priority}
-                </Badge>
-                <Badge
-                  className="text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                >
-                  {item.status}
-                </Badge>
-              </div>
-              {item.reason && (
-                <p className="mt-1 text-xs text-text-muted truncate" title={item.reason}>
-                  {item.reason}
-                </p>
-              )}
-            </div>
-          ))}
-        </FeaturedSection>
-      )}
+    <div className="flex items-center gap-1.5">
+      <span className="text-[10px] text-text-muted">{label}</span>
+      <span className="text-xs font-semibold tabular-nums" style={color ? { color } : undefined}>
+        {value}
+      </span>
     </div>
   )
 }
 
-function FeaturedSection({
-  icon,
-  title,
-  isLoading,
-  children,
-}: {
-  icon: React.ReactNode
-  title: string
-  isLoading: boolean
-  children: React.ReactNode
-}) {
-  return (
-    <div>
-      <div className="flex items-center gap-1.5 mb-2">
-        {icon}
-        <span className="text-[11px] font-mono uppercase tracking-wider text-text-muted">
-          {title}
-        </span>
-      </div>
-      <div className="overflow-x-auto">
-        <div className="flex gap-3 pb-1">
-          {isLoading
-            ? Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="w-72 h-24 flex-shrink-0 rounded-md" />
-              ))
-            : children}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
+// =============================================================================
 // Contract Row
-// ---------------------------------------------------------------------------
+// =============================================================================
 
-function ContractRow({ contract, isEven, onView }: { contract: ContractListItem; isEven?: boolean; onView: (id: number) => void }) {
+function ContractRow({ contract, onView }: { contract: ContractListItem; onView: (id: number) => void }) {
   const anomalyInfo = getAnomalyInfo(contract.mahalanobis_distance)
+  const riskLevel = contract.risk_score != null ? getRiskLevel(contract.risk_score) : null
+  const riskColor = riskLevel ? RISK_COLORS[riskLevel] : undefined
+  const sector = contract.sector_id ? SECTORS.find((s) => s.id === contract.sector_id) : null
+
+  const rowBorder =
+    riskLevel === 'critical' ? 'border-l-2 border-l-red-400/60'
+    : riskLevel === 'high' ? 'border-l-2 border-l-orange-400/40'
+    : ''
 
   const cells = (
     <>
-      <td className="p-3 pl-2 w-8">
+      <td className="px-2 py-2 w-8">
         <ExpandChevron id={contract.id} />
       </td>
-      <td className="p-3">
-        <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-text-muted shrink-0" aria-hidden="true" />
+
+      {/* Contract: sector dot + title + number + sector */}
+      <td className="px-3 py-2">
+        <div className="flex items-start gap-2 min-w-0">
+          <span
+            className="w-2 h-2 rounded-full shrink-0 mt-1"
+            style={{ backgroundColor: sector?.color || 'var(--color-border)' }}
+            title={sector?.nameEN || 'Unknown'}
+            aria-hidden="true"
+          />
           <div className="min-w-0">
-            <p className="text-sm font-medium line-clamp-2">{contract.title || 'Untitled'}</p>
-            <p className="text-xs text-text-muted">{contract.contract_number || `ID: ${contract.id}`}</p>
+            <p className="text-xs font-medium line-clamp-2 text-text-primary leading-tight">
+              {contract.title ? toTitleCase(contract.title) : 'Untitled'}
+            </p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-[10px] text-text-muted">
+                {contract.contract_number || `#${contract.id}`}
+              </span>
+              {sector && (
+                <span className="text-[10px] font-medium" style={{ color: sector.color }}>
+                  {sector.nameEN}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </td>
-      <td className="p-3">
-        <p className="text-sm truncate max-w-[150px]">{contract.vendor_name ? toTitleCase(contract.vendor_name) : '-'}</p>
+
+      {/* Parties: vendor + institution */}
+      <td className="px-3 py-2">
+        <div className="min-w-0">
+          {contract.vendor_id ? (
+            <Link
+              to={`/vendors/${contract.vendor_id}`}
+              className="text-xs font-medium text-text-primary hover:text-accent transition-colors truncate block max-w-[200px]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {toTitleCase(contract.vendor_name || 'Unknown')}
+            </Link>
+          ) : (
+            <span className="text-xs text-text-muted">Unknown vendor</span>
+          )}
+          {contract.institution_id ? (
+            <Link
+              to={`/institutions/${contract.institution_id}`}
+              className="text-[10px] text-text-muted hover:text-accent transition-colors truncate block max-w-[200px] mt-0.5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {toTitleCase(contract.institution_name || 'Unknown')}
+            </Link>
+          ) : null}
+        </div>
       </td>
-      <td className="p-3">
-        <p className="text-sm truncate max-w-[150px]">{contract.institution_name ? toTitleCase(contract.institution_name) : '-'}</p>
+
+      {/* Amount */}
+      <td className="px-3 py-2 text-right">
+        <span className="text-xs tabular-nums font-medium text-text-primary">
+          {formatCompactMXN(contract.amount_mxn)}
+        </span>
       </td>
-      <td className="p-3 text-right">
-        <p className="text-sm font-medium tabular-nums">{formatCompactMXN(contract.amount_mxn)}</p>
-      </td>
-      <td className="p-3">
-        <p className="text-sm text-text-muted">
+
+      {/* Date */}
+      <td className="px-3 py-2 text-right">
+        <span className="text-xs text-text-muted tabular-nums">
           {contract.contract_date ? formatDate(contract.contract_date) : contract.contract_year || '-'}
-        </p>
+        </span>
       </td>
-      <td className="p-3">
-        {contract.risk_score !== undefined && contract.risk_score !== null ? (
-          <RiskBadge score={contract.risk_score} />
+
+      {/* Risk: inline bar + percentage */}
+      <td className="px-3 py-2 text-right">
+        {contract.risk_score != null ? (
+          <div className="flex items-center justify-end gap-1.5">
+            <div className="w-10 h-1.5 rounded-full bg-border/40 overflow-hidden">
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${Math.min(contract.risk_score * 100, 100)}%`,
+                  backgroundColor: riskColor,
+                }}
+              />
+            </div>
+            <span
+              className="text-xs tabular-nums font-semibold w-8 text-right"
+              style={{ color: riskColor }}
+            >
+              {(contract.risk_score * 100).toFixed(0)}%
+            </span>
+          </div>
         ) : (
-          <span className="text-xs text-text-muted">-</span>
+          <span className="text-[10px] text-text-muted">-</span>
         )}
       </td>
-      <td className="p-3">
-        {anomalyInfo ? (
-          <Badge className={`text-[10px] ${anomalyInfo.badgeClass}`} title={`D\u00B2=${contract.mahalanobis_distance?.toFixed(1)}`}>
-            <span className={`inline-block h-1.5 w-1.5 rounded-full ${anomalyInfo.dotClass} mr-1`} />
-            {anomalyInfo.label}
-          </Badge>
-        ) : (
-          <span className="text-xs text-text-muted">-</span>
-        )}
-      </td>
-      <td className="p-3">
-        <div className="flex gap-1">
+
+      {/* Flags: DA + SB + anomaly */}
+      <td className="px-3 py-2 hidden lg:table-cell">
+        <div className="flex items-center gap-1">
           {contract.is_direct_award && (
-            <Badge className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30" title="Direct Award">
-              DA
-            </Badge>
+            <span className="text-[9px] font-semibold text-orange-400 bg-orange-500/15 px-1.5 py-0.5 rounded" title="Direct Award">DA</span>
           )}
           {contract.is_single_bid && (
-            <Badge className="text-[10px] bg-red-500/20 text-red-400 border border-red-500/30" title="Single Bid">
-              SB
-            </Badge>
+            <span className="text-[9px] font-semibold text-red-400 bg-red-500/15 px-1.5 py-0.5 rounded" title="Single Bid">SB</span>
+          )}
+          {anomalyInfo && (
+            <span
+              className={`inline-block h-2 w-2 rounded-full shrink-0 ${anomalyInfo.dotClass}`}
+              title={`Anomaly: ${anomalyInfo.label} (D\u00B2=${contract.mahalanobis_distance?.toFixed(1)})`}
+            />
           )}
         </div>
       </td>
-      <td className="p-3 text-center">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 w-7 p-0"
-          title="View full contract details"
-          aria-label={`View details for contract ${contract.contract_number || contract.id}`}
+
+      {/* View link */}
+      <td className="px-2 py-2 text-right">
+        <button
+          className="text-text-muted hover:text-accent transition-colors p-1"
+          title="View full details"
           onClick={(e) => { e.stopPropagation(); onView(contract.id) }}
+          aria-label={`View details for ${contract.contract_number || contract.id}`}
         >
-          <Eye className="h-4 w-4" aria-hidden="true" />
-        </Button>
+          <Eye className="h-3.5 w-3.5" />
+        </button>
       </td>
     </>
   )
@@ -934,75 +754,75 @@ function ContractRow({ contract, isEven, onView }: { contract: ContractListItem;
 
   const detail = (
     <div className="space-y-3">
-      {/* Full title */}
       {contract.title && (
-        <p className="text-sm text-text-primary font-medium">{contract.title}</p>
+        <p className="text-sm text-text-primary">{contract.title}</p>
       )}
 
-      {/* Risk factors */}
-      {factors.length > 0 && (
-        <div>
-          <p className="text-[11px] font-mono uppercase tracking-wider text-text-muted mb-1.5">Risk Factors</p>
-          <div className="flex flex-wrap gap-1.5">
-            {factors.map((raw) => {
-              const parsed = parseFactorLabel(raw)
-              return (
-                <Badge
-                  key={raw}
-                  className="text-[10px]"
-                  style={{ backgroundColor: `${getFactorCategoryColor(parsed.category)}20`, color: getFactorCategoryColor(parsed.category), borderColor: `${getFactorCategoryColor(parsed.category)}40` }}
-                  title={raw}
-                >
-                  {parsed.label}
-                </Badge>
-              )
-            })}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {factors.length > 0 && (
+          <div>
+            <p className="text-[11px] font-mono uppercase tracking-wider text-text-muted mb-1.5">Risk Factors</p>
+            <div className="flex flex-wrap gap-1.5">
+              {factors.map((raw) => {
+                const parsed = parseFactorLabel(raw)
+                const catColor = getFactorCategoryColor(parsed.category)
+                return (
+                  <span
+                    key={raw}
+                    className="text-[10px] font-medium px-1.5 py-0.5 rounded border"
+                    style={{
+                      backgroundColor: `${catColor}15`,
+                      color: catColor,
+                      borderColor: `${catColor}30`,
+                    }}
+                    title={raw}
+                  >
+                    {parsed.label}
+                  </span>
+                )
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Date & contract info */}
-      <div className="text-xs text-text-muted space-y-1">
-        {contract.contract_date && (
-          <p>Contract date: {formatDate(contract.contract_date)}</p>
-        )}
-        {contract.procedure_type && (
-          <p>Procedure: {contract.procedure_type}</p>
-        )}
-        {contract.contract_number && (
-          <p>Number: {contract.contract_number}</p>
-        )}
+        <div className="text-xs text-text-muted space-y-1">
+          {contract.contract_date && <p>Date: {formatDate(contract.contract_date)}</p>}
+          {contract.procedure_type && <p>Procedure: {contract.procedure_type}</p>}
+          {contract.contract_number && <p>Number: {contract.contract_number}</p>}
+          {anomalyInfo && contract.mahalanobis_distance != null && (
+            <p>Anomaly: {anomalyInfo.label} (D\u00B2={contract.mahalanobis_distance.toFixed(1)})</p>
+          )}
+        </div>
       </div>
 
-      {/* Links to vendor / institution profiles */}
-      <div className="flex items-center gap-3 pt-1">
+      <div className="flex items-center gap-3 pt-2 border-t border-border/30">
         {contract.vendor_id && (
           <Link
             to={`/vendors/${contract.vendor_id}`}
-            className="text-xs text-accent hover:underline"
+            className="text-xs text-accent hover:underline flex items-center gap-1"
             onClick={(e) => e.stopPropagation()}
           >
-            Vendor profile: {contract.vendor_name ? toTitleCase(contract.vendor_name) : `#${contract.vendor_id}`}
+            <ExternalLink className="h-3 w-3" />
+            {contract.vendor_name ? toTitleCase(contract.vendor_name) : `Vendor #${contract.vendor_id}`}
           </Link>
         )}
         {contract.institution_id && (
           <Link
             to={`/institutions/${contract.institution_id}`}
-            className="text-xs text-accent hover:underline"
+            className="text-xs text-accent hover:underline flex items-center gap-1"
             onClick={(e) => e.stopPropagation()}
           >
-            Institution profile: {contract.institution_name ? toTitleCase(contract.institution_name) : `#${contract.institution_id}`}
+            <ExternalLink className="h-3 w-3" />
+            {contract.institution_name ? toTitleCase(contract.institution_name) : `Inst #${contract.institution_id}`}
           </Link>
         )}
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-xs h-6 ml-auto"
+        <button
+          className="text-xs text-accent hover:underline ml-auto flex items-center gap-1"
           onClick={(e) => { e.stopPropagation(); onView(contract.id) }}
         >
-          <Eye className="h-3 w-3 mr-1" />
+          <Eye className="h-3 w-3" />
           Full details
-        </Button>
+        </button>
       </div>
     </div>
   )
@@ -1012,8 +832,8 @@ function ContractRow({ contract, isEven, onView }: { contract: ContractListItem;
       id={contract.id}
       cells={cells}
       detail={detail}
-      colSpan={10}
-      className={isEven ? 'bg-background-card' : 'bg-background-elevated/30'}
+      colSpan={8}
+      className={cn('hover:bg-accent/[0.04] transition-colors group', rowBorder)}
     />
   )
 }

@@ -85,74 +85,104 @@ def list_institutions(
     autonomy_level: Optional[str] = Query(None, description="Filter by autonomy level"),
     sector_id: Optional[int] = Query(None, description="Filter by sector ID"),
     state_code: Optional[str] = Query(None, description="Filter by state code"),
-    search: Optional[str] = Query(None, min_length=3, description="Search institution name"),
+    search: Optional[str] = Query(None, min_length=2, description="Search institution name"),
     min_contracts: Optional[int] = Query(None, ge=0, description="Minimum contract count"),
     is_legally_decentralized: Optional[bool] = Query(None, description="Filter by legal decentralized status"),
+    sort_by: str = Query("total_contracts", description="Sort field"),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$", description="Sort order"),
 ):
     """
-    List institutions with pagination and filters.
+    List institutions with pagination, filters, and sorting.
 
     Supports filtering by type, size, autonomy, sector, state, and search.
+    Joins with institution_stats for richer metrics.
     """
     with get_db() as conn:
         cursor = conn.cursor()
+
+        # Sort field mapping
+        SORT_FIELD_MAPPING = {
+            "total_contracts": "COALESCE(s.total_contracts, i.total_contracts)",
+            "total_value_mxn": "COALESCE(s.total_value_mxn, i.total_amount_mxn)",
+            "total_amount_mxn": "COALESCE(s.total_value_mxn, i.total_amount_mxn)",
+            "avg_risk_score": "s.avg_risk_score",
+            "high_risk_pct": "s.high_risk_pct",
+            "direct_award_pct": "s.direct_award_pct",
+            "single_bid_pct": "s.single_bid_pct",
+            "vendor_count": "s.vendor_count",
+            "name": "i.name",
+        }
+        sort_expr = SORT_FIELD_MAPPING.get(sort_by, "COALESCE(s.total_contracts, i.total_contracts)")
+        order_direction = "DESC" if sort_order.lower() == "desc" else "ASC"
 
         # Build WHERE clause
         conditions = ["1=1"]
         params = []
 
         if institution_type:
-            conditions.append("institution_type = ?")
+            conditions.append("i.institution_type = ?")
             params.append(institution_type)
 
         if size_tier:
-            conditions.append("size_tier = ?")
+            conditions.append("i.size_tier = ?")
             params.append(size_tier)
 
         if autonomy_level:
-            conditions.append("autonomy_level = ?")
+            conditions.append("i.autonomy_level = ?")
             params.append(autonomy_level)
 
         if sector_id:
-            conditions.append("sector_id = ?")
+            conditions.append("i.sector_id = ?")
             params.append(sector_id)
 
         if state_code:
-            conditions.append("state_code = ?")
+            conditions.append("i.state_code = ?")
             params.append(state_code.upper())
 
         if search:
-            conditions.append("(name LIKE ? OR name_normalized LIKE ? OR siglas LIKE ?)")
+            conditions.append("(i.name LIKE ? OR i.name_normalized LIKE ? OR i.siglas LIKE ?)")
             params.extend([f"%{search}%", f"%{search}%", f"%{search}%"])
 
         if min_contracts is not None:
-            conditions.append("total_contracts >= ?")
+            conditions.append("COALESCE(s.total_contracts, i.total_contracts, 0) >= ?")
             params.append(min_contracts)
 
         if is_legally_decentralized is not None:
-            conditions.append("is_legally_decentralized = ?")
+            conditions.append("i.is_legally_decentralized = ?")
             params.append(1 if is_legally_decentralized else 0)
 
         where_clause = " AND ".join(conditions)
 
         # Count total matching records
-        count_sql = f"SELECT COUNT(*) as count FROM institutions WHERE {where_clause}"
+        count_sql = f"""
+            SELECT COUNT(*) as count
+            FROM institutions i
+            LEFT JOIN institution_stats s ON i.id = s.institution_id
+            WHERE {where_clause}
+        """
         cursor.execute(count_sql, params)
         total = cursor.fetchone()["count"]
 
-        # Get paginated results
+        # Get paginated results with stats
         offset = (page - 1) * per_page
         query_sql = f"""
             SELECT
-                id, name, name_normalized, siglas,
-                institution_type, institution_type_id,
-                size_tier, autonomy_level, is_legally_decentralized,
-                sector_id, state_code, geographic_scope,
-                total_contracts, total_amount_mxn,
-                classification_confidence, data_quality_grade
-            FROM institutions
+                i.id, i.name, i.name_normalized, i.siglas,
+                i.institution_type, i.institution_type_id,
+                i.size_tier, i.autonomy_level, i.is_legally_decentralized,
+                i.sector_id, i.state_code, i.geographic_scope,
+                COALESCE(s.total_contracts, i.total_contracts) as total_contracts,
+                COALESCE(s.total_value_mxn, i.total_amount_mxn) as total_amount_mxn,
+                s.avg_risk_score,
+                s.high_risk_pct,
+                s.direct_award_pct,
+                s.single_bid_pct,
+                s.vendor_count,
+                i.classification_confidence, i.data_quality_grade
+            FROM institutions i
+            LEFT JOIN institution_stats s ON i.id = s.institution_id
             WHERE {where_clause}
-            ORDER BY total_contracts DESC NULLS LAST, name
+            ORDER BY {sort_expr} {order_direction} NULLS LAST
             LIMIT ? OFFSET ?
         """
         cursor.execute(query_sql, params + [per_page, offset])
@@ -174,6 +204,11 @@ def list_institutions(
                 geographic_scope=row["geographic_scope"],
                 total_contracts=row["total_contracts"],
                 total_amount_mxn=row["total_amount_mxn"],
+                avg_risk_score=round(row["avg_risk_score"], 4) if row["avg_risk_score"] else None,
+                high_risk_pct=round(row["high_risk_pct"], 2) if row["high_risk_pct"] else None,
+                direct_award_pct=round(row["direct_award_pct"], 2) if row["direct_award_pct"] else None,
+                single_bid_pct=round(row["single_bid_pct"], 2) if row["single_bid_pct"] else None,
+                vendor_count=row["vendor_count"],
                 classification_confidence=row["classification_confidence"],
                 data_quality_grade=row["data_quality_grade"]
             )

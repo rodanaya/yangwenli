@@ -43,8 +43,11 @@ class VendorListItem(BaseModel):
     avg_risk_score: Optional[float] = Field(None, description="Average risk score")
     high_risk_pct: float = Field(0, description="Percentage of high/critical risk contracts")
     direct_award_pct: float = Field(0, description="Percentage of direct awards")
+    single_bid_pct: float = Field(0, description="Percentage of single-bid contracts")
     first_contract_year: Optional[int] = Field(None, description="Year of first contract")
     last_contract_year: Optional[int] = Field(None, description="Year of most recent contract")
+    primary_sector_id: Optional[int] = Field(None, description="Primary sector ID (1-12)")
+    pct_anomalous: Optional[float] = Field(None, description="Percentage of anomalous contracts")
 
     class Config:
         from_attributes = True

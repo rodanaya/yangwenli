@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
-import { formatCompactMXN, formatNumber } from '@/lib/utils'
+import { formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { ChevronRight, Users, Building2, Layers, TrendingUp } from 'lucide-react'
 
 interface RelatedItem {
@@ -96,7 +96,7 @@ export const RelatedPanel = memo(function RelatedPanel({
                 {getIcon(item.type)}
                 <div className="flex-1 text-left min-w-0">
                   <p className="text-sm font-medium truncate group-hover:text-accent transition-colors">
-                    {item.name}
+                    {toTitleCase(item.name)}
                   </p>
                   <div className="flex items-center gap-2 text-xs text-text-muted">
                     {item.contracts !== undefined && (

@@ -127,9 +127,9 @@ def list_sectors(
     List all sectors with statistics.
 
     Returns the 12-sector taxonomy with contract counts, values, and risk metrics.
-    Response is cached for 2 hours to improve performance.
+    Uses precomputed_stats for the default (all-years) case for instant response.
+    Falls back to live query when filtering by year.
     """
-    # Check cache first
     cache_key = f"sectors_list:{year or 'all'}"
     cached = _cache.get(cache_key)
     if cached is not None:
@@ -139,6 +139,55 @@ def list_sectors(
         with get_db() as conn:
             cursor = conn.cursor()
 
+            # Fast path: use precomputed_stats for all-years case
+            if year is None:
+                cursor.execute("SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sectors'")
+                row = cursor.fetchone()
+                if row:
+                    import json
+                    sector_data = json.loads(row[0])
+                    sectors = []
+                    total_contracts = 0
+                    total_value = 0
+
+                    for s in sector_data:
+                        total = s.get("total_contracts", 0)
+                        total_contracts += total
+                        val = s.get("total_value_mxn", 0)
+                        total_value += val
+                        high_risk = (s.get("high_risk_count", 0) or 0) + (s.get("critical_risk_count", 0) or 0)
+
+                        sectors.append(SectorStatistics(
+                            sector_id=s["id"],
+                            sector_code=s["code"],
+                            sector_name=s["name"],
+                            color=SECTOR_COLORS.get(s["id"], "#64748b"),
+                            total_contracts=total,
+                            total_value_mxn=val,
+                            total_vendors=s.get("total_vendors", 0),
+                            total_institutions=s.get("total_institutions", 0),
+                            avg_contract_value=round(val / total, 2) if total > 0 else 0,
+                            avg_risk_score=round(s.get("avg_risk_score", 0) or 0, 4),
+                            low_risk_count=s.get("low_risk_count", 0) or 0,
+                            medium_risk_count=s.get("medium_risk_count", 0) or 0,
+                            high_risk_count=s.get("high_risk_count", 0) or 0,
+                            critical_risk_count=s.get("critical_risk_count", 0) or 0,
+                            high_risk_pct=round(high_risk / total * 100, 2) if total > 0 else 0,
+                            direct_award_count=s.get("direct_award_count", 0) or 0,
+                            direct_award_pct=round((s.get("direct_award_count", 0) or 0) / total * 100, 2) if total > 0 else 0,
+                            single_bid_count=s.get("single_bid_count", 0) or 0,
+                            single_bid_pct=round((s.get("single_bid_count", 0) or 0) / total * 100, 2) if total > 0 else 0,
+                        ))
+
+                    response = SectorListResponse(
+                        data=sectors,
+                        total_contracts=total_contracts,
+                        total_value_mxn=total_value,
+                    )
+                    _cache.set(cache_key, response, SECTORS_CACHE_TTL)
+                    return response
+
+            # Slow path: live query when filtering by year
             year_filter = "AND c.contract_year = ?" if year else ""
             params = [year] if year else []
 
@@ -207,7 +256,6 @@ def list_sectors(
                 total_value_mxn=total_value,
             )
 
-            # Cache the response for 2 hours
             _cache.set(cache_key, response, SECTORS_CACHE_TTL)
             return response
 
@@ -484,6 +532,7 @@ def get_risk_distribution(
     Get risk score distribution.
 
     Returns counts and percentages for each risk level.
+    Uses precomputed_stats for the default (no-filter) case.
     """
     cache_key = f"risk_distribution:{sector_id}:{year}"
     cached = _cache.get(cache_key)
@@ -494,6 +543,30 @@ def get_risk_distribution(
         with get_db() as conn:
             cursor = conn.cursor()
 
+            # Fast path: use precomputed data when no filters
+            if sector_id is None and year is None:
+                cursor.execute("SELECT stat_value FROM precomputed_stats WHERE stat_key = 'risk_distribution'")
+                row = cursor.fetchone()
+                if row:
+                    import json
+                    dist_data = json.loads(row[0])
+                    # Sort by risk level order
+                    level_order = {"low": 1, "medium": 2, "high": 3, "critical": 4}
+                    dist_data.sort(key=lambda x: level_order.get(x.get("risk_level", ""), 5))
+                    distribution = [
+                        RiskDistribution(
+                            risk_level=d["risk_level"],
+                            count=d["count"],
+                            percentage=d["percentage"],
+                            total_value_mxn=d.get("total_value_mxn", 0),
+                        )
+                        for d in dist_data
+                    ]
+                    result = RiskDistributionListResponse(data=distribution)
+                    _cache.set(cache_key, result, ttl_seconds=7200)
+                    return result
+
+            # Slow path: live query with filters
             conditions = []
             params = []
 
@@ -527,7 +600,6 @@ def get_risk_distribution(
             cursor.execute(query, params)
             rows = cursor.fetchall()
 
-            # Get total for percentages
             cursor.execute(f"SELECT COUNT(*) FROM contracts WHERE {where_clause}", params)
             total = cursor.fetchone()[0]
 
@@ -542,7 +614,7 @@ def get_risk_distribution(
             ]
 
             result = RiskDistributionListResponse(data=distribution)
-            _cache.set(cache_key, result, ttl_seconds=7200)  # 2hr TTL
+            _cache.set(cache_key, result, ttl_seconds=7200)
             return result
 
     except sqlite3.Error as e:
@@ -558,6 +630,7 @@ def get_year_over_year(
     Get year-over-year comparison.
 
     Returns annual statistics with change percentages.
+    Uses precomputed_stats for the default (all-sectors) case.
     """
     cache_key = f"year_over_year:{sector_id}"
     cached = _cache.get(cache_key)
@@ -568,6 +641,49 @@ def get_year_over_year(
         with get_db() as conn:
             cursor = conn.cursor()
 
+            # Fast path: use precomputed data when no sector filter
+            if sector_id is None:
+                cursor.execute("SELECT stat_value FROM precomputed_stats WHERE stat_key = 'yearly_trends'")
+                row = cursor.fetchone()
+                if row:
+                    import json
+                    trends_data = json.loads(row[0])
+                    results = []
+                    prev_contracts = None
+                    prev_value = None
+
+                    for t in trends_data:
+                        contracts_change = None
+                        value_change = None
+                        c = t.get("contracts", 0)
+                        v = t.get("value_mxn", 0)
+
+                        if prev_contracts is not None and prev_contracts > 0:
+                            contracts_change = round((c - prev_contracts) / prev_contracts * 100, 2)
+                        if prev_value is not None and prev_value > 0:
+                            value_change = round((v - prev_value) / prev_value * 100, 2)
+
+                        results.append(YearOverYearChange(
+                            year=t["year"],
+                            contracts=c,
+                            value_mxn=v,
+                            avg_risk=round(t.get("avg_risk", 0), 4),
+                            direct_award_pct=round(t.get("direct_award_pct", 0), 1),
+                            single_bid_pct=round(t.get("single_bid_pct", 0), 1),
+                            high_risk_pct=round(t.get("high_risk_pct", 0), 2),
+                            vendor_count=t.get("vendor_count", 0),
+                            institution_count=t.get("institution_count", 0),
+                            contracts_change_pct=contracts_change,
+                            value_change_pct=value_change,
+                        ))
+                        prev_contracts = c
+                        prev_value = v
+
+                    result = YearOverYearListResponse(data=results)
+                    _cache.set(cache_key, result, ttl_seconds=7200)
+                    return result
+
+            # Slow path: live query with sector filter
             sector_filter = "AND sector_id = ?" if sector_id else ""
             params = [sector_id] if sector_id else []
 
@@ -576,7 +692,13 @@ def get_year_over_year(
                     contract_year,
                     COUNT(*) as contracts,
                     COALESCE(SUM(amount_mxn), 0) as value,
-                    COALESCE(AVG(risk_score), 0) as avg_risk
+                    COALESCE(AVG(risk_score), 0) as avg_risk,
+                    SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) as direct_award_pct,
+                    SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) * 100.0 /
+                        NULLIF(SUM(CASE WHEN is_direct_award = 0 THEN 1 ELSE 0 END), 0) as single_bid_pct,
+                    SUM(CASE WHEN risk_level IN ('high', 'critical') THEN 1 ELSE 0 END) * 100.0 / COUNT(*) as high_risk_pct,
+                    COUNT(DISTINCT vendor_id) as vendor_count,
+                    COUNT(DISTINCT institution_id) as institution_count
                 FROM contracts
                 WHERE contract_year IS NOT NULL {sector_filter}
                 GROUP BY contract_year
@@ -604,6 +726,11 @@ def get_year_over_year(
                     contracts=row[1],
                     value_mxn=row[2],
                     avg_risk=round(row[3], 4),
+                    direct_award_pct=round(row[4], 1) if row[4] else 0,
+                    single_bid_pct=round(row[5], 1) if row[5] else 0,
+                    high_risk_pct=round(row[6], 2) if row[6] else 0,
+                    vendor_count=row[7] or 0,
+                    institution_count=row[8] or 0,
                     contracts_change_pct=contracts_change,
                     value_change_pct=value_change,
                 ))
@@ -612,7 +739,7 @@ def get_year_over_year(
                 prev_value = row[2]
 
             result = YearOverYearListResponse(data=results)
-            _cache.set(cache_key, result, ttl_seconds=7200)  # 2hr TTL
+            _cache.set(cache_key, result, ttl_seconds=7200)
             return result
 
     except sqlite3.Error as e:

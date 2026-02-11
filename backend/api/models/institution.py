@@ -67,6 +67,11 @@ class InstitutionResponse(BaseModel):
     geographic_scope: Optional[str] = Field(None, description="Geographic scope")
     total_contracts: Optional[int] = Field(None, description="Total contracts")
     total_amount_mxn: Optional[float] = Field(None, description="Total contract value (MXN)")
+    avg_risk_score: Optional[float] = Field(None, description="Average risk score")
+    high_risk_pct: Optional[float] = Field(None, description="Percentage of high/critical risk contracts (0-100)")
+    direct_award_pct: Optional[float] = Field(None, description="Percentage of direct awards (0-100)")
+    single_bid_pct: Optional[float] = Field(None, description="Percentage of single-bid contracts (0-100)")
+    vendor_count: Optional[int] = Field(None, description="Number of unique vendors")
     classification_confidence: Optional[float] = Field(None, description="Classification confidence")
     data_quality_grade: Optional[str] = Field(None, description="Data quality grade (A-F)")
 

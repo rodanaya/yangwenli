@@ -10,6 +10,8 @@ import { formatCompactMXN, formatNumber, formatPercentSafe, formatDate, toTitleC
 import { vendorApi, networkApi } from '@/api/client'
 import { RISK_COLORS, SECTOR_COLORS } from '@/lib/constants'
 import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
+import { NarrativeCard } from '@/components/NarrativeCard'
+import { buildVendorNarrative } from '@/lib/narratives'
 import type { ContractListItem } from '@/api/types'
 import {
   AreaChart,
@@ -178,6 +180,12 @@ export function VendorProfile() {
         )}
       </div>
 
+      {/* Narrative summary */}
+      <NarrativeCard
+        paragraphs={buildVendorNarrative(vendor, riskProfile ?? null)}
+        compact
+      />
+
       {/* KPI Row — stagger + hover-lift + risk coloring */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 stagger-animate">
         <KPICard
@@ -242,7 +250,7 @@ export function VendorProfile() {
                           to={`/vendors/${partner.vendor_id}`}
                           className="text-sm hover:text-accent transition-colors"
                         >
-                          {partner.vendor_name}
+                          {toTitleCase(partner.vendor_name)}
                         </Link>
                       </div>
                       <div className="flex items-center gap-3">
@@ -789,7 +797,7 @@ function InstitutionList({ data, maxValue }: { data: any[]; maxValue: number }) 
                 to={`/institutions/${inst.institution_id}`}
                 className="text-sm hover:text-accent transition-colors truncate max-w-[250px]"
               >
-                {inst.institution_name}
+                {toTitleCase(inst.institution_name)}
               </Link>
             </div>
             <div className="text-right relative z-10 flex-shrink-0">

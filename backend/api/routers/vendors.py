@@ -45,13 +45,14 @@ router = APIRouter(prefix="/vendors", tags=["vendors"])
 @router.get("", response_model=VendorListResponse)
 def list_vendors(
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
-    per_page: int = Query(50, ge=1, le=100, description="Items per page"),
+    per_page: int = Query(50, ge=1, le=200, description="Items per page"),
     search: Optional[str] = Query(None, min_length=2, description="Search vendor name or RFC"),
     sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by primary sector"),
+    risk_level: Optional[str] = Query(None, description="Filter by risk level: critical, high, medium, low"),
     min_contracts: Optional[int] = Query(None, ge=0, description="Minimum contract count"),
     min_value: Optional[float] = Query(None, ge=0, description="Minimum total contract value"),
     has_rfc: Optional[bool] = Query(None, description="Filter vendors with RFC"),
-    sort_by: str = Query("total_contracts", description="Sort field: total_contracts, total_value, avg_risk, name"),
+    sort_by: str = Query("total_contracts", description="Sort field: total_contracts, total_value, avg_risk, name, direct_award_pct, high_risk_pct"),
     sort_order: str = Query("desc", pattern="^(asc|desc)$", description="Sort order"),
 ):
     """
@@ -85,7 +86,13 @@ def list_vendors(
             SORT_FIELD_MAPPING = {
                 "total_contracts": "s.total_contracts",
                 "total_value": "s.total_value_mxn",
+                "total_value_mxn": "s.total_value_mxn",
                 "avg_risk": "s.avg_risk_score",
+                "avg_risk_score": "s.avg_risk_score",
+                "direct_award_pct": "s.direct_award_pct",
+                "high_risk_pct": "s.high_risk_pct",
+                "single_bid_pct": "s.single_bid_pct",
+                "pct_anomalous": "s.anomalous_pct",
                 "name": "v.name",
             }
             sort_expr = SORT_FIELD_MAPPING.get(sort_by, "s.total_contracts")
@@ -94,6 +101,22 @@ def list_vendors(
             # HAVING conditions adapted for pre-computed stats
             stats_conditions = []
             stats_params = []
+
+            if sector_id is not None:
+                stats_conditions.append("s.primary_sector_id = ?")
+                stats_params.append(sector_id)
+
+            if risk_level is not None:
+                risk_thresholds = {
+                    "critical": ("s.avg_risk_score >= ?", [0.50]),
+                    "high": ("s.avg_risk_score >= ? AND s.avg_risk_score < ?", [0.30, 0.50]),
+                    "medium": ("s.avg_risk_score >= ? AND s.avg_risk_score < ?", [0.10, 0.30]),
+                    "low": ("s.avg_risk_score < ?", [0.10]),
+                }
+                if risk_level in risk_thresholds:
+                    cond, vals = risk_thresholds[risk_level]
+                    stats_conditions.append(cond)
+                    stats_params.extend(vals)
 
             if min_contracts is not None:
                 stats_conditions.append("s.total_contracts >= ?")
@@ -105,14 +128,23 @@ def list_vendors(
 
             stats_where = " AND ".join(stats_conditions) if stats_conditions else "1=1"
 
-            # Count total using vendor_stats
-            count_query = f"""
-                SELECT COUNT(*)
-                FROM vendors v
-                JOIN vendor_stats s ON v.id = s.vendor_id
-                WHERE {where_clause} AND {stats_where}
-            """
-            cursor.execute(count_query, params + stats_params)
+            # Count total — fast path when no vendor-table filters (search, has_rfc)
+            if not search and has_rfc is None:
+                # Count from vendor_stats alone (no JOIN needed)
+                count_query = f"""
+                    SELECT COUNT(*)
+                    FROM vendor_stats s
+                    WHERE {stats_where}
+                """
+                cursor.execute(count_query, stats_params)
+            else:
+                count_query = f"""
+                    SELECT COUNT(*)
+                    FROM vendors v
+                    JOIN vendor_stats s ON v.id = s.vendor_id
+                    WHERE {where_clause} AND {stats_where}
+                """
+                cursor.execute(count_query, params + stats_params)
             total = cursor.fetchone()[0]
             total_pages = math.ceil(total / per_page) if total > 0 else 1
 
@@ -129,8 +161,11 @@ def list_vendors(
                     s.avg_risk_score,
                     s.high_risk_pct,
                     s.direct_award_pct,
+                    s.single_bid_pct,
                     s.first_contract_year,
-                    s.last_contract_year
+                    s.last_contract_year,
+                    s.primary_sector_id,
+                    s.anomalous_pct
                 FROM vendors v
                 JOIN vendor_stats s ON v.id = s.vendor_id
                 WHERE {where_clause} AND {stats_where}
@@ -151,8 +186,11 @@ def list_vendors(
                     avg_risk_score=round(row["avg_risk_score"], 4) if row["avg_risk_score"] else None,
                     high_risk_pct=round(row["high_risk_pct"], 2),
                     direct_award_pct=round(row["direct_award_pct"], 2),
+                    single_bid_pct=round(row["single_bid_pct"], 2) if row["single_bid_pct"] else 0,
                     first_contract_year=row["first_contract_year"],
                     last_contract_year=row["last_contract_year"],
+                    primary_sector_id=row["primary_sector_id"],
+                    pct_anomalous=round(row["anomalous_pct"], 2) if row["anomalous_pct"] else None,
                 )
                 for row in rows
             ]
@@ -163,6 +201,8 @@ def list_vendors(
                 filters_applied["search"] = search
             if sector_id is not None:
                 filters_applied["sector_id"] = sector_id
+            if risk_level is not None:
+                filters_applied["risk_level"] = risk_level
             if min_contracts is not None:
                 filters_applied["min_contracts"] = min_contracts
             if min_value is not None:

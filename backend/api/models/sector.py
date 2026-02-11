@@ -90,6 +90,11 @@ class YearOverYearChange(BaseModel):
     contracts: int
     value_mxn: float
     avg_risk: float
+    direct_award_pct: float = 0
+    single_bid_pct: float = 0
+    high_risk_pct: float = 0
+    vendor_count: int = 0
+    institution_count: int = 0
     contracts_change_pct: Optional[float] = None
     value_change_pct: Optional[float] = None
 

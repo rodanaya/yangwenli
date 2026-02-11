@@ -209,8 +209,11 @@ export interface VendorListItem {
   avg_risk_score?: number
   high_risk_pct: number
   direct_award_pct: number
+  single_bid_pct: number
   first_contract_year?: number
   last_contract_year?: number
+  primary_sector_id?: number
+  pct_anomalous?: number
 }
 
 export interface VendorDetailResponse {
@@ -346,6 +349,11 @@ export interface InstitutionResponse {
   geographic_scope?: string
   total_contracts?: number
   total_amount_mxn?: number
+  avg_risk_score?: number
+  high_risk_pct?: number
+  direct_award_pct?: number
+  single_bid_pct?: number
+  vendor_count?: number
   classification_confidence?: number
   data_quality_grade?: string
 }
@@ -450,8 +458,14 @@ export interface RiskDistribution {
 export interface YearOverYearChange {
   year: number
   contracts: number
+  total_value?: number
   value_mxn: number
   avg_risk: number
+  direct_award_pct: number
+  single_bid_pct: number
+  high_risk_pct: number
+  vendor_count: number
+  institution_count: number
   contracts_change_pct?: number
   value_change_pct?: number
 }
@@ -503,10 +517,12 @@ export interface ClassificationStatsResponse {
 export interface VendorFilterParams {
   industry_id?: number
   sector_affinity?: number
+  sector_id?: number
   min_contracts?: number
   max_contracts?: number
   min_value?: number
   max_value?: number
+  has_rfc?: boolean
   risk_level?: RiskLevel
   search?: string
   page?: number
@@ -520,6 +536,7 @@ export interface InstitutionFilterParams {
   sector_id?: number
   size_tier?: string
   state_code?: string
+  min_contracts?: number
   search?: string
   page?: number
   per_page?: number
