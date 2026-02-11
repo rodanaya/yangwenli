@@ -29,6 +29,10 @@ import type {
   YearOverYearChange,
   ClassificationStatsResponse,
   AnomalyItem,
+  SectorYearItem,
+  MoneyFlowResponse,
+  RiskFactorAnalysisResponse,
+  InstitutionRankingsResponse,
 } from './types'
 
 // API Base URL - proxied through Vite in development
@@ -482,6 +486,69 @@ export const analysisApi = {
    */
   async getClassificationStats(): Promise<ClassificationStatsResponse> {
     const { data } = await api.get<ClassificationStatsResponse>('/vendors/classification/stats')
+    return data
+  },
+
+  /**
+   * Get sector x year cross-tabulation for administration analysis
+   */
+  async getSectorYearBreakdown(): Promise<{ data: SectorYearItem[]; total_rows: number }> {
+    const { data } = await api.get('/analysis/sector-year-breakdown')
+    return data
+  },
+
+  /**
+   * Get money flow data for Sankey visualization
+   */
+  async getMoneyFlow(year?: number, sectorId?: number): Promise<MoneyFlowResponse> {
+    const params = buildQueryParams({ year, sector_id: sectorId } as Record<string, unknown>)
+    const paramStr = params.toString()
+    const { data } = await api.get<MoneyFlowResponse>(`/analysis/money-flow${paramStr ? `?${paramStr}` : ''}`)
+    return data
+  },
+
+  /**
+   * Get risk factor frequency and co-occurrence analysis
+   */
+  async getRiskFactorAnalysis(sectorId?: number, year?: number): Promise<RiskFactorAnalysisResponse> {
+    const params = buildQueryParams({ sector_id: sectorId, year } as Record<string, unknown>)
+    const paramStr = params.toString()
+    const { data } = await api.get<RiskFactorAnalysisResponse>(`/analysis/risk-factor-analysis${paramStr ? `?${paramStr}` : ''}`)
+    return data
+  },
+
+  /**
+   * Get institution health rankings with HHI
+   */
+  async getInstitutionRankings(sortBy = 'risk', minContracts = 100, limit = 50): Promise<InstitutionRankingsResponse> {
+    const { data } = await api.get<InstitutionRankingsResponse>(
+      `/analysis/institution-rankings?sort_by=${sortBy}&min_contracts=${minContracts}&limit=${limit}`
+    )
+    return data
+  },
+
+  /**
+   * Get ground truth validation summary
+   */
+  async getValidationSummary(): Promise<Record<string, unknown>> {
+    const { data } = await api.get('/analysis/validation/summary')
+    return data
+  },
+
+  /**
+   * Get detection rate metrics
+   */
+  async getDetectionRate(modelVersion?: string): Promise<Record<string, unknown>> {
+    const params = modelVersion ? `?model_version=${modelVersion}` : ''
+    const { data } = await api.get(`/analysis/validation/detection-rate${params}`)
+    return data
+  },
+
+  /**
+   * Get false negatives from ground truth
+   */
+  async getFalseNegatives(limit = 50): Promise<Record<string, unknown>> {
+    const { data } = await api.get(`/analysis/validation/false-negatives?limit=${limit}`)
     return data
   },
 

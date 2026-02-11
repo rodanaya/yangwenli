@@ -84,7 +84,6 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
-  AreaChart,
   Area,
   ScatterChart,
   Scatter,
@@ -1569,8 +1568,49 @@ const EVENT_BORDER_COLORS: Record<string, string> = {
   milestone: 'border-l-[#8b5cf6]',
 }
 
+type RadarPreset = 'risk' | 'transparency' | 'market'
+
+const RADAR_PRESETS: { id: RadarPreset; label: string; axes: { key: string; label: string }[] }[] = [
+  {
+    id: 'risk',
+    label: 'Risk Profile',
+    axes: [
+      { key: 'avgRisk', label: 'Avg Risk' },
+      { key: 'highRiskPct', label: 'High Risk %' },
+      { key: 'criticalPct', label: 'Critical %' },
+      { key: 'singleBidPct', label: 'Single Bid %' },
+      { key: 'concentration', label: 'Concentration' },
+    ],
+  },
+  {
+    id: 'transparency',
+    label: 'Transparency',
+    axes: [
+      { key: 'directAwardPct', label: 'Direct Award %' },
+      { key: 'singleBidPct', label: 'Single Bid %' },
+      { key: 'highRiskPct', label: 'High Risk %' },
+      { key: 'avgRisk', label: 'Avg Risk' },
+      { key: 'vendorDensity', label: 'Vendor Density' },
+    ],
+  },
+  {
+    id: 'market',
+    label: 'Market Structure',
+    axes: [
+      { key: 'vendorDensity', label: 'Vendor Density' },
+      { key: 'concentration', label: 'Concentration' },
+      { key: 'avgValue', label: 'Avg Contract $' },
+      { key: 'institutionDensity', label: 'Institutions' },
+      { key: 'directAwardPct', label: 'Direct Award %' },
+    ],
+  },
+]
+
 function TrendsTab() {
   const [selectedYear, setSelectedYear] = useState(2024)
+  const [radarPreset, setRadarPreset] = useState<RadarPreset>('risk')
+  const [radarShowAll, setRadarShowAll] = useState(false)
+  const [hiddenSectors, setHiddenSectors] = useState<Set<string>>(new Set())
 
   // Fetch year-over-year trends
   const { data: trends, isLoading: trendsLoading } = useQuery({
@@ -1605,17 +1645,31 @@ function TrendsTab() {
   // Process timeline data — includes all 5 new fields from year-over-year API
   const timelineData = useMemo(() => {
     if (!trends?.data) return []
-    return trends.data.map((d: any) => ({
-      year: d.year,
-      contracts: d.contracts,
-      value: d.total_value ?? d.value_mxn ?? 0,
-      avgRisk: (d.avg_risk ?? 0) * 100,
-      directAwardPct: d.direct_award_pct ?? 0,
-      singleBidPct: d.single_bid_pct ?? 0,
-      highRiskPct: d.high_risk_pct ?? 0,
-      vendorCount: d.vendor_count ?? 0,
-      institutionCount: d.institution_count ?? 0,
-    }))
+    return trends.data.map((d: any) => {
+      const da = d.direct_award_pct ?? 0
+      const sb = d.single_bid_pct ?? 0
+      const hr = d.high_risk_pct ?? 0
+      const vendors = d.vendor_count ?? 0
+      const contracts = d.contracts ?? 0
+      // Opacity Index: weighted composite of the 3 health indicators (0-100)
+      // Higher = more opaque/less transparent procurement
+      const opacityIndex = da * 0.5 + sb * 0.3 + hr * 0.2
+      // Contracts per vendor: market concentration metric
+      const contractsPerVendor = vendors > 0 ? contracts / vendors : 0
+      return {
+        year: d.year,
+        contracts,
+        value: d.total_value ?? d.value_mxn ?? 0,
+        avgRisk: (d.avg_risk ?? 0) * 100,
+        directAwardPct: da,
+        singleBidPct: sb,
+        highRiskPct: hr,
+        opacityIndex: Math.round(opacityIndex * 10) / 10,
+        vendorCount: vendors,
+        institutionCount: d.institution_count ?? 0,
+        contractsPerVendor: Math.round(contractsPerVendor * 10) / 10,
+      }
+    })
   }, [trends])
 
   // Selected year summary
@@ -1669,47 +1723,51 @@ function TrendsTab() {
     }))
   }, [monthlyBreakdown])
 
-  // Radar chart data: top 6 sectors, 5 axes
+  // Radar chart data: supports presets, top 6 or all 12 sectors
   const radarData = useMemo(() => {
-    if (!sectorData?.data) return { axes: [], sectors: [] }
+    if (!sectorData?.data) return { axes: [], sectors: [], chartData: [] }
 
-    const top6 = [...sectorData.data]
-      .sort((a, b) => b.total_contracts - a.total_contracts)
-      .slice(0, 6)
+    const allSectors = [...sectorData.data].sort((a, b) => b.total_contracts - a.total_contracts)
+    const chosen = radarShowAll ? allSectors : allSectors.slice(0, 6)
 
-    const maxAvgValue = Math.max(...top6.map((s) => s.avg_contract_value || 1))
+    const maxAvgValue = Math.max(...allSectors.map((s) => s.avg_contract_value || 1))
+    const maxVendors = Math.max(...allSectors.map((s) => s.total_vendors || 1))
+    const maxInstitutions = Math.max(...allSectors.map((s) => s.total_institutions || 1))
 
-    const axes = [
-      { key: 'avgRisk', label: 'Avg Risk' },
-      { key: 'highRiskPct', label: 'High Risk %' },
-      { key: 'directAwardPct', label: 'Direct Award %' },
-      { key: 'singleBidPct', label: 'Single Bid %' },
-      { key: 'concentration', label: 'Concentration' },
-    ]
+    const preset = RADAR_PRESETS.find((p) => p.id === radarPreset) ?? RADAR_PRESETS[0]
+    const axes = preset.axes
 
-    const sectors = top6.map((s) => ({
-      code: s.sector_code,
-      name: SECTORS.find((sec) => sec.id === s.sector_id)?.nameEN ?? s.sector_name,
-      color: SECTOR_COLORS[s.sector_code] ?? '#64748b',
-      values: {
-        avgRisk: Math.min((s.avg_risk_score ?? 0) * 100, 100),
-        highRiskPct: Math.min(s.high_risk_pct ?? 0, 100),
-        directAwardPct: Math.min(s.direct_award_pct ?? 0, 100),
-        singleBidPct: Math.min(s.single_bid_pct ?? 0, 100),
-        concentration: Math.min(((s.avg_contract_value || 0) / maxAvgValue) * 100, 100),
-      },
-    }))
+    const sectors = chosen.map((s) => {
+      const totalRisk = (s.low_risk_count || 0) + (s.medium_risk_count || 0) + (s.high_risk_count || 0) + (s.critical_risk_count || 0)
+      const critPct = totalRisk > 0 ? ((s.critical_risk_count || 0) / totalRisk) * 100 : 0
+      return {
+        code: s.sector_code,
+        name: SECTORS.find((sec) => sec.id === s.sector_id)?.nameEN ?? s.sector_name,
+        color: SECTOR_COLORS[s.sector_code] ?? '#64748b',
+        values: {
+          avgRisk: Math.min((s.avg_risk_score ?? 0) * 100, 100),
+          highRiskPct: Math.min(s.high_risk_pct ?? 0, 100),
+          criticalPct: Math.min(critPct, 100),
+          directAwardPct: Math.min(s.direct_award_pct ?? 0, 100),
+          singleBidPct: Math.min(s.single_bid_pct ?? 0, 100),
+          concentration: Math.min(((s.avg_contract_value || 0) / maxAvgValue) * 100, 100),
+          vendorDensity: Math.min(((s.total_vendors || 0) / maxVendors) * 100, 100),
+          avgValue: Math.min(((s.avg_contract_value || 0) / maxAvgValue) * 100, 100),
+          institutionDensity: Math.min(((s.total_institutions || 0) / maxInstitutions) * 100, 100),
+        },
+      }
+    })
 
     const chartData = axes.map((axis) => {
       const point: Record<string, string | number> = { axis: axis.label }
       sectors.forEach((s) => {
-        point[s.code] = Number(s.values[axis.key as keyof typeof s.values].toFixed(1))
+        point[s.code] = Number((s.values[axis.key as keyof typeof s.values] ?? 0).toFixed(1))
       })
       return point
     })
 
     return { axes, sectors, chartData }
-  }, [sectorData])
+  }, [sectorData, radarPreset, radarShowAll])
 
   // Sector bubble data for landscape scatter chart
   const sectorBubbleData = useMemo(() => {
@@ -1946,15 +2004,15 @@ function TrendsTab() {
           </CardContent>
         </Card>
 
-        {/* Chart 2: Procurement Health Indicators */}
+        {/* Chart 2: Procurement Transparency Pulse */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
-              Procurement Health Indicators
+              Procurement Transparency Pulse
             </CardTitle>
             <CardDescription className="text-xs">
-              Direct award %, single bid %, and high-risk % over time
+              Layered health metrics — darker fill = less transparent procurement
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -1963,72 +2021,140 @@ function TrendsTab() {
             ) : (
               <div className="h-[280px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={timelineData}>
+                  <ComposedChart data={timelineData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                     <defs>
-                      <linearGradient id="gradDA" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#58a6ff" stopOpacity={0.15} />
-                        <stop offset="95%" stopColor="#58a6ff" stopOpacity={0} />
+                      <linearGradient id="gradDA2" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#58a6ff" stopOpacity={0.45} />
+                        <stop offset="95%" stopColor="#58a6ff" stopOpacity={0.08} />
+                      </linearGradient>
+                      <linearGradient id="gradSB2" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={RISK_COLORS.medium} stopOpacity={0.5} />
+                        <stop offset="95%" stopColor={RISK_COLORS.medium} stopOpacity={0.08} />
+                      </linearGradient>
+                      <linearGradient id="gradHR2" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={RISK_COLORS.high} stopOpacity={0.55} />
+                        <stop offset="95%" stopColor={RISK_COLORS.high} stopOpacity={0.1} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
-                    <XAxis dataKey="year" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.15} />
+                    <XAxis
+                      dataKey="year"
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
+                      axisLine={{ stroke: 'var(--color-border)', strokeOpacity: 0.3 }}
+                    />
                     <YAxis
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
                       tickFormatter={(v) => `${v}%`}
                       domain={[0, 100]}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    {/* Threshold reference zones */}
+                    <ReferenceArea y1={50} y2={100} fill={RISK_COLORS.high} fillOpacity={0.03} />
+                    <ReferenceLine
+                      y={50}
+                      stroke={RISK_COLORS.high}
+                      strokeDasharray="6 4"
+                      strokeOpacity={0.3}
+                      label={{
+                        value: 'Majority',
+                        position: 'right',
+                        style: { fill: 'var(--color-text-muted)', fontSize: 8, fontFamily: 'var(--font-mono)' },
+                      }}
                     />
                     <RechartsTooltip
                       content={({ active, payload }) => {
                         if (active && payload && payload.length) {
                           const data = payload[0].payload
+                          const grade =
+                            data.opacityIndex < 30 ? 'A' :
+                            data.opacityIndex < 40 ? 'B' :
+                            data.opacityIndex < 50 ? 'C' :
+                            data.opacityIndex < 60 ? 'D' : 'F'
+                          const gradeColor =
+                            grade === 'A' ? RISK_COLORS.low :
+                            grade === 'B' ? '#58a6ff' :
+                            grade === 'C' ? RISK_COLORS.medium :
+                            grade === 'D' ? RISK_COLORS.high : RISK_COLORS.critical
                           return (
                             <div className="chart-tooltip">
-                              <p className="font-medium">{data.year}</p>
-                              <p className="text-xs" style={{ color: '#58a6ff' }}>
-                                Direct Award: {data.directAwardPct.toFixed(1)}%
-                              </p>
-                              <p className="text-xs" style={{ color: RISK_COLORS.medium }}>
-                                Single Bid: {data.singleBidPct.toFixed(1)}%
-                              </p>
-                              <p className="text-xs" style={{ color: RISK_COLORS.high }}>
-                                High Risk: {data.highRiskPct.toFixed(1)}%
-                              </p>
+                              <div className="flex items-center justify-between gap-4 mb-1">
+                                <span className="font-medium">{data.year}</span>
+                                <span
+                                  className="text-xs font-bold px-1.5 py-0.5 rounded"
+                                  style={{ color: gradeColor, background: `${gradeColor}15` }}
+                                >
+                                  Grade {grade}
+                                </span>
+                              </div>
+                              <div className="space-y-0.5">
+                                <p className="text-xs flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: '#58a6ff' }} />
+                                  Direct Award: {data.directAwardPct.toFixed(1)}%
+                                </p>
+                                <p className="text-xs flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: RISK_COLORS.medium }} />
+                                  Single Bid: {data.singleBidPct.toFixed(1)}%
+                                </p>
+                                <p className="text-xs flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: RISK_COLORS.high }} />
+                                  High Risk: {data.highRiskPct.toFixed(1)}%
+                                </p>
+                                <p className="text-xs flex items-center gap-1.5 pt-0.5 border-t border-border/50 mt-1">
+                                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: '#c084fc' }} />
+                                  Opacity Index: {data.opacityIndex.toFixed(1)}
+                                </p>
+                              </div>
                             </div>
                           )
                         }
                         return null
                       }}
                     />
+                    {/* Layered areas — each with strong gradient fill */}
                     <Area
                       type="monotone"
                       dataKey="directAwardPct"
                       stroke="#58a6ff"
-                      strokeWidth={1.5}
-                      fill="url(#gradDA)"
+                      strokeWidth={2}
+                      fill="url(#gradDA2)"
                       name="Direct Award %"
+                      dot={false}
                     />
-                    <Line
+                    <Area
                       type="monotone"
                       dataKey="singleBidPct"
                       stroke={RISK_COLORS.medium}
-                      strokeWidth={1.5}
-                      strokeDasharray="5 3"
-                      dot={false}
+                      strokeWidth={2}
+                      fill="url(#gradSB2)"
                       name="Single Bid %"
+                      dot={false}
                     />
-                    <Line
+                    <Area
                       type="monotone"
                       dataKey="highRiskPct"
                       stroke={RISK_COLORS.high}
                       strokeWidth={2}
-                      dot={false}
+                      fill="url(#gradHR2)"
                       name="High Risk %"
+                      dot={false}
+                    />
+                    {/* Composite Opacity Index — bold white-dotted overlay */}
+                    <Line
+                      type="monotone"
+                      dataKey="opacityIndex"
+                      stroke="#c084fc"
+                      strokeWidth={3}
+                      dot={{ r: 2.5, fill: '#c084fc', strokeWidth: 0 }}
+                      activeDot={{ r: 4, fill: '#c084fc', stroke: '#fff', strokeWidth: 1.5 }}
+                      name="Opacity Index"
+                      strokeLinecap="round"
                     />
                     <Legend
                       verticalAlign="bottom"
                       height={24}
-                      iconSize={10}
-                      wrapperStyle={{ fontSize: 10, color: 'var(--color-text-muted)' }}
+                      iconSize={8}
+                      wrapperStyle={{ fontSize: 9, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}
                     />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -2043,18 +2169,44 @@ function TrendsTab() {
         {/* Chart 3: Sector Risk DNA Radar */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Target className="h-4 w-4" />
-              Sector Risk DNA
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Top 6 sectors across 5 risk dimensions (0-100)
-            </CardDescription>
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Target className="h-4 w-4" />
+                Sector Risk DNA
+              </CardTitle>
+              <div className="flex items-center gap-1.5">
+                {RADAR_PRESETS.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setRadarPreset(p.id)}
+                    className={cn(
+                      'px-2 py-0.5 text-[10px] rounded-full border transition-colors font-mono',
+                      radarPreset === p.id
+                        ? 'bg-accent/20 border-accent text-accent'
+                        : 'border-border text-text-muted hover:border-text-muted'
+                    )}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <CardDescription className="text-xs">
+                {radarShowAll ? 'All 12' : 'Top 6'} sectors, {RADAR_PRESETS.find(p => p.id === radarPreset)?.axes.length ?? 5} dimensions (0-100)
+              </CardDescription>
+              <button
+                onClick={() => { setRadarShowAll(!radarShowAll); setHiddenSectors(new Set()) }}
+                className="text-[10px] text-text-muted hover:text-accent transition-colors font-mono"
+              >
+                {radarShowAll ? 'Top 6' : 'All 12'}
+              </button>
+            </div>
           </CardHeader>
           <CardContent>
             {sectorLoading ? (
               <Skeleton className="h-[300px]" />
-            ) : radarData.chartData && radarData.sectors ? (
+            ) : radarData.chartData && radarData.sectors.length > 0 ? (
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart data={radarData.chartData} cx="50%" cy="50%" outerRadius="70%">
@@ -2076,17 +2228,20 @@ function TrendsTab() {
                         dataKey={sector.code}
                         stroke={sector.color}
                         fill={sector.color}
-                        fillOpacity={0.1}
-                        strokeWidth={1.5}
+                        fillOpacity={hiddenSectors.has(sector.code) ? 0 : 0.1}
+                        strokeWidth={hiddenSectors.has(sector.code) ? 0 : 1.5}
+                        strokeOpacity={hiddenSectors.has(sector.code) ? 0 : 1}
                       />
                     ))}
                     <RechartsTooltip
                       content={({ active, payload, label }) => {
                         if (active && payload && payload.length) {
+                          const visible = payload.filter((p: any) => !hiddenSectors.has(p.dataKey as string))
+                          if (!visible.length) return null
                           return (
                             <div className="chart-tooltip">
                               <p className="font-medium text-xs mb-1">{label}</p>
-                              {payload.map((p: any) => (
+                              {visible.map((p: any) => (
                                 <p
                                   key={p.name}
                                   className="text-xs flex items-center gap-1.5"
@@ -2107,15 +2262,27 @@ function TrendsTab() {
                     />
                   </RadarChart>
                 </ResponsiveContainer>
-                <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 -mt-2">
+                <div className="flex flex-wrap justify-center gap-x-2 gap-y-1 -mt-2">
                   {radarData.sectors.map((s) => (
-                    <span key={s.code} className="flex items-center gap-1 text-[10px] text-text-muted">
+                    <button
+                      key={s.code}
+                      onClick={() => setHiddenSectors((prev) => {
+                        const next = new Set(prev)
+                        if (next.has(s.code)) next.delete(s.code)
+                        else next.add(s.code)
+                        return next
+                      })}
+                      className={cn(
+                        'flex items-center gap-1 text-[10px] transition-opacity cursor-pointer',
+                        hiddenSectors.has(s.code) ? 'opacity-30' : 'opacity-100'
+                      )}
+                    >
                       <span
                         className="inline-block w-2 h-2 rounded-full"
                         style={{ backgroundColor: s.color }}
                       />
-                      {s.name}
-                    </span>
+                      <span className="text-text-muted">{s.name}</span>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -2325,15 +2492,15 @@ function TrendsTab() {
           </CardContent>
         </Card>
 
-        {/* Chart 6: Market Structure */}
+        {/* Chart 6: Market Dynamics — Concentration & Diversity */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <Users className="h-4 w-4" />
-              Market Structure
+              Market Dynamics
             </CardTitle>
             <CardDescription className="text-xs">
-              Vendor and institution counts over time (market fragmentation)
+              Vendor pool size (area) and contracts per vendor (line) — rising line = market concentrating
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -2342,61 +2509,128 @@ function TrendsTab() {
             ) : (
               <div className="h-[280px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={timelineData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
-                    <XAxis dataKey="year" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} />
+                  <ComposedChart data={timelineData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="gradVendors" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#58a6ff" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#58a6ff" stopOpacity={0.05} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.15} />
+                    <XAxis
+                      dataKey="year"
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
+                      axisLine={{ stroke: 'var(--color-border)', strokeOpacity: 0.3 }}
+                    />
                     <YAxis
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                      yAxisId="left"
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
                       tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v)}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      yAxisId="right"
+                      orientation="right"
+                      tick={{ fill: '#c084fc', fontSize: 10, fontFamily: 'var(--font-mono)' }}
+                      tickFormatter={(v) => `${v.toFixed(0)}`}
+                      domain={[0, 'auto']}
+                      axisLine={false}
+                      tickLine={false}
+                      label={{
+                        value: 'contracts/vendor',
+                        angle: -90,
+                        position: 'insideRight',
+                        style: { fill: '#c084fc', fontSize: 9, fontFamily: 'var(--font-mono)' },
+                        offset: 10,
+                      }}
                     />
                     <RechartsTooltip
                       content={({ active, payload }) => {
                         if (active && payload && payload.length) {
                           const data = payload[0].payload
+                          const cpv = data.contractsPerVendor
+                          const concentrationLabel =
+                            cpv > 6 ? 'Concentrated' :
+                            cpv > 3 ? 'Moderate' : 'Diverse'
+                          const concentrationColor =
+                            cpv > 6 ? RISK_COLORS.high :
+                            cpv > 3 ? RISK_COLORS.medium : RISK_COLORS.low
                           return (
                             <div className="chart-tooltip">
-                              <p className="font-medium">{data.year}</p>
-                              <p className="text-xs" style={{ color: '#58a6ff' }}>
-                                Vendors: {formatNumber(data.vendorCount)}
-                              </p>
-                              <p className="text-xs text-text-muted">
-                                Institutions: {formatNumber(data.institutionCount)}
-                              </p>
-                              <p className="text-xs text-text-muted">
-                                Contracts: {formatNumber(data.contracts)}
-                              </p>
-                              {data.vendorCount > 0 && (
-                                <p className="text-xs text-text-muted">
-                                  Contracts/vendor: {(data.contracts / data.vendorCount).toFixed(1)}
+                              <div className="flex items-center justify-between gap-4 mb-1">
+                                <span className="font-medium">{data.year}</span>
+                                <span
+                                  className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                                  style={{ color: concentrationColor, background: `${concentrationColor}15` }}
+                                >
+                                  {concentrationLabel}
+                                </span>
+                              </div>
+                              <div className="space-y-0.5">
+                                <p className="text-xs flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: '#58a6ff' }} />
+                                  Vendors: {formatNumber(data.vendorCount)}
                                 </p>
-                              )}
+                                <p className="text-xs flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-sm inline-block" style={{ background: 'var(--color-text-muted)' }} />
+                                  Institutions: {formatNumber(data.institutionCount)}
+                                </p>
+                                <p className="text-xs flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-full inline-block opacity-50" />
+                                  Contracts: {formatNumber(data.contracts)}
+                                </p>
+                                <p className="text-xs flex items-center gap-1.5 pt-0.5 border-t border-border/50 mt-1 font-medium" style={{ color: '#c084fc' }}>
+                                  <span className="w-2 h-2 rounded inline-block" style={{ background: '#c084fc' }} />
+                                  {cpv.toFixed(1)} contracts/vendor
+                                </p>
+                              </div>
                             </div>
                           )
                         }
                         return null
                       }}
                     />
-                    <Line
+                    {/* Vendor count as prominent filled area */}
+                    <Area
+                      yAxisId="left"
                       type="monotone"
                       dataKey="vendorCount"
                       stroke="#58a6ff"
                       strokeWidth={2}
+                      fill="url(#gradVendors)"
+                      name="Active Vendors"
                       dot={false}
-                      name="Vendors"
                     />
+                    {/* Institution count as subtle line */}
                     <Line
+                      yAxisId="left"
                       type="monotone"
                       dataKey="institutionCount"
                       stroke="var(--color-text-muted)"
-                      strokeWidth={1.5}
+                      strokeWidth={1}
+                      strokeDasharray="4 3"
                       dot={false}
                       name="Institutions"
+                      strokeOpacity={0.5}
+                    />
+                    {/* Contracts per vendor: bold line with dots on right axis */}
+                    <Line
+                      yAxisId="right"
+                      type="monotone"
+                      dataKey="contractsPerVendor"
+                      stroke="#c084fc"
+                      strokeWidth={3}
+                      dot={{ r: 3, fill: '#c084fc', strokeWidth: 0 }}
+                      activeDot={{ r: 5, fill: '#c084fc', stroke: '#fff', strokeWidth: 1.5 }}
+                      name="Contracts/Vendor"
+                      strokeLinecap="round"
                     />
                     <Legend
                       verticalAlign="bottom"
                       height={24}
-                      iconSize={10}
-                      wrapperStyle={{ fontSize: 10, color: 'var(--color-text-muted)' }}
+                      iconSize={8}
+                      wrapperStyle={{ fontSize: 9, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}
                     />
                   </ComposedChart>
                 </ResponsiveContainer>

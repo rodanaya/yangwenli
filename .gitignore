@@ -85,7 +85,8 @@ structure_analysis.json
 backend/.env
 frontend/.env
 
-# Claude local settings (personal preferences)
+# Claude configuration (private)
+CLAUDE.md
 CLAUDE.local.md
 .claude/settings.local.json
 

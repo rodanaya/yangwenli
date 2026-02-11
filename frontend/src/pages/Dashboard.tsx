@@ -138,8 +138,8 @@ export function Dashboard() {
       .map((d) => ({
         year: d.year,
         contracts: d.contracts,
-        valueBillions: d.value_mxn / 1_000_000_000,
-        value_mxn: d.value_mxn,
+        valueBillions: (d.total_value ?? d.value_mxn ?? 0) / 1_000_000_000,
+        value_mxn: d.total_value ?? d.value_mxn ?? 0,
       }))
   }, [trends])
 

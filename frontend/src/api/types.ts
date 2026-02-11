@@ -458,8 +458,8 @@ export interface RiskDistribution {
 export interface YearOverYearChange {
   year: number
   contracts: number
-  total_value?: number
-  value_mxn: number
+  total_value: number
+  value_mxn?: number
   avg_risk: number
   direct_award_pct: number
   single_bid_pct: number
@@ -477,6 +477,89 @@ export interface AnomalyItem {
   affected_contracts: number
   affected_value_mxn: number
   details: Record<string, unknown>
+}
+
+export interface SectorYearItem {
+  year: number
+  sector_id: number
+  contracts: number
+  total_value: number
+  avg_risk: number
+  direct_award_pct: number
+  single_bid_pct: number | null
+  high_risk_pct: number
+  vendor_count: number
+  institution_count: number
+}
+
+// ============================================================================
+// Money Flow Types
+// ============================================================================
+
+export interface MoneyFlowItem {
+  source_type: string
+  source_id: number
+  source_name: string
+  target_type: string
+  target_id: number
+  target_name: string
+  value: number
+  contracts: number
+  avg_risk: number | null
+}
+
+export interface MoneyFlowResponse {
+  flows: MoneyFlowItem[]
+  total_value: number
+  total_contracts: number
+}
+
+// ============================================================================
+// Risk Factor Analysis Types
+// ============================================================================
+
+export interface RiskFactorFrequency {
+  factor: string
+  count: number
+  percentage: number
+  avg_risk_score: number
+}
+
+export interface FactorCooccurrence {
+  factor_a: string
+  factor_b: string
+  count: number
+  expected_count: number
+  lift: number
+}
+
+export interface RiskFactorAnalysisResponse {
+  total_contracts_with_factors: number
+  factor_frequencies: RiskFactorFrequency[]
+  top_cooccurrences: FactorCooccurrence[]
+}
+
+// ============================================================================
+// Institution Health Types
+// ============================================================================
+
+export interface InstitutionHealthItem {
+  institution_id: number
+  institution_name: string
+  total_contracts: number
+  total_value: number
+  avg_risk_score: number
+  direct_award_pct: number
+  single_bid_pct: number
+  high_risk_pct: number
+  vendor_count: number
+  hhi: number
+  top_vendor_share: number
+}
+
+export interface InstitutionRankingsResponse {
+  data: InstitutionHealthItem[]
+  total_institutions: number
 }
 
 // ============================================================================

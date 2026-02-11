@@ -38,6 +38,7 @@ const SECTOR_GROUPS = [
 
 export function Sectors() {
   const navigate = useNavigate()
+  const [selectedSectorCode, setSelectedSectorCode] = useState<string | null>(null)
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['sectors'],
@@ -135,8 +136,6 @@ export function Sectors() {
   const allSectors = data?.data || []
   const sortedSectors = [...allSectors].sort((a, b) => b.total_value_mxn - a.total_value_mxn)
 
-  // Selected sector for narrative expansion
-  const [selectedSectorCode, setSelectedSectorCode] = useState<string | null>(null)
   const selectedSector = allSectors.find((s) => s.sector_code === selectedSectorCode) || null
 
   // Compute comparative stats

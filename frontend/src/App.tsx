@@ -27,6 +27,14 @@ const Settings = lazy(() => import('@/pages/Settings'))
 const NetworkGraph = lazy(() => import('@/pages/NetworkGraph'))
 const Watchlist = lazy(() => import('@/pages/Watchlist'))
 const DetectivePatterns = lazy(() => import('@/pages/DetectivePatterns'))
+const Administrations = lazy(() => import('@/pages/Administrations'))
+const MoneyFlow = lazy(() => import('@/pages/MoneyFlow'))
+const RedFlags = lazy(() => import('@/pages/RedFlags'))
+const GroundTruth = lazy(() => import('@/pages/GroundTruth'))
+const TemporalPulse = lazy(() => import('@/pages/TemporalPulse'))
+const InstitutionHealth = lazy(() => import('@/pages/InstitutionHealth'))
+const PriceIntelligence = lazy(() => import('@/pages/PriceIntelligence'))
+const ModelTransparency = lazy(() => import('@/pages/ModelTransparency'))
 
 // Enhanced QueryClient configuration for better caching and UX
 const queryClient = new QueryClient({
@@ -70,6 +78,30 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <DetectivePatterns />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="administrations"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <Administrations />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="money-flow"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <MoneyFlow />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="red-flags"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <RedFlags />
                   </SuspenseBoundary>
                 }
               />
@@ -118,6 +150,46 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <Methodology />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="ground-truth"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <GroundTruth />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="temporal"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <TemporalPulse />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="institutions/health"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <InstitutionHealth />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="price-analysis"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <PriceIntelligence />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="model"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <ModelTransparency />
                   </SuspenseBoundary>
                 }
               />

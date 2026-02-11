@@ -90,11 +90,9 @@ from ..models.sector import (
     SectorListResponse,
     SectorComparisonItem,
     RiskDistribution,
-    YearOverYearChange,
     AnalysisOverview,
     SectorTrendListResponse,
     RiskDistributionListResponse,
-    YearOverYearListResponse,
     SectorComparisonListResponse,
 )
 
@@ -619,131 +617,6 @@ def get_risk_distribution(
 
     except sqlite3.Error as e:
         logger.error(f"Database error in get_risk_distribution: {e}")
-        raise HTTPException(status_code=500, detail="Database error occurred")
-
-
-@router.get("/analysis/year-over-year", response_model=YearOverYearListResponse)
-def get_year_over_year(
-    sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector ID (1-12)"),
-):
-    """
-    Get year-over-year comparison.
-
-    Returns annual statistics with change percentages.
-    Uses precomputed_stats for the default (all-sectors) case.
-    """
-    cache_key = f"year_over_year:{sector_id}"
-    cached = _cache.get(cache_key)
-    if cached is not None:
-        return cached
-
-    try:
-        with get_db() as conn:
-            cursor = conn.cursor()
-
-            # Fast path: use precomputed data when no sector filter
-            if sector_id is None:
-                cursor.execute("SELECT stat_value FROM precomputed_stats WHERE stat_key = 'yearly_trends'")
-                row = cursor.fetchone()
-                if row:
-                    import json
-                    trends_data = json.loads(row[0])
-                    results = []
-                    prev_contracts = None
-                    prev_value = None
-
-                    for t in trends_data:
-                        contracts_change = None
-                        value_change = None
-                        c = t.get("contracts", 0)
-                        v = t.get("value_mxn", 0)
-
-                        if prev_contracts is not None and prev_contracts > 0:
-                            contracts_change = round((c - prev_contracts) / prev_contracts * 100, 2)
-                        if prev_value is not None and prev_value > 0:
-                            value_change = round((v - prev_value) / prev_value * 100, 2)
-
-                        results.append(YearOverYearChange(
-                            year=t["year"],
-                            contracts=c,
-                            value_mxn=v,
-                            avg_risk=round(t.get("avg_risk", 0), 4),
-                            direct_award_pct=round(t.get("direct_award_pct", 0), 1),
-                            single_bid_pct=round(t.get("single_bid_pct", 0), 1),
-                            high_risk_pct=round(t.get("high_risk_pct", 0), 2),
-                            vendor_count=t.get("vendor_count", 0),
-                            institution_count=t.get("institution_count", 0),
-                            contracts_change_pct=contracts_change,
-                            value_change_pct=value_change,
-                        ))
-                        prev_contracts = c
-                        prev_value = v
-
-                    result = YearOverYearListResponse(data=results)
-                    _cache.set(cache_key, result, ttl_seconds=7200)
-                    return result
-
-            # Slow path: live query with sector filter
-            sector_filter = "AND sector_id = ?" if sector_id else ""
-            params = [sector_id] if sector_id else []
-
-            query = f"""
-                SELECT
-                    contract_year,
-                    COUNT(*) as contracts,
-                    COALESCE(SUM(amount_mxn), 0) as value,
-                    COALESCE(AVG(risk_score), 0) as avg_risk,
-                    SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) as direct_award_pct,
-                    SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) * 100.0 /
-                        NULLIF(SUM(CASE WHEN is_direct_award = 0 THEN 1 ELSE 0 END), 0) as single_bid_pct,
-                    SUM(CASE WHEN risk_level IN ('high', 'critical') THEN 1 ELSE 0 END) * 100.0 / COUNT(*) as high_risk_pct,
-                    COUNT(DISTINCT vendor_id) as vendor_count,
-                    COUNT(DISTINCT institution_id) as institution_count
-                FROM contracts
-                WHERE contract_year IS NOT NULL {sector_filter}
-                GROUP BY contract_year
-                ORDER BY contract_year
-            """
-            cursor.execute(query, params)
-            rows = cursor.fetchall()
-
-            results = []
-            prev_contracts = None
-            prev_value = None
-
-            for row in rows:
-                contracts_change = None
-                value_change = None
-
-                if prev_contracts is not None and prev_contracts > 0:
-                    contracts_change = round((row[1] - prev_contracts) / prev_contracts * 100, 2)
-
-                if prev_value is not None and prev_value > 0:
-                    value_change = round((row[2] - prev_value) / prev_value * 100, 2)
-
-                results.append(YearOverYearChange(
-                    year=row[0],
-                    contracts=row[1],
-                    value_mxn=row[2],
-                    avg_risk=round(row[3], 4),
-                    direct_award_pct=round(row[4], 1) if row[4] else 0,
-                    single_bid_pct=round(row[5], 1) if row[5] else 0,
-                    high_risk_pct=round(row[6], 2) if row[6] else 0,
-                    vendor_count=row[7] or 0,
-                    institution_count=row[8] or 0,
-                    contracts_change_pct=contracts_change,
-                    value_change_pct=value_change,
-                ))
-
-                prev_contracts = row[1]
-                prev_value = row[2]
-
-            result = YearOverYearListResponse(data=results)
-            _cache.set(cache_key, result, ttl_seconds=7200)
-            return result
-
-    except sqlite3.Error as e:
-        logger.error(f"Database error in get_year_over_year: {e}")
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 

@@ -71,6 +71,8 @@ def _warmup_caches():
         "/api/v1/stats/dashboard/fast",          # Dashboard (highest priority, pre-computed)
         "/api/v1/sectors",                        # Sectors list (small table)
         "/api/v1/stats/data-quality",             # Header quality badge (cached)
+        "/api/v1/analysis/patterns/counts",       # DetectivePatterns page (LIKE queries on 3.1M rows)
+        "/api/v1/analysis/year-over-year",        # Shared by Trends, Patterns, Administrations
     ]
     for ep in endpoints:
         try:

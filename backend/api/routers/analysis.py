@@ -259,30 +259,27 @@ def get_pattern_counts():
             counts: Dict[str, int] = {}
 
             # Critical-risk contracts (ghost vendors pattern)
+            # NOTE: No >100B contracts exist, so COALESCE filter removed to allow index use
             cursor.execute(
-                "SELECT COUNT(*) FROM contracts WHERE risk_level = 'critical' AND COALESCE(amount_mxn, 0) <= ?",
-                (MAX_CONTRACT_VALUE,)
+                "SELECT COUNT(*) FROM contracts WHERE risk_level = 'critical'"
             )
             counts["critical"] = cursor.fetchone()[0]
 
             # Year-end high-risk (December rush)
             cursor.execute(
-                "SELECT COUNT(*) FROM contracts WHERE risk_level IN ('high', 'critical') AND contract_month = 12 AND COALESCE(amount_mxn, 0) <= ?",
-                (MAX_CONTRACT_VALUE,)
+                "SELECT COUNT(*) FROM contracts WHERE risk_level IN ('high', 'critical') AND contract_month = 12"
             )
             counts["december_rush"] = cursor.fetchone()[0]
 
             # Threshold splitting (risk_factors contains 'split_' entries like 'split_2', 'split_3')
             cursor.execute(
-                "SELECT COUNT(*) FROM contracts WHERE risk_factors LIKE '%split_%' AND COALESCE(amount_mxn, 0) <= ?",
-                (MAX_CONTRACT_VALUE,)
+                "SELECT COUNT(*) FROM contracts WHERE risk_factors LIKE '%split_%'"
             )
             counts["split_contracts"] = cursor.fetchone()[0]
 
             # Co-bidding flagged (risk_factors contains 'co_bid' entries like 'co_bid_med:71%:2p')
             cursor.execute(
-                "SELECT COUNT(*) FROM contracts WHERE risk_factors LIKE '%co_bid%' AND COALESCE(amount_mxn, 0) <= ?",
-                (MAX_CONTRACT_VALUE,)
+                "SELECT COUNT(*) FROM contracts WHERE risk_factors LIKE '%co_bid%'"
             )
             counts["co_bidding"] = cursor.fetchone()[0]
 
@@ -455,6 +452,83 @@ def get_year_over_year(
 
     except sqlite3.Error as e:
         logger.error(f"Database error in get_year_over_year: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
+# -- Sector-Year Breakdown (for Administration Analysis page) ----------------
+
+class SectorYearItem(BaseModel):
+    """Single sector-year data point."""
+    year: int
+    sector_id: int
+    contracts: int
+    total_value: float
+    avg_risk: float
+    direct_award_pct: float
+    single_bid_pct: Optional[float] = None
+    high_risk_pct: float
+    vendor_count: int
+    institution_count: int
+
+
+class SectorYearBreakdownResponse(BaseModel):
+    """Sector x Year cross-tabulation."""
+    data: List[SectorYearItem]
+    total_rows: int
+
+
+_sector_year_cache: Dict[str, Any] = {}
+_SECTOR_YEAR_CACHE_TTL = 600  # 10 minutes
+
+
+@router.get("/sector-year-breakdown", response_model=SectorYearBreakdownResponse)
+def get_sector_year_breakdown():
+    """Get sector x year cross-tabulation for administration analysis."""
+    try:
+        import time as _time
+        cache_key = "sector_year_all"
+        cached = _sector_year_cache.get(cache_key)
+        if cached and (_time.time() - cached["ts"]) < _SECTOR_YEAR_CACHE_TTL:
+            return cached["data"]
+
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT
+                    contract_year as year, sector_id,
+                    COUNT(*) as contracts,
+                    COALESCE(SUM(amount_mxn), 0) as total_value,
+                    COALESCE(AVG(risk_score), 0) as avg_risk,
+                    SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) as direct_award_pct,
+                    SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) * 100.0 /
+                        NULLIF(SUM(CASE WHEN is_direct_award = 0 THEN 1 ELSE 0 END), 0) as single_bid_pct,
+                    SUM(CASE WHEN risk_level IN ('high', 'critical') THEN 1 ELSE 0 END) * 100.0 / COUNT(*) as high_risk_pct,
+                    COUNT(DISTINCT vendor_id) as vendor_count,
+                    COUNT(DISTINCT institution_id) as institution_count
+                FROM contracts
+                WHERE contract_year IS NOT NULL AND sector_id IS NOT NULL
+                GROUP BY contract_year, sector_id
+                ORDER BY contract_year, sector_id
+            """)
+
+            data = [SectorYearItem(
+                year=row["year"], sector_id=row["sector_id"],
+                contracts=row["contracts"],
+                total_value=row["total_value"],
+                avg_risk=round(row["avg_risk"], 4) if row["avg_risk"] else 0,
+                direct_award_pct=round(row["direct_award_pct"], 1) if row["direct_award_pct"] else 0,
+                single_bid_pct=round(row["single_bid_pct"], 1) if row["single_bid_pct"] else None,
+                high_risk_pct=round(row["high_risk_pct"], 2) if row["high_risk_pct"] else 0,
+                vendor_count=row["vendor_count"],
+                institution_count=row["institution_count"]
+            ) for row in cursor.fetchall()]
+
+            result = SectorYearBreakdownResponse(data=data, total_rows=len(data))
+            _sector_year_cache[cache_key] = {"ts": _time.time(), "data": result}
+            return result
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error in get_sector_year_breakdown: {e}")
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
@@ -2292,4 +2366,478 @@ def get_anomalies(
 
     except sqlite3.Error as e:
         logger.error(f"Database error in get_anomalies: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
+# =============================================================================
+# MONEY FLOW ENDPOINT (for Sankey/flow visualization)
+# =============================================================================
+
+class MoneyFlowItem(BaseModel):
+    source_type: str
+    source_id: int
+    source_name: str
+    target_type: str
+    target_id: int
+    target_name: str
+    value: float
+    contracts: int
+    avg_risk: Optional[float] = None
+
+class MoneyFlowResponse(BaseModel):
+    flows: List[MoneyFlowItem]
+    total_value: float
+    total_contracts: int
+
+
+_money_flow_cache: Dict[str, Any] = {}
+_money_flow_cache_ts: float = 0
+_MONEY_FLOW_CACHE_TTL = 600  # 10 minutes
+
+
+@router.get("/money-flow", response_model=MoneyFlowResponse)
+def get_money_flow(
+    year: Optional[int] = Query(None, ge=2002, le=2026),
+    sector_id: Optional[int] = Query(None, ge=1, le=12),
+    limit: int = Query(50, ge=10, le=200),
+):
+    """
+    Top institution->vendor flows grouped by sector.
+    Returns two layers: institution->sector and sector->vendor,
+    suitable for Sankey/flow visualizations.
+    """
+    import time as _time
+    global _money_flow_cache, _money_flow_cache_ts
+
+    cache_key = f"flow:{year}:{sector_id}:{limit}"
+    now = _time.time()
+    if _money_flow_cache and (now - _money_flow_cache_ts) < _MONEY_FLOW_CACHE_TTL:
+        cached = _money_flow_cache.get(cache_key)
+        if cached:
+            return cached
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # Build optional WHERE fragments
+            where_parts = ["c.amount_mxn > 0", f"c.amount_mxn <= {MAX_CONTRACT_VALUE}"]
+            params: list = []
+            if year is not None:
+                where_parts.append("c.contract_year = ?")
+                params.append(year)
+            if sector_id is not None:
+                where_parts.append("c.sector_id = ?")
+                params.append(sector_id)
+            where_clause = " AND ".join(where_parts)
+
+            flows: List[MoneyFlowItem] = []
+            total_value = 0.0
+            total_contracts = 0
+
+            # Layer 1: institution -> sector
+            cursor.execute(f"""
+                SELECT
+                    c.institution_id,
+                    COALESCE(i.siglas, i.name) AS institution_name,
+                    c.sector_id,
+                    s.name_es AS sector_name,
+                    SUM(c.amount_mxn) AS total_value,
+                    COUNT(*) AS contract_count,
+                    AVG(c.risk_score) AS avg_risk
+                FROM contracts c
+                JOIN institutions i ON c.institution_id = i.id
+                JOIN sectors s ON c.sector_id = s.id
+                WHERE {where_clause}
+                GROUP BY c.institution_id, c.sector_id
+                ORDER BY total_value DESC
+                LIMIT ?
+            """, params + [limit])
+
+            for row in cursor.fetchall():
+                flows.append(MoneyFlowItem(
+                    source_type="institution",
+                    source_id=row["institution_id"],
+                    source_name=row["institution_name"],
+                    target_type="sector",
+                    target_id=row["sector_id"],
+                    target_name=row["sector_name"],
+                    value=round(row["total_value"], 2),
+                    contracts=row["contract_count"],
+                    avg_risk=round(row["avg_risk"], 4) if row["avg_risk"] else None,
+                ))
+                total_value += row["total_value"]
+                total_contracts += row["contract_count"]
+
+            # Layer 2: sector -> vendor
+            cursor.execute(f"""
+                SELECT
+                    c.sector_id,
+                    s.name_es AS sector_name,
+                    c.vendor_id,
+                    v.name AS vendor_name,
+                    SUM(c.amount_mxn) AS total_value,
+                    COUNT(*) AS contract_count,
+                    AVG(c.risk_score) AS avg_risk
+                FROM contracts c
+                JOIN sectors s ON c.sector_id = s.id
+                JOIN vendors v ON c.vendor_id = v.id
+                WHERE {where_clause}
+                GROUP BY c.sector_id, c.vendor_id
+                ORDER BY total_value DESC
+                LIMIT ?
+            """, params + [limit])
+
+            for row in cursor.fetchall():
+                flows.append(MoneyFlowItem(
+                    source_type="sector",
+                    source_id=row["sector_id"],
+                    source_name=row["sector_name"],
+                    target_type="vendor",
+                    target_id=row["vendor_id"],
+                    target_name=row["vendor_name"],
+                    value=round(row["total_value"], 2),
+                    contracts=row["contract_count"],
+                    avg_risk=round(row["avg_risk"], 4) if row["avg_risk"] else None,
+                ))
+
+            result = MoneyFlowResponse(
+                flows=flows,
+                total_value=round(total_value, 2),
+                total_contracts=total_contracts,
+            )
+
+            _money_flow_cache[cache_key] = result
+            _money_flow_cache_ts = _time.time()
+
+            return result
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error in get_money_flow: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
+# =============================================================================
+# RISK FACTOR ANALYSIS ENDPOINT
+# =============================================================================
+
+class RiskFactorFrequency(BaseModel):
+    factor: str
+    count: int
+    percentage: float
+    avg_risk_score: float
+
+class FactorCooccurrence(BaseModel):
+    factor_a: str
+    factor_b: str
+    count: int
+    expected_count: float
+    lift: float
+
+class RiskFactorAnalysisResponse(BaseModel):
+    total_contracts_with_factors: int
+    factor_frequencies: List[RiskFactorFrequency]
+    top_cooccurrences: List[FactorCooccurrence]
+
+
+_risk_factor_analysis_cache: Dict[str, Any] = {}
+_risk_factor_analysis_cache_ts: float = 0
+_RISK_FACTOR_ANALYSIS_CACHE_TTL = 600  # 10 minutes
+
+
+@router.get("/risk-factor-analysis", response_model=RiskFactorAnalysisResponse)
+def get_risk_factor_analysis(
+    sector_id: Optional[int] = Query(None, ge=1, le=12),
+    year: Optional[int] = Query(None, ge=2002, le=2026),
+):
+    """
+    Risk factor frequency and co-occurrence analysis.
+
+    Parses the comma-separated risk_factors column, extracts base factor names
+    (before first colon), computes frequencies and pairwise co-occurrence lift.
+    """
+    import time as _time
+    from itertools import combinations
+    from collections import Counter
+
+    global _risk_factor_analysis_cache, _risk_factor_analysis_cache_ts
+
+    cache_key = f"rfa:{sector_id}:{year}"
+    now = _time.time()
+    if _risk_factor_analysis_cache and (now - _risk_factor_analysis_cache_ts) < _RISK_FACTOR_ANALYSIS_CACHE_TTL:
+        cached = _risk_factor_analysis_cache.get(cache_key)
+        if cached:
+            return cached
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            where_parts = ["risk_factors IS NOT NULL AND risk_factors != ''"]
+            params: list = []
+            if sector_id is not None:
+                where_parts.append("sector_id = ?")
+                params.append(sector_id)
+            if year is not None:
+                where_parts.append("contract_year = ?")
+                params.append(year)
+            where_clause = " AND ".join(where_parts)
+
+            cursor.execute(f"""
+                SELECT risk_factors, risk_score
+                FROM contracts
+                WHERE {where_clause}
+                LIMIT 500000
+            """, params)
+
+            rows = cursor.fetchall()
+            total = len(rows)
+
+            if total == 0:
+                result = RiskFactorAnalysisResponse(
+                    total_contracts_with_factors=0,
+                    factor_frequencies=[],
+                    top_cooccurrences=[],
+                )
+                return result
+
+            # Parse factors and accumulate stats
+            factor_count: Counter = Counter()
+            factor_risk_sum: Dict[str, float] = {}
+            pair_count: Counter = Counter()
+
+            for row in rows:
+                raw = row["risk_factors"]
+                # Extract base factor names (before first colon)
+                factors = []
+                for token in raw.split(","):
+                    token = token.strip()
+                    if not token:
+                        continue
+                    base = token.split(":")[0]
+                    factors.append(base)
+
+                risk = row["risk_score"] or 0.0
+                unique_factors = sorted(set(factors))
+
+                for f in unique_factors:
+                    factor_count[f] += 1
+                    factor_risk_sum[f] = factor_risk_sum.get(f, 0.0) + risk
+
+                # Co-occurrence pairs (sorted to avoid duplicates)
+                for pair in combinations(unique_factors, 2):
+                    pair_count[pair] += 1
+
+            # Build frequency list
+            factor_frequencies = []
+            for factor, count in factor_count.most_common():
+                avg_risk = factor_risk_sum[factor] / count if count > 0 else 0.0
+                factor_frequencies.append(RiskFactorFrequency(
+                    factor=factor,
+                    count=count,
+                    percentage=round(count / total * 100, 2),
+                    avg_risk_score=round(avg_risk, 4),
+                ))
+
+            # Build co-occurrence list with lift
+            top_cooccurrences = []
+            for (fa, fb), observed in pair_count.most_common(50):
+                freq_a = factor_count[fa] / total
+                freq_b = factor_count[fb] / total
+                expected = freq_a * freq_b * total
+                lift = observed / expected if expected > 0 else 0.0
+                top_cooccurrences.append(FactorCooccurrence(
+                    factor_a=fa,
+                    factor_b=fb,
+                    count=observed,
+                    expected_count=round(expected, 1),
+                    lift=round(lift, 3),
+                ))
+
+            # Sort co-occurrences by lift descending
+            top_cooccurrences.sort(key=lambda x: x.lift, reverse=True)
+            top_cooccurrences = top_cooccurrences[:30]
+
+            result = RiskFactorAnalysisResponse(
+                total_contracts_with_factors=total,
+                factor_frequencies=factor_frequencies,
+                top_cooccurrences=top_cooccurrences,
+            )
+
+            _risk_factor_analysis_cache[cache_key] = result
+            _risk_factor_analysis_cache_ts = _time.time()
+
+            return result
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error in get_risk_factor_analysis: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
+# =============================================================================
+# INSTITUTION RANKINGS ENDPOINT
+# =============================================================================
+
+class InstitutionHealthItem(BaseModel):
+    institution_id: int
+    institution_name: str
+    total_contracts: int
+    total_value: float
+    avg_risk_score: float
+    direct_award_pct: float
+    single_bid_pct: float
+    high_risk_pct: float
+    vendor_count: int
+    hhi: float
+    top_vendor_share: float
+
+class InstitutionRankingsResponse(BaseModel):
+    data: List[InstitutionHealthItem]
+    total_institutions: int
+
+
+_institution_rankings_cache: Dict[str, Any] = {}
+_institution_rankings_cache_ts: float = 0
+_INSTITUTION_RANKINGS_CACHE_TTL = 600  # 10 minutes
+
+
+@router.get("/institution-rankings", response_model=InstitutionRankingsResponse)
+def get_institution_rankings(
+    sort_by: str = Query("risk", description="Sort by: risk, hhi, value, contracts"),
+    min_contracts: int = Query(100, ge=10),
+    limit: int = Query(50, ge=10, le=200),
+):
+    """
+    Institution health rankings with HHI concentration index.
+
+    Uses pre-computed institution_stats and institution_top_vendors tables.
+    HHI (Herfindahl-Hirschman Index) measures vendor concentration:
+    - 0-0.15: competitive
+    - 0.15-0.25: moderate concentration
+    - >0.25: high concentration
+    """
+    import time as _time
+    global _institution_rankings_cache, _institution_rankings_cache_ts
+
+    cache_key = f"ir:{sort_by}:{min_contracts}:{limit}"
+    now = _time.time()
+    if _institution_rankings_cache and (now - _institution_rankings_cache_ts) < _INSTITUTION_RANKINGS_CACHE_TTL:
+        cached = _institution_rankings_cache.get(cache_key)
+        if cached:
+            return cached
+
+    # Validate sort_by parameter
+    sort_map = {
+        "risk": "s.avg_risk_score DESC",
+        "hhi": "hhi DESC",
+        "value": "s.total_value_mxn DESC",
+        "contracts": "s.total_contracts DESC",
+    }
+    if sort_by not in sort_map:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid sort_by value '{sort_by}'. Must be one of: risk, hhi, value, contracts"
+        )
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            has_top_vendors = table_exists(cursor, "institution_top_vendors")
+
+            if has_top_vendors:
+                # Compute HHI from institution_top_vendors
+                # HHI = sum of (share)^2 where share = vendor_value / institution_total
+                # Also get top_vendor_share = max share
+                cursor.execute(f"""
+                    SELECT
+                        s.institution_id,
+                        i.name AS institution_name,
+                        s.total_contracts,
+                        s.total_value_mxn,
+                        s.avg_risk_score,
+                        s.direct_award_pct,
+                        s.single_bid_pct,
+                        s.high_risk_pct,
+                        s.vendor_count,
+                        COALESCE(h.hhi, 0.0) AS hhi,
+                        COALESCE(h.top_share, 0.0) AS top_vendor_share
+                    FROM institution_stats s
+                    JOIN institutions i ON s.institution_id = i.id
+                    LEFT JOIN (
+                        SELECT
+                            tv.institution_id,
+                            SUM(
+                                (CAST(tv.total_value_mxn AS REAL) / NULLIF(st.total_value_mxn, 0))
+                                * (CAST(tv.total_value_mxn AS REAL) / NULLIF(st.total_value_mxn, 0))
+                            ) AS hhi,
+                            MAX(CAST(tv.total_value_mxn AS REAL) / NULLIF(st.total_value_mxn, 0)) AS top_share
+                        FROM institution_top_vendors tv
+                        JOIN institution_stats st ON tv.institution_id = st.institution_id
+                        GROUP BY tv.institution_id
+                    ) h ON s.institution_id = h.institution_id
+                    WHERE s.total_contracts >= ?
+                    ORDER BY {sort_map[sort_by]}
+                    LIMIT ?
+                """, (min_contracts, limit))
+            else:
+                # Fallback without HHI if institution_top_vendors doesn't exist
+                cursor.execute(f"""
+                    SELECT
+                        s.institution_id,
+                        i.name AS institution_name,
+                        s.total_contracts,
+                        s.total_value_mxn,
+                        s.avg_risk_score,
+                        s.direct_award_pct,
+                        s.single_bid_pct,
+                        s.high_risk_pct,
+                        s.vendor_count,
+                        0.0 AS hhi,
+                        0.0 AS top_vendor_share
+                    FROM institution_stats s
+                    JOIN institutions i ON s.institution_id = i.id
+                    WHERE s.total_contracts >= ?
+                    ORDER BY {sort_map[sort_by]}
+                    LIMIT ?
+                """, (min_contracts, limit))
+
+            rows = cursor.fetchall()
+
+            data = []
+            for row in rows:
+                data.append(InstitutionHealthItem(
+                    institution_id=row["institution_id"],
+                    institution_name=row["institution_name"],
+                    total_contracts=row["total_contracts"],
+                    total_value=round(row["total_value_mxn"], 2),
+                    avg_risk_score=round(row["avg_risk_score"], 4) if row["avg_risk_score"] else 0.0,
+                    direct_award_pct=round(row["direct_award_pct"], 2) if row["direct_award_pct"] else 0.0,
+                    single_bid_pct=round(row["single_bid_pct"], 2) if row["single_bid_pct"] else 0.0,
+                    high_risk_pct=round(row["high_risk_pct"], 2) if row["high_risk_pct"] else 0.0,
+                    vendor_count=row["vendor_count"] or 0,
+                    hhi=round(row["hhi"], 4),
+                    top_vendor_share=round(row["top_vendor_share"] * 100, 2) if row["top_vendor_share"] else 0.0,
+                ))
+
+            # Get total count of qualifying institutions
+            cursor.execute(
+                "SELECT COUNT(*) AS cnt FROM institution_stats WHERE total_contracts >= ?",
+                (min_contracts,)
+            )
+            total_row = cursor.fetchone()
+            total_institutions = total_row["cnt"] if total_row else 0
+
+            result = InstitutionRankingsResponse(
+                data=data,
+                total_institutions=total_institutions,
+            )
+
+            _institution_rankings_cache[cache_key] = result
+            _institution_rankings_cache_ts = _time.time()
+
+            return result
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error in get_institution_rankings: {e}")
         raise HTTPException(status_code=500, detail="Database error occurred")

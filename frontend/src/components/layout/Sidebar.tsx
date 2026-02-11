@@ -13,6 +13,14 @@ import {
   Network,
   Eye,
   Fingerprint,
+  Landmark,
+  Banknote,
+  AlertTriangle,
+  Shield,
+  Clock,
+  Building2,
+  DollarSign,
+  Brain,
 } from 'lucide-react'
 import { LOGHIcon } from '@/components/LOGHIcon'
 import { Button } from '@/components/ui/button'
@@ -37,6 +45,12 @@ const overviewNavItems: NavItem[] = [
 
 const investigateNavItems: NavItem[] = [
   { title: 'Patterns', href: '/patterns', icon: Fingerprint },
+  { title: 'Red Flags', href: '/red-flags', icon: AlertTriangle },
+  { title: 'Money Flow', href: '/money-flow', icon: Banknote },
+  { title: 'Temporal', href: '/temporal', icon: Clock },
+  { title: 'Administrations', href: '/administrations', icon: Landmark },
+  { title: 'Institutions', href: '/institutions/health', icon: Building2 },
+  { title: 'Pricing', href: '/price-analysis', icon: DollarSign },
   { title: 'Contracts', href: '/contracts', icon: FileText },
   { title: 'Network', href: '/network', icon: Network },
   { title: 'Watchlist', href: '/watchlist', icon: Eye },
@@ -44,6 +58,8 @@ const investigateNavItems: NavItem[] = [
 
 const understandNavItems: NavItem[] = [
   { title: 'Sectors', href: '/sectors', icon: BarChart3 },
+  { title: 'Ground Truth', href: '/ground-truth', icon: Shield },
+  { title: 'Model', href: '/model', icon: Brain },
   { title: 'Methodology', href: '/methodology', icon: BookOpen },
 ]
 
