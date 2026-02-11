@@ -117,25 +117,18 @@ function TreemapContent(props: {
 }
 
 // =============================================================================
-// Year range for selectors
-// =============================================================================
-
-const YEAR_OPTIONS = Array.from({ length: 11 }, (_, i) => 2015 + i)
-
-// =============================================================================
 // Main Component
 // =============================================================================
 
 export default function MoneyFlow() {
-  const [selectedYear, setSelectedYear] = useState<number | ''>('')
   const [selectedSector, setSelectedSector] = useState<number | ''>('')
 
   // ---- Data fetch ----
   const { data: flowData, isLoading, isError } = useQuery({
-    queryKey: ['money-flow', selectedYear, selectedSector],
+    queryKey: ['money-flow', selectedSector],
     queryFn: () =>
       analysisApi.getMoneyFlow(
-        selectedYear || undefined,
+        undefined,
         selectedSector || undefined,
       ),
     staleTime: 5 * 60 * 1000,
@@ -279,20 +272,7 @@ export default function MoneyFlow() {
 
         {/* Controls */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Filter className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value ? Number(e.target.value) : '')}
-              className="h-8 rounded-md border border-border bg-background-elevated px-3 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
-              aria-label="Filter by year"
-            >
-              <option value="">All Years</option>
-              {YEAR_OPTIONS.map(y => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
-          </div>
+          <Filter className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
           <select
             value={selectedSector}
             onChange={(e) => setSelectedSector(e.target.value ? Number(e.target.value) : '')}

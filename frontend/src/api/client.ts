@@ -33,6 +33,13 @@ import type {
   MoneyFlowResponse,
   RiskFactorAnalysisResponse,
   InstitutionRankingsResponse,
+  InvestigationCaseListResponse,
+  InvestigationCaseDetail,
+  InvestigationStats,
+  InvestigationDashboardSummary,
+  InvestigationFilterParams,
+  ExternalEvidence,
+  ExecutiveSummaryResponse,
 } from './types'
 
 // API Base URL - proxied through Vite in development
@@ -559,6 +566,14 @@ export const analysisApi = {
     const { data } = await api.get<DataQualityResponse>('/stats/data-quality')
     return data
   },
+
+  /**
+   * Get executive summary data (all sections in one call)
+   */
+  async getExecutiveSummary(): Promise<ExecutiveSummaryResponse> {
+    const { data } = await api.get<ExecutiveSummaryResponse>('/executive/summary')
+    return data
+  },
 }
 
 // ============================================================================
@@ -1073,6 +1088,96 @@ export const priceApi = {
   },
 }
 
+// ============================================================================
+// Investigation Endpoints
+// ============================================================================
+
+export const investigationApi = {
+  /**
+   * Get paginated list of investigation cases
+   */
+  async getCases(params: InvestigationFilterParams = {}): Promise<InvestigationCaseListResponse> {
+    const queryParams = buildQueryParams(params as Record<string, unknown>)
+    const { data } = await api.get<InvestigationCaseListResponse>(`/investigation/cases?${queryParams}`)
+    return data
+  },
+
+  /**
+   * Get full case details by case_id
+   */
+  async getCaseById(caseId: string): Promise<InvestigationCaseDetail> {
+    const { data } = await api.get<InvestigationCaseDetail>(`/investigation/cases/${caseId}`)
+    return data
+  },
+
+  /**
+   * Get investigation stats summary
+   */
+  async getStats(): Promise<InvestigationStats> {
+    const { data } = await api.get<InvestigationStats>('/investigation/stats')
+    return data
+  },
+
+  /**
+   * Get top N most suspicious cases
+   */
+  async getTopCases(n: number, sectorId?: number): Promise<{ data: Array<Record<string, unknown>>; count: number }> {
+    const params = sectorId ? `?sector_id=${sectorId}` : ''
+    const { data } = await api.get(`/investigation/top/${n}${params}`)
+    return data
+  },
+
+  /**
+   * Get combined dashboard summary (funnel, hit rate, top corroborated)
+   */
+  async getDashboardSummary(): Promise<InvestigationDashboardSummary> {
+    const { data } = await api.get<InvestigationDashboardSummary>('/investigation/dashboard-summary')
+    return data
+  },
+
+  /**
+   * Update case review status
+   */
+  async reviewCase(caseId: string, status: string, notes?: string, reviewedBy?: string): Promise<{ success: boolean }> {
+    const { data } = await api.put(`/investigation/cases/${caseId}/review`, {
+      validation_status: status,
+      review_notes: notes,
+      reviewed_by: reviewedBy,
+    })
+    return data
+  },
+
+  /**
+   * Add external evidence to a case
+   */
+  async addEvidence(caseId: string, evidence: ExternalEvidence[], updateStatus?: string): Promise<{ success: boolean; total_evidence: number }> {
+    const { data } = await api.put(`/investigation/cases/${caseId}/evidence`, {
+      evidence,
+      update_status: updateStatus,
+    })
+    return data
+  },
+
+  /**
+   * Promote corroborated case to ground truth
+   */
+  async promoteToGroundTruth(caseId: string, caseName: string, caseType?: string): Promise<{ success: boolean; ground_truth_case_id: string }> {
+    const { data } = await api.post(`/investigation/cases/${caseId}/promote-to-ground-truth`, {
+      case_name: caseName,
+      case_type: caseType || 'procurement_fraud',
+    })
+    return data
+  },
+
+  /**
+   * Get SHAP-based vendor explanation
+   */
+  async getVendorExplanation(vendorId: number, sectorId: number): Promise<Record<string, unknown>> {
+    const { data } = await api.get(`/investigation/vendors/${vendorId}/explanation?sector_id=${sectorId}`)
+    return data
+  },
+}
+
 // Default export with all API modules
 export default {
   sector: sectorApi,
@@ -1084,4 +1189,5 @@ export default {
   price: priceApi,
   watchlist: watchlistApi,
   network: networkApi,
+  investigation: investigationApi,
 }

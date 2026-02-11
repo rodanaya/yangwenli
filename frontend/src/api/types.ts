@@ -626,3 +626,244 @@ export interface InstitutionFilterParams {
   sort_by?: string
   sort_order?: 'asc' | 'desc'
 }
+
+// ============================================================================
+// Investigation Types
+// ============================================================================
+
+export type InvestigationValidationStatus = 'pending' | 'corroborated' | 'refuted' | 'inconclusive'
+
+export interface InvestigationCaseListItem {
+  id: number
+  case_id: string
+  case_type: string
+  sector_id: number
+  sector_name: string
+  suspicion_score: number
+  anomaly_score: number | null
+  confidence: number
+  title: string
+  total_contracts: number
+  total_value_mxn: number
+  estimated_loss_mxn: number
+  date_range_start: string | null
+  date_range_end: string | null
+  priority: number
+  is_reviewed: boolean
+  validation_status: InvestigationValidationStatus
+  vendor_count: number
+  signals_triggered: string[]
+}
+
+export interface InvestigationVendor {
+  vendor_id: number
+  name: string
+  rfc: string | null
+  role: string
+  contract_count: number | null
+  contract_value_mxn: number | null
+  avg_risk_score: number | null
+}
+
+export interface InvestigationQuestion {
+  id: number
+  question_type: string
+  question_text: string
+  priority: number
+  supporting_evidence: string[] | null
+}
+
+export interface ExternalEvidence {
+  source_url: string
+  source_title: string
+  source_type: string
+  summary: string
+  date_published: string | null
+  credibility: string
+}
+
+export interface InvestigationCaseDetail extends InvestigationCaseListItem {
+  summary: string | null
+  narrative: string | null
+  risk_factor_counts: Record<string, number>
+  vendors: InvestigationVendor[]
+  questions: InvestigationQuestion[]
+  external_sources: Array<Record<string, string>>
+  generated_at: string
+}
+
+export interface InvestigationCaseListResponse {
+  data: InvestigationCaseListItem[]
+  pagination: PaginationMeta
+}
+
+export interface InvestigationStats {
+  total_cases: number
+  by_sector: Record<string, number>
+  by_type: Record<string, number>
+  by_status: Record<string, number>
+  total_value_mxn: number
+  total_estimated_loss_mxn: number
+  avg_suspicion_score: number
+  critical_cases: number
+  high_cases: number
+}
+
+export interface InvestigationDashboardSummary {
+  total_cases: number
+  corroborated_cases: number
+  pending_cases: number
+  total_value_at_risk: number
+  hit_rate: {
+    checked: number
+    confirmed: number
+    rate: number
+  }
+  top_corroborated: Array<{
+    case_id: string
+    title: string
+    score: number
+    value: number
+    contracts: number
+    sector_code: string
+    sector_name: string
+    news_summary: string
+  }>
+  validation_funnel: {
+    detected: number
+    researched: number
+    corroborated: number
+    promoted_to_gt: number
+  }
+}
+
+// ============================================================================
+// Executive Summary Types
+// ============================================================================
+
+export interface ExecutiveSummaryHeadline {
+  total_contracts: number
+  total_value: number
+  total_vendors: number
+  total_institutions: number
+  min_year: number
+  max_year: number
+}
+
+export interface ExecutiveSummaryRisk {
+  critical_count: number
+  critical_value: number
+  critical_pct: number
+  high_count: number
+  high_value: number
+  high_pct: number
+  medium_count: number
+  medium_value: number
+  medium_pct: number
+  low_count: number
+  low_value: number
+  low_pct: number
+  value_at_risk: number
+  value_at_risk_pct: number
+  high_risk_rate: number
+}
+
+export interface ExecutiveSectorItem {
+  code: string
+  name: string
+  contracts: number
+  value: number
+  avg_risk: number
+  high_plus_pct: number
+}
+
+export interface ExecutiveTopInstitution {
+  name: string
+  contracts: number
+  value: number
+  avg_risk: number
+}
+
+export interface ExecutiveTopVendor {
+  id: number
+  name: string
+  contracts: number
+  value_billions: number
+  avg_risk: number
+}
+
+export interface ExecutiveAdministration {
+  name: string
+  full_name: string
+  years: string
+  party: string
+  contracts: number
+  value: number
+  avg_risk: number
+  high_risk_pct: number
+  direct_award_pct: number
+}
+
+export interface ExecutiveYearlyTrend {
+  year: number
+  contracts: number
+  value_billions: number
+  avg_risk: number
+}
+
+export interface ExecutiveCaseDetail {
+  name: string
+  type: string
+  contracts: number
+  high_plus_pct: number
+  avg_score: number
+  sector: string
+}
+
+export interface ExecutiveGroundTruth {
+  cases: number
+  vendors: number
+  contracts: number
+  detection_rate: number
+  auc: number
+  case_details: ExecutiveCaseDetail[]
+}
+
+export interface ExecutiveModelPredictor {
+  name: string
+  beta: number
+  direction: 'positive' | 'negative'
+}
+
+export interface ExecutiveModel {
+  version: string
+  auc: number
+  brier: number
+  lift: number
+  top_predictors: ExecutiveModelPredictor[]
+  counterintuitive: string[]
+}
+
+export interface ExecutiveSummaryResponse {
+  headline: ExecutiveSummaryHeadline
+  risk: ExecutiveSummaryRisk
+  procedures: { direct_award_pct: number; single_bid_pct: number }
+  sectors: ExecutiveSectorItem[]
+  top_institutions: ExecutiveTopInstitution[]
+  top_vendors: ExecutiveTopVendor[]
+  administrations: ExecutiveAdministration[]
+  yearly_trends: ExecutiveYearlyTrend[]
+  ground_truth: ExecutiveGroundTruth
+  model: ExecutiveModel
+  generated_at: string
+}
+
+export interface InvestigationFilterParams {
+  sector_id?: number
+  case_type?: string
+  min_score?: number
+  validation_status?: InvestigationValidationStatus
+  priority?: number
+  page?: number
+  per_page?: number
+}

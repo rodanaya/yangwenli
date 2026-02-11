@@ -48,6 +48,7 @@ from .routers.institutions import router as institutions_router
 from .routers.contracts import router as contracts_router
 from .routers.sectors import router as sectors_router
 from .routers.export import router as export_router
+from .routers.executive import router as executive_router
 
 logger = logging.getLogger(__name__)
 
@@ -73,10 +74,14 @@ def _warmup_caches():
         "/api/v1/stats/data-quality",             # Header quality badge (cached)
         "/api/v1/analysis/patterns/counts",       # DetectivePatterns page (LIKE queries on 3.1M rows)
         "/api/v1/analysis/year-over-year",        # Shared by Trends, Patterns, Administrations
+        "/api/v1/contracts/statistics",           # Explore page (3.8s cold)
+        "/api/v1/analysis/overview",              # Patterns page (8.8s cold)
     ]
     for ep in endpoints:
         try:
-            urllib.request.urlopen(f"{base}{ep}", timeout=3)
+            # Slow endpoints (contracts/statistics, overview) need longer timeout
+            timeout = 12 if "statistics" in ep or "overview" in ep else 3
+            urllib.request.urlopen(f"{base}{ep}", timeout=timeout)
         except Exception as e:
             logger.debug(f"Cache warmup skipped for {ep}: {e}")
         # Breathe between requests so user requests aren't starved
@@ -163,6 +168,7 @@ app.include_router(analysis_router, prefix="/api/v1")
 app.include_router(watchlist_router, prefix="/api/v1")
 app.include_router(reports_router, prefix="/api/v1")
 app.include_router(investigation_router, prefix="/api/v1")
+app.include_router(executive_router, prefix="/api/v1")
 
 
 @app.get("/", tags=["root"])

@@ -2397,19 +2397,19 @@ _MONEY_FLOW_CACHE_TTL = 600  # 10 minutes
 
 @router.get("/money-flow", response_model=MoneyFlowResponse)
 def get_money_flow(
-    year: Optional[int] = Query(None, ge=2002, le=2026),
     sector_id: Optional[int] = Query(None, ge=1, le=12),
     limit: int = Query(50, ge=10, le=200),
 ):
     """
     Top institution->vendor flows grouped by sector.
-    Returns two layers: institution->sector and sector->vendor,
+    Uses pre-computed tables (institution_top_vendors, vendor_stats, institution_stats)
+    for fast response. Returns two layers: institution->sector and sector->vendor,
     suitable for Sankey/flow visualizations.
     """
     import time as _time
     global _money_flow_cache, _money_flow_cache_ts
 
-    cache_key = f"flow:{year}:{sector_id}:{limit}"
+    cache_key = f"flow:{sector_id}:{limit}"
     now = _time.time()
     if _money_flow_cache and (now - _money_flow_cache_ts) < _MONEY_FLOW_CACHE_TTL:
         cached = _money_flow_cache.get(cache_key)
@@ -2420,36 +2420,32 @@ def get_money_flow(
         with get_db() as conn:
             cursor = conn.cursor()
 
-            # Build optional WHERE fragments
-            where_parts = ["c.amount_mxn > 0", f"c.amount_mxn <= {MAX_CONTRACT_VALUE}"]
-            params: list = []
-            if year is not None:
-                where_parts.append("c.contract_year = ?")
-                params.append(year)
-            if sector_id is not None:
-                where_parts.append("c.sector_id = ?")
-                params.append(sector_id)
-            where_clause = " AND ".join(where_parts)
-
             flows: List[MoneyFlowItem] = []
             total_value = 0.0
             total_contracts = 0
 
-            # Layer 1: institution -> sector
+            sector_filter = ""
+            params: list = []
+            if sector_id is not None:
+                sector_filter = "AND vs.primary_sector_id = ?"
+                params = [sector_id]
+
+            # Layer 1: institution -> sector (from institution_top_vendors + vendor_stats)
             cursor.execute(f"""
                 SELECT
-                    c.institution_id,
+                    itv.institution_id,
                     COALESCE(i.siglas, i.name) AS institution_name,
-                    c.sector_id,
+                    vs.primary_sector_id AS sector_id,
                     s.name_es AS sector_name,
-                    SUM(c.amount_mxn) AS total_value,
-                    COUNT(*) AS contract_count,
-                    AVG(c.risk_score) AS avg_risk
-                FROM contracts c
-                JOIN institutions i ON c.institution_id = i.id
-                JOIN sectors s ON c.sector_id = s.id
-                WHERE {where_clause}
-                GROUP BY c.institution_id, c.sector_id
+                    SUM(itv.total_value_mxn) AS total_value,
+                    SUM(itv.contract_count) AS contract_count,
+                    AVG(itv.avg_risk_score) AS avg_risk
+                FROM institution_top_vendors itv
+                JOIN institutions i ON itv.institution_id = i.id
+                JOIN vendor_stats vs ON itv.vendor_id = vs.vendor_id
+                JOIN sectors s ON vs.primary_sector_id = s.id
+                WHERE itv.total_value_mxn > 0 {sector_filter}
+                GROUP BY itv.institution_id, vs.primary_sector_id
                 ORDER BY total_value DESC
                 LIMIT ?
             """, params + [limit])
@@ -2469,24 +2465,29 @@ def get_money_flow(
                 total_value += row["total_value"]
                 total_contracts += row["contract_count"]
 
-            # Layer 2: sector -> vendor
+            # Layer 2: sector -> vendor (from vendor_stats)
+            sector_filter2 = ""
+            params2: list = []
+            if sector_id is not None:
+                sector_filter2 = "AND vs.primary_sector_id = ?"
+                params2 = [sector_id]
+
             cursor.execute(f"""
                 SELECT
-                    c.sector_id,
+                    vs.primary_sector_id AS sector_id,
                     s.name_es AS sector_name,
-                    c.vendor_id,
+                    vs.vendor_id,
                     v.name AS vendor_name,
-                    SUM(c.amount_mxn) AS total_value,
-                    COUNT(*) AS contract_count,
-                    AVG(c.risk_score) AS avg_risk
-                FROM contracts c
-                JOIN sectors s ON c.sector_id = s.id
-                JOIN vendors v ON c.vendor_id = v.id
-                WHERE {where_clause}
-                GROUP BY c.sector_id, c.vendor_id
-                ORDER BY total_value DESC
+                    vs.total_value_mxn AS total_value,
+                    vs.total_contracts AS contract_count,
+                    vs.avg_risk_score AS avg_risk
+                FROM vendor_stats vs
+                JOIN sectors s ON vs.primary_sector_id = s.id
+                JOIN vendors v ON vs.vendor_id = v.id
+                WHERE vs.total_value_mxn > 0 {sector_filter2}
+                ORDER BY vs.total_value_mxn DESC
                 LIMIT ?
-            """, params + [limit])
+            """, params2 + [limit])
 
             for row in cursor.fetchall():
                 flows.append(MoneyFlowItem(

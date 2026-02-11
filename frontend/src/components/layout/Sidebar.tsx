@@ -21,6 +21,8 @@ import {
   Building2,
   DollarSign,
   Brain,
+  Crosshair,
+  ScrollText,
 } from 'lucide-react'
 import { LOGHIcon } from '@/components/LOGHIcon'
 import { Button } from '@/components/ui/button'
@@ -39,6 +41,7 @@ interface NavItem {
 }
 
 const overviewNavItems: NavItem[] = [
+  { title: 'Executive', href: '/executive', icon: ScrollText },
   { title: 'Dashboard', href: '/', icon: LayoutDashboard },
   { title: 'Explore', href: '/explore', icon: Compass },
 ]
@@ -54,6 +57,7 @@ const investigateNavItems: NavItem[] = [
   { title: 'Contracts', href: '/contracts', icon: FileText },
   { title: 'Network', href: '/network', icon: Network },
   { title: 'Watchlist', href: '/watchlist', icon: Eye },
+  { title: 'Investigation', href: '/investigation', icon: Crosshair },
 ]
 
 const understandNavItems: NavItem[] = [

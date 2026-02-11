@@ -163,6 +163,43 @@ class ReviewRequest(BaseModel):
     reviewed_by: Optional[str] = None
 
 
+class EvidenceItem(BaseModel):
+    """External evidence item to attach to a case."""
+    source_url: str
+    source_title: str
+    source_type: str = Field(default="news", description="news, asf_audit, legal, investigative")
+    summary: str
+    date_published: Optional[str] = None
+    credibility: str = Field(default="medium", description="high, medium, low")
+
+
+class AddEvidenceRequest(BaseModel):
+    """Request to add external evidence to a case."""
+    evidence: List[EvidenceItem]
+    update_status: Optional[str] = Field(None, description="Optionally update validation_status")
+
+
+class PromoteRequest(BaseModel):
+    """Request to promote a case to ground truth."""
+    case_name: str = Field(..., description="Name for the ground truth case")
+    case_type: str = Field(default="procurement_fraud", description="estafa_maestra, bribery, ghost_company, bid_rigging, embezzlement, procurement_fraud")
+    year_start: Optional[int] = None
+    year_end: Optional[int] = None
+    confidence_level: str = Field(default="medium", description="high, medium, low")
+    notes: Optional[str] = None
+
+
+class DashboardSummaryResponse(BaseModel):
+    """Combined dashboard summary for investigation intelligence."""
+    total_cases: int
+    corroborated_cases: int
+    pending_cases: int
+    total_value_at_risk: float
+    hit_rate: Dict[str, Any]
+    top_corroborated: List[Dict[str, Any]]
+    validation_funnel: Dict[str, int]
+
+
 # =============================================================================
 # ENDPOINTS
 # =============================================================================
@@ -582,6 +619,253 @@ async def get_top_cases(
             })
 
         return {"data": cases, "count": len(cases)}
+
+
+# =============================================================================
+# DASHBOARD SUMMARY + EVIDENCE + PROMOTE ENDPOINTS
+# =============================================================================
+
+@router.get("/dashboard-summary", response_model=DashboardSummaryResponse)
+async def get_dashboard_summary():
+    """
+    Combined endpoint for Dashboard's investigation intelligence section.
+    Returns funnel, hit rate, top corroborated cases, and value at risk.
+    """
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # Total stats by status
+        cursor.execute("""
+            SELECT
+                COUNT(*) as total,
+                SUM(CASE WHEN validation_status = 'corroborated' THEN 1 ELSE 0 END) as corroborated,
+                SUM(CASE WHEN validation_status = 'pending' THEN 1 ELSE 0 END) as pending,
+                SUM(CASE WHEN validation_status = 'refuted' THEN 1 ELSE 0 END) as refuted,
+                SUM(CASE WHEN is_reviewed = 1 THEN 1 ELSE 0 END) as researched,
+                SUM(total_value_mxn) as total_value,
+                SUM(CASE WHEN validation_status = 'corroborated' THEN total_value_mxn ELSE 0 END) as corroborated_value
+            FROM investigation_cases
+        """)
+        stats = cursor.fetchone()
+
+        total = stats['total'] or 0
+        corroborated = stats['corroborated'] or 0
+        pending = stats['pending'] or 0
+        researched = stats['researched'] or 0
+
+        # Top corroborated cases
+        cursor.execute("""
+            SELECT
+                ic.case_id, ic.title, ic.suspicion_score,
+                ic.total_value_mxn, ic.total_contracts,
+                s.code as sector_code, s.name_es as sector_name,
+                ic.news_hits, ic.review_notes
+            FROM investigation_cases ic
+            JOIN sectors s ON ic.primary_sector_id = s.id
+            WHERE ic.validation_status = 'corroborated'
+            ORDER BY ic.total_value_mxn DESC
+            LIMIT 5
+        """)
+        top_corroborated = []
+        for row in cursor.fetchall():
+            news = []
+            if row['news_hits']:
+                try:
+                    news = json.loads(row['news_hits'])
+                except json.JSONDecodeError:
+                    pass
+            top_corroborated.append({
+                "case_id": row['case_id'],
+                "title": row['title'],
+                "score": row['suspicion_score'],
+                "value": row['total_value_mxn'],
+                "contracts": row['total_contracts'],
+                "sector_code": row['sector_code'],
+                "sector_name": row['sector_name'],
+                "news_summary": news[0]['summary'] if news else row['review_notes'],
+            })
+
+        # Count promoted to ground truth
+        cursor.execute("""
+            SELECT COUNT(*) as cnt FROM ground_truth_cases
+            WHERE notes LIKE '%promoted from investigation%'
+        """)
+        promoted = cursor.fetchone()['cnt'] or 0
+
+        return DashboardSummaryResponse(
+            total_cases=total,
+            corroborated_cases=corroborated,
+            pending_cases=pending,
+            total_value_at_risk=stats['corroborated_value'] or 0,
+            hit_rate={
+                "checked": researched,
+                "confirmed": corroborated,
+                "rate": round(corroborated / max(researched, 1), 2),
+            },
+            top_corroborated=top_corroborated,
+            validation_funnel={
+                "detected": total,
+                "researched": researched,
+                "corroborated": corroborated,
+                "promoted_to_gt": promoted,
+            },
+        )
+
+
+@router.put("/cases/{case_id}/evidence")
+async def add_evidence(
+    case_id: str = Path(..., description="Case ID"),
+    request: AddEvidenceRequest = ...,
+):
+    """
+    Append external evidence (news articles, ASF audits, legal docs) to a case.
+    Optionally updates validation_status.
+    """
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # Get existing news_hits
+        cursor.execute("""
+            SELECT id, news_hits FROM investigation_cases WHERE case_id = ?
+        """, (case_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail=f"Case {case_id} not found")
+
+        existing_hits = []
+        if row['news_hits']:
+            try:
+                existing_hits = json.loads(row['news_hits'])
+            except json.JSONDecodeError:
+                existing_hits = []
+
+        # Append new evidence
+        for ev in request.evidence:
+            existing_hits.append({
+                "source_url": ev.source_url,
+                "source_title": ev.source_title,
+                "source_type": ev.source_type,
+                "summary": ev.summary,
+                "date_published": ev.date_published,
+                "credibility": ev.credibility,
+            })
+
+        # Update case
+        if request.update_status:
+            valid_statuses = ['pending', 'corroborated', 'refuted', 'inconclusive']
+            if request.update_status not in valid_statuses:
+                raise HTTPException(status_code=400, detail=f"Invalid status: {request.update_status}")
+            cursor.execute("""
+                UPDATE investigation_cases
+                SET news_hits = ?, validation_status = ?, is_reviewed = 1, reviewed_at = ?
+                WHERE case_id = ?
+            """, (json.dumps(existing_hits, ensure_ascii=False), request.update_status,
+                  datetime.now().isoformat(), case_id))
+        else:
+            cursor.execute("""
+                UPDATE investigation_cases
+                SET news_hits = ?
+                WHERE case_id = ?
+            """, (json.dumps(existing_hits, ensure_ascii=False), case_id))
+
+        conn.commit()
+
+        return {
+            "success": True,
+            "case_id": case_id,
+            "total_evidence": len(existing_hits),
+            "status": request.update_status or "unchanged",
+        }
+
+
+@router.post("/cases/{case_id}/promote-to-ground-truth")
+async def promote_to_ground_truth(
+    case_id: str = Path(..., description="Case ID"),
+    request: PromoteRequest = ...,
+):
+    """
+    Promote a corroborated investigation case to ground_truth_cases + ground_truth_vendors.
+    Creates the bridge for retraining the v4.0 risk model.
+    """
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # Get case
+        cursor.execute("""
+            SELECT ic.*, s.code as sector_code
+            FROM investigation_cases ic
+            JOIN sectors s ON ic.primary_sector_id = s.id
+            WHERE ic.case_id = ?
+        """, (case_id,))
+        case = cursor.fetchone()
+        if not case:
+            raise HTTPException(status_code=404, detail=f"Case {case_id} not found")
+
+        if case['validation_status'] != 'corroborated':
+            raise HTTPException(
+                status_code=400,
+                detail=f"Only corroborated cases can be promoted. Current status: {case['validation_status']}"
+            )
+
+        # Check if already promoted
+        cursor.execute("""
+            SELECT id FROM ground_truth_cases WHERE notes LIKE ?
+        """, (f"%investigation:{case_id}%",))
+        if cursor.fetchone():
+            raise HTTPException(status_code=409, detail=f"Case {case_id} already promoted to ground truth")
+
+        # Create ground truth case
+        gt_case_id = f"GT-INV-{case['primary_sector_id']:02d}-{case['id']:04d}"
+        cursor.execute("""
+            INSERT INTO ground_truth_cases (
+                case_id, case_name, case_type,
+                year_start, year_end,
+                estimated_fraud_mxn,
+                source_news, confidence_level, notes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            gt_case_id, request.case_name, request.case_type,
+            request.year_start, request.year_end,
+            case['estimated_loss_mxn'],
+            case['news_hits'],
+            request.confidence_level,
+            f"Promoted from investigation:{case_id}. {request.notes or ''}".strip(),
+        ))
+        gt_db_id = cursor.lastrowid
+
+        # Get case vendors and create ground truth vendor entries
+        cursor.execute("""
+            SELECT cv.vendor_id, v.name, v.rfc, cv.role
+            FROM case_vendors cv
+            JOIN vendors v ON cv.vendor_id = v.id
+            WHERE cv.case_id = ?
+        """, (case['id'],))
+
+        vendors_promoted = 0
+        for vendor in cursor.fetchall():
+            cursor.execute("""
+                INSERT INTO ground_truth_vendors (
+                    case_id, vendor_id, vendor_name_source, rfc_source,
+                    role, evidence_strength, match_method, match_confidence, notes
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                gt_db_id, vendor['vendor_id'], vendor['name'], vendor['rfc'],
+                vendor['role'] or 'beneficiary', request.confidence_level,
+                'investigation_pipeline', 0.9,
+                f"Promoted from {case_id}",
+            ))
+            vendors_promoted += 1
+
+        conn.commit()
+
+        return {
+            "success": True,
+            "investigation_case_id": case_id,
+            "ground_truth_case_id": gt_case_id,
+            "ground_truth_db_id": gt_db_id,
+            "vendors_promoted": vendors_promoted,
+            "message": f"Case promoted to ground truth. Retrain v4.0 to incorporate {vendors_promoted} vendors.",
+        }
 
 
 # =============================================================================

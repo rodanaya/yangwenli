@@ -35,6 +35,8 @@ const TemporalPulse = lazy(() => import('@/pages/TemporalPulse'))
 const InstitutionHealth = lazy(() => import('@/pages/InstitutionHealth'))
 const PriceIntelligence = lazy(() => import('@/pages/PriceIntelligence'))
 const ModelTransparency = lazy(() => import('@/pages/ModelTransparency'))
+const Investigation = lazy(() => import('@/pages/Investigation'))
+const ExecutiveSummary = lazy(() => import('@/pages/ExecutiveSummary'))
 
 // Enhanced QueryClient configuration for better caching and UX
 const queryClient = new QueryClient({
@@ -62,6 +64,14 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<DashboardSkeleton />}>
                     <Dashboard />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="executive"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <ExecutiveSummary />
                   </SuspenseBoundary>
                 }
               />
@@ -126,6 +136,14 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <Watchlist />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="investigation"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <Investigation />
                   </SuspenseBoundary>
                 }
               />
