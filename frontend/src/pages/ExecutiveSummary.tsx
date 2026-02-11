@@ -855,6 +855,9 @@ function ReportFooter({ data }: { data: ExecutiveSummaryResponse }) {
       <p className="text-[13px] italic text-text-muted/40 mt-6">
         "There are things that cannot be measured in terms of victory or defeat."
       </p>
+      <p className="text-[9px] text-text-muted/30 font-[var(--font-family-mono)] mt-4 tracking-wide">
+        &copy; {new Date().getFullYear()} Yang Wen-li Project. All Rights Reserved.
+      </p>
     </footer>
   )
 }
