@@ -17,7 +17,7 @@ import {
 // Lazy load all page components for code splitting
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const Contracts = lazy(() => import('@/pages/Contracts'))
-const Explore = lazy(() => import('@/pages/Explore'))
+const Explore = lazy(() => import('@/pages/explore'))
 const Methodology = lazy(() => import('@/pages/Methodology'))
 const VendorProfile = lazy(() => import('@/pages/VendorProfile'))
 const InstitutionProfile = lazy(() => import('@/pages/InstitutionProfile'))

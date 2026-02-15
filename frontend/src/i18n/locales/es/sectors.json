@@ -1,0 +1,14 @@
+{
+  "salud": "Salud",
+  "educacion": "Educación",
+  "infraestructura": "Infraestructura",
+  "energia": "Energía",
+  "defensa": "Defensa",
+  "tecnologia": "Tecnología",
+  "hacienda": "Hacienda",
+  "gobernacion": "Gobernación",
+  "agricultura": "Agricultura",
+  "ambiente": "Ambiente",
+  "trabajo": "Trabajo",
+  "otros": "Otros"
+}

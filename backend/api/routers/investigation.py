@@ -205,7 +205,7 @@ class DashboardSummaryResponse(BaseModel):
 # =============================================================================
 
 @router.get("/cases", response_model=CaseListResponse)
-async def list_cases(
+def list_cases(
     sector_id: Optional[int] = Query(None, description="Filter by sector ID"),
     case_type: Optional[str] = Query(None, description="Filter by case type"),
     min_score: Optional[float] = Query(None, ge=0, le=1, description="Minimum suspicion score"),
@@ -311,7 +311,7 @@ async def list_cases(
 
 
 @router.get("/cases/{case_id}", response_model=CaseDetail)
-async def get_case(case_id: str = Path(..., description="Case ID (e.g., CASE-SAL-2026-00001)")):
+def get_case(case_id: str = Path(..., description="Case ID (e.g., CASE-SAL-2026-00001)")):
     """
     Get full case details including narrative, vendors, and questions.
     """
@@ -406,7 +406,7 @@ async def get_case(case_id: str = Path(..., description="Case ID (e.g., CASE-SAL
 
 
 @router.get("/cases/{case_id}/export")
-async def export_case(
+def export_case(
     case_id: str = Path(..., description="Case ID"),
     format: str = Query("markdown", description="Export format: markdown or json"),
 ):
@@ -426,7 +426,7 @@ async def export_case(
 
         if format == "json":
             # Return full case as JSON
-            case = await get_case(case_id)
+            case = get_case(case_id)
             return case
         else:
             # Return markdown narrative
@@ -438,7 +438,7 @@ async def export_case(
 
 
 @router.get("/stats", response_model=CaseStatsResponse)
-async def get_stats():
+def get_stats():
     """
     Get summary statistics for all investigation cases.
     """
@@ -497,7 +497,7 @@ async def get_stats():
 
 
 @router.put("/cases/{case_id}/review")
-async def review_case(
+def review_case(
     case_id: str = Path(..., description="Case ID"),
     request: ReviewRequest = ...,
 ):
@@ -540,7 +540,7 @@ async def review_case(
 
 
 @router.post("/run", response_model=RunAnalysisResponse)
-async def run_analysis(request: RunAnalysisRequest):
+def run_analysis(request: RunAnalysisRequest):
     """
     Run the investigation case generator pipeline.
 
@@ -579,7 +579,7 @@ async def run_analysis(request: RunAnalysisRequest):
 
 
 @router.get("/top/{n}")
-async def get_top_cases(
+def get_top_cases(
     n: int = Path(..., ge=1, le=50, description="Number of cases to return"),
     sector_id: Optional[int] = Query(None, description="Filter by sector"),
 ):
@@ -626,7 +626,7 @@ async def get_top_cases(
 # =============================================================================
 
 @router.get("/dashboard-summary", response_model=DashboardSummaryResponse)
-async def get_dashboard_summary():
+def get_dashboard_summary():
     """
     Combined endpoint for Dashboard's investigation intelligence section.
     Returns funnel, hit rate, top corroborated cases, and value at risk.
@@ -713,7 +713,7 @@ async def get_dashboard_summary():
 
 
 @router.put("/cases/{case_id}/evidence")
-async def add_evidence(
+def add_evidence(
     case_id: str = Path(..., description="Case ID"),
     request: AddEvidenceRequest = ...,
 ):
@@ -779,7 +779,7 @@ async def add_evidence(
 
 
 @router.post("/cases/{case_id}/promote-to-ground-truth")
-async def promote_to_ground_truth(
+def promote_to_ground_truth(
     case_id: str = Path(..., description="Case ID"),
     request: PromoteRequest = ...,
 ):
@@ -873,7 +873,7 @@ async def promote_to_ground_truth(
 # =============================================================================
 
 @router.get("/vendors/{vendor_id}/explanation", response_model=VendorExplanation)
-async def get_vendor_explanation(
+def get_vendor_explanation(
     vendor_id: int = Path(..., description="Vendor ID"),
     sector_id: int = Query(..., description="Sector ID for context"),
 ):
@@ -945,7 +945,7 @@ async def get_vendor_explanation(
 
 
 @router.get("/feature-importance", response_model=List[FeatureImportanceItem])
-async def get_feature_importance(
+def get_feature_importance(
     sector_id: int = Query(..., description="Sector ID"),
     method: str = Query("shap", description="Method: 'shap', 'permutation', or 'variance'"),
     limit: int = Query(21, ge=1, le=50, description="Number of features to return"),
@@ -987,7 +987,7 @@ async def get_feature_importance(
 
 
 @router.get("/model-comparison", response_model=List[ModelComparisonItem])
-async def get_model_comparison(
+def get_model_comparison(
     sector_id: int = Query(..., description="Sector ID"),
 ):
     """
@@ -1032,7 +1032,7 @@ async def get_model_comparison(
 
 
 @router.get("/top-anomalous-vendors")
-async def get_top_anomalous_vendors(
+def get_top_anomalous_vendors(
     sector_id: Optional[int] = Query(None, description="Filter by sector"),
     limit: int = Query(20, ge=1, le=100, description="Number of vendors to return"),
     include_explanation: bool = Query(True, description="Include SHAP explanations"),

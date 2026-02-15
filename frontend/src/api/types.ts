@@ -426,6 +426,50 @@ export interface InstitutionVendorListResponse {
 }
 
 // ============================================================================
+// Fast Dashboard Types (from /stats/dashboard/fast precomputed endpoint)
+// ============================================================================
+
+export interface DashboardOverview {
+  total_contracts: number
+  total_value_mxn: number
+  total_vendors: number
+  total_institutions: number
+  avg_risk_score: number
+  high_risk_contracts: number
+  high_risk_value_mxn: number
+  high_risk_pct?: number
+  direct_award_pct: number
+  single_bid_pct: number
+  min_year: number
+  max_year: number
+  years_covered?: number
+}
+
+export interface DashboardSectorItem {
+  id: number
+  code: string
+  name: string
+  total_contracts: number
+  total_value_mxn: number
+  total_vendors: number
+  avg_risk_score: number
+  low_risk_count: number
+  medium_risk_count: number
+  high_risk_count: number
+  critical_risk_count: number
+  direct_award_count: number
+  single_bid_count: number
+}
+
+export interface FastDashboardData {
+  overview: DashboardOverview
+  sectors: DashboardSectorItem[]
+  risk_distribution: RiskDistribution[]
+  yearly_trends: YearOverYearChange[]
+  cached_at: string | null
+}
+
+// ============================================================================
 // Analysis/Overview Types
 // ============================================================================
 
@@ -720,14 +764,17 @@ export interface InvestigationDashboardSummary {
     rate: number
   }
   top_corroborated: Array<{
+    id?: number
     case_id: string
     title: string
     score: number
     value: number
+    total_value_mxn?: number
     contracts: number
     sector_code: string
     sector_name: string
     news_summary: string
+    summary?: string
   }>
   validation_funnel: {
     detected: number

@@ -1,28 +1,33 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { Sidebar } from '../components/layout/Sidebar'
+import i18n from '../i18n'
 
-// Sidebar uses Tooltip from radix, which needs a TooltipProvider in collapsed mode.
-// We test in expanded mode to avoid that complexity.
+// Ensure English for test assertions
+beforeAll(async () => {
+  await i18n.changeLanguage('en')
+})
 
 function renderSidebar(props: { collapsed?: boolean; onToggle?: () => void } = {}) {
   const defaultProps = { collapsed: false, onToggle: vi.fn(), ...props }
   return render(
     <MemoryRouter>
-      <Sidebar {...defaultProps} />
+      <TooltipProvider>
+        <Sidebar {...defaultProps} />
+      </TooltipProvider>
     </MemoryRouter>
   )
 }
 
 describe('Sidebar', () => {
-  it('renders navigation items when expanded', () => {
+  it('renders overview navigation items when expanded', () => {
     renderSidebar({ collapsed: false })
+    expect(screen.getByText('Executive')).toBeInTheDocument()
     expect(screen.getByText('Dashboard')).toBeInTheDocument()
+    expect(screen.getByText('Explore')).toBeInTheDocument()
     expect(screen.getByText('Contracts')).toBeInTheDocument()
-    expect(screen.getByText('Vendors')).toBeInTheDocument()
-    expect(screen.getByText('Institutions')).toBeInTheDocument()
-    expect(screen.getByText('Sectors')).toBeInTheDocument()
   })
 
   it('renders brand text when expanded', () => {
@@ -33,31 +38,30 @@ describe('Sidebar', () => {
 
   it('renders section headers when expanded', () => {
     renderSidebar({ collapsed: false })
-    expect(screen.getByText('RECON')).toBeInTheDocument()
-    expect(screen.getByText('ANALYSIS')).toBeInTheDocument()
-    expect(screen.getByText('INVESTIGATION')).toBeInTheDocument()
+    expect(screen.getByText('OVERVIEW')).toBeInTheDocument()
+    expect(screen.getByText('INVESTIGATE')).toBeInTheDocument()
+    expect(screen.getByText('UNDERSTAND')).toBeInTheDocument()
   })
 
-  it('renders analysis nav items', () => {
+  it('renders investigate nav items', () => {
     renderSidebar({ collapsed: false })
-    expect(screen.getByText('Risk Analysis')).toBeInTheDocument()
-    expect(screen.getByText('Price Analysis')).toBeInTheDocument()
-    expect(screen.getByText('Data Quality')).toBeInTheDocument()
-    expect(screen.getByText('Export Data')).toBeInTheDocument()
-  })
-
-  it('renders investigation nav items', () => {
-    renderSidebar({ collapsed: false })
-    expect(screen.getByText('Network Graph')).toBeInTheDocument()
+    expect(screen.getByText('Patterns')).toBeInTheDocument()
+    expect(screen.getByText('Red Flags')).toBeInTheDocument()
+    expect(screen.getByText('Network')).toBeInTheDocument()
     expect(screen.getByText('Watchlist')).toBeInTheDocument()
-    expect(screen.getByText('Comparison')).toBeInTheDocument()
-    expect(screen.getByText('Timeline')).toBeInTheDocument()
+  })
+
+  it('renders understand nav items', () => {
+    renderSidebar({ collapsed: false })
+    expect(screen.getByText('Sectors')).toBeInTheDocument()
+    expect(screen.getByText('Institutions')).toBeInTheDocument()
+    expect(screen.getByText('Methodology')).toBeInTheDocument()
+    expect(screen.getByText('Settings')).toBeInTheDocument()
   })
 
   it('calls onToggle when collapse button is clicked', () => {
     const onToggle = vi.fn()
     renderSidebar({ onToggle })
-    // The toggle button has aria-label "Collapse sidebar" when expanded
     const toggleButton = screen.getByRole('button', { name: /collapse sidebar/i })
     fireEvent.click(toggleButton)
     expect(onToggle).toHaveBeenCalledTimes(1)
@@ -71,9 +75,9 @@ describe('Sidebar', () => {
 
   it('hides section headers when collapsed', () => {
     renderSidebar({ collapsed: true })
-    expect(screen.queryByText('RECON')).not.toBeInTheDocument()
-    expect(screen.queryByText('ANALYSIS')).not.toBeInTheDocument()
-    expect(screen.queryByText('INVESTIGATION')).not.toBeInTheDocument()
+    expect(screen.queryByText('OVERVIEW')).not.toBeInTheDocument()
+    expect(screen.queryByText('INVESTIGATE')).not.toBeInTheDocument()
+    expect(screen.queryByText('UNDERSTAND')).not.toBeInTheDocument()
   })
 
   it('shows expand sidebar label when collapsed', () => {

@@ -51,6 +51,8 @@ Z_COLS = [
     'z_vendor_concentration', 'z_ad_period_days', 'z_year_end',
     'z_same_day_count', 'z_network_member_count', 'z_co_bid_rate',
     'z_price_hyp_confidence', 'z_industry_mismatch', 'z_institution_risk',
+    'z_price_volatility', 'z_sector_spread', 'z_win_rate',
+    'z_institution_diversity',
 ]
 
 FACTOR_NAMES = [c.replace('z_', '') for c in Z_COLS]

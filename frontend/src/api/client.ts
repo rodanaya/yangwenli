@@ -40,6 +40,7 @@ import type {
   InvestigationFilterParams,
   ExternalEvidence,
   ExecutiveSummaryResponse,
+  FastDashboardData,
 } from './types'
 
 // API Base URL - proxied through Vite in development
@@ -310,14 +311,8 @@ export const institutionApi = {
 // Analysis Endpoints
 // ============================================================================
 
-// Fast dashboard response type
-export interface FastDashboardResponse {
-  overview: Record<string, unknown>
-  sectors: Array<Record<string, unknown>>
-  risk_distribution: Array<Record<string, unknown>>
-  yearly_trends: Array<Record<string, unknown>>
-  cached_at: string | null
-}
+// Fast dashboard response type — uses typed interfaces from types.ts
+export type FastDashboardResponse = FastDashboardData
 
 // Data Quality types
 export interface GradeDistribution {

@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
@@ -25,12 +26,20 @@ import {
   ScrollText,
 } from 'lucide-react'
 import { LOGHIcon } from '@/components/LOGHIcon'
+import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface SidebarProps {
   collapsed: boolean
   onToggle: () => void
+}
+
+interface NavItemDef {
+  i18nKey: string
+  href: string
+  icon: React.ElementType
+  badge?: string | number
 }
 
 interface NavItem {
@@ -40,35 +49,45 @@ interface NavItem {
   badge?: string | number
 }
 
-const overviewNavItems: NavItem[] = [
-  { title: 'Executive', href: '/executive', icon: ScrollText },
-  { title: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { title: 'Explore', href: '/explore', icon: Compass },
+const overviewNavDefs: NavItemDef[] = [
+  { i18nKey: 'executive', href: '/executive', icon: ScrollText },
+  { i18nKey: 'dashboard', href: '/', icon: LayoutDashboard },
+  { i18nKey: 'explore', href: '/explore', icon: Compass },
 ]
 
-const investigateNavItems: NavItem[] = [
-  { title: 'Patterns', href: '/patterns', icon: Fingerprint },
-  { title: 'Red Flags', href: '/red-flags', icon: AlertTriangle },
-  { title: 'Money Flow', href: '/money-flow', icon: Banknote },
-  { title: 'Temporal', href: '/temporal', icon: Clock },
-  { title: 'Administrations', href: '/administrations', icon: Landmark },
-  { title: 'Institutions', href: '/institutions/health', icon: Building2 },
-  { title: 'Pricing', href: '/price-analysis', icon: DollarSign },
-  { title: 'Contracts', href: '/contracts', icon: FileText },
-  { title: 'Network', href: '/network', icon: Network },
-  { title: 'Watchlist', href: '/watchlist', icon: Eye },
-  { title: 'Investigation', href: '/investigation', icon: Crosshair },
+const investigateNavDefs: NavItemDef[] = [
+  { i18nKey: 'patterns', href: '/patterns', icon: Fingerprint },
+  { i18nKey: 'redFlags', href: '/red-flags', icon: AlertTriangle },
+  { i18nKey: 'moneyFlow', href: '/money-flow', icon: Banknote },
+  { i18nKey: 'temporal', href: '/temporal', icon: Clock },
+  { i18nKey: 'administrations', href: '/administrations', icon: Landmark },
+  { i18nKey: 'institutions', href: '/institutions/health', icon: Building2 },
+  { i18nKey: 'pricing', href: '/price-analysis', icon: DollarSign },
+  { i18nKey: 'contracts', href: '/contracts', icon: FileText },
+  { i18nKey: 'network', href: '/network', icon: Network },
+  { i18nKey: 'watchlist', href: '/watchlist', icon: Eye },
+  { i18nKey: 'investigation', href: '/investigation', icon: Crosshair },
 ]
 
-const understandNavItems: NavItem[] = [
-  { title: 'Sectors', href: '/sectors', icon: BarChart3 },
-  { title: 'Ground Truth', href: '/ground-truth', icon: Shield },
-  { title: 'Model', href: '/model', icon: Brain },
-  { title: 'Methodology', href: '/methodology', icon: BookOpen },
+const understandNavDefs: NavItemDef[] = [
+  { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
+  { i18nKey: 'groundTruth', href: '/ground-truth', icon: Shield },
+  { i18nKey: 'model', href: '/model', icon: Brain },
+  { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
 ]
+
+function useNavItems(defs: NavItemDef[]): NavItem[] {
+  const { t } = useTranslation('nav')
+  return defs.map((d) => ({ title: t(d.i18nKey), href: d.href, icon: d.icon, badge: d.badge }))
+}
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const location = useLocation()
+  const { t } = useTranslation('nav')
+
+  const overviewNavItems = useNavItems(overviewNavDefs)
+  const investigateNavItems = useNavItems(investigateNavDefs)
+  const understandNavItems = useNavItems(understandNavDefs)
 
   return (
     <aside
@@ -101,7 +120,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <ScrollArea className="flex-1 py-3">
         <nav className="space-y-5 px-2">
           {/* Overview section */}
-          <NavSection title="OVERVIEW" collapsed={collapsed}>
+          <NavSection title={t('sections.overview')} collapsed={collapsed}>
             {overviewNavItems.map((item) => (
               <SidebarNavItem
                 key={item.href}
@@ -113,7 +132,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           </NavSection>
 
           {/* Investigate section */}
-          <NavSection title="INVESTIGATE" collapsed={collapsed}>
+          <NavSection title={t('sections.investigate')} collapsed={collapsed}>
             {investigateNavItems.map((item) => (
               <SidebarNavItem
                 key={item.href}
@@ -125,7 +144,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           </NavSection>
 
           {/* Understand section */}
-          <NavSection title="UNDERSTAND" collapsed={collapsed}>
+          <NavSection title={t('sections.understand')} collapsed={collapsed}>
             {understandNavItems.map((item) => (
               <SidebarNavItem
                 key={item.href}
@@ -143,23 +162,26 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <div className="flex items-center justify-between">
           {!collapsed && (
             <SidebarNavItem
-              item={{ title: 'Settings', href: '/settings', icon: Settings }}
+              item={{ title: t('settings'), href: '/settings', icon: Settings }}
               collapsed={collapsed}
               isActive={location.pathname === '/settings'}
             />
           )}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onToggle}
-            className={cn(
-              'h-7 w-7 text-text-muted hover:text-text-primary',
-              collapsed && 'mx-auto'
-            )}
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
-          </Button>
+          <div className="flex items-center gap-0.5">
+            {!collapsed && <LanguageToggle />}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggle}
+              className={cn(
+                'h-7 w-7 text-text-muted hover:text-text-primary',
+                collapsed && 'mx-auto'
+              )}
+              aria-label={collapsed ? t('expandSidebar') : t('collapseSidebar')}
+            >
+              {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
+            </Button>
+          </div>
         </div>
       </div>
     </aside>

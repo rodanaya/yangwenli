@@ -1,0 +1,28 @@
+{
+  "sections": {
+    "overview": "OVERVIEW",
+    "investigate": "INVESTIGATE",
+    "understand": "UNDERSTAND"
+  },
+  "executive": "Executive",
+  "dashboard": "Dashboard",
+  "explore": "Explore",
+  "patterns": "Patterns",
+  "redFlags": "Red Flags",
+  "moneyFlow": "Money Flow",
+  "temporal": "Temporal",
+  "administrations": "Administrations",
+  "institutions": "Institutions",
+  "pricing": "Pricing",
+  "contracts": "Contracts",
+  "network": "Network",
+  "watchlist": "Watchlist",
+  "investigation": "Investigation",
+  "sectors": "Sectors",
+  "groundTruth": "Ground Truth",
+  "model": "Model",
+  "methodology": "Methodology",
+  "settings": "Settings",
+  "expandSidebar": "Expand sidebar",
+  "collapseSidebar": "Collapse sidebar"
+}

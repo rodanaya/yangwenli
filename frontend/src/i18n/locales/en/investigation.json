@@ -1,0 +1,55 @@
+{
+  "title": "Investigation",
+  "cases": {
+    "title": "Investigation Cases",
+    "newCase": "New Case",
+    "columns": {
+      "name": "Case Name",
+      "status": "Status",
+      "vendorCount": "Vendors",
+      "contractCount": "Contracts",
+      "totalValue": "Total Value",
+      "created": "Created",
+      "lastUpdated": "Last Updated"
+    },
+    "statuses": {
+      "open": "Open",
+      "in_progress": "In Progress",
+      "closed": "Closed",
+      "archived": "Archived"
+    },
+    "empty": "No active investigation cases.",
+    "emptyAction": "Create a new case"
+  },
+  "groundTruth": {
+    "title": "Ground Truth",
+    "subtitle": "Documented corruption cases in Mexican government procurement",
+    "columns": {
+      "caseName": "Case",
+      "type": "Type",
+      "vendors": "Vendors",
+      "contracts": "Contracts",
+      "detectionRate": "Detection Rate",
+      "avgScore": "Avg Score"
+    },
+    "types": {
+      "ghost_companies": "Ghost Companies",
+      "procurement_fraud": "Procurement Fraud",
+      "embezzlement": "Embezzlement",
+      "overpricing": "Overpricing",
+      "bribery": "Bribery",
+      "conflict_of_interest": "Conflict of Interest",
+      "invoice_fraud": "Invoice Fraud"
+    }
+  },
+  "vendorReport": {
+    "title": "Vendor Report",
+    "profile": "Profile",
+    "contracts": "Contracts",
+    "riskAnalysis": "Risk Analysis",
+    "priceHypotheses": "Price Hypotheses",
+    "network": "Network Connections",
+    "redFlags": "Red Flags",
+    "generateReport": "Generate Report"
+  }
+}

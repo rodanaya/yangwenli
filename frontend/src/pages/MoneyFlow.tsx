@@ -26,7 +26,7 @@ import {
   Tooltip as RechartsTooltip,
   CartesianGrid,
   Treemap,
-} from 'recharts'
+} from '@/components/charts'
 import {
   Landmark,
   Banknote,

@@ -49,7 +49,7 @@ import {
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
   Cell,
-} from 'recharts'
+} from '@/components/charts'
 
 // ============================================================================
 // STATUS HELPERS

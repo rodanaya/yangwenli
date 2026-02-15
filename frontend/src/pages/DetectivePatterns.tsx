@@ -25,7 +25,7 @@ import {
   ResponsiveContainer,
   LineChart,
   Line,
-} from 'recharts'
+} from '@/components/charts'
 import {
   Fingerprint,
   UserX,

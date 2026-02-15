@@ -29,7 +29,7 @@ import {
   Cell,
   AreaChart,
   Area,
-} from 'recharts'
+} from '@/components/charts'
 
 export function SectorProfile() {
   const { id } = useParams<{ id: string }>()

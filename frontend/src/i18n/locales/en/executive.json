@@ -1,0 +1,46 @@
+{
+  "title": "Executive Summary",
+  "subtitle": "Analysis of Mexican Federal Government Procurement",
+  "overview": {
+    "title": "Overview",
+    "totalContracts": "Total Contracts",
+    "totalValue": "Total Value",
+    "totalVendors": "Unique Vendors",
+    "totalInstitutions": "Institutions",
+    "dateRange": "Date Range",
+    "avgContractValue": "Avg Contract Value"
+  },
+  "riskSummary": {
+    "title": "Risk Summary",
+    "distribution": "Risk Distribution",
+    "highRiskRate": "High Risk Rate",
+    "criticalContracts": "Critical Contracts",
+    "oecdBenchmark": "OECD Benchmark",
+    "withinBenchmark": "Within benchmark range (2-15%)",
+    "aboveBenchmark": "Above benchmark range"
+  },
+  "sectorAnalysis": {
+    "title": "Sector Analysis",
+    "topSectors": "Top Sectors by Value",
+    "riskBySector": "Risk by Sector",
+    "contractsBySector": "Contracts by Sector"
+  },
+  "keyFindings": {
+    "title": "Key Findings",
+    "directAwardRate": "Direct Award Rate",
+    "singleBidRate": "Single Bid Rate",
+    "vendorConcentration": "Vendor Concentration",
+    "yearEndSpending": "Year-End Spending"
+  },
+  "methodology": {
+    "title": "Methodology",
+    "modelVersion": "Model Version",
+    "aucRoc": "AUC-ROC",
+    "groundTruthCases": "Ground Truth Cases",
+    "features": "Model Features"
+  },
+  "footer": {
+    "disclaimer": "Risk scores are calibrated probabilities with confidence intervals. A high score indicates statistical anomaly consistent with corruption patterns — it does not constitute proof of wrongdoing.",
+    "copyright": "Yang Wen-li — Government Procurement Analysis Platform"
+  }
+}

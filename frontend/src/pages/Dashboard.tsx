@@ -1,5 +1,6 @@
 import { memo, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation, Trans } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -27,7 +28,7 @@ import {
   CartesianGrid,
   AreaChart,
   Area,
-} from 'recharts'
+} from '@/components/charts'
 import { RISK_COLORS, getSectorNameEN } from '@/lib/constants'
 
 // ============================================================================
@@ -56,6 +57,8 @@ const CORRUPTION_CASES = [
 
 export function Dashboard() {
   const navigate = useNavigate()
+  const { t } = useTranslation('dashboard')
+  const { t: tc } = useTranslation('common')
 
   const { data: fastDashboard, isLoading: dashLoading } = useQuery({
     queryKey: ['dashboard', 'fast'],
@@ -69,9 +72,9 @@ export function Dashboard() {
     staleTime: 5 * 60 * 1000,
   })
 
-  const overview = fastDashboard?.overview as any
-  const sectors = fastDashboard?.sectors as any[] | undefined
-  const riskDist = fastDashboard?.risk_distribution as any[] | undefined
+  const overview = fastDashboard?.overview
+  const sectors = fastDashboard?.sectors
+  const riskDist = fastDashboard?.risk_distribution
 
   // Compute value at risk
   const valueAtRisk = useMemo(() => {
@@ -91,7 +94,7 @@ export function Dashboard() {
   const sectorData = useMemo(() => {
     if (!sectors) return []
     return sectors
-      .map((s: any) => {
+      .map((s) => {
         const t = s.total_contracts || 1
         const hrPct = ((s.high_risk_count || 0) + (s.critical_risk_count || 0)) / t
         return {
@@ -137,32 +140,36 @@ export function Dashboard() {
           <div className="flex items-center gap-2">
             <Shield className="h-4 w-4 text-accent" />
             <span className="text-[10px] font-bold tracking-[0.25em] uppercase text-accent font-[var(--font-family-mono)]">
-              INTELLIGENCE BRIEF
+              {t('intelligenceBrief')}
             </span>
           </div>
           {lastUpdated && (
             <div className="flex items-center gap-1.5 text-[10px] text-text-muted font-[var(--font-family-mono)]">
               <Activity className="h-3 w-3 text-signal-live" />
-              <span>SYNCED {lastUpdated.toUpperCase()}</span>
+              <span>{t('synced')} {lastUpdated.toUpperCase()}</span>
             </div>
           )}
         </div>
-        <h1 className="text-2xl font-bold text-text-primary tracking-tight">
-          {dashLoading ? (
-            <Skeleton className="h-8 w-80" />
-          ) : (
-            <>{formatCompactMXN(overview?.total_value_mxn || 0)} in Public Procurement</>
-          )}
-        </h1>
-        <p className="text-sm text-text-muted mt-1">
+        {dashLoading ? (
+          <Skeleton className="h-8 w-80" />
+        ) : (
+          <h1 className="text-2xl font-bold text-text-primary tracking-tight">
+            {formatCompactMXN(overview?.total_value_mxn || 0)} {t('inPublicProcurement')}
+          </h1>
+        )}
+        <div className="text-sm text-text-muted mt-1">
           {dashLoading ? (
             <Skeleton className="h-4 w-96" />
           ) : (
             <>
-              {formatNumber(overview?.total_contracts || 0)} contracts analyzed across {overview?.years_covered || 24} years, {formatNumber(overview?.total_vendors || 0)} vendors, 12 federal sectors
+              {t('contractsAnalyzed', {
+                contracts: formatNumber(overview?.total_contracts || 0),
+                years: overview?.years_covered || 24,
+                vendors: formatNumber(overview?.total_vendors || 0),
+              })}
             </>
           )}
-        </p>
+        </div>
       </div>
 
       {/* ================================================================ */}
@@ -172,33 +179,33 @@ export function Dashboard() {
         {/* Value flagged */}
         <ThreatCard
           loading={dashLoading}
-          label="VALUE FLAGGED FOR INVESTIGATION"
+          label={t('valueFlagged')}
           value={valueAtRisk.total}
           format="currency"
-          detail={`${valueAtRisk.pct.toFixed(1)}% of all procurement value`}
+          detail={t('valueFlaggedDetail', { pct: valueAtRisk.pct.toFixed(1) })}
           variant="danger"
           onClick={() => navigate('/contracts?risk_level=critical')}
         />
         {/* Contracts at risk */}
         <ThreatCard
           loading={dashLoading}
-          label="CONTRACTS SHOWING RISK PATTERNS"
+          label={t('contractsShowingRisk')}
           value={highRiskPct}
           format="percent"
-          detail={`${formatNumber(highRiskContracts)} contracts flagged high or critical`}
+          detail={t('contractsFlaggedDetail', { count: formatNumber(highRiskContracts) })}
           variant="warning"
-          sublabel="OECD benchmark: 2-15%"
+          sublabel={t('oecdBenchmark')}
           onClick={() => navigate('/contracts?risk_level=high')}
         />
         {/* Model power */}
         <ThreatCard
           loading={false}
-          label="DETECTION ACCURACY"
+          label={t('detectionAccuracy')}
           value={0.942}
           format="auc"
-          detail="4.04x better than random screening"
+          detail={t('detectionDetail')}
           variant="accent"
-          sublabel="v4.0 Statistical Framework"
+          sublabel={t('statisticalFramework')}
           onClick={() => navigate('/model')}
         />
       </div>
@@ -212,17 +219,17 @@ export function Dashboard() {
             <div>
               <div className="flex items-center gap-2 mb-0.5">
                 <Target className="h-4 w-4 text-accent" />
-                <h2 className="text-sm font-bold text-text-primary">Validated Against Real Corruption</h2>
+                <h2 className="text-sm font-bold text-text-primary">{t('validatedAgainstReal')}</h2>
               </div>
               <p className="text-[11px] text-text-muted">
-                Retroactive detection rate on 8 documented Mexican corruption cases — {formatNumber(21252)} known-bad contracts
+                {t('retroactiveDetection', { count: formatNumber(21252) })}
               </p>
             </div>
             <button
               onClick={() => navigate('/ground-truth')}
               className="text-[10px] text-accent hover:text-accent/80 flex items-center gap-1 transition-colors"
             >
-              Full analysis <ArrowUpRight className="h-3 w-3" />
+              {t('fullAnalysis')} <ArrowUpRight className="h-3 w-3" />
             </button>
           </div>
           <CaseDetectionChart cases={CORRUPTION_CASES} />
@@ -230,7 +237,9 @@ export function Dashboard() {
             <div className="flex items-center gap-1.5">
               <Zap className="h-3 w-3 text-accent" />
               <span className="text-[10px] text-text-muted">
-                <strong className="text-text-secondary">8 of 8</strong> cases detected — model would have flagged these contracts before scandals broke
+                <Trans i18nKey="casesDetected" ns="dashboard" values={{ detected: 8, total: 8 }}>
+                  <strong className="text-text-secondary">{'{{detected}} of {{total}}'}</strong> cases detected
+                </Trans>
               </span>
             </div>
           </div>
@@ -248,16 +257,16 @@ export function Dashboard() {
               <div>
                 <div className="flex items-center gap-2 mb-0.5">
                   <Scale className="h-3.5 w-3.5 text-risk-high" />
-                  <h2 className="text-sm font-bold text-text-primary">Value at Risk by Sector</h2>
+                  <h2 className="text-sm font-bold text-text-primary">{t('valueAtRiskBySector')}</h2>
                 </div>
-                <p className="text-[10px] text-text-muted">Estimated procurement value in high/critical risk contracts</p>
+                <p className="text-[10px] text-text-muted">{t('valueAtRiskBySectorDesc')}</p>
               </div>
             </div>
             {dashLoading ? (
               <div className="space-y-2">{[...Array(8)].map((_, i) => <Skeleton key={i} className="h-6" />)}</div>
             ) : (
               <SectorRiskBars data={sectorData} onSectorClick={(code) => {
-                const s = sectors?.find((x: any) => x.code === code)
+                const s = sectors?.find((x) => x.code === code)
                 if (s) navigate(`/sectors/${s.id}`)
               }} />
             )}
@@ -271,9 +280,9 @@ export function Dashboard() {
               <div>
                 <div className="flex items-center gap-2 mb-0.5">
                   <TrendingDown className="h-3.5 w-3.5 text-risk-high" />
-                  <h2 className="text-sm font-bold text-text-primary">Risk Trajectory</h2>
+                  <h2 className="text-sm font-bold text-text-primary">{t('riskTrajectory')}</h2>
                 </div>
-                <p className="text-[10px] text-text-muted">High-risk contract rate by year (actual per-year data)</p>
+                <p className="text-[10px] text-text-muted">{t('riskTrajectoryDesc')}</p>
               </div>
               <span className="text-[9px] text-text-muted font-[var(--font-family-mono)]">2010-2025</span>
             </div>
@@ -302,23 +311,21 @@ export function Dashboard() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-accent mb-1 font-[var(--font-family-mono)]">
-                COUNTERINTUITIVE FINDING
+                {t('counterintuitiveFinding')}
               </p>
               <p className="text-sm font-semibold text-text-primary">
-                Direct awards are less risky than competitive procedures
+                {t('directAwardsLessRisky')}
               </p>
-              <p className="text-xs text-text-muted mt-1 leading-relaxed">
-                The v4.0 model learned that known corrupt vendors use competitive procedures — they don't need
-                shortcuts because they dominate their markets. The #1 corruption predictor is{' '}
-                <strong className="text-text-secondary">vendor concentration</strong> (18.7x likelihood ratio),
-                not procedure type. This contradicts standard OECD methodology.
-              </p>
+              <p
+                className="text-xs text-text-muted mt-1 leading-relaxed [&_strong]:text-text-secondary"
+                dangerouslySetInnerHTML={{ __html: t('counterintuitiveDetail') }}
+              />
             </div>
             <button
               onClick={() => navigate('/model')}
               className="text-[10px] text-accent hover:text-accent/80 flex items-center gap-1 flex-shrink-0 mt-1 transition-colors"
             >
-              Learn more <ArrowRight className="h-3 w-3" />
+              {t('learnMore')} <ArrowRight className="h-3 w-3" />
             </button>
           </div>
         </CardContent>
@@ -329,10 +336,10 @@ export function Dashboard() {
       {/* ================================================================ */}
       <div className="grid gap-2 md:grid-cols-4">
         {[
-          { label: 'Patterns', icon: Crosshair, path: '/patterns', desc: 'Fraud pattern analysis' },
-          { label: 'Network', icon: Radar, path: '/network', desc: 'Vendor relationships' },
-          { label: 'Explore', icon: Search, path: '/explore', desc: 'Vendors & institutions' },
-          { label: 'Methodology', icon: BookOpen, path: '/methodology', desc: 'How the model works' },
+          { labelKey: 'patterns' as const, icon: Crosshair, path: '/patterns', descKey: 'patternsDesc' as const },
+          { labelKey: 'network' as const, icon: Radar, path: '/network', descKey: 'networkDesc' as const },
+          { labelKey: 'explore' as const, icon: Search, path: '/explore', descKey: 'exploreDesc' as const },
+          { labelKey: 'methodology' as const, icon: BookOpen, path: '/methodology', descKey: 'methodologyDesc' as const },
         ].map((item) => (
           <button
             key={item.path}
@@ -341,8 +348,8 @@ export function Dashboard() {
           >
             <item.icon className="h-4 w-4 text-text-muted group-hover:text-accent shrink-0 transition-colors" />
             <div>
-              <p className="text-xs font-medium text-text-secondary group-hover:text-text-primary transition-colors">{item.label}</p>
-              <p className="text-[10px] text-text-muted">{item.desc}</p>
+              <p className="text-xs font-medium text-text-secondary group-hover:text-text-primary transition-colors">{t(item.labelKey)}</p>
+              <p className="text-[10px] text-text-muted">{t(item.descKey)}</p>
             </div>
             <ArrowRight className="h-3 w-3 text-text-muted/30 ml-auto group-hover:text-accent/50 transition-colors" />
           </button>
@@ -419,6 +426,9 @@ const CaseDetectionChart = memo(function CaseDetectionChart({
 }: {
   cases: readonly typeof CORRUPTION_CASES[number][]
 }) {
+  const { t } = useTranslation('dashboard')
+  const { t: tc } = useTranslation('common')
+
   return (
     <div className="space-y-2 mt-3">
       {cases.map((c) => {
@@ -465,13 +475,13 @@ const CaseDetectionChart = memo(function CaseDetectionChart({
       {/* Column labels */}
       <div className="flex items-center gap-3 pt-1">
         <div className="w-[180px] flex-shrink-0">
-          <span className="text-[9px] text-text-muted/50 uppercase tracking-wider">Case</span>
+          <span className="text-[9px] text-text-muted/50 uppercase tracking-wider">{t('caseLabel')}</span>
         </div>
         <div className="flex-1">
-          <span className="text-[9px] text-text-muted/50 uppercase tracking-wider">Detection Rate (high+critical)</span>
+          <span className="text-[9px] text-text-muted/50 uppercase tracking-wider">{t('detectionRate')}</span>
         </div>
         <div className="w-[70px] flex-shrink-0 text-right">
-          <span className="text-[9px] text-text-muted/50 uppercase tracking-wider">Contracts</span>
+          <span className="text-[9px] text-text-muted/50 uppercase tracking-wider">{tc('contracts')}</span>
         </div>
       </div>
     </div>
@@ -541,6 +551,9 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
 }: {
   data: Array<{ year: number; highRiskPct: number; avgRisk: number; contracts: number }>
 }) {
+  const { t } = useTranslation('dashboard')
+  const { t: tc } = useTranslation('common')
+
   return (
     <div className="h-[320px]">
       <ResponsiveContainer width="100%" height="100%">
@@ -575,14 +588,14 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
                     <div className="space-y-0.5 mt-1">
                       <p className="text-[11px] text-text-muted tabular-nums">
                         <span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ backgroundColor: RISK_COLORS.high }} />
-                        High-risk rate: <strong className="text-text-secondary">{d.highRiskPct.toFixed(1)}%</strong>
+                        {t('highRiskRate')}: <strong className="text-text-secondary">{d.highRiskPct.toFixed(1)}%</strong>
                       </p>
                       <p className="text-[11px] text-text-muted tabular-nums">
                         <span className="inline-block w-2 h-2 rounded-full mr-1.5 bg-accent" />
-                        Avg risk: <strong className="text-text-secondary">{d.avgRisk.toFixed(1)}%</strong>
+                        {t('avgRiskScore')}: <strong className="text-text-secondary">{d.avgRisk.toFixed(1)}%</strong>
                       </p>
                       <p className="text-[10px] text-text-muted/70 tabular-nums">
-                        {formatNumber(d.contracts)} contracts
+                        {formatNumber(d.contracts)} {tc('contracts').toLowerCase()}
                       </p>
                     </div>
                   </div>
@@ -614,11 +627,11 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
       <div className="flex items-center justify-center gap-5 mt-1">
         <div className="flex items-center gap-1.5">
           <div className="h-0.5 w-4 rounded" style={{ backgroundColor: RISK_COLORS.high }} />
-          <span className="text-[10px] text-text-muted">High-risk rate</span>
+          <span className="text-[10px] text-text-muted">{t('highRiskRate')}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="h-0.5 w-4 rounded border-b border-dashed border-accent" style={{ borderStyle: 'dashed' }} />
-          <span className="text-[10px] text-text-muted">Avg risk score</span>
+          <span className="text-[10px] text-text-muted">{t('avgRiskScore')}</span>
         </div>
       </div>
     </div>
@@ -634,6 +647,7 @@ const InvestigationIntelligenceSection = memo(function InvestigationIntelligence
 }: {
   navigate: (path: string) => void
 }) {
+  const { t } = useTranslation('dashboard')
   const { data: summary, isLoading } = useQuery({
     queryKey: ['investigation', 'dashboard-summary'],
     queryFn: () => investigationApi.getDashboardSummary(),
@@ -647,15 +661,15 @@ const InvestigationIntelligenceSection = memo(function InvestigationIntelligence
           <div>
             <div className="flex items-center gap-2 mb-0.5">
               <Crosshair className="h-3.5 w-3.5 text-accent" />
-              <h2 className="text-sm font-bold text-text-primary">Investigation Intelligence</h2>
+              <h2 className="text-sm font-bold text-text-primary">{t('investigationIntelligence')}</h2>
             </div>
-            <p className="text-[10px] text-text-muted">ML-generated leads with external validation</p>
+            <p className="text-[10px] text-text-muted">{t('mlGeneratedLeads')}</p>
           </div>
           <button
             onClick={() => navigate('/investigation')}
             className="text-[10px] text-accent hover:text-accent/80 flex items-center gap-1 transition-colors"
           >
-            View all cases <ArrowUpRight className="h-3 w-3" />
+            {t('viewAllCases')} <ArrowUpRight className="h-3 w-3" />
           </button>
         </div>
 
@@ -667,17 +681,17 @@ const InvestigationIntelligenceSection = memo(function InvestigationIntelligence
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-background-elevated/50">
                 <span className="text-lg font-bold text-text-primary tabular-nums">{summary.total_cases}</span>
-                <span className="text-[10px] text-text-muted">ML cases</span>
+                <span className="text-[10px] text-text-muted">{t('mlCases')}</span>
               </div>
               <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-signal-live/10 border border-signal-live/20">
                 <span className="text-lg font-bold text-signal-live tabular-nums">{summary.corroborated_cases}</span>
-                <span className="text-[10px] text-text-muted">confirmed</span>
+                <span className="text-[10px] text-text-muted">{t('confirmed')}</span>
               </div>
               <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-accent/10 border border-accent/20">
                 <span className="text-lg font-bold text-accent tabular-nums">
                   {summary.hit_rate ? `${(summary.hit_rate.rate * 100).toFixed(0)}%` : '—'}
                 </span>
-                <span className="text-[10px] text-text-muted">hit rate</span>
+                <span className="text-[10px] text-text-muted">{t('hitRate')}</span>
               </div>
             </div>
 
@@ -685,12 +699,16 @@ const InvestigationIntelligenceSection = memo(function InvestigationIntelligence
             <p className="text-[11px] text-text-secondary leading-relaxed">
               {summary.hit_rate ? (
                 <>
-                  <strong className="text-text-primary">{summary.hit_rate.rate >= 0.5 ? 'Strong' : 'Moderate'} external validation:</strong>{' '}
-                  {summary.hit_rate.confirmed} of {summary.hit_rate.checked} top flagged vendors have documented
-                  corruption investigations in news, ASF audits, or legal proceedings.
+                  <strong className="text-text-primary">
+                    {summary.hit_rate.rate >= 0.5 ? t('strongValidation') : t('moderateValidation')}
+                  </strong>{' '}
+                  {t('validationDetail', {
+                    confirmed: summary.hit_rate.confirmed,
+                    checked: summary.hit_rate.checked,
+                  })}
                 </>
               ) : (
-                'Investigation pipeline generated cases for review.'
+                t('pipelineGenerated')
               )}
             </p>
 
@@ -698,9 +716,9 @@ const InvestigationIntelligenceSection = memo(function InvestigationIntelligence
             {summary.top_corroborated && summary.top_corroborated.length > 0 && (
               <div className="space-y-1">
                 <p className="text-[9px] font-bold tracking-[0.15em] uppercase text-text-muted/60 font-[var(--font-family-mono)]">
-                  TOP CONFIRMED
+                  {t('topConfirmed')}
                 </p>
-                {summary.top_corroborated.slice(0, 3).map((c: any, i: number) => (
+                {summary.top_corroborated.slice(0, 3).map((c, i) => (
                   <div
                     key={c.id || i}
                     className="flex items-center gap-2.5 rounded-md p-2 hover:bg-background-elevated/40 transition-colors group cursor-pointer"
@@ -730,7 +748,7 @@ const InvestigationIntelligenceSection = memo(function InvestigationIntelligence
               <div className="flex items-center gap-2 pt-2 border-t border-border/30">
                 <Zap className="h-3 w-3 text-accent" />
                 <span className="text-[10px] text-text-muted">
-                  Total value at risk across confirmed cases:{' '}
+                  {t('totalValueAtRisk')}{' '}
                   <strong className="text-text-secondary">{formatCompactMXN(summary.total_value_at_risk)}</strong>
                 </span>
               </div>

@@ -41,7 +41,7 @@ import {
   Cell,
   ReferenceLine,
   ErrorBar,
-} from 'recharts'
+} from '@/components/charts'
 
 // ============================================================================
 // Hardcoded Model Data (from v4.0 methodology documentation)

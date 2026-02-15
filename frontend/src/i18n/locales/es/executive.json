@@ -1,0 +1,46 @@
+{
+  "title": "Resumen Ejecutivo",
+  "subtitle": "Análisis de Contratación Pública Federal de México",
+  "overview": {
+    "title": "Panorama General",
+    "totalContracts": "Total de Contratos",
+    "totalValue": "Valor Total",
+    "totalVendors": "Proveedores Únicos",
+    "totalInstitutions": "Instituciones",
+    "dateRange": "Período",
+    "avgContractValue": "Valor Promedio por Contrato"
+  },
+  "riskSummary": {
+    "title": "Resumen de Riesgos",
+    "distribution": "Distribución de Riesgo",
+    "highRiskRate": "Tasa de Alto Riesgo",
+    "criticalContracts": "Contratos Críticos",
+    "oecdBenchmark": "Referencia OCDE",
+    "withinBenchmark": "Dentro del rango de referencia (2-15%)",
+    "aboveBenchmark": "Por encima del rango de referencia"
+  },
+  "sectorAnalysis": {
+    "title": "Análisis por Sector",
+    "topSectors": "Principales Sectores por Valor",
+    "riskBySector": "Riesgo por Sector",
+    "contractsBySector": "Contratos por Sector"
+  },
+  "keyFindings": {
+    "title": "Hallazgos Clave",
+    "directAwardRate": "Tasa de Adjudicación Directa",
+    "singleBidRate": "Tasa de Licitación Única",
+    "vendorConcentration": "Concentración de Proveedores",
+    "yearEndSpending": "Gasto de Fin de Año"
+  },
+  "methodology": {
+    "title": "Metodología",
+    "modelVersion": "Versión del Modelo",
+    "aucRoc": "AUC-ROC",
+    "groundTruthCases": "Casos de Verdad de Campo",
+    "features": "Características del Modelo"
+  },
+  "footer": {
+    "disclaimer": "Las puntuaciones de riesgo son probabilidades calibradas con intervalos de confianza. Una puntuación alta indica anomalía estadística consistente con patrones de corrupción — no constituye prueba de irregularidades.",
+    "copyright": "Yang Wen-li — Plataforma de Análisis de Contratación Pública"
+  }
+}

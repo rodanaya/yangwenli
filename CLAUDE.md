@@ -74,24 +74,34 @@ For detailed validation rules, see @.claude/rules/data-validation.md
 
 ## Risk Scoring Model
 
-**Two models available** — v3.3 (weighted checklist) and v4.0 (statistical framework):
+**Three model versions** — v3.3 (weighted checklist), v4.0 (statistical), v5.0 (per-sector calibrated, active):
 
-### v4.0: Statistical Framework (active, dampened 2026-02-09)
+### v5.0: Per-Sector Calibrated Model (active, 2026-02-14)
+
+Per-sector calibrated probabilities P(corrupt|z) with confidence intervals. **Train AUC: 0.948, Test AUC: 0.951** (temporal split), high-risk rate: 10.6%.
+
+- 12 z-score features normalized by sector/year baselines
+- 12 per-sector logistic regression sub-models + 1 global fallback
+- Diversified ground truth: 15 cases, 27 vendors, 26,582 contracts across all 12 sectors
+- Temporal train/test split (train ≤2020, test ≥2021) — honest generalization
+- Elkan & Noto (2008) PU-learning correction (c=0.861) — breaks v4.0's circular estimator
+- Cross-validated ElasticNet (C=0.01, L2) — no ad-hoc dampening needed
+- 1,000 bootstrap 95% confidence intervals
+
+**Top predictors**: vendor_concentration (+1.80), industry_mismatch (+0.34), same_day_count (+0.14), network_member_count (+0.13)
+**Fixed from v4.0**: network_member_count now +0.13 (was -4.11 artifact), direct_award now ~0.00 (was -0.20 misleading)
+**Risk Levels**: Critical (>=0.50), High (>=0.30), Medium (>=0.10), Low (<0.10)
+**Distribution**: Critical 6.5%, High 4.1%, Medium 43.9%, Low 45.6%
+**Detection**: 99.8% of known-bad contracts detected (med+), 93.0% high+, 0.2% false negatives
+
+### v4.0: Statistical Framework (preserved in risk_score_v4)
 
 Calibrated probabilities P(corrupt|z) with confidence intervals. **AUC-ROC: 0.942**, high-risk rate: 11.0%.
 
-- 12 z-score features normalized by sector/year baselines
-- Mahalanobis distance for multivariate anomaly detection
-- Bayesian logistic regression (L2, C=0.1) trained on 21,252 known-bad contracts from 9 cases
-- PU-learning correction (c=0.890) for unlabeled data
-- 1,000 bootstrap 95% confidence intervals
+- 12 z-score features, single global model
+- 9 corruption cases, 17 vendors, 21,252 contracts (3 sectors dominated)
 - Post-hoc coefficient dampening to reduce overfitting
-
-**Top predictors**: vendor_concentration (+1.0, dampened from +1.85), industry_mismatch (+0.21), same_day_count (+0.14)
-**Reversed from v3.3**: direct_award (-0.20), ad_period_days (-0.22)
-**Zeroed**: network_member_count (was -4.11, training artifact), co_bid_rate (regularized to 0)
-**Risk Levels (v4.0)**: Critical (>=0.50), High (>=0.30), Medium (>=0.10), Low (<0.10)
-**Distribution**: Critical 3.3%, High 7.6%, Medium 77.0%, Low 12.0%
+- **Risk Levels**: Critical (>=0.50), High (>=0.30), Medium (>=0.10), Low (<0.10)
 
 ### v3.3: Weighted Checklist (preserved in risk_score_v3)
 
@@ -112,7 +122,7 @@ Calibrated probabilities P(corrupt|z) with confidence intervals. **AUC-ROC: 0.94
 **Interaction effects**: 5 pairs, up to +15% bonus. Score capped at 1.0.
 **Risk Levels**: Critical (>=0.50), High (0.35-0.50), Medium (0.20-0.35), Low (<0.20)
 
-For methodology details, see @docs/RISK_METHODOLOGY.md (v3.3), @docs/RISK_METHODOLOGY_v4.md (v4.0), and @docs/MODEL_COMPARISON_REPORT.md (comparison)
+For methodology details, see @docs/RISK_METHODOLOGY_v5.md (v5.0, active), @docs/RISK_METHODOLOGY_v4.md (v4.0), @docs/RISK_METHODOLOGY.md (v3.3), and @docs/MODEL_COMPARISON_REPORT.md (v3.3 vs v4.0 comparison)
 
 ---
 

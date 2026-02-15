@@ -40,7 +40,7 @@ import {
   Cell,
   PieChart,
   Pie,
-} from 'recharts'
+} from '@/components/charts'
 
 // ============================================================================
 // Types & Constants

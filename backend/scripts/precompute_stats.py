@@ -155,8 +155,57 @@ def precompute_stats():
     stats['yearly_trends'] = yearly
     print(f"   Done ({time.time() - start:.1f}s)")
 
+    # 5. Administration breakdown
+    print("5. Computing administration breakdown...")
+    start = time.time()
+    cursor.execute("""
+        SELECT
+            CASE
+                WHEN contract_year BETWEEN 2001 AND 2006 THEN 'Fox'
+                WHEN contract_year BETWEEN 2007 AND 2012 THEN 'Calderon'
+                WHEN contract_year BETWEEN 2013 AND 2018 THEN 'Pena Nieto'
+                WHEN contract_year BETWEEN 2019 AND 2024 THEN 'AMLO'
+                WHEN contract_year >= 2025 THEN 'Sheinbaum'
+            END as admin,
+            COUNT(*) as contracts,
+            SUM(amount_mxn) as total_value,
+            ROUND(AVG(risk_score), 4) as avg_risk,
+            ROUND(100.0 * SUM(CASE WHEN risk_score >= 0.30 THEN 1 ELSE 0 END)
+                  / COUNT(*), 1) as high_risk_pct,
+            ROUND(100.0 * SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END)
+                  / COUNT(*), 1) as direct_award_pct
+        FROM contracts
+        WHERE contract_year >= 2001 AND contract_year <= 2025
+        GROUP BY admin
+        ORDER BY MIN(contract_year)
+    """)
+    admin_meta = {
+        "Fox": ("Vicente Fox", "2001-2006", "PAN"),
+        "Calderon": ("Felipe Calderon", "2007-2012", "PAN"),
+        "Pena Nieto": ("Enrique Pena Nieto", "2013-2018", "PRI"),
+        "AMLO": ("Andres Manuel Lopez Obrador", "2019-2024", "MORENA"),
+        "Sheinbaum": ("Claudia Sheinbaum", "2025-present", "MORENA"),
+    }
+    administrations = []
+    for row in cursor.fetchall():
+        name = row['admin']
+        full, years, party = admin_meta.get(name, (name, "", ""))
+        administrations.append({
+            "name": name,
+            "full_name": full,
+            "years": years,
+            "party": party,
+            "contracts": row['contracts'],
+            "value": row['total_value'] or 0,
+            "avg_risk": row['avg_risk'] or 0,
+            "high_risk_pct": row['high_risk_pct'] or 0,
+            "direct_award_pct": row['direct_award_pct'] or 0,
+        })
+    stats['administrations'] = administrations
+    print(f"   Done ({time.time() - start:.1f}s)")
+
     # Save all stats to database
-    print("\n5. Saving to database...")
+    print("\n6. Saving to database...")
     for key, value in stats.items():
         cursor.execute("""
             INSERT OR REPLACE INTO precomputed_stats (stat_key, stat_value, updated_at)

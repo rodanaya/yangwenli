@@ -1,6 +1,5 @@
 """API router for institution endpoints."""
 import math
-import sqlite3
 import logging
 from fastapi import APIRouter, HTTPException, Query, Path
 from typing import Optional
@@ -31,6 +30,7 @@ from ..models.institution import (
 )
 from ..models.common import PaginationMeta
 from ..models.contract import ContractListItem, ContractListResponse, PaginationMeta as ContractPaginationMeta
+from ..services.institution_service import institution_service
 
 logger = logging.getLogger(__name__)
 
@@ -98,122 +98,23 @@ def list_institutions(
     Joins with institution_stats for richer metrics.
     """
     with get_db() as conn:
-        cursor = conn.cursor()
+        result = institution_service.list_institutions(
+            conn,
+            page=page,
+            per_page=per_page,
+            institution_type=institution_type,
+            size_tier=size_tier,
+            autonomy_level=autonomy_level,
+            sector_id=sector_id,
+            state_code=state_code,
+            search=search,
+            min_contracts=min_contracts,
+            is_legally_decentralized=is_legally_decentralized,
+            sort_by=sort_by,
+            sort_order=sort_order,
+        )
 
-        # Sort field mapping
-        SORT_FIELD_MAPPING = {
-            "total_contracts": "COALESCE(s.total_contracts, i.total_contracts)",
-            "total_value_mxn": "COALESCE(s.total_value_mxn, i.total_amount_mxn)",
-            "total_amount_mxn": "COALESCE(s.total_value_mxn, i.total_amount_mxn)",
-            "avg_risk_score": "s.avg_risk_score",
-            "high_risk_pct": "s.high_risk_pct",
-            "direct_award_pct": "s.direct_award_pct",
-            "single_bid_pct": "s.single_bid_pct",
-            "vendor_count": "s.vendor_count",
-            "name": "i.name",
-        }
-        sort_expr = SORT_FIELD_MAPPING.get(sort_by, "COALESCE(s.total_contracts, i.total_contracts)")
-        order_direction = "DESC" if sort_order.lower() == "desc" else "ASC"
-
-        # Build WHERE clause
-        conditions = ["1=1"]
-        params = []
-
-        if institution_type:
-            conditions.append("i.institution_type = ?")
-            params.append(institution_type)
-
-        if size_tier:
-            conditions.append("i.size_tier = ?")
-            params.append(size_tier)
-
-        if autonomy_level:
-            conditions.append("i.autonomy_level = ?")
-            params.append(autonomy_level)
-
-        if sector_id:
-            conditions.append("i.sector_id = ?")
-            params.append(sector_id)
-
-        if state_code:
-            conditions.append("i.state_code = ?")
-            params.append(state_code.upper())
-
-        if search:
-            conditions.append("(i.name LIKE ? OR i.name_normalized LIKE ? OR i.siglas LIKE ?)")
-            params.extend([f"%{search}%", f"%{search}%", f"%{search}%"])
-
-        if min_contracts is not None:
-            conditions.append("COALESCE(s.total_contracts, i.total_contracts, 0) >= ?")
-            params.append(min_contracts)
-
-        if is_legally_decentralized is not None:
-            conditions.append("i.is_legally_decentralized = ?")
-            params.append(1 if is_legally_decentralized else 0)
-
-        where_clause = " AND ".join(conditions)
-
-        # Count total matching records
-        count_sql = f"""
-            SELECT COUNT(*) as count
-            FROM institutions i
-            LEFT JOIN institution_stats s ON i.id = s.institution_id
-            WHERE {where_clause}
-        """
-        cursor.execute(count_sql, params)
-        total = cursor.fetchone()["count"]
-
-        # Get paginated results with stats
-        offset = (page - 1) * per_page
-        query_sql = f"""
-            SELECT
-                i.id, i.name, i.name_normalized, i.siglas,
-                i.institution_type, i.institution_type_id,
-                i.size_tier, i.autonomy_level, i.is_legally_decentralized,
-                i.sector_id, i.state_code, i.geographic_scope,
-                COALESCE(s.total_contracts, i.total_contracts) as total_contracts,
-                COALESCE(s.total_value_mxn, i.total_amount_mxn) as total_amount_mxn,
-                s.avg_risk_score,
-                s.high_risk_pct,
-                s.direct_award_pct,
-                s.single_bid_pct,
-                s.vendor_count,
-                i.classification_confidence, i.data_quality_grade
-            FROM institutions i
-            LEFT JOIN institution_stats s ON i.id = s.institution_id
-            WHERE {where_clause}
-            ORDER BY {sort_expr} {order_direction} NULLS LAST
-            LIMIT ? OFFSET ?
-        """
-        cursor.execute(query_sql, params + [per_page, offset])
-        rows = cursor.fetchall()
-
-        institutions = [
-            InstitutionResponse(
-                id=row["id"],
-                name=row["name"],
-                name_normalized=row["name_normalized"],
-                siglas=row["siglas"],
-                institution_type=row["institution_type"],
-                institution_type_id=row["institution_type_id"],
-                size_tier=row["size_tier"],
-                autonomy_level=row["autonomy_level"],
-                is_legally_decentralized=bool(row["is_legally_decentralized"]) if row["is_legally_decentralized"] is not None else None,
-                sector_id=row["sector_id"],
-                state_code=row["state_code"],
-                geographic_scope=row["geographic_scope"],
-                total_contracts=row["total_contracts"],
-                total_amount_mxn=row["total_amount_mxn"],
-                avg_risk_score=round(row["avg_risk_score"], 4) if row["avg_risk_score"] else None,
-                high_risk_pct=round(row["high_risk_pct"], 2) if row["high_risk_pct"] else None,
-                direct_award_pct=round(row["direct_award_pct"], 2) if row["direct_award_pct"] else None,
-                single_bid_pct=round(row["single_bid_pct"], 2) if row["single_bid_pct"] else None,
-                vendor_count=row["vendor_count"],
-                classification_confidence=row["classification_confidence"],
-                data_quality_grade=row["data_quality_grade"]
-            )
-            for row in rows
-        ]
+        institutions = [InstitutionResponse(**row) for row in result.data]
 
         # Track applied filters
         filters_applied = {}
@@ -236,12 +137,12 @@ def list_institutions(
 
         return InstitutionListResponse(
             data=institutions,
-            pagination=PaginationMeta.create(page, per_page, total),
-            filters_applied=filters_applied
+            pagination=PaginationMeta(**result.pagination),
+            filters_applied=filters_applied,
         )
 
 
-@router.get("/{institution_id}", response_model=InstitutionDetailResponse)
+@router.get("/{institution_id:int}", response_model=InstitutionDetailResponse)
 def get_institution(institution_id: int):
     """
     Get details for a specific institution.
@@ -250,90 +151,62 @@ def get_institution(institution_id: int):
     avg_risk_score, direct_award_rate, and high_risk metrics for comparison.
     """
     with get_db() as conn:
-        cursor = conn.cursor()
+        detail = institution_service.get_institution_detail(conn, institution_id)
 
-        cursor.execute("""
-            SELECT
-                i.id, i.name, i.name_normalized, i.siglas,
-                i.institution_type, i.institution_type_id,
-                i.size_tier, i.autonomy_level, i.is_legally_decentralized,
-                i.sector_id, i.state_code, i.geographic_scope,
-                i.total_contracts, i.total_amount_mxn,
-                i.classification_confidence, i.data_quality_grade,
-                it.risk_baseline as type_risk_baseline,
-                st.risk_adjustment as size_risk_adjustment,
-                al.risk_baseline as autonomy_risk_baseline
-            FROM institutions i
-            LEFT JOIN institution_types it ON i.institution_type_id = it.id
-            LEFT JOIN size_tiers st ON i.size_tier = st.code
-            LEFT JOIN autonomy_levels al ON i.autonomy_level = al.code
-            WHERE i.id = ?
-        """, (institution_id,))
-
-        row = cursor.fetchone()
-
-        if not row:
+        if detail is None:
             raise HTTPException(
                 status_code=404,
-                detail=f"Institution {institution_id} not found"
+                detail=f"Institution {institution_id} not found",
             )
 
-        # Use pre-computed institution_stats for performance (avoids scanning all contracts)
-        cursor.execute("""
-            SELECT total_contracts, total_value_mxn, avg_risk_score,
-                   high_risk_count, high_risk_pct, direct_award_count, direct_award_pct
-            FROM institution_stats
-            WHERE institution_id = ?
-        """, (institution_id,))
-        stats_row = cursor.fetchone()
-
-        total_contracts = row["total_contracts"] or 0
+        total_contracts = detail["total_contracts"] or 0
+        stats = detail.get("stats")
 
         # Calculate derived metrics from pre-computed stats
         avg_value = None
-        if total_contracts > 0 and row["total_amount_mxn"]:
-            avg_value = row["total_amount_mxn"] / total_contracts
+        if total_contracts > 0 and detail["total_amount_mxn"]:
+            avg_value = detail["total_amount_mxn"] / total_contracts
 
-        high_risk_count = stats_row["high_risk_count"] if stats_row else 0
-        high_risk_pct = stats_row["high_risk_pct"] if stats_row else 0.0
+        high_risk_count = stats["high_risk_count"] if stats else 0
+        high_risk_pct = stats["high_risk_pct"] if stats else 0.0
 
-        direct_award_count = stats_row["direct_award_count"] if stats_row else 0
-        direct_award_rate = stats_row["direct_award_pct"] if stats_row else 0.0
+        direct_award_count = stats["direct_award_count"] if stats else 0
+        direct_award_rate = stats["direct_award_pct"] if stats else 0.0
 
-        avg_risk_score = stats_row["avg_risk_score"] if stats_row else None
+        avg_risk_score = stats["avg_risk_score"] if stats else None
         if avg_risk_score is not None:
             avg_risk_score = round(avg_risk_score, 4)
 
         return InstitutionDetailResponse(
-            id=row["id"],
-            name=row["name"],
-            name_normalized=row["name_normalized"],
-            siglas=row["siglas"],
-            institution_type=row["institution_type"],
-            institution_type_id=row["institution_type_id"],
-            size_tier=row["size_tier"],
-            autonomy_level=row["autonomy_level"],
-            is_legally_decentralized=bool(row["is_legally_decentralized"]) if row["is_legally_decentralized"] is not None else None,
-            sector_id=row["sector_id"],
-            state_code=row["state_code"],
-            geographic_scope=row["geographic_scope"],
+            id=detail["id"],
+            name=detail["name"],
+            name_normalized=detail["name_normalized"],
+            siglas=detail["siglas"],
+            institution_type=detail["institution_type"],
+            institution_type_id=detail["institution_type_id"],
+            size_tier=detail["size_tier"],
+            autonomy_level=detail["autonomy_level"],
+            is_legally_decentralized=bool(detail["is_legally_decentralized"]) if detail["is_legally_decentralized"] is not None else None,
+            sector_id=detail["sector_id"],
+            state_code=detail["state_code"],
+            geographic_scope=detail["geographic_scope"],
             total_contracts=total_contracts,
-            total_amount_mxn=row["total_amount_mxn"],
-            classification_confidence=row["classification_confidence"],
-            data_quality_grade=row["data_quality_grade"],
-            risk_baseline=row["type_risk_baseline"],
-            size_risk_adjustment=row["size_risk_adjustment"],
-            autonomy_risk_baseline=row["autonomy_risk_baseline"],
+            total_amount_mxn=detail["total_amount_mxn"],
+            classification_confidence=detail["classification_confidence"],
+            data_quality_grade=detail["data_quality_grade"],
+            risk_baseline=detail["type_risk_baseline"],
+            size_risk_adjustment=detail["size_risk_adjustment"],
+            autonomy_risk_baseline=detail["autonomy_risk_baseline"],
             avg_contract_value=avg_value,
             high_risk_contract_count=high_risk_count,
             high_risk_percentage=round(high_risk_pct, 2),
             avg_risk_score=avg_risk_score,
             direct_award_rate=round(direct_award_rate, 2),
-            direct_award_count=direct_award_count
+            direct_award_count=direct_award_count,
         )
 
 
-@router.get("/{institution_id}/risk-profile", response_model=InstitutionRiskProfile)
+@router.get("/{institution_id:int}/risk-profile", response_model=InstitutionRiskProfile)
 def get_institution_risk_profile(institution_id: int):
     """
     Get detailed risk profile for an institution.
@@ -425,57 +298,52 @@ def search_institutions(
 
     Returns institutions matching the query with match type indication.
     """
-    try:
-        with get_db() as conn:
-            cursor = conn.cursor()
+    with get_db() as conn:
+        cursor = conn.cursor()
 
-            search_pattern = f"%{q}%"
+        search_pattern = f"%{q}%"
 
-            query = """
-                SELECT
-                    id, name, siglas, name_normalized, institution_type, sector_id, total_contracts,
-                    CASE
-                        WHEN siglas LIKE ? THEN 'siglas'
-                        WHEN name LIKE ? THEN 'name'
-                        ELSE 'normalized'
-                    END as match_type
-                FROM institutions
-                WHERE siglas LIKE ? OR name LIKE ? OR name_normalized LIKE ?
-                ORDER BY
-                    CASE WHEN siglas LIKE ? THEN 1 WHEN name LIKE ? THEN 2 ELSE 3 END,
-                    total_contracts DESC NULLS LAST
-                LIMIT ?
-            """
-            cursor.execute(query, (
-                search_pattern, search_pattern,  # CASE
-                search_pattern, search_pattern, search_pattern,  # WHERE
-                search_pattern, search_pattern,  # ORDER BY
-                limit
-            ))
-            rows = cursor.fetchall()
+        query = """
+            SELECT
+                id, name, siglas, name_normalized, institution_type, sector_id, total_contracts,
+                CASE
+                    WHEN siglas LIKE ? THEN 'siglas'
+                    WHEN name LIKE ? THEN 'name'
+                    ELSE 'normalized'
+                END as match_type
+            FROM institutions
+            WHERE siglas LIKE ? OR name LIKE ? OR name_normalized LIKE ?
+            ORDER BY
+                CASE WHEN siglas LIKE ? THEN 1 WHEN name LIKE ? THEN 2 ELSE 3 END,
+                total_contracts DESC NULLS LAST
+            LIMIT ?
+        """
+        cursor.execute(query, (
+            search_pattern, search_pattern,  # CASE
+            search_pattern, search_pattern, search_pattern,  # WHERE
+            search_pattern, search_pattern,  # ORDER BY
+            limit
+        ))
+        rows = cursor.fetchall()
 
-            results = [
-                InstitutionSearchResult(
-                    id=row["id"],
-                    name=row["name"],
-                    siglas=row["siglas"],
-                    institution_type=row["institution_type"],
-                    sector_id=row["sector_id"],
-                    total_contracts=row["total_contracts"],
-                    match_type=row["match_type"],
-                )
-                for row in rows
-            ]
-
-            return InstitutionSearchResponse(
-                data=results,
-                query=q,
-                total=len(results),
+        results = [
+            InstitutionSearchResult(
+                id=row["id"],
+                name=row["name"],
+                siglas=row["siglas"],
+                institution_type=row["institution_type"],
+                sector_id=row["sector_id"],
+                total_contracts=row["total_contracts"],
+                match_type=row["match_type"],
             )
+            for row in rows
+        ]
 
-    except sqlite3.Error as e:
-        logger.error(f"Database error in search_institutions: {e}")
-        raise HTTPException(status_code=500, detail="Database error occurred")
+        return InstitutionSearchResponse(
+            data=results,
+            query=q,
+            total=len(results),
+        )
 
 
 @router.get("/compare", response_model=InstitutionComparisonResponse)
@@ -493,101 +361,96 @@ def compare_institutions(
 
     Accepts up to 10 institutions for comparison.
     """
+    # Parse institution IDs
     try:
-        # Parse institution IDs
-        try:
-            institution_ids = [int(id.strip()) for id in ids.split(",") if id.strip()]
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid institution IDs. Must be comma-separated integers.")
+        institution_ids = [int(id.strip()) for id in ids.split(",") if id.strip()]
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid institution IDs. Must be comma-separated integers.")
 
-        if not institution_ids:
-            raise HTTPException(status_code=400, detail="At least one institution ID is required")
+    if not institution_ids:
+        raise HTTPException(status_code=400, detail="At least one institution ID is required")
 
-        if len(institution_ids) > 10:
-            raise HTTPException(status_code=400, detail="Maximum 10 institutions can be compared at once")
+    if len(institution_ids) > 10:
+        raise HTTPException(status_code=400, detail="Maximum 10 institutions can be compared at once")
 
-        with get_db() as conn:
-            cursor = conn.cursor()
+    with get_db() as conn:
+        cursor = conn.cursor()
 
-            # Build placeholders for IN clause
-            placeholders = ",".join("?" * len(institution_ids))
+        # Build placeholders for IN clause
+        placeholders = ",".join("?" * len(institution_ids))
 
-            # Get institution info with aggregated metrics in a single efficient query
-            query = f"""
+        # Get institution info with aggregated metrics in a single efficient query
+        query = f"""
+            SELECT
+                i.id,
+                i.name,
+                i.siglas,
+                i.institution_type,
+                i.sector_id,
+                i.total_contracts,
+                i.total_amount_mxn,
+                COALESCE(metrics.avg_risk_score, 0) as avg_risk_score,
+                COALESCE(metrics.direct_award_count, 0) as direct_award_count,
+                COALESCE(metrics.high_risk_count, 0) as high_risk_count,
+                COALESCE(metrics.single_bid_count, 0) as single_bid_count
+            FROM institutions i
+            LEFT JOIN (
                 SELECT
-                    i.id,
-                    i.name,
-                    i.siglas,
-                    i.institution_type,
-                    i.sector_id,
-                    i.total_contracts,
-                    i.total_amount_mxn,
-                    COALESCE(metrics.avg_risk_score, 0) as avg_risk_score,
-                    COALESCE(metrics.direct_award_count, 0) as direct_award_count,
-                    COALESCE(metrics.high_risk_count, 0) as high_risk_count,
-                    COALESCE(metrics.single_bid_count, 0) as single_bid_count
-                FROM institutions i
-                LEFT JOIN (
-                    SELECT
-                        institution_id,
-                        AVG(risk_score) as avg_risk_score,
-                        SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) as direct_award_count,
-                        SUM(CASE WHEN risk_level IN ('high', 'critical') THEN 1 ELSE 0 END) as high_risk_count,
-                        SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) as single_bid_count
-                    FROM contracts
-                    WHERE institution_id IN ({placeholders})
-                    AND COALESCE(amount_mxn, 0) <= ?
-                    GROUP BY institution_id
-                ) metrics ON i.id = metrics.institution_id
-                WHERE i.id IN ({placeholders})
-            """
+                    institution_id,
+                    AVG(risk_score) as avg_risk_score,
+                    SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) as direct_award_count,
+                    SUM(CASE WHEN risk_level IN ('high', 'critical') THEN 1 ELSE 0 END) as high_risk_count,
+                    SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) as single_bid_count
+                FROM contracts
+                WHERE institution_id IN ({placeholders})
+                AND COALESCE(amount_mxn, 0) <= ?
+                GROUP BY institution_id
+            ) metrics ON i.id = metrics.institution_id
+            WHERE i.id IN ({placeholders})
+        """
 
-            # Parameters: institution_ids for subquery, MAX_CONTRACT_VALUE, institution_ids for main query
-            params = institution_ids + [MAX_CONTRACT_VALUE] + institution_ids
-            cursor.execute(query, params)
-            rows = cursor.fetchall()
+        # Parameters: institution_ids for subquery, MAX_CONTRACT_VALUE, institution_ids for main query
+        params = institution_ids + [MAX_CONTRACT_VALUE] + institution_ids
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
 
-            # Build comparison items
-            items = []
-            for row in rows:
-                total_contracts = row["total_contracts"] or 0
-                total_value = row["total_amount_mxn"] or 0
+        # Build comparison items
+        items = []
+        for row in rows:
+            total_contracts = row["total_contracts"] or 0
+            total_value = row["total_amount_mxn"] or 0
 
-                # Calculate rates
-                direct_award_rate = (row["direct_award_count"] / total_contracts * 100) if total_contracts > 0 else 0.0
-                high_risk_pct = (row["high_risk_count"] / total_contracts * 100) if total_contracts > 0 else 0.0
-                single_bid_rate = (row["single_bid_count"] / total_contracts * 100) if total_contracts > 0 else 0.0
-                avg_contract_value = (total_value / total_contracts) if total_contracts > 0 else None
+            # Calculate rates
+            direct_award_rate = (row["direct_award_count"] / total_contracts * 100) if total_contracts > 0 else 0.0
+            high_risk_pct = (row["high_risk_count"] / total_contracts * 100) if total_contracts > 0 else 0.0
+            single_bid_rate = (row["single_bid_count"] / total_contracts * 100) if total_contracts > 0 else 0.0
+            avg_contract_value = (total_value / total_contracts) if total_contracts > 0 else None
 
-                items.append(InstitutionComparisonItem(
-                    id=row["id"],
-                    name=row["name"],
-                    siglas=row["siglas"],
-                    institution_type=row["institution_type"],
-                    sector_id=row["sector_id"],
-                    total_contracts=total_contracts,
-                    total_value_mxn=total_value,
-                    avg_risk_score=round(row["avg_risk_score"], 4) if row["avg_risk_score"] else None,
-                    direct_award_rate=round(direct_award_rate, 2),
-                    direct_award_count=row["direct_award_count"],
-                    high_risk_count=row["high_risk_count"],
-                    high_risk_percentage=round(high_risk_pct, 2),
-                    single_bid_rate=round(single_bid_rate, 2),
-                    avg_contract_value=round(avg_contract_value, 2) if avg_contract_value else None,
-                ))
+            items.append(InstitutionComparisonItem(
+                id=row["id"],
+                name=row["name"],
+                siglas=row["siglas"],
+                institution_type=row["institution_type"],
+                sector_id=row["sector_id"],
+                total_contracts=total_contracts,
+                total_value_mxn=total_value,
+                avg_risk_score=round(row["avg_risk_score"], 4) if row["avg_risk_score"] else None,
+                direct_award_rate=round(direct_award_rate, 2),
+                direct_award_count=row["direct_award_count"],
+                high_risk_count=row["high_risk_count"],
+                high_risk_percentage=round(high_risk_pct, 2),
+                single_bid_rate=round(single_bid_rate, 2),
+                avg_contract_value=round(avg_contract_value, 2) if avg_contract_value else None,
+            ))
 
-            # Sort to match input order
-            id_order = {id: i for i, id in enumerate(institution_ids)}
-            items.sort(key=lambda x: id_order.get(x.id, 999))
+        # Sort to match input order
+        id_order = {id: i for i, id in enumerate(institution_ids)}
+        items.sort(key=lambda x: id_order.get(x.id, 999))
 
-            return InstitutionComparisonResponse(
-                data=items,
-                total=len(items),
-            )
-
-    except sqlite3.Error as e:
-        logger.error(f"Database error in compare_institutions: {e}")
-        raise HTTPException(status_code=500, detail="Database error occurred")
+        return InstitutionComparisonResponse(
+            data=items,
+            total=len(items),
+        )
 
 
 @router.get("/top", response_model=InstitutionTopListResponse)
@@ -602,79 +465,74 @@ def get_top_institutions(
 
     Returns institutions ranked by the specified metric with aggregate statistics.
     """
-    try:
-        with get_db() as conn:
-            cursor = conn.cursor()
+    with get_db() as conn:
+        cursor = conn.cursor()
 
-            # Build filters
-            conditions = ["COALESCE(c.amount_mxn, 0) <= ?"]
-            params = [MAX_CONTRACT_VALUE]
+        # Build filters
+        conditions = ["COALESCE(c.amount_mxn, 0) <= ?"]
+        params = [MAX_CONTRACT_VALUE]
 
-            if institution_type is not None:
-                conditions.append("i.institution_type = ?")
-                params.append(institution_type)
+        if institution_type is not None:
+            conditions.append("i.institution_type = ?")
+            params.append(institution_type)
 
-            if sector_id is not None:
-                conditions.append("c.sector_id = ?")
-                params.append(sector_id)
+        if sector_id is not None:
+            conditions.append("c.sector_id = ?")
+            params.append(sector_id)
 
-            where_clause = " AND ".join(conditions)
+        where_clause = " AND ".join(conditions)
 
-            # Determine sort expression based on metric
-            metric_mapping = {
-                "spending": ("SUM(c.amount_mxn)", "DESC"),
-                "contracts": ("COUNT(c.id)", "DESC"),
-                "risk": ("AVG(c.risk_score)", "DESC"),
-            }
-            if by not in metric_mapping:
-                raise HTTPException(status_code=400, detail=f"Invalid metric '{by}'. Use: spending, contracts, risk")
+        # Determine sort expression based on metric
+        metric_mapping = {
+            "spending": ("SUM(c.amount_mxn)", "DESC"),
+            "contracts": ("COUNT(c.id)", "DESC"),
+            "risk": ("AVG(c.risk_score)", "DESC"),
+        }
+        if by not in metric_mapping:
+            raise HTTPException(status_code=400, detail=f"Invalid metric '{by}'. Use: spending, contracts, risk")
 
-            sort_expr, sort_dir = metric_mapping[by]
+        sort_expr, sort_dir = metric_mapping[by]
 
-            query = f"""
-                SELECT
-                    i.id,
-                    i.name,
-                    i.institution_type,
-                    {sort_expr} as metric_value,
-                    COUNT(c.id) as total_contracts,
-                    COALESCE(SUM(c.amount_mxn), 0) as total_value_mxn,
-                    COALESCE(AVG(c.risk_score), 0) as avg_risk_score
-                FROM institutions i
-                JOIN contracts c ON i.id = c.institution_id
-                WHERE {where_clause}
-                GROUP BY i.id, i.name, i.institution_type
-                HAVING COUNT(c.id) > 0
-                ORDER BY metric_value {sort_dir} NULLS LAST
-                LIMIT ?
-            """
-            params.append(limit)
-            cursor.execute(query, params)
-            rows = cursor.fetchall()
+        query = f"""
+            SELECT
+                i.id,
+                i.name,
+                i.institution_type,
+                {sort_expr} as metric_value,
+                COUNT(c.id) as total_contracts,
+                COALESCE(SUM(c.amount_mxn), 0) as total_value_mxn,
+                COALESCE(AVG(c.risk_score), 0) as avg_risk_score
+            FROM institutions i
+            JOIN contracts c ON i.id = c.institution_id
+            WHERE {where_clause}
+            GROUP BY i.id, i.name, i.institution_type
+            HAVING COUNT(c.id) > 0
+            ORDER BY metric_value {sort_dir} NULLS LAST
+            LIMIT ?
+        """
+        params.append(limit)
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
 
-            institutions = [
-                InstitutionTopItem(
-                    rank=i + 1,
-                    institution_id=row["id"],
-                    institution_name=row["name"],
-                    institution_type=row["institution_type"],
-                    metric_value=row["metric_value"] or 0,
-                    total_contracts=row["total_contracts"],
-                    total_value_mxn=row["total_value_mxn"],
-                    avg_risk_score=round(row["avg_risk_score"], 4) if row["avg_risk_score"] else None,
-                )
-                for i, row in enumerate(rows)
-            ]
-
-            return InstitutionTopListResponse(
-                data=institutions,
-                metric=by,
-                total=len(institutions),
+        institutions = [
+            InstitutionTopItem(
+                rank=i + 1,
+                institution_id=row["id"],
+                institution_name=row["name"],
+                institution_type=row["institution_type"],
+                metric_value=row["metric_value"] or 0,
+                total_contracts=row["total_contracts"],
+                total_value_mxn=row["total_value_mxn"],
+                avg_risk_score=round(row["avg_risk_score"], 4) if row["avg_risk_score"] else None,
             )
+            for i, row in enumerate(rows)
+        ]
 
-    except sqlite3.Error as e:
-        logger.error(f"Database error in get_top_institutions: {e}")
-        raise HTTPException(status_code=500, detail="Database error occurred")
+        return InstitutionTopListResponse(
+            data=institutions,
+            metric=by,
+            total=len(institutions),
+        )
 
 
 @router.get("/hierarchy", response_model=InstitutionHierarchyResponse)
@@ -684,56 +542,51 @@ def get_institution_hierarchy():
 
     Returns institutions grouped by type with aggregate statistics.
     """
-    try:
-        with get_db() as conn:
-            cursor = conn.cursor()
+    with get_db() as conn:
+        cursor = conn.cursor()
 
-            query = """
-                SELECT
-                    i.institution_type,
-                    it.name_es as institution_type_name,
-                    COUNT(DISTINCT i.id) as count,
-                    COALESCE(SUM(i.total_contracts), 0) as total_contracts,
-                    COALESCE(SUM(i.total_amount_mxn), 0) as total_value_mxn,
-                    COALESCE(AVG(c.risk_score), 0) as avg_risk_score
-                FROM institutions i
-                LEFT JOIN institution_types it ON i.institution_type = it.code
-                LEFT JOIN contracts c ON i.id = c.institution_id
-                    AND COALESCE(c.amount_mxn, 0) <= ?
-                GROUP BY i.institution_type, it.name_es
-                ORDER BY total_contracts DESC
-            """
-            cursor.execute(query, (MAX_CONTRACT_VALUE,))
-            rows = cursor.fetchall()
+        query = """
+            SELECT
+                i.institution_type,
+                it.name_es as institution_type_name,
+                COUNT(DISTINCT i.id) as count,
+                COALESCE(SUM(i.total_contracts), 0) as total_contracts,
+                COALESCE(SUM(i.total_amount_mxn), 0) as total_value_mxn,
+                COALESCE(AVG(c.risk_score), 0) as avg_risk_score
+            FROM institutions i
+            LEFT JOIN institution_types it ON i.institution_type = it.code
+            LEFT JOIN contracts c ON i.id = c.institution_id
+                AND COALESCE(c.amount_mxn, 0) <= ?
+            GROUP BY i.institution_type, it.name_es
+            ORDER BY total_contracts DESC
+        """
+        cursor.execute(query, (MAX_CONTRACT_VALUE,))
+        rows = cursor.fetchall()
 
-            hierarchy = [
-                InstitutionHierarchyItem(
-                    institution_type=row["institution_type"] or "unknown",
-                    institution_type_name=row["institution_type_name"],
-                    count=row["count"],
-                    total_contracts=row["total_contracts"],
-                    total_value_mxn=row["total_value_mxn"],
-                    avg_risk_score=round(row["avg_risk_score"], 4) if row["avg_risk_score"] else None,
-                )
-                for row in rows
-            ]
-
-            # Get total counts
-            cursor.execute("SELECT COUNT(*) FROM institutions")
-            total_institutions = cursor.fetchone()[0]
-
-            return InstitutionHierarchyResponse(
-                data=hierarchy,
-                total_institutions=total_institutions,
-                total_types=len(hierarchy),
+        hierarchy = [
+            InstitutionHierarchyItem(
+                institution_type=row["institution_type"] or "unknown",
+                institution_type_name=row["institution_type_name"],
+                count=row["count"],
+                total_contracts=row["total_contracts"],
+                total_value_mxn=row["total_value_mxn"],
+                avg_risk_score=round(row["avg_risk_score"], 4) if row["avg_risk_score"] else None,
             )
+            for row in rows
+        ]
 
-    except sqlite3.Error as e:
-        logger.error(f"Database error in get_institution_hierarchy: {e}")
-        raise HTTPException(status_code=500, detail="Database error occurred")
+        # Get total counts
+        cursor.execute("SELECT COUNT(*) FROM institutions")
+        total_institutions = cursor.fetchone()[0]
+
+        return InstitutionHierarchyResponse(
+            data=hierarchy,
+            total_institutions=total_institutions,
+            total_types=len(hierarchy),
+        )
 
 
-@router.get("/{institution_id}/contracts", response_model=ContractListResponse)
+@router.get("/{institution_id:int}/contracts", response_model=ContractListResponse)
 def get_institution_contracts(
     institution_id: int = Path(..., description="Institution ID"),
     page: int = Query(1, ge=1, description="Page number"),
@@ -746,110 +599,105 @@ def get_institution_contracts(
     """
     Get contracts for a specific institution with pagination.
     """
-    try:
-        with get_db() as conn:
-            cursor = conn.cursor()
+    with get_db() as conn:
+        cursor = conn.cursor()
 
-            # Verify institution exists
-            cursor.execute("SELECT name FROM institutions WHERE id = ?", (institution_id,))
-            institution = cursor.fetchone()
-            if not institution:
-                raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
+        # Verify institution exists
+        cursor.execute("SELECT name FROM institutions WHERE id = ?", (institution_id,))
+        institution = cursor.fetchone()
+        if not institution:
+            raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
 
-            # Build WHERE clause
-            conditions = ["c.institution_id = ?", "COALESCE(c.amount_mxn, 0) <= ?"]
-            params = [institution_id, MAX_CONTRACT_VALUE]
+        # Build WHERE clause
+        conditions = ["c.institution_id = ?", "COALESCE(c.amount_mxn, 0) <= ?"]
+        params = [institution_id, MAX_CONTRACT_VALUE]
 
-            if year is not None:
-                conditions.append("c.contract_year = ?")
-                params.append(year)
+        if year is not None:
+            conditions.append("c.contract_year = ?")
+            params.append(year)
 
-            if risk_level is not None:
-                conditions.append("c.risk_level = ?")
-                params.append(risk_level.lower())
+        if risk_level is not None:
+            conditions.append("c.risk_level = ?")
+            params.append(risk_level.lower())
 
-            where_clause = " AND ".join(conditions)
+        where_clause = " AND ".join(conditions)
 
-            # Sort field mapping
-            SORT_FIELD_MAPPING = {
-                "contract_date": "c.contract_date",
-                "amount_mxn": "c.amount_mxn",
-                "risk_score": "c.risk_score",
-            }
-            sort_expr = SORT_FIELD_MAPPING.get(sort_by, "c.contract_date")
-            order_direction = "DESC" if sort_order.lower() == "desc" else "ASC"
+        # Sort field mapping
+        SORT_FIELD_MAPPING = {
+            "contract_date": "c.contract_date",
+            "amount_mxn": "c.amount_mxn",
+            "risk_score": "c.risk_score",
+        }
+        sort_expr = SORT_FIELD_MAPPING.get(sort_by, "c.contract_date")
+        order_direction = "DESC" if sort_order.lower() == "desc" else "ASC"
 
-            # Count total — use pre-computed stats when no filters active (fast path)
-            if year is None and risk_level is None:
-                cursor.execute(
-                    "SELECT total_contracts FROM institution_stats WHERE institution_id = ?",
-                    (institution_id,)
-                )
-                stats_row = cursor.fetchone()
-                total = stats_row["total_contracts"] if stats_row else 0
-            else:
-                cursor.execute(f"SELECT COUNT(*) FROM contracts c WHERE {where_clause}", params)
-                total = cursor.fetchone()[0]
-            total_pages = math.ceil(total / per_page) if total > 0 else 1
-
-            # Get paginated results
-            offset = (page - 1) * per_page
-            query = f"""
-                SELECT
-                    c.id, c.contract_number, c.title, c.amount_mxn,
-                    c.contract_date, c.contract_year, c.sector_id,
-                    s.name_es as sector_name, c.risk_score, c.risk_level,
-                    c.is_direct_award, c.is_single_bid,
-                    v.name as vendor_name, i.name as institution_name,
-                    c.procedure_type
-                FROM contracts c
-                LEFT JOIN sectors s ON c.sector_id = s.id
-                LEFT JOIN vendors v ON c.vendor_id = v.id
-                LEFT JOIN institutions i ON c.institution_id = i.id
-                WHERE {where_clause}
-                ORDER BY {sort_expr} {order_direction} NULLS LAST
-                LIMIT ? OFFSET ?
-            """
-            cursor.execute(query, params + [per_page, offset])
-            rows = cursor.fetchall()
-
-            contracts = [
-                ContractListItem(
-                    id=row["id"],
-                    contract_number=row["contract_number"],
-                    title=row["title"],
-                    amount_mxn=row["amount_mxn"] or 0,
-                    contract_date=row["contract_date"],
-                    contract_year=row["contract_year"],
-                    sector_id=row["sector_id"],
-                    sector_name=row["sector_name"],
-                    risk_score=row["risk_score"],
-                    risk_level=row["risk_level"],
-                    is_direct_award=bool(row["is_direct_award"]),
-                    is_single_bid=bool(row["is_single_bid"]),
-                    vendor_name=row["vendor_name"],
-                    institution_name=row["institution_name"],
-                    procedure_type=row["procedure_type"],
-                )
-                for row in rows
-            ]
-
-            return ContractListResponse(
-                data=contracts,
-                pagination=ContractPaginationMeta(
-                    page=page,
-                    per_page=per_page,
-                    total=total,
-                    total_pages=total_pages,
-                )
+        # Count total -- use pre-computed stats when no filters active (fast path)
+        if year is None and risk_level is None:
+            cursor.execute(
+                "SELECT total_contracts FROM institution_stats WHERE institution_id = ?",
+                (institution_id,)
             )
+            stats_row = cursor.fetchone()
+            total = stats_row["total_contracts"] if stats_row else 0
+        else:
+            cursor.execute(f"SELECT COUNT(*) FROM contracts c WHERE {where_clause}", params)
+            total = cursor.fetchone()[0]
+        total_pages = math.ceil(total / per_page) if total > 0 else 1
 
-    except sqlite3.Error as e:
-        logger.error(f"Database error in get_institution_contracts: {e}")
-        raise HTTPException(status_code=500, detail="Database error occurred")
+        # Get paginated results
+        offset = (page - 1) * per_page
+        query = f"""
+            SELECT
+                c.id, c.contract_number, c.title, c.amount_mxn,
+                c.contract_date, c.contract_year, c.sector_id,
+                s.name_es as sector_name, c.risk_score, c.risk_level,
+                c.is_direct_award, c.is_single_bid,
+                v.name as vendor_name, i.name as institution_name,
+                c.procedure_type
+            FROM contracts c
+            LEFT JOIN sectors s ON c.sector_id = s.id
+            LEFT JOIN vendors v ON c.vendor_id = v.id
+            LEFT JOIN institutions i ON c.institution_id = i.id
+            WHERE {where_clause}
+            ORDER BY {sort_expr} {order_direction} NULLS LAST
+            LIMIT ? OFFSET ?
+        """
+        cursor.execute(query, params + [per_page, offset])
+        rows = cursor.fetchall()
+
+        contracts = [
+            ContractListItem(
+                id=row["id"],
+                contract_number=row["contract_number"],
+                title=row["title"],
+                amount_mxn=row["amount_mxn"] or 0,
+                contract_date=row["contract_date"],
+                contract_year=row["contract_year"],
+                sector_id=row["sector_id"],
+                sector_name=row["sector_name"],
+                risk_score=row["risk_score"],
+                risk_level=row["risk_level"],
+                is_direct_award=bool(row["is_direct_award"]),
+                is_single_bid=bool(row["is_single_bid"]),
+                vendor_name=row["vendor_name"],
+                institution_name=row["institution_name"],
+                procedure_type=row["procedure_type"],
+            )
+            for row in rows
+        ]
+
+        return ContractListResponse(
+            data=contracts,
+            pagination=ContractPaginationMeta(
+                page=page,
+                per_page=per_page,
+                total=total,
+                total_pages=total_pages,
+            )
+        )
 
 
-@router.get("/{institution_id}/vendors", response_model=InstitutionVendorListResponse)
+@router.get("/{institution_id:int}/vendors", response_model=InstitutionVendorListResponse)
 def get_institution_vendors(
     institution_id: int = Path(..., description="Institution ID"),
     limit: int = Query(50, ge=1, le=100, description="Maximum results"),
@@ -857,56 +705,38 @@ def get_institution_vendors(
     """
     Get vendors that an institution has contracted with.
 
-    Returns vendors ranked by contract count with this institution.
-    Uses pre-computed institution_top_vendors table for performance.
+    Returns vendors ranked by contract value with this institution.
     """
-    try:
-        with get_db() as conn:
-            cursor = conn.cursor()
+    with get_db() as conn:
+        result = institution_service.get_institution_vendors(
+            conn, institution_id, limit=limit,
+        )
 
-            # Verify institution exists
-            cursor.execute("SELECT name FROM institutions WHERE id = ?", (institution_id,))
-            institution = cursor.fetchone()
-            if not institution:
-                raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
-
-            # Use pre-computed materialized view (instant vs 54s)
-            cursor.execute("""
-                SELECT
-                    vendor_id, vendor_name, rfc,
-                    contract_count, total_value_mxn, avg_risk_score,
-                    first_year, last_year
-                FROM institution_top_vendors
-                WHERE institution_id = ?
-                ORDER BY rank_by_count
-                LIMIT ?
-            """, (institution_id, limit))
-            rows = cursor.fetchall()
-
-            vendors = [
-                InstitutionVendorItem(
-                    vendor_id=row["vendor_id"],
-                    vendor_name=row["vendor_name"],
-                    rfc=row["rfc"],
-                    contract_count=row["contract_count"],
-                    total_value_mxn=row["total_value_mxn"],
-                    avg_risk_score=round(row["avg_risk_score"], 4) if row["avg_risk_score"] else None,
-                    first_year=row["first_year"],
-                    last_year=row["last_year"],
-                )
-                for row in rows
-            ]
-
-            return InstitutionVendorListResponse(
-                institution_id=institution_id,
-                institution_name=institution["name"],
-                data=vendors,
-                total=len(vendors),
+        if result is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Institution {institution_id} not found",
             )
 
-    except sqlite3.Error as e:
-        logger.error(f"Database error in get_institution_vendors: {e}")
-        raise HTTPException(status_code=500, detail="Database error occurred")
+        vendors = [
+            InstitutionVendorItem(
+                vendor_id=v["vendor_id"],
+                vendor_name=v["vendor_name"],
+                contract_count=v["contract_count"],
+                total_value_mxn=v["total_value"],
+                avg_risk_score=v["avg_risk_score"],
+                first_year=v["first_year"],
+                last_year=v["last_year"],
+            )
+            for v in result["vendors"]
+        ]
+
+        return InstitutionVendorListResponse(
+            institution_id=result["institution_id"],
+            institution_name=result["institution_name"],
+            data=vendors,
+            total=result["total_vendors"],
+        )
 
 
 # =============================================================================

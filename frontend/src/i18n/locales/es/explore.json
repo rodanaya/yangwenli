@@ -1,0 +1,62 @@
+{
+  "title": "Explorar Datos",
+  "tabs": {
+    "vendors": "Proveedores",
+    "institutions": "Instituciones",
+    "trends": "Tendencias"
+  },
+  "vendors": {
+    "title": "Proveedores",
+    "searchPlaceholder": "Buscar por nombre o RFC...",
+    "columns": {
+      "name": "Nombre",
+      "contracts": "Contratos",
+      "totalValue": "Valor Total (MXN)",
+      "avgRisk": "Riesgo Promedio",
+      "highRiskPct": "% Alto Riesgo",
+      "directAwardPct": "% Adj. Directa",
+      "singleBidPct": "% Licitación Única",
+      "sector": "Sector Principal",
+      "years": "Años Activo"
+    },
+    "empty": "No se encontraron proveedores con los filtros seleccionados.",
+    "emptyAction": "Ajustar filtros"
+  },
+  "institutions": {
+    "title": "Instituciones",
+    "searchPlaceholder": "Buscar por nombre o siglas...",
+    "columns": {
+      "name": "Nombre",
+      "type": "Tipo",
+      "contracts": "Contratos",
+      "totalValue": "Valor Total (MXN)",
+      "avgRisk": "Riesgo Promedio",
+      "vendorCount": "Proveedores",
+      "directAwardPct": "% Adj. Directa"
+    },
+    "empty": "No se encontraron instituciones con los filtros seleccionados.",
+    "emptyAction": "Ajustar filtros"
+  },
+  "trends": {
+    "title": "Tendencias Temporales",
+    "contractsOverTime": "Contratos por Año",
+    "valueOverTime": "Valor por Año",
+    "riskOverTime": "Riesgo Promedio por Año",
+    "directAwardTrend": "Tendencia de Adjudicación Directa"
+  },
+  "filters": {
+    "sector": "Sector",
+    "allSectors": "Todos los sectores",
+    "riskLevel": "Nivel de Riesgo",
+    "allRiskLevels": "Todos los niveles",
+    "minContracts": "Mín. Contratos",
+    "minValue": "Mín. Valor",
+    "hasRfc": "Con RFC",
+    "sortBy": "Ordenar por",
+    "sortOrder": "Orden",
+    "ascending": "Ascendente",
+    "descending": "Descendente",
+    "reset": "Limpiar filtros",
+    "apply": "Aplicar"
+  }
+}

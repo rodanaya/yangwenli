@@ -47,7 +47,7 @@ import {
   Cell,
   BarChart,
   Bar,
-} from 'recharts'
+} from '@/components/charts'
 
 // =============================================================================
 // Constants

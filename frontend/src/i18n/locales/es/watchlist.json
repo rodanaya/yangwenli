@@ -1,0 +1,26 @@
+{
+  "title": "Lista de Vigilancia",
+  "subtitle": "Proveedores e instituciones bajo monitoreo",
+  "addToWatchlist": "Agregar a vigilancia",
+  "removeFromWatchlist": "Quitar de vigilancia",
+  "columns": {
+    "name": "Nombre",
+    "type": "Tipo",
+    "reason": "Razón",
+    "dateAdded": "Fecha Agregado",
+    "riskScore": "Puntuación de Riesgo",
+    "contracts": "Contratos",
+    "status": "Estado"
+  },
+  "types": {
+    "vendor": "Proveedor",
+    "institution": "Institución",
+    "contract": "Contrato"
+  },
+  "empty": "La lista de vigilancia está vacía.",
+  "emptyDescription": "Agrega proveedores o instituciones para monitorear sus contratos y riesgos.",
+  "emptyAction": "Explorar proveedores",
+  "notes": "Notas",
+  "addNote": "Agregar nota",
+  "exportList": "Exportar lista"
+}

@@ -1,5 +1,5 @@
 """Pydantic models for industry taxonomy endpoints."""
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Optional
 from datetime import datetime
 
@@ -20,8 +20,7 @@ class IndustryResponse(BaseModel):
         None, description="Total contract value for vendors in this industry"
     )
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class IndustryListResponse(BaseModel):

@@ -1,0 +1,14 @@
+{
+  "salud": "Health",
+  "educacion": "Education",
+  "infraestructura": "Infrastructure",
+  "energia": "Energy",
+  "defensa": "Defense",
+  "tecnologia": "Technology",
+  "hacienda": "Treasury",
+  "gobernacion": "Governance",
+  "agricultura": "Agriculture",
+  "ambiente": "Environment",
+  "trabajo": "Labor",
+  "otros": "Other"
+}

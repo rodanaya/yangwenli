@@ -29,7 +29,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip as RechartsTooltip,
-} from 'recharts'
+} from '@/components/charts'
 
 export function InstitutionProfile() {
   const { id } = useParams<{ id: string }>()

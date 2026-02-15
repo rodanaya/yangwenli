@@ -7,6 +7,7 @@ using precomputed tables for speed. Cached 10 minutes.
 
 import json
 import logging
+import threading
 import time
 from datetime import datetime
 
@@ -18,13 +19,14 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/executive", tags=["executive"])
 
-# In-memory cache
+# In-memory cache (thread-safe)
 _cache: dict = {"data": None, "expires": 0}
+_cache_lock = threading.Lock()
 CACHE_TTL = 600  # 10 minutes
 
 
 @router.get("/summary")
-async def get_executive_summary():
+def get_executive_summary():
     """Return consolidated executive summary data.
 
     Uses precomputed_stats table for fast reads, with supplementary queries
@@ -38,8 +40,9 @@ async def get_executive_summary():
     try:
         with get_db() as conn:
             result = _build_summary(conn)
-        _cache["data"] = result
-        _cache["expires"] = now + CACHE_TTL
+        with _cache_lock:
+            _cache["data"] = result
+            _cache["expires"] = now + CACHE_TTL
         return result
     except Exception as e:
         logger.error(f"Executive summary error: {e}")
@@ -160,50 +163,8 @@ def _build_summary(conn) -> dict:
         for row in cur.fetchall()
     ]
 
-    # 8. Administration breakdown (live query — indexed on contract_year)
-    cur.execute("""
-        SELECT
-            CASE
-                WHEN contract_year BETWEEN 2001 AND 2006 THEN 'Fox'
-                WHEN contract_year BETWEEN 2007 AND 2012 THEN 'Calderon'
-                WHEN contract_year BETWEEN 2013 AND 2018 THEN 'Pena Nieto'
-                WHEN contract_year BETWEEN 2019 AND 2024 THEN 'AMLO'
-                WHEN contract_year >= 2025 THEN 'Sheinbaum'
-            END as admin,
-            COUNT(*) as contracts,
-            SUM(amount_mxn) as total_value,
-            ROUND(AVG(risk_score), 4) as avg_risk,
-            ROUND(100.0 * SUM(CASE WHEN risk_score >= 0.30 THEN 1 ELSE 0 END)
-                  / COUNT(*), 1) as high_risk_pct,
-            ROUND(100.0 * SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END)
-                  / COUNT(*), 1) as direct_award_pct
-        FROM contracts
-        WHERE contract_year >= 2001 AND contract_year <= 2025
-        GROUP BY admin
-        ORDER BY MIN(contract_year)
-    """)
-    admin_meta = {
-        "Fox": ("Vicente Fox", "2001-2006", "PAN"),
-        "Calderon": ("Felipe Calderon", "2007-2012", "PAN"),
-        "Pena Nieto": ("Enrique Pena Nieto", "2013-2018", "PRI"),
-        "AMLO": ("Andres Manuel Lopez Obrador", "2019-2024", "MORENA"),
-        "Sheinbaum": ("Claudia Sheinbaum", "2025-present", "MORENA"),
-    }
-    administrations = []
-    for row in cur.fetchall():
-        name = row["admin"]
-        full, years, party = admin_meta.get(name, (name, "", ""))
-        administrations.append({
-            "name": name,
-            "full_name": full,
-            "years": years,
-            "party": party,
-            "contracts": row["contracts"],
-            "value": row["total_value"] or 0,
-            "avg_risk": row["avg_risk"] or 0,
-            "high_risk_pct": row["high_risk_pct"] or 0,
-            "direct_award_pct": row["direct_award_pct"] or 0,
-        })
+    # 8. Administration breakdown (from precomputed_stats — was 90s live query)
+    administrations = precomputed.get("administrations", [])
 
     # 9. Yearly trends (filtered to meaningful years)
     yearly_trends = [

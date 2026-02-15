@@ -26,7 +26,7 @@ import {
   Tooltip as RechartsTooltip,
   Cell,
   LabelList,
-} from 'recharts'
+} from '@/components/charts'
 
 // Sector groupings for logical organization
 const SECTOR_GROUPS = [

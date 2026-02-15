@@ -1,0 +1,28 @@
+{
+  "sections": {
+    "overview": "RESUMEN",
+    "investigate": "INVESTIGAR",
+    "understand": "COMPRENDER"
+  },
+  "executive": "Ejecutivo",
+  "dashboard": "Panel",
+  "explore": "Explorar",
+  "patterns": "Patrones",
+  "redFlags": "Banderas Rojas",
+  "moneyFlow": "Flujo de Dinero",
+  "temporal": "Temporal",
+  "administrations": "Administraciones",
+  "institutions": "Instituciones",
+  "pricing": "Precios",
+  "contracts": "Contratos",
+  "network": "Red",
+  "watchlist": "Vigilancia",
+  "investigation": "Investigación",
+  "sectors": "Sectores",
+  "groundTruth": "Verdad Terreno",
+  "model": "Modelo",
+  "methodology": "Metodología",
+  "settings": "Configuración",
+  "expandSidebar": "Expandir barra lateral",
+  "collapseSidebar": "Contraer barra lateral"
+}

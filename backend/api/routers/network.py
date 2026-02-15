@@ -11,10 +11,10 @@ import time
 from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, HTTPException, Query, Path
 from pydantic import BaseModel, Field
-from collections import defaultdict
 
 from ..dependencies import get_db
 from ..config.constants import MAX_CONTRACT_VALUE
+from ..services.network_service import network_service
 
 logger = logging.getLogger(__name__)
 
@@ -151,247 +151,34 @@ def get_network_graph(
         if cached is not None:
             return cached
 
-    try:
-        with get_db() as conn:
-            cursor = conn.cursor()
-            nodes = {}
-            links = []
+    with get_db() as conn:
+        data = network_service.get_network_graph(
+            conn,
+            vendor_id=vendor_id,
+            institution_id=institution_id,
+            sector_id=sector_id,
+            year=year,
+            min_value=min_value,
+            min_contracts=min_contracts,
+            depth=depth,
+            limit=limit,
+        )
 
-            # Build query conditions
-            conditions = ["COALESCE(c.amount_mxn, 0) <= ?"]
-            params = [MAX_CONTRACT_VALUE]
+    if not data["nodes"] and vendor_id:
+        raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found or has no connections")
+    if not data["nodes"] and institution_id:
+        raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found or has no connections")
 
-            if sector_id:
-                conditions.append("c.sector_id = ?")
-                params.append(sector_id)
-
-            if year:
-                conditions.append("c.contract_year = ?")
-                params.append(year)
-
-            where_clause = " AND ".join(conditions)
-
-            if vendor_id:
-                # Center on specific vendor - get their institution connections
-                cursor.execute(f"""
-                    SELECT
-                        v.id as vendor_id, v.name as vendor_name,
-                        i.id as institution_id, i.name as institution_name,
-                        i.institution_type,
-                        COUNT(c.id) as contract_count,
-                        COALESCE(SUM(c.amount_mxn), 0) as total_value,
-                        COALESCE(AVG(c.risk_score), 0) as avg_risk
-                    FROM contracts c
-                    JOIN vendors v ON c.vendor_id = v.id
-                    JOIN institutions i ON c.institution_id = i.id
-                    WHERE c.vendor_id = ? AND {where_clause}
-                    GROUP BY v.id, v.name, i.id, i.name, i.institution_type
-                    HAVING contract_count >= ?
-                    ORDER BY total_value DESC
-                    LIMIT ?
-                """, (vendor_id, *params, min_contracts, limit))
-
-                rows = cursor.fetchall()
-                if not rows:
-                    raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found or has no connections")
-
-                # Add the central vendor node
-                vendor_name = rows[0]["vendor_name"]
-                nodes[f"v-{vendor_id}"] = NetworkNode(
-                    id=f"v-{vendor_id}",
-                    type="vendor",
-                    name=vendor_name,
-                    value=sum(r["total_value"] for r in rows),
-                    contracts=sum(r["contract_count"] for r in rows),
-                    risk_score=sum(r["avg_risk"] * r["contract_count"] for r in rows) / max(1, sum(r["contract_count"] for r in rows))
-                )
-
-                # Add institution nodes and links
-                for row in rows:
-                    inst_id = f"i-{row['institution_id']}"
-                    if inst_id not in nodes:
-                        nodes[inst_id] = NetworkNode(
-                            id=inst_id,
-                            type="institution",
-                            name=row["institution_name"],
-                            value=row["total_value"],
-                            contracts=row["contract_count"],
-                            metadata={"institution_type": row["institution_type"]}
-                        )
-
-                    links.append(NetworkLink(
-                        source=f"v-{vendor_id}",
-                        target=inst_id,
-                        value=row["total_value"],
-                        contracts=row["contract_count"],
-                        avg_risk=round(row["avg_risk"], 4) if row["avg_risk"] else None
-                    ))
-
-                # If depth > 1, get other vendors connected to these institutions
-                if depth > 1 and len(links) > 0:
-                    inst_ids = [l.target.replace("i-", "") for l in links]
-                    placeholders = ",".join("?" * len(inst_ids))
-
-                    cursor.execute(f"""
-                        SELECT
-                            v.id as vendor_id, v.name as vendor_name,
-                            COUNT(c.id) as contract_count,
-                            COALESCE(SUM(c.amount_mxn), 0) as total_value,
-                            COALESCE(AVG(c.risk_score), 0) as avg_risk,
-                            c.institution_id
-                        FROM contracts c
-                        JOIN vendors v ON c.vendor_id = v.id
-                        WHERE c.institution_id IN ({placeholders})
-                        AND c.vendor_id != ?
-                        AND {where_clause}
-                        GROUP BY v.id, v.name, c.institution_id
-                        HAVING contract_count >= ?
-                        ORDER BY total_value DESC
-                        LIMIT ?
-                    """, (*inst_ids, vendor_id, *params, max(1, min_contracts // 2), limit - len(nodes)))
-
-                    for row in cursor.fetchall():
-                        vid = f"v-{row['vendor_id']}"
-                        if vid not in nodes:
-                            nodes[vid] = NetworkNode(
-                                id=vid,
-                                type="vendor",
-                                name=row["vendor_name"],
-                                value=row["total_value"],
-                                contracts=row["contract_count"],
-                                risk_score=round(row["avg_risk"], 4) if row["avg_risk"] else None
-                            )
-
-                        links.append(NetworkLink(
-                            source=vid,
-                            target=f"i-{row['institution_id']}",
-                            value=row["total_value"],
-                            contracts=row["contract_count"],
-                            avg_risk=round(row["avg_risk"], 4) if row["avg_risk"] else None
-                        ))
-
-            elif institution_id:
-                # Center on specific institution - get their vendor connections
-                cursor.execute(f"""
-                    SELECT
-                        i.id as institution_id, i.name as institution_name,
-                        i.institution_type,
-                        v.id as vendor_id, v.name as vendor_name,
-                        COUNT(c.id) as contract_count,
-                        COALESCE(SUM(c.amount_mxn), 0) as total_value,
-                        COALESCE(AVG(c.risk_score), 0) as avg_risk
-                    FROM contracts c
-                    JOIN institutions i ON c.institution_id = i.id
-                    JOIN vendors v ON c.vendor_id = v.id
-                    WHERE c.institution_id = ? AND {where_clause}
-                    GROUP BY i.id, i.name, i.institution_type, v.id, v.name
-                    HAVING contract_count >= ?
-                    ORDER BY total_value DESC
-                    LIMIT ?
-                """, (institution_id, *params, min_contracts, limit))
-
-                rows = cursor.fetchall()
-                if not rows:
-                    raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found or has no connections")
-
-                # Add central institution node
-                nodes[f"i-{institution_id}"] = NetworkNode(
-                    id=f"i-{institution_id}",
-                    type="institution",
-                    name=rows[0]["institution_name"],
-                    value=sum(r["total_value"] for r in rows),
-                    contracts=sum(r["contract_count"] for r in rows),
-                    metadata={"institution_type": rows[0]["institution_type"]}
-                )
-
-                # Add vendor nodes and links
-                for row in rows:
-                    vid = f"v-{row['vendor_id']}"
-                    if vid not in nodes:
-                        nodes[vid] = NetworkNode(
-                            id=vid,
-                            type="vendor",
-                            name=row["vendor_name"],
-                            value=row["total_value"],
-                            contracts=row["contract_count"],
-                            risk_score=round(row["avg_risk"], 4) if row["avg_risk"] else None
-                        )
-
-                    links.append(NetworkLink(
-                        source=f"i-{institution_id}",
-                        target=vid,
-                        value=row["total_value"],
-                        contracts=row["contract_count"],
-                        avg_risk=round(row["avg_risk"], 4) if row["avg_risk"] else None
-                    ))
-
-            else:
-                # No specific focus - get top vendor-institution connections
-                cursor.execute(f"""
-                    SELECT
-                        v.id as vendor_id, v.name as vendor_name,
-                        i.id as institution_id, i.name as institution_name,
-                        COUNT(c.id) as contract_count,
-                        COALESCE(SUM(c.amount_mxn), 0) as total_value,
-                        COALESCE(AVG(c.risk_score), 0) as avg_risk
-                    FROM contracts c
-                    JOIN vendors v ON c.vendor_id = v.id
-                    JOIN institutions i ON c.institution_id = i.id
-                    WHERE {where_clause}
-                    GROUP BY v.id, v.name, i.id, i.name
-                    HAVING contract_count >= ? AND total_value >= ?
-                    ORDER BY total_value DESC
-                    LIMIT ?
-                """, (*params, min_contracts, min_value or 0, limit * 2))
-
-                for row in cursor.fetchall():
-                    vid = f"v-{row['vendor_id']}"
-                    iid = f"i-{row['institution_id']}"
-
-                    if vid not in nodes:
-                        nodes[vid] = NetworkNode(
-                            id=vid,
-                            type="vendor",
-                            name=row["vendor_name"],
-                            value=row["total_value"],
-                            contracts=row["contract_count"],
-                            risk_score=round(row["avg_risk"], 4) if row["avg_risk"] else None
-                        )
-
-                    if iid not in nodes:
-                        nodes[iid] = NetworkNode(
-                            id=iid,
-                            type="institution",
-                            name=row["institution_name"],
-                            value=row["total_value"],
-                            contracts=row["contract_count"]
-                        )
-
-                    links.append(NetworkLink(
-                        source=vid,
-                        target=iid,
-                        value=row["total_value"],
-                        contracts=row["contract_count"],
-                        avg_risk=round(row["avg_risk"], 4) if row["avg_risk"] else None
-                    ))
-
-                    if len(nodes) >= limit:
-                        break
-
-            result = NetworkGraphResponse(
-                nodes=list(nodes.values())[:limit],
-                links=links,
-                total_nodes=len(nodes),
-                total_links=len(links),
-                total_value=sum(n.value for n in nodes.values())
-            )
-            if cache_key:
-                _network_cache.set(cache_key, result, ttl=3600)  # Cache 1 hour
-            return result
-
-    except sqlite3.Error as e:
-        logger.error(f"Database error in get_network_graph: {e}")
-        raise HTTPException(status_code=500, detail="Database error occurred")
+    result = NetworkGraphResponse(
+        nodes=[NetworkNode(**n) for n in data["nodes"]],
+        links=[NetworkLink(**lk) for lk in data["links"]],
+        total_nodes=data["total_nodes"],
+        total_links=data["total_links"],
+        total_value=data["total_value"],
+    )
+    if cache_key:
+        _network_cache.set(cache_key, result, ttl=3600)
+    return result
 
 
 @router.get("/co-bidders/{vendor_id}", response_model=CoBiddersResponse)
@@ -406,123 +193,24 @@ def get_co_bidders(
     Analyzes procedure participation to identify vendors that often bid in the
     same tenders. Detects potential collusion patterns like bid rotation.
     """
-    try:
-        with get_db() as conn:
-            cursor = conn.cursor()
+    with get_db() as conn:
+        data = network_service.get_co_bidders(
+            conn,
+            vendor_id,
+            min_procedures=min_procedures,
+            limit=limit,
+        )
 
-            # Verify vendor exists
-            cursor.execute("SELECT name FROM vendors WHERE id = ?", (vendor_id,))
-            vendor = cursor.fetchone()
-            if not vendor:
-                raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
+    if data is None:
+        raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
 
-            # Get total procedures for this vendor
-            cursor.execute("""
-                SELECT COUNT(DISTINCT procedure_number)
-                FROM contracts
-                WHERE vendor_id = ?
-                AND procedure_number IS NOT NULL
-                AND procedure_number != ''
-            """, (vendor_id,))
-            total_procedures = cursor.fetchone()[0] or 0
-
-            # Find co-bidders through shared procedure numbers
-            cursor.execute("""
-                WITH target_procedures AS (
-                    SELECT DISTINCT procedure_number
-                    FROM contracts
-                    WHERE vendor_id = ?
-                    AND procedure_number IS NOT NULL
-                    AND procedure_number != ''
-                ),
-                co_bids AS (
-                    SELECT
-                        c.vendor_id as co_vendor_id,
-                        v.name as co_vendor_name,
-                        c.procedure_number,
-                        c.vendor_id = (
-                            SELECT vendor_id FROM contracts c2
-                            WHERE c2.procedure_number = c.procedure_number
-                            ORDER BY c2.amount_mxn DESC LIMIT 1
-                        ) as is_winner
-                    FROM contracts c
-                    JOIN vendors v ON c.vendor_id = v.id
-                    WHERE c.procedure_number IN (SELECT procedure_number FROM target_procedures)
-                    AND c.vendor_id != ?
-                )
-                SELECT
-                    co_vendor_id,
-                    co_vendor_name,
-                    COUNT(DISTINCT procedure_number) as co_bid_count,
-                    SUM(CASE WHEN is_winner THEN 1 ELSE 0 END) as win_count
-                FROM co_bids
-                GROUP BY co_vendor_id, co_vendor_name
-                HAVING co_bid_count >= ?
-                ORDER BY co_bid_count DESC
-                LIMIT ?
-            """, (vendor_id, vendor_id, min_procedures, limit))
-
-            co_bidders = []
-            for row in cursor.fetchall():
-                co_bid_count = row["co_bid_count"]
-                win_count = row["win_count"]
-                loss_count = co_bid_count - win_count
-
-                # Calculate same winner ratio (how often this co-bidder wins)
-                same_winner_ratio = win_count / co_bid_count if co_bid_count > 0 else 0
-
-                # Determine relationship strength
-                if co_bid_count >= 20:
-                    strength = "very_strong"
-                elif co_bid_count >= 10:
-                    strength = "strong"
-                elif co_bid_count >= 5:
-                    strength = "moderate"
-                else:
-                    strength = "weak"
-
-                co_bidders.append(CoBidderItem(
-                    vendor_id=row["co_vendor_id"],
-                    vendor_name=row["co_vendor_name"],
-                    co_bid_count=co_bid_count,
-                    win_count=win_count,
-                    loss_count=loss_count,
-                    same_winner_ratio=round(same_winner_ratio, 3),
-                    relationship_strength=strength
-                ))
-
-            # Detect suspicious patterns
-            suspicious_patterns = []
-
-            # Pattern 1: Vendors that always lose when co-bidding (cover bidders)
-            potential_covers = [cb for cb in co_bidders if cb.co_bid_count >= 5 and cb.same_winner_ratio < 0.1]
-            if potential_covers:
-                suspicious_patterns.append({
-                    "pattern": "potential_cover_bidding",
-                    "description": f"{len(potential_covers)} vendors win <10% when bidding against target",
-                    "vendors": [{"id": v.vendor_id, "name": v.vendor_name, "win_rate": v.same_winner_ratio} for v in potential_covers[:3]]
-                })
-
-            # Pattern 2: Bid rotation (alternating winners)
-            high_frequency = [cb for cb in co_bidders if cb.co_bid_count >= 10 and 0.4 < cb.same_winner_ratio < 0.6]
-            if len(high_frequency) >= 2:
-                suspicious_patterns.append({
-                    "pattern": "potential_bid_rotation",
-                    "description": f"{len(high_frequency)} vendors with ~50% win rate in frequent co-bids",
-                    "vendors": [{"id": v.vendor_id, "name": v.vendor_name, "co_bids": v.co_bid_count} for v in high_frequency[:3]]
-                })
-
-            return CoBiddersResponse(
-                vendor_id=vendor_id,
-                vendor_name=vendor["name"],
-                co_bidders=co_bidders,
-                total_procedures=total_procedures,
-                suspicious_patterns=suspicious_patterns
-            )
-
-    except sqlite3.Error as e:
-        logger.error(f"Database error in get_co_bidders: {e}")
-        raise HTTPException(status_code=500, detail="Database error occurred")
+    return CoBiddersResponse(
+        vendor_id=data["vendor_id"],
+        vendor_name=data["vendor_name"],
+        co_bidders=[CoBidderItem(**cb) for cb in data["co_bidders"]],
+        total_procedures=data["total_procedures"],
+        suspicious_patterns=data["suspicious_patterns"],
+    )
 
 
 @router.get("/institution-vendors/{institution_id}", response_model=InstitutionNetworkResponse)

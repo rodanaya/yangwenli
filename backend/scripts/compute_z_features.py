@@ -40,6 +40,10 @@ FACTOR_COLS = [
     'z_price_hyp_confidence',
     'z_industry_mismatch',
     'z_institution_risk',
+    'z_price_volatility',
+    'z_sector_spread',
+    'z_win_rate',
+    'z_institution_diversity',
 ]
 
 FACTOR_NAMES = [c.replace('z_', '') for c in FACTOR_COLS]
@@ -215,6 +219,81 @@ def load_auxiliary_data(conn: sqlite3.Connection):
         for r in cursor.fetchall():
             sector_medians[r[0]] = r[1]
 
+    # Price volatility: per (vendor, sector) stddev of amounts / sector median
+    print("  Loading vendor price volatility...")
+    cursor.execute("""
+        SELECT vendor_id, sector_id,
+               AVG(amount_mxn) as avg_amt,
+               AVG(amount_mxn * amount_mxn) as avg_amt_sq,
+               COUNT(*) as cnt
+        FROM contracts
+        WHERE vendor_id IS NOT NULL AND sector_id IS NOT NULL
+          AND amount_mxn > 0 AND amount_mxn < 100000000000
+        GROUP BY vendor_id, sector_id
+        HAVING COUNT(*) >= 3
+    """)
+    vendor_price_vol = {}
+    for r in cursor.fetchall():
+        vid, sid, avg_amt, avg_amt_sq, cnt = r
+        variance = max(avg_amt_sq - avg_amt * avg_amt, 0)
+        stddev = math.sqrt(variance) if variance > 0 else 0
+        median = sector_medians.get(sid, 1)
+        vendor_price_vol[(vid, sid)] = stddev / median if median > 0 else 0
+
+    # Sector spread: distinct sectors per vendor
+    print("  Loading vendor sector spread...")
+    cursor.execute("""
+        SELECT vendor_id, COUNT(DISTINCT sector_id) as sector_count
+        FROM contracts
+        WHERE vendor_id IS NOT NULL AND sector_id IS NOT NULL
+        GROUP BY vendor_id
+    """)
+    vendor_sector_count = {r[0]: r[1] for r in cursor.fetchall()}
+
+    # Competitive win rate: vendor share of competitive contracts per sector
+    print("  Loading vendor competitive win rates...")
+    cursor.execute("""
+        SELECT vendor_id, sector_id, COUNT(*) as comp_wins
+        FROM contracts
+        WHERE vendor_id IS NOT NULL AND sector_id IS NOT NULL
+          AND is_direct_award = 0
+        GROUP BY vendor_id, sector_id
+    """)
+    vendor_comp_wins = {}
+    for r in cursor.fetchall():
+        vendor_comp_wins[(r[0], r[1])] = r[2]
+
+    cursor.execute("""
+        SELECT sector_id, COUNT(*) as total_comp
+        FROM contracts
+        WHERE sector_id IS NOT NULL AND is_direct_award = 0
+        GROUP BY sector_id
+    """)
+    sector_comp_totals = {r[0]: r[1] for r in cursor.fetchall()}
+
+    # Institution diversity: HHI per vendor
+    print("  Loading vendor institution diversity (HHI)...")
+    cursor.execute("""
+        SELECT vendor_id, institution_id, COUNT(*) as cnt
+        FROM contracts
+        WHERE vendor_id IS NOT NULL AND institution_id IS NOT NULL
+        GROUP BY vendor_id, institution_id
+    """)
+    vendor_inst_counts = defaultdict(dict)
+    vendor_total_contracts = defaultdict(int)
+    for r in cursor.fetchall():
+        vendor_inst_counts[r[0]][r[1]] = r[2]
+        vendor_total_contracts[r[0]] += r[2]
+
+    vendor_inst_hhi = {}
+    for vid, inst_map in vendor_inst_counts.items():
+        total = vendor_total_contracts[vid]
+        if total > 0:
+            hhi = sum((cnt / total) ** 2 for cnt in inst_map.values())
+            vendor_inst_hhi[vid] = hhi
+        else:
+            vendor_inst_hhi[vid] = 1.0
+
     return {
         'vendor_sector_val': vendor_sector_val,
         'sector_totals': sector_totals,
@@ -225,6 +304,11 @@ def load_auxiliary_data(conn: sqlite3.Connection):
         'vendor_affinity': vendor_affinity,
         'splitting': splitting,
         'sector_medians': sector_medians,
+        'vendor_price_vol': vendor_price_vol,
+        'vendor_sector_count': vendor_sector_count,
+        'vendor_comp_wins': vendor_comp_wins,
+        'sector_comp_totals': sector_comp_totals,
+        'vendor_inst_hhi': vendor_inst_hhi,
     }
 
 
@@ -302,6 +386,33 @@ def compute_raw_features(row, aux):
 
     # Institution risk
     features['institution_risk'] = aux['inst_baselines'].get(inst_id, 0.25) if inst_id else 0.25
+
+    # Price volatility (vendor price stddev / sector median)
+    if vendor_id and sector_id:
+        features['price_volatility'] = aux['vendor_price_vol'].get(
+            (vendor_id, sector_id), 0.0)
+    else:
+        features['price_volatility'] = 0.0
+
+    # Sector spread (distinct sectors per vendor)
+    if vendor_id:
+        features['sector_spread'] = float(aux['vendor_sector_count'].get(vendor_id, 1))
+    else:
+        features['sector_spread'] = 1.0
+
+    # Win rate (vendor competitive contract share in sector)
+    if vendor_id and sector_id:
+        comp_wins = aux['vendor_comp_wins'].get((vendor_id, sector_id), 0)
+        comp_total = aux['sector_comp_totals'].get(sector_id, 1)
+        features['win_rate'] = comp_wins / comp_total if comp_total > 0 else 0.0
+    else:
+        features['win_rate'] = 0.0
+
+    # Institution diversity (HHI of vendor's institution distribution)
+    if vendor_id:
+        features['institution_diversity'] = aux['vendor_inst_hhi'].get(vendor_id, 1.0)
+    else:
+        features['institution_diversity'] = 1.0
 
     return features
 

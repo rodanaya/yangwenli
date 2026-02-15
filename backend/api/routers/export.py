@@ -7,6 +7,7 @@ import csv
 import io
 import sqlite3
 import logging
+from copy import copy
 from typing import Optional
 from datetime import datetime
 from fastapi import APIRouter, Query, HTTPException, Request
@@ -357,7 +358,9 @@ def export_contracts_excel(
             # Style header row
             for col in range(1, len(headers) + 1):
                 cell = ws.cell(row=1, column=col)
-                cell.font = cell.font.copy(bold=True)
+                font = copy(cell.font)
+                font.bold = True
+                cell.font = font
 
             # Data rows - sanitize all cells to prevent formula injection
             for row in rows:

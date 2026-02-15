@@ -2,6 +2,12 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect, vi } from 'vitest'
+import i18n from '../i18n'
+
+// Ensure English for test assertions
+beforeAll(async () => {
+  await i18n.changeLanguage('en')
+})
 
 // Mock the API client - return never-resolving promises to keep loading state
 vi.mock('@/api/client', () => ({
@@ -9,9 +15,17 @@ vi.mock('@/api/client', () => ({
     getFastDashboard: vi.fn(() => new Promise(() => {})),
     getAnomalies: vi.fn(() => new Promise(() => {})),
   },
+  investigationApi: {
+    getCases: vi.fn(() => new Promise(() => {})),
+  },
   vendorApi: {
     getTop: vi.fn(() => new Promise(() => {})),
   },
+}))
+
+// Mock echarts-for-react (used by Heatmap component)
+vi.mock('echarts-for-react', () => ({
+  default: () => null,
 }))
 
 // Mock recharts to avoid rendering issues in jsdom
@@ -28,14 +42,8 @@ vi.mock('recharts', () => ({
   LineChart: ({ children }: any) => <div>{children}</div>,
   Line: () => null,
   CartesianGrid: () => null,
-}))
-
-// Mock lazy-loaded chart components
-vi.mock('@/components/charts', () => ({
-  StackedAreaChart: () => <div>StackedAreaChart</div>,
-  AlertPanel: () => <div>AlertPanel</div>,
-  ProcedureBreakdown: () => <div>ProcedureBreakdown</div>,
-  Heatmap: () => <div>Heatmap</div>,
+  AreaChart: ({ children }: any) => <div>{children}</div>,
+  Area: () => null,
 }))
 
 import { Dashboard } from '../pages/Dashboard'
@@ -54,32 +62,24 @@ function renderDashboard() {
 }
 
 describe('Dashboard', () => {
-  it('renders the Command Center heading', () => {
+  it('renders the Intelligence Brief heading', () => {
     renderDashboard()
-    expect(screen.getByText('Command Center')).toBeInTheDocument()
+    expect(screen.getByText('INTELLIGENCE BRIEF')).toBeInTheDocument()
   })
 
-  it('renders the subtitle', () => {
+  it('renders key section headings', () => {
     renderDashboard()
-    expect(screen.getByText('Real-time procurement intelligence overview')).toBeInTheDocument()
+    // These come from the dashboard i18n translations
+    expect(screen.getByText('Value at Risk by Sector')).toBeInTheDocument()
+    expect(screen.getByText('Risk Trajectory')).toBeInTheDocument()
   })
 
-  it('renders KPI card titles', () => {
+  it('renders navigation cards', () => {
     renderDashboard()
-    expect(screen.getByText('TOTAL CONTRACTS')).toBeInTheDocument()
-    expect(screen.getByText('TOTAL VALUE')).toBeInTheDocument()
-    expect(screen.getByText('ACTIVE VENDORS')).toBeInTheDocument()
-    expect(screen.getByText('HIGH RISK')).toBeInTheDocument()
-  })
-
-  it('renders section card titles', () => {
-    renderDashboard()
-    expect(screen.getByText('Value by Sector')).toBeInTheDocument()
-    expect(screen.getByText('Risk Distribution')).toBeInTheDocument()
-    expect(screen.getByText('Risk Trend Over Time')).toBeInTheDocument()
-    expect(screen.getByText('Active Alerts')).toBeInTheDocument()
-    expect(screen.getByText('Contract Value Trends')).toBeInTheDocument()
-    expect(screen.getByText('Top Vendors')).toBeInTheDocument()
+    expect(screen.getByText('Patterns')).toBeInTheDocument()
+    expect(screen.getByText('Network')).toBeInTheDocument()
+    expect(screen.getByText('Explore')).toBeInTheDocument()
+    expect(screen.getByText('Methodology')).toBeInTheDocument()
   })
 
   it('shows loading skeletons while data is being fetched', () => {
@@ -89,10 +89,13 @@ describe('Dashboard', () => {
     expect(skeletons.length).toBeGreaterThan(0)
   })
 
-  it('renders stat cards at the bottom', () => {
+  it('renders the validated against real corruption section', () => {
     renderDashboard()
-    expect(screen.getByText('Direct Awards')).toBeInTheDocument()
-    expect(screen.getByText('Single Bid')).toBeInTheDocument()
-    expect(screen.getByText('Avg Risk Score')).toBeInTheDocument()
+    expect(screen.getByText('Validated Against Real Corruption')).toBeInTheDocument()
+  })
+
+  it('renders the counterintuitive finding section', () => {
+    renderDashboard()
+    expect(screen.getByText('COUNTERINTUITIVE FINDING')).toBeInTheDocument()
   })
 })

@@ -1,5 +1,5 @@
 """Pydantic models for vendor classification endpoints."""
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from .common import PaginationMeta
@@ -23,8 +23,7 @@ class VendorClassificationResponse(BaseModel):
         None, description="Expected sector based on industry"
     )
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class VendorListItem(BaseModel):
@@ -49,8 +48,7 @@ class VendorListItem(BaseModel):
     primary_sector_id: Optional[int] = Field(None, description="Primary sector ID (1-12)")
     pct_anomalous: Optional[float] = Field(None, description="Percentage of anomalous contracts")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class VendorDetailResponse(BaseModel):
@@ -107,8 +105,7 @@ class VendorDetailResponse(BaseModel):
     max_mahalanobis: Optional[float] = Field(None, description="Maximum Mahalanobis distance across contracts")
     pct_anomalous: Optional[float] = Field(None, description="Percentage of contracts with Mahalanobis p-value < 0.05 (D² > 21.026 for k=12)")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class VendorRiskProfile(BaseModel):
@@ -238,8 +235,7 @@ class VerifiedVendorResponse(BaseModel):
     total_contracts: Optional[int] = Field(None, description="Total contracts")
     total_value: Optional[float] = Field(None, description="Total contract value")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class VerifiedVendorListResponse(BaseModel):

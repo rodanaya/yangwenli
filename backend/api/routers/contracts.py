@@ -3,18 +3,15 @@ Contract API endpoints.
 
 Provides access to 3.1M procurement contracts with filtering,
 pagination, and risk information.
+
+Thin router — delegates business logic to ContractService.
 """
-import math
 import sqlite3
 import logging
-import time
 from typing import Optional, List
 from fastapi import APIRouter, Query, HTTPException, Path
 
 from ..dependencies import get_db
-from ..config.constants import MAX_CONTRACT_VALUE, FLAG_THRESHOLD
-
-logger = logging.getLogger(__name__)
 from ..models.contract import (
     ContractListItem,
     ContractDetail,
@@ -23,13 +20,16 @@ from ..models.contract import (
     ContractRiskBreakdown,
     PaginationMeta,
 )
+from ..services.contract_service import contract_service
+
+logger = logging.getLogger(__name__)
 
 # Valid risk levels for validation
 VALID_RISK_LEVELS = {"low", "medium", "high", "critical"}
 
-# In-memory cache for expensive aggregate queries (refreshed every 10 min)
-_stats_cache: dict = {}
-_STATS_CACHE_TTL = 600  # seconds
+# Thread-safe, bounded cache for expensive aggregate queries
+from ..cache import app_cache
+_stats_cache_name = "contracts_stats"
 
 router = APIRouter(prefix="/contracts", tags=["contracts"])
 
@@ -79,214 +79,30 @@ def list_contracts(
                 detail=f"Invalid risk_level '{risk_level}'. Must be one of: {', '.join(sorted(VALID_RISK_LEVELS))}"
             )
 
-    try:
-        with get_db() as conn:
-            cursor = conn.cursor()
+    with get_db() as conn:
+        result = contract_service.list_contracts(
+            conn,
+            page=page,
+            per_page=per_page,
+            sector_id=sector_id,
+            year=year,
+            vendor_id=vendor_id,
+            institution_id=institution_id,
+            risk_level=risk_level,
+            is_direct_award=is_direct_award,
+            is_single_bid=is_single_bid,
+            risk_factor=risk_factor,
+            min_amount=min_amount,
+            max_amount=max_amount,
+            search=search,
+            sort_by=sort_by,
+            sort_order=sort_order,
+        )
 
-            # Build WHERE clause
-            # Filter conditions are split: amount guard is kept separate so COUNT
-            # queries can skip it and use covering indexes (60x faster on 3.1M rows).
-            # The amount guard (COALESCE) prevents SQLite from using MULTI-INDEX OR
-            # but still requires a table lookup for each row — expensive for COUNT.
-            filter_conditions = []
-            filter_params = []
-
-            if sector_id is not None:
-                filter_conditions.append("c.sector_id = ?")
-                filter_params.append(sector_id)
-
-            if year is not None:
-                filter_conditions.append("c.contract_year = ?")
-                filter_params.append(year)
-
-            if vendor_id is not None:
-                filter_conditions.append("c.vendor_id = ?")
-                filter_params.append(vendor_id)
-
-            if institution_id is not None:
-                filter_conditions.append("c.institution_id = ?")
-                filter_params.append(institution_id)
-
-            if risk_level is not None:
-                filter_conditions.append("c.risk_level = ?")
-                filter_params.append(risk_level.lower())
-
-            if is_direct_award is not None:
-                filter_conditions.append("c.is_direct_award = ?")
-                filter_params.append(1 if is_direct_award else 0)
-
-            if is_single_bid is not None:
-                filter_conditions.append("c.is_single_bid = ?")
-                filter_params.append(1 if is_single_bid else 0)
-
-            if min_amount is not None:
-                filter_conditions.append("c.amount_mxn >= ?")
-                filter_params.append(min_amount)
-
-            if max_amount is not None:
-                filter_conditions.append("c.amount_mxn <= ?")
-                filter_params.append(max_amount)
-
-            if search:
-                filter_conditions.append("(c.title LIKE ? OR c.description LIKE ?)")
-                search_pattern = f"%{search}%"
-                filter_params.extend([search_pattern, search_pattern])
-
-            if risk_factor:
-                filter_conditions.append("c.risk_factors LIKE ?")
-                filter_params.append(f"%{risk_factor}%")
-
-            # Both COUNT and DATA queries use the same filter conditions.
-            # The COALESCE amount guard was removed because:
-            # 1. ETL already rejects amounts > 100B MXN (verified: 0 rows exceed it)
-            # 2. COALESCE prevents SQLite from using composite indexes for ORDER BY
-            # 3. On large result sets (1M+ rows), this caused 1-8s slowdowns
-            count_where = " AND ".join(filter_conditions) if filter_conditions else "1=1"
-            where_clause = count_where
-            params = list(filter_params)
-
-            # Strict whitelist mapping for sort fields - maps user input to safe SQL expressions
-            # This prevents SQL injection by only allowing pre-defined, safe column references
-            SORT_FIELD_MAPPING = {
-                "contract_date": "c.contract_date",
-                "amount_mxn": "c.amount_mxn",
-                "risk_score": "c.risk_score",
-                "contract_year": "c.contract_year",
-                "id": "c.id",
-                "title": "c.title",
-                "vendor_name": "vendor_name",       # JOIN alias
-                "institution_name": "institution_name",  # JOIN alias
-                "mahalanobis_distance": "c.mahalanobis_distance",
-            }
-
-            # Get safe sort expression from whitelist (defaults to contract_date if invalid)
-            sort_expr = SORT_FIELD_MAPPING.get(sort_by, "c.contract_date")
-
-            # Validate sort order - only allow ASC or DESC (already validated by Query pattern)
-            order_direction = "DESC" if sort_order.lower() == "desc" else "ASC"
-
-            # Count total (uses filter conditions only — no amount guard —
-            # so SQLite can use covering indexes like idx_contracts_risk_level)
-            count_query = f"""
-                SELECT COUNT(*) FROM contracts c WHERE {count_where}
-            """
-            cursor.execute(count_query, filter_params)
-            total = cursor.fetchone()[0]
-            total_pages = math.ceil(total / per_page) if total > 0 else 1
-
-            # Get paginated results
-            offset = (page - 1) * per_page
-
-            query = f"""
-                SELECT
-                    c.id,
-                    c.contract_number,
-                    c.title,
-                    c.amount_mxn,
-                    c.contract_date,
-                    c.contract_year,
-                    c.sector_id,
-                    s.name_es as sector_name,
-                    c.risk_score,
-                    c.risk_level,
-                    c.is_direct_award,
-                    c.is_single_bid,
-                    v.name as vendor_name,
-                    i.name as institution_name,
-                    c.procedure_type,
-                    c.mahalanobis_distance,
-                    c.vendor_id,
-                    c.institution_id,
-                    c.risk_factors
-                FROM contracts c
-                LEFT JOIN sectors s ON c.sector_id = s.id
-                LEFT JOIN vendors v ON c.vendor_id = v.id
-                LEFT JOIN institutions i ON c.institution_id = i.id
-                WHERE {where_clause}
-                ORDER BY {sort_expr} {order_direction} NULLS LAST
-                LIMIT ? OFFSET ?
-            """
-            params.extend([per_page, offset])
-            cursor.execute(query, params)
-            rows = cursor.fetchall()
-
-            # Convert to response models
-            contracts = []
-            for row in rows:
-                contracts.append(ContractListItem(
-                    id=row[0],
-                    contract_number=row[1],
-                    title=row[2],
-                    amount_mxn=row[3] or 0,
-                    contract_date=row[4],
-                    contract_year=row[5],
-                    sector_id=row[6],
-                    sector_name=row[7],
-                    risk_score=row[8],
-                    risk_level=row[9],
-                    is_direct_award=bool(row[10]),
-                    is_single_bid=bool(row[11]),
-                    vendor_name=row[12],
-                    institution_name=row[13],
-                    procedure_type=row[14],
-                    mahalanobis_distance=row[15],
-                    vendor_id=row[16],
-                    institution_id=row[17],
-                    risk_factors=parse_risk_factors(row[18]),
-                ))
-
-            return ContractListResponse(
-                data=contracts,
-                pagination=PaginationMeta(
-                    page=page,
-                    per_page=per_page,
-                    total=total,
-                    total_pages=total_pages,
-                )
-            )
-
-    except sqlite3.Error as e:
-        logger.error(f"Database error in list_contracts: {e}")
-        raise HTTPException(status_code=500, detail="Database error occurred")
-
-
-def _compute_statistics(cursor, where_clause: str, params: list) -> ContractStatistics:
-    """Execute statistics query and build response model."""
-    query = f"""
-        SELECT
-            COUNT(*) as total_contracts,
-            COALESCE(SUM(amount_mxn), 0) as total_value,
-            COALESCE(AVG(amount_mxn), 0) as avg_value,
-            SUM(CASE WHEN risk_level = 'low' THEN 1 ELSE 0 END) as low_risk,
-            SUM(CASE WHEN risk_level = 'medium' THEN 1 ELSE 0 END) as medium_risk,
-            SUM(CASE WHEN risk_level = 'high' THEN 1 ELSE 0 END) as high_risk,
-            SUM(CASE WHEN risk_level = 'critical' THEN 1 ELSE 0 END) as critical_risk,
-            SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) as direct_awards,
-            SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) as single_bids,
-            MIN(contract_year) as min_year,
-            MAX(contract_year) as max_year
-        FROM contracts
-        WHERE {where_clause}
-    """
-    cursor.execute(query, params)
-    row = cursor.fetchone()
-
-    total = row[0] or 0
-    return ContractStatistics(
-        total_contracts=total,
-        total_value_mxn=row[1] or 0,
-        avg_contract_value=row[2] or 0,
-        low_risk_count=row[3] or 0,
-        medium_risk_count=row[4] or 0,
-        high_risk_count=row[5] or 0,
-        critical_risk_count=row[6] or 0,
-        direct_award_count=row[7] or 0,
-        direct_award_pct=round((row[7] or 0) / total * 100, 2) if total > 0 else 0,
-        single_bid_count=row[8] or 0,
-        single_bid_pct=round((row[8] or 0) / total * 100, 2) if total > 0 else 0,
-        min_year=row[9] or 2002,
-        max_year=row[10] or 2025,
-    )
+        return ContractListResponse(
+            data=[ContractListItem(**item) for item in result.data],
+            pagination=PaginationMeta(**result.pagination),
+        )
 
 
 @router.get("/statistics", response_model=ContractStatistics)
@@ -300,34 +116,18 @@ def get_contract_statistics(
     Returns total counts, values, and breakdowns by risk level and procedure type.
     Optionally filter by sector and/or year.
     """
-    try:
-        cache_key = f"stats:{sector_id}:{year}"
-        cached = _stats_cache.get(cache_key)
-        if cached and (time.time() - cached["ts"]) < _STATS_CACHE_TTL:
-            return cached["data"]
+    cache_key = f"stats:{sector_id}:{year}"
+    cached = app_cache.get(_stats_cache_name, cache_key)
+    if cached is not None:
+        return cached
 
-        with get_db() as conn:
-            cursor = conn.cursor()
-
-            conditions = []
-            params = []
-
-            if sector_id is not None:
-                conditions.append("sector_id = ?")
-                params.append(sector_id)
-
-            if year is not None:
-                conditions.append("contract_year = ?")
-                params.append(year)
-
-            where_clause = " AND ".join(conditions) if conditions else "1=1"
-            result = _compute_statistics(cursor, where_clause, params)
-            _stats_cache[cache_key] = {"ts": time.time(), "data": result}
-            return result
-
-    except sqlite3.Error as e:
-        logger.error(f"Database error in get_contract_statistics: {e}")
-        raise HTTPException(status_code=500, detail="Database error occurred")
+    with get_db() as conn:
+        stats = contract_service.get_contract_statistics(
+            conn, sector_id=sector_id, year=year,
+        )
+        result = ContractStatistics(**stats)
+        app_cache.set(_stats_cache_name, cache_key, result, maxsize=64, ttl=600)
+        return result
 
 
 @router.get("/{contract_id}", response_model=ContractDetail)
@@ -340,94 +140,24 @@ def get_contract(
     Returns all contract fields including full risk breakdown,
     related entity information, and data quality metrics.
     """
-    try:
-        with get_db() as conn:
-            cursor = conn.cursor()
+    with get_db() as conn:
+        detail = contract_service.get_contract_detail(conn, contract_id)
 
-            query = """
-                SELECT
-                    c.*,
-                    s.name_es as sector_name,
-                    v.name as vendor_name,
-                    v.rfc as vendor_rfc,
-                    i.name as institution_name,
-                    i.institution_type as institution_type
-                FROM contracts c
-                LEFT JOIN sectors s ON c.sector_id = s.id
-                LEFT JOIN vendors v ON c.vendor_id = v.id
-                LEFT JOIN institutions i ON c.institution_id = i.id
-                WHERE c.id = ?
-            """
-            cursor.execute(query, (contract_id,))
-            row = cursor.fetchone()
+        if detail is None:
+            raise HTTPException(status_code=404, detail=f"Contract {contract_id} not found")
 
-            if not row:
-                raise HTTPException(status_code=404, detail=f"Contract {contract_id} not found")
+        # Convert boolean flags and parse risk_factors from the raw dict
+        detail["is_direct_award"] = bool(detail.get("is_direct_award"))
+        detail["is_single_bid"] = bool(detail.get("is_single_bid"))
+        detail["is_framework"] = bool(detail.get("is_framework"))
+        detail["is_consolidated"] = bool(detail.get("is_consolidated"))
+        detail["is_multiannual"] = bool(detail.get("is_multiannual"))
+        detail["is_high_value"] = bool(detail.get("is_high_value"))
+        detail["is_year_end"] = bool(detail.get("is_year_end"))
+        detail["amount_mxn"] = detail.get("amount_mxn") or 0
+        detail["risk_factors"] = parse_risk_factors(detail.get("risk_factors"))
 
-            # Convert row to dict
-            columns = [desc[0] for desc in cursor.description]
-            contract_dict = dict(zip(columns, row))
-
-            return ContractDetail(
-                id=contract_dict["id"],
-                contract_number=contract_dict.get("contract_number"),
-                procedure_number=contract_dict.get("procedure_number"),
-                expedient_code=contract_dict.get("expedient_code"),
-                title=contract_dict.get("title"),
-                description=contract_dict.get("description"),
-                amount_mxn=contract_dict.get("amount_mxn") or 0,
-                amount_original=contract_dict.get("amount_original"),
-                currency=contract_dict.get("currency"),
-                contract_date=contract_dict.get("contract_date"),
-                contract_year=contract_dict.get("contract_year"),
-                start_date=contract_dict.get("start_date"),
-                end_date=contract_dict.get("end_date"),
-                award_date=contract_dict.get("award_date"),
-                publication_date=contract_dict.get("publication_date"),
-                # Classification
-                sector_id=contract_dict.get("sector_id"),
-                sector_name=contract_dict.get("sector_name"),
-                # Entities
-                vendor_id=contract_dict.get("vendor_id"),
-                vendor_name=contract_dict.get("vendor_name"),
-                vendor_rfc=contract_dict.get("vendor_rfc"),
-                institution_id=contract_dict.get("institution_id"),
-                institution_name=contract_dict.get("institution_name"),
-                institution_type=contract_dict.get("institution_type"),
-                # Procedure
-                procedure_type=contract_dict.get("procedure_type"),
-                procedure_type_normalized=contract_dict.get("procedure_type_normalized"),
-                contract_type=contract_dict.get("contract_type"),
-                contract_type_normalized=contract_dict.get("contract_type_normalized"),
-                procedure_character=contract_dict.get("procedure_character"),
-                participation_form=contract_dict.get("participation_form"),
-                partida_especifica=contract_dict.get("partida_especifica"),
-                # Flags
-                is_direct_award=bool(contract_dict.get("is_direct_award")),
-                is_single_bid=bool(contract_dict.get("is_single_bid")),
-                is_framework=bool(contract_dict.get("is_framework")),
-                is_consolidated=bool(contract_dict.get("is_consolidated")),
-                is_multiannual=bool(contract_dict.get("is_multiannual")),
-                is_high_value=bool(contract_dict.get("is_high_value")),
-                is_year_end=bool(contract_dict.get("is_year_end")),
-                # Risk
-                risk_score=contract_dict.get("risk_score"),
-                risk_level=contract_dict.get("risk_level"),
-                risk_factors=parse_risk_factors(contract_dict.get("risk_factors")),
-                risk_confidence=contract_dict.get("risk_confidence"),
-                # Quality
-                data_quality_score=contract_dict.get("data_quality_score"),
-                data_quality_grade=contract_dict.get("data_quality_grade"),
-                # Metadata
-                source_structure=contract_dict.get("source_structure"),
-                source_year=contract_dict.get("source_year"),
-                url=contract_dict.get("url"),
-                contract_status=contract_dict.get("contract_status"),
-            )
-
-    except sqlite3.Error as e:
-        logger.error(f"Database error in get_contract: {e}")
-        raise HTTPException(status_code=500, detail="Database error occurred")
+        return ContractDetail(**detail)
 
 
 @router.get("/{contract_id}/risk", response_model=ContractRiskBreakdown)

@@ -30,7 +30,7 @@ import {
   ScatterChart,
   Scatter,
   ZAxis,
-} from 'recharts'
+} from '@/components/charts'
 import {
   AlertTriangle,
   Fingerprint,
@@ -48,29 +48,82 @@ import {
 
 const FACTOR_LABELS: Record<string, string> = {
   single_bid: 'Single Bidder',
-  non_open: 'Non-Open Procedure',
+  non_open: 'Direct Award',
+  direct_award: 'Direct Award',
+  restricted_procedure: 'Restricted Procedure',
+  restricted_proc: 'Restricted Procedure',
   price_anomaly: 'Price Anomaly',
   vendor_conc: 'Vendor Concentration',
-  short_ad: 'Short Ad Period',
+  short_ad: 'Short Advertising Period',
+  'short_ad_<30d': 'Short Ad Period (<30 days)',
+  'short_ad_<15d': 'Short Ad Period (<15 days)',
+  'short_ad_<5d': 'Short Ad Period (<5 days)',
   year_end: 'Year-End Timing',
   split: 'Threshold Splitting',
-  network: 'Network Risk',
-  co_bid_high: 'Co-Bidding (High)',
-  co_bid_med: 'Co-Bidding (Medium)',
-  price_hyp: 'Price Hypothesis',
-  inst_risk: 'Institution Risk',
+  split_2: 'Splitting (2 same-day)',
+  split_3: 'Splitting (3 same-day)',
+  split_4: 'Splitting (4 same-day)',
+  split_5: 'Splitting (5 same-day)',
+  split_6: 'Splitting (6 same-day)',
+  split_7: 'Splitting (7 same-day)',
+  split_8: 'Splitting (8 same-day)',
+  split_9: 'Splitting (9 same-day)',
+  'split_10+': 'Heavy Splitting (10+ same-day)',
+  network: 'Vendor Network',
+  network_2: 'Network (2 members)',
+  network_3: 'Network (3 members)',
+  network_4: 'Network (4 members)',
+  'network_5+': 'Large Network (5+ members)',
+  co_bid_high: 'Co-Bidding (High Risk)',
+  co_bid_med: 'Co-Bidding (Medium Risk)',
+  price_hyp: 'Statistical Price Outlier',
+  inst_risk: 'High-Risk Institution',
   industry_mismatch: 'Industry Mismatch',
+  interaction: 'Multiple Risk Factors Combined',
+  data_flag: 'Data Quality Flag',
+}
+
+/** Consolidation groups: raw factor → group key */
+function getFactorGroup(factor: string): string {
+  // Group split_N where N >= 10 into one bucket
+  if (factor.startsWith('split_')) {
+    const n = parseInt(factor.replace('split_', ''), 10)
+    if (n >= 10) return 'split_10+'
+    return factor
+  }
+  // Group network_N where N >= 5 into one bucket
+  if (factor.startsWith('network_')) {
+    const n = parseInt(factor.replace('network_', ''), 10)
+    if (n >= 5) return 'network_5+'
+    return factor
+  }
+  return factor
 }
 
 function getFactorLabel(factor: string): string {
-  // Try exact match first
   if (FACTOR_LABELS[factor]) return FACTOR_LABELS[factor]
-  // Handle split_N variants (split_2, split_3, etc.)
-  if (factor.startsWith('split_')) return `Split (${factor.replace('split_', '')}+ same-day)`
+  // Consolidated groups
+  if (factor === 'split_10+') return 'Heavy Splitting (10+ same-day)'
+  if (factor === 'network_5+') return 'Large Network (5+ members)'
+  // Handle split_N variants: "split_2" → "Same-Day Splitting (2+ contracts)"
+  if (factor.startsWith('split_')) {
+    const n = factor.replace('split_', '')
+    return `Same-Day Splitting (${n}+ contracts)`
+  }
+  // Handle network_N variants: "network_2" → "Vendor Network (2+ members)"
+  if (factor.startsWith('network_')) {
+    const n = factor.replace('network_', '')
+    return `Vendor Network (${n}+ members)`
+  }
   // Handle co_bid variants
   if (factor.startsWith('co_bid_')) {
     const tier = factor.replace('co_bid_', '')
-    return `Co-Bidding (${tier.charAt(0).toUpperCase() + tier.slice(1)})`
+    return `Co-Bidding (${tier.charAt(0).toUpperCase() + tier.slice(1)} Risk)`
+  }
+  // Handle short_ad variants
+  if (factor.startsWith('short_ad_')) {
+    const days = factor.replace('short_ad_', '').replace('<', '').replace('d', '')
+    return `Short Ad Period (<${days} days)`
   }
   // Fallback: humanize the key
   return factor
@@ -152,15 +205,33 @@ function ScatterTooltip({ active, payload }: { active?: boolean; payload?: Array
 // Sub-Components
 // =============================================================================
 
+/** Consolidate raw factors into groups, summing counts and weight-averaging risk scores */
+function consolidateFactors(data: RiskFactorFrequency[]): Array<RiskFactorFrequency & { label: string }> {
+  const groups = new Map<string, { count: number; riskSum: number; percentage: number }>()
+  for (const d of data) {
+    const group = getFactorGroup(d.factor)
+    const existing = groups.get(group)
+    if (existing) {
+      existing.count += d.count
+      existing.riskSum += d.avg_risk_score * d.count
+      existing.percentage += d.percentage
+    } else {
+      groups.set(group, { count: d.count, riskSum: d.avg_risk_score * d.count, percentage: d.percentage })
+    }
+  }
+  return Array.from(groups.entries()).map(([group, { count, riskSum, percentage }]) => ({
+    factor: group,
+    label: getFactorLabel(group),
+    count,
+    avg_risk_score: count > 0 ? riskSum / count : 0,
+    percentage,
+  }))
+}
+
 /** L1: Factor Frequency Horizontal Bar Chart */
 function FactorFrequencyChart({ data }: { data: RiskFactorFrequency[] }) {
   const chartData = useMemo(() => {
-    return data
-      .map((d) => ({
-        ...d,
-        label: getFactorLabel(d.factor),
-      }))
-      .sort((a, b) => b.count - a.count)
+    return consolidateFactors(data).sort((a, b) => b.count - a.count)
   }, [data])
 
   const chartHeight = Math.max(300, chartData.length * 36)
@@ -348,9 +419,8 @@ function WorstCombinations({ cooccurrences }: { cooccurrences: FactorCooccurrenc
 /** L4: Factor-Risk Correlation Scatter Chart */
 function FactorRiskScatter({ data }: { data: RiskFactorFrequency[] }) {
   const chartData = useMemo(() => {
-    return data.map((d) => ({
+    return consolidateFactors(data).map((d) => ({
       ...d,
-      label: getFactorLabel(d.factor),
       // Scale count for ZAxis bubble sizing
       bubbleSize: Math.max(d.count, 1),
     }))

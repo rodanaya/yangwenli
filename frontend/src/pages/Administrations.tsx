@@ -34,7 +34,7 @@ import {
   PolarRadiusAxis,
   Radar,
   Cell,
-} from 'recharts'
+} from '@/components/charts'
 import {
   TrendingUp,
   TrendingDown,
@@ -201,15 +201,15 @@ export default function Administrations() {
 
   // Radar data
   const radarData = useMemo(() => {
-    const axes = ['DA %', 'SB %', 'HR %', 'Avg Risk', 'Vendor Diversity']
+    const axes = ['Direct Award %', 'Single Bid %', 'High Risk %', 'Avg Risk', 'Vendor Diversity']
     return axes.map((axis) => {
       const point: Record<string, unknown> = { axis }
       for (const agg of adminAggs) {
         if (agg.contracts === 0) { point[agg.name] = 0; continue }
         switch (axis) {
-          case 'DA %': point[agg.name] = +agg.directAwardPct.toFixed(1); break
-          case 'SB %': point[agg.name] = +agg.singleBidPct.toFixed(1); break
-          case 'HR %': point[agg.name] = +agg.highRiskPct.toFixed(1); break
+          case 'Direct Award %': point[agg.name] = +agg.directAwardPct.toFixed(1); break
+          case 'Single Bid %': point[agg.name] = +agg.singleBidPct.toFixed(1); break
+          case 'High Risk %': point[agg.name] = +agg.highRiskPct.toFixed(1); break
           case 'Avg Risk': point[agg.name] = +(agg.avgRisk * 100).toFixed(1); break
           case 'Vendor Diversity': point[agg.name] = +(agg.vendorCount / 1000).toFixed(1); break
         }
@@ -382,7 +382,7 @@ export default function Administrations() {
             label="Direct Award %"
             value={`${selectedAgg.directAwardPct.toFixed(1)}%`}
             delta={selectedAgg.directAwardPct - allTimeAvg.da}
-            unit="pp"
+            unit=" pts"
             icon={Shield}
             color={selectedMeta.color}
           />
@@ -390,7 +390,7 @@ export default function Administrations() {
             label="Single Bid %"
             value={`${selectedAgg.singleBidPct.toFixed(1)}%`}
             delta={selectedAgg.singleBidPct - allTimeAvg.sb}
-            unit="pp"
+            unit=" pts"
             icon={Users}
             color={selectedMeta.color}
           />
@@ -398,7 +398,7 @@ export default function Administrations() {
             label="High Risk %"
             value={`${selectedAgg.highRiskPct.toFixed(1)}%`}
             delta={selectedAgg.highRiskPct - allTimeAvg.hr}
-            unit="pp"
+            unit=" pts"
             icon={AlertTriangle}
             color={selectedMeta.color}
           />
@@ -528,7 +528,7 @@ export default function Administrations() {
                     yAxisId="right"
                     type="monotone"
                     dataKey="direct_award_pct"
-                    name="DA %"
+                    name="Direct Award %"
                     stroke="#3b82f6"
                     strokeWidth={2}
                     dot={{ r: 3 }}
@@ -537,7 +537,7 @@ export default function Administrations() {
                     yAxisId="right"
                     type="monotone"
                     dataKey="single_bid_pct"
-                    name="SB %"
+                    name="Single Bid %"
                     stroke="#fbbf24"
                     strokeWidth={2}
                     dot={{ r: 3 }}
@@ -546,7 +546,7 @@ export default function Administrations() {
                     yAxisId="right"
                     type="monotone"
                     dataKey="high_risk_pct"
-                    name="HR %"
+                    name="High Risk %"
                     stroke={RISK_COLORS.high}
                     strokeWidth={2}
                     dot={{ r: 3 }}
@@ -576,10 +576,10 @@ export default function Administrations() {
               <thead>
                 <tr className="border-b border-border/30">
                   <th className="text-left py-1.5 pr-3 text-text-muted font-medium">Sector</th>
-                  <th className="text-right py-1.5 px-2 text-text-muted font-medium">DA %</th>
-                  <th className="text-right py-1.5 px-2 text-text-muted font-medium">SB %</th>
-                  <th className="text-right py-1.5 px-2 text-text-muted font-medium">HR %</th>
-                  <th className="text-right py-1.5 pl-2 text-text-muted font-medium">Avg Risk</th>
+                  <th className="text-right py-1.5 px-2 text-text-muted font-medium" title="Percentage of contracts awarded directly without competitive bidding">Direct Award</th>
+                  <th className="text-right py-1.5 px-2 text-text-muted font-medium" title="Percentage of competitive procedures with only one bidder">Single Bid</th>
+                  <th className="text-right py-1.5 px-2 text-text-muted font-medium" title="Percentage of contracts scored as high or critical risk">High Risk</th>
+                  <th className="text-right py-1.5 pl-2 text-text-muted font-medium" title="Average risk score (0-100%)">Avg Risk</th>
                 </tr>
               </thead>
               <tbody>
@@ -641,9 +641,9 @@ export default function Administrations() {
                     <span className="text-xs font-semibold text-text-secondary">{t.to}</span>
                   </div>
                   <div className="grid grid-cols-5 gap-2">
-                    <TransitionMetric label="DA %" delta={t.dDA.value} unit="pp" />
-                    <TransitionMetric label="SB %" delta={t.dSB.value} unit="pp" />
-                    <TransitionMetric label="HR %" delta={t.dHR.value} unit="pp" />
+                    <TransitionMetric label="Direct Award" delta={t.dDA.value} unit=" pts" />
+                    <TransitionMetric label="Single Bid" delta={t.dSB.value} unit=" pts" />
+                    <TransitionMetric label="High Risk" delta={t.dHR.value} unit=" pts" />
                     <TransitionMetric label="Contracts" delta={t.dContracts.value} unit="" isCount />
                     <TransitionMetric label="Vendors" delta={t.dVendors.value} unit="" isCount invertColor />
                   </div>

@@ -1,0 +1,58 @@
+{
+  "title": "Contratos",
+  "searchPlaceholder": "Buscar por título o número de contrato...",
+  "columns": {
+    "id": "ID",
+    "title": "Título",
+    "vendor": "Proveedor",
+    "institution": "Institución",
+    "amount": "Monto (MXN)",
+    "date": "Fecha",
+    "year": "Año",
+    "sector": "Sector",
+    "riskScore": "Puntuación de Riesgo",
+    "riskLevel": "Nivel de Riesgo",
+    "procedureType": "Tipo de Procedimiento",
+    "isDirectAward": "Adj. Directa",
+    "isSingleBid": "Licitación Única"
+  },
+  "detail": {
+    "title": "Detalle del Contrato",
+    "contractNumber": "Número de Contrato",
+    "amount": "Monto",
+    "date": "Fecha del Contrato",
+    "year": "Año",
+    "vendor": "Proveedor",
+    "institution": "Institución",
+    "sector": "Sector",
+    "riskBreakdown": "Desglose de Riesgo",
+    "riskFactors": "Factores de Riesgo",
+    "confidenceInterval": "Intervalo de Confianza",
+    "mahalanobisDistance": "Distancia de Mahalanobis",
+    "noFactors": "Sin factores de riesgo identificados"
+  },
+  "filters": {
+    "sector": "Sector",
+    "year": "Año",
+    "riskLevel": "Nivel de Riesgo",
+    "directAward": "Adjudicación Directa",
+    "singleBid": "Licitación Única",
+    "minAmount": "Monto Mínimo",
+    "maxAmount": "Monto Máximo",
+    "riskFactor": "Factor de Riesgo"
+  },
+  "stats": {
+    "totalContracts": "Total de Contratos",
+    "totalValue": "Valor Total",
+    "avgRisk": "Riesgo Promedio",
+    "directAwardRate": "Tasa de Adj. Directa",
+    "singleBidRate": "Tasa de Licitación Única"
+  },
+  "empty": "No se encontraron contratos con los filtros seleccionados.",
+  "riskLevels": {
+    "critical": "Crítico",
+    "high": "Alto",
+    "medium": "Medio",
+    "low": "Bajo"
+  }
+}

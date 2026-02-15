@@ -148,7 +148,7 @@ def get_item_name_and_risk(conn: sqlite3.Connection, item_type: str, item_id: in
 # =============================================================================
 
 @router.get("", response_model=WatchlistResponse)
-async def list_watchlist_items(
+def list_watchlist_items(
     status: Optional[str] = Query(None, description="Filter by status"),
     item_type: Optional[str] = Query(None, description="Filter by type"),
     priority: Optional[str] = Query(None, description="Filter by priority"),
@@ -245,7 +245,7 @@ async def list_watchlist_items(
 
 
 @router.post("", response_model=WatchlistItem)
-async def add_watchlist_item(item: WatchlistItemCreate):
+def add_watchlist_item(item: WatchlistItemCreate):
     """
     Add an item to the watchlist.
 
@@ -307,7 +307,7 @@ async def add_watchlist_item(item: WatchlistItemCreate):
 
 
 @router.get("/stats", response_model=WatchlistStatsResponse)
-async def get_watchlist_stats():
+def get_watchlist_stats():
     """Get watchlist statistics."""
     try:
         with get_db() as conn:
@@ -341,7 +341,7 @@ async def get_watchlist_stats():
 
 
 @router.get("/{watchlist_id}", response_model=WatchlistItem)
-async def get_watchlist_item(watchlist_id: int = Path(..., description="Watchlist item ID")):
+def get_watchlist_item(watchlist_id: int = Path(..., description="Watchlist item ID")):
     """Get a specific watchlist item."""
     try:
         with get_db() as conn:
@@ -378,7 +378,7 @@ async def get_watchlist_item(watchlist_id: int = Path(..., description="Watchlis
 
 
 @router.patch("/{watchlist_id}", response_model=WatchlistItem)
-async def update_watchlist_item(
+def update_watchlist_item(
     watchlist_id: int = Path(..., description="Watchlist item ID"),
     update: WatchlistItemUpdate = None
 ):
@@ -462,7 +462,7 @@ async def update_watchlist_item(
 
 
 @router.delete("/{watchlist_id}")
-async def delete_watchlist_item(watchlist_id: int = Path(..., description="Watchlist item ID")):
+def delete_watchlist_item(watchlist_id: int = Path(..., description="Watchlist item ID")):
     """Remove an item from the watchlist."""
     try:
         with get_db() as conn:

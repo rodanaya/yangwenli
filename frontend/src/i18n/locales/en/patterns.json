@@ -1,0 +1,45 @@
+{
+  "title": "Risk Patterns",
+  "redFlags": {
+    "title": "Red Flags",
+    "subtitle": "Most frequent patterns indicating corruption risk",
+    "categories": {
+      "criticalRisk": "Critical Risk Contracts",
+      "decemberRush": "Year-End Purchases (December)",
+      "splitContracts": "Split Contracts",
+      "coBidding": "Suspicious Co-Bidding",
+      "priceOutliers": "Price Anomalies",
+      "singleBid": "Single-Bid Procedures",
+      "vendorConcentration": "Vendor Concentration"
+    },
+    "viewContracts": "View contracts",
+    "contractCount": "{{count}} contracts"
+  },
+  "moneyFlow": {
+    "title": "Money Flow",
+    "subtitle": "How resources flow from institutions to vendors",
+    "topFlows": "Top Flows",
+    "fromInstitution": "From institution",
+    "toVendor": "To vendor",
+    "totalValue": "Total value",
+    "concentration": "Concentration index"
+  },
+  "temporal": {
+    "title": "Temporal Pulse",
+    "subtitle": "Temporal patterns in government procurement",
+    "yearlyTrend": "Yearly Trend",
+    "monthlyPattern": "Monthly Pattern",
+    "decemberEffect": "December Effect",
+    "administrationComparison": "Administration Comparison"
+  },
+  "network": {
+    "title": "Network Analysis",
+    "subtitle": "Relationships between vendors and institutions",
+    "graphView": "Graph View",
+    "tableView": "Table View",
+    "depth": "Depth",
+    "minContracts": "Min Contracts",
+    "centerOnVendor": "Center on vendor",
+    "centerOnInstitution": "Center on institution"
+  }
+}

@@ -12,6 +12,7 @@ Date: 2026-01-05
 """
 
 import sqlite3
+import hashlib
 import pandas as pd
 import os
 import re
@@ -72,6 +73,125 @@ VALIDATION_STATS = {
     'flagged': 0,
     'total': 0
 }
+
+# =============================================================================
+# CONTRACT HASH FOR DEDUPLICATION
+# =============================================================================
+
+CHECKPOINT_DIR = os.path.join(PROJECT_DIR, '.etl_checkpoints')
+
+def compute_contract_hash(procedure_number: Optional[str], vendor_name: Optional[str],
+                          amount: float, year: Optional[int]) -> str:
+    """
+    Compute a SHA-256 content hash that uniquely identifies a contract.
+
+    Uses procedure_number + vendor_name + amount + year as the key.
+    """
+    key = f"{procedure_number or ''}|{vendor_name or ''}|{amount}|{year or ''}"
+    return hashlib.sha256(key.encode('utf-8')).hexdigest()
+
+
+def ensure_contract_hash_column(conn: sqlite3.Connection) -> None:
+    """Add contract_hash column and unique index if they don't exist (migration for existing DBs)."""
+    cursor = conn.cursor()
+    # Check if column exists
+    cursor.execute("PRAGMA table_info(contracts)")
+    columns = {row[1] for row in cursor.fetchall()}
+    if 'contract_hash' not in columns:
+        logger.info("Adding contract_hash column to contracts table...")
+        cursor.execute("ALTER TABLE contracts ADD COLUMN contract_hash VARCHAR(64)")
+        conn.commit()
+        logger.info("  contract_hash column added")
+
+    # Check if unique index exists
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_contracts_hash'")
+    if not cursor.fetchone():
+        logger.info("Creating unique index on contract_hash...")
+        cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_contracts_hash ON contracts(contract_hash)")
+        conn.commit()
+        logger.info("  idx_contracts_hash index created")
+
+
+def load_existing_hashes(conn: sqlite3.Connection, source_file: Optional[str] = None) -> Set[str]:
+    """
+    Load existing contract hashes from the database.
+
+    Args:
+        conn: Database connection
+        source_file: If provided, only load hashes for this source file
+
+    Returns:
+        Set of existing hash strings
+    """
+    cursor = conn.cursor()
+    if source_file:
+        cursor.execute(
+            "SELECT contract_hash FROM contracts WHERE source_file = ? AND contract_hash IS NOT NULL",
+            (source_file,)
+        )
+    else:
+        cursor.execute("SELECT contract_hash FROM contracts WHERE contract_hash IS NOT NULL")
+    return {row[0] for row in cursor.fetchall()}
+
+
+class BatchCheckpoint:
+    """Saves ETL progress to disk so interrupted runs can be resumed."""
+
+    def __init__(self, checkpoint_dir: str):
+        self.checkpoint_dir = checkpoint_dir
+        os.makedirs(self.checkpoint_dir, exist_ok=True)
+
+    def _checkpoint_path(self, source_file: str) -> str:
+        safe_name = re.sub(r'[^\w\-.]', '_', source_file)
+        return os.path.join(self.checkpoint_dir, f'{safe_name}.checkpoint.json')
+
+    def save(self, source_file: str, records_processed: int, records_skipped: int,
+             records_inserted: int) -> None:
+        """Save progress for a source file."""
+        data = {
+            'source_file': source_file,
+            'records_processed': records_processed,
+            'records_skipped': records_skipped,
+            'records_inserted': records_inserted,
+            'timestamp': datetime.now().isoformat(),
+        }
+        try:
+            with open(self._checkpoint_path(source_file), 'w', encoding='utf-8') as f:
+                json.dump(data, f)
+        except Exception as e:
+            logger.warning(f"Failed to save batch checkpoint: {e}")
+
+    def load(self, source_file: str) -> Optional[Dict]:
+        """Load checkpoint for a source file, if it exists."""
+        path = self._checkpoint_path(source_file)
+        if not os.path.exists(path):
+            return None
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            logger.warning(f"Failed to load batch checkpoint: {e}")
+            return None
+
+    def clear(self, source_file: str) -> None:
+        """Remove checkpoint for a completed source file."""
+        path = self._checkpoint_path(source_file)
+        if os.path.exists(path):
+            try:
+                os.remove(path)
+            except Exception:
+                pass
+
+    def clear_all(self) -> None:
+        """Remove all checkpoint files."""
+        if os.path.exists(self.checkpoint_dir):
+            for f in os.listdir(self.checkpoint_dir):
+                if f.endswith('.checkpoint.json'):
+                    try:
+                        os.remove(os.path.join(self.checkpoint_dir, f))
+                    except Exception:
+                        pass
+
 
 # =============================================================================
 # COLUMN MAPPINGS FOR EACH STRUCTURE
@@ -783,6 +903,11 @@ def normalize_row(
     is_high_value = amount >= 10_000_000  # > 10M MXN
     is_year_end = contract_month in [11, 12] if contract_month else False
 
+    procedure_number = get_value(row, df_columns, mapping.get('procedure_number', []))
+
+    # Compute content hash for deduplication
+    contract_hash = compute_contract_hash(procedure_number, vendor_name, amount, contract_year)
+
     record = {
         'source_file': source_file,
         'source_structure': structure,
@@ -797,7 +922,7 @@ def normalize_row(
         'ramo_id': ramo_id,
 
         'contract_number': get_value(row, df_columns, mapping.get('contract_number', [])),
-        'procedure_number': get_value(row, df_columns, mapping.get('procedure_number', [])),
+        'procedure_number': procedure_number,
         'expedient_code': get_value(row, df_columns, mapping.get('expedient_code', [])),
 
         'title': contract_title,
@@ -836,6 +961,8 @@ def normalize_row(
         'price_anomaly_score': 0.0,
         'temporal_anomaly_score': 0.0,
         'vendor_risk_score': 0.0,
+
+        'contract_hash': contract_hash,
 
         'url': get_value(row, df_columns, mapping.get('url', [])),
         'contract_status': get_value(row, df_columns, mapping.get('contract_status', [])),
@@ -906,20 +1033,40 @@ def validate_fk_references(conn: sqlite3.Connection, records: List[Dict]) -> Lis
     return records
 
 
-def insert_batch(conn: sqlite3.Connection, records: List[Dict], use_savepoint: bool = True) -> int:
+def insert_batch(conn: sqlite3.Connection, records: List[Dict],
+                  existing_hashes: Optional[Set[str]] = None,
+                  use_savepoint: bool = True) -> Tuple[int, int]:
     """
-    Insert a batch of contracts with savepoint-based error recovery.
+    Insert a batch of contracts with savepoint-based error recovery and deduplication.
 
     Args:
         conn: Database connection
         records: List of record dictionaries
+        existing_hashes: Set of already-inserted contract hashes for dedup. If None, no dedup.
         use_savepoint: Whether to use savepoints for error recovery
 
     Returns:
-        Number of records successfully inserted
+        Tuple of (records_inserted, records_skipped_as_duplicates)
     """
     if not records:
-        return 0
+        return 0, 0
+
+    # Deduplication: filter out records whose hash already exists
+    skipped = 0
+    if existing_hashes is not None:
+        new_records = []
+        for r in records:
+            h = r.get('contract_hash')
+            if h and h in existing_hashes:
+                skipped += 1
+            else:
+                new_records.append(r)
+                if h:
+                    existing_hashes.add(h)
+        records = new_records
+
+    if not records:
+        return 0, skipped
 
     columns = [
         'source_file', 'source_structure', 'source_year',
@@ -936,6 +1083,7 @@ def insert_batch(conn: sqlite3.Connection, records: List[Dict], use_savepoint: b
         'is_direct_award', 'is_single_bid', 'is_framework',
         'is_consolidated', 'is_multiannual', 'is_high_value', 'is_year_end',
         # NOTE: risk_score columns moved to separate risk_scores table (see etl_create_schema.py)
+        'contract_hash',
         'url', 'contract_status'
     ]
 
@@ -957,7 +1105,7 @@ def insert_batch(conn: sqlite3.Connection, records: List[Dict], use_savepoint: b
             cursor.executemany(sql, values)
             cursor.execute(f"RELEASE SAVEPOINT {savepoint_name}")
             conn.commit()
-            return len(records)
+            return len(records), skipped
         except sqlite3.Error as e:
             logger.error(f"Batch insert failed: {e}")
             cursor.execute(f"ROLLBACK TO SAVEPOINT {savepoint_name}")
@@ -971,15 +1119,18 @@ def insert_batch(conn: sqlite3.Connection, records: List[Dict], use_savepoint: b
                     cursor.execute(sql, value_tuple)
                     successful += 1
                 except sqlite3.Error as row_error:
-                    logger.warning(f"Failed to insert row {i}: {row_error}")
+                    if 'UNIQUE constraint failed: contracts.contract_hash' in str(row_error):
+                        skipped += 1
+                    else:
+                        logger.warning(f"Failed to insert row {i}: {row_error}")
 
             conn.commit()
-            logger.info(f"Recovered {successful}/{len(records)} records")
-            return successful
+            logger.info(f"Recovered {successful}/{len(records)} records ({skipped} duplicates)")
+            return successful, skipped
     else:
         cursor.executemany(sql, values)
         conn.commit()
-        return len(records)
+        return len(records), skipped
 
 
 # =============================================================================
@@ -990,9 +1141,16 @@ def process_xlsx_file(
     filepath: str,
     conn: sqlite3.Connection,
     entity_cache: EntityCache,
-    ramo_lookup: Dict[str, Tuple[int, int]]
-) -> Tuple[int, str]:
-    """Process a single XLSX file."""
+    ramo_lookup: Dict[str, Tuple[int, int]],
+    existing_hashes: Set[str],
+    batch_checkpoint: BatchCheckpoint
+) -> Tuple[int, int, str]:
+    """
+    Process a single XLSX file with deduplication.
+
+    Returns:
+        Tuple of (records_inserted, records_skipped, structure)
+    """
     filename = os.path.basename(filepath)
     logger.info(f"Processing {filename}...")
 
@@ -1002,7 +1160,7 @@ def process_xlsx_file(
 
         if row_count == 0:
             logger.warning(f"Empty file: {filename}")
-            return 0, 'empty'
+            return 0, 0, 'empty'
 
         logger.info(f"  Loaded {row_count:,} rows from {filename}")
 
@@ -1019,7 +1177,9 @@ def process_xlsx_file(
         source_year = extract_year_from_filename(filename) or 2000
 
         records = []
-        processed = 0
+        total_inserted = 0
+        total_skipped = 0
+        rows_processed = 0
 
         for idx, row in df.iterrows():
             record = normalize_row(
@@ -1027,34 +1187,55 @@ def process_xlsx_file(
                 entity_cache, ramo_lookup
             )
             records.append(record)
+            rows_processed += 1
 
             if len(records) >= BATCH_SIZE:
-                inserted = insert_batch(conn, records)
-                processed += inserted
-                logger.info(f"  Processed {processed:,}/{row_count:,} rows...")
+                inserted, skipped = insert_batch(conn, records, existing_hashes)
+                total_inserted += inserted
+                total_skipped += skipped
+                logger.info(f"  Processed {rows_processed:,}/{row_count:,} rows "
+                           f"(inserted: {total_inserted:,}, skipped: {total_skipped:,})...")
                 records = []
 
-        if records:
-            inserted = insert_batch(conn, records)
-            processed += inserted
+                # Checkpoint every 50K rows
+                if rows_processed % 50000 < BATCH_SIZE:
+                    batch_checkpoint.save(filename, rows_processed, total_skipped, total_inserted)
 
-        logger.info(f"  Completed {filename}: {processed:,} rows")
-        return processed, structure
+        if records:
+            inserted, skipped = insert_batch(conn, records, existing_hashes)
+            total_inserted += inserted
+            total_skipped += skipped
+
+        if total_skipped > 0:
+            logger.info(f"  Completed {filename}: Skipped {total_skipped:,} duplicates, "
+                       f"inserted {total_inserted:,} new records")
+        else:
+            logger.info(f"  Completed {filename}: {total_inserted:,} rows")
+
+        batch_checkpoint.clear(filename)
+        return total_inserted, total_skipped, structure
 
     except Exception as e:
         logger.error(f"  ERROR processing {filename}: {e}")
         import traceback
         traceback.print_exc()
-        return 0, 'error'
+        return 0, 0, 'error'
 
 
 def process_csv_file(
     filepath: str,
     conn: sqlite3.Connection,
     entity_cache: EntityCache,
-    ramo_lookup: Dict[str, Tuple[int, int]]
-) -> Tuple[int, str]:
-    """Process a single CSV file (2023-2025 format)."""
+    ramo_lookup: Dict[str, Tuple[int, int]],
+    existing_hashes: Set[str],
+    batch_checkpoint: BatchCheckpoint
+) -> Tuple[int, int, str]:
+    """
+    Process a single CSV file (2023-2025 format) with deduplication.
+
+    Returns:
+        Tuple of (records_inserted, records_skipped, structure)
+    """
     filename = os.path.basename(filepath)
     logger.info(f"Processing {filename}...")
 
@@ -1072,13 +1253,13 @@ def process_csv_file(
                 continue
         else:
             logger.error(f"Could not decode file {filename} with any supported encoding")
-            return 0, 'error'
+            return 0, 0, 'error'
 
         row_count = len(df)
 
         if row_count == 0:
             logger.warning(f"Empty file: {filename}")
-            return 0, 'empty'
+            return 0, 0, 'empty'
 
         logger.info(f"  Loaded {row_count:,} rows from {filename}")
         logger.info(f"  Structure: D (CSV 2023-2025)")
@@ -1093,7 +1274,9 @@ def process_csv_file(
         source_year = extract_year_from_filename(filename) or 2023
 
         records = []
-        processed = 0
+        total_inserted = 0
+        total_skipped = 0
+        rows_processed = 0
 
         for idx, row in df.iterrows():
             record = normalize_row(
@@ -1101,25 +1284,39 @@ def process_csv_file(
                 entity_cache, ramo_lookup
             )
             records.append(record)
+            rows_processed += 1
 
             if len(records) >= BATCH_SIZE:
-                inserted = insert_batch(conn, records)
-                processed += inserted
-                logger.info(f"  Processed {processed:,}/{row_count:,} rows...")
+                inserted, skipped = insert_batch(conn, records, existing_hashes)
+                total_inserted += inserted
+                total_skipped += skipped
+                logger.info(f"  Processed {rows_processed:,}/{row_count:,} rows "
+                           f"(inserted: {total_inserted:,}, skipped: {total_skipped:,})...")
                 records = []
 
-        if records:
-            inserted = insert_batch(conn, records)
-            processed += inserted
+                # Checkpoint every 50K rows
+                if rows_processed % 50000 < BATCH_SIZE:
+                    batch_checkpoint.save(filename, rows_processed, total_skipped, total_inserted)
 
-        logger.info(f"  Completed {filename}: {processed:,} rows")
-        return processed, 'D'
+        if records:
+            inserted, skipped = insert_batch(conn, records, existing_hashes)
+            total_inserted += inserted
+            total_skipped += skipped
+
+        if total_skipped > 0:
+            logger.info(f"  Completed {filename}: Skipped {total_skipped:,} duplicates, "
+                       f"inserted {total_inserted:,} new records")
+        else:
+            logger.info(f"  Completed {filename}: {total_inserted:,} rows")
+
+        batch_checkpoint.clear(filename)
+        return total_inserted, total_skipped, 'D'
 
     except Exception as e:
         logger.error(f"ERROR processing {filename}: {e}")
         import traceback
         traceback.print_exc()
-        return 0, 'error'
+        return 0, 0, 'error'
 
 
 # =============================================================================
@@ -1194,8 +1391,17 @@ def main():
     conn.execute("PRAGMA journal_mode = WAL")
     conn.execute("PRAGMA synchronous = NORMAL")
 
+    # Ensure contract_hash column exists (migration for existing databases)
+    ensure_contract_hash_column(conn)
+
     ramo_lookup = load_ramo_lookup(conn)
     entity_cache = EntityCache(conn)
+    batch_checkpoint = BatchCheckpoint(CHECKPOINT_DIR)
+
+    # Load existing hashes for deduplication
+    logger.info("Loading existing contract hashes for deduplication...")
+    existing_hashes = load_existing_hashes(conn)
+    logger.info(f"  Loaded {len(existing_hashes):,} existing hashes")
 
     # Step 3: Process XLSX files
     logger.info("=" * 70)
@@ -1211,16 +1417,21 @@ def main():
     logger.info(f"Found {len(xlsx_files)} XLSX files")
 
     total_xlsx = 0
+    total_xlsx_skipped = 0
     structure_counts = defaultdict(int)
     start_time = datetime.now()
 
     for filepath in xlsx_files:
-        count, structure = process_xlsx_file(filepath, conn, entity_cache, ramo_lookup)
+        count, skipped, structure = process_xlsx_file(
+            filepath, conn, entity_cache, ramo_lookup, existing_hashes, batch_checkpoint
+        )
         total_xlsx += count
+        total_xlsx_skipped += skipped
         structure_counts[structure] += 1
 
     xlsx_elapsed = datetime.now() - start_time
-    logger.info(f"XLSX processing complete: {total_xlsx:,} records in {xlsx_elapsed}")
+    logger.info(f"XLSX processing complete: {total_xlsx:,} inserted, "
+               f"{total_xlsx_skipped:,} duplicates skipped in {xlsx_elapsed}")
 
     # Save checkpoint after XLSX processing
     entity_cache.save_checkpoint()
@@ -1239,15 +1450,20 @@ def main():
     logger.info(f"Found {len(csv_files)} CSV files")
 
     total_csv = 0
+    total_csv_skipped = 0
     csv_start = datetime.now()
 
     for filepath in csv_files:
-        count, structure = process_csv_file(filepath, conn, entity_cache, ramo_lookup)
+        count, skipped, structure = process_csv_file(
+            filepath, conn, entity_cache, ramo_lookup, existing_hashes, batch_checkpoint
+        )
         total_csv += count
+        total_csv_skipped += skipped
         structure_counts[structure] += 1
 
     csv_elapsed = datetime.now() - csv_start
-    logger.info(f"CSV processing complete: {total_csv:,} records in {csv_elapsed}")
+    logger.info(f"CSV processing complete: {total_csv:,} inserted, "
+               f"{total_csv_skipped:,} duplicates skipped in {csv_elapsed}")
 
     # Save final checkpoint
     entity_cache.save_checkpoint()
@@ -1329,12 +1545,14 @@ def main():
     for year, count, amount in cursor.fetchall():
         logger.info(f"  {year}: {count:>10,} contracts, ${amount:>15,.0f}")
 
-    # Clean up checkpoint file on successful completion
+    # Clean up checkpoint files on successful completion
     entity_cache.clear_checkpoint()
+    batch_checkpoint.clear_all()
 
     conn.close()
 
     total_elapsed = datetime.now() - start_time
+    total_skipped = total_xlsx_skipped + total_csv_skipped
 
     logger.info("=" * 70)
     logger.info("ETL PIPELINE COMPLETE")
@@ -1343,6 +1561,8 @@ def main():
     logger.info(f"Unique vendors: {vendor_count:,}")
     logger.info(f"Unique institutions: {inst_count:,}")
     logger.info(f"Total value: ${total_amount:,.2f} MXN")
+    if total_skipped > 0:
+        logger.info(f"Duplicates skipped: {total_skipped:,}")
     logger.info(f"Total time: {total_elapsed}")
     logger.info(f"Database ready at: {DB_PATH}")
 

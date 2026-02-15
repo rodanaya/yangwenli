@@ -1,0 +1,26 @@
+{
+  "title": "Watchlist",
+  "subtitle": "Vendors and institutions under monitoring",
+  "addToWatchlist": "Add to watchlist",
+  "removeFromWatchlist": "Remove from watchlist",
+  "columns": {
+    "name": "Name",
+    "type": "Type",
+    "reason": "Reason",
+    "dateAdded": "Date Added",
+    "riskScore": "Risk Score",
+    "contracts": "Contracts",
+    "status": "Status"
+  },
+  "types": {
+    "vendor": "Vendor",
+    "institution": "Institution",
+    "contract": "Contract"
+  },
+  "empty": "Your watchlist is empty.",
+  "emptyDescription": "Add vendors or institutions to monitor their contracts and risks.",
+  "emptyAction": "Explore vendors",
+  "notes": "Notes",
+  "addNote": "Add note",
+  "exportList": "Export list"
+}

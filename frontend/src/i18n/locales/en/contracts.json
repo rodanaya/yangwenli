@@ -1,0 +1,58 @@
+{
+  "title": "Contracts",
+  "searchPlaceholder": "Search by title or contract number...",
+  "columns": {
+    "id": "ID",
+    "title": "Title",
+    "vendor": "Vendor",
+    "institution": "Institution",
+    "amount": "Amount (MXN)",
+    "date": "Date",
+    "year": "Year",
+    "sector": "Sector",
+    "riskScore": "Risk Score",
+    "riskLevel": "Risk Level",
+    "procedureType": "Procedure Type",
+    "isDirectAward": "Direct Award",
+    "isSingleBid": "Single Bid"
+  },
+  "detail": {
+    "title": "Contract Detail",
+    "contractNumber": "Contract Number",
+    "amount": "Amount",
+    "date": "Contract Date",
+    "year": "Year",
+    "vendor": "Vendor",
+    "institution": "Institution",
+    "sector": "Sector",
+    "riskBreakdown": "Risk Breakdown",
+    "riskFactors": "Risk Factors",
+    "confidenceInterval": "Confidence Interval",
+    "mahalanobisDistance": "Mahalanobis Distance",
+    "noFactors": "No risk factors identified"
+  },
+  "filters": {
+    "sector": "Sector",
+    "year": "Year",
+    "riskLevel": "Risk Level",
+    "directAward": "Direct Award",
+    "singleBid": "Single Bid",
+    "minAmount": "Min Amount",
+    "maxAmount": "Max Amount",
+    "riskFactor": "Risk Factor"
+  },
+  "stats": {
+    "totalContracts": "Total Contracts",
+    "totalValue": "Total Value",
+    "avgRisk": "Avg Risk",
+    "directAwardRate": "Direct Award Rate",
+    "singleBidRate": "Single Bid Rate"
+  },
+  "empty": "No contracts found matching your filters.",
+  "riskLevels": {
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
+  }
+}

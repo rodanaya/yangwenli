@@ -89,7 +89,7 @@ import {
   Scatter,
   ZAxis,
   Legend,
-} from 'recharts'
+} from '@/components/charts'
 
 // =============================================================================
 // Tab Configuration

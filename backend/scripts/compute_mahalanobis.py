@@ -47,6 +47,10 @@ Z_COLS = [
     'z_price_hyp_confidence',
     'z_industry_mismatch',
     'z_institution_risk',
+    'z_price_volatility',
+    'z_sector_spread',
+    'z_win_rate',
+    'z_institution_diversity',
 ]
 
 K = len(Z_COLS)  # Degrees of freedom for chi2 test

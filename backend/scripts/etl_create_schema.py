@@ -344,6 +344,9 @@ CREATE TABLE IF NOT EXISTS contracts (
     -- NOTE: Risk scores moved to separate risk_scores table
     -- This enables model versioning, A/B testing, and recalculation
 
+    -- Deduplication
+    contract_hash VARCHAR(64),
+
     -- Metadata
     url VARCHAR(1000),
     contract_status VARCHAR(50),
@@ -484,6 +487,9 @@ CREATE INDEX IF NOT EXISTS idx_contracts_ramo ON contracts(ramo_id);
 CREATE INDEX IF NOT EXISTS idx_contracts_year ON contracts(contract_year);
 CREATE INDEX IF NOT EXISTS idx_contracts_year_month ON contracts(contract_year, contract_month);
 CREATE INDEX IF NOT EXISTS idx_contracts_date ON contracts(contract_date);
+
+-- Deduplication index
+CREATE UNIQUE INDEX IF NOT EXISTS idx_contracts_hash ON contracts(contract_hash);
 
 -- Analytical indexes
 CREATE INDEX IF NOT EXISTS idx_contracts_amount ON contracts(amount_mxn);

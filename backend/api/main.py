@@ -8,11 +8,19 @@ Run with: uvicorn api.main:app --port 8001 --reload
 """
 import logging
 import threading
+import time as _time_module
 from contextlib import asynccontextmanager
+from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.gzip import GZipMiddleware
+
+# Configure structured logging FIRST (before any logger calls)
+from .middleware.structlog_config import configure as configure_logging
+configure_logging()
+
+import structlog
 
 # Optional rate limiting - gracefully degrade if slowapi not installed
 try:
@@ -28,12 +36,16 @@ except ImportError:
     RateLimitExceeded = None
 
 from .dependencies import verify_database_exists
+from .middleware import RequestLoggingMiddleware, register_error_handlers
 
 # Create rate limiter instance (if available)
 if RATE_LIMITING_ENABLED:
     limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
 else:
     limiter = None
+
+# Track server start time for uptime reporting
+_server_start_time = _time_module.time()
 from .routers import (
     industries_router,
     vendors_router,
@@ -50,7 +62,7 @@ from .routers.sectors import router as sectors_router
 from .routers.export import router as export_router
 from .routers.executive import router as executive_router
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger("yang_wenli.api")
 
 
 def _warmup_caches():
@@ -88,9 +100,61 @@ def _warmup_caches():
         time.sleep(0.5)
 
 
+def _startup_checks():
+    """Verify critical system state at startup."""
+    import sqlite3
+    from .dependencies import DB_PATH
+    from .config.constants import RISK_THRESHOLDS_V4
+
+    checks = []
+
+    # 1. Database exists
+    if not DB_PATH.exists():
+        logger.error("startup_check_failed", check="database_exists", path=str(DB_PATH))
+        checks.append("DATABASE MISSING")
+    else:
+        try:
+            conn = sqlite3.connect(str(DB_PATH), timeout=10)
+            cursor = conn.cursor()
+
+            # 2. Verify risk_level/risk_score alignment (spot check)
+            cursor.execute("""
+                SELECT risk_level, MIN(risk_score), MAX(risk_score)
+                FROM contracts GROUP BY risk_level
+            """)
+            for row in cursor.fetchall():
+                level, min_s, max_s = row
+                if level == 'critical' and min_s < RISK_THRESHOLDS_V4['critical'] - 0.001:
+                    checks.append(f"risk_level misaligned: {level} min={min_s}")
+                elif level == 'high' and min_s < RISK_THRESHOLDS_V4['high'] - 0.001:
+                    checks.append(f"risk_level misaligned: {level} min={min_s}")
+
+            # 3. Verify precomputed_stats freshness
+            cursor.execute("""
+                SELECT stat_key, updated_at FROM precomputed_stats
+                ORDER BY updated_at DESC LIMIT 1
+            """)
+            row = cursor.fetchone()
+            if row:
+                logger.info("startup_check", precomputed_stats_updated=row[1])
+            else:
+                checks.append("precomputed_stats empty")
+
+            conn.close()
+        except Exception as e:
+            checks.append(f"database error: {e}")
+
+    if checks:
+        for c in checks:
+            logger.warning("startup_check_warning", issue=c)
+    else:
+        logger.info("startup_checks_passed")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup: warm fast caches in background thread."""
+    """Startup: run checks and warm caches."""
+    _startup_checks()
     logger.info("Starting cache warmup in background...")
     warmup_thread = threading.Thread(target=_warmup_caches, daemon=True)
     warmup_thread.start()
@@ -138,10 +202,16 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Register global error handlers
+register_error_handlers(app)
+
 # Attach rate limiter to app (if available)
 if RATE_LIMITING_ENABLED and limiter:
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Request logging middleware (must be added before CORS/GZip so it wraps them)
+app.add_middleware(RequestLoggingMiddleware)
 
 # CORS middleware for frontend access
 app.add_middleware(
@@ -169,6 +239,39 @@ app.include_router(watchlist_router, prefix="/api/v1")
 app.include_router(reports_router, prefix="/api/v1")
 app.include_router(investigation_router, prefix="/api/v1")
 app.include_router(executive_router, prefix="/api/v1")
+
+
+def _get_latest_backup_info() -> dict | None:
+    """Get info about the most recent database backup."""
+    from datetime import datetime
+
+    backup_dir = Path(__file__).parent.parent / "backups"
+    if not backup_dir.exists():
+        return None
+    backups = sorted(
+        backup_dir.glob("RUBLI_NORMALIZED_*.db.gz"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )
+    if not backups:
+        return None
+    latest = backups[0]
+    stat = latest.stat()
+    size = stat.st_size
+    for unit in ("B", "KB", "MB", "GB"):
+        if size < 1024:
+            size_human = f"{size:.1f} {unit}"
+            break
+        size /= 1024
+    else:
+        size_human = f"{size:.1f} TB"
+    return {
+        "file": latest.name,
+        "size_bytes": stat.st_size,
+        "size_human": size_human,
+        "created_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+        "total_backups": len(backups),
+    }
 
 
 @app.get("/", tags=["root"])
@@ -218,12 +321,50 @@ async def root():
 
 @app.get("/health", tags=["root"])
 async def health_check():
-    """Health check endpoint."""
+    """Health check endpoint with database, backup, and uptime status."""
+    import sqlite3
+    from .dependencies import DB_PATH
+
     db_exists = verify_database_exists()
+    backup_info = _get_latest_backup_info()
+    uptime_seconds = round(_time_module.time() - _server_start_time)
+
+    # Database details
+    db_info = {"status": "not found"}
+    if db_exists:
+        try:
+            conn = sqlite3.connect(str(DB_PATH), timeout=5)
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM contracts")
+            contract_count = cursor.fetchone()[0]
+            db_size = DB_PATH.stat().st_size
+            conn.close()
+            db_info = {
+                "status": "connected",
+                "size_mb": round(db_size / (1024 * 1024)),
+                "contract_count": contract_count,
+            }
+        except Exception:
+            db_info = {"status": "error"}
+
     return {
         "status": "healthy" if db_exists else "degraded",
-        "database": "connected" if db_exists else "not found",
-        "version": API_VERSION
+        "version": API_VERSION,
+        "database": db_info,
+        "uptime_seconds": uptime_seconds,
+        "last_backup": backup_info,
+    }
+
+
+@app.get("/metrics", tags=["root"])
+async def metrics():
+    """Application metrics for monitoring."""
+    from .cache import app_cache
+
+    uptime_seconds = round(_time_module.time() - _server_start_time)
+    return {
+        "uptime_seconds": uptime_seconds,
+        "cache": app_cache.stats(),
     }
 
 

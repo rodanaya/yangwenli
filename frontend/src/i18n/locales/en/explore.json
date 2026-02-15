@@ -1,0 +1,62 @@
+{
+  "title": "Explore Data",
+  "tabs": {
+    "vendors": "Vendors",
+    "institutions": "Institutions",
+    "trends": "Trends"
+  },
+  "vendors": {
+    "title": "Vendors",
+    "searchPlaceholder": "Search by name or RFC...",
+    "columns": {
+      "name": "Name",
+      "contracts": "Contracts",
+      "totalValue": "Total Value (MXN)",
+      "avgRisk": "Avg Risk",
+      "highRiskPct": "% High Risk",
+      "directAwardPct": "% Direct Award",
+      "singleBidPct": "% Single Bid",
+      "sector": "Primary Sector",
+      "years": "Years Active"
+    },
+    "empty": "No vendors found matching your filters.",
+    "emptyAction": "Adjust filters"
+  },
+  "institutions": {
+    "title": "Institutions",
+    "searchPlaceholder": "Search by name or acronym...",
+    "columns": {
+      "name": "Name",
+      "type": "Type",
+      "contracts": "Contracts",
+      "totalValue": "Total Value (MXN)",
+      "avgRisk": "Avg Risk",
+      "vendorCount": "Vendors",
+      "directAwardPct": "% Direct Award"
+    },
+    "empty": "No institutions found matching your filters.",
+    "emptyAction": "Adjust filters"
+  },
+  "trends": {
+    "title": "Temporal Trends",
+    "contractsOverTime": "Contracts by Year",
+    "valueOverTime": "Value by Year",
+    "riskOverTime": "Average Risk by Year",
+    "directAwardTrend": "Direct Award Trend"
+  },
+  "filters": {
+    "sector": "Sector",
+    "allSectors": "All sectors",
+    "riskLevel": "Risk Level",
+    "allRiskLevels": "All levels",
+    "minContracts": "Min Contracts",
+    "minValue": "Min Value",
+    "hasRfc": "Has RFC",
+    "sortBy": "Sort by",
+    "sortOrder": "Order",
+    "ascending": "Ascending",
+    "descending": "Descending",
+    "reset": "Clear filters",
+    "apply": "Apply"
+  }
+}

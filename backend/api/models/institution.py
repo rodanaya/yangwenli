@@ -1,5 +1,5 @@
 """Pydantic models for institution endpoints."""
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Optional
 from datetime import datetime
 from .common import PaginationMeta
@@ -17,8 +17,7 @@ class InstitutionTypeResponse(BaseModel):
     default_sector: Optional[str] = Field(None, description="Default sector code")
     risk_baseline: float = Field(..., description="Risk baseline (0.10-0.35)")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SizeTierResponse(BaseModel):
@@ -32,8 +31,7 @@ class SizeTierResponse(BaseModel):
     max_contracts: Optional[int] = Field(None, description="Maximum contracts (-1 = unlimited)")
     risk_adjustment: float = Field(..., description="Risk adjustment applied to base score")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AutonomyLevelResponse(BaseModel):
@@ -46,8 +44,7 @@ class AutonomyLevelResponse(BaseModel):
     description: Optional[str] = Field(None, description="Description")
     risk_baseline: float = Field(..., description="Risk baseline for this autonomy level")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class InstitutionResponse(BaseModel):
@@ -75,8 +72,7 @@ class InstitutionResponse(BaseModel):
     classification_confidence: Optional[float] = Field(None, description="Classification confidence")
     data_quality_grade: Optional[str] = Field(None, description="Data quality grade (A-F)")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class InstitutionDetailResponse(InstitutionResponse):

@@ -26,7 +26,7 @@ import {
   Cell,
   ReferenceArea,
   BarChart,
-} from 'recharts'
+} from '@/components/charts'
 import {
   Clock,
   Activity,

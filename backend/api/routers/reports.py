@@ -8,7 +8,6 @@ Provides comprehensive reports for journalists and investigators:
 - Thematic Investigations: COVID, elections, year-end, threshold splitting
 """
 
-import sqlite3
 import logging
 from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, HTTPException, Query, Path
@@ -17,7 +16,7 @@ from datetime import datetime
 from enum import Enum
 
 from ..dependencies import get_db
-from ..config.constants import MAX_CONTRACT_VALUE
+from ..services.report_service import report_service
 
 logger = logging.getLogger(__name__)
 
@@ -156,7 +155,7 @@ class VendorReport(BaseModel):
 
 
 @router.get("/vendor/{vendor_id}", response_model=VendorReport)
-async def get_vendor_report(
+def get_vendor_report(
     vendor_id: int = Path(..., ge=1, description="Vendor ID"),
 ):
     """
@@ -170,272 +169,29 @@ async def get_vendor_report(
     - Network connections (institutions, co-bidders)
     - Red flags summary
     """
-    try:
-        with get_db() as conn:
-            cursor = conn.cursor()
+    with get_db() as conn:
+        data = report_service.generate_vendor_report(conn, vendor_id)
 
-            # Get vendor profile
-            cursor.execute("""
-                SELECT id, name, rfc, name_normalized, size_stratification,
-                       is_verified_sat, first_contract_date, last_contract_date,
-                       total_contracts, total_amount_mxn
-                FROM vendors WHERE id = ?
-            """, (vendor_id,))
-            vendor = cursor.fetchone()
+    if data is None:
+        raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
 
-            if not vendor:
-                raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
-
-            # Calculate years active
-            first_date = vendor['first_contract_date']
-            last_date = vendor['last_contract_date']
-            years_active = 0
-            if first_date and last_date:
-                try:
-                    first_year = int(first_date[:4]) if first_date else 0
-                    last_year = int(last_date[:4]) if last_date else 0
-                    years_active = max(1, last_year - first_year + 1)
-                except (ValueError, TypeError, IndexError):
-                    years_active = 1
-
-            profile = VendorReportProfile(
-                vendor_id=vendor['id'],
-                name=vendor['name'],
-                rfc=vendor['rfc'],
-                name_normalized=vendor['name_normalized'],
-                first_contract_date=first_date,
-                last_contract_date=last_date,
-                years_active=years_active,
-                size_stratification=vendor['size_stratification'],
-                is_verified=bool(vendor['is_verified_sat'])
-            )
-
-            # Get contract statistics
-            cursor.execute("""
-                SELECT
-                    COUNT(*) as total_count,
-                    COALESCE(SUM(amount_mxn), 0) as total_value,
-                    COALESCE(AVG(amount_mxn), 0) as avg_value
-                FROM contracts WHERE vendor_id = ?
-            """, (vendor_id,))
-            contract_stats = cursor.fetchone()
-
-            # By sector
-            cursor.execute("""
-                SELECT s.name_es, COUNT(*) as cnt
-                FROM contracts c
-                JOIN sectors s ON c.sector_id = s.id
-                WHERE c.vendor_id = ?
-                GROUP BY s.id ORDER BY cnt DESC
-            """, (vendor_id,))
-            by_sector = {row['name_es']: row['cnt'] for row in cursor.fetchall()}
-
-            # By year
-            cursor.execute("""
-                SELECT contract_year, COUNT(*) as cnt
-                FROM contracts WHERE vendor_id = ? AND contract_year IS NOT NULL
-                GROUP BY contract_year ORDER BY contract_year
-            """, (vendor_id,))
-            by_year = {row['contract_year']: row['cnt'] for row in cursor.fetchall()}
-
-            # By procedure type
-            cursor.execute("""
-                SELECT
-                    CASE
-                        WHEN is_direct_award = 1 THEN 'Adjudicacion Directa'
-                        WHEN procedure_type_normalized = 'licitacion' THEN 'Licitacion Publica'
-                        WHEN procedure_type_normalized = 'invitacion' THEN 'Invitacion'
-                        ELSE 'Otro'
-                    END as proc_type,
-                    COUNT(*) as cnt
-                FROM contracts WHERE vendor_id = ?
-                GROUP BY proc_type ORDER BY cnt DESC
-            """, (vendor_id,))
-            by_procedure = {row['proc_type']: row['cnt'] for row in cursor.fetchall()}
-
-            contracts = VendorReportContracts(
-                total_count=contract_stats['total_count'],
-                total_value_mxn=contract_stats['total_value'],
-                avg_value_mxn=contract_stats['avg_value'],
-                by_sector=by_sector,
-                by_year=by_year,
-                by_procedure_type=by_procedure
-            )
-
-            # Get risk profile
-            cursor.execute("""
-                SELECT
-                    COALESCE(AVG(risk_score), 0) as avg_risk,
-                    COALESCE(MAX(risk_score), 0) as max_risk,
-                    SUM(CASE WHEN risk_level = 'critical' THEN 1 ELSE 0 END) as critical,
-                    SUM(CASE WHEN risk_level = 'high' THEN 1 ELSE 0 END) as high,
-                    SUM(CASE WHEN risk_level = 'medium' THEN 1 ELSE 0 END) as medium,
-                    SUM(CASE WHEN risk_level = 'low' THEN 1 ELSE 0 END) as low,
-                    SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) as single_bid,
-                    SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) as direct_award,
-                    COUNT(*) as total
-                FROM contracts WHERE vendor_id = ?
-            """, (vendor_id,))
-            risk_stats = cursor.fetchone()
-
-            # Risk factors breakdown
-            cursor.execute("""
-                SELECT risk_factors, COUNT(*) as cnt
-                FROM contracts
-                WHERE vendor_id = ? AND risk_factors IS NOT NULL AND risk_factors != ''
-                GROUP BY risk_factors ORDER BY cnt DESC LIMIT 10
-            """, (vendor_id,))
-            rows = cursor.fetchall()
-            total_with_factors = sum(row['cnt'] for row in rows)
-            factors_breakdown = []
-            for row in rows:
-                factors_breakdown.append(RiskFactorBreakdown(
-                    factor=row['risk_factors'],
-                    count=row['cnt'],
-                    percentage=100.0 * row['cnt'] / total_with_factors if total_with_factors > 0 else 0
-                ))
-
-            total = risk_stats['total'] or 1
-            risk = VendorReportRisk(
-                avg_risk_score=risk_stats['avg_risk'],
-                max_risk_score=risk_stats['max_risk'],
-                by_risk_level={
-                    'critical': risk_stats['critical'] or 0,
-                    'high': risk_stats['high'] or 0,
-                    'medium': risk_stats['medium'] or 0,
-                    'low': risk_stats['low'] or 0
-                },
-                risk_factors_breakdown=factors_breakdown,
-                single_bid_count=risk_stats['single_bid'] or 0,
-                single_bid_pct=100.0 * (risk_stats['single_bid'] or 0) / total,
-                direct_award_count=risk_stats['direct_award'] or 0,
-                direct_award_pct=100.0 * (risk_stats['direct_award'] or 0) / total
-            )
-
-            # Price hypotheses
-            cursor.execute("""
-                SELECT
-                    COUNT(*) as total,
-                    AVG(confidence) as avg_conf
-                FROM price_hypotheses WHERE vendor_id = ?
-            """, (vendor_id,))
-            hyp_stats = cursor.fetchone()
-
-            cursor.execute("""
-                SELECT hypothesis_type, COUNT(*) as cnt
-                FROM price_hypotheses WHERE vendor_id = ?
-                GROUP BY hypothesis_type
-            """, (vendor_id,))
-            hyp_by_type = {row['hypothesis_type']: row['cnt'] for row in cursor.fetchall()}
-
-            cursor.execute("""
-                SELECT hypothesis_id, hypothesis_type, confidence, explanation, amount_mxn
-                FROM price_hypotheses
-                WHERE vendor_id = ?
-                ORDER BY confidence DESC LIMIT 5
-            """, (vendor_id,))
-            top_hypotheses = [dict(row) for row in cursor.fetchall()]
-
-            price_hypotheses = VendorReportHypotheses(
-                total_count=hyp_stats['total'] or 0,
-                by_type=hyp_by_type,
-                avg_confidence=hyp_stats['avg_conf'] or 0,
-                top_hypotheses=top_hypotheses
-            )
-
-            # Network connections
-            cursor.execute("""
-                SELECT COUNT(DISTINCT institution_id) as inst_count
-                FROM contracts WHERE vendor_id = ?
-            """, (vendor_id,))
-            inst_count = cursor.fetchone()['inst_count']
-
-            cursor.execute("""
-                SELECT i.id, i.name, COUNT(*) as contract_count, SUM(c.amount_mxn) as total_value
-                FROM contracts c
-                JOIN institutions i ON c.institution_id = i.id
-                WHERE c.vendor_id = ?
-                GROUP BY i.id ORDER BY total_value DESC LIMIT 10
-            """, (vendor_id,))
-            top_institutions = [dict(row) for row in cursor.fetchall()]
-
-            # Sector concentration
-            cursor.execute("""
-                SELECT s.code, SUM(c.amount_mxn) as value
-                FROM contracts c
-                JOIN sectors s ON c.sector_id = s.id
-                WHERE c.vendor_id = ?
-                GROUP BY s.id
-            """, (vendor_id,))
-            sector_values = {row['code']: row['value'] or 0 for row in cursor.fetchall()}
-            total_value = sum(sector_values.values()) or 1
-            sector_concentration = {k: 100.0 * v / total_value for k, v in sector_values.items()}
-
-            network = VendorReportNetwork(
-                institution_count=inst_count,
-                top_institutions=top_institutions,
-                co_bidder_count=0,  # Would need procedure-level data
-                sector_concentration=sector_concentration
-            )
-
-            # Red flags
-            flags = []
-            severity = "low"
-
-            if risk.single_bid_pct > 50:
-                flags.append(f"High single-bid rate: {risk.single_bid_pct:.1f}%")
-                severity = "high"
-            elif risk.single_bid_pct > 30:
-                flags.append(f"Elevated single-bid rate: {risk.single_bid_pct:.1f}%")
-                if severity == "low":
-                    severity = "medium"
-
-            if risk.direct_award_pct > 80:
-                flags.append(f"Very high direct award rate: {risk.direct_award_pct:.1f}%")
-                severity = "high"
-            elif risk.direct_award_pct > 60:
-                flags.append(f"High direct award rate: {risk.direct_award_pct:.1f}%")
-                if severity == "low":
-                    severity = "medium"
-
-            if price_hypotheses.total_count > 10:
-                flags.append(f"Multiple price anomalies detected: {price_hypotheses.total_count}")
-                if severity == "low":
-                    severity = "medium"
-
-            if risk.by_risk_level.get('critical', 0) > 0:
-                flags.append(f"Has {risk.by_risk_level['critical']} critical-risk contracts")
-                severity = "critical"
-            elif risk.by_risk_level.get('high', 0) > 5:
-                flags.append(f"Has {risk.by_risk_level['high']} high-risk contracts")
-                severity = "high"
-
-            # Concentration flag
-            max_sector_conc = max(sector_concentration.values()) if sector_concentration else 0
-            if max_sector_conc > 80:
-                flags.append(f"High sector concentration: {max_sector_conc:.1f}% in one sector")
-
-            if not flags:
-                flags.append("No significant red flags detected")
-
-            red_flags = VendorReportRedFlags(flags=flags, severity=severity)
-
-            return VendorReport(
-                report_type="vendor_deep_dive",
-                generated_at=datetime.now().isoformat(),
-                profile=profile,
-                contracts=contracts,
-                risk=risk,
-                price_hypotheses=price_hypotheses,
-                network=network,
-                red_flags=red_flags
-            )
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error generating vendor report: {e}")
-        raise HTTPException(status_code=500, detail="Internal error generating report")
+    return VendorReport(
+        report_type=data["report_type"],
+        generated_at=data["generated_at"],
+        profile=VendorReportProfile(**data["profile"]),
+        contracts=VendorReportContracts(**data["contracts"]),
+        risk=VendorReportRisk(
+            **{
+                **data["risk"],
+                "risk_factors_breakdown": [
+                    RiskFactorBreakdown(**f) for f in data["risk"]["risk_factors_breakdown"]
+                ],
+            }
+        ),
+        price_hypotheses=VendorReportHypotheses(**data["price_hypotheses"]),
+        network=VendorReportNetwork(**data["network"]),
+        red_flags=VendorReportRedFlags(**data["red_flags"]),
+    )
 
 
 # =============================================================================
@@ -465,7 +221,7 @@ class InstitutionReport(BaseModel):
 
 
 @router.get("/institution/{institution_id}", response_model=InstitutionReport)
-async def get_institution_report(
+def get_institution_report(
     institution_id: int = Path(..., ge=1, description="Institution ID"),
 ):
     """
@@ -666,7 +422,7 @@ class SectorReport(BaseModel):
 
 
 @router.get("/sector/{sector_id}", response_model=SectorReport)
-async def get_sector_report(
+def get_sector_report(
     sector_id: int = Path(..., ge=1, le=12, description="Sector ID (1-12)"),
 ):
     """
@@ -679,211 +435,28 @@ async def get_sector_report(
     - Risk factor patterns
     - Year-over-year trends
     """
-    try:
-        with get_db() as conn:
-            cursor = conn.cursor()
+    with get_db() as conn:
+        data = report_service.generate_sector_report(conn, sector_id)
 
-            # Get sector info
-            cursor.execute("SELECT id, code, name_es FROM sectors WHERE id = ?", (sector_id,))
-            sector = cursor.fetchone()
-            if not sector:
-                raise HTTPException(status_code=404, detail=f"Sector {sector_id} not found")
+    if data is None:
+        raise HTTPException(status_code=404, detail=f"Sector {sector_id} not found")
 
-            # Contract summary
-            cursor.execute("""
-                SELECT
-                    COUNT(*) as total,
-                    COALESCE(SUM(amount_mxn), 0) as total_value,
-                    COALESCE(AVG(amount_mxn), 0) as avg_value,
-                    COALESCE(AVG(risk_score), 0) as avg_risk,
-                    SUM(CASE WHEN risk_level = 'critical' THEN 1 ELSE 0 END) as critical,
-                    SUM(CASE WHEN risk_level = 'high' THEN 1 ELSE 0 END) as high,
-                    SUM(CASE WHEN risk_level = 'medium' THEN 1 ELSE 0 END) as medium,
-                    SUM(CASE WHEN risk_level = 'low' THEN 1 ELSE 0 END) as low
-                FROM contracts WHERE sector_id = ?
-            """, (sector_id,))
-            stats = cursor.fetchone()
-
-            cursor.execute("""
-                SELECT contract_year, COUNT(*) as cnt
-                FROM contracts WHERE sector_id = ? AND contract_year IS NOT NULL
-                GROUP BY contract_year
-            """, (sector_id,))
-            by_year = {row['contract_year']: row['cnt'] for row in cursor.fetchall()}
-
-            contracts = ContractSummary(
-                total_count=stats['total'],
-                total_value_mxn=stats['total_value'],
-                avg_value_mxn=stats['avg_value'],
-                avg_risk_score=stats['avg_risk'],
-                by_risk_level={
-                    'critical': stats['critical'] or 0,
-                    'high': stats['high'] or 0,
-                    'medium': stats['medium'] or 0,
-                    'low': stats['low'] or 0
-                },
-                by_year=by_year
-            )
-
-            # Top vendors by value
-            cursor.execute("""
-                SELECT v.id, v.name, v.rfc,
-                       COUNT(*) as contract_count,
-                       SUM(c.amount_mxn) as total_value,
-                       AVG(c.risk_score) as avg_risk
-                FROM contracts c
-                JOIN vendors v ON c.vendor_id = v.id
-                WHERE c.sector_id = ?
-                GROUP BY v.id
-                ORDER BY total_value DESC
-                LIMIT 10
-            """, (sector_id,))
-            top_vendors = [
-                TopVendor(
-                    vendor_id=row['id'],
-                    name=row['name'],
-                    rfc=row['rfc'],
-                    contract_count=row['contract_count'],
-                    total_value_mxn=row['total_value'] or 0,
-                    avg_risk_score=row['avg_risk'] or 0
-                )
-                for row in cursor.fetchall()
-            ]
-
-            # Top risky contracts
-            cursor.execute("""
-                SELECT c.id, c.title, c.amount_mxn, v.name as vendor_name,
-                       c.contract_date, c.risk_score, c.risk_factors
-                FROM contracts c
-                JOIN vendors v ON c.vendor_id = v.id
-                WHERE c.sector_id = ? AND c.risk_score IS NOT NULL
-                ORDER BY c.risk_score DESC
-                LIMIT 10
-            """, (sector_id,))
-            top_risky = [
-                TopContract(
-                    contract_id=row['id'],
-                    title=row['title'],
-                    amount_mxn=row['amount_mxn'] or 0,
-                    vendor_name=row['vendor_name'],
-                    contract_date=row['contract_date'],
-                    risk_score=row['risk_score'] or 0,
-                    risk_factors=row['risk_factors']
-                )
-                for row in cursor.fetchall()
-            ]
-
-            # Risk factor distribution
-            cursor.execute("""
-                SELECT risk_factors, COUNT(*) as cnt
-                FROM contracts
-                WHERE sector_id = ? AND risk_factors IS NOT NULL AND risk_factors != ''
-                GROUP BY risk_factors
-                ORDER BY cnt DESC
-                LIMIT 15
-            """, (sector_id,))
-            total_with_factors = sum(row['cnt'] for row in cursor.fetchall())
-
-            cursor.execute("""
-                SELECT risk_factors, COUNT(*) as cnt
-                FROM contracts
-                WHERE sector_id = ? AND risk_factors IS NOT NULL AND risk_factors != ''
-                GROUP BY risk_factors
-                ORDER BY cnt DESC
-                LIMIT 15
-            """, (sector_id,))
-            risk_factors = [
-                RiskFactorBreakdown(
-                    factor=row['risk_factors'],
-                    count=row['cnt'],
-                    percentage=100.0 * row['cnt'] / total_with_factors if total_with_factors > 0 else 0
-                )
-                for row in cursor.fetchall()
-            ]
-
-            # Price hypotheses
-            cursor.execute("""
-                SELECT
-                    COUNT(*) as total,
-                    AVG(confidence) as avg_conf,
-                    SUM(CASE WHEN confidence >= 0.85 THEN 1 ELSE 0 END) as high_conf
-                FROM price_hypotheses WHERE sector_id = ?
-            """, (sector_id,))
-            hyp = cursor.fetchone()
-
-            cursor.execute("""
-                SELECT hypothesis_type, COUNT(*) as cnt
-                FROM price_hypotheses WHERE sector_id = ?
-                GROUP BY hypothesis_type
-            """, (sector_id,))
-            hyp_by_type = {row['hypothesis_type']: row['cnt'] for row in cursor.fetchall()}
-
-            price_hypotheses = PriceHypothesisSummary(
-                total_hypotheses=hyp['total'] or 0,
-                by_type=hyp_by_type,
-                avg_confidence=hyp['avg_conf'] or 0,
-                high_confidence_count=hyp['high_conf'] or 0
-            )
-
-            # Year trends
-            cursor.execute("""
-                SELECT
-                    contract_year,
-                    COUNT(*) as contracts,
-                    SUM(amount_mxn) as value,
-                    AVG(risk_score) as avg_risk,
-                    SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) as direct_awards,
-                    COUNT(DISTINCT vendor_id) as vendors
-                FROM contracts
-                WHERE sector_id = ? AND contract_year IS NOT NULL
-                GROUP BY contract_year
-                ORDER BY contract_year
-            """, (sector_id,))
-            year_trends = {}
-            for row in cursor.fetchall():
-                year_trends[row['contract_year']] = {
-                    'contracts': row['contracts'],
-                    'value': row['value'] or 0,
-                    'avg_risk': row['avg_risk'] or 0,
-                    'direct_awards': row['direct_awards'],
-                    'direct_award_pct': 100.0 * row['direct_awards'] / row['contracts'] if row['contracts'] > 0 else 0,
-                    'vendors': row['vendors']
-                }
-
-            # Notable findings
-            findings = []
-            if stats['critical'] and stats['critical'] > 0:
-                findings.append(f"Contains {stats['critical']} critical-risk contracts requiring investigation")
-            if stats['avg_risk'] > 0.25:
-                findings.append(f"Average risk score ({stats['avg_risk']:.3f}) above median")
-            if price_hypotheses.total_hypotheses > 1000:
-                findings.append(f"High volume of price anomalies: {price_hypotheses.total_hypotheses:,}")
-            if top_vendors and top_vendors[0].total_value_mxn > stats['total_value'] * 0.2:
-                findings.append(f"Top vendor concentration: {top_vendors[0].name} holds >{20}% of sector value")
-
-            if not findings:
-                findings.append("No major anomalies detected in this sector")
-
-            return SectorReport(
-                report_type="sector_summary",
-                generated_at=datetime.now().isoformat(),
-                sector_id=sector_id,
-                sector_name=sector['name_es'],
-                sector_code=sector['code'],
-                contracts=contracts,
-                top_vendors=top_vendors,
-                top_risky_contracts=top_risky,
-                risk_factor_distribution=risk_factors,
-                price_hypotheses=price_hypotheses,
-                year_trends=year_trends,
-                notable_findings=findings
-            )
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error generating sector report: {e}")
-        raise HTTPException(status_code=500, detail="Internal error generating report")
+    return SectorReport(
+        report_type=data["report_type"],
+        generated_at=data["generated_at"],
+        sector_id=data["sector_id"],
+        sector_name=data["sector_name"],
+        sector_code=data["sector_code"],
+        contracts=ContractSummary(**data["contracts"]),
+        top_vendors=[TopVendor(**v) for v in data["top_vendors"]],
+        top_risky_contracts=[TopContract(**c) for c in data["top_risky_contracts"]],
+        risk_factor_distribution=[
+            RiskFactorBreakdown(**f) for f in data["risk_factor_distribution"]
+        ],
+        price_hypotheses=PriceHypothesisSummary(**data["price_hypotheses"]),
+        year_trends=data["year_trends"],
+        notable_findings=data["notable_findings"],
+    )
 
 
 # =============================================================================
@@ -905,7 +478,7 @@ class ThematicReport(BaseModel):
 
 
 @router.get("/thematic/{theme}", response_model=ThematicReport)
-async def get_thematic_report(
+def get_thematic_report(
     theme: ThemeType = Path(..., description="Theme type"),
 ):
     """
@@ -1112,7 +685,7 @@ class ReportTypeSummary(BaseModel):
 
 
 @router.get("/", response_model=List[ReportTypeSummary])
-async def list_report_types():
+def list_report_types():
     """List available report types and their endpoints."""
     return [
         ReportTypeSummary(

@@ -33,6 +33,10 @@ chardet>=5.0.0             # Character encoding detection
 python-dateutil>=2.8.0
 tqdm>=4.65.0               # Progress bars
 
+# Observability & Caching
+structlog>=24.0.0          # Structured JSON logging
+cachetools>=5.3.0          # Thread-safe TTL caches
+
 # Testing
 pytest>=7.4.0              # Test framework
 pytest-asyncio>=0.21.0     # Async test support

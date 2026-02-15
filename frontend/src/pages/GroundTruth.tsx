@@ -42,7 +42,7 @@ import {
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
-} from 'recharts'
+} from '@/components/charts'
 
 // ============================================================================
 // Ground Truth Data

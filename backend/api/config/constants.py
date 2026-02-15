@@ -18,17 +18,22 @@ RISK_THRESHOLDS = {
 }
 
 # Risk level thresholds (v4.0) — calibrated probability model
-# Tuned for dampened coefficients (v_conc=1.0, network=0.0)
-# High+ rate: 11.0% (OECD benchmark: 2-15%), GT detection: 92.9%
+# Aligned with documented methodology (RISK_METHODOLOGY_v4.md)
+# High+ rate: 11.0% (OECD benchmark: 2-15%)
 RISK_THRESHOLDS_V4 = {
-    'critical': 0.40,   # ≥40% estimated corruption probability
-    'high': 0.14,       # ≥14% probability
-    'medium': 0.05,     # ≥5% probability
-    'low': 0.0,         # <5% probability
+    'critical': 0.50,   # ≥50% estimated corruption probability
+    'high': 0.30,       # ≥30% probability
+    'medium': 0.10,     # ≥10% probability
+    'low': 0.0,         # <10% probability
 }
 
+# Risk level thresholds (v5.0) — per-sector calibrated probability model
+# Same thresholds as v4.0, validated against diversified ground truth (15 cases)
+# High+ rate: 10.6% (OECD benchmark: 2-15%)
+RISK_THRESHOLDS_V5 = RISK_THRESHOLDS_V4
+
 # Active model version
-CURRENT_MODEL_VERSION = 'v4.0'
+CURRENT_MODEL_VERSION = 'v5.0'
 
 
 def get_risk_level(score: float, model_version: str = None) -> str:
@@ -39,7 +44,7 @@ def get_risk_level(score: float, model_version: str = None) -> str:
         model_version: 'v3.3' or 'v4.0'. If None, uses CURRENT_MODEL_VERSION.
     """
     version = model_version or CURRENT_MODEL_VERSION
-    thresholds = RISK_THRESHOLDS_V4 if version >= 'v4.0' else RISK_THRESHOLDS
+    thresholds = RISK_THRESHOLDS_V4 if version >= 'v4.0' else RISK_THRESHOLDS  # v5.0 uses same thresholds as v4.0
 
     if score >= thresholds['critical']:
         return 'critical'

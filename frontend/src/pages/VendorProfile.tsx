@@ -18,7 +18,7 @@ import {
   Area,
   ResponsiveContainer,
   Tooltip as RechartsTooltip,
-} from 'recharts'
+} from '@/components/charts'
 import {
   Users,
   Building2,

@@ -1,0 +1,55 @@
+{
+  "title": "Investigación",
+  "cases": {
+    "title": "Casos de Investigación",
+    "newCase": "Nuevo Caso",
+    "columns": {
+      "name": "Nombre del Caso",
+      "status": "Estado",
+      "vendorCount": "Proveedores",
+      "contractCount": "Contratos",
+      "totalValue": "Valor Total",
+      "created": "Fecha de Creación",
+      "lastUpdated": "Última Actualización"
+    },
+    "statuses": {
+      "open": "Abierto",
+      "in_progress": "En Progreso",
+      "closed": "Cerrado",
+      "archived": "Archivado"
+    },
+    "empty": "No hay casos de investigación activos.",
+    "emptyAction": "Crear un nuevo caso"
+  },
+  "groundTruth": {
+    "title": "Verdad de Campo",
+    "subtitle": "Casos documentados de corrupción en contratación pública mexicana",
+    "columns": {
+      "caseName": "Caso",
+      "type": "Tipo",
+      "vendors": "Proveedores",
+      "contracts": "Contratos",
+      "detectionRate": "Tasa de Detección",
+      "avgScore": "Puntuación Promedio"
+    },
+    "types": {
+      "ghost_companies": "Empresas Fantasma",
+      "procurement_fraud": "Fraude en Contratación",
+      "embezzlement": "Malversación",
+      "overpricing": "Sobreprecio",
+      "bribery": "Soborno",
+      "conflict_of_interest": "Conflicto de Interés",
+      "invoice_fraud": "Fraude de Facturas"
+    }
+  },
+  "vendorReport": {
+    "title": "Reporte de Proveedor",
+    "profile": "Perfil",
+    "contracts": "Contratos",
+    "riskAnalysis": "Análisis de Riesgo",
+    "priceHypotheses": "Hipótesis de Precios",
+    "network": "Red de Conexiones",
+    "redFlags": "Alertas Rojas",
+    "generateReport": "Generar Reporte"
+  }
+}

@@ -25,7 +25,7 @@ import {
   YAxis,
   Tooltip as RechartsTooltip,
   CartesianGrid,
-} from 'recharts'
+} from '@/components/charts'
 
 // ============================================================================
 // Static Data

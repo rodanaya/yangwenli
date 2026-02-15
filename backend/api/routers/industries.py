@@ -1,4 +1,7 @@
 """API router for industry taxonomy endpoints."""
+import threading
+import time
+
 from fastapi import APIRouter, HTTPException
 from typing import Optional
 
@@ -7,19 +10,29 @@ from ..models.industry import IndustryResponse, IndustryListResponse
 
 router = APIRouter(prefix="/industries", tags=["industries"])
 
+# Cache for the full industry list (rarely changes)
+_industry_cache: dict = {"data": None, "expires": 0}
+_industry_cache_lock = threading.Lock()
+INDUSTRY_CACHE_TTL = 3600  # 1 hour
+
 
 @router.get("", response_model=IndustryListResponse)
-async def list_industries(include_stats: bool = True):
+def list_industries(include_stats: bool = True):
     """
     List all industry categories with optional statistics.
 
     Returns the 35-industry taxonomy (codes 1001-1035) with vendor counts
     and total contract values when include_stats=True.
     """
+    # Return cached result if available (stats query is expensive)
+    if include_stats:
+        now = time.time()
+        if _industry_cache["data"] and now < _industry_cache["expires"]:
+            return _industry_cache["data"]
+
     with get_db() as conn:
         cursor = conn.cursor()
 
-        # Get industry taxonomy with vendor counts
         if include_stats:
             cursor.execute("""
                 SELECT
@@ -29,18 +42,10 @@ async def list_industries(include_stats: bool = True):
                     vi.name_en,
                     vi.sector_affinity,
                     vi.description,
-                    COUNT(vc.vendor_id) as vendor_count,
-                    COALESCE(SUM(vs.total_value), 0) as total_contract_value
+                    COALESCE(ist.vendor_count, 0) as vendor_count,
+                    COALESCE(ist.total_contract_value, 0) as total_contract_value
                 FROM vendor_industries vi
-                LEFT JOIN vendor_classifications vc
-                    ON vi.id = vc.industry_id
-                    AND vc.industry_source = 'verified_online'
-                LEFT JOIN (
-                    SELECT vendor_id, SUM(amount_mxn) as total_value
-                    FROM contracts
-                    GROUP BY vendor_id
-                ) vs ON vc.vendor_id = vs.vendor_id
-                GROUP BY vi.id
+                LEFT JOIN industry_stats ist ON vi.id = ist.industry_id
                 ORDER BY vi.id
             """)
         else:
@@ -74,7 +79,6 @@ async def list_industries(include_stats: bool = True):
             for row in rows
         ]
 
-        # Get total verified vendors
         cursor.execute("""
             SELECT COUNT(*) as count
             FROM vendor_classifications
@@ -82,15 +86,23 @@ async def list_industries(include_stats: bool = True):
         """)
         total_verified = cursor.fetchone()["count"]
 
-        return IndustryListResponse(
+        result = IndustryListResponse(
             data=industries,
             total_industries=len(industries),
             total_verified_vendors=total_verified
         )
 
+        # Cache if stats were included
+        if include_stats:
+            with _industry_cache_lock:
+                _industry_cache["data"] = result
+                _industry_cache["expires"] = time.time() + INDUSTRY_CACHE_TTL
+
+        return result
+
 
 @router.get("/{industry_id}", response_model=IndustryResponse)
-async def get_industry(industry_id: int):
+def get_industry(industry_id: int):
     """
     Get details for a specific industry by ID.
 
@@ -107,19 +119,11 @@ async def get_industry(industry_id: int):
                 vi.name_en,
                 vi.sector_affinity,
                 vi.description,
-                COUNT(vc.vendor_id) as vendor_count,
-                COALESCE(SUM(vs.total_value), 0) as total_contract_value
+                COALESCE(ist.vendor_count, 0) as vendor_count,
+                COALESCE(ist.total_contract_value, 0) as total_contract_value
             FROM vendor_industries vi
-            LEFT JOIN vendor_classifications vc
-                ON vi.id = vc.industry_id
-                AND vc.industry_source = 'verified_online'
-            LEFT JOIN (
-                SELECT vendor_id, SUM(amount_mxn) as total_value
-                FROM contracts
-                GROUP BY vendor_id
-            ) vs ON vc.vendor_id = vs.vendor_id
+            LEFT JOIN industry_stats ist ON vi.id = ist.industry_id
             WHERE vi.id = ?
-            GROUP BY vi.id
         """, (industry_id,))
 
         row = cursor.fetchone()

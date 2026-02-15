@@ -1,0 +1,45 @@
+{
+  "title": "Patrones de Riesgo",
+  "redFlags": {
+    "title": "Banderas Rojas",
+    "subtitle": "Patrones más frecuentes que indican riesgo de corrupción",
+    "categories": {
+      "criticalRisk": "Contratos de Riesgo Crítico",
+      "decemberRush": "Compras de Fin de Año (Diciembre)",
+      "splitContracts": "Contratos Fraccionados",
+      "coBidding": "Co-licitación Sospechosa",
+      "priceOutliers": "Anomalías de Precio",
+      "singleBid": "Licitación con Oferente Único",
+      "vendorConcentration": "Concentración de Proveedores"
+    },
+    "viewContracts": "Ver contratos",
+    "contractCount": "{{count}} contratos"
+  },
+  "moneyFlow": {
+    "title": "Flujo de Dinero",
+    "subtitle": "Cómo fluyen los recursos de las instituciones a los proveedores",
+    "topFlows": "Principales Flujos",
+    "fromInstitution": "De institución",
+    "toVendor": "A proveedor",
+    "totalValue": "Valor total",
+    "concentration": "Índice de concentración"
+  },
+  "temporal": {
+    "title": "Pulso Temporal",
+    "subtitle": "Patrones temporales en la contratación pública",
+    "yearlyTrend": "Tendencia Anual",
+    "monthlyPattern": "Patrón Mensual",
+    "decemberEffect": "Efecto Diciembre",
+    "administrationComparison": "Comparación por Administración"
+  },
+  "network": {
+    "title": "Análisis de Red",
+    "subtitle": "Relaciones entre proveedores e instituciones",
+    "graphView": "Vista de Grafo",
+    "tableView": "Vista de Tabla",
+    "depth": "Profundidad",
+    "minContracts": "Mín. Contratos",
+    "centerOnVendor": "Centrar en proveedor",
+    "centerOnInstitution": "Centrar en institución"
+  }
+}
