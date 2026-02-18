@@ -239,7 +239,7 @@ def main():
     args = parser.parse_args()
 
     print("=" * 70)
-    print("YANG WEN-LI: GROUND TRUTH DATA SEEDING")
+    print("RUBLI: GROUND TRUTH DATA SEEDING")
     print("=" * 70)
     print(f"\nDatabase: {DB_PATH}")
     print(f"Data directory: {DATA_DIR}")

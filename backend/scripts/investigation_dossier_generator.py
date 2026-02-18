@@ -11,7 +11,7 @@ Each dossier includes:
 - Investigation questions
 - Validation search queries
 
-Author: Yang Wen-li Project
+Author: RUBLI Project
 Date: 2026-02-03
 """
 

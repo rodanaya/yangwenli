@@ -1,5 +1,5 @@
 """
-Database Backup Script for Yang Wen-li
+Database Backup Script for RUBLI
 
 Creates compressed backups of RUBLI_NORMALIZED.db with integrity verification.
 Retains last 7 daily backups, deletes older ones.
@@ -105,7 +105,7 @@ def run_backup(output_dir: Path | None = None) -> dict:
     # Temporary uncompressed copy for integrity check
     temp_copy = backup_dir / f"_temp_{timestamp}.db"
 
-    print(f"=== Yang Wen-li Database Backup ===")
+    print(f"=== RUBLI Database Backup ===")
     print(f"Source:    {DB_PATH}")
     print(f"Source size: {format_size(source_size)}")
     print(f"Output:    {backup_path}")

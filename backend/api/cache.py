@@ -1,5 +1,5 @@
 """
-Thread-safe caching utilities for the Yang Wen-li API.
+Thread-safe caching utilities for the RUBLI API.
 
 Replaces ad-hoc _cache = {} patterns with bounded, thread-safe TTLCache.
 All caches are size-bounded (maxsize) and time-bounded (ttl seconds).

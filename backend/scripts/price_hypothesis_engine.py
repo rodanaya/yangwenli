@@ -24,7 +24,7 @@ Literature Sources:
 - OECD Procurement Performance Reports
 - Open Contracting Partnership: Red Flags Guide
 
-Author: Yang Wen-li Project
+Author: RUBLI Project
 Date: February 2026
 """
 

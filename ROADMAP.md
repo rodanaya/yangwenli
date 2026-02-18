@@ -1,6 +1,5 @@
-# Yang Wen-li Development Roadmap
+# RUBLI Development Roadmap
 
-> *"In the long run, the victor is the one who can adapt."* - Yang Wen-li
 
 **Total Steps:** 432
 **Phases:** 5
@@ -673,4 +672,4 @@ The following can be executed in parallel:
 
 ---
 
-*"The fleet that survives is not the strongest, but the one that adapts."* - Yang Wen-li
+*"The fleet that survives is not the strongest, but the one that adapts."* - RUBLI

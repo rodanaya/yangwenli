@@ -771,7 +771,7 @@ def main():
     args = parser.parse_args()
 
     print("=" * 70)
-    print("YANG WEN-LI: RISK MODEL VALIDATION")
+    print("RUBLI: RISK MODEL VALIDATION")
     print("=" * 70)
     print(f"\nDatabase: {DB_PATH}")
     print(f"Model version: {args.model_version}")

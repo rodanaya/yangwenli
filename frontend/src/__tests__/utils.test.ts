@@ -1,5 +1,5 @@
 /**
- * Basic utility function tests for Yang Wen-li frontend
+ * Basic utility function tests for RUBLI frontend
  *
  * These tests verify the core formatting utilities used throughout the app.
  * To run: npm test (after adding vitest)

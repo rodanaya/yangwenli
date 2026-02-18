@@ -15,7 +15,7 @@ Algorithm:
 4. Rank by final suspicion score
 5. Return top 10-20 cases
 
-Author: Yang Wen-li Project
+Author: RUBLI Project
 Date: 2026-02-03
 """
 

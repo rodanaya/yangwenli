@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the Yang Wen-li Procurement Analysis Platform.
+All notable changes to the RUBLI Procurement Analysis Platform.
 
 ## [0.6.0] - 2026-01-20
 

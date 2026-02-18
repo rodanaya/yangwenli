@@ -1,7 +1,7 @@
 """
 HYPERION: Entity Resolution & Classification System
 
-> "The fleet that adapts, survives." - Yang Wen-li
+> "The fleet that adapts, survives." - RUBLI
 
 A state-of-the-art entity resolution system for Mexican government
 procurement data, covering institution classification and vendor deduplication.
@@ -18,7 +18,7 @@ Shared modules:
 """
 
 __version__ = "1.0.0"
-__author__ = "Yang Wen-li Project"
+__author__ = "RUBLI Project"
 
 from .normalizer import HyperionNormalizer
 from .phonetic import SpanishSoundex

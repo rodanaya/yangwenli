@@ -1,5 +1,5 @@
 """
-Security tests for the Yang Wen-li API.
+Security tests for the RUBLI API.
 
 Tests for:
 - SQL injection prevention

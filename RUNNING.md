@@ -1,4 +1,4 @@
-# Running Yang Wen-li
+# Running RUBLI
 
 ## Prerequisites
 

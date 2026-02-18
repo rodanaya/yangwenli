@@ -1,5 +1,5 @@
 """
-Service layer for Yang Wen-li API.
+Service layer for RUBLI API.
 
 Domain services encapsulate business logic, query construction,
 and data mapping. Routers become thin: parse request → call service → return response.

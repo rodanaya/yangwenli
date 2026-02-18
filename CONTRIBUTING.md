@@ -1,6 +1,6 @@
-# Contributing to Yang Wen-li
+# Contributing to RUBLI
 
-Thank you for your interest in contributing to Yang Wen-li! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to RUBLI! This document provides guidelines and instructions for contributing.
 
 ## Code of Conduct
 
@@ -148,7 +148,7 @@ Always enforce these rules:
 ## Project Structure
 
 ```
-yangwenli/
+rubli/
 ├── backend/
 │   ├── api/               # FastAPI application
 │   │   ├── routers/       # Endpoint definitions
@@ -196,4 +196,4 @@ If you have questions about contributing, please:
 
 ---
 
-*"The most important thing is not to win, but to understand."* - Yang Wen-li
+*"The most important thing is not to win, but to understand."* - RUBLI

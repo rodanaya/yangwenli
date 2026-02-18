@@ -1,4 +1,4 @@
-# Configuration Reference for Yang Wen-li
+# Configuration Reference for RUBLI
 
 > Complete reference for all Claude Code configuration options.
 

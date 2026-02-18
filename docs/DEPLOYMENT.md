@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide covers deploying Yang Wen-li in various environments.
+This guide covers deploying RUBLI in various environments.
 
 ## Table of Contents
 
@@ -37,8 +37,8 @@ This guide covers deploying Yang Wen-li in various environments.
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/yangwenli.git
-cd yangwenli
+git clone https://github.com/rodanaya/yangwenli.git
+cd rubli
 ```
 
 ### 2. Backend Setup
@@ -83,7 +83,7 @@ The database file (`RUBLI_NORMALIZED.db`) is not included in the repository due 
 **Option A: Download Pre-built Database**
 ```bash
 # Download from release assets (when available)
-wget https://github.com/yourusername/yangwenli/releases/download/v1.0/RUBLI_NORMALIZED.db
+wget https://github.com/yourusername/rubli/releases/download/v1.0/RUBLI_NORMALIZED.db
 mv RUBLI_NORMALIZED.db backend/
 ```
 
@@ -132,18 +132,18 @@ docker-compose down
 
 ```bash
 # Build backend
-docker build -t yangwenli-backend ./backend
+docker build -t rubli-backend ./backend
 
 # Build frontend
-docker build -t yangwenli-frontend ./frontend
+docker build -t rubli-frontend ./frontend
 
 # Run backend
 docker run -d -p 8001:8001 \
   -v $(pwd)/backend/RUBLI_NORMALIZED.db:/app/RUBLI_NORMALIZED.db \
-  yangwenli-backend
+  rubli-backend
 
 # Run frontend
-docker run -d -p 3009:80 yangwenli-frontend
+docker run -d -p 3009:80 rubli-frontend
 ```
 
 ---
@@ -234,7 +234,7 @@ server {
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `VITE_API_URL` | `http://localhost:8001` | Backend API URL |
-| `VITE_APP_NAME` | `Yang Wen-li` | Application name |
+| `VITE_APP_NAME` | `RUBLI` | Application name |
 | `VITE_ENABLE_EXPORTS` | `true` | Enable export features |
 
 ---
@@ -354,4 +354,4 @@ REDIS_URL=redis://localhost:6379
 
 ---
 
-*"The most important thing is not to win, but to understand."* - Yang Wen-li
+*"The most important thing is not to win, but to understand."* - RUBLI

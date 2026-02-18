@@ -1,6 +1,5 @@
-# Yang Wen-li: Mexican Government Procurement Analysis
+# RUBLI: Mexican Government Procurement Analysis
 
-> *"There are things that cannot be measured in terms of victory or defeat."* - Yang Wen-li
 >
 > AI-Powered Corruption Detection Platform for Mexican Government Procurement
 
@@ -192,4 +191,4 @@ Nothing irreversible happens without your explicit approval.
 
 ---
 
-*Named after Yang Wen-li from Legend of the Galactic Heroes - the pragmatic historian who valued transparency and democratic institutions over blind ambition.*
+*Named after RUBLI from Legend of the Galactic Heroes - the pragmatic historian who valued transparency and democratic institutions over blind ambition.*

@@ -13,7 +13,7 @@ Algorithm:
 
 Target Sectors: Salud (1), Infraestructura (3)
 
-Author: Yang Wen-li Project
+Author: RUBLI Project
 Date: 2026-02-03
 """
 

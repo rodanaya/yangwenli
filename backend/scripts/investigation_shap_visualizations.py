@@ -9,7 +9,7 @@ Visualizations:
 3. Individual vendor force plots - Per-vendor explanation
 4. Sector comparison - Compare feature importance across sectors
 
-Author: Yang Wen-li Project
+Author: RUBLI Project
 Date: 2026-02-03
 """
 

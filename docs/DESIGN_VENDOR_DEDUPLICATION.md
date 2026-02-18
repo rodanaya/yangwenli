@@ -1,6 +1,5 @@
 # Vendor Deduplication Design Document
 
-> *"In chaos, there is opportunity - but first you must see the patterns."* - Yang Wen-li
 
 **Version:** 2.0
 **Status:** IMPLEMENTED - Phase 3 Complete

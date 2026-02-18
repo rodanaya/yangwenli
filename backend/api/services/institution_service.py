@@ -15,7 +15,7 @@ from .base_service import BaseService
 from .query_builder import QueryBuilder
 from .pagination import paginate_query, PaginatedResult
 
-logger = structlog.get_logger("yang_wenli.services.institution")
+logger = structlog.get_logger("rubli.services.institution")
 
 # Sort field whitelist for institution listing
 INSTITUTION_SORT_WHITELIST = {

@@ -1,5 +1,5 @@
 /**
- * Yang Wen-li API Client
+ * RUBLI API Client
  * Centralized API calls with TypeScript types
  */
 

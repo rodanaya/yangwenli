@@ -14,7 +14,7 @@ import structlog
 
 from .base_service import BaseService
 
-logger = structlog.get_logger("yang_wenli.services.report")
+logger = structlog.get_logger("rubli.services.report")
 
 
 class ReportService(BaseService):

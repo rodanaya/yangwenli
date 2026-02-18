@@ -17,7 +17,7 @@ from .base_service import BaseService
 from .query_builder import QueryBuilder
 from .pagination import paginate_query, PaginatedResult
 
-logger = structlog.get_logger("yang_wenli.services.contract")
+logger = structlog.get_logger("rubli.services.contract")
 
 # Sort field whitelist for contract listing
 CONTRACT_SORT_WHITELIST = {

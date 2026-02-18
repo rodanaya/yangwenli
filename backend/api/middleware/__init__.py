@@ -1,4 +1,4 @@
-"""Middleware package for Yang Wen-li API."""
+"""Middleware package for RUBLI API."""
 from .logging_middleware import RequestLoggingMiddleware
 from .error_handler import register_error_handlers
 

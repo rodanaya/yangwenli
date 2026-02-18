@@ -10,7 +10,7 @@ Algorithms tested:
 3. One-Class SVM - boundary-based
 4. Elliptic Envelope - assumes Gaussian distribution
 
-Author: Yang Wen-li Project
+Author: RUBLI Project
 Date: 2026-02-03
 """
 

@@ -1,4 +1,4 @@
-# Yang Wen-li - Mexican Government Procurement Analysis Platform
+# RUBLI - Mexican Government Procurement Analysis Platform
 # Docker Compose Configuration
 
 services:
@@ -7,15 +7,15 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: yangwenli-backend
-    # Port 8001 not exposed externally — nginx proxies internally via yangwenli-network
+    container_name: rubli-backend
+    # Port 8001 not exposed externally — nginx proxies internally via rubli-network
     # For dev access, uncomment: ports: ["8001:8001"]
     volumes:
       - ./backend/RUBLI_NORMALIZED.db:/app/RUBLI_NORMALIZED.db
     environment:
       - PYTHONPATH=/app
       # Add your production domain before deploying (e.g., https://yourdomain.com)
-      - CORS_ORIGINS=http://localhost:3009,http://127.0.0.1:3009,http://yangwenli-frontend
+      - CORS_ORIGINS=http://localhost:3009,http://127.0.0.1:3009,http://rubli-frontend
     healthcheck:
       test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8001/health', timeout=5)"]
       interval: 30s
@@ -24,14 +24,14 @@ services:
       start_period: 10s
     restart: unless-stopped
     networks:
-      - yangwenli-network
+      - rubli-network
 
   # Frontend (React + Nginx)
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: yangwenli-frontend
+    container_name: rubli-frontend
     ports:
       - "3009:80"
     depends_on:
@@ -39,27 +39,27 @@ services:
         condition: service_healthy
     restart: unless-stopped
     networks:
-      - yangwenli-network
+      - rubli-network
 
   # Scheduled database backup (daily at 3am UTC)
   backup:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: yangwenli-backup
+    container_name: rubli-backup
     entrypoint: ["sh", "-c", "while true; do python -m scripts.backup_database --output-dir /backups && sleep 86400; done"]
     volumes:
       - ./backend/RUBLI_NORMALIZED.db:/app/RUBLI_NORMALIZED.db:ro  # read-only for backup
-      - yangwenli-backups:/backups
+      - rubli-backups:/backups
     environment:
       - PYTHONPATH=/app
     restart: unless-stopped
     networks:
-      - yangwenli-network
+      - rubli-network
 
 networks:
-  yangwenli-network:
+  rubli-network:
     driver: bridge
 
 volumes:
-  yangwenli-backups:
+  rubli-backups:

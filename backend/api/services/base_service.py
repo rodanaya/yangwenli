@@ -15,7 +15,7 @@ from ..dependencies import get_db
 from .query_builder import QueryBuilder
 from .pagination import paginate_query, PaginatedResult
 
-logger = structlog.get_logger("yang_wenli.services")
+logger = structlog.get_logger("rubli.services")
 
 
 class BaseService:

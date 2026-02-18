@@ -1,4 +1,4 @@
-# Workflow Patterns for Yang Wen-li
+# Workflow Patterns for RUBLI
 
 > Step-by-step guides for common development workflows.
 
@@ -410,4 +410,4 @@ Claude will:
 
 ---
 
-*"The most dangerous thing is to win without thinking."* - Yang Wen-li
+*"The most dangerous thing is to win without thinking."* - RUBLI

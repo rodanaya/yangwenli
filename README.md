@@ -1,8 +1,6 @@
-# Yang Wen-li
+# RUBLI
 
 **AI-Powered Corruption Detection Platform for Mexican Government Procurement**
-
-> *"There are things that cannot be measured in terms of victory or defeat."* - Yang Wen-li
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
@@ -14,7 +12,7 @@
 
 ## What Is This?
 
-Yang Wen-li is an intelligence platform that analyzes **3.1 million Mexican federal procurement contracts** (2002-2025) worth over **6 trillion pesos**. Using a 16-feature per-sector calibrated risk model validated against 15 documented corruption cases, it identifies patterns consistent with fraud, collusion, and abuse of public funds.
+RUBLI is an intelligence platform that analyzes **3.1 million Mexican federal procurement contracts** (2002-2025) worth over **6 trillion pesos**. Using a 16-feature per-sector calibrated risk model validated against 15 documented corruption cases, it identifies patterns consistent with fraud, collusion, and abuse of public funds.
 
 This is not a simple dashboard. It is a full analytical engine with:
 
@@ -46,7 +44,7 @@ This is not a simple dashboard. It is a full analytical engine with:
 ## Architecture
 
 ```
-yangwenli/
+rubli/
 ├── backend/                  # Python/FastAPI REST API
 │   ├── api/                  # Endpoints, routers, services
 │   │   ├── routers/          # 10+ router modules
@@ -320,6 +318,3 @@ Full documentation:
 
 All Rights Reserved. Unauthorized copying, distribution, or modification is prohibited without explicit permission.
 
----
-
-*Named after Yang Wen-li from Legend of the Galactic Heroes — the pragmatic historian who valued transparency and democratic institutions over blind ambition.*

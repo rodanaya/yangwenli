@@ -198,7 +198,7 @@ def verify_migration(conn: sqlite3.Connection) -> None:
 def main():
     """Main entry point."""
     print("=" * 70)
-    print("YANG WEN-LI: GROUND TRUTH SCHEMA MIGRATION (v3.2)")
+    print("RUBLI: GROUND TRUTH SCHEMA MIGRATION (v3.2)")
     print("=" * 70)
     print(f"\nDatabase: {DB_PATH}")
     print(f"Timestamp: {datetime.now().isoformat()}")

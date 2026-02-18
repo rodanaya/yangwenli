@@ -2,7 +2,7 @@
 
 > *"Facts over guesses. Every classification must have a verified source."*
 
-This document describes the methodology used to classify vendors in the Yang Wen-li procurement analysis platform.
+This document describes the methodology used to classify vendors in the RUBLI procurement analysis platform.
 
 ---
 
@@ -320,4 +320,4 @@ WHERE industry_id = XXXX;
 
 ---
 
-*"The most important thing is not to classify, but to classify correctly."* - Yang Wen-li methodology
+*"The most important thing is not to classify, but to classify correctly."* - RUBLI methodology

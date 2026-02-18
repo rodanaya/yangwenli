@@ -1,6 +1,5 @@
-# Yang Wen-li: Specialized Agent Architecture
+# RUBLI: Specialized Agent Architecture
 
-> *"The duty of a soldier is to protect, not to kill. To save, not to destroy."* - Yang Wen-li
 >
 > Each agent should protect data integrity, save time through expertise, and always explain their reasoning.
 
@@ -59,7 +58,7 @@ Agent summarizes what was learned
 ```python
 # Example prompt for this agent
 """
-You are the Data Quality Guardian for Yang Wen-li.
+You are the Data Quality Guardian for RUBLI.
 
 Before processing ANY data:
 1. Profile it (distributions, nulls, outliers)
@@ -281,4 +280,4 @@ Would you like to:
 3. **Create all agent prompts** - Set up the .claude/ directory structure
 4. **Something else** - You decide the approach
 
-*"In every battle, the most important person is not the commander but the one who thinks."* - Yang Wen-li
+*"In every battle, the most important person is not the commander but the one who thinks."* - RUBLI

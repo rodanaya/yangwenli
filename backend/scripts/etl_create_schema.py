@@ -1,5 +1,5 @@
 """
-Yang Wen-li: Normalized Database Schema Creation
+RUBLI: Normalized Database Schema Creation
 =================================================
 Creates the RUBLI_NORMALIZED.db with a 3-level sector taxonomy
 optimized for fraud detection analytics.
@@ -22,7 +22,7 @@ Tables:
 - financial_metrics: USD conversion and inflation data
 - exchange_rates: Reference table for rates
 
-Author: Yang Wen-li Project
+Author: RUBLI Project
 Date: 2026-01-06
 """
 
@@ -1560,7 +1560,7 @@ def verify_schema(conn: sqlite3.Connection) -> None:
 def main():
     """Main entry point."""
     print("=" * 70)
-    print("YANG WEN-LI: NORMALIZED DATABASE SCHEMA CREATION")
+    print("RUBLI: NORMALIZED DATABASE SCHEMA CREATION")
     print("=" * 70)
     print(f"\nDatabase path: {DB_PATH}")
 

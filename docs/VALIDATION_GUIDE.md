@@ -1,8 +1,7 @@
 # Risk Model Validation Guide
 
-> *"The most dangerous enemy is not the one in front of you, but the one you cannot see."* - Yang Wen-li
 
-This guide explains how to validate the Yang Wen-li risk scoring model against known corruption cases.
+This guide explains how to validate the RUBLI risk scoring model against known corruption cases.
 
 ---
 
@@ -365,4 +364,4 @@ For false negatives:
 
 ---
 
-*"Victory belongs not to the strongest, but to the one who adapts."* - Yang Wen-li
+*"Victory belongs not to the strongest, but to the one who adapts."* - RUBLI

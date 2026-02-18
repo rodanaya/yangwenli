@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MCP Server for Yang Wen-li Procurement Analysis Platform.
+MCP Server for RUBLI Procurement Analysis Platform.
 
 This server exposes procurement analysis tools to Claude Code via the
 Model Context Protocol (MCP). It wraps the FastAPI backend endpoints
@@ -1287,7 +1287,7 @@ async def get_database_stats(args: dict) -> str:
         sectors = cursor.fetchall()
 
         result = f"""
-# Yang Wen-li Database Statistics
+# RUBLI Database Statistics
 
 ## Overview
 - **Database**: RUBLI_NORMALIZED.db

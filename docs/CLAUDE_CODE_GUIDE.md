@@ -1,8 +1,7 @@
-# Claude Code Guide for Yang Wen-li
+# Claude Code Guide for RUBLI
 
-> *"There are things that cannot be measured in terms of victory or defeat."* - Yang Wen-li
 
-This guide teaches you how to use Claude Code effectively with the Yang Wen-li procurement analysis platform.
+This guide teaches you how to use Claude Code effectively with the RUBLI procurement analysis platform.
 
 ---
 
@@ -34,7 +33,7 @@ When you describe a task, Claude will automatically delegate to specialized agen
 
 ## The "Ask Before Acting" Philosophy
 
-This project follows the Yang Wen-li philosophy of **thoughtful action**:
+This project follows the RUBLI philosophy of **thoughtful action**:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -61,7 +60,7 @@ This project follows the Yang Wen-li philosophy of **thoughtful action**:
 ### File Hierarchy
 
 ```
-Yang Wen-li/
+rubli/
 ├── CLAUDE.md                    # Main project instructions (shared)
 ├── CLAUDE.local.md              # Your personal preferences (not committed)
 ├── .claude/
@@ -283,4 +282,4 @@ Run `/clear` to reset, then start fresh with your question.
 
 ---
 
-*"The most important thing is not to win, but to understand."* - Yang Wen-li
+*"The most important thing is not to win, but to understand."* - RUBLI

@@ -480,7 +480,7 @@ def main():
     args = parser.parse_args()
 
     print("=" * 70)
-    print("YANG WEN-LI: GROUND TRUTH ENTITY MATCHING")
+    print("RUBLI: GROUND TRUTH ENTITY MATCHING")
     print("=" * 70)
     print(f"\nDatabase: {DB_PATH}")
     print(f"Timestamp: {datetime.now().isoformat()}")

@@ -1,5 +1,5 @@
 """
-Structlog configuration for Yang Wen-li API.
+Structlog configuration for RUBLI API.
 
 Outputs JSON-formatted structured logs to stdout (Docker-friendly).
 Call configure() once at app startup.

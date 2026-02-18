@@ -1,5 +1,5 @@
 """
-Centralized constants for the Yang Wen-li backend.
+Centralized constants for the RUBLI backend.
 
 These values were previously duplicated across 9+ files.
 Import from here instead of redefining.

@@ -1,6 +1,5 @@
-# Yang Wen-li Project Status Report
+# RUBLI Project Status Report
 
-> *"There are things that cannot be measured in terms of victory or defeat."* - Yang Wen-li
 
 **Report Date:** 2026-01-07
 **Project:** Mexican Government Procurement Analysis Platform
@@ -257,4 +256,4 @@ This document does not include time estimates per project philosophy. See ROADMA
 
 ---
 
-*"The most important thing is not to win, but to understand."* - Yang Wen-li
+*"The most important thing is not to win, but to understand."* - RUBLI

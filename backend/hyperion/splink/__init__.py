@@ -1,7 +1,7 @@
 """
 HYPERION-SPLINK: Probabilistic Vendor Deduplication
 
-> "The best strategy achieves the objective with minimum expenditure of resources." - Yang Wen-li
+> "The best strategy achieves the objective with minimum expenditure of resources." - RUBLI
 
 Uses the UK Ministry of Justice's Splink library for probabilistic record linkage
 to identify duplicate vendor entries in Mexican government procurement data.

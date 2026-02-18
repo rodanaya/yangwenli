@@ -16,7 +16,7 @@ from .base_service import BaseService
 from .query_builder import QueryBuilder
 from .pagination import paginate_query, PaginatedResult
 
-logger = structlog.get_logger("yang_wenli.services.vendor")
+logger = structlog.get_logger("rubli.services.vendor")
 
 # Sort field whitelist for vendor listing
 VENDOR_SORT_WHITELIST = {

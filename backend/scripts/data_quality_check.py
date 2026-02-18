@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Data Quality Validation Script for Yang Wen-li ETL Pipeline
+Data Quality Validation Script for RUBLI ETL Pipeline
 
 Validates the RUBLI_NORMALIZED.db database before committing to ensure
 data integrity and fitness for corruption analysis.

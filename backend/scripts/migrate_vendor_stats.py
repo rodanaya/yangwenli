@@ -14,7 +14,7 @@ on EVERY query - causing 30s timeouts.
 Solution: Pre-compute vendor statistics into a physical table.
 Expected result: Query time drops from 30s to <500ms.
 
-Author: Yang Wen-li Project
+Author: RUBLI Project
 Date: 2026-01-23
 """
 

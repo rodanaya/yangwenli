@@ -227,4 +227,4 @@ Created files for future reference:
 **Next Action**: Proceed with ETL pipeline execution
 **Monitoring**: Run check_if_problem_exists.py after ETL completes
 
-*Data Quality Guardian - Protecting Yang Wen-li from phantom data issues since 2026*
+*Data Quality Guardian - Protecting RUBLI from phantom data issues since 2026*

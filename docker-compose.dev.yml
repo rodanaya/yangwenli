@@ -1,4 +1,4 @@
-# Yang Wen-li - Development Docker Compose
+# RUBLI - Development Docker Compose
 # Use: docker-compose -f docker-compose.dev.yml up
 
 services:
@@ -7,7 +7,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: yangwenli-backend-dev
+    container_name: rubli-backend-dev
     ports:
       - "8001:8001"
     volumes:
@@ -20,14 +20,14 @@ services:
     command: uvicorn api.main:app --host 0.0.0.0 --port 8001 --reload
     restart: unless-stopped
     networks:
-      - yangwenli-network
+      - rubli-network
 
   # Frontend with Vite dev server
   frontend-dev:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
-    container_name: yangwenli-frontend-dev
+    container_name: rubli-frontend-dev
     ports:
       - "3009:3009"
     volumes:
@@ -39,8 +39,8 @@ services:
       - backend
     restart: unless-stopped
     networks:
-      - yangwenli-network
+      - rubli-network
 
 networks:
-  yangwenli-network:
+  rubli-network:
     driver: bridge

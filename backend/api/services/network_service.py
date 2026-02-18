@@ -14,7 +14,7 @@ import structlog
 
 from .base_service import BaseService
 
-logger = structlog.get_logger("yang_wenli.services.network")
+logger = structlog.get_logger("rubli.services.network")
 
 # Max contract value used to filter out data errors
 _MAX_CONTRACT_VALUE = 100_000_000_000

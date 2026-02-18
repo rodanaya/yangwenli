@@ -14,7 +14,7 @@ import structlog
 
 from .base_service import BaseService
 
-logger = structlog.get_logger("yang_wenli.services.analysis")
+logger = structlog.get_logger("rubli.services.analysis")
 
 
 def _table_exists(cursor: sqlite3.Cursor, table_name: str) -> bool:

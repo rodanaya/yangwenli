@@ -1,6 +1,6 @@
 # Institution Classification Taxonomy v2.0
 
-> Reference documentation for the Yang Wen-li institution classification system.
+> Reference documentation for the RUBLI institution classification system.
 
 **Version:** 2.0.0
 **Last Updated:** January 16, 2026
@@ -10,7 +10,7 @@
 
 ## Overview
 
-The Yang Wen-li platform classifies Mexican government institutions using a 19-type taxonomy aligned with Mexican administrative law and international anti-corruption standards. This classification enables:
+The RUBLI platform classifies Mexican government institutions using a 19-type taxonomy aligned with Mexican administrative law and international anti-corruption standards. This classification enables:
 
 - **Risk-adjusted scoring**: Institution type contributes to contract risk assessment
 - **Comparative analysis**: Fair comparison between similar institutions
@@ -303,4 +303,4 @@ Classification confidence is stored in `classification_confidence` field:
 
 ---
 
-*This taxonomy is maintained as part of the Yang Wen-li procurement analysis platform.*
+*This taxonomy is maintained as part of the RUBLI procurement analysis platform.*

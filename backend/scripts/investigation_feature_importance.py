@@ -7,7 +7,7 @@ using multiple methods: native importance, permutation importance, and SHAP.
 This helps investigators understand which features drive the anomaly detection
 at a global (sector) level, complementing the per-vendor SHAP explanations.
 
-Author: Yang Wen-li Project
+Author: RUBLI Project
 Date: 2026-02-03
 """
 

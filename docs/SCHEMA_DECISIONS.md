@@ -1,4 +1,4 @@
-# Schema Decisions: Yang Wen-li
+# Schema Decisions: RUBLI
 
 > *"Strategy without tactics is the slowest route to victory. Tactics without strategy is the noise before defeat."* - Sun Tzu
 >

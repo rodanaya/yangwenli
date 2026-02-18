@@ -1,5 +1,5 @@
 """
-Global error handlers for the Yang Wen-li API.
+Global error handlers for the RUBLI API.
 
 Translates exceptions into consistent JSON error responses.
 Never exposes internal details to clients.
@@ -10,7 +10,7 @@ import structlog
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-logger = structlog.get_logger("yang_wenli.api.errors")
+logger = structlog.get_logger("rubli.api.errors")
 
 
 class DomainError(Exception):

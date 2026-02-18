@@ -1,6 +1,6 @@
 # Institution Classification Design Document
 
-> *"To know your enemy, you must become your enemy."* - Sun Tzu (adapted by Yang Wen-li)
+> *"To know your enemy, you must become your enemy."* - Sun Tzu (adapted by RUBLI)
 
 **Version:** 1.0
 **Status:** Design Phase

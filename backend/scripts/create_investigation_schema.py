@@ -9,7 +9,7 @@ Tables:
 - case_contracts: Contracts associated with each case
 - case_questions: Investigation questions for each case
 
-Author: Yang Wen-li Project
+Author: RUBLI Project
 Date: 2026-02-03
 """
 

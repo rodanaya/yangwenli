@@ -1,6 +1,6 @@
 # Development Quick Start
 
-> Get up and running with Yang Wen-li in 5 minutes.
+> Get up and running with RUBLI in 5 minutes.
 
 ---
 
@@ -17,8 +17,8 @@
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-org/yangwenli.git
-cd yangwenli
+git clone https://github.com/rodanaya/yangwenli.git
+cd rubli
 ```
 
 ### 2. Backend Setup
@@ -72,7 +72,7 @@ npm run dev
 ## Project Structure
 
 ```
-yangwenli/
+rubli/
 ├── backend/
 │   ├── api/                 # FastAPI application
 │   │   ├── main.py          # App entry point

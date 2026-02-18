@@ -1,3 +1,3 @@
 """
-Test suite for Yang Wen-li API.
+Test suite for RUBLI API.
 """

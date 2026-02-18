@@ -1,5 +1,5 @@
 """
-Yang Wen-li: Data Quality Score Calculation
+RUBLI: Data Quality Score Calculation
 ============================================
 Calculates quality scores for contracts, vendors, and institutions
 based on completeness, validity, structure, and reliability factors.
@@ -15,7 +15,7 @@ Quality Grades:
     D (40-59):  Medium confidence - limited reliability
     F (0-39):   Low confidence - use for counts only
 
-Author: Yang Wen-li Project
+Author: RUBLI Project
 Date: 2026-01-14
 """
 
@@ -680,7 +680,7 @@ def generate_report(conn: sqlite3.Connection) -> str:
 def main():
     """Main entry point."""
     print("=" * 70)
-    print("YANG WEN-LI: DATA QUALITY SCORE CALCULATION")
+    print("RUBLI: DATA QUALITY SCORE CALCULATION")
     print("=" * 70)
     print(f"\nDatabase: {DB_PATH}")
     start_time = datetime.now()

@@ -1,4 +1,4 @@
-# Yang Wen-li Vendor Classification API
+# RUBLI Vendor Classification API
 """
 REST API for exposing verified vendor classifications.
 

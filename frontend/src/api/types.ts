@@ -1,5 +1,5 @@
 /**
- * Yang Wen-li API Types
+ * RUBLI API Types
  * Generated from backend Pydantic models
  */
 
