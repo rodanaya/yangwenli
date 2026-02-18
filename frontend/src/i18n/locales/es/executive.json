@@ -1,46 +1,209 @@
 {
-  "title": "Resumen Ejecutivo",
-  "subtitle": "Análisis de Contratación Pública Federal de México",
-  "overview": {
-    "title": "Panorama General",
-    "totalContracts": "Total de Contratos",
+  "header": {
+    "badge": "RESUMEN EJECUTIVO DE INTELIGENCIA",
+    "dateline": "Febrero 2026  |  Plataforma de Inteligencia RUBLI",
+    "title": "9.6 Billones de Pesos Bajo el Microscopio",
+    "subtitle": "Un An\u00e1lisis Integral de la Contrataci\u00f3n P\u00fablica Federal de M\u00e9xico, 2002-2025",
+    "lead": "Entre 2002 y 2025, el gobierno federal mexicano adjudic\u00f3 {{totalContracts}} contratos de contrataci\u00f3n p\u00fablica por un valor combinado de {{totalValue}} \u2014 aproximadamente {{totalValueUSD}}. Este informe presenta los hallazgos de un an\u00e1lisis sistem\u00e1tico impulsado por inteligencia artificial de cada uno de esos contratos. Utilizando un modelo calibrado por sector con 16 variables, validado contra quince casos documentados de corrupci\u00f3n, identificamos patrones consistentes con fraude, colusi\u00f3n y abuso en contratos por un valor estimado de {{valueAtRisk}} \u2014 {{pct}}% del valor total de contrataci\u00f3n. Estos hallazgos no constituyen prueba de irregularidades. Son se\u00f1ales estad\u00edsticas que ameritan investigaci\u00f3n.",
+    "contracts": "Contratos",
     "totalValue": "Valor Total",
-    "totalVendors": "Proveedores Únicos",
-    "totalInstitutions": "Instituciones",
-    "dateRange": "Período",
-    "avgContractValue": "Valor Promedio por Contrato"
+    "vendors": "Proveedores",
+    "institutions": "Instituciones"
   },
-  "riskSummary": {
-    "title": "Resumen de Riesgos",
-    "distribution": "Distribución de Riesgo",
-    "highRiskRate": "Tasa de Alto Riesgo",
-    "criticalContracts": "Contratos Críticos",
-    "oecdBenchmark": "Referencia OCDE",
-    "withinBenchmark": "Dentro del rango de referencia (2-15%)",
-    "aboveBenchmark": "Por encima del rango de referencia"
-  },
-  "sectorAnalysis": {
-    "title": "Análisis por Sector",
-    "topSectors": "Principales Sectores por Valor",
-    "riskBySector": "Riesgo por Sector",
-    "contractsBySector": "Contratos por Sector"
-  },
+
   "keyFindings": {
     "title": "Hallazgos Clave",
-    "directAwardRate": "Tasa de Adjudicación Directa",
-    "singleBidRate": "Tasa de Licitación Única",
-    "vendorConcentration": "Concentración de Proveedores",
-    "yearEndSpending": "Gasto de Fin de Año"
+    "items": [
+      "Nuestro modelo habr\u00eda detectado el fraude del IMSS 8 a\u00f1os antes de que fuera descubierto",
+      "El 7.9% del valor de contrataci\u00f3n muestra patrones consistentes con corrupci\u00f3n",
+      "La volatilidad de precios, no el tipo de procedimiento, es la se\u00f1al de corrupci\u00f3n m\u00e1s fuerte",
+      "Validado contra 15 casos reales de corrupci\u00f3n con 96% de precisi\u00f3n"
+    ]
   },
-  "methodology": {
-    "title": "Metodología",
-    "modelVersion": "Versión del Modelo",
-    "aucRoc": "AUC-ROC",
-    "groundTruthCases": "Casos de Verdad de Campo",
-    "features": "Características del Modelo"
+
+  "predictors": {
+    "price_volatility": "Volatilidad de Precios",
+    "institution_diversity": "Diversidad Institucional",
+    "win_rate": "Tasa de Adjudicaci\u00f3n",
+    "vendor_concentration": "Concentraci\u00f3n de Proveedores",
+    "sector_spread": "Dispersi\u00f3n Sectorial",
+    "industry_mismatch": "Incompatibilidad Industrial",
+    "same_day_count": "Contratos Mismo D\u00eda",
+    "direct_award": "Adjudicaci\u00f3n Directa",
+    "ad_period_days": "Per\u00edodo de Publicaci\u00f3n",
+    "institution_risk": "Riesgo Institucional",
+    "single_bid": "Licitante \u00danico",
+    "network_member_count": "Membres\u00eda en Red",
+    "year_end": "Fin de A\u00f1o Fiscal",
+    "price_ratio": "Ratio de Precios",
+    "price_hyp_confidence": "Hip\u00f3tesis de Precios",
+    "co_bid_rate": "Tasa de Co-licitaci\u00f3n"
   },
+
+  "s1": {
+    "title": "La Amenaza",
+    "p1": "De los {{totalValue}} en contrataci\u00f3n p\u00fablica analizada, un estimado de <bold>{{valueAtRisk}}</bold> \u2014 {{pct}}% del valor total \u2014 se encuentra en contratos clasificados como de riesgo alto o cr\u00edtico. Para contextualizar, el presupuesto federal anual de educaci\u00f3n de M\u00e9xico es de aproximadamente 400 mil millones de pesos. El valor en riesgo en este conjunto de datos equivale aproximadamente a {{years}} a\u00f1os de gasto educativo.",
+    "p2": "El riesgo no se distribuye uniformemente. La mayor parte del valor se\u00f1alado se concentra en un n\u00famero reducido de contratos de alto valor otorgados a proveedores dominantes en salud, infraestructura y energ\u00eda. El {{remainingPct}}% restante del valor se ubica en categor\u00edas de riesgo medio o bajo \u2014 no exento de problemas, pero menos urgentemente sospechoso.",
+    "riskDistLabel": "DISTRIBUCI\u00d3N DE RIESGO POR VALOR",
+    "riskLevel": {
+      "critical": "Cr\u00edtico",
+      "high": "Alto",
+      "medium": "Medio",
+      "low": "Bajo"
+    },
+    "criticalContracts": "Contratos cr\u00edticos",
+    "highRiskContracts": "Contratos de alto riesgo",
+    "directAwards": "Adjudicaciones directas",
+    "singleBidders": "Licitantes \u00fanicos",
+    "p3": "Un hallazgo contraintuitivo: <bold>las adjudicaciones directas no son la principal se\u00f1al de riesgo</bold>. En nuestro modelo, los procedimientos de adjudicaci\u00f3n directa tienen solo un coeficiente ligeramente positivo (+0.182), proporcionando m\u00ednima capacidad discriminatoria. La verdadera se\u00f1al de alerta no es c\u00f3mo se adjudica un contrato, sino <bold>qui\u00e9n sigue ganando</bold>. La volatilidad de precios \u2014 proveedores con montos de contratos que var\u00edan dr\u00e1sticamente \u2014 es el predictor individual m\u00e1s fuerte de corrupci\u00f3n en v5.0."
+  },
+
+  "s2": {
+    "title": "La Prueba",
+    "p1": "Cualquier modelo puede se\u00f1alar contratos. La pregunta es si se\u00f1ala los correctos. Validamos nuestro modelo contra {{cases}} casos documentados de corrupci\u00f3n mexicana que abarcan {{contracts}} contratos de {{vendors}} proveedores identificados. No son hipot\u00e9ticos \u2014 son casos que llevaron a investigaciones penales, arrestos y esc\u00e1ndalos p\u00fablicos. Se le pregunt\u00f3 al modelo: \u00bflos habr\u00edas se\u00f1alado?",
+    "p2": "La respuesta: <bold>s\u00ed, en el {{detectionRate}}% de los casos</bold> (a nivel de riesgo medio o superior). El modelo alcanza un AUC-ROC de {{auc}}, lo que significa que clasifica correctamente un contrato corrupto por encima de uno limpio el {{aucPct}}% de las veces.",
+    "detectionLabel": "TASA DE DETECCI\u00d3N ALTO+ POR CASO",
+    "nContracts": "{{count}} contratos",
+    "earlyWarning": "<accent>Valor de alerta temprana:</accent> El modelo habr\u00eda activado alarmas sobre los contratos de empresas fantasma del IMSS desde 2008 \u2014 <italic>ocho a\u00f1os</italic> antes de que el esc\u00e1ndalo se hiciera p\u00fablico en 2016. Para Segalmex, los primeros contratos se\u00f1alados preceden la investigaci\u00f3n de 2020 por varios a\u00f1os.",
+    "p3": "Las detecciones m\u00e1s fuertes ocurren en casos que involucran <bold>proveedores concentrados en salud y agricultura</bold> \u2014 IMSS (99.0%), Segalmex (94.3%), contrataci\u00f3n COVID-19 (91.8%). Estos casos comparten un patr\u00f3n com\u00fan: un n\u00famero reducido de proveedores capturando una cuota de mercado desproporcionada. La detecci\u00f3n es m\u00e1s d\u00e9bil en casos de <bold>soborno y conflicto de inter\u00e9s</bold> \u2014 Grupo Higa (33.3%), Cyber Robotic (43.2%) \u2014 donde la corrupci\u00f3n opera a trav\u00e9s de relaciones m\u00e1s que de patrones estad\u00edsticos en los datos de contrataci\u00f3n."
+  },
+
+  "s3": {
+    "title": "D\u00f3nde se Concentra el Riesgo",
+    "p1": "Tres sectores dominan el panorama de riesgo. <bold>Salud</bold> concentra el mayor volumen \u2014 {{healthContracts}} contratos por un valor de {{healthValue}}. <bold>Infraestructura</bold> tiene menos contratos pero valores unitarios enormes. <bold>Energ\u00eda</bold> combina volumen y valor en un sector con concentraci\u00f3n estructural (pocos proveedores pueden atender a Pemex y CFE).",
+    "riskLabel": "VALOR ESTIMADO EN RIESGO POR SECTOR",
+    "health": {
+      "name": "Salud",
+      "text": "El sector con mayor volumen de contratos. Sede de la red de empresas fantasma del IMSS y el fraude en contrataciones COVID-19 \u2014 dos de los tres casos de corrupci\u00f3n m\u00e1s grandes del conjunto de datos. La magnitud implica que incluso una tasa de riesgo modesta se traduce en un enorme valor absoluto en riesgo."
+    },
+    "infrastructure": {
+      "name": "Infraestructura",
+      "text": "Tasa de riesgo relativamente baja, pero dominada por megacontratos de empresas como CICSA e ICA. Un solo contrato de infraestructura se\u00f1alado puede valer m\u00e1s que miles de contratos se\u00f1alados de menor tama\u00f1o en otros sectores combinados."
+    },
+    "agriculture": {
+      "name": "Agricultura",
+      "text": "Solo el 3.2% del valor total de contrataci\u00f3n, pero desproporcionadamente representado en contratos de alto riesgo. El esc\u00e1ndalo de Segalmex (LICONSA, DICONSA) expuso fraude sistem\u00e1tico en distribuci\u00f3n de alimentos \u2014 un sector donde la supervisi\u00f3n hist\u00f3ricamente fue d\u00e9bil."
+    }
+  },
+
+  "s4": {
+    "title": "Qui\u00e9nes Est\u00e1n Involucrados",
+    "p1": "Los 10 principales proveedores por valor de contratos concentran colectivamente <bold>{{totalValue}}</bold> en contrataci\u00f3n p\u00fablica. Entre ellos, dos son participantes confirmados en casos documentados de corrupci\u00f3n. Varios otros tienen puntuaciones de riesgo superiores a 0.20, indicando patrones estad\u00edsticos consistentes con los casos de corrupci\u00f3n de nuestros datos de entrenamiento.",
+    "table": {
+      "rank": "Pos.",
+      "vendor": "Proveedor",
+      "value": "Valor",
+      "contracts": "Contratos",
+      "avgRisk": "Riesgo Prom."
+    },
+    "p2": "Es importante distinguir <bold>alto valor de alto riesgo</bold>. CICSA (Operadora CICSA) ocupa el puesto #1 por valor total de contratos con {{topValue}}B MXN, pero tiene una puntuaci\u00f3n de riesgo moderada. Por el contrario, proveedores con menos contratos pero de mayor riesgo pueden representar objetivos de investigaci\u00f3n m\u00e1s accionables. El \u00edcono <shield></shield> marca proveedores confirmados en casos documentados de corrupci\u00f3n."
+  },
+
+  "s5": {
+    "title": "La Red",
+    "p1": "La corrupci\u00f3n rara vez opera en aislamiento. Nuestro an\u00e1lisis de co-licitaci\u00f3n identific\u00f3 <bold>8,701 proveedores</bold> con patrones de licitaci\u00f3n sospechosos \u2014 proveedores que aparecen frecuentemente en los mismos procedimientos de contrataci\u00f3n pero rara vez compiten entre s\u00ed. Estos patrones afectaron m\u00e1s de <bold>1 mill\u00f3n de contratos</bold>.",
+    "p2": "Emergen dos patrones clave: la <bold>oferta de cobertura</bold>, donde socios consistentemente presentan ofertas perdedoras para crear la apariencia de competencia, y la <bold>rotaci\u00f3n de ofertas</bold>, donde proveedores se turnan para ganar en patrones predecibles. Ambos son indicadores cl\u00e1sicos de c\u00e1rteles de licitaci\u00f3n documentados por la OCDE.",
+    "suspiciousVendors": "Proveedores sospechosos",
+    "affectedContracts": "Contratos afectados",
+    "coBidThreshold": "Umbral de co-licitaci\u00f3n",
+    "p3": "La concentraci\u00f3n institucional tambi\u00e9n juega un papel cr\u00edtico. Cuando un solo proveedor captura una proporci\u00f3n desproporcionada del presupuesto de contrataci\u00f3n de una instituci\u00f3n, crea dependencia y reduce la presi\u00f3n competitiva \u2014 condiciones propicias para la corrupci\u00f3n. Nuestro an\u00e1lisis mide esto a trav\u00e9s del \u00cdndice Herfindahl-Hirschman (IHH) a nivel institucional."
+  },
+
+  "s6": {
+    "title": "Los Datos",
+    "p1": "Este an\u00e1lisis se construye sobre COMPRANET, el portal de transparencia en contrataciones p\u00fablicas federales de M\u00e9xico. Los datos abarcan cuatro estructuras distintas con niveles de calidad dram\u00e1ticamente diferentes \u2014 un desaf\u00edo que influye en todo, desde la confiabilidad de las puntuaciones de riesgo hasta la capacidad de an\u00e1lisis de redes.",
+    "structures": {
+      "a": { "quality": "M\u00e1s Baja", "note": "Las puntuaciones de riesgo pueden estar subestimadas. An\u00e1lisis de redes pr\u00e1cticamente imposible." },
+      "b": { "quality": "Mejor", "note": "Texto en MAY\u00daSCULAS. 72.2% tasa de adjudicaci\u00f3n directa. Identificaci\u00f3n de proveedores mejorando." },
+      "c": { "quality": "Buena", "note": "Texto mixto. 78.4% tasa de adjudicaci\u00f3n directa. Confiable para la mayor\u00eda de an\u00e1lisis." },
+      "d": { "quality": "\u00d3ptima", "note": "100% c\u00f3digos de partida. Datos m\u00e1s ricos disponibles." }
+    },
+    "rfc": "RFC",
+    "trillionLesson": "<accent>La lecci\u00f3n del bill\u00f3n de pesos:</accent> Un an\u00e1lisis previo de estos datos incluy\u00f3 7 contratos con valores superiores a 1 bill\u00f3n de pesos \u2014 errores obvios de punto decimal que destruyeron todas las anal\u00edticas. Estos contratos, de ser reales, habr\u00edan representado el 12.5% del presupuesto federal completo de M\u00e9xico cada uno. Ahora rechazamos cualquier contrato que exceda 100 mil millones de MXN y se\u00f1alamos contratos superiores a 10 mil millones para revisi\u00f3n manual.",
+    "p2": "La validaci\u00f3n de montos es cr\u00edtica: el presupuesto federal completo de M\u00e9xico es de aproximadamente 8 billones de MXN anuales. Los contratos leg\u00edtimos m\u00e1s grandes de PEMEX t\u00edpicamente oscilan entre 1 y 5 mil millones de MXN. Nuestras reglas de validaci\u00f3n aseguran que los errores de datos no corrompan silenciosamente las anal\u00edticas."
+  },
+
+  "s7": {
+    "title": "A Trav\u00e9s de las Administraciones",
+    "p1": "El riesgo de corrupci\u00f3n ha demostrado ser notablemente persistente a trav\u00e9s de las transiciones pol\u00edticas. Ninguna administraci\u00f3n ha sido inmune, aunque el <italic>car\u00e1cter</italic> del riesgo var\u00eda \u2014 desde limitaciones de calidad de datos en la era Fox, hasta concentraci\u00f3n de volumen bajo Pe\u00f1a Nieto, hasta las tasas m\u00e1s altas de adjudicaci\u00f3n directa bajo AMLO.",
+    "labels": {
+      "contracts": "Contratos",
+      "value": "Valor",
+      "highRisk": "Alto Riesgo",
+      "directAward": "Adj. Directa"
+    },
+    "narratives": {
+      "Fox": "Per\u00edodo de datos m\u00e1s temprano (Estructura A) con la menor calidad \u2014 0.1% de cobertura RFC. Las puntuaciones de riesgo pueden estar subestimadas. Datos de adjudicaci\u00f3n directa no disponibles para este per\u00edodo.",
+      "Calderon": "El volumen de contratos se duplic\u00f3 con la modernizaci\u00f3n de COMPRANET. La red de empresas fantasma del IMSS comenz\u00f3 operaciones durante este per\u00edodo, con los primeros contratos fechados en 2008.",
+      "Pena Nieto": "Mayor volumen de contrataci\u00f3n de cualquier administraci\u00f3n. 73.4% adjudicaciones directas. Per\u00edodo del esc\u00e1ndalo de sobornos de Odebrecht, La Estafa Maestra y el caso de conflicto de inter\u00e9s de Grupo Higa.",
+      "AMLO": "Mayor tasa de riesgo observada y mayor porcentaje de adjudicaci\u00f3n directa con 79.5%. Los esc\u00e1ndalos de Segalmex y contrataciones COVID-19 ocurrieron durante esta administraci\u00f3n.",
+      "Sheinbaum": "Solo datos iniciales (2025). Ligera disminuci\u00f3n tanto en tasa de riesgo como en porcentaje de adjudicaci\u00f3n directa respecto al predecesor. Demasiado temprano para una evaluaci\u00f3n concluyente."
+    }
+  },
+
+  "s8": {
+    "title": "C\u00f3mo lo Sabemos",
+    "p1": "El modelo v5.0 transforma el an\u00e1lisis de contrataci\u00f3n de una lista de verificaci\u00f3n de indicadores ponderados a un <bold>marco de probabilidades calibradas</bold>. Cada contrato recibe una puntuaci\u00f3n que representa la probabilidad estimada de corrupci\u00f3n, derivada de 16 variables normalizadas contra l\u00edneas base sectoriales y anuales usando z-scores, con detecci\u00f3n de anomal\u00edas multivariada v\u00eda distancia de Mahalanobis y regresi\u00f3n log\u00edstica bayesiana entrenada con {{contracts}} contratos confirmados como irregulares.",
+    "discriminationPower": "Poder discriminatorio",
+    "calibrationQuality": "Calidad de calibraci\u00f3n",
+    "vsRandom": "vs l\u00ednea base aleatoria",
+    "coeffLabel": "COEFICIENTES DEL MODELO (PRINCIPALES PREDICTORES)",
+    "reducesRisk": "\u2190 Reduce riesgo",
+    "increasesRisk": "Aumenta riesgo \u2192",
+    "p2": "<bold>La volatilidad de precios es el predictor individual m\u00e1s fuerte</bold> \u2014 proveedores cuyos montos de contratos var\u00edan dr\u00e1sticamente en su portafolio son los m\u00e1s sospechosos. Esto desaf\u00eda el kit de herramientas anticorrupci\u00f3n est\u00e1ndar. La diversidad institucional y la tasa de adjudicaci\u00f3n completan los tres principales, mientras que indicadores tradicionales como licitaci\u00f3n \u00fanica y co-licitaci\u00f3n proporcionan poca se\u00f1al discriminatoria."
+  },
+
+  "s9": {
+    "title": "Lo Que No Podemos Ver",
+    "p1": "La honestidad intelectual exige declarar lo que este an\u00e1lisis no puede hacer. Un modelo de riesgo es una lente, no un or\u00e1culo. Amplifica patrones de datos hist\u00f3ricos, lo que significa que es ciego a cualquier cosa que no se parezca al pasado.",
+    "limitations": {
+      "groundTruth": {
+        "title": "Concentraci\u00f3n de Verdad de Campo",
+        "text": "Aunque la verdad de campo se ha diversificado a 15 casos en los 12 sectores, los tres casos m\u00e1s grandes (IMSS, Segalmex, COVID) a\u00fan contribuyen la mayor\u00eda de contratos de entrenamiento. El modelo sobresale detectando fraude basado en concentraci\u00f3n, pero puede subdetectar esquemas de corrupci\u00f3n novedosos."
+      },
+      "dataQuality": {
+        "title": "La Calidad de Datos se Degrada con el Tiempo",
+        "text": "Los datos de Estructura A (2002-2010) tienen solo 0.1% de cobertura RFC, haciendo poco confiable la identificaci\u00f3n de proveedores. Las puntuaciones de riesgo para este per\u00edodo pueden estar subestimadas, y el an\u00e1lisis de redes es pr\u00e1cticamente imposible."
+      },
+      "correlation": {
+        "title": "Correlaci\u00f3n No Es Causalidad",
+        "text": "Una puntuaci\u00f3n de riesgo alta indica anomal\u00eda estad\u00edstica consistente con patrones de corrupci\u00f3n conocidos \u2014 no constituye prueba de irregularidades. Algunos sectores (Defensa, Energ\u00eda) tienen razones estructurales para la concentraci\u00f3n de proveedores que no son corruptas."
+      },
+      "unknowns": {
+        "title": "Inc\u00f3gnitas Desconocidas",
+        "text": "Los esquemas de corrupci\u00f3n novedosos que no se parezcan a los 15 casos documentados no ser\u00e1n se\u00f1alados por este modelo. El modelo detecta lo que fue entrenado a reconocer \u2014 patrones del pasado, no innovaci\u00f3n en el fraude."
+      }
+    }
+  },
+
+  "s10": {
+    "title": "Lo Que Viene",
+    "p1": "Este an\u00e1lisis no es un punto final \u2014 es un punto de partida para la investigaci\u00f3n. El modelo ha identificado d\u00f3nde buscar. Los siguientes pasos maximizar\u00edan el impacto de la plataforma en la integridad de las contrataciones.",
+    "actions": {
+      "investigate": {
+        "title": "Investigar Proveedores de Alta Concentraci\u00f3n",
+        "description": "Los proveedores con puntuaciones de riesgo cr\u00edtico concentran colectivamente m\u00e1s de 1 bill\u00f3n de MXN en contrataci\u00f3n. Comenzar con los 50 principales por valor ponderado por riesgo.",
+        "link": "Abrir Investigaci\u00f3n"
+      },
+      "safeguards": {
+        "title": "Fortalecer Salvaguardas Competitivas",
+        "description": "El problema no es qu\u00e9 tipo de procedimiento se usa, sino qui\u00e9n participa y gana. Enfocar la supervisi\u00f3n en la concentraci\u00f3n de proveedores m\u00e1s que en la clasificaci\u00f3n de procedimientos.",
+        "link": "Ver Patrones"
+      },
+      "diversify": {
+        "title": "Diversificar Verdad de Campo",
+        "description": "El modelo necesita m\u00e1s casos de entrenamiento de los sectores de infraestructura, defensa y tecnolog\u00eda. Los informes de auditor\u00eda de la ASF e investigaciones de Mexicanos Contra la Corrupci\u00f3n son fuentes prometedoras.",
+        "link": "Verdad de Campo"
+      }
+    }
+  },
+
   "footer": {
-    "disclaimer": "Las puntuaciones de riesgo son probabilidades calibradas con intervalos de confianza. Una puntuación alta indica anomalía estadística consistente con patrones de corrupción — no constituye prueba de irregularidades.",
-    "copyright": "Yang Wen-li — Plataforma de Análisis de Contratación Pública"
+    "platform": "Plataforma de Inteligencia RUBLI",
+    "compranet": "COMPRANET 2002-2025",
+    "sectors": "12 sectores",
+    "quote": "\"Hay cosas que no pueden medirse en t\u00e9rminos de victoria o derrota.\"",
+    "copyright": "\u00a9 {{year}} Proyecto RUBLI. Todos los Derechos Reservados.",
+    "disclaimer": "Las puntuaciones de riesgo son probabilidades calibradas con intervalos de confianza. Una puntuaci\u00f3n alta indica anomal\u00eda estad\u00edstica consistente con patrones de corrupci\u00f3n \u2014 no constituye prueba de irregularidades."
   }
 }

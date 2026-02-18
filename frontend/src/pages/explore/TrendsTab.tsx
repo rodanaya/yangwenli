@@ -311,7 +311,7 @@ export default function TrendsTab() {
     <div className="space-y-4">
       {/* Year Selector + Admin Badge */}
       <Card>
-        <CardContent className="p-3">
+        <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
@@ -345,7 +345,7 @@ export default function TrendsTab() {
           </div>
           {currentAdmin && (
             <div className="flex items-center justify-center mt-1.5">
-              <Badge variant="outline" className="text-[10px] text-text-muted border-border">
+              <Badge variant="outline" className="text-xs text-text-muted border-border">
                 {currentAdmin.name} Administration ({currentAdmin.start}-{currentAdmin.end})
               </Badge>
             </div>
@@ -479,7 +479,7 @@ export default function TrendsTab() {
                         label={{
                           value: admin.name,
                           position: 'insideTopLeft',
-                          style: { fill: 'var(--color-text-muted)', fontSize: 9, fontFamily: 'var(--font-mono)' },
+                          style: { fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' },
                         }}
                       />
                     ))}
@@ -501,7 +501,7 @@ export default function TrendsTab() {
                       label={{
                         value: 'Bundled data',
                         position: 'insideTopRight',
-                        style: { fill: 'var(--color-text-muted)', fontSize: 8, fontFamily: 'var(--font-mono)' },
+                        style: { fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' },
                       }}
                     />
                     <Bar
@@ -580,7 +580,7 @@ export default function TrendsTab() {
                       label={{
                         value: 'Majority',
                         position: 'right',
-                        style: { fill: 'var(--color-text-muted)', fontSize: 8, fontFamily: 'var(--font-mono)' },
+                        style: { fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' },
                       }}
                     />
                     <RechartsTooltip
@@ -673,7 +673,7 @@ export default function TrendsTab() {
                       verticalAlign="bottom"
                       height={24}
                       iconSize={8}
-                      wrapperStyle={{ fontSize: 9, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}
+                      wrapperStyle={{ fontSize: 10, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}
                     />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -699,7 +699,7 @@ export default function TrendsTab() {
                     key={p.id}
                     onClick={() => setRadarPreset(p.id)}
                     className={cn(
-                      'px-2 py-0.5 text-[10px] rounded-full border transition-colors font-mono',
+                      'px-2 py-0.5 text-xs rounded-full border transition-colors font-mono',
                       radarPreset === p.id
                         ? 'bg-accent/20 border-accent text-accent'
                         : 'border-border text-text-muted hover:border-text-muted'
@@ -716,7 +716,7 @@ export default function TrendsTab() {
               </CardDescription>
               <button
                 onClick={() => { setRadarShowAll(!radarShowAll); setHiddenSectors(new Set()) }}
-                className="text-[10px] text-text-muted hover:text-accent transition-colors font-mono"
+                className="text-xs text-text-muted hover:text-accent transition-colors font-mono"
               >
                 {radarShowAll ? 'Top 6' : 'All 12'}
               </button>
@@ -737,7 +737,7 @@ export default function TrendsTab() {
                     <PolarRadiusAxis
                       angle={90}
                       domain={[0, 100]}
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 9 }}
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
                       tickCount={4}
                     />
                     {radarData.sectors.map((sector) => (
@@ -792,7 +792,7 @@ export default function TrendsTab() {
                         return next
                       })}
                       className={cn(
-                        'flex items-center gap-1 text-[10px] transition-opacity cursor-pointer',
+                        'flex items-center gap-1 text-xs transition-opacity cursor-pointer',
                         hiddenSectors.has(s.code) ? 'opacity-30' : 'opacity-100'
                       )}
                     >
@@ -883,7 +883,7 @@ export default function TrendsTab() {
                 </ResponsiveContainer>
                 <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 -mt-1">
                   {sectorBubbleData.map((s) => (
-                    <span key={s.code} className="flex items-center gap-1 text-[10px] text-text-muted">
+                    <span key={s.code} className="flex items-center gap-1 text-xs text-text-muted">
                       <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
                       {s.name}
                     </span>
@@ -1060,7 +1060,7 @@ export default function TrendsTab() {
                         value: 'contracts/vendor',
                         angle: -90,
                         position: 'insideRight',
-                        style: { fill: '#c084fc', fontSize: 9, fontFamily: 'var(--font-mono)' },
+                        style: { fill: '#c084fc', fontSize: 10, fontFamily: 'var(--font-mono)' },
                         offset: 10,
                       }}
                     />
@@ -1080,7 +1080,7 @@ export default function TrendsTab() {
                               <div className="flex items-center justify-between gap-4 mb-1">
                                 <span className="font-medium">{data.year}</span>
                                 <span
-                                  className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                                  className="text-xs font-mono px-1.5 py-0.5 rounded"
                                   style={{ color: concentrationColor, background: `${concentrationColor}15` }}
                                 >
                                   {concentrationLabel}
@@ -1146,7 +1146,7 @@ export default function TrendsTab() {
                       verticalAlign="bottom"
                       height={24}
                       iconSize={8}
-                      wrapperStyle={{ fontSize: 9, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}
+                      wrapperStyle={{ fontSize: 10, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}
                     />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -1164,7 +1164,7 @@ export default function TrendsTab() {
               <Flag className="h-3.5 w-3.5" />
               Key Events
               {yearEvents.length > 0 && (
-                <Badge variant="outline" className="text-[9px] px-1 py-0 ml-1">
+                <Badge variant="outline" className="text-xs px-1 py-0 ml-1">
                   {yearEvents.length} in {selectedYear}
                 </Badge>
               )}
@@ -1191,19 +1191,19 @@ export default function TrendsTab() {
                         {event.impact === 'high' && (
                           <Badge
                             variant="outline"
-                            className="text-[8px] px-1 py-0 bg-risk-high/10 border-risk-high/30 text-risk-high shrink-0"
+                            className="text-xs px-1 py-0 bg-risk-high/10 border-risk-high/30 text-risk-high shrink-0"
                           >
                             High
                           </Badge>
                         )}
-                        <span className="text-[10px] text-text-muted shrink-0 ml-auto">{event.date}</span>
+                        <span className="text-xs text-text-muted shrink-0 ml-auto">{event.date}</span>
                       </div>
-                      <p className="text-[10px] text-text-muted mt-0.5 pl-5 line-clamp-1">{event.description}</p>
+                      <p className="text-xs text-text-muted mt-0.5 pl-5 line-clamp-1">{event.description}</p>
                     </div>
                   )
                 })}
                 {yearEvents.length === 0 && (
-                  <p className="text-[10px] text-text-muted text-center py-2">
+                  <p className="text-xs text-text-muted text-center py-2">
                     No events for {selectedYear}
                   </p>
                 )}
@@ -1220,7 +1220,7 @@ export default function TrendsTab() {
                             <button
                               key={event.id}
                               onClick={() => setSelectedYear(event.year)}
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] text-text-muted hover:bg-background-elevated transition-colors border border-border/30"
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs text-text-muted hover:bg-background-elevated transition-colors border border-border/30"
                             >
                               <IconComp className="h-2.5 w-2.5 shrink-0" />
                               <span className="truncate max-w-[120px]">{event.title}</span>

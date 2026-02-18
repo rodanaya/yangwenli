@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { toTitleCase, formatCompactMXN, formatCompactUSD, formatDate } from '@/lib/utils'
 import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
 import { Link } from 'react-router-dom'
+import { RiskExplanationPanel } from '@/components/RiskExplanation'
 import {
   Building2,
   Calendar,
@@ -59,7 +60,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                   {toTitleCase(contract.title || 'Untitled Contract')}
                 </p>
 
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="grid grid-cols-2 gap-4 text-sm">
                   <InfoRow icon={User} label="Vendor">
                     {contract.vendor_id ? (
                       <Link
@@ -132,7 +133,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                     </span>
                   ) : null}
                   {contract.risk_model_version && (
-                    <span className="text-[10px] text-text-muted font-mono">
+                    <span className="text-xs text-text-muted font-mono">
                       {contract.risk_model_version}
                     </span>
                   )}
@@ -157,22 +158,25 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
 
                 <div className="flex gap-2 flex-wrap">
                   {contract.is_direct_award && (
-                    <Badge className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                    <Badge className="text-xs bg-risk-high/20 text-risk-high border border-risk-high/30">
                       Direct Award
                     </Badge>
                   )}
                   {contract.is_single_bid && (
-                    <Badge className="text-[10px] bg-red-500/20 text-red-400 border border-red-500/30">
+                    <Badge className="text-xs bg-risk-critical/20 text-risk-critical border border-risk-critical/30">
                       Single Bid
                     </Badge>
                   )}
                   {contract.is_year_end && (
-                    <Badge variant="outline" className="text-[10px]">Year-End</Badge>
+                    <Badge variant="outline" className="text-xs">Year-End</Badge>
                   )}
                   {contract.is_high_value && (
-                    <Badge variant="outline" className="text-[10px]">High Value</Badge>
+                    <Badge variant="outline" className="text-xs">High Value</Badge>
                   )}
                 </div>
+
+                {/* v5.0 Risk Explanation */}
+                <RiskExplanationPanel contractId={contract.id} compact />
               </div>
             </section>
 
@@ -205,7 +209,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
 
             {/* Data quality footer */}
             {(contract.data_quality_grade || contract.source_structure) && (
-              <div className="flex items-center gap-3 text-[10px] text-text-muted border-t border-border pt-3">
+              <div className="flex items-center gap-3 text-xs text-text-muted border-t border-border pt-3">
                 {contract.data_quality_grade && (
                   <span>Quality: {contract.data_quality_grade}</span>
                 )}
@@ -230,7 +234,7 @@ function InfoRow({ icon: Icon, label, children }: {
     <div className="flex items-start gap-2">
       <Icon className="h-3.5 w-3.5 text-text-muted mt-0.5 shrink-0" aria-hidden="true" />
       <div>
-        <p className="text-[10px] text-text-muted uppercase tracking-wider">{label}</p>
+        <p className="text-xs text-text-muted uppercase tracking-wider">{label}</p>
         <div className="text-sm text-text-primary">{children}</div>
       </div>
     </div>
@@ -241,7 +245,7 @@ function DetailRow({ label, value }: { label: string; value?: string | null }) {
   if (!value) return null
   return (
     <div>
-      <p className="text-[10px] text-text-muted uppercase tracking-wider">{label}</p>
+      <p className="text-xs text-text-muted uppercase tracking-wider">{label}</p>
       <p className="text-sm text-text-primary">{toTitleCase(value)}</p>
     </div>
   )
@@ -252,7 +256,7 @@ function LoadingSkeleton() {
     <div className="space-y-5">
       <div className="space-y-3">
         <Skeleton className="h-5 w-3/4" />
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-4">
           <Skeleton className="h-10" />
           <Skeleton className="h-10" />
           <Skeleton className="h-10" />

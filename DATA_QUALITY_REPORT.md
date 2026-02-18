@@ -1,8 +1,8 @@
 # Data Quality Validation Report
 
-**Generated:** 2026-01-14 10:58:35
+**Generated:** 2026-02-17 13:21:17
 **Database:** `D:\Python\yangwenli\backend\RUBLI_NORMALIZED.db`
-**Total Contracts:** 3,110,017
+**Total Contracts:** 3,110,007
 
 ---
 ## Pass/Fail Summary
@@ -10,7 +10,7 @@
 ### WARNINGS
 - WARNING: contract_date completeness 47.9% below threshold 95%
 - WARNING: 935 contracts have start_date > end_date
-- WARNING: 27 contracts with invalid years: 1900 (1), 1906 (1), 1981 (1), 2000 (1), 2001 (19)...
+- WARNING: 20 contracts with invalid years: 2000 (1), 2001 (19)...
 
 ### INFORMATIONAL
 - INFO: 40 contracts between 10B-100B MXN (flagged for review)
@@ -21,13 +21,13 @@
 
 | Field | Null/Missing | Total | Rate | Threshold | Status |
 |-------|-------------|-------|------|-----------|--------|
-| vendor_id | 0 | 3,110,017 | 100.00% | 100% | PASS |
-| institution_id | 0 | 3,110,017 | 100.00% | 100% | PASS |
-| amount_mxn | 1,385 | 3,110,017 | 99.96% | 99% | PASS |
-| contract_date | 1,620,316 | 3,110,017 | 47.90% | 95% | FAIL |
-| procedure_type | 550 | 3,110,017 | 99.98% | 95% | PASS |
-| contract_number | 15,092 | 3,110,017 | 99.51% | 90% | PASS |
-| contract_year | 0 | 3,110,017 | 100.00% | 90% | PASS |
+| vendor_id | 0 | 3,110,007 | 100.00% | 100% | PASS |
+| institution_id | 0 | 3,110,007 | 100.00% | 100% | PASS |
+| amount_mxn | 1,385 | 3,110,007 | 99.96% | 99% | PASS |
+| contract_date | 1,620,323 | 3,110,007 | 47.90% | 95% | FAIL |
+| procedure_type | 550 | 3,110,007 | 99.98% | 95% | PASS |
+| contract_number | 15,092 | 3,110,007 | 99.51% | 90% | PASS |
+| contract_year | 7 | 3,110,007 | 100.00% | 90% | PASS |
 
 ---
 ## 2. Consistency Checks
@@ -52,14 +52,8 @@
 
 | Year | Count |
 |------|-------|
-| 1900 | 1 |
-| 1906 | 1 |
-| 1981 | 1 |
 | 2000 | 1 |
 | 2001 | 19 |
-| 2031 | 2 |
-| 2047 | 1 |
-| 2048 | 1 |
 
 ---
 ## 4. Uniqueness Checks
@@ -97,12 +91,12 @@
 
 | Sector | Contracts | Percentage |
 |--------|-----------|------------|
-| Salud | 1,103,321 | 35.5% |
-| Agricultura | 454,934 | 14.6% |
+| Salud | 1,103,317 | 35.5% |
+| Agricultura | 454,931 | 14.6% |
 | Educacion | 335,853 | 10.8% |
 | Infraestructura | 326,592 | 10.5% |
-| Energia | 315,968 | 10.2% |
-| Hacienda | 151,315 | 4.9% |
+| Energia | 315,967 | 10.2% |
+| Hacienda | 151,313 | 4.9% |
 | Gobernacion | 120,029 | 3.9% |
 | Medio Ambiente | 92,635 | 3.0% |
 | Defensa | 79,505 | 2.6% |
@@ -135,7 +129,7 @@ All blocking criteria have been met. The database is ready for commit.
 **Note:** There are warnings that should be reviewed but are not blocking:
 - WARNING: contract_date completeness 47.9% below threshold 95%
 - WARNING: 935 contracts have start_date > end_date
-- WARNING: 27 contracts with invalid years: 1900 (1), 1906 (1), 1981 (1), 2000 (1), 2001 (19)...
+- WARNING: 20 contracts with invalid years: 2000 (1), 2001 (19)...
 
 ---
 

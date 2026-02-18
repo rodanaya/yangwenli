@@ -24,37 +24,44 @@ function renderSidebar(props: { collapsed?: boolean; onToggle?: () => void } = {
 describe('Sidebar', () => {
   it('renders overview navigation items when expanded', () => {
     renderSidebar({ collapsed: false })
-    expect(screen.getByText('Executive')).toBeInTheDocument()
+    expect(screen.getByText('Executive Summary')).toBeInTheDocument()
     expect(screen.getByText('Dashboard')).toBeInTheDocument()
-    expect(screen.getByText('Explore')).toBeInTheDocument()
-    expect(screen.getByText('Contracts')).toBeInTheDocument()
+    expect(screen.getByText('Explore Data')).toBeInTheDocument()
   })
 
   it('renders brand text when expanded', () => {
     renderSidebar({ collapsed: false })
-    expect(screen.getByText('YANG WEN-LI')).toBeInTheDocument()
+    expect(screen.getByText('RUBLI')).toBeInTheDocument()
     expect(screen.getByText('INTEL PLATFORM')).toBeInTheDocument()
   })
 
   it('renders section headers when expanded', () => {
     renderSidebar({ collapsed: false })
     expect(screen.getByText('OVERVIEW')).toBeInTheDocument()
+    expect(screen.getByText('ANALYZE')).toBeInTheDocument()
     expect(screen.getByText('INVESTIGATE')).toBeInTheDocument()
     expect(screen.getByText('UNDERSTAND')).toBeInTheDocument()
   })
 
+  it('renders analyze nav items', () => {
+    renderSidebar({ collapsed: false })
+    expect(screen.getByText('Fraud Patterns')).toBeInTheDocument()
+    expect(screen.getByText('Red Flags')).toBeInTheDocument()
+    expect(screen.getByText('Money Flow')).toBeInTheDocument()
+    expect(screen.getByText('All Contracts')).toBeInTheDocument()
+  })
+
   it('renders investigate nav items', () => {
     renderSidebar({ collapsed: false })
-    expect(screen.getByText('Patterns')).toBeInTheDocument()
-    expect(screen.getByText('Red Flags')).toBeInTheDocument()
-    expect(screen.getByText('Network')).toBeInTheDocument()
-    expect(screen.getByText('Watchlist')).toBeInTheDocument()
+    expect(screen.getByText('Institution Health')).toBeInTheDocument()
+    expect(screen.getByText('Vendor Network')).toBeInTheDocument()
+    expect(screen.getByText('My Watchlist')).toBeInTheDocument()
+    expect(screen.getByText('Case Manager')).toBeInTheDocument()
   })
 
   it('renders understand nav items', () => {
     renderSidebar({ collapsed: false })
     expect(screen.getByText('Sectors')).toBeInTheDocument()
-    expect(screen.getByText('Institutions')).toBeInTheDocument()
     expect(screen.getByText('Methodology')).toBeInTheDocument()
     expect(screen.getByText('Settings')).toBeInTheDocument()
   })
@@ -69,13 +76,14 @@ describe('Sidebar', () => {
 
   it('hides brand text when collapsed', () => {
     renderSidebar({ collapsed: true })
-    expect(screen.queryByText('YANG WEN-LI')).not.toBeInTheDocument()
+    expect(screen.queryByText('RUBLI')).not.toBeInTheDocument()
     expect(screen.queryByText('INTEL PLATFORM')).not.toBeInTheDocument()
   })
 
   it('hides section headers when collapsed', () => {
     renderSidebar({ collapsed: true })
     expect(screen.queryByText('OVERVIEW')).not.toBeInTheDocument()
+    expect(screen.queryByText('ANALYZE')).not.toBeInTheDocument()
     expect(screen.queryByText('INVESTIGATE')).not.toBeInTheDocument()
     expect(screen.queryByText('UNDERSTAND')).not.toBeInTheDocument()
   })

@@ -24,6 +24,7 @@ import {
   Brain,
   Crosshair,
   ScrollText,
+  ShoppingCart,
 } from 'lucide-react'
 import { LOGHIcon } from '@/components/LOGHIcon'
 import { LanguageToggle } from '@/components/LanguageToggle'
@@ -55,15 +56,19 @@ const overviewNavDefs: NavItemDef[] = [
   { i18nKey: 'explore', href: '/explore', icon: Compass },
 ]
 
-const investigateNavDefs: NavItemDef[] = [
+const analyzeNavDefs: NavItemDef[] = [
   { i18nKey: 'patterns', href: '/patterns', icon: Fingerprint },
   { i18nKey: 'redFlags', href: '/red-flags', icon: AlertTriangle },
   { i18nKey: 'moneyFlow', href: '/money-flow', icon: Banknote },
   { i18nKey: 'temporal', href: '/temporal', icon: Clock },
-  { i18nKey: 'administrations', href: '/administrations', icon: Landmark },
-  { i18nKey: 'institutions', href: '/institutions/health', icon: Building2 },
   { i18nKey: 'pricing', href: '/price-analysis', icon: DollarSign },
+  { i18nKey: 'categories', href: '/categories', icon: ShoppingCart },
   { i18nKey: 'contracts', href: '/contracts', icon: FileText },
+]
+
+const investigateNavDefs: NavItemDef[] = [
+  { i18nKey: 'institutions', href: '/institutions/health', icon: Building2 },
+  { i18nKey: 'administrations', href: '/administrations', icon: Landmark },
   { i18nKey: 'network', href: '/network', icon: Network },
   { i18nKey: 'watchlist', href: '/watchlist', icon: Eye },
   { i18nKey: 'investigation', href: '/investigation', icon: Crosshair },
@@ -86,6 +91,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { t } = useTranslation('nav')
 
   const overviewNavItems = useNavItems(overviewNavDefs)
+  const analyzeNavItems = useNavItems(analyzeNavDefs)
   const investigateNavItems = useNavItems(investigateNavDefs)
   const understandNavItems = useNavItems(understandNavDefs)
 
@@ -105,10 +111,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           </div>
           {!collapsed && (
             <div className="flex flex-col min-w-0">
-              <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-text-primary font-[var(--font-family-mono)]">
-                YANG WEN-LI
+              <span className="text-xs font-bold tracking-wider uppercase text-text-primary font-mono">
+                RUBLI
               </span>
-              <span className="text-[9px] tracking-[0.15em] uppercase text-accent/70">
+              <span className="text-xs tracking-wider uppercase text-accent">
                 INTEL PLATFORM
               </span>
             </div>
@@ -122,6 +128,18 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           {/* Overview section */}
           <NavSection title={t('sections.overview')} collapsed={collapsed}>
             {overviewNavItems.map((item) => (
+              <SidebarNavItem
+                key={item.href}
+                item={item}
+                collapsed={collapsed}
+                isActive={location.pathname === item.href}
+              />
+            ))}
+          </NavSection>
+
+          {/* Analyze section */}
+          <NavSection title={t('sections.analyze')} collapsed={collapsed}>
+            {analyzeNavItems.map((item) => (
               <SidebarNavItem
                 key={item.href}
                 item={item}
@@ -193,7 +211,7 @@ function NavSection({ title, collapsed, children }: { title: string; collapsed: 
     <div>
       {!collapsed && (
         <div className="mb-1.5 px-2 flex items-center gap-2">
-          <span className="text-[9px] font-semibold tracking-[0.2em] text-text-muted/60 font-[var(--font-family-mono)]">
+          <span className="text-xs font-semibold tracking-wider text-text-secondary font-mono">
             {title}
           </span>
           <div className="flex-1 h-px bg-border/30" />
@@ -214,7 +232,7 @@ function SidebarNavItem({ item, collapsed, isActive }: { item: NavItem; collapse
     <NavLink
       to={item.href}
       className={cn(
-        'group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-all duration-150',
+        'group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-all duration-150',
         'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
         isActive
           ? 'text-accent bg-accent/10'
@@ -233,7 +251,7 @@ function SidebarNavItem({ item, collapsed, isActive }: { item: NavItem; collapse
       )} aria-hidden="true" />
       {!collapsed && <span className="truncate">{item.title}</span>}
       {!collapsed && item.badge && (
-        <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded px-1 text-[9px] font-bold tracking-wide uppercase bg-accent/15 text-accent">
+        <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded px-1 text-xs font-bold tracking-wide uppercase bg-accent/15 text-accent">
           {item.badge}
         </span>
       )}

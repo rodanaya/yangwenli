@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ChartSkeleton } from '@/components/LoadingSkeleton'
 import { cn, formatNumber } from '@/lib/utils'
 import { RISK_COLORS, SECTORS } from '@/lib/constants'
+import { PageHero } from '@/components/DashboardWidgets'
 import { analysisApi } from '@/api/client'
 import { SectionDescription } from '@/components/SectionDescription'
 import type { RiskFactorFrequency, FactorCooccurrence } from '@/api/types'
@@ -35,7 +36,6 @@ import {
   AlertTriangle,
   Fingerprint,
   Users,
-  Shield,
   Layers,
   Zap,
   ArrowRight,
@@ -159,16 +159,16 @@ function riskScoreToColor(score: number): string {
 
 /** Map a lift value to a background color class string */
 function liftToColor(lift: number): string {
-  if (lift >= 2) return 'bg-red-500/30 text-red-300'
-  if (lift >= 1.5) return 'bg-orange-500/25 text-orange-300'
-  if (lift >= 1) return 'bg-yellow-500/20 text-yellow-300'
+  if (lift >= 2) return 'bg-risk-critical/30 text-risk-critical'
+  if (lift >= 1.5) return 'bg-risk-high/25 text-risk-high'
+  if (lift >= 1) return 'bg-risk-medium/20 text-risk-medium'
   return 'bg-zinc-700/30 text-text-muted'
 }
 
 function liftToBadgeColor(lift: number): string {
-  if (lift >= 2) return 'bg-red-500/20 text-red-400 border border-red-500/30'
-  if (lift >= 1.5) return 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-  if (lift >= 1) return 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+  if (lift >= 2) return 'bg-risk-critical/20 text-risk-critical border border-risk-critical/30'
+  if (lift >= 1.5) return 'bg-risk-high/20 text-risk-high border border-risk-high/30'
+  if (lift >= 1) return 'bg-risk-medium/20 text-risk-medium border border-risk-medium/30'
   return 'bg-zinc-700/30 text-text-muted border border-border/30'
 }
 
@@ -230,70 +230,86 @@ function consolidateFactors(data: RiskFactorFrequency[]): Array<RiskFactorFreque
 
 /** L1: Factor Frequency Horizontal Bar Chart */
 function FactorFrequencyChart({ data }: { data: RiskFactorFrequency[] }) {
-  const chartData = useMemo(() => {
+  const [showAll, setShowAll] = useState(false)
+
+  const allData = useMemo(() => {
     return consolidateFactors(data).sort((a, b) => b.count - a.count)
   }, [data])
 
-  const chartHeight = Math.max(300, chartData.length * 36)
+  const chartData = showAll ? allData : allData.slice(0, 15)
+  const chartHeight = Math.min(600, Math.max(300, chartData.length * 36))
 
   return (
-    <ResponsiveContainer width="100%" height={chartHeight}>
-      <BarChart
-        layout="vertical"
-        data={chartData}
-        margin={{ top: 4, right: 40, bottom: 4, left: 4 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} horizontal={false} />
-        <XAxis
-          type="number"
-          tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-          tickFormatter={(v: number) => {
-            if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`
-            if (v >= 1_000) return `${(v / 1_000).toFixed(0)}K`
-            return String(v)
-          }}
-          axisLine={{ stroke: 'var(--color-border)' }}
-        />
-        <YAxis
-          type="category"
-          dataKey="label"
-          width={170}
-          tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
-          axisLine={false}
-          tickLine={false}
-        />
-        <RechartsTooltip content={<BarTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-        <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={24}>
-          {chartData.map((entry, index) => (
-            <Cell key={index} fill={riskScoreToColor(entry.avg_risk_score)} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+    <div>
+      <ResponsiveContainer width="100%" height={chartHeight}>
+        <BarChart
+          layout="vertical"
+          data={chartData}
+          margin={{ top: 4, right: 40, bottom: 4, left: 4 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} horizontal={false} />
+          <XAxis
+            type="number"
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+            tickFormatter={(v: number) => {
+              if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`
+              if (v >= 1_000) return `${(v / 1_000).toFixed(0)}K`
+              return String(v)
+            }}
+            axisLine={{ stroke: 'var(--color-border)' }}
+          />
+          <YAxis
+            type="category"
+            dataKey="label"
+            width={170}
+            tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <RechartsTooltip content={<BarTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+          <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={24}>
+            {chartData.map((entry, index) => (
+              <Cell key={index} fill={riskScoreToColor(entry.avg_risk_score)} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+      {allData.length > 15 && (
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="mt-3 text-xs text-accent hover:text-accent underline underline-offset-2 transition-colors"
+        >
+          {showAll ? 'Show top 15' : `Show all ${allData.length} factors`}
+        </button>
+      )}
+    </div>
   )
 }
 
 /** L2: Co-occurrence Heatmap */
 function CooccurrenceHeatmap({ cooccurrences, factors }: { cooccurrences: FactorCooccurrence[]; factors: string[] }) {
+  // Filter to only interesting co-occurrences (lift > 1.0)
+  const filteredCooccurrences = useMemo(() => cooccurrences.filter(c => c.lift > 1.0), [cooccurrences])
+
   // Build a lookup map: factorA+factorB -> lift
   const liftMap = useMemo(() => {
     const m = new Map<string, number>()
-    for (const c of cooccurrences) {
+    for (const c of filteredCooccurrences) {
       m.set(`${c.factor_a}|${c.factor_b}`, c.lift)
       m.set(`${c.factor_b}|${c.factor_a}`, c.lift)
     }
     return m
-  }, [cooccurrences])
+  }, [filteredCooccurrences])
 
-  // Use only factors that appear in at least one co-occurrence pair
+  // Use only factors that appear in at least one co-occurrence pair with lift > 1.0
   const relevantFactors = useMemo(() => {
     const seen = new Set<string>()
-    for (const c of cooccurrences) {
+    for (const c of filteredCooccurrences) {
       seen.add(c.factor_a)
       seen.add(c.factor_b)
     }
     return factors.filter((f) => seen.has(f))
-  }, [factors, cooccurrences])
+  }, [factors, filteredCooccurrences])
 
   if (relevantFactors.length === 0) {
     return (
@@ -340,7 +356,7 @@ function CooccurrenceHeatmap({ cooccurrences, factors }: { cooccurrences: Factor
                 if (lift === undefined) {
                   return (
                     <td key={colFactor} className="p-1 text-center">
-                      <div className="w-10 h-8 rounded bg-zinc-900/30 flex items-center justify-center text-text-muted/50">
+                      <div className="w-10 h-8 rounded bg-zinc-900/30 flex items-center justify-center text-text-muted">
                         -
                       </div>
                     </td>
@@ -349,7 +365,7 @@ function CooccurrenceHeatmap({ cooccurrences, factors }: { cooccurrences: Factor
                 return (
                   <td key={colFactor} className="p-1 text-center">
                     <div
-                      className={cn('w-10 h-8 rounded flex items-center justify-center text-[10px] font-mono font-medium', liftToColor(lift))}
+                      className={cn('w-10 h-8 rounded flex items-center justify-center text-xs font-mono font-medium', liftToColor(lift))}
                       title={`${getFactorLabel(rowFactor)} + ${getFactorLabel(colFactor)}: lift = ${lift.toFixed(2)}`}
                     >
                       {lift.toFixed(1)}
@@ -455,11 +471,11 @@ function FactorRiskScatter({ data }: { data: RiskFactorFrequency[] }) {
           label={{ value: 'Avg Risk Score', angle: -90, position: 'insideLeft', offset: 0, fill: 'var(--color-text-muted)', fontSize: 11 }}
           tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
         />
-        <ZAxis type="number" dataKey="bubbleSize" range={[120, 800]} domain={[0, maxCount]} />
+        <ZAxis type="number" dataKey="bubbleSize" range={[60, 300]} domain={[0, maxCount]} />
         <RechartsTooltip content={<ScatterTooltip />} cursor={{ strokeDasharray: '3 3', stroke: 'var(--color-border)' }} />
         <Scatter data={chartData} shape="circle">
           {chartData.map((entry, index) => (
-            <Cell key={index} fill={riskScoreToColor(entry.avg_risk_score)} fillOpacity={0.75} stroke={riskScoreToColor(entry.avg_risk_score)} strokeWidth={1} />
+            <Cell key={index} fill={riskScoreToColor(entry.avg_risk_score)} fillOpacity={0.45} stroke={riskScoreToColor(entry.avg_risk_score)} strokeWidth={1} />
           ))}
         </Scatter>
       </ScatterChart>
@@ -524,6 +540,7 @@ function RedFlagsSkeleton() {
 export default function RedFlags() {
   const [sectorId, setSectorId] = useState<number | undefined>(undefined)
   const [year, setYear] = useState<number | undefined>(undefined)
+  const [showHeatmap, setShowHeatmap] = useState(false)
 
   // Fetch risk factor analysis
   const { data: analysis, isLoading, error } = useQuery({
@@ -550,7 +567,7 @@ export default function RedFlags() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <AlertTriangle className="h-10 w-10 text-red-400" />
+        <AlertTriangle className="h-10 w-10 text-risk-critical" />
         <p className="text-text-secondary text-sm">Failed to load risk factor analysis.</p>
         <p className="text-text-muted text-xs">Please check that the backend is running on port 8001.</p>
       </div>
@@ -564,23 +581,14 @@ export default function RedFlags() {
   return (
     <div className="space-y-6">
       {/* ---------------------------------------------------------------- */}
-      {/* Header */}
+      {/* Hero Header */}
       {/* ---------------------------------------------------------------- */}
-      <div>
-        <div className="flex items-center gap-3 mb-2">
-          <div className="flex items-center justify-center h-9 w-9 rounded-lg bg-red-500/10">
-            <Fingerprint className="h-5 w-5 text-red-400" aria-hidden="true" />
-          </div>
-          <div>
-            <h1 className="text-xl font-semibold text-text-primary tracking-tight">
-              Red Flag Anatomy
-            </h1>
-            <p className="text-sm text-text-secondary">
-              How risk factors distribute across {formatNumber(totalWithFactors)} flagged contracts
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHero
+        trackingLabel="RED FLAG ANATOMY"
+        icon={<Fingerprint className="h-4 w-4 text-accent" />}
+        headline={formatNumber(totalWithFactors)}
+        subtitle="Contracts with risk factors — how corruption signals distribute"
+      />
 
       {/* ---------------------------------------------------------------- */}
       {/* Filters */}
@@ -622,7 +630,7 @@ export default function RedFlags() {
         {(sectorId || year) && (
           <button
             onClick={() => { setSectorId(undefined); setYear(undefined) }}
-            className="text-xs text-accent hover:text-accent/80 underline underline-offset-2 transition-colors"
+            className="text-xs text-accent hover:text-accent underline underline-offset-2 transition-colors"
           >
             Clear filters
           </button>
@@ -655,81 +663,75 @@ export default function RedFlags() {
             <span className="text-xs text-text-muted">Bar color = avg risk:</span>
             <div className="flex items-center gap-1">
               <div className="h-2.5 w-6 rounded-sm" style={{ backgroundColor: RISK_COLORS.low }} />
-              <span className="text-[10px] text-text-muted">Low</span>
+              <span className="text-xs text-text-muted">Low</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="h-2.5 w-6 rounded-sm" style={{ backgroundColor: RISK_COLORS.medium }} />
-              <span className="text-[10px] text-text-muted">Medium</span>
+              <span className="text-xs text-text-muted">Medium</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="h-2.5 w-6 rounded-sm" style={{ backgroundColor: RISK_COLORS.high }} />
-              <span className="text-[10px] text-text-muted">High</span>
+              <span className="text-xs text-text-muted">High</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="h-2.5 w-6 rounded-sm" style={{ backgroundColor: RISK_COLORS.critical }} />
-              <span className="text-[10px] text-text-muted">Critical</span>
+              <span className="text-xs text-text-muted">Critical</span>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* ---------------------------------------------------------------- */}
-      {/* L2 + L3: Heatmap and Worst Combinations */}
+      {/* L2 + L3: Worst Combinations + Heatmap (collapsed) */}
       {/* ---------------------------------------------------------------- */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        {/* L2: Co-occurrence Heatmap */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-text-muted" aria-hidden="true" />
-              <CardTitle>Co-occurrence Heatmap</CardTitle>
-            </div>
-            <CardDescription>
-              Lift values show how often factor pairs appear together vs. expected.
-              Lift &gt; 1 = more than chance; lift &gt; 2 = strong association.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CooccurrenceHeatmap cooccurrences={cooccurrences} factors={factorKeys} />
-            {/* Legend */}
-            <div className="flex items-center gap-3 mt-4 pt-3 border-t border-border/20">
-              <span className="text-xs text-text-muted">Lift:</span>
-              <div className="flex items-center gap-1">
-                <div className={cn('h-3 w-5 rounded-sm', 'bg-zinc-700/30')} />
-                <span className="text-[10px] text-text-muted">&lt;1</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="h-3 w-5 rounded-sm bg-yellow-500/20" />
-                <span className="text-[10px] text-text-muted">1-1.5</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="h-3 w-5 rounded-sm bg-orange-500/25" />
-                <span className="text-[10px] text-text-muted">1.5-2</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="h-3 w-5 rounded-sm bg-red-500/30" />
-                <span className="text-[10px] text-text-muted">&gt;2</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Zap className="h-4 w-4 text-text-muted" aria-hidden="true" />
+            <CardTitle>Worst Factor Combinations</CardTitle>
+          </div>
+          <CardDescription>
+            Top 10 factor pairs ranked by lift -- combinations that appear together far more often than expected by chance.
+            Lift &gt; 1 = more than chance; lift &gt; 2 = strong association.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <WorstCombinations cooccurrences={cooccurrences} />
 
-        {/* L3: Worst Combinations */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4 text-text-muted" aria-hidden="true" />
-              <CardTitle>Worst Combinations</CardTitle>
-            </div>
-            <CardDescription>
-              Top 10 factor pairs ranked by lift -- combinations that appear together far more often than expected by chance.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <WorstCombinations cooccurrences={cooccurrences} />
-          </CardContent>
-        </Card>
-      </div>
+          {/* Collapsible heatmap section */}
+          <div className="border-t border-border/20 pt-4">
+            <button
+              onClick={() => setShowHeatmap(!showHeatmap)}
+              className="flex items-center gap-2 text-xs text-accent hover:text-accent transition-colors"
+            >
+              <Users className="h-3.5 w-3.5" aria-hidden="true" />
+              {showHeatmap ? 'Hide heatmap' : 'Show co-occurrence heatmap'}
+            </button>
+
+            {showHeatmap && (
+              <div className="mt-4">
+                <CooccurrenceHeatmap cooccurrences={cooccurrences} factors={factorKeys} />
+                {/* Legend */}
+                <div className="flex items-center gap-3 mt-4 pt-3 border-t border-border/20">
+                  <span className="text-xs text-text-muted">Lift:</span>
+                  <div className="flex items-center gap-1">
+                    <div className="h-3 w-5 rounded-sm bg-yellow-500/20" />
+                    <span className="text-xs text-text-muted">1-1.5</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="h-3 w-5 rounded-sm bg-orange-500/25" />
+                    <span className="text-xs text-text-muted">1.5-2</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="h-3 w-5 rounded-sm bg-red-500/30" />
+                    <span className="text-xs text-text-muted">&gt;2</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* ---------------------------------------------------------------- */}
       {/* L4: Factor-Risk Correlation Scatter */}

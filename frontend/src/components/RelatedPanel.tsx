@@ -108,7 +108,7 @@ export const RelatedPanel = memo(function RelatedPanel({
                   </div>
                 </div>
                 {item.riskScore !== undefined && (
-                  <RiskBadge score={item.riskScore} className="text-[10px]" />
+                  <RiskBadge score={item.riskScore} className="text-xs" />
                 )}
                 <ChevronRight className="h-4 w-4 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>

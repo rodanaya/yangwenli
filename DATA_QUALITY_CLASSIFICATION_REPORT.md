@@ -1,13 +1,13 @@
 # Data Quality Classification Report
 
-**Generated:** 2026-01-14 12:52:58
+**Generated:** 2026-02-17 13:11:28
 
 ## Quality Grade Distribution
 
 | Grade | Count | Avg Score | Percentage |
 |-------|-------|-----------|------------|
 | A | 441,778 | 93.9 | 14.2% |
-| B | 2,667,229 | 81.5 | 85.8% |
+| B | 2,667,219 | 81.5 | 85.8% |
 | C | 1,010 | 71.5 | 0.0% |
 
 ## Quality by Data Structure
@@ -15,7 +15,7 @@
 | Structure | Contracts | Avg Score | High Quality % |
 |-----------|-----------|-----------|----------------|
 | A | 397,756 | 76.9 | 100.0% |
-| B | 1,356,215 | 80.3 | 100.0% |
+| B | 1,356,205 | 80.3 | 100.0% |
 | C | 952,087 | 86.2 | 100.0% |
 | D | 403,959 | 92.3 | 100.0% |
 
@@ -23,7 +23,7 @@
 
 | Confidence | Count | Percentage |
 |------------|-------|------------|
-| high | 3,109,007 | 100.0% |
+| high | 3,108,997 | 100.0% |
 | medium | 1,010 | 0.0% |
 
 ## Vendor Quality Distribution

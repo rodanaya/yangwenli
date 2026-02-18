@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Search, Moon, Sun, X, Database, Activity, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -9,24 +10,37 @@ import { useTheme } from '@/hooks/useTheme'
 import { analysisApi } from '@/api/client'
 import { cn } from '@/lib/utils'
 
-// Breadcrumb mapping
-const ROUTE_TITLES: Record<string, string> = {
-  '/': 'Dashboard',
-  '/explore': 'Explore',
-  '/patterns': 'Patterns',
-  '/contracts': 'Contracts',
-  '/network': 'Network',
-  '/watchlist': 'Watchlist',
-  '/sectors': 'Sectors',
-  '/methodology': 'Methodology',
-  '/settings': 'Settings',
+// Route path → nav i18n key mapping
+const ROUTE_I18N_KEYS: Record<string, string> = {
+  '/': 'dashboard',
+  '/executive': 'executive',
+  '/explore': 'explore',
+  '/patterns': 'patterns',
+  '/red-flags': 'redFlags',
+  '/money-flow': 'moneyFlow',
+  '/temporal': 'temporal',
+  '/administrations': 'administrations',
+  '/institutions/health': 'institutions',
+  '/price-analysis': 'pricing',
+  '/contracts': 'contracts',
+  '/network': 'network',
+  '/watchlist': 'watchlist',
+  '/investigation': 'investigation',
+  '/sectors': 'sectors',
+  '/ground-truth': 'groundTruth',
+  '/model': 'model',
+  '/methodology': 'methodology',
+  '/settings': 'settings',
+  '/categories': 'categories',
 }
 
 export function Header() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { t } = useTranslation('nav')
   const { theme, toggleTheme } = useTheme()
   const [searchOpen, setSearchOpen] = useState(false)
+  const [searchValue, setSearchValue] = useState('')
 
   // Fetch anomaly count for notifications — non-blocking, cached aggressively
   const { data: anomalies } = useQuery({
@@ -69,9 +83,13 @@ export function Header() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
-        setSearchOpen((prev) => !prev)
+        setSearchOpen((prev) => {
+          if (prev) setSearchValue('')
+          return !prev
+        })
       }
       if (e.key === 'Escape' && searchOpen) {
+        setSearchValue('')
         setSearchOpen(false)
       }
     }
@@ -81,7 +99,8 @@ export function Header() {
   }, [searchOpen])
 
   const currentPath = location.pathname
-  const title = ROUTE_TITLES[currentPath] || getBreadcrumbTitle(currentPath)
+  const i18nKey = ROUTE_I18N_KEYS[currentPath]
+  const title = i18nKey ? t(i18nKey) : getBreadcrumbTitle(currentPath)
   const parentPath = getParentPath(currentPath)
 
   const handleSearchSelect = useCallback(
@@ -93,6 +112,7 @@ export function Header() {
       } else {
         navigate(`/contracts?search=${encodeURIComponent(suggestion.label)}`)
       }
+      setSearchValue('')
       setSearchOpen(false)
     },
     [navigate]
@@ -101,11 +121,11 @@ export function Header() {
   return (
     <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-border/40 bg-background/80 px-4 md:px-5 backdrop-blur-md">
       {/* Left — Breadcrumb path */}
-      <div className="flex items-center gap-1.5 min-w-0 text-[13px]">
+      <div className="flex items-center gap-1.5 min-w-0 text-sm">
         {currentPath !== '/' && (
           <>
-            <span className="text-text-muted/50 hidden sm:inline">{parentPath}</span>
-            <span className="text-text-muted/30 hidden sm:inline">/</span>
+            <span className="text-text-muted hidden sm:inline">{parentPath}</span>
+            <span className="text-text-muted hidden sm:inline">/</span>
           </>
         )}
         <span className="font-semibold text-text-primary truncate">{title}</span>
@@ -117,8 +137,8 @@ export function Header() {
         {searchOpen ? (
           <div className="flex items-center gap-1.5 animate-slide-in-right">
             <SmartSearch
-              value=""
-              onChange={() => {}}
+              value={searchValue}
+              onChange={setSearchValue}
               onSelect={handleSearchSelect}
               className="w-full max-w-56"
               autoFocus
@@ -127,7 +147,7 @@ export function Header() {
               variant="ghost"
               size="icon"
               className="h-7 w-7 flex-shrink-0"
-              onClick={() => setSearchOpen(false)}
+              onClick={() => { setSearchValue(''); setSearchOpen(false) }}
               aria-label="Close search"
             >
               <X className="h-3.5 w-3.5" />
@@ -147,7 +167,7 @@ export function Header() {
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs">Search <kbd className="ml-1 text-[10px] px-1 py-0.5 rounded bg-background-elevated border border-border text-text-muted">Ctrl+K</kbd></p>
+              <p className="text-xs">Search <kbd className="ml-1 text-xs px-1 py-0.5 rounded bg-background-elevated border border-border text-text-muted">Ctrl+K</kbd></p>
             </TooltipContent>
           </Tooltip>
         )}
@@ -167,7 +187,7 @@ export function Header() {
             >
               <Shield className="h-3.5 w-3.5 text-text-muted" />
               {alertCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-risk-critical text-[8px] font-bold text-white">
+                <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-risk-critical text-xs font-bold text-white">
                   {alertCount > 9 ? '!' : alertCount}
                 </span>
               )}
@@ -184,7 +204,7 @@ export function Header() {
             <TooltipTrigger asChild>
               <button
                 className={cn(
-                  'hidden sm:flex items-center gap-1 h-7 px-1.5 rounded text-[10px] font-bold tracking-wide',
+                  'hidden sm:flex items-center gap-1 h-7 px-1.5 rounded text-xs font-bold tracking-wide',
                   'transition-colors hover:bg-sidebar-hover',
                   qualityGrade === 'A' ? 'text-risk-low' :
                   qualityGrade === 'B' ? 'text-accent' :
@@ -206,9 +226,9 @@ export function Header() {
         {/* Live signal */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="hidden sm:flex items-center gap-1 h-7 px-1.5 text-[10px] text-text-muted">
+            <div className="hidden sm:flex items-center gap-1 h-7 px-1.5 text-xs text-text-muted">
               <Activity className="h-3 w-3 text-signal-live" />
-              <span className="font-[var(--font-family-mono)]">LIVE</span>
+              <span className="font-mono">LIVE</span>
             </div>
           </TooltipTrigger>
           <TooltipContent>
@@ -248,9 +268,9 @@ function getBreadcrumbTitle(path: string): string {
   const lastPart = parts[parts.length - 1]
   if (/^\d+$/.test(lastPart)) {
     const parentRoute = parts.slice(0, -1).join('/')
-    const parentTitle = ROUTE_TITLES[`/${parentRoute}`]
-    if (parentTitle) {
-      return `${parentTitle.replace(/s$/, '')} #${lastPart}`
+    const parentKey = ROUTE_I18N_KEYS[`/${parentRoute}`]
+    if (parentKey) {
+      return `#${lastPart}`
     }
   }
 

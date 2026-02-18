@@ -41,6 +41,7 @@ import type {
   ExternalEvidence,
   ExecutiveSummaryResponse,
   FastDashboardData,
+  RiskExplanation,
 } from './types'
 
 // API Base URL - proxied through Vite in development
@@ -153,6 +154,14 @@ export const contractApi = {
   async search(query: string, params: ContractFilterParams = {}): Promise<ContractListResponse> {
     const queryParams = buildQueryParams({ ...params, search: query } as Record<string, unknown>)
     const { data } = await api.get<ContractListResponse>(`/contracts?${queryParams}`)
+    return data
+  },
+
+  /**
+   * Get v5.0 risk score explanation with per-feature contributions
+   */
+  async getRiskExplanation(contractId: number): Promise<RiskExplanation> {
+    const { data } = await api.get<RiskExplanation>(`/contracts/${contractId}/risk-explain`)
     return data
   },
 }
@@ -1173,6 +1182,27 @@ export const investigationApi = {
   },
 }
 
+// ============================================================================
+// CATEGORIES API
+// ============================================================================
+
+export const categoriesApi = {
+  getSummary: async () => {
+    const { data } = await api.get('/categories/summary')
+    return data
+  },
+
+  getContracts: async (categoryId: number, params?: { page?: number; per_page?: number; risk_level?: string; year?: number }) => {
+    const { data } = await api.get(`/categories/${categoryId}/contracts`, { params })
+    return data
+  },
+
+  getTrends: async (yearFrom = 2010, yearTo = 2025) => {
+    const { data } = await api.get('/categories/trends', { params: { year_from: yearFrom, year_to: yearTo } })
+    return data
+  },
+}
+
 // Default export with all API modules
 export default {
   sector: sectorApi,
@@ -1185,4 +1215,5 @@ export default {
   watchlist: watchlistApi,
   network: networkApi,
   investigation: investigationApi,
+  categories: categoriesApi,
 }

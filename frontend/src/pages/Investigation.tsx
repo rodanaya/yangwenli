@@ -4,7 +4,7 @@
  * Shows the full pipeline: Detection -> Research -> Corroboration -> Ground Truth
  */
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent } from '@/components/ui/card'
@@ -14,9 +14,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { investigationApi } from '@/api/client'
 import { SECTOR_COLORS, getSectorNameEN } from '@/lib/constants'
+import { PageHero } from '@/components/DashboardWidgets'
 import type {
   InvestigationCaseListItem,
-  InvestigationCaseDetail,
   InvestigationDashboardSummary,
   InvestigationValidationStatus,
   InvestigationFilterParams,
@@ -32,8 +32,6 @@ import {
   ChevronDown,
   ChevronRight,
   Newspaper,
-  FileText,
-  Scale,
   Shield,
   ArrowUpRight,
   Filter,
@@ -64,20 +62,20 @@ const STATUS_CONFIG: Record<InvestigationValidationStatus, {
   pending: {
     label: 'Pending',
     icon: Clock,
-    className: 'bg-amber-500/15 text-amber-400 border border-amber-500/30',
-    dotClass: 'bg-amber-400',
+    className: 'bg-risk-medium/15 text-risk-medium border border-risk-medium/30',
+    dotClass: 'bg-risk-medium',
   },
   corroborated: {
     label: 'Corroborated',
     icon: CheckCircle2,
-    className: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
-    dotClass: 'bg-emerald-400',
+    className: 'bg-risk-low/15 text-risk-low border border-risk-low/30',
+    dotClass: 'bg-risk-low',
   },
   refuted: {
     label: 'Refuted',
     icon: XCircle,
-    className: 'bg-red-500/15 text-red-400 border border-red-500/30',
-    dotClass: 'bg-red-400',
+    className: 'bg-risk-critical/15 text-risk-critical border border-risk-critical/30',
+    dotClass: 'bg-risk-critical',
   },
   inconclusive: {
     label: 'Inconclusive',
@@ -91,7 +89,7 @@ function StatusPill({ status }: { status: InvestigationValidationStatus }) {
   const config = STATUS_CONFIG[status] || STATUS_CONFIG.pending
   const Icon = config.icon
   return (
-    <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium', config.className)}>
+    <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium', config.className)}>
       <Icon className="h-3 w-3" />
       {config.label}
     </span>
@@ -108,7 +106,7 @@ export function Investigation() {
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<InvestigationValidationStatus | 'all'>('all')
-  const [sectorFilter, setSectorFilter] = useState<number | undefined>(undefined)
+  const [sectorFilter] = useState<number | undefined>(undefined)
   const [minScore, setMinScore] = useState<number | undefined>(undefined)
   const [expandedCaseId, setExpandedCaseId] = useState<string | null>(null)
 
@@ -148,10 +146,6 @@ export function Investigation() {
   })
 
   const cases = casesData?.data || []
-  const corroboratedCases = useMemo(
-    () => cases.filter((c) => c.validation_status === 'corroborated'),
-    [cases]
-  )
 
   // Sector breakdown for chart
   const sectorBreakdown = useMemo(() => {
@@ -169,32 +163,20 @@ export function Investigation() {
   return (
     <div className="space-y-6">
       {/* ================================================================ */}
-      {/* HEADER */}
+      {/* HERO HEADER */}
       {/* ================================================================ */}
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <Crosshair className="h-4 w-4 text-accent" />
-          <span className="text-[10px] font-bold tracking-[0.25em] uppercase text-accent font-[var(--font-family-mono)]">
-            INVESTIGATION CASES
-          </span>
-        </div>
-        <h1 className="text-2xl font-bold text-text-primary tracking-tight">
-          ML-Generated Investigation Leads
-        </h1>
-        <p className="text-sm text-text-muted mt-1">
-          {summaryLoading ? (
-            <Skeleton className="h-4 w-96" />
-          ) : (
-            <>
-              {summary?.total_cases || 0} cases detected by anomaly pipeline
-              {' '}&middot;{' '}
-              <strong className="text-emerald-400">{summary?.corroborated_cases || 0} externally confirmed</strong>
-              {' '}&middot;{' '}
-              {formatCompactMXN(summary?.total_value_at_risk || 0)} confirmed value at risk
-            </>
-          )}
-        </p>
-      </div>
+      <PageHero
+        trackingLabel="INVESTIGATION CASES"
+        icon={<Crosshair className="h-4 w-4 text-accent" />}
+        headline={summaryLoading ? '—' : `${summary?.total_cases || 0} Cases`}
+        subtitle="ML-generated investigation leads from anomaly detection"
+        detail={summaryLoading ? undefined : `${summary?.corroborated_cases || 0} externally confirmed · ${formatCompactMXN(summary?.total_value_at_risk || 0)} value at risk`}
+        loading={summaryLoading}
+      />
+      <p className="text-xs text-text-secondary max-w-3xl leading-relaxed -mt-4">
+        Each case represents a cluster of suspicious contracts identified through statistical anomaly detection.
+        Review, corroborate, and validate against external sources.
+      </p>
 
       {/* ================================================================ */}
       {/* S1: VALIDATION FUNNEL */}
@@ -216,15 +198,15 @@ export function Investigation() {
       {(summary?.top_corroborated?.length ?? 0) > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <Shield className="h-3.5 w-3.5 text-emerald-400" />
+            <Shield className="h-3.5 w-3.5 text-risk-low" />
             <h2 className="text-sm font-bold text-text-primary">Confirmed Investigation Targets</h2>
-            <span className="text-[10px] text-text-muted ml-1">
+            <span className="text-xs text-text-muted ml-1">
               Externally validated through news reports, ASF audits, and legal proceedings
             </span>
           </div>
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {summary!.top_corroborated.map((item) => (
-              <BigFishCard key={item.case_id} item={item} navigate={navigate} />
+              <BigFishCard key={item.case_id} item={item} />
             ))}
           </div>
         </div>
@@ -241,7 +223,7 @@ export function Investigation() {
               <Filter className="h-3.5 w-3.5 text-text-muted" />
               {/* Status filter */}
               <select
-                className="text-[11px] bg-background-elevated border border-border/50 rounded px-2 py-1 text-text-secondary"
+                className="text-xs bg-background-elevated border border-border/50 rounded px-2 py-1 text-text-secondary"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as InvestigationValidationStatus | 'all')}
               >
@@ -253,7 +235,7 @@ export function Investigation() {
               </select>
               {/* Score filter */}
               <select
-                className="text-[11px] bg-background-elevated border border-border/50 rounded px-2 py-1 text-text-secondary"
+                className="text-xs bg-background-elevated border border-border/50 rounded px-2 py-1 text-text-secondary"
                 value={minScore ?? ''}
                 onChange={(e) => setMinScore(e.target.value ? Number(e.target.value) : undefined)}
               >
@@ -274,20 +256,17 @@ export function Investigation() {
           ) : (
             <div className="space-y-0.5">
               {/* Header */}
-              <div className="grid grid-cols-[40px_1fr_80px_80px_100px_80px_100px] gap-2 px-2 py-1.5 text-[9px] font-bold tracking-[0.15em] uppercase text-text-muted/60 font-[var(--font-family-mono)]">
-                <span>#</span>
+              <div className="grid grid-cols-[28px_1fr_90px_100px_110px] gap-3 px-3 py-2 text-xs font-bold tracking-wider uppercase text-text-secondary font-mono">
+                <span />
                 <span>Case</span>
                 <span>Sector</span>
-                <span className="text-right">Score</span>
-                <span className="text-right">Value</span>
-                <span className="text-right">Contracts</span>
+                <span className="text-right">Score / Value</span>
                 <span className="text-center">Status</span>
               </div>
-              {cases.map((c, i) => (
+              {cases.map((c) => (
                 <CaseRow
                   key={c.case_id}
                   caseItem={c}
-                  rank={i + 1}
                   isExpanded={expandedCaseId === c.case_id}
                   onToggle={() => setExpandedCaseId(expandedCaseId === c.case_id ? null : c.case_id)}
                   onReview={(status) => reviewMutation.mutate({ caseId: c.case_id, status })}
@@ -324,7 +303,7 @@ export function Investigation() {
                         return (
                           <div className="chart-tooltip">
                             <p className="text-xs font-semibold text-text-primary">{d.name}</p>
-                            <p className="text-[11px] text-text-muted">{d.count} cases</p>
+                            <p className="text-xs text-text-muted">{d.count} cases</p>
                           </div>
                         )
                       }
@@ -374,19 +353,19 @@ function ValidationFunnel({
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <div className={cn('h-2 w-2 rounded-full', step.color)} />
-                <span className="text-[10px] font-medium text-text-secondary">{step.label}</span>
+                <span className="text-xs font-medium text-text-secondary">{step.label}</span>
               </div>
               <div className="text-lg font-bold text-text-primary tabular-nums">{step.value}</div>
             </div>
             {i < steps.length - 1 && (
-              <ChevronRight className="h-4 w-4 text-text-muted/30 flex-shrink-0 mx-1" />
+              <ChevronRight className="h-4 w-4 text-text-muted flex-shrink-0 mx-1" />
             )}
           </div>
         ))}
       </div>
       {hitRate && hitRate.checked > 0 && (
-        <p className="text-[11px] text-text-muted mt-3 pt-3 border-t border-border/30">
-          <strong className="text-emerald-400">{Math.round(hitRate.rate * 100)}% hit rate</strong>
+        <p className="text-xs text-text-muted mt-3 pt-3 border-t border-border/30">
+          <strong className="text-risk-low">{Math.round(hitRate.rate * 100)}% hit rate</strong>
           {' '}&mdash; {hitRate.confirmed} of {hitRate.checked} investigated vendors have documented corruption investigations
         </p>
       )}
@@ -400,38 +379,36 @@ function ValidationFunnel({
 
 function BigFishCard({
   item,
-  navigate,
 }: {
   item: InvestigationDashboardSummary['top_corroborated'][number]
-  navigate: ReturnType<typeof useNavigate>
 }) {
   const sectorColor = SECTOR_COLORS[item.sector_code] || '#64748b'
 
   return (
     <Card className="border-emerald-500/20 bg-emerald-500/[0.02] hover:border-emerald-500/30 transition-colors group">
-      <CardContent className="p-3">
+      <CardContent className="p-4">
         <div className="flex items-start justify-between mb-2">
           <span
-            className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+            className="text-xs font-bold px-1.5 py-0.5 rounded"
             style={{ backgroundColor: sectorColor + '20', color: sectorColor }}
           >
             {getSectorNameEN(item.sector_code)}
           </span>
           <StatusPill status="corroborated" />
         </div>
-        <h3 className="text-[12px] font-semibold text-text-primary truncate mb-1 group-hover:text-accent transition-colors">
+        <h3 className="text-sm font-semibold text-text-primary truncate mb-1 group-hover:text-accent transition-colors">
           {toTitleCase(item.title.replace(/ - Anomalous Procurement Pattern$/, '').replace(/ - Externally Corroborated Investigation$/, ''))}
         </h3>
-        <p className="text-[10px] text-text-muted line-clamp-2 mb-2 leading-relaxed">
+        <p className="text-xs text-text-muted line-clamp-2 mb-2 leading-relaxed">
           {item.news_summary}
         </p>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-[10px] text-text-muted tabular-nums font-[var(--font-family-mono)]">
+          <div className="flex items-center gap-2 text-xs text-text-muted tabular-nums font-mono">
             <span>{formatCompactMXN(item.value)}</span>
-            <span className="text-text-muted/30">|</span>
+            <span className="text-text-muted">|</span>
             <span>{formatNumber(item.contracts)} contracts</span>
           </div>
-          <RiskBadge score={item.score} className="text-[9px]" />
+          <RiskBadge score={item.score} className="text-xs" />
         </div>
       </CardContent>
     </Card>
@@ -444,7 +421,6 @@ function BigFishCard({
 
 function CaseRow({
   caseItem,
-  rank,
   isExpanded,
   onToggle,
   onReview,
@@ -452,7 +428,6 @@ function CaseRow({
   navigate,
 }: {
   caseItem: InvestigationCaseListItem
-  rank: number
   isExpanded: boolean
   onToggle: () => void
   onReview: (status: string) => void
@@ -465,37 +440,35 @@ function CaseRow({
     <div>
       <button
         className={cn(
-          'grid grid-cols-[40px_1fr_80px_80px_100px_80px_100px] gap-2 w-full text-left px-2 py-2 rounded-md transition-colors',
+          'grid grid-cols-[28px_1fr_90px_100px_110px] gap-3 w-full text-left px-3 py-2.5 rounded-md transition-colors',
           isExpanded
             ? 'bg-accent/5 border border-accent/20'
             : 'hover:bg-background-elevated/40'
         )}
         onClick={onToggle}
       >
-        <span className="text-[11px] text-text-muted tabular-nums font-[var(--font-family-mono)]">
-          {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+        <span className="text-text-muted self-center">
+          {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
         </span>
-        <div className="min-w-0">
-          <p className="text-[11px] font-medium text-text-primary truncate">
+        <div className="min-w-0 self-center">
+          <p className="text-sm font-medium text-text-primary truncate">
             {toTitleCase(caseItem.title.replace(/ - Anomalous Procurement Pattern$/, '').replace(/ - Externally Corroborated Investigation$/, ''))}
           </p>
-          <p className="text-[9px] text-text-muted truncate">{caseItem.case_id}</p>
         </div>
         <span
-          className="text-[10px] font-medium px-1.5 py-0.5 rounded self-center w-fit"
+          className="text-xs font-medium px-2 py-0.5 rounded self-center w-fit"
           style={{ backgroundColor: sectorColor + '15', color: sectorColor }}
         >
           {getSectorNameEN(caseItem.sector_name)}
         </span>
-        <span className="text-[11px] text-text-secondary tabular-nums text-right self-center font-[var(--font-family-mono)]">
-          {(caseItem.suspicion_score * 100).toFixed(0)}%
-        </span>
-        <span className="text-[11px] text-text-secondary tabular-nums text-right self-center font-[var(--font-family-mono)]">
-          {formatCompactMXN(caseItem.total_value_mxn)}
-        </span>
-        <span className="text-[11px] text-text-muted tabular-nums text-right self-center font-[var(--font-family-mono)]">
-          {formatNumber(caseItem.total_contracts)}
-        </span>
+        <div className="text-right self-center">
+          <p className="text-sm text-text-secondary tabular-nums font-mono">
+            {(caseItem.suspicion_score * 100).toFixed(0)}%
+          </p>
+          <p className="text-xs text-text-muted tabular-nums font-mono">
+            {formatCompactMXN(caseItem.total_value_mxn)}
+          </p>
+        </div>
         <span className="self-center flex justify-center">
           <StatusPill status={caseItem.validation_status} />
         </span>
@@ -529,7 +502,7 @@ function CaseDetailPanel({
   isReviewing: boolean
   navigate: ReturnType<typeof useNavigate>
 }) {
-  const [activeTab, setActiveTab] = useState<'summary' | 'vendors' | 'questions' | 'evidence'>('summary')
+  const [activeTab, setActiveTab] = useState<'overview' | 'evidence'>('overview')
   const queryClient = useQueryClient()
 
   const { data: detail, isLoading } = useQuery({
@@ -572,7 +545,7 @@ function CaseDetailPanel({
 
   if (isLoading) {
     return (
-      <div className="ml-10 mr-2 my-2 p-4 rounded-md bg-background-elevated/30 border border-border/30">
+      <div className="my-2 p-4 rounded-md bg-background-elevated/20 border-l-2 border-accent pl-4">
         <div className="space-y-2">
           <Skeleton className="h-4 w-3/4" />
           <Skeleton className="h-4 w-1/2" />
@@ -605,21 +578,19 @@ function CaseDetailPanel({
   }
 
   const tabs = [
-    { key: 'summary', label: 'Summary' },
-    { key: 'vendors', label: `Vendors (${detail.vendors.length})` },
-    { key: 'questions', label: `Questions (${detail.questions.length})` },
-    { key: 'evidence', label: `Evidence (${newsHits.length})` },
+    { key: 'overview', label: 'Overview' },
+    { key: 'evidence', label: `Evidence (${detail.vendors.length + newsHits.length})` },
   ] as const
 
   return (
-    <div className="ml-10 mr-2 my-2 p-4 rounded-md bg-background-elevated/20 border border-border/30 space-y-3">
+    <div className="my-2 p-4 rounded-md bg-background-elevated/20 border-l-2 border-accent pl-4 space-y-3">
       {/* Tabs */}
       <div className="flex items-center gap-1 border-b border-border/30 pb-2">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             className={cn(
-              'px-3 py-1 text-[11px] font-medium rounded-t transition-colors',
+              'px-3 py-1 text-xs font-medium rounded-t transition-colors',
               activeTab === tab.key
                 ? 'text-accent border-b-2 border-accent'
                 : 'text-text-muted hover:text-text-secondary'
@@ -632,111 +603,116 @@ function CaseDetailPanel({
       </div>
 
       {/* Tab content */}
-      {activeTab === 'summary' && (
-        <div className="space-y-2">
+      {activeTab === 'overview' && (
+        <div className="space-y-4">
+          {/* Summary */}
           {detail.summary && (
-            <p className="text-[12px] text-text-secondary leading-relaxed">{detail.summary}</p>
+            <p className="text-xs text-text-secondary leading-relaxed">{detail.summary}</p>
           )}
           {detail.signals_triggered.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-2">
+            <div className="flex flex-wrap gap-1.5">
               {detail.signals_triggered.map((signal) => (
                 <span
                   key={signal}
-                  className="text-[9px] px-1.5 py-0.5 rounded bg-accent/10 text-accent/80 font-[var(--font-family-mono)]"
+                  className="text-xs px-2 py-0.5 rounded bg-accent/10 text-accent font-mono"
                 >
                   {signal}
                 </span>
               ))}
             </div>
           )}
-        </div>
-      )}
-
-      {activeTab === 'vendors' && (
-        <div className="space-y-1">
-          {detail.vendors.map((v) => (
-            <div key={v.vendor_id} className="flex items-center gap-3 p-2 rounded hover:bg-background-elevated/40 transition-colors">
-              <div className="flex-1 min-w-0">
-                <button
-                  className="text-[11px] font-medium text-text-primary hover:text-accent transition-colors truncate block"
-                  onClick={() => navigate(`/vendors/${v.vendor_id}`)}
-                >
-                  {toTitleCase(v.name)}
-                </button>
-                <p className="text-[9px] text-text-muted">
-                  {v.role} &middot; {formatNumber(v.contract_count || 0)} contracts &middot; {formatCompactMXN(v.contract_value_mxn || 0)}
-                </p>
-              </div>
-              {v.avg_risk_score != null && <RiskBadge score={v.avg_risk_score} className="text-[9px]" />}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {activeTab === 'questions' && (
-        <div className="space-y-2">
-          {detail.questions.length === 0 ? (
-            <p className="text-[11px] text-text-muted">No investigation questions generated.</p>
-          ) : (
-            detail.questions.slice(0, 10).map((q) => (
-              <div key={q.id} className="flex gap-2 p-2 rounded bg-background-elevated/20">
-                <HelpCircle className="h-3.5 w-3.5 text-accent/60 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-[11px] text-text-secondary">{q.question_text}</p>
-                  <span className="text-[9px] text-text-muted/60 font-[var(--font-family-mono)]">{q.question_type}</span>
+          {/* Research Questions */}
+          {detail.questions.length > 0 && (
+            <div className="space-y-2 pt-2 border-t border-border/20">
+              <p className="text-xs font-medium text-text-muted uppercase tracking-wider">Research Questions</p>
+              {detail.questions.slice(0, 8).map((q) => (
+                <div key={q.id} className="flex gap-2 p-2 rounded bg-background-elevated/20">
+                  <HelpCircle className="h-3.5 w-3.5 text-accent flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs text-text-secondary">{q.question_text}</p>
+                    <span className="text-xs text-text-secondary font-mono">{q.question_type}</span>
+                  </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       )}
 
       {activeTab === 'evidence' && (
-        <div className="space-y-2">
-          {newsHits.map((ev, i) => (
-            <div key={i} className="flex gap-2 p-2 rounded bg-background-elevated/20">
-              <Newspaper className="h-3.5 w-3.5 text-emerald-400/60 flex-shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-medium text-text-primary">{ev.source_title}</p>
-                <p className="text-[10px] text-text-muted mt-0.5">{ev.summary}</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[9px] text-text-muted/60 font-[var(--font-family-mono)]">{ev.source_type}</span>
-                  {ev.source_url && (
-                    <a
-                      href={ev.source_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[9px] text-accent/70 hover:text-accent flex items-center gap-0.5"
+        <div className="space-y-4">
+          {/* Vendors */}
+          {detail.vendors.length > 0 && (
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Vendors</p>
+              {detail.vendors.map((v) => (
+                <div key={v.vendor_id} className="flex items-center gap-3 p-2 rounded hover:bg-background-elevated/40 transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <button
+                      className="text-xs font-medium text-text-primary hover:text-accent transition-colors truncate block"
+                      onClick={() => navigate(`/vendors/${v.vendor_id}`)}
                     >
-                      Source <ExternalLink className="h-2.5 w-2.5" />
-                    </a>
-                  )}
+                      {toTitleCase(v.name)}
+                    </button>
+                    <p className="text-xs text-text-muted">
+                      {v.role} &middot; {formatNumber(v.contract_count || 0)} contracts &middot; {formatCompactMXN(v.contract_value_mxn || 0)}
+                    </p>
+                  </div>
+                  {v.avg_risk_score != null && <RiskBadge score={v.avg_risk_score} className="text-xs" />}
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
-          {newsHits.length === 0 && !showEvidenceForm && (
-            <p className="text-[11px] text-text-muted">No external evidence attached yet.</p>
+          )}
+          {/* External Evidence */}
+          {(newsHits.length > 0 || !showEvidenceForm) && (
+            <div className="space-y-2 pt-2 border-t border-border/20">
+              <p className="text-xs font-medium text-text-muted uppercase tracking-wider">External Evidence</p>
+              {newsHits.map((ev, i) => (
+                <div key={i} className="flex gap-2 p-2 rounded bg-background-elevated/20">
+                  <Newspaper className="h-3.5 w-3.5 text-emerald-400/60 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-text-primary">{ev.source_title}</p>
+                    <p className="text-xs text-text-muted mt-0.5">{ev.summary}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs text-text-secondary font-mono">{ev.source_type}</span>
+                      {ev.source_url && (
+                        <a
+                          href={ev.source_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-accent hover:text-accent flex items-center gap-0.5"
+                        >
+                          Source <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {newsHits.length === 0 && !showEvidenceForm && (
+                <p className="text-xs text-text-muted">No external evidence attached yet.</p>
+              )}
+            </div>
           )}
 
           {/* Add evidence form */}
           {showEvidenceForm ? (
             <div className="p-3 rounded border border-accent/20 bg-accent/[0.02] space-y-2">
-              <p className="text-[10px] font-bold text-accent uppercase tracking-wider">Add Evidence</p>
+              <p className="text-xs font-bold text-accent uppercase tracking-wider">Add Evidence</p>
               <input
-                className="w-full text-[11px] bg-background-elevated border border-border/50 rounded px-2 py-1.5 text-text-primary placeholder-text-muted/50"
+                className="w-full text-xs bg-background-elevated border border-border/50 rounded px-2 py-1.5 text-text-primary placeholder-text-muted/50"
                 placeholder="Source URL"
                 value={evidenceUrl}
                 onChange={(e) => setEvidenceUrl(e.target.value)}
               />
               <input
-                className="w-full text-[11px] bg-background-elevated border border-border/50 rounded px-2 py-1.5 text-text-primary placeholder-text-muted/50"
+                className="w-full text-xs bg-background-elevated border border-border/50 rounded px-2 py-1.5 text-text-primary placeholder-text-muted/50"
                 placeholder="Source title"
                 value={evidenceTitle}
                 onChange={(e) => setEvidenceTitle(e.target.value)}
               />
               <textarea
-                className="w-full text-[11px] bg-background-elevated border border-border/50 rounded px-2 py-1.5 text-text-primary placeholder-text-muted/50 resize-none"
+                className="w-full text-xs bg-background-elevated border border-border/50 rounded px-2 py-1.5 text-text-primary placeholder-text-muted/50 resize-none"
                 rows={2}
                 placeholder="Brief summary of the evidence"
                 value={evidenceSummary}
@@ -744,7 +720,7 @@ function CaseDetailPanel({
               />
               <div className="flex items-center gap-2">
                 <select
-                  className="text-[11px] bg-background-elevated border border-border/50 rounded px-2 py-1 text-text-secondary"
+                  className="text-xs bg-background-elevated border border-border/50 rounded px-2 py-1 text-text-secondary"
                   value={evidenceType}
                   onChange={(e) => setEvidenceType(e.target.value)}
                 >
@@ -755,20 +731,20 @@ function CaseDetailPanel({
                 </select>
                 <Button
                   size="sm"
-                  className="h-7 text-[10px]"
+                  className="h-7 text-xs"
                   disabled={!evidenceUrl || !evidenceTitle || addEvidenceMutation.isPending}
                   onClick={() => addEvidenceMutation.mutate()}
                 >
                   {addEvidenceMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
                   <span className="ml-1">Submit</span>
                 </Button>
-                <Button size="sm" variant="ghost" className="h-7 text-[10px]" onClick={() => setShowEvidenceForm(false)}>
+                <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setShowEvidenceForm(false)}>
                   Cancel
                 </Button>
               </div>
             </div>
           ) : (
-            <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => setShowEvidenceForm(true)}>
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setShowEvidenceForm(true)}>
               <Plus className="h-3 w-3 mr-1" /> Add Evidence
             </Button>
           )}
@@ -776,12 +752,12 @@ function CaseDetailPanel({
       )}
 
       {/* Actions */}
-      <div className="flex items-center gap-2 pt-3 border-t border-border/30">
-        <span className="text-[9px] text-text-muted/60 mr-2">Review:</span>
+      <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-border/30">
+        <span className="text-xs text-text-secondary mr-2">Review:</span>
         <Button
           size="sm"
           variant="outline"
-          className="h-7 text-[10px] border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+          className="h-7 text-xs border-risk-low/30 text-risk-low hover:bg-risk-low/10"
           disabled={isReviewing || detail.validation_status === 'corroborated'}
           onClick={() => onReview('corroborated')}
         >
@@ -790,7 +766,7 @@ function CaseDetailPanel({
         <Button
           size="sm"
           variant="outline"
-          className="h-7 text-[10px] border-red-500/30 text-red-400 hover:bg-red-500/10"
+          className="h-7 text-xs border-risk-critical/30 text-risk-critical hover:bg-risk-critical/10"
           disabled={isReviewing || detail.validation_status === 'refuted'}
           onClick={() => onReview('refuted')}
         >
@@ -799,7 +775,7 @@ function CaseDetailPanel({
         <Button
           size="sm"
           variant="outline"
-          className="h-7 text-[10px]"
+          className="h-7 text-xs"
           disabled={isReviewing || detail.validation_status === 'inconclusive'}
           onClick={() => onReview('inconclusive')}
         >
@@ -809,7 +785,7 @@ function CaseDetailPanel({
         {detail.validation_status === 'corroborated' && (
           <Button
             size="sm"
-            className="h-7 text-[10px] ml-auto bg-accent/20 text-accent hover:bg-accent/30"
+            className="h-7 text-xs ml-auto bg-accent/20 text-accent hover:bg-accent/30"
             disabled={promoteMutation.isPending}
             onClick={() => promoteMutation.mutate()}
           >
@@ -822,7 +798,7 @@ function CaseDetailPanel({
           </Button>
         )}
         {promoteMutation.isSuccess && (
-          <span className="text-[10px] text-emerald-400 ml-2">Promoted successfully</span>
+          <span className="text-xs text-risk-low ml-2">Promoted successfully</span>
         )}
       </div>
     </div>

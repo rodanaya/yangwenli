@@ -26,7 +26,7 @@ export const useTheme = create<ThemeState>()(
       },
     }),
     {
-      name: 'yang-wenli-theme',
+      name: 'rubli-theme',
       onRehydrateStorage: () => (state) => {
         if (state) {
           applyTheme(state.theme)

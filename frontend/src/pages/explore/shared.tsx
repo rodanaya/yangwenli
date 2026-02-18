@@ -2,7 +2,6 @@
  * Shared components, constants, and types for the Explore page tabs.
  */
 
-import type { LucideIcon } from 'lucide-react'
 import {
   Users,
   Building2,
@@ -28,7 +27,7 @@ export type TabId = (typeof TABS)[number]['id']
 export function StatPill({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-[10px] text-text-muted">{label}</span>
+      <span className="text-xs text-text-muted">{label}</span>
       <span
         className="text-xs font-semibold tabular-nums"
         style={color ? { color } : undefined}

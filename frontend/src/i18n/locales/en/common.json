@@ -31,5 +31,19 @@
   "viewDetails": "View Details",
   "exportCSV": "Export CSV",
   "exportExcel": "Export Excel",
-  "dateNote": "Date granularity available for ~48% of contracts."
+  "dateNote": "Date granularity available for ~48% of contracts.",
+  "welcome": {
+    "subtitle": "Red Unificada de Busqueda de Licitaciones Irregulares — AI-Powered Corruption Detection for Mexican Government Procurement",
+    "step1Title": "3.1 Million Contracts Analyzed",
+    "step1Desc": "We analyze every federal procurement contract from 2002-2025, worth over 9 trillion MXN. Our AI model detects patterns consistent with corruption, validated against 15 real documented cases.",
+    "step2Title": "Risk Scores You Can Trust",
+    "step2Desc": "Each contract receives a calibrated probability score (0-100%) estimating corruption risk. Critical (50%+), High (30%+), Medium (10%+), Low (<10%). Hover over any metric with a help icon for an explanation.",
+    "step3Title": "Explore and Investigate",
+    "step3Desc": "Search vendors, institutions, and contracts. Track suspicious entities on your Watchlist. Use the Network view to see vendor relationships and potential collusion patterns.",
+    "step4Title": "Start with the Executive Summary",
+    "step4Desc": "The Executive Summary gives you a complete overview of procurement risk across all 12 federal sectors. From there, drill into any sector, vendor, or pattern that catches your eye.",
+    "skip": "Skip tour",
+    "next": "Next",
+    "getStarted": "Get Started"
+  }
 }

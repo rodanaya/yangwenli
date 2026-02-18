@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
+import { WelcomeModal } from '@/components/WelcomeModal'
 
 export function MainLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -16,6 +17,9 @@ export function MainLayout() {
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
+
+      {/* First-visit onboarding */}
+      <WelcomeModal />
 
       {/* Sidebar */}
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
@@ -39,8 +43,8 @@ export function MainLayout() {
 
         {/* Footer — minimal status bar */}
         <footer className="border-t border-border/30 px-5 py-2.5">
-          <div className="flex items-center justify-between text-[10px] text-text-muted/50 font-[var(--font-family-mono)] tracking-wide">
-            <span>YANG WEN-LI // PROCUREMENT INTELLIGENCE</span>
+          <div className="flex items-center justify-between text-xs text-text-muted font-mono tracking-wide">
+            <span>RUBLI // PROCUREMENT INTELLIGENCE</span>
             <span>3.1M CONTRACTS // 2002-2025</span>
           </div>
         </footer>

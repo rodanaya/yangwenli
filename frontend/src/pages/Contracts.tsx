@@ -315,7 +315,7 @@ export function Contracts() {
               key={preset.id}
               onClick={() => isActive ? clearAllFilters() : applyPreset(preset.id)}
               className={cn(
-                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap border transition-all',
+                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-all',
                 isActive
                   ? 'bg-accent/15 border-accent/40 text-accent'
                   : 'bg-background-card border-border/50 text-text-muted hover:text-text-primary hover:border-border'
@@ -440,7 +440,7 @@ export function Contracts() {
               <button
                 key={tag.key}
                 onClick={() => updateFilter(tag.key, undefined)}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20 transition-colors"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20 transition-colors"
                 title={`Remove ${tag.label} filter`}
               >
                 {tag.label}
@@ -508,7 +508,7 @@ export function Contracts() {
                       <th
                         key={col.key}
                         className={cn(
-                          'px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider select-none',
+                          'px-3 py-2.5 text-xs font-semibold uppercase tracking-wider select-none',
                           col.sortField && 'cursor-pointer hover:text-accent transition-colors',
                           col.align === 'right' ? 'text-right' : 'text-left',
                           col.hideBelow === 'lg' && 'hidden lg:table-cell',
@@ -547,7 +547,7 @@ export function Contracts() {
       {/* Pagination */}
       {data && data.pagination.total > 0 && (
         <div className="flex items-center justify-between">
-          <p className="text-[11px] text-text-muted tabular-nums">
+          <p className="text-xs text-text-muted tabular-nums">
             {(() => {
               const { start, end } = getPaginationRange(filters.page || 1, filters.per_page || 50, data.pagination.total)
               return `${formatNumber(start)}-${formatNumber(end)} of ${formatNumber(data.pagination.total)}`
@@ -564,7 +564,7 @@ export function Contracts() {
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
-            <span className="text-[11px] text-text-muted tabular-nums px-1">
+            <span className="text-xs text-text-muted tabular-nums px-1">
               {clampPage(filters.page || 1, data.pagination.total_pages)}/{Math.max(1, data.pagination.total_pages)}
             </span>
             <Button
@@ -597,7 +597,7 @@ export function Contracts() {
 function StatPill({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-[10px] text-text-muted">{label}</span>
+      <span className="text-xs text-text-muted">{label}</span>
       <span className="text-xs font-semibold tabular-nums" style={color ? { color } : undefined}>
         {value}
       </span>
@@ -640,11 +640,11 @@ function ContractRow({ contract, onView }: { contract: ContractListItem; onView:
               {contract.title ? toTitleCase(contract.title) : 'Untitled'}
             </p>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-[10px] text-text-muted">
+              <span className="text-xs text-text-muted">
                 {contract.contract_number || `#${contract.id}`}
               </span>
               {sector && (
-                <span className="text-[10px] font-medium" style={{ color: sector.color }}>
+                <span className="text-xs font-medium" style={{ color: sector.color }}>
                   {sector.nameEN}
                 </span>
               )}
@@ -670,7 +670,7 @@ function ContractRow({ contract, onView }: { contract: ContractListItem; onView:
           {contract.institution_id ? (
             <Link
               to={`/institutions/${contract.institution_id}`}
-              className="text-[10px] text-text-muted hover:text-accent transition-colors truncate block max-w-[200px] mt-0.5"
+              className="text-xs text-text-muted hover:text-accent transition-colors truncate block max-w-[200px] mt-0.5"
               onClick={(e) => e.stopPropagation()}
             >
               {toTitleCase(contract.institution_name || 'Unknown')}
@@ -714,7 +714,7 @@ function ContractRow({ contract, onView }: { contract: ContractListItem; onView:
             </span>
           </div>
         ) : (
-          <span className="text-[10px] text-text-muted">-</span>
+          <span className="text-xs text-text-muted">-</span>
         )}
       </td>
 
@@ -722,10 +722,10 @@ function ContractRow({ contract, onView }: { contract: ContractListItem; onView:
       <td className="px-3 py-2 hidden lg:table-cell">
         <div className="flex items-center gap-1">
           {contract.is_direct_award && (
-            <span className="text-[9px] font-semibold text-orange-400 bg-orange-500/15 px-1.5 py-0.5 rounded" title="Direct Award">DA</span>
+            <span className="text-xs font-semibold text-risk-high bg-risk-high/15 px-1.5 py-0.5 rounded" title="Direct Award">DA</span>
           )}
           {contract.is_single_bid && (
-            <span className="text-[9px] font-semibold text-red-400 bg-red-500/15 px-1.5 py-0.5 rounded" title="Single Bid">SB</span>
+            <span className="text-xs font-semibold text-risk-critical bg-risk-critical/15 px-1.5 py-0.5 rounded" title="Single Bid">SB</span>
           )}
           {anomalyInfo && (
             <span
@@ -761,7 +761,7 @@ function ContractRow({ contract, onView }: { contract: ContractListItem; onView:
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {factors.length > 0 && (
           <div>
-            <p className="text-[11px] font-mono uppercase tracking-wider text-text-muted mb-1.5">Risk Factors</p>
+            <p className="text-xs font-mono uppercase tracking-wider text-text-muted mb-1.5">Risk Factors</p>
             <div className="flex flex-wrap gap-1.5">
               {factors.map((raw) => {
                 const parsed = parseFactorLabel(raw)
@@ -769,7 +769,7 @@ function ContractRow({ contract, onView }: { contract: ContractListItem; onView:
                 return (
                   <span
                     key={raw}
-                    className="text-[10px] font-medium px-1.5 py-0.5 rounded border"
+                    className="text-xs font-medium px-1.5 py-0.5 rounded border"
                     style={{
                       backgroundColor: `${catColor}15`,
                       color: catColor,

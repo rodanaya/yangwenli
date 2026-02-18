@@ -674,25 +674,16 @@ VIEWS_DDL = """
 -- VIEWS FOR COMMON ANALYTICS
 -- =============================================================================
 
--- Unified Contracts View (joins contracts + risk_scores + financial_metrics)
+-- Unified Contracts View (risk scores now live on contracts table since v5.0)
 CREATE VIEW IF NOT EXISTS v_contracts_full AS
 SELECT
     c.*,
-    r.risk_score,
-    r.risk_level,
-    r.model_version,
-    r.single_bid_score,
-    r.direct_award_score,
-    r.price_anomaly_score,
-    r.vendor_concentration_score,
-    r.network_risk_score,
     f.amount_usd,
     f.amount_mxn_2024,
     f.amount_usd_2024,
     f.estimated_loss_mxn,
     f.estimated_loss_usd
 FROM contracts c
-LEFT JOIN risk_scores r ON c.id = r.contract_id
 LEFT JOIN financial_metrics f ON c.id = f.contract_id;
 
 -- Vendor Stats View (computed aggregates, not stored)
@@ -704,14 +695,13 @@ SELECT
     v.name_normalized,
     COUNT(c.id) as total_contracts,
     SUM(c.amount_mxn) as total_amount_mxn,
-    AVG(r.risk_score) as avg_risk_score,
+    AVG(c.risk_score) as avg_risk_score,
     MIN(c.contract_date) as first_contract,
     MAX(c.contract_date) as last_contract,
     COUNT(DISTINCT c.sector_id) as sector_count,
     COUNT(DISTINCT c.institution_id) as institution_count
 FROM vendors v
 LEFT JOIN contracts c ON v.id = c.vendor_id
-LEFT JOIN risk_scores r ON c.id = r.contract_id
 GROUP BY v.id, v.rfc, v.name, v.name_normalized;
 
 -- Sector Summary View
@@ -723,17 +713,16 @@ SELECT
     s.color as sector_color,
     COUNT(c.id) as total_contracts,
     COALESCE(SUM(c.amount_mxn), 0) as total_amount_mxn,
-    COALESCE(AVG(r.risk_score), 0) as avg_risk_score,
+    COALESCE(AVG(c.risk_score), 0) as avg_risk_score,
     SUM(CASE WHEN c.is_direct_award = 1 THEN 1 ELSE 0 END) as direct_award_count,
     SUM(CASE WHEN c.is_single_bid = 1 THEN 1 ELSE 0 END) as single_bid_count,
-    SUM(CASE WHEN r.risk_score >= 0.7 THEN 1 ELSE 0 END) as high_risk_count,
+    SUM(CASE WHEN c.risk_score >= 0.5 THEN 1 ELSE 0 END) as high_risk_count,
     COUNT(DISTINCT c.vendor_id) as unique_vendors,
     COUNT(DISTINCT c.institution_id) as unique_institutions,
     MIN(c.contract_year) as earliest_year,
     MAX(c.contract_year) as latest_year
 FROM sectors s
 LEFT JOIN contracts c ON s.id = c.sector_id
-LEFT JOIN risk_scores r ON c.id = r.contract_id
 GROUP BY s.id, s.code, s.name_es, s.color;
 
 -- Vendor Risk Profile View
@@ -749,8 +738,8 @@ SELECT
     COUNT(c.id) as contract_count,
     COALESCE(SUM(c.amount_mxn), 0) as total_amount_mxn,
     COALESCE(AVG(c.amount_mxn), 0) as avg_contract_value,
-    COALESCE(AVG(r.risk_score), 0) as avg_risk_score,
-    COALESCE(MAX(r.risk_score), 0) as max_risk_score,
+    COALESCE(AVG(c.risk_score), 0) as avg_risk_score,
+    COALESCE(MAX(c.risk_score), 0) as max_risk_score,
     SUM(CASE WHEN c.is_direct_award = 1 THEN 1 ELSE 0 END) as direct_award_count,
     SUM(CASE WHEN c.is_single_bid = 1 THEN 1 ELSE 0 END) as single_bid_count,
     COUNT(DISTINCT c.institution_id) as institution_count,
@@ -759,7 +748,6 @@ SELECT
     MAX(c.contract_year) as last_year
 FROM vendors v
 LEFT JOIN contracts c ON v.id = c.vendor_id
-LEFT JOIN risk_scores r ON c.id = r.contract_id
 GROUP BY v.id, v.rfc, v.name, v.name_normalized, v.size_stratification,
          v.is_ghost_company, v.ghost_probability;
 
@@ -770,12 +758,11 @@ SELECT
     c.sector_id,
     COUNT(*) as contract_count,
     SUM(c.amount_mxn) as total_amount_mxn,
-    AVG(r.risk_score) as avg_risk_score,
+    AVG(c.risk_score) as avg_risk_score,
     SUM(CASE WHEN c.is_direct_award = 1 THEN 1 ELSE 0 END) as direct_awards,
     ROUND(100.0 * SUM(CASE WHEN c.is_direct_award = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) as direct_award_pct,
-    SUM(CASE WHEN r.risk_score >= 0.7 THEN 1 ELSE 0 END) as high_risk_count
+    SUM(CASE WHEN c.risk_score >= 0.5 THEN 1 ELSE 0 END) as high_risk_count
 FROM contracts c
-LEFT JOIN risk_scores r ON c.id = r.contract_id
 WHERE c.contract_year IS NOT NULL
 GROUP BY c.contract_year, c.sector_id
 ORDER BY c.contract_year, c.sector_id;
@@ -808,7 +795,7 @@ SELECT
     -- Aggregates
     COUNT(c.id) as total_contracts,
     COALESCE(SUM(c.amount_mxn), 0) as total_amount_mxn,
-    COALESCE(AVG(rs.risk_score), 0) as avg_risk_score,
+    COALESCE(AVG(c.risk_score), 0) as avg_risk_score,
     SUM(CASE WHEN c.is_direct_award = 1 THEN 1 ELSE 0 END) as direct_award_count,
     COUNT(DISTINCT c.vendor_id) as unique_vendors,
     MIN(c.contract_year) as first_year,
@@ -820,7 +807,6 @@ LEFT JOIN autonomy_levels al ON i.autonomy_level_id = al.id
 LEFT JOIN sectors s ON i.sector_id = s.id
 LEFT JOIN ramos rm ON i.ramo_id = rm.id
 LEFT JOIN contracts c ON i.id = c.institution_id
-LEFT JOIN risk_scores rs ON c.id = rs.contract_id
 GROUP BY i.id, i.siglas, i.name, i.name_normalized, i.tipo, i.gobierno_nivel,
          i.institution_type, it.name_es, it.risk_baseline,
          i.size_tier, st.risk_adjustment,
@@ -838,12 +824,11 @@ SELECT
     s.name_es as sector_name,
     COUNT(c.id) as total_contracts,
     COALESCE(SUM(c.amount_mxn), 0) as total_amount_mxn,
-    COALESCE(AVG(rs.risk_score), 0) as avg_risk_score,
+    COALESCE(AVG(c.risk_score), 0) as avg_risk_score,
     COUNT(DISTINCT c.vendor_id) as unique_vendors
 FROM sub_sectors ss
 JOIN sectors s ON ss.sector_id = s.id
 LEFT JOIN contracts c ON ss.id = c.sub_sector_id
-LEFT JOIN risk_scores rs ON c.id = rs.contract_id
 GROUP BY ss.id, ss.code, ss.name_es, s.code, s.name_es;
 
 -- Data Quality View

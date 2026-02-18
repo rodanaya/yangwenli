@@ -25,6 +25,9 @@ def get_db_connection() -> sqlite3.Connection:
     # WAL mode allows concurrent readers while one writer is active
     conn.execute("PRAGMA journal_mode = WAL")
     conn.execute("PRAGMA read_uncommitted = ON")
+    # Performance: 200MB page cache + 1GB memory-mapped I/O for 5.6GB database
+    conn.execute("PRAGMA cache_size = -200000")
+    conn.execute("PRAGMA mmap_size = 1073741824")
     return conn
 
 

@@ -1,10 +1,12 @@
 /**
  * Chart Components
  * Centralized exports for all visualization components and Recharts re-exports
+ *
+ * NOTE: Heatmap is NOT exported here to avoid bundling echarts (~900KB) into every page.
+ * Import Heatmap directly: import { Heatmap } from '@/components/charts/Heatmap'
  */
 
-// Custom chart components
-export { Heatmap } from './Heatmap'
+// Custom chart components (Recharts-based only)
 export { StackedAreaChart } from './StackedArea'
 export { AlertPanel } from './AlertPanel'
 export { ProcedureBreakdown } from './ProcedureBreakdown'

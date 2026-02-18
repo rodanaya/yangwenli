@@ -7,6 +7,7 @@
  */
 
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -15,6 +16,7 @@ import { SectionDescription } from '@/components/SectionDescription'
 import { cn, formatCompactMXN, formatNumber, getRiskLevel, toTitleCase } from '@/lib/utils'
 import { SECTORS, SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
+import { PageHero, StatCard as SharedStatCard } from '@/components/DashboardWidgets'
 import type { MoneyFlowItem } from '@/api/types'
 import {
   BarChart,
@@ -28,15 +30,11 @@ import {
   Treemap,
 } from '@/components/charts'
 import {
-  Landmark,
   Banknote,
   AlertTriangle,
   Building2,
   Users,
-  ChevronDown,
   ArrowRight,
-  ShieldAlert,
-  DollarSign,
   TrendingUp,
   Filter,
 } from 'lucide-react'
@@ -53,7 +51,7 @@ function riskToColor(risk: number | null): string {
 }
 
 /** Truncate a name for chart axis labels */
-function truncateName(name: string, maxLen = 28): string {
+function truncateName(name: string, maxLen = 22): string {
   const titled = toTitleCase(name)
   if (titled.length <= maxLen) return titled
   return titled.slice(0, maxLen - 1).trimEnd() + '\u2026'
@@ -90,26 +88,52 @@ function TreemapTooltip({ active, payload }: { active?: boolean; payload?: Array
   )
 }
 
+/** Calculate text color based on background luminance */
+function getTextColor(bgColor: string): string {
+  const hex = bgColor.replace('#', '')
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  return luminance > 0.5 ? '#1a1f2e' : '#e2e8f0'
+}
+
 // Custom treemap content renderer
 function TreemapContent(props: {
   x: number; y: number; width: number; height: number;
   name: string; fill: string; value: number;
 }) {
-  const { x, y, width, height, name, fill } = props
+  const { x, y, width, height, name, fill, value } = props
   const showLabel = width > 60 && height > 30
+  const showValue = width > 60 && height > 45
+  const textColor = getTextColor(fill)
   return (
     <g>
       <rect x={x} y={y} width={width} height={height} fill={fill} stroke="#1a1f2e" strokeWidth={2} rx={4} />
       {showLabel && (
         <text
           x={x + width / 2}
-          y={y + height / 2}
+          y={y + height / 2 + (showValue ? -7 : 0)}
           textAnchor="middle"
           dominantBaseline="central"
-          className="text-[10px] font-medium"
-          fill="#e2e8f0"
+          className="text-xs font-medium"
+          fill={textColor}
+          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
         >
           {name}
+        </text>
+      )}
+      {showValue && (
+        <text
+          x={x + width / 2}
+          y={y + height / 2 + 9}
+          textAnchor="middle"
+          dominantBaseline="central"
+          className="text-xs"
+          fill={textColor}
+          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)', opacity: 0.8 }}
+        >
+          {formatCompactMXN(value)}
         </text>
       )}
     </g>
@@ -121,6 +145,7 @@ function TreemapContent(props: {
 // =============================================================================
 
 export default function MoneyFlow() {
+  const navigate = useNavigate()
   const [selectedSector, setSelectedSector] = useState<number | ''>('')
 
   // ---- Data fetch ----
@@ -185,6 +210,7 @@ export default function MoneyFlow() {
         return {
           name: s.nameEN,
           sectorCode: s.code,
+          sectorId: s.id,
           value: agg.value,
           contracts: agg.contracts,
           fill: SECTOR_COLORS[s.code] || '#64748b',
@@ -223,7 +249,7 @@ export default function MoneyFlow() {
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           {[...Array(3)].map((_, i) => (
-            <Card key={i}><CardContent className="p-5"><Skeleton className="h-16" /></CardContent></Card>
+            <Card key={i}><CardContent className="p-4"><Skeleton className="h-16" /></CardContent></Card>
           ))}
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
@@ -259,81 +285,57 @@ export default function MoneyFlow() {
       {/* ================================================================== */}
       {/* Header                                                              */}
       {/* ================================================================== */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-text-primary flex items-center gap-2">
-            <Banknote className="h-5 w-5 text-accent" aria-hidden="true" />
-            Follow the Money
-          </h1>
-          <p className="text-sm text-text-secondary mt-1">
-            Tracing the flow of public procurement funds from institutions to vendors
-          </p>
-        </div>
+      {/* Hero */}
+      <PageHero
+        trackingLabel="FUND FLOW ANALYSIS"
+        icon={<Banknote className="h-4 w-4 text-accent" />}
+        headline={formatCompactMXN(flowData.total_value)}
+        subtitle="Total procurement value tracked"
+        detail="Traces how government spending flows from institutions through sectors to vendors, highlighting high-risk channels."
+        trailing={
+          <div className="flex items-center gap-3">
+            <Filter className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
+            <select
+              value={selectedSector}
+              onChange={(e) => setSelectedSector(e.target.value ? Number(e.target.value) : '')}
+              className="h-8 rounded-md border border-border bg-background-elevated px-3 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
+              aria-label="Filter by sector"
+            >
+              <option value="">All Sectors</option>
+              {SECTORS.map(s => (
+                <option key={s.id} value={s.id}>{s.nameEN}</option>
+              ))}
+            </select>
+          </div>
+        }
+      />
 
-        {/* Controls */}
-        <div className="flex items-center gap-3">
-          <Filter className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
-          <select
-            value={selectedSector}
-            onChange={(e) => setSelectedSector(e.target.value ? Number(e.target.value) : '')}
-            className="h-8 rounded-md border border-border bg-background-elevated px-3 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
-            aria-label="Filter by sector"
-          >
-            <option value="">All Sectors</option>
-            {SECTORS.map(s => (
-              <option key={s.id} value={s.id}>{s.nameEN}</option>
-            ))}
-          </select>
-        </div>
+      {/* L1: Overview Stats */}
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
+        <SharedStatCard
+          label="TOTAL CONTRACTS"
+          value={formatNumber(flowData.total_contracts)}
+          detail="Across all institutions"
+          color="text-accent"
+          borderColor="border-accent/30"
+        />
+        <SharedStatCard
+          label="HIGH-RISK FLOWS"
+          value={formatCompactMXN(riskWeightedValue)}
+          detail="Flows with avg risk ≥ 30%"
+          color="text-risk-critical"
+          borderColor="border-risk-critical/30"
+        />
+        <SharedStatCard
+          label="INSTITUTIONS"
+          value={formatNumber(institutionFlows.length)}
+          detail="Top spending entities"
+          color="text-text-primary"
+          borderColor="border-text-muted/20"
+        />
       </div>
 
-      {/* ================================================================== */}
-      {/* L1: Overview Stats                                                  */}
-      {/* ================================================================== */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
-                <DollarSign className="h-5 w-5 text-accent" aria-hidden="true" />
-              </div>
-              <div>
-                <p className="text-xs text-text-muted">Total Procurement Value</p>
-                <p className="text-lg font-bold text-text-primary">{formatCompactMXN(flowData.total_value)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10">
-                <Landmark className="h-5 w-5 text-blue-400" aria-hidden="true" />
-              </div>
-              <div>
-                <p className="text-xs text-text-muted">Total Contracts</p>
-                <p className="text-lg font-bold text-text-primary">{formatNumber(flowData.total_contracts)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-500/10">
-                <ShieldAlert className="h-5 w-5 text-red-400" aria-hidden="true" />
-              </div>
-              <div>
-                <p className="text-xs text-text-muted">High-Risk Flow Value</p>
-                <p className="text-lg font-bold text-text-primary">{formatCompactMXN(riskWeightedValue)}</p>
-                <p className="text-[10px] text-text-muted">Flows with avg risk &ge; 30%</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Old stat cards removed — replaced by SharedStatCard above */}
 
       {/* ================================================================== */}
       {/* L2 + L3: Institution and Vendor Charts                              */}
@@ -358,26 +360,35 @@ export default function MoneyFlow() {
                 <BarChart
                   layout="vertical"
                   data={institutionFlows}
-                  margin={{ top: 4, right: 16, bottom: 4, left: 4 }}
+                  margin={{ top: 4, right: 16, bottom: 4, left: 160 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" horizontal={false} />
                   <XAxis
                     type="number"
                     tickFormatter={(v: number) => formatCompactMXN(v)}
-                    tick={{ fontSize: 10, fill: '#94a3b8' }}
+                    tick={{ fontSize: 10, fill: 'var(--color-text-secondary)' }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <YAxis
                     type="category"
                     dataKey="name"
-                    width={180}
-                    tick={{ fontSize: 10, fill: '#94a3b8' }}
+                    width={150}
+                    tick={{ fontSize: 10, fill: 'var(--color-text-secondary)' }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <RechartsTooltip content={<FlowBarTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-                  <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={18}>
+                  <Bar
+                    dataKey="value"
+                    radius={[0, 4, 4, 0]}
+                    maxBarSize={18}
+                    onClick={(_data: unknown, index: number) => {
+                      const item = institutionFlows[index]
+                      if (item?.id) navigate(`/institutions/${item.id}`)
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
                     {institutionFlows.map((entry, i) => (
                       <Cell key={i} fill={riskToColor(entry.avg_risk)} />
                     ))}
@@ -407,26 +418,35 @@ export default function MoneyFlow() {
                 <BarChart
                   layout="vertical"
                   data={vendorFlows}
-                  margin={{ top: 4, right: 16, bottom: 4, left: 4 }}
+                  margin={{ top: 4, right: 16, bottom: 4, left: 160 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" horizontal={false} />
                   <XAxis
                     type="number"
                     tickFormatter={(v: number) => formatCompactMXN(v)}
-                    tick={{ fontSize: 10, fill: '#94a3b8' }}
+                    tick={{ fontSize: 10, fill: 'var(--color-text-secondary)' }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <YAxis
                     type="category"
                     dataKey="name"
-                    width={180}
-                    tick={{ fontSize: 10, fill: '#94a3b8' }}
+                    width={150}
+                    tick={{ fontSize: 10, fill: 'var(--color-text-secondary)' }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <RechartsTooltip content={<FlowBarTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-                  <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={18}>
+                  <Bar
+                    dataKey="value"
+                    radius={[0, 4, 4, 0]}
+                    maxBarSize={18}
+                    onClick={(_data: unknown, index: number) => {
+                      const item = vendorFlows[index]
+                      if (item?.id) navigate(`/vendors/${item.id}`)
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
                     {vendorFlows.map((entry, i) => (
                       <Cell key={i} fill={riskToColor(entry.avg_risk)} />
                     ))}
@@ -463,6 +483,11 @@ export default function MoneyFlow() {
                   nameKey="name"
                   stroke="#1a1f2e"
                   content={<TreemapContent x={0} y={0} width={0} height={0} name="" fill="" value={0} />}
+                  onClick={(node: unknown) => {
+                    const n = node as { sectorId?: number }
+                    if (n?.sectorId) setSelectedSector(n.sectorId)
+                  }}
+                  style={{ cursor: 'pointer' }}
                 >
                   <RechartsTooltip content={<TreemapTooltip />} />
                 </Treemap>
@@ -471,7 +496,7 @@ export default function MoneyFlow() {
               {/* Legend */}
               <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-4 justify-center">
                 {sectorAgg.map(s => (
-                  <div key={s.sectorCode} className="flex items-center gap-1.5 text-[10px] text-text-secondary">
+                  <div key={s.sectorCode} className="flex items-center gap-1.5 text-xs text-text-secondary">
                     <span className="inline-block h-2.5 w-2.5 rounded-sm shrink-0" style={{ backgroundColor: s.fill }} />
                     {s.name}
                   </div>
@@ -524,14 +549,14 @@ export default function MoneyFlow() {
                       >
                         <td className="py-2.5 px-3">
                           <span className="text-text-primary font-medium">{truncateName(flow.source_name, 32)}</span>
-                          <span className="text-text-muted ml-1.5 text-[10px] capitalize">{flow.source_type}</span>
+                          <span className="text-text-muted ml-1.5 text-xs capitalize">{flow.source_type}</span>
                         </td>
                         <td className="py-2.5 px-3 text-text-muted hidden md:table-cell">
                           <ArrowRight className="h-3 w-3" aria-hidden="true" />
                         </td>
                         <td className="py-2.5 px-3">
                           <span className="text-text-primary font-medium">{truncateName(flow.target_name, 32)}</span>
-                          <span className="text-text-muted ml-1.5 text-[10px] capitalize">{flow.target_type}</span>
+                          <span className="text-text-muted ml-1.5 text-xs capitalize">{flow.target_type}</span>
                         </td>
                         <td className="py-2.5 px-3 text-right text-text-primary font-mono">
                           {formatCompactMXN(flow.value)}
@@ -542,11 +567,11 @@ export default function MoneyFlow() {
                         <td className="py-2.5 px-3 text-right">
                           <span
                             className={cn(
-                              'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold',
-                              level === 'critical' && 'bg-red-500/15 text-red-400',
-                              level === 'high' && 'bg-orange-500/15 text-orange-400',
-                              level === 'medium' && 'bg-amber-500/15 text-amber-400',
-                              level === 'low' && 'bg-green-500/15 text-green-400',
+                              'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold',
+                              level === 'critical' && 'bg-risk-critical/15 text-risk-critical',
+                              level === 'high' && 'bg-risk-high/15 text-risk-high',
+                              level === 'medium' && 'bg-risk-medium/15 text-risk-medium',
+                              level === 'low' && 'bg-risk-low/15 text-risk-low',
                             )}
                           >
                             {(risk * 100).toFixed(1)}%
@@ -567,7 +592,7 @@ export default function MoneyFlow() {
       {/* ================================================================== */}
       <SectionDescription title="Methodology">
         Fund flows are aggregated from 3.1M procurement contracts (2002-2025).
-        Bar colors reflect the average v4.0 risk score for each flow:
+        Bar colors reflect the average v5.0 risk score for each flow:
         green (&lt;10%), amber (10-30%), orange (30-50%), and red (&ge;50%).
         High-risk flow value sums all flows where average risk exceeds 30%.
         Use year and sector filters to narrow the analysis.

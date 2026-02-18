@@ -6,6 +6,7 @@ Router becomes thin: parse request → call service → return response.
 """
 from __future__ import annotations
 
+import json
 import math
 import sqlite3
 from typing import Any
@@ -166,6 +167,173 @@ class ContractService(BaseService):
             return None
         # Convert Row to dict using cursor description
         return dict(row)
+
+    # Z-feature column names matching the v5.0 pipeline
+    Z_COLS = [
+        'z_single_bid', 'z_direct_award', 'z_price_ratio',
+        'z_vendor_concentration', 'z_ad_period_days', 'z_year_end',
+        'z_same_day_count', 'z_network_member_count', 'z_co_bid_rate',
+        'z_price_hyp_confidence', 'z_industry_mismatch', 'z_institution_risk',
+        'z_price_volatility', 'z_sector_spread', 'z_win_rate',
+        'z_institution_diversity',
+    ]
+    FACTOR_NAMES = [c.replace('z_', '') for c in Z_COLS]
+
+    # Human-readable labels for each feature
+    FACTOR_LABELS = {
+        'single_bid': 'Single Bidder',
+        'direct_award': 'Direct Award',
+        'price_ratio': 'Price Anomaly',
+        'vendor_concentration': 'Vendor Concentration',
+        'ad_period_days': 'Ad Period Length',
+        'year_end': 'Year-End Timing',
+        'same_day_count': 'Same-Day Contracts',
+        'network_member_count': 'Network Size',
+        'co_bid_rate': 'Co-Bidding Rate',
+        'price_hyp_confidence': 'Price Outlier Confidence',
+        'industry_mismatch': 'Industry Mismatch',
+        'institution_risk': 'Institution Risk',
+        'price_volatility': 'Price Volatility',
+        'sector_spread': 'Cross-Sector Activity',
+        'win_rate': 'Win Rate',
+        'institution_diversity': 'Institution Diversity',
+    }
+
+    def get_risk_explanation(
+        self,
+        conn: sqlite3.Connection,
+        contract_id: int,
+    ) -> dict | None:
+        """
+        Compute per-feature contribution to a contract's v5.0 risk score.
+
+        For logistic regression P = sigmoid(intercept + sum(beta_i * z_i)) / c,
+        each feature's contribution to the logit is beta_i * z_i.
+
+        Returns dict with overall score, model info, and sorted feature contributions.
+        """
+        # 1. Get contract basic info + sector_id
+        contract_row = self._execute_one(
+            conn,
+            """
+            SELECT id, risk_score, risk_level, risk_model_version,
+                   risk_confidence_lower, risk_confidence_upper,
+                   sector_id, contract_year
+            FROM contracts WHERE id = ?
+            """,
+            (contract_id,),
+        )
+        if contract_row is None:
+            return None
+
+        sector_id = contract_row["sector_id"]
+
+        # 2. Get z-features for this contract
+        z_cols_sql = ", ".join(self.Z_COLS)
+        z_row = self._execute_one(
+            conn,
+            f"SELECT {z_cols_sql} FROM contract_z_features WHERE contract_id = ?",
+            (contract_id,),
+        )
+        if z_row is None:
+            # No z-features (pre-2002 data or missing)
+            return {
+                "contract_id": contract_id,
+                "risk_score": contract_row["risk_score"] or 0,
+                "risk_level": contract_row["risk_level"] or "unknown",
+                "model_version": contract_row["risk_model_version"],
+                "confidence_interval": {
+                    "lower": contract_row["risk_confidence_lower"],
+                    "upper": contract_row["risk_confidence_upper"],
+                },
+                "explanation_available": False,
+                "features": [],
+            }
+
+        z_values = [z_row[col] or 0.0 for col in self.Z_COLS]
+
+        # 3. Load the appropriate model (sector-specific or global)
+        # Try sector model first
+        cal_row = self._execute_one(
+            conn,
+            """
+            SELECT intercept, coefficients, pu_correction_factor, sector_id
+            FROM model_calibration
+            WHERE model_version = 'v5.0' AND sector_id = ?
+            ORDER BY created_at DESC LIMIT 1
+            """,
+            (sector_id,),
+        )
+        model_type = "sector"
+        if cal_row is None:
+            # Fall back to global model
+            cal_row = self._execute_one(
+                conn,
+                """
+                SELECT intercept, coefficients, pu_correction_factor, sector_id
+                FROM model_calibration
+                WHERE model_version = 'v5.0' AND sector_id IS NULL
+                ORDER BY created_at DESC LIMIT 1
+                """,
+            )
+            model_type = "global"
+
+        if cal_row is None:
+            logger.warning("No v5.0 calibration found", contract_id=contract_id)
+            return {
+                "contract_id": contract_id,
+                "risk_score": contract_row["risk_score"] or 0,
+                "risk_level": contract_row["risk_level"] or "unknown",
+                "model_version": contract_row["risk_model_version"],
+                "confidence_interval": {
+                    "lower": contract_row["risk_confidence_lower"],
+                    "upper": contract_row["risk_confidence_upper"],
+                },
+                "explanation_available": False,
+                "features": [],
+            }
+
+        intercept = cal_row["intercept"]
+        coefficients = json.loads(cal_row["coefficients"])
+        pu_c = cal_row["pu_correction_factor"] or 1.0
+
+        # 4. Compute per-feature contributions (beta_i * z_i)
+        features = []
+        total_logit = intercept
+        for i, factor_name in enumerate(self.FACTOR_NAMES):
+            beta = coefficients.get(factor_name, 0.0)
+            z = z_values[i]
+            contribution = beta * z
+            total_logit += contribution
+
+            features.append({
+                "feature": factor_name,
+                "label": self.FACTOR_LABELS.get(factor_name, factor_name.replace('_', ' ').title()),
+                "z_score": round(z, 3),
+                "coefficient": round(beta, 4),
+                "contribution": round(contribution, 4),
+            })
+
+        # Sort by absolute contribution (most impactful first)
+        features.sort(key=lambda f: abs(f["contribution"]), reverse=True)
+
+        return {
+            "contract_id": contract_id,
+            "risk_score": contract_row["risk_score"] or 0,
+            "risk_level": contract_row["risk_level"] or "unknown",
+            "model_version": contract_row["risk_model_version"],
+            "model_type": model_type,
+            "sector_id": sector_id,
+            "confidence_interval": {
+                "lower": contract_row["risk_confidence_lower"],
+                "upper": contract_row["risk_confidence_upper"],
+            },
+            "explanation_available": True,
+            "intercept": round(intercept, 4),
+            "logit": round(total_logit, 4),
+            "pu_correction": round(pu_c, 4),
+            "features": features,
+        }
 
     def get_contract_statistics(
         self,

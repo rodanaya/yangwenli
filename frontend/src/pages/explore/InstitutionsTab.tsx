@@ -310,7 +310,7 @@ export default function InstitutionsTab() {
               key={preset.id}
               onClick={() => isActive ? clearAllFilters() : applyPreset(preset.id)}
               className={cn(
-                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap border transition-all',
+                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-all',
                 isActive
                   ? 'bg-accent/15 border-accent/40 text-accent'
                   : 'bg-background-card border-border/50 text-text-muted hover:text-text-primary hover:border-border'
@@ -337,7 +337,7 @@ export default function InstitutionsTab() {
               {activeFilterTags.map((tag) => (
                 <span
                   key={tag.key}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-medium"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs font-medium"
                 >
                   {tag.label}
                   <button
@@ -435,7 +435,7 @@ export default function InstitutionsTab() {
 
           {hasActiveFilters && (
             <button
-              className="text-[11px] text-accent hover:underline"
+              className="text-xs text-accent hover:underline"
               onClick={clearAllFilters}
             >
               Clear all
@@ -490,7 +490,7 @@ export default function InstitutionsTab() {
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-background-elevated/50">
-                <th className="w-8 px-2 py-2 text-[10px] font-semibold text-text-muted text-center">#</th>
+                <th className="w-8 px-2 py-2 text-xs font-semibold text-text-muted text-center">#</th>
                 {INST_COLUMNS.map((col) => (
                   <th
                     key={col.key}
@@ -534,7 +534,7 @@ export default function InstitutionsTab() {
       {/* Pagination */}
       {data && data.pagination.total_pages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-[11px] text-text-muted tabular-nums">
+          <p className="text-xs text-text-muted tabular-nums">
             {(filters.page! - 1) * filters.per_page! + 1}-
             {Math.min(filters.page! * filters.per_page!, data.pagination.total)} of{' '}
             {formatNumber(data.pagination.total)}
@@ -550,7 +550,7 @@ export default function InstitutionsTab() {
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
-            <span className="text-[11px] text-text-muted tabular-nums px-1">
+            <span className="text-xs text-text-muted tabular-nums px-1">
               {filters.page}/{data.pagination.total_pages}
             </span>
             <Button
@@ -610,7 +610,7 @@ function InstitutionRow({ institution, rank }: { institution: InstitutionRespons
     <tr className="hover:bg-accent/[0.04] transition-colors group" {...prefetch}>
       {/* Rank */}
       <td className="px-2 py-2 text-center">
-        <span className="text-[10px] tabular-nums text-text-muted">{rank}</span>
+        <span className="text-xs tabular-nums text-text-muted">{rank}</span>
       </td>
 
       {/* Institution name + type icon + sector */}
@@ -640,15 +640,15 @@ function InstitutionRow({ institution, rank }: { institution: InstitutionRespons
             </div>
             <div className="flex items-center gap-2 mt-0.5">
               {institution.siglas && (
-                <span className="text-[10px] text-text-muted font-medium">{institution.siglas}</span>
+                <span className="text-xs text-text-muted font-medium">{institution.siglas}</span>
               )}
               {institution.institution_type && (
-                <span className="text-[10px] text-text-muted capitalize">
+                <span className="text-xs text-text-muted capitalize">
                   {institution.institution_type.replace(/_/g, ' ')}
                 </span>
               )}
               {sector && (
-                <span className="text-[10px] font-medium" style={{ color: sector.color }}>
+                <span className="text-xs font-medium" style={{ color: sector.color }}>
                   {sector.nameEN}
                 </span>
               )}
@@ -689,7 +689,7 @@ function InstitutionRow({ institution, rank }: { institution: InstitutionRespons
             </span>
           </div>
         ) : (
-          <span className="text-[10px] text-text-muted">-</span>
+          <span className="text-xs text-text-muted">-</span>
         )}
       </td>
 

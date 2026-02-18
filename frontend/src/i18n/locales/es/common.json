@@ -31,5 +31,19 @@
   "viewDetails": "Ver detalles",
   "exportCSV": "Exportar CSV",
   "exportExcel": "Exportar Excel",
-  "dateNote": "Granularidad de fecha disponible para ~48% de los contratos."
+  "dateNote": "Granularidad de fecha disponible para ~48% de los contratos.",
+  "welcome": {
+    "subtitle": "Red Unificada de Busqueda de Licitaciones Irregulares — Detección de Corrupción con IA para Contrataciones del Gobierno de México",
+    "step1Title": "3.1 Millones de Contratos Analizados",
+    "step1Desc": "Analizamos cada contrato federal de contratación de 2002 a 2025, con un valor de más de 9 billones de MXN. Nuestro modelo de IA detecta patrones consistentes con corrupción, validado contra 15 casos documentados reales.",
+    "step2Title": "Puntuaciones de Riesgo Confiables",
+    "step2Desc": "Cada contrato recibe una probabilidad calibrada (0-100%) que estima el riesgo de corrupción. Crítico (50%+), Alto (30%+), Medio (10%+), Bajo (<10%). Pasa el cursor sobre cualquier métrica con ícono de ayuda para ver su explicación.",
+    "step3Title": "Explora e Investiga",
+    "step3Desc": "Busca proveedores, instituciones y contratos. Rastrea entidades sospechosas en tu Lista de Vigilancia. Usa la vista de Red para ver relaciones entre proveedores y patrones potenciales de colusión.",
+    "step4Title": "Comienza con el Resumen Ejecutivo",
+    "step4Desc": "El Resumen Ejecutivo te da una visión completa del riesgo de contrataciones en los 12 sectores federales. Desde ahí, profundiza en cualquier sector, proveedor o patrón que llame tu atención.",
+    "skip": "Saltar tour",
+    "next": "Siguiente",
+    "getStarted": "Comenzar"
+  }
 }

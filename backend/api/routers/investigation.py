@@ -574,8 +574,8 @@ def run_analysis(request: RunAnalysisRequest):
             execution_time_seconds=elapsed,
         )
     except Exception as e:
-        logger.error(f"Analysis failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Analysis failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Investigation analysis failed. Check server logs for details.")
 
 
 @router.get("/top/{n}")
@@ -864,7 +864,7 @@ def promote_to_ground_truth(
             "ground_truth_case_id": gt_case_id,
             "ground_truth_db_id": gt_db_id,
             "vendors_promoted": vendors_promoted,
-            "message": f"Case promoted to ground truth. Retrain v4.0 to incorporate {vendors_promoted} vendors.",
+            "message": f"Case promoted to ground truth. Retrain v5.0 to incorporate {vendors_promoted} vendors.",
         }
 
 

@@ -8,15 +8,14 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: yangwenli-backend
-    ports:
-      - "8001:8001"
+    # Port 8001 not exposed externally — nginx proxies internally via yangwenli-network
+    # For dev access, uncomment: ports: ["8001:8001"]
     volumes:
-      # Mount the database file (read-only for safety in production)
-      - ./backend/RUBLI_NORMALIZED.db:/app/RUBLI_NORMALIZED.db:ro
-      # For development, mount as read-write:
-      # - ./backend/RUBLI_NORMALIZED.db:/app/RUBLI_NORMALIZED.db
+      - ./backend/RUBLI_NORMALIZED.db:/app/RUBLI_NORMALIZED.db
     environment:
       - PYTHONPATH=/app
+      # Add your production domain before deploying (e.g., https://yourdomain.com)
+      - CORS_ORIGINS=http://localhost:3009,http://127.0.0.1:3009,http://yangwenli-frontend
     healthcheck:
       test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8001/health', timeout=5)"]
       interval: 30s
@@ -42,10 +41,25 @@ services:
     networks:
       - yangwenli-network
 
+  # Scheduled database backup (daily at 3am UTC)
+  backup:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: yangwenli-backup
+    entrypoint: ["sh", "-c", "while true; do python -m scripts.backup_database --output-dir /backups && sleep 86400; done"]
+    volumes:
+      - ./backend/RUBLI_NORMALIZED.db:/app/RUBLI_NORMALIZED.db:ro  # read-only for backup
+      - yangwenli-backups:/backups
+    environment:
+      - PYTHONPATH=/app
+    restart: unless-stopped
+    networks:
+      - yangwenli-network
+
 networks:
   yangwenli-network:
     driver: bridge
 
-# Volume for persistent data (optional, for future use)
 volumes:
-  yangwenli-data:
+  yangwenli-backups:

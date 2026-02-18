@@ -1,0 +1,98 @@
+{
+  "riskScore": {
+    "title": "Risk Score",
+    "description": "A calibrated probability (0-1) estimating the likelihood that a contract involves corruption patterns. Based on 16 statistical features compared against documented corruption cases. Higher = more suspicious."
+  },
+  "riskLevel": {
+    "title": "Risk Level",
+    "description": "Categorization based on risk score: Critical (>=50%), High (>=30%), Medium (>=10%), Low (<10%). These thresholds are aligned with OECD procurement benchmarks."
+  },
+  "singleBid": {
+    "title": "Single Bid",
+    "description": "A competitive procedure (not direct award) where only one vendor submitted a bid. This is a red flag because competitive processes should attract multiple bidders. If only one shows up, it may indicate bid-rigging or market manipulation."
+  },
+  "directAward": {
+    "title": "Direct Award",
+    "description": "A contract awarded directly to a vendor without competitive bidding. Legal in Mexico under certain conditions (emergencies, sole source). Having one bid in a direct award is expected — it's NOT the same as a single bid."
+  },
+  "vendorConcentration": {
+    "title": "Vendor Concentration",
+    "description": "How much of a sector's total procurement value goes to a single vendor. High concentration means one vendor dominates — a top predictor of corruption risk in our model (+0.43 coefficient)."
+  },
+  "mahalanobisDistance": {
+    "title": "Mahalanobis Distance",
+    "description": "A statistical measure of how unusual a contract is across ALL 16 risk dimensions simultaneously. Like asking: 'How far is this contract from normal?' Higher values = more anomalous."
+  },
+  "zScore": {
+    "title": "Z-Score",
+    "description": "A standardized measure showing how many standard deviations a value is from the sector/year average. A z-score of +2 means the value is unusually high compared to similar contracts."
+  },
+  "hhi": {
+    "title": "HHI (Herfindahl-Hirschman Index)",
+    "description": "A market concentration measure (0-10,000). Below 1,500 = competitive market. 1,500-2,500 = moderately concentrated. Above 2,500 = highly concentrated. Used to detect vendor monopolies."
+  },
+  "puLearning": {
+    "title": "PU Learning",
+    "description": "Positive-Unlabeled learning: a technique for training models when we only know some corrupt contracts (positive) but the rest are unknown (unlabeled, not necessarily clean). Our model uses the Elkan & Noto (2008) correction."
+  },
+  "aucRoc": {
+    "title": "AUC-ROC",
+    "description": "Area Under the Receiver Operating Curve — measures how well the model distinguishes corrupt from clean contracts. 0.5 = random guessing, 1.0 = perfect. Our v5.0 model achieves 0.960 (test AUC)."
+  },
+  "industryMismatch": {
+    "title": "Industry Mismatch",
+    "description": "When a vendor wins contracts in a sector that doesn't match their primary business. For example, a construction company winning health procurement contracts. Suggests shell company or favoritism."
+  },
+  "priceAnomaly": {
+    "title": "Price Anomaly",
+    "description": "Contract amount that is statistically unusual compared to similar contracts in the same sector and year. Detected using Tukey's IQR method — values beyond 1.5x the interquartile range are flagged."
+  },
+  "cobidding": {
+    "title": "Co-Bidding Pattern",
+    "description": "When two or more vendors consistently appear together in bidding procedures. Can indicate legitimate specialization, but high co-bid rates with alternating wins suggest bid rotation (a form of collusion)."
+  },
+  "yearEnd": {
+    "title": "Year-End Timing",
+    "description": "Contracts awarded in December, when agencies rush to spend remaining budget. This 'December dump' creates pressure to award quickly, reducing oversight and increasing corruption risk."
+  },
+  "thresholdSplitting": {
+    "title": "Threshold Splitting",
+    "description": "Multiple contracts awarded to the same vendor on the same day, potentially to keep each contract below a threshold that would require competitive bidding. A classic procurement fraud technique."
+  },
+  "networkRisk": {
+    "title": "Network Risk",
+    "description": "Risk from vendor relationships — companies that share addresses, legal representatives, or consistently bid together. Network membership can indicate shell company networks or bid-rigging cartels."
+  },
+  "confidenceInterval": {
+    "title": "Confidence Interval",
+    "description": "The range within which the true risk score likely falls (95% confidence). A score of 0.35 [0.22, 0.48] means we estimate 35% corruption probability, but it could reasonably be between 22% and 48%."
+  },
+  "calibratedProbability": {
+    "title": "Calibrated Probability",
+    "description": "A risk score that represents an actual estimated probability of corruption, not an arbitrary number. Our v5.0 model produces calibrated probabilities validated against documented corruption cases."
+  },
+  "perSectorModel": {
+    "title": "Per-Sector Model",
+    "description": "Separate statistical models trained for each of the 12 sectors. Corruption patterns differ: Health → vendor concentration, Energy → industry mismatch, Infrastructure → network relationships."
+  },
+  "groundTruth": {
+    "title": "Ground Truth",
+    "description": "Documented, verified corruption cases used to train and validate the model. We use 15 cases with 27 vendors and 26,582 contracts across all 12 sectors, including IMSS, Segalmex, Odebrecht, and more."
+  },
+  "adPeriod": {
+    "title": "Ad Period",
+    "description": "Days between publication of a procurement opportunity and the contract award. Very short periods (<15 days) may indicate the process was rushed to favor a predetermined vendor."
+  },
+  "rfc": {
+    "title": "RFC (Tax ID)",
+    "description": "Registro Federal de Contribuyentes — Mexico's tax identification number for businesses and individuals. Used to uniquely identify vendors. Coverage varies: 0.1% in 2002-2010 data to 47% in 2023-2025."
+  },
+  "compranet": {
+    "title": "COMPRANET",
+    "description": "Mexico's federal electronic procurement platform, now called ComprasMX. All federal government purchases above certain thresholds must be published here. Source of all 3.1M contracts in this database."
+  },
+  "sector": {
+    "title": "Sector",
+    "description": "One of 12 federal government spending categories (Health, Education, Energy, etc.) classified from Mexico's 'Ramo' budget codes. Each sector has different procurement patterns and risk profiles."
+  }
+}

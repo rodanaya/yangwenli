@@ -1,0 +1,19 @@
+# Yang Wen-li API Runtime Dependencies
+# Use this for production Docker builds (slim image)
+# For full dev/pipeline environment, use requirements.txt
+
+# API Server
+fastapi>=0.100.0
+uvicorn>=0.23.0
+pydantic>=2.0.0
+slowapi>=0.1.9              # Rate limiting for FastAPI
+httpx>=0.25.0               # HTTP client (healthcheck + TestClient)
+
+# Data Processing (used by API at runtime)
+unidecode>=1.3.0           # Unicode to ASCII transliteration
+chardet>=5.0.0             # Character encoding detection
+python-dateutil>=2.8.0
+
+# Observability & Caching
+structlog>=24.0.0          # Structured JSON logging
+cachetools>=5.3.0          # Thread-safe TTL caches

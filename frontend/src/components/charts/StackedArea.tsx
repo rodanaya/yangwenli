@@ -14,7 +14,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts'
-import { useTheme } from '@/hooks/useTheme'
+// Theme handled by CSS variables
 import { RISK_COLORS } from '@/lib/constants'
 import { formatNumber, formatPercent } from '@/lib/utils'
 
@@ -41,8 +41,6 @@ export const StackedAreaChart = memo(function StackedAreaChart({
   showPercentage = false,
   onYearClick,
 }: StackedAreaProps) {
-  const { theme } = useTheme()
-  const isDark = theme === 'dark'
 
   const chartData = useMemo(() => {
     if (!showPercentage) return data
@@ -74,18 +72,18 @@ export const StackedAreaChart = memo(function StackedAreaChart({
         <AreaChart data={chartData} onClick={handleClick} style={{ cursor: onYearClick ? 'pointer' : 'default' }}>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke={isDark ? '#2e2e2e' : '#e2e8f0'}
+            stroke={'var(--color-border)'}
             vertical={false}
           />
           <XAxis
             dataKey="year"
-            tick={{ fill: isDark ? '#a3a3a3' : '#64748b', fontSize: 12 }}
-            axisLine={{ stroke: isDark ? '#2e2e2e' : '#e2e8f0' }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+            axisLine={{ stroke: 'var(--color-border)' }}
             tickLine={false}
           />
           <YAxis
-            tick={{ fill: isDark ? '#a3a3a3' : '#64748b', fontSize: 12 }}
-            axisLine={{ stroke: isDark ? '#2e2e2e' : '#e2e8f0' }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+            axisLine={{ stroke: 'var(--color-border)' }}
             tickLine={false}
             tickFormatter={(v) => (showPercentage ? `${v}%` : formatNumber(v))}
           />
@@ -120,7 +118,7 @@ export const StackedAreaChart = memo(function StackedAreaChart({
               verticalAlign="bottom"
               height={36}
               formatter={(value) => (
-                <span style={{ color: isDark ? '#a3a3a3' : '#64748b', fontSize: 12 }}>
+                <span style={{ color: 'var(--color-text-muted)', fontSize: 11 }}>
                   {value.charAt(0).toUpperCase() + value.slice(1)}
                 </span>
               )}

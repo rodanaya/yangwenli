@@ -1,8 +1,8 @@
 /**
  * Model Transparency Page
  *
- * Explains the v4.0 risk scoring model: coefficients, validation metrics,
- * per-case detection performance, model comparison (v3.3 vs v4.0), and
+ * Explains the v5.0 risk scoring model: coefficients, validation metrics,
+ * per-case detection performance, model comparison (v3.3 vs v5.0), and
  * known limitations. All data is hardcoded from methodology documentation.
  */
 
@@ -44,7 +44,7 @@ import {
 } from '@/components/charts'
 
 // ============================================================================
-// Hardcoded Model Data (from v4.0 methodology documentation)
+// Hardcoded Model Data (from v5.0 methodology documentation)
 // ============================================================================
 
 interface Coefficient {
@@ -58,30 +58,34 @@ interface Coefficient {
 }
 
 const MODEL_COEFFICIENTS: Coefficient[] = [
-  { factor: 'vendor_concentration', beta: 1.0000, raw_beta: 1.8497, ci_lower: 1.766, ci_upper: 1.949, direction: 'positive', note: 'Capped from +1.85 to reduce overfit' },
-  { factor: 'industry_mismatch', beta: 0.2141, raw_beta: 0.2141, ci_lower: 0.169, ci_upper: 0.258, direction: 'positive' },
-  { factor: 'same_day_count', beta: 0.1424, raw_beta: 0.1424, ci_lower: 0.077, ci_upper: 0.215, direction: 'positive' },
-  { factor: 'institution_risk', beta: 0.1189, raw_beta: 0.1189, ci_lower: 0.074, ci_upper: 0.167, direction: 'positive' },
-  { factor: 'single_bid', beta: 0.0997, raw_beta: 0.0997, ci_lower: 0.056, ci_upper: 0.143, direction: 'positive' },
-  { factor: 'price_ratio', beta: 0.0984, raw_beta: 0.0984, ci_lower: -0.091, ci_upper: 0.303, direction: 'positive', note: 'Wide CI - uncertain' },
-  { factor: 'year_end', beta: 0.0231, raw_beta: 0.0231, ci_lower: -0.021, ci_upper: 0.063, direction: 'neutral' },
-  { factor: 'price_hyp_confidence', beta: 0.0212, raw_beta: 0.0212, ci_lower: -0.017, ci_upper: 0.058, direction: 'neutral' },
-  { factor: 'co_bid_rate', beta: 0.0000, raw_beta: 0.0000, ci_lower: 0.000, ci_upper: 0.000, direction: 'neutral', note: 'Regularized to zero' },
-  { factor: 'direct_award', beta: -0.1968, raw_beta: -0.1968, ci_lower: -0.250, ci_upper: -0.150, direction: 'negative' },
-  { factor: 'ad_period_days', beta: -0.2216, raw_beta: -0.2216, ci_lower: -0.284, ci_upper: -0.170, direction: 'negative' },
-  { factor: 'network_member_count', beta: 0.0000, raw_beta: -4.1142, ci_lower: -4.477, ci_upper: -3.781, direction: 'zeroed', note: 'Zeroed - training artifact' },
+  { factor: 'price_volatility', beta: 1.219, raw_beta: 1.219, ci_lower: 1.016, ci_upper: 1.431, direction: 'positive', note: 'NEW in v5.0 — strongest predictor' },
+  { factor: 'win_rate', beta: 0.727, raw_beta: 0.727, ci_lower: 0.648, ci_upper: 0.833, direction: 'positive', note: 'NEW in v5.0' },
+  { factor: 'vendor_concentration', beta: 0.428, raw_beta: 0.428, ci_lower: 0.277, ci_upper: 0.597, direction: 'positive' },
+  { factor: 'industry_mismatch', beta: 0.305, raw_beta: 0.305, ci_lower: 0.263, ci_upper: 0.345, direction: 'positive' },
+  { factor: 'same_day_count', beta: 0.222, raw_beta: 0.222, ci_lower: 0.172, ci_upper: 0.286, direction: 'positive' },
+  { factor: 'direct_award', beta: 0.182, raw_beta: 0.182, ci_lower: 0.124, ci_upper: 0.247, direction: 'positive', note: 'Reversed from v4.0 (-0.197)' },
+  { factor: 'network_member_count', beta: 0.064, raw_beta: 0.064, ci_lower: 0.033, ci_upper: 0.097, direction: 'positive', note: 'Now positive (was zeroed in v4.0)' },
+  { factor: 'year_end', beta: 0.059, raw_beta: 0.059, ci_lower: 0.023, ci_upper: 0.098, direction: 'positive' },
+  { factor: 'institution_risk', beta: 0.057, raw_beta: 0.057, ci_lower: 0.016, ci_upper: 0.097, direction: 'positive' },
+  { factor: 'single_bid', beta: 0.013, raw_beta: 0.013, ci_lower: -0.042, ci_upper: 0.074, direction: 'neutral' },
+  { factor: 'price_hyp_confidence', beta: 0.001, raw_beta: 0.001, ci_lower: -0.049, ci_upper: 0.050, direction: 'neutral' },
+  { factor: 'co_bid_rate', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'neutral', note: 'Regularized to zero' },
+  { factor: 'price_ratio', beta: -0.015, raw_beta: -0.015, ci_lower: -0.098, ci_upper: 0.080, direction: 'neutral' },
+  { factor: 'ad_period_days', beta: -0.104, raw_beta: -0.104, ci_lower: -0.180, ci_upper: -0.032, direction: 'negative' },
+  { factor: 'sector_spread', beta: -0.374, raw_beta: -0.374, ci_lower: -0.443, ci_upper: -0.316, direction: 'negative', note: 'NEW in v5.0 — cross-sector = less risky' },
+  { factor: 'institution_diversity', beta: -0.848, raw_beta: -0.848, ci_lower: -0.933, ci_upper: -0.777, direction: 'negative', note: 'NEW in v5.0 — serves many institutions = less risky' },
 ]
 
 const VALIDATION_METRICS = {
-  auc_roc: 0.9416,
-  brier_score: 0.065,
-  detection_rate_medium_plus: 0.906,
-  detection_rate_high_plus: 0.457,
-  high_risk_rate: 0.110,
-  pu_correction: 0.890,
-  ground_truth_cases: 9,
-  ground_truth_vendors: 17,
-  ground_truth_contracts: 21252,
+  auc_roc: 0.960,
+  brier_score: 0.060,
+  detection_rate_medium_plus: 0.998,
+  detection_rate_high_plus: 0.930,
+  high_risk_rate: 0.079,
+  pu_correction: 0.887,
+  ground_truth_cases: 15,
+  ground_truth_vendors: 27,
+  ground_truth_contracts: 26582,
 } as const
 
 interface CaseDetection {
@@ -93,19 +97,25 @@ interface CaseDetection {
 }
 
 const CASE_DETECTION: CaseDetection[] = [
-  { case_name: 'IMSS Ghost Companies', contracts: 9366, detection_pct: 100.0, high_plus_pct: 99.0, avg_score: 0.962 },
-  { case_name: 'Segalmex Food Distribution', contracts: 6326, detection_pct: 100.0, high_plus_pct: 94.3, avg_score: 0.828 },
-  { case_name: 'COVID-19 Emergency', contracts: 5371, detection_pct: 100.0, high_plus_pct: 91.8, avg_score: 0.863 },
-  { case_name: 'Cyber Robotic IT', contracts: 139, detection_pct: 100.0, high_plus_pct: 43.2, avg_score: 0.261 },
-  { case_name: 'Odebrecht-PEMEX', contracts: 35, detection_pct: 82.9, high_plus_pct: 68.6, avg_score: 0.314 },
-  { case_name: 'La Estafa Maestra', contracts: 10, detection_pct: 100.0, high_plus_pct: 70.0, avg_score: 0.205 },
-  { case_name: 'Grupo Higa', contracts: 3, detection_pct: 100.0, high_plus_pct: 33.3, avg_score: 0.268 },
-  { case_name: 'Oceanografia PEMEX', contracts: 2, detection_pct: 100.0, high_plus_pct: 100.0, avg_score: 0.354 },
+  { case_name: 'IMSS Ghost Companies', contracts: 9366, detection_pct: 99.9, high_plus_pct: 99.0, avg_score: 0.977 },
+  { case_name: 'Segalmex Food Distribution', contracts: 6326, detection_pct: 99.6, high_plus_pct: 89.3, avg_score: 0.664 },
+  { case_name: 'COVID-19 Emergency', contracts: 5371, detection_pct: 99.9, high_plus_pct: 84.9, avg_score: 0.821 },
+  { case_name: 'Edenred Voucher Monopoly', contracts: 2939, detection_pct: 100.0, high_plus_pct: 96.7, avg_score: 0.884 },
+  { case_name: 'Toka IT Monopoly', contracts: 1954, detection_pct: 100.0, high_plus_pct: 100.0, avg_score: 0.964 },
+  { case_name: 'Infrastructure Network', contracts: 191, detection_pct: 100.0, high_plus_pct: 99.5, avg_score: 0.962 },
+  { case_name: 'SixSigma Tender Rigging', contracts: 147, detection_pct: 95.2, high_plus_pct: 87.8, avg_score: 0.756 },
+  { case_name: 'Cyber Robotic IT', contracts: 139, detection_pct: 100.0, high_plus_pct: 14.4, avg_score: 0.249 },
+  { case_name: 'PEMEX-Cotemar', contracts: 51, detection_pct: 100.0, high_plus_pct: 100.0, avg_score: 1.000 },
+  { case_name: 'IPN Cartel de la Limpieza', contracts: 48, detection_pct: 95.8, high_plus_pct: 64.6, avg_score: 0.551 },
+  { case_name: 'Odebrecht-PEMEX', contracts: 35, detection_pct: 97.1, high_plus_pct: 97.1, avg_score: 0.915 },
+  { case_name: 'La Estafa Maestra', contracts: 10, detection_pct: 90.0, high_plus_pct: 0.0, avg_score: 0.179 },
+  { case_name: 'Grupo Higa', contracts: 3, detection_pct: 100.0, high_plus_pct: 33.3, avg_score: 0.359 },
+  { case_name: 'Oceanografia PEMEX', contracts: 2, detection_pct: 50.0, high_plus_pct: 0.0, avg_score: 0.152 },
 ]
 
 const MODEL_COMPARISON = {
   v33: { auc: 0.584, detection: 67.1, high_plus: 18.3, brier: 0.411, lift: 1.22 },
-  v40: { auc: 0.942, detection: 90.6, high_plus: 45.7, brier: 0.065, lift: 3.80 },
+  v50: { auc: 0.960, detection: 99.8, high_plus: 93.0, brier: 0.060, lift: 4.04 },
 } as const
 
 // ============================================================================
@@ -113,6 +123,10 @@ const MODEL_COMPARISON = {
 // ============================================================================
 
 const FACTOR_LABELS: Record<string, string> = {
+  price_volatility: 'Price Volatility',
+  institution_diversity: 'Institution Diversity',
+  win_rate: 'Win Rate',
+  sector_spread: 'Sector Spread',
   vendor_concentration: 'Vendor Concentration',
   industry_mismatch: 'Industry Mismatch',
   same_day_count: 'Same-Day Contracts',
@@ -156,7 +170,7 @@ function MetricGauge({
   return (
     <Card>
       <CardContent className="p-4">
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-4">
           <div
             className="rounded-lg p-2 shrink-0"
             style={{ backgroundColor: `${color}15`, color }}
@@ -169,7 +183,7 @@ function MetricGauge({
               {value}
               {format && <span className="text-xs font-normal text-text-muted ml-1">{format}</span>}
             </p>
-            <p className="text-[10px] text-text-secondary mt-0.5">{subtitle}</p>
+            <p className="text-xs text-text-secondary mt-0.5">{subtitle}</p>
           </div>
         </div>
       </CardContent>
@@ -186,7 +200,7 @@ function ScoreBadge({ score }: { score: number }) {
   const color = RISK_COLORS[level]
   return (
     <span
-      className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold tabular-nums"
+      className="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-semibold tabular-nums"
       style={{ backgroundColor: `${color}20`, color, border: `1px solid ${color}30` }}
       role="status"
       aria-label={`Average score ${(score * 100).toFixed(0)}%`}
@@ -214,11 +228,11 @@ function DetectionBar({ pct, color }: { pct: number; color: string }) {
   )
 }
 
-function DeltaLabel({ v33, v40, suffix = '' }: { v33: number; v40: number; suffix?: string }) {
-  const delta = v40 - v33
+function DeltaLabel({ v33, v50, suffix = '' }: { v33: number; v50: number; suffix?: string }) {
+  const delta = v50 - v33
   const isPositive = delta > 0
   return (
-    <span className={cn('text-[10px] font-medium', isPositive ? 'text-emerald-400' : 'text-red-400')}>
+    <span className={cn('text-xs font-medium', isPositive ? 'text-risk-low' : 'text-risk-critical')}>
       {isPositive ? '+' : ''}{delta.toFixed(delta < 1 ? 2 : 1)}{suffix}
     </span>
   )
@@ -241,7 +255,7 @@ function CoefficientTooltip({ active, payload }: { active?: boolean; payload?: A
         </span>
         {d.raw_beta !== d.beta && (
           <>
-            <span className="text-text-muted">Raw (pre-dampen)</span>
+            <span className="text-text-muted">Raw coefficient</span>
             <span className="text-text-secondary tabular-nums">
               {d.raw_beta >= 0 ? '+' : ''}{d.raw_beta.toFixed(4)}
             </span>
@@ -297,7 +311,7 @@ function LimitationCard({
   return (
     <Card>
       <CardContent className="p-4">
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-4">
           <div
             className="rounded-lg p-2 shrink-0 mt-0.5"
             style={{ backgroundColor: `${color}15`, color }}
@@ -342,12 +356,12 @@ export default function ModelTransparency() {
   // ------------------------------------------------------------------
   const comparisonData = useMemo(() => {
     return [
-      { metric: 'AUC-ROC', v33: MODEL_COMPARISON.v33.auc, v40: MODEL_COMPARISON.v40.auc },
-      { metric: 'Detection %', v33: MODEL_COMPARISON.v33.detection, v40: MODEL_COMPARISON.v40.detection },
-      { metric: 'High+ %', v33: MODEL_COMPARISON.v33.high_plus, v40: MODEL_COMPARISON.v40.high_plus },
-      { metric: 'Lift', v33: MODEL_COMPARISON.v33.lift, v40: MODEL_COMPARISON.v40.lift },
+      { metric: 'AUC-ROC', v33: MODEL_COMPARISON.v33.auc, v50: MODEL_COMPARISON.v50.auc },
+      { metric: 'Detection %', v33: MODEL_COMPARISON.v33.detection, v50: MODEL_COMPARISON.v50.detection },
+      { metric: 'High+ %', v33: MODEL_COMPARISON.v33.high_plus, v50: MODEL_COMPARISON.v50.high_plus },
+      { metric: 'Lift', v33: MODEL_COMPARISON.v33.lift, v50: MODEL_COMPARISON.v50.lift },
       // Invert Brier score: lower is better, so show (1 - brier) for visual clarity
-      { metric: '1 - Brier', v33: 1 - MODEL_COMPARISON.v33.brier, v40: 1 - MODEL_COMPARISON.v40.brier },
+      { metric: '1 - Brier', v33: 1 - MODEL_COMPARISON.v33.brier, v50: 1 - MODEL_COMPARISON.v50.brier },
     ]
   }, [])
 
@@ -358,9 +372,9 @@ export default function ModelTransparency() {
       {/* ================================================================ */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <h1 className="text-xl font-bold text-text-primary">Model Transparency</h1>
-            <Badge variant="outline" className="text-[10px] tabular-nums gap-1">
+            <Badge variant="outline" className="text-xs tabular-nums gap-1">
               <Brain className="h-3 w-3" aria-hidden="true" />
               {CURRENT_MODEL_VERSION} | AUC {VALIDATION_METRICS.auc_roc.toFixed(3)}
             </Badge>
@@ -374,7 +388,7 @@ export default function ModelTransparency() {
       {/* ================================================================ */}
       {/* L1: Key Metrics (4 gauge-style cards)                            */}
       {/* ================================================================ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricGauge
           label="AUC-ROC"
           value={VALIDATION_METRICS.auc_roc.toFixed(3)}
@@ -428,7 +442,7 @@ export default function ModelTransparency() {
             Error bars show 95% bootstrap confidence intervals (1,000 resamples).
           </SectionDescription>
 
-          <div className="h-[420px]">
+          <div className="h-[560px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={coefficientData}
@@ -438,8 +452,8 @@ export default function ModelTransparency() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
                 <XAxis
                   type="number"
-                  domain={[-0.5, 1.2]}
-                  tick={{ fontSize: 10, fill: '#8b949e' }}
+                  domain={[-1.0, 1.4]}
+                  tick={{ fontSize: 10, fill: 'var(--color-text-secondary)' }}
                   tickFormatter={(v: number) => v.toFixed(1)}
                   axisLine={{ stroke: '#30363d' }}
                   tickLine={{ stroke: '#30363d' }}
@@ -447,7 +461,7 @@ export default function ModelTransparency() {
                 <YAxis
                   type="category"
                   dataKey="label"
-                  tick={{ fontSize: 11, fill: '#c9d1d9' }}
+                  tick={{ fontSize: 11, fill: 'var(--color-text-primary)' }}
                   width={135}
                   axisLine={false}
                   tickLine={false}
@@ -466,14 +480,14 @@ export default function ModelTransparency() {
                     width={4}
                     strokeWidth={1.5}
                     stroke="#8b949e"
-                    direction="right"
+                    direction="x"
                   />
                   <ErrorBar
                     dataKey="errorLower"
                     width={4}
                     strokeWidth={1.5}
                     stroke="#8b949e"
-                    direction="left"
+                    direction="x"
                   />
                 </Bar>
               </BarChart>
@@ -481,7 +495,7 @@ export default function ModelTransparency() {
           </div>
 
           {/* Coefficient legend + annotation */}
-          <div className="flex flex-wrap gap-4 mt-3 text-[10px] text-text-muted">
+          <div className="flex flex-wrap gap-4 mt-3 text-xs text-text-muted">
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: DIRECTION_COLORS.positive }} />
               Increases risk
@@ -494,16 +508,12 @@ export default function ModelTransparency() {
               <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: DIRECTION_COLORS.neutral }} />
               Negligible / zero signal
             </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: DIRECTION_COLORS.zeroed }} />
-              Zeroed (training artifact)
-            </span>
           </div>
 
-          {/* Dampening annotations */}
+          {/* Coefficient annotations */}
           <div className="mt-4 space-y-2">
             {MODEL_COEFFICIENTS.filter((c) => c.note).map((c) => (
-              <div key={c.factor} className="flex items-start gap-2 text-[10px] text-text-muted">
+              <div key={c.factor} className="flex items-start gap-2 text-xs text-text-muted">
                 <Info className="h-3 w-3 shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   <span className="font-medium text-text-secondary">{FACTOR_LABELS[c.factor]}:</span>{' '}
@@ -516,16 +526,16 @@ export default function ModelTransparency() {
       </Card>
 
       {/* ================================================================ */}
-      {/* L3: Model Comparison — v3.3 vs v4.0                              */}
+      {/* L3: Model Comparison — v3.3 vs v5.0                              */}
       {/* ================================================================ */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-text-muted" aria-hidden="true" />
             <div>
-              <CardTitle>Model Comparison: v3.3 vs v4.0</CardTitle>
+              <CardTitle>Model Comparison: v3.3 vs v5.0</CardTitle>
               <CardDescription>
-                Statistical framework (v4.0) dramatically outperforms the weighted checklist (v3.3) on every metric
+                Per-sector framework (v5.0) dramatically outperforms the weighted checklist (v3.3) on every metric
               </CardDescription>
             </div>
           </div>
@@ -541,19 +551,19 @@ export default function ModelTransparency() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
                 <XAxis
                   dataKey="metric"
-                  tick={{ fontSize: 11, fill: '#c9d1d9' }}
+                  tick={{ fontSize: 11, fill: 'var(--color-text-primary)' }}
                   axisLine={{ stroke: '#30363d' }}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 10, fill: '#8b949e' }}
+                  tick={{ fontSize: 10, fill: 'var(--color-text-secondary)' }}
                   axisLine={false}
                   tickLine={false}
                   domain={[0, 'auto']}
                 />
                 <RechartsTooltip content={<ComparisonTooltip />} cursor={{ fill: '#ffffff08' }} />
                 <Bar dataKey="v33" name="v3.3 (Checklist)" fill="#64748b" radius={[4, 4, 0, 0]} barSize={28} />
-                <Bar dataKey="v40" name="v4.0 (Statistical)" fill="#58a6ff" radius={[4, 4, 0, 0]} barSize={28} />
+                <Bar dataKey="v50" name="v5.0 (Per-Sector)" fill="#58a6ff" radius={[4, 4, 0, 0]} barSize={28} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -566,7 +576,7 @@ export default function ModelTransparency() {
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm bg-[#58a6ff]" />
-              v4.0 Statistical Framework
+              v5.0 Per-Sector Framework
             </span>
           </div>
 
@@ -577,7 +587,7 @@ export default function ModelTransparency() {
                 <tr className="border-b border-border/30">
                   <th className="text-left py-2 pr-4 text-text-muted font-medium">Metric</th>
                   <th className="text-right py-2 px-3 text-text-muted font-medium">v3.3</th>
-                  <th className="text-right py-2 px-3 text-text-muted font-medium">v4.0</th>
+                  <th className="text-right py-2 px-3 text-text-muted font-medium">v5.0</th>
                   <th className="text-right py-2 pl-3 text-text-muted font-medium">Delta</th>
                 </tr>
               </thead>
@@ -585,36 +595,36 @@ export default function ModelTransparency() {
                 <tr className="border-b border-border/10">
                   <td className="py-2 pr-4 text-text-secondary">AUC-ROC</td>
                   <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{MODEL_COMPARISON.v33.auc.toFixed(3)}</td>
-                  <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v40.auc.toFixed(3)}</td>
-                  <td className="py-2 pl-3 text-right"><DeltaLabel v33={MODEL_COMPARISON.v33.auc} v40={MODEL_COMPARISON.v40.auc} /></td>
+                  <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v50.auc.toFixed(3)}</td>
+                  <td className="py-2 pl-3 text-right"><DeltaLabel v33={MODEL_COMPARISON.v33.auc} v50={MODEL_COMPARISON.v50.auc} /></td>
                 </tr>
                 <tr className="border-b border-border/10">
                   <td className="py-2 pr-4 text-text-secondary">Detection Rate (med+)</td>
                   <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{MODEL_COMPARISON.v33.detection}%</td>
-                  <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v40.detection}%</td>
-                  <td className="py-2 pl-3 text-right"><DeltaLabel v33={MODEL_COMPARISON.v33.detection} v40={MODEL_COMPARISON.v40.detection} suffix="pp" /></td>
+                  <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v50.detection}%</td>
+                  <td className="py-2 pl-3 text-right"><DeltaLabel v33={MODEL_COMPARISON.v33.detection} v50={MODEL_COMPARISON.v50.detection} suffix="pp" /></td>
                 </tr>
                 <tr className="border-b border-border/10">
                   <td className="py-2 pr-4 text-text-secondary">High+ Detection</td>
                   <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{MODEL_COMPARISON.v33.high_plus}%</td>
-                  <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v40.high_plus}%</td>
-                  <td className="py-2 pl-3 text-right"><DeltaLabel v33={MODEL_COMPARISON.v33.high_plus} v40={MODEL_COMPARISON.v40.high_plus} suffix="pp" /></td>
+                  <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v50.high_plus}%</td>
+                  <td className="py-2 pl-3 text-right"><DeltaLabel v33={MODEL_COMPARISON.v33.high_plus} v50={MODEL_COMPARISON.v50.high_plus} suffix="pp" /></td>
                 </tr>
                 <tr className="border-b border-border/10">
                   <td className="py-2 pr-4 text-text-secondary">Brier Score</td>
                   <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{MODEL_COMPARISON.v33.brier.toFixed(3)}</td>
-                  <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v40.brier.toFixed(3)}</td>
+                  <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v50.brier.toFixed(3)}</td>
                   <td className="py-2 pl-3 text-right">
-                    <span className="text-[10px] font-medium text-emerald-400">
-                      -{(MODEL_COMPARISON.v33.brier - MODEL_COMPARISON.v40.brier).toFixed(2)}
+                    <span className="text-xs font-medium text-risk-low">
+                      -{(MODEL_COMPARISON.v33.brier - MODEL_COMPARISON.v50.brier).toFixed(2)}
                     </span>
                   </td>
                 </tr>
                 <tr>
                   <td className="py-2 pr-4 text-text-secondary">Lift vs Baseline</td>
                   <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{MODEL_COMPARISON.v33.lift}x</td>
-                  <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v40.lift}x</td>
-                  <td className="py-2 pl-3 text-right"><DeltaLabel v33={MODEL_COMPARISON.v33.lift} v40={MODEL_COMPARISON.v40.lift} suffix="x" /></td>
+                  <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v50.lift}x</td>
+                  <td className="py-2 pl-3 text-right"><DeltaLabel v33={MODEL_COMPARISON.v33.lift} v50={MODEL_COMPARISON.v50.lift} suffix="x" /></td>
                 </tr>
               </tbody>
             </table>
@@ -632,7 +642,7 @@ export default function ModelTransparency() {
             <div>
               <CardTitle>Per-Case Detection Performance</CardTitle>
               <CardDescription>
-                How the model performs on each of the 9 documented corruption cases
+                How the model performs on each of the 15 documented corruption cases
               </CardDescription>
             </div>
           </div>
@@ -686,18 +696,18 @@ export default function ModelTransparency() {
           </div>
 
           {/* Summary footer */}
-          <div className="flex flex-wrap items-center gap-4 mt-4 pt-3 border-t border-border/20 text-[10px] text-text-muted">
+          <div className="flex flex-wrap items-center gap-4 mt-4 pt-3 border-t border-border/20 text-xs text-text-muted">
             <span className="flex items-center gap-1">
-              <CheckCircle className="h-3 w-3 text-emerald-400" aria-hidden="true" />
-              7 of 9 cases: 100% detection rate
+              <CheckCircle className="h-3 w-3 text-risk-low" aria-hidden="true" />
+              12 of 15 cases: {'>'}95% detection rate
             </span>
             <span className="flex items-center gap-1">
               <TrendingUp className="h-3 w-3 text-blue-400" aria-hidden="true" />
-              3 largest cases (21K contracts): {'>'}91% high+
+              3 largest cases (21K contracts): {'>'}84% high+
             </span>
             <span className="flex items-center gap-1">
-              <AlertTriangle className="h-3 w-3 text-amber-400" aria-hidden="true" />
-              Weakest: Odebrecht (82.9% detection, small sample)
+              <AlertTriangle className="h-3 w-3 text-risk-medium" aria-hidden="true" />
+              Weakest: Oceanografia (50% detection, 2 contracts)
             </span>
           </div>
         </CardContent>
@@ -716,24 +726,24 @@ export default function ModelTransparency() {
           statistical anomaly consistent with corruption patterns — it does not constitute proof of wrongdoing.
         </SectionDescription>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <LimitationCard
             icon={Users}
-            title="Ground Truth Bias"
+            title="Ground Truth Concentration"
             color="#f87171"
-            description="Three cases (IMSS, Segalmex, COVID-19) account for 99% of the 21,252 training contracts. The model's coefficients heavily reflect these cases' characteristics: large, concentrated vendors in health and agriculture sectors. Detection may be weaker for corruption patterns in other sectors like infrastructure or defense."
+            description="While v5.0 diversified to 15 cases across all 12 sectors (up from 9 cases in 3 sectors), three cases (IMSS, Segalmex, COVID-19) still account for 79% of the 26,582 training contracts. Vendor concentration remains dominant across most per-sector sub-models."
           />
           <LimitationCard
             icon={TrendingDown}
-            title="Reversed Factors"
+            title="Small-Case Detection"
             color="#fb923c"
-            description="Direct awards and short ad periods have negative coefficients, meaning they decrease risk scores. This contradicts expert intuition but reflects the data: known-bad vendors (LICONSA, Pisa, DIMM) operate through competitive procedures with normal timelines, not rushed direct awards."
+            description="Cases with few contracts have lower detection rates: La Estafa Maestra (10 contracts, 0% high+), Oceanografia (2 contracts, 50% detection). The model requires sufficient contract volume to detect patterns reliably."
           />
           <LimitationCard
             icon={Lock}
             title="No Causal Claims"
             color="#58a6ff"
-            description="A high P(corrupt|z) indicates a statistical anomaly consistent with corruption patterns observed in 9 documented cases. It does not prove corruption. Some sectors (defense, energy) have structural reasons for high vendor concentration that are legitimate."
+            description="A high P(corrupt|z) indicates a statistical anomaly consistent with corruption patterns observed in 15 documented cases. It does not prove corruption. Some sectors (defense, energy) have structural reasons for high vendor concentration that are legitimate."
           />
           <LimitationCard
             icon={Database}
@@ -760,12 +770,12 @@ export default function ModelTransparency() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               {
                 step: 1,
                 title: 'Z-Score Normalization',
-                description: 'Each of the 12 features is normalized relative to its sector and year baseline, producing z-scores that measure how unusual a contract is compared to peers.',
+                description: 'Each of the 16 features is normalized relative to its sector and year baseline, producing z-scores that measure how unusual a contract is compared to peers.',
                 icon: Activity,
               },
               {
@@ -776,14 +786,14 @@ export default function ModelTransparency() {
               },
               {
                 step: 3,
-                title: 'Logistic Regression',
-                description: 'Bayesian logistic regression (L2, C=0.1) trained on 21,252 known-bad contracts converts z-scores into a raw corruption probability via the sigmoid function.',
+                title: 'Per-Sector Logistic Regression',
+                description: 'Cross-validated ElasticNet (C=10.0, l1_ratio=0.25) with 12 per-sector sub-models trained on 26,582 known-bad contracts converts z-scores into corruption probabilities.',
                 icon: TrendingUp,
               },
               {
                 step: 4,
                 title: 'PU Correction + CI',
-                description: 'Positive-Unlabeled learning correction (c=0.890) adjusts for unlabeled corrupt contracts. Bootstrap (1,000 resamples) provides 95% confidence intervals.',
+                description: 'Elkan & Noto (2008) holdout PU-learning correction (c=0.887) adjusts for unlabeled corrupt contracts. Bootstrap (500 resamples) provides 95% confidence intervals.',
                 icon: Shield,
               },
             ].map((item) => (
@@ -792,16 +802,16 @@ export default function ModelTransparency() {
                 className="rounded-lg border border-border/30 bg-background-elevated/20 p-4 space-y-2"
               >
                 <div className="flex items-center gap-2">
-                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[#58a6ff]/15 text-[10px] font-bold text-[#58a6ff] tabular-nums">
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[#58a6ff]/15 text-xs font-bold text-[#58a6ff] tabular-nums">
                     {item.step}
                   </span>
                   <item.icon className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
                   <span className="text-xs font-medium text-text-primary">{item.title}</span>
                 </div>
-                <p className="text-[10px] text-text-secondary leading-relaxed">{item.description}</p>
+                <p className="text-xs text-text-secondary leading-relaxed">{item.description}</p>
                 {item.step < 4 && (
                   <div className="flex justify-end">
-                    <ArrowRight className="h-3 w-3 text-text-muted/50 hidden lg:block" aria-hidden="true" />
+                    <ArrowRight className="h-3 w-3 text-text-muted hidden lg:block" aria-hidden="true" />
                   </div>
                 )}
               </div>
@@ -810,12 +820,12 @@ export default function ModelTransparency() {
 
           {/* Risk thresholds reference */}
           <div className="mt-4 pt-3 border-t border-border/20">
-            <p className="text-[10px] text-text-muted mb-2 font-medium">Risk Level Thresholds (calibrated probabilities)</p>
-            <div className="flex flex-wrap gap-3">
+            <p className="text-xs text-text-muted mb-2 font-medium">Risk Level Thresholds (calibrated probabilities)</p>
+            <div className="flex flex-wrap gap-4">
               {(Object.entries(RISK_THRESHOLDS) as Array<[keyof typeof RISK_THRESHOLDS, number]>)
                 .filter(([level]) => level !== 'low')
                 .map(([level, threshold]) => (
-                  <div key={level} className="flex items-center gap-1.5 text-[10px]">
+                  <div key={level} className="flex items-center gap-1.5 text-xs">
                     <span
                       className="w-2 h-2 rounded-full"
                       style={{ backgroundColor: RISK_COLORS[level] }}
@@ -826,7 +836,7 @@ export default function ModelTransparency() {
                     </span>
                   </div>
                 ))}
-              <div className="flex items-center gap-1.5 text-[10px]">
+              <div className="flex items-center gap-1.5 text-xs">
                 <span
                   className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: RISK_COLORS.low }}

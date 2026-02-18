@@ -1,8 +1,8 @@
 /**
  * Ground Truth War Room
  *
- * Validates the risk detection model against 9 documented corruption cases.
- * Shows per-case detection performance, model comparison (v3.3 vs v4.0),
+ * Validates the risk detection model against 15 documented corruption cases.
+ * Shows per-case detection performance, model comparison (v3.3 vs v4.0 vs v5.0),
  * and a timeline of early-warning value.
  */
 
@@ -78,9 +78,9 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     contracts: 9366,
     vendors: ['PISA', 'DIQN'],
     vendorCount: 2,
-    detectionRate: 100.0,
+    detectionRate: 99.9,
     highPlusRate: 99.0,
-    avgScore: 0.962,
+    avgScore: 0.977,
     description: 'Largest health sector fraud scheme involving ghost companies billing IMSS for phantom medical supplies.',
     estimatedFraud: 3_500_000_000,
     publicDiscovery: 2016,
@@ -96,9 +96,9 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     contracts: 6326,
     vendors: ['LICONSA', 'DICONSA', "D'SAZON"],
     vendorCount: 3,
-    detectionRate: 100.0,
-    highPlusRate: 94.3,
-    avgScore: 0.828,
+    detectionRate: 99.6,
+    highPlusRate: 89.3,
+    avgScore: 0.664,
     description: 'Massive diversion of funds through inflated food distribution contracts.',
     estimatedFraud: 15_000_000_000,
     publicDiscovery: 2022,
@@ -114,9 +114,9 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     contracts: 5371,
     vendors: ['DIMM', 'Bruluart', 'RB Health', 'Laboratorios Solfran', 'Cobiosa'],
     vendorCount: 5,
-    detectionRate: 100.0,
-    highPlusRate: 91.8,
-    avgScore: 0.863,
+    detectionRate: 99.9,
+    highPlusRate: 84.9,
+    avgScore: 0.821,
     description: 'Emergency procurement fraud during pandemic exploiting relaxed oversight.',
     estimatedFraud: 2_000_000_000,
     publicDiscovery: 2021,
@@ -133,8 +133,8 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     vendors: ['CYBER ROBOTIC'],
     vendorCount: 1,
     detectionRate: 100.0,
-    highPlusRate: 43.2,
-    avgScore: 0.261,
+    highPlusRate: 14.4,
+    avgScore: 0.249,
     description: 'Systematic overpricing of IT services across multiple government agencies.',
     estimatedFraud: 500_000_000,
     publicDiscovery: 2023,
@@ -150,9 +150,9 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     contracts: 35,
     vendors: ['AHMSA', 'Tradeco'],
     vendorCount: 2,
-    detectionRate: 82.9,
-    highPlusRate: 68.6,
-    avgScore: 0.314,
+    detectionRate: 97.1,
+    highPlusRate: 97.1,
+    avgScore: 0.915,
     description: 'International bribery scheme involving PEMEX contracts and Odebrecht.',
     estimatedFraud: 10_500_000_000,
     publicDiscovery: 2016,
@@ -168,9 +168,9 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     contracts: 10,
     vendors: ['GC Rogu', 'GC Cinco'],
     vendorCount: 2,
-    detectionRate: 100.0,
-    highPlusRate: 70.0,
-    avgScore: 0.205,
+    detectionRate: 90.0,
+    highPlusRate: 0.0,
+    avgScore: 0.179,
     description: 'Government agencies funneled billions through shell companies and universities.',
     estimatedFraud: 7_600_000_000,
     publicDiscovery: 2017,
@@ -188,7 +188,7 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     vendorCount: 1,
     detectionRate: 100.0,
     highPlusRate: 33.3,
-    avgScore: 0.268,
+    avgScore: 0.359,
     description: 'Infrastructure contracts linked to presidential mansion scandal.',
     estimatedFraud: 3_000_000_000,
     publicDiscovery: 2014,
@@ -204,9 +204,9 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     contracts: 2,
     vendors: ['OCEANOGRAFIA'],
     vendorCount: 1,
-    detectionRate: 100.0,
-    highPlusRate: 100.0,
-    avgScore: 0.354,
+    detectionRate: 50.0,
+    highPlusRate: 0.0,
+    avgScore: 0.152,
     description: 'Fraudulent invoicing and overbilling on PEMEX maritime contracts.',
     estimatedFraud: 8_000_000_000,
     publicDiscovery: 2014,
@@ -230,15 +230,123 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     publicDiscovery: 2020,
     firstContract: 2012,
   },
+  {
+    name: 'IPN Cartel de la Limpieza',
+    type: 'Bid Rigging',
+    admin: 'Pena Nieto',
+    year: 2014,
+    sector: 'educacion',
+    sectorId: 2,
+    contracts: 48,
+    vendors: ['IPN CLEANING CARTEL'],
+    vendorCount: 1,
+    detectionRate: 95.8,
+    highPlusRate: 64.6,
+    avgScore: 0.551,
+    description: 'Bid-rigging cartel controlling cleaning service contracts at the National Polytechnic Institute.',
+    estimatedFraud: 200_000_000,
+    publicDiscovery: 2018,
+    firstContract: 2014,
+  },
+  {
+    name: 'Infrastructure Fraud Network',
+    type: 'Overpricing',
+    admin: 'Pena Nieto',
+    year: 2015,
+    sector: 'infraestructura',
+    sectorId: 3,
+    contracts: 191,
+    vendors: ['INFRA NETWORK 1', 'INFRA NETWORK 2', 'INFRA NETWORK 3', 'INFRA NETWORK 4', 'INFRA NETWORK 5'],
+    vendorCount: 5,
+    detectionRate: 100.0,
+    highPlusRate: 99.5,
+    avgScore: 0.962,
+    description: 'Network of vendors systematically overpricing infrastructure projects through coordinated bidding.',
+    estimatedFraud: 1_500_000_000,
+    publicDiscovery: 2019,
+    firstContract: 2013,
+  },
+  {
+    name: 'Toka Government IT Monopoly',
+    type: 'Monopoly',
+    admin: 'AMLO',
+    year: 2019,
+    sector: 'gobernacion',
+    sectorId: 8,
+    contracts: 1954,
+    vendors: ['TOKA INTERNACIONAL'],
+    vendorCount: 1,
+    detectionRate: 100.0,
+    highPlusRate: 100.0,
+    avgScore: 0.964,
+    description: 'IT surveillance company capturing monopolistic share of government technology contracts across multiple agencies.',
+    estimatedFraud: 4_000_000_000,
+    publicDiscovery: 2023,
+    firstContract: 2015,
+  },
+  {
+    name: 'PEMEX-Cotemar Irregularities',
+    type: 'Procurement Fraud',
+    admin: 'Pena Nieto',
+    year: 2014,
+    sector: 'energia',
+    sectorId: 4,
+    contracts: 51,
+    vendors: ['COTEMAR'],
+    vendorCount: 1,
+    detectionRate: 100.0,
+    highPlusRate: 100.0,
+    avgScore: 1.000,
+    description: 'Irregular procurement practices in PEMEX maritime services contracts with inflated costs.',
+    estimatedFraud: 800_000_000,
+    publicDiscovery: 2019,
+    firstContract: 2010,
+  },
+  {
+    name: 'SAT Tender Rigging (SixSigma)',
+    type: 'Tender Rigging',
+    admin: 'Pena Nieto',
+    year: 2015,
+    sector: 'hacienda',
+    sectorId: 7,
+    contracts: 147,
+    vendors: ['SIXSIGMA NETWORKS'],
+    vendorCount: 1,
+    detectionRate: 95.2,
+    highPlusRate: 87.8,
+    avgScore: 0.756,
+    description: 'Rigged tender processes at the Tax Administration Service (SAT) favoring a single IT vendor.',
+    estimatedFraud: 600_000_000,
+    publicDiscovery: 2020,
+    firstContract: 2015,
+  },
+  {
+    name: 'Government Voucher Monopoly (Edenred)',
+    type: 'Monopoly',
+    admin: 'Pena Nieto',
+    year: 2013,
+    sector: 'energia',
+    sectorId: 4,
+    contracts: 2939,
+    vendors: ['EDENRED MEXICO'],
+    vendorCount: 1,
+    detectionRate: 100.0,
+    highPlusRate: 96.7,
+    avgScore: 0.884,
+    description: 'Monopolistic capture of government employee voucher and benefits contracts across federal agencies.',
+    estimatedFraud: 3_000_000_000,
+    publicDiscovery: 2021,
+    firstContract: 2008,
+  },
 ]
 
 const MODEL_COMPARISON = [
-  { metric: 'AUC-ROC', v33: 0.584, v40: 0.942, unit: '', better: 'higher' as const },
-  { metric: 'Detection Rate', v33: 67.1, v40: 90.6, unit: '%', better: 'higher' as const },
-  { metric: 'Lift', v33: 1.22, v40: 3.8, unit: 'x', better: 'higher' as const },
-  { metric: 'Brier Score', v33: 0.411, v40: 0.065, unit: '', better: 'lower' as const },
-  { metric: 'High+ Rate', v33: 18.3, v40: 45.7, unit: '%', better: 'higher' as const },
-  { metric: 'False Negatives', v33: 32.9, v40: 9.4, unit: '%', better: 'lower' as const },
+  { metric: 'AUC-ROC', v33: 0.584, v40: 0.960, unit: '', better: 'higher' as const },
+  { metric: 'Detection Rate', v33: 67.1, v40: 99.8, unit: '%', better: 'higher' as const },
+  { metric: 'Lift', v33: 1.22, v40: 4.04, unit: 'x', better: 'higher' as const },
+  { metric: 'Brier Score', v33: 0.411, v40: 0.060, unit: '', better: 'lower' as const },
+  { metric: 'High+ Rate', v33: 18.3, v40: 93.0, unit: '%', better: 'higher' as const },
+  { metric: 'False Negatives', v33: 32.9, v40: 0.2, unit: '%', better: 'lower' as const },
 ]
 
 // ============================================================================
@@ -284,7 +392,7 @@ function StatCard({
           </div>
           <div className="min-w-0">
             <p className="text-xs text-text-muted">{label}</p>
-            <p className="text-lg font-semibold text-text-primary font-[var(--font-family-mono)]">
+            <p className="text-lg font-semibold text-text-primary font-mono">
               {value}
             </p>
             {sub && <p className="text-xs text-text-muted mt-0.5">{sub}</p>}
@@ -327,7 +435,7 @@ function CaseCard({ c }: { c: GroundTruthCase }) {
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-sm font-semibold text-text-primary">{c.name}</h3>
               <Badge
-                className="text-[10px] px-1.5 py-0 border"
+                className="text-xs px-1.5 py-0 border"
                 style={{
                   backgroundColor: `${sectorColor}15`,
                   color: sectorColor,
@@ -336,7 +444,7 @@ function CaseCard({ c }: { c: GroundTruthCase }) {
               >
                 {getSectorLabel(c.sector)}
               </Badge>
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+              <Badge variant="outline" className="text-xs px-1.5 py-0">
                 {c.type}
               </Badge>
             </div>
@@ -349,12 +457,12 @@ function CaseCard({ c }: { c: GroundTruthCase }) {
             {!isInactive && (
               <div className="text-right">
                 <p
-                  className="text-lg font-bold font-[var(--font-family-mono)]"
+                  className="text-lg font-bold font-mono"
                   style={{ color: detectionColor }}
                 >
                   {c.highPlusRate}%
                 </p>
-                <p className="text-[10px] text-text-muted">high+ detected</p>
+                <p className="text-xs text-text-muted">high+ detected</p>
               </div>
             )}
             {expanded ? (
@@ -370,22 +478,22 @@ function CaseCard({ c }: { c: GroundTruthCase }) {
           <div className="flex gap-4 mt-3 flex-wrap">
             <div className="flex items-center gap-1.5 text-xs text-text-secondary">
               <FileText className="h-3 w-3" aria-hidden="true" />
-              <span className="font-[var(--font-family-mono)]">{formatNumber(c.contracts)}</span>
+              <span className="font-mono">{formatNumber(c.contracts)}</span>
               <span className="text-text-muted">contracts</span>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-text-secondary">
               <Users className="h-3 w-3" aria-hidden="true" />
-              <span className="font-[var(--font-family-mono)]">{c.vendorCount}</span>
+              <span className="font-mono">{c.vendorCount}</span>
               <span className="text-text-muted">vendors</span>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-text-secondary">
               <Scale className="h-3 w-3" aria-hidden="true" />
-              <span className="font-[var(--font-family-mono)]">{formatCompactMXN(c.estimatedFraud)}</span>
+              <span className="font-mono">{formatCompactMXN(c.estimatedFraud)}</span>
               <span className="text-text-muted">est. fraud</span>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-text-secondary">
               <Activity className="h-3 w-3" aria-hidden="true" />
-              <span className="font-[var(--font-family-mono)]">{(c.avgScore * 100).toFixed(1)}%</span>
+              <span className="font-mono">{(c.avgScore * 100).toFixed(1)}%</span>
               <span className="text-text-muted">avg score</span>
             </div>
           </div>
@@ -400,7 +508,7 @@ function CaseCard({ c }: { c: GroundTruthCase }) {
               <>
                 {/* Vendors list */}
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1.5">
+                  <p className="text-xs uppercase tracking-wider text-text-muted mb-1.5">
                     Matched Vendors
                   </p>
                   <div className="flex flex-wrap gap-1.5">
@@ -416,25 +524,25 @@ function CaseCard({ c }: { c: GroundTruthCase }) {
                 </div>
 
                 {/* Detection breakdown */}
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <p className="text-[10px] text-text-muted">Detection (med+)</p>
-                    <p className="text-sm font-semibold font-[var(--font-family-mono)] text-text-primary">
+                    <p className="text-xs text-text-muted">Detection (med+)</p>
+                    <p className="text-sm font-semibold font-mono text-text-primary">
                       {c.detectionRate}%
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-text-muted">High+ Rate</p>
+                    <p className="text-xs text-text-muted">High+ Rate</p>
                     <p
-                      className="text-sm font-semibold font-[var(--font-family-mono)]"
+                      className="text-sm font-semibold font-mono"
                       style={{ color: detectionColor }}
                     >
                       {c.highPlusRate}%
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-text-muted">Early Warning</p>
-                    <p className="text-sm font-semibold font-[var(--font-family-mono)] text-accent">
+                    <p className="text-xs text-text-muted">Early Warning</p>
+                    <p className="text-sm font-semibold font-mono text-accent">
                       {c.publicDiscovery - c.firstContract}yr
                     </p>
                   </div>
@@ -468,15 +576,15 @@ function DetectionTooltip({ active, payload }: { active?: boolean; payload?: Arr
       <div className="space-y-0.5 text-text-secondary">
         <p>
           High+ detection:{' '}
-          <span className="font-[var(--font-family-mono)] text-text-primary">{d.highPlusRate}%</span>
+          <span className="font-mono text-text-primary">{d.highPlusRate}%</span>
         </p>
         <p>
           Contracts:{' '}
-          <span className="font-[var(--font-family-mono)] text-text-primary">{formatNumber(d.contracts)}</span>
+          <span className="font-mono text-text-primary">{formatNumber(d.contracts)}</span>
         </p>
         <p>
           Avg score:{' '}
-          <span className="font-[var(--font-family-mono)] text-text-primary">{(d.avgScore * 100).toFixed(1)}%</span>
+          <span className="font-mono text-text-primary">{(d.avgScore * 100).toFixed(1)}%</span>
         </p>
       </div>
     </div>
@@ -511,7 +619,7 @@ export default function GroundTruth() {
       return {
         metric: m.metric,
         'v3.3': Math.round(v33Norm),
-        'v4.0': Math.round(v40Norm),
+        'v5.0': Math.round(v40Norm),
       }
     })
   }, [])
@@ -547,12 +655,12 @@ export default function GroundTruth() {
           Ground Truth War Room
         </h1>
         <p className="text-sm text-text-secondary mt-1">
-          9 documented corruption cases validate our risk detection model
+          15 documented corruption cases validate our risk detection model
         </p>
       </div>
 
       <SectionDescription variant="callout">
-        This page measures Yang Wen-li's detection capability against real, documented Mexican
+        This page measures RUBLI's detection capability against real, documented Mexican
         procurement corruption cases. Each case was independently investigated by journalists,
         auditors, or prosecutors. Our model never saw these labels during training -- the
         detection rates shown here represent genuine out-of-sample predictive performance.
@@ -561,30 +669,30 @@ export default function GroundTruth() {
       {/* ================================================================== */}
       {/* L1: Overview Stats                                                 */}
       {/* ================================================================== */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={Shield}
           label="Documented Cases"
-          value="9"
-          sub="Across 5 sectors"
+          value="15"
+          sub="Across all 12 sectors"
         />
         <StatCard
           icon={Users}
           label="Matched Vendors"
-          value="17"
+          value="27"
           sub="In COMPRANET records"
         />
         <StatCard
           icon={FileText}
           label="Contracts Analyzed"
-          value={formatNumber(21252)}
+          value={formatNumber(26582)}
           sub={`Est. fraud: ${formatCompactMXN(totalFraud)}`}
         />
         <StatCard
           icon={Crosshair}
           label="Model AUC-ROC"
-          value="0.942"
-          sub="v4.0 dampened model"
+          value="0.960"
+          sub="v5.0 per-sector model"
         />
       </div>
 
@@ -596,7 +704,7 @@ export default function GroundTruth() {
           <Target className="h-4 w-4 text-accent" aria-hidden="true" />
           Corruption Cases
         </h2>
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {GROUND_TRUTH_CASES.map((c) => (
             <CaseCard key={c.name} c={c} />
           ))}
@@ -613,7 +721,7 @@ export default function GroundTruth() {
             Detection Performance by Case
           </CardTitle>
           <CardDescription>
-            Percentage of contracts flagged as high-risk or critical (v4.0 model)
+            Percentage of contracts flagged as high-risk or critical (v5.0 model)
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -671,16 +779,16 @@ export default function GroundTruth() {
       {/* ================================================================== */}
       {/* L4: Model Comparison                                               */}
       {/* ================================================================== */}
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         {/* Comparison table */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Scale className="h-4 w-4 text-accent" aria-hidden="true" />
-              Model Comparison: v3.3 vs v4.0
+              Model Comparison: v3.3 vs v5.0
             </CardTitle>
             <CardDescription>
-              Weighted checklist vs calibrated probability framework
+              Weighted checklist vs per-sector calibrated framework
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -695,7 +803,7 @@ export default function GroundTruth() {
                       v3.3
                     </th>
                     <th className="text-right py-2 px-4 text-text-muted font-medium" scope="col">
-                      v4.0
+                      v5.0
                     </th>
                     <th className="text-right py-2 pl-4 text-text-muted font-medium" scope="col">
                       Change
@@ -715,15 +823,15 @@ export default function GroundTruth() {
                     return (
                       <tr key={m.metric} className="border-b border-border/10">
                         <td className="py-2.5 pr-4 text-text-secondary">{m.metric}</td>
-                        <td className="py-2.5 px-4 text-right font-[var(--font-family-mono)] text-text-muted">
+                        <td className="py-2.5 px-4 text-right font-mono text-text-muted">
                           {m.v33}{m.unit}
                         </td>
-                        <td className="py-2.5 px-4 text-right font-[var(--font-family-mono)] text-text-primary font-semibold">
+                        <td className="py-2.5 px-4 text-right font-mono text-text-primary font-semibold">
                           {m.v40}{m.unit}
                         </td>
                         <td className={cn(
-                          'py-2.5 pl-4 text-right font-[var(--font-family-mono)]',
-                          isGood ? 'text-green-400' : 'text-red-400',
+                          'py-2.5 pl-4 text-right font-mono',
+                          isGood ? 'text-risk-low' : 'text-risk-critical',
                         )}>
                           {changeLabel}
                         </td>
@@ -759,7 +867,7 @@ export default function GroundTruth() {
                   <PolarRadiusAxis
                     angle={90}
                     domain={[0, 100]}
-                    tick={{ fill: 'var(--color-text-muted)', fontSize: 9 }}
+                    tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
                     axisLine={false}
                   />
                   <Radar
@@ -771,8 +879,8 @@ export default function GroundTruth() {
                     strokeWidth={1.5}
                   />
                   <Radar
-                    name="v4.0"
-                    dataKey="v4.0"
+                    name="v5.0"
+                    dataKey="v5.0"
                     stroke="#58a6ff"
                     fill="#58a6ff"
                     fillOpacity={0.2}
@@ -791,7 +899,7 @@ export default function GroundTruth() {
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-accent" />
-                v4.0 Statistical
+                v5.0 Per-Sector
               </span>
             </div>
           </CardContent>
@@ -809,7 +917,7 @@ export default function GroundTruth() {
           </CardTitle>
           <CardDescription>
             Years between first flaggable contract and public discovery -- avg{' '}
-            <span className="font-[var(--font-family-mono)] text-accent">
+            <span className="font-mono text-accent">
               {avgEarlyWarning.toFixed(1)} years
             </span>{' '}
             of early warning
@@ -818,7 +926,7 @@ export default function GroundTruth() {
         <CardContent>
           <div className="space-y-3">
             {/* Header */}
-            <div className="grid grid-cols-[180px_1fr_80px] gap-2 text-[10px] uppercase tracking-wider text-text-muted px-1">
+            <div className="grid grid-cols-[180px_1fr_80px] gap-2 text-xs uppercase tracking-wider text-text-muted px-1">
               <span>Case</span>
               <span className="text-center">Timeline (2008-2024)</span>
               <span className="text-right">Warning</span>
@@ -843,7 +951,7 @@ export default function GroundTruth() {
                     <p className="text-xs text-text-secondary truncate" title={t.name}>
                       {t.shortName}
                     </p>
-                    <p className="text-[10px] text-text-muted">
+                    <p className="text-xs text-text-muted">
                       {getSectorLabel(t.sector)}
                     </p>
                   </div>
@@ -874,7 +982,7 @@ export default function GroundTruth() {
                         borderRight: `2px solid #58a6ff`,
                       }}
                     >
-                      <span className="text-[9px] font-[var(--font-family-mono)] text-text-muted whitespace-nowrap px-1">
+                      <span className="text-xs font-mono text-text-secondary font-medium whitespace-nowrap px-1">
                         {barWidth > 15 ? `${t.firstContract} - ${t.publicDiscovery}` : ''}
                       </span>
                     </div>
@@ -902,7 +1010,7 @@ export default function GroundTruth() {
                   <div className="text-right">
                     <span
                       className={cn(
-                        'text-sm font-bold font-[var(--font-family-mono)]',
+                        'text-sm font-bold font-mono',
                         t.earlyWarning >= 4 ? 'text-accent' : 'text-text-secondary',
                       )}
                     >
@@ -922,7 +1030,7 @@ export default function GroundTruth() {
                   return (
                     <span
                       key={year}
-                      className="absolute text-[9px] text-text-muted font-[var(--font-family-mono)] -translate-x-1/2"
+                      className="absolute text-xs text-text-muted font-mono -translate-x-1/2"
                       style={{ left: `${pos}%` }}
                     >
                       {year}
@@ -985,8 +1093,8 @@ export default function GroundTruth() {
             <FindingCard
               icon={Target}
               iconColor={RISK_COLORS.critical}
-              title="Vendor Concentration is Key"
-              body="The top predictor (LR 18.7x) is vendor concentration. Known-bad vendors like PISA and LICONSA dominate their sector's procurement."
+              title="Price Volatility is Key"
+              body="The top predictor (+1.22) is price volatility — vendors with wildly varying contract sizes. Followed by institution diversity (-0.85) and win rate (+0.73)."
             />
             <FindingCard
               icon={Activity}
@@ -997,8 +1105,8 @@ export default function GroundTruth() {
             <FindingCard
               icon={Shield}
               iconColor="#4ade80"
-              title="Ground Truth Needs Diversification"
-              body="3 cases account for 99% of training data. Adding infrastructure, defense, and technology sector cases would improve generalization."
+              title="Per-Sector Models Capture Nuance"
+              body="v5.0 trains 12 sector-specific sub-models. Energia is driven by industry mismatch, Infraestructura by networks, Agricultura by vendor concentration (+1.82)."
             />
           </div>
         </CardContent>

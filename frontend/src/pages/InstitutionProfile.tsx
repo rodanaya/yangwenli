@@ -9,6 +9,7 @@ import { formatCompactMXN, formatCompactUSD, formatNumber, formatPercentSafe, fo
 import { institutionApi } from '@/api/client'
 import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { NarrativeCard } from '@/components/NarrativeCard'
+import { AddToWatchlistButton } from '@/components/AddToWatchlistButton'
 import { buildInstitutionNarrative } from '@/lib/narratives'
 import type { ContractListItem } from '@/api/types'
 import {
@@ -108,9 +109,16 @@ export function InstitutionProfile() {
             </div>
           </div>
         </div>
-        {institution.risk_baseline !== undefined && (
-          <RiskBadge score={institution.risk_baseline} className="text-base px-3 py-1" />
-        )}
+        <div className="flex items-center gap-2">
+          <AddToWatchlistButton
+            itemType="institution"
+            itemId={institutionId}
+            itemName={toTitleCase(institution.name)}
+          />
+          {institution.risk_baseline !== undefined && (
+            <RiskBadge score={institution.risk_baseline} className="text-base px-3 py-1" />
+          )}
+        </div>
       </div>
 
       {/* Narrative Summary */}
@@ -305,7 +313,7 @@ function KPICard({ title, value, icon: Icon, format = 'number', subtitle, varian
           <div className="space-y-1">
             <p className="text-xs font-medium text-text-muted">{title}</p>
             <p className="text-2xl font-bold tabular-nums text-text-primary">{formattedValue}</p>
-            {usdSubtitle && <p className="text-[10px] text-text-muted tabular-nums">{usdSubtitle}</p>}
+            {usdSubtitle && <p className="text-xs text-text-muted tabular-nums">{usdSubtitle}</p>}
             {subtitle && <p className="text-xs text-text-muted">{subtitle}</p>}
           </div>
           <div
@@ -482,7 +490,7 @@ function ContractRow({ contract }: { contract: ContractListItem }) {
       <div className="flex items-center gap-3 flex-shrink-0">
         <div className="text-right">
           <p className="text-sm font-medium tabular-nums">{formatCompactMXN(contract.amount_mxn)}</p>
-          <p className="text-[10px] text-text-muted tabular-nums">{formatCompactUSD(contract.amount_mxn)}</p>
+          <p className="text-xs text-text-muted tabular-nums">{formatCompactUSD(contract.amount_mxn)}</p>
         </div>
         {contract.risk_score !== undefined && contract.risk_score !== null && (
           <RiskBadge score={contract.risk_score} />

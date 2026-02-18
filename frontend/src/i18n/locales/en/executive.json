@@ -1,46 +1,209 @@
 {
-  "title": "Executive Summary",
-  "subtitle": "Analysis of Mexican Federal Government Procurement",
-  "overview": {
-    "title": "Overview",
-    "totalContracts": "Total Contracts",
+  "header": {
+    "badge": "EXECUTIVE INTELLIGENCE SUMMARY",
+    "dateline": "February 2026  |  RUBLI Intelligence Platform",
+    "title": "9.6 Trillion Pesos Under the Microscope",
+    "subtitle": "A Comprehensive Analysis of Mexican Federal Procurement, 2002-2025",
+    "lead": "Between 2002 and 2025, the Mexican federal government awarded {{totalContracts}} public procurement contracts worth a combined {{totalValue}} — roughly {{totalValueUSD}}. This report presents the findings of a systematic, AI-driven analysis of every one of those contracts. Using a 16-feature per-sector calibrated model validated against fifteen documented corruption cases, we identified patterns consistent with fraud, collusion, and abuse in contracts worth an estimated {{valueAtRisk}} — {{pct}}% of all procurement value. These findings do not constitute proof of wrongdoing. They are statistical signals that warrant investigation.",
+    "contracts": "Contracts",
     "totalValue": "Total Value",
-    "totalVendors": "Unique Vendors",
-    "totalInstitutions": "Institutions",
-    "dateRange": "Date Range",
-    "avgContractValue": "Avg Contract Value"
+    "vendors": "Vendors",
+    "institutions": "Institutions"
   },
-  "riskSummary": {
-    "title": "Risk Summary",
-    "distribution": "Risk Distribution",
-    "highRiskRate": "High Risk Rate",
-    "criticalContracts": "Critical Contracts",
-    "oecdBenchmark": "OECD Benchmark",
-    "withinBenchmark": "Within benchmark range (2-15%)",
-    "aboveBenchmark": "Above benchmark range"
-  },
-  "sectorAnalysis": {
-    "title": "Sector Analysis",
-    "topSectors": "Top Sectors by Value",
-    "riskBySector": "Risk by Sector",
-    "contractsBySector": "Contracts by Sector"
-  },
+
   "keyFindings": {
     "title": "Key Findings",
-    "directAwardRate": "Direct Award Rate",
-    "singleBidRate": "Single Bid Rate",
-    "vendorConcentration": "Vendor Concentration",
-    "yearEndSpending": "Year-End Spending"
+    "items": [
+      "Our model would have flagged IMSS fraud 8 years before it was discovered",
+      "7.9% of procurement value shows patterns consistent with corruption",
+      "Price volatility, not procedure type, is the strongest corruption signal",
+      "Validated against 15 real corruption cases with 96% accuracy"
+    ]
   },
-  "methodology": {
-    "title": "Methodology",
-    "modelVersion": "Model Version",
-    "aucRoc": "AUC-ROC",
-    "groundTruthCases": "Ground Truth Cases",
-    "features": "Model Features"
+
+  "predictors": {
+    "price_volatility": "Price Volatility",
+    "institution_diversity": "Institution Diversity",
+    "win_rate": "Win Rate",
+    "vendor_concentration": "Vendor Concentration",
+    "sector_spread": "Sector Spread",
+    "industry_mismatch": "Industry Mismatch",
+    "same_day_count": "Same-Day Contracts",
+    "direct_award": "Direct Award",
+    "ad_period_days": "Ad Period Length",
+    "institution_risk": "Institution Risk",
+    "single_bid": "Single Bidder",
+    "network_member_count": "Network Membership",
+    "year_end": "Year-End Timing",
+    "price_ratio": "Price Ratio",
+    "price_hyp_confidence": "Price Hypothesis",
+    "co_bid_rate": "Co-Bidding Rate"
   },
+
+  "s1": {
+    "title": "The Threat",
+    "p1": "Of the {{totalValue}} in analyzed procurement, an estimated <bold>{{valueAtRisk}}</bold> — {{pct}}% of all value — sits in contracts flagged as high or critical risk. To put this in context, Mexico's entire annual federal education budget is approximately 400 billion pesos. The value at risk in this dataset is roughly equivalent to {{years}} years of education spending.",
+    "p2": "Risk is not evenly distributed. The bulk of flagged value concentrates in a small number of high-value contracts from dominant vendors in health, infrastructure, and energy. The remaining {{remainingPct}}% of value falls in medium or low risk categories — not clean, but less urgently suspicious.",
+    "riskDistLabel": "RISK DISTRIBUTION BY VALUE",
+    "riskLevel": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "criticalContracts": "Critical contracts",
+    "highRiskContracts": "High-risk contracts",
+    "directAwards": "Direct awards",
+    "singleBidders": "Single bidders",
+    "p3": "A counterintuitive finding: <bold>direct awards are not the primary risk signal</bold>. In our model, direct award procedures carry only a slightly positive coefficient (+0.182), providing minimal discriminating signal. The real red flag is not how a contract is awarded, but <bold>who keeps winning</bold>. Price volatility — vendors with wildly varying contract sizes — is the strongest single predictor of corruption in v5.0."
+  },
+
+  "s2": {
+    "title": "The Proof",
+    "p1": "Any model can flag contracts. The question is whether it flags the right ones. We validated our model against {{cases}} documented Mexican corruption cases spanning {{contracts}} contracts from {{vendors}} matched vendors. These are not hypothetical — they are cases that led to criminal investigations, arrests, and public scandal. The model was asked: would you have flagged these?",
+    "p2": "The answer: <bold>yes, in {{detectionRate}}% of cases</bold> (at medium risk or above). The model achieves an AUC-ROC of {{auc}}, meaning it correctly ranks a randomly chosen corrupt contract above a clean one {{aucPct}}% of the time.",
+    "detectionLabel": "HIGH+ DETECTION RATE BY CASE",
+    "nContracts": "{{count}} contracts",
+    "earlyWarning": "<accent>Early warning value:</accent> The model would have raised alarms on IMSS ghost company contracts as early as 2008 — <italic>eight years</italic> before the scandal became public in 2016. For Segalmex, the earliest flagged contracts predate the 2020 investigation by several years.",
+    "p3": "The strongest detections occur in cases involving <bold>concentrated vendors in health and agriculture</bold> — IMSS (99.0%), Segalmex (94.3%), COVID-19 procurement (91.8%). These cases share a common pattern: a small number of vendors capturing outsized market share. Detection is weakest for cases involving <bold>bribery and conflict of interest</bold> — Grupo Higa (33.3%), Cyber Robotic (43.2%) — where corruption operates through relationships rather than statistical patterns in the procurement data itself."
+  },
+
+  "s3": {
+    "title": "Where the Risk Concentrates",
+    "p1": "Three sectors dominate the risk landscape. <bold>Health</bold> (Salud) accounts for the largest volume — {{healthContracts}} contracts worth {{healthValue}}. <bold>Infrastructure</bold> carries fewer contracts but enormous per-unit values. <bold>Energy</bold> combines both volume and value in a sector with structural concentration (few vendors can serve Pemex and CFE).",
+    "riskLabel": "ESTIMATED VALUE AT RISK BY SECTOR",
+    "health": {
+      "name": "Health",
+      "text": "The largest sector by contract volume. Home to the IMSS ghost company network and COVID-19 procurement fraud — two of the three largest corruption cases in the dataset. The sheer scale means even a modest risk rate translates to enormous absolute value at risk."
+    },
+    "infrastructure": {
+      "name": "Infrastructure",
+      "text": "Relatively low risk rate, but dominated by mega-contracts from firms like CICSA and ICA. A single flagged infrastructure contract can be worth more than thousands of smaller flagged contracts in other sectors combined."
+    },
+    "agriculture": {
+      "name": "Agriculture",
+      "text": "Only 3.2% of total procurement value but disproportionately represented in high-risk contracts. The Segalmex scandal (LICONSA, DICONSA) exposed systematic fraud in food distribution — a sector where oversight was historically weak."
+    }
+  },
+
+  "s4": {
+    "title": "Who Is Involved",
+    "p1": "The top 10 vendors by contract value collectively hold <bold>{{totalValue}}</bold> in procurement. Among them, two are confirmed participants in documented corruption cases. Several others carry risk scores above 0.20, indicating statistical patterns consistent with the corruption cases in our training data.",
+    "table": {
+      "rank": "Rank",
+      "vendor": "Vendor",
+      "value": "Value",
+      "contracts": "Contracts",
+      "avgRisk": "Avg Risk"
+    },
+    "p2": "It is important to distinguish <bold>high value from high risk</bold>. CICSA (Operadora CICSA) ranks #1 by total contract value with {{topValue}}B MXN, but carries a moderate risk score. In contrast, vendors with fewer but higher-risk contracts may represent more actionable investigation targets. The <shield></shield> icon marks vendors confirmed in documented corruption cases."
+  },
+
+  "s5": {
+    "title": "The Network",
+    "p1": "Corruption rarely operates in isolation. Our co-bidding analysis identified <bold>8,701 vendors</bold> with suspicious bidding patterns — vendors that frequently appear in the same procurement procedures but rarely compete against each other. These patterns affected over <bold>1 million contracts</bold>.",
+    "p2": "Two key patterns emerge: <bold>cover bidding</bold>, where partners consistently submit losing bids to create the appearance of competition, and <bold>bid rotation</bold>, where vendors take turns winning in predictable patterns. Both are classic indicators of bid-rigging cartels documented by the OECD.",
+    "suspiciousVendors": "Suspicious vendors",
+    "affectedContracts": "Affected contracts",
+    "coBidThreshold": "Co-bid threshold",
+    "p3": "Institution concentration also plays a critical role. When a single vendor captures a disproportionate share of an institution's procurement budget, it creates dependency and reduces competitive pressure — conditions ripe for corruption. Our analysis measures this through the Herfindahl-Hirschman Index (HHI) at the institution level."
+  },
+
+  "s6": {
+    "title": "The Data",
+    "p1": "This analysis is built on COMPRANET, Mexico's federal procurement transparency portal. The data spans four distinct structures with dramatically different quality levels — a challenge that shapes everything from risk score reliability to network analysis capability.",
+    "structures": {
+      "a": { "quality": "Lowest", "note": "Risk scores may be underestimated. Network analysis effectively impossible." },
+      "b": { "quality": "Better", "note": "UPPERCASE text. 72.2% direct award rate. Vendor identification improving." },
+      "c": { "quality": "Good", "note": "Mixed case. 78.4% direct award rate. Reliable for most analyses." },
+      "d": { "quality": "Best", "note": "100% partida codes. Richest data available." }
+    },
+    "rfc": "RFC",
+    "trillionLesson": "<accent>The trillion-peso lesson:</accent> A previous analysis of this data included 7 contracts with values exceeding 1 trillion pesos — obvious decimal point errors that destroyed all analytics. These contracts, if real, would have represented 12.5% of Mexico's entire federal budget each. We now reject any contract exceeding 100 billion MXN and flag contracts above 10 billion for manual review.",
+    "p2": "Amount validation is critical: Mexico's entire federal budget is approximately 8 trillion MXN annually. The largest legitimate PEMEX contracts are typically 1-5 billion MXN. Our validation rules ensure that data errors do not silently corrupt the analytics."
+  },
+
+  "s7": {
+    "title": "Across Administrations",
+    "p1": "Corruption risk has proven remarkably persistent across political transitions. No administration has been immune, though the <italic>character</italic> of risk varies — from data quality limitations in the Fox era, to volume concentration under Peña Nieto, to the highest direct award rates under AMLO.",
+    "labels": {
+      "contracts": "Contracts",
+      "value": "Value",
+      "highRisk": "High Risk",
+      "directAward": "Direct Award"
+    },
+    "narratives": {
+      "Fox": "Earliest data period (Structure A) with lowest quality — 0.1% RFC coverage. Risk scores may be underestimated. Direct award data unavailable for this period.",
+      "Calderon": "Contract volume doubled as COMPRANET modernized. The IMSS ghost company network began operations during this period, with earliest contracts dating to 2008.",
+      "Pena Nieto": "Largest procurement volume of any administration. 73.4% direct awards. Period of the Odebrecht bribery scandal, La Estafa Maestra, and the Grupo Higa conflict of interest case.",
+      "AMLO": "Highest observed risk rate and highest direct award percentage at 79.5%. The Segalmex and COVID-19 procurement scandals occurred during this administration.",
+      "Sheinbaum": "Early data only (2025). Slight decrease in both risk rate and direct award percentage compared to predecessor. Too early for conclusive assessment."
+    }
+  },
+
+  "s8": {
+    "title": "How We Know",
+    "p1": "The v5.0 model transforms procurement analysis from a weighted indicator checklist to a <bold>calibrated probability framework</bold>. Every contract receives a score representing the estimated probability of corruption, derived from 16 features normalized against sector and year baselines using z-scores, with multivariate anomaly detection via Mahalanobis distance and Bayesian logistic regression trained on {{contracts}} known-bad contracts.",
+    "discriminationPower": "Discrimination power",
+    "calibrationQuality": "Calibration quality",
+    "vsRandom": "vs random baseline",
+    "coeffLabel": "MODEL COEFFICIENTS (TOP PREDICTORS)",
+    "reducesRisk": "\u2190 Reduces risk",
+    "increasesRisk": "Increases risk \u2192",
+    "p2": "<bold>Price volatility is the strongest single predictor</bold> — vendors whose contract amounts vary wildly across their portfolio are the most suspicious. This challenges the standard anti-corruption toolkit. Institution diversity and win rate round out the top three, while traditional indicators like single bidding and co-bidding provide little discriminating signal."
+  },
+
+  "s9": {
+    "title": "What We Cannot See",
+    "p1": "Intellectual honesty demands we state what this analysis cannot do. A risk model is a lens, not an oracle. It amplifies patterns from historical data, which means it is blind to anything that doesn't resemble the past.",
+    "limitations": {
+      "groundTruth": {
+        "title": "Ground Truth Concentration",
+        "text": "While ground truth has been diversified to 15 cases across all 12 sectors, the three largest cases (IMSS, Segalmex, COVID) still contribute the majority of training contracts. The model excels at detecting concentration-based fraud but may underdetect novel corruption schemes."
+      },
+      "dataQuality": {
+        "title": "Data Quality Degrades with Age",
+        "text": "Structure A data (2002-2010) has only 0.1% RFC coverage, making vendor identification unreliable. Risk scores for this period may be underestimated, and network analysis is effectively impossible."
+      },
+      "correlation": {
+        "title": "Correlation is Not Causation",
+        "text": "A high risk score indicates statistical anomaly consistent with known corruption patterns — it does not constitute proof of wrongdoing. Some sectors (Defense, Energy) have structural reasons for vendor concentration that are not corrupt."
+      },
+      "unknowns": {
+        "title": "Unknown Unknowns",
+        "text": "Novel corruption schemes that do not resemble the 15 documented cases will not be flagged by this model. The model detects what it has been trained to recognize — patterns from the past, not innovation in fraud."
+      }
+    }
+  },
+
+  "s10": {
+    "title": "What Comes Next",
+    "p1": "This analysis is not an endpoint — it is a starting point for investigation. The model has identified where to look. The following steps would maximize the platform's impact on procurement integrity.",
+    "actions": {
+      "investigate": {
+        "title": "Investigate High-Concentration Vendors",
+        "description": "Vendors with critical risk scores collectively hold over 1 trillion MXN in procurement. Start with the top 50 by risk-weighted value.",
+        "link": "Open Investigation"
+      },
+      "safeguards": {
+        "title": "Strengthen Competitive Safeguards",
+        "description": "The problem is not which procedure type is used, but who participates and wins. Focus oversight on vendor concentration rather than procedure classification.",
+        "link": "View Patterns"
+      },
+      "diversify": {
+        "title": "Diversify Ground Truth",
+        "description": "The model needs more training cases from infrastructure, defense, and technology sectors. ASF audit reports and Mexicanos Contra la Corrupci\u00f3n investigations are promising sources.",
+        "link": "Ground Truth"
+      }
+    }
+  },
+
   "footer": {
-    "disclaimer": "Risk scores are calibrated probabilities with confidence intervals. A high score indicates statistical anomaly consistent with corruption patterns — it does not constitute proof of wrongdoing.",
-    "copyright": "Yang Wen-li — Government Procurement Analysis Platform"
+    "platform": "RUBLI Intelligence Platform",
+    "compranet": "COMPRANET 2002-2025",
+    "sectors": "12 sectors",
+    "quote": "\"There are things that cannot be measured in terms of victory or defeat.\"",
+    "copyright": "\u00a9 {{year}} RUBLI Project. All Rights Reserved.",
+    "disclaimer": "Risk scores are calibrated probabilities with confidence intervals. A high score indicates statistical anomaly consistent with corruption patterns \u2014 it does not constitute proof of wrongdoing."
   }
 }

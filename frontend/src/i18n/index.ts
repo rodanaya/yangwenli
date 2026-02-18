@@ -23,6 +23,8 @@ import esPatterns from './locales/es/patterns.json'
 import enPatterns from './locales/en/patterns.json'
 import esWatchlist from './locales/es/watchlist.json'
 import enWatchlist from './locales/en/watchlist.json'
+import esGlossary from './locales/es/glossary.json'
+import enGlossary from './locales/en/glossary.json'
 
 i18n
   .use(LanguageDetector)
@@ -33,11 +35,13 @@ i18n
         common: esCommon, sectors: esSectors, nav: esNav, dashboard: esDashboard,
         explore: esExplore, contracts: esContracts, investigation: esInvestigation,
         executive: esExecutive, patterns: esPatterns, watchlist: esWatchlist,
+        glossary: esGlossary,
       },
       en: {
         common: enCommon, sectors: enSectors, nav: enNav, dashboard: enDashboard,
         explore: enExplore, contracts: enContracts, investigation: enInvestigation,
         executive: enExecutive, patterns: enPatterns, watchlist: enWatchlist,
+        glossary: enGlossary,
       },
     },
     lng: 'es', // Default to Spanish

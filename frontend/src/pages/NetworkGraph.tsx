@@ -119,7 +119,7 @@ function VendorRow({
       {vendor.avg_risk_score != null && (
         <RiskBadge
           score={vendor.avg_risk_score}
-          className={cn('text-[9px] px-1.5 py-0', !isHighRisk && 'opacity-60')}
+          className={cn('text-xs px-1.5 py-0', !isHighRisk && 'opacity-60')}
         />
       )}
     </div>
@@ -223,7 +223,7 @@ function InstitutionRow({
           {vendorsLoading ? (
             <RowSpinner />
           ) : vendors.length === 0 ? (
-            <div className="py-1.5 pl-16 text-[10px] text-text-muted italic">
+            <div className="py-1.5 pl-16 text-xs text-text-muted italic">
               No vendor data available
             </div>
           ) : (
@@ -355,11 +355,11 @@ function SectorRow({
           {institutionsLoading ? (
             <RowSpinner />
           ) : institutions.length === 0 ? (
-            <div className="py-2 pl-12 text-[10px] text-text-muted italic">
+            <div className="py-2 pl-12 text-xs text-text-muted italic">
               No institutions found
             </div>
           ) : filteredInstitutions.length === 0 ? (
-            <div className="py-2 pl-12 text-[10px] text-text-muted italic">
+            <div className="py-2 pl-12 text-xs text-text-muted italic">
               No institutions match "{searchQuery}"
             </div>
           ) : (
@@ -414,7 +414,7 @@ function DetailPanel({
             <X className="h-4 w-4" />
           </button>
         </div>
-        <span className="text-[10px] uppercase tracking-wider text-text-muted">{node.type}</span>
+        <span className="text-xs uppercase tracking-wider text-text-muted">{node.type}</span>
       </CardHeader>
       <CardContent className="space-y-2 text-xs">
         {/* Sector detail */}
@@ -453,7 +453,7 @@ function DetailPanel({
             {(data.avg_risk_score as number) != null && (
               <div className="flex items-center justify-between">
                 <span className="text-text-muted">Risk</span>
-                <RiskBadge score={(data.avg_risk_score as number) ?? 0} className="text-[9px]" />
+                <RiskBadge score={(data.avg_risk_score as number) ?? 0} className="text-xs" />
               </div>
             )}
             {(data.rfc as string) && <StatRow label="RFC" value={data.rfc as string} />}
@@ -677,7 +677,7 @@ export function NetworkGraph() {
             <CardHeader className="pb-2">
               <CardTitle className="text-xs">How to use</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-[10px] text-text-muted">
+            <CardContent className="space-y-2 text-xs text-text-muted">
               <div className="flex items-start gap-2">
                 <ExpandChevron expanded={false} className="h-3 w-3 mt-0.5" />
                 <span>Click the arrow to expand/collapse levels</span>
@@ -700,7 +700,7 @@ export function NetworkGraph() {
             </CardHeader>
             <CardContent className="space-y-1">
               {SECTORS.map((s) => (
-                <div key={s.id} className="flex items-center gap-2 text-[10px]">
+                <div key={s.id} className="flex items-center gap-2 text-xs">
                   <span
                     className="w-2.5 h-2.5 rounded-sm shrink-0"
                     style={{ backgroundColor: s.color }}

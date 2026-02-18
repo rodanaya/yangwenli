@@ -44,13 +44,10 @@ export default defineConfig({
           ],
           // UI library components
           'vendor-radix': [
-            '@radix-ui/react-checkbox',
             '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
             '@radix-ui/react-scroll-area',
             '@radix-ui/react-select',
             '@radix-ui/react-slot',
-            '@radix-ui/react-tabs',
             '@radix-ui/react-tooltip',
           ],
           // Utilities

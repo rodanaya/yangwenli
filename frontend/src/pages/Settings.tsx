@@ -312,17 +312,17 @@ function GeneralTab() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Info className="h-4 w-4" />
-            About Yang Wen-li
+            About RUBLI
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-text-muted mb-4">
-            Yang Wen-li is an AI-Powered Corruption Detection Platform for Mexican Government Procurement.
-            Named after the pragmatic historian from Legend of the Galactic Heroes who valued transparency
-            and democratic institutions over blind ambition.
+            RUBLI (Red Unificada de Busqueda de Licitaciones Irregulares) is an AI-Powered Corruption Detection
+            Platform for Mexican Government Procurement. Named after the unified network concept for detecting
+            irregular procurement patterns across federal sectors.
           </p>
           <div className="text-xs text-text-muted space-y-1">
-            <p>Risk Model: v4.0 Statistical Framework (AUC-ROC: 0.942)</p>
+            <p>Risk Model: v5.0 Per-Sector Calibrated Framework (Test AUC: 0.960)</p>
             <p>Sectors: 12-sector taxonomy</p>
             <p>Backend: FastAPI + SQLite</p>
             <p>Frontend: React + TypeScript + TailwindCSS</p>
@@ -1012,7 +1012,7 @@ function DQKeyIssuesList({ issues }: { issues: KeyIssue[] }) {
             <div className="flex items-center gap-2">
               <span className="font-medium text-sm">{issue.field}</span>
               <span
-                className="text-[10px] px-1.5 py-0.5 rounded font-medium uppercase"
+                className="text-xs px-1.5 py-0.5 rounded font-medium uppercase"
                 style={{
                   backgroundColor: `${SEVERITY_COLORS[issue.severity]}20`,
                   color: SEVERITY_COLORS[issue.severity],

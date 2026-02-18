@@ -11,8 +11,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ChartSkeleton } from '@/components/LoadingSkeleton'
 import { cn, formatNumber, formatCompactMXN, formatPercentSafe } from '@/lib/utils'
 import { RISK_COLORS } from '@/lib/constants'
+import { PageHero, StatCard as SharedStatCard } from '@/components/DashboardWidgets'
 import { analysisApi } from '@/api/client'
-import type { MonthlyBreakdownResponse } from '@/api/client'
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -25,6 +25,7 @@ import {
   Legend,
   Cell,
   ReferenceArea,
+  ReferenceLine,
   BarChart,
 } from '@/components/charts'
 import {
@@ -33,8 +34,6 @@ import {
   Calendar,
   AlertTriangle,
   Zap,
-  BarChart3,
-  FileText,
   Landmark,
   Scale,
   Shield,
@@ -67,7 +66,15 @@ const ADMINISTRATIONS = [
   { name: 'Sheinbaum', start: 2024, end: 2026, color: 'rgba(96,165,250,0.08)' },
 ]
 
-const EVENT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+const KEY_EVENTS = [
+  { year: 2008, label: 'Financial Crisis' },
+  { year: 2012, label: 'New PRI Govt' },
+  { year: 2018, label: 'AMLO Takes Office' },
+  { year: 2020, label: 'COVID-19' },
+  { year: 2024, label: 'Sheinbaum' },
+]
+
+const EVENT_ICONS: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
   election: Landmark,
   scandal: AlertTriangle,
   reform: Scale,
@@ -210,83 +217,80 @@ export default function TemporalPulse() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-text-primary flex items-center gap-2">
-            <Activity className="h-5 w-5 text-accent" />
-            Temporal Pulse
-          </h1>
-          <p className="text-sm text-text-secondary mt-1">
-            The heartbeat of Mexican procurement — rhythms, spikes, and political cycles
-          </p>
-        </div>
-
-        {/* Year Selector */}
-        <div className="flex items-center gap-2">
-          <label htmlFor="year-select" className="text-xs text-text-muted font-mono">
-            Year:
-          </label>
-          <select
-            id="year-select"
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="bg-background-elevated border border-border rounded-md px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
-          >
-            {YEAR_OPTIONS.map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+      {/* Hero Header */}
+      <PageHero
+        trackingLabel="TEMPORAL PULSE"
+        icon={<Activity className="h-4 w-4 text-accent" />}
+        headline={yearOverview ? formatNumber(yearOverview.totalContracts) : '—'}
+        subtitle={`Contracts in ${selectedYear} — rhythms, spikes, and political cycles`}
+        detail={yearOverview ? `${formatCompactMXN(yearOverview.totalValue)} total value · ${formatPercentSafe(yearOverview.avgRisk)} avg risk` : undefined}
+        loading={monthlyLoading}
+        trailing={
+          <div className="flex items-center gap-2">
+            <label htmlFor="year-select" className="text-xs text-text-muted font-mono">
+              Year:
+            </label>
+            <select
+              id="year-select"
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className="bg-background-elevated border border-border rounded-md px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
+            >
+              {YEAR_OPTIONS.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          </div>
+        }
+      />
 
       {/* L1: Year Overview Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          label="Total Contracts"
-          value={yearOverview ? formatNumber(yearOverview.totalContracts) : null}
-          icon={FileText}
-          subtitle={`In ${selectedYear}`}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <SharedStatCard
+          label="TOTAL CONTRACTS"
+          value={yearOverview ? formatNumber(yearOverview.totalContracts) : '—'}
+          detail={`In ${selectedYear}`}
+          borderColor="border-accent/30"
           loading={monthlyLoading}
         />
-        <StatCard
-          label="Total Value"
-          value={yearOverview ? formatCompactMXN(yearOverview.totalValue) : null}
-          icon={BarChart3}
-          subtitle="Contract spending"
+        <SharedStatCard
+          label="TOTAL VALUE"
+          value={yearOverview ? formatCompactMXN(yearOverview.totalValue) : '—'}
+          detail="Contract spending"
+          borderColor="border-blue-500/30"
           loading={monthlyLoading}
         />
-        <StatCard
-          label="Avg Risk Score"
-          value={yearOverview ? formatPercentSafe(yearOverview.avgRisk) : null}
-          icon={AlertTriangle}
-          subtitle="Mean corruption probability"
-          loading={monthlyLoading}
-          valueColor={
+        <SharedStatCard
+          label="AVG RISK SCORE"
+          value={yearOverview ? formatPercentSafe(yearOverview.avgRisk) : '—'}
+          detail="Mean corruption probability"
+          borderColor="border-amber-500/30"
+          color={
             yearOverview && yearOverview.avgRisk >= 0.3
-              ? RISK_COLORS.high
+              ? 'text-risk-high'
               : yearOverview && yearOverview.avgRisk >= 0.1
-                ? RISK_COLORS.medium
-                : undefined
+                ? 'text-risk-medium'
+                : 'text-text-primary'
           }
+          loading={monthlyLoading}
         />
-        <StatCard
-          label="December Spike"
+        <SharedStatCard
+          label="DECEMBER SPIKE"
           value={
             yearOverview?.decSpikeRatio != null
               ? `${yearOverview.decSpikeRatio.toFixed(1)}x`
-              : null
+              : '—'
           }
-          icon={Zap}
-          subtitle="Dec vs avg month"
-          loading={monthlyLoading}
-          valueColor={
+          detail="Dec vs avg month"
+          borderColor="border-red-500/30"
+          color={
             yearOverview?.decSpikeRatio != null && yearOverview.decSpikeRatio > 1.5
-              ? RISK_COLORS.high
-              : undefined
+              ? 'text-risk-critical'
+              : 'text-text-primary'
           }
+          loading={monthlyLoading}
         />
       </div>
 
@@ -341,23 +345,23 @@ export default function TemporalPulse() {
                           <p className="font-medium text-xs mb-1">
                             {d.month} {selectedYear}
                           </p>
-                          <p className="text-[10px] text-text-muted tabular-nums">
+                          <p className="text-xs text-text-muted tabular-nums">
                             Contracts: {formatNumber(d.contracts)}
                           </p>
-                          <p className="text-[10px] text-text-muted tabular-nums">
+                          <p className="text-xs text-text-muted tabular-nums">
                             Value: {formatCompactMXN(d.value)}
                           </p>
-                          <p className="text-[10px] text-text-muted tabular-nums">
+                          <p className="text-xs text-text-muted tabular-nums">
                             Avg Risk: {d.avgRisk.toFixed(1)}%
                           </p>
-                          <p className="text-[10px] text-text-muted tabular-nums">
+                          <p className="text-xs text-text-muted tabular-nums">
                             Direct Awards: {formatNumber(d.directAwards)}
                           </p>
-                          <p className="text-[10px] text-text-muted tabular-nums">
+                          <p className="text-xs text-text-muted tabular-nums">
                             Single Bids: {formatNumber(d.singleBids)}
                           </p>
                           {d.isYearEnd && (
-                            <p className="text-[10px] text-risk-high mt-1 font-medium">
+                            <p className="text-xs text-risk-high mt-1 font-medium">
                               Year-end period
                             </p>
                           )}
@@ -447,14 +451,14 @@ export default function TemporalPulse() {
                       return (
                         <div className="chart-tooltip">
                           <p className="font-medium text-xs mb-1">{d.year}</p>
-                          <div className="flex items-center gap-2 text-[10px] text-text-muted">
+                          <div className="flex items-center gap-2 text-xs text-text-muted">
                             <div
                               className="w-2 h-2 rounded-full"
                               style={{ backgroundColor: RISK_COLORS.high }}
                             />
                             December: {formatNumber(d.decContracts)}
                           </div>
-                          <div className="flex items-center gap-2 text-[10px] text-text-muted">
+                          <div className="flex items-center gap-2 text-xs text-text-muted">
                             <div
                               className="w-2 h-2 rounded-full"
                               style={{ backgroundColor: 'var(--color-accent)' }}
@@ -463,7 +467,7 @@ export default function TemporalPulse() {
                           </div>
                           <p
                             className={cn(
-                              'text-[10px] font-medium mt-1',
+                              'text-xs font-medium mt-1',
                               d.spikeRatio > 1.5 ? 'text-risk-high' : 'text-text-secondary'
                             )}
                           >
@@ -572,16 +576,16 @@ export default function TemporalPulse() {
                             {d.year}
                             {admin ? ` (${admin.name})` : ''}
                           </p>
-                          <p className="text-[10px] text-text-muted tabular-nums">
+                          <p className="text-xs text-text-muted tabular-nums">
                             Contracts: {formatNumber(d.contracts)}
                           </p>
-                          <p className="text-[10px] text-text-muted tabular-nums">
+                          <p className="text-xs text-text-muted tabular-nums">
                             Value: {formatCompactMXN(d.value)}
                           </p>
-                          <p className="text-[10px] text-text-muted tabular-nums">
+                          <p className="text-xs text-text-muted tabular-nums">
                             Avg Risk: {d.avgRisk.toFixed(1)}%
                           </p>
-                          <p className="text-[10px] text-text-muted tabular-nums">
+                          <p className="text-xs text-text-muted tabular-nums">
                             Direct Awards: {d.directAwardPct.toFixed(1)}%
                           </p>
                         </div>
@@ -602,8 +606,26 @@ export default function TemporalPulse() {
                         position: 'insideTopLeft',
                         style: {
                           fill: 'var(--color-text-muted)',
-                          fontSize: 9,
+                          fontSize: 11,
                           fontFamily: 'var(--font-mono)',
+                        },
+                      }}
+                    />
+                  ))}
+                  {/* Key event markers */}
+                  {KEY_EVENTS.map((event) => (
+                    <ReferenceLine
+                      key={event.year}
+                      x={event.year}
+                      yAxisId="left"
+                      stroke="#fbbf24"
+                      strokeDasharray="3 3"
+                      label={{
+                        value: event.label,
+                        position: 'top',
+                        style: {
+                          fill: 'var(--color-text-muted)',
+                          fontSize: 10,
                         },
                       }}
                     />
@@ -635,12 +657,12 @@ export default function TemporalPulse() {
           {adminChartData.length > 0 && (
             <div className="flex flex-wrap gap-4 mt-4 px-2">
               {ADMINISTRATIONS.map((admin) => (
-                <div key={admin.name} className="flex items-center gap-1.5 text-xs text-text-muted">
+                <div key={admin.name} className="flex items-center gap-1.5 text-sm text-text-muted">
                   <div
                     className="w-3 h-3 rounded-sm border border-border"
                     style={{ backgroundColor: admin.color }}
                   />
-                  <span className="font-mono">
+                  <span className="font-mono text-xs">
                     {admin.name} ({admin.start}-{admin.end > 2025 ? '' : admin.end})
                   </span>
                 </div>
@@ -697,7 +719,7 @@ export default function TemporalPulse() {
                           {event.title}
                         </span>
                         <span
-                          className="text-[10px] font-mono px-1.5 py-0.5 rounded-full shrink-0"
+                          className="text-xs font-mono px-1.5 py-0.5 rounded-full shrink-0"
                           style={{
                             backgroundColor: `${color}15`,
                             color,
@@ -709,16 +731,16 @@ export default function TemporalPulse() {
                       <p className="text-xs text-text-secondary line-clamp-2">
                         {event.description}
                       </p>
-                      <div className="flex items-center gap-3 mt-1 text-[10px] text-text-muted font-mono">
+                      <div className="flex items-center gap-3 mt-1 text-xs text-text-muted font-mono">
                         <span>{event.date}</span>
                         {event.impact && (
                           <span
                             className={cn(
                               'px-1.5 py-0.5 rounded',
                               event.impact === 'high'
-                                ? 'bg-red-500/10 text-red-400'
+                                ? 'bg-risk-critical/10 text-risk-critical'
                                 : event.impact === 'medium'
-                                  ? 'bg-amber-500/10 text-amber-400'
+                                  ? 'bg-risk-medium/10 text-risk-medium'
                                   : 'bg-blue-500/10 text-blue-400'
                             )}
                           >
@@ -738,7 +760,7 @@ export default function TemporalPulse() {
               {eventsData && eventsData.events.length > 8 && (
                 <button
                   onClick={() => setShowAllEvents(!showAllEvents)}
-                  className="flex items-center gap-1 text-xs text-accent hover:text-accent/80 transition-colors mt-2 px-2.5"
+                  className="flex items-center gap-1 text-xs text-accent hover:text-accent transition-colors mt-2 px-2.5"
                 >
                   {showAllEvents ? (
                     <>
@@ -767,49 +789,7 @@ export default function TemporalPulse() {
 // Sub-components
 // =============================================================================
 
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-  subtitle,
-  loading,
-  valueColor,
-}: {
-  label: string
-  value: string | null
-  icon: React.ElementType
-  subtitle: string
-  loading: boolean
-  valueColor?: string
-}) {
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <p className="text-xs text-text-muted font-mono uppercase tracking-wider">
-              {label}
-            </p>
-            {loading || value === null ? (
-              <Skeleton className="h-7 w-24" />
-            ) : (
-              <p
-                className="text-xl font-bold tabular-nums"
-                style={{ color: valueColor || 'var(--color-text-primary)' }}
-              >
-                {value}
-              </p>
-            )}
-            <p className="text-[10px] text-text-muted">{subtitle}</p>
-          </div>
-          <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-accent/10">
-            <Icon className="h-5 w-5 text-accent" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
+// Local StatCard removed — using shared DashboardWidgets.StatCard
 
 function EmptyState({ message }: { message: string }) {
   return (

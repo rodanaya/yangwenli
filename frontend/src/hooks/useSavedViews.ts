@@ -14,7 +14,7 @@ interface SavedView {
   updatedAt: string
 }
 
-const STORAGE_KEY = 'yang-wenli-saved-views'
+const STORAGE_KEY = 'rubli-saved-views'
 const MAX_VIEWS = 10
 
 function generateId(): string {

@@ -15,17 +15,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY requirements.txt .
+# Copy requirements first for better caching (slim API-only deps)
+COPY requirements-api.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies (API runtime only — no ML/ETL packages)
+RUN pip install --no-cache-dir -r requirements-api.txt
+
+# Create non-root user for security
+RUN addgroup --system app && adduser --system --ingroup app app
 
 # Copy application code
-COPY . .
+COPY --chown=app:app . .
 
 # Create data directory for SQLite database
-RUN mkdir -p /data
+RUN mkdir -p /data && chown app:app /data
+
+# Switch to non-root user
+USER app
 
 # Expose port
 EXPOSE 8001

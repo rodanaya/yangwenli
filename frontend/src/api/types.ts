@@ -195,6 +195,32 @@ export interface ContractStatistics {
   max_year: number
 }
 
+export interface RiskFeatureContribution {
+  feature: string
+  label: string
+  z_score: number
+  coefficient: number
+  contribution: number
+}
+
+export interface RiskExplanation {
+  contract_id: number
+  risk_score: number
+  risk_level: string
+  model_version?: string
+  model_type?: string
+  sector_id?: number
+  confidence_interval?: {
+    lower?: number | null
+    upper?: number | null
+  }
+  explanation_available: boolean
+  intercept?: number
+  logit?: number
+  pu_correction?: number
+  features: RiskFeatureContribution[]
+}
+
 // ============================================================================
 // Vendor Types
 // ============================================================================

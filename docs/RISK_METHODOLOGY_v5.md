@@ -1,6 +1,6 @@
 # Risk Scoring Methodology v5.0
 
-**Last Updated:** February 14, 2026 | **Contracts:** 3,110,017 | **Years:** 2002-2025
+**Last Updated:** February 16, 2026 | **Contracts:** 3,110,007 | **Years:** 2002-2025
 
 ---
 
@@ -8,14 +8,14 @@
 
 | Level | Threshold | Count | % | Action |
 |-------|-----------|-------|---|--------|
-| **Critical** | >= 0.50 | 201,745 | 6.5% | Immediate investigation |
-| **High** | >= 0.30 | 126,551 | 4.1% | Priority review |
-| **Medium** | >= 0.10 | 1,364,321 | 43.9% | Watch list |
-| **Low** | < 0.10 | 1,417,390 | 45.6% | Standard monitoring |
+| **Critical** | >= 0.50 | 178,938 | 5.8% | Immediate investigation |
+| **High** | >= 0.30 | 67,190 | 2.2% | Priority review |
+| **Medium** | >= 0.10 | 294,468 | 9.5% | Watch list |
+| **Low** | < 0.10 | 2,569,411 | 82.6% | Standard monitoring |
 
-**High-risk rate: 10.6%** (OECD benchmark: 2-15%)
+**High-risk rate: 7.9%** (OECD benchmark: 2-15%)
 
-**Validation:** Train AUC = 0.9482, Test AUC = 0.9508 (temporal split), Brier = 0.097
+**Validation:** Train AUC = 0.967, Test AUC = 0.960 (temporal split), Brier = 0.060
 
 ---
 
@@ -33,7 +33,7 @@ v5.0 builds on the v4.0 statistical framework with three major improvements:
 | Ground truth | 9 cases, 17 vendors, 21K contracts | **15 cases, 27 vendors, 27K contracts** |
 | Sector coverage | 3 sectors (Salud, Agricultura, Energia) | **All 12 sectors** |
 | Validation | In-sample AUC only | **Temporal train/test split** |
-| PU correction | Circular (c=0.890) | **Elkan & Noto holdout (c=0.861)** |
+| PU correction | Circular (c=0.890) | **Elkan & Noto holdout (c=0.887)** |
 | Models | 1 global | **1 global + 12 per-sector** |
 | Regularization | L2 with ad-hoc dampening | **Cross-validated ElasticNet** |
 | Detection (high+) | 45.7% | **93.0%** |
@@ -89,12 +89,10 @@ Testing set:   contracts where contract_year ≥ 2021
 This mimics real-world deployment: the model learns from historical corruption patterns and must predict on future contracts it has never seen.
 
 **Results:**
-- Train AUC: 0.9482
-- **Test AUC: 0.9508** (≥ train AUC → no overfitting)
-- Test Brier: 0.097
-- Test Average Precision: 0.971
-
-The test AUC slightly exceeding train AUC confirms the model generalizes well — it does not overfit to historical patterns.
+- Train AUC: 0.967
+- **Test AUC: 0.960**
+- Test Brier: 0.060
+- Test Average Precision: 0.981
 
 ---
 
@@ -113,10 +111,10 @@ Following Elkan & Noto (2008):
 2. Train the model on remaining 80% positives + all unlabeled negatives
 3. Estimate c from the held-out 20% (which the model has never seen)
 
-**v5.0 c = 0.861** (more conservative and honest)
+**v5.0 c = 0.887** (more conservative and honest)
 
 ```
-P(corrupt | x) = P(labeled=1 | x) / c = σ(β₀ + βᵀz) / 0.861
+P(corrupt | x) = P(labeled=1 | x) / c = σ(β₀ + βᵀz) / 0.887
 ```
 
 ---
@@ -133,9 +131,9 @@ Grid search over:
 - **C**: [0.01, 0.1, 1.0, 10.0]
 - **l1_ratio**: [0.0, 0.25, 0.5] (ElasticNet mixing)
 
-**Best:** C=0.01, l1_ratio=0.0 (pure L2)
+**Best:** C=10.0, l1_ratio=0.25 (ElasticNet with 75% L2 + 25% L1)
 
-The stronger regularization (C=0.01 vs C=0.1) naturally controls coefficient magnitudes without ad-hoc dampening. No manual coefficient capping is needed.
+The cross-validated hyperparameters naturally control coefficient magnitudes without ad-hoc dampening. No manual coefficient capping is needed.
 
 ---
 
@@ -151,30 +149,43 @@ Corruption patterns differ by sector:
 
 A single global model cannot capture these differences. v5.0 trains a dedicated logistic regression for each of the 12 sectors.
 
-### Global Model Coefficients
+### Global Model Coefficients (16 features)
 
-| Factor | v4.0 (dampened) | v5.0 | Change |
-|--------|-----------------|------|--------|
-| vendor_concentration | +1.000 (capped) | **+1.795** | Natural, no dampening needed |
-| industry_mismatch | +0.214 | **+0.339** | Stronger signal with diversified data |
-| same_day_count | +0.142 | **+0.144** | Stable |
-| network_member_count | 0.000 (zeroed) | **+0.132** | Fixed! Now positive as expected |
-| price_ratio | +0.098 | **+0.108** | Stable |
-| price_hyp_confidence | +0.021 | **+0.084** | Stronger with more cases |
-| ad_period_days | -0.222 | **-0.061** | Less extreme, closer to neutral |
-| year_end | +0.023 | **+0.046** | Slight increase |
-| single_bid | +0.100 | **+0.016** | Weaker (known-bad vendors use competitive) |
-| institution_risk | +0.119 | **+0.008** | Weakened |
-| direct_award | -0.197 | **+0.001** | Fixed! No longer misleadingly negative |
-| co_bid_rate | 0.000 | **0.000** | Still zeroed by regularization |
+v5.0 expands from 12 to 16 z-score features by adding 4 new vendor-behavior features:
 
-### Key Improvements in Coefficients
+| # | Factor | v4.0 (dampened) | v5.0 | 95% CI | New? |
+|---|--------|-----------------|------|--------|------|
+| 1 | price_volatility | — | **+1.219** | [+1.016, +1.431] | **NEW** |
+| 2 | institution_diversity | — | **-0.848** | [-0.933, -0.777] | **NEW** |
+| 3 | win_rate | — | **+0.727** | [+0.648, +0.833] | **NEW** |
+| 4 | vendor_concentration | +1.000 (capped) | **+0.428** | [+0.277, +0.597] | |
+| 5 | sector_spread | — | **-0.374** | [-0.443, -0.316] | **NEW** |
+| 6 | industry_mismatch | +0.214 | **+0.305** | [+0.263, +0.345] | |
+| 7 | same_day_count | +0.142 | **+0.222** | [+0.172, +0.286] | |
+| 8 | direct_award | -0.197 | **+0.182** | [+0.124, +0.247] | |
+| 9 | ad_period_days | -0.222 | **-0.104** | [-0.180, -0.032] | |
+| 10 | network_member_count | 0.000 (zeroed) | **+0.064** | [+0.033, +0.097] | |
+| 11 | year_end | +0.023 | **+0.059** | [+0.023, +0.098] | |
+| 12 | institution_risk | +0.119 | **+0.057** | [+0.016, +0.097] | |
+| 13 | price_ratio | +0.098 | **-0.015** | [-0.098, +0.080] | |
+| 14 | single_bid | +0.100 | **+0.013** | [-0.042, +0.074] | |
+| 15 | price_hyp_confidence | +0.021 | **+0.001** | [-0.049, +0.050] | |
+| 16 | co_bid_rate | 0.000 | **0.000** | [0.000, 0.000] | |
 
-1. **network_member_count = +0.132** (was -4.11 raw, zeroed to 0.0 in v4.0): The diversified ground truth includes infrastructure network vendors (ICA, COCONAL, Mota-Engil) that operate in networks. The coefficient is now naturally positive — network membership correctly increases risk.
+### New Features in v5.0
 
-2. **direct_award ≈ 0.0** (was -0.197 in v4.0): v4.0's negative coefficient was misleading — it suggested direct awards are less risky, which contradicts OECD guidance. With diversified cases, direct_award becomes neutral — neither protective nor risky on its own.
+1. **price_volatility** (+1.22): Standard deviation of a vendor's contract amounts relative to sector norm. Vendors with wildly varying contract sizes are the strongest predictor of corruption.
+2. **institution_diversity** (-0.85): Number of distinct institutions a vendor serves. Vendors serving many different institutions are *less* suspicious — they have legitimate broad reach.
+3. **win_rate** (+0.73): Vendor's contract win rate relative to sector baseline. Abnormally high win rates increase risk.
+4. **sector_spread** (-0.37): Number of sectors a vendor operates across. Cross-sector vendors are *less* suspicious — genuinely diversified operations.
 
-3. **vendor_concentration = +1.795** (was capped to +1.0 in v4.0): The raw coefficient is naturally moderated by C=0.01 regularization. No ad-hoc dampening needed.
+### Key Changes from v4.0
+
+1. **direct_award = +0.182** (was -0.197 in v4.0): With diversified cases and new features absorbing confounders, direct awards now correctly increase risk — aligning with OECD guidance.
+
+2. **network_member_count = +0.064** (was -4.11 raw, zeroed to 0.0 in v4.0): Now naturally positive — network membership correctly increases risk.
+
+3. **vendor_concentration = +0.428** (was capped to +1.0 in v4.0): The new behavioral features (price_volatility, win_rate) absorb much of what vendor_concentration previously captured alone, producing a more balanced model.
 
 ### Per-Sector Model Highlights
 
@@ -335,7 +346,8 @@ python -m scripts.precompute_stats
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| **5.0.0** | 2026-02-14 | Per-sector sub-models, diversified ground truth (15 cases, 27 vendors), temporal train/test split, Elkan & Noto PU correction, cross-validated ElasticNet. Test AUC 0.951. |
+| **5.0.1** | 2026-02-16 | Updated docs to match database: 16 features (4 new behavioral), Train AUC 0.967, Test AUC 0.960, c=0.887, C=10.0/l1=0.25. Fixed views referencing empty risk_scores table. |
+| **5.0.0** | 2026-02-14 | Per-sector sub-models, diversified ground truth (15 cases, 27 vendors), temporal train/test split, Elkan & Noto PU correction, cross-validated ElasticNet. |
 | 4.0.2 | 2026-02-09 | Dampened coefficients, OECD-compliant thresholds. AUC 0.942. |
 | 4.0.1 | 2026-02-09 | Retrained with diversified ground truth (9 cases). AUC 0.951. |
 | 4.0.0 | 2026-02-06 | Statistical framework: z-scores, Mahalanobis, Bayesian calibration |

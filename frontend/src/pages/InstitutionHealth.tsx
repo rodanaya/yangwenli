@@ -11,27 +11,24 @@
  */
 
 import { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChartSkeleton } from '@/components/LoadingSkeleton'
 import { RiskBadge } from '@/components/ui/badge'
 import { SectionDescription } from '@/components/SectionDescription'
-import { cn, formatCompactMXN, formatNumber, getRiskLevel, toTitleCase } from '@/lib/utils'
+import { formatCompactMXN, formatNumber, getRiskLevel, toTitleCase } from '@/lib/utils'
 import { RISK_COLORS } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
-import type { InstitutionHealthItem, InstitutionRankingsResponse } from '@/api/types'
+import { PageHero, StatCard as SharedStatCard } from '@/components/DashboardWidgets'
+import type { InstitutionHealthItem } from '@/api/types'
 import {
   Building2,
-  Activity,
   AlertTriangle,
   Target,
-  ChevronDown,
   SlidersHorizontal,
-  Users,
   TrendingUp,
-  ExternalLink,
   BarChart3,
 } from 'lucide-react'
 import {
@@ -135,6 +132,7 @@ function BarTooltip({ active, payload }: { active?: boolean; payload?: Array<{ p
 // =============================================================================
 
 export default function InstitutionHealth() {
+  const navigate = useNavigate()
   const [sortBy, setSortBy] = useState<string>('risk')
   const [minContracts, setMinContracts] = useState(100)
 
@@ -213,21 +211,22 @@ export default function InstitutionHealth() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0">
       {/* ================================================================ */}
       {/* L0: Header + Controls                                            */}
       {/* ================================================================ */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-xl font-bold text-text-primary flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-accent" />
-            Institutional Health Check
-          </h1>
-          <p className="text-sm text-text-secondary max-w-2xl">
-            Ranking government institutions by procurement integrity, vendor diversity, and risk concentration.
-          </p>
-        </div>
+      {/* Hero */}
+      <PageHero
+        trackingLabel="INSTITUTIONAL HEALTH"
+        icon={<Building2 className="h-4 w-4 text-accent" />}
+        headline={summary ? formatNumber(items.length) : '—'}
+        subtitle="Government institutions ranked by procurement integrity"
+        detail="Vendor diversity, risk concentration (HHI), and composite risk metrics across all institutions."
+        loading={isLoading}
+      />
 
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div />
         {/* Controls */}
         <div className="flex items-center gap-3 flex-wrap">
           {/* Sort dropdown */}
@@ -272,86 +271,39 @@ export default function InstitutionHealth() {
       {/* ================================================================ */}
       {/* L1: Summary Cards                                                */}
       {/* ================================================================ */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* Total institutions */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <p className="text-xs text-text-muted">Institutions Analyzed</p>
-                <p className="text-2xl font-bold font-mono text-text-primary">
-                  {data ? formatNumber(data.total_institutions) : '-'}
-                </p>
-                <p className="text-xs text-text-secondary">
-                  with {formatNumber(minContracts)}+ contracts
-                </p>
-              </div>
-              <div className="rounded-lg bg-accent/10 p-2.5">
-                <Building2 className="h-5 w-5 text-accent" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Avg HHI */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <p className="text-xs text-text-muted">Average HHI</p>
-                <p className="text-2xl font-bold font-mono" style={{ color: summary ? getHHIColor(summary.avgHHI) : undefined }}>
-                  {summary ? summary.avgHHI.toFixed(3) : '-'}
-                </p>
-                <p className="text-xs text-text-secondary">
-                  {summary ? getHHILabel(summary.avgHHI) : '-'} market
-                </p>
-              </div>
-              <div className="rounded-lg bg-accent/10 p-2.5">
-                <Activity className="h-5 w-5 text-accent" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Worst risk */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <p className="text-xs text-text-muted">Highest Avg Risk</p>
-                <p className="text-2xl font-bold font-mono" style={{ color: summary ? getDotColor(summary.worstRisk.avg_risk_score) : undefined }}>
-                  {summary ? `${(summary.worstRisk.avg_risk_score * 100).toFixed(1)}%` : '-'}
-                </p>
-                <p className="text-xs text-text-secondary truncate max-w-[180px]" title={summary?.worstRisk.institution_name}>
-                  {summary ? toTitleCase(summary.worstRisk.institution_name) : '-'}
-                </p>
-              </div>
-              <div className="rounded-lg bg-risk-high/10 p-2.5">
-                <AlertTriangle className="h-5 w-5 text-risk-high" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Most concentrated */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <p className="text-xs text-text-muted">Most Concentrated</p>
-                <p className="text-2xl font-bold font-mono" style={{ color: summary ? getHHIColor(summary.mostConcentrated.hhi) : undefined }}>
-                  {summary ? summary.mostConcentrated.hhi.toFixed(3) : '-'}
-                </p>
-                <p className="text-xs text-text-secondary truncate max-w-[180px]" title={summary?.mostConcentrated.institution_name}>
-                  {summary ? toTitleCase(summary.mostConcentrated.institution_name) : '-'}
-                </p>
-              </div>
-              <div className="rounded-lg bg-risk-critical/10 p-2.5">
-                <Target className="h-5 w-5 text-risk-critical" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <SharedStatCard
+          loading={isLoading}
+          label="INSTITUTIONS"
+          value={data ? formatNumber(data.total_institutions) : '—'}
+          detail={`With ${formatNumber(minContracts)}+ contracts`}
+          color="text-accent"
+          borderColor="border-accent/30"
+        />
+        <SharedStatCard
+          loading={isLoading}
+          label="AVG HHI"
+          value={summary ? summary.avgHHI.toFixed(3) : '—'}
+          detail={summary ? `${getHHILabel(summary.avgHHI)} market` : '—'}
+          color="text-risk-medium"
+          borderColor="border-risk-medium/30"
+        />
+        <SharedStatCard
+          loading={isLoading}
+          label="HIGHEST RISK"
+          value={summary ? `${(summary.worstRisk.avg_risk_score * 100).toFixed(1)}%` : '—'}
+          detail={summary ? toTitleCase(summary.worstRisk.institution_name).slice(0, 30) : '—'}
+          color="text-risk-high"
+          borderColor="border-risk-high/30"
+        />
+        <SharedStatCard
+          loading={isLoading}
+          label="MOST CONCENTRATED"
+          value={summary ? summary.mostConcentrated.hhi.toFixed(3) : '—'}
+          detail={summary ? toTitleCase(summary.mostConcentrated.institution_name).slice(0, 30) : '—'}
+          color="text-risk-critical"
+          borderColor="border-risk-critical/30"
+        />
       </div>
 
       {/* ================================================================ */}
@@ -390,36 +342,44 @@ export default function InstitutionHealth() {
                     tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
                     label={{ value: 'Avg Risk Score', angle: -90, position: 'insideLeft', offset: 0, fontSize: 11, fill: 'var(--color-text-secondary)' }}
                   />
-                  <ZAxis type="number" dataKey="radius" range={[20, 400]} />
+                  <ZAxis type="number" dataKey="radius" range={[30, 250]} />
                   {/* Quadrant reference lines */}
                   <ReferenceLine x={0.25} stroke="#fbbf24" strokeDasharray="4 4" strokeOpacity={0.6} />
                   <ReferenceLine y={0.30} stroke="#fb923c" strokeDasharray="4 4" strokeOpacity={0.6} />
                   <RechartsTooltip content={<ScatterTooltip />} cursor={false} />
-                  <Scatter data={scatterData} isAnimationActive={false}>
+                  <Scatter
+                    data={scatterData}
+                    isAnimationActive={false}
+                    onClick={(data: { institution_id?: number }) => {
+                      if (data?.institution_id) navigate(`/institutions/${data.institution_id}`)
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
                     {scatterData.map((entry, idx) => (
                       <Cell
                         key={`scatter-${idx}`}
                         fill={getDotColor(entry.avg_risk_score)}
-                        fillOpacity={0.7}
+                        fillOpacity={0.45}
                         stroke={getDotColor(entry.avg_risk_score)}
                         strokeOpacity={0.9}
                         strokeWidth={1}
+                        style={{ cursor: 'pointer' }}
                       />
                     ))}
                   </Scatter>
                 </ScatterChart>
               </ResponsiveContainer>
               {/* Quadrant labels */}
-              <div className="absolute top-6 left-16 text-[10px] font-medium text-risk-low/60 pointer-events-none">
+              <div className="absolute top-6 left-16 text-xs font-medium text-risk-low/60 pointer-events-none">
                 Healthy
               </div>
-              <div className="absolute top-6 right-10 text-[10px] font-medium text-risk-medium/60 pointer-events-none">
+              <div className="absolute top-6 right-10 text-xs font-medium text-risk-medium/60 pointer-events-none">
                 Concentrated but Clean
               </div>
-              <div className="absolute bottom-10 left-16 text-[10px] font-medium text-risk-high/60 pointer-events-none">
+              <div className="absolute bottom-10 left-16 text-xs font-medium text-risk-high/60 pointer-events-none">
                 Risky but Diverse
               </div>
-              <div className="absolute bottom-10 right-10 text-[10px] font-medium text-risk-critical/60 pointer-events-none">
+              <div className="absolute bottom-10 right-10 text-xs font-medium text-risk-critical/60 pointer-events-none">
                 Danger Zone
               </div>
             </div>
@@ -434,7 +394,7 @@ export default function InstitutionHealth() {
       {/* ================================================================ */}
       {/* L3: Rankings Table                                               */}
       {/* ================================================================ */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-accent" />
@@ -454,17 +414,16 @@ export default function InstitutionHealth() {
                   <th className="px-3 py-2.5 text-right font-medium">Contracts</th>
                   <th className="px-3 py-2.5 text-right font-medium">Value</th>
                   <th className="px-3 py-2.5 text-right font-medium">Avg Risk</th>
-                  <th className="px-3 py-2.5 text-right font-medium" title="Direct Award %">DA%</th>
-                  <th className="px-3 py-2.5 text-right font-medium" title="Single Bid %">SB%</th>
-                  <th className="px-3 py-2.5 text-right font-medium" title="High Risk %">HR%</th>
+                  <th className="px-3 py-2.5 text-right font-medium hidden lg:table-cell" title="Direct Award %">DA%</th>
+                  <th className="px-3 py-2.5 text-right font-medium hidden lg:table-cell" title="Single Bid %">SB%</th>
+                  <th className="px-3 py-2.5 text-right font-medium hidden lg:table-cell" title="High Risk %">HR%</th>
                   <th className="px-3 py-2.5 text-right font-medium">HHI</th>
-                  <th className="px-3 py-2.5 text-right font-medium" title="Top Vendor Share %">Top Vendor</th>
+                  <th className="px-3 py-2.5 text-right font-medium hidden lg:table-cell" title="Top Vendor Share %">Top Vendor</th>
                   <th className="px-3 py-2.5 text-right font-medium">Vendors</th>
                 </tr>
               </thead>
               <tbody>
                 {items.slice(0, 50).map((item, idx) => {
-                  const riskLevel = getRiskLevel(item.avg_risk_score)
                   return (
                     <tr
                       key={item.institution_id}
@@ -487,22 +446,22 @@ export default function InstitutionHealth() {
                         {formatCompactMXN(item.total_value)}
                       </td>
                       <td className="px-3 py-2 text-right">
-                        <RiskBadge score={item.avg_risk_score} className="text-[10px] px-1.5 py-0" />
+                        <RiskBadge score={item.avg_risk_score} className="text-xs px-1.5 py-0" />
                       </td>
-                      <td className="px-3 py-2 text-right font-mono text-text-secondary">
-                        {(item.direct_award_pct * 100).toFixed(1)}%
+                      <td className="px-3 py-2 text-right font-mono text-text-secondary hidden lg:table-cell">
+                        {item.direct_award_pct.toFixed(1)}%
                       </td>
-                      <td className="px-3 py-2 text-right font-mono text-text-secondary">
-                        {(item.single_bid_pct * 100).toFixed(1)}%
+                      <td className="px-3 py-2 text-right font-mono text-text-secondary hidden lg:table-cell">
+                        {item.single_bid_pct.toFixed(1)}%
                       </td>
-                      <td className="px-3 py-2 text-right font-mono text-text-secondary">
-                        {(item.high_risk_pct * 100).toFixed(1)}%
+                      <td className="px-3 py-2 text-right font-mono text-text-secondary hidden lg:table-cell">
+                        {item.high_risk_pct.toFixed(1)}%
                       </td>
                       <td className="px-3 py-2 text-right font-mono font-semibold" style={{ color: getHHIColor(item.hhi) }}>
                         {item.hhi.toFixed(3)}
                       </td>
-                      <td className="px-3 py-2 text-right font-mono text-text-secondary">
-                        {(item.top_vendor_share * 100).toFixed(1)}%
+                      <td className="px-3 py-2 text-right font-mono text-text-secondary hidden lg:table-cell">
+                        {item.top_vendor_share.toFixed(1)}%
                       </td>
                       <td className="px-3 py-2 text-right font-mono text-text-secondary">
                         {formatNumber(item.vendor_count)}

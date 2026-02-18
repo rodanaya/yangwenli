@@ -357,7 +357,7 @@ export function Watchlist() {
                               <Clock className="h-3 w-3" />
                               Added {formatDate(item.created_at)}
                             </span>
-                            <Badge variant="outline" className={`text-[10px] ${getPriorityColor(item.priority)}`}>
+                            <Badge variant="outline" className={`text-xs ${getPriorityColor(item.priority)}`}>
                               {item.priority}
                             </Badge>
                             <span className="flex items-center gap-1 capitalize">

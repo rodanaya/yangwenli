@@ -328,10 +328,10 @@ export function DetectivePatterns() {
         </div>
         {vitals && (
           <div className="text-right hidden sm:block">
-            <p className="text-[11px] text-text-muted font-mono">
+            <p className="text-xs text-text-muted font-mono">
               {formatNumber(vitals.totalContracts)} contracts analyzed
             </p>
-            <p className="text-[10px] text-text-muted/60 font-mono">
+            <p className="text-xs text-text-secondary font-mono">
               {formatCompactMXN(vitals.totalValue)} total value
             </p>
           </div>
@@ -344,11 +344,11 @@ export function DetectivePatterns() {
       <div>
         <SectionLabel icon={Activity} label="Level 1" title="System Vital Signs" description="20-year structural health indicators with trend direction" />
         {yoyLoading || !vitals ? (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mt-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mt-3">
             {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-[120px]" />)}
           </div>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mt-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mt-3">
             {Object.entries(vitals.metrics).map(([key, m]) => (
               <VitalCard key={key} {...m} />
             ))}
@@ -368,11 +368,11 @@ export function DetectivePatterns() {
             <CardContent className="pt-4 pb-3 px-3">
               {/* Header row */}
               <div className="grid grid-cols-[120px_1fr_1fr_1fr_80px] gap-2 mb-2 px-1">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">Administration</span>
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">Direct Awards</span>
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">Single Bid</span>
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">High Risk</span>
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-text-muted text-right">Contracts</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">Administration</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">Direct Awards</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">Single Bid</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">High Risk</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-muted text-right">Contracts</span>
               </div>
               {/* Data rows */}
               <div className="space-y-1">
@@ -391,19 +391,19 @@ export function DetectivePatterns() {
                       />
                       <div>
                         <span className="text-xs font-medium text-text-primary">{admin.name}</span>
-                        <span className="text-[10px] text-text-muted/60 ml-1">{admin.period}</span>
+                        <span className="text-xs text-text-secondary ml-1">{admin.period}</span>
                       </div>
                     </div>
                     <MetricBar value={admin.avgDA} max={100} color={metricIntensity(admin.avgDA, 60, 85)} />
                     <MetricBar value={admin.avgSB} max={100} color={metricIntensity(admin.avgSB, 35, 60)} />
                     <MetricBar value={admin.avgHR} max={20} color={metricIntensity(admin.avgHR, 8, 13)} />
-                    <span className="text-[11px] font-mono tabular-nums text-text-muted text-right">
+                    <span className="text-xs font-mono tabular-nums text-text-muted text-right">
                       {formatNumber(admin.contracts)}
                     </span>
                   </div>
                 ))}
               </div>
-              <p className="text-[10px] text-text-muted/40 mt-2 px-1">
+              <p className="text-xs text-text-muted mt-2 px-1">
                 Bar color: green = healthier, red = worse. Bar width proportional to percentage.
               </p>
             </CardContent>
@@ -427,7 +427,7 @@ export function DetectivePatterns() {
                     <GroupIcon className="h-3.5 w-3.5 text-accent" />
                     <CardTitle className="text-xs">{group.title}</CardTitle>
                   </div>
-                  <CardDescription className="text-[10px]">{group.description}</CardDescription>
+                  <CardDescription className="text-xs">{group.description}</CardDescription>
                 </CardHeader>
                 <CardContent className="px-3 pb-3 space-y-0.5">
                   {groupPatterns.map((pattern) => {
@@ -454,7 +454,7 @@ export function DetectivePatterns() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <span className="text-xs font-medium text-text-primary block">{pattern.title}</span>
-                            <span className="text-[10px] text-text-muted">{pattern.subtitle}</span>
+                            <span className="text-xs text-text-muted">{pattern.subtitle}</span>
                           </div>
                           <div className="shrink-0 text-right flex items-center gap-1.5">
                             {count !== undefined ? (
@@ -462,7 +462,7 @@ export function DetectivePatterns() {
                                 {formatNumber(count)}
                               </span>
                             ) : (
-                              <span className="text-[10px] text-text-muted">--</span>
+                              <span className="text-xs text-text-muted">--</span>
                             )}
                             <ChevronDown
                               className={cn('h-3 w-3 text-text-muted transition-transform', isExpanded && 'rotate-180')}
@@ -472,7 +472,7 @@ export function DetectivePatterns() {
 
                         {isExpanded && desc && (
                           <div className="mx-2.5 mb-2 mt-1 px-3 py-2.5 bg-accent/[0.03] rounded border border-accent/10">
-                            <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="grid gap-4 sm:grid-cols-2">
                               <div className="space-y-2">
                                 <DetailBlock title="What it is" text={desc.what} />
                                 <DetailBlock title="Detection" text={desc.howDetected} />
@@ -484,7 +484,7 @@ export function DetectivePatterns() {
                             </div>
                             <Link
                               to={pattern.href}
-                              className="inline-flex items-center gap-1.5 text-[11px] font-medium text-accent hover:underline mt-2"
+                              className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:underline mt-2"
                             >
                               Investigate
                               <ArrowRight className="h-3 w-3" />
@@ -507,7 +507,7 @@ export function DetectivePatterns() {
       {vitals && (
         <div>
           <SectionLabel icon={Microscope} label="Level 4" title={`Year-over-Year Pulse (${vitals.prevYear} to ${vitals.latestYear})`} description="Recent micro-shifts — early warning indicators for emerging patterns" />
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mt-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mt-3">
             <PulseCard
               icon={BarChart3}
               label="Contract Volume"
@@ -552,15 +552,15 @@ export function DetectivePatterns() {
       {/* LEVEL 5: MODEL INTELLIGENCE                                        */}
       {/* ================================================================== */}
       <div>
-        <SectionLabel icon={Brain} label="Level 5" title="Model Intelligence" description="Key findings from v4.0 statistical risk model (AUC 0.942)" />
+        <SectionLabel icon={Brain} label="Level 5" title="Model Intelligence" description="Key findings from v5.0 per-sector risk model (AUC 0.960)" />
         <div className="rounded-lg border border-accent/20 bg-accent/[0.03] p-4 mt-3">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+            <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
               What the data reveals vs. what experts assumed
             </span>
             <Link
               to="/methodology"
-              className="inline-flex items-center gap-1 text-[11px] text-accent hover:underline"
+              className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
             >
               Full methodology
               <ExternalLink className="h-3 w-3" />
@@ -630,7 +630,7 @@ export function DetectivePatterns() {
       </div>
 
       {/* Footer */}
-      <div className="text-[11px] text-text-muted/40 font-mono text-center pb-4">
+      <div className="text-xs text-text-muted font-mono text-center pb-4">
         OECD / IMF CRI / EU ARACHNE / WORLD BANK INT METHODOLOGIES
       </div>
     </div>
@@ -652,10 +652,10 @@ function SectionLabel({ icon: Icon, label, title, description }: {
       </div>
       <div>
         <div className="flex items-center gap-2">
-          <span className="text-[9px] font-bold uppercase tracking-widest text-accent/60 font-mono">{label}</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-accent font-mono">{label}</span>
           <h2 className="text-sm font-semibold text-text-primary">{title}</h2>
         </div>
-        <p className="text-[11px] text-text-muted">{description}</p>
+        <p className="text-xs text-text-muted">{description}</p>
       </div>
     </div>
   )
@@ -677,11 +677,11 @@ function VitalCard({ label, icon: Icon, current, spark, delta5yr, unit, invertCo
 
   return (
     <Card className="relative overflow-hidden">
-      <CardContent className="p-3">
+      <CardContent className="p-4">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-1.5">
             <Icon className="h-3.5 w-3.5" style={{ color }} />
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">{label}</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">{label}</span>
           </div>
           <TrendIcon className="h-3.5 w-3.5" style={{ color: trendColor }} />
         </div>
@@ -703,10 +703,10 @@ function VitalCard({ label, icon: Icon, current, spark, delta5yr, unit, invertCo
           </ResponsiveContainer>
         </div>
         <div className="flex items-center gap-1.5 mt-1">
-          <span className="text-[10px] font-mono" style={{ color: trendColor }}>
+          <span className="text-xs font-mono" style={{ color: trendColor }}>
             {delta5yr > 0 ? '+' : ''}{delta5yr.toFixed(1)}{invertColor ? ' pp' : '%'}
           </span>
-          <span className="text-[10px] text-text-muted/50">20yr shift</span>
+          <span className="text-xs text-text-muted">20yr shift</span>
         </div>
       </CardContent>
     </Card>
@@ -724,7 +724,7 @@ function MetricBar({ value, max, color }: { value: number; max: number; color: s
           style={{ width: `${pct}%`, backgroundColor: color, opacity: 0.7 }}
         />
       </div>
-      <span className="text-[11px] font-mono tabular-nums text-text-muted w-10 text-right">
+      <span className="text-xs font-mono tabular-nums text-text-muted w-10 text-right">
         {value.toFixed(1)}%
       </span>
     </div>
@@ -766,12 +766,12 @@ function PulseCard({ icon: Icon, label, value, suffix, detail, thresholds, inver
     <div className={`rounded-lg border p-3 ${bgClass}`}>
       <div className="flex items-center gap-2 mb-1">
         <Icon className="h-3.5 w-3.5" style={{ color }} />
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">{label}</span>
+        <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">{label}</span>
       </div>
       <p className="text-lg font-bold font-mono tabular-nums" style={{ color }}>
         {value > 0 ? '+' : ''}{value.toFixed(1)}{suffix}
       </p>
-      <p className="text-[10px] text-text-muted/60 mt-0.5">{detail}</p>
+      <p className="text-xs text-text-secondary mt-0.5">{detail}</p>
     </div>
   )
 }
@@ -780,8 +780,8 @@ function PulseCard({ icon: Icon, label, value, suffix, detail, thresholds, inver
 function DetailBlock({ title, text, italic }: { title: string; text: string; italic?: boolean }) {
   return (
     <div>
-      <h4 className="text-[10px] font-semibold uppercase tracking-wider text-text-muted mb-0.5">{title}</h4>
-      <p className={cn('text-[11px] text-text-secondary leading-relaxed', italic && 'italic')}>{text}</p>
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-0.5">{title}</h4>
+      <p className={cn('text-xs text-text-secondary leading-relaxed', italic && 'italic')}>{text}</p>
     </div>
   )
 }
@@ -791,12 +791,12 @@ function Insight({ color, tag, children }: { color: string; tag: string; childre
   return (
     <div className="flex items-start gap-2">
       <span
-        className="mt-1 shrink-0 px-1 py-0.5 text-[8px] font-bold font-mono rounded"
+        className="mt-1 shrink-0 px-1 py-0.5 text-xs font-bold font-mono rounded"
         style={{ backgroundColor: `${color}20`, color }}
       >
         {tag}
       </span>
-      <p className="text-[11px] text-text-muted leading-relaxed">{children}</p>
+      <p className="text-xs text-text-muted leading-relaxed">{children}</p>
     </div>
   )
 }

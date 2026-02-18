@@ -14,7 +14,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts'
-import { useTheme } from '@/hooks/useTheme'
+// Theme handled by CSS variables
 import { formatPercent } from '@/lib/utils'
 
 interface ProcedureBreakdownData {
@@ -28,7 +28,6 @@ interface ProcedureBreakdownData {
 interface ProcedureBreakdownProps {
   data: ProcedureBreakdownData[]
   height?: number
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onSectorClick?: (sectorCode: string) => void
 }
 
@@ -41,19 +40,18 @@ const PROCEDURE_COLORS = {
 export const ProcedureBreakdown = memo(function ProcedureBreakdown({
   data,
   height = 300,
-  onSectorClick: _onSectorClick,
+  onSectorClick,
 }: ProcedureBreakdownProps) {
-  const { theme } = useTheme()
-  const isDark = theme === 'dark'
+  // Theme handled by CSS variables
 
   const chartData = useMemo(() => {
     return data
       .map((d) => ({
         name: d.sector_name,
         code: d.sector_code,
-        'Direct Award': d.direct_award_pct * 100,
-        'Single Bid': d.single_bid_pct * 100,
-        'Open Tender': d.open_tender_pct * 100,
+        'Direct Award': d.direct_award_pct,
+        'Single Bid': d.single_bid_pct,
+        'Open Tender': d.open_tender_pct,
       }))
       .sort((a, b) => b['Direct Award'] - a['Direct Award'])
   }, [data])
@@ -61,16 +59,20 @@ export const ProcedureBreakdown = memo(function ProcedureBreakdown({
   return (
     <div style={{ height: `${height}px` }}>
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData} layout="vertical">
+        <BarChart data={chartData} layout="vertical" onClick={(data) => {
+          if (onSectorClick && data?.activePayload?.[0]?.payload?.code) {
+            onSectorClick(data.activePayload[0].payload.code)
+          }
+        }} style={{ cursor: onSectorClick ? 'pointer' : 'default' }}>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke={isDark ? '#2e2e2e' : '#e2e8f0'}
+            stroke={'var(--color-border)'}
             horizontal={false}
           />
           <XAxis
             type="number"
-            tick={{ fill: isDark ? '#a3a3a3' : '#64748b', fontSize: 11 }}
-            axisLine={{ stroke: isDark ? '#2e2e2e' : '#e2e8f0' }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+            axisLine={{ stroke: 'var(--color-border)' }}
             tickLine={false}
             tickFormatter={(v) => `${v}%`}
             domain={[0, 100]}
@@ -78,8 +80,8 @@ export const ProcedureBreakdown = memo(function ProcedureBreakdown({
           <YAxis
             type="category"
             dataKey="name"
-            tick={{ fill: isDark ? '#a3a3a3' : '#64748b', fontSize: 11 }}
-            axisLine={{ stroke: isDark ? '#2e2e2e' : '#e2e8f0' }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+            axisLine={{ stroke: 'var(--color-border)' }}
             tickLine={false}
             width={90}
           />
@@ -111,7 +113,7 @@ export const ProcedureBreakdown = memo(function ProcedureBreakdown({
             verticalAlign="bottom"
             height={36}
             formatter={(value) => (
-              <span style={{ color: isDark ? '#a3a3a3' : '#64748b', fontSize: 11 }}>{value}</span>
+              <span style={{ color: 'var(--color-text-muted)', fontSize: 11 }}>{value}</span>
             )}
           />
           <Bar

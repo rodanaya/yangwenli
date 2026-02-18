@@ -10,6 +10,8 @@ import { formatCompactMXN, formatNumber, formatPercentSafe, formatDate, toTitleC
 import { vendorApi, networkApi } from '@/api/client'
 import { RISK_COLORS, SECTOR_COLORS } from '@/lib/constants'
 import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
+import { InfoTooltip } from '@/components/ui/info-tooltip'
+import { AddToWatchlistButton } from '@/components/AddToWatchlistButton'
 import { NarrativeCard } from '@/components/NarrativeCard'
 import { buildVendorNarrative } from '@/lib/narratives'
 import type { ContractListItem } from '@/api/types'
@@ -154,7 +156,7 @@ export function VendorProfile() {
                   <>
                     <span>·</span>
                     <Badge
-                      className="text-[10px] border"
+                      className="text-xs border"
                       style={{
                         backgroundColor: `${sectorColor}20`,
                         color: sectorColor,
@@ -175,9 +177,17 @@ export function VendorProfile() {
             </div>
           </div>
         </div>
-        {vendor.avg_risk_score !== undefined && (
-          <RiskBadge score={vendor.avg_risk_score} className="text-base px-3 py-1" />
-        )}
+        <div className="flex items-center gap-2">
+          <AddToWatchlistButton
+            itemType="vendor"
+            itemId={vendorId}
+            itemName={toTitleCase(vendor.name)}
+            defaultReason={`Risk score: ${((vendor.avg_risk_score ?? 0) * 100).toFixed(0)}%`}
+          />
+          {vendor.avg_risk_score !== undefined && (
+            <RiskBadge score={vendor.avg_risk_score} className="text-base px-3 py-1" />
+          )}
+        </div>
       </div>
 
       {/* Narrative summary */}
@@ -220,16 +230,16 @@ export function VendorProfile() {
       {!coBiddersLoading && hasCoBiddingRisk && (
         <Card className="border-amber-500/50 bg-amber-500/5 animate-slide-up">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-amber-600">
+            <CardTitle className="flex items-center gap-2 text-risk-medium">
               <Users className="h-5 w-5" />
-              Co-Bidding Pattern Detected
+              Co-Bidding Pattern Detected <InfoTooltip termKey="cobidding" size={13} />
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-text-muted mb-4">
               This vendor frequently appears in the same procedures with specific partners.
               {coBidders?.suspicious_patterns?.length ? (
-                <span className="text-amber-600 font-medium ml-1">
+                <span className="text-risk-medium font-medium ml-1">
                   {coBidders.suspicious_patterns.length} suspicious pattern(s) detected.
                 </span>
               ) : null}
@@ -258,8 +268,8 @@ export function VendorProfile() {
                           {partner.co_bid_count} shared procedures
                         </span>
                         <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          partner.relationship_strength === 'very_strong' ? 'bg-red-500/20 text-red-400' :
-                          partner.relationship_strength === 'strong' ? 'bg-amber-500/20 text-amber-400' :
+                          partner.relationship_strength === 'very_strong' ? 'bg-risk-critical/20 text-risk-critical' :
+                          partner.relationship_strength === 'strong' ? 'bg-risk-medium/20 text-risk-medium' :
                           'bg-gray-500/20 text-gray-400'
                         }`}>
                           {partner.relationship_strength.replace('_', ' ')}
@@ -279,7 +289,7 @@ export function VendorProfile() {
                 </p>
                 {coBidders.suspicious_patterns.map((pattern, idx) => (
                   <div key={idx} className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                    <p className="text-sm font-medium text-amber-400">
+                    <p className="text-sm font-medium text-risk-medium">
                       {pattern.pattern === 'potential_cover_bidding' ? 'Potential Cover Bidding' :
                        pattern.pattern === 'potential_bid_rotation' ? 'Potential Bid Rotation' :
                        pattern.pattern}
@@ -302,7 +312,7 @@ export function VendorProfile() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-4 w-4" />
-                Risk Profile
+                Risk Profile <InfoTooltip termKey="riskScore" size={13} />
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -389,7 +399,7 @@ export function VendorProfile() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <BarChart3 className="h-4 w-4" />
-                  Statistical Anomaly
+                  Statistical Anomaly <InfoTooltip termKey="mahalanobisDistance" size={13} />
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -674,7 +684,7 @@ function RiskGauge({
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-3xl font-bold tabular-nums">{percentage}</span>
-          <span className="text-[10px] text-text-muted">/ 100</span>
+          <span className="text-xs text-text-muted">/ 100</span>
         </div>
       </div>
       <div className="mt-3 flex items-center gap-2">

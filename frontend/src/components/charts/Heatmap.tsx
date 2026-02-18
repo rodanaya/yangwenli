@@ -5,7 +5,7 @@
 
 import { memo, useMemo } from 'react'
 import ReactECharts from 'echarts-for-react'
-import { useTheme } from '@/hooks/useTheme'
+// Theme handled by CSS variables
 
 interface HeatmapData {
   row: string
@@ -34,9 +34,6 @@ export const Heatmap = memo(function Heatmap({
   height = 300,
   onCellClick,
 }: HeatmapProps) {
-  const { theme } = useTheme()
-  const isDark = theme === 'dark'
-
   const option = useMemo(() => {
     // Convert data to ECharts format [colIndex, rowIndex, value]
     const chartData = data.map((d) => {
@@ -56,18 +53,18 @@ export const Heatmap = memo(function Heatmap({
             text: title,
             left: 'center',
             textStyle: {
-              color: isDark ? '#f5f5f5' : '#0f172a',
-              fontSize: 14,
+              color: 'var(--color-text-primary)',
+              fontSize: 12,
               fontWeight: 500,
             },
           }
         : undefined,
       tooltip: {
         position: 'top',
-        backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
-        borderColor: isDark ? '#2e2e2e' : '#e2e8f0',
+        backgroundColor: 'var(--color-background)',
+        borderColor: 'var(--color-border)',
         textStyle: {
-          color: isDark ? '#f5f5f5' : '#0f172a',
+          color: 'var(--color-text-primary)',
         },
         formatter: (params: { data: [number, number, number] }) => {
           const [colIdx, rowIdx, value] = params.data
@@ -87,7 +84,7 @@ export const Heatmap = memo(function Heatmap({
         data: columns,
         splitArea: { show: false },
         axisLabel: {
-          color: isDark ? '#a3a3a3' : '#64748b',
+          color: 'var(--color-text-muted)',
           fontSize: 11,
           rotate: 45,
         },
@@ -99,7 +96,7 @@ export const Heatmap = memo(function Heatmap({
         data: rows,
         splitArea: { show: false },
         axisLabel: {
-          color: isDark ? '#a3a3a3' : '#64748b',
+          color: 'var(--color-text-muted)',
           fontSize: 11,
         },
         axisLine: { show: false },
@@ -116,7 +113,7 @@ export const Heatmap = memo(function Heatmap({
           color: colorRange,
         },
         textStyle: {
-          color: isDark ? '#a3a3a3' : '#64748b',
+          color: 'var(--color-text-muted)',
         },
       },
       series: [
@@ -125,9 +122,8 @@ export const Heatmap = memo(function Heatmap({
           data: chartData,
           label: {
             show: true,
-            // Use dark text on light cells, light text on dark cells
-            // Since heatmap goes green (light) -> yellow -> red (medium), use dark text for contrast
-            color: '#1a1a1a',
+            // Dark text for contrast on colored cells (green/yellow/red backgrounds)
+            color: '#18181b',
             fontSize: 10,
             fontWeight: 500,
             formatter: (params: { data: [number, number, number] }) => {
@@ -136,7 +132,7 @@ export const Heatmap = memo(function Heatmap({
             },
           },
           itemStyle: {
-            borderColor: isDark ? '#1a1a1a' : '#ffffff',
+            borderColor: 'var(--color-background)',
             borderWidth: 2,
           },
           emphasis: {
@@ -148,7 +144,7 @@ export const Heatmap = memo(function Heatmap({
         },
       ],
     }
-  }, [data, rows, columns, title, valueFormatter, colorRange, isDark])
+  }, [data, rows, columns, title, valueFormatter, colorRange])
 
   const handleClick = (params: { data: [number, number, number] }) => {
     if (onCellClick && params.data) {

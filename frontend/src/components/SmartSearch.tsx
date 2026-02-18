@@ -26,7 +26,7 @@ interface SmartSearchProps {
 }
 
 // Recent searches (stored in localStorage)
-const RECENT_SEARCHES_KEY = 'yang-wenli-recent-searches'
+const RECENT_SEARCHES_KEY = 'rubli-recent-searches'
 const MAX_RECENT_SEARCHES = 5
 
 function getRecentSearches(): string[] {
@@ -329,7 +329,7 @@ export const SmartSearch = memo(function SmartSearch({
                       <p className="text-xs text-text-muted truncate">{suggestion.sublabel}</p>
                     )}
                   </div>
-                  <span className="text-[10px] text-text-muted uppercase tracking-wide">
+                  <span className="text-xs text-text-muted uppercase tracking-wide">
                     {suggestion.type}
                   </span>
                 </button>

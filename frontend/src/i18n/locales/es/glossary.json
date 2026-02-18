@@ -1,0 +1,98 @@
+{
+  "riskScore": {
+    "title": "Puntuación de Riesgo",
+    "description": "Una probabilidad calibrada (0-1) que estima la posibilidad de que un contrato involucre patrones de corrupción. Basada en 16 características estadísticas comparadas contra casos documentados de corrupción. Mayor = más sospechoso."
+  },
+  "riskLevel": {
+    "title": "Nivel de Riesgo",
+    "description": "Categorización basada en la puntuación: Crítico (>=50%), Alto (>=30%), Medio (>=10%), Bajo (<10%). Estos umbrales están alineados con las referencias de contratación de la OCDE."
+  },
+  "singleBid": {
+    "title": "Licitante Único",
+    "description": "Un procedimiento competitivo (no adjudicación directa) donde solo un proveedor presentó oferta. Es una señal de alerta porque los procesos competitivos deberían atraer múltiples licitantes. Si solo aparece uno, puede indicar manipulación de licitaciones."
+  },
+  "directAward": {
+    "title": "Adjudicación Directa",
+    "description": "Un contrato otorgado directamente a un proveedor sin licitación competitiva. Legal en México bajo ciertas condiciones (emergencias, proveedor único). Tener un solo oferente en adjudicación directa es esperado — NO es lo mismo que licitante único."
+  },
+  "vendorConcentration": {
+    "title": "Concentración de Proveedores",
+    "description": "Qué proporción del valor total de contrataciones de un sector va a un solo proveedor. Alta concentración significa que un proveedor domina — un predictor principal de riesgo de corrupción en nuestro modelo (coeficiente +0.43)."
+  },
+  "mahalanobisDistance": {
+    "title": "Distancia de Mahalanobis",
+    "description": "Una medida estadística de qué tan inusual es un contrato en TODAS las 16 dimensiones de riesgo simultáneamente. Como preguntar: '¿Qué tan lejos está este contrato de lo normal?' Valores más altos = más anómalo."
+  },
+  "zScore": {
+    "title": "Puntuación Z",
+    "description": "Una medida estandarizada que muestra cuántas desviaciones estándar un valor está del promedio del sector/año. Una puntuación z de +2 significa que el valor es inusualmente alto comparado con contratos similares."
+  },
+  "hhi": {
+    "title": "IHH (Índice Herfindahl-Hirschman)",
+    "description": "Medida de concentración de mercado (0-10,000). Menos de 1,500 = mercado competitivo. 1,500-2,500 = moderadamente concentrado. Más de 2,500 = altamente concentrado. Usado para detectar monopolios de proveedores."
+  },
+  "puLearning": {
+    "title": "Aprendizaje PU",
+    "description": "Aprendizaje Positivo-No etiquetado: técnica para entrenar modelos cuando solo conocemos algunos contratos corruptos (positivos) pero el resto es desconocido (no etiquetado, no necesariamente limpio). Nuestro modelo usa la corrección de Elkan & Noto (2008)."
+  },
+  "aucRoc": {
+    "title": "AUC-ROC",
+    "description": "Área Bajo la Curva ROC — mide qué tan bien el modelo distingue contratos corruptos de limpios. 0.5 = adivinanza aleatoria, 1.0 = perfecto. Nuestro modelo v5.0 alcanza 0.960 (AUC de prueba)."
+  },
+  "industryMismatch": {
+    "title": "Discrepancia de Industria",
+    "description": "Cuando un proveedor gana contratos en un sector que no coincide con su negocio principal. Por ejemplo, una constructora ganando contratos de salud. Sugiere empresa fantasma o favoritismo."
+  },
+  "priceAnomaly": {
+    "title": "Anomalía de Precio",
+    "description": "Monto de contrato estadísticamente inusual comparado con contratos similares del mismo sector y año. Detectado usando el método IQR de Tukey — valores más allá de 1.5x el rango intercuartil son señalados."
+  },
+  "cobidding": {
+    "title": "Patrón de Co-licitación",
+    "description": "Cuando dos o más proveedores aparecen consistentemente juntos en procedimientos de licitación. Puede indicar especialización legítima, pero altas tasas de co-licitación con victorias alternadas sugieren rotación de ofertas (una forma de colusión)."
+  },
+  "yearEnd": {
+    "title": "Cierre de Año Fiscal",
+    "description": "Contratos otorgados en diciembre, cuando las dependencias se apresuran a gastar el presupuesto restante. Este 'gasto de fin de año' crea presión para adjudicar rápidamente, reduciendo la supervisión y aumentando el riesgo de corrupción."
+  },
+  "thresholdSplitting": {
+    "title": "Fraccionamiento de Contratos",
+    "description": "Múltiples contratos otorgados al mismo proveedor el mismo día, potencialmente para mantener cada contrato debajo del umbral que requeriría licitación competitiva. Una técnica clásica de fraude en contrataciones."
+  },
+  "networkRisk": {
+    "title": "Riesgo de Red",
+    "description": "Riesgo por relaciones entre proveedores — empresas que comparten domicilio, representante legal, o consistentemente licitan juntos. La membresía en redes puede indicar redes de empresas fantasma o cárteles de licitación."
+  },
+  "confidenceInterval": {
+    "title": "Intervalo de Confianza",
+    "description": "El rango dentro del cual probablemente cae la verdadera puntuación de riesgo (95% de confianza). Una puntuación de 0.35 [0.22, 0.48] significa que estimamos 35% de probabilidad de corrupción, pero podría estar razonablemente entre 22% y 48%."
+  },
+  "calibratedProbability": {
+    "title": "Probabilidad Calibrada",
+    "description": "Una puntuación de riesgo que representa una probabilidad real estimada de corrupción, no un número arbitrario. Nuestro modelo v5.0 produce probabilidades calibradas validadas contra casos documentados de corrupción."
+  },
+  "perSectorModel": {
+    "title": "Modelo por Sector",
+    "description": "Modelos estadísticos separados entrenados para cada uno de los 12 sectores. Los patrones de corrupción difieren: Salud → concentración de proveedores, Energía → discrepancia de industria, Infraestructura → relaciones de red."
+  },
+  "groundTruth": {
+    "title": "Verdad de Terreno",
+    "description": "Casos documentados y verificados de corrupción usados para entrenar y validar el modelo. Usamos 15 casos con 27 proveedores y 26,582 contratos en los 12 sectores, incluyendo IMSS, Segalmex, Odebrecht, y más."
+  },
+  "adPeriod": {
+    "title": "Período de Publicación",
+    "description": "Días entre la publicación de una oportunidad de contratación y la adjudicación del contrato. Períodos muy cortos (<15 días) pueden indicar que el proceso fue apresurado para favorecer a un proveedor predeterminado."
+  },
+  "rfc": {
+    "title": "RFC (Identificación Fiscal)",
+    "description": "Registro Federal de Contribuyentes — número de identificación fiscal de México para empresas e individuos. Usado para identificar proveedores de forma única. La cobertura varía: 0.1% en datos 2002-2010 a 47% en 2023-2025."
+  },
+  "compranet": {
+    "title": "COMPRANET",
+    "description": "Plataforma electrónica de contrataciones del gobierno federal de México, ahora llamada ComprasMX. Todas las compras gubernamentales federales por encima de ciertos umbrales deben publicarse aquí. Fuente de los 3.1M de contratos en esta base de datos."
+  },
+  "sector": {
+    "title": "Sector",
+    "description": "Una de las 12 categorías de gasto del gobierno federal (Salud, Educación, Energía, etc.) clasificadas a partir de los códigos de Ramo presupuestario de México. Cada sector tiene diferentes patrones de contratación y perfiles de riesgo."
+  }
+}

@@ -8,7 +8,7 @@ import { RiskBadge } from '@/components/ui/badge'
 import { formatCompactMXN, formatCompactUSD, formatNumber, formatPercentSafe } from '@/lib/utils'
 import { sectorApi } from '@/api/client'
 import { SECTOR_COLORS, SECTORS, getSectorNameEN } from '@/lib/constants'
-import { Heatmap } from '@/components/charts'
+import { Heatmap } from '@/components/charts/Heatmap'
 import type { SectorStatistics } from '@/api/types'
 import { BarChart3, ExternalLink, Layers } from 'lucide-react'
 import { usePrefetchOnHover } from '@/hooks/usePrefetchOnHover'
@@ -190,7 +190,7 @@ export function Sectors() {
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} horizontal={false} />
                 <XAxis
                   type="number"
-                  tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }}
+                  tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
                   tickFormatter={(v) => `${(v / 1_000_000_000_000).toFixed(1)}T`}
                 />
                 <YAxis
@@ -265,7 +265,7 @@ export function Sectors() {
         if (groupSectors.length === 0) return null
         return (
           <div key={group.label} className="space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-text-muted font-[var(--font-family-mono)]">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted font-mono">
               {group.label}
             </h3>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -436,10 +436,10 @@ function SectorCard({
         </div>
 
         {/* Sector description */}
-        <p className="text-[11px] leading-relaxed text-text-muted mb-3">{desc.short}</p>
+        <p className="text-xs leading-relaxed text-text-muted mb-3">{desc.short}</p>
 
         {/* Stats with comparative context */}
-        <div className="grid grid-cols-2 gap-3 text-sm mb-3">
+        <div className="grid grid-cols-2 gap-4 text-sm mb-3">
           <div>
             <p className="text-text-muted text-xs">Total Value</p>
             <p className="font-medium tabular-nums">{formatCompactMXN(sector.total_value_mxn)}</p>
@@ -453,7 +453,7 @@ function SectorCard({
             <p className="font-medium tabular-nums">
               {formatPercentSafe(sector.direct_award_pct, false)}
               {daAnnotation && (
-                <span className="text-[10px] text-text-muted ml-1">({daAnnotation})</span>
+                <span className="text-xs text-text-muted ml-1">({daAnnotation})</span>
               )}
             </p>
           </div>
@@ -462,7 +462,7 @@ function SectorCard({
             <p className="font-medium tabular-nums">
               {formatPercentSafe(sector.single_bid_pct, false)}
               {sbAnnotation && (
-                <span className="text-[10px] text-text-muted ml-1">({sbAnnotation})</span>
+                <span className="text-xs text-text-muted ml-1">({sbAnnotation})</span>
               )}
             </p>
           </div>

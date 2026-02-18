@@ -190,29 +190,29 @@ def get_contract_risk(
             factors_str = row[4] or ""
             factors = []
 
-            # Map factor codes to descriptions and weights (v3.2)
+            # Map factor codes to descriptions and weights (v5.0 global coefficients)
             factor_info = {
-                # Base factors
-                "direct_award": ("Direct Award (Non-competitive)", 0.15),
-                "single_bid": ("Single Bidder", 0.15),
-                "restricted_procedure": ("Restricted Procedure", 0.08),
-                "year_end": ("Year-End Timing (December)", 0.05),
-                "price_anomaly": ("Price Anomaly", 0.15),
-                "price_outlier": ("Price Anomaly", 0.15),
-                "vendor_concentration_high": ("High Vendor Concentration (>30%)", 0.10),
-                "vendor_concentration_med": ("Medium Vendor Concentration (20-30%)", 0.07),
-                "vendor_concentration_low": ("Low Vendor Concentration (10-20%)", 0.05),
-                "short_ad_<5d": ("Very Short Ad Period (<5 days)", 0.10),
-                "short_ad_<15d": ("Short Ad Period (<15 days)", 0.07),
-                "short_ad_<30d": ("Moderately Short Ad Period", 0.03),
-                # Threshold splitting
-                "split_5+": ("Threshold Splitting (5+ same day)", 0.05),
-                "split_3-4": ("Threshold Splitting (3-4 same day)", 0.03),
-                "split_2": ("Threshold Splitting (2 same day)", 0.015),
-                # Network risk
-                "network_5+": ("Network Risk (Large Group)", 0.05),
-                "network_3-4": ("Network Risk (Medium Group)", 0.03),
-                "network_2": ("Network Risk (Small Group)", 0.015),
+                # Behavioral factors
+                "price_volatility": ("Price Volatility", 1.219, "Behavioral"),
+                "institution_diversity": ("Institution Diversity", -0.848, "Behavioral"),
+                "win_rate": ("Win Rate", 0.727, "Behavioral"),
+                "vendor_concentration": ("Vendor Concentration", 0.428, "Behavioral"),
+                "sector_spread": ("Sector Spread", -0.374, "Behavioral"),
+                # Procedure factors
+                "direct_award": ("Direct Award", 0.182, "Procedure"),
+                "single_bid": ("Single Bidder", 0.013, "Procedure"),
+                "ad_period_days": ("Ad Period Duration", -0.104, "Procedure"),
+                # Pricing factors
+                "price_ratio": ("Price Ratio", -0.015, "Pricing"),
+                "price_hyp_confidence": ("Price Hypothesis Confidence", 0.001, "Pricing"),
+                # Network factors
+                "network_member_count": ("Network Member Count", 0.064, "Network"),
+                "industry_mismatch": ("Industry-Sector Mismatch", 0.305, "Network"),
+                "co_bid_rate": ("Co-Bidding Rate", 0.0, "Network"),
+                # Timing factors
+                "same_day_count": ("Same-Day Contracts", 0.222, "Timing"),
+                "year_end": ("Year-End Timing", 0.059, "Timing"),
+                "institution_risk": ("Institution Risk Baseline", 0.057, "Timing"),
             }
 
             for factor in factors_str.split(","):
@@ -237,7 +237,7 @@ def get_contract_risk(
                         "weight": 0.03,
                     })
                 elif factor.startswith("co_bid_high:"):
-                    # v3.2: Co-bidding high risk - e.g., co_bid_high:85%:3p
+                    # Legacy co-bidding high risk - e.g., co_bid_high:85%:3p
                     parts = factor.split(":")
                     rate = parts[1] if len(parts) > 1 else "?"
                     partners = parts[2] if len(parts) > 2 else "?"
@@ -262,7 +262,7 @@ def get_contract_risk(
                         "severity": "medium",
                     })
                 elif factor.startswith("price_hyp:"):
-                    # v3.1: Price hypothesis - e.g., price_hyp:extreme_overpricing:0.95
+                    # Legacy price hypothesis - e.g., price_hyp:extreme_overpricing:0.95
                     parts = factor.split(":")
                     hyp_type = parts[1] if len(parts) > 1 else "unknown"
                     confidence = parts[2] if len(parts) > 2 else "?"
@@ -295,12 +295,13 @@ def get_contract_risk(
                         "icon": "git-branch",
                     })
                 elif factor in factor_info:
-                    name, weight = factor_info[factor]
+                    name, coefficient, category = factor_info[factor]
                     factors.append({
                         "code": factor,
                         "name": name,
                         "description": name,
-                        "weight": weight,
+                        "weight": abs(coefficient),
+                        "category": category,
                     })
                 else:
                     factors.append({
@@ -320,6 +321,31 @@ def get_contract_risk(
 
     except sqlite3.Error as e:
         logger.error(f"Database error in get_contract_risk: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
+@router.get("/{contract_id}/risk-explain")
+def get_contract_risk_explain(
+    contract_id: int = Path(..., description="Contract ID"),
+):
+    """
+    Get v5.0 risk score explanation with per-feature contributions.
+
+    For each of the 16 z-score features, returns:
+    - z_score: how anomalous this contract is for this feature
+    - coefficient: model weight (beta) for this feature
+    - contribution: beta * z_score (impact on log-odds)
+
+    Features are sorted by absolute contribution (most impactful first).
+    """
+    try:
+        with get_db() as conn:
+            result = contract_service.get_risk_explanation(conn, contract_id)
+            if result is None:
+                raise HTTPException(status_code=404, detail=f"Contract {contract_id} not found")
+            return result
+    except sqlite3.Error as e:
+        logger.error(f"Database error in get_contract_risk_explain: {e}")
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 

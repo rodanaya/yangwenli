@@ -48,16 +48,4 @@ export function useFiltersWithDeferred<T extends Record<string, unknown>>(filter
   }
 }
 
-/**
- * Hook for URL-synced filters with deferred values.
- * Combines useSearchParams with useDeferredValue for optimal UX.
- */
-export function useDeferredSearchParams() {
-  // This would be used with react-router's useSearchParams
-  // For now, it's a placeholder for the pattern
-  return {
-    // Implementation would go here
-  }
-}
-
 export default useDeferredFilters

@@ -49,6 +49,52 @@ def get_executive_summary():
         raise HTTPException(status_code=500, detail="Failed to generate executive summary")
 
 
+def _query_top_vendors(cur) -> list[dict]:
+    """Query top vendors by value, merging duplicates via vendor_canonical_map if available."""
+    try:
+        # Check if the dedup table exists
+        cur.execute("SELECT 1 FROM vendor_canonical_map LIMIT 1")
+        cur.fetchone()
+        # Cluster-aware query: group by canonical_id, sum contracts/value, weighted avg risk
+        cur.execute("""
+            SELECT
+                COALESCE(vcm.canonical_id, v.id) AS canonical_id,
+                MAX(v.name) AS name,
+                SUM(vs.total_contracts) AS total_contracts,
+                SUM(vs.total_value_mxn) AS total_value_mxn,
+                CASE WHEN SUM(vs.total_contracts) > 0
+                     THEN SUM(vs.avg_risk_score * vs.total_contracts) / SUM(vs.total_contracts)
+                     ELSE 0 END AS avg_risk_score
+            FROM vendor_stats vs
+            JOIN vendors v ON v.id = vs.vendor_id
+            LEFT JOIN vendor_canonical_map vcm ON vcm.vendor_id = v.id
+            GROUP BY COALESCE(vcm.canonical_id, v.id)
+            ORDER BY total_value_mxn DESC
+            LIMIT 10
+        """)
+    except Exception:
+        # Fallback: no dedup table, use simple query
+        cur.execute("""
+            SELECT v.id AS canonical_id, v.name,
+                   vs.total_contracts, vs.total_value_mxn, vs.avg_risk_score
+            FROM vendor_stats vs
+            JOIN vendors v ON v.id = vs.vendor_id
+            ORDER BY vs.total_value_mxn DESC
+            LIMIT 10
+        """)
+
+    return [
+        {
+            "id": row["canonical_id"],
+            "name": row["name"],
+            "contracts": row["total_contracts"],
+            "value_billions": round((row["total_value_mxn"] or 0) / 1e9, 1),
+            "avg_risk": round(row["avg_risk_score"] or 0, 4),
+        }
+        for row in cur.fetchall()
+    ]
+
+
 def _build_summary(conn) -> dict:
     """Build the full executive summary from precomputed + live data."""
     cur = conn.cursor()
@@ -144,24 +190,8 @@ def _build_summary(conn) -> dict:
         for row in cur.fetchall()
     ]
 
-    # 7. Top vendors by value (from materialized table)
-    cur.execute("""
-        SELECT v.id, v.name, vs.total_contracts, vs.total_value_mxn, vs.avg_risk_score
-        FROM vendor_stats vs
-        JOIN vendors v ON v.id = vs.vendor_id
-        ORDER BY vs.total_value_mxn DESC
-        LIMIT 10
-    """)
-    top_vendors = [
-        {
-            "id": row["id"],
-            "name": row["name"],
-            "contracts": row["total_contracts"],
-            "value_billions": round((row["total_value_mxn"] or 0) / 1e9, 1),
-            "avg_risk": round(row["avg_risk_score"] or 0, 4),
-        }
-        for row in cur.fetchall()
-    ]
+    # 7. Top vendors by value (cluster-aware if vendor_canonical_map exists)
+    top_vendors = _query_top_vendors(cur)
 
     # 8. Administration breakdown (from precomputed_stats — was 90s live query)
     administrations = precomputed.get("administrations", [])
@@ -179,51 +209,72 @@ def _build_summary(conn) -> dict:
     ]
 
     # 10. Ground truth validation (hardcoded — stable between retraining)
+    # Updated to v5.0: 15 cases, 27 vendors, 26,582 contracts
     ground_truth = {
-        "cases": 9,
-        "vendors": 17,
-        "contracts": 21252,
-        "detection_rate": 90.6,
-        "auc": 0.942,
+        "cases": 15,
+        "vendors": 27,
+        "contracts": 26582,
+        "detection_rate": 99.8,
+        "high_plus_rate": 93.0,
+        "auc": 0.960,
+        "train_auc": 0.967,
         "case_details": [
             {"name": "IMSS Ghost Companies", "type": "Ghost companies",
-             "contracts": 9366, "high_plus_pct": 99.0, "avg_score": 0.962, "sector": "salud"},
+             "contracts": 9366, "high_plus_pct": 99.0, "avg_score": 0.977, "sector": "salud"},
             {"name": "Segalmex Food Distribution", "type": "Procurement fraud",
-             "contracts": 6326, "high_plus_pct": 94.3, "avg_score": 0.828, "sector": "agricultura"},
+             "contracts": 6326, "high_plus_pct": 89.3, "avg_score": 0.664, "sector": "agricultura"},
             {"name": "COVID-19 Emergency Procurement", "type": "Embezzlement",
-             "contracts": 5371, "high_plus_pct": 91.8, "avg_score": 0.863, "sector": "salud"},
+             "contracts": 5371, "high_plus_pct": 84.9, "avg_score": 0.821, "sector": "salud"},
+            {"name": "Edenred Voucher Monopoly", "type": "Monopoly",
+             "contracts": 2939, "high_plus_pct": 96.7, "avg_score": 0.884, "sector": "energia"},
+            {"name": "Toka IT Monopoly", "type": "Monopoly",
+             "contracts": 1954, "high_plus_pct": 100.0, "avg_score": 0.964, "sector": "tecnologia"},
+            {"name": "Infrastructure Fraud Network", "type": "Overpricing",
+             "contracts": 191, "high_plus_pct": 99.5, "avg_score": 0.962, "sector": "infraestructura"},
+            {"name": "SAT SixSigma Tender Rigging", "type": "Tender rigging",
+             "contracts": 147, "high_plus_pct": 87.8, "avg_score": 0.756, "sector": "hacienda"},
             {"name": "Cyber Robotic IT", "type": "Overpricing",
-             "contracts": 139, "high_plus_pct": 43.2, "avg_score": 0.261, "sector": "tecnologia"},
+             "contracts": 139, "high_plus_pct": 14.4, "avg_score": 0.249, "sector": "tecnologia"},
+            {"name": "PEMEX-Cotemar Irregularities", "type": "Procurement fraud",
+             "contracts": 51, "high_plus_pct": 100.0, "avg_score": 1.000, "sector": "energia"},
+            {"name": "IPN Cartel de la Limpieza", "type": "Bid rigging",
+             "contracts": 48, "high_plus_pct": 64.6, "avg_score": 0.551, "sector": "educacion"},
             {"name": "Odebrecht-PEMEX Bribery", "type": "Bribery",
-             "contracts": 35, "high_plus_pct": 68.6, "avg_score": 0.314, "sector": "energia"},
+             "contracts": 35, "high_plus_pct": 97.1, "avg_score": 0.915, "sector": "energia"},
             {"name": "La Estafa Maestra", "type": "Ghost companies",
-             "contracts": 10, "high_plus_pct": 70.0, "avg_score": 0.205, "sector": "gobernacion"},
+             "contracts": 10, "high_plus_pct": 0.0, "avg_score": 0.179, "sector": "gobernacion"},
             {"name": "Grupo Higa / Casa Blanca", "type": "Conflict of interest",
-             "contracts": 3, "high_plus_pct": 33.3, "avg_score": 0.268, "sector": "infraestructura"},
+             "contracts": 3, "high_plus_pct": 33.3, "avg_score": 0.359, "sector": "infraestructura"},
             {"name": "Oceanografia PEMEX", "type": "Invoice fraud",
-             "contracts": 2, "high_plus_pct": 100.0, "avg_score": 0.354, "sector": "energia"},
+             "contracts": 2, "high_plus_pct": 0.0, "avg_score": 0.152, "sector": "energia"},
         ],
     }
 
-    # 11. Model info (hardcoded)
+    # 11. Model info (hardcoded — v5.0 per-sector calibrated)
     model = {
-        "version": "v4.0",
-        "auc": 0.942,
-        "brier": 0.065,
+        "version": "v5.0",
+        "features": 16,
+        "sub_models": 13,
+        "auc": 0.960,
+        "train_auc": 0.967,
+        "brier": 0.060,
         "lift": 4.04,
+        "pu_correction": 0.887,
         "top_predictors": [
-            {"name": "vendor_concentration", "beta": 1.0, "direction": "positive"},
-            {"name": "industry_mismatch", "beta": 0.214, "direction": "positive"},
-            {"name": "same_day_count", "beta": 0.142, "direction": "positive"},
-            {"name": "institution_risk", "beta": 0.119, "direction": "positive"},
-            {"name": "single_bid", "beta": 0.100, "direction": "positive"},
-            {"name": "direct_award", "beta": -0.197, "direction": "negative"},
-            {"name": "ad_period_days", "beta": -0.222, "direction": "negative"},
+            {"name": "price_volatility", "beta": 1.219, "direction": "positive"},
+            {"name": "institution_diversity", "beta": -0.848, "direction": "negative"},
+            {"name": "win_rate", "beta": 0.727, "direction": "positive"},
+            {"name": "vendor_concentration", "beta": 0.428, "direction": "positive"},
+            {"name": "sector_spread", "beta": -0.374, "direction": "negative"},
+            {"name": "industry_mismatch", "beta": 0.305, "direction": "positive"},
+            {"name": "same_day_count", "beta": 0.222, "direction": "positive"},
+            {"name": "direct_award", "beta": 0.182, "direction": "positive"},
+            {"name": "ad_period_days", "beta": -0.104, "direction": "negative"},
         ],
         "counterintuitive": [
-            "Direct awards carry a negative coefficient — they are less risky, not more.",
-            "Longer ad periods correlate with higher risk — corrupt vendors operate through normal timelines.",
-            "Co-bidding rate was regularized to zero — no signal in current ground truth.",
+            "Institution diversity is protective — vendors serving many institutions are less suspicious.",
+            "Sector spread reduces risk — genuinely diversified vendors operate across sectors.",
+            "Price volatility is the #1 predictor — vendors with wildly varying contract sizes are most suspicious.",
         ],
     }
 

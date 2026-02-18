@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { describe, it, expect, vi } from 'vitest'
 import i18n from '../i18n'
 
@@ -13,9 +14,13 @@ beforeAll(async () => {
 vi.mock('@/api/client', () => ({
   analysisApi: {
     getFastDashboard: vi.fn(() => new Promise(() => {})),
+    getYearOverYear: vi.fn(() => new Promise(() => {})),
+    getExecutiveSummary: vi.fn(() => new Promise(() => {})),
+    getPatternCounts: vi.fn(() => new Promise(() => {})),
     getAnomalies: vi.fn(() => new Promise(() => {})),
   },
   investigationApi: {
+    getDashboardSummary: vi.fn(() => new Promise(() => {})),
     getCases: vi.fn(() => new Promise(() => {})),
   },
   vendorApi: {
@@ -54,9 +59,11 @@ function renderDashboard() {
   })
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <Dashboard />
-      </MemoryRouter>
+      <TooltipProvider>
+        <MemoryRouter>
+          <Dashboard />
+        </MemoryRouter>
+      </TooltipProvider>
     </QueryClientProvider>
   )
 }
@@ -69,22 +76,20 @@ describe('Dashboard', () => {
 
   it('renders key section headings', () => {
     renderDashboard()
-    // These come from the dashboard i18n translations
-    expect(screen.getByText('Value at Risk by Sector')).toBeInTheDocument()
-    expect(screen.getByText('Risk Trajectory')).toBeInTheDocument()
+    expect(screen.getByText('Sector Intelligence')).toBeInTheDocument()
+    expect(screen.getByText('Risk Trajectory 2010-2025')).toBeInTheDocument()
   })
 
   it('renders navigation cards', () => {
     renderDashboard()
-    expect(screen.getByText('Patterns')).toBeInTheDocument()
-    expect(screen.getByText('Network')).toBeInTheDocument()
-    expect(screen.getByText('Explore')).toBeInTheDocument()
+    expect(screen.getByText('Fraud Patterns')).toBeInTheDocument()
+    expect(screen.getByText('Vendor Network')).toBeInTheDocument()
+    expect(screen.getByText('All Contracts')).toBeInTheDocument()
     expect(screen.getByText('Methodology')).toBeInTheDocument()
   })
 
   it('shows loading skeletons while data is being fetched', () => {
     renderDashboard()
-    // Skeleton elements should be present during loading state
     const skeletons = document.querySelectorAll('[class*="animate-pulse"], [class*="skeleton"]')
     expect(skeletons.length).toBeGreaterThan(0)
   })
@@ -94,8 +99,12 @@ describe('Dashboard', () => {
     expect(screen.getByText('Validated Against Real Corruption')).toBeInTheDocument()
   })
 
-  it('renders the counterintuitive finding section', () => {
+  it('renders stat card labels', () => {
     renderDashboard()
-    expect(screen.getByText('COUNTERINTUITIVE FINDING')).toBeInTheDocument()
+    expect(screen.getByText('VALUE AT RISK')).toBeInTheDocument()
+    expect(screen.getByText('HIGH-RISK RATE')).toBeInTheDocument()
+    expect(screen.getByText('DIRECT AWARDS')).toBeInTheDocument()
+    expect(screen.getByText('SINGLE BIDDER')).toBeInTheDocument()
+    expect(screen.getByText('MODEL ACCURACY')).toBeInTheDocument()
   })
 })

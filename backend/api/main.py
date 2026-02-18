@@ -1,12 +1,12 @@
 """
-Yang Wen-li Vendor Classification API
+RUBLI — Red Unificada de Busqueda de Licitaciones Irregulares
 
-REST API for exposing verified vendor classifications from the
-Mexican Government Procurement Analysis platform.
+REST API for the RUBLI Mexican Government Procurement Analysis platform.
 
 Run with: uvicorn api.main:app --port 8001 --reload
 """
 import logging
+import os
 import threading
 import time as _time_module
 from contextlib import asynccontextmanager
@@ -61,8 +61,9 @@ from .routers.contracts import router as contracts_router
 from .routers.sectors import router as sectors_router
 from .routers.export import router as export_router
 from .routers.executive import router as executive_router
+from .routers.categories import router as categories_router
 
-logger = structlog.get_logger("yang_wenli.api")
+logger = structlog.get_logger("rubli.api")
 
 
 def _warmup_caches():
@@ -163,32 +164,30 @@ async def lifespan(app: FastAPI):
 
 
 # API metadata
-API_TITLE = "Yang Wen-li Vendor Classification API"
+API_TITLE = "RUBLI — Procurement Intelligence API"
 API_DESCRIPTION = """
-REST API for verified vendor industry classifications.
+Red Unificada de Busqueda de Licitaciones Irregulares
 
 ## Overview
 
-This API exposes vendor classification data from the Yang Wen-li
-Mexican Government Procurement Analysis platform.
+REST API for the RUBLI platform — AI-powered corruption detection
+for Mexican federal government procurement (2002-2025).
 
 ### Key Statistics
-- **45,603** vendors with verified classifications
-- **5,000** verified patterns
-- **35** industry categories
-- **14.23%** coverage of 320,429 total vendors
+- **3.1M** contracts analyzed
+- **320,000+** vendors profiled
+- **12** federal sectors
+- **v5.0** risk model (AUC 0.960)
 
-### Endpoints
+### Core Endpoints
 
-- **Industries** - Browse the 35-industry taxonomy
-- **Vendors** - Query verified vendor classifications
-- **Statistics** - Classification coverage metrics
-
-### Methodology
-
-All classifications are verified through online research with documented
-sources. No pattern-matching guesses. See `/docs/VENDOR_CLASSIFICATION_METHODOLOGY.md`
-for the full methodology.
+- **Contracts** - Search and filter procurement contracts
+- **Vendors** - Vendor profiles and risk analysis
+- **Institutions** - Government institution analysis
+- **Sectors** - Sector-level intelligence
+- **Analysis** - Risk patterns and anomaly detection
+- **Investigation** - ML-generated investigation leads
+- **Executive** - Consolidated executive summary
 """
 API_VERSION = "1.0.0"
 
@@ -214,13 +213,26 @@ if RATE_LIMITING_ENABLED and limiter:
 app.add_middleware(RequestLoggingMiddleware)
 
 # CORS middleware for frontend access
+cors_origins = os.environ.get(
+    "CORS_ORIGINS", "http://localhost:3009,http://127.0.0.1:3009"
+).split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3009", "http://127.0.0.1:3009"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "DELETE"],
-    allow_headers=["*"],
+    allow_headers=["Content-Type", "Authorization", "Accept", "Accept-Language"],
 )
+
+# Security headers middleware
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["X-XSS-Protection"] = "0"
+    return response
 
 # GZip compression for responses > 1KB
 app.add_middleware(GZipMiddleware, minimum_size=1000)
@@ -239,6 +251,7 @@ app.include_router(watchlist_router, prefix="/api/v1")
 app.include_router(reports_router, prefix="/api/v1")
 app.include_router(investigation_router, prefix="/api/v1")
 app.include_router(executive_router, prefix="/api/v1")
+app.include_router(categories_router, prefix="/api/v1")
 
 
 def _get_latest_backup_info() -> dict | None:

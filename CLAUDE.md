@@ -78,21 +78,19 @@ For detailed validation rules, see @.claude/rules/data-validation.md
 
 ### v5.0: Per-Sector Calibrated Model (active, 2026-02-14)
 
-Per-sector calibrated probabilities P(corrupt|z) with confidence intervals. **Train AUC: 0.948, Test AUC: 0.951** (temporal split), high-risk rate: 10.6%.
+Per-sector calibrated probabilities P(corrupt|z) with confidence intervals. **Train AUC: 0.967, Test AUC: 0.960** (temporal split), high-risk rate: 7.9%.
 
-- 12 z-score features normalized by sector/year baselines
+- 16 z-score features (12 original + 4 new: price_volatility, institution_diversity, win_rate, sector_spread)
 - 12 per-sector logistic regression sub-models + 1 global fallback
 - Diversified ground truth: 15 cases, 27 vendors, 26,582 contracts across all 12 sectors
 - Temporal train/test split (train ≤2020, test ≥2021) — honest generalization
-- Elkan & Noto (2008) PU-learning correction (c=0.861) — breaks v4.0's circular estimator
-- Cross-validated ElasticNet (C=0.01, L2) — no ad-hoc dampening needed
-- 1,000 bootstrap 95% confidence intervals
+- Elkan & Noto (2008) PU-learning correction (c=0.887) — breaks v4.0's circular estimator
+- Cross-validated ElasticNet (C=10.0, l1_ratio=0.25) — no ad-hoc dampening needed
+- 500 bootstrap 95% confidence intervals
 
-**Top predictors**: vendor_concentration (+1.80), industry_mismatch (+0.34), same_day_count (+0.14), network_member_count (+0.13)
-**Fixed from v4.0**: network_member_count now +0.13 (was -4.11 artifact), direct_award now ~0.00 (was -0.20 misleading)
+**Top predictors**: price_volatility (+1.22), institution_diversity (-0.85), win_rate (+0.73), vendor_concentration (+0.43)
 **Risk Levels**: Critical (>=0.50), High (>=0.30), Medium (>=0.10), Low (<0.10)
-**Distribution**: Critical 6.5%, High 4.1%, Medium 43.9%, Low 45.6%
-**Detection**: 99.8% of known-bad contracts detected (med+), 93.0% high+, 0.2% false negatives
+**Distribution**: Critical 5.8%, High 2.2%, Medium 9.5%, Low 82.6%
 
 ### v4.0: Statistical Framework (preserved in risk_score_v4)
 

@@ -237,7 +237,7 @@ export function SectorProfile() {
               <CardTitle className="text-sm">Explore This Sector</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-3">
                 <Link to={`/contracts?sector_id=${sectorId}`}>
                   <Button variant="outline" className="w-full justify-start">
                     <FileText className="mr-2 h-4 w-4" />
@@ -296,7 +296,7 @@ function KPICard({ title, value, icon: Icon, format = 'number', color = '#3b82f6
           <div className="space-y-1">
             <p className="text-xs font-medium text-text-muted">{title}</p>
             <p className="text-2xl font-bold tabular-nums text-text-primary">{formattedValue}</p>
-            {usdSubtitle && <p className="text-[10px] text-text-muted tabular-nums">{usdSubtitle}</p>}
+            {usdSubtitle && <p className="text-xs text-text-muted tabular-nums">{usdSubtitle}</p>}
           </div>
           <div
             className="flex h-10 w-10 items-center justify-center rounded-lg"
@@ -481,9 +481,9 @@ function TopVendorsList({ data }: { data: any[] }) {
           </div>
           <div className="text-right">
             <p className="text-sm font-medium tabular-nums">{formatCompactMXN(vendor.total_value_mxn)}</p>
-            <p className="text-[10px] text-text-muted tabular-nums">{formatCompactUSD(vendor.total_value_mxn)}</p>
+            <p className="text-xs text-text-muted tabular-nums">{formatCompactUSD(vendor.total_value_mxn)}</p>
             {vendor.avg_risk_score !== undefined && vendor.avg_risk_score !== null && (
-              <RiskBadge score={vendor.avg_risk_score} className="text-[10px]" />
+              <RiskBadge score={vendor.avg_risk_score} className="text-xs" />
             )}
           </div>
         </div>

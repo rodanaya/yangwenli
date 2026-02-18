@@ -246,7 +246,7 @@ export default function VendorsTab() {
               key={preset.id}
               onClick={() => isActive ? clearAllFilters() : applyPreset(preset.id)}
               className={cn(
-                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap border transition-all',
+                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-all',
                 isActive
                   ? 'bg-accent/15 border-accent/40 text-accent'
                   : 'bg-background-card border-border/50 text-text-muted hover:text-text-primary hover:border-border'
@@ -274,7 +274,7 @@ export default function VendorsTab() {
               {activeFilterTags.map((tag) => (
                 <span
                   key={tag.key}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-medium"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs font-medium"
                 >
                   {tag.label}
                   <button
@@ -390,7 +390,7 @@ export default function VendorsTab() {
 
           {hasActiveFilters && (
             <button
-              className="text-[11px] text-accent hover:underline"
+              className="text-xs text-accent hover:underline"
               onClick={clearAllFilters}
             >
               Clear all
@@ -447,7 +447,7 @@ export default function VendorsTab() {
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-background-elevated/50">
-                <th className="w-8 px-2 py-2 text-[10px] font-semibold text-text-muted text-center">#</th>
+                <th className="w-8 px-2 py-2 text-xs font-semibold text-text-muted text-center">#</th>
                 {VENDOR_COLUMNS.map((col) => (
                   <th
                     key={col.key}
@@ -491,7 +491,7 @@ export default function VendorsTab() {
       {/* Pagination */}
       {data && data.pagination.total_pages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-[11px] text-text-muted tabular-nums">
+          <p className="text-xs text-text-muted tabular-nums">
             {(filters.page! - 1) * filters.per_page! + 1}-
             {Math.min(filters.page! * filters.per_page!, data.pagination.total)} of{' '}
             {formatNumber(data.pagination.total)}
@@ -507,7 +507,7 @@ export default function VendorsTab() {
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
-            <span className="text-[11px] text-text-muted tabular-nums px-1">
+            <span className="text-xs text-text-muted tabular-nums px-1">
               {filters.page}/{data.pagination.total_pages}
             </span>
             <Button
@@ -579,7 +579,7 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
     >
       {/* Rank */}
       <td className="px-2 py-2 text-center">
-        <span className="text-[10px] tabular-nums text-text-muted">{rank}</span>
+        <span className="text-xs tabular-nums text-text-muted">{rank}</span>
       </td>
 
       {/* Vendor name + sector + activity */}
@@ -606,19 +606,19 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
             </div>
             <div className="flex items-center gap-2 mt-0.5">
               {sector && (
-                <span className="text-[10px] font-medium" style={{ color: sector.color }}>
+                <span className="text-xs font-medium" style={{ color: sector.color }}>
                   {sector.nameEN}
                 </span>
               )}
               {vendor.first_contract_year && vendor.last_contract_year && (
-                <span className="text-[10px] text-text-muted">
+                <span className="text-xs text-text-muted">
                   {vendor.first_contract_year === vendor.last_contract_year
                     ? vendor.first_contract_year
                     : `${vendor.first_contract_year}-${vendor.last_contract_year}`}
                 </span>
               )}
               {avgContractSize >= 100_000_000 && (
-                <span className="text-[10px] text-text-muted" title={`Avg contract: ${formatCompactMXN(avgContractSize)}`}>
+                <span className="text-xs text-text-muted" title={`Avg contract: ${formatCompactMXN(avgContractSize)}`}>
                   avg {formatCompactMXN(avgContractSize)}
                 </span>
               )}
@@ -659,7 +659,7 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
             </span>
           </div>
         ) : (
-          <span className="text-[10px] text-text-muted">-</span>
+          <span className="text-xs text-text-muted">-</span>
         )}
       </td>
 
@@ -693,7 +693,7 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
             {vendor.pct_anomalous.toFixed(0)}%
           </span>
         ) : (
-          <span className="text-[10px] text-text-muted">-</span>
+          <span className="text-xs text-text-muted">-</span>
         )}
       </td>
 
