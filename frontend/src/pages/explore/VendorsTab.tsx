@@ -3,6 +3,7 @@
  */
 
 import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams, Link } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
@@ -73,8 +74,29 @@ const VENDOR_PRESETS = [
 // =============================================================================
 
 export default function VendorsTab() {
+  const { t } = useTranslation('explore')
   const [searchParams, setSearchParams] = useSearchParams()
   const [activePreset, setActivePreset] = useState<string | null>(null)
+
+  const columnLabel = (key: SortField): string => ({
+    name: t('vendors.columns.name'),
+    total_contracts: t('vendors.columns.contracts'),
+    total_value_mxn: t('vendors.columns.totalValue'),
+    avg_risk_score: t('vendors.columns.avgRisk'),
+    direct_award_pct: t('vendors.columns.directAwardPct'),
+    single_bid_pct: t('vendors.columns.singleBidPct'),
+    high_risk_pct: t('vendors.columns.highRiskPct'),
+    pct_anomalous: t('vendors.columns.anomalyPct'),
+  })[key] ?? key
+
+  const presetLabel = (id: string): string => ({
+    'top-value': t('vendors.presets.topValue'),
+    'highest-risk': t('vendors.presets.highestRisk'),
+    'most-direct': t('vendors.presets.mostDirect'),
+    'most-flagged': t('vendors.presets.mostFlagged'),
+    'anomalous': t('vendors.presets.outliers'),
+    'big-players': t('vendors.presets.bigPlayers'),
+  } as Record<string, string>)[id] ?? id
 
   // Debounced search
   const {
@@ -253,7 +275,7 @@ export default function VendorsTab() {
               )}
             >
               <Icon className="h-3 w-3" />
-              {preset.label}
+              {presetLabel(preset.id)}
             </button>
           )
         })}
@@ -462,7 +484,7 @@ export default function VendorsTab() {
                     aria-sort={sortBy === col.key ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
                   >
                     <span className="inline-flex items-center gap-1">
-                      <span className="hidden sm:inline">{col.label}</span>
+                      <span className="hidden sm:inline">{columnLabel(col.key)}</span>
                       <span className="sm:hidden">{col.shortLabel}</span>
                       {sortBy === col.key && (
                         <span className="text-accent">

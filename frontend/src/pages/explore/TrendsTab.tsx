@@ -3,6 +3,7 @@
  */
 
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -132,6 +133,7 @@ const RADAR_PRESETS: { id: RadarPreset; label: string; axes: { key: string; labe
 // =============================================================================
 
 export default function TrendsTab() {
+  const { t } = useTranslation('explore')
   const [selectedYear, setSelectedYear] = useState(2024)
   const [radarPreset, setRadarPreset] = useState<RadarPreset>('risk')
   const [radarShowAll, setRadarShowAll] = useState(false)
@@ -705,7 +707,7 @@ export default function TrendsTab() {
                         : 'border-border text-text-muted hover:border-text-muted'
                     )}
                   >
-                    {p.label}
+                    {t(`trends.radarPresets.${p.id}`)}
                   </button>
                 ))}
               </div>

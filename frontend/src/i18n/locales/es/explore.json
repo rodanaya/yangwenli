@@ -17,7 +17,16 @@
       "directAwardPct": "% Adj. Directa",
       "singleBidPct": "% Licitación Única",
       "sector": "Sector Principal",
-      "years": "Años Activo"
+      "years": "Años Activo",
+      "anomalyPct": "% Anomalías"
+    },
+    "presets": {
+      "topValue": "Mayor Valor",
+      "highestRisk": "Mayor Riesgo",
+      "mostDirect": "Más Adj. Directas",
+      "mostFlagged": "Más Sospechosos",
+      "outliers": "Valores Atípicos",
+      "bigPlayers": "Grandes Actores (1K+)"
     },
     "empty": "No se encontraron proveedores con los filtros seleccionados.",
     "emptyAction": "Ajustar filtros"
@@ -42,7 +51,12 @@
     "contractsOverTime": "Contratos por Año",
     "valueOverTime": "Valor por Año",
     "riskOverTime": "Riesgo Promedio por Año",
-    "directAwardTrend": "Tendencia de Adjudicación Directa"
+    "directAwardTrend": "Tendencia de Adjudicación Directa",
+    "radarPresets": {
+      "risk": "Perfil de Riesgo",
+      "transparency": "Transparencia",
+      "market": "Estructura de Mercado"
+    }
   },
   "filters": {
     "sector": "Sector",

@@ -29,7 +29,11 @@
     "riskFactors": "Risk Factors",
     "confidenceInterval": "Confidence Interval",
     "mahalanobisDistance": "Mahalanobis Distance",
-    "noFactors": "No risk factors identified"
+    "noFactors": "No risk factors identified",
+    "overview": "Overview",
+    "riskAssessment": "Risk Assessment",
+    "noRiskScore": "No risk score available",
+    "errorLoading": "Failed to load contract details"
   },
   "filters": {
     "sector": "Sector",

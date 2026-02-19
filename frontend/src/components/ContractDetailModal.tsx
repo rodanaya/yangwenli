@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { contractApi } from '@/api/client'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
@@ -24,6 +25,7 @@ interface ContractDetailModalProps {
 }
 
 export function ContractDetailModal({ contractId, open, onOpenChange }: ContractDetailModalProps) {
+  const { t } = useTranslation('contracts')
   const { data: contract, isLoading, error } = useQuery({
     queryKey: ['contract', contractId],
     queryFn: () => contractApi.getById(contractId!),
@@ -36,7 +38,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <FileText className="h-4 w-4 text-accent" aria-hidden="true" />
-            Contract Details
+            {t('detail.title')}
           </DialogTitle>
           <DialogDescription>
             {contract?.contract_number || (contractId ? `ID: ${contractId}` : '')}
@@ -48,20 +50,20 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
         ) : error ? (
           <div className="py-8 text-center text-text-muted">
             <ShieldAlert className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">Failed to load contract details</p>
+            <p className="text-sm">{t('detail.errorLoading')}</p>
           </div>
         ) : contract ? (
           <div className="space-y-5">
             {/* Section 1: Overview */}
             <section>
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">Overview</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">{t('detail.overview')}</h3>
               <div className="space-y-3">
                 <p className="text-sm font-medium leading-snug">
                   {toTitleCase(contract.title || 'Untitled Contract')}
                 </p>
 
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <InfoRow icon={User} label="Vendor">
+                  <InfoRow icon={User} label={t('detail.vendor')}>
                     {contract.vendor_id ? (
                       <Link
                         to={`/vendors/${contract.vendor_id}`}
@@ -75,7 +77,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                     )}
                   </InfoRow>
 
-                  <InfoRow icon={Building2} label="Institution">
+                  <InfoRow icon={Building2} label={t('detail.institution')}>
                     {contract.institution_id ? (
                       <Link
                         to={`/institutions/${contract.institution_id}`}
@@ -89,7 +91,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                     )}
                   </InfoRow>
 
-                  <InfoRow icon={DollarSign} label="Amount">
+                  <InfoRow icon={DollarSign} label={t('detail.amount')}>
                     <span className="font-medium tabular-nums">
                       {formatCompactMXN(contract.amount_mxn)}
                     </span>
@@ -98,7 +100,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                     </span>
                   </InfoRow>
 
-                  <InfoRow icon={Calendar} label="Date">
+                  <InfoRow icon={Calendar} label={t('detail.date')}>
                     <span>
                       {contract.contract_date ? formatDate(contract.contract_date) : contract.contract_year || '-'}
                     </span>
@@ -115,13 +117,13 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
 
             {/* Section 2: Risk Assessment */}
             <section>
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">Risk Assessment</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">{t('detail.riskAssessment')}</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   {contract.risk_score !== undefined && contract.risk_score !== null ? (
                     <RiskBadge score={contract.risk_score} />
                   ) : (
-                    <span className="text-sm text-text-muted">No risk score available</span>
+                    <span className="text-sm text-text-muted">{t('detail.noRiskScore')}</span>
                   )}
                   {contract.risk_confidence_lower != null && contract.risk_confidence_upper != null ? (
                     <span className="text-xs text-text-muted font-mono tabular-nums">

@@ -17,7 +17,16 @@
       "directAwardPct": "% Direct Award",
       "singleBidPct": "% Single Bid",
       "sector": "Primary Sector",
-      "years": "Years Active"
+      "years": "Years Active",
+      "anomalyPct": "Anomaly %"
+    },
+    "presets": {
+      "topValue": "Top by Value",
+      "highestRisk": "Highest Risk",
+      "mostDirect": "Most Direct Awards",
+      "mostFlagged": "Most Flagged",
+      "outliers": "Statistical Outliers",
+      "bigPlayers": "Big Players (1K+)"
     },
     "empty": "No vendors found matching your filters.",
     "emptyAction": "Adjust filters"
@@ -42,7 +51,12 @@
     "contractsOverTime": "Contracts by Year",
     "valueOverTime": "Value by Year",
     "riskOverTime": "Average Risk by Year",
-    "directAwardTrend": "Direct Award Trend"
+    "directAwardTrend": "Direct Award Trend",
+    "radarPresets": {
+      "risk": "Risk Profile",
+      "transparency": "Transparency",
+      "market": "Market Structure"
+    }
   },
   "filters": {
     "sector": "Sector",

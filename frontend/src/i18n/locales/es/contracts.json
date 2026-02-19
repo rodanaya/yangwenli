@@ -29,7 +29,11 @@
     "riskFactors": "Factores de Riesgo",
     "confidenceInterval": "Intervalo de Confianza",
     "mahalanobisDistance": "Distancia de Mahalanobis",
-    "noFactors": "Sin factores de riesgo identificados"
+    "noFactors": "Sin factores de riesgo identificados",
+    "overview": "Resumen",
+    "riskAssessment": "Evaluación de Riesgo",
+    "noRiskScore": "Sin puntuación de riesgo",
+    "errorLoading": "Error al cargar los detalles del contrato"
   },
   "filters": {
     "sector": "Sector",
