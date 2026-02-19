@@ -51,8 +51,8 @@ export function SectorProfile() {
 
   // Fetch top vendors in this sector
   const { data: topVendors, isLoading: vendorsLoading } = useQuery({
-    queryKey: ['vendors', 'top', 'value', { sector_affinity: sectorId }],
-    queryFn: () => vendorApi.getTop('value', 10, { sector_affinity: sectorId }),
+    queryKey: ['vendors', 'top', 'value', { sector_id: sectorId }],
+    queryFn: () => vendorApi.getTop('value', 10, { sector_id: sectorId }),
     enabled: !!sectorId,
   })
 
