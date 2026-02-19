@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,6 +10,7 @@ import { formatCompactMXN, formatCompactUSD, formatNumber, formatPercentSafe, fo
 import { institutionApi } from '@/api/client'
 import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { NarrativeCard } from '@/components/NarrativeCard'
+import { ContractDetailModal } from '@/components/ContractDetailModal'
 import { AddToWatchlistButton } from '@/components/AddToWatchlistButton'
 import { buildInstitutionNarrative } from '@/lib/narratives'
 import type { ContractListItem } from '@/api/types'
@@ -35,6 +37,8 @@ import {
 export function InstitutionProfile() {
   const { id } = useParams<{ id: string }>()
   const institutionId = Number(id)
+  const [selectedContractId, setSelectedContractId] = useState<number | null>(null)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
 
   // Fetch institution details
   const { data: institution, isLoading: institutionLoading, error: institutionError } = useQuery({
@@ -247,7 +251,7 @@ export function InstitutionProfile() {
                 <ScrollArea className="h-[300px]">
                   <div className="divide-y divide-border">
                     {contracts.data.map((contract) => (
-                      <ContractRow key={contract.id} contract={contract} />
+                      <ContractRow key={contract.id} contract={contract} onView={(cid) => { setSelectedContractId(cid); setIsDetailOpen(true) }} />
                     ))}
                   </div>
                 </ScrollArea>
@@ -277,6 +281,11 @@ export function InstitutionProfile() {
           </Card>
         </div>
       </div>
+      <ContractDetailModal
+        contractId={selectedContractId}
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+      />
     </div>
   )
 }
@@ -469,9 +478,9 @@ function VendorConcentration({ data, total }: { data: any[]; total: number }) {
   )
 }
 
-function ContractRow({ contract }: { contract: ContractListItem }) {
+function ContractRow({ contract, onView }: { contract: ContractListItem; onView?: (id: number) => void }) {
   return (
-    <div className="flex items-center justify-between p-3 hover:bg-background-elevated/50 transition-colors">
+    <div className="flex items-center justify-between p-3 hover:bg-background-elevated/50 transition-colors cursor-pointer" onClick={() => onView?.(contract.id)}>
       <div className="flex items-center gap-3 min-w-0">
         <FileText className="h-4 w-4 text-text-muted flex-shrink-0" />
         <div className="min-w-0">

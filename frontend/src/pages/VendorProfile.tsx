@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,6 +13,7 @@ import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { AddToWatchlistButton } from '@/components/AddToWatchlistButton'
 import { NarrativeCard } from '@/components/NarrativeCard'
+import { ContractDetailModal } from '@/components/ContractDetailModal'
 import { buildVendorNarrative } from '@/lib/narratives'
 import type { ContractListItem } from '@/api/types'
 import {
@@ -40,6 +41,8 @@ import {
 export function VendorProfile() {
   const { id } = useParams<{ id: string }>()
   const vendorId = Number(id)
+  const [selectedContractId, setSelectedContractId] = useState<number | null>(null)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
 
   // Fetch vendor details
   const { data: vendor, isLoading: vendorLoading, error: vendorError } = useQuery({
@@ -523,7 +526,7 @@ export function VendorProfile() {
                 <ScrollArea className="h-[300px]">
                   <div className="divide-y divide-border">
                     {contracts.data.map((contract) => (
-                      <ContractRow key={contract.id} contract={contract} />
+                      <ContractRow key={contract.id} contract={contract} onView={(cid) => { setSelectedContractId(cid); setIsDetailOpen(true) }} />
                     ))}
                   </div>
                 </ScrollArea>
@@ -560,6 +563,11 @@ export function VendorProfile() {
           </Card>
         </div>
       </div>
+      <ContractDetailModal
+        contractId={selectedContractId}
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+      />
     </div>
   )
 }
@@ -821,14 +829,15 @@ function InstitutionList({ data, maxValue }: { data: any[]; maxValue: number }) 
   )
 }
 
-function ContractRow({ contract }: { contract: ContractListItem }) {
+function ContractRow({ contract, onView }: { contract: ContractListItem; onView?: (id: number) => void }) {
   const riskLevel = contract.risk_score != null ? getRiskLevel(contract.risk_score) : null
   const borderColor = riskLevel ? RISK_COLORS[riskLevel] : 'transparent'
 
   return (
     <div
-      className="flex items-center justify-between p-3 interactive"
+      className="flex items-center justify-between p-3 interactive cursor-pointer"
       style={{ borderLeft: `3px solid ${borderColor}` }}
+      onClick={() => onView?.(contract.id)}
     >
       <div className="flex items-center gap-3 min-w-0">
         <FileText className="h-4 w-4 text-text-muted flex-shrink-0" />
