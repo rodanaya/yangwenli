@@ -5,6 +5,7 @@
  */
 
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueries } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -59,11 +60,11 @@ const YEAR_OPTIONS = Array.from({ length: 11 }, (_, i) => 2015 + i)
 const MULTI_YEAR_RANGE = [2018, 2019, 2020, 2021, 2022, 2023, 2024]
 
 const ADMINISTRATIONS = [
-  { name: 'Fox', start: 2002, end: 2006, color: 'rgba(59,130,246,0.08)' },
-  { name: 'Calderon', start: 2006, end: 2012, color: 'rgba(251,146,60,0.08)' },
-  { name: 'Pena Nieto', start: 2012, end: 2018, color: 'rgba(248,113,113,0.08)' },
-  { name: 'AMLO', start: 2018, end: 2024, color: 'rgba(74,222,128,0.08)' },
-  { name: 'Sheinbaum', start: 2024, end: 2026, color: 'rgba(96,165,250,0.08)' },
+  { name: 'Fox', start: 2002, end: 2006, color: 'rgba(59,130,246,0.08)', solidColor: '#3b82f6' },
+  { name: 'Calderon', start: 2006, end: 2012, color: 'rgba(251,146,60,0.08)', solidColor: '#fb923c' },
+  { name: 'Pena Nieto', start: 2012, end: 2018, color: 'rgba(248,113,113,0.08)', solidColor: '#f87171' },
+  { name: 'AMLO', start: 2018, end: 2024, color: 'rgba(74,222,128,0.08)', solidColor: '#4ade80' },
+  { name: 'Sheinbaum', start: 2024, end: 2026, color: 'rgba(96,165,250,0.08)', solidColor: '#60a5fa' },
 ]
 
 const KEY_EVENTS = [
@@ -97,6 +98,7 @@ const EVENT_COLORS: Record<string, string> = {
 // =============================================================================
 
 export default function TemporalPulse() {
+  const navigate = useNavigate()
   const [selectedYear, setSelectedYear] = useState(2023)
   const [showAllEvents, setShowAllEvents] = useState(false)
 
@@ -198,11 +200,55 @@ export default function TemporalPulse() {
       .map((y) => ({
         year: y.year,
         contracts: y.contracts,
-        value: y.total_value ?? y.value_mxn ?? 0,
+        value: y.total_value ?? 0,
         avgRisk: y.avg_risk * 100,
         directAwardPct: y.direct_award_pct,
         highRiskPct: y.high_risk_pct,
       }))
+  }, [yoyData])
+
+  // Anomaly years: years where high_risk_pct is > mean + 1.2 * stddev
+  const anomalyYears = useMemo(() => {
+    if (!adminChartData.length) return new Set<number>()
+    const riskValues = adminChartData
+      .map((d) => d.highRiskPct)
+      .filter((v): v is number => v != null)
+    if (riskValues.length < 3) return new Set<number>()
+    const mean = riskValues.reduce((a, b) => a + b, 0) / riskValues.length
+    const stddev = Math.sqrt(
+      riskValues.map((v) => (v - mean) ** 2).reduce((a, b) => a + b, 0) / riskValues.length
+    )
+    const threshold = mean + 1.2 * stddev
+    return new Set(adminChartData.filter((d) => (d.highRiskPct ?? 0) > threshold).map((d) => d.year))
+  }, [adminChartData])
+
+  // Administration scorecard stats derived from yoyData
+  const adminStats = useMemo(() => {
+    if (!yoyData?.data?.length) return []
+    return ADMINISTRATIONS.map((admin) => {
+      const adminYears = yoyData.data.filter(
+        (d) => d.year >= admin.start && d.year < admin.end
+      )
+      if (!adminYears.length) return null
+      const totalContracts = adminYears.reduce((s, d) => s + (d.contracts ?? 0), 0)
+      const totalValue = adminYears.reduce((s, d) => s + (d.total_value ?? 0), 0)
+      const avgRisk =
+        adminYears.length > 0
+          ? adminYears.reduce((s, d) => s + (d.high_risk_pct ?? 0), 0) / adminYears.length
+          : 0
+      const avgDirectAward =
+        adminYears.length > 0
+          ? adminYears.reduce((s, d) => s + (d.direct_award_pct ?? 0), 0) / adminYears.length
+          : 0
+      return {
+        ...admin,
+        totalContracts,
+        totalValue,
+        avgRisk,
+        avgDirectAward,
+        yearCount: adminYears.length,
+      }
+    }).filter((x): x is NonNullable<typeof x> => x !== null)
   }, [yoyData])
 
   const visibleEvents = useMemo(() => {
@@ -294,6 +340,70 @@ export default function TemporalPulse() {
         />
       </div>
 
+      {/* Administration Scorecard */}
+      {adminStats.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2">
+              <Landmark className="h-4 w-4 text-text-muted" />
+              Administration Comparison
+            </CardTitle>
+            <CardDescription>
+              Click any administration to view contracts from that era.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+              {adminStats.map((admin) => {
+                const riskLevel =
+                  admin.avgRisk >= 0.15
+                    ? 'critical'
+                    : admin.avgRisk >= 0.10
+                      ? 'high'
+                      : admin.avgRisk >= 0.05
+                        ? 'medium'
+                        : 'low'
+                return (
+                  <button
+                    key={admin.name}
+                    onClick={() =>
+                      navigate(
+                        `/contracts?year=${admin.start}&sort_by=risk_score&sort_order=desc`
+                      )
+                    }
+                    className="text-left rounded-lg border border-border/30 bg-background-card/50 p-3 hover:border-accent/40 hover:bg-background-elevated/50 transition-colors group"
+                    style={{
+                      borderLeftWidth: '3px',
+                      borderLeftColor: admin.solidColor,
+                    }}
+                  >
+                    <p className="text-sm font-semibold text-text-primary">{admin.name}</p>
+                    <p className="text-xs text-text-muted">
+                      {admin.start}–{admin.end > 2025 ? '' : admin.end}
+                    </p>
+                    <div className="mt-2 space-y-0.5 text-xs text-text-secondary">
+                      <p>{formatNumber(admin.totalContracts)} contracts</p>
+                      <p>{formatCompactMXN(admin.totalValue)}</p>
+                    </div>
+                    <div className="mt-2 flex items-center gap-1">
+                      <span
+                        className="text-xs font-mono font-medium"
+                        style={{ color: RISK_COLORS[riskLevel] }}
+                      >
+                        {(admin.avgRisk * 100).toFixed(1)}% avg high-risk
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-accent/60 group-hover:text-accent transition-colors">
+                      Investigate →
+                    </p>
+                  </button>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* L2: Monthly Rhythm Chart */}
       <Card>
         <CardHeader className="pb-2">
@@ -302,7 +412,9 @@ export default function TemporalPulse() {
             Monthly Procurement Rhythm ({selectedYear})
           </CardTitle>
           <CardDescription>
-            Contract volume by month with risk overlay. December bars highlighted when they exceed the annual average.
+            Contract volume by month with risk overlay. December bars highlighted when they exceed
+            the annual average. Click any bar to investigate contracts from that period — December
+            bars show year-end contracts specifically.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -365,6 +477,7 @@ export default function TemporalPulse() {
                               Year-end period
                             </p>
                           )}
+                          <p className="text-xs text-accent/70 mt-1">Click to investigate</p>
                         </div>
                       )
                     }}
@@ -377,6 +490,19 @@ export default function TemporalPulse() {
                     dataKey="contracts"
                     name="Contracts"
                     radius={[3, 3, 0, 0]}
+                    style={{ cursor: 'pointer' }}
+                    onClick={(_data: unknown, index: number) => {
+                      const monthIndex = index // 0 = Jan, 11 = Dec
+                      if (monthIndex === 11) {
+                        navigate(
+                          `/contracts?year=${selectedYear}&risk_factor=year_end&sort_by=amount_mxn&sort_order=desc`
+                        )
+                      } else {
+                        navigate(
+                          `/contracts?year=${selectedYear}&sort_by=contract_date&sort_order=desc`
+                        )
+                      }
+                    }}
                   >
                     {monthlyChartData.map((entry, index) => (
                       <Cell
@@ -514,7 +640,7 @@ export default function TemporalPulse() {
         </CardContent>
       </Card>
 
-      {/* L4: Administration Bands */}
+      {/* L4: Administration Bands (Year-over-Year Chart) */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
@@ -523,7 +649,8 @@ export default function TemporalPulse() {
           </CardTitle>
           <CardDescription>
             Year-over-year contract volume with administration periods shaded.
-            Structural shifts in procurement patterns often align with political transitions.
+            Highlighted years (red dashed lines) show anomalous spikes in high-risk contracts.
+            Click any bar to investigate contracts from that year.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -570,11 +697,13 @@ export default function TemporalPulse() {
                       const admin = ADMINISTRATIONS.find(
                         (a) => d.year >= a.start && d.year < a.end
                       )
+                      const isAnomaly = anomalyYears.has(d.year)
                       return (
                         <div className="chart-tooltip">
                           <p className="font-medium text-xs mb-1">
                             {d.year}
                             {admin ? ` (${admin.name})` : ''}
+                            {isAnomaly ? ' — anomalous' : ''}
                           </p>
                           <p className="text-xs text-text-muted tabular-nums">
                             Contracts: {formatNumber(d.contracts)}
@@ -588,6 +717,7 @@ export default function TemporalPulse() {
                           <p className="text-xs text-text-muted tabular-nums">
                             Direct Awards: {d.directAwardPct.toFixed(1)}%
                           </p>
+                          <p className="text-xs text-accent/70 mt-1">Click to investigate</p>
                         </div>
                       )
                     }}
@@ -630,12 +760,38 @@ export default function TemporalPulse() {
                       }}
                     />
                   ))}
+                  {/* Anomaly year markers */}
+                  {Array.from(anomalyYears).map((year) => (
+                    <ReferenceLine
+                      key={`anomaly-${year}`}
+                      x={year}
+                      yAxisId="left"
+                      stroke={RISK_COLORS.critical}
+                      strokeOpacity={0.4}
+                      strokeDasharray="4 4"
+                      label={{
+                        value: '↑',
+                        fill: RISK_COLORS.critical,
+                        fontSize: 12,
+                        position: 'top',
+                      }}
+                    />
+                  ))}
                   <Bar
                     yAxisId="left"
                     dataKey="contracts"
                     fill="var(--color-accent)"
                     opacity={0.7}
                     radius={[2, 2, 0, 0]}
+                    style={{ cursor: 'pointer' }}
+                    onClick={(_data: unknown, index: number) => {
+                      const year = adminChartData[index]?.year
+                      if (year) {
+                        navigate(
+                          `/contracts?year=${year}&risk_level=high&sort_by=risk_score&sort_order=desc`
+                        )
+                      }
+                    }}
                   />
                   <Line
                     yAxisId="right"
@@ -682,6 +838,7 @@ export default function TemporalPulse() {
           <CardDescription>
             Key political events that may have influenced procurement patterns.
             Elections, reforms, scandals, and crises can all trigger shifts in spending behavior.
+            Click any event to investigate contracts from that year.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -702,10 +859,26 @@ export default function TemporalPulse() {
               {visibleEvents.map((event) => {
                 const EventIcon = EVENT_ICONS[event.type] || EVENT_ICONS.default
                 const color = EVENT_COLORS[event.type] || EVENT_COLORS.default
+                const eventYear = new Date(event.date).getFullYear()
                 return (
                   <div
                     key={event.id}
-                    className="flex gap-3 p-2.5 rounded-md hover:bg-background-elevated/50 transition-colors"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() =>
+                      navigate(
+                        `/contracts?year=${eventYear}&sort_by=risk_score&sort_order=desc`
+                      )
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        navigate(
+                          `/contracts?year=${eventYear}&sort_by=risk_score&sort_order=desc`
+                        )
+                      }
+                    }}
+                    className="flex gap-3 p-2.5 rounded-md hover:bg-background-elevated/50 transition-colors cursor-pointer"
                   >
                     <div
                       className="flex items-center justify-center h-8 w-8 rounded-lg shrink-0"
@@ -750,6 +923,7 @@ export default function TemporalPulse() {
                         {event.source && (
                           <span className="text-text-muted">{event.source}</span>
                         )}
+                        <span className="text-accent/50 ml-auto">Investigate {eventYear} →</span>
                       </div>
                     </div>
                   </div>

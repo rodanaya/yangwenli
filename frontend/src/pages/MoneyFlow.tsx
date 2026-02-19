@@ -37,6 +37,7 @@ import {
   ArrowRight,
   TrendingUp,
   Filter,
+  ExternalLink,
 } from 'lucide-react'
 
 // =============================================================================
@@ -147,13 +148,14 @@ function TreemapContent(props: {
 export default function MoneyFlow() {
   const navigate = useNavigate()
   const [selectedSector, setSelectedSector] = useState<number | ''>('')
+  const [selectedYear, setSelectedYear] = useState<number | ''>(2024)
 
   // ---- Data fetch ----
   const { data: flowData, isLoading, isError } = useQuery({
-    queryKey: ['money-flow', selectedSector],
+    queryKey: ['money-flow', selectedSector, selectedYear],
     queryFn: () =>
       analysisApi.getMoneyFlow(
-        undefined,
+        selectedYear || undefined,
         selectedSector || undefined,
       ),
     staleTime: 5 * 60 * 1000,
@@ -239,6 +241,10 @@ export default function MoneyFlow() {
     }
   }, [flowData])
 
+  // ---- Empty state check ----
+  const hasNoData = !isLoading && !isError && flowData &&
+    (!flowData.flows?.length || flowData.total_value === 0)
+
   // ---- Loading state ----
   if (isLoading) {
     return (
@@ -280,34 +286,74 @@ export default function MoneyFlow() {
     )
   }
 
+  // ---- Filter controls (shared between hero and empty state) ----
+  const filterControls = (
+    <div className="flex items-center gap-3 flex-wrap">
+      <Filter className="h-3.5 w-3.5 text-text-muted shrink-0" aria-hidden="true" />
+      <select
+        value={selectedYear}
+        onChange={(e) => setSelectedYear(e.target.value ? Number(e.target.value) : '')}
+        className="h-8 rounded-md border border-border bg-background-elevated px-3 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
+        aria-label="Filter by year"
+      >
+        <option value="">All Years</option>
+        {[2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015].map(y => (
+          <option key={y} value={y}>{y}</option>
+        ))}
+      </select>
+      <select
+        value={selectedSector}
+        onChange={(e) => setSelectedSector(e.target.value ? Number(e.target.value) : '')}
+        className="h-8 rounded-md border border-border bg-background-elevated px-3 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
+        aria-label="Filter by sector"
+      >
+        <option value="">All Sectors</option>
+        {SECTORS.map(s => (
+          <option key={s.id} value={s.id}>{s.nameEN}</option>
+        ))}
+      </select>
+    </div>
+  )
+
+  // ---- Empty data state (filters returned no results) ----
+  if (hasNoData) {
+    return (
+      <div className="space-y-6">
+        <PageHero
+          trackingLabel="FUND FLOW ANALYSIS"
+          icon={<Banknote className="h-4 w-4 text-accent" />}
+          headline="No Data"
+          subtitle="Adjust filters to load fund flow data"
+          detail="Select a year and sector to trace how government spending flows from institutions through sectors to vendors."
+          trailing={filterControls}
+        />
+        <Card>
+          <CardContent className="p-8 text-center space-y-3">
+            <Filter className="h-8 w-8 text-text-muted mx-auto" />
+            <p className="font-medium text-text-primary">No fund flow data for this combination</p>
+            <p className="text-sm text-text-muted">
+              Try selecting a specific year or sector. The money flow analysis aggregates
+              institution-to-vendor relationships and requires contract data with both
+              institution and vendor records.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* ================================================================== */}
       {/* Header                                                              */}
       {/* ================================================================== */}
-      {/* Hero */}
       <PageHero
         trackingLabel="FUND FLOW ANALYSIS"
         icon={<Banknote className="h-4 w-4 text-accent" />}
         headline={formatCompactMXN(flowData.total_value)}
-        subtitle="Total procurement value tracked"
-        detail="Traces how government spending flows from institutions through sectors to vendors, highlighting high-risk channels."
-        trailing={
-          <div className="flex items-center gap-3">
-            <Filter className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
-            <select
-              value={selectedSector}
-              onChange={(e) => setSelectedSector(e.target.value ? Number(e.target.value) : '')}
-              className="h-8 rounded-md border border-border bg-background-elevated px-3 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
-              aria-label="Filter by sector"
-            >
-              <option value="">All Sectors</option>
-              {SECTORS.map(s => (
-                <option key={s.id} value={s.id}>{s.nameEN}</option>
-              ))}
-            </select>
-          </div>
-        }
+        subtitle={`${formatNumber(flowData.total_contracts)} contracts tracked${selectedYear ? ` in ${selectedYear}` : ''}`}
+        detail="Select a year and sector to trace how government spending flows from institutions through sectors to vendors, highlighting high-risk channels."
+        trailing={filterControls}
       />
 
       {/* L1: Overview Stats */}
@@ -334,8 +380,6 @@ export default function MoneyFlow() {
           borderColor="border-text-muted/20"
         />
       </div>
-
-      {/* Old stat cards removed — replaced by SharedStatCard above */}
 
       {/* ================================================================== */}
       {/* L2 + L3: Institution and Vendor Charts                              */}
@@ -516,7 +560,10 @@ export default function MoneyFlow() {
             <AlertTriangle className="h-4 w-4 text-risk-high" aria-hidden="true" />
             Highest-Risk Fund Flows
           </CardTitle>
-          <CardDescription>Top 20 flows ranked by average risk score. These institution-vendor relationships warrant closer scrutiny.</CardDescription>
+          <CardDescription>
+            Top 20 flows ranked by average risk score. These institution-vendor relationships warrant closer scrutiny.
+            Click any row to investigate the contracts in that flow relationship.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {highRiskFlows.length === 0 ? (
@@ -536,16 +583,33 @@ export default function MoneyFlow() {
                     <th className="text-right py-2.5 px-3 text-text-muted font-medium" scope="col">Value</th>
                     <th className="text-right py-2.5 px-3 text-text-muted font-medium hidden sm:table-cell" scope="col">Contracts</th>
                     <th className="text-right py-2.5 px-3 text-text-muted font-medium" scope="col">Avg Risk</th>
+                    <th className="text-right py-2.5 px-3 text-text-muted font-medium hidden md:table-cell" scope="col">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {highRiskFlows.map((flow, i) => {
                     const risk = flow.avg_risk ?? 0
                     const level = getRiskLevel(risk)
+
+                    const handleRowClick = () => {
+                      if (flow.source_type === 'institution' && flow.target_type === 'vendor') {
+                        navigate(`/contracts?institution_id=${flow.source_id}&vendor_id=${flow.target_id}`)
+                      } else if (flow.source_type === 'institution') {
+                        navigate(`/contracts?institution_id=${flow.source_id}`)
+                      } else if (flow.target_type === 'vendor') {
+                        navigate(`/contracts?vendor_id=${flow.target_id}`)
+                      }
+                    }
+
                     return (
                       <tr
                         key={`${flow.source_id}-${flow.target_id}-${i}`}
-                        className="border-b border-border/10 hover:bg-background-elevated/50 transition-colors"
+                        className="border-b border-border/10 hover:bg-background-elevated transition-colors cursor-pointer"
+                        onClick={handleRowClick}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleRowClick() } }}
+                        aria-label={`Investigate flow from ${toTitleCase(flow.source_name)} to ${toTitleCase(flow.target_name)}`}
                       >
                         <td className="py-2.5 px-3">
                           <span className="text-text-primary font-medium">{truncateName(flow.source_name, 32)}</span>
@@ -577,6 +641,9 @@ export default function MoneyFlow() {
                             {(risk * 100).toFixed(1)}%
                           </span>
                         </td>
+                        <td className="py-2.5 px-3 text-right hidden md:table-cell">
+                          <ExternalLink className="h-3.5 w-3.5 text-text-muted inline" aria-hidden="true" />
+                        </td>
                       </tr>
                     )
                   })}
@@ -595,7 +662,8 @@ export default function MoneyFlow() {
         Bar colors reflect the average v5.0 risk score for each flow:
         green (&lt;10%), amber (10-30%), orange (30-50%), and red (&ge;50%).
         High-risk flow value sums all flows where average risk exceeds 30%.
-        Use year and sector filters to narrow the analysis.
+        Use year and sector filters to narrow the analysis. Clicking a row in the
+        high-risk table navigates to the contracts page filtered by that institution-vendor relationship.
       </SectionDescription>
     </div>
   )

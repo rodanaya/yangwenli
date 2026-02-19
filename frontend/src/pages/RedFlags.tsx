@@ -2,6 +2,7 @@
  * Red Flag Anatomy Page
  *
  * Interactive breakdown of risk factors across the entire database:
+ * L0: Danger Zone (top 3 co-occurrence combinations by lift × volume)
  * L1: Factor Frequency (horizontal bar chart)
  * L2: Co-occurrence Heatmap (lift matrix)
  * L3: Worst Combinations (ranked list of factor pairs)
@@ -9,6 +10,7 @@
  */
 
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -31,6 +33,7 @@ import {
   ScatterChart,
   Scatter,
   ZAxis,
+  ReferenceLine,
 } from '@/components/charts'
 import {
   AlertTriangle,
@@ -40,6 +43,7 @@ import {
   Zap,
   ArrowRight,
   TrendingUp,
+  ExternalLink,
 } from 'lucide-react'
 
 // =============================================================================
@@ -229,7 +233,13 @@ function consolidateFactors(data: RiskFactorFrequency[]): Array<RiskFactorFreque
 }
 
 /** L1: Factor Frequency Horizontal Bar Chart */
-function FactorFrequencyChart({ data }: { data: RiskFactorFrequency[] }) {
+function FactorFrequencyChart({
+  data,
+  onFactorClick,
+}: {
+  data: RiskFactorFrequency[]
+  onFactorClick?: (factor: string) => void
+}) {
   const [showAll, setShowAll] = useState(false)
 
   const allData = useMemo(() => {
@@ -267,7 +277,15 @@ function FactorFrequencyChart({ data }: { data: RiskFactorFrequency[] }) {
             tickLine={false}
           />
           <RechartsTooltip content={<BarTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-          <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={24}>
+          <Bar
+            dataKey="count"
+            radius={[0, 4, 4, 0]}
+            maxBarSize={24}
+            style={{ cursor: onFactorClick ? 'pointer' : 'default' }}
+            onClick={(_data: unknown, index: number) => {
+              if (onFactorClick) onFactorClick(chartData[index].factor)
+            }}
+          >
             {chartData.map((entry, index) => (
               <Cell key={index} fill={riskScoreToColor(entry.avg_risk_score)} />
             ))}
@@ -382,7 +400,13 @@ function CooccurrenceHeatmap({ cooccurrences, factors }: { cooccurrences: Factor
 }
 
 /** L3: Worst Combinations Ranked List */
-function WorstCombinations({ cooccurrences }: { cooccurrences: FactorCooccurrence[] }) {
+function WorstCombinations({
+  cooccurrences,
+  onPairClick,
+}: {
+  cooccurrences: FactorCooccurrence[]
+  onPairClick?: (factorA: string, factorB: string) => void
+}) {
   const top10 = useMemo(() => {
     return [...cooccurrences]
       .sort((a, b) => b.lift - a.lift)
@@ -400,9 +424,10 @@ function WorstCombinations({ cooccurrences }: { cooccurrences: FactorCooccurrenc
   return (
     <div className="space-y-2">
       {top10.map((pair, i) => (
-        <div
+        <button
           key={`${pair.factor_a}-${pair.factor_b}`}
-          className="flex items-center gap-3 rounded-lg border border-border/20 bg-background-card/50 px-4 py-3 transition-colors hover:border-border/40"
+          onClick={() => onPairClick?.(pair.factor_a, pair.factor_b)}
+          className="w-full text-left flex items-center gap-3 rounded-lg border border-border/20 bg-background-card/50 px-4 py-3 transition-colors hover:border-accent/30 hover:bg-background-elevated/50 group"
         >
           <span className="text-text-muted text-xs font-mono w-5 shrink-0">
             {i + 1}.
@@ -426,14 +451,24 @@ function WorstCombinations({ cooccurrences }: { cooccurrences: FactorCooccurrenc
           <span className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-xs font-mono font-semibold', liftToBadgeColor(pair.lift))}>
             {pair.lift.toFixed(2)}x
           </span>
-        </div>
+
+          {onPairClick && (
+            <ArrowRight className="h-3.5 w-3.5 text-text-muted/50 group-hover:text-accent transition-colors shrink-0" aria-hidden="true" />
+          )}
+        </button>
       ))}
     </div>
   )
 }
 
 /** L4: Factor-Risk Correlation Scatter Chart */
-function FactorRiskScatter({ data }: { data: RiskFactorFrequency[] }) {
+function FactorRiskScatter({
+  data,
+  onFactorClick,
+}: {
+  data: RiskFactorFrequency[]
+  onFactorClick?: (factor: string) => void
+}) {
   const chartData = useMemo(() => {
     return consolidateFactors(data).map((d) => ({
       ...d,
@@ -473,7 +508,26 @@ function FactorRiskScatter({ data }: { data: RiskFactorFrequency[] }) {
         />
         <ZAxis type="number" dataKey="bubbleSize" range={[60, 300]} domain={[0, maxCount]} />
         <RechartsTooltip content={<ScatterTooltip />} cursor={{ strokeDasharray: '3 3', stroke: 'var(--color-border)' }} />
-        <Scatter data={chartData} shape="circle">
+        {/* Quadrant guide lines */}
+        <ReferenceLine
+          x={maxPct / 2}
+          stroke="rgba(255,255,255,0.08)"
+          strokeDasharray="4 4"
+        />
+        <ReferenceLine
+          y={0.25}
+          stroke="rgba(255,255,255,0.08)"
+          strokeDasharray="4 4"
+          label={{ value: '25% risk threshold', fill: 'var(--color-text-muted)', fontSize: 9, position: 'right' }}
+        />
+        <Scatter
+          data={chartData}
+          shape="circle"
+          style={{ cursor: onFactorClick ? 'pointer' : 'default' }}
+          onClick={(data: { factor?: string }) => {
+            if (onFactorClick && data?.factor) onFactorClick(data.factor)
+          }}
+        >
           {chartData.map((entry, index) => (
             <Cell key={index} fill={riskScoreToColor(entry.avg_risk_score)} fillOpacity={0.45} stroke={riskScoreToColor(entry.avg_risk_score)} strokeWidth={1} />
           ))}
@@ -500,6 +554,17 @@ function RedFlagsSkeleton() {
         <Skeleton className="h-9 w-40" />
         <Skeleton className="h-9 w-32" />
       </div>
+      {/* Danger zone */}
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-5 w-48" />
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 lg:grid-cols-3">
+            {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-28" />)}
+          </div>
+        </CardContent>
+      </Card>
       {/* Bar chart */}
       <Card>
         <CardHeader>
@@ -538,6 +603,7 @@ function RedFlagsSkeleton() {
 // =============================================================================
 
 export default function RedFlags() {
+  const navigate = useNavigate()
   const [sectorId, setSectorId] = useState<number | undefined>(undefined)
   const [year, setYear] = useState<number | undefined>(undefined)
   const [showHeatmap, setShowHeatmap] = useState(false)
@@ -562,6 +628,18 @@ export default function RedFlags() {
     return years
   }, [])
 
+  const frequencies = analysis?.factor_frequencies ?? []
+  const cooccurrences = analysis?.top_cooccurrences ?? []
+  const totalWithFactors = analysis?.total_contracts_with_factors ?? 0
+
+  // Danger zone: top 3 co-occurrences by lift × log10(count) — balances signal strength with volume
+  const dangerZone = useMemo(() => {
+    if (!cooccurrences.length) return []
+    return [...cooccurrences]
+      .sort((a, b) => (b.lift * Math.log10(b.count + 1)) - (a.lift * Math.log10(a.count + 1)))
+      .slice(0, 3)
+  }, [cooccurrences])
+
   if (isLoading) return <RedFlagsSkeleton />
 
   if (error) {
@@ -573,10 +651,6 @@ export default function RedFlags() {
       </div>
     )
   }
-
-  const frequencies = analysis?.factor_frequencies ?? []
-  const cooccurrences = analysis?.top_cooccurrences ?? []
-  const totalWithFactors = analysis?.total_contracts_with_factors ?? 0
 
   return (
     <div className="space-y-6">
@@ -638,6 +712,48 @@ export default function RedFlags() {
       </div>
 
       {/* ---------------------------------------------------------------- */}
+      {/* L0: Danger Zone */}
+      {/* ---------------------------------------------------------------- */}
+      {dangerZone.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-risk-critical" aria-hidden="true" />
+              <CardTitle>Top Danger Combinations</CardTitle>
+            </div>
+            <CardDescription>
+              These factor pairs co-occur far more than chance. Each is a potential corruption signature.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 lg:grid-cols-3">
+              {dangerZone.map((pair, i) => (
+                <button
+                  key={`${pair.factor_a}-${pair.factor_b}`}
+                  onClick={() => navigate(`/contracts?risk_factor=${pair.factor_a}`)}
+                  className="text-left rounded-lg border border-risk-critical/30 bg-risk-critical/5 p-4 hover:bg-risk-critical/10 hover:border-risk-critical/50 transition-colors group"
+                >
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <span className="text-xs font-mono text-risk-critical">#{i + 1} DANGER COMBINATION</span>
+                    <ExternalLink className="h-3.5 w-3.5 text-risk-critical/50 group-hover:text-risk-critical shrink-0 mt-0.5 transition-colors" aria-hidden="true" />
+                  </div>
+                  <p className="text-sm font-medium text-text-primary leading-snug">
+                    {getFactorLabel(pair.factor_a)} <span className="text-text-muted mx-1">+</span> {getFactorLabel(pair.factor_b)}
+                  </p>
+                  <div className="mt-2 flex items-center gap-3 text-xs text-text-muted">
+                    <span className="text-risk-high font-mono">{pair.lift.toFixed(1)}x lift</span>
+                    <span>·</span>
+                    <span>{formatNumber(pair.count)} contracts</span>
+                  </div>
+                  <p className="mt-2 text-xs text-accent group-hover:text-accent">Click to investigate →</p>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ---------------------------------------------------------------- */}
       {/* L1: Factor Frequency */}
       {/* ---------------------------------------------------------------- */}
       <Card>
@@ -647,12 +763,15 @@ export default function RedFlags() {
             <CardTitle>Factor Frequency</CardTitle>
           </div>
           <CardDescription>
-            How often each risk factor appears across contracts. Bars colored by average risk score of contracts carrying that factor.
+            How often each risk factor appears across contracts. Bars colored by average risk score of contracts carrying that factor. Click any bar to view contracts with that risk factor.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {frequencies.length > 0 ? (
-            <FactorFrequencyChart data={frequencies} />
+            <FactorFrequencyChart
+              data={frequencies}
+              onFactorClick={(factor) => navigate(`/contracts?risk_factor=${factor}`)}
+            />
           ) : (
             <div className="flex items-center justify-center h-48 text-text-muted text-sm">
               No risk factor data available for the selected filters.
@@ -693,10 +812,14 @@ export default function RedFlags() {
           <CardDescription>
             Top 10 factor pairs ranked by lift -- combinations that appear together far more often than expected by chance.
             Lift &gt; 1 = more than chance; lift &gt; 2 = strong association.
+            Click any combination to investigate the contracts that triggered both flags.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <WorstCombinations cooccurrences={cooccurrences} />
+          <WorstCombinations
+            cooccurrences={cooccurrences}
+            onPairClick={(factorA, _factorB) => navigate(`/contracts?risk_factor=${factorA}`)}
+          />
 
           {/* Collapsible heatmap section */}
           <div className="border-t border-border/20 pt-4">
@@ -743,13 +866,16 @@ export default function RedFlags() {
             <CardTitle>Factor-Risk Correlation</CardTitle>
           </div>
           <CardDescription>
-            Each bubble is a risk factor. X-axis = how frequently it appears; Y-axis = average risk score of contracts with that factor.
-            Bubble size = number of contracts. Factors in the upper-right are both common and high-risk.
+            Each bubble is a risk factor. X-axis = frequency (how common); Y-axis = avg risk. Upper-right = common AND high-risk (priority investigation). Upper-left = rare but dangerous.
+            Bubble size = number of contracts. Click any bubble to investigate.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {frequencies.length > 0 ? (
-            <FactorRiskScatter data={frequencies} />
+            <FactorRiskScatter
+              data={frequencies}
+              onFactorClick={(factor) => navigate(`/contracts?risk_factor=${factor}`)}
+            />
           ) : (
             <div className="flex items-center justify-center h-48 text-text-muted text-sm">
               No data available for the selected filters.

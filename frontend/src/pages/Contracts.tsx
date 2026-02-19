@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useEffect, useState } from 'react'
+import React, { useCallback, useMemo, useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams, Link } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
@@ -45,9 +45,11 @@ import {
   Scissors,
   Users,
   X,
+  GitCompareArrows,
 } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 import { ContractDetailModal } from '@/components/ContractDetailModal'
+import { ContractCompareModal } from '@/components/ContractCompareModal'
 import { ExpandableProvider, ExpandableRow, ExpandChevron } from '@/components/ExpandableRow'
 import { NarrativeCard } from '@/components/NarrativeCard'
 import { buildFilterNarrative } from '@/lib/narratives'
@@ -59,16 +61,90 @@ import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
 
 type ContractSortField = 'amount_mxn' | 'contract_date' | 'risk_score'
 
-const CONTRACT_PRESETS = [
-  { id: 'critical', label: 'Critical', icon: Flame, sort: 'risk_score' as ContractSortField, order: 'desc' as const, filters: { risk_level: 'critical' } },
-  { id: 'high-risk', label: 'High Risk', icon: AlertTriangle, sort: 'risk_score' as ContractSortField, order: 'desc' as const, filters: { risk_level: 'high' } },
-  { id: 'single-bid', label: 'Single Bidders', icon: Target, sort: 'amount_mxn' as ContractSortField, order: 'desc' as const, filters: { is_single_bid: 'true' } },
-  { id: 'direct-award', label: 'Direct Awards', icon: Zap, sort: 'amount_mxn' as ContractSortField, order: 'desc' as const, filters: { is_direct_award: 'true' } },
-  { id: 'price-outlier', label: 'Price Outliers', icon: TrendingUp, sort: 'amount_mxn' as ContractSortField, order: 'desc' as const, filters: { risk_factor: 'price_hyp' } },
-  { id: 'split', label: 'Split Contracts', icon: Scissors, sort: 'contract_date' as ContractSortField, order: 'desc' as const, filters: { risk_factor: 'split' } },
-  { id: 'co-bidding', label: 'Co-Bidding', icon: Users, sort: 'risk_score' as ContractSortField, order: 'desc' as const, filters: { risk_factor: 'co_bid' } },
-  { id: 'largest', label: 'Largest', icon: Crown, sort: 'amount_mxn' as ContractSortField, order: 'desc' as const, filters: {} },
-] as const
+interface ContractPreset {
+  id: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  sort: ContractSortField
+  order: 'asc' | 'desc'
+  filters: Partial<Record<string, string>>
+  description?: string
+}
+
+const CONTRACT_PRESETS: ContractPreset[] = [
+  {
+    id: 'suspicious-monopolies',
+    label: 'Suspicious Monopolies',
+    icon: Crown,
+    sort: 'amount_mxn',
+    order: 'desc',
+    filters: { risk_level: 'critical', is_single_bid: 'true' },
+    description: 'Critical-risk single-bidder contracts — one vendor, no competition',
+  },
+  {
+    id: 'december-rush',
+    label: 'December Rush',
+    icon: Flame,
+    sort: 'amount_mxn',
+    order: 'desc',
+    filters: { risk_level: 'high', risk_factor: 'year_end' },
+    description: 'High-risk year-end contracts — budget dumps before fiscal close',
+  },
+  {
+    id: 'price-manipulation',
+    label: 'Price Manipulation',
+    icon: TrendingUp,
+    sort: 'risk_score',
+    order: 'desc',
+    filters: { risk_factor: 'price_hyp', risk_level: 'high' },
+    description: 'Statistical price outliers — contracts priced far above sector norm',
+  },
+  {
+    id: 'ghost-companies',
+    label: 'Ghost Companies',
+    icon: AlertTriangle,
+    sort: 'amount_mxn',
+    order: 'desc',
+    filters: { risk_factor: 'industry_mismatch', is_direct_award: 'true' },
+    description: 'Direct awards to out-of-industry vendors — classic ghost company pattern',
+  },
+  {
+    id: 'network-clusters',
+    label: 'Network Clusters',
+    icon: Users,
+    sort: 'risk_score',
+    order: 'desc',
+    filters: { risk_factor: 'network', risk_level: 'critical' },
+    description: 'Critical-risk network member contracts — coordinated vendor groups',
+  },
+  {
+    id: 'split-contracts',
+    label: 'Split Contracts',
+    icon: Scissors,
+    sort: 'contract_date',
+    order: 'desc',
+    filters: { risk_factor: 'split' },
+    description: 'Threshold splitting — multiple same-day contracts to dodge oversight limits',
+  },
+  {
+    id: 'recent-critical',
+    label: 'Recent & Critical',
+    icon: Zap,
+    sort: 'contract_date',
+    order: 'desc',
+    filters: { year: '2024', risk_level: 'critical' },
+    description: '2024 critical-risk contracts — most recent suspicious activity',
+  },
+  {
+    id: 'largest-direct-awards',
+    label: 'Biggest Direct Awards',
+    icon: Target,
+    sort: 'amount_mxn',
+    order: 'desc',
+    filters: { is_direct_award: 'true' },
+    description: 'Largest contracts bypassing competitive tender — highest value without competition',
+  },
+]
 
 interface ColumnDef {
   key: string
@@ -138,6 +214,30 @@ export function Contracts() {
   const toast = useToast()
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
+
+  // Compare selection
+  const [compareIds, setCompareIds] = useState<Set<number>>(new Set())
+  const [isCompareOpen, setIsCompareOpen] = useState(false)
+  const MAX_COMPARE = 4
+
+  const toggleCompare = useCallback((id: number) => {
+    setCompareIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else if (next.size < MAX_COMPARE) {
+        next.add(id)
+      } else {
+        toast.error('Too many selected', `You can compare up to ${MAX_COMPARE} contracts at a time`)
+      }
+      return next
+    })
+  }, [toast])
+
+  const clearCompare = useCallback(() => {
+    setCompareIds(new Set())
+    setIsCompareOpen(false)
+  }, [])
 
   const { data, isLoading, error, isFetching, refetch } = useQuery({
     queryKey: ['contracts', filters],
@@ -283,6 +383,10 @@ export function Contracts() {
               <Loader2 className="inline h-3 w-3 ml-1.5 animate-spin text-accent" />
             )}
           </p>
+          <p className="text-xs text-text-muted mt-1">
+            Select a preset to start investigating, or use filters to find specific contracts.
+            Click any row to expand risk factors. Use the compare tool to analyze contracts side-by-side.
+          </p>
         </div>
         <div className="flex items-center gap-1.5">
           <Button
@@ -315,6 +419,7 @@ export function Contracts() {
           return (
             <button
               key={preset.id}
+              title={preset.description}
               onClick={() => isActive ? clearAllFilters() : applyPreset(preset.id)}
               className={cn(
                 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-all',
@@ -505,6 +610,18 @@ export function Contracts() {
               <table className="w-full min-w-[700px]" role="table" aria-label="Contracts list">
                 <thead className="sticky top-0 z-10 bg-background-card/95 backdrop-blur-sm border-b-2 border-border">
                   <tr>
+                    <th className="px-2 py-2.5 w-8" title="Select to compare">
+                      {compareIds.size > 0 && (
+                        <button
+                          onClick={clearCompare}
+                          className="text-xs text-text-muted hover:text-text-primary transition-colors"
+                          title="Clear selection"
+                          aria-label="Clear comparison selection"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </th>
                     <th className="px-2 py-2.5 w-8" />
                     {CONTRACT_COLUMNS.map((col) => (
                       <th
@@ -535,6 +652,8 @@ export function Contracts() {
                       key={contract.id}
                       contract={contract}
                       onView={(id) => { setSelectedContractId(id); setIsDetailOpen(true) }}
+                      isSelected={compareIds.has(contract.id)}
+                      onToggleCompare={toggleCompare}
                     />
                   ))}
                 </tbody>
@@ -588,6 +707,47 @@ export function Contracts() {
         open={isDetailOpen}
         onOpenChange={setIsDetailOpen}
       />
+
+      {/* Floating compare bar */}
+      {compareIds.size >= 2 && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '1.5rem',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 9000,
+          }}
+          className="flex items-center gap-3 px-4 py-2.5 rounded-full shadow-xl border border-accent/30 bg-background-card backdrop-blur-sm"
+        >
+          <span className="text-xs text-text-muted">
+            <span className="font-semibold text-accent tabular-nums">{compareIds.size}</span> selected
+          </span>
+          <Button
+            size="sm"
+            className="h-7 text-xs px-3 rounded-full"
+            onClick={() => setIsCompareOpen(true)}
+          >
+            <GitCompareArrows className="h-3.5 w-3.5 mr-1.5" />
+            Compare
+          </Button>
+          <button
+            onClick={clearCompare}
+            className="text-text-muted hover:text-text-primary transition-colors"
+            aria-label="Clear selection"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Compare modal */}
+      <ContractCompareModal
+        contracts={(data?.data || []).filter((c) => compareIds.has(c.id))}
+        open={isCompareOpen}
+        onOpenChange={setIsCompareOpen}
+        onViewDetail={(id) => { setSelectedContractId(id); setIsDetailOpen(true) }}
+      />
     </div>
   )
 }
@@ -611,7 +771,17 @@ function StatPill({ label, value, color }: { label: string; value: string; color
 // Contract Row
 // =============================================================================
 
-function ContractRow({ contract, onView }: { contract: ContractListItem; onView: (id: number) => void }) {
+function ContractRow({
+  contract,
+  onView,
+  isSelected,
+  onToggleCompare,
+}: {
+  contract: ContractListItem
+  onView: (id: number) => void
+  isSelected: boolean
+  onToggleCompare: (id: number) => void
+}) {
   const anomalyInfo = getAnomalyInfo(contract.mahalanobis_distance)
   const riskLevel = contract.risk_score != null ? getRiskLevel(contract.risk_score) : null
   const riskColor = riskLevel ? RISK_COLORS[riskLevel] : undefined
@@ -624,6 +794,17 @@ function ContractRow({ contract, onView }: { contract: ContractListItem; onView:
 
   const cells = (
     <>
+      {/* Checkbox: select for comparison */}
+      <td className="px-2 py-2 w-8">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => onToggleCompare(contract.id)}
+          onClick={(e) => e.stopPropagation()}
+          className="w-3.5 h-3.5 rounded border-border accent-accent cursor-pointer"
+          aria-label={`Select contract ${contract.contract_number || contract.id} for comparison`}
+        />
+      </td>
       <td className="px-2 py-2 w-8">
         <ExpandChevron id={contract.id} />
       </td>
@@ -834,7 +1015,7 @@ function ContractRow({ contract, onView }: { contract: ContractListItem; onView:
       id={contract.id}
       cells={cells}
       detail={detail}
-      colSpan={8}
+      colSpan={9}
       className={cn('hover:bg-accent/[0.04] transition-colors group', rowBorder)}
     />
   )
