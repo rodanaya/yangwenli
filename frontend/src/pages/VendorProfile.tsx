@@ -36,13 +36,16 @@ import {
   Minus,
   Activity,
   Shield,
+  Network,
 } from 'lucide-react'
+import { NetworkGraphModal } from '@/components/NetworkGraphModal'
 
 export function VendorProfile() {
   const { id } = useParams<{ id: string }>()
   const vendorId = Number(id)
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
+  const [networkOpen, setNetworkOpen] = useState(false)
 
   // Fetch vendor details
   const { data: vendor, isLoading: vendorLoading, error: vendorError } = useQuery({
@@ -181,6 +184,13 @@ export function VendorProfile() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setNetworkOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-background-elevated border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
+          >
+            <Network className="h-3.5 w-3.5" />
+            View Network
+          </button>
           <AddToWatchlistButton
             itemType="vendor"
             itemId={vendorId}
@@ -192,6 +202,13 @@ export function VendorProfile() {
           )}
         </div>
       </div>
+      <NetworkGraphModal
+        open={networkOpen}
+        onOpenChange={setNetworkOpen}
+        centerType="vendor"
+        centerId={vendorId}
+        centerName={toTitleCase(vendor.name)}
+      />
 
       {/* Narrative summary */}
       <NarrativeCard

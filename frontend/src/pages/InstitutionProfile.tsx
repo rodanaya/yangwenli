@@ -23,7 +23,9 @@ import {
   ExternalLink,
   DollarSign,
   BarChart3,
+  Network,
 } from 'lucide-react'
+import { NetworkGraphModal } from '@/components/NetworkGraphModal'
 import {
   ResponsiveContainer,
   BarChart,
@@ -39,6 +41,7 @@ export function InstitutionProfile() {
   const institutionId = Number(id)
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
+  const [networkOpen, setNetworkOpen] = useState(false)
 
   // Fetch institution details
   const { data: institution, isLoading: institutionLoading, error: institutionError } = useQuery({
@@ -114,6 +117,13 @@ export function InstitutionProfile() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setNetworkOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-background-elevated border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
+          >
+            <Network className="h-3.5 w-3.5" />
+            View Network
+          </button>
           <AddToWatchlistButton
             itemType="institution"
             itemId={institutionId}
@@ -124,6 +134,13 @@ export function InstitutionProfile() {
           )}
         </div>
       </div>
+      <NetworkGraphModal
+        open={networkOpen}
+        onOpenChange={setNetworkOpen}
+        centerType="institution"
+        centerId={institutionId}
+        centerName={toTitleCase(institution.name)}
+      />
 
       {/* Narrative Summary */}
       <NarrativeCard
