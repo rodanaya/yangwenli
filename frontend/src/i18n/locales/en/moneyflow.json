@@ -1,0 +1,64 @@
+{
+  "trackingLabel": "FUND FLOW ANALYSIS",
+  "title": "Follow the Money",
+  "subtitle": "Tracing the flow of public procurement funds from institutions to vendors",
+  "heroSubtitle": "{{count}} contracts tracked",
+  "heroSubtitleYear": "{{count}} contracts tracked in {{year}}",
+  "heroDetail": "Select a year and sector to trace how government spending flows from institutions through sectors to vendors, highlighting high-risk channels.",
+  "errorTitle": "Follow the Money",
+  "errorSubtitle": "Tracing the flow of public procurement funds from institutions to vendors",
+  "errorMessage": "Failed to load money flow data",
+  "errorHint": "Please check that the backend is running and try again.",
+  "emptyHeadline": "No Data",
+  "emptySubtitle": "Adjust filters to load fund flow data",
+  "emptyDetail": "Select a year and sector to trace how government spending flows from institutions through sectors to vendors.",
+  "emptyMessage": "No fund flow data for this combination",
+  "emptyHint": "Try selecting a specific year or sector. The money flow analysis aggregates institution-to-vendor relationships and requires contract data with both institution and vendor records.",
+  "filters": {
+    "allYears": "All Years",
+    "allSectors": "All Sectors",
+    "byYear": "Filter by year",
+    "bySector": "Filter by sector"
+  },
+  "stats": {
+    "totalContracts": "TOTAL CONTRACTS",
+    "totalContractsDetail": "Across all institutions",
+    "highRiskFlows": "HIGH-RISK FLOWS",
+    "highRiskFlowsDetail": "Flows with avg risk >= 30%",
+    "institutions": "INSTITUTIONS",
+    "institutionsDetail": "Top spending entities"
+  },
+  "sections": {
+    "institutionFlows": "Top Spending Institutions",
+    "institutionFlowsDesc": "Top 15 institutions by total procurement value",
+    "vendorFlows": "Top Vendor Recipients",
+    "vendorFlowsDesc": "Top 15 vendors receiving the most procurement funds",
+    "sectorDistribution": "Sector Distribution",
+    "sectorDistributionDesc": "How procurement funds distribute across the 12 sectors. Size represents total value.",
+    "highRiskFlows": "Highest-Risk Fund Flows",
+    "highRiskFlowsDesc": "Top 20 flows ranked by average risk score. These institution-vendor relationships warrant closer scrutiny. Click any row to investigate the contracts in that flow relationship."
+  },
+  "table": {
+    "source": "Source",
+    "target": "Target",
+    "value": "Value",
+    "contracts": "Contracts",
+    "avgRisk": "Avg Risk",
+    "actions": "Actions"
+  },
+  "emptyStates": {
+    "noInstitutionData": "No institution flow data available",
+    "noVendorData": "No vendor flow data available",
+    "noSectorData": "No sector distribution data available",
+    "noHighRiskFlows": "No high-risk flows found for the current filters"
+  },
+  "tooltip": {
+    "value": "Value",
+    "contracts": "Contracts",
+    "avgRisk": "Avg Risk"
+  },
+  "methodology": {
+    "title": "Methodology",
+    "content": "Fund flows are aggregated from 3.1M procurement contracts (2002-2025). Bar colors reflect the average v5.0 risk score for each flow: green (<10%), amber (10-30%), orange (30-50%), and red (>=50%). High-risk flow value sums all flows where average risk exceeds 30%. Use year and sector filters to narrow the analysis. Clicking a row in the high-risk table navigates to the contracts page filtered by that institution-vendor relationship."
+  }
+}

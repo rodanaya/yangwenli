@@ -9,6 +9,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChartSkeleton } from '@/components/LoadingSkeleton'
@@ -60,16 +61,17 @@ function truncateName(name: string, maxLen = 22): string {
 
 /** Custom tooltip for horizontal bar charts */
 function FlowBarTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: { name: string; value: number; contracts: number; avg_risk: number | null } }> }) {
+  const { t } = useTranslation('moneyflow')
   if (!active || !payload?.length) return null
   const d = payload[0].payload
   return (
     <div className="rounded-lg border border-border bg-background-card p-3 shadow-xl text-xs space-y-1">
       <p className="font-medium text-text-primary text-sm">{toTitleCase(d.name)}</p>
-      <p className="text-text-secondary">Value: <span className="text-text-primary font-medium">{formatCompactMXN(d.value)}</span></p>
-      <p className="text-text-secondary">Contracts: <span className="text-text-primary font-medium">{formatNumber(d.contracts)}</span></p>
+      <p className="text-text-secondary">{t('tooltip.value')}: <span className="text-text-primary font-medium">{formatCompactMXN(d.value)}</span></p>
+      <p className="text-text-secondary">{t('tooltip.contracts')}: <span className="text-text-primary font-medium">{formatNumber(d.contracts)}</span></p>
       {d.avg_risk != null && (
         <p className="text-text-secondary">
-          Avg Risk: <span className="font-medium" style={{ color: riskToColor(d.avg_risk) }}>{(d.avg_risk * 100).toFixed(1)}%</span>
+          {t('tooltip.avgRisk')}: <span className="font-medium" style={{ color: riskToColor(d.avg_risk) }}>{(d.avg_risk * 100).toFixed(1)}%</span>
         </p>
       )}
     </div>
@@ -78,13 +80,14 @@ function FlowBarTooltip({ active, payload }: { active?: boolean; payload?: Array
 
 /** Custom tooltip for treemap */
 function TreemapTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: { name: string; value: number; contracts: number; sectorCode: string } }> }) {
+  const { t } = useTranslation('moneyflow')
   if (!active || !payload?.length) return null
   const d = payload[0].payload
   return (
     <div className="rounded-lg border border-border bg-background-card p-3 shadow-xl text-xs space-y-1">
       <p className="font-medium text-text-primary text-sm">{d.name}</p>
-      <p className="text-text-secondary">Value: <span className="text-text-primary font-medium">{formatCompactMXN(d.value)}</span></p>
-      <p className="text-text-secondary">Contracts: <span className="text-text-primary font-medium">{formatNumber(d.contracts)}</span></p>
+      <p className="text-text-secondary">{t('tooltip.value')}: <span className="text-text-primary font-medium">{formatCompactMXN(d.value)}</span></p>
+      <p className="text-text-secondary">{t('tooltip.contracts')}: <span className="text-text-primary font-medium">{formatNumber(d.contracts)}</span></p>
     </div>
   )
 }
@@ -147,6 +150,7 @@ function TreemapContent(props: {
 
 export default function MoneyFlow() {
   const navigate = useNavigate()
+  const { t } = useTranslation('moneyflow')
   const [selectedSector, setSelectedSector] = useState<number | ''>('')
   const [selectedYear, setSelectedYear] = useState<number | ''>(2024)
 
@@ -272,14 +276,14 @@ export default function MoneyFlow() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-xl font-bold text-text-primary">Follow the Money</h1>
-          <p className="text-sm text-text-secondary mt-1">Tracing the flow of public procurement funds from institutions to vendors</p>
+          <h1 className="text-xl font-bold text-text-primary">{t('errorTitle')}</h1>
+          <p className="text-sm text-text-secondary mt-1">{t('errorSubtitle')}</p>
         </div>
         <Card>
           <CardContent className="p-8 text-center">
             <AlertTriangle className="h-8 w-8 text-risk-high mx-auto mb-3" />
-            <p className="text-text-primary font-medium">Failed to load money flow data</p>
-            <p className="text-text-muted text-sm mt-1">Please check that the backend is running and try again.</p>
+            <p className="text-text-primary font-medium">{t('errorMessage')}</p>
+            <p className="text-text-muted text-sm mt-1">{t('errorHint')}</p>
           </CardContent>
         </Card>
       </div>
@@ -294,9 +298,9 @@ export default function MoneyFlow() {
         value={selectedYear}
         onChange={(e) => setSelectedYear(e.target.value ? Number(e.target.value) : '')}
         className="h-8 rounded-md border border-border bg-background-elevated px-3 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
-        aria-label="Filter by year"
+        aria-label={t('filters.byYear')}
       >
-        <option value="">All Years</option>
+        <option value="">{t('filters.allYears')}</option>
         {[2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015].map(y => (
           <option key={y} value={y}>{y}</option>
         ))}
@@ -305,9 +309,9 @@ export default function MoneyFlow() {
         value={selectedSector}
         onChange={(e) => setSelectedSector(e.target.value ? Number(e.target.value) : '')}
         className="h-8 rounded-md border border-border bg-background-elevated px-3 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
-        aria-label="Filter by sector"
+        aria-label={t('filters.bySector')}
       >
-        <option value="">All Sectors</option>
+        <option value="">{t('filters.allSectors')}</option>
         {SECTORS.map(s => (
           <option key={s.id} value={s.id}>{s.nameEN}</option>
         ))}
@@ -320,22 +324,18 @@ export default function MoneyFlow() {
     return (
       <div className="space-y-6">
         <PageHero
-          trackingLabel="FUND FLOW ANALYSIS"
+          trackingLabel={t('trackingLabel')}
           icon={<Banknote className="h-4 w-4 text-accent" />}
-          headline="No Data"
-          subtitle="Adjust filters to load fund flow data"
-          detail="Select a year and sector to trace how government spending flows from institutions through sectors to vendors."
+          headline={t('emptyHeadline')}
+          subtitle={t('emptySubtitle')}
+          detail={t('emptyDetail')}
           trailing={filterControls}
         />
         <Card>
           <CardContent className="p-8 text-center space-y-3">
             <Filter className="h-8 w-8 text-text-muted mx-auto" />
-            <p className="font-medium text-text-primary">No fund flow data for this combination</p>
-            <p className="text-sm text-text-muted">
-              Try selecting a specific year or sector. The money flow analysis aggregates
-              institution-to-vendor relationships and requires contract data with both
-              institution and vendor records.
-            </p>
+            <p className="font-medium text-text-primary">{t('emptyMessage')}</p>
+            <p className="text-sm text-text-muted">{t('emptyHint')}</p>
           </CardContent>
         </Card>
       </div>
@@ -348,34 +348,38 @@ export default function MoneyFlow() {
       {/* Header                                                              */}
       {/* ================================================================== */}
       <PageHero
-        trackingLabel="FUND FLOW ANALYSIS"
+        trackingLabel={t('trackingLabel')}
         icon={<Banknote className="h-4 w-4 text-accent" />}
         headline={formatCompactMXN(flowData.total_value)}
-        subtitle={`${formatNumber(flowData.total_contracts)} contracts tracked${selectedYear ? ` in ${selectedYear}` : ''}`}
-        detail="Select a year and sector to trace how government spending flows from institutions through sectors to vendors, highlighting high-risk channels."
+        subtitle={
+          selectedYear
+            ? t('heroSubtitleYear', { count: formatNumber(flowData.total_contracts), year: selectedYear })
+            : t('heroSubtitle', { count: formatNumber(flowData.total_contracts) })
+        }
+        detail={t('heroDetail')}
         trailing={filterControls}
       />
 
       {/* L1: Overview Stats */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
         <SharedStatCard
-          label="TOTAL CONTRACTS"
+          label={t('stats.totalContracts')}
           value={formatNumber(flowData.total_contracts)}
-          detail="Across all institutions"
+          detail={t('stats.totalContractsDetail')}
           color="text-accent"
           borderColor="border-accent/30"
         />
         <SharedStatCard
-          label="HIGH-RISK FLOWS"
+          label={t('stats.highRiskFlows')}
           value={formatCompactMXN(riskWeightedValue)}
-          detail="Flows with avg risk ≥ 30%"
+          detail={t('stats.highRiskFlowsDetail')}
           color="text-risk-critical"
           borderColor="border-risk-critical/30"
         />
         <SharedStatCard
-          label="INSTITUTIONS"
+          label={t('stats.institutions')}
           value={formatNumber(institutionFlows.length)}
-          detail="Top spending entities"
+          detail={t('stats.institutionsDetail')}
           color="text-text-primary"
           borderColor="border-text-muted/20"
         />
@@ -390,14 +394,14 @@ export default function MoneyFlow() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-4 w-4 text-text-muted" aria-hidden="true" />
-              Top Spending Institutions
+              {t('sections.institutionFlows')}
             </CardTitle>
-            <CardDescription>Top 15 institutions by total procurement value</CardDescription>
+            <CardDescription>{t('sections.institutionFlowsDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             {institutionFlows.length === 0 ? (
               <div className="flex items-center justify-center h-[350px] text-text-muted text-sm">
-                No institution flow data available
+                {t('emptyStates.noInstitutionData')}
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={350}>
@@ -448,14 +452,14 @@ export default function MoneyFlow() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-4 w-4 text-text-muted" aria-hidden="true" />
-              Top Vendor Recipients
+              {t('sections.vendorFlows')}
             </CardTitle>
-            <CardDescription>Top 15 vendors receiving the most procurement funds</CardDescription>
+            <CardDescription>{t('sections.vendorFlowsDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             {vendorFlows.length === 0 ? (
               <div className="flex items-center justify-center h-[350px] text-text-muted text-sm">
-                No vendor flow data available
+                {t('emptyStates.noVendorData')}
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={350}>
@@ -509,14 +513,14 @@ export default function MoneyFlow() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-text-muted" aria-hidden="true" />
-            Sector Distribution
+            {t('sections.sectorDistribution')}
           </CardTitle>
-          <CardDescription>How procurement funds distribute across the 12 sectors. Size represents total value.</CardDescription>
+          <CardDescription>{t('sections.sectorDistributionDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           {sectorAgg.length === 0 ? (
             <div className="flex items-center justify-center h-[300px] text-text-muted text-sm">
-              No sector distribution data available
+              {t('emptyStates.noSectorData')}
             </div>
           ) : (
             <div>
@@ -558,32 +562,29 @@ export default function MoneyFlow() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-risk-high" aria-hidden="true" />
-            Highest-Risk Fund Flows
+            {t('sections.highRiskFlows')}
           </CardTitle>
-          <CardDescription>
-            Top 20 flows ranked by average risk score. These institution-vendor relationships warrant closer scrutiny.
-            Click any row to investigate the contracts in that flow relationship.
-          </CardDescription>
+          <CardDescription>{t('sections.highRiskFlowsDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           {highRiskFlows.length === 0 ? (
             <div className="flex items-center justify-center h-24 text-text-muted text-sm">
-              No high-risk flows found for the current filters
+              {t('emptyStates.noHighRiskFlows')}
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-xs" role="table">
                 <thead>
                   <tr className="border-b border-border/30">
-                    <th className="text-left py-2.5 px-3 text-text-muted font-medium" scope="col">Source</th>
+                    <th className="text-left py-2.5 px-3 text-text-muted font-medium" scope="col">{t('table.source')}</th>
                     <th className="text-left py-2.5 px-3 text-text-muted font-medium hidden md:table-cell" scope="col">
                       <ArrowRight className="h-3 w-3 inline-block" aria-hidden="true" />
                     </th>
-                    <th className="text-left py-2.5 px-3 text-text-muted font-medium" scope="col">Target</th>
-                    <th className="text-right py-2.5 px-3 text-text-muted font-medium" scope="col">Value</th>
-                    <th className="text-right py-2.5 px-3 text-text-muted font-medium hidden sm:table-cell" scope="col">Contracts</th>
-                    <th className="text-right py-2.5 px-3 text-text-muted font-medium" scope="col">Avg Risk</th>
-                    <th className="text-right py-2.5 px-3 text-text-muted font-medium hidden md:table-cell" scope="col">Actions</th>
+                    <th className="text-left py-2.5 px-3 text-text-muted font-medium" scope="col">{t('table.target')}</th>
+                    <th className="text-right py-2.5 px-3 text-text-muted font-medium" scope="col">{t('table.value')}</th>
+                    <th className="text-right py-2.5 px-3 text-text-muted font-medium hidden sm:table-cell" scope="col">{t('table.contracts')}</th>
+                    <th className="text-right py-2.5 px-3 text-text-muted font-medium" scope="col">{t('table.avgRisk')}</th>
+                    <th className="text-right py-2.5 px-3 text-text-muted font-medium hidden md:table-cell" scope="col">{t('table.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -657,13 +658,8 @@ export default function MoneyFlow() {
       {/* ================================================================== */}
       {/* Methodology Note                                                    */}
       {/* ================================================================== */}
-      <SectionDescription title="Methodology">
-        Fund flows are aggregated from 3.1M procurement contracts (2002-2025).
-        Bar colors reflect the average v5.0 risk score for each flow:
-        green (&lt;10%), amber (10-30%), orange (30-50%), and red (&ge;50%).
-        High-risk flow value sums all flows where average risk exceeds 30%.
-        Use year and sector filters to narrow the analysis. Clicking a row in the
-        high-risk table navigates to the contracts page filtered by that institution-vendor relationship.
+      <SectionDescription title={t('methodology.title')}>
+        {t('methodology.content')}
       </SectionDescription>
     </div>
   )

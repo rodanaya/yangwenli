@@ -12,6 +12,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChartSkeleton } from '@/components/LoadingSkeleton'
@@ -181,25 +182,27 @@ function liftToBadgeColor(lift: number): string {
 // =============================================================================
 
 function BarTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: { label: string; count: number; percentage: number; avg_risk_score: number } }> }) {
+  const { t } = useTranslation('redflags')
   if (!active || !payload?.[0]) return null
   const d = payload[0].payload
   return (
     <div className="rounded-lg border border-border/50 bg-background-card px-3 py-2 shadow-lg text-xs">
       <p className="font-medium text-text-primary mb-1">{d.label}</p>
-      <p className="text-text-secondary">{formatNumber(d.count)} contracts ({d.percentage.toFixed(1)}%)</p>
-      <p className="text-text-muted">Avg risk: {(d.avg_risk_score * 100).toFixed(1)}%</p>
+      <p className="text-text-secondary">{t('tooltip.contracts', { count: formatNumber(d.count), pct: d.percentage.toFixed(1) })}</p>
+      <p className="text-text-muted">{t('tooltip.avgRisk', { value: (d.avg_risk_score * 100).toFixed(1) })}</p>
     </div>
   )
 }
 
 function ScatterTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: { label: string; count: number; percentage: number; avg_risk_score: number } }> }) {
+  const { t } = useTranslation('redflags')
   if (!active || !payload?.[0]) return null
   const d = payload[0].payload
   return (
     <div className="rounded-lg border border-border/50 bg-background-card px-3 py-2 shadow-lg text-xs">
       <p className="font-medium text-text-primary mb-1">{d.label}</p>
-      <p className="text-text-secondary">Frequency: {d.percentage.toFixed(1)}%</p>
-      <p className="text-text-secondary">Avg risk: {(d.avg_risk_score * 100).toFixed(1)}%</p>
+      <p className="text-text-secondary">{t('tooltip.frequency', { value: d.percentage.toFixed(1) })}</p>
+      <p className="text-text-secondary">{t('tooltip.avgRisk', { value: (d.avg_risk_score * 100).toFixed(1) })}</p>
       <p className="text-text-muted">{formatNumber(d.count)} contracts</p>
     </div>
   )
@@ -240,6 +243,7 @@ function FactorFrequencyChart({
   data: RiskFactorFrequency[]
   onFactorClick?: (factor: string) => void
 }) {
+  const { t } = useTranslation('redflags')
   const [showAll, setShowAll] = useState(false)
 
   const allData = useMemo(() => {
@@ -297,7 +301,9 @@ function FactorFrequencyChart({
           onClick={() => setShowAll(!showAll)}
           className="mt-3 text-xs text-accent hover:text-accent underline underline-offset-2 transition-colors"
         >
-          {showAll ? 'Show top 15' : `Show all ${allData.length} factors`}
+          {showAll
+            ? t('factorFrequency.showTop')
+            : t('factorFrequency.showAll', { count: allData.length })}
         </button>
       )}
     </div>
@@ -306,6 +312,7 @@ function FactorFrequencyChart({
 
 /** L2: Co-occurrence Heatmap */
 function CooccurrenceHeatmap({ cooccurrences, factors }: { cooccurrences: FactorCooccurrence[]; factors: string[] }) {
+  const { t } = useTranslation('redflags')
   // Filter to only interesting co-occurrences (lift > 1.0)
   const filteredCooccurrences = useMemo(() => cooccurrences.filter(c => c.lift > 1.0), [cooccurrences])
 
@@ -332,7 +339,7 @@ function CooccurrenceHeatmap({ cooccurrences, factors }: { cooccurrences: Factor
   if (relevantFactors.length === 0) {
     return (
       <div className="flex items-center justify-center h-48 text-text-muted text-sm">
-        No co-occurrence data available for the selected filters.
+        {t('worstCombinations.heatmapEmpty')}
       </div>
     )
   }
@@ -407,6 +414,7 @@ function WorstCombinations({
   cooccurrences: FactorCooccurrence[]
   onPairClick?: (factorA: string, factorB: string) => void
 }) {
+  const { t } = useTranslation('redflags')
   const top10 = useMemo(() => {
     return [...cooccurrences]
       .sort((a, b) => b.lift - a.lift)
@@ -416,7 +424,7 @@ function WorstCombinations({
   if (top10.length === 0) {
     return (
       <div className="flex items-center justify-center h-32 text-text-muted text-sm">
-        No co-occurrence data available.
+        {t('worstCombinations.empty')}
       </div>
     )
   }
@@ -444,7 +452,7 @@ function WorstCombinations({
               </span>
             </div>
             <p className="text-xs text-text-muted mt-0.5">
-              {formatNumber(pair.count)} contracts -- {pair.lift.toFixed(1)}x more likely to co-occur than by chance
+              {t('worstCombinations.contractsLift', { count: formatNumber(pair.count), lift: pair.lift.toFixed(1) })}
             </p>
           </div>
 
@@ -469,6 +477,7 @@ function FactorRiskScatter({
   data: RiskFactorFrequency[]
   onFactorClick?: (factor: string) => void
 }) {
+  const { t } = useTranslation('redflags')
   const chartData = useMemo(() => {
     return consolidateFactors(data).map((d) => ({
       ...d,
@@ -493,7 +502,7 @@ function FactorRiskScatter({
           domain={[0, Math.ceil(maxPct * 1.1)]}
           tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
           axisLine={{ stroke: 'var(--color-border)' }}
-          label={{ value: 'Frequency (%)', position: 'insideBottom', offset: -10, fill: 'var(--color-text-muted)', fontSize: 11 }}
+          label={{ value: t('factorRiskScatter.xAxisLabel'), position: 'insideBottom', offset: -10, fill: 'var(--color-text-muted)', fontSize: 11 }}
           tickFormatter={(v: number) => `${v.toFixed(0)}%`}
         />
         <YAxis
@@ -503,7 +512,7 @@ function FactorRiskScatter({
           domain={[0, Math.min(Math.ceil(maxRisk * 120) / 100, 1)]}
           tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
           axisLine={{ stroke: 'var(--color-border)' }}
-          label={{ value: 'Avg Risk Score', angle: -90, position: 'insideLeft', offset: 0, fill: 'var(--color-text-muted)', fontSize: 11 }}
+          label={{ value: t('factorRiskScatter.yAxisLabel'), angle: -90, position: 'insideLeft', offset: 0, fill: 'var(--color-text-muted)', fontSize: 11 }}
           tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
         />
         <ZAxis type="number" dataKey="bubbleSize" range={[60, 300]} domain={[0, maxCount]} />
@@ -518,7 +527,7 @@ function FactorRiskScatter({
           y={0.25}
           stroke="rgba(255,255,255,0.08)"
           strokeDasharray="4 4"
-          label={{ value: '25% risk threshold', fill: 'var(--color-text-muted)', fontSize: 9, position: 'right' }}
+          label={{ value: t('factorRiskScatter.riskThreshold'), fill: 'var(--color-text-muted)', fontSize: 9, position: 'right' }}
         />
         <Scatter
           data={chartData}
@@ -604,6 +613,7 @@ function RedFlagsSkeleton() {
 
 export default function RedFlags() {
   const navigate = useNavigate()
+  const { t } = useTranslation('redflags')
   const [sectorId, setSectorId] = useState<number | undefined>(undefined)
   const [year, setYear] = useState<number | undefined>(undefined)
   const [showHeatmap, setShowHeatmap] = useState(false)
@@ -646,8 +656,8 @@ export default function RedFlags() {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <AlertTriangle className="h-10 w-10 text-risk-critical" />
-        <p className="text-text-secondary text-sm">Failed to load risk factor analysis.</p>
-        <p className="text-text-muted text-xs">Please check that the backend is running on port 8001.</p>
+        <p className="text-text-secondary text-sm">{t('errorMessage')}</p>
+        <p className="text-text-muted text-xs">{t('errorHint')}</p>
       </div>
     )
   }
@@ -658,10 +668,10 @@ export default function RedFlags() {
       {/* Hero Header */}
       {/* ---------------------------------------------------------------- */}
       <PageHero
-        trackingLabel="RED FLAG ANATOMY"
+        trackingLabel={t('trackingLabel')}
         icon={<Fingerprint className="h-4 w-4 text-accent" />}
         headline={formatNumber(totalWithFactors)}
-        subtitle="Contracts with risk factors — how corruption signals distribute"
+        subtitle={t('heroSubtitle')}
       />
 
       {/* ---------------------------------------------------------------- */}
@@ -670,14 +680,14 @@ export default function RedFlags() {
       <div className="flex flex-wrap items-center gap-3">
         {/* Sector filter */}
         <div className="flex items-center gap-2">
-          <label htmlFor="sector-filter" className="text-xs text-text-muted">Sector</label>
+          <label htmlFor="sector-filter" className="text-xs text-text-muted">{t('filters.sector')}</label>
           <select
             id="sector-filter"
             value={sectorId ?? ''}
             onChange={(e) => setSectorId(e.target.value ? Number(e.target.value) : undefined)}
             className="h-9 rounded-md border border-border/40 bg-background-card px-3 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
           >
-            <option value="">All Sectors</option>
+            <option value="">{t('filters.allSectors')}</option>
             {SECTORS.map((s) => (
               <option key={s.id} value={s.id}>{s.nameEN}</option>
             ))}
@@ -686,14 +696,14 @@ export default function RedFlags() {
 
         {/* Year filter */}
         <div className="flex items-center gap-2">
-          <label htmlFor="year-filter" className="text-xs text-text-muted">Year</label>
+          <label htmlFor="year-filter" className="text-xs text-text-muted">{t('filters.year')}</label>
           <select
             id="year-filter"
             value={year ?? ''}
             onChange={(e) => setYear(e.target.value ? Number(e.target.value) : undefined)}
             className="h-9 rounded-md border border-border/40 bg-background-card px-3 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
           >
-            <option value="">All Years</option>
+            <option value="">{t('filters.allYears')}</option>
             {yearOptions.map((y) => (
               <option key={y} value={y}>{y}</option>
             ))}
@@ -706,7 +716,7 @@ export default function RedFlags() {
             onClick={() => { setSectorId(undefined); setYear(undefined) }}
             className="text-xs text-accent hover:text-accent underline underline-offset-2 transition-colors"
           >
-            Clear filters
+            {t('filters.clearFilters')}
           </button>
         )}
       </div>
@@ -719,11 +729,9 @@ export default function RedFlags() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-risk-critical" aria-hidden="true" />
-              <CardTitle>Top Danger Combinations</CardTitle>
+              <CardTitle>{t('dangerZone.title')}</CardTitle>
             </div>
-            <CardDescription>
-              These factor pairs co-occur far more than chance. Each is a potential corruption signature.
-            </CardDescription>
+            <CardDescription>{t('dangerZone.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 lg:grid-cols-3">
@@ -734,18 +742,18 @@ export default function RedFlags() {
                   className="text-left rounded-lg border border-risk-critical/30 bg-risk-critical/5 p-4 hover:bg-risk-critical/10 hover:border-risk-critical/50 transition-colors group"
                 >
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <span className="text-xs font-mono text-risk-critical">#{i + 1} DANGER COMBINATION</span>
+                    <span className="text-xs font-mono text-risk-critical">{t('dangerZone.label', { rank: i + 1 })}</span>
                     <ExternalLink className="h-3.5 w-3.5 text-risk-critical/50 group-hover:text-risk-critical shrink-0 mt-0.5 transition-colors" aria-hidden="true" />
                   </div>
                   <p className="text-sm font-medium text-text-primary leading-snug">
                     {getFactorLabel(pair.factor_a)} <span className="text-text-muted mx-1">+</span> {getFactorLabel(pair.factor_b)}
                   </p>
                   <div className="mt-2 flex items-center gap-3 text-xs text-text-muted">
-                    <span className="text-risk-high font-mono">{pair.lift.toFixed(1)}x lift</span>
+                    <span className="text-risk-high font-mono">{t('dangerZone.liftLabel', { value: pair.lift.toFixed(1) })}</span>
                     <span>·</span>
-                    <span>{formatNumber(pair.count)} contracts</span>
+                    <span>{t('dangerZone.contractsLabel', { count: formatNumber(pair.count) })}</span>
                   </div>
-                  <p className="mt-2 text-xs text-accent group-hover:text-accent">Click to investigate →</p>
+                  <p className="mt-2 text-xs text-accent group-hover:text-accent">{t('dangerZone.investigate')}</p>
                 </button>
               ))}
             </div>
@@ -760,11 +768,9 @@ export default function RedFlags() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Layers className="h-4 w-4 text-text-muted" aria-hidden="true" />
-            <CardTitle>Factor Frequency</CardTitle>
+            <CardTitle>{t('factorFrequency.title')}</CardTitle>
           </div>
-          <CardDescription>
-            How often each risk factor appears across contracts. Bars colored by average risk score of contracts carrying that factor. Click any bar to view contracts with that risk factor.
-          </CardDescription>
+          <CardDescription>{t('factorFrequency.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           {frequencies.length > 0 ? (
@@ -774,27 +780,27 @@ export default function RedFlags() {
             />
           ) : (
             <div className="flex items-center justify-center h-48 text-text-muted text-sm">
-              No risk factor data available for the selected filters.
+              {t('factorFrequency.empty')}
             </div>
           )}
           {/* Legend */}
           <div className="flex items-center gap-4 mt-4 pt-3 border-t border-border/20">
-            <span className="text-xs text-text-muted">Bar color = avg risk:</span>
+            <span className="text-xs text-text-muted">{t('factorFrequency.legendLabel')}</span>
             <div className="flex items-center gap-1">
               <div className="h-2.5 w-6 rounded-sm" style={{ backgroundColor: RISK_COLORS.low }} />
-              <span className="text-xs text-text-muted">Low</span>
+              <span className="text-xs text-text-muted">{t('factorFrequency.low')}</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="h-2.5 w-6 rounded-sm" style={{ backgroundColor: RISK_COLORS.medium }} />
-              <span className="text-xs text-text-muted">Medium</span>
+              <span className="text-xs text-text-muted">{t('factorFrequency.medium')}</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="h-2.5 w-6 rounded-sm" style={{ backgroundColor: RISK_COLORS.high }} />
-              <span className="text-xs text-text-muted">High</span>
+              <span className="text-xs text-text-muted">{t('factorFrequency.high')}</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="h-2.5 w-6 rounded-sm" style={{ backgroundColor: RISK_COLORS.critical }} />
-              <span className="text-xs text-text-muted">Critical</span>
+              <span className="text-xs text-text-muted">{t('factorFrequency.critical')}</span>
             </div>
           </div>
         </CardContent>
@@ -807,13 +813,9 @@ export default function RedFlags() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Zap className="h-4 w-4 text-text-muted" aria-hidden="true" />
-            <CardTitle>Worst Factor Combinations</CardTitle>
+            <CardTitle>{t('worstCombinations.title')}</CardTitle>
           </div>
-          <CardDescription>
-            Top 10 factor pairs ranked by lift -- combinations that appear together far more often than expected by chance.
-            Lift &gt; 1 = more than chance; lift &gt; 2 = strong association.
-            Click any combination to investigate the contracts that triggered both flags.
-          </CardDescription>
+          <CardDescription>{t('worstCombinations.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <WorstCombinations
@@ -828,7 +830,7 @@ export default function RedFlags() {
               className="flex items-center gap-2 text-xs text-accent hover:text-accent transition-colors"
             >
               <Users className="h-3.5 w-3.5" aria-hidden="true" />
-              {showHeatmap ? 'Hide heatmap' : 'Show co-occurrence heatmap'}
+              {showHeatmap ? t('worstCombinations.hideHeatmap') : t('worstCombinations.showHeatmap')}
             </button>
 
             {showHeatmap && (
@@ -836,7 +838,7 @@ export default function RedFlags() {
                 <CooccurrenceHeatmap cooccurrences={cooccurrences} factors={factorKeys} />
                 {/* Legend */}
                 <div className="flex items-center gap-3 mt-4 pt-3 border-t border-border/20">
-                  <span className="text-xs text-text-muted">Lift:</span>
+                  <span className="text-xs text-text-muted">{t('worstCombinations.liftLegend')}</span>
                   <div className="flex items-center gap-1">
                     <div className="h-3 w-5 rounded-sm bg-yellow-500/20" />
                     <span className="text-xs text-text-muted">1-1.5</span>
@@ -863,12 +865,9 @@ export default function RedFlags() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-text-muted" aria-hidden="true" />
-            <CardTitle>Factor-Risk Correlation</CardTitle>
+            <CardTitle>{t('factorRiskScatter.title')}</CardTitle>
           </div>
-          <CardDescription>
-            Each bubble is a risk factor. X-axis = frequency (how common); Y-axis = avg risk. Upper-right = common AND high-risk (priority investigation). Upper-left = rare but dangerous.
-            Bubble size = number of contracts. Click any bubble to investigate.
-          </CardDescription>
+          <CardDescription>{t('factorRiskScatter.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           {frequencies.length > 0 ? (
@@ -878,7 +877,7 @@ export default function RedFlags() {
             />
           ) : (
             <div className="flex items-center justify-center h-48 text-text-muted text-sm">
-              No data available for the selected filters.
+              {t('factorRiskScatter.empty')}
             </div>
           )}
         </CardContent>
@@ -887,12 +886,8 @@ export default function RedFlags() {
       {/* ---------------------------------------------------------------- */}
       {/* Methodology Note */}
       {/* ---------------------------------------------------------------- */}
-      <SectionDescription title="Methodology">
-        Risk factors are extracted from the <code className="text-xs bg-background-elevated px-1 py-0.5 rounded">risk_factors</code> column
-        on each contract. Co-occurrence lift is calculated as <code className="text-xs bg-background-elevated px-1 py-0.5 rounded">P(A and B) / (P(A) * P(B))</code>,
-        where a lift of 1.0 means factors co-occur exactly as often as expected by chance.
-        Values above 2.0 indicate a strong non-random association that may suggest coordinated
-        procurement irregularities.
+      <SectionDescription title={t('methodology.title')}>
+        {t('methodology.content')}
       </SectionDescription>
     </div>
   )

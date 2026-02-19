@@ -1,0 +1,60 @@
+{
+  "trackingLabel": "RED FLAG ANATOMY",
+  "heroSubtitle": "Contracts with risk factors -- how corruption signals distribute",
+  "errorMessage": "Failed to load risk factor analysis.",
+  "errorHint": "Please check that the backend is running on port 8001.",
+  "filters": {
+    "sector": "Sector",
+    "allSectors": "All Sectors",
+    "year": "Year",
+    "allYears": "All Years",
+    "clearFilters": "Clear filters"
+  },
+  "dangerZone": {
+    "title": "Top Danger Combinations",
+    "description": "These factor pairs co-occur far more than chance. Each is a potential corruption signature.",
+    "label": "#{{rank}} DANGER COMBINATION",
+    "liftLabel": "{{value}}x lift",
+    "contractsLabel": "{{count}} contracts",
+    "investigate": "Click to investigate"
+  },
+  "factorFrequency": {
+    "title": "Factor Frequency",
+    "description": "How often each risk factor appears across contracts. Bars colored by average risk score of contracts carrying that factor. Click any bar to view contracts with that risk factor.",
+    "empty": "No risk factor data available for the selected filters.",
+    "showAll": "Show all {{count}} factors",
+    "showTop": "Show top 15",
+    "legendLabel": "Bar color = avg risk:",
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "critical": "Critical"
+  },
+  "worstCombinations": {
+    "title": "Worst Factor Combinations",
+    "description": "Top 10 factor pairs ranked by lift -- combinations that appear together far more often than expected by chance. Lift > 1 = more than chance; lift > 2 = strong association. Click any combination to investigate the contracts that triggered both flags.",
+    "empty": "No co-occurrence data available.",
+    "contractsLift": "{{count}} contracts -- {{lift}}x more likely to co-occur than by chance",
+    "showHeatmap": "Show co-occurrence heatmap",
+    "hideHeatmap": "Hide heatmap",
+    "heatmapEmpty": "No co-occurrence data available for the selected filters.",
+    "liftLegend": "Lift:"
+  },
+  "factorRiskScatter": {
+    "title": "Factor-Risk Correlation",
+    "description": "Each bubble is a risk factor. X-axis = frequency (how common); Y-axis = avg risk. Upper-right = common AND high-risk (priority investigation). Upper-left = rare but dangerous. Bubble size = number of contracts. Click any bubble to investigate.",
+    "empty": "No data available for the selected filters.",
+    "xAxisLabel": "Frequency (%)",
+    "yAxisLabel": "Avg Risk Score",
+    "riskThreshold": "25% risk threshold"
+  },
+  "tooltip": {
+    "contracts": "{{count}} contracts ({{pct}}%)",
+    "avgRisk": "Avg risk: {{value}}%",
+    "frequency": "Frequency: {{value}}%"
+  },
+  "methodology": {
+    "title": "Methodology",
+    "content": "Risk factors are extracted from the risk_factors column on each contract. Co-occurrence lift is calculated as P(A and B) / (P(A) * P(B)), where a lift of 1.0 means factors co-occur exactly as often as expected by chance. Values above 2.0 indicate a strong non-random association that may suggest coordinated procurement irregularities."
+  }
+}

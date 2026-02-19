@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -69,6 +70,42 @@ interface ContractPreset {
   order: 'asc' | 'desc'
   filters: Partial<Record<string, string>>
   description?: string
+}
+
+// Preset i18n key maps — label and description come from contracts namespace
+const PRESET_TRANSLATION_KEYS: Record<string, { labelKey: string; descKey: string }> = {
+  'suspicious-monopolies': {
+    labelKey: 'presets.suspiciousMonopolies.label',
+    descKey: 'presets.suspiciousMonopolies.description',
+  },
+  'december-rush': {
+    labelKey: 'presets.decemberRush.label',
+    descKey: 'presets.decemberRush.description',
+  },
+  'price-manipulation': {
+    labelKey: 'presets.priceManipulation.label',
+    descKey: 'presets.priceManipulation.description',
+  },
+  'ghost-companies': {
+    labelKey: 'presets.ghostCompanies.label',
+    descKey: 'presets.ghostCompanies.description',
+  },
+  'network-clusters': {
+    labelKey: 'presets.networkClusters.label',
+    descKey: 'presets.networkClusters.description',
+  },
+  'split-contracts': {
+    labelKey: 'presets.splitContracts.label',
+    descKey: 'presets.splitContracts.description',
+  },
+  'recent-critical': {
+    labelKey: 'presets.recentCritical.label',
+    descKey: 'presets.recentCritical.description',
+  },
+  'largest-direct-awards': {
+    labelKey: 'presets.biggestDirectAwards.label',
+    descKey: 'presets.biggestDirectAwards.description',
+  },
 }
 
 const CONTRACT_PRESETS: ContractPreset[] = [
@@ -168,6 +205,7 @@ const CONTRACT_COLUMNS: ColumnDef[] = [
 // =============================================================================
 
 export function Contracts() {
+  const { t } = useTranslation('contracts')
   const [searchParams, setSearchParams] = useSearchParams()
   const [activePreset, setActivePreset] = useState<string | null>(null)
 
@@ -384,8 +422,7 @@ export function Contracts() {
             )}
           </p>
           <p className="text-xs text-text-muted mt-1">
-            Select a preset to start investigating, or use filters to find specific contracts.
-            Click any row to expand risk factors. Use the compare tool to analyze contracts side-by-side.
+            {t('guidance')}
           </p>
         </div>
         <div className="flex items-center gap-1.5">
@@ -416,10 +453,13 @@ export function Contracts() {
         {CONTRACT_PRESETS.map((preset) => {
           const Icon = preset.icon
           const isActive = activePreset === preset.id
+          const keys = PRESET_TRANSLATION_KEYS[preset.id]
+          const label = keys ? t(keys.labelKey) : preset.label
+          const description = keys ? t(keys.descKey) : preset.description
           return (
             <button
               key={preset.id}
-              title={preset.description}
+              title={description}
               onClick={() => isActive ? clearAllFilters() : applyPreset(preset.id)}
               className={cn(
                 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-all',
@@ -429,7 +469,7 @@ export function Contracts() {
               )}
             >
               <Icon className="h-3 w-3" />
-              {preset.label}
+              {label}
             </button>
           )
         })}

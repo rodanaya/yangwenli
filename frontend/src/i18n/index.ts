@@ -25,6 +25,14 @@ import esWatchlist from './locales/es/watchlist.json'
 import enWatchlist from './locales/en/watchlist.json'
 import esGlossary from './locales/es/glossary.json'
 import enGlossary from './locales/en/glossary.json'
+import esSpending from './locales/es/spending.json'
+import enSpending from './locales/en/spending.json'
+import esMoneyflow from './locales/es/moneyflow.json'
+import enMoneyflow from './locales/en/moneyflow.json'
+import esRedflags from './locales/es/redflags.json'
+import enRedflags from './locales/en/redflags.json'
+import esTemporal from './locales/es/temporal.json'
+import enTemporal from './locales/en/temporal.json'
 
 i18n
   .use(LanguageDetector)
@@ -35,13 +43,15 @@ i18n
         common: esCommon, sectors: esSectors, nav: esNav, dashboard: esDashboard,
         explore: esExplore, contracts: esContracts, investigation: esInvestigation,
         executive: esExecutive, patterns: esPatterns, watchlist: esWatchlist,
-        glossary: esGlossary,
+        glossary: esGlossary, spending: esSpending,
+        moneyflow: esMoneyflow, redflags: esRedflags, temporal: esTemporal,
       },
       en: {
         common: enCommon, sectors: enSectors, nav: enNav, dashboard: enDashboard,
         explore: enExplore, contracts: enContracts, investigation: enInvestigation,
         executive: enExecutive, patterns: enPatterns, watchlist: enWatchlist,
-        glossary: enGlossary,
+        glossary: enGlossary, spending: enSpending,
+        moneyflow: enMoneyflow, redflags: enRedflags, temporal: enTemporal,
       },
     },
     lng: 'es', // Default to Spanish

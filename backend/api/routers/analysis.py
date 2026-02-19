@@ -731,71 +731,125 @@ def list_price_hypotheses(
 
 @router.get("/price-hypotheses/summary")
 def get_price_hypotheses_summary():
-    """Get summary statistics for price hypotheses."""
+    """Get summary statistics for price hypotheses, computed live across all contracts."""
     try:
         with get_db() as conn:
             cursor = conn.cursor()
 
-            if not table_exists(cursor, "price_hypotheses"):
-                return {"status": "not_initialized", "message": "Run price_hypothesis_engine.py to generate hypotheses"}
+            # --- Live analysis: compute outliers from ALL contracts using sector baselines ---
+            cursor.execute("""
+                SELECT
+                    SUM(CASE WHEN c.amount_mxn > b.extreme_fence THEN 1 ELSE 0 END) AS extreme_overpricing,
+                    SUM(CASE WHEN c.amount_mxn > b.upper_fence
+                              AND c.amount_mxn <= b.extreme_fence THEN 1 ELSE 0 END) AS statistical_outlier,
+                    SUM(CASE WHEN c.amount_mxn > b.upper_fence THEN 1 ELSE 0 END) AS total_flagged,
+                    COALESCE(SUM(CASE WHEN c.amount_mxn > b.upper_fence THEN c.amount_mxn ELSE 0 END), 0) AS flagged_value,
+                    COUNT(*) AS total_analyzed
+                FROM contracts c
+                JOIN sector_price_baselines b
+                  ON c.sector_id = b.sector_id
+                  AND b.contract_type = 'all'
+                  AND b.year IS NULL
+                WHERE c.amount_mxn > 0
+            """)
+            live = cursor.fetchone()
+            live_extreme = live["extreme_overpricing"] or 0
+            live_outlier = live["statistical_outlier"] or 0
+            live_total_flagged = live["total_flagged"] or 0
+            live_flagged_value = live["flagged_value"] or 0
+            live_total_analyzed = live["total_analyzed"] or 0
 
             cursor.execute("""
-                SELECT COUNT(*) as total,
-                       SUM(CASE WHEN is_reviewed = 0 THEN 1 ELSE 0 END) as pending_review,
-                       SUM(CASE WHEN is_valid = 1 THEN 1 ELSE 0 END) as confirmed,
-                       SUM(CASE WHEN is_valid = 0 THEN 1 ELSE 0 END) as dismissed,
-                       COALESCE(SUM(amount_mxn), 0) as total_flagged_value,
-                       AVG(confidence) as avg_confidence
-                FROM price_hypotheses
+                SELECT
+                    c.sector_id,
+                    s.name_es AS sector_name,
+                    SUM(CASE WHEN c.amount_mxn > b.extreme_fence THEN 1 ELSE 0 END) AS extreme_overpricing,
+                    SUM(CASE WHEN c.amount_mxn > b.upper_fence
+                              AND c.amount_mxn <= b.extreme_fence THEN 1 ELSE 0 END) AS statistical_outlier,
+                    SUM(CASE WHEN c.amount_mxn > b.upper_fence THEN 1 ELSE 0 END) AS total_flagged,
+                    COALESCE(SUM(CASE WHEN c.amount_mxn > b.upper_fence THEN c.amount_mxn ELSE 0 END), 0) AS flagged_value
+                FROM contracts c
+                JOIN sector_price_baselines b
+                  ON c.sector_id = b.sector_id
+                  AND b.contract_type = 'all'
+                  AND b.year IS NULL
+                JOIN sectors s ON c.sector_id = s.id
+                WHERE c.amount_mxn > 0
+                GROUP BY c.sector_id, s.name_es
+                ORDER BY total_flagged DESC
             """)
-            overall = cursor.fetchone()
-
-            cursor.execute("""
-                SELECT hypothesis_type, COUNT(*) as count, AVG(confidence) as avg_confidence,
-                       COALESCE(SUM(amount_mxn), 0) as total_value
-                FROM price_hypotheses GROUP BY hypothesis_type ORDER BY count DESC
-            """)
-            by_type = [{"type": r[0], "count": r[1], "avg_confidence": round(r[2], 3), "total_value": r[3]}
-                       for r in cursor.fetchall()]
-
-            cursor.execute("""
-                SELECT h.sector_id, s.name_es, COUNT(*) as count, COALESCE(SUM(h.amount_mxn), 0) as total_value
-                FROM price_hypotheses h
-                LEFT JOIN sectors s ON h.sector_id = s.id
-                GROUP BY h.sector_id ORDER BY count DESC
-            """)
-            by_sector = [{"sector_id": r[0], "sector_name": r[1], "count": r[2], "total_value": r[3]}
-                         for r in cursor.fetchall()]
-
-            cursor.execute("""
-                SELECT confidence_level, COUNT(*) as count FROM price_hypotheses
-                GROUP BY confidence_level
-                ORDER BY CASE confidence_level
-                    WHEN 'very_high' THEN 1 WHEN 'high' THEN 2
-                    WHEN 'medium' THEN 3 WHEN 'low' THEN 4 END
-            """)
-            by_confidence = [{"level": r[0], "count": r[1]} for r in cursor.fetchall()]
-
-            cursor.execute("""
-                SELECT run_id, started_at, completed_at, contracts_analyzed, hypotheses_generated, status
-                FROM hypothesis_runs ORDER BY started_at DESC LIMIT 5
-            """)
-            recent_runs = [
-                {"run_id": r[0], "started_at": r[1], "completed_at": r[2],
-                 "contracts_analyzed": r[3], "hypotheses_generated": r[4], "status": r[5]}
+            live_by_sector = [
+                {
+                    "sector_id": r["sector_id"],
+                    "sector_name": r["sector_name"],
+                    "count": r["total_flagged"],
+                    "total_value": r["flagged_value"],
+                }
                 for r in cursor.fetchall()
             ]
+
+            by_type = [
+                {"type": "extreme_overpricing", "count": live_extreme, "avg_confidence": 0.95, "total_value": 0},
+                {"type": "statistical_outlier", "count": live_outlier, "avg_confidence": 0.75, "total_value": 0},
+            ]
+
+            # --- Review workflow stats (from pre-computed price_hypotheses table) ---
+            pending_review = confirmed = dismissed = 0
+            avg_confidence = 0.0
+            by_confidence: list = []
+            recent_runs: list = []
+
+            if table_exists(cursor, "price_hypotheses"):
+                cursor.execute("""
+                    SELECT
+                        SUM(CASE WHEN is_reviewed = 0 THEN 1 ELSE 0 END) as pending_review,
+                        SUM(CASE WHEN is_valid = 1 THEN 1 ELSE 0 END) as confirmed,
+                        SUM(CASE WHEN is_valid = 0 THEN 1 ELSE 0 END) as dismissed,
+                        AVG(confidence) as avg_confidence
+                    FROM price_hypotheses
+                """)
+                ph = cursor.fetchone()
+                if ph:
+                    pending_review = ph["pending_review"] or 0
+                    confirmed = ph["confirmed"] or 0
+                    dismissed = ph["dismissed"] or 0
+                    avg_confidence = round(ph["avg_confidence"], 3) if ph["avg_confidence"] else 0
+
+                cursor.execute("""
+                    SELECT confidence_level, COUNT(*) as count FROM price_hypotheses
+                    GROUP BY confidence_level
+                    ORDER BY CASE confidence_level
+                        WHEN 'very_high' THEN 1 WHEN 'high' THEN 2
+                        WHEN 'medium' THEN 3 WHEN 'low' THEN 4 END
+                """)
+                by_confidence = [{"level": r[0], "count": r[1]} for r in cursor.fetchall()]
+
+            if table_exists(cursor, "hypothesis_runs"):
+                cursor.execute("""
+                    SELECT run_id, started_at, completed_at, contracts_analyzed, hypotheses_generated, status
+                    FROM hypothesis_runs ORDER BY started_at DESC LIMIT 5
+                """)
+                recent_runs = [
+                    {"run_id": r[0], "started_at": r[1], "completed_at": r[2],
+                     "contracts_analyzed": r[3], "hypotheses_generated": r[4], "status": r[5]}
+                    for r in cursor.fetchall()
+                ]
 
             return {
                 "status": "active",
                 "overall": {
-                    "total_hypotheses": overall[0], "pending_review": overall[1],
-                    "confirmed": overall[2], "dismissed": overall[3],
-                    "total_flagged_value": overall[4],
-                    "avg_confidence": round(overall[5], 3) if overall[5] else 0
+                    "total_hypotheses": live_total_flagged,
+                    "pending_review": pending_review,
+                    "confirmed": confirmed,
+                    "dismissed": dismissed,
+                    "total_flagged_value": live_flagged_value,
+                    "avg_confidence": avg_confidence,
+                    "total_analyzed": live_total_analyzed,
                 },
-                "by_type": by_type, "by_sector": by_sector,
-                "by_confidence": by_confidence, "recent_runs": recent_runs
+                "by_type": by_type,
+                "by_sector": live_by_sector,
+                "by_confidence": by_confidence,
+                "recent_runs": recent_runs,
             }
 
     except sqlite3.Error as e:
@@ -2314,6 +2368,7 @@ _MONEY_FLOW_CACHE_TTL = 600  # 10 minutes
 @router.get("/money-flow", response_model=MoneyFlowResponse)
 def get_money_flow(
     sector_id: Optional[int] = Query(None, ge=1, le=12),
+    year: Optional[int] = Query(None, ge=2002, le=2026),
     limit: int = Query(50, ge=10, le=200),
 ):
     """
@@ -2325,7 +2380,7 @@ def get_money_flow(
     import time as _time
     global _money_flow_cache, _money_flow_cache_ts
 
-    cache_key = f"flow:{sector_id}:{limit}"
+    cache_key = f"flow:{sector_id}:{year}:{limit}"
     now = _time.time()
     if _money_flow_cache and (now - _money_flow_cache_ts) < _MONEY_FLOW_CACHE_TTL:
         cached = _money_flow_cache.get(cache_key)
@@ -2336,6 +2391,7 @@ def get_money_flow(
         result = analysis_service.get_money_flow(
             conn,
             sector_id=sector_id,
+            year=year,
             limit=limit,
         )
         _money_flow_cache[cache_key] = result
@@ -2409,15 +2465,14 @@ def get_risk_factor_analysis(
                 params.append(year)
             where_clause = " AND ".join(where_parts)
 
+            # Get total count first (used for percentage calculations)
             cursor.execute(f"""
-                SELECT risk_factors, risk_score
+                SELECT COUNT(*) AS cnt
                 FROM contracts
                 WHERE {where_clause}
-                LIMIT 500000
             """, params)
-
-            rows = cursor.fetchall()
-            total = len(rows)
+            total_row = cursor.fetchone()
+            total = total_row["cnt"] if total_row else 0
 
             if total == 0:
                 result = RiskFactorAnalysisResponse(
@@ -2427,12 +2482,19 @@ def get_risk_factor_analysis(
                 )
                 return result
 
+            # Stream rows without loading all into memory at once
+            cursor.execute(f"""
+                SELECT risk_factors, risk_score
+                FROM contracts
+                WHERE {where_clause}
+            """, params)
+
             # Parse factors and accumulate stats
             factor_count: Counter = Counter()
             factor_risk_sum: Dict[str, float] = {}
             pair_count: Counter = Counter()
 
-            for row in rows:
+            for row in cursor:
                 raw = row["risk_factors"]
                 # Extract base factor names (before first colon)
                 factors = []

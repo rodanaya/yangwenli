@@ -1,0 +1,64 @@
+{
+  "trackingLabel": "ANALISIS DE FLUJO DE FONDOS",
+  "title": "Sigue el Dinero",
+  "subtitle": "Rastreando el flujo de fondos de contratacion publica de instituciones a proveedores",
+  "heroSubtitle": "{{count}} contratos rastreados",
+  "heroSubtitleYear": "{{count}} contratos rastreados en {{year}}",
+  "heroDetail": "Seleccione un ano y sector para rastrear como fluye el gasto gubernamental de instituciones a traves de sectores hacia proveedores, resaltando canales de alto riesgo.",
+  "errorTitle": "Sigue el Dinero",
+  "errorSubtitle": "Rastreando el flujo de fondos de contratacion publica de instituciones a proveedores",
+  "errorMessage": "Error al cargar datos de flujo de fondos",
+  "errorHint": "Verifique que el servidor este en funcionamiento e intente de nuevo.",
+  "emptyHeadline": "Sin Datos",
+  "emptySubtitle": "Ajuste los filtros para cargar datos de flujo de fondos",
+  "emptyDetail": "Seleccione un ano y sector para rastrear como fluye el gasto gubernamental de instituciones a traves de sectores hacia proveedores.",
+  "emptyMessage": "Sin datos de flujo de fondos para esta combinacion",
+  "emptyHint": "Intente seleccionar un ano o sector especifico. El analisis de flujo de fondos agrega relaciones institucion-proveedor y requiere datos de contratos con registros de instituciones y proveedores.",
+  "filters": {
+    "allYears": "Todos los Anos",
+    "allSectors": "Todos los Sectores",
+    "byYear": "Filtrar por ano",
+    "bySector": "Filtrar por sector"
+  },
+  "stats": {
+    "totalContracts": "TOTAL DE CONTRATOS",
+    "totalContractsDetail": "En todas las instituciones",
+    "highRiskFlows": "FLUJOS DE ALTO RIESGO",
+    "highRiskFlowsDetail": "Flujos con riesgo promedio >= 30%",
+    "institutions": "INSTITUCIONES",
+    "institutionsDetail": "Principales entidades de gasto"
+  },
+  "sections": {
+    "institutionFlows": "Instituciones con Mayor Gasto",
+    "institutionFlowsDesc": "Top 15 instituciones por valor total de contratacion",
+    "vendorFlows": "Principales Proveedores Receptores",
+    "vendorFlowsDesc": "Top 15 proveedores que reciben mas fondos de contratacion",
+    "sectorDistribution": "Distribucion por Sector",
+    "sectorDistributionDesc": "Como se distribuyen los fondos de contratacion en los 12 sectores. El tamano representa el valor total.",
+    "highRiskFlows": "Flujos de Fondos de Mayor Riesgo",
+    "highRiskFlowsDesc": "Top 20 flujos clasificados por puntuacion de riesgo promedio. Estas relaciones institucion-proveedor merecen mayor escrutinio. Haga clic en cualquier fila para investigar los contratos de esa relacion."
+  },
+  "table": {
+    "source": "Origen",
+    "target": "Destino",
+    "value": "Valor",
+    "contracts": "Contratos",
+    "avgRisk": "Riesgo Prom.",
+    "actions": "Acciones"
+  },
+  "emptyStates": {
+    "noInstitutionData": "Sin datos de flujo institucional disponibles",
+    "noVendorData": "Sin datos de flujo de proveedores disponibles",
+    "noSectorData": "Sin datos de distribucion por sector disponibles",
+    "noHighRiskFlows": "Sin flujos de alto riesgo para los filtros actuales"
+  },
+  "tooltip": {
+    "value": "Valor",
+    "contracts": "Contratos",
+    "avgRisk": "Riesgo Prom."
+  },
+  "methodology": {
+    "title": "Metodologia",
+    "content": "Los flujos de fondos se agregan de 3.1M contratos de contratacion publica (2002-2025). Los colores de las barras reflejan la puntuacion de riesgo promedio v5.0 para cada flujo: verde (<10%), ambar (10-30%), naranja (30-50%) y rojo (>=50%). El valor de flujo de alto riesgo suma todos los flujos donde el riesgo promedio supera el 30%. Use los filtros de ano y sector para acotar el analisis."
+  }
+}

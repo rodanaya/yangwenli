@@ -6,6 +6,7 @@
 
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useQueries } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -99,6 +100,7 @@ const EVENT_COLORS: Record<string, string> = {
 
 export default function TemporalPulse() {
   const navigate = useNavigate()
+  const { t } = useTranslation('temporal')
   const [selectedYear, setSelectedYear] = useState(2023)
   const [showAllEvents, setShowAllEvents] = useState(false)
 
@@ -265,16 +267,16 @@ export default function TemporalPulse() {
     <div className="space-y-6">
       {/* Hero Header */}
       <PageHero
-        trackingLabel="TEMPORAL PULSE"
+        trackingLabel={t('trackingLabel')}
         icon={<Activity className="h-4 w-4 text-accent" />}
         headline={yearOverview ? formatNumber(yearOverview.totalContracts) : '—'}
-        subtitle={`Contracts in ${selectedYear} — rhythms, spikes, and political cycles`}
-        detail={yearOverview ? `${formatCompactMXN(yearOverview.totalValue)} total value · ${formatPercentSafe(yearOverview.avgRisk)} avg risk` : undefined}
+        subtitle={t('subtitle', { year: selectedYear })}
+        detail={yearOverview ? t('heroDetail', { value: formatCompactMXN(yearOverview.totalValue), risk: formatPercentSafe(yearOverview.avgRisk) }) : undefined}
         loading={monthlyLoading}
         trailing={
           <div className="flex items-center gap-2">
             <label htmlFor="year-select" className="text-xs text-text-muted font-mono">
-              Year:
+              {t('yearLabel')}
             </label>
             <select
               id="year-select"
@@ -295,23 +297,23 @@ export default function TemporalPulse() {
       {/* L1: Year Overview Stats */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <SharedStatCard
-          label="TOTAL CONTRACTS"
+          label={t('stats.totalContracts')}
           value={yearOverview ? formatNumber(yearOverview.totalContracts) : '—'}
-          detail={`In ${selectedYear}`}
+          detail={t('stats.totalContractsDetail', { year: selectedYear })}
           borderColor="border-accent/30"
           loading={monthlyLoading}
         />
         <SharedStatCard
-          label="TOTAL VALUE"
+          label={t('stats.totalValue')}
           value={yearOverview ? formatCompactMXN(yearOverview.totalValue) : '—'}
-          detail="Contract spending"
+          detail={t('stats.totalValueDetail')}
           borderColor="border-blue-500/30"
           loading={monthlyLoading}
         />
         <SharedStatCard
-          label="AVG RISK SCORE"
+          label={t('stats.avgRiskScore')}
           value={yearOverview ? formatPercentSafe(yearOverview.avgRisk) : '—'}
-          detail="Mean corruption probability"
+          detail={t('stats.avgRiskScoreDetail')}
           borderColor="border-amber-500/30"
           color={
             yearOverview && yearOverview.avgRisk >= 0.3
@@ -323,13 +325,13 @@ export default function TemporalPulse() {
           loading={monthlyLoading}
         />
         <SharedStatCard
-          label="DECEMBER SPIKE"
+          label={t('stats.decemberSpike')}
           value={
             yearOverview?.decSpikeRatio != null
               ? `${yearOverview.decSpikeRatio.toFixed(1)}x`
               : '—'
           }
-          detail="Dec vs avg month"
+          detail={t('stats.decemberSpikeDetail')}
           borderColor="border-red-500/30"
           color={
             yearOverview?.decSpikeRatio != null && yearOverview.decSpikeRatio > 1.5
@@ -346,10 +348,10 @@ export default function TemporalPulse() {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2">
               <Landmark className="h-4 w-4 text-text-muted" />
-              Administration Comparison
+              {t('adminScorecard.title')}
             </CardTitle>
             <CardDescription>
-              Click any administration to view contracts from that era.
+              {t('adminScorecard.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -382,7 +384,7 @@ export default function TemporalPulse() {
                       {admin.start}–{admin.end > 2025 ? '' : admin.end}
                     </p>
                     <div className="mt-2 space-y-0.5 text-xs text-text-secondary">
-                      <p>{formatNumber(admin.totalContracts)} contracts</p>
+                      <p>{formatNumber(admin.totalContracts)} {t('adminCard.contracts')}</p>
                       <p>{formatCompactMXN(admin.totalValue)}</p>
                     </div>
                     <div className="mt-2 flex items-center gap-1">
@@ -390,11 +392,11 @@ export default function TemporalPulse() {
                         className="text-xs font-mono font-medium"
                         style={{ color: RISK_COLORS[riskLevel] }}
                       >
-                        {(admin.avgRisk * 100).toFixed(1)}% avg high-risk
+                        {(admin.avgRisk * 100).toFixed(1)}% {t('adminCard.avgHighRisk')}
                       </span>
                     </div>
                     <p className="mt-1 text-xs text-accent/60 group-hover:text-accent transition-colors">
-                      Investigate →
+                      {t('investigate')}
                     </p>
                   </button>
                 )
@@ -409,12 +411,10 @@ export default function TemporalPulse() {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-text-muted" />
-            Monthly Procurement Rhythm ({selectedYear})
+            {t('monthlyRhythm.title', { year: selectedYear })}
           </CardTitle>
           <CardDescription>
-            Contract volume by month with risk overlay. December bars highlighted when they exceed
-            the annual average. Click any bar to investigate contracts from that period — December
-            bars show year-end contracts specifically.
+            {t('monthlyRhythm.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -458,26 +458,26 @@ export default function TemporalPulse() {
                             {d.month} {selectedYear}
                           </p>
                           <p className="text-xs text-text-muted tabular-nums">
-                            Contracts: {formatNumber(d.contracts)}
+                            {t('tooltip.contracts')}: {formatNumber(d.contracts)}
                           </p>
                           <p className="text-xs text-text-muted tabular-nums">
-                            Value: {formatCompactMXN(d.value)}
+                            {t('tooltip.value')}: {formatCompactMXN(d.value)}
                           </p>
                           <p className="text-xs text-text-muted tabular-nums">
-                            Avg Risk: {d.avgRisk.toFixed(1)}%
+                            {t('tooltip.avgRisk')}: {d.avgRisk.toFixed(1)}%
                           </p>
                           <p className="text-xs text-text-muted tabular-nums">
-                            Direct Awards: {formatNumber(d.directAwards)}
+                            {t('tooltip.directAwards')}: {formatNumber(d.directAwards)}
                           </p>
                           <p className="text-xs text-text-muted tabular-nums">
-                            Single Bids: {formatNumber(d.singleBids)}
+                            {t('tooltip.singleBids')}: {formatNumber(d.singleBids)}
                           </p>
                           {d.isYearEnd && (
                             <p className="text-xs text-risk-high mt-1 font-medium">
-                              Year-end period
+                              {t('tooltip.yearEndPeriod')}
                             </p>
                           )}
-                          <p className="text-xs text-accent/70 mt-1">Click to investigate</p>
+                          <p className="text-xs text-accent/70 mt-1">{t('tooltip.clickToInvestigate')}</p>
                         </div>
                       )
                     }}
@@ -488,7 +488,7 @@ export default function TemporalPulse() {
                   <Bar
                     yAxisId="left"
                     dataKey="contracts"
-                    name="Contracts"
+                    name={t('legend.contracts')}
                     radius={[3, 3, 0, 0]}
                     style={{ cursor: 'pointer' }}
                     onClick={(_data: unknown, index: number) => {
@@ -520,7 +520,7 @@ export default function TemporalPulse() {
                     yAxisId="right"
                     type="monotone"
                     dataKey="avgRisk"
-                    name="Avg Risk %"
+                    name={t('legend.avgRiskPct')}
                     stroke={RISK_COLORS.critical}
                     strokeWidth={2}
                     dot={{ r: 3, fill: RISK_COLORS.critical }}
@@ -529,7 +529,7 @@ export default function TemporalPulse() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <EmptyState message={`No data available for ${selectedYear}`} />
+            <EmptyState message={t('empty.noDataForYear', { year: selectedYear })} />
           )}
         </CardContent>
       </Card>
@@ -539,11 +539,10 @@ export default function TemporalPulse() {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
             <Zap className="h-4 w-4 text-text-muted" />
-            December Spike Analysis (2018-2024)
+            {t('decemberAnalysis.title')}
           </CardTitle>
           <CardDescription>
-            December contract counts vs average of other months. Years where December exceeds 1.5x are highlighted.
-            Budget-clearing behavior drives predictable year-end surges.
+            {t('decemberAnalysis.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -582,14 +581,14 @@ export default function TemporalPulse() {
                               className="w-2 h-2 rounded-full"
                               style={{ backgroundColor: RISK_COLORS.high }}
                             />
-                            December: {formatNumber(d.decContracts)}
+                            {t('tooltip.december')}: {formatNumber(d.decContracts)}
                           </div>
                           <div className="flex items-center gap-2 text-xs text-text-muted">
                             <div
                               className="w-2 h-2 rounded-full"
                               style={{ backgroundColor: 'var(--color-accent)' }}
                             />
-                            Avg Other: {formatNumber(d.avgOtherContracts)}
+                            {t('tooltip.avgOther')}: {formatNumber(d.avgOtherContracts)}
                           </div>
                           <p
                             className={cn(
@@ -597,8 +596,8 @@ export default function TemporalPulse() {
                               d.spikeRatio > 1.5 ? 'text-risk-high' : 'text-text-secondary'
                             )}
                           >
-                            Ratio: {d.spikeRatio.toFixed(2)}x
-                            {d.spikeRatio > 1.5 ? ' (spike detected)' : ''}
+                            {t('tooltip.ratio')}: {d.spikeRatio.toFixed(2)}x
+                            {d.spikeRatio > 1.5 ? ` (${t('tooltip.spikeDetected')})` : ''}
                           </p>
                         </div>
                       )
@@ -609,7 +608,7 @@ export default function TemporalPulse() {
                   />
                   <Bar
                     dataKey="decContracts"
-                    name="December"
+                    name={t('legend.december')}
                     radius={[3, 3, 0, 0]}
                   >
                     {decemberSpikeData.map((entry, index) => (
@@ -626,7 +625,7 @@ export default function TemporalPulse() {
                   </Bar>
                   <Bar
                     dataKey="avgOtherContracts"
-                    name="Avg Other Months"
+                    name={t('legend.avgOtherMonths')}
                     fill="var(--color-accent)"
                     opacity={0.5}
                     radius={[3, 3, 0, 0]}
@@ -635,7 +634,7 @@ export default function TemporalPulse() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <EmptyState message="No multi-year data available" />
+            <EmptyState message={t('empty.noMultiYearData')} />
           )}
         </CardContent>
       </Card>
@@ -645,12 +644,10 @@ export default function TemporalPulse() {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
             <Landmark className="h-4 w-4 text-text-muted" />
-            Procurement by Presidential Administration
+            {t('adminBands.title')}
           </CardTitle>
           <CardDescription>
-            Year-over-year contract volume with administration periods shaded.
-            Highlighted years (red dashed lines) show anomalous spikes in high-risk contracts.
-            Click any bar to investigate contracts from that year.
+            {t('adminBands.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -703,21 +700,21 @@ export default function TemporalPulse() {
                           <p className="font-medium text-xs mb-1">
                             {d.year}
                             {admin ? ` (${admin.name})` : ''}
-                            {isAnomaly ? ' — anomalous' : ''}
+                            {isAnomaly ? ` — ${t('anomalous')}` : ''}
                           </p>
                           <p className="text-xs text-text-muted tabular-nums">
-                            Contracts: {formatNumber(d.contracts)}
+                            {t('tooltip.contracts')}: {formatNumber(d.contracts)}
                           </p>
                           <p className="text-xs text-text-muted tabular-nums">
-                            Value: {formatCompactMXN(d.value)}
+                            {t('tooltip.value')}: {formatCompactMXN(d.value)}
                           </p>
                           <p className="text-xs text-text-muted tabular-nums">
-                            Avg Risk: {d.avgRisk.toFixed(1)}%
+                            {t('tooltip.avgRisk')}: {d.avgRisk.toFixed(1)}%
                           </p>
                           <p className="text-xs text-text-muted tabular-nums">
-                            Direct Awards: {d.directAwardPct.toFixed(1)}%
+                            {t('tooltip.directAwards')}: {d.directAwardPct.toFixed(1)}%
                           </p>
-                          <p className="text-xs text-accent/70 mt-1">Click to investigate</p>
+                          <p className="text-xs text-accent/70 mt-1">{t('tooltip.clickToInvestigate')}</p>
                         </div>
                       )
                     }}
@@ -797,7 +794,7 @@ export default function TemporalPulse() {
                     yAxisId="right"
                     type="monotone"
                     dataKey="avgRisk"
-                    name="Avg Risk %"
+                    name={t('legend.avgRiskPct')}
                     stroke={RISK_COLORS.high}
                     strokeWidth={2}
                     dot={false}
@@ -806,7 +803,7 @@ export default function TemporalPulse() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <EmptyState message="No year-over-year data available" />
+            <EmptyState message={t('empty.noYoyData')} />
           )}
 
           {/* Admin legend */}
@@ -833,12 +830,10 @@ export default function TemporalPulse() {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-text-muted" />
-            Political Events Timeline
+            {t('politicalTimeline.title')}
           </CardTitle>
           <CardDescription>
-            Key political events that may have influenced procurement patterns.
-            Elections, reforms, scandals, and crises can all trigger shifts in spending behavior.
-            Click any event to investigate contracts from that year.
+            {t('politicalTimeline.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -923,7 +918,7 @@ export default function TemporalPulse() {
                         {event.source && (
                           <span className="text-text-muted">{event.source}</span>
                         )}
-                        <span className="text-accent/50 ml-auto">Investigate {eventYear} →</span>
+                        <span className="text-accent/50 ml-auto">{t('investigateYear', { year: eventYear })}</span>
                       </div>
                     </div>
                   </div>
@@ -939,19 +934,19 @@ export default function TemporalPulse() {
                   {showAllEvents ? (
                     <>
                       <ChevronUp className="h-3 w-3" />
-                      Show less
+                      {t('politicalTimeline.showLess')}
                     </>
                   ) : (
                     <>
                       <ChevronDown className="h-3 w-3" />
-                      Show all {eventsData.events.length} events
+                      {t('politicalTimeline.showAll', { count: eventsData.events.length })}
                     </>
                   )}
                 </button>
               )}
             </div>
           ) : (
-            <EmptyState message="No political events data available" />
+            <EmptyState message={t('politicalTimeline.noData')} />
           )}
         </CardContent>
       </Card>

@@ -1,0 +1,87 @@
+{
+  "trackingLabel": "TEMPORAL PULSE",
+  "title": "Temporal Pulse",
+  "subtitle": "Contracts in {{year}} — rhythms, spikes, and political cycles",
+  "heroDetail": "{{value}} total value · {{risk}} avg risk",
+  "yearLabel": "Year:",
+  "investigate": "Investigate →",
+  "investigateYear": "Investigate {{year}} →",
+  "anomalous": "anomalous",
+  "stats": {
+    "totalContracts": "TOTAL CONTRACTS",
+    "totalContractsDetail": "In {{year}}",
+    "totalValue": "TOTAL VALUE",
+    "totalValueDetail": "Contract spending",
+    "avgRiskScore": "AVG RISK SCORE",
+    "avgRiskScoreDetail": "Mean corruption probability",
+    "decemberSpike": "DECEMBER SPIKE",
+    "decemberSpikeDetail": "Dec vs avg month"
+  },
+  "administrations": {
+    "Fox": "Fox",
+    "Calderon": "Calderon",
+    "Pena Nieto": "Pena Nieto",
+    "AMLO": "AMLO",
+    "Sheinbaum": "Sheinbaum"
+  },
+  "adminCard": {
+    "contracts": "contracts",
+    "avgHighRisk": "avg high-risk"
+  },
+  "adminScorecard": {
+    "title": "Administration Comparison",
+    "description": "Click any administration to view contracts from that era."
+  },
+  "monthlyRhythm": {
+    "title": "Monthly Procurement Rhythm ({{year}})",
+    "description": "Contract volume by month with risk overlay. December bars highlighted when they exceed the annual average. Click any bar to investigate contracts from that period — December bars show year-end contracts specifically."
+  },
+  "decemberAnalysis": {
+    "title": "December Spike Analysis (2018-2024)",
+    "description": "December contract counts vs average of other months. Years where December exceeds 1.5x are highlighted. Budget-clearing behavior drives predictable year-end surges."
+  },
+  "adminBands": {
+    "title": "Procurement by Presidential Administration",
+    "description": "Year-over-year contract volume with administration periods shaded. Highlighted years (red dashed lines) show anomalous spikes in high-risk contracts. Click any bar to investigate contracts from that year."
+  },
+  "politicalTimeline": {
+    "title": "Political Events Timeline",
+    "description": "Key political events that may have influenced procurement patterns. Elections, reforms, scandals, and crises can all trigger shifts in spending behavior. Click any event to investigate contracts from that year.",
+    "showLess": "Show less",
+    "showAll": "Show all {{count}} events",
+    "impact": "{{level}} impact",
+    "noData": "No political events data available"
+  },
+  "tooltip": {
+    "contracts": "Contracts",
+    "value": "Value",
+    "avgRisk": "Avg Risk",
+    "directAwards": "Direct Awards",
+    "singleBids": "Single Bids",
+    "yearEndPeriod": "Year-end period",
+    "clickToInvestigate": "Click to investigate",
+    "december": "December",
+    "avgOther": "Avg Other",
+    "ratio": "Ratio",
+    "spikeDetected": "spike detected"
+  },
+  "legend": {
+    "contracts": "Contracts",
+    "avgRiskPct": "Avg Risk %",
+    "december": "December",
+    "avgOtherMonths": "Avg Other Months"
+  },
+  "keyEvents": {
+    "financialCrisis": "Financial Crisis",
+    "newPriGovt": "New PRI Govt",
+    "amloTakesOffice": "AMLO Takes Office",
+    "covid19": "COVID-19",
+    "sheinbaum": "Sheinbaum"
+  },
+  "empty": {
+    "noDataForYear": "No data available for {{year}}",
+    "noMultiYearData": "No multi-year data available",
+    "noYoyData": "No year-over-year data available"
+  },
+  "loading": "Loading..."
+}

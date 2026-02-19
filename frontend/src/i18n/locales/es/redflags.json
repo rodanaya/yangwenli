@@ -1,0 +1,60 @@
+{
+  "trackingLabel": "ANATOMIA DE ALERTAS",
+  "heroSubtitle": "Contratos con factores de riesgo -- como se distribuyen las senales de corrupcion",
+  "errorMessage": "Error al cargar el analisis de factores de riesgo.",
+  "errorHint": "Verifique que el servidor este en funcionamiento en el puerto 8001.",
+  "filters": {
+    "sector": "Sector",
+    "allSectors": "Todos los Sectores",
+    "year": "Ano",
+    "allYears": "Todos los Anos",
+    "clearFilters": "Limpiar filtros"
+  },
+  "dangerZone": {
+    "title": "Combinaciones Mas Peligrosas",
+    "description": "Estos pares de factores co-ocurren mucho mas de lo esperado por azar. Cada uno es una posible firma de corrupcion.",
+    "label": "#{{rank}} COMBINACION PELIGROSA",
+    "liftLabel": "{{value}}x elevacion",
+    "contractsLabel": "{{count}} contratos",
+    "investigate": "Clic para investigar"
+  },
+  "factorFrequency": {
+    "title": "Frecuencia de Factores",
+    "description": "Con que frecuencia aparece cada factor de riesgo en los contratos. Las barras coloreadas por puntuacion de riesgo promedio de los contratos con ese factor. Haga clic en cualquier barra para ver los contratos con ese factor de riesgo.",
+    "empty": "Sin datos de factores de riesgo para los filtros seleccionados.",
+    "showAll": "Mostrar todos los {{count}} factores",
+    "showTop": "Mostrar top 15",
+    "legendLabel": "Color de barra = riesgo prom.:",
+    "low": "Bajo",
+    "medium": "Medio",
+    "high": "Alto",
+    "critical": "Critico"
+  },
+  "worstCombinations": {
+    "title": "Peores Combinaciones de Factores",
+    "description": "Top 10 pares de factores clasificados por elevacion -- combinaciones que aparecen juntas con mucha mas frecuencia de lo esperado por azar. Elevacion > 1 = mas que azar; elevacion > 2 = asociacion fuerte. Haga clic en cualquier combinacion para investigar los contratos que activaron ambas alertas.",
+    "empty": "Sin datos de co-ocurrencia disponibles.",
+    "contractsLift": "{{count}} contratos -- {{lift}}x mas probable de co-ocurrir que por azar",
+    "showHeatmap": "Mostrar mapa de calor de co-ocurrencia",
+    "hideHeatmap": "Ocultar mapa de calor",
+    "heatmapEmpty": "Sin datos de co-ocurrencia para los filtros seleccionados.",
+    "liftLegend": "Elevacion:"
+  },
+  "factorRiskScatter": {
+    "title": "Correlacion Factor-Riesgo",
+    "description": "Cada burbuja es un factor de riesgo. Eje X = frecuencia (que tan comun); Eje Y = riesgo promedio. Superior derecha = comun Y de alto riesgo (investigacion prioritaria). Superior izquierda = raro pero peligroso. Tamano de burbuja = numero de contratos. Haga clic en cualquier burbuja para investigar.",
+    "empty": "Sin datos disponibles para los filtros seleccionados.",
+    "xAxisLabel": "Frecuencia (%)",
+    "yAxisLabel": "Puntuacion de Riesgo Prom.",
+    "riskThreshold": "Umbral de riesgo 25%"
+  },
+  "tooltip": {
+    "contracts": "{{count}} contratos ({{pct}}%)",
+    "avgRisk": "Riesgo prom.: {{value}}%",
+    "frequency": "Frecuencia: {{value}}%"
+  },
+  "methodology": {
+    "title": "Metodologia",
+    "content": "Los factores de riesgo se extraen de la columna risk_factors de cada contrato. La elevacion de co-ocurrencia se calcula como P(A y B) / (P(A) * P(B)), donde una elevacion de 1.0 significa que los factores co-ocurren exactamente con la frecuencia esperada por azar. Valores superiores a 2.0 indican una asociacion no aleatoria fuerte que puede sugerir irregularidades coordinadas en contratacion."
+  }
+}

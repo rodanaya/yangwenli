@@ -1,6 +1,42 @@
 {
   "title": "Contratos",
   "searchPlaceholder": "Buscar por título o número de contrato...",
+  "guidance": "Seleccione un preset para comenzar a investigar, o use filtros para encontrar contratos especificos. Haga clic en cualquier fila para expandir los factores de riesgo. Use la herramienta de comparacion para analizar contratos lado a lado.",
+  "presets": {
+    "sectionLabel": "Presets de Investigacion",
+    "suspiciousMonopolies": {
+      "label": "Monopolios Sospechosos",
+      "description": "Contratos de riesgo critico con un solo licitante — un proveedor, sin competencia"
+    },
+    "decemberRush": {
+      "label": "Prisa de Diciembre",
+      "description": "Contratos de alto riesgo de fin de ano — vaciado presupuestal antes del cierre fiscal"
+    },
+    "priceManipulation": {
+      "label": "Manipulacion de Precios",
+      "description": "Valores atipicos estadisticos de precios — contratos muy por encima de la norma sectorial"
+    },
+    "ghostCompanies": {
+      "label": "Empresas Fantasma",
+      "description": "Adjudicaciones directas a proveedores fuera de sector — patron clasico de empresa fantasma"
+    },
+    "networkClusters": {
+      "label": "Grupos en Red",
+      "description": "Contratos de riesgo critico de miembros de red — grupos coordinados de proveedores"
+    },
+    "splitContracts": {
+      "label": "Contratos Fraccionados",
+      "description": "Fraccionamiento de umbrales — multiples contratos el mismo dia para evadir limites de supervision"
+    },
+    "recentCritical": {
+      "label": "Recientes y Criticos",
+      "description": "Contratos de riesgo critico de 2024 — actividad sospechosa mas reciente"
+    },
+    "biggestDirectAwards": {
+      "label": "Mayores Adj. Directas",
+      "description": "Contratos mas grandes sin licitacion competitiva — mayor valor sin competencia"
+    }
+  },
   "columns": {
     "id": "ID",
     "title": "Título",

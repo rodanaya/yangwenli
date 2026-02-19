@@ -1,0 +1,87 @@
+{
+  "trackingLabel": "PULSO TEMPORAL",
+  "title": "Pulso Temporal",
+  "subtitle": "Contratos en {{year}} — ritmos, picos y ciclos politicos",
+  "heroDetail": "{{value}} valor total · {{risk}} riesgo promedio",
+  "yearLabel": "Ano:",
+  "investigate": "Investigar →",
+  "investigateYear": "Investigar {{year}} →",
+  "anomalous": "anomalo",
+  "stats": {
+    "totalContracts": "TOTAL DE CONTRATOS",
+    "totalContractsDetail": "En {{year}}",
+    "totalValue": "VALOR TOTAL",
+    "totalValueDetail": "Gasto en contratos",
+    "avgRiskScore": "RIESGO PROMEDIO",
+    "avgRiskScoreDetail": "Probabilidad media de corrupcion",
+    "decemberSpike": "PICO DE DICIEMBRE",
+    "decemberSpikeDetail": "Dic vs mes promedio"
+  },
+  "administrations": {
+    "Fox": "Fox",
+    "Calderon": "Calderon",
+    "Pena Nieto": "Pena Nieto",
+    "AMLO": "AMLO",
+    "Sheinbaum": "Sheinbaum"
+  },
+  "adminCard": {
+    "contracts": "contratos",
+    "avgHighRisk": "riesgo alto promedio"
+  },
+  "adminScorecard": {
+    "title": "Comparacion por Administracion",
+    "description": "Haga clic en cualquier administracion para ver contratos de esa epoca."
+  },
+  "monthlyRhythm": {
+    "title": "Ritmo Mensual de Contratacion ({{year}})",
+    "description": "Volumen de contratos por mes con superposicion de riesgo. Las barras de diciembre se resaltan cuando superan el promedio anual. Haga clic en cualquier barra para investigar contratos de ese periodo."
+  },
+  "decemberAnalysis": {
+    "title": "Analisis de Pico de Diciembre (2018-2024)",
+    "description": "Recuento de contratos de diciembre vs promedio de otros meses. Se resaltan los anos donde diciembre supera 1.5x. El comportamiento de liquidacion presupuestal genera picos predecibles a fin de ano."
+  },
+  "adminBands": {
+    "title": "Contratacion por Administracion Presidencial",
+    "description": "Volumen de contratos ano a ano con periodos de administracion sombreados. Los anos resaltados (lineas rojas punteadas) muestran picos anomalos en contratos de alto riesgo. Haga clic en cualquier barra para investigar contratos de ese ano."
+  },
+  "politicalTimeline": {
+    "title": "Cronologia de Eventos Politicos",
+    "description": "Eventos politicos clave que pueden haber influido en los patrones de contratacion. Elecciones, reformas, escandalos y crisis pueden generar cambios en el comportamiento del gasto. Haga clic en cualquier evento para investigar contratos de ese ano.",
+    "showLess": "Mostrar menos",
+    "showAll": "Mostrar todos los {{count}} eventos",
+    "impact": "impacto {{level}}",
+    "noData": "Sin datos de eventos politicos disponibles"
+  },
+  "tooltip": {
+    "contracts": "Contratos",
+    "value": "Valor",
+    "avgRisk": "Riesgo Prom.",
+    "directAwards": "Adj. Directas",
+    "singleBids": "Licitaciones Unicas",
+    "yearEndPeriod": "Periodo de fin de ano",
+    "clickToInvestigate": "Clic para investigar",
+    "december": "Diciembre",
+    "avgOther": "Prom. Otros",
+    "ratio": "Razon",
+    "spikeDetected": "pico detectado"
+  },
+  "legend": {
+    "contracts": "Contratos",
+    "avgRiskPct": "Riesgo Prom. %",
+    "december": "Diciembre",
+    "avgOtherMonths": "Prom. Otros Meses"
+  },
+  "keyEvents": {
+    "financialCrisis": "Crisis Financiera",
+    "newPriGovt": "Nuevo Gobierno PRI",
+    "amloTakesOffice": "AMLO Toma el Poder",
+    "covid19": "COVID-19",
+    "sheinbaum": "Sheinbaum"
+  },
+  "empty": {
+    "noDataForYear": "Sin datos disponibles para {{year}}",
+    "noMultiYearData": "Sin datos multianuales disponibles",
+    "noYoyData": "Sin datos ano a ano disponibles"
+  },
+  "loading": "Cargando..."
+}

@@ -1,6 +1,42 @@
 {
   "title": "Contracts",
   "searchPlaceholder": "Search by title or contract number...",
+  "guidance": "Select a preset to start investigating, or use filters to find specific contracts. Click any row to expand risk factors. Use the compare tool to analyze contracts side-by-side.",
+  "presets": {
+    "sectionLabel": "Investigation Presets",
+    "suspiciousMonopolies": {
+      "label": "Suspicious Monopolies",
+      "description": "Critical-risk single-bidder contracts — one vendor, no competition"
+    },
+    "decemberRush": {
+      "label": "December Rush",
+      "description": "High-risk year-end contracts — budget dumps before fiscal close"
+    },
+    "priceManipulation": {
+      "label": "Price Manipulation",
+      "description": "Statistical price outliers — contracts priced far above sector norm"
+    },
+    "ghostCompanies": {
+      "label": "Ghost Companies",
+      "description": "Direct awards to out-of-industry vendors — classic ghost company pattern"
+    },
+    "networkClusters": {
+      "label": "Network Clusters",
+      "description": "Critical-risk network member contracts — coordinated vendor groups"
+    },
+    "splitContracts": {
+      "label": "Split Contracts",
+      "description": "Threshold splitting — multiple same-day contracts to dodge oversight limits"
+    },
+    "recentCritical": {
+      "label": "Recent & Critical",
+      "description": "2024 critical-risk contracts — most recent suspicious activity"
+    },
+    "biggestDirectAwards": {
+      "label": "Biggest Direct Awards",
+      "description": "Largest contracts bypassing competitive tender — highest value without competition"
+    }
+  },
   "columns": {
     "id": "ID",
     "title": "Title",

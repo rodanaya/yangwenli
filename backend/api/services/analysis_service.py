@@ -149,47 +149,52 @@ class AnalysisService(BaseService):
         conn: sqlite3.Connection,
         *,
         sector_id: int | None = None,
+        year: int | None = None,
         limit: int = 50,
     ) -> dict:
         """
         Top institution->vendor flows grouped by sector.
 
-        Uses pre-computed tables (institution_top_vendors, vendor_stats, institution_stats)
-        for fast response. Returns two layers: institution->sector and sector->vendor,
-        suitable for Sankey/flow visualizations.
+        Queries contracts directly to compute institution->sector and sector->vendor
+        flows. Returns two layers suitable for Sankey/flow visualizations.
         """
         cursor = conn.cursor()
         flows: list[dict] = []
         total_value = 0.0
         total_contracts = 0
 
-        sector_filter = ""
-        params: list[Any] = []
+        extra_filters = ""
+        params_l1: list[Any] = []
         if sector_id is not None:
-            sector_filter = "AND vs.primary_sector_id = ?"
-            params = [sector_id]
+            extra_filters += " AND c.sector_id = ?"
+            params_l1.append(sector_id)
+        if year is not None:
+            extra_filters += " AND c.contract_year = ?"
+            params_l1.append(year)
 
-        # Layer 1: institution -> sector
+        # Layer 1: institution -> sector (top pairs by total contract value)
         cursor.execute(
             f"""
             SELECT
-                itv.institution_id,
+                c.institution_id,
                 COALESCE(i.siglas, i.name) AS institution_name,
-                vs.primary_sector_id AS sector_id,
+                c.sector_id,
                 s.name_es AS sector_name,
-                SUM(itv.total_value_mxn) AS total_value,
-                SUM(itv.contract_count) AS contract_count,
-                AVG(itv.avg_risk_score) AS avg_risk
-            FROM institution_top_vendors itv
-            JOIN institutions i ON itv.institution_id = i.id
-            JOIN vendor_stats vs ON itv.vendor_id = vs.vendor_id
-            JOIN sectors s ON vs.primary_sector_id = s.id
-            WHERE itv.total_value_mxn > 0 {sector_filter}
-            GROUP BY itv.institution_id, vs.primary_sector_id
+                SUM(c.amount_mxn) AS total_value,
+                COUNT(*) AS contract_count,
+                AVG(c.risk_score) AS avg_risk
+            FROM contracts c
+            JOIN institutions i ON c.institution_id = i.id
+            JOIN sectors s ON c.sector_id = s.id
+            WHERE c.amount_mxn > 0
+              AND c.institution_id IS NOT NULL
+              AND c.sector_id IS NOT NULL
+              {extra_filters}
+            GROUP BY c.institution_id, c.sector_id
             ORDER BY total_value DESC
             LIMIT ?
             """,
-            params + [limit],
+            params_l1 + [limit],
         )
 
         for row in cursor.fetchall():
@@ -207,31 +212,38 @@ class AnalysisService(BaseService):
             total_value += row["total_value"]
             total_contracts += row["contract_count"]
 
-        # Layer 2: sector -> vendor
-        sector_filter2 = ""
-        params2: list[Any] = []
+        # Layer 2: sector -> vendor (top pairs by total contract value)
+        extra_filters2 = ""
+        params_l2: list[Any] = []
         if sector_id is not None:
-            sector_filter2 = "AND vs.primary_sector_id = ?"
-            params2 = [sector_id]
+            extra_filters2 += " AND c.sector_id = ?"
+            params_l2.append(sector_id)
+        if year is not None:
+            extra_filters2 += " AND c.contract_year = ?"
+            params_l2.append(year)
 
         cursor.execute(
             f"""
             SELECT
-                vs.primary_sector_id AS sector_id,
+                c.sector_id,
                 s.name_es AS sector_name,
-                vs.vendor_id,
+                c.vendor_id,
                 v.name AS vendor_name,
-                vs.total_value_mxn AS total_value,
-                vs.total_contracts AS contract_count,
-                vs.avg_risk_score AS avg_risk
-            FROM vendor_stats vs
-            JOIN sectors s ON vs.primary_sector_id = s.id
-            JOIN vendors v ON vs.vendor_id = v.id
-            WHERE vs.total_value_mxn > 0 {sector_filter2}
-            ORDER BY vs.total_value_mxn DESC
+                SUM(c.amount_mxn) AS total_value,
+                COUNT(*) AS contract_count,
+                AVG(c.risk_score) AS avg_risk
+            FROM contracts c
+            JOIN sectors s ON c.sector_id = s.id
+            JOIN vendors v ON c.vendor_id = v.id
+            WHERE c.amount_mxn > 0
+              AND c.vendor_id IS NOT NULL
+              AND c.sector_id IS NOT NULL
+              {extra_filters2}
+            GROUP BY c.sector_id, c.vendor_id
+            ORDER BY total_value DESC
             LIMIT ?
             """,
-            params2 + [limit],
+            params_l2 + [limit],
         )
 
         for row in cursor.fetchall():
