@@ -15,7 +15,7 @@ services:
       dockerfile: Dockerfile
     container_name: rubli-backend
     volumes:
-      - ./backend/RUBLI_DEPLOY.db:/app/RUBLI_DEPLOY.db:ro
+      - ./backend/RUBLI_DEPLOY.db:/app/RUBLI_DEPLOY.db
     environment:
       - PYTHONPATH=/app
       - DATABASE_PATH=/app/RUBLI_DEPLOY.db
