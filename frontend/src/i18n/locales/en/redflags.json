@@ -56,5 +56,38 @@
   "methodology": {
     "title": "Methodology",
     "content": "Risk factors are extracted from the risk_factors column on each contract. Co-occurrence lift is calculated as P(A and B) / (P(A) * P(B)), where a lift of 1.0 means factors co-occur exactly as often as expected by chance. Values above 2.0 indicate a strong non-random association that may suggest coordinated procurement irregularities."
+  },
+  "factors": {
+    "single_bid": "Single Bidder",
+    "non_open": "Direct Award",
+    "direct_award": "Direct Award",
+    "restricted_procedure": "Restricted Proc.",
+    "restricted_proc": "Restricted Proc.",
+    "price_anomaly": "Price Anomaly",
+    "vendor_conc": "Vendor Concentration",
+    "short_ad": "Short Ad Period",
+    "year_end": "Year-End Timing",
+    "split": "Splitting",
+    "split_2": "Splitting (x2)",
+    "split_3": "Splitting (x3)",
+    "split_4": "Splitting (x4)",
+    "split_5": "Splitting (x5)",
+    "split_6": "Splitting (x6)",
+    "split_7": "Splitting (x7)",
+    "split_8": "Splitting (x8)",
+    "split_9": "Splitting (x9)",
+    "split_10plus": "Heavy Splitting",
+    "network": "Vendor Network",
+    "network_2": "Network (2)",
+    "network_3": "Network (3)",
+    "network_4": "Network (4)",
+    "network_5plus": "Large Network",
+    "co_bid_high": "Co-Bidding (High)",
+    "co_bid_med": "Co-Bidding (Med)",
+    "price_hyp": "Price Outlier",
+    "inst_risk": "High-Risk Inst.",
+    "industry_mismatch": "Industry Mismatch",
+    "interaction": "Multiple Flags",
+    "data_flag": "Data Flag"
   }
 }

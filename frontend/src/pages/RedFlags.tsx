@@ -51,52 +51,13 @@ import {
 // Factor Display Labels
 // =============================================================================
 
-const FACTOR_LABELS: Record<string, string> = {
-  single_bid: 'Single Bidder',
-  non_open: 'Direct Award',
-  direct_award: 'Direct Award',
-  restricted_procedure: 'Restricted Procedure',
-  restricted_proc: 'Restricted Procedure',
-  price_anomaly: 'Price Anomaly',
-  vendor_conc: 'Vendor Concentration',
-  short_ad: 'Short Advertising Period',
-  'short_ad_<30d': 'Short Ad Period (<30 days)',
-  'short_ad_<15d': 'Short Ad Period (<15 days)',
-  'short_ad_<5d': 'Short Ad Period (<5 days)',
-  year_end: 'Year-End Timing',
-  split: 'Threshold Splitting',
-  split_2: 'Splitting (2 same-day)',
-  split_3: 'Splitting (3 same-day)',
-  split_4: 'Splitting (4 same-day)',
-  split_5: 'Splitting (5 same-day)',
-  split_6: 'Splitting (6 same-day)',
-  split_7: 'Splitting (7 same-day)',
-  split_8: 'Splitting (8 same-day)',
-  split_9: 'Splitting (9 same-day)',
-  'split_10+': 'Heavy Splitting (10+ same-day)',
-  network: 'Vendor Network',
-  network_2: 'Network (2 members)',
-  network_3: 'Network (3 members)',
-  network_4: 'Network (4 members)',
-  'network_5+': 'Large Network (5+ members)',
-  co_bid_high: 'Co-Bidding (High Risk)',
-  co_bid_med: 'Co-Bidding (Medium Risk)',
-  price_hyp: 'Statistical Price Outlier',
-  inst_risk: 'High-Risk Institution',
-  industry_mismatch: 'Industry Mismatch',
-  interaction: 'Multiple Risk Factors Combined',
-  data_flag: 'Data Quality Flag',
-}
-
-/** Consolidation groups: raw factor → group key */
+/** Consolidation groups: raw factor → i18n key suffix */
 function getFactorGroup(factor: string): string {
-  // Group split_N where N >= 10 into one bucket
   if (factor.startsWith('split_')) {
     const n = parseInt(factor.replace('split_', ''), 10)
     if (n >= 10) return 'split_10+'
     return factor
   }
-  // Group network_N where N >= 5 into one bucket
   if (factor.startsWith('network_')) {
     const n = parseInt(factor.replace('network_', ''), 10)
     if (n >= 5) return 'network_5+'
@@ -105,35 +66,39 @@ function getFactorGroup(factor: string): string {
   return factor
 }
 
-function getFactorLabel(factor: string): string {
-  if (FACTOR_LABELS[factor]) return FACTOR_LABELS[factor]
-  // Consolidated groups
-  if (factor === 'split_10+') return 'Heavy Splitting (10+ same-day)'
-  if (factor === 'network_5+') return 'Large Network (5+ members)'
-  // Handle split_N variants: "split_2" → "Same-Day Splitting (2+ contracts)"
+/** Map raw factor key to i18n key under `factors.*` */
+function factorI18nKey(factor: string): string {
+  const group = getFactorGroup(factor)
+  // Keys with special chars must be normalized
+  const safe = group.replace(/[<>+]/g, '').replace(/_+$/, '')
+  const map: Record<string, string> = {
+    'split_10': 'split_10plus',
+    'network_5': 'network_5plus',
+  }
+  return map[safe] ?? safe
+}
+
+type TFunction = (key: string) => string
+
+function getFactorLabel(factor: string, t: TFunction): string {
+  const key = `factors.${factorI18nKey(factor)}`
+  const translated = t(key)
+  // i18next returns the key itself if missing — fall back to humanized version
+  if (translated !== key) return translated
+  // Fallback for dynamic variants not in the map
   if (factor.startsWith('split_')) {
     const n = factor.replace('split_', '')
-    return `Same-Day Splitting (${n}+ contracts)`
+    return `x${n}`
   }
-  // Handle network_N variants: "network_2" → "Vendor Network (2+ members)"
   if (factor.startsWith('network_')) {
     const n = factor.replace('network_', '')
-    return `Vendor Network (${n}+ members)`
+    return `Red (${n})`
   }
-  // Handle co_bid variants
-  if (factor.startsWith('co_bid_')) {
-    const tier = factor.replace('co_bid_', '')
-    return `Co-Bidding (${tier.charAt(0).toUpperCase() + tier.slice(1)} Risk)`
-  }
-  // Handle short_ad variants
   if (factor.startsWith('short_ad_')) {
     const days = factor.replace('short_ad_', '').replace('<', '').replace('d', '')
-    return `Short Ad Period (<${days} days)`
+    return `Aviso <${days}d`
   }
-  // Fallback: humanize the key
-  return factor
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase())
+  return factor.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
 // =============================================================================
@@ -213,7 +178,7 @@ function ScatterTooltip({ active, payload }: { active?: boolean; payload?: Array
 // =============================================================================
 
 /** Consolidate raw factors into groups, summing counts and weight-averaging risk scores */
-function consolidateFactors(data: RiskFactorFrequency[]): Array<RiskFactorFrequency & { label: string }> {
+function consolidateFactors(data: RiskFactorFrequency[], t: TFunction): Array<RiskFactorFrequency & { label: string }> {
   const groups = new Map<string, { count: number; riskSum: number; percentage: number }>()
   for (const d of data) {
     const group = getFactorGroup(d.factor)
@@ -228,7 +193,7 @@ function consolidateFactors(data: RiskFactorFrequency[]): Array<RiskFactorFreque
   }
   return Array.from(groups.entries()).map(([group, { count, riskSum, percentage }]) => ({
     factor: group,
-    label: getFactorLabel(group),
+    label: getFactorLabel(group, t),
     count,
     avg_risk_score: count > 0 ? riskSum / count : 0,
     percentage,
@@ -247,8 +212,8 @@ function FactorFrequencyChart({
   const [showAll, setShowAll] = useState(false)
 
   const allData = useMemo(() => {
-    return consolidateFactors(data).sort((a, b) => b.count - a.count)
-  }, [data])
+    return consolidateFactors(data, t).sort((a, b) => b.count - a.count)
+  }, [data, t])
 
   const chartData = showAll ? allData : allData.slice(0, 15)
   const chartHeight = Math.min(600, Math.max(300, chartData.length * 36))
@@ -354,9 +319,9 @@ function CooccurrenceHeatmap({ cooccurrences, factors }: { cooccurrences: Factor
               <th
                 key={f}
                 className="p-1.5 text-text-muted font-normal whitespace-nowrap"
-                style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', maxHeight: 120 }}
+                style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', height: '120px', overflow: 'hidden' }}
               >
-                {getFactorLabel(f)}
+                {getFactorLabel(f, t)}
               </th>
             ))}
           </tr>
@@ -365,7 +330,7 @@ function CooccurrenceHeatmap({ cooccurrences, factors }: { cooccurrences: Factor
           {relevantFactors.map((rowFactor) => (
             <tr key={rowFactor}>
               <td className="sticky left-0 bg-background-card z-10 p-1.5 text-text-secondary font-medium whitespace-nowrap">
-                {getFactorLabel(rowFactor)}
+                {getFactorLabel(rowFactor, t)}
               </td>
               {relevantFactors.map((colFactor) => {
                 if (rowFactor === colFactor) {
@@ -391,7 +356,7 @@ function CooccurrenceHeatmap({ cooccurrences, factors }: { cooccurrences: Factor
                   <td key={colFactor} className="p-1 text-center">
                     <div
                       className={cn('w-10 h-8 rounded flex items-center justify-center text-xs font-mono font-medium', liftToColor(lift))}
-                      title={`${getFactorLabel(rowFactor)} + ${getFactorLabel(colFactor)}: lift = ${lift.toFixed(2)}`}
+                      title={`${getFactorLabel(rowFactor, t)} + ${getFactorLabel(colFactor, t)}: lift = ${lift.toFixed(2)}`}
                     >
                       {lift.toFixed(1)}
                     </div>
@@ -444,11 +409,11 @@ function WorstCombinations({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 text-sm">
               <span className="text-text-primary font-medium truncate">
-                {getFactorLabel(pair.factor_a)}
+                {getFactorLabel(pair.factor_a, t)}
               </span>
               <ArrowRight className="h-3 w-3 text-text-muted shrink-0" aria-hidden="true" />
               <span className="text-text-primary font-medium truncate">
-                {getFactorLabel(pair.factor_b)}
+                {getFactorLabel(pair.factor_b, t)}
               </span>
             </div>
             <p className="text-xs text-text-muted mt-0.5">
@@ -479,12 +444,12 @@ function FactorRiskScatter({
 }) {
   const { t } = useTranslation('redflags')
   const chartData = useMemo(() => {
-    return consolidateFactors(data).map((d) => ({
+    return consolidateFactors(data, t).map((d) => ({
       ...d,
       // Scale count for ZAxis bubble sizing
       bubbleSize: Math.max(d.count, 1),
     }))
-  }, [data])
+  }, [data, t])
 
   // Compute domain bounds for padding
   const maxPct = useMemo(() => Math.max(...chartData.map((d) => d.percentage), 1), [chartData])
@@ -746,7 +711,7 @@ export default function RedFlags() {
                     <ExternalLink className="h-3.5 w-3.5 text-risk-critical/50 group-hover:text-risk-critical shrink-0 mt-0.5 transition-colors" aria-hidden="true" />
                   </div>
                   <p className="text-sm font-medium text-text-primary leading-snug">
-                    {getFactorLabel(pair.factor_a)} <span className="text-text-muted mx-1">+</span> {getFactorLabel(pair.factor_b)}
+                    {getFactorLabel(pair.factor_a, t)} <span className="text-text-muted mx-1">+</span> {getFactorLabel(pair.factor_b, t)}
                   </p>
                   <div className="mt-2 flex items-center gap-3 text-xs text-text-muted">
                     <span className="text-risk-high font-mono">{t('dangerZone.liftLabel', { value: pair.lift.toFixed(1) })}</span>

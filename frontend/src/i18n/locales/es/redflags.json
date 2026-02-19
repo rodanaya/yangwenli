@@ -56,5 +56,38 @@
   "methodology": {
     "title": "Metodologia",
     "content": "Los factores de riesgo se extraen de la columna risk_factors de cada contrato. La elevacion de co-ocurrencia se calcula como P(A y B) / (P(A) * P(B)), donde una elevacion de 1.0 significa que los factores co-ocurren exactamente con la frecuencia esperada por azar. Valores superiores a 2.0 indican una asociacion no aleatoria fuerte que puede sugerir irregularidades coordinadas en contratacion."
+  },
+  "factors": {
+    "single_bid": "Licitacion Unica",
+    "non_open": "Adj. Directa",
+    "direct_award": "Adj. Directa",
+    "restricted_procedure": "Proc. Restringido",
+    "restricted_proc": "Proc. Restringido",
+    "price_anomaly": "Anomalia de Precio",
+    "vendor_conc": "Conc. Proveedor",
+    "short_ad": "Aviso Corto",
+    "year_end": "Gasto Diciembre",
+    "split": "Fraccionamiento",
+    "split_2": "Fraccion. (x2)",
+    "split_3": "Fraccion. (x3)",
+    "split_4": "Fraccion. (x4)",
+    "split_5": "Fraccion. (x5)",
+    "split_6": "Fraccion. (x6)",
+    "split_7": "Fraccion. (x7)",
+    "split_8": "Fraccion. (x8)",
+    "split_9": "Fraccion. (x9)",
+    "split_10plus": "Fracc. Masivo",
+    "network": "Red Proveedor",
+    "network_2": "Red (2 miembros)",
+    "network_3": "Red (3 miembros)",
+    "network_4": "Red (4 miembros)",
+    "network_5plus": "Red Grande",
+    "co_bid_high": "Co-licitan (Alto)",
+    "co_bid_med": "Co-licitan (Med.)",
+    "price_hyp": "Precio Atipico",
+    "inst_risk": "Inst. Alto Riesgo",
+    "industry_mismatch": "Giro Distinto",
+    "interaction": "Multiples Alertas",
+    "data_flag": "Calidad de Datos"
   }
 }
