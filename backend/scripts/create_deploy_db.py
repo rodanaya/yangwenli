@@ -98,6 +98,69 @@ def run():
     conn.commit()
     print("  Dropped view: v_contracts_full")
 
+    # Create empty stub tables so API endpoints return empty results instead of 500 errors
+    step("Step 2b/7: Creating empty stub tables for API compatibility")
+    stubs = {
+        "contract_z_features": """CREATE TABLE IF NOT EXISTS contract_z_features (
+            contract_id INTEGER PRIMARY KEY,
+            z_single_bid REAL, z_direct_award REAL, z_price_ratio REAL,
+            z_vendor_concentration REAL, z_ad_period_days REAL, z_year_end REAL,
+            z_same_day_count REAL, z_network_member_count REAL, z_co_bid_rate REAL,
+            z_price_hyp_confidence REAL, z_industry_mismatch REAL, z_institution_risk REAL,
+            z_price_volatility REAL, z_sector_spread REAL, z_win_rate REAL,
+            z_institution_diversity REAL,
+            mahalanobis_distance REAL, mahalanobis_pvalue REAL,
+            sector_id INTEGER, contract_year INTEGER
+        )""",
+        "price_hypotheses": """CREATE TABLE IF NOT EXISTS price_hypotheses (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            hypothesis_id TEXT UNIQUE, contract_id INTEGER, hypothesis_type TEXT,
+            confidence REAL, confidence_level TEXT, explanation TEXT,
+            supporting_evidence TEXT, recommended_action TEXT, literature_reference TEXT,
+            sector_id INTEGER, vendor_id INTEGER, amount_mxn REAL,
+            is_reviewed INTEGER DEFAULT 0, is_valid INTEGER, review_notes TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )""",
+        "contract_quality": """CREATE TABLE IF NOT EXISTS contract_quality (
+            contract_id INTEGER PRIMARY KEY, quality_score REAL, quality_grade TEXT
+        )""",
+        "vendor_investigation_features": """CREATE TABLE IF NOT EXISTS vendor_investigation_features (
+            vendor_id INTEGER, sector_id INTEGER, feature_name TEXT, feature_value REAL,
+            PRIMARY KEY (vendor_id, sector_id, feature_name)
+        )""",
+        "vendor_price_profiles": """CREATE TABLE IF NOT EXISTS vendor_price_profiles (
+            vendor_id INTEGER, sector_id INTEGER,
+            avg_contract_value REAL, median_contract_value REAL, contract_count INTEGER,
+            price_trend TEXT, PRIMARY KEY (vendor_id, sector_id)
+        )""",
+        "risk_scores": """CREATE TABLE IF NOT EXISTS risk_scores (
+            contract_id INTEGER PRIMARY KEY, risk_score REAL
+        )""",
+        "model_comparison": """CREATE TABLE IF NOT EXISTS model_comparison (
+            id INTEGER PRIMARY KEY, model_a TEXT, model_b TEXT, metric TEXT, value REAL
+        )""",
+        "feature_importance": """CREATE TABLE IF NOT EXISTS feature_importance (
+            id INTEGER PRIMARY KEY, feature_name TEXT, importance REAL, model_version TEXT
+        )""",
+        "validation_results": """CREATE TABLE IF NOT EXISTS validation_results (
+            id INTEGER PRIMARY KEY, metric TEXT, value REAL, model_version TEXT
+        )""",
+        "hypothesis_runs": """CREATE TABLE IF NOT EXISTS hypothesis_runs (
+            id INTEGER PRIMARY KEY, run_id TEXT, started_at TEXT, completed_at TEXT,
+            contracts_analyzed INTEGER, hypotheses_generated INTEGER, status TEXT
+        )""",
+        "financial_metrics": """CREATE TABLE IF NOT EXISTS financial_metrics (
+            contract_id INTEGER PRIMARY KEY, metric_name TEXT, metric_value REAL
+        )""",
+    }
+    for tbl_name, create_sql in stubs.items():
+        try:
+            cur.execute(create_sql)
+            print(f"  Stub: {tbl_name}")
+        except Exception as e:
+            print(f"  WARN: Could not create stub {tbl_name}: {e}")
+    conn.commit()
+
     # ── Step 3: Slim down contracts table ──
     step("Step 3/7: Rebuilding contracts table (dropping columns + NULLing text)")
 

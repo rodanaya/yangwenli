@@ -21,5 +21,8 @@ venv
 .venv
 tests/__pycache__
 
-# Don't ignore the database - we need it!
-# RUBLI_NORMALIZED.db
+# Databases are mounted as volumes, not copied into image
+*.db
+*.db.gz
+backups/
+original_data/

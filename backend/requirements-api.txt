@@ -1,4 +1,4 @@
-# Yang Wen-li API Runtime Dependencies
+# RUBLI API Runtime Dependencies
 # Use this for production Docker builds (slim image)
 # For full dev/pipeline environment, use requirements.txt
 

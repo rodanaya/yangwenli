@@ -1,4 +1,4 @@
-# Yang Wen-li Frontend - Multi-stage Docker Build
+# RUBLI Frontend - Multi-stage Docker Build
 # Stage 1: Build the React app
 FROM node:22-alpine AS builder
 

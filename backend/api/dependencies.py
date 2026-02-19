@@ -5,8 +5,8 @@ from pathlib import Path
 from contextlib import contextmanager
 from typing import Generator
 
-# Database path - relative to backend directory
-DB_PATH = Path(__file__).parent.parent / "RUBLI_NORMALIZED.db"
+# Database path - configurable via env var, defaults to RUBLI_NORMALIZED.db
+DB_PATH = Path(os.environ.get("DATABASE_PATH", str(Path(__file__).parent.parent / "RUBLI_NORMALIZED.db")))
 
 # Query timeout in seconds (configurable via environment variable)
 DB_QUERY_TIMEOUT = int(os.environ.get("DB_QUERY_TIMEOUT", "30"))

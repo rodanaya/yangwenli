@@ -230,11 +230,15 @@ class ContractService(BaseService):
 
         # 2. Get z-features for this contract
         z_cols_sql = ", ".join(self.Z_COLS)
-        z_row = self._execute_one(
-            conn,
-            f"SELECT {z_cols_sql} FROM contract_z_features WHERE contract_id = ?",
-            (contract_id,),
-        )
+        try:
+            z_row = self._execute_one(
+                conn,
+                f"SELECT {z_cols_sql} FROM contract_z_features WHERE contract_id = ?",
+                (contract_id,),
+            )
+        except sqlite3.OperationalError:
+            # Table may not exist in deploy database
+            z_row = None
         if z_row is None:
             # No z-features (pre-2002 data or missing)
             return {

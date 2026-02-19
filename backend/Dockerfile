@@ -1,4 +1,4 @@
-# Yang Wen-li Backend - FastAPI with SQLite
+# RUBLI Backend - FastAPI with SQLite
 FROM python:3.11-slim
 
 # Set environment variables

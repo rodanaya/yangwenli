@@ -1,0 +1,49 @@
+# RUBLI Production Deployment
+# Uses the optimized deploy database (2.3 GB vs 5.8 GB)
+#
+# Usage:
+#   docker-compose -f docker-compose.prod.yml up -d --build
+#
+# Prerequisites:
+#   1. Run: python backend/scripts/create_deploy_db.py
+#   2. Ensure backend/RUBLI_DEPLOY.db exists (~2.3 GB)
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rubli-backend
+    volumes:
+      - ./backend/RUBLI_DEPLOY.db:/app/RUBLI_DEPLOY.db:ro
+    environment:
+      - PYTHONPATH=/app
+      - DATABASE_PATH=/app/RUBLI_DEPLOY.db
+      - CORS_ORIGINS=http://localhost:3009,http://rubli-frontend
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8001/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - rubli-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: rubli-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - rubli-network
+
+networks:
+  rubli-network:
+    driver: bridge
