@@ -181,7 +181,8 @@ class AnalysisService(BaseService):
                 s.name_es AS sector_name,
                 SUM(c.amount_mxn) AS total_value,
                 COUNT(*) AS contract_count,
-                AVG(c.risk_score) AS avg_risk
+                AVG(c.risk_score) AS avg_risk,
+                SUM(CASE WHEN c.risk_score >= 0.30 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS high_risk_pct
             FROM contracts c
             JOIN institutions i ON c.institution_id = i.id
             JOIN sectors s ON c.sector_id = s.id
@@ -207,6 +208,7 @@ class AnalysisService(BaseService):
                 "value": round(row["total_value"], 2),
                 "contracts": row["contract_count"],
                 "avg_risk": round(row["avg_risk"], 4) if row["avg_risk"] else None,
+                "high_risk_pct": round(row["high_risk_pct"], 2) if row["high_risk_pct"] else 0.0,
             })
             total_value += row["total_value"]
             total_contracts += row["contract_count"]

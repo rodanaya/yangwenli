@@ -96,6 +96,7 @@ export interface ContractBase {
 export interface ContractListItem extends ContractBase {
   vendor_id?: number
   vendor_name?: string
+  vendor_rfc?: string
   institution_id?: number
   institution_name?: string
   procedure_type?: string
@@ -576,6 +577,7 @@ export interface MoneyFlowItem {
   value: number
   contracts: number
   avg_risk: number | null
+  high_risk_pct: number | null
 }
 
 export interface MoneyFlowResponse {

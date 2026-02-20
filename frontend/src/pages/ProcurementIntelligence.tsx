@@ -253,7 +253,7 @@ export default function ProcurementIntelligence() {
         total_flow: f.value,
         contracts: f.contracts,
         avg_risk: f.avg_risk,
-        high_risk_pct: f.high_risk_pct ?? 0,
+        high_risk_pct: f.high_risk_pct ?? 0,  // % of contracts with risk_score >= 0.30
       }))
   }, [flowData])
 
@@ -479,8 +479,8 @@ export default function ProcurementIntelligence() {
                           {formatCompactMXN(inst.total_flow)}
                         </td>
                         <td className="px-4 py-2.5 text-right">
-                          <span style={{ color: riskToColor(inst.high_risk_pct / 100) }}>
-                            {inst.high_risk_pct.toFixed(1)}%
+                          <span style={{ color: riskToColor((inst.high_risk_pct ?? 0) / 100) }}>
+                            {(inst.high_risk_pct ?? 0).toFixed(1)}%
                           </span>
                         </td>
                         <td className="px-4 py-2.5 text-center">

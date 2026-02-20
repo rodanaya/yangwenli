@@ -2381,6 +2381,7 @@ class MoneyFlowItem(BaseModel):
     value: float
     contracts: int
     avg_risk: Optional[float] = None
+    high_risk_pct: Optional[float] = None
 
 class MoneyFlowResponse(BaseModel):
     flows: List[MoneyFlowItem]

@@ -104,7 +104,7 @@ class ContractService(BaseService):
             c.contract_date, c.contract_year, c.sector_id,
             s.name_es as sector_name,
             c.risk_score, c.risk_level, c.is_direct_award, c.is_single_bid,
-            v.name as vendor_name, i.name as institution_name,
+            v.name as vendor_name, v.rfc as vendor_rfc, i.name as institution_name,
             c.procedure_type, c.mahalanobis_distance,
             c.vendor_id, c.institution_id, c.risk_factors
         """
@@ -131,6 +131,7 @@ class ContractService(BaseService):
             "is_direct_award": bool(row["is_direct_award"]),
             "is_single_bid": bool(row["is_single_bid"]),
             "vendor_name": row["vendor_name"],
+            "vendor_rfc": row["vendor_rfc"],
             "institution_name": row["institution_name"],
             "procedure_type": row["procedure_type"],
             "mahalanobis_distance": row["mahalanobis_distance"],

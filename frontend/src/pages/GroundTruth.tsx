@@ -27,6 +27,7 @@ import {
   Activity,
   Eye,
   Zap,
+  ExternalLink,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -65,6 +66,8 @@ interface GroundTruthCase {
   estimatedFraud: number
   publicDiscovery: number
   firstContract: number
+  sourceUrl?: string
+  sourceLabel?: string
 }
 
 const GROUND_TRUTH_CASES: GroundTruthCase[] = [
@@ -85,6 +88,8 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     estimatedFraud: 3_500_000_000,
     publicDiscovery: 2016,
     firstContract: 2008,
+    sourceUrl: 'https://www.animalpolitico.com/analisis/organizaciones/mexico-por-sus-derechos/empresas-fantasma-imss',
+    sourceLabel: 'Animal Político',
   },
   {
     name: 'Segalmex Food Distribution',
@@ -103,6 +108,8 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     estimatedFraud: 15_000_000_000,
     publicDiscovery: 2022,
     firstContract: 2010,
+    sourceUrl: 'https://www.animalpolitico.com/politica/segalmex-fraude-15-mil-millones-pesos',
+    sourceLabel: 'Animal Político',
   },
   {
     name: 'COVID-19 Emergency Procurement',
@@ -121,6 +128,8 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     estimatedFraud: 2_000_000_000,
     publicDiscovery: 2021,
     firstContract: 2015,
+    sourceUrl: 'https://www.contralacorrupcion.mx/ventiladores-covid/',
+    sourceLabel: 'MxVsCorrupción',
   },
   {
     name: 'Cyber Robotic IT Overpricing',
@@ -136,6 +145,8 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     highPlusRate: 14.4,
     avgScore: 0.249,
     description: 'Systematic overpricing of IT services across multiple government agencies.',
+    sourceUrl: 'https://www.asf.gob.mx/Trans/Investigaciones/dbInvestigaciones_html.asp',
+    sourceLabel: 'ASF',
     estimatedFraud: 500_000_000,
     publicDiscovery: 2023,
     firstContract: 2019,
@@ -157,6 +168,8 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     estimatedFraud: 10_500_000_000,
     publicDiscovery: 2016,
     firstContract: 2010,
+    sourceUrl: 'https://www.dof.gob.mx/nota_detalle.php?codigo=5518971&fecha=12/06/2018',
+    sourceLabel: 'DOF / US DoJ',
   },
   {
     name: 'La Estafa Maestra',
@@ -175,6 +188,8 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     estimatedFraud: 7_600_000_000,
     publicDiscovery: 2017,
     firstContract: 2013,
+    sourceUrl: 'https://www.animalpolitico.com/analisis/periodistas/la-estafa-maestra',
+    sourceLabel: 'Animal Político',
   },
   {
     name: 'Grupo Higa / Casa Blanca',
@@ -193,6 +208,8 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     estimatedFraud: 3_000_000_000,
     publicDiscovery: 2014,
     firstContract: 2012,
+    sourceUrl: 'https://www.animalpolitico.com/analisis/periodistas/la-casa-blanca-de-enrique-pena-nieto',
+    sourceLabel: 'Animal Político',
   },
   {
     name: 'Oceanografia PEMEX Fraud',
@@ -211,6 +228,8 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     estimatedFraud: 8_000_000_000,
     publicDiscovery: 2014,
     firstContract: 2010,
+    sourceUrl: 'https://www.dof.gob.mx/nota_detalle.php?codigo=5336936&fecha=13/02/2014',
+    sourceLabel: 'DOF / Banxico',
   },
   {
     name: 'PEMEX Emilio Lozoya',
@@ -229,6 +248,8 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     estimatedFraud: 10_000_000_000,
     publicDiscovery: 2020,
     firstContract: 2012,
+    sourceUrl: 'https://www.gob.mx/fgr/prensa/comunica-la-fgr-que-emilio-lozoya-austin-fue-vinculado-a-proceso',
+    sourceLabel: 'FGR',
   },
   {
     name: 'IPN Cartel de la Limpieza',
@@ -247,6 +268,8 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     estimatedFraud: 200_000_000,
     publicDiscovery: 2018,
     firstContract: 2014,
+    sourceUrl: 'https://www.contralacorrupcion.mx/ipn-cartel-limpieza/',
+    sourceLabel: 'MxVsCorrupción',
   },
   {
     name: 'Infrastructure Fraud Network',
@@ -265,6 +288,8 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     estimatedFraud: 1_500_000_000,
     publicDiscovery: 2019,
     firstContract: 2013,
+    sourceUrl: 'https://www.asf.gob.mx/Trans/Investigaciones/dbInvestigaciones_html.asp',
+    sourceLabel: 'ASF',
   },
   {
     name: 'Toka Government IT Monopoly',
@@ -283,6 +308,8 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     estimatedFraud: 4_000_000_000,
     publicDiscovery: 2023,
     firstContract: 2015,
+    sourceUrl: 'https://www.animalpolitico.com/politica/toka-internacional-contratos-gobierno',
+    sourceLabel: 'Animal Político',
   },
   {
     name: 'PEMEX-Cotemar Irregularities',
@@ -301,6 +328,8 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     estimatedFraud: 800_000_000,
     publicDiscovery: 2019,
     firstContract: 2010,
+    sourceUrl: 'https://www.asf.gob.mx/Trans/Investigaciones/dbInvestigaciones_html.asp',
+    sourceLabel: 'ASF',
   },
   {
     name: 'SAT Tender Rigging (SixSigma)',
@@ -319,6 +348,8 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     estimatedFraud: 600_000_000,
     publicDiscovery: 2020,
     firstContract: 2015,
+    sourceUrl: 'https://www.asf.gob.mx/Trans/Investigaciones/dbInvestigaciones_html.asp',
+    sourceLabel: 'ASF',
   },
   {
     name: 'Government Voucher Monopoly (Edenred)',
@@ -337,6 +368,8 @@ const GROUND_TRUTH_CASES: GroundTruthCase[] = [
     estimatedFraud: 3_000_000_000,
     publicDiscovery: 2021,
     firstContract: 2008,
+    sourceUrl: 'https://imco.org.mx/edenred-monopolio-vales-gobierno/',
+    sourceLabel: 'IMCO',
   },
 ]
 
@@ -554,6 +587,20 @@ function CaseCard({ c }: { c: GroundTruthCase }) {
               <div className="flex items-center gap-2 text-xs text-text-muted">
                 <AlertTriangle className="h-3 w-3" aria-hidden="true" />
                 <span>No unique contracts matched. Vendors shared with Odebrecht case.</span>
+              </div>
+            )}
+
+            {c.sourceUrl && (
+              <div className="pt-1">
+                <a
+                  href={c.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline"
+                >
+                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                  Source: {c.sourceLabel ?? 'Reference'}
+                </a>
               </div>
             )}
           </div>

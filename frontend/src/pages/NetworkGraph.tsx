@@ -566,6 +566,16 @@ export function NetworkGraph() {
         &quot;High risk only&quot; to focus on sectors with elevated risk concentration.
       </SectionDescription>
 
+      <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-4 py-2.5 text-xs text-amber-400 flex items-start gap-2">
+        <span className="shrink-0 mt-0.5">⚠</span>
+        <span>
+          <strong>Note on co-bidding:</strong> Co-bidding patterns (vendors that frequently appear in the same bids)
+          are visible in vendor profiles but are <em>not included in the risk score</em> — the signal was regularized
+          to zero in model training because dominant cases involved market concentration, not coordinated bidding.
+          Use the <strong>Collusion Detection</strong> tab in vendor profiles for manual investigation.
+        </span>
+      </div>
+
       {/* Toolbar */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-sm">

@@ -890,6 +890,11 @@ function ContractRow({
           ) : (
             <span className="text-xs text-text-muted">Unknown vendor</span>
           )}
+          {contract.vendor_rfc && (
+            <span className="text-xs text-text-muted/60 font-mono block mt-0.5 truncate max-w-[200px]">
+              {contract.vendor_rfc}
+            </span>
+          )}
           {contract.institution_id ? (
             <Link
               to={`/institutions/${contract.institution_id}`}
@@ -1038,6 +1043,19 @@ function ContractRow({
             <ExternalLink className="h-3 w-3" />
             {contract.institution_name ? toTitleCase(contract.institution_name) : `Inst #${contract.institution_id}`}
           </Link>
+        )}
+        {contract.contract_number && (
+          <a
+            href={`https://compranet.hacienda.gob.mx/esop/toolkit/opportunity/opportunityDetail.do?opportunityId=${encodeURIComponent(contract.contract_number)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-text-muted hover:text-accent flex items-center gap-1"
+            onClick={(e) => e.stopPropagation()}
+            title="View on COMPRANET"
+          >
+            <ExternalLink className="h-3 w-3" />
+            COMPRANET
+          </a>
         )}
         <button
           className="text-xs text-accent hover:underline ml-auto flex items-center gap-1"
