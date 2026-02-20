@@ -131,3 +131,25 @@ class TestAnalysisYearOverYear:
         """Test year over year filtered by sector."""
         response = client.get(f"{base_url}/analysis/year-over-year?sector_id=1")
         assert response.status_code == 200
+
+
+class TestAnalysisPerCaseDetection:
+    """Tests for GET /analysis/validation/per-case-detection endpoint."""
+
+    def test_per_case_detection_returns_list(self, client, base_url):
+        response = client.get(f"{base_url}/analysis/validation/per-case-detection")
+        assert response.status_code == 200
+        data = response.json()
+        assert "data" in data
+        assert "total" in data
+        assert isinstance(data["data"], list)
+
+    def test_per_case_detection_structure(self, client, base_url):
+        response = client.get(f"{base_url}/analysis/validation/per-case-detection")
+        data = response.json()
+        if data["data"]:
+            case = data["data"][0]
+            assert "case_name" in case
+            assert "total_contracts" in case
+            assert "detection_rate" in case
+            assert 0 <= case["detection_rate"] <= 1

@@ -29,6 +29,8 @@ CONTRACT_SORT_WHITELIST = {
     "title": "c.title",
     "vendor_name": "vendor_name",
     "institution_name": "institution_name",
+    "sector_id": "c.sector_id",
+    "risk_level": "c.risk_level",
     "mahalanobis_distance": "c.mahalanobis_distance",
 }
 

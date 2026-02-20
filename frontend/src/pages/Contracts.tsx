@@ -52,15 +52,21 @@ import { useToast } from '@/components/ui/toast'
 import { ContractDetailModal } from '@/components/ContractDetailModal'
 import { ContractCompareModal } from '@/components/ContractCompareModal'
 import { ExpandableProvider, ExpandableRow, ExpandChevron } from '@/components/ExpandableRow'
-import { NarrativeCard } from '@/components/NarrativeCard'
-import { buildFilterNarrative } from '@/lib/narratives'
 import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
 
 // =============================================================================
 // Configuration
 // =============================================================================
 
-type ContractSortField = 'amount_mxn' | 'contract_date' | 'risk_score'
+type ContractSortField =
+  | 'amount_mxn'
+  | 'contract_date'
+  | 'risk_score'
+  | 'vendor_name'
+  | 'institution_name'
+  | 'sector_id'
+  | 'risk_level'
+  | 'mahalanobis_distance'
 
 interface ContractPreset {
   id: string
@@ -72,41 +78,7 @@ interface ContractPreset {
   description?: string
 }
 
-// Preset i18n key maps — label and description come from contracts namespace
-const PRESET_TRANSLATION_KEYS: Record<string, { labelKey: string; descKey: string }> = {
-  'suspicious-monopolies': {
-    labelKey: 'presets.suspiciousMonopolies.label',
-    descKey: 'presets.suspiciousMonopolies.description',
-  },
-  'december-rush': {
-    labelKey: 'presets.decemberRush.label',
-    descKey: 'presets.decemberRush.description',
-  },
-  'price-manipulation': {
-    labelKey: 'presets.priceManipulation.label',
-    descKey: 'presets.priceManipulation.description',
-  },
-  'ghost-companies': {
-    labelKey: 'presets.ghostCompanies.label',
-    descKey: 'presets.ghostCompanies.description',
-  },
-  'network-clusters': {
-    labelKey: 'presets.networkClusters.label',
-    descKey: 'presets.networkClusters.description',
-  },
-  'split-contracts': {
-    labelKey: 'presets.splitContracts.label',
-    descKey: 'presets.splitContracts.description',
-  },
-  'recent-critical': {
-    labelKey: 'presets.recentCritical.label',
-    descKey: 'presets.recentCritical.description',
-  },
-  'largest-direct-awards': {
-    labelKey: 'presets.biggestDirectAwards.label',
-    descKey: 'presets.biggestDirectAwards.description',
-  },
-}
+// NOTE: PRESET_TRANSLATION_KEYS removed — preset labels use static strings directly
 
 const CONTRACT_PRESETS: ContractPreset[] = [
   {
@@ -186,18 +158,20 @@ const CONTRACT_PRESETS: ContractPreset[] = [
 interface ColumnDef {
   key: string
   label: string
-  align: 'left' | 'right'
+  align: 'left' | 'center' | 'right'
   sortField?: ContractSortField
   hideBelow?: string
 }
 
 const CONTRACT_COLUMNS: ColumnDef[] = [
-  { key: 'contract', label: 'Contract', align: 'left' },
-  { key: 'parties', label: 'Parties', align: 'left' },
-  { key: 'amount', label: 'Amount', align: 'right', sortField: 'amount_mxn' },
+  { key: 'risk', label: 'Risk', align: 'center', sortField: 'risk_score' },
+  { key: 'amount', label: 'Amount (MXN)', align: 'right', sortField: 'amount_mxn' },
+  { key: 'vendor', label: 'Vendor', align: 'left', sortField: 'vendor_name' },
+  { key: 'institution', label: 'Institution', align: 'left', sortField: 'institution_name' },
+  { key: 'sector', label: 'Sector', align: 'left', sortField: 'sector_id' },
   { key: 'date', label: 'Date', align: 'right', sortField: 'contract_date' },
-  { key: 'risk', label: 'Risk', align: 'right', sortField: 'risk_score' },
-  { key: 'flags', label: 'Flags', align: 'left', hideBelow: 'lg' },
+  { key: 'procedure', label: 'Procedure', align: 'left' },
+  { key: 'anomaly', label: 'Anomaly D\u00B2', align: 'right', sortField: 'mahalanobis_distance' },
 ]
 
 // =============================================================================
@@ -322,7 +296,7 @@ export function Contracts() {
     newParams.set('sort_by', preset.sort)
     newParams.set('sort_order', preset.order)
     for (const [k, v] of Object.entries(preset.filters)) {
-      newParams.set(k, v)
+      if (v !== undefined) newParams.set(k, v)
     }
     newParams.set('page', '1')
     setSearchInput('')
@@ -453,13 +427,10 @@ export function Contracts() {
         {CONTRACT_PRESETS.map((preset) => {
           const Icon = preset.icon
           const isActive = activePreset === preset.id
-          const keys = PRESET_TRANSLATION_KEYS[preset.id]
-          const label = keys ? t(keys.labelKey) : preset.label
-          const description = keys ? t(keys.descKey) : preset.description
           return (
             <button
               key={preset.id}
-              title={description}
+              title={preset.description}
               onClick={() => isActive ? clearAllFilters() : applyPreset(preset.id)}
               className={cn(
                 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-all',
@@ -469,30 +440,40 @@ export function Contracts() {
               )}
             >
               <Icon className="h-3 w-3" />
-              {label}
+              {preset.label}
             </button>
           )
         })}
       </div>
 
-      {/* Filter bar */}
+      {/* Filter bar — compact inline row */}
       <div className="flex items-center gap-2 flex-wrap">
-        <div className="relative flex-1 min-w-[200px] max-w-[300px]">
-          {showSearchLoading ? (
-            <Loader2 className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted animate-spin" />
-          ) : (
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted" />
-          )}
-          <input
-            type="text"
-            placeholder="Search contracts..."
-            className="h-8 w-full rounded-md border border-border bg-background-card pl-8 pr-3 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            aria-label="Search contracts"
-          />
+        {/* Risk level chips */}
+        <div className="flex items-center gap-1" role="group" aria-label="Filter by risk level">
+          {(['critical', 'high', 'medium', 'low'] as const).map((level) => {
+            const isActive = filters.risk_level === level
+            const color = RISK_COLORS[level]
+            return (
+              <button
+                key={level}
+                onClick={() => updateFilter('risk_level', isActive ? undefined : level)}
+                className={cn(
+                  'px-2.5 py-1 rounded-full text-xs border transition-colors whitespace-nowrap capitalize',
+                  isActive
+                    ? 'border-current font-semibold'
+                    : 'border-border text-text-muted hover:border-current'
+                )}
+                style={isActive ? { color, borderColor: color, backgroundColor: `${color}18` } : { color: isActive ? color : undefined }}
+                aria-pressed={isActive}
+                title={`Filter by ${level} risk`}
+              >
+                {level}
+              </button>
+            )
+          })}
         </div>
 
+        {/* Sector dropdown */}
         <select
           className="h-8 rounded-md border border-border bg-background-card px-2 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
           value={filters.sector_id || ''}
@@ -505,6 +486,7 @@ export function Contracts() {
           ))}
         </select>
 
+        {/* Year dropdown */}
         <select
           className="h-8 rounded-md border border-border bg-background-card px-2 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
           value={filters.year || ''}
@@ -517,19 +499,7 @@ export function Contracts() {
           ))}
         </select>
 
-        <select
-          className="h-8 rounded-md border border-border bg-background-card px-2 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
-          value={filters.risk_level || ''}
-          onChange={(e) => updateFilter('risk_level', e.target.value || undefined)}
-          aria-label="Filter by risk"
-        >
-          <option value="">All Risk</option>
-          <option value="critical">Critical</option>
-          <option value="high">High</option>
-          <option value="medium">Medium</option>
-          <option value="low">Low</option>
-        </select>
-
+        {/* Risk factor dropdown */}
         <select
           className="h-8 rounded-md border border-border bg-background-card px-2 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
           value={filters.risk_factor || ''}
@@ -542,6 +512,52 @@ export function Contracts() {
           ))}
         </select>
 
+        {/* Search */}
+        <div className="relative flex-1 min-w-[180px] max-w-[280px]">
+          {showSearchLoading ? (
+            <Loader2 className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted animate-spin" />
+          ) : (
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted" />
+          )}
+          <input
+            type="text"
+            placeholder="Search vendor, institution..."
+            className="h-8 w-full rounded-md border border-border bg-background-card pl-8 pr-3 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            aria-label="Search contracts by vendor or institution"
+          />
+        </div>
+
+        {/* Direct award toggle */}
+        <button
+          onClick={() => updateFilter('is_direct_award', filters.is_direct_award ? undefined : true)}
+          className={cn(
+            'h-8 px-3 rounded-md text-xs border transition-colors whitespace-nowrap',
+            filters.is_direct_award
+              ? 'border-amber-500 text-amber-500 bg-amber-500/10 font-semibold'
+              : 'border-border text-text-muted hover:border-amber-500/50 hover:text-amber-500'
+          )}
+          aria-pressed={!!filters.is_direct_award}
+        >
+          Direct Award
+        </button>
+
+        {/* Single bid toggle */}
+        <button
+          onClick={() => updateFilter('is_single_bid', filters.is_single_bid ? undefined : true)}
+          className={cn(
+            'h-8 px-3 rounded-md text-xs border transition-colors whitespace-nowrap',
+            filters.is_single_bid
+              ? 'border-red-500 text-red-500 bg-red-500/10 font-semibold'
+              : 'border-border text-text-muted hover:border-red-500/50 hover:text-red-500'
+          )}
+          aria-pressed={!!filters.is_single_bid}
+        >
+          Single Bid
+        </button>
+
+        {/* Per page */}
         <select
           className="h-8 rounded-md border border-border bg-background-card px-2 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
           value={filters.per_page || 50}
@@ -553,10 +569,11 @@ export function Contracts() {
           <option value={100}>100</option>
         </select>
 
+        {/* Clear all */}
         {hasActiveFilters && (
           <Button variant="ghost" size="sm" className="h-8 text-xs px-2 text-text-muted hover:text-text-primary" onClick={clearAllFilters}>
             <X className="h-3 w-3 mr-1" />
-            Clear
+            Clear all
           </Button>
         )}
       </div>
@@ -597,17 +614,6 @@ export function Contracts() {
           </div>
         )}
       </div>
-
-      {/* Filter narrative */}
-      {data && hasActiveFilters && (
-        <NarrativeCard
-          paragraphs={buildFilterNarrative(
-            data.pagination.total,
-            { sector_id: filters.sector_id, year: filters.year, risk_level: filters.risk_level, search: filters.search },
-          )}
-          compact
-        />
-      )}
 
       {/* Contracts table */}
       <Card>
@@ -669,7 +675,7 @@ export function Contracts() {
                         className={cn(
                           'px-3 py-2.5 text-xs font-semibold uppercase tracking-wider select-none',
                           col.sortField && 'cursor-pointer hover:text-accent transition-colors',
-                          col.align === 'right' ? 'text-right' : 'text-left',
+                          col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
                           col.hideBelow === 'lg' && 'hidden lg:table-cell',
                           col.sortField && sortBy === col.sortField ? 'text-accent' : 'text-text-muted'
                         )}
@@ -823,7 +829,7 @@ function ContractRow({
   onToggleCompare: (id: number) => void
 }) {
   const anomalyInfo = getAnomalyInfo(contract.mahalanobis_distance)
-  const riskLevel = contract.risk_score != null ? getRiskLevel(contract.risk_score) : null
+  const riskLevel = contract.risk_score != null ? getRiskLevel(contract.risk_score) : (contract.risk_level ?? null)
   const riskColor = riskLevel ? RISK_COLORS[riskLevel] : undefined
   const sector = contract.sector_id ? SECTORS.find((s) => s.id === contract.sector_id) : null
 
@@ -849,62 +855,19 @@ function ContractRow({
         <ExpandChevron id={contract.id} />
       </td>
 
-      {/* Contract: sector dot + title + number + sector */}
-      <td className="px-3 py-2">
-        <div className="flex items-start gap-2 min-w-0">
+      {/* Risk: badge with level label */}
+      <td className="px-3 py-2 text-center">
+        {riskLevel ? (
           <span
-            className="w-2 h-2 rounded-full shrink-0 mt-1"
-            style={{ backgroundColor: sector?.color || 'var(--color-border)' }}
-            title={sector?.nameEN || 'Unknown'}
-            aria-hidden="true"
-          />
-          <div className="min-w-0">
-            <p className="text-xs font-medium line-clamp-2 text-text-primary leading-tight">
-              {contract.title ? toTitleCase(contract.title) : 'Untitled'}
-            </p>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-xs text-text-muted">
-                {contract.contract_number || `#${contract.id}`}
-              </span>
-              {sector && (
-                <span className="text-xs font-medium" style={{ color: sector.color }}>
-                  {sector.nameEN}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      </td>
-
-      {/* Parties: vendor + institution */}
-      <td className="px-3 py-2">
-        <div className="min-w-0">
-          {contract.vendor_id ? (
-            <Link
-              to={`/vendors/${contract.vendor_id}`}
-              className="text-xs font-medium text-text-primary hover:text-accent transition-colors truncate block max-w-[200px]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {toTitleCase(contract.vendor_name || 'Unknown')}
-            </Link>
-          ) : (
-            <span className="text-xs text-text-muted">Unknown vendor</span>
-          )}
-          {contract.vendor_rfc && (
-            <span className="text-xs text-text-muted/60 font-mono block mt-0.5 truncate max-w-[200px]">
-              {contract.vendor_rfc}
-            </span>
-          )}
-          {contract.institution_id ? (
-            <Link
-              to={`/institutions/${contract.institution_id}`}
-              className="text-xs text-text-muted hover:text-accent transition-colors truncate block max-w-[200px] mt-0.5"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {toTitleCase(contract.institution_name || 'Unknown')}
-            </Link>
-          ) : null}
-        </div>
+            className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold capitalize"
+            style={{ color: riskColor, backgroundColor: `${riskColor}18`, border: `1px solid ${riskColor}40` }}
+            title={contract.risk_score != null ? `${(contract.risk_score * 100).toFixed(1)}%` : riskLevel}
+          >
+            {riskLevel}
+          </span>
+        ) : (
+          <span className="text-xs text-text-muted">—</span>
+        )}
       </td>
 
       {/* Amount */}
@@ -914,54 +877,82 @@ function ContractRow({
         </span>
       </td>
 
-      {/* Date */}
-      <td className="px-3 py-2 text-right">
-        <span className="text-xs text-text-muted tabular-nums">
-          {contract.contract_date ? formatDate(contract.contract_date) : contract.contract_year || '-'}
-        </span>
-      </td>
-
-      {/* Risk: inline bar + percentage */}
-      <td className="px-3 py-2 text-right">
-        {contract.risk_score != null ? (
-          <div className="flex items-center justify-end gap-1.5">
-            <div className="w-10 h-1.5 rounded-full bg-border/40 overflow-hidden">
-              <div
-                className="h-full rounded-full"
-                style={{
-                  width: `${Math.min(contract.risk_score * 100, 100)}%`,
-                  backgroundColor: riskColor,
-                }}
-              />
-            </div>
-            <span
-              className="text-xs tabular-nums font-semibold w-8 text-right"
-              style={{ color: riskColor }}
-            >
-              {(contract.risk_score * 100).toFixed(0)}%
-            </span>
-          </div>
+      {/* Vendor */}
+      <td className="px-3 py-2 max-w-[180px]">
+        {contract.vendor_id ? (
+          <Link
+            to={`/vendors/${contract.vendor_id}`}
+            className="text-xs font-medium text-text-primary hover:text-accent transition-colors block truncate"
+            title={toTitleCase(contract.vendor_name || 'Unknown')}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {toTitleCase(contract.vendor_name || 'Unknown')}
+          </Link>
         ) : (
-          <span className="text-xs text-text-muted">-</span>
+          <span className="text-xs text-text-muted truncate block" title={contract.vendor_name || ''}>
+            {contract.vendor_name ? toTitleCase(contract.vendor_name) : '—'}
+          </span>
         )}
       </td>
 
-      {/* Flags: DA + SB + anomaly */}
-      <td className="px-3 py-2 hidden lg:table-cell">
-        <div className="flex items-center gap-1">
-          {contract.is_direct_award && (
-            <span className="text-xs font-semibold text-risk-high bg-risk-high/15 px-1.5 py-0.5 rounded" title="Direct Award">DA</span>
-          )}
-          {contract.is_single_bid && (
-            <span className="text-xs font-semibold text-risk-critical bg-risk-critical/15 px-1.5 py-0.5 rounded" title="Single Bid">SB</span>
-          )}
-          {anomalyInfo && (
-            <span
-              className={`inline-block h-2 w-2 rounded-full shrink-0 ${anomalyInfo.dotClass}`}
-              title={`Anomaly: ${anomalyInfo.label} (D\u00B2=${contract.mahalanobis_distance?.toFixed(1)})`}
-            />
-          )}
-        </div>
+      {/* Institution */}
+      <td className="px-3 py-2 max-w-[180px]">
+        {contract.institution_id ? (
+          <Link
+            to={`/institutions/${contract.institution_id}`}
+            className="text-xs text-text-muted hover:text-accent transition-colors block truncate"
+            title={toTitleCase(contract.institution_name || 'Unknown')}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {toTitleCase(contract.institution_name || 'Unknown')}
+          </Link>
+        ) : (
+          <span className="text-xs text-text-muted truncate block" title={contract.institution_name || ''}>
+            {contract.institution_name ? toTitleCase(contract.institution_name) : '—'}
+          </span>
+        )}
+      </td>
+
+      {/* Sector */}
+      <td className="px-3 py-2">
+        {sector ? (
+          <span className="text-xs font-medium whitespace-nowrap" style={{ color: sector.color }}>
+            {sector.nameEN}
+          </span>
+        ) : (
+          <span className="text-xs text-text-muted">—</span>
+        )}
+      </td>
+
+      {/* Date: year-month only for density */}
+      <td className="px-3 py-2 text-right">
+        <span className="text-xs text-text-muted tabular-nums whitespace-nowrap">
+          {contract.contract_date
+            ? contract.contract_date.slice(0, 7)
+            : contract.contract_year || '—'}
+        </span>
+      </td>
+
+      {/* Procedure type */}
+      <td className="px-3 py-2 max-w-[120px]">
+        <span className="text-xs text-text-muted truncate block" title={contract.procedure_type || ''}>
+          {contract.procedure_type || '—'}
+        </span>
+      </td>
+
+      {/* Anomaly (Mahalanobis D²) */}
+      <td className="px-3 py-2 text-right">
+        {contract.mahalanobis_distance != null ? (
+          <span
+            className="text-xs tabular-nums font-mono"
+            style={anomalyInfo ? { color: anomalyInfo.dotClass.includes('red') ? RISK_COLORS.critical : anomalyInfo.dotClass.includes('amber') ? RISK_COLORS.medium : 'inherit' } : undefined}
+            title={anomalyInfo ? `${anomalyInfo.label} anomaly` : undefined}
+          >
+            {contract.mahalanobis_distance.toFixed(1)}
+          </span>
+        ) : (
+          <span className="text-xs text-text-muted">—</span>
+        )}
       </td>
 
       {/* View link */}
@@ -1073,7 +1064,7 @@ function ContractRow({
       id={contract.id}
       cells={cells}
       detail={detail}
-      colSpan={9}
+      colSpan={11}
       className={cn('hover:bg-accent/[0.04] transition-colors group', rowBorder)}
     />
   )

@@ -539,6 +539,14 @@ export const analysisApi = {
   },
 
   /**
+   * Get per-case detection statistics from live contract data
+   */
+  async getPerCaseDetection(): Promise<Record<string, unknown>> {
+    const { data } = await api.get('/analysis/validation/per-case-detection')
+    return data
+  },
+
+  /**
    * Get ground truth validation summary
    */
   async getValidationSummary(): Promise<Record<string, unknown>> {
@@ -624,8 +632,25 @@ export interface WatchlistItem {
   alert_threshold: number | null
   alerts_enabled: boolean
   risk_score: number | null
+  risk_score_at_creation: number | null
   created_at: string
   updated_at: string
+}
+
+export interface WatchlistChanges {
+  watchlist_id: number
+  item_type: 'vendor' | 'institution' | 'contract'
+  item_id: number
+  risk_score_at_creation: number | null
+  current_risk_score: number | null
+  risk_change: number | null
+  recent_contracts: Array<{
+    id: number
+    amount_mxn: number
+    risk_score: number | null
+    contract_date: string | null
+    sector_id: number | null
+  }>
 }
 
 export interface WatchlistResponse {
@@ -721,6 +746,14 @@ export const watchlistApi = {
    */
   async getStats(): Promise<WatchlistStats> {
     const { data } = await api.get<WatchlistStats>('/watchlist/stats')
+    return data
+  },
+
+  /**
+   * Get risk score changes since item was added to watchlist
+   */
+  async getChanges(id: number): Promise<WatchlistChanges> {
+    const { data } = await api.get<WatchlistChanges>(`/watchlist/${id}/changes`)
     return data
   },
 }

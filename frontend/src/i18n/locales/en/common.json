@@ -32,6 +32,18 @@
   "exportCSV": "Export CSV",
   "exportExcel": "Export Excel",
   "dateNote": "Date granularity available for ~48% of contracts.",
+  "groundTruth": {
+    "caseName": "Case Name",
+    "caseType": "Type",
+    "sector": "Sector",
+    "vendorsMatched": "Vendors Matched",
+    "contracts": "Contracts",
+    "detectionRate": "Detection Rate",
+    "avgScore": "Avg Score",
+    "estimatedFraud": "Est. Fraud",
+    "modelComparison": "Model Comparison",
+    "liveData": "Live Data"
+  },
   "welcome": {
     "subtitle": "Red Unificada de Busqueda de Licitaciones Irregulares — AI-Powered Corruption Detection for Mexican Government Procurement",
     "step1Title": "3.1 Million Contracts Analyzed",

@@ -54,6 +54,7 @@ class WatchlistItem(BaseModel):
     alert_threshold: Optional[float]
     alerts_enabled: bool
     risk_score: Optional[float] = Field(None, description="Current risk score if available")
+    risk_score_at_creation: Optional[float] = Field(None, description="Risk score when item was added to watchlist")
     created_at: str
     updated_at: str
 
@@ -96,11 +97,19 @@ def ensure_watchlist_table(conn: sqlite3.Connection):
             notes TEXT,
             alert_threshold REAL,
             alerts_enabled INTEGER NOT NULL DEFAULT 1,
+            risk_score_at_creation REAL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(item_type, item_id)
         )
     """)
+
+    # Add risk_score_at_creation column to existing tables that predate this migration
+    try:
+        cursor.execute("ALTER TABLE watchlist_items ADD COLUMN risk_score_at_creation REAL")
+        conn.commit()
+    except Exception:
+        pass  # Column already exists
 
     cursor.execute("""
         CREATE INDEX IF NOT EXISTS idx_watchlist_type ON watchlist_items(item_type)
@@ -193,6 +202,7 @@ def list_watchlist_items(
             items = []
             for row in cursor.fetchall():
                 name, risk = get_item_name_and_risk(conn, row["item_type"], row["item_id"])
+                rsc = row["risk_score_at_creation"] if "risk_score_at_creation" in row.keys() else None
                 items.append(WatchlistItem(
                     id=row["id"],
                     item_type=row["item_type"],
@@ -205,6 +215,7 @@ def list_watchlist_items(
                     alert_threshold=row["alert_threshold"],
                     alerts_enabled=bool(row["alerts_enabled"]),
                     risk_score=round(risk, 4) if risk else None,
+                    risk_score_at_creation=round(rsc, 4) if rsc else None,
                     created_at=row["created_at"],
                     updated_at=row["updated_at"]
                 ))
@@ -273,14 +284,35 @@ def add_watchlist_item(item: WatchlistItemCreate):
             if cursor.fetchone():
                 raise HTTPException(status_code=409, detail=f"This {item.item_type} is already on the watchlist")
 
+            # Capture risk score at creation time
+            risk_score_at_creation = None
+            if item.item_type == 'vendor':
+                row = cursor.execute(
+                    "SELECT avg_risk_score FROM vendor_stats WHERE vendor_id = ?", (item.item_id,)
+                ).fetchone()
+                if row:
+                    risk_score_at_creation = row[0]
+            elif item.item_type == 'institution':
+                row = cursor.execute(
+                    "SELECT avg_risk_score FROM institution_stats WHERE institution_id = ?", (item.item_id,)
+                ).fetchone()
+                if row:
+                    risk_score_at_creation = row[0]
+            elif item.item_type == 'contract':
+                row = cursor.execute(
+                    "SELECT risk_score FROM contracts WHERE id = ?", (item.item_id,)
+                ).fetchone()
+                if row:
+                    risk_score_at_creation = row[0]
+
             # Insert
             now = datetime.utcnow().isoformat()
             cursor.execute("""
                 INSERT INTO watchlist_items
-                (item_type, item_id, reason, priority, notes, alert_threshold, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (item_type, item_id, reason, priority, notes, alert_threshold, risk_score_at_creation, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (item.item_type, item.item_id, item.reason, item.priority,
-                  item.notes, item.alert_threshold, now, now))
+                  item.notes, item.alert_threshold, risk_score_at_creation, now, now))
 
             conn.commit()
             item_id = cursor.lastrowid
@@ -297,6 +329,7 @@ def add_watchlist_item(item: WatchlistItemCreate):
                 alert_threshold=item.alert_threshold,
                 alerts_enabled=True,
                 risk_score=round(risk, 4) if risk else None,
+                risk_score_at_creation=round(risk_score_at_creation, 4) if risk_score_at_creation else None,
                 created_at=now,
                 updated_at=now
             )
@@ -355,6 +388,7 @@ def get_watchlist_item(watchlist_id: int = Path(..., description="Watchlist item
                 raise HTTPException(status_code=404, detail=f"Watchlist item {watchlist_id} not found")
 
             name, risk = get_item_name_and_risk(conn, row["item_type"], row["item_id"])
+            rsc = row["risk_score_at_creation"] if "risk_score_at_creation" in row.keys() else None
 
             return WatchlistItem(
                 id=row["id"],
@@ -368,12 +402,77 @@ def get_watchlist_item(watchlist_id: int = Path(..., description="Watchlist item
                 alert_threshold=row["alert_threshold"],
                 alerts_enabled=bool(row["alerts_enabled"]),
                 risk_score=round(risk, 4) if risk else None,
+                risk_score_at_creation=round(rsc, 4) if rsc else None,
                 created_at=row["created_at"],
                 updated_at=row["updated_at"]
             )
 
     except sqlite3.Error as e:
         logger.error(f"Database error in get_watchlist_item: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
+@router.get("/{watchlist_id}/changes")
+def get_watchlist_changes(watchlist_id: int = Path(..., description="Watchlist item ID")):
+    """
+    Returns current risk score vs score at creation, and recent contract activity.
+
+    Enables change-tracking: see whether a vendor's risk has risen or fallen
+    since they were added to the watchlist.
+    """
+    try:
+        with get_db() as conn:
+            ensure_watchlist_table(conn)
+
+            item = conn.execute(
+                "SELECT * FROM watchlist_items WHERE id = ?", (watchlist_id,)
+            ).fetchone()
+            if not item:
+                raise HTTPException(status_code=404, detail="Watchlist item not found")
+
+            current_risk = None
+            recent_contracts = []
+
+            if item["item_type"] == "vendor":
+                row = conn.execute(
+                    "SELECT avg_risk_score FROM vendor_stats WHERE vendor_id = ?", (item["item_id"],)
+                ).fetchone()
+                if row:
+                    current_risk = row[0]
+                recent_contracts = conn.execute("""
+                    SELECT id, amount_mxn, risk_score, contract_date, sector_id
+                    FROM contracts WHERE vendor_id = ? ORDER BY contract_date DESC LIMIT 5
+                """, (item["item_id"],)).fetchall()
+            elif item["item_type"] == "institution":
+                row = conn.execute(
+                    "SELECT avg_risk_score FROM institution_stats WHERE institution_id = ?", (item["item_id"],)
+                ).fetchone()
+                if row:
+                    current_risk = row[0]
+            elif item["item_type"] == "contract":
+                row = conn.execute(
+                    "SELECT risk_score FROM contracts WHERE id = ?", (item["item_id"],)
+                ).fetchone()
+                if row:
+                    current_risk = row[0]
+
+            rsc = item["risk_score_at_creation"] if "risk_score_at_creation" in item.keys() else None
+            risk_change = None
+            if current_risk is not None and rsc is not None:
+                risk_change = round(current_risk - rsc, 3)
+
+            return {
+                "watchlist_id": watchlist_id,
+                "item_type": item["item_type"],
+                "item_id": item["item_id"],
+                "risk_score_at_creation": round(rsc, 4) if rsc else None,
+                "current_risk_score": round(current_risk, 4) if current_risk else None,
+                "risk_change": risk_change,
+                "recent_contracts": [dict(c) for c in recent_contracts],
+            }
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error in get_watchlist_changes: {e}")
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
@@ -439,6 +538,7 @@ def update_watchlist_item(
             row = cursor.fetchone()
 
             name, risk = get_item_name_and_risk(conn, row["item_type"], row["item_id"])
+            rsc = row["risk_score_at_creation"] if "risk_score_at_creation" in row.keys() else None
 
             return WatchlistItem(
                 id=row["id"],
@@ -452,6 +552,7 @@ def update_watchlist_item(
                 alert_threshold=row["alert_threshold"],
                 alerts_enabled=bool(row["alerts_enabled"]),
                 risk_score=round(risk, 4) if risk else None,
+                risk_score_at_creation=round(rsc, 4) if rsc else None,
                 created_at=row["created_at"],
                 updated_at=row["updated_at"]
             )

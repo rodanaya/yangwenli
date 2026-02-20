@@ -1,8 +1,9 @@
 /**
- * Spending Categories Page
+ * Spending Categories — Investigation Workbench
  *
- * Shows what Mexico buys — 72 regex-based spending categories covering
- * all 3.1M contracts (2002-2025), with risk analysis and trends.
+ * Section 1: Filter bar (year range, sector, view toggle)
+ * Section 2: Sortable table (by Partida or by Sector view)
+ * Section 3: Charts (treemap, trend lines) — collapsed in <details>
  */
 
 import { useMemo, useState } from 'react'
@@ -15,7 +16,7 @@ import { ChartSkeleton } from '@/components/LoadingSkeleton'
 import { cn, formatNumber, formatCompactMXN } from '@/lib/utils'
 import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
 import { categoriesApi } from '@/api/client'
-import { PageHero, StatCard as SharedStatCard } from '@/components/DashboardWidgets'
+import { StatCard as SharedStatCard } from '@/components/DashboardWidgets'
 import {
   XAxis,
   YAxis,
@@ -31,7 +32,9 @@ import {
   ShoppingCart,
   TrendingUp,
   ArrowUpRight,
+  SlidersHorizontal,
 } from 'lucide-react'
+import { getSectorNameEN } from '@/lib/constants'
 
 // =============================================================================
 // Types
@@ -62,6 +65,10 @@ interface TrendItem {
   avg_risk: number
 }
 
+type SortField = 'total_contracts' | 'total_value' | 'avg_risk' | 'direct_award_pct'
+type SortDir = 'asc' | 'desc'
+type ViewMode = 'partida' | 'sector'
+
 // =============================================================================
 // Helpers
 // =============================================================================
@@ -77,6 +84,13 @@ function getRiskColor(score: number): string {
   return RISK_COLORS.low
 }
 
+function getRiskLabel(score: number): string {
+  if (score >= 0.5) return 'Critical'
+  if (score >= 0.3) return 'High'
+  if (score >= 0.1) return 'Medium'
+  return 'Low'
+}
+
 function getTextColor(bgColor: string): string {
   const hex = bgColor.replace('#', '')
   const r = parseInt(hex.substring(0, 2), 16)
@@ -86,8 +100,37 @@ function getTextColor(bgColor: string): string {
   return luminance > 0.5 ? '#1a1f2e' : '#e2e8f0'
 }
 
+function SortIndicator({ field, sortField, sortDir }: { field: SortField; sortField: SortField; sortDir: SortDir }) {
+  if (field !== sortField) return <span className="text-text-muted/40 ml-1">↕</span>
+  return <span className="text-accent ml-1">{sortDir === 'desc' ? '▼' : '▲'}</span>
+}
+
 // =============================================================================
-// Custom Treemap Content
+// Year range constants
+// =============================================================================
+
+const MIN_YEAR = 2002
+const MAX_YEAR = 2025
+
+// Sector options for filter dropdown
+const SECTOR_OPTIONS = [
+  { code: '', label: 'All Sectors' },
+  { code: 'salud', label: 'Health' },
+  { code: 'educacion', label: 'Education' },
+  { code: 'infraestructura', label: 'Infrastructure' },
+  { code: 'energia', label: 'Energy' },
+  { code: 'defensa', label: 'Defense' },
+  { code: 'tecnologia', label: 'Technology' },
+  { code: 'hacienda', label: 'Treasury' },
+  { code: 'gobernacion', label: 'Governance' },
+  { code: 'agricultura', label: 'Agriculture' },
+  { code: 'ambiente', label: 'Environment' },
+  { code: 'trabajo', label: 'Labor' },
+  { code: 'otros', label: 'Other' },
+]
+
+// =============================================================================
+// Treemap content component
 // =============================================================================
 
 function TreemapContent(props: {
@@ -96,9 +139,7 @@ function TreemapContent(props: {
 }) {
   const { x, y, width, height, name, value, depth, fill } = props
   if (depth !== 1 || width < 50 || height < 30) return null
-
   const textFill = getTextColor(fill)
-
   return (
     <g>
       <rect x={x} y={y} width={width} height={height} fill={fill} stroke="var(--color-background)" strokeWidth={2} rx={3} />
@@ -132,8 +173,43 @@ function TreemapContent(props: {
 }
 
 // =============================================================================
-// Tooltips
+// Sector aggregation (for "by sector" view)
 // =============================================================================
+
+interface SectorAggregate {
+  sector_code: string
+  total_contracts: number
+  total_value: number
+  avg_risk: number
+  high_risk_count: number
+}
+
+function aggregateBySector(categories: CategoryStat[]): SectorAggregate[] {
+  const map = new Map<string, SectorAggregate>()
+  for (const cat of categories) {
+    const code = cat.sector_code || 'otros'
+    const existing = map.get(code)
+    if (!existing) {
+      map.set(code, {
+        sector_code: code,
+        total_contracts: cat.total_contracts,
+        total_value: cat.total_value,
+        avg_risk: cat.avg_risk * cat.total_contracts,
+        high_risk_count: cat.avg_risk >= 0.3 ? cat.total_contracts : 0,
+      })
+    } else {
+      existing.total_contracts += cat.total_contracts
+      existing.total_value += cat.total_value
+      existing.avg_risk += cat.avg_risk * cat.total_contracts
+      existing.high_risk_count += cat.avg_risk >= 0.3 ? cat.total_contracts : 0
+    }
+  }
+  // Normalize avg_risk
+  for (const agg of map.values()) {
+    agg.avg_risk = agg.total_contracts > 0 ? agg.avg_risk / agg.total_contracts : 0
+  }
+  return Array.from(map.values())
+}
 
 // =============================================================================
 // Main Component
@@ -142,7 +218,12 @@ function TreemapContent(props: {
 export default function SpendingCategories() {
   const navigate = useNavigate()
   const { t } = useTranslation('spending')
-  const [sortBy, setSortBy] = useState<'value' | 'risk' | 'contracts'>('value')
+  const [viewMode, setViewMode] = useState<ViewMode>('partida')
+  const [sectorFilter, setSectorFilter] = useState<string>('')
+  const [yearFrom, setYearFrom] = useState(2010)
+  const [yearTo, setYearTo] = useState(2025)
+  const [sortField, setSortField] = useState<SortField>('total_value')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
 
   const { data: summaryData, isLoading: summaryLoading } = useQuery({
     queryKey: ['categories', 'summary'],
@@ -151,37 +232,65 @@ export default function SpendingCategories() {
   })
 
   const { data: trendsData, isLoading: trendsLoading } = useQuery({
-    queryKey: ['categories', 'trends'],
-    queryFn: () => categoriesApi.getTrends(2015, 2025),
+    queryKey: ['categories', 'trends', yearFrom, yearTo],
+    queryFn: () => categoriesApi.getTrends(yearFrom, yearTo),
     staleTime: 5 * 60 * 1000,
   })
 
-  const categories: CategoryStat[] = summaryData?.data ?? []
+  const allCategories: CategoryStat[] = summaryData?.data ?? []
 
-  // Derived stats
+  // Apply sector filter
+  const filteredCategories = useMemo(() => {
+    if (!sectorFilter) return allCategories
+    return allCategories.filter(c => c.sector_code === sectorFilter)
+  }, [allCategories, sectorFilter])
+
+  // Derived stats from filtered categories
   const stats = useMemo(() => {
-    if (!categories.length) return null
-    const totalValue = categories.reduce((s, c) => s + c.total_value, 0)
-    const totalContracts = categories.reduce((s, c) => s + c.total_contracts, 0)
+    if (!filteredCategories.length) return null
+    const totalValue = filteredCategories.reduce((s, c) => s + c.total_value, 0)
+    const totalContracts = filteredCategories.reduce((s, c) => s + c.total_contracts, 0)
     const avgRisk = totalContracts > 0
-      ? categories.reduce((s, c) => s + c.avg_risk * c.total_contracts, 0) / totalContracts
+      ? filteredCategories.reduce((s, c) => s + c.avg_risk * c.total_contracts, 0) / totalContracts
       : 0
-    const highRiskCategories = categories.filter(c => c.avg_risk >= 0.3).length
+    const highRiskCategories = filteredCategories.filter(c => c.avg_risk >= 0.3).length
     return { totalValue, totalContracts, avgRisk, highRiskCategories }
-  }, [categories])
+  }, [filteredCategories])
 
-  // Sorted categories
+  // Sort handler
+  const handleSort = (field: SortField) => {
+    if (field === sortField) {
+      setSortDir(d => d === 'desc' ? 'asc' : 'desc')
+    } else {
+      setSortField(field)
+      setSortDir('desc')
+    }
+  }
+
+  // Sorted partida view
   const sortedCategories = useMemo(() => {
-    const sorted = [...categories]
-    if (sortBy === 'value') sorted.sort((a, b) => b.total_value - a.total_value)
-    else if (sortBy === 'risk') sorted.sort((a, b) => b.avg_risk - a.avg_risk)
-    else sorted.sort((a, b) => b.total_contracts - a.total_contracts)
+    const sorted = [...filteredCategories]
+    sorted.sort((a, b) => {
+      const aVal = a[sortField] as number
+      const bVal = b[sortField] as number
+      return sortDir === 'desc' ? bVal - aVal : aVal - bVal
+    })
     return sorted
-  }, [categories, sortBy])
+  }, [filteredCategories, sortField, sortDir])
+
+  // Sector aggregation view
+  const sectorAggregates = useMemo(() => {
+    const aggs = aggregateBySector(filteredCategories)
+    return aggs.sort((a, b) => {
+      if (sortField === 'total_contracts') return sortDir === 'desc' ? b.total_contracts - a.total_contracts : a.total_contracts - b.total_contracts
+      if (sortField === 'avg_risk') return sortDir === 'desc' ? b.avg_risk - a.avg_risk : a.avg_risk - b.avg_risk
+      return sortDir === 'desc' ? b.total_value - a.total_value : a.total_value - b.total_value
+    })
+  }, [filteredCategories, sortField, sortDir])
 
   // Treemap data
   const treemapData = useMemo(() => {
-    return categories
+    return filteredCategories
       .filter(c => c.total_value > 0)
       .slice(0, 30)
       .map(c => ({
@@ -189,13 +298,14 @@ export default function SpendingCategories() {
         value: c.total_value,
         fill: c.sector_code ? (SECTOR_COLORS[c.sector_code] || '#64748b') : getRiskColor(c.avg_risk),
       }))
-  }, [categories])
+  }, [filteredCategories])
 
-  // Trend chart data — top 5 categories by value
+  // Trend chart — top 5 categories by value
   const trendChartData = useMemo(() => {
     if (!trendsData?.data) return { years: [] as number[], series: [] as Array<{ name: string; data: Record<number, number> }> }
     const items: TrendItem[] = trendsData.data
-    const top5Ids = categories.slice(0, 5).map(c => c.category_id)
+    const top5 = [...filteredCategories].sort((a, b) => b.total_value - a.total_value).slice(0, 5)
+    const top5Ids = top5.map(c => c.category_id)
     const yearSet = new Set<number>()
     const seriesMap = new Map<number, { name: string; data: Record<number, number> }>()
 
@@ -208,33 +318,101 @@ export default function SpendingCategories() {
       seriesMap.get(item.category_id)!.data[item.year] = item.value
     }
 
-    return {
-      years: Array.from(yearSet).sort(),
-      series: Array.from(seriesMap.values()),
-    }
-  }, [trendsData, categories])
+    return { years: Array.from(yearSet).sort(), series: Array.from(seriesMap.values()) }
+  }, [trendsData, filteredCategories])
 
-  // Colors for trend lines
   const TREND_COLORS = ['#3b82f6', '#f97316', '#8b5cf6', '#16a34a', '#dc2626']
+
+  // Year range options
+  const yearOptions = Array.from({ length: MAX_YEAR - MIN_YEAR + 1 }, (_, i) => MIN_YEAR + i)
 
   return (
     <div className="space-y-6">
-      {/* Hero */}
-      <PageHero
-        trackingLabel={t('hero.trackingLabel')}
-        icon={<ShoppingCart className="h-4 w-4 text-accent" />}
-        headline={stats ? formatCompactMXN(stats.totalValue) : '—'}
-        subtitle={t('hero.subtitle')}
-        detail={t('hero.detail')}
-        loading={summaryLoading}
-      />
+      {/* Header */}
+      <div>
+        <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+          <ShoppingCart className="h-4 w-4 text-accent" />
+          Spending Categories
+        </h2>
+        <p className="text-xs text-text-muted mt-0.5">
+          What Mexico buys — {allCategories.length} categories covering all 3.1M contracts
+        </p>
+      </div>
+
+      {/* Section 1: Filter Bar */}
+      <div className="flex items-center gap-3 flex-wrap bg-background-elevated/30 border border-border/50 rounded-lg px-4 py-2.5">
+        <SlidersHorizontal className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
+
+        {/* Year range */}
+        <div className="flex items-center gap-2">
+          <label htmlFor="year-from" className="text-xs text-text-muted whitespace-nowrap">Year</label>
+          <select
+            id="year-from"
+            value={yearFrom}
+            onChange={e => setYearFrom(Math.min(Number(e.target.value), yearTo))}
+            className="h-7 rounded border border-border bg-background-card px-2 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
+          >
+            {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+          <span className="text-xs text-text-muted">to</span>
+          <select
+            id="year-to"
+            value={yearTo}
+            onChange={e => setYearTo(Math.max(Number(e.target.value), yearFrom))}
+            className="h-7 rounded border border-border bg-background-card px-2 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
+          >
+            {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+        </div>
+
+        {/* Sector filter */}
+        <div className="flex items-center gap-2">
+          <label htmlFor="sector-filter" className="text-xs text-text-muted whitespace-nowrap">Sector</label>
+          <select
+            id="sector-filter"
+            value={sectorFilter}
+            onChange={e => setSectorFilter(e.target.value)}
+            className="h-7 rounded border border-border bg-background-card px-2 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
+          >
+            {SECTOR_OPTIONS.map(opt => (
+              <option key={opt.code} value={opt.code}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* View toggle */}
+        <div className="flex items-center gap-1 ml-auto">
+          <button
+            onClick={() => setViewMode('partida')}
+            className={cn(
+              'px-3 py-1 rounded text-xs font-medium transition-colors',
+              viewMode === 'partida'
+                ? 'bg-accent/20 text-accent'
+                : 'text-text-muted hover:text-text-primary hover:bg-background-elevated'
+            )}
+          >
+            By Category
+          </button>
+          <button
+            onClick={() => setViewMode('sector')}
+            className={cn(
+              'px-3 py-1 rounded text-xs font-medium transition-colors',
+              viewMode === 'sector'
+                ? 'bg-accent/20 text-accent'
+                : 'text-text-muted hover:text-text-primary hover:bg-background-elevated'
+            )}
+          >
+            By Sector
+          </button>
+        </div>
+      </div>
 
       {/* Stat Cards */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <SharedStatCard
           label={t('stats.totalCategories')}
-          value={categories.length > 0 ? formatNumber(categories.length) : '—'}
-          detail={t('stats.totalCategoriesDetail')}
+          value={filteredCategories.length > 0 ? formatNumber(filteredCategories.length) : '—'}
+          detail={sectorFilter ? `In ${getSectorNameEN(sectorFilter)}` : t('stats.totalCategoriesDetail')}
           borderColor="border-accent/30"
           loading={summaryLoading}
         />
@@ -263,104 +441,80 @@ export default function SpendingCategories() {
         />
       </div>
 
-      {/* Treemap */}
-      <Card>
+      {/* Section 2: Table */}
+      <Card className="overflow-hidden">
         <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2">
-            <ShoppingCart className="h-4 w-4 text-text-muted" />
-            {t('treemap.title')}
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <TrendingUp className="h-3.5 w-3.5 text-text-muted" />
+            {viewMode === 'partida' ? 'Spending Categories' : 'By Government Sector'}
           </CardTitle>
-          <CardDescription>
-            {t('treemap.description')}
+          <CardDescription className="text-xs">
+            {viewMode === 'partida'
+              ? `${sortedCategories.length} categories. Click column headers to sort.`
+              : `${sectorAggregates.length} sectors. Click column headers to sort.`}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {summaryLoading ? (
-            <ChartSkeleton height={380} />
-          ) : treemapData.length > 0 ? (
-            <div style={{ height: 380 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <Treemap
-                  data={treemapData}
-                  dataKey="value"
-                  nameKey="name"
-                  content={<TreemapContent x={0} y={0} width={0} height={0} name="" value={0} depth={0} fill="" />}
-                />
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-64 text-text-muted text-sm">
-              {t('treemap.empty')}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Category Table */}
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-text-muted" />
-                {t('table.title')}
-              </CardTitle>
-              <CardDescription>
-                {sortBy === 'value' ? t('table.rankedByValue') : sortBy === 'risk' ? t('table.rankedByRisk') : t('table.rankedByCount')}
-              </CardDescription>
-            </div>
-            <div className="flex gap-1">
-              {(['value', 'risk', 'contracts'] as const).map(s => (
-                <button
-                  key={s}
-                  onClick={() => setSortBy(s)}
-                  className={cn(
-                    'px-3 py-1 text-xs rounded-md transition-colors',
-                    sortBy === s
-                      ? 'bg-accent/20 text-accent font-medium'
-                      : 'text-text-muted hover:text-text-primary hover:bg-background-elevated'
-                  )}
-                >
-                  {s === 'value' ? t('table.sortValue') : s === 'risk' ? t('table.sortRisk') : t('table.sortCount')}
-                </button>
-              ))}
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {summaryLoading ? (
-            <div className="space-y-3">
+            <div className="space-y-3 p-4">
               {Array.from({ length: 10 }).map((_, i) => (
                 <Skeleton key={i} className="h-10 w-full" />
               ))}
             </div>
-          ) : (
+          ) : viewMode === 'partida' ? (
+            /* ---- Partida view ---- */
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full min-w-[700px] text-xs" role="table">
                 <thead>
-                  <tr className="border-b border-border/30 text-text-muted">
-                    <th className="text-left px-3 py-2.5 text-xs font-medium text-text-muted">{t('table.colNum')}</th>
-                    <th className="text-left px-3 py-2.5 text-xs font-medium text-text-muted">{t('table.colCategory')}</th>
-                    <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">{t('table.colContracts')}</th>
-                    <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">{t('table.colValue')}</th>
-                    <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">{t('table.colAvgRisk')}</th>
-                    <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted hidden lg:table-cell">{t('table.colDA')}</th>
-                    <th className="text-left px-3 py-2.5 text-xs font-medium text-text-muted hidden lg:table-cell">{t('table.colTopVendor')}</th>
+                  <tr className="border-b border-border bg-background-elevated/30 text-text-muted">
+                    <th className="px-3 py-2.5 text-left font-medium w-8">#</th>
+                    <th className="px-3 py-2.5 text-left font-medium min-w-[200px]">Category</th>
+                    <th className="px-3 py-2.5 text-left font-medium hidden md:table-cell">Sector</th>
+                    <th
+                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                      onClick={() => handleSort('total_contracts')}
+                    >
+                      Contracts
+                      <SortIndicator field="total_contracts" sortField={sortField} sortDir={sortDir} />
+                    </th>
+                    <th
+                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                      onClick={() => handleSort('total_value')}
+                    >
+                      Total Value (MXN)
+                      <SortIndicator field="total_value" sortField={sortField} sortDir={sortDir} />
+                    </th>
+                    <th
+                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                      onClick={() => handleSort('avg_risk')}
+                    >
+                      Avg Risk
+                      <SortIndicator field="avg_risk" sortField={sortField} sortDir={sortDir} />
+                    </th>
+                    <th
+                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap hidden lg:table-cell"
+                      onClick={() => handleSort('direct_award_pct')}
+                    >
+                      Direct Award %
+                      <SortIndicator field="direct_award_pct" sortField={sortField} sortDir={sortDir} />
+                    </th>
+                    <th className="px-3 py-2.5 text-left font-medium hidden lg:table-cell">Top Vendor</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedCategories.slice(0, 30).map((cat, idx) => (
+                  {sortedCategories.slice(0, 50).map((cat, idx) => (
                     <tr
                       key={cat.category_id}
                       className="border-b border-border/10 hover:bg-background-elevated/50 transition-colors"
                     >
-                      <td className="px-3 py-2 text-text-muted text-xs tabular-nums">{idx + 1}</td>
+                      <td className="px-3 py-2 text-text-muted tabular-nums">{idx + 1}</td>
                       <td className="px-3 py-2">
                         <div className="flex items-center gap-2">
                           {cat.sector_code && (
                             <div
                               className="w-2 h-2 rounded-full flex-shrink-0"
                               style={{ backgroundColor: SECTOR_COLORS[cat.sector_code] || '#64748b' }}
+                              aria-hidden="true"
                             />
                           )}
                           <span className="text-text-primary font-medium truncate max-w-[280px]">
@@ -368,10 +522,13 @@ export default function SpendingCategories() {
                           </span>
                         </div>
                       </td>
-                      <td className="px-3 py-2 text-right text-text-secondary tabular-nums">
+                      <td className="px-3 py-2 text-text-muted hidden md:table-cell">
+                        {cat.sector_code ? getSectorNameEN(cat.sector_code) : '—'}
+                      </td>
+                      <td className="px-3 py-2 text-right text-text-secondary tabular-nums font-mono">
                         {formatNumber(cat.total_contracts)}
                       </td>
-                      <td className="px-3 py-2 text-right text-text-secondary tabular-nums">
+                      <td className="px-3 py-2 text-right text-text-secondary tabular-nums font-mono">
                         {formatCompactMXN(cat.total_value)}
                       </td>
                       <td className="px-3 py-2 text-right">
@@ -381,11 +538,12 @@ export default function SpendingCategories() {
                             color: getRiskColor(cat.avg_risk),
                             backgroundColor: `${getRiskColor(cat.avg_risk)}15`,
                           }}
+                          title={getRiskLabel(cat.avg_risk)}
                         >
                           {(cat.avg_risk * 100).toFixed(1)}%
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-right text-text-muted tabular-nums hidden lg:table-cell">
+                      <td className="px-3 py-2 text-right text-text-muted tabular-nums font-mono hidden lg:table-cell">
                         {cat.direct_award_pct != null ? `${cat.direct_award_pct.toFixed(0)}%` : '—'}
                       </td>
                       <td className="px-3 py-2 text-text-muted text-xs truncate max-w-[200px] hidden lg:table-cell">
@@ -405,95 +563,212 @@ export default function SpendingCategories() {
               </table>
               {sortedCategories.length === 0 && (
                 <div className="flex items-center justify-center py-12 text-text-muted text-sm">
-                  {t('table.empty')}
+                  No categories match the current filters.
                 </div>
               )}
+            </div>
+          ) : (
+            /* ---- By Sector view ---- */
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[600px] text-xs" role="table">
+                <thead>
+                  <tr className="border-b border-border bg-background-elevated/30 text-text-muted">
+                    <th className="px-3 py-2.5 text-left font-medium">Sector</th>
+                    <th
+                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                      onClick={() => handleSort('total_contracts')}
+                    >
+                      Contracts
+                      <SortIndicator field="total_contracts" sortField={sortField} sortDir={sortDir} />
+                    </th>
+                    <th
+                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                      onClick={() => handleSort('total_value')}
+                    >
+                      Total Value (MXN)
+                      <SortIndicator field="total_value" sortField={sortField} sortDir={sortDir} />
+                    </th>
+                    <th
+                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                      onClick={() => handleSort('avg_risk')}
+                    >
+                      Avg Risk
+                      <SortIndicator field="avg_risk" sortField={sortField} sortDir={sortDir} />
+                    </th>
+                    <th className="px-3 py-2.5 text-right font-medium whitespace-nowrap">High-Risk Contracts</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sectorAggregates.map((agg) => (
+                    <tr
+                      key={agg.sector_code}
+                      className="border-b border-border/10 hover:bg-background-elevated/50 transition-colors cursor-pointer"
+                      onClick={() => setSectorFilter(agg.sector_code)}
+                    >
+                      <td className="px-3 py-2.5">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: SECTOR_COLORS[agg.sector_code] || '#64748b' }}
+                            aria-hidden="true"
+                          />
+                          <span className="font-medium text-text-primary">
+                            {getSectorNameEN(agg.sector_code)}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2.5 text-right font-mono text-text-secondary tabular-nums">
+                        {formatNumber(agg.total_contracts)}
+                      </td>
+                      <td className="px-3 py-2.5 text-right font-mono text-text-secondary tabular-nums">
+                        {formatCompactMXN(agg.total_value)}
+                      </td>
+                      <td className="px-3 py-2.5 text-right">
+                        <span
+                          className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-mono tabular-nums"
+                          style={{
+                            color: getRiskColor(agg.avg_risk),
+                            backgroundColor: `${getRiskColor(agg.avg_risk)}15`,
+                          }}
+                        >
+                          {(agg.avg_risk * 100).toFixed(1)}%
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5 text-right font-mono text-text-secondary tabular-nums">
+                        {formatNumber(agg.high_risk_count)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Trend Chart */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-text-muted" />
-            {t('trends.title')}
-          </CardTitle>
-          <CardDescription>
-            {t('trends.description')}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {trendsLoading ? (
-            <ChartSkeleton height={320} type="area" />
-          ) : trendChartData.years.length > 0 ? (
-            <div style={{ height: 320 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  margin={{ top: 10, right: 30, bottom: 0, left: 10 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
-                  <XAxis
-                    dataKey="year"
-                    type="number"
-                    domain={[trendChartData.years[0], trendChartData.years[trendChartData.years.length - 1]]}
-                    ticks={trendChartData.years}
-                    tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-                    axisLine={{ stroke: 'var(--color-border)' }}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-                    axisLine={{ stroke: 'var(--color-border)' }}
-                    tickLine={false}
-                    tickFormatter={(v: number) => formatCompactMXN(v)}
-                  />
-                  <RechartsTooltip
-                    content={({ active, payload, label }) => {
-                      if (!active || !payload?.length) return null
-                      return (
-                        <div className="chart-tooltip">
-                          <p className="font-medium text-xs text-text-primary mb-1">{label}</p>
-                          {payload.map((p, i) => (
-                            <p key={i} className="text-xs tabular-nums" style={{ color: p.color }}>
-                              {p.name}: {formatCompactMXN(p.value as number)}
-                            </p>
-                          ))}
-                        </div>
-                      )
-                    }}
-                  />
-                  <Legend
-                    verticalAlign="bottom"
-                    height={36}
-                    formatter={(value: string) => (
-                      <span className="text-xs text-text-muted">{truncate(value, 30)}</span>
-                    )}
-                  />
-                  {trendChartData.series.map((series, idx) => (
-                    <Line
-                      key={series.name}
-                      type="monotone"
-                      data={trendChartData.years.map(y => ({ year: y, value: series.data[y] || 0 }))}
+      {/* Section 3: Charts (collapsed) */}
+      <details className="mt-4 group">
+        <summary className="flex items-center gap-2 cursor-pointer select-none list-none text-xs font-medium text-text-muted hover:text-text-primary transition-colors py-1">
+          <ShoppingCart className="h-3.5 w-3.5" />
+          Show charts (treemap, value trends)
+          <span className="ml-1 group-open:hidden">▶</span>
+          <span className="ml-1 hidden group-open:inline">▼</span>
+        </summary>
+        <div className="mt-4 space-y-5">
+          {/* Treemap */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4 text-text-muted" />
+                {t('treemap.title')}
+              </CardTitle>
+              <CardDescription>
+                {t('treemap.description')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {summaryLoading ? (
+                <ChartSkeleton height={380} />
+              ) : treemapData.length > 0 ? (
+                <div style={{ height: 380 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <Treemap
+                      data={treemapData}
                       dataKey="value"
-                      name={series.name}
-                      stroke={TREND_COLORS[idx % TREND_COLORS.length]}
-                      strokeWidth={2}
-                      dot={{ r: 3 }}
-                      activeDot={{ r: 5 }}
+                      nameKey="name"
+                      content={<TreemapContent x={0} y={0} width={0} height={0} name="" value={0} depth={0} fill="" />}
                     />
-                  ))}
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-64 text-text-muted text-sm">
-              {t('trends.empty')}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-64 text-text-muted text-sm">
+                  {t('treemap.empty')}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Trend Chart */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-text-muted" />
+                {t('trends.title')}
+              </CardTitle>
+              <CardDescription>
+                {t('trends.description')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {trendsLoading ? (
+                <ChartSkeleton height={320} type="area" />
+              ) : trendChartData.years.length > 0 ? (
+                <div style={{ height: 320 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart margin={{ top: 10, right: 30, bottom: 0, left: 10 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
+                      <XAxis
+                        dataKey="year"
+                        type="number"
+                        domain={[trendChartData.years[0], trendChartData.years[trendChartData.years.length - 1]]}
+                        ticks={trendChartData.years}
+                        tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                        axisLine={{ stroke: 'var(--color-border)' }}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                        axisLine={{ stroke: 'var(--color-border)' }}
+                        tickLine={false}
+                        tickFormatter={(v: number) => formatCompactMXN(v)}
+                      />
+                      <RechartsTooltip
+                        content={({ active, payload, label }) => {
+                          if (!active || !payload?.length) return null
+                          return (
+                            <div className="chart-tooltip">
+                              <p className="font-medium text-xs text-text-primary mb-1">{label}</p>
+                              {payload.map((p, i) => (
+                                <p key={i} className="text-xs tabular-nums" style={{ color: p.color }}>
+                                  {p.name}: {formatCompactMXN(p.value as number)}
+                                </p>
+                              ))}
+                            </div>
+                          )
+                        }}
+                      />
+                      <Legend
+                        verticalAlign="bottom"
+                        height={36}
+                        formatter={(value: string) => (
+                          <span className="text-xs text-text-muted">{truncate(value, 30)}</span>
+                        )}
+                      />
+                      {trendChartData.series.map((series, idx) => (
+                        <Line
+                          key={series.name}
+                          type="monotone"
+                          data={trendChartData.years.map(y => ({ year: y, value: series.data[y] || 0 }))}
+                          dataKey="value"
+                          name={series.name}
+                          stroke={TREND_COLORS[idx % TREND_COLORS.length]}
+                          strokeWidth={2}
+                          dot={{ r: 3 }}
+                          activeDot={{ r: 5 }}
+                        />
+                      ))}
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-64 text-text-muted text-sm">
+                  {t('trends.empty')}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </details>
     </div>
   )
 }

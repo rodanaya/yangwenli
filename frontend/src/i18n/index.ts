@@ -33,6 +33,10 @@ import esRedflags from './locales/es/redflags.json'
 import enRedflags from './locales/en/redflags.json'
 import esTemporal from './locales/es/temporal.json'
 import enTemporal from './locales/en/temporal.json'
+import esProcurement from './locales/es/procurement.json'
+import enProcurement from './locales/en/procurement.json'
+import esAdministrations from './locales/es/administrations.json'
+import enAdministrations from './locales/en/administrations.json'
 
 i18n
   .use(LanguageDetector)
@@ -45,6 +49,7 @@ i18n
         executive: esExecutive, patterns: esPatterns, watchlist: esWatchlist,
         glossary: esGlossary, spending: esSpending,
         moneyflow: esMoneyflow, redflags: esRedflags, temporal: esTemporal,
+        procurement: esProcurement, administrations: esAdministrations,
       },
       en: {
         common: enCommon, sectors: enSectors, nav: enNav, dashboard: enDashboard,
@@ -52,6 +57,7 @@ i18n
         executive: enExecutive, patterns: enPatterns, watchlist: enWatchlist,
         glossary: enGlossary, spending: enSpending,
         moneyflow: enMoneyflow, redflags: enRedflags, temporal: enTemporal,
+        procurement: enProcurement, administrations: enAdministrations,
       },
     },
     lng: 'es', // Default to Spanish

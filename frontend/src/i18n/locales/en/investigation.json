@@ -154,9 +154,32 @@
     "high": "High",
     "medium": "Medium",
     "low": "Low",
+    "priority": "Priority",
     "totalAtRisk": "Total at risk",
     "allPriorities": "All",
-    "empty": "No cases match the current filters."
+    "empty": "No cases match the current filters.",
+    "funnel": {
+      "detected": "Detected",
+      "researching": "Researching",
+      "corroborated": "Corroborated",
+      "promoted": "Promoted"
+    }
+  },
+  "caseDetail": {
+    "backToQueue": "Investigation Queue",
+    "narrative": "Case Narrative",
+    "vendors": "Involved Vendors",
+    "contracts": "Top Contracts",
+    "questions": "Investigation Questions",
+    "evidence": "Evidence Log",
+    "noEvidence": "No evidence recorded yet. Add external sources to support or refute this case.",
+    "addEvidence": "Add Evidence",
+    "changeStatus": "Change Status",
+    "promoteToGroundTruth": "Promote to Ground Truth",
+    "promote": {
+      "confirm": "This will add the case to the ground truth database and use it to retrain the risk model in the next cycle. This action cannot be undone. Are you sure?",
+      "success": "Case promoted to ground truth successfully."
+    }
   },
   "card": {
     "priority": "PRIORITY {{n}}",

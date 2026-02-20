@@ -32,6 +32,18 @@
   "exportCSV": "Exportar CSV",
   "exportExcel": "Exportar Excel",
   "dateNote": "Granularidad de fecha disponible para ~48% de los contratos.",
+  "groundTruth": {
+    "caseName": "Nombre del Caso",
+    "caseType": "Tipo",
+    "sector": "Sector",
+    "vendorsMatched": "Proveedores Coincidentes",
+    "contracts": "Contratos",
+    "detectionRate": "Tasa de Detección",
+    "avgScore": "Puntaje Promedio",
+    "estimatedFraud": "Fraude Estimado",
+    "modelComparison": "Comparación de Modelos",
+    "liveData": "Datos en Vivo"
+  },
   "welcome": {
     "subtitle": "Red Unificada de Busqueda de Licitaciones Irregulares — Detección de Corrupción con IA para Contrataciones del Gobierno de México",
     "step1Title": "3.1 Millones de Contratos Analizados",

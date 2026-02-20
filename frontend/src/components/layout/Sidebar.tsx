@@ -57,7 +57,7 @@ const overviewNavDefs: NavItemDef[] = [
 const analyzeNavDefs: NavItemDef[] = [
   { i18nKey: 'patterns', href: '/patterns', icon: Fingerprint },
   { i18nKey: 'procurementIntelligence', href: '/procurement-intelligence', icon: TrendingUp },
-  { i18nKey: 'temporal', href: '/temporal', icon: Clock },
+  { i18nKey: 'temporal', href: '/administrations', icon: Clock },
   { i18nKey: 'pricing', href: '/price-analysis', icon: DollarSign },
   { i18nKey: 'categories', href: '/categories', icon: ShoppingCart },
   { i18nKey: 'contracts', href: '/contracts', icon: FileText },

@@ -154,9 +154,32 @@
     "high": "Alto",
     "medium": "Medio",
     "low": "Bajo",
+    "priority": "Prioridad",
     "totalAtRisk": "Total en riesgo",
     "allPriorities": "Todos",
-    "empty": "No hay casos que coincidan con los filtros actuales."
+    "empty": "No hay casos que coincidan con los filtros actuales.",
+    "funnel": {
+      "detected": "Detectados",
+      "researching": "En investigación",
+      "corroborated": "Corroborados",
+      "promoted": "Promovidos"
+    }
+  },
+  "caseDetail": {
+    "backToQueue": "Cola de Investigación",
+    "narrative": "Narrativa del Caso",
+    "vendors": "Proveedores Involucrados",
+    "contracts": "Contratos Principales",
+    "questions": "Preguntas de Investigación",
+    "evidence": "Registro de Evidencias",
+    "noEvidence": "Aún no hay evidencias registradas. Agrega fuentes externas para corroborar o refutar este caso.",
+    "addEvidence": "Agregar Evidencia",
+    "changeStatus": "Cambiar Estado",
+    "promoteToGroundTruth": "Promover a Verdad Base",
+    "promote": {
+      "confirm": "Esto agregará el caso a la base de datos de verdad base y se usará para reentrenar el modelo de riesgo en el próximo ciclo. Esta acción no se puede deshacer. ¿Estás seguro?",
+      "success": "Caso promovido a verdad base exitosamente."
+    }
   },
   "card": {
     "priority": "PRIORIDAD {{n}}",

@@ -1,23 +1,20 @@
 /**
  * Watchlist Page
- * Track suspicious vendors, contracts, and patterns for investigation
- * Personal investigation dashboard for analysts
+ * Change-tracking investigation workflow tool.
+ * Table view with risk-delta column, inline status transitions, and investigate nav.
  */
 
-import { useState, useCallback, useMemo, useReducer } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { RiskBadge, Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatDate } from '@/lib/utils'
 import { watchlistApi, type WatchlistItem, type WatchlistItemUpdate } from '@/api/client'
 import {
   Eye,
   EyeOff,
-  Plus,
   Trash2,
   Users,
   Building2,
@@ -26,126 +23,321 @@ import {
   Clock,
   CheckCircle,
   Filter,
-  Download,
-  Bell,
-  BellOff,
-  Loader2,
   RefreshCw,
-  ChevronDown,
-  ChevronRight,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Search,
+  Loader2,
 } from 'lucide-react'
+import { formatDate } from '@/lib/utils'
+
+// ============================================================================
+// Helper utilities
+// ============================================================================
+
+function formatRiskPct(score: number | null | undefined): string {
+  if (score === null || score === undefined) return '—'
+  return `${(score * 100).toFixed(1)}%`
+}
+
+function getRiskColor(score: number | null | undefined): string {
+  if (score === null || score === undefined) return 'text-text-muted'
+  if (score >= 0.5) return 'text-risk-critical'
+  if (score >= 0.3) return 'text-risk-high'
+  if (score >= 0.1) return 'text-risk-medium'
+  return 'text-risk-low'
+}
+
+// ============================================================================
+// Sub-components
+// ============================================================================
+
+interface RiskDeltaProps {
+  scoreAtCreation: number | null | undefined
+  currentScore: number | null | undefined
+}
+
+function RiskDelta({ scoreAtCreation, currentScore }: RiskDeltaProps) {
+  if (scoreAtCreation === null || scoreAtCreation === undefined ||
+      currentScore === null || currentScore === undefined) {
+    return <span className="text-text-muted text-sm">—</span>
+  }
+  const delta = currentScore - scoreAtCreation
+  if (Math.abs(delta) < 0.005) {
+    return (
+      <span className="flex items-center gap-1 text-text-muted text-sm">
+        <Minus className="h-3 w-3" />
+        0.0%
+      </span>
+    )
+  }
+  if (delta > 0) {
+    return (
+      <span className="flex items-center gap-1 text-risk-critical text-sm font-medium">
+        <TrendingUp className="h-3 w-3" />
+        +{(delta * 100).toFixed(1)}%
+      </span>
+    )
+  }
+  return (
+    <span className="flex items-center gap-1 text-risk-low text-sm font-medium">
+      <TrendingDown className="h-3 w-3" />
+      {(delta * 100).toFixed(1)}%
+    </span>
+  )
+}
+
+function TypeBadge({ type }: { type: WatchlistItem['item_type'] }) {
+  const config = {
+    vendor: { label: 'Vendor', Icon: Users, cls: 'bg-accent/10 text-accent border-accent/20' },
+    institution: { label: 'Institution', Icon: Building2, cls: 'bg-sector-gobernacion/10 text-sector-gobernacion border-sector-gobernacion/20' },
+    contract: { label: 'Contract', Icon: FileText, cls: 'bg-text-muted/10 text-text-muted border-text-muted/20' },
+  }
+  const { label, Icon, cls } = config[type]
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-xs ${cls}`}>
+      <Icon className="h-3 w-3" />
+      {label}
+    </span>
+  )
+}
+
+function PriorityBadge({ priority }: { priority: WatchlistItem['priority'] }) {
+  const styles = {
+    high: 'bg-risk-critical/15 text-risk-critical border-risk-critical/30',
+    medium: 'bg-risk-medium/15 text-risk-medium border-risk-medium/30',
+    low: 'bg-risk-low/15 text-risk-low border-risk-low/30',
+  }
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded border text-xs capitalize ${styles[priority]}`}>
+      {priority}
+    </span>
+  )
+}
+
+function StatusBadge({ status }: { status: WatchlistItem['status'] }) {
+  const styles = {
+    watching: 'bg-accent/10 text-accent border-accent/20',
+    investigating: 'bg-risk-high/10 text-risk-high border-risk-high/20',
+    resolved: 'bg-risk-low/10 text-risk-low border-risk-low/20',
+  }
+  const icons = {
+    watching: Eye,
+    investigating: AlertTriangle,
+    resolved: CheckCircle,
+  }
+  const Icon = icons[status]
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-xs capitalize ${styles[status]}`}>
+      <Icon className="h-3 w-3" />
+      {status}
+    </span>
+  )
+}
+
+// ============================================================================
+// Filter chip component
+// ============================================================================
+
+interface FilterChipProps<T extends string> {
+  value: T
+  active: boolean
+  onClick: () => void
+  label: string
+}
+
+function FilterChip<T extends string>({ active, onClick, label }: FilterChipProps<T>) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+        active
+          ? 'bg-accent text-white border-accent'
+          : 'bg-background border-border text-text-muted hover:border-accent hover:text-accent'
+      }`}
+    >
+      {label}
+    </button>
+  )
+}
+
+// ============================================================================
+// Stat card
+// ============================================================================
+
+interface StatCardProps {
+  label: string
+  value: number
+  color?: string
+  icon: React.ElementType
+  onClick?: () => void
+  loading: boolean
+}
+
+function StatCard({ label, value, color, icon: Icon, onClick, loading }: StatCardProps) {
+  return (
+    <Card
+      className={`${onClick ? 'cursor-pointer hover:border-accent transition-colors' : ''}`}
+      onClick={onClick}
+    >
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs text-text-muted">{label}</p>
+            {loading ? (
+              <Skeleton className="h-8 w-12 mt-1" />
+            ) : (
+              <p className={`text-2xl font-bold ${color ?? ''}`}>{value}</p>
+            )}
+          </div>
+          <Icon className={`h-8 w-8 opacity-40 ${color ?? 'text-text-muted'}`} />
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// ============================================================================
+// Confirm remove button (inline two-step pattern)
+// ============================================================================
+
+function RemoveButton({ onConfirm, disabled }: { onConfirm: () => void; disabled: boolean }) {
+  const [confirming, setConfirming] = useState(false)
+
+  if (confirming) {
+    return (
+      <span className="flex items-center gap-1">
+        <button
+          onClick={() => { setConfirming(false); onConfirm() }}
+          className="text-xs text-risk-critical hover:underline"
+          disabled={disabled}
+        >
+          Confirm
+        </button>
+        <button
+          onClick={() => setConfirming(false)}
+          className="text-xs text-text-muted hover:underline"
+        >
+          Cancel
+        </button>
+      </span>
+    )
+  }
+
+  return (
+    <button
+      onClick={() => setConfirming(true)}
+      disabled={disabled}
+      title="Remove from watchlist"
+      className="p-1 rounded hover:bg-risk-critical/10 text-text-muted hover:text-risk-critical transition-colors disabled:opacity-40"
+    >
+      <Trash2 className="h-4 w-4" />
+    </button>
+  )
+}
+
+// ============================================================================
+// Main component
+// ============================================================================
+
+type StatusFilter = 'all' | 'watching' | 'investigating' | 'resolved'
+type TypeFilter = 'all' | 'vendor' | 'institution' | 'contract'
+type PriorityFilter = 'all' | 'high' | 'medium' | 'low'
 
 export function Watchlist() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [filter, setFilter] = useState<'all' | 'watching' | 'investigating' | 'resolved'>('all')
-  const [typeFilter, setTypeFilter] = useState<'all' | 'vendor' | 'institution' | 'contract'>('all')
-  const [expandedNotes, toggleNote] = useReducer(
-    (state: Set<number>, id: number) => {
-      const next = new Set(state)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    },
-    new Set<number>()
-  )
 
-  // Fetch watchlist items from API
-  const { data: watchlistData, isLoading, error, refetch } = useQuery({
-    queryKey: ['watchlist', filter === 'all' ? undefined : filter, typeFilter === 'all' ? undefined : typeFilter],
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all')
+
+  // Stats query (separate so header cards always show totals)
+  const { data: statsData, isLoading: statsLoading } = useQuery({
+    queryKey: ['watchlist-stats'],
+    queryFn: () => watchlistApi.getStats(),
+  })
+
+  // Items query (filtered)
+  const { data: watchlistData, isLoading: itemsLoading, error, refetch } = useQuery({
+    queryKey: [
+      'watchlist',
+      statusFilter === 'all' ? undefined : statusFilter,
+      typeFilter === 'all' ? undefined : typeFilter,
+      priorityFilter === 'all' ? undefined : priorityFilter,
+    ],
     queryFn: () => watchlistApi.getAll({
-      status: filter === 'all' ? undefined : filter,
+      status: statusFilter === 'all' ? undefined : statusFilter,
       item_type: typeFilter === 'all' ? undefined : typeFilter,
+      priority: priorityFilter === 'all' ? undefined : priorityFilter,
     }),
   })
 
-  // Update mutation
   const updateMutation = useMutation({
     mutationFn: ({ id, update }: { id: number; update: WatchlistItemUpdate }) =>
       watchlistApi.update(id, update),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['watchlist'] })
+      queryClient.invalidateQueries({ queryKey: ['watchlist-stats'] })
     },
   })
 
-  // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: (id: number) => watchlistApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['watchlist'] })
+      queryClient.invalidateQueries({ queryKey: ['watchlist-stats'] })
     },
   })
 
-  const items = watchlistData?.data || []
+  const isLoading = itemsLoading
+  const isMutating = updateMutation.isPending || deleteMutation.isPending
+
+  const items = watchlistData?.data ?? []
+
   const stats = useMemo(() => ({
-    total: watchlistData?.total || 0,
-    watching: watchlistData?.by_status?.watching || 0,
-    investigating: watchlistData?.by_status?.investigating || 0,
-    resolved: watchlistData?.by_status?.resolved || 0,
-    highPriority: watchlistData?.high_priority_count || 0,
-  }), [watchlistData])
+    watching: statsData?.watching ?? 0,
+    investigating: statsData?.investigating ?? 0,
+    resolved: statsData?.resolved ?? 0,
+    highPriority: statsData?.high_priority ?? 0,
+  }), [statsData])
 
-  const toggleAlerts = useCallback((id: number, currentValue: boolean) => {
-    updateMutation.mutate({ id, update: { alerts_enabled: !currentValue } })
-  }, [updateMutation])
-
-  const updateStatus = useCallback((id: number, status: WatchlistItem['status']) => {
-    updateMutation.mutate({ id, update: { status } })
-  }, [updateMutation])
-
-  const removeItem = useCallback((id: number) => {
-    deleteMutation.mutate(id)
-  }, [deleteMutation])
-
-  const handleItemClick = useCallback((item: WatchlistItem) => {
+  const handleEntityNav = useCallback((item: WatchlistItem) => {
     switch (item.item_type) {
-      case 'vendor':
-        navigate(`/vendors/${item.item_id}`)
-        break
-      case 'institution':
-        navigate(`/institutions/${item.item_id}`)
-        break
-      case 'contract':
-        navigate(`/contracts?id=${item.item_id}`)
-        break
+      case 'vendor': navigate(`/vendors/${item.item_id}`); break
+      case 'institution': navigate(`/institutions/${item.item_id}`); break
+      case 'contract': navigate(`/contracts?id=${item.item_id}`); break
     }
   }, [navigate])
 
-  const getTypeIcon = (type: WatchlistItem['item_type']) => {
-    switch (type) {
-      case 'vendor': return Users
-      case 'institution': return Building2
-      case 'contract': return FileText
-    }
-  }
+  const handleInvestigate = useCallback((item: WatchlistItem) => {
+    const params = item.item_type === 'vendor'
+      ? `?vendor=${encodeURIComponent(item.item_name)}`
+      : item.item_type === 'institution'
+        ? `?institution=${encodeURIComponent(item.item_name)}`
+        : ''
+    navigate(`/investigation${params}`)
+  }, [navigate])
 
-  const getPriorityColor = (priority: WatchlistItem['priority']) => {
-    switch (priority) {
-      case 'high': return 'bg-risk-critical/20 text-risk-critical border-risk-critical/30'
-      case 'medium': return 'bg-risk-medium/20 text-risk-medium border-risk-medium/30'
-      case 'low': return 'bg-risk-low/20 text-risk-low border-risk-low/30'
-    }
-  }
+  const handleStatusTransition = useCallback((id: number, newStatus: WatchlistItem['status']) => {
+    updateMutation.mutate({ id, update: { status: newStatus } })
+  }, [updateMutation])
 
-  const getStatusIcon = (status: WatchlistItem['status']) => {
-    switch (status) {
-      case 'watching': return Eye
-      case 'investigating': return AlertTriangle
-      case 'resolved': return CheckCircle
-    }
-  }
+  const handleRemove = useCallback((id: number) => {
+    deleteMutation.mutate(id)
+  }, [deleteMutation])
 
+  // ---- error state ----
   if (error) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
-              <Eye className="h-4.5 w-4.5 text-accent" />
-              Watchlist
-            </h2>
-            <p className="text-xs text-text-muted mt-0.5">Track and investigate suspicious patterns</p>
-          </div>
+        <div>
+          <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+            <Eye className="h-4.5 w-4.5 text-accent" />
+            Watchlist
+          </h2>
+          <p className="text-xs text-text-muted mt-0.5">Track and investigate suspicious patterns</p>
         </div>
         <Card className="border-risk-critical/30 bg-risk-critical/5">
           <CardContent className="p-6 text-center">
@@ -171,287 +363,298 @@ export function Watchlist() {
             Watchlist
           </h2>
           <p className="text-xs text-text-muted mt-0.5">
-            Track and investigate suspicious patterns
+            Track entities and monitor risk score changes over time
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-          <Button size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Add to Watchlist
-          </Button>
+        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      </div>
+
+      {/* Stat cards — 4 cards */}
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+        <StatCard
+          label="Watching"
+          value={stats.watching}
+          color="text-accent"
+          icon={Eye}
+          onClick={() => setStatusFilter('watching')}
+          loading={statsLoading}
+        />
+        <StatCard
+          label="Investigating"
+          value={stats.investigating}
+          color="text-risk-high"
+          icon={AlertTriangle}
+          onClick={() => setStatusFilter('investigating')}
+          loading={statsLoading}
+        />
+        <StatCard
+          label="High Priority"
+          value={stats.highPriority}
+          color="text-risk-critical"
+          icon={AlertTriangle}
+          loading={statsLoading}
+        />
+        <StatCard
+          label="Resolved"
+          value={stats.resolved}
+          color="text-risk-low"
+          icon={CheckCircle}
+          onClick={() => setStatusFilter('resolved')}
+          loading={statsLoading}
+        />
+      </div>
+
+      {/* Filter bar */}
+      <div className="flex flex-wrap gap-3">
+        {/* Status chips */}
+        <div className="flex items-center gap-1.5">
+          <Filter className="h-3.5 w-3.5 text-text-muted" />
+          {(['all', 'watching', 'investigating', 'resolved'] as StatusFilter[]).map((s) => (
+            <FilterChip
+              key={s}
+              value={s}
+              active={statusFilter === s}
+              onClick={() => setStatusFilter(s)}
+              label={s === 'all' ? 'All Status' : s.charAt(0).toUpperCase() + s.slice(1)}
+            />
+          ))}
+        </div>
+        {/* Type chips */}
+        <div className="flex items-center gap-1.5">
+          {(['all', 'vendor', 'institution', 'contract'] as TypeFilter[]).map((t) => (
+            <FilterChip
+              key={t}
+              value={t}
+              active={typeFilter === t}
+              onClick={() => setTypeFilter(t)}
+              label={t === 'all' ? 'All Types' : t.charAt(0).toUpperCase() + t.slice(1) + 's'}
+            />
+          ))}
+        </div>
+        {/* Priority chips */}
+        <div className="flex items-center gap-1.5">
+          {(['all', 'high', 'medium', 'low'] as PriorityFilter[]).map((p) => (
+            <FilterChip
+              key={p}
+              value={p}
+              active={priorityFilter === p}
+              onClick={() => setPriorityFilter(p)}
+              label={p === 'all' ? 'All Priority' : p.charAt(0).toUpperCase() + p.slice(1)}
+            />
+          ))}
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-5">
-        <Card className="cursor-pointer hover:border-accent transition-colors" onClick={() => setFilter('all')}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-text-muted">Total Items</p>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-12" />
-                ) : (
-                  <p className="text-2xl font-bold">{stats.total}</p>
-                )}
-              </div>
-              <Eye className="h-8 w-8 text-text-muted opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="cursor-pointer hover:border-accent transition-colors" onClick={() => setFilter('watching')}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-text-muted">Watching</p>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-12" />
-                ) : (
-                  <p className="text-2xl font-bold text-accent">{stats.watching}</p>
-                )}
-              </div>
-              <Eye className="h-8 w-8 text-accent opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="cursor-pointer hover:border-accent transition-colors" onClick={() => setFilter('investigating')}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-text-muted">Investigating</p>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-12" />
-                ) : (
-                  <p className="text-2xl font-bold text-risk-high">{stats.investigating}</p>
-                )}
-              </div>
-              <AlertTriangle className="h-8 w-8 text-risk-high opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="cursor-pointer hover:border-accent transition-colors" onClick={() => setFilter('resolved')}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-text-muted">Resolved</p>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-12" />
-                ) : (
-                  <p className="text-2xl font-bold text-risk-low">{stats.resolved}</p>
-                )}
-              </div>
-              <CheckCircle className="h-8 w-8 text-risk-low opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-risk-critical/5 border-risk-critical/20">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-text-muted">High Priority</p>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-12" />
-                ) : (
-                  <p className="text-2xl font-bold text-risk-critical">{stats.highPriority}</p>
-                )}
-              </div>
-              <AlertTriangle className="h-8 w-8 text-risk-critical opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <div className="flex items-center gap-2">
-        <Filter className="h-4 w-4 text-text-muted" />
-        <span className="text-sm text-text-muted">Filter:</span>
-        {(['all', 'vendor', 'institution', 'contract'] as const).map((type) => (
-          <Button
-            key={type}
-            variant={typeFilter === type ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setTypeFilter(type)}
-            className="capitalize"
-          >
-            {type === 'all' ? 'All Types' : type + 's'}
-          </Button>
-        ))}
-      </div>
-
-      {/* Watchlist Items */}
+      {/* Table */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center justify-between text-sm">
             <span className="flex items-center gap-2">
               <Eye className="h-4 w-4" />
-              Tracked Items
+              Tracked Entities
             </span>
-            <Badge variant="secondary">{items.length} items</Badge>
+            <Badge variant="secondary">{items.length} item{items.length !== 1 ? 's' : ''}</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <ScrollArea className="h-[500px]">
-            <div className="divide-y divide-border">
-              {isLoading ? (
-                <div className="p-4 space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-start gap-4">
-                      <Skeleton className="h-10 w-10 rounded-lg" />
-                      <div className="flex-1 space-y-2">
-                        <Skeleton className="h-4 w-3/4" />
-                        <Skeleton className="h-3 w-1/2" />
-                      </div>
-                    </div>
-                  ))}
+          {/* Loading skeleton */}
+          {isLoading ? (
+            <div className="p-4 space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-4">
+                  <Skeleton className="h-5 w-5/12" />
+                  <Skeleton className="h-5 w-1/12" />
+                  <Skeleton className="h-5 w-1/12" />
+                  <Skeleton className="h-5 w-1/12" />
+                  <Skeleton className="h-5 w-1/12" />
+                  <Skeleton className="h-5 w-1/12" />
+                  <Skeleton className="h-5 w-2/12" />
                 </div>
-              ) : items.length === 0 ? (
-                <div className="p-8 text-center text-text-muted">
-                  <EyeOff className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                  <p>No items match your filters</p>
-                  <p className="text-xs mt-2">Add vendors, institutions, or contracts to track suspicious patterns</p>
-                </div>
-              ) : (
-                items.map((item) => {
-                  const TypeIcon = getTypeIcon(item.item_type)
-                  const StatusIcon = getStatusIcon(item.status)
-                  const isUpdating = updateMutation.isPending || deleteMutation.isPending
-                  return (
-                    <div
-                      key={item.id}
-                      className="p-4 hover:bg-background-elevated/50 transition-colors"
-                    >
-                      <div className="flex items-start gap-4">
-                        {/* Icon */}
-                        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                          item.item_type === 'vendor' ? 'bg-accent/10 text-accent' :
-                          item.item_type === 'institution' ? 'bg-sector-gobernacion/10 text-sector-gobernacion' :
-                          'bg-text-muted/10 text-text-muted'
-                        }`}>
-                          <TypeIcon className="h-5 w-5" />
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            {item.risk_score !== null && item.risk_score !== undefined && (
-                              <RiskBadge score={item.risk_score} className="flex-shrink-0" />
-                            )}
-                            <button
-                              onClick={() => handleItemClick(item)}
-                              className="font-medium text-sm hover:text-accent transition-colors truncate"
-                            >
-                              {item.item_name}
-                            </button>
-                          </div>
-                          <p className="text-xs text-text-muted mb-2">{item.reason}</p>
-                          <div className="flex items-center gap-3 text-xs text-text-muted">
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              Added {formatDate(item.created_at)}
-                            </span>
-                            <Badge variant="outline" className={`text-xs ${getPriorityColor(item.priority)}`}>
-                              {item.priority}
-                            </Badge>
-                            <span className="flex items-center gap-1 capitalize">
-                              <StatusIcon className="h-3 w-3" />
-                              {item.status}
-                            </span>
-                          </div>
-                          {item.notes && (
-                            <button
-                              onClick={() => toggleNote(item.id)}
-                              className="flex items-center gap-1 text-xs text-text-muted mt-2 hover:text-accent transition-colors"
-                            >
-                              {expandedNotes.has(item.id) ? (
-                                <ChevronDown className="h-3 w-3" />
-                              ) : (
-                                <ChevronRight className="h-3 w-3" />
-                              )}
-                              {expandedNotes.has(item.id) ? 'Hide note' : 'Show note'}
-                            </button>
-                          )}
-                          {item.notes && expandedNotes.has(item.id) && (
-                            <p className="text-xs text-text-muted mt-1 ml-4 italic">{item.notes}</p>
-                          )}
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => toggleAlerts(item.id, item.alerts_enabled)}
-                            title={item.alerts_enabled ? 'Disable alerts' : 'Enable alerts'}
-                            disabled={isUpdating}
-                          >
-                            {item.alerts_enabled ? (
-                              <Bell className="h-4 w-4 text-accent" />
-                            ) : (
-                              <BellOff className="h-4 w-4 text-text-muted" />
-                            )}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => removeItem(item.id)}
-                            title="Remove from watchlist"
-                            disabled={isUpdating}
-                          >
-                            {deleteMutation.isPending ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4 text-text-muted hover:text-risk-critical" />
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* Status actions */}
-                      {item.status !== 'resolved' && (
-                        <div className="flex gap-2 mt-3 ml-14">
-                          {item.status === 'watching' && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-xs h-7"
-                              onClick={() => updateStatus(item.id, 'investigating')}
-                              disabled={isUpdating}
-                            >
-                              <AlertTriangle className="h-3 w-3 mr-1" />
-                              Start Investigation
-                            </Button>
-                          )}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-xs h-7"
-                            onClick={() => updateStatus(item.id, 'resolved')}
-                            disabled={isUpdating}
-                          >
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Mark Resolved
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })
-              )}
+              ))}
             </div>
-          </ScrollArea>
+          ) : items.length === 0 ? (
+            /* Empty state */
+            <div className="p-12 text-center text-text-muted">
+              <EyeOff className="h-12 w-12 mx-auto mb-4 opacity-25" />
+              <p className="text-sm font-medium mb-1">Your watchlist is empty</p>
+              <p className="text-xs max-w-sm mx-auto">
+                Use the + button on any vendor or institution profile to track entities of interest and monitor risk score changes over time.
+              </p>
+            </div>
+          ) : (
+            /* Table */
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-xs text-text-muted">
+                    <th className="text-left px-4 py-3 font-medium">Entity</th>
+                    <th className="text-left px-3 py-3 font-medium">Type</th>
+                    <th className="text-left px-3 py-3 font-medium">Priority</th>
+                    <th className="text-left px-3 py-3 font-medium">Status</th>
+                    <th className="text-right px-3 py-3 font-medium">Risk at Add</th>
+                    <th className="text-right px-3 py-3 font-medium">Current Risk</th>
+                    <th className="text-right px-3 py-3 font-medium">Change</th>
+                    <th className="text-left px-3 py-3 font-medium">Added</th>
+                    <th className="text-right px-4 py-3 font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {items.map((item) => (
+                    <WatchlistRow
+                      key={item.id}
+                      item={item}
+                      isMutating={isMutating}
+                      onEntityNav={handleEntityNav}
+                      onInvestigate={handleInvestigate}
+                      onStatusTransition={handleStatusTransition}
+                      onRemove={handleRemove}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+// ============================================================================
+// Table row
+// ============================================================================
+
+interface WatchlistRowProps {
+  item: WatchlistItem
+  isMutating: boolean
+  onEntityNav: (item: WatchlistItem) => void
+  onInvestigate: (item: WatchlistItem) => void
+  onStatusTransition: (id: number, status: WatchlistItem['status']) => void
+  onRemove: (id: number) => void
+}
+
+function WatchlistRow({
+  item,
+  isMutating,
+  onEntityNav,
+  onInvestigate,
+  onStatusTransition,
+  onRemove,
+}: WatchlistRowProps) {
+  return (
+    <tr className="hover:bg-background-elevated/40 transition-colors">
+      {/* Entity */}
+      <td className="px-4 py-3">
+        <div className="flex flex-col gap-0.5">
+          <button
+            onClick={() => onEntityNav(item)}
+            className="text-left font-medium hover:text-accent transition-colors truncate max-w-[200px]"
+            title={item.item_name}
+          >
+            {item.item_name}
+          </button>
+          {item.reason && (
+            <span className="text-xs text-text-muted truncate max-w-[200px]" title={item.reason}>
+              {item.reason}
+            </span>
+          )}
+        </div>
+      </td>
+
+      {/* Type */}
+      <td className="px-3 py-3 whitespace-nowrap">
+        <TypeBadge type={item.item_type} />
+      </td>
+
+      {/* Priority */}
+      <td className="px-3 py-3 whitespace-nowrap">
+        <PriorityBadge priority={item.priority} />
+      </td>
+
+      {/* Status + inline transition */}
+      <td className="px-3 py-3 whitespace-nowrap">
+        <div className="flex flex-col gap-1">
+          <StatusBadge status={item.status} />
+          {item.status === 'watching' && (
+            <button
+              onClick={() => onStatusTransition(item.id, 'investigating')}
+              disabled={isMutating}
+              className="text-xs text-text-muted hover:text-risk-high flex items-center gap-0.5 transition-colors disabled:opacity-40"
+            >
+              {isMutating ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <AlertTriangle className="h-3 w-3" />
+              )}
+              Start investigating
+            </button>
+          )}
+          {item.status === 'investigating' && (
+            <button
+              onClick={() => onStatusTransition(item.id, 'resolved')}
+              disabled={isMutating}
+              className="text-xs text-text-muted hover:text-risk-low flex items-center gap-0.5 transition-colors disabled:opacity-40"
+            >
+              {isMutating ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <CheckCircle className="h-3 w-3" />
+              )}
+              Mark resolved
+            </button>
+          )}
+        </div>
+      </td>
+
+      {/* Risk at add */}
+      <td className="px-3 py-3 text-right whitespace-nowrap">
+        <span className={`text-sm tabular-nums ${getRiskColor(item.risk_score_at_creation)}`}>
+          {formatRiskPct(item.risk_score_at_creation)}
+        </span>
+      </td>
+
+      {/* Current risk */}
+      <td className="px-3 py-3 text-right whitespace-nowrap">
+        <span className={`text-sm tabular-nums font-medium ${getRiskColor(item.risk_score)}`}>
+          {formatRiskPct(item.risk_score)}
+        </span>
+      </td>
+
+      {/* Change delta */}
+      <td className="px-3 py-3 text-right whitespace-nowrap">
+        <RiskDelta scoreAtCreation={item.risk_score_at_creation} currentScore={item.risk_score} />
+      </td>
+
+      {/* Added date */}
+      <td className="px-3 py-3 whitespace-nowrap">
+        <span className="flex items-center gap-1 text-xs text-text-muted">
+          <Clock className="h-3 w-3" />
+          {formatDate(item.created_at)}
+        </span>
+      </td>
+
+      {/* Actions */}
+      <td className="px-4 py-3">
+        <div className="flex items-center justify-end gap-1">
+          {/* Investigate button — only for vendor/institution */}
+          {item.item_type !== 'contract' && (
+            <button
+              onClick={() => onInvestigate(item)}
+              title="Open in Investigation Queue"
+              className="flex items-center gap-1 px-2 py-1 rounded text-xs border border-border hover:border-accent hover:text-accent transition-colors text-text-muted"
+            >
+              <Search className="h-3 w-3" />
+              Investigate
+            </button>
+          )}
+          {/* Remove */}
+          <RemoveButton onConfirm={() => onRemove(item.id)} disabled={isMutating} />
+        </div>
+      </td>
+    </tr>
   )
 }
 

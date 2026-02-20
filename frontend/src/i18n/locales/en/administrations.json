@@ -1,0 +1,37 @@
+{
+  "title": "Administration Analysis",
+  "subtitle": "Deep dive into procurement patterns across Mexican presidential administrations (2002–2025)",
+  "comparisonTable": "Administration Comparison",
+  "narrative": "Context",
+  "groundTruthNote": "Known corruption cases documented in this period are tracked in the Ground Truth section, including vendor matches, contract counts, and detection rates for each case.",
+  "yearlyTrends": "Yearly Trends — {{admin}} ({{start}}–{{end}})",
+  "sectorProfile": "Sector Risk Profile — {{admin}}",
+  "transitionImpact": "Transition Impact",
+  "keyEvents": "Key Events — {{admin}} ({{start}}–{{end}})",
+  "documentedCases": "Documented Corruption Cases",
+  "documentedCasesNote": "Manually verified from public records and ASF investigations — not ML-detected",
+  "noData": "No yearly data available for this administration",
+  "noEvents": "No events recorded for this period",
+  "insufficientData": "Insufficient data for transition analysis",
+  "metrics": {
+    "contractsPerYear": "Contracts / Year",
+    "avgAnnualSpend": "Avg Annual Spend",
+    "avgRiskScore": "Avg Risk Score",
+    "directAwardPct": "Direct Award %",
+    "highRiskPct": "High Risk %",
+    "singleBidPct": "Single Bid %"
+  },
+  "table": {
+    "metric": "Metric",
+    "selected": "Selected"
+  },
+  "statCards": {
+    "contracts": "Contracts",
+    "totalValue": "Total Value",
+    "directAward": "Direct Award %",
+    "singleBid": "Single Bid %",
+    "highRisk": "High Risk %",
+    "activeVendors": "Active Vendors",
+    "vsAvg": "vs avg"
+  }
+}

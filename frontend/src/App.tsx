@@ -30,11 +30,11 @@ const DetectivePatterns = lazy(() => import('@/pages/DetectivePatterns'))
 const Administrations = lazy(() => import('@/pages/Administrations'))
 const ProcurementIntelligence = lazy(() => import('@/pages/ProcurementIntelligence'))
 const GroundTruth = lazy(() => import('@/pages/GroundTruth'))
-const TemporalPulse = lazy(() => import('@/pages/TemporalPulse'))
 const InstitutionHealth = lazy(() => import('@/pages/InstitutionHealth'))
 const PriceIntelligence = lazy(() => import('@/pages/PriceIntelligence'))
 const ModelTransparency = lazy(() => import('@/pages/ModelTransparency'))
 const Investigation = lazy(() => import('@/pages/Investigation'))
+const InvestigationCaseDetail = lazy(() => import('@/pages/InvestigationCaseDetail'))
 const ExecutiveSummary = lazy(() => import('@/pages/ExecutiveSummary'))
 const SpendingCategories = lazy(() => import('@/pages/SpendingCategories'))
 const Limitations = lazy(() => import('@/pages/Limitations'))
@@ -141,6 +141,14 @@ function App() {
                 }
               />
               <Route
+                path="investigation/:caseId"
+                element={
+                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
+                    <InvestigationCaseDetail />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
                 path="investigation"
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
@@ -188,14 +196,7 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
-              <Route
-                path="temporal"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <TemporalPulse />
-                  </SuspenseBoundary>
-                }
-              />
+              <Route path="temporal" element={<Navigate to="/administrations" replace />} />
               <Route
                 path="institutions/health"
                 element={

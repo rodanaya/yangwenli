@@ -1,0 +1,37 @@
+{
+  "title": "Analisis por Administracion",
+  "subtitle": "Analisis profundo de patrones de contratacion en administraciones presidenciales mexicanas (2002–2025)",
+  "comparisonTable": "Comparacion de Administraciones",
+  "narrative": "Contexto",
+  "groundTruthNote": "Los casos de corrupcion documentados en este periodo se registran en la seccion de Casos Verificados, incluyendo coincidencias de proveedores, conteos de contratos y tasas de deteccion por caso.",
+  "yearlyTrends": "Tendencias Anuales — {{admin}} ({{start}}–{{end}})",
+  "sectorProfile": "Perfil de Riesgo Sectorial — {{admin}}",
+  "transitionImpact": "Impacto de Transicion",
+  "keyEvents": "Eventos Clave — {{admin}} ({{start}}–{{end}})",
+  "documentedCases": "Casos de Corrupcion Documentados",
+  "documentedCasesNote": "Verificados manualmente desde registros publicos e investigaciones de la ASF — no detectados por ML",
+  "noData": "Sin datos anuales disponibles para esta administracion",
+  "noEvents": "Sin eventos registrados para este periodo",
+  "insufficientData": "Datos insuficientes para el analisis de transicion",
+  "metrics": {
+    "contractsPerYear": "Contratos / Ano",
+    "avgAnnualSpend": "Gasto Anual Promedio",
+    "avgRiskScore": "Riesgo Promedio",
+    "directAwardPct": "Adj. Directa %",
+    "highRiskPct": "Alto Riesgo %",
+    "singleBidPct": "Licitacion Unica %"
+  },
+  "table": {
+    "metric": "Metrica",
+    "selected": "Seleccionada"
+  },
+  "statCards": {
+    "contracts": "Contratos",
+    "totalValue": "Valor Total",
+    "directAward": "Adj. Directa %",
+    "singleBid": "Lic. Unica %",
+    "highRisk": "Alto Riesgo %",
+    "activeVendors": "Proveedores Activos",
+    "vsAvg": "vs promedio"
+  }
+}

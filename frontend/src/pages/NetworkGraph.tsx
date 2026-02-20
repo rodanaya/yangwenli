@@ -1,242 +1,311 @@
 /**
- * Network Explorer Page
- * Hierarchical tree: Sectors -> Institutions -> Vendors
- * Lazy-loaded at each level with search and risk filtering
+ * Network Explorer Page — Graph-First Layout
+ * Force-directed graph as the primary experience, with a side panel for node details.
+ * Replaces the previous 3-level accordion tree (Sectors → Institutions → Vendors).
  */
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
+import ReactECharts from 'echarts-for-react'
+import { Network, Search, X, ExternalLink, Users } from 'lucide-react'
 import { RiskBadge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { SectionDescription } from '@/components/SectionDescription'
-import { formatCompactMXN, formatNumber, toTitleCase, cn } from '@/lib/utils'
-import { SECTORS, SECTOR_COLORS, SECTOR_NAMES_EN, getRiskLevelFromScore } from '@/lib/constants'
-import { sectorApi, institutionApi } from '@/api/client'
-import type { SectorStatistics, InstitutionResponse, InstitutionVendorItem } from '@/api/types'
-import {
-  ChevronRight,
-  Search,
-  ShieldAlert,
-  Network,
-  Building2,
-  Users,
-  X,
-  ExternalLink,
-  Loader2,
-} from 'lucide-react'
+import { formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
+import { RISK_COLORS, getRiskLevelFromScore, SECTORS } from '@/lib/constants'
+import { networkApi, vendorApi, institutionApi } from '@/api/client'
+import type { NetworkNode, NetworkLink, CoBidderItem } from '@/api/client'
 
 // ---------------------------------------------------------------------------
-// Types
+// Helpers
 // ---------------------------------------------------------------------------
 
-interface SelectedNode {
-  type: 'sector' | 'institution' | 'vendor'
+function riskToColor(score: number | null): string {
+  if (score == null) return '#64748b'
+  return RISK_COLORS[getRiskLevelFromScore(score)]
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max)
+}
+
+function nodeSymbolSize(value: number, nodeType: string): number {
+  if (nodeType === 'institution') {
+    return clamp(Math.sqrt(value / 1e9) * 20 + 15, 12, 45)
+  }
+  return clamp(Math.sqrt(value / 1e9) * 25 + 15, 15, 55)
+}
+
+function linkWidth(contracts: number): number {
+  return clamp(Math.log2(contracts + 1), 1, 5)
+}
+
+function truncate(name: string, max = 18): string {
+  return name.length > max ? name.slice(0, max) + '…' : name
+}
+
+// ---------------------------------------------------------------------------
+// Filter bar types
+// ---------------------------------------------------------------------------
+
+interface GraphFilters {
+  sectorId: number | undefined
+  year: number | undefined
+  minContracts: number
+  depth: 1 | 2
+}
+
+// ---------------------------------------------------------------------------
+// Search suggestion item
+// ---------------------------------------------------------------------------
+
+interface SearchSuggestion {
   id: number
   name: string
-  data?: Record<string, unknown>
+  entityType: 'vendor' | 'institution'
+  subtitle?: string
 }
 
 // ---------------------------------------------------------------------------
-// Chevron component (animated rotation)
+// FiltersBar
 // ---------------------------------------------------------------------------
 
-function ExpandChevron({ expanded, className }: { expanded: boolean; className?: string }) {
-  return (
-    <ChevronRight
-      className={cn(
-        'h-4 w-4 shrink-0 text-text-muted transition-transform duration-150',
-        expanded && 'rotate-90',
-        className,
-      )}
-    />
-  )
-}
+const YEARS = Array.from({ length: 24 }, (_, i) => 2025 - i)
+const MIN_CONTRACTS_OPTIONS = [1, 5, 10, 20, 50]
 
-// ---------------------------------------------------------------------------
-// Inline loading spinner for lazy rows
-// ---------------------------------------------------------------------------
-
-function RowSpinner() {
-  return (
-    <div className="flex items-center gap-2 py-2 pl-12 text-xs text-text-muted">
-      <Loader2 className="h-3 w-3 animate-spin" />
-      Loading...
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Vendor row (Level 2)
-// ---------------------------------------------------------------------------
-
-function VendorRow({
-  vendor,
-  onSelect,
-  isSelected,
-  matchesSearch,
+function FiltersBar({
+  filters,
+  onChange,
+  onReset,
 }: {
-  vendor: InstitutionVendorItem
-  onSelect: (node: SelectedNode) => void
-  isSelected: boolean
-  matchesSearch: boolean
+  filters: GraphFilters
+  onChange: (patch: Partial<GraphFilters>) => void
+  onReset: () => void
 }) {
-  const riskLevel = vendor.avg_risk_score != null ? getRiskLevelFromScore(vendor.avg_risk_score) : null
-  const isHighRisk = riskLevel === 'high' || riskLevel === 'critical'
+  const hasActive =
+    filters.sectorId !== undefined ||
+    filters.year !== undefined ||
+    filters.minContracts !== 10 ||
+    filters.depth !== 1
 
   return (
-    <div
-      className={cn(
-        'flex items-center gap-3 py-1.5 pl-16 pr-4 text-xs border-l-2 border-transparent transition-colors',
-        isSelected && 'bg-accent/10 border-l-accent',
-        !isSelected && 'hover:bg-background-elevated/50',
-        !matchesSearch && 'opacity-40',
-      )}
-    >
-      <Users className="h-3 w-3 shrink-0 text-text-muted" />
-      <button
-        onClick={() =>
-          onSelect({
-            type: 'vendor',
-            id: vendor.vendor_id,
-            name: vendor.vendor_name,
-            data: vendor as unknown as Record<string, unknown>,
-          })
-        }
-        className="truncate text-left hover:text-accent transition-colors"
-        title={toTitleCase(vendor.vendor_name)}
-      >
-        {toTitleCase(vendor.vendor_name)}
-      </button>
-      <span className="ml-auto shrink-0 tabular-nums text-text-muted">
-        {formatNumber(vendor.contract_count)}
-      </span>
-      <span className="shrink-0 tabular-nums text-text-muted w-20 text-right">
-        {formatCompactMXN(vendor.total_value_mxn)}
-      </span>
-      {vendor.avg_risk_score != null && (
-        <RiskBadge
-          score={vendor.avg_risk_score}
-          className={cn('text-xs px-1.5 py-0', !isHighRisk && 'opacity-60')}
-        />
-      )}
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Institution row (Level 1) + lazy vendor children
-// ---------------------------------------------------------------------------
-
-function InstitutionRow({
-  inst,
-  expandedInstitutions,
-  toggleInstitution,
-  onSelect,
-  selectedNode,
-  searchQuery,
-}: {
-  inst: InstitutionResponse
-  expandedInstitutions: Set<number>
-  toggleInstitution: (id: number) => void
-  onSelect: (node: SelectedNode) => void
-  selectedNode: SelectedNode | null
-  searchQuery: string
-}) {
-  const isExpanded = expandedInstitutions.has(inst.id)
-  const isSelected = selectedNode?.type === 'institution' && selectedNode?.id === inst.id
-  const query = searchQuery.toLowerCase()
-  const matchesSearch = !query || inst.name.toLowerCase().includes(query)
-
-  // Lazy load vendors when institution is expanded
-  const { data: vendorsData, isLoading: vendorsLoading } = useQuery({
-    queryKey: ['institution-vendors-tree', inst.id],
-    queryFn: () => institutionApi.getVendors(inst.id, 30),
-    enabled: isExpanded,
-    staleTime: 5 * 60 * 1000,
-  })
-
-  const vendors = vendorsData?.data ?? []
-
-  // If search active, check if any vendors match
-  const matchingVendors = query
-    ? vendors.filter((v) => v.vendor_name.toLowerCase().includes(query))
-    : vendors
-
-  // high_risk_percentage may be returned even for list items depending on backend
-  const highRiskPct = (inst as unknown as Record<string, unknown>).high_risk_percentage as number | undefined
-  const hasHighRisk = highRiskPct != null && highRiskPct > 15
-
-  return (
-    <div>
-      {/* Institution header row */}
-      <div
-        className={cn(
-          'flex items-center gap-2 py-1.5 pl-10 pr-4 text-xs border-l-2 border-transparent transition-colors cursor-pointer',
-          isSelected && 'bg-accent/10 border-l-accent',
-          !isSelected && 'hover:bg-background-elevated/50',
-          !matchesSearch && !query && '',
-          !matchesSearch && query && matchingVendors.length === 0 && 'opacity-40',
-        )}
-      >
-        <button
-          onClick={() => toggleInstitution(inst.id)}
-          className="shrink-0 p-0.5 -m-0.5 rounded hover:bg-background-elevated"
-          aria-label={isExpanded ? 'Collapse' : 'Expand'}
-        >
-          <ExpandChevron expanded={isExpanded} />
-        </button>
-        <Building2 className="h-3 w-3 shrink-0 text-text-muted" />
-        <button
-          onClick={() =>
-            onSelect({
-              type: 'institution',
-              id: inst.id,
-              name: inst.name,
-              data: inst as unknown as Record<string, unknown>,
-            })
+    <div className="flex flex-wrap items-center gap-3 text-xs">
+      {/* Sector */}
+      <div className="flex items-center gap-1.5">
+        <label className="text-text-muted shrink-0">Sector:</label>
+        <select
+          value={filters.sectorId ?? ''}
+          onChange={(e) =>
+            onChange({ sectorId: e.target.value ? Number(e.target.value) : undefined })
           }
-          className="truncate text-left hover:text-accent transition-colors font-medium"
-          title={toTitleCase(inst.name)}
+          className="h-7 pl-2 pr-6 rounded border border-border bg-background-card text-xs focus:outline-none focus:ring-1 focus:ring-accent"
         >
-          {toTitleCase(inst.name)}
-        </button>
-        {inst.siglas && (
-          <span className="shrink-0 text-text-muted">({inst.siglas})</span>
-        )}
-        <span className="ml-auto shrink-0 tabular-nums text-text-muted">
-          {inst.total_contracts != null ? formatNumber(inst.total_contracts) : '-'}
-        </span>
-        <span className="shrink-0 tabular-nums text-text-muted w-20 text-right">
-          {inst.total_amount_mxn != null ? formatCompactMXN(inst.total_amount_mxn) : '-'}
-        </span>
-        {hasHighRisk && (
-          <ShieldAlert className="h-3 w-3 shrink-0 text-risk-high" aria-label="High risk concentration" />
-        )}
+          <option value="">All sectors</option>
+          {SECTORS.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.nameEN}
+            </option>
+          ))}
+        </select>
       </div>
 
-      {/* Vendor children */}
-      {isExpanded && (
-        <div>
-          {vendorsLoading ? (
-            <RowSpinner />
-          ) : vendors.length === 0 ? (
-            <div className="py-1.5 pl-16 text-xs text-text-muted italic">
-              No vendor data available
-            </div>
-          ) : (
-            (query ? matchingVendors : vendors).map((vendor) => (
-              <VendorRow
-                key={vendor.vendor_id}
-                vendor={vendor}
-                onSelect={onSelect}
-                isSelected={selectedNode?.type === 'vendor' && selectedNode?.id === vendor.vendor_id}
-                matchesSearch={!query || vendor.vendor_name.toLowerCase().includes(query)}
-              />
-            ))
-          )}
+      {/* Year */}
+      <div className="flex items-center gap-1.5">
+        <label className="text-text-muted shrink-0">Year:</label>
+        <select
+          value={filters.year ?? ''}
+          onChange={(e) =>
+            onChange({ year: e.target.value ? Number(e.target.value) : undefined })
+          }
+          className="h-7 pl-2 pr-6 rounded border border-border bg-background-card text-xs focus:outline-none focus:ring-1 focus:ring-accent"
+        >
+          <option value="">All years</option>
+          {YEARS.map((y) => (
+            <option key={y} value={y}>
+              {y}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Min contracts */}
+      <div className="flex items-center gap-1.5">
+        <label className="text-text-muted shrink-0">Min contracts:</label>
+        <select
+          value={filters.minContracts}
+          onChange={(e) => onChange({ minContracts: Number(e.target.value) })}
+          className="h-7 pl-2 pr-6 rounded border border-border bg-background-card text-xs focus:outline-none focus:ring-1 focus:ring-accent"
+        >
+          {MIN_CONTRACTS_OPTIONS.map((n) => (
+            <option key={n} value={n}>
+              {n}+
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Depth */}
+      <div className="flex items-center gap-1.5">
+        <label className="text-text-muted shrink-0">Depth:</label>
+        <div className="flex rounded border border-border overflow-hidden">
+          {([1, 2] as const).map((d) => (
+            <button
+              key={d}
+              onClick={() => onChange({ depth: d })}
+              className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                filters.depth === d
+                  ? 'bg-accent text-white'
+                  : 'bg-background-card text-text-secondary hover:bg-background-elevated'
+              }`}
+              aria-pressed={filters.depth === d}
+            >
+              {d}-hop
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Reset */}
+      {hasActive && (
+        <button
+          onClick={onReset}
+          className="flex items-center gap-1 text-text-muted hover:text-text-primary transition-colors"
+          aria-label="Reset filters"
+        >
+          <X className="h-3 w-3" />
+          Reset
+        </button>
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// SearchBar with autocomplete
+// ---------------------------------------------------------------------------
+
+function SearchBar({
+  onSelect,
+}: {
+  onSelect: (suggestion: SearchSuggestion) => void
+}) {
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const trimmed = query.trim()
+
+  const { data: vendorResults } = useQuery({
+    queryKey: ['network-search-vendors', trimmed],
+    queryFn: () => vendorApi.search(trimmed, 5),
+    enabled: trimmed.length >= 2,
+    staleTime: 30_000,
+  })
+
+  const { data: institutionResults } = useQuery({
+    queryKey: ['network-search-institutions', trimmed],
+    queryFn: () => institutionApi.search(trimmed, 5),
+    enabled: trimmed.length >= 2,
+    staleTime: 30_000,
+  })
+
+  const suggestions = useMemo<SearchSuggestion[]>(() => {
+    const results: SearchSuggestion[] = []
+    vendorResults?.data?.slice(0, 5).forEach((v) => {
+      results.push({
+        id: v.id,
+        name: v.name,
+        entityType: 'vendor',
+        subtitle: v.rfc ?? undefined,
+      })
+    })
+    institutionResults?.data?.slice(0, 5).forEach((inst) => {
+      results.push({
+        id: inst.id,
+        name: inst.name,
+        entityType: 'institution',
+        subtitle: inst.siglas ?? undefined,
+      })
+    })
+    return results
+  }, [vendorResults, institutionResults])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  function handleSelect(s: SearchSuggestion) {
+    setQuery('')
+    setOpen(false)
+    onSelect(s)
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Escape') {
+      setQuery('')
+      setOpen(false)
+    }
+  }
+
+  return (
+    <div ref={containerRef} className="relative flex-1 max-w-md">
+      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted pointer-events-none" />
+      <input
+        type="text"
+        placeholder="Search vendor or institution to center graph..."
+        value={query}
+        onChange={(e) => {
+          setQuery(e.target.value)
+          setOpen(true)
+        }}
+        onFocus={() => setOpen(true)}
+        onKeyDown={handleKeyDown}
+        className="w-full h-9 pl-8 pr-8 text-xs rounded-md border border-border bg-background-card focus:outline-none focus:ring-1 focus:ring-accent"
+        aria-label="Search vendor or institution"
+        aria-autocomplete="list"
+        aria-expanded={open && suggestions.length > 0}
+      />
+      {query && (
+        <button
+          onClick={() => { setQuery(''); setOpen(false) }}
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
+          aria-label="Clear search"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      )}
+
+      {open && suggestions.length > 0 && (
+        <div className="absolute z-50 top-full mt-1 w-full rounded-md border border-border bg-background-card shadow-lg overflow-hidden">
+          {suggestions.map((s) => (
+            <button
+              key={`${s.entityType}-${s.id}`}
+              onClick={() => handleSelect(s)}
+              className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-background-elevated transition-colors text-left"
+            >
+              <span
+                className={`shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                  s.entityType === 'vendor'
+                    ? 'bg-accent/10 text-accent'
+                    : 'bg-blue-500/10 text-blue-400'
+                }`}
+              >
+                {s.entityType === 'vendor' ? 'Vendor' : 'Institution'}
+              </span>
+              <span className="truncate font-medium">{toTitleCase(s.name)}</span>
+              {s.subtitle && (
+                <span className="shrink-0 text-text-muted">{s.subtitle}</span>
+              )}
+            </button>
+          ))}
         </div>
       )}
     </div>
@@ -244,239 +313,142 @@ function InstitutionRow({
 }
 
 // ---------------------------------------------------------------------------
-// Sector row (Level 0) + lazy institution children
+// Side panel
 // ---------------------------------------------------------------------------
 
-function SectorRow({
-  sector,
-  expandedSectors,
-  toggleSector,
-  expandedInstitutions,
-  toggleInstitution,
-  onSelect,
-  selectedNode,
-  searchQuery,
-  showHighRiskOnly,
-}: {
-  sector: SectorStatistics
-  expandedSectors: Set<number>
-  toggleSector: (id: number) => void
-  expandedInstitutions: Set<number>
-  toggleInstitution: (id: number) => void
-  onSelect: (node: SelectedNode) => void
-  selectedNode: SelectedNode | null
-  searchQuery: string
-  showHighRiskOnly: boolean
-}) {
-  const isExpanded = expandedSectors.has(sector.sector_id)
-  const isSelected = selectedNode?.type === 'sector' && selectedNode?.id === sector.sector_id
-  const sectorCode = sector.sector_code
-  const color = SECTOR_COLORS[sectorCode] ?? '#64748b'
-  const nameEN = SECTOR_NAMES_EN[sectorCode] ?? sectorCode
-  const highRiskPct = sector.high_risk_pct ?? 0
-
-  // Skip sector if risk filter is on and it has low risk
-  if (showHighRiskOnly && highRiskPct < 5) return null
-
-  // Lazy load institutions when sector is expanded
-  const { data: institutionsData, isLoading: institutionsLoading } = useQuery({
-    queryKey: ['sector-institutions-tree', sector.sector_id],
-    queryFn: () =>
-      institutionApi.getAll({
-        sector_id: sector.sector_id,
-        per_page: 50,
-        sort_by: 'total_amount_mxn',
-        sort_order: 'desc',
-      }),
-    enabled: isExpanded,
-    staleTime: 5 * 60 * 1000,
-  })
-
-  const institutions = institutionsData?.data ?? []
-  const query = searchQuery.toLowerCase()
-
-  // Filter institutions by search query
-  const filteredInstitutions = query
-    ? institutions.filter((inst) => inst.name.toLowerCase().includes(query))
-    : institutions
-
-  return (
-    <div className="border-b border-border/50 last:border-b-0">
-      {/* Sector header row */}
-      <div
-        className={cn(
-          'flex items-center gap-3 py-2.5 pl-4 pr-4 text-sm transition-colors cursor-pointer',
-          isSelected && 'bg-accent/10',
-          !isSelected && 'hover:bg-background-elevated/30',
-        )}
-        style={{ borderLeft: `3px solid ${color}` }}
-      >
-        <button
-          onClick={() => toggleSector(sector.sector_id)}
-          className="shrink-0 p-0.5 -m-0.5 rounded hover:bg-background-elevated"
-          aria-label={isExpanded ? 'Collapse' : 'Expand'}
-        >
-          <ExpandChevron expanded={isExpanded} />
-        </button>
-        <button
-          onClick={() =>
-            onSelect({
-              type: 'sector',
-              id: sector.sector_id,
-              name: nameEN,
-              data: sector as unknown as Record<string, unknown>,
-            })
-          }
-          className="font-semibold text-text-primary hover:text-accent transition-colors text-left"
-        >
-          {nameEN}
-        </button>
-        <span className="text-xs text-text-muted">
-          {formatNumber(sector.total_contracts)} contracts
-        </span>
-        <span className="text-xs text-text-muted">
-          {formatCompactMXN(sector.total_value_mxn)}
-        </span>
-        <span className="ml-auto text-xs tabular-nums">
-          {highRiskPct > 10 ? (
-            <span className="text-risk-high font-medium">
-              <ShieldAlert className="h-3 w-3 inline mr-0.5 -mt-0.5" />
-              {highRiskPct.toFixed(1)}% high risk
-            </span>
-          ) : (
-            <span className="text-text-muted">{highRiskPct.toFixed(1)}% high risk</span>
-          )}
-        </span>
-      </div>
-
-      {/* Institution children */}
-      {isExpanded && (
-        <div className="bg-background-elevated/20">
-          {institutionsLoading ? (
-            <RowSpinner />
-          ) : institutions.length === 0 ? (
-            <div className="py-2 pl-12 text-xs text-text-muted italic">
-              No institutions found
-            </div>
-          ) : filteredInstitutions.length === 0 ? (
-            <div className="py-2 pl-12 text-xs text-text-muted italic">
-              No institutions match "{searchQuery}"
-            </div>
-          ) : (
-            filteredInstitutions.map((inst) => (
-              <InstitutionRow
-                key={inst.id}
-                inst={inst}
-                expandedInstitutions={expandedInstitutions}
-                toggleInstitution={toggleInstitution}
-                onSelect={onSelect}
-                selectedNode={selectedNode}
-                searchQuery={searchQuery}
-              />
-            ))
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Detail panel (sidebar)
-// ---------------------------------------------------------------------------
-
-function DetailPanel({
+function SidePanel({
   node,
+  coBidders,
+  coBiddersLoading,
   onClose,
+  onLoadCoBidders,
 }: {
-  node: SelectedNode
+  node: NetworkNode
+  coBidders: CoBidderItem[] | null
+  coBiddersLoading: boolean
   onClose: () => void
+  onLoadCoBidders: (id: number) => void
 }) {
-  const data = node.data ?? {}
-
-  const profileLink =
-    node.type === 'vendor'
-      ? `/vendors/${node.id}`
-      : node.type === 'institution'
-        ? `/institutions/${node.id}`
-        : `/sectors`
+  const isVendor = node.type === 'vendor'
+  // Node IDs are like "v-123" or "i-456"
+  const numericId = parseInt(node.id.slice(2), 10)
+  const profileLink = isVendor ? `/vendors/${numericId}` : `/institutions/${numericId}`
 
   return (
-    <Card className="border-accent/30">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-sm truncate">{toTitleCase(node.name)}</CardTitle>
-          <button
-            onClick={onClose}
-            className="text-text-muted hover:text-text-primary shrink-0"
-            aria-label="Close details"
+    <div className="w-72 shrink-0 border-l border-border bg-background-card flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-2 p-4 border-b border-border">
+        <div className="min-w-0">
+          <div
+            className={`inline-block mb-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+              isVendor ? 'bg-accent/10 text-accent' : 'bg-blue-500/10 text-blue-400'
+            }`}
           >
-            <X className="h-4 w-4" />
-          </button>
+            {isVendor ? 'Vendor' : 'Institution'}
+          </div>
+          <h3 className="text-sm font-semibold leading-snug" title={node.name}>
+            {toTitleCase(node.name)}
+          </h3>
         </div>
-        <span className="text-xs uppercase tracking-wider text-text-muted">{node.type}</span>
-      </CardHeader>
-      <CardContent className="space-y-2 text-xs">
-        {/* Sector detail */}
-        {node.type === 'sector' && (
-          <>
-            <StatRow label="Total contracts" value={formatNumber((data.total_contracts as number) ?? 0)} />
-            <StatRow label="Total value" value={formatCompactMXN((data.total_value_mxn as number) ?? 0)} />
-            <StatRow label="Vendors" value={formatNumber((data.total_vendors as number) ?? 0)} />
-            <StatRow label="Institutions" value={formatNumber((data.total_institutions as number) ?? 0)} />
-            <StatRow label="Avg risk" value={`${(((data.avg_risk_score as number) ?? 0) * 100).toFixed(1)}%`} />
-            <StatRow label="Direct awards" value={`${((data.direct_award_pct as number) ?? 0).toFixed(1)}%`} />
-            <StatRow label="Single bids" value={`${((data.single_bid_pct as number) ?? 0).toFixed(1)}%`} />
-          </>
+        <button
+          onClick={onClose}
+          className="shrink-0 text-text-muted hover:text-text-primary mt-0.5"
+          aria-label="Close side panel"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Stats */}
+      <div className="p-4 space-y-3 overflow-y-auto flex-1">
+        {/* Risk badge */}
+        {node.risk_score != null && (
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-text-muted">Risk score</span>
+            <RiskBadge score={node.risk_score} className="text-xs" />
+          </div>
         )}
 
-        {/* Institution detail */}
-        {node.type === 'institution' && (
-          <>
-            {(data.siglas as string) && (
-              <StatRow label="Acronym" value={data.siglas as string} />
-            )}
-            <StatRow label="Type" value={toTitleCase((data.institution_type as string) ?? '-')} />
-            <StatRow label="Contracts" value={formatNumber((data.total_contracts as number) ?? 0)} />
-            <StatRow label="Value" value={formatCompactMXN((data.total_amount_mxn as number) ?? 0)} />
-            {(data.high_risk_percentage as number) != null && (
-              <StatRow label="High risk" value={`${((data.high_risk_percentage as number) ?? 0).toFixed(1)}%`} />
-            )}
-          </>
-        )}
+        {/* Contract count and value */}
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="rounded bg-background-elevated p-2">
+            <div className="text-text-muted mb-0.5">Contracts</div>
+            <div className="font-semibold tabular-nums">{formatNumber(node.contracts)}</div>
+          </div>
+          <div className="rounded bg-background-elevated p-2">
+            <div className="text-text-muted mb-0.5">Value</div>
+            <div className="font-semibold tabular-nums">{formatCompactMXN(node.value)}</div>
+          </div>
+        </div>
 
-        {/* Vendor detail */}
-        {node.type === 'vendor' && (
-          <>
-            <StatRow label="Contracts" value={formatNumber((data.contract_count as number) ?? 0)} />
-            <StatRow label="Value" value={formatCompactMXN((data.total_value_mxn as number) ?? 0)} />
-            {(data.avg_risk_score as number) != null && (
-              <div className="flex items-center justify-between">
-                <span className="text-text-muted">Risk</span>
-                <RiskBadge score={(data.avg_risk_score as number) ?? 0} className="text-xs" />
-              </div>
-            )}
-            {(data.rfc as string) && <StatRow label="RFC" value={data.rfc as string} />}
-          </>
-        )}
-
+        {/* Profile link */}
         <Link
           to={profileLink}
-          className="flex items-center gap-1.5 mt-3 text-accent hover:underline text-xs"
+          className="flex items-center gap-1.5 text-xs text-accent hover:underline"
         >
-          <ExternalLink className="h-3 w-3" />
+          <ExternalLink className="h-3 w-3 shrink-0" />
           View full profile
         </Link>
-      </CardContent>
-    </Card>
-  )
-}
 
-function StatRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-text-muted">{label}</span>
-      <span className="tabular-nums font-medium">{value}</span>
+        {/* Co-bidders section (vendors only) */}
+        {isVendor && (
+          <div className="border-t border-border pt-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium">Co-bidders</span>
+              {!coBidders && !coBiddersLoading && (
+                <button
+                  onClick={() => onLoadCoBidders(numericId)}
+                  className="flex items-center gap-1 text-xs border border-border rounded px-2 py-1 hover:border-accent hover:text-accent transition-colors"
+                >
+                  <Users className="h-3 w-3" />
+                  Find
+                </button>
+              )}
+            </div>
+
+            {coBiddersLoading && (
+              <div className="space-y-1.5">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-5/6" />
+              </div>
+            )}
+
+            {coBidders && coBidders.length === 0 && (
+              <p className="text-xs text-text-muted italic">No co-bidders found.</p>
+            )}
+
+            {coBidders && coBidders.length > 0 && (
+              <div className="space-y-1.5">
+                {coBidders.slice(0, 8).map((cb) => (
+                  <div
+                    key={cb.vendor_id}
+                    className="flex items-center justify-between gap-2 text-xs"
+                  >
+                    <span className="truncate text-text-secondary" title={cb.vendor_name}>
+                      {toTitleCase(cb.vendor_name)}
+                    </span>
+                    <div className="shrink-0 flex items-center gap-1.5">
+                      <span className="tabular-nums text-text-muted">
+                        {(cb.same_winner_ratio * 100).toFixed(0)}%
+                      </span>
+                      <span
+                        className={`px-1 py-0.5 rounded text-[10px] font-medium ${
+                          cb.relationship_strength === 'very_strong' || cb.relationship_strength === 'strong'
+                            ? 'bg-risk-high/10 text-risk-high'
+                            : 'bg-background-elevated text-text-muted'
+                        }`}
+                      >
+                        {cb.relationship_strength}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -485,243 +457,336 @@ function StatRow({ label, value }: { label: string; value: string }) {
 // Main page component
 // ---------------------------------------------------------------------------
 
-export function NetworkGraph() {
-  // State
-  const [expandedSectors, setExpandedSectors] = useState<Set<number>>(new Set())
-  const [expandedInstitutions, setExpandedInstitutions] = useState<Set<number>>(new Set())
-  const [selectedNode, setSelectedNode] = useState<SelectedNode | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [showHighRiskOnly, setShowHighRiskOnly] = useState(false)
+const DEFAULT_FILTERS: GraphFilters = {
+  sectorId: undefined,
+  year: undefined,
+  minContracts: 10,
+  depth: 1,
+}
 
-  // Fetch all sectors (always loaded)
-  const { data: sectorsData, isLoading: sectorsLoading } = useQuery({
-    queryKey: ['sectors-tree'],
-    queryFn: () => sectorApi.getAll(),
+// Center entity selected via search
+interface CenterEntity {
+  id: number
+  entityType: 'vendor' | 'institution'
+  name: string
+}
+
+export function NetworkGraph() {
+  const [filters, setFilters] = useState<GraphFilters>(DEFAULT_FILTERS)
+  const [centerEntity, setCenterEntity] = useState<CenterEntity | null>(null)
+  const [selectedNode, setSelectedNode] = useState<NetworkNode | null>(null)
+  const [coBidders, setCoBidders] = useState<CoBidderItem[] | null>(null)
+  const [coBiddersLoading, setCoBiddersLoading] = useState(false)
+
+  // Clear co-bidder state when selected node changes
+  useEffect(() => {
+    setCoBidders(null)
+    setCoBiddersLoading(false)
+  }, [selectedNode?.id])
+
+  // Build query params
+  const graphParams = useMemo(() => {
+    const params: Record<string, unknown> = {
+      limit: 60,
+      min_contracts: filters.minContracts,
+      depth: filters.depth,
+    }
+    if (centerEntity) {
+      if (centerEntity.entityType === 'vendor') params.vendor_id = centerEntity.id
+      else params.institution_id = centerEntity.id
+    }
+    if (filters.sectorId) params.sector_id = filters.sectorId
+    if (filters.year) params.year = filters.year
+    return params
+  }, [centerEntity, filters])
+
+  const { data: graphData, isLoading } = useQuery({
+    queryKey: ['network-graph-page', graphParams],
+    queryFn: () => networkApi.getGraph(graphParams),
     staleTime: 5 * 60 * 1000,
   })
 
-  const sectors = useMemo(() => {
-    if (!sectorsData?.data) return []
-    // Sort by total_value_mxn descending
-    return [...sectorsData.data].sort((a, b) => b.total_value_mxn - a.total_value_mxn)
-  }, [sectorsData])
+  // Build ECharts option
+  const option = useMemo(() => {
+    if (!graphData) return {}
 
-  // Toggle helpers
-  const toggleSector = useCallback((id: number) => {
-    setExpandedSectors((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
+    const centerNodeId = centerEntity
+      ? centerEntity.entityType === 'vendor'
+        ? `v-${centerEntity.id}`
+        : `i-${centerEntity.id}`
+      : null
+
+    const nodes = graphData.nodes.map((node: NetworkNode) => {
+      const isCenter = node.id === centerNodeId
+      const symbolSize = isCenter ? 65 : nodeSymbolSize(node.value, node.type)
+      const itemColor =
+        node.type === 'institution' ? '#3b82f6' : riskToColor(node.risk_score)
+      const showLabel = isCenter || symbolSize > 25
+
+      return {
+        id: node.id,
+        name: node.name,
+        value: node.value,
+        contracts: node.contracts,
+        risk_score: node.risk_score,
+        node_type: node.type,
+        // Store the full raw node for the side panel
+        extra: node,
+        symbolSize,
+        itemStyle: {
+          color: itemColor,
+          borderColor: isCenter ? '#ffffff' : undefined,
+          borderWidth: isCenter ? 3 : 0,
+        },
+        label: {
+          show: showLabel,
+          formatter: truncate(node.name),
+          fontSize: 10,
+          position: 'bottom' as const,
+          color: 'var(--color-text-muted)',
+        },
+      }
     })
+
+    const links = graphData.links.map((link: NetworkLink) => ({
+      source: link.source,
+      target: link.target,
+      value: link.value,
+      contracts: link.contracts,
+      avg_risk: link.avg_risk,
+      lineStyle: {
+        width: linkWidth(link.contracts),
+        color: (link.avg_risk ?? 0) >= 0.3 ? '#ef444480' : '#47556980',
+        curveness: 0.1,
+      },
+    }))
+
+    return {
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: 'var(--color-background)',
+        borderColor: 'var(--color-border)',
+        textStyle: { color: 'var(--color-text-primary)', fontSize: 12 },
+        formatter: (params: {
+          dataType: string
+          data: {
+            name: string
+            contracts?: number
+            value?: number
+            avg_risk?: number
+            risk_score?: number | null
+          }
+        }) => {
+          if (params.dataType === 'node') {
+            const { name, contracts, value, risk_score } = params.data
+            const riskPct = risk_score != null ? ` • Risk: ${(risk_score * 100).toFixed(0)}%` : ''
+            return `<strong>${name}</strong><br/>${formatNumber(contracts ?? 0)} contracts<br/>${formatCompactMXN(value ?? 0)}${riskPct}`
+          }
+          if (params.dataType === 'edge') {
+            const { contracts, value, avg_risk } = params.data
+            const riskPct = avg_risk != null ? ` • Avg risk: ${(avg_risk * 100).toFixed(0)}%` : ''
+            return `${formatNumber(contracts ?? 0)} contracts<br/>${formatCompactMXN(value ?? 0)}${riskPct}`
+          }
+          return ''
+        },
+      },
+      series: [
+        {
+          type: 'graph',
+          layout: 'force',
+          roam: true,
+          draggable: true,
+          data: nodes,
+          links,
+          force: {
+            repulsion: 300,
+            gravity: 0.08,
+            edgeLength: [80, 220],
+            layoutAnimation: true,
+          },
+          emphasis: {
+            focus: 'adjacency',
+            lineStyle: { width: 4 },
+          },
+          label: { show: true },
+          lineStyle: { opacity: 0.6 },
+        },
+      ],
+    }
+  }, [graphData, centerEntity])
+
+  // Click handler for ECharts nodes
+  const handleGraphEvents = useMemo(
+    () => ({
+      click: (params: { dataType?: string; data?: { extra?: NetworkNode } }) => {
+        if (params.dataType !== 'node' || !params.data?.extra) return
+        setSelectedNode(params.data.extra)
+      },
+    }),
+    []
+  )
+
+  // Load co-bidders for a vendor
+  const handleLoadCoBidders = useCallback(async (vendorId: number) => {
+    setCoBiddersLoading(true)
+    try {
+      const result = await networkApi.getCoBidders(vendorId, 3, 20)
+      setCoBidders(result.co_bidders)
+    } catch {
+      setCoBidders([])
+    } finally {
+      setCoBiddersLoading(false)
+    }
   }, [])
 
-  const toggleInstitution = useCallback((id: number) => {
-    setExpandedInstitutions((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
+  // Handle search selection — center the graph on the entity
+  const handleSearchSelect = useCallback((suggestion: SearchSuggestion) => {
+    setCenterEntity({
+      id: suggestion.id,
+      entityType: suggestion.entityType,
+      name: suggestion.name,
     })
+    setSelectedNode(null)
   }, [])
 
-  // When search changes, auto-expand sectors that match
-  const filteredSectors = useMemo(() => {
-    if (!searchQuery) return sectors
-    const q = searchQuery.toLowerCase()
-    return sectors.filter((s) => {
-      const nameEN = SECTOR_NAMES_EN[s.sector_code] ?? ''
-      return (
-        nameEN.toLowerCase().includes(q) ||
-        s.sector_code.toLowerCase().includes(q) ||
-        s.sector_name.toLowerCase().includes(q)
-      )
-    })
-  }, [sectors, searchQuery])
+  const isEmpty = !isLoading && graphData && graphData.nodes.length === 0
 
-  // Stats summary
-  const totalContracts = sectorsData?.total_contracts ?? 0
-  const totalValue = sectorsData?.total_value_mxn ?? 0
-  const expandedCount = expandedSectors.size + expandedInstitutions.size
+  const patchFilters = useCallback((patch: Partial<GraphFilters>) => {
+    setFilters((prev) => ({ ...prev, ...patch }))
+  }, [])
+
+  const resetFilters = useCallback(() => {
+    setFilters(DEFAULT_FILTERS)
+    setCenterEntity(null)
+    setSelectedNode(null)
+  }, [])
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
-            <Network className="h-4.5 w-4.5 text-accent" />
-            Network Explorer
-          </h2>
+    <div className="space-y-4">
+      {/* Page header */}
+      <div>
+        <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+          <Network className="h-4.5 w-4.5 text-accent" />
+          Network Explorer
+        </h2>
+        {graphData && (
           <p className="text-xs text-text-muted mt-0.5">
-            {formatNumber(totalContracts)} contracts across {sectors.length} sectors ({formatCompactMXN(totalValue)})
+            {graphData.total_nodes} nodes · {graphData.total_links} connections
+            {centerEntity && ` · centered on ${toTitleCase(centerEntity.name)}`}
           </p>
-        </div>
-      </div>
-
-      <SectionDescription>
-        Explore the procurement network as a hierarchy: sectors, institutions, and vendors.
-        Expand any level to see relationships. Click an entity name to view details in the
-        side panel. Use the search bar to filter by name across all levels, or toggle
-        &quot;High risk only&quot; to focus on sectors with elevated risk concentration.
-      </SectionDescription>
-
-      <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-4 py-2.5 text-xs text-amber-400 flex items-start gap-2">
-        <span className="shrink-0 mt-0.5">⚠</span>
-        <span>
-          <strong>Note on co-bidding:</strong> Co-bidding patterns (vendors that frequently appear in the same bids)
-          are visible in vendor profiles but are <em>not included in the risk score</em> — the signal was regularized
-          to zero in model training because dominant cases involved market concentration, not coordinated bidding.
-          Use the <strong>Collusion Detection</strong> tab in vendor profiles for manual investigation.
-        </span>
-      </div>
-
-      {/* Toolbar */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
-          <input
-            type="text"
-            placeholder="Search sectors, institutions, vendors..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-8 pl-8 pr-8 text-xs rounded-md border border-border bg-background-card focus:outline-none focus:ring-1 focus:ring-accent"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
-              aria-label="Clear search"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          )}
-        </div>
-
-        <Button
-          variant={showHighRiskOnly ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setShowHighRiskOnly(!showHighRiskOnly)}
-          className="text-xs"
-        >
-          <ShieldAlert className="h-3.5 w-3.5 mr-1.5" />
-          High risk only
-        </Button>
-
-        {expandedCount > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setExpandedSectors(new Set())
-              setExpandedInstitutions(new Set())
-            }}
-            className="text-xs"
-          >
-            Collapse all
-          </Button>
         )}
       </div>
 
-      {/* Main content */}
-      <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
-        {/* Tree */}
-        <Card>
-          <CardContent className="p-0">
-            {sectorsLoading ? (
-              <div className="space-y-1 p-4">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <Skeleton key={i} className="h-10" />
-                ))}
-              </div>
-            ) : filteredSectors.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-text-muted">
-                <Network className="h-10 w-10 mb-3 opacity-40" />
-                <p className="text-sm">No sectors match your filters</p>
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="mt-2 text-xs text-accent hover:underline"
-                  >
-                    Clear search
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="divide-y divide-border/30">
-                {(searchQuery ? filteredSectors : sectors).map((sector) => (
-                  <SectorRow
-                    key={sector.sector_id}
-                    sector={sector}
-                    expandedSectors={expandedSectors}
-                    toggleSector={toggleSector}
-                    expandedInstitutions={expandedInstitutions}
-                    toggleInstitution={toggleInstitution}
-                    onSelect={setSelectedNode}
-                    selectedNode={selectedNode}
-                    searchQuery={searchQuery}
-                    showHighRiskOnly={showHighRiskOnly}
-                  />
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      <SectionDescription>
+        Force-directed graph of vendor and institution relationships. Search for a specific entity
+        to center the graph on it, or browse the default top connections. Click any node to open
+        its detail panel.
+      </SectionDescription>
 
-        {/* Sidebar */}
-        <div className="space-y-4">
-          {selectedNode ? (
-            <DetailPanel node={selectedNode} onClose={() => setSelectedNode(null)} />
-          ) : (
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-center text-text-muted py-6">
-                  <Network className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                  <p className="text-xs">Click a sector, institution, or vendor to see details</p>
-                </div>
-              </CardContent>
-            </Card>
+      {/* Co-bidding note */}
+      <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-4 py-2.5 text-xs text-amber-400 flex items-start gap-2">
+        <span className="shrink-0 mt-0.5">&#9888;</span>
+        <span>
+          <strong>Note on co-bidding:</strong> Co-bidding patterns are visible in vendor profiles
+          but are <em>not included in the risk score</em> — the signal was regularized to zero in
+          model training. Use <strong>Find co-bidders</strong> in the side panel for manual
+          investigation.
+        </span>
+      </div>
+
+      {/* Toolbar row: search + filters */}
+      <div className="flex flex-wrap items-center gap-3">
+        <SearchBar onSelect={handleSearchSelect} />
+        {centerEntity && (
+          <div className="flex items-center gap-1.5 text-xs bg-accent/10 border border-accent/30 rounded px-2 py-1">
+            <span className="text-accent font-medium">
+              {toTitleCase(centerEntity.name)}
+            </span>
+            <button
+              onClick={() => { setCenterEntity(null); setSelectedNode(null) }}
+              className="text-text-muted hover:text-text-primary"
+              aria-label="Clear center entity"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      <FiltersBar filters={filters} onChange={patchFilters} onReset={resetFilters} />
+
+      {/* Main content: graph + side panel */}
+      <div className="flex border border-border rounded-md overflow-hidden" style={{ height: '620px' }}>
+        {/* Graph area */}
+        <div className="flex-1 relative min-w-0">
+          {isLoading && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background-card z-10">
+              <Network className="h-8 w-8 text-accent animate-pulse" />
+              <p className="text-sm text-text-muted">Loading network...</p>
+            </div>
           )}
 
-          {/* Legend */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs">How to use</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-xs text-text-muted">
-              <div className="flex items-start gap-2">
-                <ExpandChevron expanded={false} className="h-3 w-3 mt-0.5" />
-                <span>Click the arrow to expand/collapse levels</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <Building2 className="h-3 w-3 mt-0.5 shrink-0" />
-                <span>Click a name to see details and link to its profile</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <ShieldAlert className="h-3 w-3 mt-0.5 shrink-0 text-risk-high" />
-                <span>Shield icon marks entities with elevated risk concentration</span>
-              </div>
-            </CardContent>
-          </Card>
+          {isEmpty && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background-card">
+              <Network className="h-10 w-10 opacity-30" />
+              <p className="text-sm text-text-muted">No connections found for these filters.</p>
+              <button
+                onClick={resetFilters}
+                className="text-xs text-accent hover:underline"
+              >
+                Reset filters
+              </button>
+            </div>
+          )}
 
-          {/* Sector color reference */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs">Sectors</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1">
-              {SECTORS.map((s) => (
-                <div key={s.id} className="flex items-center gap-2 text-xs">
-                  <span
-                    className="w-2.5 h-2.5 rounded-sm shrink-0"
-                    style={{ backgroundColor: s.color }}
-                  />
-                  <span className="text-text-secondary">{s.nameEN}</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          {!isLoading && !isEmpty && graphData && (
+            <ReactECharts
+              option={option}
+              style={{ height: '100%', width: '100%' }}
+              onEvents={handleGraphEvents}
+              opts={{ renderer: 'svg' }}
+            />
+          )}
+
+          {/* Default hint overlay — shown when no entity is centered */}
+          {!isLoading && !isEmpty && graphData && !centerEntity && (
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 pointer-events-none">
+              <div className="bg-background-card/90 border border-border rounded px-3 py-1.5 text-xs text-text-muted text-center backdrop-blur-sm">
+                Click any node to explore its connections. Search above to center on a specific entity.
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Side panel */}
+        {selectedNode && (
+          <SidePanel
+            node={selectedNode}
+            coBidders={coBidders}
+            coBiddersLoading={coBiddersLoading}
+            onClose={() => setSelectedNode(null)}
+            onLoadCoBidders={handleLoadCoBidders}
+          />
+        )}
+      </div>
+
+      {/* Legend */}
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-text-muted">
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-3 h-3 rounded-full bg-[#3b82f6]" />
+          Institution
+        </span>
+        {(['critical', 'high', 'medium', 'low'] as const).map((level) => (
+          <span key={level} className="flex items-center gap-1.5 capitalize">
+            <span
+              className="inline-block w-3 h-3 rounded-full"
+              style={{ backgroundColor: RISK_COLORS[level] }}
+            />
+            {level} vendor
+          </span>
+        ))}
+        <span className="text-text-muted">· Node size = contract value · Edge width = contract count</span>
       </div>
     </div>
   )

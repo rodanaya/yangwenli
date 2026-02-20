@@ -1,33 +1,29 @@
 /**
  * Ground Truth War Room
  *
- * Validates the risk detection model against 15 documented corruption cases.
- * Shows per-case detection performance, model comparison (v3.3 vs v4.0 vs v5.0),
- * and a timeline of early-warning value.
+ * Validates the risk detection model against documented corruption cases.
+ * Fetches live data from the API — no hardcoded constants.
  */
 
 import { useState, useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { SectionDescription } from '@/components/SectionDescription'
 import { cn, formatNumber, formatCompactMXN } from '@/lib/utils'
-import { SECTOR_COLORS, RISK_COLORS, SECTORS } from '@/lib/constants'
+import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { analysisApi } from '@/api/client'
 import {
   Shield,
   Target,
-  Users,
   FileText,
   ChevronDown,
   ChevronUp,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  Crosshair,
-  Scale,
   Activity,
-  Eye,
-  Zap,
-  ExternalLink,
+  Crosshair,
+  AlertTriangle,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -37,368 +33,63 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip as RechartsTooltip,
-  Cell,
-  RadarChart,
-  Radar,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
+  Legend,
 } from '@/components/charts'
 
 // ============================================================================
-// Ground Truth Data
+// Types
 // ============================================================================
 
-interface GroundTruthCase {
-  name: string
-  type: string
-  admin: string
-  year: number
-  sector: string
-  sectorId: number
-  contracts: number
-  vendors: string[]
-  vendorCount: number
-  detectionRate: number
-  highPlusRate: number
-  avgScore: number
-  description: string
-  estimatedFraud: number
-  publicDiscovery: number
-  firstContract: number
-  sourceUrl?: string
-  sourceLabel?: string
+interface PerCaseItem {
+  case_name: string
+  case_type: string
+  sector_name: string | null
+  estimated_fraud_mxn: number | null
+  confidence_level: string | null
+  vendors_matched: number
+  total_contracts: number
+  avg_risk_score: number
+  detection_rate: number
+  critical_rate: number
 }
 
-const GROUND_TRUTH_CASES: GroundTruthCase[] = [
-  {
-    name: 'IMSS Ghost Company Network',
-    type: 'Ghost Companies',
-    admin: 'Pena Nieto',
-    year: 2014,
-    sector: 'salud',
-    sectorId: 1,
-    contracts: 9366,
-    vendors: ['PISA', 'DIQN'],
-    vendorCount: 2,
-    detectionRate: 99.9,
-    highPlusRate: 99.0,
-    avgScore: 0.977,
-    description: 'Largest health sector fraud scheme involving ghost companies billing IMSS for phantom medical supplies.',
-    estimatedFraud: 3_500_000_000,
-    publicDiscovery: 2016,
-    firstContract: 2008,
-    sourceUrl: 'https://www.animalpolitico.com/analisis/organizaciones/mexico-por-sus-derechos/empresas-fantasma-imss',
-    sourceLabel: 'Animal Político',
-  },
-  {
-    name: 'Segalmex Food Distribution',
-    type: 'Procurement Fraud',
-    admin: 'AMLO',
-    year: 2019,
-    sector: 'agricultura',
-    sectorId: 9,
-    contracts: 6326,
-    vendors: ['LICONSA', 'DICONSA', "D'SAZON"],
-    vendorCount: 3,
-    detectionRate: 99.6,
-    highPlusRate: 89.3,
-    avgScore: 0.664,
-    description: 'Massive diversion of funds through inflated food distribution contracts.',
-    estimatedFraud: 15_000_000_000,
-    publicDiscovery: 2022,
-    firstContract: 2010,
-    sourceUrl: 'https://www.animalpolitico.com/politica/segalmex-fraude-15-mil-millones-pesos',
-    sourceLabel: 'Animal Político',
-  },
-  {
-    name: 'COVID-19 Emergency Procurement',
-    type: 'Embezzlement',
-    admin: 'AMLO',
-    year: 2020,
-    sector: 'salud',
-    sectorId: 1,
-    contracts: 5371,
-    vendors: ['DIMM', 'Bruluart', 'RB Health', 'Laboratorios Solfran', 'Cobiosa'],
-    vendorCount: 5,
-    detectionRate: 99.9,
-    highPlusRate: 84.9,
-    avgScore: 0.821,
-    description: 'Emergency procurement fraud during pandemic exploiting relaxed oversight.',
-    estimatedFraud: 2_000_000_000,
-    publicDiscovery: 2021,
-    firstContract: 2015,
-    sourceUrl: 'https://www.contralacorrupcion.mx/ventiladores-covid/',
-    sourceLabel: 'MxVsCorrupción',
-  },
-  {
-    name: 'Cyber Robotic IT Overpricing',
-    type: 'Overpricing',
-    admin: 'AMLO',
-    year: 2019,
-    sector: 'tecnologia',
-    sectorId: 6,
-    contracts: 139,
-    vendors: ['CYBER ROBOTIC'],
-    vendorCount: 1,
-    detectionRate: 100.0,
-    highPlusRate: 14.4,
-    avgScore: 0.249,
-    description: 'Systematic overpricing of IT services across multiple government agencies.',
-    sourceUrl: 'https://www.asf.gob.mx/Trans/Investigaciones/dbInvestigaciones_html.asp',
-    sourceLabel: 'ASF',
-    estimatedFraud: 500_000_000,
-    publicDiscovery: 2023,
-    firstContract: 2019,
-  },
-  {
-    name: 'Odebrecht-PEMEX Bribery',
-    type: 'Bribery',
-    admin: 'Pena Nieto',
-    year: 2014,
-    sector: 'energia',
-    sectorId: 4,
-    contracts: 35,
-    vendors: ['AHMSA', 'Tradeco'],
-    vendorCount: 2,
-    detectionRate: 97.1,
-    highPlusRate: 97.1,
-    avgScore: 0.915,
-    description: 'International bribery scheme involving PEMEX contracts and Odebrecht.',
-    estimatedFraud: 10_500_000_000,
-    publicDiscovery: 2016,
-    firstContract: 2010,
-    sourceUrl: 'https://www.dof.gob.mx/nota_detalle.php?codigo=5518971&fecha=12/06/2018',
-    sourceLabel: 'DOF / US DoJ',
-  },
-  {
-    name: 'La Estafa Maestra',
-    type: 'Ghost Companies',
-    admin: 'Pena Nieto',
-    year: 2013,
-    sector: 'otros',
-    sectorId: 12,
-    contracts: 10,
-    vendors: ['GC Rogu', 'GC Cinco'],
-    vendorCount: 2,
-    detectionRate: 90.0,
-    highPlusRate: 0.0,
-    avgScore: 0.179,
-    description: 'Government agencies funneled billions through shell companies and universities.',
-    estimatedFraud: 7_600_000_000,
-    publicDiscovery: 2017,
-    firstContract: 2013,
-    sourceUrl: 'https://www.animalpolitico.com/analisis/periodistas/la-estafa-maestra',
-    sourceLabel: 'Animal Político',
-  },
-  {
-    name: 'Grupo Higa / Casa Blanca',
-    type: 'Conflict of Interest',
-    admin: 'Pena Nieto',
-    year: 2014,
-    sector: 'infraestructura',
-    sectorId: 3,
-    contracts: 3,
-    vendors: ['CONSTRUCTORA TEYA'],
-    vendorCount: 1,
-    detectionRate: 100.0,
-    highPlusRate: 33.3,
-    avgScore: 0.359,
-    description: 'Infrastructure contracts linked to presidential mansion scandal.',
-    estimatedFraud: 3_000_000_000,
-    publicDiscovery: 2014,
-    firstContract: 2012,
-    sourceUrl: 'https://www.animalpolitico.com/analisis/periodistas/la-casa-blanca-de-enrique-pena-nieto',
-    sourceLabel: 'Animal Político',
-  },
-  {
-    name: 'Oceanografia PEMEX Fraud',
-    type: 'Invoice Fraud',
-    admin: 'Pena Nieto',
-    year: 2014,
-    sector: 'energia',
-    sectorId: 4,
-    contracts: 2,
-    vendors: ['OCEANOGRAFIA'],
-    vendorCount: 1,
-    detectionRate: 50.0,
-    highPlusRate: 0.0,
-    avgScore: 0.152,
-    description: 'Fraudulent invoicing and overbilling on PEMEX maritime contracts.',
-    estimatedFraud: 8_000_000_000,
-    publicDiscovery: 2014,
-    firstContract: 2010,
-    sourceUrl: 'https://www.dof.gob.mx/nota_detalle.php?codigo=5336936&fecha=13/02/2014',
-    sourceLabel: 'DOF / Banxico',
-  },
-  {
-    name: 'PEMEX Emilio Lozoya',
-    type: 'Bribery',
-    admin: 'Pena Nieto',
-    year: 2012,
-    sector: 'energia',
-    sectorId: 4,
-    contracts: 0,
-    vendors: [],
-    vendorCount: 0,
-    detectionRate: 0,
-    highPlusRate: 0,
-    avgScore: 0,
-    description: 'Bribery case involving PEMEX director. Vendors shared with Odebrecht case.',
-    estimatedFraud: 10_000_000_000,
-    publicDiscovery: 2020,
-    firstContract: 2012,
-    sourceUrl: 'https://www.gob.mx/fgr/prensa/comunica-la-fgr-que-emilio-lozoya-austin-fue-vinculado-a-proceso',
-    sourceLabel: 'FGR',
-  },
-  {
-    name: 'IPN Cartel de la Limpieza',
-    type: 'Bid Rigging',
-    admin: 'Pena Nieto',
-    year: 2014,
-    sector: 'educacion',
-    sectorId: 2,
-    contracts: 48,
-    vendors: ['IPN CLEANING CARTEL'],
-    vendorCount: 1,
-    detectionRate: 95.8,
-    highPlusRate: 64.6,
-    avgScore: 0.551,
-    description: 'Bid-rigging cartel controlling cleaning service contracts at the National Polytechnic Institute.',
-    estimatedFraud: 200_000_000,
-    publicDiscovery: 2018,
-    firstContract: 2014,
-    sourceUrl: 'https://www.contralacorrupcion.mx/ipn-cartel-limpieza/',
-    sourceLabel: 'MxVsCorrupción',
-  },
-  {
-    name: 'Infrastructure Fraud Network',
-    type: 'Overpricing',
-    admin: 'Pena Nieto',
-    year: 2015,
-    sector: 'infraestructura',
-    sectorId: 3,
-    contracts: 191,
-    vendors: ['INFRA NETWORK 1', 'INFRA NETWORK 2', 'INFRA NETWORK 3', 'INFRA NETWORK 4', 'INFRA NETWORK 5'],
-    vendorCount: 5,
-    detectionRate: 100.0,
-    highPlusRate: 99.5,
-    avgScore: 0.962,
-    description: 'Network of vendors systematically overpricing infrastructure projects through coordinated bidding.',
-    estimatedFraud: 1_500_000_000,
-    publicDiscovery: 2019,
-    firstContract: 2013,
-    sourceUrl: 'https://www.asf.gob.mx/Trans/Investigaciones/dbInvestigaciones_html.asp',
-    sourceLabel: 'ASF',
-  },
-  {
-    name: 'Toka Government IT Monopoly',
-    type: 'Monopoly',
-    admin: 'AMLO',
-    year: 2019,
-    sector: 'gobernacion',
-    sectorId: 8,
-    contracts: 1954,
-    vendors: ['TOKA INTERNACIONAL'],
-    vendorCount: 1,
-    detectionRate: 100.0,
-    highPlusRate: 100.0,
-    avgScore: 0.964,
-    description: 'IT surveillance company capturing monopolistic share of government technology contracts across multiple agencies.',
-    estimatedFraud: 4_000_000_000,
-    publicDiscovery: 2023,
-    firstContract: 2015,
-    sourceUrl: 'https://www.animalpolitico.com/politica/toka-internacional-contratos-gobierno',
-    sourceLabel: 'Animal Político',
-  },
-  {
-    name: 'PEMEX-Cotemar Irregularities',
-    type: 'Procurement Fraud',
-    admin: 'Pena Nieto',
-    year: 2014,
-    sector: 'energia',
-    sectorId: 4,
-    contracts: 51,
-    vendors: ['COTEMAR'],
-    vendorCount: 1,
-    detectionRate: 100.0,
-    highPlusRate: 100.0,
-    avgScore: 1.000,
-    description: 'Irregular procurement practices in PEMEX maritime services contracts with inflated costs.',
-    estimatedFraud: 800_000_000,
-    publicDiscovery: 2019,
-    firstContract: 2010,
-    sourceUrl: 'https://www.asf.gob.mx/Trans/Investigaciones/dbInvestigaciones_html.asp',
-    sourceLabel: 'ASF',
-  },
-  {
-    name: 'SAT Tender Rigging (SixSigma)',
-    type: 'Tender Rigging',
-    admin: 'Pena Nieto',
-    year: 2015,
-    sector: 'hacienda',
-    sectorId: 7,
-    contracts: 147,
-    vendors: ['SIXSIGMA NETWORKS'],
-    vendorCount: 1,
-    detectionRate: 95.2,
-    highPlusRate: 87.8,
-    avgScore: 0.756,
-    description: 'Rigged tender processes at the Tax Administration Service (SAT) favoring a single IT vendor.',
-    estimatedFraud: 600_000_000,
-    publicDiscovery: 2020,
-    firstContract: 2015,
-    sourceUrl: 'https://www.asf.gob.mx/Trans/Investigaciones/dbInvestigaciones_html.asp',
-    sourceLabel: 'ASF',
-  },
-  {
-    name: 'Government Voucher Monopoly (Edenred)',
-    type: 'Monopoly',
-    admin: 'Pena Nieto',
-    year: 2013,
-    sector: 'energia',
-    sectorId: 4,
-    contracts: 2939,
-    vendors: ['EDENRED MEXICO'],
-    vendorCount: 1,
-    detectionRate: 100.0,
-    highPlusRate: 96.7,
-    avgScore: 0.884,
-    description: 'Monopolistic capture of government employee voucher and benefits contracts across federal agencies.',
-    estimatedFraud: 3_000_000_000,
-    publicDiscovery: 2021,
-    firstContract: 2008,
-    sourceUrl: 'https://imco.org.mx/edenred-monopolio-vales-gobierno/',
-    sourceLabel: 'IMCO',
-  },
-]
+interface ValidationSummary {
+  total_cases: number
+  total_vendors: number
+  vendors_matched: number
+  cases: Array<{ estimated_fraud_mxn?: number | null }>
+  last_validation_run?: { detection_rate?: number } | null
+}
 
-const MODEL_COMPARISON = [
-  { metric: 'AUC-ROC', v33: 0.584, v40: 0.960, unit: '', better: 'higher' as const },
-  { metric: 'Detection Rate', v33: 67.1, v40: 99.8, unit: '%', better: 'higher' as const },
-  { metric: 'Lift', v33: 1.22, v40: 4.04, unit: 'x', better: 'higher' as const },
-  { metric: 'Brier Score', v33: 0.411, v40: 0.060, unit: '', better: 'lower' as const },
-  { metric: 'High+ Rate', v33: 18.3, v40: 93.0, unit: '%', better: 'higher' as const },
-  { metric: 'False Negatives', v33: 32.9, v40: 0.2, unit: '%', better: 'lower' as const },
-]
+interface DetectionRateResult {
+  model_version: string
+  detection_rate: number
+  high_plus_rate?: number
+  critical_detection_rate?: number
+}
+
+interface DetectionRateResponse {
+  results?: DetectionRateResult[]
+}
 
 // ============================================================================
 // Helpers
 // ============================================================================
 
-function getSectorColor(sectorCode: string): string {
-  return SECTOR_COLORS[sectorCode] || SECTOR_COLORS.otros
+type SortKey = keyof Pick<
+  PerCaseItem,
+  'case_name' | 'vendors_matched' | 'total_contracts' | 'detection_rate' | 'avg_risk_score' | 'estimated_fraud_mxn'
+>
+
+function scoreColor(score: number): string {
+  const level = getRiskLevelFromScore(score)
+  return RISK_COLORS[level]
 }
 
-function getDetectionColor(rate: number): string {
-  if (rate >= 80) return RISK_COLORS.low
-  if (rate >= 50) return RISK_COLORS.medium
-  return RISK_COLORS.critical
-}
-
-function getSectorLabel(sectorCode: string): string {
-  const sector = SECTORS.find(s => s.code === sectorCode)
-  return sector ? sector.nameEN : sectorCode
+function detectionBadgeVariant(rate: number): 'default' | 'secondary' | 'destructive' | 'outline' {
+  if (rate >= 0.9) return 'default'
+  if (rate >= 0.5) return 'secondary'
+  return 'destructive'
 }
 
 // ============================================================================
@@ -413,21 +104,19 @@ function StatCard({
 }: {
   icon: React.ElementType
   label: string
-  value: string
+  value: string | number
   sub?: string
 }) {
   return (
     <Card>
-      <CardContent className="p-4">
+      <CardContent className="pt-5">
         <div className="flex items-start gap-3">
-          <div className="rounded-md bg-accent/10 p-2">
+          <div className="rounded-md bg-accent/10 p-2 shrink-0">
             <Icon className="h-4 w-4 text-accent" aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-text-muted">{label}</p>
-            <p className="text-lg font-semibold text-text-primary font-mono">
-              {value}
-            </p>
+            <p className="text-xs text-text-secondary truncate">{label}</p>
+            <p className="text-xl font-bold text-text-primary font-mono">{value}</p>
             {sub && <p className="text-xs text-text-muted mt-0.5">{sub}</p>}
           </div>
         </div>
@@ -436,204 +125,74 @@ function StatCard({
   )
 }
 
-/** Expandable case card */
-function CaseCard({ c }: { c: GroundTruthCase }) {
-  const [expanded, setExpanded] = useState(false)
-  const sectorColor = getSectorColor(c.sector)
-  const detectionColor = getDetectionColor(c.highPlusRate)
-  const isInactive = c.contracts === 0
-
+function SortButton({
+  label,
+  sortKey,
+  currentKey,
+  dir,
+  onSort,
+}: {
+  label: string
+  sortKey: SortKey
+  currentKey: SortKey
+  dir: 'asc' | 'desc'
+  onSort: (key: SortKey) => void
+}) {
+  const active = sortKey === currentKey
   return (
-    <Card
+    <button
+      type="button"
+      onClick={() => onSort(sortKey)}
       className={cn(
-        'transition-all duration-200 cursor-pointer hover:border-accent/40',
-        isInactive && 'opacity-60',
+        'flex items-center gap-1 text-xs font-medium whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded',
+        active ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary'
       )}
-      onClick={() => setExpanded(!expanded)}
-      role="button"
-      tabIndex={0}
-      aria-expanded={expanded}
-      aria-label={`${c.name} case details`}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          setExpanded(!expanded)
-        }
-      }}
+      aria-sort={active ? (dir === 'asc' ? 'ascending' : 'descending') : 'none'}
     >
-      <CardContent className="p-4">
-        {/* Header row */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-sm font-semibold text-text-primary">{c.name}</h3>
-              <Badge
-                className="text-xs px-1.5 py-0 border"
-                style={{
-                  backgroundColor: `${sectorColor}15`,
-                  color: sectorColor,
-                  borderColor: `${sectorColor}40`,
-                }}
-              >
-                {getSectorLabel(c.sector)}
-              </Badge>
-              <Badge variant="outline" className="text-xs px-1.5 py-0">
-                {c.type}
-              </Badge>
-            </div>
-            <p className="text-xs text-text-muted mt-1">
-              {c.admin} administration, ~{c.year}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            {!isInactive && (
-              <div className="text-right">
-                <p
-                  className="text-lg font-bold font-mono"
-                  style={{ color: detectionColor }}
-                >
-                  {c.highPlusRate}%
-                </p>
-                <p className="text-xs text-text-muted">high+ detected</p>
-              </div>
-            )}
-            {expanded ? (
-              <ChevronUp className="h-4 w-4 text-text-muted" />
-            ) : (
-              <ChevronDown className="h-4 w-4 text-text-muted" />
-            )}
-          </div>
-        </div>
-
-        {/* Summary stats row */}
-        {!isInactive && (
-          <div className="flex gap-4 mt-3 flex-wrap">
-            <div className="flex items-center gap-1.5 text-xs text-text-secondary">
-              <FileText className="h-3 w-3" aria-hidden="true" />
-              <span className="font-mono">{formatNumber(c.contracts)}</span>
-              <span className="text-text-muted">contracts</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-text-secondary">
-              <Users className="h-3 w-3" aria-hidden="true" />
-              <span className="font-mono">{c.vendorCount}</span>
-              <span className="text-text-muted">vendors</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-text-secondary">
-              <Scale className="h-3 w-3" aria-hidden="true" />
-              <span className="font-mono">{formatCompactMXN(c.estimatedFraud)}</span>
-              <span className="text-text-muted">est. fraud</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-text-secondary">
-              <Activity className="h-3 w-3" aria-hidden="true" />
-              <span className="font-mono">{(c.avgScore * 100).toFixed(1)}%</span>
-              <span className="text-text-muted">avg score</span>
-            </div>
-          </div>
-        )}
-
-        {/* Expanded details */}
-        {expanded && (
-          <div className="mt-4 pt-3 border-t border-border/30 space-y-3">
-            <p className="text-xs text-text-secondary leading-relaxed">{c.description}</p>
-
-            {!isInactive && (
-              <>
-                {/* Vendors list */}
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-text-muted mb-1.5">
-                    Matched Vendors
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {c.vendors.map((v) => (
-                      <span
-                        key={v}
-                        className="text-xs px-2 py-0.5 rounded bg-background-elevated text-text-secondary"
-                      >
-                        {v}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Detection breakdown */}
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-xs text-text-muted">Detection (med+)</p>
-                    <p className="text-sm font-semibold font-mono text-text-primary">
-                      {c.detectionRate}%
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-text-muted">High+ Rate</p>
-                    <p
-                      className="text-sm font-semibold font-mono"
-                      style={{ color: detectionColor }}
-                    >
-                      {c.highPlusRate}%
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-text-muted">Early Warning</p>
-                    <p className="text-sm font-semibold font-mono text-accent">
-                      {c.publicDiscovery - c.firstContract}yr
-                    </p>
-                  </div>
-                </div>
-              </>
-            )}
-
-            {isInactive && (
-              <div className="flex items-center gap-2 text-xs text-text-muted">
-                <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-                <span>No unique contracts matched. Vendors shared with Odebrecht case.</span>
-              </div>
-            )}
-
-            {c.sourceUrl && (
-              <div className="pt-1">
-                <a
-                  href={c.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline"
-                >
-                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
-                  Source: {c.sourceLabel ?? 'Reference'}
-                </a>
-              </div>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      {label}
+      {active ? (
+        dir === 'asc' ? (
+          <ChevronUp className="h-3 w-3" />
+        ) : (
+          <ChevronDown className="h-3 w-3" />
+        )
+      ) : (
+        <ChevronDown className="h-3 w-3 opacity-30" />
+      )}
+    </button>
   )
 }
 
-// ============================================================================
-// Custom Tooltip for Detection Chart
-// ============================================================================
+function CasesTableSkeleton() {
+  return (
+    <div className="space-y-2">
+      {[...Array(6)].map((_, i) => (
+        <Skeleton key={i} className="h-12 w-full" />
+      ))}
+    </div>
+  )
+}
 
-function DetectionTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: { name: string; highPlusRate: number; contracts: number; avgScore: number } }> }) {
+function ModelComparisonTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean
+  payload?: Array<{ name: string; value: number; color: string }>
+  label?: string
+}) {
   if (!active || !payload?.length) return null
-  const d = payload[0].payload
   return (
     <div className="rounded-lg border border-border bg-background-card p-3 shadow-lg text-xs">
-      <p className="font-semibold text-text-primary mb-1">{d.name}</p>
-      <div className="space-y-0.5 text-text-secondary">
-        <p>
-          High+ detection:{' '}
-          <span className="font-mono text-text-primary">{d.highPlusRate}%</span>
+      <p className="font-semibold text-text-primary mb-2">{label}</p>
+      {payload.map((p) => (
+        <p key={p.name} className="flex items-center gap-2">
+          <span className="inline-block w-2 h-2 rounded-full" style={{ background: p.color }} />
+          <span className="text-text-secondary">{p.name}:</span>
+          <span className="font-mono text-text-primary">{(p.value * 100).toFixed(1)}%</span>
         </p>
-        <p>
-          Contracts:{' '}
-          <span className="font-mono text-text-primary">{formatNumber(d.contracts)}</span>
-        </p>
-        <p>
-          Avg score:{' '}
-          <span className="font-mono text-text-primary">{(d.avgScore * 100).toFixed(1)}%</span>
-        </p>
-      </div>
+      ))}
     </div>
   )
 }
@@ -643,54 +202,117 @@ function DetectionTooltip({ active, payload }: { active?: boolean; payload?: Arr
 // ============================================================================
 
 export default function GroundTruth() {
-  // Derived data for charts
-  const detectionChartData = useMemo(() => {
-    return GROUND_TRUTH_CASES
-      .filter(c => c.contracts > 0)
-      .sort((a, b) => b.highPlusRate - a.highPlusRate)
-      .map(c => ({
-        name: c.name.length > 20 ? c.name.slice(0, 18) + '...' : c.name,
-        fullName: c.name,
-        highPlusRate: c.highPlusRate,
-        contracts: c.contracts,
-        avgScore: c.avgScore,
-        sector: c.sector,
-      }))
-  }, [])
+  const { t } = useTranslation('common')
 
-  const radarData = useMemo(() => {
-    return MODEL_COMPARISON.filter(m => m.unit === '%' || m.metric === 'AUC-ROC').map(m => {
-      // Normalize to 0-100 for radar
-      const v33Norm = m.metric === 'AUC-ROC' ? m.v33 * 100 : m.better === 'lower' ? 100 - m.v33 : m.v33
-      const v40Norm = m.metric === 'AUC-ROC' ? m.v40 * 100 : m.better === 'lower' ? 100 - m.v40 : m.v40
-      return {
-        metric: m.metric,
-        'v3.3': Math.round(v33Norm),
-        'v5.0': Math.round(v40Norm),
+  // Sort state for cases table
+  const [sortKey, setSortKey] = useState<SortKey>('total_contracts')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  // Expanded row state
+  const [expandedRow, setExpandedRow] = useState<string | null>(null)
+
+  // --------------------------------------------------------------------------
+  // Data fetching
+  // --------------------------------------------------------------------------
+
+  const {
+    data: perCaseData,
+    isLoading: perCaseLoading,
+    isError: perCaseError,
+  } = useQuery({
+    queryKey: ['perCaseDetection'],
+    queryFn: () => analysisApi.getPerCaseDetection(),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const {
+    data: summaryData,
+    isLoading: summaryLoading,
+    isError: summaryError,
+  } = useQuery({
+    queryKey: ['validationSummary'],
+    queryFn: () => analysisApi.getValidationSummary(),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const {
+    data: detectionRateData,
+    isLoading: detectionLoading,
+  } = useQuery({
+    queryKey: ['detectionRate'],
+    queryFn: () => analysisApi.getDetectionRate(),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  // --------------------------------------------------------------------------
+  // Derived values from summary
+  // --------------------------------------------------------------------------
+
+  const summary = summaryData as ValidationSummary | undefined
+  const totalCases = summary?.total_cases ?? 0
+  const vendorsMatched = summary?.vendors_matched ?? 0
+  const totalFraud = useMemo(() => {
+    if (!summary?.cases) return 0
+    return summary.cases.reduce((sum: number, c) => sum + (c.estimated_fraud_mxn ?? 0), 0)
+  }, [summary])
+
+  // --------------------------------------------------------------------------
+  // Sorted cases table data
+  // --------------------------------------------------------------------------
+
+  const cases: PerCaseItem[] = useMemo(() => {
+    const raw = (perCaseData as { data?: PerCaseItem[] } | undefined)?.data ?? []
+    return [...raw].sort((a, b) => {
+      const av = a[sortKey] ?? 0
+      const bv = b[sortKey] ?? 0
+      if (typeof av === 'string' && typeof bv === 'string') {
+        return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av)
       }
+      const an = Number(av)
+      const bn = Number(bv)
+      return sortDir === 'asc' ? an - bn : bn - an
     })
-  }, [])
+  }, [perCaseData, sortKey, sortDir])
 
-  const timelineData = useMemo(() => {
-    return GROUND_TRUTH_CASES
-      .filter(c => c.contracts > 0)
-      .sort((a, b) => a.firstContract - b.firstContract)
-      .map(c => ({
-        name: c.name,
-        shortName: c.name.length > 16 ? c.name.slice(0, 14) + '...' : c.name,
-        firstContract: c.firstContract,
-        publicDiscovery: c.publicDiscovery,
-        earlyWarning: c.publicDiscovery - c.firstContract,
-        sector: c.sector,
-      }))
-  }, [])
+  // --------------------------------------------------------------------------
+  // Model comparison chart data
+  // --------------------------------------------------------------------------
 
-  // Totals
-  const activeCases = GROUND_TRUTH_CASES.filter(c => c.contracts > 0)
-  const totalFraud = GROUND_TRUTH_CASES.reduce((sum, c) => sum + c.estimatedFraud, 0)
-  const avgEarlyWarning = activeCases.reduce(
-    (sum, c) => sum + (c.publicDiscovery - c.firstContract), 0
-  ) / activeCases.length
+  const modelComparisonData = useMemo(() => {
+    const results = (detectionRateData as DetectionRateResponse | undefined)?.results ?? []
+    if (!results.length) return []
+
+    // Group by model version; build one row per model with detection metrics
+    return results.map((r) => ({
+      model: r.model_version,
+      'Detection (medium+)': r.detection_rate ?? 0,
+      'High+ Rate': r.high_plus_rate ?? 0,
+      'Critical Rate': r.critical_detection_rate ?? 0,
+    }))
+  }, [detectionRateData])
+
+  // --------------------------------------------------------------------------
+  // Sort handler
+  // --------------------------------------------------------------------------
+
+  function handleSort(key: SortKey) {
+    if (key === sortKey) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(key)
+      setSortDir('desc')
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Overall loading / error state
+  // --------------------------------------------------------------------------
+
+  const isLoading = perCaseLoading || summaryLoading
+  const isError = perCaseError || summaryError
+
+  // --------------------------------------------------------------------------
+  // Render
+  // --------------------------------------------------------------------------
 
   return (
     <div className="space-y-6 p-6">
@@ -698,492 +320,344 @@ export default function GroundTruth() {
       {/* Header                                                             */}
       {/* ================================================================== */}
       <div>
-        <h1 className="text-2xl font-bold text-text-primary tracking-tight">
+        <h1 className="text-2xl font-bold text-text-primary tracking-tight flex items-center gap-2">
           Ground Truth War Room
+          <Badge variant="outline" className="text-xs font-normal ml-1">
+            {t('groundTruth.liveData')}
+          </Badge>
         </h1>
         <p className="text-sm text-text-secondary mt-1">
-          15 documented corruption cases validate our risk detection model
+          Documented corruption cases validate the risk detection model
         </p>
       </div>
 
       <SectionDescription variant="callout">
         This page measures RUBLI's detection capability against real, documented Mexican
         procurement corruption cases. Each case was independently investigated by journalists,
-        auditors, or prosecutors. Our model never saw these labels during training -- the
+        auditors, or prosecutors. Our model never saw these labels during training — the
         detection rates shown here represent genuine out-of-sample predictive performance.
       </SectionDescription>
 
       {/* ================================================================== */}
-      {/* L1: Overview Stats                                                 */}
+      {/* Section A — Stat Cards                                             */}
       {/* ================================================================== */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          icon={Shield}
-          label="Documented Cases"
-          value="15"
-          sub="Across all 12 sectors"
-        />
-        <StatCard
-          icon={Users}
-          label="Matched Vendors"
-          value="27"
-          sub="In COMPRANET records"
-        />
-        <StatCard
-          icon={FileText}
-          label="Contracts Analyzed"
-          value={formatNumber(26582)}
-          sub={`Est. fraud: ${formatCompactMXN(totalFraud)}`}
-        />
-        <StatCard
-          icon={Crosshair}
-          label="Model AUC-ROC"
-          value="0.960"
-          sub="v5.0 per-sector model"
-        />
-      </div>
-
-      {/* ================================================================== */}
-      {/* L2: Case Cards                                                     */}
-      {/* ================================================================== */}
-      <div>
-        <h2 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2">
-          <Target className="h-4 w-4 text-accent" aria-hidden="true" />
-          Corruption Cases
-        </h2>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {GROUND_TRUTH_CASES.map((c) => (
-            <CaseCard key={c.name} c={c} />
+      {isLoading ? (
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-24" />
           ))}
         </div>
-      </div>
+      ) : isError ? (
+        <div className="flex items-center gap-2 text-sm text-destructive p-4 rounded-md border border-destructive/20 bg-destructive/5">
+          <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>Failed to load summary data. Please try refreshing.</span>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <StatCard
+            icon={Shield}
+            label="Ground Truth Cases"
+            value={totalCases || '—'}
+            sub="Documented corruption cases"
+          />
+          <StatCard
+            icon={Crosshair}
+            label="Vendors Matched"
+            value={vendorsMatched || '—'}
+            sub="In COMPRANET records"
+          />
+          <StatCard
+            icon={FileText}
+            label="Total Value at Risk"
+            value={totalFraud > 0 ? formatCompactMXN(totalFraud) : '—'}
+            sub="Estimated fraud across all cases"
+          />
+        </div>
+      )}
 
       {/* ================================================================== */}
-      {/* L3: Detection Performance Chart                                    */}
+      {/* Section B — Sortable Cases Table                                  */}
       {/* ================================================================== */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Eye className="h-4 w-4 text-accent" aria-hidden="true" />
-            Detection Performance by Case
+            <Target className="h-4 w-4 text-accent" aria-hidden="true" />
+            {t('groundTruth.caseName')} — Per-Case Detection
           </CardTitle>
           <CardDescription>
-            Percentage of contracts flagged as high-risk or critical (v5.0 model)
+            Live detection rates computed from current risk scores. Click a row to expand.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[320px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={detectionChartData}
-                layout="vertical"
-                margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
-                <XAxis
-                  type="number"
-                  domain={[0, 100]}
-                  tickFormatter={(v: number) => `${v}%`}
-                  tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-                  axisLine={{ stroke: 'var(--color-border)' }}
-                />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  width={150}
-                  tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
-                  axisLine={{ stroke: 'var(--color-border)' }}
-                />
-                <RechartsTooltip
-                  content={<DetectionTooltip />}
-                  cursor={{ fill: 'rgba(255,255,255,0.03)' }}
-                />
-                <Bar dataKey="highPlusRate" radius={[0, 4, 4, 0]} maxBarSize={28}>
-                  {detectionChartData.map((entry, idx) => (
-                    <Cell key={idx} fill={getDetectionColor(entry.highPlusRate)} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="flex items-center justify-center gap-6 mt-3 text-xs text-text-muted">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: RISK_COLORS.low }} />
-              80%+ detected
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: RISK_COLORS.medium }} />
-              50-80% detected
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: RISK_COLORS.critical }} />
-              Below 50%
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ================================================================== */}
-      {/* L4: Model Comparison                                               */}
-      {/* ================================================================== */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        {/* Comparison table */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Scale className="h-4 w-4 text-accent" aria-hidden="true" />
-              Model Comparison: v3.3 vs v5.0
-            </CardTitle>
-            <CardDescription>
-              Weighted checklist vs per-sector calibrated framework
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs" role="table">
+          {perCaseLoading ? (
+            <CasesTableSkeleton />
+          ) : perCaseError ? (
+            <div className="flex items-center gap-2 text-sm text-destructive">
+              <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+              <span>Failed to load case data.</span>
+            </div>
+          ) : cases.length === 0 ? (
+            <p className="text-sm text-text-secondary text-center py-8">
+              No ground truth cases found in the database.
+            </p>
+          ) : (
+            <div className="overflow-x-auto" role="region" aria-label="Per-case detection table">
+              <table className="w-full text-sm" aria-label="Ground truth cases detection rates">
                 <thead>
-                  <tr className="border-b border-border/30">
-                    <th className="text-left py-2 pr-4 text-text-muted font-medium" scope="col">
-                      Metric
+                  <tr className="border-b border-border">
+                    <th className="text-left py-2 pr-4">
+                      <SortButton
+                        label={t('groundTruth.caseName')}
+                        sortKey="case_name"
+                        currentKey={sortKey}
+                        dir={sortDir}
+                        onSort={handleSort}
+                      />
                     </th>
-                    <th className="text-right py-2 px-4 text-text-muted font-medium" scope="col">
-                      v3.3
+                    <th className="text-left py-2 pr-4 hidden md:table-cell">
+                      <span className="text-xs font-medium text-text-secondary">
+                        {t('groundTruth.caseType')}
+                      </span>
                     </th>
-                    <th className="text-right py-2 px-4 text-text-muted font-medium" scope="col">
-                      v5.0
+                    <th className="text-left py-2 pr-4 hidden lg:table-cell">
+                      <span className="text-xs font-medium text-text-secondary">
+                        {t('groundTruth.sector')}
+                      </span>
                     </th>
-                    <th className="text-right py-2 pl-4 text-text-muted font-medium" scope="col">
-                      Change
+                    <th className="text-right py-2 pr-4">
+                      <SortButton
+                        label={t('groundTruth.vendorsMatched')}
+                        sortKey="vendors_matched"
+                        currentKey={sortKey}
+                        dir={sortDir}
+                        onSort={handleSort}
+                      />
+                    </th>
+                    <th className="text-right py-2 pr-4">
+                      <SortButton
+                        label={t('groundTruth.contracts')}
+                        sortKey="total_contracts"
+                        currentKey={sortKey}
+                        dir={sortDir}
+                        onSort={handleSort}
+                      />
+                    </th>
+                    <th className="text-right py-2 pr-4">
+                      <SortButton
+                        label={t('groundTruth.detectionRate')}
+                        sortKey="detection_rate"
+                        currentKey={sortKey}
+                        dir={sortDir}
+                        onSort={handleSort}
+                      />
+                    </th>
+                    <th className="text-right py-2 pr-4">
+                      <SortButton
+                        label={t('groundTruth.avgScore')}
+                        sortKey="avg_risk_score"
+                        currentKey={sortKey}
+                        dir={sortDir}
+                        onSort={handleSort}
+                      />
+                    </th>
+                    <th className="text-right py-2 hidden lg:table-cell">
+                      <SortButton
+                        label={t('groundTruth.estimatedFraud')}
+                        sortKey="estimated_fraud_mxn"
+                        currentKey={sortKey}
+                        dir={sortDir}
+                        onSort={handleSort}
+                      />
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {MODEL_COMPARISON.map((m) => {
-                    const improvement = m.better === 'higher'
-                      ? m.v40 - m.v33
-                      : m.v33 - m.v40
-                    const isGood = improvement > 0
-                    const changeLabel = m.better === 'higher'
-                      ? `+${(m.v40 - m.v33).toFixed(m.unit === 'x' ? 2 : 1)}${m.unit}`
-                      : `-${(m.v33 - m.v40).toFixed(m.unit === 'x' ? 2 : 1)}${m.unit}`
-
+                  {cases.map((c) => {
+                    const isExpanded = expandedRow === c.case_name
                     return (
-                      <tr key={m.metric} className="border-b border-border/10">
-                        <td className="py-2.5 pr-4 text-text-secondary">{m.metric}</td>
-                        <td className="py-2.5 px-4 text-right font-mono text-text-muted">
-                          {m.v33}{m.unit}
-                        </td>
-                        <td className="py-2.5 px-4 text-right font-mono text-text-primary font-semibold">
-                          {m.v40}{m.unit}
-                        </td>
-                        <td className={cn(
-                          'py-2.5 pl-4 text-right font-mono',
-                          isGood ? 'text-risk-low' : 'text-risk-critical',
-                        )}>
-                          {changeLabel}
-                        </td>
-                      </tr>
+                      <>
+                        <tr
+                          key={c.case_name}
+                          className="border-b border-border/50 hover:bg-background-hover cursor-pointer transition-colors"
+                          onClick={() =>
+                            setExpandedRow(isExpanded ? null : c.case_name)
+                          }
+                          aria-expanded={isExpanded}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              setExpandedRow(isExpanded ? null : c.case_name)
+                            }
+                          }}
+                        >
+                          <td className="py-2.5 pr-4 font-medium text-text-primary">
+                            <div className="flex items-center gap-1.5">
+                              {isExpanded ? (
+                                <ChevronUp className="h-3 w-3 text-text-muted shrink-0" />
+                              ) : (
+                                <ChevronDown className="h-3 w-3 text-text-muted shrink-0" />
+                              )}
+                              <span className="truncate max-w-[180px]" title={c.case_name}>
+                                {c.case_name}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-2.5 pr-4 hidden md:table-cell text-text-secondary">
+                            {c.case_type ?? '—'}
+                          </td>
+                          <td className="py-2.5 pr-4 hidden lg:table-cell text-text-secondary capitalize">
+                            {c.sector_name ?? '—'}
+                          </td>
+                          <td className="py-2.5 pr-4 text-right font-mono text-text-primary">
+                            {c.vendors_matched}
+                          </td>
+                          <td className="py-2.5 pr-4 text-right font-mono text-text-primary">
+                            {formatNumber(c.total_contracts)}
+                          </td>
+                          <td className="py-2.5 pr-4 text-right">
+                            {c.total_contracts > 0 ? (
+                              <Badge variant={detectionBadgeVariant(c.detection_rate)}>
+                                {(c.detection_rate * 100).toFixed(1)}%
+                              </Badge>
+                            ) : (
+                              <span className="text-text-muted text-xs">—</span>
+                            )}
+                          </td>
+                          <td className="py-2.5 pr-4 text-right">
+                            {c.total_contracts > 0 ? (
+                              <span
+                                className="font-mono text-sm font-semibold"
+                                style={{ color: scoreColor(c.avg_risk_score) }}
+                              >
+                                {(c.avg_risk_score * 100).toFixed(1)}%
+                              </span>
+                            ) : (
+                              <span className="text-text-muted text-xs">—</span>
+                            )}
+                          </td>
+                          <td className="py-2.5 text-right hidden lg:table-cell text-text-secondary font-mono text-xs">
+                            {c.estimated_fraud_mxn != null
+                              ? formatCompactMXN(c.estimated_fraud_mxn)
+                              : '—'}
+                          </td>
+                        </tr>
+                        {isExpanded && (
+                          <tr
+                            key={`${c.case_name}-expanded`}
+                            className="bg-background-hover/50"
+                          >
+                            <td colSpan={8} className="px-8 py-3 text-xs text-text-secondary">
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-1">
+                                <div>
+                                  <span className="font-medium text-text-primary">Critical Rate: </span>
+                                  <span style={{ color: RISK_COLORS.critical }}>
+                                    {(c.critical_rate * 100).toFixed(1)}%
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-text-primary">Confidence: </span>
+                                  <span className="capitalize">{c.confidence_level ?? '—'}</span>
+                                </div>
+                                <div className="col-span-2 md:col-span-2">
+                                  Matched via vendor RFC/name in{' '}
+                                  <code className="text-xs bg-background-card px-1 rounded">
+                                    ground_truth_vendors
+                                  </code>{' '}
+                                  table. Contracts join on{' '}
+                                  <code className="text-xs bg-background-card px-1 rounded">
+                                    vendor_id
+                                  </code>
+                                  .
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </>
                     )
                   })}
                 </tbody>
               </table>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Radar chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-accent" aria-hidden="true" />
-              Performance Radar
-            </CardTitle>
-            <CardDescription>
-              Normalized comparison (higher = better on all axes)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
-                  <PolarGrid stroke="var(--color-border)" opacity={0.3} />
-                  <PolarAngleAxis
-                    dataKey="metric"
-                    tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-                  />
-                  <PolarRadiusAxis
-                    angle={90}
-                    domain={[0, 100]}
-                    tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-                    axisLine={false}
-                  />
-                  <Radar
-                    name="v3.3"
-                    dataKey="v3.3"
-                    stroke={RISK_COLORS.medium}
-                    fill={RISK_COLORS.medium}
-                    fillOpacity={0.15}
-                    strokeWidth={1.5}
-                  />
-                  <Radar
-                    name="v5.0"
-                    dataKey="v5.0"
-                    stroke="#58a6ff"
-                    fill="#58a6ff"
-                    fillOpacity={0.2}
-                    strokeWidth={2}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex items-center justify-center gap-6 text-xs text-text-muted">
-              <span className="flex items-center gap-1.5">
-                <span
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{ backgroundColor: RISK_COLORS.medium }}
-                />
-                v3.3 Checklist
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-accent" />
-                v5.0 Per-Sector
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* ================================================================== */}
-      {/* L5: Early Warning Timeline                                         */}
+      {/* Section C — Model Comparison Bar Chart                            */}
       {/* ================================================================== */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-accent" aria-hidden="true" />
-            Would We Have Caught It? Early Warning Timeline
+            <Activity className="h-4 w-4 text-accent" aria-hidden="true" />
+            {t('groundTruth.modelComparison')}
           </CardTitle>
           <CardDescription>
-            Years between first flaggable contract and public discovery -- avg{' '}
-            <span className="font-mono text-accent">
-              {avgEarlyWarning.toFixed(1)} years
-            </span>{' '}
-            of early warning
+            Detection rate comparison across model versions (v3.3, v4.0, v5.0).
+            High+ = score ≥ 0.30, Critical = score ≥ 0.50.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {/* Header */}
-            <div className="grid grid-cols-[180px_1fr_80px] gap-2 text-xs uppercase tracking-wider text-text-muted px-1">
-              <span>Case</span>
-              <span className="text-center">Timeline (2008-2024)</span>
-              <span className="text-right">Warning</span>
-            </div>
-
-            {/* Rows */}
-            {timelineData.map((t) => {
-              const minYear = 2008
-              const maxYear = 2024
-              const range = maxYear - minYear
-              const flagStart = ((t.firstContract - minYear) / range) * 100
-              const flagEnd = ((t.publicDiscovery - minYear) / range) * 100
-              const barWidth = flagEnd - flagStart
-
-              return (
-                <div
-                  key={t.name}
-                  className="grid grid-cols-[180px_1fr_80px] gap-2 items-center group"
+          {detectionLoading ? (
+            <Skeleton className="h-48 w-full" />
+          ) : modelComparisonData.length === 0 ? (
+            <p className="text-sm text-text-secondary text-center py-8">
+              No model comparison data available. Run validate_risk_model.py to generate results.
+            </p>
+          ) : (
+            <div className="h-[260px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={modelComparisonData}
+                  margin={{ top: 10, right: 20, left: 0, bottom: 5 }}
+                  aria-label="Model comparison bar chart"
                 >
-                  {/* Case name */}
-                  <div className="min-w-0">
-                    <p className="text-xs text-text-secondary truncate" title={t.name}>
-                      {t.shortName}
-                    </p>
-                    <p className="text-xs text-text-muted">
-                      {getSectorLabel(t.sector)}
-                    </p>
-                  </div>
-
-                  {/* Timeline bar */}
-                  <div className="relative h-8 rounded bg-background-elevated overflow-hidden">
-                    {/* Background grid lines at each even year */}
-                    {Array.from({ length: 9 }, (_, i) => {
-                      const year = minYear + i * 2
-                      const pos = ((year - minYear) / range) * 100
-                      return (
-                        <div
-                          key={year}
-                          className="absolute top-0 h-full w-px bg-border/20"
-                          style={{ left: `${pos}%` }}
-                        />
-                      )
-                    })}
-
-                    {/* Early warning span */}
-                    <div
-                      className="absolute top-1 bottom-1 rounded-sm flex items-center justify-center transition-opacity"
-                      style={{
-                        left: `${Math.max(0, flagStart)}%`,
-                        width: `${Math.max(2, barWidth)}%`,
-                        backgroundColor: `${getSectorColor(t.sector)}30`,
-                        borderLeft: `2px solid ${getSectorColor(t.sector)}`,
-                        borderRight: `2px solid #58a6ff`,
-                      }}
-                    >
-                      <span className="text-xs font-mono text-text-secondary font-medium whitespace-nowrap px-1">
-                        {barWidth > 15 ? `${t.firstContract} - ${t.publicDiscovery}` : ''}
-                      </span>
-                    </div>
-
-                    {/* Flag marker (first contract) */}
-                    <div
-                      className="absolute top-0 h-full flex items-center"
-                      style={{ left: `${Math.max(0, flagStart)}%` }}
-                      title={`First high-risk flag: ${t.firstContract}`}
-                    >
-                      <Zap className="h-3 w-3 -ml-1.5" style={{ color: getSectorColor(t.sector) }} />
-                    </div>
-
-                    {/* Discovery marker */}
-                    <div
-                      className="absolute top-0 h-full flex items-center"
-                      style={{ left: `${flagEnd}%` }}
-                      title={`Public discovery: ${t.publicDiscovery}`}
-                    >
-                      <Eye className="h-3 w-3 -ml-1.5 text-accent" />
-                    </div>
-                  </div>
-
-                  {/* Early warning years */}
-                  <div className="text-right">
-                    <span
-                      className={cn(
-                        'text-sm font-bold font-mono',
-                        t.earlyWarning >= 4 ? 'text-accent' : 'text-text-secondary',
-                      )}
-                    >
-                      {t.earlyWarning} yr{t.earlyWarning !== 1 ? 's' : ''}
-                    </span>
-                  </div>
-                </div>
-              )
-            })}
-
-            {/* Year labels at bottom */}
-            <div className="grid grid-cols-[180px_1fr_80px] gap-2">
-              <div />
-              <div className="relative h-4">
-                {[2008, 2010, 2012, 2014, 2016, 2018, 2020, 2022, 2024].map((year) => {
-                  const pos = ((year - 2008) / 16) * 100
-                  return (
-                    <span
-                      key={year}
-                      className="absolute text-xs text-text-muted font-mono -translate-x-1/2"
-                      style={{ left: `${pos}%` }}
-                    >
-                      {year}
-                    </span>
-                  )
-                })}
-              </div>
-              <div />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="var(--color-border)"
+                    opacity={0.3}
+                  />
+                  <XAxis
+                    dataKey="model"
+                    tick={{ fill: 'var(--color-text-secondary)', fontSize: 12 }}
+                    axisLine={{ stroke: 'var(--color-border)' }}
+                  />
+                  <YAxis
+                    tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
+                    tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                    axisLine={{ stroke: 'var(--color-border)' }}
+                    domain={[0, 1]}
+                  />
+                  <RechartsTooltip content={<ModelComparisonTooltip />} />
+                  <Legend
+                    wrapperStyle={{ fontSize: 12, color: 'var(--color-text-secondary)' }}
+                  />
+                  <Bar
+                    dataKey="Detection (medium+)"
+                    fill={RISK_COLORS.medium}
+                    radius={[3, 3, 0, 0]}
+                    maxBarSize={40}
+                  />
+                  <Bar
+                    dataKey="High+ Rate"
+                    fill={RISK_COLORS.high}
+                    radius={[3, 3, 0, 0]}
+                    maxBarSize={40}
+                  />
+                  <Bar
+                    dataKey="Critical Rate"
+                    fill={RISK_COLORS.critical}
+                    radius={[3, 3, 0, 0]}
+                    maxBarSize={40}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-
-            {/* Legend */}
-            <div className="flex items-center justify-center gap-6 text-xs text-text-muted pt-2 border-t border-border/20">
-              <span className="flex items-center gap-1.5">
-                <Zap className="h-3 w-3 text-text-secondary" />
-                First flaggable contract
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Eye className="h-3 w-3 text-accent" />
-                Public discovery
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-6 h-2 rounded-sm bg-accent/20 border-l-2 border-accent" />
-                Early warning window
-              </span>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
-
-      {/* ================================================================== */}
-      {/* L6: Key Findings                                                   */}
-      {/* ================================================================== */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Crosshair className="h-4 w-4 text-accent" aria-hidden="true" />
-            Key Findings
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <FindingCard
-              icon={CheckCircle}
-              iconColor="#4ade80"
-              title="Strong Detection on Large Schemes"
-              body="The 3 largest cases (IMSS, Segalmex, COVID) with 21,063 contracts are detected at 91-99% high+ rate. These vendor-concentration-driven schemes are the model's sweet spot."
-            />
-            <FindingCard
-              icon={AlertTriangle}
-              iconColor={RISK_COLORS.medium}
-              title="Weaker on Small Cases"
-              body="Cases with few contracts (Grupo Higa: 3, Odebrecht: 35) show lower detection rates (33-69%). Small sample sizes limit the model's statistical power."
-            />
-            <FindingCard
-              icon={Clock}
-              iconColor="#58a6ff"
-              title={`Avg ${avgEarlyWarning.toFixed(1)} Years Early Warning`}
-              body="The model would have flagged suspicious patterns years before public investigations. Segalmex had a 12-year gap, IMSS had 8 years of early warning."
-            />
-            <FindingCard
-              icon={Target}
-              iconColor={RISK_COLORS.critical}
-              title="Price Volatility is Key"
-              body="The top predictor (+1.22) is price volatility — vendors with wildly varying contract sizes. Followed by institution diversity (-0.85) and win rate (+0.73)."
-            />
-            <FindingCard
-              icon={Activity}
-              iconColor="#58a6ff"
-              title="Classic Indicators Underperform"
-              body="Single bidding and direct awards are negatively correlated with known corruption -- the documented cases involve large vendors winning competitive procedures."
-            />
-            <FindingCard
-              icon={Shield}
-              iconColor="#4ade80"
-              title="Per-Sector Models Capture Nuance"
-              body="v5.0 trains 12 sector-specific sub-models. Energia is driven by industry mismatch, Infraestructura by networks, Agricultura by vendor concentration (+1.82)."
-            />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-
-// ============================================================================
-// Finding Card
-// ============================================================================
-
-function FindingCard({
-  icon: Icon,
-  iconColor,
-  title,
-  body,
-}: {
-  icon: React.ElementType
-  iconColor: string
-  title: string
-  body: string
-}) {
-  return (
-    <div className="rounded-lg border border-border/30 bg-background-elevated/30 p-4 space-y-2">
-      <div className="flex items-center gap-2">
-        <Icon className="h-4 w-4 shrink-0" style={{ color: iconColor }} aria-hidden="true" />
-        <h4 className="text-xs font-semibold text-text-primary">{title}</h4>
-      </div>
-      <p className="text-xs text-text-secondary leading-relaxed">{body}</p>
     </div>
   )
 }

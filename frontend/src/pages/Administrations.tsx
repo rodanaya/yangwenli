@@ -3,11 +3,11 @@
  *
  * L0: Admin Selector (5 clickable cards)
  * L1: Selected Admin Overview (6 stat cards)
- * L2: Admin Comparison Radar (all admins overlaid)
+ * L2: Admin Comparison Table (replaces radar chart)
  * L3: Yearly Deep Dive (within selected admin)
  * L4: Sector Heatmap (12 sectors × 4 metrics)
  * L5: Transition Impact (4 delta cards)
- * L6: Corruption Cases & Events Timeline
+ * L6: Events Timeline
  */
 
 import { useMemo, useState } from 'react'
@@ -28,11 +28,7 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
+  ReferenceLine,
   Cell,
 } from '@/components/charts'
 import {
@@ -47,6 +43,7 @@ import {
   Banknote,
   FileText,
   Activity,
+  Info,
 } from 'lucide-react'
 
 // =============================================================================
@@ -61,19 +58,49 @@ const ADMINISTRATIONS = [
   { name: 'Sheinbaum', fullName: 'Claudia Sheinbaum', start: 2024, end: 2030, dataStart: 2024, color: '#60a5fa', party: 'MORENA' },
 ] as const
 
-const GROUND_TRUTH_CASES = [
-  { name: 'Odebrecht-PEMEX Bribery', admin: 'Pena Nieto', year: 2014, sector: 'energia', contracts: 35, type: 'Bribery' },
-  { name: 'La Estafa Maestra', admin: 'Pena Nieto', year: 2013, sector: 'multiple', contracts: 10, type: 'Ghost companies' },
-  { name: 'IMSS Ghost Companies', admin: 'Pena Nieto', year: 2014, sector: 'salud', contracts: 9366, type: 'Ghost companies' },
-  { name: 'Grupo Higa / Casa Blanca', admin: 'Pena Nieto', year: 2014, sector: 'infraestructura', contracts: 3, type: 'Conflict of interest' },
-  { name: 'Oceanografia PEMEX', admin: 'Pena Nieto', year: 2014, sector: 'energia', contracts: 2, type: 'Invoice fraud' },
-  { name: 'Segalmex Food Distribution', admin: 'AMLO', year: 2019, sector: 'agricultura', contracts: 6326, type: 'Procurement fraud' },
-  { name: 'COVID-19 Emergency', admin: 'AMLO', year: 2020, sector: 'salud', contracts: 5371, type: 'Embezzlement' },
-  { name: 'Cyber Robotic IT', admin: 'AMLO', year: 2019, sector: 'tecnologia', contracts: 139, type: 'Overpricing' },
-  { name: 'PEMEX Emilio Lozoya', admin: 'Pena Nieto', year: 2012, sector: 'energia', contracts: 0, type: 'Bribery' },
-] as const
-
 type AdminName = typeof ADMINISTRATIONS[number]['name']
+
+const ADMIN_NARRATIVES: Record<AdminName, string> = {
+  Fox: "Vicente Fox's term (2000–2006) marked the PAN's first presidential win after 71 years of PRI rule and the transition to COMPRANET digital procurement records. Data quality improves significantly from 2003 onward. Technology sector procurement expanded notably as e-government initiatives launched.",
+  Calderon: "The Calderón administration (2006–2012) saw significant infrastructure and security procurement driven by the drug war. Single-bid rates remained elevated across defense-adjacent sectors, and PEMEX contracts from this era later became subjects of major corruption investigations including the Odebrecht bribery network.",
+  'Pena Nieto': "Enrique Peña Nieto's administration (2012–2018) is the best-documented period for corruption cases in this dataset. IMSS ghost company networks, La Estafa Maestra, and the Casa Blanca conflict of interest all originate here. The PRI's return to power coincided with record-high vendor concentration in health and agriculture.",
+  AMLO: "Under López Obrador (2018–2024), direct award contracts reached historic highs as austerity policies consolidated procurement through fewer channels. Health and energy sectors showed elevated risk patterns, particularly in COVID-19 emergency spending (Segalmex, COVID procurement fraud) despite the administration's anti-corruption rhetoric.",
+  Sheinbaum: "Claudia Sheinbaum took office in October 2024. COMPRANET data for this administration is currently limited to a partial year. Risk patterns are preliminary and should not be compared to full six-year terms. Trends will become meaningful as the dataset expands through 2025–2030.",
+}
+
+// Comparison table metric definitions — use fields from AdminAgg
+const ADMIN_METRICS = [
+  {
+    key: 'contractsPerYear' as const,
+    label: 'Contracts / Year',
+    format: (v: number) => formatNumber(Math.round(v)),
+  },
+  {
+    key: 'valuePerYear' as const,
+    label: 'Avg Annual Spend',
+    format: (v: number) => formatCompactMXN(v),
+  },
+  {
+    key: 'avgRisk' as const,
+    label: 'Avg Risk Score',
+    format: (v: number) => (v * 100).toFixed(1) + '%',
+  },
+  {
+    key: 'directAwardPct' as const,
+    label: 'Direct Award %',
+    format: (v: number) => v.toFixed(1) + '%',
+  },
+  {
+    key: 'highRiskPct' as const,
+    label: 'High Risk %',
+    format: (v: number) => v.toFixed(1) + '%',
+  },
+  {
+    key: 'singleBidPct' as const,
+    label: 'Single Bid %',
+    format: (v: number) => v.toFixed(1) + '%',
+  },
+]
 
 // =============================================================================
 // Helpers
@@ -90,6 +117,10 @@ interface AdminAgg {
   vendorCount: number
   institutionCount: number
   years: YearOverYearChange[]
+  // Derived for comparison table
+  contractsPerYear: number
+  valuePerYear: number
+  yearCount: number
 }
 
 function aggregateByAdmin(yoyData: YearOverYearChange[]): AdminAgg[] {
@@ -99,6 +130,7 @@ function aggregateByAdmin(yoyData: YearOverYearChange[]): AdminAgg[] {
     )
     const totalContracts = years.reduce((s, y) => s + y.contracts, 0)
     const totalValue = years.reduce((s, y) => s + y.total_value, 0)
+    const yearCount = years.length || 1
     const weightedRisk = totalContracts > 0
       ? years.reduce((s, y) => s + y.avg_risk * y.contracts, 0) / totalContracts
       : 0
@@ -111,7 +143,6 @@ function aggregateByAdmin(yoyData: YearOverYearChange[]): AdminAgg[] {
     const weightedHR = totalContracts > 0
       ? years.reduce((s, y) => s + y.high_risk_pct * y.contracts, 0) / totalContracts
       : 0
-    // Unique vendors: use max yearly count as proxy (sum would overcount)
     const maxVendors = years.length > 0 ? Math.max(...years.map((y) => y.vendor_count)) : 0
     const maxInst = years.length > 0 ? Math.max(...years.map((y) => y.institution_count)) : 0
 
@@ -126,6 +157,9 @@ function aggregateByAdmin(yoyData: YearOverYearChange[]): AdminAgg[] {
       vendorCount: maxVendors,
       institutionCount: maxInst,
       years,
+      contractsPerYear: totalContracts / yearCount,
+      valuePerYear: totalValue / yearCount,
+      yearCount,
     }
   })
 }
@@ -139,7 +173,6 @@ function DeltaBadge({ val, unit, invertColor }: { val: number; unit: string; inv
   const abs = Math.abs(val)
   const isUp = val > 0.01
   const isDown = val < -0.01
-  // For most metrics, up = bad (red). invertColor flips this.
   const color = invertColor
     ? (isUp ? 'text-risk-low' : isDown ? 'text-risk-critical' : 'text-text-muted')
     : (isUp ? 'text-risk-critical' : isDown ? 'text-risk-low' : 'text-text-muted')
@@ -199,32 +232,12 @@ export default function Administrations() {
   const selectedAgg = adminAggs.find((a) => a.name === selectedAdmin)
   const selectedMeta = ADMINISTRATIONS.find((a) => a.name === selectedAdmin)!
 
-  // Radar data
-  const radarData = useMemo(() => {
-    const axes = ['Direct Award %', 'Single Bid %', 'High Risk %', 'Avg Risk', 'Vendor Diversity']
-    return axes.map((axis) => {
-      const point: Record<string, unknown> = { axis }
-      for (const agg of adminAggs) {
-        if (agg.contracts === 0) { point[agg.name] = 0; continue }
-        switch (axis) {
-          case 'Direct Award %': point[agg.name] = +agg.directAwardPct.toFixed(1); break
-          case 'Single Bid %': point[agg.name] = +agg.singleBidPct.toFixed(1); break
-          case 'High Risk %': point[agg.name] = +agg.highRiskPct.toFixed(1); break
-          case 'Avg Risk': point[agg.name] = +(agg.avgRisk * 100).toFixed(1); break
-          case 'Vendor Diversity': point[agg.name] = +(agg.vendorCount / 1000).toFixed(1); break
-        }
-      }
-      return point
-    })
-  }, [adminAggs])
-
   // Sector heatmap data for selected admin
   const sectorHeatmap = useMemo(() => {
     if (!selectedMeta || sectorYearData.length === 0) return []
     const filtered = sectorYearData.filter(
       (sy) => sy.year >= selectedMeta.dataStart && sy.year < selectedMeta.end
     )
-    // Group by sector
     return SECTORS.map((sector) => {
       const sectorRows = filtered.filter((r) => r.sector_id === sector.id)
       const totalContracts = sectorRows.reduce((s, r) => s + r.contracts, 0)
@@ -273,7 +286,6 @@ export default function Administrations() {
     () => events.filter((e) => e.year >= selectedMeta.dataStart && e.year < selectedMeta.end),
     [events, selectedMeta]
   )
-  const adminCases = GROUND_TRUTH_CASES.filter((c) => c.admin === selectedAdmin)
 
   const isLoading = yoyLoading || syLoading
 
@@ -297,13 +309,10 @@ export default function Administrations() {
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold text-text-primary font-mono tracking-tight">
-          Documented Corruption Cases
+          Administration Analysis
         </h1>
         <p className="text-sm text-text-muted mt-1">
-          Manually verified from public records — not ML-detected
-        </p>
-        <p className="text-xs text-text-muted mt-0.5">
-          Deep dive into procurement patterns across Mexican presidential administrations (2002-2025)
+          Deep dive into procurement patterns across Mexican presidential administrations (2002–2025)
         </p>
       </div>
 
@@ -319,8 +328,8 @@ export default function Administrations() {
               className={cn(
                 'relative text-left rounded-lg border p-3 transition-all duration-200',
                 isSelected
-                  ? 'border-accent bg-accent/5 shadow-[0_0_12px_rgba(88,166,255,0.1)]'
-                  : 'border-border/40 bg-card hover:border-border/80 hover:bg-card-hover'
+                  ? 'border-accent bg-accent/10 shadow-md scale-[1.02]'
+                  : 'border-border/50 hover:border-border hover:bg-background-card/50'
               )}
             >
               {isSelected && (
@@ -337,11 +346,14 @@ export default function Administrations() {
                 <span className="text-xs text-text-muted font-mono ml-auto">{admin.party}</span>
               </div>
               <div className="text-xs text-text-muted font-mono">
-                {admin.dataStart}-{Math.min(admin.end, 2025)}
+                {admin.dataStart}–{Math.min(admin.end, 2025)}
               </div>
               <div className="mt-2 text-xs font-mono text-text-secondary">
                 {agg ? formatNumber(agg.contracts) : '0'} contracts
               </div>
+              {isSelected && (
+                <div className="mt-1 text-xs text-accent font-mono">Selected</div>
+              )}
               {/* Mini sparkline */}
               {agg && agg.years.length > 1 && (
                 <div className="mt-1.5 h-6">
@@ -362,6 +374,17 @@ export default function Administrations() {
             </button>
           )
         })}
+      </div>
+
+      {/* Editorial Narrative */}
+      <div className="flex items-start gap-3 rounded-lg border border-border/40 bg-card px-4 py-3">
+        <Info className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+        <div>
+          <span className="text-xs font-semibold text-accent uppercase tracking-wider mr-2">Context</span>
+          <span className="text-sm text-text-secondary leading-relaxed">
+            {ADMIN_NARRATIVES[selectedAdmin]}
+          </span>
+        </div>
       </div>
 
       {/* L1: Selected Admin Overview */}
@@ -418,7 +441,7 @@ export default function Administrations() {
 
       {/* L2 + L3 side by side */}
       <div className="grid grid-cols-2 gap-4">
-        {/* L2: Admin Comparison Radar */}
+        {/* L2: Administration Comparison Table */}
         <Card className="bg-card border-border/40">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-mono text-text-primary">
@@ -426,47 +449,49 @@ export default function Administrations() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={320}>
-              <RadarChart data={radarData}>
-                <PolarGrid stroke="var(--color-border)" strokeOpacity={0.3} />
-                <PolarAngleAxis
-                  dataKey="axis"
-                  tick={{ fill: 'var(--color-text-muted)', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
-                />
-                <PolarRadiusAxis tick={{ fontSize: 10 }} stroke="var(--color-border)" strokeOpacity={0.2} />
-                {ADMINISTRATIONS.map((admin) => (
-                  <Radar
-                    key={admin.name}
-                    name={admin.name}
-                    dataKey={admin.name}
-                    stroke={admin.color}
-                    fill={admin.color}
-                    fillOpacity={admin.name === selectedAdmin ? 0.15 : 0}
-                    strokeWidth={admin.name === selectedAdmin ? 2.5 : 1}
-                    strokeOpacity={admin.name === selectedAdmin ? 1 : 0.35}
-                    dot={admin.name === selectedAdmin}
-                  />
-                ))}
-                <Legend
-                  wrapperStyle={{ fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
-                  onClick={(e) => {
-                    if (e.value && typeof e.value === 'string') {
-                      const match = ADMINISTRATIONS.find((a) => a.name === e.value)
-                      if (match) setSelectedAdmin(match.name)
-                    }
-                  }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'var(--color-card)',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: 8,
-                    fontSize: 11,
-                    fontFamily: 'var(--font-family-mono)',
-                  }}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-2 pr-4 text-text-muted font-normal text-xs">Metric</th>
+                    {adminAggs.map((a) => (
+                      <th
+                        key={a.name}
+                        className={cn(
+                          'text-right py-2 px-2 text-xs font-semibold',
+                          a.name === selectedAdmin ? 'text-accent' : 'text-text-muted'
+                        )}
+                      >
+                        {a.name}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {ADMIN_METRICS.map((metric) => (
+                    <tr key={metric.key} className="border-b border-border/30">
+                      <td className="py-2 pr-4 text-xs text-text-muted">{metric.label}</td>
+                      {adminAggs.map((a) => {
+                        const value = a[metric.key] as number
+                        return (
+                          <td
+                            key={a.name}
+                            className={cn(
+                              'text-right py-2 px-2 text-xs font-mono',
+                              a.name === selectedAdmin
+                                ? 'font-semibold text-text-primary'
+                                : 'text-text-muted'
+                            )}
+                          >
+                            {a.contracts > 0 ? metric.format(value) : '—'}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
 
@@ -474,7 +499,7 @@ export default function Administrations() {
         <Card className="bg-card border-border/40">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-mono text-text-primary">
-              Yearly Trends — {selectedAdmin} ({selectedMeta.dataStart}-{Math.min(selectedMeta.end - 1, 2025)})
+              Yearly Trends — {selectedAdmin} ({selectedMeta.dataStart}–{Math.min(selectedMeta.end - 1, 2025)})
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -554,6 +579,21 @@ export default function Administrations() {
                     strokeWidth={2}
                     dot={{ r: 3 }}
                   />
+                  {adminEvents.slice(0, 8).map((event) => (
+                    <ReferenceLine
+                      key={event.id ?? event.year}
+                      yAxisId="left"
+                      x={event.year}
+                      stroke="#64748b"
+                      strokeDasharray="3 3"
+                      label={{
+                        value: (event.title ?? '').slice(0, 15),
+                        position: 'top',
+                        fontSize: 9,
+                        fill: '#64748b',
+                      }}
+                    />
+                  ))}
                 </ComposedChart>
               </ResponsiveContainer>
             ) : (
@@ -662,47 +702,36 @@ export default function Administrations() {
         </Card>
       </div>
 
-      {/* L6: Cases & Events Timeline */}
+      {/* L6: Events Timeline */}
       <Card className="bg-card border-border/40">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-mono text-text-primary">
-            Corruption Cases & Events — {selectedAdmin} ({selectedMeta.dataStart}-{Math.min(selectedMeta.end - 1, 2025)})
+            Key Events — {selectedAdmin} ({selectedMeta.dataStart}–{Math.min(selectedMeta.end - 1, 2025)})
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-6">
-            {/* Cases */}
+            {/* Ground truth note */}
             <div>
               <h4 className="text-xs font-semibold text-text-muted tracking-wider uppercase mb-0.5">
-                Documented Cases
+                Documented Corruption Cases
               </h4>
-              <p className="text-xs text-text-muted/70 italic mb-2">
+              <p className="text-xs text-text-muted/70 italic mb-3">
                 Manually verified from public records and ASF investigations — not ML-detected
               </p>
-              {adminCases.length > 0 ? (
-                <div className="space-y-2">
-                  {adminCases.map((c) => (
-                    <div
-                      key={c.name}
-                      className="flex items-start gap-3 rounded-md border border-border/20 bg-card-hover/30 p-2.5"
-                    >
-                      <div className="mt-0.5">
-                        <AlertTriangle className="h-3.5 w-3.5 text-risk-critical" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs font-semibold text-text-primary">{c.name}</div>
-                        <div className="text-xs text-text-muted font-mono mt-0.5">
-                          {c.year} &middot; {c.type} &middot; {c.sector} &middot; {c.contracts > 0 ? `${formatNumber(c.contracts)} contracts` : 'No direct contracts'}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="py-6 text-center text-text-muted text-xs">
-                  No documented corruption cases during this administration
-                </div>
-              )}
+              <div className="flex items-start gap-2 rounded-md border border-border/30 bg-card-hover/20 p-3">
+                <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  Known corruption cases documented in this period are tracked in the{' '}
+                  <a
+                    href="/ground-truth"
+                    className="text-accent underline underline-offset-2 hover:no-underline"
+                  >
+                    Ground Truth
+                  </a>{' '}
+                  section, including vendor matches, contract counts, and detection rates for each case.
+                </p>
+              </div>
             </div>
 
             {/* Events */}
@@ -784,7 +813,6 @@ function StatCard({
 }
 
 function HeatCell({ value, max }: { value: number; max: number }) {
-  // Intensity: 0 = green, max = red
   const ratio = Math.min(value / max, 1)
   const r = Math.round(200 * ratio + 40)
   const g = Math.round(200 * (1 - ratio) + 40)

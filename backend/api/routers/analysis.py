@@ -1237,6 +1237,78 @@ class FactorEffectivenessItem(BaseModel):
     effectiveness_score: float
 
 
+@router.get("/validation/per-case-detection")
+def get_per_case_detection():
+    """
+    Returns per-case detection statistics from live contract data.
+    Joins ground_truth_cases + ground_truth_vendors + contracts to compute
+    real detection rates from the current risk model.
+    """
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            if not table_exists(cursor, "ground_truth_cases"):
+                raise HTTPException(
+                    status_code=404,
+                    detail="Ground truth tables not found. Run migrate_ground_truth_schema.py first."
+                )
+
+            rows = cursor.execute("""
+                SELECT
+                    gtc.case_name,
+                    gtc.case_type,
+                    gtc.estimated_fraud_mxn,
+                    gtc.confidence_level,
+                    COUNT(DISTINCT gtv.vendor_id) as vendors_matched,
+                    COUNT(DISTINCT c.id) as total_contracts,
+                    AVG(c.risk_score) as avg_risk_score,
+                    SUM(CASE WHEN c.risk_score >= 0.30 THEN 1 ELSE 0 END) as high_plus_count,
+                    SUM(CASE WHEN c.risk_score >= 0.50 THEN 1 ELSE 0 END) as critical_count,
+                    SUM(CASE WHEN c.risk_score < 0.10 THEN 1 ELSE 0 END) as low_count,
+                    (
+                        SELECT se.name_es FROM sectors se
+                        JOIN contracts cc ON cc.sector_id = se.id
+                        JOIN ground_truth_vendors gv2 ON gv2.vendor_id = cc.vendor_id
+                        WHERE gv2.case_id = gtc.id
+                        GROUP BY se.id
+                        ORDER BY COUNT(*) DESC
+                        LIMIT 1
+                    ) as sector_name
+                FROM ground_truth_cases gtc
+                LEFT JOIN ground_truth_vendors gtv ON gtv.case_id = gtc.id
+                LEFT JOIN contracts c ON c.vendor_id = gtv.vendor_id
+                GROUP BY gtc.case_name, gtc.case_type, gtc.estimated_fraud_mxn, gtc.confidence_level
+                ORDER BY vendors_matched DESC, total_contracts DESC
+            """).fetchall()
+
+            cases = []
+            for row in rows:
+                total = row['total_contracts'] or 0
+                high_plus = row['high_plus_count'] or 0
+                critical = row['critical_count'] or 0
+                cases.append({
+                    "case_name": row['case_name'],
+                    "case_type": row['case_type'],
+                    "sector_name": row['sector_name'],
+                    "estimated_fraud_mxn": row['estimated_fraud_mxn'],
+                    "confidence_level": row['confidence_level'],
+                    "vendors_matched": row['vendors_matched'] or 0,
+                    "total_contracts": total,
+                    "avg_risk_score": round(float(row['avg_risk_score'] or 0), 3),
+                    "detection_rate": round(high_plus / total, 3) if total > 0 else 0,
+                    "critical_rate": round(critical / total, 3) if total > 0 else 0,
+                })
+
+            return {"data": cases, "total": len(cases)}
+
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
+        logger.error(f"Database error in get_per_case_detection: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
 @router.get("/validation/summary", response_model=ValidationSummaryResponse)
 def get_validation_summary():
     """Get summary of ground truth data and validation status."""
