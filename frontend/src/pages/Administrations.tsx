@@ -297,9 +297,12 @@ export default function Administrations() {
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold text-text-primary font-mono tracking-tight">
-          Administration Analysis
+          Documented Corruption Cases
         </h1>
         <p className="text-sm text-text-muted mt-1">
+          Manually verified from public records — not ML-detected
+        </p>
+        <p className="text-xs text-text-muted mt-0.5">
           Deep dive into procurement patterns across Mexican presidential administrations (2002-2025)
         </p>
       </div>

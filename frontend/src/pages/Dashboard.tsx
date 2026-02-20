@@ -241,6 +241,7 @@ export function Dashboard() {
           label={t('directAwardRate')}
           value={`${(overview?.direct_award_pct || 0).toFixed(1)}%`}
           detail={t('noCompetition')}
+          sublabel={t('oecdDirectAward')}
           color="text-risk-medium"
           borderColor="border-risk-medium/30"
           onClick={() => navigate('/contracts?is_direct_award=true')}
@@ -251,6 +252,7 @@ export function Dashboard() {
           label={t('singleBidRate')}
           value={`${(overview?.single_bid_pct || 0).toFixed(1)}%`}
           detail={t('ofContracts')}
+          sublabel={t('oecdSingleBid')}
           color="text-risk-high"
           borderColor="border-risk-high/30"
           onClick={() => navigate('/contracts?is_single_bid=true')}
@@ -343,12 +345,6 @@ export function Dashboard() {
                 <Building2 className="h-4 w-4 text-risk-critical" />
                 <h2 className="text-base font-bold text-text-primary">{t('topInstitutionsRisk')}</h2>
               </div>
-              <button
-                onClick={() => navigate('/institutions/health')}
-                className="text-xs text-accent hover:text-accent flex items-center gap-1"
-              >
-                {t('fullAnalysis')} <ArrowUpRight className="h-3 w-3" />
-              </button>
             </div>
             <p className="text-xs text-text-muted mb-3">{t('topInstitutionsDesc')}</p>
             {execLoading ? (

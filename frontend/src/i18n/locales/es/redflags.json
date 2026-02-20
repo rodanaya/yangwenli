@@ -89,5 +89,25 @@
     "industry_mismatch": "Giro Distinto",
     "interaction": "Multiples Alertas",
     "data_flag": "Calidad de Datos"
+  },
+  "liftTooltip": "El 'lift' mide con qué frecuencia aparece este factor de riesgo en contratos de alto riesgo comparado con la línea base. 2.0× = el doble de frecuente en contratos marcados.",
+  "playbook": {
+    "title": "Manual de Investigación",
+    "singleBidShortAd": {
+      "combo": "Licitación Única + Período de Publicación Corto",
+      "action": "Solicita las bases de la licitación en la Plataforma Nacional de Transparencia (PNT). Busca especificaciones técnicas pre-diseñadas para favorecer a un proveedor."
+    },
+    "priceConcentration": {
+      "combo": "Anomalía de Precio + Concentración de Proveedor",
+      "action": "Compara con el precio mediano del sector. Verifica si el mismo proveedor gana en múltiples instituciones de este sector."
+    },
+    "yearEndDirect": {
+      "combo": "Fin de Año + Adjudicación Directa",
+      "action": "Legal bajo la ley mexicana pero propenso a auditorías. Documenta la cadena de aprobación y verifica que la justificación esté registrada en COMPRANET."
+    },
+    "industryMismatchDirect": {
+      "combo": "Sector Inadecuado + Adjudicación Directa",
+      "action": "Indicador central de empresa fantasma. Verifica RFC en SAT (sat.gob.mx). Compara la fecha de registro de la empresa con la fecha del primer contrato."
+    }
   }
 }

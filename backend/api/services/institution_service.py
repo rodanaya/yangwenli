@@ -191,6 +191,7 @@ class InstitutionService(BaseService):
         year: int | None = None,
         min_contracts: int = 1,
         limit: int = 50,
+        offset: int = 0,
     ) -> dict | None:
         """
         Get vendors connected to an institution, ranked by contract value.
@@ -232,9 +233,9 @@ class InstitutionService(BaseService):
             GROUP BY v.id, v.name
             HAVING contract_count >= ?
             ORDER BY total_value DESC
-            LIMIT ?
+            LIMIT ? OFFSET ?
             """,
-            (*params, min_contracts, limit),
+            (*params, min_contracts, limit, offset),
         )
 
         vendors = []

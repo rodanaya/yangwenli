@@ -3,7 +3,7 @@
   "title": "Pulso Temporal",
   "subtitle": "Contratos en {{year}} — ritmos, picos y ciclos politicos",
   "heroDetail": "{{value}} valor total · {{risk}} riesgo promedio",
-  "yearLabel": "Ano:",
+  "yearLabel": "Año:",
   "investigate": "Investigar →",
   "investigateYear": "Investigar {{year}} →",
   "anomalous": "anomalo",
@@ -24,33 +24,29 @@
     "AMLO": "AMLO",
     "Sheinbaum": "Sheinbaum"
   },
-  "adminCard": {
-    "contracts": "contratos",
-    "avgHighRisk": "riesgo alto promedio"
-  },
-  "adminScorecard": {
-    "title": "Comparacion por Administracion",
-    "description": "Haga clic en cualquier administracion para ver contratos de esa epoca."
-  },
   "monthlyRhythm": {
     "title": "Ritmo Mensual de Contratacion ({{year}})",
     "description": "Volumen de contratos por mes con superposicion de riesgo. Las barras de diciembre se resaltan cuando superan el promedio anual. Haga clic en cualquier barra para investigar contratos de ese periodo."
   },
   "decemberAnalysis": {
     "title": "Analisis de Pico de Diciembre (2018-2024)",
-    "description": "Recuento de contratos de diciembre vs promedio de otros meses. Se resaltan los anos donde diciembre supera 1.5x. El comportamiento de liquidacion presupuestal genera picos predecibles a fin de ano."
+    "description": "Recuento de contratos de diciembre vs promedio de otros meses. Se resaltan los años donde diciembre supera 1.5x. El comportamiento de liquidación presupuestal genera picos predecibles a fin de año."
   },
-  "adminBands": {
-    "title": "Contratacion por Administracion Presidencial",
-    "description": "Volumen de contratos ano a ano con periodos de administracion sombreados. Los anos resaltados (lineas rojas punteadas) muestran picos anomalos en contratos de alto riesgo. Haga clic en cualquier barra para investigar contratos de ese ano."
+  "yoyTrend": {
+    "title": "Volumen de Contratos Año a Año",
+    "description": "Tendencias de volumen anual de contratos y tasa de alto riesgo (2002–2025). Haz clic en cualquier barra para investigar contratos de ese año."
   },
-  "politicalTimeline": {
-    "title": "Cronologia de Eventos Politicos",
-    "description": "Eventos politicos clave que pueden haber influido en los patrones de contratacion. Elecciones, reformas, escandalos y crisis pueden generar cambios en el comportamiento del gasto. Haga clic en cualquier evento para investigar contratos de ese ano.",
-    "showLess": "Mostrar menos",
-    "showAll": "Mostrar todos los {{count}} eventos",
-    "impact": "impacto {{level}}",
-    "noData": "Sin datos de eventos politicos disponibles"
+  "q4Breakdown": {
+    "title": "Gasto T4 vs T1-T3 (por Año)",
+    "description": "Gasto del T4 vs promedio mensual T1-T3 por año. Una razón > 3× indica vertederos sistemáticos de presupuesto de fin de año.",
+    "q4Label": "Total T4",
+    "q1q3Label": "Prom. Mensual T1-T3",
+    "ratio": "Razón T4"
+  },
+  "sectorDecember": {
+    "title": "Avalancha de Diciembre por Sector",
+    "description": "Porcentaje de contratos anuales de cada sector adjudicados en diciembre. Sectores por encima del 15% muestran presión sistemática de fin de año.",
+    "pctDecember": "% de Contratos Anuales en Diciembre"
   },
   "tooltip": {
     "contracts": "Contratos",

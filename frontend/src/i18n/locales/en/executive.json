@@ -159,21 +159,26 @@
     "limitations": {
       "groundTruth": {
         "title": "Ground Truth Concentration",
-        "text": "While ground truth has been diversified to 15 cases across all 12 sectors, the three largest cases (IMSS, Segalmex, COVID) still contribute the majority of training contracts. The model excels at detecting concentration-based fraud but may underdetect novel corruption schemes."
+        "text": "While ground truth has been diversified to 15 cases across all 12 sectors, the three largest cases (IMSS, Segalmex, COVID) still contribute the majority of training contracts. The model excels at detecting concentration-based fraud but may underdetect novel corruption schemes.",
+        "mitigation": "Adding 8+ cases in v6.0. Workaround: per-sector models reduce this bias."
       },
       "dataQuality": {
         "title": "Data Quality Degrades with Age",
-        "text": "Structure A data (2002-2010) has only 0.1% RFC coverage, making vendor identification unreliable. Risk scores for this period may be underestimated, and network analysis is effectively impossible."
+        "text": "Structure A data (2002-2010) has only 0.1% RFC coverage, making vendor identification unreliable. Risk scores for this period may be underestimated, and network analysis is effectively impossible.",
+        "mitigation": "For network analysis, filter to contracts from 2018+ (30%+ RFC coverage)."
       },
       "correlation": {
         "title": "Correlation is Not Causation",
-        "text": "A high risk score indicates statistical anomaly consistent with known corruption patterns — it does not constitute proof of wrongdoing. Some sectors (Defense, Energy) have structural reasons for vendor concentration that are not corrupt."
+        "text": "A high risk score indicates statistical anomaly consistent with known corruption patterns — it does not constitute proof of wrongdoing. Some sectors (Defense, Energy) have structural reasons for vendor concentration that are not corrupt.",
+        "mitigation": "Always cross-reference with ASF audit reports before publishing."
       },
       "unknowns": {
         "title": "Unknown Unknowns",
-        "text": "Novel corruption schemes that do not resemble the 15 documented cases will not be flagged by this model. The model detects what it has been trained to recognize — patterns from the past, not innovation in fraud."
+        "text": "Novel corruption schemes that do not resemble the 15 documented cases will not be flagged by this model. The model detects what it has been trained to recognize — patterns from the past, not innovation in fraud.",
+        "mitigation": "ASF audit data integration is in the v6.0 roadmap."
       }
-    }
+    },
+    "calibrationNote": "This rate reflects thresholds calibrated to the OECD 2\u201315% international benchmark. Under alternative thresholds, the rate ranges from 2% to 23%. These are statistical signals for triage \u2014 not prevalence estimates of actual corruption."
   },
 
   "s10": {

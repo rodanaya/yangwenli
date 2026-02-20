@@ -109,12 +109,9 @@
     "patterns": {
       "ghost": { "title": "Ghost Vendors", "subtitle": "Win >50% via single-bid procedures" },
       "cobid": { "title": "Co-Bidding Rings", "subtitle": "Suspiciously high co-bid rates" },
-      "monopoly": { "title": "Sector Monopolies", "subtitle": "Vendors with >30% sector share" },
       "price": { "title": "Price Outliers", "subtitle": "Extreme overpricing flagged by IQR" },
       "split": { "title": "Split Contracts", "subtitle": "Same vendor + institution + day" },
-      "december": { "title": "December Rush", "subtitle": "Year-end budget dump contracts" },
-      "rubber": { "title": "Rubber Stamp", "subtitle": ">90% direct award rate" },
-      "new": { "title": "New & Suspicious", "subtitle": "Recently registered, high risk" }
+      "december": { "title": "December Rush", "subtitle": "Year-end budget dump contracts" }
     },
     "detail": {
       "what": "What it is",

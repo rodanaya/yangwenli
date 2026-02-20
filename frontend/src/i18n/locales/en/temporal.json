@@ -24,14 +24,6 @@
     "AMLO": "AMLO",
     "Sheinbaum": "Sheinbaum"
   },
-  "adminCard": {
-    "contracts": "contracts",
-    "avgHighRisk": "avg high-risk"
-  },
-  "adminScorecard": {
-    "title": "Administration Comparison",
-    "description": "Click any administration to view contracts from that era."
-  },
   "monthlyRhythm": {
     "title": "Monthly Procurement Rhythm ({{year}})",
     "description": "Contract volume by month with risk overlay. December bars highlighted when they exceed the annual average. Click any bar to investigate contracts from that period — December bars show year-end contracts specifically."
@@ -40,17 +32,21 @@
     "title": "December Spike Analysis (2018-2024)",
     "description": "December contract counts vs average of other months. Years where December exceeds 1.5x are highlighted. Budget-clearing behavior drives predictable year-end surges."
   },
-  "adminBands": {
-    "title": "Procurement by Presidential Administration",
-    "description": "Year-over-year contract volume with administration periods shaded. Highlighted years (red dashed lines) show anomalous spikes in high-risk contracts. Click any bar to investigate contracts from that year."
+  "yoyTrend": {
+    "title": "Year-over-Year Contract Volume",
+    "description": "Annual contract volume and high-risk rate trends (2002–2025). Click any bar to investigate contracts from that year."
   },
-  "politicalTimeline": {
-    "title": "Political Events Timeline",
-    "description": "Key political events that may have influenced procurement patterns. Elections, reforms, scandals, and crises can all trigger shifts in spending behavior. Click any event to investigate contracts from that year.",
-    "showLess": "Show less",
-    "showAll": "Show all {{count}} events",
-    "impact": "{{level}} impact",
-    "noData": "No political events data available"
+  "q4Breakdown": {
+    "title": "Q4 vs Q1-Q3 Spend (by Year)",
+    "description": "Q4 spending vs average Q1-Q3 monthly spend per year. A ratio > 3× indicates systematic end-of-year budget dumps.",
+    "q4Label": "Q4 Total",
+    "q1q3Label": "Q1-Q3 Monthly Avg",
+    "ratio": "Q4 Ratio"
+  },
+  "sectorDecember": {
+    "title": "December Rush by Sector",
+    "description": "Percentage of each sector's annual contracts awarded in December. Sectors above 15% show systematic year-end budget pressure.",
+    "pctDecember": "% of Annual Contracts in December"
   },
   "tooltip": {
     "contracts": "Contracts",

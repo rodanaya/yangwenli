@@ -28,8 +28,7 @@ const NetworkGraph = lazy(() => import('@/pages/NetworkGraph'))
 const Watchlist = lazy(() => import('@/pages/Watchlist'))
 const DetectivePatterns = lazy(() => import('@/pages/DetectivePatterns'))
 const Administrations = lazy(() => import('@/pages/Administrations'))
-const MoneyFlow = lazy(() => import('@/pages/MoneyFlow'))
-const RedFlags = lazy(() => import('@/pages/RedFlags'))
+const ProcurementIntelligence = lazy(() => import('@/pages/ProcurementIntelligence'))
 const GroundTruth = lazy(() => import('@/pages/GroundTruth'))
 const TemporalPulse = lazy(() => import('@/pages/TemporalPulse'))
 const InstitutionHealth = lazy(() => import('@/pages/InstitutionHealth'))
@@ -102,18 +101,10 @@ function App() {
                 }
               />
               <Route
-                path="money-flow"
+                path="procurement-intelligence"
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <MoneyFlow />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="red-flags"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <RedFlags />
+                    <ProcurementIntelligence />
                   </SuspenseBoundary>
                 }
               />
@@ -253,6 +244,10 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
+
+              {/* Redirects from merged pages */}
+              <Route path="money-flow" element={<Navigate to="/procurement-intelligence" replace />} />
+              <Route path="red-flags" element={<Navigate to="/procurement-intelligence" replace />} />
 
               {/* Redirects from old routes */}
               <Route path="vendors" element={<Navigate to="/explore?tab=vendors" replace />} />

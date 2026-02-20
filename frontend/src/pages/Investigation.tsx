@@ -106,7 +106,8 @@ export function Investigation() {
   const [statusFilter, setStatusFilter] = useState<InvestigationValidationStatus | 'all'>('all')
   const [sectorFilter] = useState<number | undefined>(undefined)
   const [minScore, setMinScore] = useState<number | undefined>(undefined)
-  const [expandedCaseId, setExpandedCaseId] = useState<string | null>(null)
+  const [priorityFilter, setPriorityFilter] = useState<'all' | 'critical' | 'high' | 'medium' | 'low'>('all')
+  const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null)
 
   // Data queries
   const { data: summary, isLoading: summaryLoading } = useQuery({
@@ -143,7 +144,35 @@ export function Investigation() {
     },
   })
 
-  const cases = casesData?.data || []
+  const allCases = casesData?.data || []
+
+  // Priority derivation
+  const getPriority = (score: number): { level: 'critical' | 'high' | 'medium' | 'low'; n: number } => {
+    if (score >= 0.75) return { level: 'critical', n: 1 }
+    if (score >= 0.50) return { level: 'high', n: 2 }
+    if (score >= 0.25) return { level: 'medium', n: 3 }
+    return { level: 'low', n: 4 }
+  }
+
+  // Priority counts
+  const priorityCounts = useMemo(() => {
+    const counts = { critical: 0, high: 0, medium: 0, low: 0 }
+    for (const c of allCases) {
+      counts[getPriority(c.suspicion_score).level]++
+    }
+    return counts
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allCases])
+
+  // Filtered + sorted cases
+  const cases = useMemo(() => {
+    let filtered = allCases
+    if (priorityFilter !== 'all') {
+      filtered = filtered.filter((c) => getPriority(c.suspicion_score).level === priorityFilter)
+    }
+    return filtered.sort((a, b) => b.suspicion_score - a.suspicion_score)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allCases, priorityFilter])
 
   // Sector breakdown for chart
   const sectorBreakdown = useMemo(() => {
@@ -210,71 +239,122 @@ export function Investigation() {
       )}
 
       {/* ================================================================ */}
-      {/* S3: ALL CASES TABLE */}
+      {/* WORKFLOW GUIDE */}
       {/* ================================================================ */}
-      <Card>
-        <CardContent className="pt-5 pb-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-text-primary">{t('sections.allCases')}</h2>
-            <div className="flex items-center gap-2">
-              <Filter className="h-3.5 w-3.5 text-text-muted" />
-              {/* Status filter */}
-              <select
-                className="text-xs bg-background-elevated border border-border/50 rounded px-2 py-1 text-text-secondary"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as InvestigationValidationStatus | 'all')}
-              >
-                <option value="all">{t('filters.allStatuses')}</option>
-                <option value="pending">{t('status.pending')}</option>
-                <option value="corroborated">{t('status.corroborated')}</option>
-                <option value="refuted">{t('status.refuted')}</option>
-                <option value="inconclusive">{t('status.inconclusive')}</option>
-              </select>
-              {/* Score filter */}
-              <select
-                className="text-xs bg-background-elevated border border-border/50 rounded px-2 py-1 text-text-secondary"
-                value={minScore ?? ''}
-                onChange={(e) => setMinScore(e.target.value ? Number(e.target.value) : undefined)}
-              >
-                <option value="">{t('filters.anyScore')}</option>
-                <option value="0.5">{t('filters.scoreMin', { threshold: '0.50' })}</option>
-                <option value="0.3">{t('filters.scoreMin', { threshold: '0.30' })}</option>
-                <option value="0.2">{t('filters.scoreMin', { threshold: '0.20' })}</option>
-              </select>
-            </div>
-          </div>
+      <details className="mb-6 border rounded-lg p-4 bg-muted/30">
+        <summary className="cursor-pointer font-semibold text-sm">
+          {t('workflowGuide.title')}
+        </summary>
+        <ol className="mt-3 space-y-2 text-sm list-decimal list-inside text-muted-foreground">
+          <li><strong>{t('workflowGuide.step1.label')}</strong> — {t('workflowGuide.step1.desc')}</li>
+          <li><strong>{t('workflowGuide.step2.label')}</strong> — {t('workflowGuide.step2.desc')}</li>
+          <li><strong>{t('workflowGuide.step3.label')}</strong> — {t('workflowGuide.step3.desc')}</li>
+          <li><strong>{t('workflowGuide.step4.label')}</strong> — {t('workflowGuide.step4.desc')}</li>
+        </ol>
+        <p className="mt-3 text-xs text-muted-foreground italic">{t('workflowGuide.groundTruthNote')}</p>
+      </details>
 
-          {casesLoading ? (
-            <div className="space-y-2">
-              {[...Array(8)].map((_, i) => <Skeleton key={i} className="h-12" />)}
-            </div>
-          ) : cases.length === 0 ? (
-            <p className="text-sm text-text-muted py-8 text-center">{t('empty')}</p>
-          ) : (
-            <div className="space-y-0.5">
-              {/* Header */}
-              <div className="grid grid-cols-[28px_1fr_90px_100px_110px] gap-3 px-3 py-2 text-xs font-bold tracking-wider uppercase text-text-secondary font-mono">
-                <span />
-                <span>{t('table.case')}</span>
-                <span>{t('table.sector')}</span>
-                <span className="text-right">{t('table.scoreValue')}</span>
-                <span className="text-center">{t('table.status')}</span>
-              </div>
-              {cases.map((c) => (
-                <CaseRow
-                  key={c.case_id}
-                  caseItem={c}
-                  isExpanded={expandedCaseId === c.case_id}
-                  onToggle={() => setExpandedCaseId(expandedCaseId === c.case_id ? null : c.case_id)}
-                  onReview={(status) => reviewMutation.mutate({ caseId: c.case_id, status })}
-                  isReviewing={reviewMutation.isPending}
-                  navigate={navigate}
-                />
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* ================================================================ */}
+      {/* S3: INVESTIGATION QUEUE */}
+      {/* ================================================================ */}
+
+      {/* Queue Header — priority filter chips */}
+      <div className="flex flex-wrap items-center gap-2">
+        {(
+          [
+            { key: 'all', label: t('queue.allPriorities'), count: allCases.length, color: 'text-text-secondary border-border/50 hover:border-accent/40' },
+            { key: 'critical', label: t('queue.critical'), count: priorityCounts.critical, color: 'text-risk-critical border-risk-critical/30 hover:border-risk-critical/60 bg-risk-critical/5' },
+            { key: 'high', label: t('queue.high'), count: priorityCounts.high, color: 'text-risk-high border-risk-high/30 hover:border-risk-high/60 bg-risk-high/5' },
+            { key: 'medium', label: t('queue.medium'), count: priorityCounts.medium, color: 'text-risk-medium border-risk-medium/30 hover:border-risk-medium/60 bg-risk-medium/5' },
+            { key: 'low', label: t('queue.low'), count: priorityCounts.low, color: 'text-risk-low border-risk-low/30 hover:border-risk-low/60 bg-risk-low/5' },
+          ] as const
+        ).map((chip) => (
+          <button
+            key={chip.key}
+            onClick={() => setPriorityFilter(chip.key)}
+            className={cn(
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-all',
+              chip.color,
+              priorityFilter === chip.key ? 'ring-1 ring-current' : ''
+            )}
+          >
+            <span className="font-bold tabular-nums">{chip.count}</span>
+            <span>{chip.label}</span>
+          </button>
+        ))}
+        <div className="ml-auto flex items-center gap-2">
+          <Filter className="h-3.5 w-3.5 text-text-muted" />
+          <select
+            className="text-xs bg-background-elevated border border-border/50 rounded px-2 py-1 text-text-secondary"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as InvestigationValidationStatus | 'all')}
+          >
+            <option value="all">{t('filters.allStatuses')}</option>
+            <option value="pending">{t('status.pending')}</option>
+            <option value="corroborated">{t('status.corroborated')}</option>
+            <option value="refuted">{t('status.refuted')}</option>
+            <option value="inconclusive">{t('status.inconclusive')}</option>
+          </select>
+          <select
+            className="text-xs bg-background-elevated border border-border/50 rounded px-2 py-1 text-text-secondary"
+            value={minScore ?? ''}
+            onChange={(e) => setMinScore(e.target.value ? Number(e.target.value) : undefined)}
+          >
+            <option value="">{t('filters.anyScore')}</option>
+            <option value="0.5">{t('filters.scoreMin', { threshold: '0.50' })}</option>
+            <option value="0.3">{t('filters.scoreMin', { threshold: '0.30' })}</option>
+            <option value="0.2">{t('filters.scoreMin', { threshold: '0.20' })}</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Priority Card Grid */}
+      {casesLoading ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-48" />)}
+        </div>
+      ) : cases.length === 0 ? (
+        <p className="text-sm text-text-muted py-8 text-center">{t('queue.empty')}</p>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {cases.map((c, i) => (
+            <InvestigationCard
+              key={c.case_id}
+              caseItem={c}
+              rank={i + 1}
+              priority={getPriority(c.suspicion_score)}
+              isSelected={selectedCaseId === c.case_id}
+              onSelect={() => setSelectedCaseId(selectedCaseId === c.case_id ? null : c.case_id)}
+              onReview={(status) => reviewMutation.mutate({ caseId: c.case_id, status })}
+              isReviewing={reviewMutation.isPending}
+              navigate={navigate}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Case Detail Drawer */}
+      {selectedCaseId && (
+        <div className="fixed inset-y-0 right-0 z-50 w-full max-w-xl bg-background-card border-l border-border/50 shadow-2xl overflow-y-auto">
+          <div className="flex items-center justify-between p-4 border-b border-border/30 sticky top-0 bg-background-card z-10">
+            <h2 className="text-sm font-bold text-text-primary">{t('sections.allCases')}</h2>
+            <button
+              onClick={() => setSelectedCaseId(null)}
+              className="text-xs text-text-muted hover:text-text-primary px-2 py-1 rounded hover:bg-background-elevated/50 transition-colors"
+            >
+              {t('card.close')} ✕
+            </button>
+          </div>
+          <div className="p-4">
+            <CaseDetailPanel
+              caseId={selectedCaseId}
+              onReview={(status) => reviewMutation.mutate({ caseId: selectedCaseId, status })}
+              isReviewing={reviewMutation.isPending}
+              navigate={navigate}
+            />
+          </div>
+        </div>
+      )}
 
       {/* ================================================================ */}
       {/* S5: SECTOR BREAKDOWN */}
@@ -415,73 +495,158 @@ function BigFishCard({
 }
 
 // ============================================================================
-// CASE ROW (expandable)
+// INVESTIGATION CARD (priority triage workbench)
 // ============================================================================
 
-function CaseRow({
+const PRIORITY_CONFIG = {
+  critical: { border: 'border-risk-critical/40', bg: 'bg-risk-critical/5', badge: 'bg-risk-critical/15 text-risk-critical' },
+  high:     { border: 'border-risk-high/40',     bg: 'bg-risk-high/5',     badge: 'bg-risk-high/15 text-risk-high' },
+  medium:   { border: 'border-risk-medium/40',   bg: 'bg-risk-medium/5',   badge: 'bg-risk-medium/15 text-risk-medium' },
+  low:      { border: 'border-risk-low/40',      bg: 'bg-risk-low/5',      badge: 'bg-risk-low/15 text-risk-low' },
+}
+
+function InvestigationCard({
   caseItem,
-  isExpanded,
-  onToggle,
+  rank,
+  priority,
+  isSelected,
+  onSelect,
   onReview,
   isReviewing,
   navigate,
 }: {
   caseItem: InvestigationCaseListItem
-  isExpanded: boolean
-  onToggle: () => void
+  rank: number
+  priority: { level: 'critical' | 'high' | 'medium' | 'low'; n: number }
+  isSelected: boolean
+  onSelect: () => void
   onReview: (status: string) => void
   isReviewing: boolean
   navigate: ReturnType<typeof useNavigate>
 }) {
+  const { t } = useTranslation('investigation')
   const sectorColor = SECTOR_COLORS[caseItem.sector_name] || '#64748b'
+  const pCfg = PRIORITY_CONFIG[priority.level]
+  const cleanTitle = toTitleCase(
+    caseItem.title
+      .replace(/ - Anomalous Procurement Pattern$/, '')
+      .replace(/ - Externally Corroborated Investigation$/, '')
+  )
+  const newsSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(`"${cleanTitle}" ASF auditoría corrupción México`)}`
+  const asfSearchUrl = `https://www.asf.gob.mx/Trans/Investigaciones/dbInvestigaciones.asp`
 
   return (
-    <div>
-      <button
-        className={cn(
-          'grid grid-cols-[28px_1fr_90px_100px_110px] gap-3 w-full text-left px-3 py-2.5 rounded-md transition-colors',
-          isExpanded
-            ? 'bg-accent/5 border border-accent/20'
-            : 'hover:bg-background-elevated/40'
-        )}
-        onClick={onToggle}
-      >
-        <span className="text-text-muted self-center">
-          {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-        </span>
-        <div className="min-w-0 self-center">
-          <p className="text-sm font-medium text-text-primary truncate">
-            {toTitleCase(caseItem.title.replace(/ - Anomalous Procurement Pattern$/, '').replace(/ - Externally Corroborated Investigation$/, ''))}
-          </p>
-        </div>
-        <span
-          className="text-xs font-medium px-2 py-0.5 rounded self-center w-fit"
-          style={{ backgroundColor: sectorColor + '15', color: sectorColor }}
-        >
-          {getSectorNameEN(caseItem.sector_name)}
-        </span>
-        <div className="text-right self-center">
-          <p className="text-sm text-text-secondary tabular-nums font-mono">
-            {(caseItem.suspicion_score * 100).toFixed(0)}%
-          </p>
-          <p className="text-xs text-text-muted tabular-nums font-mono">
-            {formatCompactMXN(caseItem.total_value_mxn)}
-          </p>
-        </div>
-        <span className="self-center flex justify-center">
+    <div className={cn('rounded-lg border-2 transition-all', pCfg.border, pCfg.bg, isSelected && 'ring-2 ring-accent')}>
+      <div className="p-4">
+        {/* Priority badge + status */}
+        <div className="flex items-center justify-between mb-2">
+          <span className={cn('text-xs font-bold px-2 py-0.5 rounded font-mono tracking-wider uppercase', pCfg.badge)}>
+            {t('card.priority', { n: rank })}
+          </span>
           <StatusPill status={caseItem.validation_status} />
-        </span>
-      </button>
+        </div>
 
-      {/* Expanded detail */}
-      {isExpanded && (
-        <CaseDetailPanel
-          caseId={caseItem.case_id}
-          onReview={onReview}
-          isReviewing={isReviewing}
-          navigate={navigate}
-        />
-      )}
+        {/* Title */}
+        <h3 className="text-sm font-semibold text-text-primary leading-snug mb-1.5 line-clamp-2">
+          {cleanTitle}
+        </h3>
+
+        {/* Sector + metrics row */}
+        <div className="flex flex-wrap items-center gap-3 mb-3">
+          <span
+            className="text-xs font-medium px-1.5 py-0.5 rounded"
+            style={{ backgroundColor: sectorColor + '18', color: sectorColor }}
+          >
+            {getSectorNameEN(caseItem.sector_name)}
+          </span>
+          <span className="text-xs text-text-muted tabular-nums font-mono">
+            {t('card.estLoss')}: <strong className="text-text-secondary">{formatCompactMXN(caseItem.total_value_mxn)}</strong>
+          </span>
+          <span className="text-xs text-text-muted tabular-nums font-mono">
+            {t('card.avgRisk')}: <strong className="text-text-secondary">{(caseItem.suspicion_score * 100).toFixed(0)}%</strong>
+          </span>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {/* Review actions */}
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-6 text-xs px-2 border-risk-low/30 text-risk-low hover:bg-risk-low/10"
+            disabled={isReviewing || caseItem.validation_status === 'corroborated'}
+            onClick={(e) => { e.stopPropagation(); onReview('corroborated') }}
+          >
+            <CheckCircle2 className="h-3 w-3 mr-1" /> {t('actions.corroborate')}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-6 text-xs px-2 border-risk-critical/30 text-risk-critical hover:bg-risk-critical/10"
+            disabled={isReviewing || caseItem.validation_status === 'refuted'}
+            onClick={(e) => { e.stopPropagation(); onReview('refuted') }}
+          >
+            <XCircle className="h-3 w-3 mr-1" /> {t('actions.refute')}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-6 text-xs px-2"
+            disabled={isReviewing || caseItem.validation_status === 'inconclusive'}
+            onClick={(e) => { e.stopPropagation(); onReview('inconclusive') }}
+          >
+            <HelpCircle className="h-3 w-3 mr-1" /> {t('actions.inconclusive')}
+          </Button>
+
+          {/* Separator */}
+          <div className="w-px h-4 bg-border/50 mx-0.5" />
+
+          {/* View Contracts */}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 text-xs px-2 text-accent hover:bg-accent/10"
+            onClick={(e) => { e.stopPropagation(); navigate(`/contracts?sort_by=risk_score&sort_order=desc`) }}
+          >
+            <ExternalLink className="h-3 w-3 mr-1" /> {t('card.viewContracts')}
+          </Button>
+
+          {/* ASF Lookup */}
+          <a
+            href={asfSearchUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-1 h-6 text-xs px-2 rounded text-text-muted hover:text-text-primary hover:bg-background-elevated/50 transition-colors border border-border/40"
+          >
+            <Shield className="h-3 w-3" /> {t('asfLookup.button')}
+          </a>
+
+          {/* News Search */}
+          <a
+            href={newsSearchUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-1 h-6 text-xs px-2 rounded text-text-muted hover:text-text-primary hover:bg-background-elevated/50 transition-colors border border-border/40"
+          >
+            <Newspaper className="h-3 w-3" /> {t('asfLookup.newsSearch')}
+          </a>
+
+          {/* View Detail */}
+          <button
+            onClick={onSelect}
+            className={cn(
+              'ml-auto inline-flex items-center gap-1 h-6 text-xs px-2 rounded transition-colors border',
+              isSelected
+                ? 'bg-accent/10 text-accent border-accent/30'
+                : 'text-text-muted hover:text-text-primary border-border/40 hover:bg-background-elevated/50'
+            )}
+          >
+            {isSelected ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

@@ -14,8 +14,7 @@ import {
   Eye,
   Fingerprint,
   Landmark,
-  Banknote,
-  AlertTriangle,
+  TrendingUp,
   Shield,
   Clock,
   Building2,
@@ -57,8 +56,7 @@ const overviewNavDefs: NavItemDef[] = [
 
 const analyzeNavDefs: NavItemDef[] = [
   { i18nKey: 'patterns', href: '/patterns', icon: Fingerprint },
-  { i18nKey: 'redFlags', href: '/red-flags', icon: AlertTriangle },
-  { i18nKey: 'moneyFlow', href: '/money-flow', icon: Banknote },
+  { i18nKey: 'procurementIntelligence', href: '/procurement-intelligence', icon: TrendingUp },
   { i18nKey: 'temporal', href: '/temporal', icon: Clock },
   { i18nKey: 'pricing', href: '/price-analysis', icon: DollarSign },
   { i18nKey: 'categories', href: '/categories', icon: ShoppingCart },

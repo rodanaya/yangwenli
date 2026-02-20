@@ -320,8 +320,13 @@ function SectionThreat({ data }: { data: ExecutiveSummaryResponse }) {
         />
       </div>
 
+      {/* Calibration context */}
+      <p className="text-xs text-text-muted mt-1 max-w-prose">
+        {t('s9.calibrationNote')}
+      </p>
+
       {/* Counterintuitive finding */}
-      <p className="text-sm leading-relaxed text-text-secondary">
+      <p className="text-sm leading-relaxed text-text-secondary mt-4">
         <Trans
           t={t}
           i18nKey="s1.p3"
@@ -944,6 +949,9 @@ function SectionLimitations() {
               </div>
               <p className="text-sm leading-relaxed text-text-muted">
                 {t(`s9.limitations.${lim.key}.text`)}
+              </p>
+              <p className="text-xs italic text-text-muted mt-2">
+                {t(`s9.limitations.${lim.key}.mitigation`)}
               </p>
             </div>
           )

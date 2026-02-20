@@ -76,7 +76,7 @@
     "description": "Modelos estadísticos separados entrenados para cada uno de los 12 sectores. Los patrones de corrupción difieren: Salud → concentración de proveedores, Energía → discrepancia de industria, Infraestructura → relaciones de red."
   },
   "groundTruth": {
-    "title": "Verdad de Terreno",
+    "title": "Verdad Base",
     "description": "Casos documentados y verificados de corrupción usados para entrenar y validar el modelo. Usamos 15 casos con 27 proveedores y 26,582 contratos en los 12 sectores, incluyendo IMSS, Segalmex, Odebrecht, y más."
   },
   "adPeriod": {

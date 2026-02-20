@@ -16,6 +16,7 @@ from datetime import datetime
 
 from ..dependencies import get_db_connection, get_db
 from ..config.constants import get_risk_level
+from ..models.asf import ASFCase, ASFMatchesResponse
 
 logger = logging.getLogger(__name__)
 
@@ -435,6 +436,79 @@ def export_case(
                 "format": "markdown",
                 "content": row['narrative'] or "No narrative generated."
             }
+
+
+@router.get("/cases/{case_id}/asf-matches", response_model=ASFMatchesResponse)
+def get_case_asf_matches(
+    case_id: str = Path(..., description="Case ID (e.g., CASE-SAL-2026-00001)"),
+):
+    """Get ASF audit matches for all vendors in an investigation case."""
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # Get the internal numeric id from case_id string
+        cursor.execute(
+            "SELECT id FROM investigation_cases WHERE case_id = ?", (case_id,)
+        )
+        case_row = cursor.fetchone()
+        if not case_row:
+            raise HTTPException(status_code=404, detail=f"Case {case_id} not found")
+        internal_id = case_row["id"]
+
+        # Get all vendors associated with this case
+        cursor.execute(
+            """
+            SELECT DISTINCT v.name, v.rfc
+            FROM case_vendors cv
+            JOIN vendors v ON cv.vendor_id = v.id
+            WHERE cv.case_id = ?
+            """,
+            (internal_id,),
+        )
+        vendors = cursor.fetchall()
+
+        if not vendors:
+            return ASFMatchesResponse(case_id=internal_id, matches=[], total=0)
+
+        all_matches = []
+        seen_ids: set[int] = set()
+
+        for vendor_row in vendors:
+            vendor_name = vendor_row["name"]
+            vendor_rfc = vendor_row["rfc"]
+
+            conditions = []
+            params = []
+
+            if vendor_rfc:
+                conditions.append("vendor_rfc = ?")
+                params.append(vendor_rfc)
+
+            if vendor_name:
+                name_prefix = vendor_name[:20].strip()
+                conditions.append("vendor_name LIKE ?")
+                params.append(f"%{name_prefix}%")
+                conditions.append("entity_name LIKE ?")
+                params.append(f"%{name_prefix}%")
+
+            if not conditions:
+                continue
+
+            where_clause = " OR ".join(conditions)
+            rows = cursor.execute(
+                f"SELECT * FROM asf_cases WHERE {where_clause} LIMIT 20",
+                params,
+            ).fetchall()
+
+            for row in rows:
+                row_dict = dict(row)
+                if row_dict["id"] not in seen_ids:
+                    seen_ids.add(row_dict["id"])
+                    all_matches.append(ASFCase(**row_dict))
+
+        return ASFMatchesResponse(
+            case_id=internal_id, matches=all_matches, total=len(all_matches)
+        )
 
 
 @router.get("/stats", response_model=CaseStatsResponse)

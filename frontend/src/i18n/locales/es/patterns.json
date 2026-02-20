@@ -109,12 +109,9 @@
     "patterns": {
       "ghost": { "title": "Proveedores Fantasma", "subtitle": "Ganan >50% mediante licitaciones con un solo postor" },
       "cobid": { "title": "Anillos de Co-licitación", "subtitle": "Tasas de co-licitación sospechosamente altas" },
-      "monopoly": { "title": "Monopolios Sectoriales", "subtitle": "Proveedores con >30% de participación sectorial" },
       "price": { "title": "Anomalías de Precio", "subtitle": "Sobreprecios extremos identificados por IQR" },
       "split": { "title": "Contratos Fraccionados", "subtitle": "Mismo proveedor + institución + día" },
-      "december": { "title": "Gasto de Diciembre", "subtitle": "Contratos de descarga presupuestal de fin de año" },
-      "rubber": { "title": "Sello de Goma", "subtitle": ">90% de tasa de adjudicación directa" },
-      "new": { "title": "Nuevo y Sospechoso", "subtitle": "Registrado recientemente, alto riesgo" }
+      "december": { "title": "Gasto de Diciembre", "subtitle": "Contratos de descarga presupuestal de fin de año" }
     },
     "detail": {
       "what": "Qué es",

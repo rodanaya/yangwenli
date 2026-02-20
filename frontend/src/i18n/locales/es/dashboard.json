@@ -5,7 +5,7 @@
   "synced": "SINCRONIZADO",
   "underSurveillance": "bajo vigilancia",
   "inPublicProcurement": "en contrataciones publicas",
-  "contractsAnalyzed": "{{contracts}} contratos · {{vendors}} proveedores · {{years}} anos · 12 sectores",
+  "contractsAnalyzed": "{{contracts}} contratos · {{vendors}} proveedores · {{years}} años · 12 sectores",
   "valueFlagged": "VALOR EN RIESGO",
   "valueFlaggedDetail": "{{pct}}% del valor total",
   "contractsShowingRisk": "TASA DE ALTO RIESGO",
@@ -90,5 +90,8 @@
   "noCompetition": "sin competencia",
   "ofContracts": "de contratos",
   "generated": "generados",
-  "confirmed": "confirmados"
+  "confirmed": "confirmados",
+  "oecdDirectAward": "Referencia OCDE: 20-30%",
+  "oecdSingleBid": "Alerta OCDE: >15%",
+  "oecdHighRisk": "OCDE esperado: 2-15%"
 }

@@ -28,9 +28,11 @@ from ..models.vendor import (
     VendorRelatedListResponse,
     VendorTopItem,
     VendorTopListResponse,
+    VendorTopAllResponse,
     VendorComparisonItem,
     VendorComparisonResponse,
 )
+from ..models.asf import ASFCase
 from ..models.common import PaginationMeta
 from ..models.contract import ContractListItem, ContractListResponse, PaginationMeta as ContractPaginationMeta
 from ..services.vendor_service import vendor_service
@@ -199,7 +201,7 @@ def compare_vendors(
         return VendorComparisonResponse(data=items, total=len(items))
 
 
-@router.get("/top-all")
+@router.get("/top-all", response_model=VendorTopAllResponse)
 def get_top_vendors_all(
     limit: int = Query(5, ge=1, le=20, description="Number per category"),
 ):
@@ -210,7 +212,7 @@ def get_top_vendors_all(
     with get_db() as conn:
         cursor = conn.cursor()
 
-        result = {}
+        result: dict[str, list] = {}
         for metric, sort_field in [("value", "total_amount_mxn"), ("count", "total_contracts")]:
             cursor.execute(f"""
                 SELECT id, name, rfc, {sort_field} as metric_value,
@@ -219,16 +221,16 @@ def get_top_vendors_all(
                 ORDER BY {sort_field} DESC LIMIT ?
             """, (limit,))
             result[metric] = [
-                {
-                    "rank": i + 1,
-                    "vendor_id": row["id"],
-                    "vendor_name": row["name"],
-                    "rfc": row["rfc"],
-                    "metric_value": row["metric_value"] or 0,
-                    "total_contracts": row["total_contracts"],
-                    "total_value_mxn": row["total_value_mxn"],
-                    "avg_risk_score": None,
-                }
+                VendorTopItem(
+                    rank=i + 1,
+                    vendor_id=row["id"],
+                    vendor_name=row["name"],
+                    rfc=row["rfc"],
+                    metric_value=row["metric_value"] or 0,
+                    total_contracts=row["total_contracts"],
+                    total_value_mxn=row["total_value_mxn"],
+                    avg_risk_score=None,
+                )
                 for i, row in enumerate(cursor.fetchall())
             ]
 
@@ -245,20 +247,20 @@ def get_top_vendors_all(
             LIMIT ?
         """, (limit,))
         result["risk"] = [
-            {
-                "rank": i + 1,
-                "vendor_id": row["id"],
-                "vendor_name": row["name"],
-                "rfc": row["rfc"],
-                "metric_value": row["metric_value"] or 0,
-                "total_contracts": row["total_contracts"],
-                "total_value_mxn": row["total_value_mxn"],
-                "avg_risk_score": row["avg_risk_score"],
-            }
+            VendorTopItem(
+                rank=i + 1,
+                vendor_id=row["id"],
+                vendor_name=row["name"],
+                rfc=row["rfc"],
+                metric_value=row["metric_value"] or 0,
+                total_contracts=row["total_contracts"],
+                total_value_mxn=row["total_value_mxn"],
+                avg_risk_score=row["avg_risk_score"],
+            )
             for i, row in enumerate(cursor.fetchall())
         ]
 
-        return result
+        return VendorTopAllResponse(**result)
 
 
 @router.get("/top", response_model=VendorTopListResponse)
@@ -560,7 +562,8 @@ def get_vendor_contracts(
 @router.get("/{vendor_id:int}/institutions", response_model=VendorInstitutionListResponse)
 def get_vendor_institutions(
     vendor_id: int = Path(..., description="Vendor ID"),
-    limit: int = Query(50, ge=1, le=100, description="Maximum results"),
+    page: int = Query(1, ge=1, description="Page number"),
+    per_page: int = Query(50, ge=1, le=100, description="Items per page"),
 ):
     """
     Get institutions that a vendor has contracted with.
@@ -575,6 +578,16 @@ def get_vendor_institutions(
         if not vendor:
             raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
 
+        # Count total
+        cursor.execute("""
+            SELECT COUNT(DISTINCT i.id)
+            FROM contracts c
+            JOIN institutions i ON c.institution_id = i.id
+            WHERE c.vendor_id = ? AND COALESCE(c.amount_mxn, 0) <= ?
+        """, (vendor_id, MAX_CONTRACT_VALUE))
+        total = cursor.fetchone()[0]
+
+        offset = (page - 1) * per_page
         cursor.execute("""
             SELECT
                 i.id as institution_id, i.name as institution_name,
@@ -589,8 +602,8 @@ def get_vendor_institutions(
             WHERE c.vendor_id = ? AND COALESCE(c.amount_mxn, 0) <= ?
             GROUP BY i.id, i.name, i.institution_type
             ORDER BY contract_count DESC
-            LIMIT ?
-        """, (vendor_id, MAX_CONTRACT_VALUE, limit))
+            LIMIT ? OFFSET ?
+        """, (vendor_id, MAX_CONTRACT_VALUE, per_page, offset))
 
         institutions = [
             VendorInstitutionItem(
@@ -610,7 +623,7 @@ def get_vendor_institutions(
             vendor_id=vendor_id,
             vendor_name=vendor["name"],
             data=institutions,
-            total=len(institutions),
+            total=total,
         )
 
 
@@ -828,6 +841,52 @@ def get_vendor_related(
             data=related[:limit],
             total=len(related[:limit]),
         )
+
+
+# =============================================================================
+# ASF AUDIT CASES
+# =============================================================================
+
+@router.get("/{vendor_id:int}/asf-cases", response_model=list[ASFCase])
+def get_vendor_asf_cases(
+    vendor_id: int = Path(..., description="Vendor ID"),
+):
+    """Get ASF audit cases matching this vendor by RFC or name."""
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # Get vendor RFC and name
+        cursor.execute("SELECT name, rfc FROM vendors WHERE id = ?", (vendor_id,))
+        vendor_row = cursor.fetchone()
+        if not vendor_row:
+            raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
+
+        vendor_name = vendor_row["name"]
+        vendor_rfc = vendor_row["rfc"]
+
+        conditions = []
+        params = []
+
+        if vendor_rfc:
+            conditions.append("vendor_rfc = ?")
+            params.append(vendor_rfc)
+
+        # Fuzzy name match: use LIKE with first 20 chars
+        if vendor_name:
+            name_prefix = vendor_name[:20].strip()
+            conditions.append("vendor_name LIKE ?")
+            params.append(f"%{name_prefix}%")
+
+        if not conditions:
+            return []
+
+        where_clause = " OR ".join(conditions)
+        rows = cursor.execute(
+            f"SELECT * FROM asf_cases WHERE {where_clause} ORDER BY report_year DESC LIMIT 50",
+            params,
+        ).fetchall()
+
+        return [ASFCase(**dict(row)) for row in rows]
 
 
 # =============================================================================

@@ -1,0 +1,65 @@
+{
+  "title": "Procurement Intelligence",
+  "trackingLabel": "PROCUREMENT INTELLIGENCE",
+  "subtitle": "Integrated money flow and risk factor analysis",
+  "hero": {
+    "totalSpend": "TOTAL SPEND",
+    "totalSpendDetail": "Tracked procurement value",
+    "highRiskInstitutions": "HIGH-RISK INSTITUTIONS",
+    "highRiskInstitutionsDetail": "Institutions with avg risk ≥ 30%",
+    "topRiskFactor": "TOP RISK FACTOR",
+    "topRiskFactorDetail": "Most common anomaly flag",
+    "highRiskValue": "HIGH-RISK FLOW",
+    "highRiskValueDetail": "Value at risk (score ≥ 0.30)"
+  },
+  "filters": {
+    "year": "Year:",
+    "sector": "Sector:",
+    "allSectors": "All Sectors",
+    "allYears": "All Years"
+  },
+  "institutionTable": {
+    "title": "Institution Money Flow",
+    "subtitle": "Contract value and risk by institution — click any row to view contracts",
+    "rank": "#",
+    "institution": "Institution",
+    "totalFlow": "Total Flow",
+    "highRiskPct": "High-Risk %",
+    "riskLevel": "Risk Level",
+    "contracts": "Contracts",
+    "viewContracts": "Investigate →",
+    "showMore": "Show more institutions",
+    "empty": "No institution flow data available"
+  },
+  "treemap": {
+    "title": "Sector Money Flow",
+    "subtitle": "Contract value distribution by sector. Click any sector to filter.",
+    "contracts": "contracts",
+    "avgRisk": "Avg Risk"
+  },
+  "riskFactors": {
+    "title": "Risk Factor Analysis",
+    "subtitle": "Statistical patterns in procurement anomalies",
+    "heatmapTitle": "Risk Factor Co-occurrence",
+    "heatmapSubtitle": "How often two risk factors appear together (lift > 1 = correlated). Higher lift = stronger association.",
+    "frequencyTitle": "Factor Frequency",
+    "frequencySubtitle": "How many contracts trigger each risk factor",
+    "scatterTitle": "Risk Score vs Contract Value",
+    "scatterSubtitle": "Identify high-value contracts with high risk scores",
+    "contracts": "contracts",
+    "lift": "Lift",
+    "showHeatmap": "Show Co-occurrence Heatmap",
+    "hideHeatmap": "Hide Heatmap"
+  },
+  "dangerZone": {
+    "title": "High-Risk Flows",
+    "subtitle": "Institutions with average risk score ≥ 0.30 — prioritize for investigation",
+    "rank": "#",
+    "institution": "Institution",
+    "totalValue": "Total Value",
+    "avgRisk": "Avg Risk",
+    "contracts": "Contracts",
+    "investigate": "Investigate →",
+    "empty": "No high-risk institution flows found"
+  }
+}

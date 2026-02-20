@@ -1,0 +1,65 @@
+{
+  "title": "Inteligencia de Compras",
+  "trackingLabel": "INTELIGENCIA DE COMPRAS",
+  "subtitle": "Análisis integrado de flujos de dinero y factores de riesgo",
+  "hero": {
+    "totalSpend": "GASTO TOTAL",
+    "totalSpendDetail": "Valor de compras rastreadas",
+    "highRiskInstitutions": "INSTITUCIONES DE ALTO RIESGO",
+    "highRiskInstitutionsDetail": "Instituciones con riesgo prom. ≥ 30%",
+    "topRiskFactor": "FACTOR DE RIESGO PRINCIPAL",
+    "topRiskFactorDetail": "Anomalía más frecuente",
+    "highRiskValue": "FLUJO DE ALTO RIESGO",
+    "highRiskValueDetail": "Valor en riesgo (puntaje ≥ 0.30)"
+  },
+  "filters": {
+    "year": "Año:",
+    "sector": "Sector:",
+    "allSectors": "Todos los Sectores",
+    "allYears": "Todos los Años"
+  },
+  "institutionTable": {
+    "title": "Flujo de Dinero por Institución",
+    "subtitle": "Valor y riesgo de contratos por institución — haz clic para ver contratos",
+    "rank": "#",
+    "institution": "Institución",
+    "totalFlow": "Flujo Total",
+    "highRiskPct": "% Alto Riesgo",
+    "riskLevel": "Nivel de Riesgo",
+    "contracts": "Contratos",
+    "viewContracts": "Investigar →",
+    "showMore": "Ver más instituciones",
+    "empty": "Sin datos de flujo institucional disponibles"
+  },
+  "treemap": {
+    "title": "Flujo de Dinero por Sector",
+    "subtitle": "Distribución del valor de contratos por sector. Haz clic para filtrar.",
+    "contracts": "contratos",
+    "avgRisk": "Riesgo Prom."
+  },
+  "riskFactors": {
+    "title": "Análisis de Factores de Riesgo",
+    "subtitle": "Patrones estadísticos en anomalías de contratación",
+    "heatmapTitle": "Co-ocurrencia de Factores de Riesgo",
+    "heatmapSubtitle": "Con qué frecuencia aparecen dos factores juntos (lift > 1 = correlacionados). Mayor lift = asociación más fuerte.",
+    "frequencyTitle": "Frecuencia de Factores",
+    "frequencySubtitle": "Cuántos contratos activan cada factor de riesgo",
+    "scatterTitle": "Puntaje de Riesgo vs Valor del Contrato",
+    "scatterSubtitle": "Identifica contratos de alto valor con altos puntajes de riesgo",
+    "contracts": "contratos",
+    "lift": "Lift",
+    "showHeatmap": "Mostrar Mapa de Co-ocurrencia",
+    "hideHeatmap": "Ocultar Mapa"
+  },
+  "dangerZone": {
+    "title": "Flujos de Alto Riesgo",
+    "subtitle": "Instituciones con puntaje de riesgo promedio ≥ 0.30 — priorizar para investigación",
+    "rank": "#",
+    "institution": "Institución",
+    "totalValue": "Valor Total",
+    "avgRisk": "Riesgo Prom.",
+    "contracts": "Contratos",
+    "investigate": "Investigar →",
+    "empty": "Sin flujos de alto riesgo encontrados"
+  }
+}

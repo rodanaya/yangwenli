@@ -39,6 +39,7 @@ const SECTOR_GROUPS = [
 export function Sectors() {
   const navigate = useNavigate()
   const [selectedSectorCode, setSelectedSectorCode] = useState<string | null>(null)
+  const [sortKey, setSortKey] = useState<'risk' | 'value' | 'count' | 'direct_award'>('risk')
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['sectors'],
@@ -257,11 +258,36 @@ export function Sectors() {
         </div>
       )}
 
+      {/* Sort controls for sector cards */}
+      <div className="flex gap-2 flex-wrap">
+        {(['risk', 'value', 'count', 'direct_award'] as const).map(key => (
+          <button
+            key={key}
+            onClick={() => setSortKey(key)}
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+              sortKey === key
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
+          >
+            {key === 'risk' ? 'By Risk Score' : key === 'value' ? 'By Value' : key === 'count' ? 'By Contracts' : 'By Direct Award Rate'}
+          </button>
+        ))}
+      </div>
+
       {/* Grouped sector cards */}
       {SECTOR_GROUPS.map((group) => {
         const groupSectors = group.codes
           .map((code) => allSectors.find((s) => s.sector_code === code))
           .filter((s): s is SectorStatistics => s != null)
+          .sort((a, b) => {
+            switch (sortKey) {
+              case 'risk': return b.avg_risk_score - a.avg_risk_score
+              case 'value': return b.total_value_mxn - a.total_value_mxn
+              case 'count': return b.total_contracts - a.total_contracts
+              case 'direct_award': return b.direct_award_pct - a.direct_award_pct
+            }
+          })
         if (groupSectors.length === 0) return null
         return (
           <div key={group.label} className="space-y-3">

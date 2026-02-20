@@ -6,12 +6,14 @@
  * known limitations. All data is hardcoded from methodology documentation.
  */
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { SectionDescription } from '@/components/SectionDescription'
 import { cn, formatNumber } from '@/lib/utils'
 import { RISK_COLORS, RISK_THRESHOLDS, CURRENT_MODEL_VERSION } from '@/lib/constants'
+import { analysisApi } from '@/api/client'
 import {
   Shield,
   Target,
@@ -117,6 +119,21 @@ const MODEL_COMPARISON = {
   v33: { auc: 0.584, detection: 67.1, high_plus: 18.3, brier: 0.411, lift: 1.22 },
   v50: { auc: 0.960, detection: 99.8, high_plus: 93.0, brier: 0.060, lift: 4.04 },
 } as const
+
+const SECTOR_MODELS = [
+  { sector: 'Salud (1)', factors: [['vendor_concentration', '+1.39'], ['price_ratio', '+0.17'], ['same_day_count', '+0.16']] },
+  { sector: 'Educacion (2)', factors: [['vendor_concentration', '+0.71'], ['industry_mismatch', '+0.55'], ['price_hyp_confidence', '+0.48']] },
+  { sector: 'Infraestructura (3)', factors: [['vendor_concentration', '+0.97'], ['network_member_count', '+0.61'], ['industry_mismatch', '+0.52']] },
+  { sector: 'Energia (4)', factors: [['industry_mismatch', '+1.17'], ['vendor_concentration', '+0.75'], ['network_member_count', '+0.26']] },
+  { sector: 'Defensa (5)', factors: [['industry_mismatch', '+0.68'], ['vendor_concentration', '+0.21'], ['price_hyp_confidence', '+0.21']] },
+  { sector: 'Tecnologia (6)', factors: [['network_member_count', '+0.39'], ['price_hyp_confidence', '+0.27'], ['industry_mismatch', '+0.25']] },
+  { sector: 'Hacienda (7)', factors: [['network_member_count', '+0.77'], ['vendor_concentration', '+0.44'], ['price_hyp_confidence', '+0.32']] },
+  { sector: 'Gobernacion (8)', factors: [['vendor_concentration', '+0.42'], ['industry_mismatch', '+0.37'], ['price_hyp_confidence', '+0.26']] },
+  { sector: 'Agricultura (9)', factors: [['vendor_concentration', '+1.82'], ['network_member_count', '+0.26'], ['price_ratio', '+0.18']] },
+  { sector: 'Ambiente (10)', factors: [['vendor_concentration', '+0.62'], ['network_member_count', '+0.60'], ['industry_mismatch', '+0.43']] },
+  { sector: 'Trabajo (11)', factors: [['vendor_concentration', '+0.54'], ['network_member_count', '+0.37'], ['industry_mismatch', '+0.29']] },
+  { sector: 'Otros (12)', factors: [['network_member_count', '+0.40'], ['industry_mismatch', '+0.29'], ['same_day_count', '+0.15']] },
+] as const
 
 // ============================================================================
 // Factor display names and descriptions
@@ -333,6 +350,22 @@ function LimitationCard({
 // ============================================================================
 
 export default function ModelTransparency() {
+  const [selectedSector, setSelectedSector] = useState(0)
+
+  // ------------------------------------------------------------------
+  // Model metadata from API (freshness badge)
+  // ------------------------------------------------------------------
+  const { data: modelMeta } = useQuery({
+    queryKey: ['model', 'metadata'],
+    queryFn: async () => {
+      const resp = await fetch('/api/v1/analysis/model/metadata')
+      if (!resp.ok) throw new Error('Failed to fetch model metadata')
+      return resp.json() as Promise<{ version: string; trained_at: string; n_contracts: number; auc_test: number }>
+    },
+    staleTime: 30 * 60 * 1000,
+    retry: 1,
+  })
+
   // ------------------------------------------------------------------
   // L2: Prepare coefficient chart data (sorted by beta descending)
   // ------------------------------------------------------------------
@@ -374,13 +407,16 @@ export default function ModelTransparency() {
         <div>
           <div className="flex items-center gap-4">
             <h1 className="text-xl font-bold text-text-primary">Model Transparency</h1>
-            <Badge variant="outline" className="text-xs tabular-nums gap-1">
-              <Brain className="h-3 w-3" aria-hidden="true" />
-              {CURRENT_MODEL_VERSION} | AUC {VALIDATION_METRICS.auc_roc.toFixed(3)}
+            <Badge variant="outline" className="text-xs tabular-nums gap-1 border-risk-low/30">
+              <Brain className="h-3 w-3 text-risk-low" aria-hidden="true" />
+              {modelMeta
+                ? `Model ${modelMeta.version} · Trained ${modelMeta.trained_at} · ${formatNumber(modelMeta.n_contracts)} contracts · AUC ${modelMeta.auc_test.toFixed(3)}`
+                : `${CURRENT_MODEL_VERSION} | AUC ${VALIDATION_METRICS.auc_roc.toFixed(3)}`
+              }
             </Badge>
           </div>
           <p className="text-xs text-text-secondary mt-1">
-            Understanding how the {CURRENT_MODEL_VERSION} risk scoring model works — coefficients, validation, and limitations
+            Understanding how the {modelMeta?.version ?? CURRENT_MODEL_VERSION} risk scoring model works — coefficients, validation, and limitations
           </p>
         </div>
       </div>
@@ -529,6 +565,66 @@ export default function ModelTransparency() {
               </div>
             ))}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* ================================================================ */}
+      {/* Per-Sector Models                                                */}
+      {/* ================================================================ */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-text-muted" aria-hidden="true" />
+            <div>
+              <CardTitle>Per-Sector Models</CardTitle>
+              <CardDescription>
+                Top 3 factors for each of the 12 per-sector logistic regression sub-models
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {SECTOR_MODELS.map((sm, i) => (
+              <button
+                key={i}
+                onClick={() => setSelectedSector(i)}
+                className={cn(
+                  'px-2.5 py-1 rounded text-xs font-mono transition-colors',
+                  selectedSector === i
+                    ? 'bg-[#58a6ff]/15 text-[#58a6ff] font-medium'
+                    : 'bg-background-elevated/30 text-text-muted hover:text-text-secondary'
+                )}
+              >
+                {sm.sector}
+              </button>
+            ))}
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs" role="table" aria-label="Per-sector model factors">
+              <thead>
+                <tr className="border-b border-border/30">
+                  <th className="text-left py-2 pr-4 text-text-muted font-medium">Rank</th>
+                  <th className="text-left py-2 px-3 text-text-muted font-medium">Factor</th>
+                  <th className="text-right py-2 pl-3 text-text-muted font-medium">Coefficient</th>
+                </tr>
+              </thead>
+              <tbody>
+                {SECTOR_MODELS[selectedSector].factors.map(([factor, coeff], i) => (
+                  <tr key={factor} className="border-b border-border/10">
+                    <td className="py-2 pr-4 text-text-muted tabular-nums">#{i + 1}</td>
+                    <td className="py-2 px-3 text-text-primary font-medium">{FACTOR_LABELS[factor] ?? factor}</td>
+                    <td className="py-2 pl-3 text-right tabular-nums text-risk-low font-medium">{coeff}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <p className="text-xs text-text-muted mt-3">
+            Sector models are applied when the contract's sector has 30+ contracts in the training data. Global model is used as fallback.
+          </p>
         </CardContent>
       </Card>
 

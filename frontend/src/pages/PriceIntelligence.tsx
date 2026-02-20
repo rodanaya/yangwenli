@@ -434,6 +434,7 @@ export default function PriceIntelligence() {
           ) : topOverpriced?.data && topOverpriced.data.length > 0 ? (
             <OverpricedTable
               data={topOverpriced.data}
+              baselines={baselines || []}
               onContractClick={(id) => setSelectedContractId(id)}
             />
           ) : (
@@ -705,11 +706,22 @@ const BaselineTable = memo(function BaselineTable({
 
 const OverpricedTable = memo(function OverpricedTable({
   data,
+  baselines,
   onContractClick,
 }: {
   data: PriceHypothesisItem[]
+  baselines: SectorPriceBaseline[]
   onContractClick: (id: number) => void
 }) {
+  // Build a lookup from sector_id to upper_fence
+  const baselineMap = useMemo(() => {
+    const map = new Map<number, number>()
+    for (const b of baselines) {
+      if (b.upper_fence > 0) map.set(b.sector_id, b.upper_fence)
+    }
+    return map
+  }, [baselines])
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-xs">
@@ -717,48 +729,63 @@ const OverpricedTable = memo(function OverpricedTable({
           <tr className="border-b border-border">
             <th className="text-left px-3 py-2.5 text-xs font-medium text-text-muted">Contract</th>
             <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">Amount</th>
+            <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted" title="Contract amount divided by sector upper fence (Q3 + 1.5x IQR)">x Baseline</th>
             <th className="text-left px-3 py-2.5 text-xs font-medium text-text-muted">Type</th>
             <th className="text-center px-3 py-2.5 text-xs font-medium text-text-muted">Confidence</th>
           </tr>
         </thead>
         <tbody>
-          {data.map((item) => (
-            <tr
-              key={item.id}
-              className="border-b border-border/50 hover:bg-surface-hover/50 cursor-pointer"
-              onClick={() => onContractClick(item.contract_id)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault()
-                  onContractClick(item.contract_id)
-                }
-              }}
-            >
-              <td className="px-3 py-2">
-                <span className="text-accent hover:underline font-mono tabular-nums">
-                  #{item.contract_id}
-                </span>
-              </td>
-              <td className="text-right px-3 py-2 tabular-nums font-medium text-text-primary">
-                {item.amount_mxn ? formatCompactMXN(item.amount_mxn) : '—'}
-              </td>
-              <td className="px-3 py-2 text-text-muted">
-                {formatTypeName(item.hypothesis_type)}
-              </td>
-              <td className="text-center px-3 py-2">
-                <RiskBadge level={
-                  item.confidence >= 0.8 ? 'critical'
-                    : item.confidence >= 0.6 ? 'high'
-                      : item.confidence >= 0.4 ? 'medium'
-                        : 'low'
-                }>
-                  {(item.confidence * 100).toFixed(0)}%
-                </RiskBadge>
-              </td>
-            </tr>
-          ))}
+          {data.map((item) => {
+            const fence = item.sector_id ? baselineMap.get(item.sector_id) : undefined
+            const ratio = (item.amount_mxn && fence) ? item.amount_mxn / fence : null
+
+            return (
+              <tr
+                key={item.id}
+                className="border-b border-border/50 hover:bg-surface-hover/50 cursor-pointer"
+                onClick={() => onContractClick(item.contract_id)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    onContractClick(item.contract_id)
+                  }
+                }}
+              >
+                <td className="px-3 py-2">
+                  <span className="text-accent hover:underline font-mono tabular-nums">
+                    #{item.contract_id}
+                  </span>
+                </td>
+                <td className="text-right px-3 py-2 tabular-nums font-medium text-text-primary">
+                  {item.amount_mxn ? formatCompactMXN(item.amount_mxn) : '—'}
+                </td>
+                <td className="text-right px-3 py-2 tabular-nums font-medium" title="Contract amount / sector upper fence">
+                  {ratio !== null ? (
+                    <span className={ratio > 3.0 ? 'text-risk-critical' : ratio > 1.5 ? 'text-risk-medium' : 'text-text-muted'}>
+                      {ratio.toFixed(1)}x
+                    </span>
+                  ) : (
+                    <span className="text-text-muted">—</span>
+                  )}
+                </td>
+                <td className="px-3 py-2 text-text-muted">
+                  {formatTypeName(item.hypothesis_type)}
+                </td>
+                <td className="text-center px-3 py-2">
+                  <RiskBadge level={
+                    item.confidence >= 0.8 ? 'critical'
+                      : item.confidence >= 0.6 ? 'high'
+                        : item.confidence >= 0.4 ? 'medium'
+                          : 'low'
+                  }>
+                    {(item.confidence * 100).toFixed(0)}%
+                  </RiskBadge>
+                </td>
+              </tr>
+            )
+          })}
         </tbody>
       </table>
     </div>

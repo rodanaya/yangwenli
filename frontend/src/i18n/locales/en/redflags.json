@@ -89,5 +89,25 @@
     "industry_mismatch": "Industry Mismatch",
     "interaction": "Multiple Flags",
     "data_flag": "Data Flag"
+  },
+  "liftTooltip": "Lift measures how much more frequently this risk factor appears in high-risk contracts compared to baseline. 2.0× = twice as common in flagged contracts.",
+  "playbook": {
+    "title": "Investigation Playbook",
+    "singleBidShortAd": {
+      "combo": "Single Bid + Short Ad Period",
+      "action": "Request bidding documents via Plataforma Nacional de Transparencia (PNT). Check for pre-positioned technical specifications that favor one vendor."
+    },
+    "priceConcentration": {
+      "combo": "Price Anomaly + Vendor Concentration",
+      "action": "Compare to sector median price. Check if the same vendor wins across multiple institutions in this sector."
+    },
+    "yearEndDirect": {
+      "combo": "Year-End + Direct Award",
+      "action": "Legal under Mexican law but audit-prone. Document the approval chain and verify the justification is documented in COMPRANET."
+    },
+    "industryMismatchDirect": {
+      "combo": "Industry Mismatch + Direct Award",
+      "action": "Core ghost company indicator. Verify RFC with SAT (sat.gob.mx). Check company registration date vs. first contract date."
+    }
   }
 }

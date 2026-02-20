@@ -108,39 +108,38 @@ class AnalysisService(BaseService):
         """
         Return all pattern match counts in a single request.
 
-        Replaces 4+ separate per_page=1 queries from DetectivePatterns page.
+        Reads from precomputed_stats table (populated by precompute_stats.py).
+        Falls back to live queries only for keys not yet precomputed.
         """
         cursor = conn.cursor()
         counts: dict[str, int] = {}
 
-        # Critical-risk contracts
+        # Try precomputed values first
+        precomputed_keys = {
+            "december_rush": "pattern_december_rush",
+            "split_contracts": "pattern_split_contracts",
+            "single_bid": "pattern_single_bid",
+            "price_outliers": "pattern_price_outlier",
+            "co_bidding": "pattern_co_bidding",
+        }
+
+        for count_key, stat_key in precomputed_keys.items():
+            try:
+                row = cursor.execute(
+                    "SELECT stat_value FROM precomputed_stats WHERE stat_key = ?",
+                    (stat_key,),
+                ).fetchone()
+                if row:
+                    counts[count_key] = json.loads(row[0])
+                    continue
+            except Exception:
+                pass
+            # Not found — fall back to 0
+            counts[count_key] = 0
+
+        # Critical-risk contracts (always fast — uses indexed risk_level)
         cursor.execute("SELECT COUNT(*) FROM contracts WHERE risk_level = 'critical'")
         counts["critical"] = cursor.fetchone()[0]
-
-        # Year-end high-risk (December rush)
-        cursor.execute(
-            "SELECT COUNT(*) FROM contracts WHERE risk_level IN ('high', 'critical') AND contract_month = 12"
-        )
-        counts["december_rush"] = cursor.fetchone()[0]
-
-        # Threshold splitting
-        cursor.execute(
-            "SELECT COUNT(*) FROM contracts WHERE risk_factors LIKE '%split_%'"
-        )
-        counts["split_contracts"] = cursor.fetchone()[0]
-
-        # Co-bidding flagged
-        cursor.execute(
-            "SELECT COUNT(*) FROM contracts WHERE risk_factors LIKE '%co_bid%'"
-        )
-        counts["co_bidding"] = cursor.fetchone()[0]
-
-        # Price outliers
-        if _table_exists(cursor, "price_hypotheses"):
-            cursor.execute("SELECT COUNT(*) FROM price_hypotheses")
-            counts["price_outliers"] = cursor.fetchone()[0]
-        else:
-            counts["price_outliers"] = 0
 
         return {"counts": counts}
 

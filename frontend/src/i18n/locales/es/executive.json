@@ -158,22 +158,27 @@
     "p1": "La honestidad intelectual exige declarar lo que este an\u00e1lisis no puede hacer. Un modelo de riesgo es una lente, no un or\u00e1culo. Amplifica patrones de datos hist\u00f3ricos, lo que significa que es ciego a cualquier cosa que no se parezca al pasado.",
     "limitations": {
       "groundTruth": {
-        "title": "Concentraci\u00f3n de Verdad de Campo",
-        "text": "Aunque la verdad de campo se ha diversificado a 15 casos en los 12 sectores, los tres casos m\u00e1s grandes (IMSS, Segalmex, COVID) a\u00fan contribuyen la mayor\u00eda de contratos de entrenamiento. El modelo sobresale detectando fraude basado en concentraci\u00f3n, pero puede subdetectar esquemas de corrupci\u00f3n novedosos."
+        "title": "Concentraci\u00f3n de Verdad Base",
+        "text": "Aunque la verdad de campo se ha diversificado a 15 casos en los 12 sectores, los tres casos m\u00e1s grandes (IMSS, Segalmex, COVID) a\u00fan contribuyen la mayor\u00eda de contratos de entrenamiento. El modelo sobresale detectando fraude basado en concentraci\u00f3n, pero puede subdetectar esquemas de corrupci\u00f3n novedosos.",
+        "mitigation": "Agregando 8+ casos en v6.0. Soluci\u00f3n temporal: los modelos por sector reducen este sesgo."
       },
       "dataQuality": {
         "title": "La Calidad de Datos se Degrada con el Tiempo",
-        "text": "Los datos de Estructura A (2002-2010) tienen solo 0.1% de cobertura RFC, haciendo poco confiable la identificaci\u00f3n de proveedores. Las puntuaciones de riesgo para este per\u00edodo pueden estar subestimadas, y el an\u00e1lisis de redes es pr\u00e1cticamente imposible."
+        "text": "Los datos de Estructura A (2002-2010) tienen solo 0.1% de cobertura RFC, haciendo poco confiable la identificaci\u00f3n de proveedores. Las puntuaciones de riesgo para este per\u00edodo pueden estar subestimadas, y el an\u00e1lisis de redes es pr\u00e1cticamente imposible.",
+        "mitigation": "Para an\u00e1lisis de redes, filtrar a contratos desde 2018+ (30%+ cobertura RFC)."
       },
       "correlation": {
         "title": "Correlaci\u00f3n No Es Causalidad",
-        "text": "Una puntuaci\u00f3n de riesgo alta indica anomal\u00eda estad\u00edstica consistente con patrones de corrupci\u00f3n conocidos \u2014 no constituye prueba de irregularidades. Algunos sectores (Defensa, Energ\u00eda) tienen razones estructurales para la concentraci\u00f3n de proveedores que no son corruptas."
+        "text": "Una puntuaci\u00f3n de riesgo alta indica anomal\u00eda estad\u00edstica consistente con patrones de corrupci\u00f3n conocidos \u2014 no constituye prueba de irregularidades. Algunos sectores (Defensa, Energ\u00eda) tienen razones estructurales para la concentraci\u00f3n de proveedores que no son corruptas.",
+        "mitigation": "Siempre cruzar con informes de auditor\u00eda de la ASF antes de publicar."
       },
       "unknowns": {
         "title": "Inc\u00f3gnitas Desconocidas",
-        "text": "Los esquemas de corrupci\u00f3n novedosos que no se parezcan a los 15 casos documentados no ser\u00e1n se\u00f1alados por este modelo. El modelo detecta lo que fue entrenado a reconocer \u2014 patrones del pasado, no innovaci\u00f3n en el fraude."
+        "text": "Los esquemas de corrupci\u00f3n novedosos que no se parezcan a los 15 casos documentados no ser\u00e1n se\u00f1alados por este modelo. El modelo detecta lo que fue entrenado a reconocer \u2014 patrones del pasado, no innovaci\u00f3n en el fraude.",
+        "mitigation": "La integraci\u00f3n de datos de auditor\u00eda de la ASF est\u00e1 en la hoja de ruta de v6.0."
       }
-    }
+    },
+    "calibrationNote": "Esta tasa refleja umbrales calibrados con la referencia internacional de la OCDE (2\u201315%). Con umbrales alternativos, la tasa var\u00eda del 2% al 23%. Estas son se\u00f1ales estad\u00edsticas para priorizaci\u00f3n \u2014 no estimaciones de la prevalencia real de corrupci\u00f3n."
   },
 
   "s10": {
@@ -191,9 +196,9 @@
         "link": "Ver Patrones"
       },
       "diversify": {
-        "title": "Diversificar Verdad de Campo",
+        "title": "Diversificar Verdad Base",
         "description": "El modelo necesita m\u00e1s casos de entrenamiento de los sectores de infraestructura, defensa y tecnolog\u00eda. Los informes de auditor\u00eda de la ASF e investigaciones de Mexicanos Contra la Corrupci\u00f3n son fuentes prometedoras.",
-        "link": "Verdad de Campo"
+        "link": "Verdad Base"
       }
     }
   },

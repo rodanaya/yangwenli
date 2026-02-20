@@ -700,16 +700,18 @@ def get_institution_contracts(
 @router.get("/{institution_id:int}/vendors", response_model=InstitutionVendorListResponse)
 def get_institution_vendors(
     institution_id: int = Path(..., description="Institution ID"),
-    limit: int = Query(50, ge=1, le=100, description="Maximum results"),
+    page: int = Query(1, ge=1, description="Page number"),
+    per_page: int = Query(50, ge=1, le=100, description="Items per page"),
 ):
     """
     Get vendors that an institution has contracted with.
 
     Returns vendors ranked by contract value with this institution.
     """
+    offset = (page - 1) * per_page
     with get_db() as conn:
         result = institution_service.get_institution_vendors(
-            conn, institution_id, limit=limit,
+            conn, institution_id, limit=per_page, offset=offset,
         )
 
         if result is None:

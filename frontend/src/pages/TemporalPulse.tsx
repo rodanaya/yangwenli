@@ -9,7 +9,6 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useQueries } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
 import { ChartSkeleton } from '@/components/LoadingSkeleton'
 import { cn, formatNumber, formatCompactMXN, formatPercentSafe } from '@/lib/utils'
 import { RISK_COLORS } from '@/lib/constants'
@@ -26,23 +25,14 @@ import {
   Tooltip as RechartsTooltip,
   Legend,
   Cell,
-  ReferenceArea,
   ReferenceLine,
   BarChart,
 } from '@/components/charts'
 import {
   Clock,
   Activity,
-  Calendar,
-  AlertTriangle,
   Zap,
-  Landmark,
-  Scale,
-  Shield,
-  Flag,
-  Flame,
-  ChevronDown,
-  ChevronUp,
+  TrendingUp,
 } from 'lucide-react'
 
 // =============================================================================
@@ -76,24 +66,6 @@ const KEY_EVENTS = [
   { year: 2024, label: 'Sheinbaum' },
 ]
 
-const EVENT_ICONS: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
-  election: Landmark,
-  scandal: AlertTriangle,
-  reform: Scale,
-  policy: Shield,
-  crisis: Flame,
-  default: Flag,
-}
-
-const EVENT_COLORS: Record<string, string> = {
-  election: '#3b82f6',
-  scandal: '#f87171',
-  reform: '#8b5cf6',
-  policy: '#4ade80',
-  crisis: '#fb923c',
-  default: '#64748b',
-}
-
 // =============================================================================
 // Main Component
 // =============================================================================
@@ -102,7 +74,6 @@ export default function TemporalPulse() {
   const navigate = useNavigate()
   const { t } = useTranslation('temporal')
   const [selectedYear, setSelectedYear] = useState(2023)
-  const [showAllEvents, setShowAllEvents] = useState(false)
 
   // ---- Data Fetching ----
 
@@ -115,12 +86,6 @@ export default function TemporalPulse() {
   const { data: yoyData, isLoading: yoyLoading } = useQuery({
     queryKey: ['year-over-year'],
     queryFn: () => analysisApi.getYearOverYear(),
-    staleTime: STALE_TIME,
-  })
-
-  const { data: eventsData, isLoading: eventsLoading } = useQuery({
-    queryKey: ['temporal-events'],
-    queryFn: () => analysisApi.getTemporalEvents(),
     staleTime: STALE_TIME,
   })
 
@@ -224,42 +189,34 @@ export default function TemporalPulse() {
     return new Set(adminChartData.filter((d) => (d.highRiskPct ?? 0) > threshold).map((d) => d.year))
   }, [adminChartData])
 
-  // Administration scorecard stats derived from yoyData
-  const adminStats = useMemo(() => {
-    if (!yoyData?.data?.length) return []
-    return ADMINISTRATIONS.map((admin) => {
-      const adminYears = yoyData.data.filter(
-        (d) => d.year >= admin.start && d.year < admin.end
-      )
-      if (!adminYears.length) return null
-      const totalContracts = adminYears.reduce((s, d) => s + (d.contracts ?? 0), 0)
-      const totalValue = adminYears.reduce((s, d) => s + (d.total_value ?? 0), 0)
-      const avgRisk =
-        adminYears.length > 0
-          ? adminYears.reduce((s, d) => s + (d.high_risk_pct ?? 0), 0) / adminYears.length
+  // Q4 vs Q1-Q3 breakdown derived from multiYearQueries
+  const q4BreakdownData = useMemo(() => {
+    const results: Array<{
+      year: number
+      q4Total: number
+      q1q3AvgMonthly: number
+      q4Ratio: number
+    }> = []
+    for (let i = 0; i < MULTI_YEAR_RANGE.length; i++) {
+      const query = multiYearQueries[i]
+      if (!query.data?.months) continue
+      const months = query.data.months
+      const q4Months = months.filter((m) => m.month >= 10)
+      const q1q3Months = months.filter((m) => m.month < 10)
+      const q4Total = q4Months.reduce((s, m) => s + m.contracts, 0)
+      const q1q3Avg =
+        q1q3Months.length > 0
+          ? q1q3Months.reduce((s, m) => s + m.contracts, 0) / q1q3Months.length
           : 0
-      const avgDirectAward =
-        adminYears.length > 0
-          ? adminYears.reduce((s, d) => s + (d.direct_award_pct ?? 0), 0) / adminYears.length
-          : 0
-      return {
-        ...admin,
-        totalContracts,
-        totalValue,
-        avgRisk,
-        avgDirectAward,
-        yearCount: adminYears.length,
-      }
-    }).filter((x): x is NonNullable<typeof x> => x !== null)
-  }, [yoyData])
-
-  const visibleEvents = useMemo(() => {
-    if (!eventsData?.events) return []
-    const sorted = [...eventsData.events].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    )
-    return showAllEvents ? sorted : sorted.slice(0, 8)
-  }, [eventsData, showAllEvents])
+      results.push({
+        year: MULTI_YEAR_RANGE[i],
+        q4Total,
+        q1q3AvgMonthly: Math.round(q1q3Avg),
+        q4Ratio: q1q3Avg > 0 ? q4Total / (q1q3Avg * 3) : 0,
+      })
+    }
+    return results
+  }, [multiYearQueries])
 
   // ---- Render ----
 
@@ -341,70 +298,6 @@ export default function TemporalPulse() {
           loading={monthlyLoading}
         />
       </div>
-
-      {/* Administration Scorecard */}
-      {adminStats.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2">
-              <Landmark className="h-4 w-4 text-text-muted" />
-              {t('adminScorecard.title')}
-            </CardTitle>
-            <CardDescription>
-              {t('adminScorecard.description')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-              {adminStats.map((admin) => {
-                const riskLevel =
-                  admin.avgRisk >= 0.15
-                    ? 'critical'
-                    : admin.avgRisk >= 0.10
-                      ? 'high'
-                      : admin.avgRisk >= 0.05
-                        ? 'medium'
-                        : 'low'
-                return (
-                  <button
-                    key={admin.name}
-                    onClick={() =>
-                      navigate(
-                        `/contracts?year=${admin.start}&sort_by=risk_score&sort_order=desc`
-                      )
-                    }
-                    className="text-left rounded-lg border border-border/30 bg-background-card/50 p-3 hover:border-accent/40 hover:bg-background-elevated/50 transition-colors group"
-                    style={{
-                      borderLeftWidth: '3px',
-                      borderLeftColor: admin.solidColor,
-                    }}
-                  >
-                    <p className="text-sm font-semibold text-text-primary">{admin.name}</p>
-                    <p className="text-xs text-text-muted">
-                      {admin.start}–{admin.end > 2025 ? '' : admin.end}
-                    </p>
-                    <div className="mt-2 space-y-0.5 text-xs text-text-secondary">
-                      <p>{formatNumber(admin.totalContracts)} {t('adminCard.contracts')}</p>
-                      <p>{formatCompactMXN(admin.totalValue)}</p>
-                    </div>
-                    <div className="mt-2 flex items-center gap-1">
-                      <span
-                        className="text-xs font-mono font-medium"
-                        style={{ color: RISK_COLORS[riskLevel] }}
-                      >
-                        {(admin.avgRisk * 100).toFixed(1)}% {t('adminCard.avgHighRisk')}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-xs text-accent/60 group-hover:text-accent transition-colors">
-                      {t('investigate')}
-                    </p>
-                  </button>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* L2: Monthly Rhythm Chart */}
       <Card>
@@ -639,15 +532,15 @@ export default function TemporalPulse() {
         </CardContent>
       </Card>
 
-      {/* L4: Administration Bands (Year-over-Year Chart) */}
+      {/* L4: Year-over-Year Chart */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
-            <Landmark className="h-4 w-4 text-text-muted" />
-            {t('adminBands.title')}
+            <TrendingUp className="h-4 w-4 text-text-muted" />
+            {t('yoyTrend.title')}
           </CardTitle>
           <CardDescription>
-            {t('adminBands.description')}
+            {t('yoyTrend.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -719,26 +612,6 @@ export default function TemporalPulse() {
                       )
                     }}
                   />
-                  {/* Administration shading */}
-                  {ADMINISTRATIONS.map((admin) => (
-                    <ReferenceArea
-                      key={admin.name}
-                      x1={admin.start}
-                      x2={admin.end}
-                      yAxisId="left"
-                      fill={admin.color}
-                      fillOpacity={1}
-                      label={{
-                        value: admin.name,
-                        position: 'insideTopLeft',
-                        style: {
-                          fill: 'var(--color-text-muted)',
-                          fontSize: 11,
-                          fontFamily: 'var(--font-mono)',
-                        },
-                      }}
-                    />
-                  ))}
                   {/* Key event markers */}
                   {KEY_EVENTS.map((event) => (
                     <ReferenceLine
@@ -806,149 +679,95 @@ export default function TemporalPulse() {
             <EmptyState message={t('empty.noYoyData')} />
           )}
 
-          {/* Admin legend */}
-          {adminChartData.length > 0 && (
-            <div className="flex flex-wrap gap-4 mt-4 px-2">
-              {ADMINISTRATIONS.map((admin) => (
-                <div key={admin.name} className="flex items-center gap-1.5 text-sm text-text-muted">
-                  <div
-                    className="w-3 h-3 rounded-sm border border-border"
-                    style={{ backgroundColor: admin.color }}
-                  />
-                  <span className="font-mono text-xs">
-                    {admin.name} ({admin.start}-{admin.end > 2025 ? '' : admin.end})
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
         </CardContent>
       </Card>
 
-      {/* L5: Political Events Timeline */}
+      {/* L5: Q4 vs Q1-Q3 Spend Breakdown */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-text-muted" />
-            {t('politicalTimeline.title')}
+            <Zap className="h-4 w-4 text-text-muted" />
+            {t('q4Breakdown.title')}
           </CardTitle>
           <CardDescription>
-            {t('politicalTimeline.description')}
-            {' '}
-            <span className="italic opacity-70">Key events sourced from public records — not derived from contract analysis.</span>
+            {t('q4Breakdown.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {eventsLoading ? (
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex gap-3">
-                  <Skeleton className="h-8 w-8 rounded-lg shrink-0" />
-                  <div className="flex-1 space-y-1.5">
-                    <Skeleton className="h-4 w-48" />
-                    <Skeleton className="h-3 w-full" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : visibleEvents.length > 0 ? (
-            <div className="space-y-1">
-              {visibleEvents.map((event) => {
-                const EventIcon = EVENT_ICONS[event.type] || EVENT_ICONS.default
-                const color = EVENT_COLORS[event.type] || EVENT_COLORS.default
-                const eventYear = new Date(event.date).getFullYear()
-                return (
-                  <div
-                    key={event.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() =>
-                      navigate(
-                        `/contracts?year=${eventYear}&sort_by=risk_score&sort_order=desc`
-                      )
-                    }
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault()
-                        navigate(
-                          `/contracts?year=${eventYear}&sort_by=risk_score&sort_order=desc`
-                        )
-                      }
-                    }}
-                    className="flex gap-3 p-2.5 rounded-md hover:bg-background-elevated/50 transition-colors cursor-pointer"
-                  >
-                    <div
-                      className="flex items-center justify-center h-8 w-8 rounded-lg shrink-0"
-                      style={{ backgroundColor: `${color}20` }}
-                    >
-                      <EventIcon className="h-4 w-4" style={{ color }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-sm font-medium text-text-primary truncate">
-                          {event.title}
-                        </span>
-                        <span
-                          className="text-xs font-mono px-1.5 py-0.5 rounded-full shrink-0"
-                          style={{
-                            backgroundColor: `${color}15`,
-                            color,
-                          }}
-                        >
-                          {event.type}
-                        </span>
-                      </div>
-                      <p className="text-xs text-text-secondary line-clamp-2">
-                        {event.description}
-                      </p>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-text-muted font-mono">
-                        <span>{event.date}</span>
-                        {event.impact && (
-                          <span
-                            className={cn(
-                              'px-1.5 py-0.5 rounded',
-                              event.impact === 'high'
-                                ? 'bg-risk-critical/10 text-risk-critical'
-                                : event.impact === 'medium'
-                                  ? 'bg-risk-medium/10 text-risk-medium'
-                                  : 'bg-blue-500/10 text-blue-400'
-                            )}
-                          >
-                            {event.impact} impact
-                          </span>
-                        )}
-                        {event.source && (
-                          <span className="text-text-muted">{event.source}</span>
-                        )}
-                        <span className="text-accent/50 ml-auto">{t('investigateYear', { year: eventYear })}</span>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-
-              {/* Show more/less toggle */}
-              {eventsData && eventsData.events.length > 8 && (
-                <button
-                  onClick={() => setShowAllEvents(!showAllEvents)}
-                  className="flex items-center gap-1 text-xs text-accent hover:text-accent transition-colors mt-2 px-2.5"
+          {multiYearQueries.some((q) => q.isLoading) ? (
+            <ChartSkeleton height={280} />
+          ) : q4BreakdownData.length > 0 ? (
+            <div style={{ height: 280 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={q4BreakdownData}
+                  margin={{ top: 10, right: 30, bottom: 0, left: 10 }}
                 >
-                  {showAllEvents ? (
-                    <>
-                      <ChevronUp className="h-3 w-3" />
-                      {t('politicalTimeline.showLess')}
-                    </>
-                  ) : (
-                    <>
-                      <ChevronDown className="h-3 w-3" />
-                      {t('politicalTimeline.showAll', { count: eventsData.events.length })}
-                    </>
-                  )}
-                </button>
-              )}
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.5} />
+                  <XAxis
+                    dataKey="year"
+                    tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                    axisLine={{ stroke: 'var(--color-border)' }}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                    axisLine={{ stroke: 'var(--color-border)' }}
+                    tickLine={false}
+                    tickFormatter={(v: number) => formatNumber(v)}
+                  />
+                  <RechartsTooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null
+                      const d = payload[0]?.payload
+                      if (!d) return null
+                      return (
+                        <div className="chart-tooltip">
+                          <p className="font-medium text-xs mb-1">{d.year}</p>
+                          <div className="flex items-center gap-2 text-xs text-text-muted">
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: RISK_COLORS.high }} />
+                            {t('q4Breakdown.q4Label')}: {formatNumber(d.q4Total)}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-text-muted">
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-accent)' }} />
+                            {t('q4Breakdown.q1q3Label')} (×3): {formatNumber(d.q1q3AvgMonthly * 3)}
+                          </div>
+                          <p className={cn(
+                            'text-xs font-medium mt-1',
+                            d.q4Ratio > 1.3 ? 'text-risk-high' : 'text-text-secondary'
+                          )}>
+                            {t('q4Breakdown.ratio')}: {d.q4Ratio.toFixed(2)}x
+                          </p>
+                        </div>
+                      )
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 11, color: 'var(--color-text-muted)' }} />
+                  <Bar
+                    dataKey="q4Total"
+                    name={t('q4Breakdown.q4Label')}
+                    radius={[3, 3, 0, 0]}
+                  >
+                    {q4BreakdownData.map((entry, index) => (
+                      <Cell
+                        key={`q4-${index}`}
+                        fill={entry.q4Ratio > 1.3 ? RISK_COLORS.high : RISK_COLORS.medium}
+                        opacity={0.85}
+                      />
+                    ))}
+                  </Bar>
+                  <Bar
+                    dataKey="q1q3AvgMonthly"
+                    name={t('q4Breakdown.q1q3Label')}
+                    fill="var(--color-accent)"
+                    opacity={0.5}
+                    radius={[3, 3, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           ) : (
-            <EmptyState message={t('politicalTimeline.noData')} />
+            <EmptyState message={t('empty.noMultiYearData')} />
           )}
         </CardContent>
       </Card>

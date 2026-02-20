@@ -356,7 +356,7 @@ function CooccurrenceHeatmap({ cooccurrences, factors }: { cooccurrences: Factor
                   <td key={colFactor} className="p-1 text-center">
                     <div
                       className={cn('w-10 h-8 rounded flex items-center justify-center text-xs font-mono font-medium', liftToColor(lift))}
-                      title={`${getFactorLabel(rowFactor, t)} + ${getFactorLabel(colFactor, t)}: lift = ${lift.toFixed(2)}`}
+                      title={`${getFactorLabel(rowFactor, t)} + ${getFactorLabel(colFactor, t)}: lift = ${lift.toFixed(2)}. ${t('liftTooltip')}`}
                     >
                       {lift.toFixed(1)}
                     </div>
@@ -421,7 +421,10 @@ function WorstCombinations({
             </p>
           </div>
 
-          <span className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-xs font-mono font-semibold', liftToBadgeColor(pair.lift))}>
+          <span
+            className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-xs font-mono font-semibold', liftToBadgeColor(pair.lift))}
+            title={t('liftTooltip')}
+          >
             {pair.lift.toFixed(2)}x
           </span>
 
@@ -822,6 +825,33 @@ export default function RedFlags() {
           </div>
         </CardContent>
       </Card>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* Investigation Playbook */}
+      {/* ---------------------------------------------------------------- */}
+      <details className="mt-6 border rounded-lg p-4">
+        <summary className="cursor-pointer font-semibold text-sm">
+          {t('playbook.title')}
+        </summary>
+        <div className="mt-3 space-y-3 text-sm">
+          <div>
+            <strong>{t('playbook.singleBidShortAd.combo')}</strong>
+            <p className="text-muted-foreground mt-1">{t('playbook.singleBidShortAd.action')}</p>
+          </div>
+          <div>
+            <strong>{t('playbook.priceConcentration.combo')}</strong>
+            <p className="text-muted-foreground mt-1">{t('playbook.priceConcentration.action')}</p>
+          </div>
+          <div>
+            <strong>{t('playbook.yearEndDirect.combo')}</strong>
+            <p className="text-muted-foreground mt-1">{t('playbook.yearEndDirect.action')}</p>
+          </div>
+          <div>
+            <strong>{t('playbook.industryMismatchDirect.combo')}</strong>
+            <p className="text-muted-foreground mt-1">{t('playbook.industryMismatchDirect.action')}</p>
+          </div>
+        </div>
+      </details>
 
       {/* ---------------------------------------------------------------- */}
       {/* L4: Factor-Risk Correlation Scatter */}

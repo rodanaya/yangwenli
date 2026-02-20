@@ -130,6 +130,45 @@ def get_contract_statistics(
         return result
 
 
+@router.get("/compare")
+def compare_contracts(
+    ids: str = Query(..., description="Comma-separated contract IDs (max 10)"),
+):
+    """
+    Compare multiple contracts side-by-side.
+
+    Accepts up to 10 comma-separated contract IDs and returns their details
+    for comparison.
+    """
+    try:
+        contract_ids = [int(x.strip()) for x in ids.split(",") if x.strip()]
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid contract IDs. Must be comma-separated integers.")
+
+    if not contract_ids:
+        raise HTTPException(status_code=400, detail="At least one contract ID is required.")
+    if len(contract_ids) > 10:
+        raise HTTPException(status_code=400, detail="Maximum 10 contracts can be compared at once.")
+
+    with get_db() as conn:
+        results = []
+        for cid in contract_ids:
+            detail = contract_service.get_contract_detail(conn, cid)
+            if detail:
+                detail["is_direct_award"] = bool(detail.get("is_direct_award"))
+                detail["is_single_bid"] = bool(detail.get("is_single_bid"))
+                detail["is_framework"] = bool(detail.get("is_framework"))
+                detail["is_consolidated"] = bool(detail.get("is_consolidated"))
+                detail["is_multiannual"] = bool(detail.get("is_multiannual"))
+                detail["is_high_value"] = bool(detail.get("is_high_value"))
+                detail["is_year_end"] = bool(detail.get("is_year_end"))
+                detail["amount_mxn"] = detail.get("amount_mxn") or 0
+                detail["risk_factors"] = parse_risk_factors(detail.get("risk_factors"))
+                results.append(ContractDetail(**detail))
+
+        return {"data": results, "total": len(results), "requested": len(contract_ids)}
+
+
 @router.get("/{contract_id}", response_model=ContractDetail)
 def get_contract(
     contract_id: int = Path(..., description="Contract ID"),

@@ -221,6 +221,14 @@ class VendorTopListResponse(BaseModel):
     generated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+class VendorTopAllResponse(BaseModel):
+    """All top-vendor categories in a single response."""
+
+    value: List[VendorTopItem] = Field(default_factory=list, description="Top vendors by contract value")
+    count: List[VendorTopItem] = Field(default_factory=list, description="Top vendors by contract count")
+    risk: List[VendorTopItem] = Field(default_factory=list, description="Top vendors by risk score")
+
+
 class VerifiedVendorResponse(BaseModel):
     """Verified vendor with classification details."""
 

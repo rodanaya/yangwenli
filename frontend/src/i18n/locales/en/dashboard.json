@@ -90,5 +90,8 @@
   "noCompetition": "no competition",
   "ofContracts": "of contracts",
   "generated": "generated",
-  "confirmed": "confirmed"
+  "confirmed": "confirmed",
+  "oecdDirectAward": "OECD benchmark: 20-30%",
+  "oecdSingleBid": "OECD alert: >15%",
+  "oecdHighRisk": "OECD expected: 2-15%"
 }

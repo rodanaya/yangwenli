@@ -204,8 +204,30 @@ def precompute_stats():
     stats['administrations'] = administrations
     print(f"   Done ({time.time() - start:.1f}s)")
 
+    # 6. Pattern counts for DetectivePatterns page
+    print("6. Computing pattern counts...")
+    start = time.time()
+    pattern_queries = [
+        ('pattern_december_rush', "SELECT COUNT(*) FROM contracts WHERE CAST(strftime('%m', contract_date) AS INTEGER) = 12 AND risk_score >= 0.30"),
+        ('pattern_split_contracts', "SELECT COUNT(*) FROM contracts WHERE same_day_count >= 3"),
+        ('pattern_single_bid', "SELECT COUNT(*) FROM contracts WHERE is_single_bid = 1"),
+        ('pattern_price_outlier', "SELECT COUNT(*) FROM contract_z_features WHERE z_price_ratio > 2.0"),
+        ('pattern_co_bidding', "SELECT COUNT(*) FROM contracts WHERE co_bid_rate > 0.5"),
+    ]
+    for key, query in pattern_queries:
+        try:
+            val = cursor.execute(query).fetchone()[0]
+            cursor.execute(
+                "INSERT OR REPLACE INTO precomputed_stats (stat_key, stat_value, updated_at) VALUES (?, ?, ?)",
+                (key, json.dumps(val), datetime.now().isoformat()),
+            )
+            print(f"   {key}: {val:,}")
+        except Exception as e:
+            print(f"   Warning: pattern count {key} failed: {e}")
+    print(f"   Done ({time.time() - start:.1f}s)")
+
     # Save all stats to database
-    print("\n6. Saving to database...")
+    print("\n7. Saving to database...")
     for key, value in stats.items():
         cursor.execute("""
             INSERT OR REPLACE INTO precomputed_stats (stat_key, stat_value, updated_at)

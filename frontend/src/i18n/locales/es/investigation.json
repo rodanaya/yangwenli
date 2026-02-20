@@ -24,7 +24,7 @@
   "filters": {
     "allStatuses": "Todos los estados",
     "anyScore": "Cualquier puntaje",
-    "scoreMin": "Puntaje ≥ {{threshold}}"
+    "scoreMin": "Puntuación ≥ {{threshold}}"
   },
   "table": {
     "case": "Caso",
@@ -119,6 +119,26 @@
       "invoice_fraud": "Fraude de Facturas"
     }
   },
+  "workflowGuide": {
+    "title": "Cómo Usar Este Flujo de Trabajo",
+    "step1": {
+      "label": "Revisar",
+      "desc": "Lee el resumen del caso y examina los contratos vinculados. Revisa la distribución de puntuaciones de riesgo."
+    },
+    "step2": {
+      "label": "Corroborar",
+      "desc": "Encontraste evidencia externa (nota de prensa, auditoría de la ASF, expediente judicial o datos del SAT) que confirma el patrón sospechoso."
+    },
+    "step3": {
+      "label": "Refutar",
+      "desc": "Encontraste una explicación legítima: exención por contrato de emergencia, proveedor único calificado, o una auditoría anterior que limpió a este proveedor."
+    },
+    "step4": {
+      "label": "Inconcluso",
+      "desc": "El patrón está marcado pero aún no encontraste evidencia externa. Déjalo en seguimiento o pásalo a otro investigador."
+    },
+    "groundTruthNote": "Los casos corroborados pueden enviarse como nuevo ground truth para el reentrenamiento del modelo v6.0, mejorando la detección futura."
+  },
   "vendorReport": {
     "title": "Reporte de Proveedor",
     "profile": "Perfil",
@@ -128,5 +148,37 @@
     "network": "Conexiones de Red",
     "redFlags": "Banderas Rojas",
     "generateReport": "Generar Reporte"
+  },
+  "queue": {
+    "critical": "Crítico",
+    "high": "Alto",
+    "medium": "Medio",
+    "low": "Bajo",
+    "totalAtRisk": "Total en riesgo",
+    "allPriorities": "Todos",
+    "empty": "No hay casos que coincidan con los filtros actuales."
+  },
+  "card": {
+    "priority": "PRIORIDAD {{n}}",
+    "contracts": "contratos",
+    "estLoss": "Pérdida Est.",
+    "avgRisk": "Riesgo Prom.",
+    "criticalPct": "Crítico",
+    "topSignal": "Señal Principal",
+    "viewContracts": "Ver Contratos",
+    "close": "Cerrar"
+  },
+  "asfLookup": {
+    "button": "Buscar en ASF",
+    "newsSearch": "Buscar Noticias",
+    "title": "Coincidencias ASF",
+    "subtitle": "Hallazgos de la Auditoría Superior de la Federación que coinciden con proveedores en este caso",
+    "noMatches": "No se encontraron hallazgos de la ASF para los proveedores en este caso.",
+    "findingType": "Tipo de Hallazgo",
+    "entity": "Entidad",
+    "vendor": "Proveedor",
+    "amount": "Monto",
+    "year": "Año",
+    "viewReport": "Ver Reporte →"
   }
 }

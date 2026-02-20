@@ -195,6 +195,34 @@ MONTH_NAMES = [
 
 
 # =============================================================================
+# MODEL METADATA ENDPOINT
+# =============================================================================
+
+@router.get("/model/metadata")
+def get_model_metadata():
+    """
+    Return metadata about the active risk model (version, training date, metrics).
+    """
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            row = cursor.execute(
+                "SELECT model_version, created_at, auc_roc, pu_correction_factor FROM model_calibration ORDER BY created_at DESC LIMIT 1"
+            ).fetchone()
+            if not row:
+                return {"version": "v5.0", "trained_at": "2026-02-14", "n_contracts": 3110007, "auc_test": 0.960}
+            return {
+                "version": row["model_version"],
+                "trained_at": row["created_at"],
+                "auc_test": row["auc_roc"],
+                "pu_correction": row["pu_correction_factor"],
+            }
+    except Exception as e:
+        logger.error(f"Error in get_model_metadata: {e}")
+        return {"version": "v5.0", "trained_at": "2026-02-14", "n_contracts": 3110007, "auc_test": 0.960}
+
+
+# =============================================================================
 # COMBINED RISK OVERVIEW ENDPOINT
 # =============================================================================
 

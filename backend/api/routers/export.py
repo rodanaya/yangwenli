@@ -16,28 +16,15 @@ from fastapi.responses import StreamingResponse
 from ..dependencies import get_db
 from ..config.constants import MAX_CONTRACT_VALUE
 
-# Optional rate limiting - gracefully degrade if not available
-try:
-    from slowapi import Limiter
-    from slowapi.util import get_remote_address
-    limiter = Limiter(key_func=get_remote_address)
-    RATE_LIMITING_ENABLED = True
-except ImportError:
-    limiter = None
-    RATE_LIMITING_ENABLED = False
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
 
 
 def rate_limit(limit_string: str):
-    """
-    Decorator factory for rate limiting.
-    Returns a no-op decorator if slowapi is not installed.
-    """
-    if RATE_LIMITING_ENABLED and limiter:
-        return limiter.limit(limit_string)
-    else:
-        def noop_decorator(func):
-            return func
-        return noop_decorator
+    """Decorator factory for rate limiting."""
+    return limiter.limit(limit_string)
 
 
 logger = logging.getLogger(__name__)

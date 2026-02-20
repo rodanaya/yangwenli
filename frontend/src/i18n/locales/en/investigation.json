@@ -119,6 +119,26 @@
       "invoice_fraud": "Invoice Fraud"
     }
   },
+  "workflowGuide": {
+    "title": "How to Use This Workflow",
+    "step1": {
+      "label": "Review",
+      "desc": "Read the case summary and examine the linked contracts. Check the risk score distribution."
+    },
+    "step2": {
+      "label": "Corroborate",
+      "desc": "You found external evidence (news article, ASF audit report, court record, or SAT data) confirming the suspicious pattern."
+    },
+    "step3": {
+      "label": "Refute",
+      "desc": "You found a legitimate explanation — emergency contract exemption, sole qualified supplier, or a prior audit cleared this vendor."
+    },
+    "step4": {
+      "label": "Inconclusive",
+      "desc": "The pattern is flagged but you found no external evidence yet. Leave for monitoring or pass to another investigator."
+    },
+    "groundTruthNote": "Corroborated cases can be submitted as new ground truth for v6.0 model retraining, improving future detection."
+  },
   "vendorReport": {
     "title": "Vendor Report",
     "profile": "Profile",
@@ -128,5 +148,37 @@
     "network": "Network Connections",
     "redFlags": "Red Flags",
     "generateReport": "Generate Report"
+  },
+  "queue": {
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "totalAtRisk": "Total at risk",
+    "allPriorities": "All",
+    "empty": "No cases match the current filters."
+  },
+  "card": {
+    "priority": "PRIORITY {{n}}",
+    "contracts": "contracts",
+    "estLoss": "Est. Loss",
+    "avgRisk": "Avg Risk",
+    "criticalPct": "Critical",
+    "topSignal": "Top Signal",
+    "viewContracts": "View Contracts",
+    "close": "Close"
+  },
+  "asfLookup": {
+    "button": "ASF Lookup",
+    "newsSearch": "News Search",
+    "title": "ASF Audit Matches",
+    "subtitle": "Findings from the Auditoría Superior de la Federación matching vendors in this case",
+    "noMatches": "No ASF findings found for vendors in this case.",
+    "findingType": "Finding Type",
+    "entity": "Entity",
+    "vendor": "Vendor",
+    "amount": "Amount",
+    "year": "Year",
+    "viewReport": "View Report →"
   }
 }
