@@ -1,14 +1,37 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import react from '@vitejs/plugin-react-swc'
 import path from 'path'
+import { visualizer } from 'rollup-plugin-visualizer'
+import checker from 'vite-plugin-checker'
 
 // API target: use env var for Docker, default to localhost
 // Use 127.0.0.1 instead of localhost to avoid Windows DNS resolution delay (~2s)
 const API_TARGET = process.env.VITE_API_URL || 'http://127.0.0.1:8001'
 
+const isProduction = process.env.NODE_ENV === 'production'
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    // SWC-based React transform — ~10x faster HMR than Babel
+    react(),
+
+    // TypeScript errors shown as browser overlay during dev (non-blocking)
+    checker({
+      typescript: true,
+      enableBuild: false, // don't block prod builds; tsc -b already runs in "build" script
+    }),
+
+    // Bundle size visualizer — writes stats.html after every production build
+    isProduction &&
+      visualizer({
+        filename: 'dist/stats.html',
+        open: false,
+        gzipSize: true,
+        brotliSize: true,
+        template: 'treemap',
+      }),
+  ],
   server: {
     port: 3009,
     strictPort: true,
