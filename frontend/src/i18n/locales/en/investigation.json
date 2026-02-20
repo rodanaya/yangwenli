@@ -1,5 +1,82 @@
 {
   "title": "Investigation",
+  "hero": {
+    "trackingLabel": "INVESTIGATION CASES",
+    "subtitle": "ML-generated investigation leads from anomaly detection",
+    "casesCount": "{{count}} Cases",
+    "confirmedDetail": "externally confirmed",
+    "valueAtRisk": "value at risk"
+  },
+  "description": "Each case represents a cluster of suspicious contracts identified through statistical anomaly detection. Review, corroborate, and validate against external sources.",
+  "status": {
+    "pending": "Pending",
+    "corroborated": "Corroborated",
+    "refuted": "Refuted",
+    "inconclusive": "Inconclusive"
+  },
+  "sections": {
+    "pipeline": "Validation Pipeline",
+    "confirmed": "Confirmed Investigation Targets",
+    "confirmedSubtitle": "Externally validated through news reports, ASF audits, and legal proceedings",
+    "allCases": "All Investigation Cases",
+    "bySector": "Cases by Sector"
+  },
+  "filters": {
+    "allStatuses": "All statuses",
+    "anyScore": "Any score",
+    "scoreMin": "Score ≥ {{threshold}}"
+  },
+  "table": {
+    "case": "Case",
+    "sector": "Sector",
+    "scoreValue": "Score / Value",
+    "status": "Status"
+  },
+  "empty": "No cases match the current filters.",
+  "contracts": "contracts",
+  "funnel": {
+    "detected": "Detected",
+    "researched": "Researched",
+    "corroborated": "Corroborated",
+    "groundTruth": "Ground Truth",
+    "hitRate": "hit rate",
+    "hitRateText": "{{confirmed}} of {{checked}} investigated vendors have documented corruption investigations"
+  },
+  "tabs": {
+    "overview": "Overview",
+    "evidence": "Evidence ({{count}})"
+  },
+  "research": "Research Questions",
+  "vendors": "Vendors",
+  "externalEvidence": "External Evidence",
+  "noEvidence": "No external evidence attached yet.",
+  "source": "Source",
+  "evidenceForm": {
+    "title": "Add Evidence",
+    "urlPlaceholder": "Source URL",
+    "titlePlaceholder": "Source title",
+    "summaryPlaceholder": "Brief summary of the evidence",
+    "types": {
+      "news": "News",
+      "asf_audit": "ASF Audit",
+      "legal": "Legal",
+      "investigative": "Investigative"
+    },
+    "submit": "Submit",
+    "cancel": "Cancel"
+  },
+  "addEvidence": "Add Evidence",
+  "review": "Review:",
+  "actions": {
+    "corroborate": "Corroborate",
+    "refute": "Refute",
+    "inconclusive": "Inconclusive",
+    "promoteToGroundTruth": "Promote to Ground Truth",
+    "promotedSuccess": "Promoted successfully"
+  },
+  "tooltip": {
+    "cases": "cases"
+  },
   "cases": {
     "title": "Investigation Cases",
     "newCase": "New Case",

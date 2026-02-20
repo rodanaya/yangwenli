@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   LayoutDashboard,
-  Compass,
   FileText,
   BarChart3,
   BookOpen,
@@ -25,6 +24,7 @@ import {
   Crosshair,
   ScrollText,
   ShoppingCart,
+  TriangleAlert,
 } from 'lucide-react'
 import { LOGHIcon } from '@/components/LOGHIcon'
 import { LanguageToggle } from '@/components/LanguageToggle'
@@ -53,7 +53,6 @@ interface NavItem {
 const overviewNavDefs: NavItemDef[] = [
   { i18nKey: 'executive', href: '/executive', icon: ScrollText },
   { i18nKey: 'dashboard', href: '/', icon: LayoutDashboard },
-  { i18nKey: 'explore', href: '/explore', icon: Compass },
 ]
 
 const analyzeNavDefs: NavItemDef[] = [
@@ -79,6 +78,7 @@ const understandNavDefs: NavItemDef[] = [
   { i18nKey: 'groundTruth', href: '/ground-truth', icon: Shield },
   { i18nKey: 'model', href: '/model', icon: Brain },
   { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
+  { i18nKey: 'limitations', href: '/limitations', icon: TriangleAlert },
 ]
 
 function useNavItems(defs: NavItemDef[]): NavItem[] {

@@ -1,0 +1,44 @@
+{
+  "hero": {
+    "trackingLabel": "CATEGORÍAS DE GASTO",
+    "subtitle": "Qué compra México — categorías de gasto en la contratación pública",
+    "detail": "72 categorías basadas en expresiones regulares clasifican 3.1M de contratos (2002-2025) por título con coincidencia sensible a acentos. Cobertura: ~84% específica, ~16% sin clasificar."
+  },
+  "stats": {
+    "totalCategories": "TOTAL CATEGORÍAS",
+    "totalCategoriesDetail": "Categorías de gasto distintas",
+    "totalContracts": "TOTAL CONTRATOS",
+    "totalContractsDetail": "Contratos categorizados",
+    "avgRisk": "RIESGO PROM.",
+    "avgRiskDetail": "Puntaje de riesgo promedio ponderado",
+    "highRisk": "CATEGORÍAS ALTO RIESGO",
+    "highRiskDetail": "Categorías con riesgo prom. ≥ 30%"
+  },
+  "treemap": {
+    "title": "Mapa de Árbol por Valor",
+    "description": "El tamaño representa el valor total del contrato. Los colores indican la clasificación sectorial.",
+    "empty": "No hay datos de categorías disponibles aún. Por favor contacta al administrador."
+  },
+  "table": {
+    "title": "Principales Categorías",
+    "rankedByValue": "Ordenado por valor total del contrato",
+    "rankedByRisk": "Ordenado por puntaje de riesgo promedio",
+    "rankedByCount": "Ordenado por número de contratos",
+    "sortValue": "Valor",
+    "sortRisk": "Riesgo",
+    "sortCount": "Cantidad",
+    "colNum": "#",
+    "colCategory": "Categoría",
+    "colContracts": "Contratos",
+    "colValue": "Valor",
+    "colAvgRisk": "Riesgo Prom.",
+    "colDA": "Adj. %",
+    "colTopVendor": "Principal Proveedor",
+    "empty": "No se encontraron categorías. Los datos pueden no estar disponibles aún."
+  },
+  "trends": {
+    "title": "Tendencias de Gasto — Top 5 Categorías",
+    "description": "Valor de contratos interanual para las cinco categorías de mayor gasto.",
+    "empty": "No hay datos de tendencias disponibles."
+  }
+}

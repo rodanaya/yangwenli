@@ -7,6 +7,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { RiskBadge } from '@/components/ui/badge'
@@ -54,31 +55,26 @@ import {
 // ============================================================================
 
 const STATUS_CONFIG: Record<InvestigationValidationStatus, {
-  label: string
   icon: React.ElementType
   className: string
   dotClass: string
 }> = {
   pending: {
-    label: 'Pending',
     icon: Clock,
     className: 'bg-risk-medium/15 text-risk-medium border border-risk-medium/30',
     dotClass: 'bg-risk-medium',
   },
   corroborated: {
-    label: 'Corroborated',
     icon: CheckCircle2,
     className: 'bg-risk-low/15 text-risk-low border border-risk-low/30',
     dotClass: 'bg-risk-low',
   },
   refuted: {
-    label: 'Refuted',
     icon: XCircle,
     className: 'bg-risk-critical/15 text-risk-critical border border-risk-critical/30',
     dotClass: 'bg-risk-critical',
   },
   inconclusive: {
-    label: 'Inconclusive',
     icon: HelpCircle,
     className: 'bg-slate-500/15 text-slate-400 border border-slate-500/30',
     dotClass: 'bg-slate-400',
@@ -86,12 +82,13 @@ const STATUS_CONFIG: Record<InvestigationValidationStatus, {
 }
 
 function StatusPill({ status }: { status: InvestigationValidationStatus }) {
+  const { t } = useTranslation('investigation')
   const config = STATUS_CONFIG[status] || STATUS_CONFIG.pending
   const Icon = config.icon
   return (
     <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium', config.className)}>
       <Icon className="h-3 w-3" />
-      {config.label}
+      {t(`status.${status}`)}
     </span>
   )
 }
@@ -103,6 +100,7 @@ function StatusPill({ status }: { status: InvestigationValidationStatus }) {
 export function Investigation() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { t } = useTranslation('investigation')
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<InvestigationValidationStatus | 'all'>('all')
@@ -166,16 +164,15 @@ export function Investigation() {
       {/* HERO HEADER */}
       {/* ================================================================ */}
       <PageHero
-        trackingLabel="INVESTIGATION CASES"
+        trackingLabel={t('hero.trackingLabel')}
         icon={<Crosshair className="h-4 w-4 text-accent" />}
-        headline={summaryLoading ? '—' : `${summary?.total_cases || 0} Cases`}
-        subtitle="ML-generated investigation leads from anomaly detection"
-        detail={summaryLoading ? undefined : `${summary?.corroborated_cases || 0} externally confirmed · ${formatCompactMXN(summary?.total_value_at_risk || 0)} value at risk`}
+        headline={summaryLoading ? '—' : t('hero.casesCount', { count: summary?.total_cases || 0 })}
+        subtitle={t('hero.subtitle')}
+        detail={summaryLoading ? undefined : `${summary?.corroborated_cases || 0} ${t('hero.confirmedDetail')} · ${formatCompactMXN(summary?.total_value_at_risk || 0)} ${t('hero.valueAtRisk')}`}
         loading={summaryLoading}
       />
       <p className="text-xs text-text-secondary max-w-3xl leading-relaxed -mt-4">
-        Each case represents a cluster of suspicious contracts identified through statistical anomaly detection.
-        Review, corroborate, and validate against external sources.
+        {t('description')}
       </p>
 
       {/* ================================================================ */}
@@ -183,7 +180,7 @@ export function Investigation() {
       {/* ================================================================ */}
       <Card>
         <CardContent className="pt-5 pb-4">
-          <h2 className="text-sm font-bold text-text-primary mb-3">Validation Pipeline</h2>
+          <h2 className="text-sm font-bold text-text-primary mb-3">{t('sections.pipeline')}</h2>
           {summaryLoading ? (
             <Skeleton className="h-16 w-full" />
           ) : (
@@ -199,9 +196,9 @@ export function Investigation() {
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Shield className="h-3.5 w-3.5 text-risk-low" />
-            <h2 className="text-sm font-bold text-text-primary">Confirmed Investigation Targets</h2>
+            <h2 className="text-sm font-bold text-text-primary">{t('sections.confirmed')}</h2>
             <span className="text-xs text-text-muted ml-1">
-              Externally validated through news reports, ASF audits, and legal proceedings
+              {t('sections.confirmedSubtitle')}
             </span>
           </div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -218,7 +215,7 @@ export function Investigation() {
       <Card>
         <CardContent className="pt-5 pb-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-text-primary">All Investigation Cases</h2>
+            <h2 className="text-sm font-bold text-text-primary">{t('sections.allCases')}</h2>
             <div className="flex items-center gap-2">
               <Filter className="h-3.5 w-3.5 text-text-muted" />
               {/* Status filter */}
@@ -227,11 +224,11 @@ export function Investigation() {
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as InvestigationValidationStatus | 'all')}
               >
-                <option value="all">All statuses</option>
-                <option value="pending">Pending</option>
-                <option value="corroborated">Corroborated</option>
-                <option value="refuted">Refuted</option>
-                <option value="inconclusive">Inconclusive</option>
+                <option value="all">{t('filters.allStatuses')}</option>
+                <option value="pending">{t('status.pending')}</option>
+                <option value="corroborated">{t('status.corroborated')}</option>
+                <option value="refuted">{t('status.refuted')}</option>
+                <option value="inconclusive">{t('status.inconclusive')}</option>
               </select>
               {/* Score filter */}
               <select
@@ -239,10 +236,10 @@ export function Investigation() {
                 value={minScore ?? ''}
                 onChange={(e) => setMinScore(e.target.value ? Number(e.target.value) : undefined)}
               >
-                <option value="">Any score</option>
-                <option value="0.5">Score &ge; 0.50</option>
-                <option value="0.3">Score &ge; 0.30</option>
-                <option value="0.2">Score &ge; 0.20</option>
+                <option value="">{t('filters.anyScore')}</option>
+                <option value="0.5">{t('filters.scoreMin', { threshold: '0.50' })}</option>
+                <option value="0.3">{t('filters.scoreMin', { threshold: '0.30' })}</option>
+                <option value="0.2">{t('filters.scoreMin', { threshold: '0.20' })}</option>
               </select>
             </div>
           </div>
@@ -252,16 +249,16 @@ export function Investigation() {
               {[...Array(8)].map((_, i) => <Skeleton key={i} className="h-12" />)}
             </div>
           ) : cases.length === 0 ? (
-            <p className="text-sm text-text-muted py-8 text-center">No cases match the current filters.</p>
+            <p className="text-sm text-text-muted py-8 text-center">{t('empty')}</p>
           ) : (
             <div className="space-y-0.5">
               {/* Header */}
               <div className="grid grid-cols-[28px_1fr_90px_100px_110px] gap-3 px-3 py-2 text-xs font-bold tracking-wider uppercase text-text-secondary font-mono">
                 <span />
-                <span>Case</span>
-                <span>Sector</span>
-                <span className="text-right">Score / Value</span>
-                <span className="text-center">Status</span>
+                <span>{t('table.case')}</span>
+                <span>{t('table.sector')}</span>
+                <span className="text-right">{t('table.scoreValue')}</span>
+                <span className="text-center">{t('table.status')}</span>
               </div>
               {cases.map((c) => (
                 <CaseRow
@@ -285,7 +282,7 @@ export function Investigation() {
       {sectorBreakdown.length > 0 && (
         <Card>
           <CardContent className="pt-5 pb-4">
-            <h2 className="text-sm font-bold text-text-primary mb-3">Cases by Sector</h2>
+            <h2 className="text-sm font-bold text-text-primary mb-3">{t('sections.bySector')}</h2>
             <div className="h-[200px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={sectorBreakdown} layout="vertical" margin={{ left: 80, right: 20 }}>
@@ -303,7 +300,7 @@ export function Investigation() {
                         return (
                           <div className="chart-tooltip">
                             <p className="text-xs font-semibold text-text-primary">{d.name}</p>
-                            <p className="text-xs text-text-muted">{d.count} cases</p>
+                            <p className="text-xs text-text-muted">{d.count} {t('tooltip.cases')}</p>
                           </div>
                         )
                       }
@@ -336,13 +333,14 @@ function ValidationFunnel({
   funnel?: InvestigationDashboardSummary['validation_funnel']
   hitRate?: InvestigationDashboardSummary['hit_rate']
 }) {
+  const { t } = useTranslation('investigation')
   if (!funnel) return null
 
   const steps = [
-    { label: 'Detected', value: funnel.detected, color: 'bg-blue-500' },
-    { label: 'Researched', value: funnel.researched, color: 'bg-amber-500' },
-    { label: 'Corroborated', value: funnel.corroborated, color: 'bg-emerald-500' },
-    { label: 'Ground Truth', value: funnel.promoted_to_gt, color: 'bg-accent' },
+    { label: t('funnel.detected'), value: funnel.detected, color: 'bg-blue-500' },
+    { label: t('funnel.researched'), value: funnel.researched, color: 'bg-amber-500' },
+    { label: t('funnel.corroborated'), value: funnel.corroborated, color: 'bg-emerald-500' },
+    { label: t('funnel.groundTruth'), value: funnel.promoted_to_gt, color: 'bg-accent' },
   ]
 
   return (
@@ -365,8 +363,8 @@ function ValidationFunnel({
       </div>
       {hitRate && hitRate.checked > 0 && (
         <p className="text-xs text-text-muted mt-3 pt-3 border-t border-border/30">
-          <strong className="text-risk-low">{Math.round(hitRate.rate * 100)}% hit rate</strong>
-          {' '}&mdash; {hitRate.confirmed} of {hitRate.checked} investigated vendors have documented corruption investigations
+          <strong className="text-risk-low">{Math.round(hitRate.rate * 100)}% {t('funnel.hitRate')}</strong>
+          {' '}&mdash; {t('funnel.hitRateText', { confirmed: hitRate.confirmed, checked: hitRate.checked })}
         </p>
       )}
     </div>
@@ -382,6 +380,7 @@ function BigFishCard({
 }: {
   item: InvestigationDashboardSummary['top_corroborated'][number]
 }) {
+  const { t } = useTranslation('investigation')
   const sectorColor = SECTOR_COLORS[item.sector_code] || '#64748b'
 
   return (
@@ -406,7 +405,7 @@ function BigFishCard({
           <div className="flex items-center gap-2 text-xs text-text-muted tabular-nums font-mono">
             <span>{formatCompactMXN(item.value)}</span>
             <span className="text-text-muted">|</span>
-            <span>{formatNumber(item.contracts)} contracts</span>
+            <span>{formatNumber(item.contracts)} {t('contracts')}</span>
           </div>
           <RiskBadge score={item.score} className="text-xs" />
         </div>
@@ -502,6 +501,7 @@ function CaseDetailPanel({
   isReviewing: boolean
   navigate: ReturnType<typeof useNavigate>
 }) {
+  const { t } = useTranslation('investigation')
   const [activeTab, setActiveTab] = useState<'overview' | 'evidence'>('overview')
   const queryClient = useQueryClient()
 
@@ -578,8 +578,8 @@ function CaseDetailPanel({
   }
 
   const tabs = [
-    { key: 'overview', label: 'Overview' },
-    { key: 'evidence', label: `Evidence (${detail.vendors.length + newsHits.length})` },
+    { key: 'overview', label: t('tabs.overview') },
+    { key: 'evidence', label: t('tabs.evidence', { count: detail.vendors.length + newsHits.length }) },
   ] as const
 
   return (
@@ -624,7 +624,7 @@ function CaseDetailPanel({
           {/* Research Questions */}
           {detail.questions.length > 0 && (
             <div className="space-y-2 pt-2 border-t border-border/20">
-              <p className="text-xs font-medium text-text-muted uppercase tracking-wider">Research Questions</p>
+              <p className="text-xs font-medium text-text-muted uppercase tracking-wider">{t('research')}</p>
               {detail.questions.slice(0, 8).map((q) => (
                 <div key={q.id} className="flex gap-2 p-2 rounded bg-background-elevated/20">
                   <HelpCircle className="h-3.5 w-3.5 text-accent flex-shrink-0 mt-0.5" />
@@ -644,7 +644,7 @@ function CaseDetailPanel({
           {/* Vendors */}
           {detail.vendors.length > 0 && (
             <div className="space-y-1">
-              <p className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Vendors</p>
+              <p className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">{t('vendors')}</p>
               {detail.vendors.map((v) => (
                 <div key={v.vendor_id} className="flex items-center gap-3 p-2 rounded hover:bg-background-elevated/40 transition-colors">
                   <div className="flex-1 min-w-0">
@@ -655,7 +655,7 @@ function CaseDetailPanel({
                       {toTitleCase(v.name)}
                     </button>
                     <p className="text-xs text-text-muted">
-                      {v.role} &middot; {formatNumber(v.contract_count || 0)} contracts &middot; {formatCompactMXN(v.contract_value_mxn || 0)}
+                      {v.role} &middot; {formatNumber(v.contract_count || 0)} {t('contracts')} &middot; {formatCompactMXN(v.contract_value_mxn || 0)}
                     </p>
                   </div>
                   {v.avg_risk_score != null && <RiskBadge score={v.avg_risk_score} className="text-xs" />}
@@ -666,7 +666,7 @@ function CaseDetailPanel({
           {/* External Evidence */}
           {(newsHits.length > 0 || !showEvidenceForm) && (
             <div className="space-y-2 pt-2 border-t border-border/20">
-              <p className="text-xs font-medium text-text-muted uppercase tracking-wider">External Evidence</p>
+              <p className="text-xs font-medium text-text-muted uppercase tracking-wider">{t('externalEvidence')}</p>
               {newsHits.map((ev, i) => (
                 <div key={i} className="flex gap-2 p-2 rounded bg-background-elevated/20">
                   <Newspaper className="h-3.5 w-3.5 text-emerald-400/60 flex-shrink-0 mt-0.5" />
@@ -682,7 +682,7 @@ function CaseDetailPanel({
                           rel="noopener noreferrer"
                           className="text-xs text-accent hover:text-accent flex items-center gap-0.5"
                         >
-                          Source <ExternalLink className="h-3 w-3" />
+                          {t('source')} <ExternalLink className="h-3 w-3" />
                         </a>
                       )}
                     </div>
@@ -690,7 +690,7 @@ function CaseDetailPanel({
                 </div>
               ))}
               {newsHits.length === 0 && !showEvidenceForm && (
-                <p className="text-xs text-text-muted">No external evidence attached yet.</p>
+                <p className="text-xs text-text-muted">{t('noEvidence')}</p>
               )}
             </div>
           )}
@@ -698,23 +698,23 @@ function CaseDetailPanel({
           {/* Add evidence form */}
           {showEvidenceForm ? (
             <div className="p-3 rounded border border-accent/20 bg-accent/[0.02] space-y-2">
-              <p className="text-xs font-bold text-accent uppercase tracking-wider">Add Evidence</p>
+              <p className="text-xs font-bold text-accent uppercase tracking-wider">{t('evidenceForm.title')}</p>
               <input
                 className="w-full text-xs bg-background-elevated border border-border/50 rounded px-2 py-1.5 text-text-primary placeholder-text-muted/50"
-                placeholder="Source URL"
+                placeholder={t('evidenceForm.urlPlaceholder')}
                 value={evidenceUrl}
                 onChange={(e) => setEvidenceUrl(e.target.value)}
               />
               <input
                 className="w-full text-xs bg-background-elevated border border-border/50 rounded px-2 py-1.5 text-text-primary placeholder-text-muted/50"
-                placeholder="Source title"
+                placeholder={t('evidenceForm.titlePlaceholder')}
                 value={evidenceTitle}
                 onChange={(e) => setEvidenceTitle(e.target.value)}
               />
               <textarea
                 className="w-full text-xs bg-background-elevated border border-border/50 rounded px-2 py-1.5 text-text-primary placeholder-text-muted/50 resize-none"
                 rows={2}
-                placeholder="Brief summary of the evidence"
+                placeholder={t('evidenceForm.summaryPlaceholder')}
                 value={evidenceSummary}
                 onChange={(e) => setEvidenceSummary(e.target.value)}
               />
@@ -724,10 +724,10 @@ function CaseDetailPanel({
                   value={evidenceType}
                   onChange={(e) => setEvidenceType(e.target.value)}
                 >
-                  <option value="news">News</option>
-                  <option value="asf_audit">ASF Audit</option>
-                  <option value="legal">Legal</option>
-                  <option value="investigative">Investigative</option>
+                  <option value="news">{t('evidenceForm.types.news')}</option>
+                  <option value="asf_audit">{t('evidenceForm.types.asf_audit')}</option>
+                  <option value="legal">{t('evidenceForm.types.legal')}</option>
+                  <option value="investigative">{t('evidenceForm.types.investigative')}</option>
                 </select>
                 <Button
                   size="sm"
@@ -736,16 +736,16 @@ function CaseDetailPanel({
                   onClick={() => addEvidenceMutation.mutate()}
                 >
                   {addEvidenceMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
-                  <span className="ml-1">Submit</span>
+                  <span className="ml-1">{t('evidenceForm.submit')}</span>
                 </Button>
                 <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setShowEvidenceForm(false)}>
-                  Cancel
+                  {t('evidenceForm.cancel')}
                 </Button>
               </div>
             </div>
           ) : (
             <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setShowEvidenceForm(true)}>
-              <Plus className="h-3 w-3 mr-1" /> Add Evidence
+              <Plus className="h-3 w-3 mr-1" /> {t('addEvidence')}
             </Button>
           )}
         </div>
@@ -753,7 +753,7 @@ function CaseDetailPanel({
 
       {/* Actions */}
       <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-border/30">
-        <span className="text-xs text-text-secondary mr-2">Review:</span>
+        <span className="text-xs text-text-secondary mr-2">{t('review')}</span>
         <Button
           size="sm"
           variant="outline"
@@ -761,7 +761,7 @@ function CaseDetailPanel({
           disabled={isReviewing || detail.validation_status === 'corroborated'}
           onClick={() => onReview('corroborated')}
         >
-          <CheckCircle2 className="h-3 w-3 mr-1" /> Corroborate
+          <CheckCircle2 className="h-3 w-3 mr-1" /> {t('actions.corroborate')}
         </Button>
         <Button
           size="sm"
@@ -770,7 +770,7 @@ function CaseDetailPanel({
           disabled={isReviewing || detail.validation_status === 'refuted'}
           onClick={() => onReview('refuted')}
         >
-          <XCircle className="h-3 w-3 mr-1" /> Refute
+          <XCircle className="h-3 w-3 mr-1" /> {t('actions.refute')}
         </Button>
         <Button
           size="sm"
@@ -779,7 +779,7 @@ function CaseDetailPanel({
           disabled={isReviewing || detail.validation_status === 'inconclusive'}
           onClick={() => onReview('inconclusive')}
         >
-          <HelpCircle className="h-3 w-3 mr-1" /> Inconclusive
+          <HelpCircle className="h-3 w-3 mr-1" /> {t('actions.inconclusive')}
         </Button>
 
         {detail.validation_status === 'corroborated' && (
@@ -794,11 +794,11 @@ function CaseDetailPanel({
             ) : (
               <ArrowUpRight className="h-3 w-3 mr-1" />
             )}
-            Promote to Ground Truth
+            {t('actions.promoteToGroundTruth')}
           </Button>
         )}
         {promoteMutation.isSuccess && (
-          <span className="text-xs text-risk-low ml-2">Promoted successfully</span>
+          <span className="text-xs text-risk-low ml-2">{t('actions.promotedSuccess')}</span>
         )}
       </div>
     </div>

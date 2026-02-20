@@ -281,17 +281,95 @@ Per-sector models use the global model's bootstrap CIs for robustness.
 
 ## 9. Limitations
 
-1. **Vendor concentration remains dominant.** Despite diversification, the top predictor is still vendor_concentration across most sectors. The model may still underdetect corruption types that don't involve concentrated vendors.
+> See also: `/limitations` page in the RUBLI platform for the full interactive version with workarounds.
 
-2. **co_bid_rate provides no signal.** Regularized to 0.0 in both global and all sector models. Co-bidding patterns don't discriminate in our current ground truth.
+### 9.1 Procurement-Phase Only — Execution Fraud Is Invisible
 
-3. **Small-case detection is weaker.** Cases with few contracts (La Estafa Maestra: 10, Grupo Higa: 3, Oceanografia: 2) have lower detection rates. The model requires sufficient contract volume to detect patterns.
+RUBLI analyzes contract **award** data from COMPRANET. It cannot detect fraud that occurs during contract execution: cost overruns, ghost workers, material substitution, inflated invoicing, or kickbacks paid after award.
 
-4. **PU assumption.** The Elkan & Noto correction assumes labeled positives are representative of all corrupt contracts. If undiscovered corruption has fundamentally different patterns, the correction may be inaccurate.
+This is the primary reason Building Construction (1.1T MXN, #1 by total value) scores only 3.4% average risk. Grupo Higa, Odebrecht-PEMEX, and major infrastructure overruns all involved mechanisms invisible to procurement records. **Sectors most affected**: Infraestructura, Energía, large civil works.
 
-5. **Data quality by period.** Structure A (2002-2010) has 0.1% RFC coverage — z-scores may be less reliable.
+**Workaround**: Cross-reference with ASF (Auditoría Superior de la Federación) audit reports, which cover execution-phase irregularities.
 
-6. **Temporal stationarity.** Sector-level baselines assume corruption patterns are stable within a year. Regime changes may require recalibration.
+### 9.2 Training Data Bias — Three Cases Dominate
+
+The v5.0 model improved over v4.0 by diversifying from 9 to 15 ground truth cases. However, IMSS Ghost Companies (9,366) + Segalmex (6,326) + COVID-19 (5,371) = ~79% of labeled training contracts. These three cases all involve large, concentrated vendors in health/agriculture. The model has learned: *large vendor + high concentration + same institution = risk*.
+
+Corruption that does not match this pattern is systematically underdetected:
+- Small-vendor corruption (new shell companies, few contracts, not concentrated)
+- Distributed corruption across many small contracts
+- Corruption in Defensa, Ambiente, Trabajo (few training cases)
+
+### 9.3 Vendor Deduplication — Unsolved Identity Problem
+
+The same company appears under hundreds of name variations across 23 years of data from different government systems. The platform uses RFC as the primary match key when available, but RFC coverage is 0.1% (2002–2010), 15.7% (2010–2017), 30.3% (2018–2022), 47.4% (2023–2025).
+
+**Why it cannot be fully solved algorithmically:**
+- Fuzzy string matching creates false merges (regional companies with similar names)
+- Shell company names are intentionally similar — merging them destroys the network signal you are trying to detect
+- Companies restructure under new entities to escape blacklists — merging obscures the fresh start; not merging understates their history
+- No canonical public vendor registry exists in Mexico
+
+**Impact**: True vendor concentration is higher than displayed for 2002–2017 data. The "Top Vendor" per category is the single name-string with the most contracts — the real dominant vendor may be spread across name variants.
+
+### 9.4 Co-Bidding Signal — Regularized to Zero
+
+`co_bid_rate` was regularized to exactly 0.000 in both global and all 12 per-sector models. Co-bidding patterns do not discriminate between corrupt and clean vendors in our current training data — because the dominant training cases involve market concentration rather than coordinated bidding rings.
+
+**Not detected by the risk score:**
+- Cover bidding (partner bids high to let the winner win)
+- Bid rotation (A wins this month, B wins next month)
+- Market allocation by geography or institution
+
+The Vendor Profile → Collusion Detection tab provides a separate heuristic analysis, but this does not feed into the contract-level risk score.
+
+### 9.5 Data Quality by Period
+
+| Structure | Years | RFC Coverage | Quality |
+|-----------|-------|-------------|---------|
+| A | 2002–2010 | 0.1% | Lowest — encoding corruption, missing fields, unreliable z-scores |
+| B | 2010–2017 | 15.7% | Better — ALL CAPS text, ~72% direct award flag rate |
+| C | 2018–2022 | 30.3% | Good — mixed case, ~78% direct award rate |
+| D | 2023–2025 | 47.4% | Best — 100% Partida codes, most complete |
+
+Risk scores for 2002–2010 contracts are directional estimates, not precise probabilities.
+
+### 9.6 Structural Concentration — Legitimate Monopolies
+
+Some sectors have quasi-monopolies driven by regulation, clearance requirements, or market structure:
+- **Energía**: Specialized equipment suppliers require technical certification; Edenred/Sodexo hold ~90% of the meal voucher market by regulation
+- **Defensa**: Security clearance requirements legally limit competition
+- **Insurance**: The government insurance carrier market is dominated by 5–6 firms by regulation
+
+The z-score normalization partially handles this by comparing within sector/year, but concentration signals persist.
+
+### 9.7 PU Learning Assumption
+
+The Elkan & Noto correction assumes labeled positives are representative of all corrupt contracts. If undiscovered corruption has fundamentally different statistical patterns from our 15 documented cases, the correction factor (c=0.887) may misestimate the true positive rate.
+
+### 9.8 Temporal Stationarity
+
+The model was trained on contracts ≤2020 and tested on ≥2021 (AUC 0.960). It assumes corruption patterns are relatively stable over time. If a new administration introduces fundamentally different fraud mechanisms, the model may be slow to detect them until new ground truth cases are documented and incorporated.
+
+### 9.9 Correlation Is Not Causation
+
+A risk score of 0.85 means: *"This contract has statistical characteristics similar to contracts from documented corruption cases."* It does not mean the contract is corrupt. A legitimate bulk medicine purchase by IMSS from a major pharmaceutical supplier scores high for the same reasons a fraudulent one does — large amount, concentrated vendor, same institution.
+
+Scores are **investigation triage**, not verdicts.
+
+### Summary
+
+| Limitation | Impact | Fixable? |
+|-----------|--------|----------|
+| Execution-phase fraud invisible | Construction/infrastructure underscored | Partial (needs ASF data) |
+| Training bias (3 dominant cases) | Small-vendor corruption underdetected | Yes (more ground truth) |
+| Vendor deduplication unsolved | True concentration understated pre-2018 | Partial (RFC blocking) |
+| Co-bidding signal = zero | Bid rotation not in risk score | Yes (needs collusion ground truth) |
+| Pre-2010 data quality | 25% of records less reliable | No (structural COMPRANET limit) |
+| Structural concentration | Some sectors over-flagged | Yes (sector-specific priors) |
+| PU assumption | Correction factor may be off | Partial (better labeled data) |
+| Temporal stationarity | New fraud patterns may be missed | Yes (periodic retraining) |
+| Correlation ≠ causation | Scores require follow-up investigation | No (by design) |
 
 ---
 

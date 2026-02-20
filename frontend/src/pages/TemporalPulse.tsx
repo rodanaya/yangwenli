@@ -834,6 +834,8 @@ export default function TemporalPulse() {
           </CardTitle>
           <CardDescription>
             {t('politicalTimeline.description')}
+            {' '}
+            <span className="italic opacity-70">Key events sourced from public records — not derived from contract analysis.</span>
           </CardDescription>
         </CardHeader>
         <CardContent>

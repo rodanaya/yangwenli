@@ -58,13 +58,13 @@
   --font-size-small: 0.875rem;
   --font-size-tiny: 0.75rem;
 
-  /* Spacing Scale */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
+  /* Named container widths — these drive max-w-xs/sm/md/lg/xl/2xl utilities in Tailwind v4 */
+  --spacing-xs: 20rem;   /* 320px  — matches Tailwind v3 max-w-xs  */
+  --spacing-sm: 24rem;   /* 384px  — matches Tailwind v3 max-w-sm  */
+  --spacing-md: 28rem;   /* 448px  — matches Tailwind v3 max-w-md  */
+  --spacing-lg: 32rem;   /* 512px  — matches Tailwind v3 max-w-lg  */
+  --spacing-xl: 36rem;   /* 576px  — matches Tailwind v3 max-w-xl  */
+  --spacing-2xl: 42rem;  /* 672px  — matches Tailwind v3 max-w-2xl */
 }
 
 /* Base Styles */

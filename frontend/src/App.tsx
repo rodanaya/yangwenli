@@ -38,6 +38,7 @@ const ModelTransparency = lazy(() => import('@/pages/ModelTransparency'))
 const Investigation = lazy(() => import('@/pages/Investigation'))
 const ExecutiveSummary = lazy(() => import('@/pages/ExecutiveSummary'))
 const SpendingCategories = lazy(() => import('@/pages/SpendingCategories'))
+const Limitations = lazy(() => import('@/pages/Limitations'))
 
 // Enhanced QueryClient configuration for better caching and UX
 const queryClient = new QueryClient({
@@ -177,6 +178,14 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <Methodology />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="limitations"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <Limitations />
                   </SuspenseBoundary>
                 }
               />

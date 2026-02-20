@@ -41,5 +41,105 @@
     "minContracts": "Mín. Contratos",
     "centerOnVendor": "Centrar en proveedor",
     "centerOnInstitution": "Centrar en institución"
+  },
+  "detective": {
+    "title": "Informe de Inteligencia",
+    "subtitle": "Análisis macro a micro de contratación — salud del sistema, patrones estructurales, señales activas",
+    "contractsAnalyzed": "{{count}} contratos analizados",
+    "totalValue": "{{value}} valor total",
+    "yrShift": "Cambio 20 años",
+    "investigate": "Investigar",
+    "fullMethodology": "Metodología completa",
+    "dataReveals": "Lo que revelan los datos vs. lo que asumían los expertos",
+    "filterBySeverity": "Filtrar por gravedad para priorizar",
+    "severity": {
+      "all": "Todos",
+      "critical": "Crítico",
+      "high": "Alto",
+      "medium": "Medio"
+    },
+    "barNote": "Color de barra: verde = más saludable, rojo = peor. Ancho proporcional al porcentaje.",
+    "footer": "METODOLOGÍAS OCDE / IMF CRI / EU ARACHNE / WORLD BANK INT",
+    "level1": {
+      "label": "Nivel 1",
+      "title": "Signos Vitales del Sistema",
+      "description": "Indicadores estructurales de salud de 20 años con dirección de tendencia"
+    },
+    "level2": {
+      "label": "Nivel 2",
+      "title": "Ficha de Administraciones",
+      "description": "Métricas promedio de salud de contratación por administración presidencial",
+      "colAdministration": "Administración",
+      "colDirectAwards": "Adjud. Directas",
+      "colSingleBid": "Licitación Única",
+      "colHighRisk": "Alto Riesgo",
+      "colContracts": "Contratos"
+    },
+    "level3": {
+      "label": "Nivel 3",
+      "title": "Patrones de Amenaza Activos",
+      "description": "Señales de alerta clasificadas en 3.1M contratos — clic para expandir"
+    },
+    "level4": {
+      "label": "Nivel 4",
+      "title": "Pulso Interanual ({{from}} a {{to}})",
+      "description": "Microcambios recientes — indicadores de alerta temprana para patrones emergentes"
+    },
+    "level5": {
+      "label": "Nivel 5",
+      "title": "Documentación del Modelo",
+      "description": "Coeficientes estáticos del modelo v5.0 — no son datos en tiempo real. Hallazgos clave del modelo de riesgo por sector (AUC 0.960)"
+    },
+    "level6": {
+      "label": "Nivel 6",
+      "title": "Cola de Investigación",
+      "description": "{{count}} anomalías detectadas — análisis más profundo"
+    },
+    "metrics": {
+      "da": "Adjud. Directas",
+      "sb": "Licitación Única",
+      "hr": "Alto Riesgo",
+      "vendors": "Proveedores Activos"
+    },
+    "groups": {
+      "competition": { "title": "Amenazas a la Competencia", "description": "Patrones que socavan la licitación competitiva" },
+      "financial": { "title": "Señales Financieras de Alerta", "description": "Anomalías en precios y gasto" },
+      "institutional": { "title": "Preocupaciones Institucionales", "description": "Debilidades institucionales sistémicas" }
+    },
+    "patterns": {
+      "ghost": { "title": "Proveedores Fantasma", "subtitle": "Ganan >50% mediante licitaciones con un solo postor" },
+      "cobid": { "title": "Anillos de Co-licitación", "subtitle": "Tasas de co-licitación sospechosamente altas" },
+      "monopoly": { "title": "Monopolios Sectoriales", "subtitle": "Proveedores con >30% de participación sectorial" },
+      "price": { "title": "Anomalías de Precio", "subtitle": "Sobreprecios extremos identificados por IQR" },
+      "split": { "title": "Contratos Fraccionados", "subtitle": "Mismo proveedor + institución + día" },
+      "december": { "title": "Gasto de Diciembre", "subtitle": "Contratos de descarga presupuestal de fin de año" },
+      "rubber": { "title": "Sello de Goma", "subtitle": ">90% de tasa de adjudicación directa" },
+      "new": { "title": "Nuevo y Sospechoso", "subtitle": "Registrado recientemente, alto riesgo" }
+    },
+    "detail": {
+      "what": "Qué es",
+      "detection": "Detección",
+      "realCase": "Caso real",
+      "whyMatters": "Por qué importa"
+    },
+    "pulse": {
+      "contractVolume": "Volumen de Contratos",
+      "vendorPool": "Cartera de Proveedores",
+      "directAwardShift": "Cambio en Adj. Directas",
+      "riskLevelShift": "Cambio en Nivel de Riesgo",
+      "lessTransparent": "Menos transparente",
+      "moreCompetitive": "Más competitivo",
+      "contractsIn": "{{count}} contratos en {{year}}",
+      "activeVendors": "{{count}} proveedores activos",
+      "riskRateChange": "Cambio en tasa de riesgo alto+crítico"
+    },
+    "insights": {
+      "concentration": "<strong>Concentración de proveedores</strong>: el indicador más predictivo de corrupción.",
+      "directAward": "<strong>Las adjudicaciones directas</strong> son en realidad <em>menos</em> comunes en casos de corrupción conocidos.",
+      "adPeriod": "<strong>Los períodos cortos de publicación</strong> muestran señal invertida — los proveedores corruptos usan plazos normales.",
+      "mismatch": "<strong>Incompatibilidad industrial</strong> — trabajo fuera del sector es una señal de alerta importante.",
+      "cobidding": "<strong>La co-licitación</strong> no proporciona señal en los datos de verdad conocida actuales.",
+      "network": "<strong>Membresía en redes</strong> — los proveedores corruptos conocidos operan como entidades independientes."
+    }
   }
 }

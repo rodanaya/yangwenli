@@ -41,5 +41,105 @@
     "minContracts": "Min Contracts",
     "centerOnVendor": "Center on vendor",
     "centerOnInstitution": "Center on institution"
+  },
+  "detective": {
+    "title": "Intelligence Brief",
+    "subtitle": "Macro-to-micro procurement analysis — system health, structural patterns, active signals",
+    "contractsAnalyzed": "{{count}} contracts analyzed",
+    "totalValue": "{{value}} total value",
+    "yrShift": "20yr shift",
+    "investigate": "Investigate",
+    "fullMethodology": "Full methodology",
+    "dataReveals": "What the data reveals vs. what experts assumed",
+    "filterBySeverity": "Filter by severity to prioritize",
+    "severity": {
+      "all": "All",
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium"
+    },
+    "barNote": "Bar color: green = healthier, red = worse. Bar width proportional to percentage.",
+    "footer": "OECD / IMF CRI / EU ARACHNE / WORLD BANK INT METHODOLOGIES",
+    "level1": {
+      "label": "Level 1",
+      "title": "System Vital Signs",
+      "description": "20-year structural health indicators with trend direction"
+    },
+    "level2": {
+      "label": "Level 2",
+      "title": "Administration Scorecard",
+      "description": "Average procurement health metrics by presidential administration",
+      "colAdministration": "Administration",
+      "colDirectAwards": "Direct Awards",
+      "colSingleBid": "Single Bid",
+      "colHighRisk": "High Risk",
+      "colContracts": "Contracts"
+    },
+    "level3": {
+      "label": "Level 3",
+      "title": "Active Threat Patterns",
+      "description": "Categorized red flags detected across 3.1M contracts — click to expand"
+    },
+    "level4": {
+      "label": "Level 4",
+      "title": "Year-over-Year Pulse ({{from}} to {{to}})",
+      "description": "Recent micro-shifts — early warning indicators for emerging patterns"
+    },
+    "level5": {
+      "label": "Level 5",
+      "title": "Model Documentation",
+      "description": "Static v5.0 model coefficients — not live contract data. Key findings from per-sector risk model (AUC 0.960)"
+    },
+    "level6": {
+      "label": "Level 6",
+      "title": "Investigation Queue",
+      "description": "{{count}} detected anomalies — deepest drill-down"
+    },
+    "metrics": {
+      "da": "Direct Awards",
+      "sb": "Single Bid",
+      "hr": "High Risk",
+      "vendors": "Active Vendors"
+    },
+    "groups": {
+      "competition": { "title": "Competition Threats", "description": "Patterns that undermine competitive bidding" },
+      "financial": { "title": "Financial Red Flags", "description": "Pricing and spending anomalies" },
+      "institutional": { "title": "Institutional Concerns", "description": "Systemic institutional weaknesses" }
+    },
+    "patterns": {
+      "ghost": { "title": "Ghost Vendors", "subtitle": "Win >50% via single-bid procedures" },
+      "cobid": { "title": "Co-Bidding Rings", "subtitle": "Suspiciously high co-bid rates" },
+      "monopoly": { "title": "Sector Monopolies", "subtitle": "Vendors with >30% sector share" },
+      "price": { "title": "Price Outliers", "subtitle": "Extreme overpricing flagged by IQR" },
+      "split": { "title": "Split Contracts", "subtitle": "Same vendor + institution + day" },
+      "december": { "title": "December Rush", "subtitle": "Year-end budget dump contracts" },
+      "rubber": { "title": "Rubber Stamp", "subtitle": ">90% direct award rate" },
+      "new": { "title": "New & Suspicious", "subtitle": "Recently registered, high risk" }
+    },
+    "detail": {
+      "what": "What it is",
+      "detection": "Detection",
+      "realCase": "Real case",
+      "whyMatters": "Why it matters"
+    },
+    "pulse": {
+      "contractVolume": "Contract Volume",
+      "vendorPool": "Vendor Pool",
+      "directAwardShift": "Direct Award Shift",
+      "riskLevelShift": "Risk Level Shift",
+      "lessTransparent": "Less transparent",
+      "moreCompetitive": "More competitive",
+      "contractsIn": "{{count}} contracts in {{year}}",
+      "activeVendors": "{{count}} active vendors",
+      "riskRateChange": "High+critical risk rate change"
+    },
+    "insights": {
+      "concentration": "<strong>Vendor concentration</strong> is the single most predictive indicator of corruption.",
+      "directAward": "<strong>Direct awards</strong> are actually <em>less</em> common in known corruption cases.",
+      "adPeriod": "<strong>Short ad periods</strong> show a reversed signal — corrupt vendors use normal timelines.",
+      "mismatch": "<strong>Industry mismatch</strong> — out-of-sector work is a strong red flag.",
+      "cobidding": "<strong>Co-bidding</strong> provides zero signal in current ground truth data.",
+      "network": "<strong>Network membership</strong> — known-bad vendors operate as standalone players."
+    }
   }
 }

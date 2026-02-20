@@ -12,6 +12,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
@@ -34,9 +35,6 @@ import {
   GitMerge,
   TrendingUp,
   TrendingDown,
-  Crown,
-  Sparkles,
-  Stamp,
   AlertTriangle,
   ExternalLink,
   ChevronDown,
@@ -52,7 +50,6 @@ import {
   Target,
   Activity,
   DollarSign,
-  Building2,
 } from 'lucide-react'
 
 // =============================================================================
@@ -90,11 +87,6 @@ const PATTERNS: PatternDef[] = [
     icon: GitMerge, color: '#8b5cf6', href: '/contracts?risk_factor=co_bid',
   },
   {
-    id: 'monopoly', descriptionKey: 'monopoly', group: 'competition',
-    title: 'Sector Monopolies', subtitle: 'Vendors with >30% sector share',
-    icon: Crown, color: '#ea580c', href: '/vendors?min_contracts=100',
-  },
-  {
     id: 'price', descriptionKey: 'price_anomaly', group: 'financial',
     title: 'Price Outliers', subtitle: 'Extreme overpricing flagged by IQR',
     icon: DollarSign, color: '#dc2626', href: '/contracts?risk_factor=price_anomaly',
@@ -109,22 +101,11 @@ const PATTERNS: PatternDef[] = [
     title: 'December Rush', subtitle: 'Year-end budget dump contracts',
     icon: CalendarDays, color: '#ea580c', href: '/contracts?risk_factor=year_end_timing&risk_level=high',
   },
-  {
-    id: 'rubber', descriptionKey: 'rubber', group: 'institutional',
-    title: 'Rubber Stamp', subtitle: '>90% direct award rate',
-    icon: Stamp, color: '#be123c', href: '/institutions',
-  },
-  {
-    id: 'new', descriptionKey: 'new_vendor', group: 'institutional',
-    title: 'New & Suspicious', subtitle: 'Recently registered, high risk',
-    icon: Sparkles, color: '#eab308', href: '/vendors?risk_level=high',
-  },
 ]
 
 const PATTERN_GROUPS = [
   { key: 'competition', title: 'Competition Threats', icon: Users, description: 'Patterns that undermine competitive bidding' },
   { key: 'financial', title: 'Financial Red Flags', icon: DollarSign, description: 'Pricing and spending anomalies' },
-  { key: 'institutional', title: 'Institutional Concerns', icon: Building2, description: 'Systemic institutional weaknesses' },
 ] as const
 
 // =============================================================================
@@ -144,6 +125,7 @@ function metricIntensity(value: number, low: number, high: number): string {
 
 export function DetectivePatterns() {
   const navigate = useNavigate()
+  const { t } = useTranslation('patterns')
   const [severityFilter, setSeverityFilter] = useState<string | undefined>(undefined)
   const [expandedPattern, setExpandedPattern] = useState<string | null>(null)
 
@@ -190,7 +172,7 @@ export function DetectivePatterns() {
       totalValue: data.reduce((s: number, d: YearOverYearChange) => s + (d.total_value ?? d.value_mxn ?? 0), 0),
       metrics: {
         da: {
-          label: 'Direct Awards', icon: Eye,
+          label: 'da', icon: Eye,
           current: latest.direct_award_pct,
           spark: sparkYears.map((d: YearOverYearChange) => d.direct_award_pct),
           delta5yr: avg(recent5, 'direct_award_pct') - avg(early5, 'direct_award_pct'),
@@ -199,7 +181,7 @@ export function DetectivePatterns() {
           color: '#58a6ff',
         },
         sb: {
-          label: 'Single Bid', icon: Target,
+          label: 'sb', icon: Target,
           current: latest.single_bid_pct,
           spark: sparkYears.map((d: YearOverYearChange) => d.single_bid_pct),
           delta5yr: avg(recent5, 'single_bid_pct') - avg(early5, 'single_bid_pct'),
@@ -208,7 +190,7 @@ export function DetectivePatterns() {
           color: RISK_COLORS.medium,
         },
         hr: {
-          label: 'High Risk', icon: ShieldAlert,
+          label: 'hr', icon: ShieldAlert,
           current: latest.high_risk_pct,
           spark: sparkYears.map((d: YearOverYearChange) => d.high_risk_pct),
           delta5yr: avg(recent5, 'high_risk_pct') - avg(early5, 'high_risk_pct'),
@@ -217,7 +199,7 @@ export function DetectivePatterns() {
           color: RISK_COLORS.high,
         },
         vendors: {
-          label: 'Active Vendors', icon: Users,
+          label: 'vendors', icon: Users,
           current: latest.vendor_count,
           spark: sparkYears.map((d: YearOverYearChange) => d.vendor_count),
           delta5yr: ((avg(recent5, 'vendor_count') - avg(early5, 'vendor_count')) / avg(early5, 'vendor_count')) * 100,
@@ -279,9 +261,6 @@ export function DetectivePatterns() {
       split: c.split_contracts,
       cobid: c.co_bidding,
       price: c.price_outliers,
-      monopoly: undefined,
-      new: undefined,
-      rubber: undefined,
     }
   }, [patternData])
 
@@ -320,19 +299,19 @@ export function DetectivePatterns() {
         <div>
           <h1 className="text-xl font-bold text-text-primary tracking-tight flex items-center gap-2">
             <Fingerprint className="h-5 w-5 text-accent" />
-            Intelligence Brief
+            {t('detective.title')}
           </h1>
           <p className="text-xs text-text-muted mt-0.5">
-            Macro-to-micro procurement analysis — system health, structural patterns, active signals
+            {t('detective.subtitle')}
           </p>
         </div>
         {vitals && (
           <div className="text-right hidden sm:block">
             <p className="text-xs text-text-muted font-mono">
-              {formatNumber(vitals.totalContracts)} contracts analyzed
+              {t('detective.contractsAnalyzed', { count: formatNumber(vitals.totalContracts) })}
             </p>
             <p className="text-xs text-text-secondary font-mono">
-              {formatCompactMXN(vitals.totalValue)} total value
+              {t('detective.totalValue', { value: formatCompactMXN(vitals.totalValue) })}
             </p>
           </div>
         )}
@@ -342,7 +321,7 @@ export function DetectivePatterns() {
       {/* LEVEL 1: SYSTEM VITAL SIGNS                                        */}
       {/* ================================================================== */}
       <div>
-        <SectionLabel icon={Activity} label="Level 1" title="System Vital Signs" description="20-year structural health indicators with trend direction" />
+        <SectionLabel icon={Activity} label={t('detective.level1.label')} title={t('detective.level1.title')} description={t('detective.level1.description')} />
         {yoyLoading || !vitals ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mt-3">
             {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-[120px]" />)}
@@ -360,7 +339,7 @@ export function DetectivePatterns() {
       {/* LEVEL 2: ADMINISTRATION SCORECARD                                  */}
       {/* ================================================================== */}
       <div>
-        <SectionLabel icon={Globe} label="Level 2" title="Administration Scorecard" description="Average procurement health metrics by presidential administration" />
+        <SectionLabel icon={Globe} label={t('detective.level2.label')} title={t('detective.level2.title')} description={t('detective.level2.description')} />
         {yoyLoading || !adminScorecard.length ? (
           <Skeleton className="h-[200px] mt-3" />
         ) : (
@@ -368,11 +347,11 @@ export function DetectivePatterns() {
             <CardContent className="pt-4 pb-3 px-3">
               {/* Header row */}
               <div className="grid grid-cols-[120px_1fr_1fr_1fr_80px] gap-2 mb-2 px-1">
-                <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">Administration</span>
-                <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">Direct Awards</span>
-                <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">Single Bid</span>
-                <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">High Risk</span>
-                <span className="text-xs font-semibold uppercase tracking-wider text-text-muted text-right">Contracts</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">{t('detective.level2.colAdministration')}</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">{t('detective.level2.colDirectAwards')}</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">{t('detective.level2.colSingleBid')}</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">{t('detective.level2.colHighRisk')}</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-muted text-right">{t('detective.level2.colContracts')}</span>
               </div>
               {/* Data rows */}
               <div className="space-y-1">
@@ -404,7 +383,7 @@ export function DetectivePatterns() {
                 ))}
               </div>
               <p className="text-xs text-text-muted mt-2 px-1">
-                Bar color: green = healthier, red = worse. Bar width proportional to percentage.
+                {t('detective.barNote')}
               </p>
             </CardContent>
           </Card>
@@ -415,7 +394,7 @@ export function DetectivePatterns() {
       {/* LEVEL 3: THREAT PATTERN MATRIX                                     */}
       {/* ================================================================== */}
       <div>
-        <SectionLabel icon={Target} label="Level 3" title="Active Threat Patterns" description="Categorized red flags detected across 3.1M contracts — click to expand" />
+        <SectionLabel icon={Target} label={t('detective.level3.label')} title={t('detective.level3.title')} description={t('detective.level3.description')} />
         <div className="grid gap-4 lg:grid-cols-3 mt-3">
           {PATTERN_GROUPS.map((group) => {
             const GroupIcon = group.icon
@@ -425,9 +404,9 @@ export function DetectivePatterns() {
                 <CardHeader className="pb-2 pt-3 px-4">
                   <div className="flex items-center gap-2">
                     <GroupIcon className="h-3.5 w-3.5 text-accent" />
-                    <CardTitle className="text-xs">{group.title}</CardTitle>
+                    <CardTitle className="text-xs">{t(`detective.groups.${group.key}.title`)}</CardTitle>
                   </div>
-                  <CardDescription className="text-xs">{group.description}</CardDescription>
+                  <CardDescription className="text-xs">{t(`detective.groups.${group.key}.description`)}</CardDescription>
                 </CardHeader>
                 <CardContent className="px-3 pb-3 space-y-0.5">
                   {groupPatterns.map((pattern) => {
@@ -453,8 +432,8 @@ export function DetectivePatterns() {
                             <Icon className="h-3.5 w-3.5" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <span className="text-xs font-medium text-text-primary block">{pattern.title}</span>
-                            <span className="text-xs text-text-muted">{pattern.subtitle}</span>
+                            <span className="text-xs font-medium text-text-primary block">{t(`detective.patterns.${pattern.id}.title`)}</span>
+                            <span className="text-xs text-text-muted">{t(`detective.patterns.${pattern.id}.subtitle`)}</span>
                           </div>
                           <div className="shrink-0 text-right flex items-center gap-1.5">
                             {count !== undefined ? (
@@ -474,19 +453,19 @@ export function DetectivePatterns() {
                           <div className="mx-2.5 mb-2 mt-1 px-3 py-2.5 bg-accent/[0.03] rounded border border-accent/10">
                             <div className="grid gap-4 sm:grid-cols-2">
                               <div className="space-y-2">
-                                <DetailBlock title="What it is" text={desc.what} />
-                                <DetailBlock title="Detection" text={desc.howDetected} />
+                                <DetailBlock title={t('detective.detail.what')} text={desc.what} />
+                                <DetailBlock title={t('detective.detail.detection')} text={desc.howDetected} />
                               </div>
                               <div className="space-y-2">
-                                <DetailBlock title="Real case" text={desc.realExample} italic />
-                                <DetailBlock title="Why it matters" text={desc.whyItMatters} />
+                                <DetailBlock title={t('detective.detail.realCase')} text={desc.realExample} italic />
+                                <DetailBlock title={t('detective.detail.whyMatters')} text={desc.whyItMatters} />
                               </div>
                             </div>
                             <Link
                               to={pattern.href}
                               className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:underline mt-2"
                             >
-                              Investigate
+                              {t('detective.investigate')}
                               <ArrowRight className="h-3 w-3" />
                             </Link>
                           </div>
@@ -506,41 +485,41 @@ export function DetectivePatterns() {
       {/* ================================================================== */}
       {vitals && (
         <div>
-          <SectionLabel icon={Microscope} label="Level 4" title={`Year-over-Year Pulse (${vitals.prevYear} to ${vitals.latestYear})`} description="Recent micro-shifts — early warning indicators for emerging patterns" />
+          <SectionLabel icon={Microscope} label={t('detective.level4.label')} title={t('detective.level4.title', { from: vitals.prevYear, to: vitals.latestYear })} description={t('detective.level4.description')} />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mt-3">
             <PulseCard
               icon={BarChart3}
-              label="Contract Volume"
+              label={t('detective.pulse.contractVolume')}
               value={vitals.yoyContracts}
               suffix="%"
-              detail={`${formatNumber(vitals.latestContracts)} contracts in ${vitals.latestYear}`}
+              detail={t('detective.pulse.contractsIn', { count: formatNumber(vitals.latestContracts), year: vitals.latestYear })}
               thresholds={[-15, 15]}
               invertSeverity={false}
             />
             <PulseCard
               icon={Users}
-              label="Vendor Pool"
+              label={t('detective.pulse.vendorPool')}
               value={vitals.metrics.vendors.yoy}
               suffix="%"
-              detail={`${formatNumber(vitals.latestVendors)} active vendors`}
+              detail={t('detective.pulse.activeVendors', { count: formatNumber(vitals.latestVendors) })}
               thresholds={[-10, 999]}
               invertSeverity={true}
             />
             <PulseCard
               icon={ShieldAlert}
-              label="Direct Award Shift"
+              label={t('detective.pulse.directAwardShift')}
               value={vitals.metrics.da.yoy}
               suffix=" pp"
-              detail={vitals.metrics.da.yoy > 0 ? 'Less transparent' : 'More competitive'}
+              detail={vitals.metrics.da.yoy > 0 ? t('detective.pulse.lessTransparent') : t('detective.pulse.moreCompetitive')}
               thresholds={[-3, 3]}
               invertSeverity={false}
             />
             <PulseCard
               icon={AlertTriangle}
-              label="Risk Level Shift"
+              label={t('detective.pulse.riskLevelShift')}
               value={vitals.metrics.hr.yoy}
               suffix=" pp"
-              detail="High+critical risk rate change"
+              detail={t('detective.pulse.riskRateChange')}
               thresholds={[-1, 1]}
               invertSeverity={false}
             />
@@ -552,39 +531,27 @@ export function DetectivePatterns() {
       {/* LEVEL 5: MODEL INTELLIGENCE                                        */}
       {/* ================================================================== */}
       <div>
-        <SectionLabel icon={Brain} label="Level 5" title="Model Intelligence" description="Key findings from v5.0 per-sector risk model (AUC 0.960)" />
+        <SectionLabel icon={Brain} label={t('detective.level5.label')} title={t('detective.level5.title')} description={t('detective.level5.description')} />
         <div className="rounded-lg border border-accent/20 bg-accent/[0.03] p-4 mt-3">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
-              What the data reveals vs. what experts assumed
+              {t('detective.dataReveals')}
             </span>
             <Link
               to="/methodology"
               className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
             >
-              Full methodology
+              {t('detective.fullMethodology')}
               <ExternalLink className="h-3 w-3" />
             </Link>
           </div>
           <div className="grid gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
-            <Insight color={RISK_COLORS.critical} tag="18.7x">
-              <strong>Vendor concentration</strong> is the single most predictive indicator of corruption.
-            </Insight>
-            <Insight color="#58a6ff" tag="reversed">
-              <strong>Direct awards</strong> are actually <em>less</em> common in known corruption cases.
-            </Insight>
-            <Insight color="#58a6ff" tag="reversed">
-              <strong>Short ad periods</strong> show a reversed signal — corrupt vendors use normal timelines.
-            </Insight>
-            <Insight color={RISK_COLORS.high} tag="+0.21">
-              <strong>Industry mismatch</strong> — out-of-sector work is a strong red flag.
-            </Insight>
-            <Insight color="var(--color-text-muted)" tag="0.000">
-              <strong>Co-bidding</strong> provides zero signal in current ground truth data.
-            </Insight>
-            <Insight color="#58a6ff" tag="reversed">
-              <strong>Network membership</strong> — known-bad vendors operate as standalone players.
-            </Insight>
+            <Insight color={RISK_COLORS.critical} tag="18.7x" html={t('detective.insights.concentration')} />
+            <Insight color="#58a6ff" tag="reversed" html={t('detective.insights.directAward')} />
+            <Insight color="#58a6ff" tag="reversed" html={t('detective.insights.adPeriod')} />
+            <Insight color={RISK_COLORS.high} tag="+0.21" html={t('detective.insights.mismatch')} />
+            <Insight color="var(--color-text-muted)" tag="0.000" html={t('detective.insights.cobidding')} />
+            <Insight color="#58a6ff" tag="reversed" html={t('detective.insights.network')} />
           </div>
         </div>
       </div>
@@ -593,21 +560,21 @@ export function DetectivePatterns() {
       {/* LEVEL 6: ANOMALY INVESTIGATION QUEUE                               */}
       {/* ================================================================== */}
       <div>
-        <SectionLabel icon={AlertTriangle} label="Level 6" title="Investigation Queue" description={`${anomalies?.total || 0} detected anomalies requiring investigation — deepest drill-down`} />
+        <SectionLabel icon={AlertTriangle} label={t('detective.level6.label')} title={t('detective.level6.title')} description={t('detective.level6.description', { count: anomalies?.total || 0 })} />
         <Card className="mt-3">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardDescription className="text-xs">Filter by severity to prioritize</CardDescription>
+              <CardDescription className="text-xs">{t('detective.filterBySeverity')}</CardDescription>
               <div className="flex gap-1.5">
-                {['all', 'critical', 'high', 'medium'].map((severity) => (
+                {(['all', 'critical', 'high', 'medium'] as const).map((severity) => (
                   <Button
                     key={severity}
                     variant={severityFilter === (severity === 'all' ? undefined : severity) ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSeverityFilter(severity === 'all' ? undefined : severity)}
-                    className="capitalize h-7 text-xs px-2.5"
+                    className="h-7 text-xs px-2.5"
                   >
-                    {severity}
+                    {t(`detective.severity.${severity}`)}
                   </Button>
                 ))}
               </div>
@@ -631,7 +598,7 @@ export function DetectivePatterns() {
 
       {/* Footer */}
       <div className="text-xs text-text-muted font-mono text-center pb-4">
-        OECD / IMF CRI / EU ARACHNE / WORLD BANK INT METHODOLOGIES
+        {t('detective.footer')}
       </div>
     </div>
   )
@@ -666,6 +633,7 @@ function VitalCard({ label, icon: Icon, current, spark, delta5yr, unit, invertCo
   label: string; icon: React.ElementType; current: number; spark: number[]
   delta5yr: number; unit: string; invertColor: boolean; color: string
 }) {
+  const { t } = useTranslation('patterns')
   const isUp = delta5yr > 0
   const isBad = invertColor ? isUp : !isUp
   const trendColor = Math.abs(delta5yr) < 1
@@ -681,7 +649,7 @@ function VitalCard({ label, icon: Icon, current, spark, delta5yr, unit, invertCo
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-1.5">
             <Icon className="h-3.5 w-3.5" style={{ color }} />
-            <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">{label}</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">{t(`detective.metrics.${label}`)}</span>
           </div>
           <TrendIcon className="h-3.5 w-3.5" style={{ color: trendColor }} />
         </div>
@@ -706,7 +674,7 @@ function VitalCard({ label, icon: Icon, current, spark, delta5yr, unit, invertCo
           <span className="text-xs font-mono" style={{ color: trendColor }}>
             {delta5yr > 0 ? '+' : ''}{delta5yr.toFixed(1)}{invertColor ? ' pp' : '%'}
           </span>
-          <span className="text-xs text-text-muted">20yr shift</span>
+          <span className="text-xs text-text-muted">{t('detective.yrShift')}</span>
         </div>
       </CardContent>
     </Card>
@@ -787,7 +755,7 @@ function DetailBlock({ title, text, italic }: { title: string; text: string; ita
 }
 
 /** Model insight bullet */
-function Insight({ color, tag, children }: { color: string; tag: string; children: React.ReactNode }) {
+function Insight({ color, tag, children, html }: { color: string; tag: string; children?: React.ReactNode; html?: string }) {
   return (
     <div className="flex items-start gap-2">
       <span
@@ -796,7 +764,11 @@ function Insight({ color, tag, children }: { color: string; tag: string; childre
       >
         {tag}
       </span>
-      <p className="text-xs text-text-muted leading-relaxed">{children}</p>
+      {html ? (
+        <p className="text-xs text-text-muted leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />
+      ) : (
+        <p className="text-xs text-text-muted leading-relaxed">{children}</p>
+      )}
     </div>
   )
 }

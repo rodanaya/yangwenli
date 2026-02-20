@@ -670,9 +670,12 @@ export default function Administrations() {
           <div className="grid grid-cols-2 gap-6">
             {/* Cases */}
             <div>
-              <h4 className="text-xs font-semibold text-text-muted tracking-wider uppercase mb-2">
+              <h4 className="text-xs font-semibold text-text-muted tracking-wider uppercase mb-0.5">
                 Documented Cases
               </h4>
+              <p className="text-xs text-text-muted/70 italic mb-2">
+                Manually verified from public records and ASF investigations — not ML-detected
+              </p>
               {adminCases.length > 0 ? (
                 <div className="space-y-2">
                   {adminCases.map((c) => (

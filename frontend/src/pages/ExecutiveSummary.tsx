@@ -7,7 +7,7 @@
  * Fully internationalized (ES/EN) via react-i18next 'executive' namespace.
  */
 
-import { useMemo } from 'react'
+import { useMemo, useRef, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation, Trans } from 'react-i18next'
@@ -47,6 +47,50 @@ function useExecutiveSummary() {
 }
 
 // ============================================================================
+// Scroll Reveal Hook + Component
+// ============================================================================
+
+function useReveal() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true)
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.05, rootMargin: '0px 0px -40px 0px' }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+  return { ref, visible }
+}
+
+function ScrollReveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const { ref, visible } = useReveal()
+  return (
+    <div
+      ref={ref}
+      style={{
+        transitionProperty: 'opacity, transform',
+        transitionDuration: '650ms',
+        transitionDelay: `${delay}ms`,
+        transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(28px)',
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+// ============================================================================
 // Main Component
 // ============================================================================
 
@@ -60,29 +104,29 @@ export function ExecutiveSummary() {
 
   return (
     <article className="max-w-4xl mx-auto pb-20 space-y-16">
-      <ReportHeader data={data} />
-      <KeyFindings />
+      <ScrollReveal delay={80}><ReportHeader data={data} /></ScrollReveal>
+      <ScrollReveal delay={120}><KeyFindings /></ScrollReveal>
       <Divider />
-      <SectionThreat data={data} />
+      <ScrollReveal><SectionThreat data={data} /></ScrollReveal>
       <Divider />
-      <SectionProof data={data} />
+      <ScrollReveal><SectionProof data={data} /></ScrollReveal>
       <Divider />
-      <SectionSectors data={data} navigate={navigate} />
+      <ScrollReveal><SectionSectors data={data} navigate={navigate} /></ScrollReveal>
       <Divider />
-      <SectionVendors data={data} navigate={navigate} />
+      <ScrollReveal><SectionVendors data={data} navigate={navigate} /></ScrollReveal>
       <Divider />
-      <SectionNetwork />
+      <ScrollReveal><SectionNetwork /></ScrollReveal>
       <Divider />
-      <SectionData />
+      <ScrollReveal><SectionData /></ScrollReveal>
       <Divider />
-      <SectionAdministrations data={data} />
+      <ScrollReveal><SectionAdministrations data={data} /></ScrollReveal>
       <Divider />
-      <SectionModel data={data} />
+      <ScrollReveal><SectionModel data={data} /></ScrollReveal>
       <Divider />
-      <SectionLimitations />
+      <ScrollReveal><SectionLimitations /></ScrollReveal>
       <Divider />
-      <SectionRecommendations navigate={navigate} />
-      <ReportFooter data={data} />
+      <ScrollReveal><SectionRecommendations navigate={navigate} /></ScrollReveal>
+      <ScrollReveal><ReportFooter data={data} /></ScrollReveal>
     </article>
   )
 }

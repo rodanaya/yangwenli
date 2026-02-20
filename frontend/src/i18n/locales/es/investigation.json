@@ -1,5 +1,82 @@
 {
   "title": "Investigación",
+  "hero": {
+    "trackingLabel": "CASOS DE INVESTIGACIÓN",
+    "subtitle": "Pistas de investigación generadas por IA a partir de la detección de anomalías",
+    "casesCount": "{{count}} Casos",
+    "confirmedDetail": "confirmados externamente",
+    "valueAtRisk": "valor en riesgo"
+  },
+  "description": "Cada caso representa un clúster de contratos sospechosos identificados mediante detección de anomalías estadísticas. Revisa, corrobora y valida con fuentes externas.",
+  "status": {
+    "pending": "Pendiente",
+    "corroborated": "Corroborado",
+    "refuted": "Refutado",
+    "inconclusive": "No concluyente"
+  },
+  "sections": {
+    "pipeline": "Canal de Validación",
+    "confirmed": "Objetivos de Investigación Confirmados",
+    "confirmedSubtitle": "Validados externamente a través de reportes periodísticos, auditorías de la ASF y procedimientos legales",
+    "allCases": "Todos los Casos de Investigación",
+    "bySector": "Casos por Sector"
+  },
+  "filters": {
+    "allStatuses": "Todos los estados",
+    "anyScore": "Cualquier puntaje",
+    "scoreMin": "Puntaje ≥ {{threshold}}"
+  },
+  "table": {
+    "case": "Caso",
+    "sector": "Sector",
+    "scoreValue": "Puntaje / Valor",
+    "status": "Estado"
+  },
+  "empty": "No hay casos que coincidan con los filtros actuales.",
+  "contracts": "contratos",
+  "funnel": {
+    "detected": "Detectados",
+    "researched": "Investigados",
+    "corroborated": "Corroborados",
+    "groundTruth": "Verdad Base",
+    "hitRate": "de acierto",
+    "hitRateText": "{{confirmed}} de {{checked}} proveedores investigados tienen investigaciones de corrupción documentadas"
+  },
+  "tabs": {
+    "overview": "Resumen",
+    "evidence": "Evidencias ({{count}})"
+  },
+  "research": "Preguntas de Investigación",
+  "vendors": "Proveedores",
+  "externalEvidence": "Evidencia Externa",
+  "noEvidence": "No hay evidencia externa adjunta aún.",
+  "source": "Fuente",
+  "evidenceForm": {
+    "title": "Agregar Evidencia",
+    "urlPlaceholder": "URL de la fuente",
+    "titlePlaceholder": "Título de la fuente",
+    "summaryPlaceholder": "Breve resumen de la evidencia",
+    "types": {
+      "news": "Noticia",
+      "asf_audit": "Auditoría ASF",
+      "legal": "Legal",
+      "investigative": "Investigativo"
+    },
+    "submit": "Enviar",
+    "cancel": "Cancelar"
+  },
+  "addEvidence": "Agregar Evidencia",
+  "review": "Revisar:",
+  "actions": {
+    "corroborate": "Corroborar",
+    "refute": "Refutar",
+    "inconclusive": "No concluyente",
+    "promoteToGroundTruth": "Promover a Verdad Base",
+    "promotedSuccess": "Promovido exitosamente"
+  },
+  "tooltip": {
+    "cases": "casos"
+  },
   "cases": {
     "title": "Casos de Investigación",
     "newCase": "Nuevo Caso",
@@ -22,20 +99,20 @@
     "emptyAction": "Crear un nuevo caso"
   },
   "groundTruth": {
-    "title": "Verdad de Campo",
-    "subtitle": "Casos documentados de corrupción en contratación pública mexicana",
+    "title": "Verdad Base",
+    "subtitle": "Casos de corrupción documentados en la contratación pública mexicana",
     "columns": {
       "caseName": "Caso",
       "type": "Tipo",
       "vendors": "Proveedores",
       "contracts": "Contratos",
       "detectionRate": "Tasa de Detección",
-      "avgScore": "Puntuación Promedio"
+      "avgScore": "Puntaje Prom."
     },
     "types": {
       "ghost_companies": "Empresas Fantasma",
       "procurement_fraud": "Fraude en Contratación",
-      "embezzlement": "Malversación",
+      "embezzlement": "Peculado",
       "overpricing": "Sobreprecio",
       "bribery": "Soborno",
       "conflict_of_interest": "Conflicto de Interés",
@@ -47,9 +124,9 @@
     "profile": "Perfil",
     "contracts": "Contratos",
     "riskAnalysis": "Análisis de Riesgo",
-    "priceHypotheses": "Hipótesis de Precios",
-    "network": "Red de Conexiones",
-    "redFlags": "Alertas Rojas",
+    "priceHypotheses": "Hipótesis de Precio",
+    "network": "Conexiones de Red",
+    "redFlags": "Banderas Rojas",
     "generateReport": "Generar Reporte"
   }
 }

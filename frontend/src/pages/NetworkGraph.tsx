@@ -562,7 +562,7 @@ export function NetworkGraph() {
       <SectionDescription>
         Explore the procurement network as a hierarchy: sectors, institutions, and vendors.
         Expand any level to see relationships. Click an entity name to view details in the
-        side panel.
+        side panel. Use the search and filters below to focus on a specific sector, institution, or vendor.
       </SectionDescription>
 
       {/* Toolbar */}

@@ -7,7 +7,6 @@
   },
   "executive": "Executive Summary",
   "dashboard": "Dashboard",
-  "explore": "Explore Data",
   "patterns": "Fraud Patterns",
   "redFlags": "Red Flags",
   "moneyFlow": "Money Flow",
@@ -24,6 +23,7 @@
   "groundTruth": "Ground Truth",
   "model": "Model Transparency",
   "methodology": "Methodology",
+  "limitations": "Limitations",
   "settings": "Settings",
   "expandSidebar": "Expand sidebar",
   "collapseSidebar": "Collapse sidebar"

@@ -7,7 +7,6 @@
   },
   "executive": "Resumen Ejecutivo",
   "dashboard": "Panel",
-  "explore": "Explorar Datos",
   "patterns": "Patrones de Fraude",
   "redFlags": "Banderas Rojas",
   "moneyFlow": "Flujo de Dinero",
@@ -24,6 +23,7 @@
   "groundTruth": "Verdad de Terreno",
   "model": "Transparencia del Modelo",
   "methodology": "Metodología",
+  "limitations": "Limitaciones",
   "settings": "Configuración",
   "expandSidebar": "Expandir barra lateral",
   "collapseSidebar": "Contraer barra lateral"

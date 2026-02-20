@@ -49,12 +49,15 @@ CATEGORIES = [
      r"|paracetamol|ibuprofeno|metformina|amoxicilina|ciprofloxacin|losartan"
      r"|captopril|diclofenac|ranitidina|naproxeno|ampicilina|cefalosporina"
      r"|bienes.{0,10}terapeutic|productos.{0,10}farmac|clorhidrato|solucion.{0,10}(inyect|oral)"
-     r"|tableta|capsula|jarabe|suspension.{0,10}(oral|inyect)|ampolleta"),
+     r"|tableta|capsula|jarabe|suspension.{0,10}(oral|inyect)|ampolleta"
+     r"|medicina.{0,5}(patente|generica)|oxigeno.{0,5}medic"),
     (21, "cat_medical_equipment", "Medical Equipment", "Equipo Medico", 1,
      r"equipo.{0,10}medic|instrumental quirurg|protesis|ortoped|rayos.?x|tomograf"
      r"|resonancia|electrocardiog|desfibrilad|esteriliz|autoclave|incubadora"
      r"|ventilador.{0,10}(medic|mecanico|pulmonar)|oximetro|monitor.{0,10}(pacient|signos)"
-     r"|ultrasonido.{0,10}medic|endoscopio|equipo.{0,10}(dental|quirurg|radiolog|oftalmol)"),
+     r"|ultrasonido.{0,10}medic|endoscopio|equipo.{0,10}(dental|quirurg|radiolog|oftalmol)"
+     r"|osteosintesis|marcapasos|instrumental.{0,5}medic|implante.{0,5}(oseo|cardiaco|coclear|titan)"
+     r"|protesis.{0,5}(osea|articular|valvular)|endoprotesis|stent"),
     (22, "cat_medical_supplies", "Medical Supplies", "Material de Curacion", 1,
      r"material de curacion|materiales.{0,10}(medic|curacion|quirurg)|gasas|jeringas|cateter"
      r"|vendas|guantes.{0,5}(quirurg|latex|nitrilo)|sutura|aposito|sonda"
@@ -188,7 +191,8 @@ CATEGORIES = [
      r"|exposicion|inauguracion|conmemoracion"),
     (56, "cat_advertising_media", "Advertising & Media", "Publicidad y Medios", 8,
      r"publicidad|campana.{0,10}(difusion|comunicacion)|medios de comunicacion|spot|propaganda"
-     r"|difusion|inserciones|monitoreo de medios|produccion.{0,10}(audiovisual|video|spot)"),
+     r"|difusion|inserciones|monitoreo de medios|produccion.{0,10}(audiovisual|video|spot)"
+     r"|promocional"),
 
     # ── Group 9: Food & Catering (IDs 57-59) ── MASSIVELY broadened
     (57, "cat_food_provisions", "Food & Provisions", "Alimentos y Viveres", 12,
@@ -214,7 +218,11 @@ CATEGORIES = [
      r"|mercancias generales|maquila"
      # Additional food products
      r"|pimienta|canela|oregano|comino|ajonjoli|champi|aceituna"
-     r"|chicharron|carnita|barbacoa|tamale|empanada|taco|enchilada"),
+     r"|chicharron|carnita|barbacoa|tamale|empanada|taco|enchilada"
+     r"|chocolate.{0,5}mesa|chocolate.{0,5}liquido|\bsal\b|sal.{0,5}(grano|marina|campo)"
+     r"|granola|granos.{0,5}(granel|envasado|basico)|polvo.{0,5}hornear|salvado"
+     r"|alim.{0,10}(infantil|colado|picado)|alimentos.{0,5}(infantil|bebe)"
+     r"|diversos.{0,5}vegetales|vegetales.{0,5}envasados"),
     (58, "cat_catering_meals", "Catering & Meals", "Servicio de Alimentacion", 12,
      r"alimentacion|comedor|cocina|racion|desayuno|box lunch|banquete|catering"
      r"|servicio.{0,10}(aliment|comida|comedor|cocina)|dieta|menu"),
@@ -244,7 +252,9 @@ CATEGORIES = [
      r"|escoba|trapeador|fibra.{0,10}(verde|limpieza)|jerga|franela|cubeta|recogedor"
      r"|atomizador|guantes.{0,10}(limpieza|latex|domestico)|bolsa.{0,10}(basura|plastica)"
      r"|insecticida|raticida|gel.{0,10}(antibacterial|sanitizante)"
-     r"|pastilla.{0,10}(sanitizante|desodorante|urinario)"),
+     r"|pastilla.{0,10}(sanitizante|desodorante|urinario)"
+     r"|servilleta|panuelo.{0,5}desechable|navajas.{0,5}afeitar|rastrillo.{0,5}afeitar"
+     r"|desodorante.{0,5}(personal|uso|axila)|higiene.{0,5}personal"),
     (65, "cat_waste_management", "Waste Management", "Manejo de Residuos", 10,
      r"residuo|basura|desecho|reciclaje|recoleccion.{0,10}basura|confinamiento|residuo peligroso"),
 
@@ -282,7 +292,7 @@ CATEGORIES = [
      r"|zapato|playera|chamarra|chaleco.{0,5}($|\s|s)"
      r"|ropa|prendas|vestimenta|pantalon"),
     (76, "cat_textiles", "Textiles & Fabrics", "Textiles y Telas", 12,
-     r"textil|tela|blancos|cobija|sabana|colchon|cortina|alfombra|colcha|almohada|edredon"),
+     r"textil|tela|blancos|cobija|sabana|colchon|cortina|alfombra|colcha|almohada|edredon|roperia"),
 
     # ── Group 16: Travel & Per Diem (IDs 77-78) ──
     (77, "cat_lodging", "Lodging & Hotels", "Hospedaje y Hoteles", 12,
@@ -294,13 +304,17 @@ CATEGORIES = [
     (79, "cat_electrical_materials", "Electrical Materials", "Material Electrico", 12,
      r"material electrico|cable.{0,10}(electr|cobre|utp|red)|contacto.{0,10}electr"
      r"|interruptor|transformador|luminaria|foco|led|lampara|apagador"
-     r"|centro de carga|tablero.{0,10}(electr|distribucion)"),
+     r"|centro de carga|tablero.{0,10}(electr|distribucion)"
+     r"|pilas?\b|baterias?\b|linterna|apartarrayos|cuchilla.{0,5}desconect"
+     r"|cable.{0,5}(control|media tension|alta tension|baja tension)|\bcables\b"),
     (80, "cat_plumbing", "Plumbing & Hydraulic", "Plomeria e Hidraulico", 12,
      r"plomeria|tuberia|valvula|bomba de agua|tinaco|cisterna|sanitario|lavabo"
      r"|regadera|llave.{0,10}(agua|paso)|mingitorio|inodoro"),
     (81, "cat_tools_hardware", "Tools & Hardware", "Herramientas y Ferreteria", 12,
      r"herramienta|ferreteria|taladro|soldadura|pintura|brocha|tornillo|cerrajeria"
-     r"|desarmador|llave.{0,10}(mecanica|allen|stilson)|sierra|cinta metrica"),
+     r"|desarmador|llave.{0,10}(mecanica|allen|stilson)|sierra|cinta metrica"
+     r"|herraje|albanileria|plomeria.{0,5}(ferret|herram)|utensilios.{0,5}(lamina|galvaniz|metal|cocina)"
+     r"|cuchilla(?!.{0,5}desconect)|\blamina\b|candado|bisagra|jaladera|cerradura"),
 
     # ── Group 18: Education & Culture (IDs 82-84) ──
     (82, "cat_textbooks_education", "Textbooks & Education", "Libros de Texto y Educacion", 2,
@@ -344,6 +358,8 @@ CATEGORIES = [
     (91, "cat_general_services", "General Services", "Servicios Generales", 12,
      # Catches remaining "servicio" titles not matched by specific categories
      r"servicio.{0,15}(administr|auxiliar|apoyo|complement|ordinario|tecnico)"
+     r"|trabajo.{0,5}(tecnico|especializ|profesional|comisionado)"
+     r"|trabajos.{0,5}(tecnicos|especializados|comisionados)"
      r"|servicio|contratacion|subrogado|outsourcing|tercerizado"
      r"|prestador.{0,10}servicio|honorario"
      r"|obra|proyecto|programa|instalacion|acondicionamiento"
@@ -422,8 +438,25 @@ def classify_contracts():
     print("\n4. Classifying contracts...")
     t0 = time.time()
 
-    # Fetch all contract IDs and titles
-    cur.execute("SELECT id, title FROM contracts WHERE title IS NOT NULL AND title != ''")
+    # Sector-based fallback: if no pattern matches, use sector context
+    # Only contracts with sector_id=12 (otros) remain as truly unclassified
+    SECTOR_FALLBACK_CATEGORY = {
+        1: 22,   # salud → Medical Supplies (IMSS/ISSSTE unclassified = likely medical)
+        2: 82,   # educacion → Textbooks & Education
+        3: 88,   # infraestructura → General Maintenance
+        4: 86,   # energia → Machinery & Equipment
+        5: 92,   # defensa → General Equipment
+        6: 34,   # tecnologia → IT Services
+        7: 91,   # hacienda → General Services
+        8: 91,   # gobernacion → General Services
+        9: 85,   # agricultura → Agricultural Supplies
+        10: 72,  # ambiente → Environmental Services
+        11: 91,  # trabajo → General Services
+        12: 89,  # otros → Other/Unclassified (genuinely unknown)
+    }
+
+    # Fetch all contract IDs, titles, and sector_ids
+    cur.execute("SELECT id, title, sector_id FROM contracts WHERE title IS NOT NULL AND title != ''")
     contracts = cur.fetchall()
     total = len(contracts)
     print(f"   Loaded {total:,} contracts with titles")
@@ -432,9 +465,10 @@ def classify_contracts():
     BATCH_SIZE = 50_000
     category_counts = {}
     unclassified = 0
+    sector_fallback_count = 0
     batch = []
 
-    for idx, (contract_id, title) in enumerate(contracts):
+    for idx, (contract_id, title, sector_id) in enumerate(contracts):
         title_lower = strip_accents(title.lower())
         matched_cat = 89  # default to unclassified
 
@@ -442,6 +476,13 @@ def classify_contracts():
             if pattern.search(title_lower):
                 matched_cat = cat_id
                 break
+
+        # Sector-based fallback: use sector context for unmatched contracts
+        if matched_cat == 89 and sector_id:
+            fallback = SECTOR_FALLBACK_CATEGORY.get(sector_id, 89)
+            if fallback != 89:
+                matched_cat = fallback
+                sector_fallback_count += 1
 
         if matched_cat == 89:
             unclassified += 1
@@ -462,13 +503,30 @@ def classify_contracts():
         cur.executemany("UPDATE contracts SET category_id = ? WHERE id = ?", batch)
         conn.commit()
 
-    # Also set category_id = 89 for contracts without titles
-    cur.execute("UPDATE contracts SET category_id = 89 WHERE title IS NULL OR title = ''")
+    # For contracts without titles, apply sector fallback (or 89 for sector 12/null)
+    cur.execute("""
+        UPDATE contracts SET category_id = CASE sector_id
+            WHEN 1 THEN 22
+            WHEN 2 THEN 82
+            WHEN 3 THEN 88
+            WHEN 4 THEN 86
+            WHEN 5 THEN 92
+            WHEN 6 THEN 34
+            WHEN 7 THEN 91
+            WHEN 8 THEN 91
+            WHEN 9 THEN 85
+            WHEN 10 THEN 72
+            WHEN 11 THEN 91
+            ELSE 89
+        END
+        WHERE title IS NULL OR title = ''
+    """)
     no_title = cur.rowcount
     conn.commit()
 
     elapsed = time.time() - t0
     print(f"\n   Classification complete in {elapsed:.1f}s ({total / elapsed:,.0f} contracts/sec)")
+    print(f"   Sector fallback applied: {sector_fallback_count:,} contracts")
 
     # --- Step 5: Print summary ---
     print(f"\n{'='*60}")

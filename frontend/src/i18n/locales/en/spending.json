@@ -1,0 +1,44 @@
+{
+  "hero": {
+    "trackingLabel": "SPENDING CATEGORIES",
+    "subtitle": "What Mexico buys — spending categories from government procurement",
+    "detail": "72 regex-based categories classify 3.1M contracts (2002-2025) by title with accent-aware matching. Coverage: ~84% specific, ~16% unclassified."
+  },
+  "stats": {
+    "totalCategories": "TOTAL CATEGORIES",
+    "totalCategoriesDetail": "Distinct spending categories",
+    "totalContracts": "TOTAL CONTRACTS",
+    "totalContractsDetail": "Categorized contracts",
+    "avgRisk": "AVG RISK",
+    "avgRiskDetail": "Weighted average risk score",
+    "highRisk": "HIGH-RISK CATEGORIES",
+    "highRiskDetail": "Categories with avg risk ≥ 30%"
+  },
+  "treemap": {
+    "title": "Category Treemap by Value",
+    "description": "Size represents total contract value. Colors indicate sector classification.",
+    "empty": "No category data available yet. Please contact your administrator."
+  },
+  "table": {
+    "title": "Top Categories",
+    "rankedByValue": "Ranked by total contract value",
+    "rankedByRisk": "Ranked by average risk score",
+    "rankedByCount": "Ranked by contract count",
+    "sortValue": "Value",
+    "sortRisk": "Risk",
+    "sortCount": "Count",
+    "colNum": "#",
+    "colCategory": "Category",
+    "colContracts": "Contracts",
+    "colValue": "Value",
+    "colAvgRisk": "Avg Risk",
+    "colDA": "DA%",
+    "colTopVendor": "Top Vendor",
+    "empty": "No categories found. Category data may not be available yet."
+  },
+  "trends": {
+    "title": "Spending Trends — Top 5 Categories",
+    "description": "Year-over-year contract value for the five largest spending categories.",
+    "empty": "No trend data available."
+  }
+}

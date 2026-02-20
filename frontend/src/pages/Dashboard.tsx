@@ -651,10 +651,10 @@ const RiskDistributionBar = memo(function RiskDistributionBar({
   const total = data.reduce((sum, d) => sum + d.count, 0)
 
   const segments = [
-    { key: 'critical', color: RISK_COLORS.critical, label: t('critical') },
-    { key: 'high', color: RISK_COLORS.high, label: t('high') },
-    { key: 'medium', color: RISK_COLORS.medium, label: t('medium') },
-    { key: 'low', color: RISK_COLORS.low, label: t('low') },
+    { key: 'critical', color: RISK_COLORS.critical, label: t('critical'), darkText: false },
+    { key: 'high', color: RISK_COLORS.high, label: t('high'), darkText: false },
+    { key: 'medium', color: RISK_COLORS.medium, label: t('medium'), darkText: true },
+    { key: 'low', color: RISK_COLORS.low, label: t('low'), darkText: true },
   ]
 
   return (
@@ -673,7 +673,13 @@ const RiskDistributionBar = memo(function RiskDistributionBar({
               title={`${seg.label}: ${formatNumber(item.count)} (${item.percentage.toFixed(1)}%)`}
             >
               {widthPct > 6 && (
-                <span className="text-xs font-bold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] font-mono tabular-nums">
+                <span
+                  className="text-xs font-bold font-mono tabular-nums"
+                  style={{
+                    color: seg.darkText ? 'rgba(0,0,0,0.75)' : '#fff',
+                    textShadow: seg.darkText ? 'none' : '0 1px 1px rgba(0,0,0,0.5)',
+                  }}
+                >
                   {item.percentage.toFixed(1)}%
                 </span>
               )}
@@ -732,6 +738,7 @@ const SectorGrid = memo(function SectorGrid({
   onSectorClick?: (id: number) => void
 }) {
   const { t } = useTranslation('dashboard')
+  const { t: ts } = useTranslation('sectors')
   const maxVal = Math.max(...data.map((d) => d.valueAtRisk), 1)
 
   return (
@@ -757,7 +764,7 @@ const SectorGrid = memo(function SectorGrid({
             <div className="w-[80px] flex-shrink-0 flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: sectorColor }} />
               <span className="text-xs text-text-secondary font-medium truncate group-hover:text-text-primary transition-colors">
-                {sector.name}
+                {ts(sector.code)}
               </span>
             </div>
             {/* Value at risk bar */}
@@ -816,74 +823,94 @@ const CaseDetectionChart = memo(function CaseDetectionChart({
   }, [cases])
 
   return (
-    <div className="space-y-1 mt-3">
-      {/* Column headers */}
-      <div className="flex items-center gap-3 pb-1 border-b border-border/20 px-1">
-        <div className="w-[180px] flex-shrink-0">
-          <span className="text-xs text-text-muted uppercase tracking-wider font-bold">{t('caseLabel')}</span>
-        </div>
-        <div className="flex-1">
-          <span className="text-xs text-text-muted uppercase tracking-wider font-bold">{t('detectionRate')}</span>
-        </div>
-        <div className="w-[50px] flex-shrink-0 text-right">
-          <span className="text-xs text-text-muted uppercase tracking-wider font-bold">{tc('contracts')}</span>
-        </div>
-        <div className="w-[40px] flex-shrink-0 text-right">
-          <span className="text-xs text-text-muted uppercase tracking-wider font-bold">Avg</span>
-        </div>
-      </div>
-      {filteredCases.map((c) => {
+    <div className="mt-3 space-y-0">
+      {filteredCases.map((c, idx) => {
         const detected = c.high_plus_pct
-        const barColor = detected >= 90
-          ? '#4ade80'
-          : detected >= 50
-            ? '#fbbf24'
-            : '#f87171'
         const sectorColor = SECTOR_COLORS[c.sector] || '#64748b'
+        const trackColor =
+          detected >= 90 ? 'rgba(74,222,128,0.18)' :
+          detected >= 50 ? 'rgba(251,191,36,0.18)' :
+          'rgba(248,113,113,0.18)'
+        const fillColor =
+          detected >= 90 ? '#4ade80' :
+          detected >= 50 ? '#fbbf24' :
+          '#f87171'
+        const pctColor =
+          detected >= 90 ? 'text-risk-low' :
+          detected >= 50 ? 'text-risk-medium' :
+          'text-risk-critical'
+
         return (
-          <div key={c.name} className="group hover:bg-background-elevated/30 rounded px-1 py-0.5 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="w-[180px] flex-shrink-0">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: sectorColor }} />
-                  <p className="text-xs font-medium text-text-primary truncate">{c.name}</p>
-                </div>
-                <div className="flex items-center gap-1.5 mt-0.5 ml-3.5">
-                  <span className="text-xs px-1.5 py-0 rounded bg-background-elevated/60 text-text-muted font-medium">
-                    {c.type}
-                  </span>
-                </div>
+          <div
+            key={c.name}
+            className="group grid items-center gap-x-3 py-2 px-2 hover:bg-background-elevated/30 rounded transition-colors"
+            style={{ gridTemplateColumns: '170px 1fr 44px 42px 38px' }}
+          >
+            {/* Case name + type */}
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: sectorColor }} />
+                <span className="text-xs font-semibold text-text-primary truncate leading-tight">{c.name}</span>
               </div>
-              <div className="flex-1 relative">
-                <div className="h-6 rounded bg-background-elevated/60 overflow-hidden">
-                  <div
-                    className="h-full rounded transition-all duration-700 ease-out flex items-center justify-end pr-2"
-                    style={{
-                      width: `${Math.max(detected, 8)}%`,
-                      backgroundColor: barColor,
-                      opacity: 0.85,
-                    }}
-                  >
-                    <span className="text-xs font-bold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] font-mono tabular-nums">
-                      {detected.toFixed(0)}%
-                    </span>
-                  </div>
-                </div>
+              <div className="mt-0.5 ml-3">
+                <span className="text-[10px] text-text-muted font-medium">{c.type}</span>
               </div>
-              <div className="w-[50px] flex-shrink-0 text-right">
-                <span className="text-xs text-text-muted tabular-nums font-mono">
-                  {formatNumber(c.contracts)}
-                </span>
-              </div>
-              <div className="w-[40px] flex-shrink-0 text-right">
-                <span className="text-xs font-bold tabular-nums font-mono px-1.5 py-0.5 rounded bg-background-elevated/60 text-text-secondary">
-                  {c.avg_score.toFixed(2)}
-                </span>
-              </div>
+            </div>
+
+            {/* Slim track + fill */}
+            <div className="relative h-4 flex items-center">
+              {/* Track */}
+              <div className="absolute inset-0 rounded-full" style={{ backgroundColor: trackColor }} />
+              {/* Fill */}
+              <div
+                className="absolute left-0 top-0 h-full rounded-full transition-all duration-700 ease-out"
+                style={{ width: `${Math.max(detected, 2)}%`, backgroundColor: fillColor, opacity: 0.9 }}
+              />
+              {/* Tick marks at 25/50/75/100 */}
+              {[25, 50, 75].map((tick) => (
+                <div
+                  key={tick}
+                  className="absolute top-0 h-full w-px opacity-20"
+                  style={{ left: `${tick}%`, backgroundColor: 'var(--color-border)' }}
+                />
+              ))}
+            </div>
+
+            {/* Detection % */}
+            <div className="text-right">
+              <span className={cn('text-xs font-black tabular-nums font-mono', pctColor)}>
+                {detected.toFixed(0)}%
+              </span>
+            </div>
+
+            {/* Contract count */}
+            <div className="text-right">
+              <span className="text-[11px] text-text-muted tabular-nums font-mono">
+                {formatNumber(c.contracts)}
+              </span>
+            </div>
+
+            {/* Avg score */}
+            <div className="text-right">
+              <span className="text-[11px] font-bold tabular-nums font-mono text-text-secondary">
+                {c.avg_score.toFixed(2)}
+              </span>
             </div>
           </div>
         )
       })}
+
+      {/* Column footer labels */}
+      <div
+        className="grid items-center gap-x-3 pt-2 px-2 border-t border-border/20 mt-1"
+        style={{ gridTemplateColumns: '170px 1fr 44px 42px 38px' }}
+      >
+        <span className="text-[10px] text-text-muted uppercase tracking-wider font-bold">{t('caseLabel')}</span>
+        <span className="text-[10px] text-text-muted uppercase tracking-wider font-bold">{t('detectionRate')} (high+)</span>
+        <span className="text-[10px] text-text-muted uppercase tracking-wider font-bold text-right">%</span>
+        <span className="text-[10px] text-text-muted uppercase tracking-wider font-bold text-right">{tc('contracts')}</span>
+        <span className="text-[10px] text-text-muted uppercase tracking-wider font-bold text-right">avg</span>
+      </div>
     </div>
   )
 })

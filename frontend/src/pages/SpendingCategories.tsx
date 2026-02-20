@@ -8,6 +8,7 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChartSkeleton } from '@/components/LoadingSkeleton'
@@ -140,6 +141,7 @@ function TreemapContent(props: {
 
 export default function SpendingCategories() {
   const navigate = useNavigate()
+  const { t } = useTranslation('spending')
   const [sortBy, setSortBy] = useState<'value' | 'risk' | 'contracts'>('value')
 
   const { data: summaryData, isLoading: summaryLoading } = useQuery({
@@ -219,42 +221,42 @@ export default function SpendingCategories() {
     <div className="space-y-6">
       {/* Hero */}
       <PageHero
-        trackingLabel="SPENDING CATEGORIES"
+        trackingLabel={t('hero.trackingLabel')}
         icon={<ShoppingCart className="h-4 w-4 text-accent" />}
         headline={stats ? formatCompactMXN(stats.totalValue) : '—'}
-        subtitle="What Mexico buys — spending categories from government procurement"
-        detail="72 regex-based categories classify 3.1M contracts (2002-2025) by title with accent-aware matching. Coverage: ~84% specific, ~16% unclassified."
+        subtitle={t('hero.subtitle')}
+        detail={t('hero.detail')}
         loading={summaryLoading}
       />
 
       {/* Stat Cards */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <SharedStatCard
-          label="TOTAL CATEGORIES"
+          label={t('stats.totalCategories')}
           value={categories.length > 0 ? formatNumber(categories.length) : '—'}
-          detail="Distinct spending categories"
+          detail={t('stats.totalCategoriesDetail')}
           borderColor="border-accent/30"
           loading={summaryLoading}
         />
         <SharedStatCard
-          label="TOTAL CONTRACTS"
+          label={t('stats.totalContracts')}
           value={stats ? formatNumber(stats.totalContracts) : '—'}
-          detail="Categorized contracts"
+          detail={t('stats.totalContractsDetail')}
           borderColor="border-blue-500/30"
           loading={summaryLoading}
         />
         <SharedStatCard
-          label="AVG RISK"
+          label={t('stats.avgRisk')}
           value={stats ? `${(stats.avgRisk * 100).toFixed(1)}%` : '—'}
-          detail="Weighted average risk score"
+          detail={t('stats.avgRiskDetail')}
           borderColor="border-amber-500/30"
           color={stats && stats.avgRisk >= 0.3 ? 'text-risk-high' : 'text-text-primary'}
           loading={summaryLoading}
         />
         <SharedStatCard
-          label="HIGH-RISK CATEGORIES"
+          label={t('stats.highRisk')}
           value={stats ? String(stats.highRiskCategories) : '—'}
-          detail="Categories with avg risk >= 30%"
+          detail={t('stats.highRiskDetail')}
           borderColor="border-red-500/30"
           color={stats && stats.highRiskCategories > 0 ? 'text-risk-critical' : 'text-text-primary'}
           loading={summaryLoading}
@@ -266,10 +268,10 @@ export default function SpendingCategories() {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
             <ShoppingCart className="h-4 w-4 text-text-muted" />
-            Category Treemap by Value
+            {t('treemap.title')}
           </CardTitle>
           <CardDescription>
-            Size represents total contract value. Colors indicate sector classification.
+            {t('treemap.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -288,7 +290,7 @@ export default function SpendingCategories() {
             </div>
           ) : (
             <div className="flex items-center justify-center h-64 text-text-muted text-sm">
-              No category data available yet. Please contact your administrator.
+              {t('treemap.empty')}
             </div>
           )}
         </CardContent>
@@ -301,10 +303,10 @@ export default function SpendingCategories() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-text-muted" />
-                Top Categories
+                {t('table.title')}
               </CardTitle>
               <CardDescription>
-                Ranked by {sortBy === 'value' ? 'total contract value' : sortBy === 'risk' ? 'average risk score' : 'contract count'}
+                {sortBy === 'value' ? t('table.rankedByValue') : sortBy === 'risk' ? t('table.rankedByRisk') : t('table.rankedByCount')}
               </CardDescription>
             </div>
             <div className="flex gap-1">
@@ -319,7 +321,7 @@ export default function SpendingCategories() {
                       : 'text-text-muted hover:text-text-primary hover:bg-background-elevated'
                   )}
                 >
-                  {s === 'value' ? 'Value' : s === 'risk' ? 'Risk' : 'Count'}
+                  {s === 'value' ? t('table.sortValue') : s === 'risk' ? t('table.sortRisk') : t('table.sortCount')}
                 </button>
               ))}
             </div>
@@ -337,13 +339,13 @@ export default function SpendingCategories() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border/30 text-text-muted">
-                    <th className="text-left px-3 py-2.5 text-xs font-medium text-text-muted">#</th>
-                    <th className="text-left px-3 py-2.5 text-xs font-medium text-text-muted">Category</th>
-                    <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">Contracts</th>
-                    <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">Value</th>
-                    <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">Avg Risk</th>
-                    <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted hidden lg:table-cell">DA%</th>
-                    <th className="text-left px-3 py-2.5 text-xs font-medium text-text-muted hidden lg:table-cell">Top Vendor</th>
+                    <th className="text-left px-3 py-2.5 text-xs font-medium text-text-muted">{t('table.colNum')}</th>
+                    <th className="text-left px-3 py-2.5 text-xs font-medium text-text-muted">{t('table.colCategory')}</th>
+                    <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">{t('table.colContracts')}</th>
+                    <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">{t('table.colValue')}</th>
+                    <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">{t('table.colAvgRisk')}</th>
+                    <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted hidden lg:table-cell">{t('table.colDA')}</th>
+                    <th className="text-left px-3 py-2.5 text-xs font-medium text-text-muted hidden lg:table-cell">{t('table.colTopVendor')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -403,7 +405,7 @@ export default function SpendingCategories() {
               </table>
               {sortedCategories.length === 0 && (
                 <div className="flex items-center justify-center py-12 text-text-muted text-sm">
-                  No categories found. Category data may not be available yet.
+                  {t('table.empty')}
                 </div>
               )}
             </div>
@@ -416,10 +418,10 @@ export default function SpendingCategories() {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-text-muted" />
-            Spending Trends — Top 5 Categories
+            {t('trends.title')}
           </CardTitle>
           <CardDescription>
-            Year-over-year contract value for the five largest spending categories.
+            {t('trends.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -487,7 +489,7 @@ export default function SpendingCategories() {
             </div>
           ) : (
             <div className="flex items-center justify-center h-64 text-text-muted text-sm">
-              No trend data available.
+              {t('trends.empty')}
             </div>
           )}
         </CardContent>

@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import { X } from 'lucide-react'
 
@@ -44,12 +45,12 @@ DialogTrigger.displayName = 'DialogTrigger'
 
 type DialogSize = 'sm' | 'md' | 'lg' | 'xl' | 'full'
 
-const DIALOG_SIZE_CLASSES: Record<DialogSize, string> = {
-  sm: 'max-w-sm',
-  md: 'max-w-lg',
-  lg: 'max-w-2xl',
-  xl: 'max-w-4xl',
-  full: 'max-w-[90vw]',
+const DIALOG_SIZE_PX: Record<DialogSize, string> = {
+  sm: '24rem',
+  md: '32rem',
+  lg: '42rem',
+  xl: '56rem',
+  full: '90vw',
 }
 
 interface DialogContentProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -62,33 +63,51 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
 
     if (!open) return null
 
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
+    return createPortal(
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem',
+        }}
+      >
         {/* Backdrop */}
         <div
-          className="fixed inset-0 bg-black/50"
+          style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }}
           onClick={() => onOpenChange(false)}
         />
         {/* Content */}
         <div
           ref={ref}
+          style={{
+            position: 'relative',
+            zIndex: 1,
+            width: '100%',
+            maxWidth: DIALOG_SIZE_PX[size],
+            maxHeight: '85vh',
+            overflowY: 'auto',
+          }}
           className={cn(
-            'fixed z-50 grid w-full gap-4 border bg-background p-6 shadow-lg sm:rounded-lg',
-            DIALOG_SIZE_CLASSES[size],
+            'border bg-background p-6 shadow-lg rounded-lg',
             className
           )}
           {...props}
         >
           {children}
           <button
-            className="absolute right-4 top-4 rounded-sm opacity-100 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+            className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
             onClick={() => onOpenChange(false)}
           >
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
           </button>
         </div>
-      </div>
+      </div>,
+      document.body
     )
   }
 )

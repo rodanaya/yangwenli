@@ -384,6 +384,13 @@ export default function ModelTransparency() {
           </p>
         </div>
       </div>
+      <div className="flex items-start gap-2 rounded-md border border-blue-500/20 bg-blue-500/[0.04] px-3 py-2 text-xs text-text-muted">
+        <Info className="h-3.5 w-3.5 text-blue-400 shrink-0 mt-0.5" aria-hidden="true" />
+        <span>
+          All data on this page is <strong className="text-text-primary">static documentation</strong> derived from the v5.0 methodology report — not queried from the live database.
+          To recompute, run <code className="font-mono text-text-secondary">calibrate_risk_model_v5</code> and <code className="font-mono text-text-secondary">calculate_risk_scores_v5</code>.
+        </span>
+      </div>
 
       {/* ================================================================ */}
       {/* L1: Key Metrics (4 gauge-style cards)                            */}
