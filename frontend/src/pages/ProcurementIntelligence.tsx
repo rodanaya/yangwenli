@@ -62,12 +62,14 @@ function riskLevelBadge(risk: number | null): string {
   return 'bg-risk-low/20 text-risk-low border border-risk-low/30'
 }
 
-function riskLevelLabel(risk: number | null, t: (k: string) => string): string {
+// NOTE: riskLevelLabel uses the 'procurement' namespace (t), not 'redflags' (tRf),
+// because riskLevels keys live in procurement.json.
+function riskLevelLabel(risk: number | null, tProcurement: (k: string) => string): string {
   if (risk == null) return '—'
-  if (risk >= 0.5) return t('riskLevels.critical')
-  if (risk >= 0.3) return t('riskLevels.high')
-  if (risk >= 0.1) return t('riskLevels.medium')
-  return t('riskLevels.low')
+  if (risk >= 0.5) return tProcurement('riskLevels.critical')
+  if (risk >= 0.3) return tProcurement('riskLevels.high')
+  if (risk >= 0.1) return tProcurement('riskLevels.medium')
+  return tProcurement('riskLevels.low')
 }
 
 function lerpColor(colorA: string, colorB: string, t: number): string {
@@ -485,7 +487,7 @@ export default function ProcurementIntelligence() {
                         </td>
                         <td className="px-4 py-2.5 text-center">
                           <span className={cn('inline-block px-2 py-0.5 rounded text-xs font-medium', riskLevelBadge(inst.avg_risk))}>
-                            {riskLevelLabel(inst.avg_risk, tRf)}
+                            {riskLevelLabel(inst.avg_risk, t)}
                           </span>
                         </td>
                         <td className="px-4 py-2.5 text-right text-text-secondary font-mono">
@@ -514,7 +516,7 @@ export default function ProcurementIntelligence() {
                     className="text-xs text-accent hover:underline"
                   >
                     {showMoreInstitutions
-                      ? `Show top 30`
+                      ? 'Show top 30'
                       : t('institutionTable.showMore')}
                   </button>
                 </div>

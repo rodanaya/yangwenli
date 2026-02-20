@@ -51,6 +51,12 @@
     "showHeatmap": "Show Co-occurrence Heatmap",
     "hideHeatmap": "Hide Heatmap"
   },
+  "riskLevels": {
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
+  },
   "dangerZone": {
     "title": "High-Risk Flows",
     "subtitle": "Institutions with average risk score ≥ 0.30 — prioritize for investigation",

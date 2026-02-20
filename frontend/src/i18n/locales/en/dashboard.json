@@ -93,5 +93,6 @@
   "confirmed": "confirmed",
   "oecdDirectAward": "OECD benchmark: 20-30%",
   "oecdSingleBid": "OECD alert: >15%",
-  "oecdHighRisk": "OECD expected: 2-15%"
+  "oecdHighRisk": "OECD expected: 2-15%",
+  "sector": "Sector"
 }

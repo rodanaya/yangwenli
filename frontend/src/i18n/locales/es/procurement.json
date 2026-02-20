@@ -51,6 +51,12 @@
     "showHeatmap": "Mostrar Mapa de Co-ocurrencia",
     "hideHeatmap": "Ocultar Mapa"
   },
+  "riskLevels": {
+    "critical": "Crítico",
+    "high": "Alto",
+    "medium": "Medio",
+    "low": "Bajo"
+  },
   "dangerZone": {
     "title": "Flujos de Alto Riesgo",
     "subtitle": "Instituciones con puntaje de riesgo promedio ≥ 0.30 — priorizar para investigación",

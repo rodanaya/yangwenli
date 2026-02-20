@@ -93,5 +93,6 @@
   "confirmed": "confirmados",
   "oecdDirectAward": "Referencia OCDE: 20-30%",
   "oecdSingleBid": "Alerta OCDE: >15%",
-  "oecdHighRisk": "OCDE esperado: 2-15%"
+  "oecdHighRisk": "OCDE esperado: 2-15%",
+  "sector": "Sector"
 }
