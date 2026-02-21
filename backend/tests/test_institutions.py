@@ -156,6 +156,33 @@ class TestInstitutionVendors:
             assert "data" in data
 
 
+class TestInstitutionRiskTimeline:
+    """Tests for GET /institutions/{id}/risk-timeline endpoint."""
+
+    def test_institution_risk_timeline(self, client, base_url):
+        """Test getting institution's risk timeline."""
+        list_response = client.get(f"{base_url}/institutions?per_page=1")
+        if list_response.status_code == 200 and list_response.json()["data"]:
+            institution_id = list_response.json()["data"][0]["id"]
+            response = client.get(f"{base_url}/institutions/{institution_id}/risk-timeline")
+            assert response.status_code == 200
+            data = response.json()
+            assert "institution_id" in data
+            assert "institution_name" in data
+            assert "timeline" in data
+            assert isinstance(data["timeline"], list)
+            if data["timeline"]:
+                item = data["timeline"][0]
+                assert "year" in item
+                assert "avg_risk" in item
+                assert "contract_count" in item
+
+    def test_institution_risk_timeline_not_found(self, client, base_url):
+        """Test risk timeline with non-existent institution."""
+        response = client.get(f"{base_url}/institutions/999999999/risk-timeline")
+        assert response.status_code == 404
+
+
 class TestInstitutionTypes:
     """Tests for GET /institutions/types endpoint."""
 

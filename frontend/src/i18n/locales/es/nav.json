@@ -3,7 +3,12 @@
     "overview": "RESUMEN",
     "analyze": "ANALIZAR",
     "investigate": "INVESTIGAR",
-    "understand": "COMPRENDER"
+    "understand": "COMPRENDER",
+    "theStory": "LA HISTORIA",
+    "theMoney": "EL DINERO",
+    "whoAndHow": "QUIÉN Y CÓMO",
+    "investigateSection": "INVESTIGAR",
+    "understandSection": "ENTENDER"
   },
   "executive": "Resumen Ejecutivo",
   "dashboard": "Panel",
@@ -12,7 +17,7 @@
   "temporal": "Línea de Tiempo",
   "administrations": "Por Administración",
   "institutions": "Salud Institucional",
-  "pricing": "Análisis de Precios",
+  "pricing": "Inteligencia de Precios",
   "categories": "Categorías de Gasto",
   "contracts": "Todos los Contratos",
   "network": "Red de Proveedores",

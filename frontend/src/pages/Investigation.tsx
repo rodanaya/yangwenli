@@ -34,6 +34,11 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Building2,
+  User,
+  FileText,
+  Calendar,
+  Search,
 } from 'lucide-react'
 import {
   BarChart,
@@ -153,6 +158,159 @@ function SortHeader({
         )}
       </span>
     </th>
+  )
+}
+
+// ============================================================================
+// INVESTIGATION INTAKE
+// ============================================================================
+
+type IntakeTab = 'institution' | 'vendor' | 'pattern' | 'time' | null
+
+function InvestigationIntake() {
+  const { t } = useTranslation('investigation')
+  const navigate = useNavigate()
+  const [activeTab, setActiveTab] = useState<IntakeTab>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [yearFrom, setYearFrom] = useState('')
+  const [yearTo, setYearTo] = useState('')
+
+  const tabs = [
+    { key: 'institution' as const, icon: Building2, label: t('intake.byInstitution') },
+    { key: 'vendor' as const, icon: User, label: t('intake.byVendor') },
+    { key: 'pattern' as const, icon: FileText, label: t('intake.byPattern') },
+    { key: 'time' as const, icon: Calendar, label: t('intake.byTimePeriod') },
+  ]
+
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault()
+    if (!searchTerm.trim()) return
+    if (activeTab === 'institution') {
+      navigate(`/contracts?institution=${encodeURIComponent(searchTerm.trim())}`)
+    } else if (activeTab === 'vendor') {
+      navigate(`/contracts?vendor=${encodeURIComponent(searchTerm.trim())}`)
+    }
+  }
+
+  function handlePatternClick(pattern: string) {
+    const params = new URLSearchParams()
+    if (pattern === 'directAward') params.set('is_direct_award', 'true')
+    else if (pattern === 'singleBid') params.set('is_single_bid', 'true')
+    else if (pattern === 'decemberRush') params.set('month', '12')
+    navigate(`/contracts?${params.toString()}`)
+  }
+
+  function handleTimeSearch() {
+    const params = new URLSearchParams()
+    if (yearFrom) params.set('year_from', yearFrom)
+    if (yearTo) params.set('year_to', yearTo)
+    navigate(`/contracts?${params.toString()}`)
+  }
+
+  return (
+    <Card className="border-accent/20 bg-accent/[0.02]">
+      <CardContent className="pt-5 pb-4">
+        <div className="text-center mb-4">
+          <h2 className="text-base font-bold text-text-primary mb-1">{t('intake.title')}</h2>
+          <p className="text-xs text-text-muted">{t('intake.subtitle')}</p>
+        </div>
+
+        {/* Tab buttons */}
+        <div className="flex flex-wrap justify-center gap-2 mb-4">
+          {tabs.map((tab) => {
+            const Icon = tab.icon
+            const isActive = activeTab === tab.key
+            return (
+              <button
+                key={tab.key}
+                onClick={() => {
+                  setActiveTab(isActive ? null : tab.key)
+                  setSearchTerm('')
+                }}
+                className={cn(
+                  'flex items-center gap-2 px-4 py-2 rounded-lg border text-xs font-medium transition-all',
+                  isActive
+                    ? 'border-accent bg-accent/10 text-accent ring-1 ring-accent/30'
+                    : 'border-border/50 text-text-secondary hover:border-accent/40 hover:text-accent'
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {tab.label}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Search panels */}
+        {(activeTab === 'institution' || activeTab === 'vendor') && (
+          <form onSubmit={handleSearch} className="flex items-center gap-2 max-w-md mx-auto">
+            <div className="flex-1 relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder={activeTab === 'institution' ? t('intake.institutionPlaceholder') : t('intake.vendorPlaceholder')}
+                className="w-full pl-8 pr-3 py-2 text-xs bg-background-elevated border border-border/50 rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent/50"
+                autoFocus
+              />
+            </div>
+            <button
+              type="submit"
+              className="px-4 py-2 text-xs font-medium bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors"
+            >
+              {t('intake.go')}
+            </button>
+          </form>
+        )}
+
+        {activeTab === 'pattern' && (
+          <div className="flex flex-wrap justify-center gap-2">
+            {(['directAward', 'singleBid', 'decemberRush'] as const).map((pattern) => (
+              <button
+                key={pattern}
+                onClick={() => handlePatternClick(pattern)}
+                className="px-4 py-2 text-xs font-medium border border-border/50 rounded-lg text-text-secondary hover:border-accent/40 hover:text-accent transition-all"
+              >
+                {t(`intake.patterns.${pattern}`)}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {activeTab === 'time' && (
+          <div className="flex items-center justify-center gap-2">
+            <input
+              type="number"
+              min="2002"
+              max="2025"
+              value={yearFrom}
+              onChange={(e) => setYearFrom(e.target.value)}
+              placeholder={t('intake.yearFrom')}
+              className="w-28 px-3 py-2 text-xs bg-background-elevated border border-border/50 rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent/50"
+            />
+            <span className="text-text-muted text-xs">-</span>
+            <input
+              type="number"
+              min="2002"
+              max="2025"
+              value={yearTo}
+              onChange={(e) => setYearTo(e.target.value)}
+              placeholder={t('intake.yearTo')}
+              className="w-28 px-3 py-2 text-xs bg-background-elevated border border-border/50 rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent/50"
+            />
+            <button
+              onClick={handleTimeSearch}
+              className="px-4 py-2 text-xs font-medium bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors"
+            >
+              {t('intake.go')}
+            </button>
+          </div>
+        )}
+
+        <p className="text-center text-xs text-text-muted mt-4">{t('intake.browseExisting')}</p>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -286,6 +444,9 @@ export function Investigation() {
       <p className="text-xs text-text-secondary max-w-3xl leading-relaxed -mt-4">
         {t('description')}
       </p>
+
+      {/* INVESTIGATION INTAKE */}
+      <InvestigationIntake />
 
       {/* VALIDATION FUNNEL */}
       <Card>

@@ -555,34 +555,138 @@ export function Dashboard() {
       </div>
 
       {/* ================================================================ */}
-      {/* NAVIGATE DEEPER — 6 link cards */}
+      {/* THREE SYSTEMIC PATTERNS — recurring across all administrations */}
       {/* ================================================================ */}
       <div>
-        <h2 className="text-base font-bold text-text-primary mb-3">{t('navigateDeeper')}</h2>
-        <div className="grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-          {[
-            { labelKey: 'patterns' as const, icon: Crosshair, path: '/patterns', descKey: 'patternsDesc' as const },
-            { labelKey: 'network' as const, icon: Radar, path: '/network', descKey: 'networkDesc' as const },
-            { labelKey: 'explore' as const, icon: Search, path: '/explore', descKey: 'exploreDesc' as const },
-            { labelKey: 'methodology' as const, icon: BookOpen, path: '/methodology', descKey: 'methodologyDesc' as const },
-            { labelKey: 'institutions' as const, icon: Gavel, path: '/institutions/health', descKey: 'institutionsDesc' as const },
-            { labelKey: 'investigation' as const, icon: FileSearch, path: '/investigation', descKey: 'investigationDesc' as const },
-          ].map((item) => (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              className="flex flex-col items-start gap-1.5 px-3 py-3 rounded-lg border border-border/40 bg-surface-card/30 hover:border-accent/40 hover:bg-accent/5 transition-all text-left group"
-            >
-              <div className="flex items-center gap-2 w-full">
-                <item.icon className="h-4 w-4 text-text-muted group-hover:text-accent shrink-0 transition-colors" />
-                <span className="text-sm font-semibold text-text-secondary group-hover:text-text-primary transition-colors">
-                  {t(item.labelKey)}
-                </span>
-                <ArrowRight className="h-3 w-3 text-text-muted ml-auto group-hover:text-accent transition-colors" />
+        <div className="flex items-center gap-2 mb-3">
+          <AlertTriangle className="h-4 w-4 text-risk-high" />
+          <h2 className="text-base font-bold text-text-primary">Three Patterns Our AI Found in Every Administration</h2>
+        </div>
+        <p className="text-xs text-text-muted mb-4">
+          These systemic red flags recur across all governments, all sectors, and all years — the structural fingerprint of Mexico's procurement risk.
+        </p>
+        <div className="grid gap-3 md:grid-cols-3">
+          {/* Direct Awards */}
+          <button
+            onClick={() => navigate('/contracts?is_direct_award=true')}
+            className="flex flex-col gap-3 p-4 rounded-lg border border-risk-high/20 bg-risk-high/5 hover:border-risk-high/40 hover:bg-risk-high/10 transition-all text-left group"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🚨</span>
+              <span className="text-xs font-bold tracking-wider uppercase text-risk-high font-mono">Direct Awards</span>
+            </div>
+            <div>
+              <p className="text-3xl font-black text-text-primary tabular-nums font-mono">
+                {overview ? `${(overview.direct_award_pct || 0).toFixed(0)}%` : '—'}
+              </p>
+              <p className="text-sm text-text-secondary mt-1">of contracts skip competition entirely</p>
+              <p className="text-xs text-text-muted mt-1 font-mono">OECD benchmark: 20–30%</p>
+            </div>
+            <ArrowRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" />
+          </button>
+
+          {/* Single Bidder */}
+          <button
+            onClick={() => navigate('/contracts?is_single_bid=true')}
+            className="flex flex-col gap-3 p-4 rounded-lg border border-risk-critical/20 bg-risk-critical/5 hover:border-risk-critical/40 hover:bg-risk-critical/10 transition-all text-left group"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🔴</span>
+              <span className="text-xs font-bold tracking-wider uppercase text-risk-critical font-mono">Single Bidder</span>
+            </div>
+            <div>
+              <p className="text-3xl font-black text-text-primary tabular-nums font-mono">
+                {overview ? `${(overview.single_bid_pct || 0).toFixed(0)}%` : '—'}
+              </p>
+              <p className="text-sm text-text-secondary mt-1">of "competitive" tenders had only one bidder</p>
+              <p className="text-xs text-text-muted mt-1 font-mono">Effectively no competition</p>
+            </div>
+            <ArrowRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" />
+          </button>
+
+          {/* December Rush */}
+          <button
+            onClick={() => navigate('/administrations')}
+            className="flex flex-col gap-3 p-4 rounded-lg border border-risk-medium/20 bg-risk-medium/5 hover:border-risk-medium/40 hover:bg-risk-medium/10 transition-all text-left group"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">📅</span>
+              <span className="text-xs font-bold tracking-wider uppercase text-risk-medium font-mono">December Rush</span>
+            </div>
+            <div>
+              <p className="text-3xl font-black text-text-primary tabular-nums font-mono">
+                {patternData ? `${((patternData.counts.december_rush / (overview?.total_contracts || 1)) * 100).toFixed(0)}%` : '~18%'}
+              </p>
+              <p className="text-sm text-text-secondary mt-1">of contracts awarded in December</p>
+              <p className="text-xs text-text-muted mt-1 font-mono">Year-end budget dump pattern</p>
+            </div>
+            <ArrowRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" />
+          </button>
+        </div>
+      </div>
+
+      {/* ================================================================ */}
+      {/* START INVESTIGATING — 3 action cards */}
+      {/* ================================================================ */}
+      <div>
+        <h2 className="text-base font-bold text-text-primary mb-1">Start Your Investigation</h2>
+        <p className="text-xs text-text-muted mb-3">
+          These are the tools. Search any vendor, institution, contract. Build your own investigation.
+        </p>
+        <div className="grid gap-3 md:grid-cols-3">
+          <button
+            onClick={() => navigate('/categories')}
+            className="flex flex-col gap-3 p-5 rounded-lg border border-border/40 bg-surface-card/30 hover:border-accent/40 hover:bg-accent/5 transition-all text-left group"
+          >
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-md bg-accent/10 group-hover:bg-accent/20 transition-colors">
+                <Search className="h-5 w-5 text-accent" />
               </div>
-              <p className="text-xs text-text-muted leading-snug">{t(item.descKey)}</p>
-            </button>
-          ))}
+              <span className="text-sm font-bold text-text-primary">Follow the Money</span>
+            </div>
+            <p className="text-xs text-text-muted leading-relaxed">
+              Where does $9.56T MXN actually go? Explore 72 spending categories and 12 sectors with AI-scored risk at every level.
+            </p>
+            <div className="flex items-center gap-1 text-xs text-accent font-medium">
+              Explore categories <ArrowRight className="h-3 w-3" />
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/contracts')}
+            className="flex flex-col gap-3 p-5 rounded-lg border border-border/40 bg-surface-card/30 hover:border-accent/40 hover:bg-accent/5 transition-all text-left group"
+          >
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-md bg-accent/10 group-hover:bg-accent/20 transition-colors">
+                <FileSearch className="h-5 w-5 text-accent" />
+              </div>
+              <span className="text-sm font-bold text-text-primary">Search Any Contract</span>
+            </div>
+            <p className="text-xs text-text-muted leading-relaxed">
+              Search 3.1M contracts by vendor name, institution, or contract description. Each result includes its AI risk score.
+            </p>
+            <div className="flex items-center gap-1 text-xs text-accent font-medium">
+              Open contract search <ArrowRight className="h-3 w-3" />
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/investigation')}
+            className="flex flex-col gap-3 p-5 rounded-lg border border-border/40 bg-surface-card/30 hover:border-accent/40 hover:bg-accent/5 transition-all text-left group"
+          >
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-md bg-accent/10 group-hover:bg-accent/20 transition-colors">
+                <Crosshair className="h-5 w-5 text-accent" />
+              </div>
+              <span className="text-sm font-bold text-text-primary">Open an Investigation</span>
+            </div>
+            <p className="text-xs text-text-muted leading-relaxed">
+              Start from a suspicion — a vendor, institution, or pattern — and build a documented case with AI-powered analysis tools.
+            </p>
+            <div className="flex items-center gap-1 text-xs text-accent font-medium">
+              Open case manager <ArrowRight className="h-3 w-3" />
+            </div>
+          </button>
         </div>
       </div>
     </div>

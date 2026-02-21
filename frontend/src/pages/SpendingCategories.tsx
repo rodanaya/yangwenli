@@ -33,6 +33,7 @@ import {
   TrendingUp,
   ArrowUpRight,
   SlidersHorizontal,
+  AlertTriangle,
 } from 'lucide-react'
 import { getSectorNameEN } from '@/lib/constants'
 
@@ -224,6 +225,7 @@ export default function SpendingCategories() {
   const [yearTo, setYearTo] = useState(2025)
   const [sortField, setSortField] = useState<SortField>('total_value')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [trendCount, setTrendCount] = useState(5)
 
   const { data: summaryData, isLoading: summaryLoading } = useQuery({
     queryKey: ['categories', 'summary'],
@@ -278,6 +280,14 @@ export default function SpendingCategories() {
     return sorted
   }, [filteredCategories, sortField, sortDir])
 
+  // Top risk categories for the AI-Flagged strip
+  const topRiskCategories = useMemo(() => {
+    return [...filteredCategories]
+      .filter(c => c.avg_risk > 0)
+      .sort((a, b) => b.avg_risk - a.avg_risk)
+      .slice(0, 8)
+  }, [filteredCategories])
+
   // Sector aggregation view
   const sectorAggregates = useMemo(() => {
     const aggs = aggregateBySector(filteredCategories)
@@ -304,7 +314,7 @@ export default function SpendingCategories() {
   const trendChartData = useMemo(() => {
     if (!trendsData?.data) return { years: [] as number[], series: [] as Array<{ name: string; data: Record<number, number> }> }
     const items: TrendItem[] = trendsData.data
-    const top5 = [...filteredCategories].sort((a, b) => b.total_value - a.total_value).slice(0, 5)
+    const top5 = [...filteredCategories].sort((a, b) => b.total_value - a.total_value).slice(0, trendCount)
     const top5Ids = top5.map(c => c.category_id)
     const yearSet = new Set<number>()
     const seriesMap = new Map<number, { name: string; data: Record<number, number> }>()
@@ -440,6 +450,50 @@ export default function SpendingCategories() {
           loading={summaryLoading}
         />
       </div>
+
+      {/* AI-Flagged Categories Strip */}
+      {topRiskCategories.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle className="h-3.5 w-3.5 text-risk-high" />
+            <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+              AI-Flagged: Highest Risk Categories
+            </span>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+            {topRiskCategories.map((cat) => (
+              <div
+                key={cat.category_id}
+                className="flex-shrink-0 rounded-lg border border-border/50 bg-background-card px-3 py-2 min-w-[150px] max-w-[190px]"
+              >
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  {cat.sector_code && (
+                    <span
+                      className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: SECTOR_COLORS[cat.sector_code] || '#64748b' }}
+                    />
+                  )}
+                  <span className="text-xs font-medium text-text-primary truncate">
+                    {cat.name_en || cat.name_es}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-text-muted font-mono">{formatCompactMXN(cat.total_value)}</span>
+                  <span
+                    className="text-xs font-mono font-bold px-1.5 py-0.5 rounded flex-shrink-0"
+                    style={{
+                      color: getRiskColor(cat.avg_risk),
+                      backgroundColor: `${getRiskColor(cat.avg_risk)}20`,
+                    }}
+                  >
+                    {(cat.avg_risk * 100).toFixed(0)}%
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Section 2: Table */}
       <Card className="overflow-hidden">
@@ -646,15 +700,8 @@ export default function SpendingCategories() {
         </CardContent>
       </Card>
 
-      {/* Section 3: Charts (collapsed) */}
-      <details className="mt-4 group">
-        <summary className="flex items-center gap-2 cursor-pointer select-none list-none text-xs font-medium text-text-muted hover:text-text-primary transition-colors py-1">
-          <ShoppingCart className="h-3.5 w-3.5" />
-          Show charts (treemap, value trends)
-          <span className="ml-1 group-open:hidden">▶</span>
-          <span className="ml-1 hidden group-open:inline">▼</span>
-        </summary>
-        <div className="mt-4 space-y-5">
+      {/* Section 3: Charts */}
+      <div className="space-y-5">
           {/* Treemap */}
           <Card>
             <CardHeader className="pb-2">
@@ -694,6 +741,22 @@ export default function SpendingCategories() {
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-text-muted" />
                 {t('trends.title')}
+                <div className="ml-auto flex items-center gap-1">
+                  {([5, 10, 20] as const).map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setTrendCount(n)}
+                      className={cn(
+                        'px-2 py-0.5 text-xs rounded border transition-colors',
+                        trendCount === n
+                          ? 'border-accent bg-accent/10 text-accent'
+                          : 'border-border/50 text-text-muted hover:border-accent/40 hover:text-text-primary'
+                      )}
+                    >
+                      Top {n}
+                    </button>
+                  ))}
+                </div>
               </CardTitle>
               <CardDescription>
                 {t('trends.description')}
@@ -768,7 +831,7 @@ export default function SpendingCategories() {
             </CardContent>
           </Card>
         </div>
-      </details>
+      </div>
     </div>
   )
 }

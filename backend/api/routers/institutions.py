@@ -206,6 +206,53 @@ def get_institution(institution_id: int):
         )
 
 
+@router.get("/{institution_id:int}/risk-timeline")
+def get_institution_risk_timeline(
+    institution_id: int = Path(..., description="Institution ID"),
+):
+    """
+    Get year-by-year average risk score for an institution.
+
+    Returns a timeline of average risk scores and contract counts per year.
+    """
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # Verify institution exists
+        cursor.execute("SELECT name FROM institutions WHERE id = ?", (institution_id,))
+        institution = cursor.fetchone()
+        if not institution:
+            raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
+
+        cursor.execute("""
+            SELECT
+                contract_year as year,
+                AVG(risk_score) as avg_risk,
+                COUNT(*) as contract_count
+            FROM contracts
+            WHERE institution_id = ?
+              AND risk_score IS NOT NULL
+              AND contract_year IS NOT NULL
+            GROUP BY contract_year
+            ORDER BY contract_year
+        """, (institution_id,))
+
+        timeline = [
+            {
+                "year": row["year"],
+                "avg_risk": round(row["avg_risk"], 4) if row["avg_risk"] else None,
+                "contract_count": row["contract_count"],
+            }
+            for row in cursor.fetchall()
+        ]
+
+        return {
+            "institution_id": institution_id,
+            "institution_name": institution["name"],
+            "timeline": timeline,
+        }
+
+
 @router.get("/{institution_id:int}/risk-profile", response_model=InstitutionRiskProfile)
 def get_institution_risk_profile(institution_id: int):
     """

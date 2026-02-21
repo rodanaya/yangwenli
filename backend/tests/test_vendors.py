@@ -143,6 +143,57 @@ class TestVendorRelated:
             assert "data" in data
 
 
+class TestVendorRiskTimeline:
+    """Tests for GET /vendors/{vendor_id}/risk-timeline endpoint."""
+
+    def test_vendor_risk_timeline(self, client, base_url):
+        """Test getting vendor's risk timeline."""
+        list_response = client.get(f"{base_url}/vendors?per_page=1")
+        if list_response.status_code == 200 and list_response.json()["data"]:
+            vendor_id = list_response.json()["data"][0]["id"]
+            response = client.get(f"{base_url}/vendors/{vendor_id}/risk-timeline")
+            assert response.status_code == 200
+            data = response.json()
+            assert "vendor_id" in data
+            assert "vendor_name" in data
+            assert "timeline" in data
+            assert isinstance(data["timeline"], list)
+            if data["timeline"]:
+                item = data["timeline"][0]
+                assert "year" in item
+                assert "avg_risk" in item
+                assert "contract_count" in item
+
+    def test_vendor_risk_timeline_not_found(self, client, base_url):
+        """Test risk timeline with non-existent vendor."""
+        response = client.get(f"{base_url}/vendors/999999999/risk-timeline")
+        assert response.status_code == 404
+
+
+class TestVendorAISummary:
+    """Tests for GET /vendors/{vendor_id}/ai-summary endpoint."""
+
+    def test_vendor_ai_summary(self, client, base_url):
+        """Test getting vendor's AI summary."""
+        list_response = client.get(f"{base_url}/vendors?per_page=1")
+        if list_response.status_code == 200 and list_response.json()["data"]:
+            vendor_id = list_response.json()["data"][0]["id"]
+            response = client.get(f"{base_url}/vendors/{vendor_id}/ai-summary")
+            assert response.status_code == 200
+            data = response.json()
+            assert "vendor_id" in data
+            assert "vendor_name" in data
+            assert "summary" in data
+            assert "insights" in data
+            assert isinstance(data["insights"], list)
+            assert data["generated_by"] == "v5.0 feature analysis"
+
+    def test_vendor_ai_summary_not_found(self, client, base_url):
+        """Test AI summary with non-existent vendor."""
+        response = client.get(f"{base_url}/vendors/999999999/ai-summary")
+        assert response.status_code == 404
+
+
 class TestVendorVerified:
     """Tests for existing verified vendor endpoints."""
 

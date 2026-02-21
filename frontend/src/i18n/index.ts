@@ -60,8 +60,9 @@ i18n
         procurement: enProcurement, administrations: enAdministrations,
       },
     },
-    lng: 'es', // Default to Spanish
+    lng: 'en', // Default to English
     fallbackLng: 'en',
+    detection: { order: ['localStorage', 'navigator'], caches: ['localStorage'] },
     defaultNS: 'common',
     interpolation: { escapeValue: false },
   })

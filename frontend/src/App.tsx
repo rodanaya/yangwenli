@@ -246,9 +246,12 @@ function App() {
                 }
               />
 
-              {/* Redirects from merged pages */}
+              {/* Redirects from merged/renamed pages */}
               <Route path="money-flow" element={<Navigate to="/procurement-intelligence" replace />} />
               <Route path="red-flags" element={<Navigate to="/procurement-intelligence" replace />} />
+              <Route path="detective-patterns" element={<Navigate to="/administrations" replace />} />
+              <Route path="spending-categories" element={<Navigate to="/categories" replace />} />
+              <Route path="institution-health" element={<Navigate to="/institutions/health" replace />} />
 
               {/* Redirects from old routes */}
               <Route path="vendors" element={<Navigate to="/explore?tab=vendors" replace />} />

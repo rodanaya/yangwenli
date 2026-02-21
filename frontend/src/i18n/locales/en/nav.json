@@ -3,7 +3,12 @@
     "overview": "OVERVIEW",
     "analyze": "ANALYZE",
     "investigate": "INVESTIGATE",
-    "understand": "UNDERSTAND"
+    "understand": "UNDERSTAND",
+    "theStory": "THE STORY",
+    "theMoney": "THE MONEY",
+    "whoAndHow": "WHO & HOW",
+    "investigateSection": "INVESTIGATE",
+    "understandSection": "UNDERSTAND"
   },
   "executive": "Executive Summary",
   "dashboard": "Dashboard",
@@ -12,7 +17,7 @@
   "temporal": "Timeline",
   "administrations": "By Administration",
   "institutions": "Institution Health",
-  "pricing": "Price Analysis",
+  "pricing": "Price Intelligence",
   "categories": "Spending Categories",
   "contracts": "All Contracts",
   "network": "Vendor Network",

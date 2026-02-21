@@ -12,11 +12,8 @@ import {
   ChevronRight,
   Network,
   Eye,
-  Fingerprint,
   Landmark,
-  TrendingUp,
   Shield,
-  Clock,
   Building2,
   DollarSign,
   Brain,
@@ -24,6 +21,7 @@ import {
   ScrollText,
   ShoppingCart,
   TriangleAlert,
+  TrendingUp,
 } from 'lucide-react'
 import { LOGHIcon } from '@/components/LOGHIcon'
 import { LanguageToggle } from '@/components/LanguageToggle'
@@ -49,33 +47,39 @@ interface NavItem {
   badge?: string | number
 }
 
-const overviewNavDefs: NavItemDef[] = [
-  { i18nKey: 'executive', href: '/executive', icon: ScrollText },
+// THE STORY — entry point, overview
+const storyNavDefs: NavItemDef[] = [
   { i18nKey: 'dashboard', href: '/', icon: LayoutDashboard },
+  { i18nKey: 'executive', href: '/executive', icon: ScrollText },
 ]
 
-const analyzeNavDefs: NavItemDef[] = [
-  { i18nKey: 'patterns', href: '/patterns', icon: Fingerprint },
-  { i18nKey: 'procurementIntelligence', href: '/procurement-intelligence', icon: TrendingUp },
-  { i18nKey: 'temporal', href: '/administrations', icon: Clock },
-  { i18nKey: 'pricing', href: '/price-analysis', icon: DollarSign },
+// THE MONEY — where funds flow
+const moneyNavDefs: NavItemDef[] = [
   { i18nKey: 'categories', href: '/categories', icon: ShoppingCart },
-  { i18nKey: 'contracts', href: '/contracts', icon: FileText },
+  { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
+  { i18nKey: 'procurementIntelligence', href: '/procurement-intelligence', icon: TrendingUp },
 ]
 
-const investigateNavDefs: NavItemDef[] = [
+// WHO & HOW — actors and mechanisms
+const whoNavDefs: NavItemDef[] = [
   { i18nKey: 'institutions', href: '/institutions/health', icon: Building2 },
   { i18nKey: 'administrations', href: '/administrations', icon: Landmark },
-  { i18nKey: 'network', href: '/network', icon: Network },
-  { i18nKey: 'watchlist', href: '/watchlist', icon: Eye },
-  { i18nKey: 'investigation', href: '/investigation', icon: Crosshair },
+  { i18nKey: 'pricing', href: '/price-analysis', icon: DollarSign },
 ]
 
+// INVESTIGATE — active investigation tools
+const investigateNavDefs: NavItemDef[] = [
+  { i18nKey: 'investigation', href: '/investigation', icon: Crosshair },
+  { i18nKey: 'contracts', href: '/contracts', icon: FileText },
+  { i18nKey: 'network', href: '/network', icon: Network },
+  { i18nKey: 'watchlist', href: '/watchlist', icon: Eye },
+]
+
+// UNDERSTAND — methodology and model
 const understandNavDefs: NavItemDef[] = [
-  { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
+  { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
   { i18nKey: 'groundTruth', href: '/ground-truth', icon: Shield },
   { i18nKey: 'model', href: '/model', icon: Brain },
-  { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
   { i18nKey: 'limitations', href: '/limitations', icon: TriangleAlert },
 ]
 
@@ -88,8 +92,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const location = useLocation()
   const { t } = useTranslation('nav')
 
-  const overviewNavItems = useNavItems(overviewNavDefs)
-  const analyzeNavItems = useNavItems(analyzeNavDefs)
+  const storyNavItems = useNavItems(storyNavDefs)
+  const moneyNavItems = useNavItems(moneyNavDefs)
+  const whoNavItems = useNavItems(whoNavDefs)
   const investigateNavItems = useNavItems(investigateNavDefs)
   const understandNavItems = useNavItems(understandNavDefs)
 
@@ -123,9 +128,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       {/* Navigation */}
       <ScrollArea className="flex-1 py-3">
         <nav className="space-y-5 px-2">
-          {/* Overview section */}
-          <NavSection title={t('sections.overview')} collapsed={collapsed}>
-            {overviewNavItems.map((item) => (
+          {/* THE STORY */}
+          <NavSection title={t('sections.theStory')} collapsed={collapsed}>
+            {storyNavItems.map((item) => (
               <SidebarNavItem
                 key={item.href}
                 item={item}
@@ -135,32 +140,48 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             ))}
           </NavSection>
 
-          {/* Analyze section */}
-          <NavSection title={t('sections.analyze')} collapsed={collapsed}>
-            {analyzeNavItems.map((item) => (
+          {/* THE MONEY */}
+          <NavSection title={t('sections.theMoney')} collapsed={collapsed}>
+            {moneyNavItems.map((item) => (
               <SidebarNavItem
                 key={item.href}
                 item={item}
                 collapsed={collapsed}
-                isActive={location.pathname === item.href}
+                isActive={
+                  item.href === '/sectors'
+                    ? location.pathname === '/sectors' || location.pathname.startsWith('/sectors/')
+                    : location.pathname === item.href
+                }
               />
             ))}
           </NavSection>
 
-          {/* Investigate section */}
-          <NavSection title={t('sections.investigate')} collapsed={collapsed}>
+          {/* WHO & HOW */}
+          <NavSection title={t('sections.whoAndHow')} collapsed={collapsed}>
+            {whoNavItems.map((item) => (
+              <SidebarNavItem
+                key={item.href}
+                item={item}
+                collapsed={collapsed}
+                isActive={location.pathname === item.href || location.pathname.startsWith(item.href + '/')}
+              />
+            ))}
+          </NavSection>
+
+          {/* INVESTIGATE */}
+          <NavSection title={t('sections.investigateSection')} collapsed={collapsed}>
             {investigateNavItems.map((item) => (
               <SidebarNavItem
                 key={item.href}
                 item={item}
                 collapsed={collapsed}
-                isActive={location.pathname === item.href}
+                isActive={location.pathname === item.href || location.pathname.startsWith(item.href + '/')}
               />
             ))}
           </NavSection>
 
-          {/* Understand section */}
-          <NavSection title={t('sections.understand')} collapsed={collapsed}>
+          {/* UNDERSTAND */}
+          <NavSection title={t('sections.understandSection')} collapsed={collapsed}>
             {understandNavItems.map((item) => (
               <SidebarNavItem
                 key={item.href}

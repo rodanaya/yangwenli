@@ -191,6 +191,26 @@
     "viewContracts": "View Contracts",
     "close": "Close"
   },
+  "intake": {
+    "title": "Start an Investigation",
+    "subtitle": "What do you want to investigate?",
+    "byInstitution": "By Institution",
+    "byVendor": "By Vendor",
+    "byPattern": "By Contract Pattern",
+    "byTimePeriod": "By Time Period",
+    "searchPlaceholder": "Search...",
+    "institutionPlaceholder": "Search institution name...",
+    "vendorPlaceholder": "Search vendor name or RFC...",
+    "go": "Search",
+    "patterns": {
+      "directAward": "Direct Award",
+      "singleBid": "Single Bid",
+      "decemberRush": "December Rush"
+    },
+    "yearFrom": "From year",
+    "yearTo": "To year",
+    "browseExisting": "Or browse existing cases"
+  },
   "asfLookup": {
     "button": "ASF Lookup",
     "newsSearch": "News Search",

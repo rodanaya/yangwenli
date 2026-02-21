@@ -441,6 +441,7 @@ export function Sectors() {
                   rows={sectorHeatmapData.rows}
                   columns={sectorHeatmapData.columns}
                   height={450}
+                  colorRange={['#16a34a', '#f5f5f5', '#dc2626']}
                   valueFormatter={(v, row, col) => {
                     const cell = sectorHeatmapData.data.find((d) => d.row === row && d.col === col)
                     const rawValue = (cell as { rawValue?: number })?.rawValue ?? v

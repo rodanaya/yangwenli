@@ -191,6 +191,26 @@
     "viewContracts": "Ver Contratos",
     "close": "Cerrar"
   },
+  "intake": {
+    "title": "Iniciar una Investigacion",
+    "subtitle": "Que deseas investigar?",
+    "byInstitution": "Por Institucion",
+    "byVendor": "Por Proveedor",
+    "byPattern": "Por Patron de Contrato",
+    "byTimePeriod": "Por Periodo de Tiempo",
+    "searchPlaceholder": "Buscar...",
+    "institutionPlaceholder": "Buscar nombre de institucion...",
+    "vendorPlaceholder": "Buscar nombre de proveedor o RFC...",
+    "go": "Buscar",
+    "patterns": {
+      "directAward": "Adjudicacion Directa",
+      "singleBid": "Licitacion Unica",
+      "decemberRush": "Cierre de Diciembre"
+    },
+    "yearFrom": "Desde ano",
+    "yearTo": "Hasta ano",
+    "browseExisting": "O explora los casos existentes"
+  },
   "asfLookup": {
     "button": "Buscar en ASF",
     "newsSearch": "Buscar Noticias",

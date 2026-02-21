@@ -504,6 +504,7 @@ export function NetworkGraph() {
     queryKey: ['network-graph-page', graphParams],
     queryFn: () => networkApi.getGraph(graphParams),
     staleTime: 5 * 60 * 1000,
+    enabled: centerEntity !== null,
   })
 
   // Build ECharts option
@@ -679,9 +680,9 @@ export function NetworkGraph() {
       </div>
 
       <SectionDescription>
-        Force-directed graph of vendor and institution relationships. Search for a specific entity
-        to center the graph on it, or browse the default top connections. Click any node to open
-        its detail panel.
+        Force-directed graph of vendor and institution relationships. Search for any vendor or
+        institution to build the graph around it. Click any node to explore its connections and
+        detect co-bidding patterns.
       </SectionDescription>
 
       {/* Co-bidding note */}
@@ -720,6 +721,27 @@ export function NetworkGraph() {
       <div className="flex border border-border rounded-md overflow-hidden" style={{ height: '620px' }}>
         {/* Graph area */}
         <div className="flex-1 relative min-w-0">
+          {/* Search-to-start state — shown before any entity is selected */}
+          {!centerEntity && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-background-card z-10">
+              <Network className="h-12 w-12 opacity-20" />
+              <div className="text-center">
+                <p className="text-sm font-medium text-text-primary">Search to explore the network</p>
+                <p className="text-xs text-text-muted mt-1">
+                  Enter a vendor or institution name in the search box above
+                </p>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-text-muted flex-wrap justify-center">
+                <span className="text-text-muted">Try:</span>
+                {['IMSS', 'Pisa Farmacéutica', 'SCT', 'PEMEX'].map((name) => (
+                  <span key={name} className="px-2 py-1 rounded bg-background-elevated border border-border text-text-secondary">
+                    {name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {isLoading && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background-card z-10">
               <Network className="h-8 w-8 text-accent animate-pulse" />
@@ -749,11 +771,11 @@ export function NetworkGraph() {
             />
           )}
 
-          {/* Default hint overlay — shown when no entity is centered */}
-          {!isLoading && !isEmpty && graphData && !centerEntity && (
+          {/* Hint overlay — shown when graph is loaded */}
+          {!isLoading && !isEmpty && graphData && centerEntity && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 pointer-events-none">
               <div className="bg-background-card/90 border border-border rounded px-3 py-1.5 text-xs text-text-muted text-center backdrop-blur-sm">
-                Click any node to explore its connections. Search above to center on a specific entity.
+                Click any node to see its details and co-bidding relationships.
               </div>
             </div>
           )}

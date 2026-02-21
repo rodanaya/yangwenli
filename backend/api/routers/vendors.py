@@ -893,6 +893,141 @@ def get_vendor_asf_cases(
 # EXISTING CLASSIFICATION ENDPOINTS (preserved)
 # =============================================================================
 
+@router.get("/{vendor_id:int}/risk-timeline")
+def get_vendor_risk_timeline(
+    vendor_id: int = Path(..., description="Vendor ID"),
+):
+    """
+    Get year-by-year average risk score for a vendor.
+
+    Returns a timeline of average risk scores and contract counts per year.
+    """
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # Verify vendor exists
+        cursor.execute("SELECT name FROM vendors WHERE id = ?", (vendor_id,))
+        vendor = cursor.fetchone()
+        if not vendor:
+            raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
+
+        cursor.execute("""
+            SELECT
+                contract_year as year,
+                AVG(risk_score) as avg_risk,
+                COUNT(*) as contract_count
+            FROM contracts
+            WHERE vendor_id = ?
+              AND risk_score IS NOT NULL
+              AND contract_year IS NOT NULL
+            GROUP BY contract_year
+            ORDER BY contract_year
+        """, (vendor_id,))
+
+        timeline = [
+            {
+                "year": row["year"],
+                "avg_risk": round(row["avg_risk"], 4) if row["avg_risk"] else None,
+                "contract_count": row["contract_count"],
+            }
+            for row in cursor.fetchall()
+        ]
+
+        return {
+            "vendor_id": vendor_id,
+            "vendor_name": vendor["name"],
+            "timeline": timeline,
+        }
+
+
+@router.get("/{vendor_id:int}/ai-summary")
+def get_vendor_ai_summary(
+    vendor_id: int = Path(..., description="Vendor ID"),
+):
+    """
+    Get AI-generated pattern analysis summary for a vendor.
+
+    Returns template-generated insights based on the vendor's z-score features
+    from the v5.0 risk model.
+    """
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # Get vendor name and basic stats
+        cursor.execute("""
+            SELECT name, total_contracts, COALESCE(total_amount_mxn, 0) as total_value,
+                   avg_risk_score
+            FROM vendors WHERE id = ?
+        """, (vendor_id,))
+        vendor = cursor.fetchone()
+        if not vendor:
+            raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
+
+        # Get avg z-features for this vendor's contracts
+        cursor.execute("""
+            SELECT
+                AVG(czf.z_price_volatility) as price_volatility,
+                AVG(czf.z_win_rate) as win_rate,
+                AVG(czf.z_institution_diversity) as institution_diversity,
+                AVG(czf.z_vendor_concentration) as vendor_concentration,
+                AVG(czf.z_industry_mismatch) as industry_mismatch,
+                AVG(czf.z_same_day_count) as same_day_count,
+                AVG(czf.z_direct_award) as direct_award,
+                AVG(czf.z_single_bid) as single_bid,
+                AVG(czf.z_sector_spread) as sector_spread
+            FROM contract_z_features czf
+            JOIN contracts c ON czf.contract_id = c.id
+            WHERE c.vendor_id = ?
+        """, (vendor_id,))
+        z_features = cursor.fetchone()
+
+        insights = []
+        if z_features:
+            pv = z_features["price_volatility"]
+            if pv is not None and pv > 1.0:
+                insights.append(f"Price volatility {pv:.2f}\u03c3 above sector average \u2014 a top predictor of corruption risk in the v5.0 model.")
+            wr = z_features["win_rate"]
+            if wr is not None and wr > 1.0:
+                insights.append(f"Win rate {wr:.1f}\u03c3 above sector norm \u2014 abnormally high success rate in competitive procedures.")
+            id_val = z_features["institution_diversity"]
+            if id_val is not None and id_val < -0.5:
+                insights.append("Serves few institutions \u2014 concentrated relationships increase risk per the v5.0 model.")
+            vc = z_features["vendor_concentration"]
+            if vc is not None and vc > 1.0:
+                insights.append(f"Vendor concentration {vc:.2f}\u03c3 above sector norm \u2014 high market dominance in awarded contracts.")
+            im = z_features["industry_mismatch"]
+            if im is not None and im > 1.0:
+                insights.append(f"Industry mismatch {im:.2f}\u03c3 above average \u2014 this vendor wins contracts outside its classified industry.")
+            sdc = z_features["same_day_count"]
+            if sdc is not None and sdc > 1.5:
+                insights.append(f"Same-day contract count {sdc:.2f}\u03c3 above average \u2014 potential threshold splitting pattern.")
+            ss = z_features["sector_spread"]
+            if ss is not None and ss < -1.0:
+                insights.append("Operates in very few sectors \u2014 low diversification increases risk concentration.")
+
+        total_contracts = vendor["total_contracts"] or 0
+        avg_risk = vendor["avg_risk_score"]
+
+        summary_parts = []
+        if insights:
+            summary_parts.append(f"AI pattern analysis identified {len(insights)} risk indicator{'s' if len(insights) != 1 else ''}.")
+        else:
+            summary_parts.append("No significant risk indicators detected in the v5.0 feature analysis.")
+
+        if avg_risk is not None:
+            summary_parts.append(f"Average risk score: {avg_risk:.3f} across {total_contracts} contracts.")
+
+        return {
+            "vendor_id": vendor_id,
+            "vendor_name": vendor["name"],
+            "summary": " ".join(summary_parts),
+            "insights": insights,
+            "total_contracts": total_contracts,
+            "avg_risk_score": round(avg_risk, 4) if avg_risk else None,
+            "generated_by": "v5.0 feature analysis",
+        }
+
+
 @router.get("/{vendor_id:int}/classification", response_model=VendorClassificationResponse)
 def get_vendor_classification(vendor_id: int):
     """

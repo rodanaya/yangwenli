@@ -192,6 +192,7 @@ function DeltaBadge({ val, unit, invertColor }: { val: number; unit: string; inv
 
 export default function Administrations() {
   const [selectedAdmin, setSelectedAdmin] = useState<AdminName>('AMLO')
+  const [activeTab, setActiveTab] = useState<'overview' | 'patterns'>('overview')
 
   // Data queries
   const { data: yoyResp, isLoading: yoyLoading } = useQuery({
@@ -307,14 +308,48 @@ export default function Administrations() {
   return (
     <div className="space-y-6 p-6 max-w-[1600px] mx-auto">
       {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold text-text-primary font-mono tracking-tight">
-          Administration Analysis
-        </h1>
-        <p className="text-sm text-text-muted mt-1">
-          Deep dive into procurement patterns across Mexican presidential administrations (2002–2025)
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-text-primary font-mono tracking-tight">
+            Administration Analysis
+          </h1>
+          <p className="text-sm text-text-muted mt-1">
+            Deep dive into procurement patterns across Mexican presidential administrations (2002–2025)
+          </p>
+        </div>
+        {/* Tab Switcher */}
+        <div className="flex items-center gap-1 rounded-lg border border-border/50 p-0.5 bg-background-elevated/30 flex-shrink-0">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={cn(
+              'px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
+              activeTab === 'overview'
+                ? 'bg-accent/20 text-accent'
+                : 'text-text-muted hover:text-text-primary'
+            )}
+          >
+            Administration Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('patterns')}
+            className={cn(
+              'px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
+              activeTab === 'patterns'
+                ? 'bg-accent/20 text-accent'
+                : 'text-text-muted hover:text-text-primary'
+            )}
+          >
+            Systemic Patterns
+          </button>
+        </div>
       </div>
+
+      {activeTab === 'patterns' && (
+        <PatternsView yoyData={yoyData} allTimeAvg={allTimeAvg} isLoading={yoyLoading} />
+      )}
+
+      {activeTab === 'overview' && (
+      <>
 
       {/* L0: Admin Selector */}
       <div className="grid grid-cols-5 gap-4">
@@ -772,6 +807,9 @@ export default function Administrations() {
           </div>
         </CardContent>
       </Card>
+
+      </> /* end overview tab */
+      )}
     </div>
   )
 }
@@ -852,6 +890,188 @@ function TransitionMetric({
           <DeltaBadge val={d} unit={unit} invertColor={invertColor} />
         )}
       </div>
+    </div>
+  )
+}
+
+// =============================================================================
+// Patterns View — 23-year systemic pattern analysis
+// =============================================================================
+
+interface PatternsViewProps {
+  yoyData: YearOverYearChange[]
+  allTimeAvg: { da: number; sb: number; hr: number; risk: number }
+  isLoading: boolean
+}
+
+function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-3 gap-4">
+          {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24" />)}
+        </div>
+        <Skeleton className="h-80" />
+      </div>
+    )
+  }
+
+  // OECD benchmark: ~20-30% direct award is "normal"
+  const daVsOECD = allTimeAvg.da - 25 // deviation from OECD midpoint
+  // December rush: approximate from single-bid patterns at year-end (use hr as proxy)
+  const maxDA = Math.max(...yoyData.map(y => y.direct_award_pct), 0)
+  const maxSB = Math.max(...yoyData.map(y => y.single_bid_pct), 0)
+  const maxHR = Math.max(...yoyData.map(y => y.high_risk_pct), 0)
+  const peakDAYear = yoyData.find(y => y.direct_award_pct === maxDA)?.year
+
+  // Admin transition years for reference lines
+  const transitionYears = [2006, 2012, 2018, 2024]
+  const adminLabels: Record<number, string> = {
+    2006: 'Calderon',
+    2012: 'Peña',
+    2018: 'AMLO',
+    2024: 'Sheinbaum',
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Systemic pattern summary cards */}
+      <div className="grid grid-cols-3 gap-4">
+        <Card className="bg-card border-border/40">
+          <CardContent className="p-4">
+            <div className="text-xs font-mono text-text-muted uppercase tracking-wider mb-1">Direct Award Rate</div>
+            <div className={cn('text-2xl font-bold font-mono', allTimeAvg.da > 50 ? 'text-risk-critical' : allTimeAvg.da > 30 ? 'text-risk-high' : 'text-risk-medium')}>
+              {allTimeAvg.da.toFixed(1)}%
+            </div>
+            <div className="mt-1 text-xs text-text-muted leading-relaxed">
+              23-year average. OECD benchmark: 20–30%.
+              {daVsOECD > 0 && (
+                <span className="ml-1 text-risk-high">+{daVsOECD.toFixed(1)}pp above benchmark.</span>
+              )}
+            </div>
+            <div className="mt-2 text-xs text-text-muted">
+              Peak: {maxDA.toFixed(1)}%{peakDAYear ? ` (${peakDAYear})` : ''}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-border/40">
+          <CardContent className="p-4">
+            <div className="text-xs font-mono text-text-muted uppercase tracking-wider mb-1">Single Bidder Rate</div>
+            <div className={cn('text-2xl font-bold font-mono', allTimeAvg.sb > 30 ? 'text-risk-critical' : allTimeAvg.sb > 15 ? 'text-risk-high' : 'text-risk-medium')}>
+              {allTimeAvg.sb.toFixed(1)}%
+            </div>
+            <div className="mt-1 text-xs text-text-muted leading-relaxed">
+              Competitive tenders with only one bidder — a primary collusion indicator.
+            </div>
+            <div className="mt-2 text-xs text-text-muted">
+              Peak: {maxSB.toFixed(1)}% · All-time high-risk: {maxHR.toFixed(1)}%
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-border/40">
+          <CardContent className="p-4">
+            <div className="text-xs font-mono text-text-muted uppercase tracking-wider mb-1">High Risk Rate</div>
+            <div className={cn('text-2xl font-bold font-mono', allTimeAvg.hr > 15 ? 'text-risk-critical' : allTimeAvg.hr > 8 ? 'text-risk-high' : 'text-risk-low')}>
+              {allTimeAvg.hr.toFixed(1)}%
+            </div>
+            <div className="mt-1 text-xs text-text-muted leading-relaxed">
+              Contracts scored critical or high risk by the AI model. OECD benchmark: 2–15%.
+            </div>
+            <div className="mt-2 text-xs text-text-muted">
+              Avg risk score: {(allTimeAvg.risk * 100).toFixed(1)}% across 3.1M contracts
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 23-year trend chart */}
+      <Card className="bg-card border-border/40">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-mono text-text-primary">
+            Systemic Patterns — 23-Year Timeline (2002–2025)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {yoyData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={360}>
+              <ComposedChart data={yoyData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.2} />
+                <XAxis
+                  dataKey="year"
+                  tick={{ fill: 'var(--color-text-muted)', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
+                />
+                <YAxis
+                  domain={[0, 100]}
+                  tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                  tickFormatter={(v: number) => `${v}%`}
+                  width={40}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'var(--color-card)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 8,
+                    fontSize: 11,
+                    fontFamily: 'var(--font-family-mono)',
+                  }}
+                  formatter={(value: unknown, name?: string) => [`${Number(value).toFixed(1)}%`, name]}
+                />
+                <Legend wrapperStyle={{ fontSize: 11, fontFamily: 'var(--font-family-mono)' }} />
+                {/* Admin transition reference lines */}
+                {transitionYears.map((year) => (
+                  <ReferenceLine
+                    key={year}
+                    x={year}
+                    stroke="#4b5563"
+                    strokeDasharray="4 4"
+                    label={{
+                      value: adminLabels[year],
+                      position: 'top',
+                      fontSize: 9,
+                      fill: '#6b7280',
+                    }}
+                  />
+                ))}
+                <Line
+                  type="monotone"
+                  dataKey="direct_award_pct"
+                  name="Direct Award %"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  dot={false}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="single_bid_pct"
+                  name="Single Bid %"
+                  stroke="#fbbf24"
+                  strokeWidth={2}
+                  dot={false}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="high_risk_pct"
+                  name="High Risk %"
+                  stroke={RISK_COLORS.high}
+                  strokeWidth={2}
+                  dot={false}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-[360px] flex items-center justify-center text-text-muted text-sm">
+              No data available
+            </div>
+          )}
+          <p className="mt-3 text-xs text-text-muted leading-relaxed">
+            Vertical dashed lines indicate presidential administration transitions.
+            Three systemic patterns — direct awards bypassing competition, single-bidder tenders,
+            and AI-flagged high-risk contracts — persist across all administrations regardless of political party.
+          </p>
+        </CardContent>
+      </Card>
     </div>
   )
 }
