@@ -22,11 +22,10 @@ function renderSidebar(props: { collapsed?: boolean; onToggle?: () => void } = {
 }
 
 describe('Sidebar', () => {
-  it('renders overview navigation items when expanded', () => {
+  it('renders story navigation items when expanded', () => {
     renderSidebar({ collapsed: false })
     expect(screen.getByText('Executive Summary')).toBeInTheDocument()
     expect(screen.getByText('Dashboard')).toBeInTheDocument()
-    expect(screen.getByText('Explore Data')).toBeInTheDocument()
   })
 
   it('renders brand text when expanded', () => {
@@ -37,17 +36,18 @@ describe('Sidebar', () => {
 
   it('renders section headers when expanded', () => {
     renderSidebar({ collapsed: false })
-    expect(screen.getByText('OVERVIEW')).toBeInTheDocument()
-    expect(screen.getByText('ANALYZE')).toBeInTheDocument()
+    expect(screen.getByText('THE STORY')).toBeInTheDocument()
+    expect(screen.getByText('THE MONEY')).toBeInTheDocument()
+    expect(screen.getByText('WHO & HOW')).toBeInTheDocument()
     expect(screen.getByText('INVESTIGATE')).toBeInTheDocument()
     expect(screen.getByText('UNDERSTAND')).toBeInTheDocument()
   })
 
-  it('renders analyze nav items', () => {
+  it('renders money nav items', () => {
     renderSidebar({ collapsed: false })
-    expect(screen.getByText('Fraud Patterns')).toBeInTheDocument()
-    expect(screen.getByText('Red Flags')).toBeInTheDocument()
-    expect(screen.getByText('Money Flow')).toBeInTheDocument()
+    expect(screen.getByText('Spending Categories')).toBeInTheDocument()
+    expect(screen.getByText('Sectors')).toBeInTheDocument()
+    expect(screen.getByText('Procurement Intelligence')).toBeInTheDocument()
     expect(screen.getByText('All Contracts')).toBeInTheDocument()
   })
 
@@ -61,7 +61,6 @@ describe('Sidebar', () => {
 
   it('renders understand nav items', () => {
     renderSidebar({ collapsed: false })
-    expect(screen.getByText('Sectors')).toBeInTheDocument()
     expect(screen.getByText('Methodology')).toBeInTheDocument()
     expect(screen.getByText('Settings')).toBeInTheDocument()
   })
@@ -82,8 +81,9 @@ describe('Sidebar', () => {
 
   it('hides section headers when collapsed', () => {
     renderSidebar({ collapsed: true })
-    expect(screen.queryByText('OVERVIEW')).not.toBeInTheDocument()
-    expect(screen.queryByText('ANALYZE')).not.toBeInTheDocument()
+    expect(screen.queryByText('THE STORY')).not.toBeInTheDocument()
+    expect(screen.queryByText('THE MONEY')).not.toBeInTheDocument()
+    expect(screen.queryByText('WHO & HOW')).not.toBeInTheDocument()
     expect(screen.queryByText('INVESTIGATE')).not.toBeInTheDocument()
     expect(screen.queryByText('UNDERSTAND')).not.toBeInTheDocument()
   })

@@ -78,14 +78,14 @@ describe('Dashboard', () => {
     renderDashboard()
     expect(screen.getByText('Sector Intelligence')).toBeInTheDocument()
     expect(screen.getByText('Risk Trajectory 2010-2025')).toBeInTheDocument()
+    expect(screen.getByText('Start Your Investigation')).toBeInTheDocument()
   })
 
-  it('renders navigation cards', () => {
+  it('renders action cards', () => {
     renderDashboard()
-    expect(screen.getByText('Fraud Patterns')).toBeInTheDocument()
-    expect(screen.getByText('Vendor Network')).toBeInTheDocument()
-    expect(screen.getByText('All Contracts')).toBeInTheDocument()
-    expect(screen.getByText('Methodology')).toBeInTheDocument()
+    expect(screen.getByText('Follow the Money')).toBeInTheDocument()
+    expect(screen.getByText('Search Any Contract')).toBeInTheDocument()
+    expect(screen.getByText('Open an Investigation')).toBeInTheDocument()
   })
 
   it('shows loading skeletons while data is being fetched', () => {
