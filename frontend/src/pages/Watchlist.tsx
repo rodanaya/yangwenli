@@ -7,6 +7,7 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -248,6 +249,7 @@ type PriorityFilter = 'all' | 'high' | 'medium' | 'low'
 export function Watchlist() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { open: openEntityDrawer } = useEntityDrawer()
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
@@ -511,6 +513,7 @@ export function Watchlist() {
                       onInvestigate={handleInvestigate}
                       onStatusTransition={handleStatusTransition}
                       onRemove={handleRemove}
+                      onOpenDrawer={(id, type) => openEntityDrawer(id, type)}
                     />
                   ))}
                 </tbody>
@@ -534,6 +537,7 @@ interface WatchlistRowProps {
   onInvestigate: (item: WatchlistItem) => void
   onStatusTransition: (id: number, status: WatchlistItem['status']) => void
   onRemove: (id: number) => void
+  onOpenDrawer: (id: number, type: 'vendor' | 'institution') => void
 }
 
 function WatchlistRow({
@@ -543,14 +547,23 @@ function WatchlistRow({
   onInvestigate,
   onStatusTransition,
   onRemove,
+  onOpenDrawer,
 }: WatchlistRowProps) {
+  function handleEntityClick() {
+    if (item.item_type === 'vendor' || item.item_type === 'institution') {
+      onOpenDrawer(item.item_id, item.item_type)
+    } else {
+      onEntityNav(item)
+    }
+  }
+
   return (
     <tr className="hover:bg-background-elevated/40 transition-colors">
       {/* Entity */}
       <td className="px-4 py-3">
         <div className="flex flex-col gap-0.5">
           <button
-            onClick={() => onEntityNav(item)}
+            onClick={handleEntityClick}
             className="text-left font-medium hover:text-accent transition-colors truncate max-w-[200px]"
             title={item.item_name}
           >

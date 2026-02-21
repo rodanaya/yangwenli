@@ -8,6 +8,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -223,6 +224,7 @@ export default function ProcurementIntelligence() {
   const navigate = useNavigate()
   const { t } = useTranslation('procurement')
   const { t: tRf } = useTranslation('redflags')
+  const { open: openEntityDrawer } = useEntityDrawer()
 
   const [selectedSector, setSelectedSector] = useState<number | ''>('')
   const [selectedYear, setSelectedYear] = useState<number | ''>(2024)
@@ -471,7 +473,8 @@ export default function ProcurementIntelligence() {
                     {sortedInstitutions.map((inst, idx) => (
                       <tr
                         key={inst.id ?? inst.name}
-                        className="border-b border-border/30 hover:bg-background-elevated/40 transition-colors group"
+                        className="border-b border-border/30 hover:bg-background-elevated/40 transition-colors group cursor-pointer"
+                        onClick={() => inst.id && openEntityDrawer(inst.id, 'institution')}
                       >
                         <td className="px-4 py-2.5 text-text-muted">{idx + 1}</td>
                         <td className="px-4 py-2.5 text-text-primary font-medium max-w-xs">

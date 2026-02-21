@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams, Link } from 'react-router-dom'
+import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -182,6 +183,7 @@ export function Contracts() {
   const { t } = useTranslation('contracts')
   const [searchParams, setSearchParams] = useSearchParams()
   const [activePreset, setActivePreset] = useState<string | null>(null)
+  const { open: openEntityDrawer } = useEntityDrawer()
 
   const {
     inputValue: searchInput,
@@ -700,6 +702,7 @@ export function Contracts() {
                       onView={(id) => { setSelectedContractId(id); setIsDetailOpen(true) }}
                       isSelected={compareIds.has(contract.id)}
                       onToggleCompare={toggleCompare}
+                      onOpenVendorDrawer={openEntityDrawer}
                     />
                   ))}
                 </tbody>
@@ -822,11 +825,13 @@ function ContractRow({
   onView,
   isSelected,
   onToggleCompare,
+  onOpenVendorDrawer,
 }: {
   contract: ContractListItem
   onView: (id: number) => void
   isSelected: boolean
   onToggleCompare: (id: number) => void
+  onOpenVendorDrawer: (id: number, type: 'vendor' | 'institution') => void
 }) {
   const anomalyInfo = getAnomalyInfo(contract.mahalanobis_distance)
   const riskLevel = contract.risk_score != null ? getRiskLevel(contract.risk_score) : (contract.risk_level ?? null)
@@ -880,14 +885,13 @@ function ContractRow({
       {/* Vendor */}
       <td className="px-3 py-2 max-w-[180px]">
         {contract.vendor_id ? (
-          <Link
-            to={`/vendors/${contract.vendor_id}`}
-            className="text-xs font-medium text-text-primary hover:text-accent transition-colors block truncate"
+          <button
+            className="text-xs font-medium text-text-primary hover:text-accent transition-colors block truncate text-left w-full"
             title={toTitleCase(contract.vendor_name || 'Unknown')}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); onOpenVendorDrawer(contract.vendor_id!, 'vendor') }}
           >
             {toTitleCase(contract.vendor_name || 'Unknown')}
-          </Link>
+          </button>
         ) : (
           <span className="text-xs text-text-muted truncate block" title={contract.vendor_name || ''}>
             {contract.vendor_name ? toTitleCase(contract.vendor_name) : '—'}

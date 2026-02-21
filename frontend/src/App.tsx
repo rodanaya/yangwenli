@@ -13,6 +13,8 @@ import {
   SectorsSkeleton,
   GenericPageSkeleton,
 } from '@/components/LoadingSkeleton'
+import { EntityDrawerProvider } from '@/contexts/EntityDrawerContext'
+import { EntityProfileDrawer } from '@/components/EntityProfileDrawer'
 
 // Lazy load all page components for code splitting
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
@@ -57,6 +59,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
         <TooltipProvider delayDuration={300}>
+          <EntityDrawerProvider>
           <BrowserRouter>
           <Routes>
             <Route path="/" element={<MainLayout />}>
@@ -267,7 +270,9 @@ function App() {
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
+          <EntityProfileDrawer />
           </BrowserRouter>
+          </EntityDrawerProvider>
         </TooltipProvider>
       </ToastProvider>
     </QueryClientProvider>
