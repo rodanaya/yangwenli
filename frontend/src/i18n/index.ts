@@ -60,9 +60,9 @@ i18n
         procurement: enProcurement, administrations: enAdministrations,
       },
     },
-    lng: 'en', // Default to English
+    lng: localStorage.getItem('i18nextLng') || 'en', // Default to English when no saved preference
     fallbackLng: 'en',
-    detection: { order: ['localStorage', 'navigator'], caches: ['localStorage'] },
+    detection: { order: ['localStorage'], caches: ['localStorage'] },
     defaultNS: 'common',
     interpolation: { escapeValue: false },
   })

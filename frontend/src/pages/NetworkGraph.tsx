@@ -188,8 +188,10 @@ function FiltersBar({
 
 function SearchBar({
   onSelect,
+  placeholder,
 }: {
   onSelect: (suggestion: SearchSuggestion) => void
+  placeholder?: string
 }) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
@@ -261,7 +263,7 @@ function SearchBar({
       <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted pointer-events-none" />
       <input
         type="text"
-        placeholder="Search vendor or institution to center graph..."
+        placeholder={placeholder ?? "Search vendor or institution to center graph..."}
         value={query}
         onChange={(e) => {
           setQuery(e.target.value)
@@ -461,6 +463,62 @@ function SidePanel({
         )}
       </div>
     </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// ExampleChip — clickable example entity that searches and selects
+// ---------------------------------------------------------------------------
+
+function ExampleChip({
+  name,
+  entityType,
+  onSelect,
+}: {
+  name: string
+  entityType: 'vendor' | 'institution'
+  onSelect: (suggestion: SearchSuggestion) => void
+}) {
+  const [isLoading, setIsLoading] = useState(false)
+
+  async function handleClick() {
+    setIsLoading(true)
+    try {
+      if (entityType === 'vendor') {
+        const result = await vendorApi.search(name, 1)
+        const hit = result?.data?.[0]
+        if (hit) {
+          onSelect({ id: hit.id, name: hit.name, entityType: 'vendor', subtitle: hit.rfc ?? undefined })
+          return
+        }
+      } else {
+        const result = await institutionApi.search(name, 1)
+        const hit = result?.data?.[0]
+        if (hit) {
+          onSelect({ id: hit.id, name: hit.name, entityType: 'institution', subtitle: (hit as { siglas?: string }).siglas ?? undefined })
+          return
+        }
+      }
+    } catch {
+      // If search fails, silently ignore
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={isLoading}
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-background-elevated text-text-secondary hover:border-accent/50 hover:text-accent hover:bg-accent/5 transition-all disabled:opacity-50 disabled:cursor-wait"
+    >
+      <span
+        className={`h-1.5 w-1.5 rounded-full shrink-0 ${
+          entityType === 'vendor' ? 'bg-accent' : 'bg-blue-400'
+        }`}
+      />
+      {name.length > 30 ? name.slice(0, 30) + '…' : name}
+    </button>
   )
 }
 
@@ -709,7 +767,7 @@ export function NetworkGraph() {
 
       {/* Toolbar row: search + filters */}
       <div className="flex flex-wrap items-center gap-3">
-        <SearchBar onSelect={handleSearchSelect} />
+        <SearchBar onSelect={handleSearchSelect} placeholder="Search vendor or institution name to begin…" />
         {centerEntity && (
           <div className="flex items-center gap-1.5 text-xs bg-accent/10 border border-accent/30 rounded px-2 py-1">
             <span className="text-accent font-medium">
@@ -734,21 +792,35 @@ export function NetworkGraph() {
         <div className="flex-1 relative min-w-0">
           {/* Search-to-start state — shown before any entity is selected */}
           {!centerEntity && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-background-card z-10">
-              <Network className="h-12 w-12 opacity-20" />
-              <div className="text-center">
-                <p className="text-sm font-medium text-text-primary">Search to explore the network</p>
-                <p className="text-xs text-text-muted mt-1">
-                  Enter a vendor or institution name in the search box above
-                </p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-background-card z-10 px-8">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="flex items-center justify-center h-16 w-16 rounded-full bg-accent/10 border border-accent/20">
+                  <Network className="h-8 w-8 text-accent opacity-70" />
+                </div>
+                <div>
+                  <p className="text-base font-semibold text-text-primary">Vendor Network Explorer</p>
+                  <p className="text-xs text-text-muted mt-1 max-w-xs">
+                    AI-powered relationship mapping. Search any vendor or institution to build its 1st-degree network graph.
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-xs text-text-muted flex-wrap justify-center">
-                <span className="text-text-muted">Try:</span>
-                {['IMSS', 'Pisa Farmacéutica', 'SCT', 'PEMEX'].map((name) => (
-                  <span key={name} className="px-2 py-1 rounded bg-background-elevated border border-border text-text-secondary">
-                    {name}
-                  </span>
-                ))}
+              <div className="w-full max-w-sm text-center">
+                <p className="text-xs text-text-muted mb-2 uppercase tracking-wider font-medium">Try these examples</p>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  {[
+                    { name: 'IMSS', type: 'institution' as const },
+                    { name: 'Pisa Farmacéutica', type: 'vendor' as const },
+                    { name: 'Secretaría de Comunicaciones y Transportes', type: 'institution' as const },
+                    { name: 'PEMEX', type: 'institution' as const },
+                  ].map((example) => (
+                    <ExampleChip
+                      key={example.name}
+                      name={example.name}
+                      entityType={example.type}
+                      onSelect={handleSearchSelect}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           )}

@@ -424,6 +424,32 @@ export function Contracts() {
         </div>
       </div>
 
+      {/* Full-width search bar — primary entry point */}
+      <div className="relative">
+        {showSearchLoading ? (
+          <Loader2 className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted animate-spin pointer-events-none" />
+        ) : (
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted pointer-events-none" />
+        )}
+        <input
+          type="text"
+          placeholder="Search contracts, institutions, or vendors…"
+          className="h-11 w-full rounded-lg border border-border bg-background-card pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-colors"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          aria-label="Search contracts by vendor or institution"
+        />
+        {searchInput && (
+          <button
+            onClick={() => setSearchInput('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors"
+            aria-label="Clear search"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+
       {/* Preset chips */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
         {CONTRACT_PRESETS.map((preset) => {
@@ -513,23 +539,6 @@ export function Contracts() {
             <option key={f.value} value={f.value}>{f.label}</option>
           ))}
         </select>
-
-        {/* Search */}
-        <div className="relative flex-1 min-w-[180px] max-w-[280px]">
-          {showSearchLoading ? (
-            <Loader2 className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted animate-spin" />
-          ) : (
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted" />
-          )}
-          <input
-            type="text"
-            placeholder="Search vendor, institution..."
-            className="h-8 w-full rounded-md border border-border bg-background-card pl-8 pr-3 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            aria-label="Search contracts by vendor or institution"
-          />
-        </div>
 
         {/* Direct award toggle */}
         <button
@@ -641,16 +650,24 @@ export function Contracts() {
               </Button>
             </div>
           ) : data?.data.length === 0 ? (
-            <div className="p-8 text-center text-text-muted">
-              <FileText className="h-10 w-10 mx-auto mb-3 opacity-30" />
-              <p className="text-sm font-medium">No contracts found</p>
-              <p className="text-xs mt-1">Try adjusting your filters.</p>
-              {hasActiveFilters && (
+            !hasActiveFilters ? (
+              <div className="p-12 text-center">
+                <FileText className="h-14 w-14 mx-auto mb-4 opacity-10" />
+                <p className="text-base font-semibold text-text-primary mb-1">3.1 Million Contracts · 2002–2025</p>
+                <p className="text-xs text-text-muted max-w-xs mx-auto leading-relaxed">
+                  Search any contract, institution, or vendor name to begin. Or use the filters above to browse by sector, year, or risk level.
+                </p>
+              </div>
+            ) : (
+              <div className="p-8 text-center text-text-muted">
+                <FileText className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                <p className="text-sm font-medium">No contracts found</p>
+                <p className="text-xs mt-1">Try adjusting your filters.</p>
                 <Button variant="outline" size="sm" className="mt-3" onClick={clearAllFilters}>
                   Clear all filters
                 </Button>
-              )}
-            </div>
+              </div>
+            )
           ) : (
             <ExpandableProvider>
             <ScrollArea className="h-[600px]">

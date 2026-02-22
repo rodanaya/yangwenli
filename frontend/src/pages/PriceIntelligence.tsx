@@ -2,7 +2,6 @@ import { memo, useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { PageHero, StatCard as SharedStatCard } from '@/components/DashboardWidgets'
 import { RiskBadge } from '@/components/ui/badge'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { SECTOR_COLORS, SECTORS, getSectorNameEN } from '@/lib/constants'
@@ -22,6 +21,42 @@ import {
   Check,
   X,
 } from 'lucide-react'
+
+// ─── MacroStatCard ───────────────────────────────────────────────────────────
+
+function MacroStatCard({
+  loading,
+  label,
+  value,
+  detail,
+  color,
+  borderColor,
+  sectorName,
+}: {
+  loading: boolean
+  label: string
+  value: string
+  detail: string
+  color: string
+  borderColor: string
+  sectorName?: string
+}) {
+  const sectorColor = sectorName ? SECTOR_COLORS[sectorName] : undefined
+
+  return (
+    <div className={`rounded-lg border bg-background-card p-4 ${borderColor}`}>
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">{label}</p>
+      {loading ? (
+        <Skeleton className="h-7 w-24 mb-1" />
+      ) : (
+        <p className={`text-xl font-bold tabular-nums ${color}`} style={sectorColor ? { color: sectorColor } : undefined}>
+          {value}
+        </p>
+      )}
+      <p className="text-[11px] text-text-muted mt-0.5 leading-tight">{detail}</p>
+    </div>
+  )
+}
 
 const STALE_TIME = 10 * 60 * 1000
 const PER_PAGE = 20
@@ -191,49 +226,81 @@ export default function PriceIntelligence() {
     })
   }
 
+  // ── Derived macro stats ───────────────────────────────────────────────────
+  const topAnomalySector = useMemo(() => {
+    if (!priceSummary?.by_sector || priceSummary.by_sector.length === 0) return null
+    return priceSummary.by_sector.reduce((best, curr) =>
+      curr.count > best.count ? curr : best
+    )
+  }, [priceSummary])
+
+  const extremeOverpricingType = useMemo(() => {
+    if (!priceSummary?.by_type) return null
+    return priceSummary.by_type.find((t) => t.type === 'extreme_overpricing') ?? null
+  }, [priceSummary])
+
+  const avgOverpricingPct = extremeOverpricingType
+    ? `${(extremeOverpricingType.avg_confidence * 100).toFixed(0)}%`
+    : avgConfidence > 0
+    ? `${(avgConfidence * 100).toFixed(0)}%`
+    : '—'
+
   return (
     <div className="space-y-5">
-      {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <PageHero
-        trackingLabel="PRICE INTELLIGENCE"
-        icon={<TrendingUp className="h-4 w-4 text-accent" />}
-        headline={summaryLoading ? '—' : formatNumber(totalHypotheses)}
-        subtitle="Price anomalies flagged across 3.1M contracts"
-        detail="IQR-based statistical outlier detection. Extreme overpricing = amount exceeds Q3 + 3x IQR. Statistical outlier = exceeds Q3 + 1.5x IQR. Scores normalized per sector and year baseline."
-        loading={summaryLoading}
-      />
+      {/* ── Macro Intelligence Section ────────────────────────────────────── */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-accent shrink-0" />
+          <h2 className="text-lg font-bold tracking-tight">Price Outlier Intelligence</h2>
+        </div>
+        <p className="text-xs text-text-muted max-w-2xl">
+          Contracts where the awarded price significantly exceeds sector and category norms.
+          IQR-based statistical outlier detection normalized per sector and year baseline —
+          extreme overpricing flags contracts above Q3&nbsp;+&nbsp;3× IQR.
+        </p>
+      </div>
 
-      {/* ── Section 1: Stats ─────────────────────────────────────────────── */}
+      {/* ── Macro stat cards ─────────────────────────────────────────────── */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <SharedStatCard
+        <MacroStatCard
           loading={summaryLoading}
-          label="ANOMALIES FLAGGED"
-          value={formatNumber(totalHypotheses)}
-          detail="Total price anomaly hypotheses"
+          label="PRICE ANOMALIES DETECTED"
+          value={summaryLoading ? '—' : formatNumber(totalHypotheses)}
+          detail="Total flagged contracts across all sectors"
           color="text-risk-high"
           borderColor="border-risk-high/30"
         />
-        <SharedStatCard
+        <MacroStatCard
           loading={summaryLoading}
-          label="PENDING REVIEW"
-          value={formatNumber(pendingCount)}
-          detail="Awaiting analyst review"
-          color="text-risk-medium"
-          borderColor="border-risk-medium/30"
-        />
-        <SharedStatCard
-          loading={summaryLoading}
-          label="TOTAL FLAGGED VALUE"
-          value={formatCompactMXN(totalFlaggedValue)}
-          detail="Sum of anomalous contract values"
+          label="VALUE OF FLAGGED CONTRACTS"
+          value={summaryLoading ? '—' : formatCompactMXN(totalFlaggedValue)}
+          detail="Total MXN value of anomalous contracts"
           color="text-risk-critical"
           borderColor="border-risk-critical/30"
         />
-        <SharedStatCard
+        <MacroStatCard
           loading={summaryLoading}
-          label="AVG CONFIDENCE"
-          value={`${(avgConfidence * 100).toFixed(0)}%`}
-          detail="Mean detection confidence"
+          label="TOP ANOMALY SECTOR"
+          value={
+            summaryLoading ? '—' :
+            topAnomalySector
+              ? getSectorNameEN(topAnomalySector.sector_name)
+              : '—'
+          }
+          detail={
+            topAnomalySector
+              ? `${formatNumber(topAnomalySector.count)} anomalies detected`
+              : 'Most price outliers'
+          }
+          color="text-risk-medium"
+          borderColor="border-risk-medium/30"
+          sectorName={topAnomalySector?.sector_name}
+        />
+        <MacroStatCard
+          loading={summaryLoading}
+          label="EXTREME OVERPRICING CONFIDENCE"
+          value={summaryLoading ? '—' : avgOverpricingPct}
+          detail="Avg detection confidence (extreme type)"
           color="text-accent"
           borderColor="border-accent/30"
         />

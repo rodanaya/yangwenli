@@ -13,14 +13,11 @@ import {
   Network,
   Eye,
   Landmark,
-  Shield,
   Building2,
   DollarSign,
-  Brain,
   Crosshair,
   ScrollText,
   ShoppingCart,
-  TriangleAlert,
   TrendingUp,
 } from 'lucide-react'
 import { LOGHIcon } from '@/components/LOGHIcon'
@@ -75,12 +72,10 @@ const investigateNavDefs: NavItemDef[] = [
   { i18nKey: 'watchlist', href: '/watchlist', icon: Eye },
 ]
 
-// UNDERSTAND — methodology and model
+// UNDERSTAND — methodology and settings
 const understandNavDefs: NavItemDef[] = [
   { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
-  { i18nKey: 'groundTruth', href: '/ground-truth', icon: Shield },
-  { i18nKey: 'model', href: '/model', icon: Brain },
-  { i18nKey: 'limitations', href: '/limitations', icon: TriangleAlert },
+  { i18nKey: 'settings', href: '/settings', icon: Settings },
 ]
 
 function useNavItems(defs: NavItemDef[]): NavItem[] {
@@ -196,14 +191,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
       {/* Bottom section */}
       <div className="border-t border-border/30 p-2">
-        <div className="flex items-center justify-between">
-          {!collapsed && (
-            <SidebarNavItem
-              item={{ title: t('settings'), href: '/settings', icon: Settings }}
-              collapsed={collapsed}
-              isActive={location.pathname === '/settings'}
-            />
-          )}
+        <div className="flex items-center justify-end">
           <div className="flex items-center gap-0.5">
             {!collapsed && <LanguageToggle />}
             <Button

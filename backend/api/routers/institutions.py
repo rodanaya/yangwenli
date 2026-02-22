@@ -227,8 +227,9 @@ def get_institution_risk_timeline(
         cursor.execute("""
             SELECT
                 contract_year as year,
-                AVG(risk_score) as avg_risk,
-                COUNT(*) as contract_count
+                AVG(risk_score) as avg_risk_score,
+                COUNT(*) as contract_count,
+                SUM(amount_mxn) as total_value
             FROM contracts
             WHERE institution_id = ?
               AND risk_score IS NOT NULL
@@ -240,8 +241,9 @@ def get_institution_risk_timeline(
         timeline = [
             {
                 "year": row["year"],
-                "avg_risk": round(row["avg_risk"], 4) if row["avg_risk"] else None,
+                "avg_risk_score": round(row["avg_risk_score"], 4) if row["avg_risk_score"] else None,
                 "contract_count": row["contract_count"],
+                "total_value": row["total_value"] or 0,
             }
             for row in cursor.fetchall()
         ]

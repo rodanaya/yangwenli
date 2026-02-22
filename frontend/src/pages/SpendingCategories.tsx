@@ -34,6 +34,7 @@ import {
   ArrowUpRight,
   SlidersHorizontal,
   AlertTriangle,
+  Brain,
 } from 'lucide-react'
 import { getSectorNameEN } from '@/lib/constants'
 
@@ -225,7 +226,7 @@ export default function SpendingCategories() {
   const [yearTo, setYearTo] = useState(2025)
   const [sortField, setSortField] = useState<SortField>('total_value')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
-  const [trendCount, setTrendCount] = useState(5)
+  const [trendCount, setTrendCount] = useState<number | null>(10)
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
 
   const { data: summaryData, isLoading: summaryLoading } = useQuery({
@@ -325,9 +326,10 @@ export default function SpendingCategories() {
   const trendChartData = useMemo(() => {
     if (!trendsData?.data) return { years: [] as number[], series: [] as Array<{ name: string; data: Record<number, number> }> }
     const items: TrendItem[] = trendsData.data
+    const sortedByValue = [...filteredCategories].sort((a, b) => b.total_value - a.total_value)
     const targetIds = selectedCategoryId
       ? [selectedCategoryId]
-      : [...filteredCategories].sort((a, b) => b.total_value - a.total_value).slice(0, trendCount).map(c => c.category_id)
+      : (trendCount === null ? sortedByValue : sortedByValue.slice(0, trendCount)).map(c => c.category_id)
     const yearSet = new Set<number>()
     const seriesMap = new Map<number, { name: string; data: Record<number, number> }>()
 
@@ -348,6 +350,18 @@ export default function SpendingCategories() {
   // Year range options
   const yearOptions = Array.from({ length: MAX_YEAR - MIN_YEAR + 1 }, (_, i) => MIN_YEAR + i)
 
+  // Macro stats from all categories (not filtered)
+  const macroStats = useMemo(() => {
+    if (!allCategories.length) return null
+    const totalValue = allCategories.reduce((s, c) => s + c.total_value, 0)
+    const totalContracts = allCategories.reduce((s, c) => s + c.total_contracts, 0)
+    const avgRisk = totalContracts > 0
+      ? allCategories.reduce((s, c) => s + c.avg_risk * c.total_contracts, 0) / totalContracts
+      : 0
+    const topCategory = [...allCategories].sort((a, b) => b.total_value - a.total_value)[0]
+    return { totalValue, totalContracts, avgRisk, topCategory }
+  }, [allCategories])
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -359,6 +373,53 @@ export default function SpendingCategories() {
         <p className="text-xs text-text-muted mt-0.5">
           What Mexico buys — {allCategories.length} categories covering all 3.1M contracts
         </p>
+      </div>
+
+      {/* Macro Intelligence Banner */}
+      <div className="flex items-start gap-3 rounded-lg border border-accent/20 bg-accent/5 px-4 py-3">
+        <Brain className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+        <div>
+          <span className="text-xs font-semibold text-accent uppercase tracking-wider mr-2">AI Analysis</span>
+          <span className="text-sm text-text-secondary leading-relaxed">
+            {summaryLoading ? 'Loading analysis...' : macroStats
+              ? `${allCategories.length} spending categories tracked across ${formatCompactMXN(macroStats.totalValue)} in validated federal procurement (2002–2025). Top category by value: ${macroStats.topCategory ? (macroStats.topCategory.name_en || macroStats.topCategory.name_es) : '—'}. Portfolio-wide avg risk: ${(macroStats.avgRisk * 100).toFixed(1)}%.`
+              : 'Analyzing spending categories across Mexican federal procurement (2002–2025).'
+            }
+          </span>
+        </div>
+      </div>
+
+      {/* Macro Stat Cards — all categories, unfiltered */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <SharedStatCard
+          label="TOTAL TRACKED SPEND"
+          value={macroStats ? formatCompactMXN(macroStats.totalValue) : '—'}
+          detail={`${allCategories.length} categories · 2002–2025`}
+          borderColor="border-accent/30"
+          loading={summaryLoading}
+        />
+        <SharedStatCard
+          label="CATEGORIES TRACKED"
+          value={allCategories.length > 0 ? formatNumber(allCategories.length) : '—'}
+          detail="Partida presupuestal items"
+          borderColor="border-blue-500/30"
+          loading={summaryLoading}
+        />
+        <SharedStatCard
+          label="TOP CATEGORY"
+          value={macroStats?.topCategory ? formatCompactMXN(macroStats.topCategory.total_value) : '—'}
+          detail={macroStats?.topCategory ? (macroStats.topCategory.name_en || macroStats.topCategory.name_es) : 'Loading...'}
+          borderColor="border-amber-500/30"
+          loading={summaryLoading}
+        />
+        <SharedStatCard
+          label="AVG RISK SCORE"
+          value={macroStats ? `${(macroStats.avgRisk * 100).toFixed(1)}%` : '—'}
+          detail="Weighted by contract count"
+          borderColor="border-red-500/30"
+          color={macroStats && macroStats.avgRisk >= 0.3 ? 'text-risk-high' : 'text-text-primary'}
+          loading={summaryLoading}
+        />
       </div>
 
       {/* Section 1: Filter Bar */}
@@ -429,39 +490,41 @@ export default function SpendingCategories() {
         </div>
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <SharedStatCard
-          label={t('stats.totalCategories')}
-          value={filteredCategories.length > 0 ? formatNumber(filteredCategories.length) : '—'}
-          detail={sectorFilter ? `In ${getSectorNameEN(sectorFilter)}` : t('stats.totalCategoriesDetail')}
-          borderColor="border-accent/30"
-          loading={summaryLoading}
-        />
-        <SharedStatCard
-          label={t('stats.totalContracts')}
-          value={stats ? formatNumber(stats.totalContracts) : '—'}
-          detail={t('stats.totalContractsDetail')}
-          borderColor="border-blue-500/30"
-          loading={summaryLoading}
-        />
-        <SharedStatCard
-          label={t('stats.avgRisk')}
-          value={stats ? `${(stats.avgRisk * 100).toFixed(1)}%` : '—'}
-          detail={t('stats.avgRiskDetail')}
-          borderColor="border-amber-500/30"
-          color={stats && stats.avgRisk >= 0.3 ? 'text-risk-high' : 'text-text-primary'}
-          loading={summaryLoading}
-        />
-        <SharedStatCard
-          label={t('stats.highRisk')}
-          value={stats ? String(stats.highRiskCategories) : '—'}
-          detail={t('stats.highRiskDetail')}
-          borderColor="border-red-500/30"
-          color={stats && stats.highRiskCategories > 0 ? 'text-risk-critical' : 'text-text-primary'}
-          loading={summaryLoading}
-        />
-      </div>
+      {/* Filtered Stat Cards — reflect current sector/view selection */}
+      {sectorFilter && (
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+          <SharedStatCard
+            label="FILTERED CATEGORIES"
+            value={filteredCategories.length > 0 ? formatNumber(filteredCategories.length) : '—'}
+            detail={`In ${getSectorNameEN(sectorFilter)}`}
+            borderColor="border-accent/30"
+            loading={summaryLoading}
+          />
+          <SharedStatCard
+            label="FILTERED CONTRACTS"
+            value={stats ? formatNumber(stats.totalContracts) : '—'}
+            detail={`${getSectorNameEN(sectorFilter)} sector`}
+            borderColor="border-blue-500/30"
+            loading={summaryLoading}
+          />
+          <SharedStatCard
+            label="FILTERED AVG RISK"
+            value={stats ? `${(stats.avgRisk * 100).toFixed(1)}%` : '—'}
+            detail="Weighted by contract count"
+            borderColor="border-amber-500/30"
+            color={stats && stats.avgRisk >= 0.3 ? 'text-risk-high' : 'text-text-primary'}
+            loading={summaryLoading}
+          />
+          <SharedStatCard
+            label="HIGH-RISK CATEGORIES"
+            value={stats ? String(stats.highRiskCategories) : '—'}
+            detail="Risk score >= 30%"
+            borderColor="border-red-500/30"
+            color={stats && stats.highRiskCategories > 0 ? 'text-risk-critical' : 'text-text-primary'}
+            loading={summaryLoading}
+          />
+        </div>
+      )}
 
       {/* AI-Flagged Categories Strip */}
       {topRiskCategories.length > 0 && (
@@ -794,6 +857,17 @@ export default function SpendingCategories() {
                         Top {n}
                       </button>
                     ))}
+                    <button
+                      onClick={() => setTrendCount(null)}
+                      className={cn(
+                        'px-2 py-0.5 text-xs rounded border transition-colors',
+                        trendCount === null
+                          ? 'border-accent bg-accent/10 text-accent'
+                          : 'border-border/50 text-text-muted hover:border-accent/40 hover:text-text-primary'
+                      )}
+                    >
+                      All
+                    </button>
                   </div>
                 )}
               </CardTitle>
