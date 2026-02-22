@@ -161,7 +161,7 @@ class TestVendorRiskTimeline:
             if data["timeline"]:
                 item = data["timeline"][0]
                 assert "year" in item
-                assert "avg_risk" in item
+                assert "avg_risk_score" in item
                 assert "contract_count" in item
 
     def test_vendor_risk_timeline_not_found(self, client, base_url):
