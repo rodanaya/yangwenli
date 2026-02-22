@@ -226,6 +226,7 @@ export default function SpendingCategories() {
   const [sortField, setSortField] = useState<SortField>('total_value')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [trendCount, setTrendCount] = useState(5)
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
 
   const { data: summaryData, isLoading: summaryLoading } = useQuery({
     queryKey: ['categories', 'summary'],
@@ -298,7 +299,7 @@ export default function SpendingCategories() {
     })
   }, [filteredCategories, sortField, sortDir])
 
-  // Treemap data
+  // Treemap data — include category_id for click-to-drill
   const treemapData = useMemo(() => {
     return filteredCategories
       .filter(c => c.total_value > 0)
@@ -306,21 +307,32 @@ export default function SpendingCategories() {
       .map(c => ({
         name: c.name_en || c.name_es,
         value: c.total_value,
-        fill: c.sector_code ? (SECTOR_COLORS[c.sector_code] || '#64748b') : getRiskColor(c.avg_risk),
+        category_id: c.category_id,
+        fill: selectedCategoryId === c.category_id
+          ? '#f59e0b'  // highlight selected in amber
+          : c.sector_code ? (SECTOR_COLORS[c.sector_code] || '#64748b') : getRiskColor(c.avg_risk),
       }))
-  }, [filteredCategories])
+  }, [filteredCategories, selectedCategoryId])
 
-  // Trend chart — top 5 categories by value
+  // Selected category name (for the filter chip label)
+  const selectedCategoryName = useMemo(() => {
+    if (!selectedCategoryId) return null
+    const cat = filteredCategories.find(c => c.category_id === selectedCategoryId)
+    return cat ? (cat.name_en || cat.name_es) : null
+  }, [selectedCategoryId, filteredCategories])
+
+  // Trend chart — filtered by selected treemap cell, or top N by value
   const trendChartData = useMemo(() => {
     if (!trendsData?.data) return { years: [] as number[], series: [] as Array<{ name: string; data: Record<number, number> }> }
     const items: TrendItem[] = trendsData.data
-    const top5 = [...filteredCategories].sort((a, b) => b.total_value - a.total_value).slice(0, trendCount)
-    const top5Ids = top5.map(c => c.category_id)
+    const targetIds = selectedCategoryId
+      ? [selectedCategoryId]
+      : [...filteredCategories].sort((a, b) => b.total_value - a.total_value).slice(0, trendCount).map(c => c.category_id)
     const yearSet = new Set<number>()
     const seriesMap = new Map<number, { name: string; data: Record<number, number> }>()
 
     for (const item of items) {
-      if (!top5Ids.includes(item.category_id)) continue
+      if (!targetIds.includes(item.category_id)) continue
       yearSet.add(item.year)
       if (!seriesMap.has(item.category_id)) {
         seriesMap.set(item.category_id, { name: item.name_en || item.name_es, data: {} })
@@ -329,7 +341,7 @@ export default function SpendingCategories() {
     }
 
     return { years: Array.from(yearSet).sort(), series: Array.from(seriesMap.values()) }
-  }, [trendsData, filteredCategories])
+  }, [trendsData, filteredCategories, selectedCategoryId, trendCount])
 
   const TREND_COLORS = ['#3b82f6', '#f97316', '#8b5cf6', '#16a34a', '#dc2626']
 
@@ -714,6 +726,21 @@ export default function SpendingCategories() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {selectedCategoryName && (
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs text-text-muted">Trend filtered by:</span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    {selectedCategoryName}
+                    <button
+                      onClick={() => setSelectedCategoryId(null)}
+                      className="ml-0.5 hover:text-amber-200"
+                      aria-label="Clear filter"
+                    >
+                      ×
+                    </button>
+                  </span>
+                </div>
+              )}
               {summaryLoading ? (
                 <ChartSkeleton height={380} />
               ) : treemapData.length > 0 ? (
@@ -723,6 +750,12 @@ export default function SpendingCategories() {
                       data={treemapData}
                       dataKey="value"
                       nameKey="name"
+                      onClick={(data: { category_id?: number }) => {
+                        if (data.category_id != null) {
+                          setSelectedCategoryId(prev => prev === data.category_id ? null : data.category_id!)
+                        }
+                      }}
+                      style={{ cursor: 'pointer' }}
                       content={<TreemapContent x={0} y={0} width={0} height={0} name="" value={0} depth={0} fill="" />}
                     />
                   </ResponsiveContainer>
@@ -741,22 +774,28 @@ export default function SpendingCategories() {
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-text-muted" />
                 {t('trends.title')}
-                <div className="ml-auto flex items-center gap-1">
-                  {([5, 10, 20] as const).map((n) => (
-                    <button
-                      key={n}
-                      onClick={() => setTrendCount(n)}
-                      className={cn(
-                        'px-2 py-0.5 text-xs rounded border transition-colors',
-                        trendCount === n
-                          ? 'border-accent bg-accent/10 text-accent'
-                          : 'border-border/50 text-text-muted hover:border-accent/40 hover:text-text-primary'
-                      )}
-                    >
-                      Top {n}
-                    </button>
-                  ))}
-                </div>
+                {selectedCategoryName ? (
+                  <span className="ml-auto text-xs text-amber-400 font-normal">
+                    Showing: {selectedCategoryName}
+                  </span>
+                ) : (
+                  <div className="ml-auto flex items-center gap-1">
+                    {([5, 10, 20] as const).map((n) => (
+                      <button
+                        key={n}
+                        onClick={() => setTrendCount(n)}
+                        className={cn(
+                          'px-2 py-0.5 text-xs rounded border transition-colors',
+                          trendCount === n
+                            ? 'border-accent bg-accent/10 text-accent'
+                            : 'border-border/50 text-text-muted hover:border-accent/40 hover:text-text-primary'
+                        )}
+                      >
+                        Top {n}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </CardTitle>
               <CardDescription>
                 {t('trends.description')}

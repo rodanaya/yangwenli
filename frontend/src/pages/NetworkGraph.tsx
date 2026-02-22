@@ -8,7 +8,7 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import ReactECharts from 'echarts-for-react'
-import { Network, Search, X, ExternalLink, Users } from 'lucide-react'
+import { Network, Search, X, ExternalLink, Users, UserCircle } from 'lucide-react'
 import { RiskBadge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SectionDescription } from '@/components/SectionDescription'
@@ -16,6 +16,7 @@ import { formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { RISK_COLORS, getRiskLevelFromScore, SECTORS } from '@/lib/constants'
 import { networkApi, vendorApi, institutionApi } from '@/api/client'
 import type { NetworkNode, NetworkLink, CoBidderItem } from '@/api/client'
+import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -333,6 +334,7 @@ function SidePanel({
   // Node IDs are like "v-123" or "i-456"
   const numericId = parseInt(node.id.slice(2), 10)
   const profileLink = isVendor ? `/vendors/${numericId}` : `/institutions/${numericId}`
+  const { open: openDrawer } = useEntityDrawer()
 
   return (
     <div className="w-72 shrink-0 border-l border-border bg-background-card flex flex-col overflow-hidden">
@@ -381,14 +383,23 @@ function SidePanel({
           </div>
         </div>
 
-        {/* Profile link */}
-        <Link
-          to={profileLink}
-          className="flex items-center gap-1.5 text-xs text-accent hover:underline"
-        >
-          <ExternalLink className="h-3 w-3 shrink-0" />
-          View full profile
-        </Link>
+        {/* Profile actions */}
+        <div className="flex flex-col gap-1.5">
+          <button
+            onClick={() => openDrawer(numericId, isVendor ? 'vendor' : 'institution')}
+            className="flex items-center gap-1.5 text-xs text-accent hover:underline w-full text-left"
+          >
+            <UserCircle className="h-3 w-3 shrink-0" />
+            Open AI profile
+          </button>
+          <Link
+            to={profileLink}
+            className="flex items-center gap-1.5 text-xs text-text-muted hover:text-text-primary hover:underline"
+          >
+            <ExternalLink className="h-3 w-3 shrink-0" />
+            View full page
+          </Link>
+        </div>
 
         {/* Co-bidders section (vendors only) */}
         {isVendor && (
