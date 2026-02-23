@@ -46,8 +46,8 @@ interface NavItem {
 
 // THE STORY — entry point, overview
 const storyNavDefs: NavItemDef[] = [
-  { i18nKey: 'dashboard', href: '/', icon: LayoutDashboard },
-  { i18nKey: 'executive', href: '/executive', icon: ScrollText },
+  { i18nKey: 'executive', href: '/', icon: ScrollText },
+  { i18nKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
 ]
 
 // THE MONEY — where funds flow

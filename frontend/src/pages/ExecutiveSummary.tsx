@@ -46,6 +46,14 @@ function useExecutiveSummary() {
   })
 }
 
+function usePatternCounts() {
+  return useQuery({
+    queryKey: ['analysis', 'pattern-counts'],
+    queryFn: () => analysisApi.getPatternCounts(),
+    staleTime: 10 * 60 * 1000,
+  })
+}
+
 // ============================================================================
 // Scroll Reveal Hook + Component
 // ============================================================================
@@ -97,6 +105,7 @@ function ScrollReveal({ children, delay = 0 }: { children: React.ReactNode; dela
 export function ExecutiveSummary() {
   const navigate = useNavigate()
   const { data, isLoading } = useExecutiveSummary()
+  const { data: patternCounts } = usePatternCounts()
 
   if (isLoading || !data) {
     return <LoadingSkeleton />
@@ -115,7 +124,7 @@ export function ExecutiveSummary() {
       <Divider />
       <ScrollReveal><SectionVendors data={data} navigate={navigate} /></ScrollReveal>
       <Divider />
-      <ScrollReveal><SectionNetwork /></ScrollReveal>
+      <ScrollReveal><SectionNetwork patternCounts={patternCounts} /></ScrollReveal>
       <Divider />
       <ScrollReveal><SectionData /></ScrollReveal>
       <Divider />
@@ -655,7 +664,9 @@ function SectionVendors({
 // S5: The Network — Co-bidding and Collusion Patterns
 // ============================================================================
 
-function SectionNetwork() {
+function SectionNetwork({ patternCounts }: {
+  patternCounts?: { counts: { critical: number; december_rush: number; split_contracts: number; co_bidding: number; price_outliers: number } }
+}) {
   const { t } = useTranslation('executive')
 
   return (
@@ -678,11 +689,29 @@ function SectionNetwork() {
         />
       </p>
 
-      <div className="grid sm:grid-cols-3 gap-4 mb-6">
+      <div className="grid sm:grid-cols-3 gap-4 mb-4">
         <StatCallout value="8,701" label={t('s5.suspiciousVendors')} color="var(--color-risk-high)" />
-        <StatCallout value="1M+" label={t('s5.affectedContracts')} color="var(--color-risk-medium)" />
+        <StatCallout
+          value={patternCounts ? formatNumber(patternCounts.counts.co_bidding) : '1M+'}
+          label={t('s5.affectedContracts')}
+          color="var(--color-risk-medium)"
+        />
         <StatCallout value="50%+" label={t('s5.coBidThreshold')} color="var(--color-text-secondary)" />
       </div>
+
+      {patternCounts && (
+        <div className="border border-border/30 rounded-lg px-4 py-3 bg-surface-raised/20 mb-6">
+          <p className="text-xs font-bold tracking-wider uppercase text-text-muted font-mono mb-3">
+            All detection patterns — live database scan
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <MiniStat label="Critical risk" value={formatNumber(patternCounts.counts.critical)} color={RISK_COLORS.critical} />
+            <MiniStat label="December rush" value={formatNumber(patternCounts.counts.december_rush)} color={RISK_COLORS.medium} />
+            <MiniStat label="Split contracts" value={formatNumber(patternCounts.counts.split_contracts)} />
+            <MiniStat label="Price outliers" value={formatNumber(patternCounts.counts.price_outliers)} />
+          </div>
+        </div>
+      )}
 
       <p className="text-sm leading-relaxed text-text-secondary">
         {t('s5.p3')}
