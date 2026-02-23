@@ -60,12 +60,7 @@ export function Dashboard() {
     staleTime: 5 * 60 * 1000,
   })
 
-  // API call 2: Year-over-year trends
-  const { data: yoyData } = useQuery({
-    queryKey: ['analysis', 'yoy'],
-    queryFn: () => analysisApi.getYearOverYear(),
-    staleTime: 5 * 60 * 1000,
-  })
+  // API call 2: (yoy removed — using fastDashboard.yearly_trends instead)
 
   // API call 3: Executive summary (ground truth, top institutions/vendors, risk data)
   const { data: execData, isLoading: execLoading } = useQuery({
@@ -81,12 +76,7 @@ export function Dashboard() {
     staleTime: 5 * 60 * 1000,
   })
 
-  // API call 5: Money flow data
-  const { data: moneyFlowData } = useQuery({
-    queryKey: ['analysis', 'money-flow', 'dashboard'],
-    queryFn: () => analysisApi.getMoneyFlow(),
-    staleTime: 10 * 60 * 1000,
-  })
+  // API call 5: (money-flow removed — using sectorData instead, which is pre-loaded)
 
   // API call 6: December spike analysis
   const { data: decemberSpike } = useQuery({
@@ -136,32 +126,24 @@ export function Dashboard() {
       .sort((a, b) => b.valueAtRisk - a.valueAtRisk)
   }, [sectors])
 
-  // Risk trajectory from year-over-year data
+  // Risk trajectory from precomputed yearly_trends (fast, no extra API call)
   const riskTrajectory = useMemo(() => {
-    if (!yoyData?.data) return []
-    return yoyData.data
-      .filter((d) => d.year >= 2010 && d.year <= 2025)
+    if (!fastDashboard?.yearly_trends) return []
+    return fastDashboard.yearly_trends
+      .filter((d) => d.year >= 2010)
       .map((d) => ({
         year: d.year,
-        highRiskPct: d.high_risk_pct || 0,
+        highRiskPct: (d.avg_risk || 0) * 100,
         avgRisk: (d.avg_risk || 0) * 100,
         contracts: d.contracts,
       }))
-  }, [yoyData])
+  }, [fastDashboard])
 
   // Ground truth cases from executive API
   const corruptionCases = useMemo(() => {
     if (!execData?.ground_truth?.case_details) return []
     return execData.ground_truth.case_details
   }, [execData])
-
-  // Top 5 money flows sorted by value
-  const topFlows = useMemo(() => {
-    if (!moneyFlowData?.flows) return []
-    return [...moneyFlowData.flows]
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 5)
-  }, [moneyFlowData])
 
   const groundTruth = execData?.ground_truth
   const modelAuc = execData?.model?.auc ?? 0.960
@@ -243,7 +225,9 @@ export function Dashboard() {
             className="flex flex-col gap-3 p-4 rounded-lg border border-risk-high/20 bg-risk-high/5 hover:border-risk-high/40 hover:bg-risk-high/10 transition-all text-left group"
           >
             <div className="flex items-center gap-2">
-              <span className="text-2xl">🚨</span>
+              <div className="p-1.5 rounded bg-risk-high/10">
+                <Zap className="h-4 w-4 text-risk-high" />
+              </div>
               <span className="text-xs font-bold tracking-wider uppercase text-risk-high font-mono">Direct Awards</span>
             </div>
             <div>
@@ -262,7 +246,9 @@ export function Dashboard() {
             className="flex flex-col gap-3 p-4 rounded-lg border border-risk-critical/20 bg-risk-critical/5 hover:border-risk-critical/40 hover:bg-risk-critical/10 transition-all text-left group"
           >
             <div className="flex items-center gap-2">
-              <span className="text-2xl">🔴</span>
+              <div className="p-1.5 rounded bg-risk-critical/10">
+                <Crosshair className="h-4 w-4 text-risk-critical" />
+              </div>
               <span className="text-xs font-bold tracking-wider uppercase text-risk-critical font-mono">Single Bidder</span>
             </div>
             <div>
@@ -281,7 +267,9 @@ export function Dashboard() {
             className="flex flex-col gap-3 p-4 rounded-lg border border-risk-medium/20 bg-risk-medium/5 hover:border-risk-medium/40 hover:bg-risk-medium/10 transition-all text-left group"
           >
             <div className="flex items-center gap-2">
-              <span className="text-2xl">📅</span>
+              <div className="p-1.5 rounded bg-risk-medium/10">
+                <Activity className="h-4 w-4 text-risk-medium" />
+              </div>
               <span className="text-xs font-bold tracking-wider uppercase text-risk-medium font-mono">December Rush</span>
             </div>
             <div>
@@ -301,61 +289,111 @@ export function Dashboard() {
       </div>
 
       {/* ================================================================ */}
-      {/* WHERE THE MONEY GOES — Top 5 institution→vendor flows           */}
+      {/* THE COST OF NO COMPETITION — Impact card                       */}
       {/* ================================================================ */}
-      <Card className="border-border/40">
-        <CardContent className="pt-5 pb-4">
-          <div className="flex items-center justify-between mb-1">
+      {dashLoading ? (
+        <Skeleton className="h-28 w-full rounded-lg" />
+      ) : overview ? (
+        <div className="rounded-lg border border-risk-critical/20 bg-risk-critical/5 px-6 py-5">
+          <div className="flex items-start justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 mb-0.5">
-                <ArrowRight className="h-4 w-4 text-accent" />
-                <h2 className="text-base font-bold text-text-primary">Where the Money Goes</h2>
+              <div className="flex items-center gap-2 mb-2">
+                <Zap className="h-4 w-4 text-risk-critical" />
+                <span className="text-xs font-bold tracking-wider uppercase text-risk-critical font-mono">
+                  The Cost of No Competition
+                </span>
               </div>
-              <p className="text-xs text-text-muted">
-                Top institution → vendor flows by total contract value
+              <p className="text-4xl md:text-5xl font-black text-text-primary tabular-nums font-mono leading-none">
+                {formatCompactMXN((overview.direct_award_pct / 100) * overview.total_value_mxn)}
+              </p>
+              <p className="text-sm text-text-secondary mt-2">
+                awarded without competitive bidding · {(overview.direct_award_pct).toFixed(0)}% of all contracts
+              </p>
+              <p className="text-xs text-text-muted mt-1 font-mono">
+                OECD benchmark: 20–30% direct award rate
               </p>
             </div>
             <button
-              onClick={() => navigate('/categories')}
-              className="text-xs text-accent hover:text-accent flex items-center gap-1"
+              onClick={() => navigate('/contracts?is_direct_award=true')}
+              className="text-xs text-accent flex items-center gap-1 whitespace-nowrap mt-1 flex-shrink-0"
             >
-              Full breakdown <ArrowUpRight className="h-3 w-3" />
+              Explore <ArrowUpRight className="h-3 w-3" />
             </button>
           </div>
+        </div>
+      ) : null}
 
-          {!moneyFlowData ? (
-            <div className="space-y-2 mt-3">
-              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-9" />)}
+      {/* ================================================================ */}
+      {/* 23 YEARS AT A GLANCE — Temporal contract volume + risk trend   */}
+      {/* ================================================================ */}
+      <Card className="border-border/40">
+        <CardContent className="pt-5 pb-3">
+          <div className="flex items-center justify-between mb-1">
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <Activity className="h-4 w-4 text-accent" />
+                <h2 className="text-base font-bold text-text-primary">23 Years at a Glance</h2>
+              </div>
+              <p className="text-xs text-text-muted">Contract volume and average risk score · 2002–2024</p>
             </div>
+            <button
+              onClick={() => navigate('/temporal')}
+              className="text-xs text-accent flex items-center gap-1"
+            >
+              Full timeline <ArrowUpRight className="h-3 w-3" />
+            </button>
+          </div>
+          {dashLoading ? (
+            <Skeleton className="h-[160px] w-full mt-3" />
           ) : (
-            <div className="mt-3 space-y-1">
-              {topFlows.map((flow, i) => {
-                const riskColor =
-                  (flow.avg_risk ?? 0) >= 0.50 ? 'text-risk-critical' :
-                  (flow.avg_risk ?? 0) >= 0.30 ? 'text-risk-high' :
-                  (flow.avg_risk ?? 0) >= 0.10 ? 'text-risk-medium' :
-                  'text-risk-low'
-                return (
-                  <div key={i} className="flex items-center gap-3 py-1.5 px-2 rounded hover:bg-background-elevated/30 transition-colors">
-                    <span className="text-xs text-text-muted font-mono w-4">{i + 1}</span>
-                    <span className="text-sm text-text-secondary truncate w-[140px] font-medium">
-                      {toTitleCase(flow.source_name)}
-                    </span>
-                    <ArrowRight className="h-3 w-3 text-text-muted flex-shrink-0" />
-                    <span className="text-sm text-text-secondary truncate flex-1 font-medium">
-                      {toTitleCase(flow.target_name)}
-                    </span>
-                    <span className="text-xs tabular-nums font-mono text-text-muted">
-                      {formatCompactMXN(flow.value)}
-                    </span>
-                    {flow.avg_risk != null && (
-                      <span className={cn('text-xs font-bold tabular-nums font-mono', riskColor)}>
-                        {(flow.avg_risk * 100).toFixed(0)}%
-                      </span>
-                    )}
-                  </div>
-                )
-              })}
+            <div className="mt-2">
+              <ResponsiveContainer width="100%" height={160}>
+                <ComposedChart data={fastDashboard?.yearly_trends || []} margin={{ top: 12, right: 36, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="contractGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0.0} />
+                    </linearGradient>
+                  </defs>
+                  <ReferenceArea x1={2002} x2={2006} fill="#22c55e" fillOpacity={0.04} label={{ value: 'Fox', position: 'insideTopLeft', fontSize: 8, fill: '#64748b' }} />
+                  <ReferenceArea x1={2006} x2={2012} fill="#3b82f6" fillOpacity={0.04} label={{ value: 'Calderón', position: 'insideTopLeft', fontSize: 8, fill: '#64748b' }} />
+                  <ReferenceArea x1={2012} x2={2018} fill="#ea580c" fillOpacity={0.04} label={{ value: 'Peña', position: 'insideTopLeft', fontSize: 8, fill: '#64748b' }} />
+                  <ReferenceArea x1={2018} x2={2024} fill="#eab308" fillOpacity={0.04} label={{ value: 'AMLO', position: 'insideTopLeft', fontSize: 8, fill: '#64748b' }} />
+                  <XAxis dataKey="year" tick={{ fontSize: 9, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
+                  <YAxis yAxisId="left" hide />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    domain={[0, 0.20]}
+                    tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
+                    tick={{ fontSize: 9, fill: '#94a3b8' }}
+                    tickLine={false}
+                    axisLine={false}
+                    width={32}
+                  />
+                  <RechartsTooltip
+                    contentStyle={{ background: 'hsl(var(--background-elevated))', border: '1px solid hsl(var(--border))', borderRadius: '6px', fontSize: '11px' }}
+                    formatter={(value: unknown, name: string) => {
+                      if (name === 'contracts') return [formatNumber(value as number), 'Contracts']
+                      if (name === 'avg_risk') return [`${((value as number) * 100).toFixed(1)}%`, 'Avg Risk']
+                      return [value, name]
+                    }}
+                    labelFormatter={(label: unknown) => `Year: ${label}`}
+                  />
+                  <Area yAxisId="left" type="monotone" dataKey="contracts" stroke="hsl(var(--accent))" strokeWidth={1.5} fill="url(#contractGrad)" dot={false} />
+                  <Line yAxisId="right" type="monotone" dataKey="avg_risk" stroke={RISK_COLORS.high} strokeWidth={1.5} dot={false} strokeDasharray="3 3" />
+                </ComposedChart>
+              </ResponsiveContainer>
+              <div className="flex items-center gap-4 mt-1 px-1">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 h-0.5 rounded" style={{ background: 'hsl(var(--accent))' }} />
+                  <span className="text-xs text-text-muted">Contracts/year</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 border-t border-dashed" style={{ borderColor: RISK_COLORS.high }} />
+                  <span className="text-xs text-text-muted">Avg risk score</span>
+                </div>
+              </div>
             </div>
           )}
         </CardContent>
@@ -456,7 +494,7 @@ export function Dashboard() {
                 <p className="text-xs text-text-muted">{t('riskTrajectoryDesc')}</p>
               </div>
             </div>
-            {!yoyData ? (
+            {dashLoading ? (
               <div className="h-[340px] flex items-center justify-center"><Skeleton className="h-full w-full" /></div>
             ) : (
               <RiskTrajectoryChart data={riskTrajectory} />
@@ -756,9 +794,9 @@ const SectorGrid = memo(function SectorGrid({
       <div className="flex items-center gap-2 px-2 pb-1.5 border-b border-border/20">
         <span className="text-xs font-bold uppercase tracking-wider text-text-muted w-[80px]">{t('sector')}</span>
         <span className="text-xs font-bold uppercase tracking-wider text-text-muted flex-1">{t('valueAtRisk')}</span>
-        <span className="text-xs font-bold uppercase tracking-wider text-text-muted w-[70px] text-right">{t('contracts')}</span>
-        <span className="text-xs font-bold uppercase tracking-wider text-text-muted w-[55px] text-right">{t('highPlus')}</span>
-        <span className="text-xs font-bold uppercase tracking-wider text-text-muted w-[45px] text-right">DA%</span>
+        <span className="text-xs font-bold uppercase tracking-wider text-text-muted w-[68px] text-right">MXN</span>
+        <span className="text-xs font-bold uppercase tracking-wider text-text-muted w-[52px] text-right">{t('highPlus')}</span>
+        <span className="text-xs font-bold uppercase tracking-wider text-text-muted w-[40px] text-right">DA%</span>
       </div>
       {data.map((sector) => {
         const widthPct = (sector.valueAtRisk / maxVal) * 100
@@ -776,7 +814,7 @@ const SectorGrid = memo(function SectorGrid({
                 {ts(sector.code)}
               </span>
             </div>
-            {/* Value at risk bar */}
+            {/* Value at risk bar — no text inside */}
             <div className="flex-1 relative h-5">
               <div className="absolute inset-0 rounded bg-background-elevated/30" />
               <div
@@ -787,22 +825,17 @@ const SectorGrid = memo(function SectorGrid({
                   opacity: 0.6,
                 }}
               />
-              {sector.valueAtRisk > 0 && (
-                <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-xs font-mono tabular-nums text-text-muted">
-                  {formatCompactMXN(sector.valueAtRisk)}
-                </span>
-              )}
             </div>
-            {/* Contract count */}
-            <span className="text-xs text-text-muted tabular-nums font-mono w-[70px] text-right">
-              {formatNumber(sector.contracts)}
+            {/* Value at risk — separate column, always visible */}
+            <span className="text-xs text-text-muted tabular-nums font-mono w-[68px] text-right flex-shrink-0">
+              {sector.valueAtRisk > 0 ? formatCompactMXN(sector.valueAtRisk) : '—'}
             </span>
             {/* High+ rate */}
-            <span className="text-xs text-text-muted tabular-nums font-mono w-[55px] text-right">
+            <span className="text-xs text-text-muted tabular-nums font-mono w-[52px] text-right flex-shrink-0">
               {sector.riskPct.toFixed(1)}%
             </span>
             {/* Direct award rate */}
-            <span className="text-xs text-text-muted tabular-nums font-mono w-[45px] text-right">
+            <span className="text-xs text-text-muted tabular-nums font-mono w-[40px] text-right flex-shrink-0">
               {sector.directAwardPct.toFixed(0)}%
             </span>
           </button>

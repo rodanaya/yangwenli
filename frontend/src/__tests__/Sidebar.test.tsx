@@ -25,7 +25,7 @@ describe('Sidebar', () => {
   it('renders story navigation items when expanded', () => {
     renderSidebar({ collapsed: false })
     expect(screen.getByText('Executive Summary')).toBeInTheDocument()
-    expect(screen.getByText('Dashboard')).toBeInTheDocument()
+    expect(screen.getByText('The Brief')).toBeInTheDocument()
   })
 
   it('renders brand text when expanded', () => {
