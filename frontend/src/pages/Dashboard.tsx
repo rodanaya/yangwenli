@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
-import { analysisApi } from '@/api/client'
+import { analysisApi, investigationApi } from '@/api/client'
 import type { ExecutiveCaseDetail } from '@/api/types'
 import {
   ArrowRight,
@@ -25,12 +25,14 @@ import {
 } from 'lucide-react'
 import {
   ResponsiveContainer,
+  BarChart,
   XAxis,
   YAxis,
   Tooltip as RechartsTooltip,
   CartesianGrid,
   Area,
   Bar,
+  Cell,
   Line,
   ComposedChart,
   ReferenceLine,
@@ -51,6 +53,46 @@ import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN } from '@/lib/constants'
 // 7. RED FLAGS + INVESTIGATION — Pattern counts + ML leads
 // 8. NAVIGATE DEEPER — 6 link cards
 // ============================================================================
+
+// v5.0 model top-4 predictors (from RISK_METHODOLOGY_v5.md global model coefficients)
+const AI_SIGNALS = [
+  {
+    icon: TrendingDown,
+    coefficient: '+1.22',
+    label: 'Erratic Pricing',
+    description: 'Price volatility vs. sector norm',
+    color: 'text-risk-critical' as const,
+    border: 'border-risk-critical/20' as const,
+    bg: 'bg-risk-critical/5' as const,
+  },
+  {
+    icon: Scale,
+    coefficient: '−0.85',
+    label: 'Focused Buyer',
+    description: 'Serves very few institutions',
+    color: 'text-risk-high' as const,
+    border: 'border-risk-high/20' as const,
+    bg: 'bg-risk-high/5' as const,
+  },
+  {
+    icon: Target,
+    coefficient: '+0.73',
+    label: 'Win Rate Spike',
+    description: 'Abnormal win rate for sector',
+    color: 'text-risk-medium' as const,
+    border: 'border-risk-medium/20' as const,
+    bg: 'bg-risk-medium/5' as const,
+  },
+  {
+    icon: Crosshair,
+    coefficient: '+0.43',
+    label: 'Market Capture',
+    description: 'Dominates sector spending',
+    color: 'text-text-secondary' as const,
+    border: 'border-border/30' as const,
+    bg: 'bg-background-elevated/20' as const,
+  },
+]
 
 export function Dashboard() {
   const navigate = useNavigate()
@@ -90,6 +132,20 @@ export function Dashboard() {
     queryKey: ['analysis', 'december-spike'],
     queryFn: () => analysisApi.getDecemberSpike(),
     staleTime: 10 * 60 * 1000,
+  })
+
+  // API call 7: Monthly breakdown for December Rush sparkline
+  const { data: monthlyData } = useQuery({
+    queryKey: ['analysis', 'monthly-breakdown', 'dashboard'],
+    queryFn: () => analysisApi.getMonthlyBreakdown(2023),
+    staleTime: 60 * 60 * 1000, // 1 hour — historical data, won't change
+  })
+
+  // API call 8: Top investigation case for Ground Truth "smoking gun"
+  const { data: topCaseData } = useQuery({
+    queryKey: ['investigation', 'top-1-dashboard'],
+    queryFn: () => investigationApi.getTopCases(1),
+    staleTime: 30 * 60 * 1000,
   })
 
   const overview = fastDashboard?.overview
@@ -229,6 +285,26 @@ export function Dashboard() {
       </div>
 
       {/* ================================================================ */}
+      {/* DATA QUALITY — Compact transparency strip                       */}
+      {/* ================================================================ */}
+      <div className="flex items-center gap-2 flex-wrap px-3 py-2 rounded border border-border/20 bg-background-elevated/10">
+        <Shield className="h-3 w-3 text-text-muted flex-shrink-0" />
+        <span className="text-[11px] font-bold tracking-wider uppercase text-text-muted font-mono">Data coverage</span>
+        <span className="text-border text-[11px]">·</span>
+        <span className="text-[11px] text-text-muted font-mono">2002–10 <span className="text-risk-medium">0.1% RFC</span></span>
+        <span className="text-border text-[11px]">·</span>
+        <span className="text-[11px] text-text-muted font-mono">2010–22 <span className="text-text-secondary">15–30% RFC</span></span>
+        <span className="text-border text-[11px]">·</span>
+        <span className="text-[11px] text-text-muted font-mono">2023–25 <span className="text-risk-low">47% RFC</span></span>
+        <button
+          onClick={() => navigate('/limitations')}
+          className="ml-auto text-[11px] text-accent flex items-center gap-0.5 hover:underline font-mono"
+        >
+          See limitations <ArrowUpRight className="h-3 w-3" />
+        </button>
+      </div>
+
+      {/* ================================================================ */}
       {/* THREE SYSTEMIC PATTERNS — AI-found structural failures          */}
       {/* ================================================================ */}
       <div>
@@ -303,16 +379,80 @@ export function Dashboard() {
                 {decemberSpike ? `${decemberSpike.average_spike_ratio.toFixed(1)}x` : '—'}
               </p>
               <p className="text-sm text-text-secondary mt-1">December spending vs. average month</p>
-              <p className="text-xs text-text-muted mt-1 font-mono">
-                {decemberSpike
-                  ? `Significant in ${decemberSpike.years_with_significant_spike} of ${decemberSpike.total_years_analyzed} years`
-                  : 'Year-end budget dump pattern'}
-              </p>
+              {monthlyData ? (
+                <div className="mt-2">
+                  <div className="h-10">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={monthlyData.months} barCategoryGap="8%" margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                        <Bar dataKey="contracts" radius={[2, 2, 0, 0]}>
+                          {monthlyData.months.map((entry: { month: number }) => (
+                            <Cell
+                              key={entry.month}
+                              fill={entry.month === 12 ? RISK_COLORS.medium : 'rgba(255,255,255,0.12)'}
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <p className="text-[10px] text-text-muted font-mono text-center">
+                    Contracts awarded per month · 2023
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-text-muted mt-1 font-mono">
+                  {decemberSpike
+                    ? `Significant in ${decemberSpike.years_with_significant_spike} of ${decemberSpike.total_years_analyzed} years`
+                    : 'Year-end budget dump pattern'}
+                </p>
+              )}
             </div>
             <ArrowRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" />
           </button>
         </div>
       </div>
+
+      {/* ================================================================ */}
+      {/* HOW THE AI WORKS — Top 4 v5.0 model predictors                */}
+      {/* ================================================================ */}
+      <Card className="border-border/40">
+        <CardContent className="pt-5 pb-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <Radar className="h-4 w-4 text-accent" />
+                <h2 className="text-base font-bold text-text-primary">How the AI Flags Corruption</h2>
+              </div>
+              <p className="text-xs text-text-muted">
+                The four statistical signals our v5.0 model learned from 15 documented cases
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/methodology')}
+              className="text-xs text-accent flex items-center gap-1"
+            >
+              Full methodology <ArrowUpRight className="h-3 w-3" />
+            </button>
+          </div>
+          <div className="grid gap-2 grid-cols-2 md:grid-cols-4">
+            {AI_SIGNALS.map((signal) => (
+              <div key={signal.label} className={cn('rounded-lg border p-3', signal.border, signal.bg)}>
+                <div className="flex items-center gap-2 mb-2">
+                  <signal.icon className={cn('h-3.5 w-3.5', signal.color)} />
+                  <span className={cn('text-lg font-black tabular-nums font-mono leading-none', signal.color)}>
+                    {signal.coefficient}
+                  </span>
+                </div>
+                <p className="text-sm font-bold text-text-primary leading-tight">{signal.label}</p>
+                <p className="text-xs text-text-muted mt-0.5 leading-relaxed">{signal.description}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-[10px] text-text-muted mt-3 font-mono">
+            Coefficient = log-odds contribution to corruption probability. v5.0 · Train AUC 0.967 · Test AUC 0.960
+          </p>
+        </CardContent>
+      </Card>
 
       {/* ================================================================ */}
       {/* VALUE CONCENTRATION — The 7.9% that holds the money           */}
@@ -637,6 +777,40 @@ export function Dashboard() {
           ) : (
             <CaseDetectionChart cases={corruptionCases} />
           )}
+          {/* SMOKING GUN — one concrete high-risk investigation lead */}
+          {topCaseData?.data?.[0] && (() => {
+            const lead = topCaseData.data[0] as Record<string, unknown>
+            const riskPct = ((Number(lead.avg_risk_score) || Number(lead.suspicion_score) || 0) * 100).toFixed(0)
+            return (
+              <div className="mt-3 mb-1 pt-3 border-t border-border/20">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-mono mb-2">
+                  Highest-Scored Active Investigation
+                </p>
+                <button
+                  onClick={() => navigate('/investigation')}
+                  className="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg border border-risk-critical/20 bg-risk-critical/5 hover:bg-risk-critical/10 transition-colors group"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-text-primary truncate">
+                      {toTitleCase(String(lead.title || lead.vendor_name || 'Unknown Vendor'))}
+                    </p>
+                    <p className="text-xs text-text-muted mt-0.5">
+                      {formatCompactMXN(Number(lead.total_value || 0))}
+                      {lead.sector_id ? ` · Sector ${lead.sector_id}` : ''}
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-base font-black tabular-nums font-mono text-risk-critical">{riskPct}%</p>
+                    <p className="text-[10px] text-text-muted font-mono">
+                      {Number(lead.total_contracts || 0).toLocaleString()} contracts
+                    </p>
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 text-text-muted group-hover:text-accent transition-colors flex-shrink-0" />
+                </button>
+              </div>
+            )
+          })()}
+
           <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/30">
             <div className="flex items-center gap-1.5">
               <Zap className="h-3.5 w-3.5 text-accent" />

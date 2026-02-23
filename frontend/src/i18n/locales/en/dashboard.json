@@ -102,5 +102,9 @@
   "systemicPatternsTitle": "Three Structural Failures — In Every Administration",
   "systemicPatternsDesc": "Our model analyzed 3.1M contracts across 5 governments. These patterns never stopped.",
   "decemberSpikeRatio": "December spending vs. average month",
-  "decemberSpikeYears": "Significant in {{significant}} of {{total}} years"
+  "decemberSpikeYears": "Significant in {{significant}} of {{total}} years",
+  "howAiWorks": "How the AI Flags Corruption",
+  "howAiWorksDesc": "The four statistical signals our v5.0 model learned from 15 documented cases",
+  "dataQualityLabel": "Data coverage",
+  "smokingGunLabel": "Highest-Scored Active Investigation"
 }
