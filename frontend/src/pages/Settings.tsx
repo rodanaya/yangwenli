@@ -17,7 +17,6 @@ import {
   Download,
   FileText,
   Users,
-  Building2,
   Loader2,
   Check,
   X,
@@ -364,7 +363,7 @@ function ExportTab() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         <ExportCard
           title="Contracts"
           description="Export contract data with risk scores and classifications"
@@ -399,21 +398,6 @@ function ExportTab() {
             }
           }}
           onSuccess={(format) => showToast(`Vendors exported as ${format} successfully!`, 'success')}
-          onError={(error) => showToast(`Export failed: ${error}`, 'error')}
-        />
-        <ExportCard
-          title="Institutions"
-          description="Export institution data with spending analysis"
-          icon={Building2}
-          estimatedRecords={EXPORT_LIMITS.institutions.default}
-          estimatedSizeMB={EXPORT_LIMITS.institutions.estimatedSizeMB}
-          formats={['CSV']}
-          disabled
-          disabledReason="Coming soon"
-          onExport={async (_format) => {
-            throw new Error('Institution export coming soon')
-          }}
-          onSuccess={(format) => showToast(`Institutions exported as ${format} successfully!`, 'success')}
           onError={(error) => showToast(`Export failed: ${error}`, 'error')}
         />
       </div>

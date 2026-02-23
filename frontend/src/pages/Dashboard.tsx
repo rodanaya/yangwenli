@@ -21,6 +21,7 @@ import {
   TrendingDown,
   Scale,
   FileSearch,
+  AlertTriangle,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -55,7 +56,7 @@ export function Dashboard() {
   const navigate = useNavigate()
   const { t } = useTranslation('dashboard')
   // API call 1: Fast precomputed dashboard stats
-  const { data: fastDashboard, isLoading: dashLoading } = useQuery({
+  const { data: fastDashboard, isLoading: dashLoading, error: dashError } = useQuery({
     queryKey: ['dashboard', 'fast'],
     queryFn: () => analysisApi.getFastDashboard(),
     staleTime: 5 * 60 * 1000,
@@ -160,6 +161,17 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {dashError && (
+        <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-risk-critical/30 bg-risk-critical/5 mb-2">
+          <AlertTriangle className="h-4 w-4 text-risk-critical flex-shrink-0" />
+          <p className="text-sm text-risk-critical">
+            Dashboard data failed to load. Some sections may be unavailable.{' '}
+            <button onClick={() => window.location.reload()} className="underline hover:no-underline">
+              Reload page
+            </button>
+          </p>
+        </div>
+      )}
       {/* ================================================================ */}
       {/* HERO — Giant value headline */}
       {/* ================================================================ */}

@@ -35,6 +35,7 @@ import {
   SlidersHorizontal,
   AlertTriangle,
   Brain,
+  BarChart3,
 } from 'lucide-react'
 import { getSectorNameEN } from '@/lib/constants'
 
@@ -364,6 +365,20 @@ export default function SpendingCategories() {
 
   return (
     <div className="space-y-6">
+      {/* Page Hero */}
+      <div className="pb-1">
+        <div className="flex items-center gap-2 mb-1">
+          <BarChart3 className="h-4 w-4 text-accent" />
+          <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
+            SPENDING INTELLIGENCE
+          </span>
+        </div>
+        <h1 className="text-3xl font-black text-text-primary tracking-tight">Where the Money Goes</h1>
+        <p className="text-sm text-text-muted mt-1">
+          Drill into procurement spending by category, sector, and year — with AI risk scores on every line.
+        </p>
+      </div>
+
       {/* Header */}
       <div>
         <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">

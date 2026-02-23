@@ -25,6 +25,7 @@ import type { ContractFilterParams, ContractListItem } from '@/api/types'
 import { RISK_FACTORS } from '@/api/types'
 import {
   FileText,
+  FileSearch,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
@@ -384,6 +385,20 @@ export function Contracts() {
 
   return (
     <div className="space-y-3">
+      {/* Page Hero */}
+      <div className="pb-1">
+        <div className="flex items-center gap-2 mb-1">
+          <FileText className="h-4 w-4 text-accent" />
+          <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
+            CONTRACT EXPLORER
+          </span>
+        </div>
+        <h1 className="text-3xl font-black text-text-primary tracking-tight">3.1M Contracts. Search Everything.</h1>
+        <p className="text-sm text-text-muted mt-1">
+          Every government contract from 2002–2025, searchable by vendor, institution, sector, or risk level.
+        </p>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -659,13 +674,10 @@ export function Contracts() {
                 </p>
               </div>
             ) : (
-              <div className="p-8 text-center text-text-muted">
-                <FileText className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                <p className="text-sm font-medium">No contracts found</p>
-                <p className="text-xs mt-1">Try adjusting your filters.</p>
-                <Button variant="outline" size="sm" className="mt-3" onClick={clearAllFilters}>
-                  Clear all filters
-                </Button>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <FileSearch className="h-8 w-8 text-text-muted mb-3" />
+                <p className="text-sm font-medium text-text-secondary">No contracts match your filters</p>
+                <p className="text-xs text-text-muted mt-1">Try adjusting your search or clearing the active filters</p>
               </div>
             )
           ) : (

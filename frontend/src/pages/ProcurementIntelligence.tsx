@@ -43,6 +43,7 @@ import {
   ChevronDown,
   ExternalLink,
   Layers,
+  Crosshair,
 } from 'lucide-react'
 
 // =============================================================================
@@ -385,6 +386,20 @@ export default function ProcurementIntelligence() {
 
   return (
     <div className="space-y-6">
+      {/* Page Hero */}
+      <div className="pb-1">
+        <div className="flex items-center gap-2 mb-1">
+          <Crosshair className="h-4 w-4 text-accent" />
+          <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
+            PROCUREMENT INTELLIGENCE
+          </span>
+        </div>
+        <h1 className="text-3xl font-black text-text-primary tracking-tight">Follow the Risk</h1>
+        <p className="text-sm text-text-muted mt-1">
+          Institution-level money flows, AI risk factors, and high-risk contract patterns across all sectors.
+        </p>
+      </div>
+
       {/* ─── HERO ─── */}
       <PageHero
         trackingLabel={t('trackingLabel')}

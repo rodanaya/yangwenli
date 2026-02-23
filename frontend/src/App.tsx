@@ -1,4 +1,5 @@
 import { lazy } from 'react'
+import { NotFound } from './pages/NotFound'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider, keepPreviousData } from '@tanstack/react-query'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -276,15 +277,6 @@ function App() {
         </TooltipProvider>
       </ToastProvider>
     </QueryClientProvider>
-  )
-}
-
-function NotFound() {
-  return (
-    <div className="flex flex-col items-center justify-center py-20">
-      <h1 className="text-4xl font-bold text-text-primary mb-2">404</h1>
-      <p className="text-text-muted">Page not found</p>
-    </div>
   )
 }
 
