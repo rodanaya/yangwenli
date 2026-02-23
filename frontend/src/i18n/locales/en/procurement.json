@@ -1,71 +1,81 @@
 {
-  "title": "Procurement Intelligence",
-  "trackingLabel": "PROCUREMENT INTELLIGENCE",
-  "subtitle": "Integrated money flow and risk factor analysis",
-  "hero": {
-    "totalSpend": "TOTAL SPEND",
-    "totalSpendDetail": "Tracked procurement value",
-    "highRiskInstitutions": "HIGH-RISK INSTITUTIONS",
-    "highRiskInstitutionsDetail": "Institutions with avg risk ≥ 30%",
-    "topRiskFactor": "TOP RISK FACTOR",
-    "topRiskFactorDetail": "Most common anomaly flag",
-    "highRiskValue": "HIGH-RISK FLOW",
-    "highRiskValueDetail": "Value at risk (score ≥ 0.30)"
-  },
-  "filters": {
-    "year": "Year:",
-    "sector": "Sector:",
-    "allSectors": "All Sectors",
-    "allYears": "All Years"
-  },
-  "institutionTable": {
-    "title": "Institution Money Flow",
-    "subtitle": "Contract value and risk by institution — click any row to view contracts",
-    "rank": "#",
-    "institution": "Institution",
-    "totalFlow": "Total Flow",
-    "highRiskPct": "High-Risk %",
-    "riskLevel": "Risk Level",
-    "contracts": "Contracts",
-    "viewContracts": "Investigate →",
-    "showMore": "Show more institutions",
-    "empty": "No institution flow data available"
-  },
-  "treemap": {
-    "title": "Sector Money Flow",
-    "subtitle": "Contract value distribution by sector. Click any sector to filter.",
-    "contracts": "contracts",
-    "avgRisk": "Avg Risk"
+  "title": "Procurement Risk Intelligence",
+  "trackingLabel": "RISK INTELLIGENCE",
+  "subtitle": "AI-detected anomalies, structural corruption patterns, and investigation signals",
+  "anomalies": {
+    "title": "AI-Detected Anomalies",
+    "subtitle": "Statistical outliers and structural irregularities flagged by the risk model",
+    "affectedContracts": "contracts affected",
+    "affectedValue": "value at risk",
+    "empty": "No anomalies detected"
   },
   "riskFactors": {
-    "title": "Risk Factor Analysis",
-    "subtitle": "Statistical patterns in procurement anomalies",
-    "heatmapTitle": "Risk Factor Co-occurrence",
-    "heatmapSubtitle": "How often two risk factors appear together (lift > 1 = correlated). Higher lift = stronger association.",
+    "title": "Risk Factor Deep Dive",
+    "subtitle": "How each flag performs against 26,582 documented corruption contracts",
     "frequencyTitle": "Factor Frequency",
     "frequencySubtitle": "How many contracts trigger each risk factor",
-    "scatterTitle": "Factor Frequency vs Avg Risk Score",
-    "scatterSubtitle": "Bubble size = contract count. High-right quadrant = most dangerous factors.",
-    "contracts": "contracts",
-    "lift": "Lift",
+    "effectivenessTitle": "Factor Lift vs. Ground Truth",
+    "effectivenessSubtitle": "How much more likely each factor appears in known-corrupt contracts vs. baseline. Lift > 1 = diagnostic signal.",
+    "heatmapTitle": "Factor Co-occurrence",
+    "heatmapSubtitle": "How often two risk factors appear together (lift > 1 = correlated). Higher lift = stronger association.",
     "showHeatmap": "Show Co-occurrence Heatmap",
-    "hideHeatmap": "Hide Heatmap"
+    "hideHeatmap": "Hide Heatmap",
+    "lift": "Lift",
+    "contracts": "contracts",
+    "baseline": "baseline rate",
+    "knownBad": "in corrupt contracts"
+  },
+  "decemberRush": {
+    "title": "December Rush Intelligence",
+    "subtitle": "Year-end spending spike analysis — budget dumps and procurement timing anomalies",
+    "spikeRatio": "Spike Ratio",
+    "avgMonthly": "Avg Monthly",
+    "decemberValue": "Dec. Value",
+    "decemberRisk": "Dec. Risk",
+    "significant": "Significant",
+    "normal": "Normal",
+    "yearsWithSpikes": "{{n}} of {{total}} years showed significant year-end spikes"
+  },
+  "collusion": {
+    "title": "Collusion Signals",
+    "subtitle": "Co-bidding patterns and market concentration alerts flagged by the AI",
+    "coBiddingTitle": "Co-Bidding Pairs",
+    "coBiddingSubtitle": "Vendors that consistently appear in the same procedures — potential bid-rigging",
+    "concentrationTitle": "Concentration Alerts",
+    "concentrationSubtitle": "Institutions where a single vendor holds disproportionate market share",
+    "investigate": "Investigate",
+    "potentialCollusion": "Potential Collusion",
+    "sharedBids": "Shared",
+    "coBidRate": "Co-Bid Rate",
+    "valueShare": "Value Share",
+    "empty": "No collusion signals detected at this threshold"
+  },
+  "highRiskFlows": {
+    "title": "High-Risk Money Flows",
+    "subtitle": "Institution → vendor flows where average risk score ≥ 30% — prioritize for investigation",
+    "institution": "Institution",
+    "vendor": "Vendor",
+    "value": "Value",
+    "risk": "Avg Risk",
+    "contracts": "Contracts",
+    "investigate": "Investigate →",
+    "empty": "No high-risk flows found"
+  },
+  "leads": {
+    "title": "Investigation Leads",
+    "subtitle": "AI-ranked investigation priorities based on anomaly pattern strength",
+    "allTypes": "All Leads",
+    "highPriority": "High Priority",
+    "steps": "Verification Steps",
+    "viewContracts": "View Contracts →",
+    "amount": "Amount",
+    "riskScore": "Risk Score",
+    "empty": "No investigation leads generated at this time"
   },
   "riskLevels": {
     "critical": "Critical",
     "high": "High",
     "medium": "Medium",
     "low": "Low"
-  },
-  "dangerZone": {
-    "title": "High-Risk Flows",
-    "subtitle": "Institutions with average risk score ≥ 0.30 — prioritize for investigation",
-    "rank": "#",
-    "institution": "Institution",
-    "totalValue": "Total Value",
-    "avgRisk": "Avg Risk",
-    "contracts": "Contracts",
-    "investigate": "Investigate →",
-    "empty": "No high-risk institution flows found"
   }
 }

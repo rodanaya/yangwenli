@@ -26,6 +26,10 @@ import {
   SlidersHorizontal,
   TrendingUp,
   BarChart3,
+  Flame,
+  Percent,
+  ChevronRight,
+  Skull,
 } from 'lucide-react'
 import {
   ScatterChart,
@@ -188,6 +192,25 @@ export default function InstitutionHealth() {
     }))
   }, [items])
 
+  // ---------- Danger Rankings: top by volume (high-risk contract count) ----------
+  const topByVolume = useMemo(() => {
+    if (!items.length) return []
+    return [...items]
+      .filter(i => i.total_contracts >= 1000)
+      .map(i => ({ ...i, high_risk_count: Math.round(i.high_risk_pct * i.total_contracts) }))
+      .sort((a, b) => b.high_risk_count - a.high_risk_count)
+      .slice(0, 10)
+  }, [items])
+
+  // ---------- Danger Rankings: top by rate (avg_risk_score) ----------
+  const topByRate = useMemo(() => {
+    if (!items.length) return []
+    return [...items]
+      .filter(i => i.total_contracts >= 1000)
+      .sort((a, b) => b.avg_risk_score - a.avg_risk_score)
+      .slice(0, 10)
+  }, [items])
+
   // ---------- Top 10 concentration bar data ----------
   const barData = useMemo(() => {
     if (!items.length) return []
@@ -290,6 +313,152 @@ export default function InstitutionHealth() {
           borderColor="border-risk-high/30"
         />
       </div>
+
+      {/* ============================================================ */}
+      {/* DANGER RANKINGS — Two ranked lists above the full table    */}
+      {/* ============================================================ */}
+      {(topByVolume.length > 0 || topByRate.length > 0) && (
+        <div className="space-y-3">
+          {/* Editorial header */}
+          <div>
+            <div className="flex items-center gap-2 mb-0.5">
+              <Skull className="h-4 w-4 text-risk-critical" />
+              <span className="text-xs font-bold tracking-wider uppercase text-risk-critical font-mono">
+                AI Intelligence · Danger Rankings
+              </span>
+            </div>
+            <h2 className="text-base font-black text-text-primary">
+              Most Dangerous Institutions — Two Ways to Measure
+            </h2>
+            <p className="text-xs text-text-muted mt-0.5">
+              Left: institutions with the most high-risk contracts in absolute terms. Right: institutions with the highest proportion of risky spending. Both lists require 1,000+ contracts.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* --- Left: By Volume (raw high-risk count) --- */}
+            <Card className="border-risk-critical/20">
+              <CardContent className="pt-4 pb-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <Flame className="h-3.5 w-3.5 text-risk-critical" />
+                  <div>
+                    <p className="text-xs font-bold text-text-primary">Most High-Risk Contracts</p>
+                    <p className="text-xs text-text-muted">By raw count — sheer volume of risk</p>
+                  </div>
+                </div>
+                {topByVolume.length === 0 ? (
+                  <div className="space-y-2">
+                    {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-8" />)}
+                  </div>
+                ) : (
+                  <div className="space-y-0.5">
+                    {(() => {
+                      const maxCount = topByVolume[0]?.high_risk_count ?? 1
+                      return topByVolume.map((item, i) => {
+                        const barPct = (item.high_risk_count / maxCount) * 100
+                        const riskColor =
+                          item.avg_risk_score >= 0.50 ? 'var(--color-risk-critical)' :
+                          item.avg_risk_score >= 0.30 ? 'var(--color-risk-high)' :
+                          item.avg_risk_score >= 0.10 ? 'var(--color-risk-medium)' :
+                          'var(--color-risk-low)'
+                        return (
+                          <Link
+                            key={item.institution_id}
+                            to={`/institutions/${item.institution_id}`}
+                            className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-background-elevated/40 transition-colors group"
+                          >
+                            <span className="text-xs text-text-muted font-mono w-4 shrink-0 tabular-nums">{i + 1}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-0.5">
+                                <span className="text-xs font-medium text-text-primary truncate group-hover:text-accent transition-colors" title={toTitleCase(item.institution_name)}>
+                                  {toTitleCase(item.institution_name)}
+                                </span>
+                                <span className="text-xs font-bold font-mono tabular-nums text-risk-critical ml-2 shrink-0">
+                                  {formatNumber(item.high_risk_count)}
+                                </span>
+                              </div>
+                              <div className="w-full h-1 bg-background-elevated rounded-full overflow-hidden">
+                                <div
+                                  className="h-full rounded-full"
+                                  style={{ width: `${barPct}%`, backgroundColor: riskColor, opacity: 0.8 }}
+                                />
+                              </div>
+                            </div>
+                            <ChevronRight className="h-3 w-3 text-text-muted opacity-0 group-hover:opacity-100 shrink-0" />
+                          </Link>
+                        )
+                      })
+                    })()}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* --- Right: By Rate (avg_risk_score) --- */}
+            <Card className="border-risk-high/20">
+              <CardContent className="pt-4 pb-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <Percent className="h-3.5 w-3.5 text-risk-high" />
+                  <div>
+                    <p className="text-xs font-bold text-text-primary">Highest Risk Concentration</p>
+                    <p className="text-xs text-text-muted">By avg risk score — systemic pattern depth</p>
+                  </div>
+                </div>
+                {topByRate.length === 0 ? (
+                  <div className="space-y-2">
+                    {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-8" />)}
+                  </div>
+                ) : (
+                  <div className="space-y-0.5">
+                    {(() => {
+                      const maxScore = topByRate[0]?.avg_risk_score ?? 1
+                      return topByRate.map((item, i) => {
+                        const barPct = (item.avg_risk_score / maxScore) * 100
+                        const riskColor =
+                          item.avg_risk_score >= 0.50 ? 'var(--color-risk-critical)' :
+                          item.avg_risk_score >= 0.30 ? 'var(--color-risk-high)' :
+                          item.avg_risk_score >= 0.10 ? 'var(--color-risk-medium)' :
+                          'var(--color-risk-low)'
+                        return (
+                          <Link
+                            key={item.institution_id}
+                            to={`/institutions/${item.institution_id}`}
+                            className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-background-elevated/40 transition-colors group"
+                          >
+                            <span className="text-xs text-text-muted font-mono w-4 shrink-0 tabular-nums">{i + 1}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-0.5">
+                                <span className="text-xs font-medium text-text-primary truncate group-hover:text-accent transition-colors" title={toTitleCase(item.institution_name)}>
+                                  {toTitleCase(item.institution_name)}
+                                </span>
+                                <span className="text-xs font-bold font-mono tabular-nums ml-2 shrink-0" style={{ color: riskColor }}>
+                                  {(item.avg_risk_score * 100).toFixed(1)}%
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <div className="flex-1 h-1 bg-background-elevated rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full"
+                                    style={{ width: `${barPct}%`, backgroundColor: riskColor, opacity: 0.8 }}
+                                  />
+                                </div>
+                                <span className="text-xs font-mono text-text-muted tabular-nums shrink-0">
+                                  {formatNumber(item.total_contracts)} contracts
+                                </span>
+                              </div>
+                            </div>
+                            <ChevronRight className="h-3 w-3 text-text-muted opacity-0 group-hover:opacity-100 shrink-0" />
+                          </Link>
+                        )
+                      })
+                    })()}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
 
       {/* Section 2: Sortable Rankings Table */}
       <Card className="overflow-hidden">

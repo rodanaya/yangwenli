@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
 import { formatCompactMXN, formatNumber, formatPercentSafe } from '@/lib/utils'
-import { sectorApi } from '@/api/client'
+import { sectorApi, analysisApi } from '@/api/client'
 import { SECTOR_COLORS, SECTORS, getSectorNameEN } from '@/lib/constants'
 import { Heatmap } from '@/components/charts/Heatmap'
 import type { SectorStatistics } from '@/api/types'
@@ -87,6 +87,12 @@ export function Sectors() {
     staleTime: 10 * 60 * 1000,
   })
 
+  const { data: patternCounts } = useQuery({
+    queryKey: ['analysis', 'pattern-counts'],
+    queryFn: () => analysisApi.getPatternCounts(),
+    staleTime: 15 * 60 * 1000,
+  })
+
   // ---- Aggregate stats ----
   const aggregates = useMemo(() => {
     const sectors = data?.data ?? []
@@ -113,7 +119,7 @@ export function Sectors() {
   const sectorHeatmapData = useMemo(() => {
     if (!data?.data) return { data: [], rows: [], columns: [] }
     const metrics = ['Avg Risk', 'Direct Award %', 'Single Bid %', 'High Risk %']
-    const sectorNames = data.data.slice(0, 12).map((s) => s.sector_name)
+    const sectorNames = data.data.slice(0, 12).map((s) => getSectorNameEN(s.sector_code))
 
     const avgRiskValues = data.data.map((s) => s.avg_risk_score)
     const daValues = data.data.map((s) => s.direct_award_pct)
@@ -135,17 +141,17 @@ export function Sectors() {
 
     const sectorsSubset = data.data.slice(0, 12)
     const heatmapData = sectorsSubset.flatMap((sector) => [
-      { row: sector.sector_name, col: 'Avg Risk', value: normalize(sector.avg_risk_score, 'Avg Risk'), rawValue: sector.avg_risk_score },
-      { row: sector.sector_name, col: 'Direct Award %', value: normalize(sector.direct_award_pct, 'Direct Award %'), rawValue: sector.direct_award_pct },
-      { row: sector.sector_name, col: 'Single Bid %', value: normalize(sector.single_bid_pct, 'Single Bid %'), rawValue: sector.single_bid_pct },
-      { row: sector.sector_name, col: 'High Risk %', value: normalize(sector.high_risk_pct, 'High Risk %'), rawValue: sector.high_risk_pct },
+      { row: getSectorNameEN(sector.sector_code), col: 'Avg Risk', value: normalize(sector.avg_risk_score, 'Avg Risk'), rawValue: sector.avg_risk_score },
+      { row: getSectorNameEN(sector.sector_code), col: 'Direct Award %', value: normalize(sector.direct_award_pct, 'Direct Award %'), rawValue: sector.direct_award_pct },
+      { row: getSectorNameEN(sector.sector_code), col: 'Single Bid %', value: normalize(sector.single_bid_pct, 'Single Bid %'), rawValue: sector.single_bid_pct },
+      { row: getSectorNameEN(sector.sector_code), col: 'High Risk %', value: normalize(sector.high_risk_pct, 'High Risk %'), rawValue: sector.high_risk_pct },
     ])
 
     return { data: heatmapData, rows: sectorNames, columns: metrics }
   }, [data])
 
   const handleSectorClick = (sectorName: string) => {
-    const sector = data?.data.find((s) => s.sector_name === sectorName)
+    const sector = data?.data.find((s) => getSectorNameEN(s.sector_code) === sectorName)
     if (sector) navigate(`/sectors/${sector.sector_id}`)
   }
 
@@ -232,6 +238,36 @@ export function Sectors() {
           loading={isLoading}
         />
       </div>
+
+      {/* System Intelligence Chips */}
+      {patternCounts && (
+        <div className="flex flex-wrap gap-2">
+          <div className="flex items-center gap-1.5 rounded-md border border-risk-critical/20 bg-risk-critical/5 px-3 py-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-risk-critical" />
+            <span className="text-xs font-mono font-medium text-risk-critical">
+              {formatNumber(patternCounts.counts.critical)} Critical Risk
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 rounded-md border border-amber-500/20 bg-amber-500/5 px-3 py-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+            <span className="text-xs font-mono font-medium text-amber-500">
+              {formatNumber(patternCounts.counts.december_rush)} December Rush
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 rounded-md border border-border/50 bg-background-elevated/30 px-3 py-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-text-muted" />
+            <span className="text-xs font-mono font-medium text-text-secondary">
+              {formatNumber(patternCounts.counts.co_bidding)} Co-Bidding Flags
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 rounded-md border border-border/50 bg-background-elevated/30 px-3 py-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-text-muted" />
+            <span className="text-xs font-mono font-medium text-text-secondary">
+              {formatNumber(patternCounts.counts.price_outliers)} Price Outliers
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Section 2: Sortable Comparison Table */}
       <Card className="overflow-hidden">

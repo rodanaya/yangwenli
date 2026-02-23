@@ -1,71 +1,81 @@
 {
-  "title": "Inteligencia de Compras",
-  "trackingLabel": "INTELIGENCIA DE COMPRAS",
-  "subtitle": "Análisis integrado de flujos de dinero y factores de riesgo",
-  "hero": {
-    "totalSpend": "GASTO TOTAL",
-    "totalSpendDetail": "Valor de compras rastreadas",
-    "highRiskInstitutions": "INSTITUCIONES DE ALTO RIESGO",
-    "highRiskInstitutionsDetail": "Instituciones con riesgo prom. ≥ 30%",
-    "topRiskFactor": "FACTOR DE RIESGO PRINCIPAL",
-    "topRiskFactorDetail": "Anomalía más frecuente",
-    "highRiskValue": "FLUJO DE ALTO RIESGO",
-    "highRiskValueDetail": "Valor en riesgo (puntaje ≥ 0.30)"
-  },
-  "filters": {
-    "year": "Año:",
-    "sector": "Sector:",
-    "allSectors": "Todos los Sectores",
-    "allYears": "Todos los Años"
-  },
-  "institutionTable": {
-    "title": "Flujo de Dinero por Institución",
-    "subtitle": "Valor y riesgo de contratos por institución — haz clic para ver contratos",
-    "rank": "#",
-    "institution": "Institución",
-    "totalFlow": "Flujo Total",
-    "highRiskPct": "% Alto Riesgo",
-    "riskLevel": "Nivel de Riesgo",
-    "contracts": "Contratos",
-    "viewContracts": "Investigar →",
-    "showMore": "Ver más instituciones",
-    "empty": "Sin datos de flujo institucional disponibles"
-  },
-  "treemap": {
-    "title": "Flujo de Dinero por Sector",
-    "subtitle": "Distribución del valor de contratos por sector. Haz clic para filtrar.",
-    "contracts": "contratos",
-    "avgRisk": "Riesgo Prom."
+  "title": "Inteligencia de Riesgo en Compras",
+  "trackingLabel": "INTELIGENCIA DE RIESGO",
+  "subtitle": "Anomalías detectadas por IA, patrones estructurales de corrupción y señales de investigación",
+  "anomalies": {
+    "title": "Anomalías Detectadas por IA",
+    "subtitle": "Valores atípicos estadísticos e irregularidades estructurales marcadas por el modelo de riesgo",
+    "affectedContracts": "contratos afectados",
+    "affectedValue": "valor en riesgo",
+    "empty": "No se detectaron anomalías"
   },
   "riskFactors": {
-    "title": "Análisis de Factores de Riesgo",
-    "subtitle": "Patrones estadísticos en anomalías de contratación",
-    "heatmapTitle": "Co-ocurrencia de Factores de Riesgo",
-    "heatmapSubtitle": "Con qué frecuencia aparecen dos factores juntos (lift > 1 = correlacionados). Mayor lift = asociación más fuerte.",
+    "title": "Análisis Profundo de Factores de Riesgo",
+    "subtitle": "Rendimiento de cada indicador contra 26,582 contratos de corrupción documentados",
     "frequencyTitle": "Frecuencia de Factores",
     "frequencySubtitle": "Cuántos contratos activan cada factor de riesgo",
-    "scatterTitle": "Frecuencia de Factor vs Riesgo Promedio",
-    "scatterSubtitle": "Tamaño de burbuja = número de contratos. Cuadrante superior-derecho = factores más peligrosos.",
-    "contracts": "contratos",
-    "lift": "Lift",
+    "effectivenessTitle": "Lift de Factores vs. Verdad de Campo",
+    "effectivenessSubtitle": "Qué tan más probable es cada factor en contratos corruptos conocidos vs. línea base. Lift > 1 = señal diagnóstica.",
+    "heatmapTitle": "Co-ocurrencia de Factores",
+    "heatmapSubtitle": "Con qué frecuencia aparecen dos factores juntos (lift > 1 = correlacionados). Mayor lift = asociación más fuerte.",
     "showHeatmap": "Mostrar Mapa de Co-ocurrencia",
-    "hideHeatmap": "Ocultar Mapa"
+    "hideHeatmap": "Ocultar Mapa",
+    "lift": "Lift",
+    "contracts": "contratos",
+    "baseline": "tasa base",
+    "knownBad": "en contratos corruptos"
+  },
+  "decemberRush": {
+    "title": "Inteligencia del Alza de Diciembre",
+    "subtitle": "Análisis del pico de gasto de fin de año — volcados de presupuesto y anomalías de tiempo",
+    "spikeRatio": "Ratio de Pico",
+    "avgMonthly": "Prom. Mensual",
+    "decemberValue": "Valor Dic.",
+    "decemberRisk": "Riesgo Dic.",
+    "significant": "Significativo",
+    "normal": "Normal",
+    "yearsWithSpikes": "{{n}} de {{total}} años mostraron picos significativos de fin de año"
+  },
+  "collusion": {
+    "title": "Señales de Colusión",
+    "subtitle": "Patrones de co-licitación y alertas de concentración de mercado identificadas por la IA",
+    "coBiddingTitle": "Pares de Co-licitación",
+    "coBiddingSubtitle": "Proveedores que aparecen consistentemente en los mismos procedimientos — posible manipulación de licitaciones",
+    "concentrationTitle": "Alertas de Concentración",
+    "concentrationSubtitle": "Instituciones donde un solo proveedor tiene una participación de mercado desproporcionada",
+    "investigate": "Investigar",
+    "potentialCollusion": "Posible Colusión",
+    "sharedBids": "Compartidas",
+    "coBidRate": "Tasa Co-licitación",
+    "valueShare": "Participación",
+    "empty": "No se detectaron señales de colusión en este umbral"
+  },
+  "highRiskFlows": {
+    "title": "Flujos de Dinero de Alto Riesgo",
+    "subtitle": "Flujos institución → proveedor con puntaje de riesgo promedio ≥ 30% — priorizar para investigación",
+    "institution": "Institución",
+    "vendor": "Proveedor",
+    "value": "Valor",
+    "risk": "Riesgo Prom.",
+    "contracts": "Contratos",
+    "investigate": "Investigar →",
+    "empty": "No se encontraron flujos de alto riesgo"
+  },
+  "leads": {
+    "title": "Pistas de Investigación",
+    "subtitle": "Prioridades de investigación clasificadas por IA según la fuerza del patrón de anomalía",
+    "allTypes": "Todas las Pistas",
+    "highPriority": "Alta Prioridad",
+    "steps": "Pasos de Verificación",
+    "viewContracts": "Ver Contratos →",
+    "amount": "Monto",
+    "riskScore": "Puntaje de Riesgo",
+    "empty": "No se generaron pistas de investigación en este momento"
   },
   "riskLevels": {
     "critical": "Crítico",
     "high": "Alto",
     "medium": "Medio",
     "low": "Bajo"
-  },
-  "dangerZone": {
-    "title": "Flujos de Alto Riesgo",
-    "subtitle": "Instituciones con puntaje de riesgo promedio ≥ 0.30 — priorizar para investigación",
-    "rank": "#",
-    "institution": "Institución",
-    "totalValue": "Valor Total",
-    "avgRisk": "Riesgo Prom.",
-    "contracts": "Contratos",
-    "investigate": "Investigar →",
-    "empty": "Sin flujos de alto riesgo encontrados"
   }
 }

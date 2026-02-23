@@ -33,6 +33,11 @@ import type {
   MoneyFlowResponse,
   RiskFactorAnalysisResponse,
   InstitutionRankingsResponse,
+  CoBiddingResponse,
+  ConcentrationResponse,
+  YearEndResponse,
+  InvestigationLeadsResponse,
+  FactorAnalysisValidationResponse,
   InvestigationCaseListResponse,
   InvestigationCaseDetail,
   InvestigationStats,
@@ -312,6 +317,18 @@ export const institutionApi = {
     const { data } = await api.get<InstitutionListResponse>(
       `/institutions?search=${encodeURIComponent(query)}&per_page=${limit}`
     )
+    return data
+  },
+
+  /**
+   * Get year-by-year risk timeline for an institution
+   */
+  async getRiskTimeline(institutionId: number): Promise<{
+    institution_id: number
+    institution_name: string
+    timeline: Array<{ year: number; avg_risk_score: number | null; contract_count: number; total_value: number }>
+  }> {
+    const { data } = await api.get(`/institutions/${institutionId}/risk-timeline`)
     return data
   },
 }
@@ -600,6 +617,33 @@ export const analysisApi = {
     const { data } = await api.get(
       `/analysis/december-spike-analysis?start_year=${startYear}&end_year=${endYear}`
     )
+    return data
+  },
+
+  async getCoBiddingPatterns(minCoBidRate = 0.5): Promise<CoBiddingResponse> {
+    const { data } = await api.get(`/analysis/patterns/co-bidding?min_co_bid_rate=${minCoBidRate}`)
+    return data
+  },
+
+  async getConcentrationPatterns(minSharePct = 0.3): Promise<ConcentrationResponse> {
+    const { data } = await api.get(`/analysis/patterns/concentration?min_share_pct=${minSharePct}`)
+    return data
+  },
+
+  async getYearEndPatterns(startYear = 2010, endYear = 2024): Promise<YearEndResponse> {
+    const { data } = await api.get(
+      `/analysis/patterns/year-end?start_year=${startYear}&end_year=${endYear}`
+    )
+    return data
+  },
+
+  async getInvestigationLeads(limit = 20): Promise<InvestigationLeadsResponse> {
+    const { data } = await api.get(`/analysis/leads?limit=${limit}`)
+    return data
+  },
+
+  async getFactorEffectiveness(): Promise<FactorAnalysisValidationResponse> {
+    const { data } = await api.get('/analysis/validation/factor-analysis')
     return data
   },
 }

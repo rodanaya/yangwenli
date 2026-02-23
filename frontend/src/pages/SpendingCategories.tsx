@@ -960,6 +960,5 @@ export default function SpendingCategories() {
           </Card>
         </div>
       </div>
-    </div>
   )
 }

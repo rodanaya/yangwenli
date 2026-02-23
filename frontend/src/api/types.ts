@@ -635,6 +635,101 @@ export interface InstitutionRankingsResponse {
 }
 
 // ============================================================================
+// Procurement Intelligence — Collusion / Concentration / Year-End / Leads
+// ============================================================================
+
+export interface CoBiddingPair {
+  vendor_1_id: number
+  vendor_1_name: string
+  vendor_2_id: number
+  vendor_2_name: string
+  co_bid_count: number
+  co_bid_rate: number
+  combined_value: number
+  is_potential_collusion: boolean
+}
+
+export interface CoBiddingResponse {
+  total_pairs_analyzed: number
+  high_confidence_pairs: number
+  potential_collusion_pairs: number
+  pairs: CoBiddingPair[]
+}
+
+export interface ConcentrationAlert {
+  vendor_id: number
+  vendor_name: string
+  institution_id: number
+  institution_name: string
+  vendor_contracts: number
+  vendor_value: number
+  total_contracts: number
+  total_value: number
+  value_share_pct: number
+  avg_risk_score: number | null
+}
+
+export interface ConcentrationResponse {
+  institutions_analyzed: number
+  high_concentration_count: number
+  alerts: ConcentrationAlert[]
+}
+
+export interface YearEndPattern {
+  year: number
+  december_value: number
+  december_contracts: number
+  avg_monthly_value: number
+  spike_ratio: number | null
+  is_significant: boolean
+  december_risk: number | null
+}
+
+export interface YearEndResponse {
+  years_analyzed: number
+  years_with_spikes: number
+  average_spike_ratio: number
+  patterns: YearEndPattern[]
+}
+
+export interface InvestigationLead {
+  lead_type: string
+  priority: string
+  contract_id: number | null
+  vendor_id: number | null
+  vendor_name: string | null
+  institution_id: number | null
+  institution_name: string | null
+  amount_mxn: number | null
+  risk_score: number | null
+  risk_indicators: string[]
+  verification_steps: string[]
+}
+
+export interface InvestigationLeadsResponse {
+  total_leads: number
+  high_priority: number
+  leads: InvestigationLead[]
+}
+
+export interface FactorEffectivenessItem {
+  factor_name: string
+  trigger_rate_known_bad: number
+  trigger_rate_baseline: number
+  lift: number
+  effectiveness_score: number
+}
+
+export interface FactorAnalysisValidationResponse {
+  factors: FactorEffectivenessItem[]
+  sample_sizes: {
+    known_bad_contracts: number
+    baseline_contracts: number
+  }
+  recommendations: FactorEffectivenessItem[]
+}
+
+// ============================================================================
 // Classification Types
 // ============================================================================
 
