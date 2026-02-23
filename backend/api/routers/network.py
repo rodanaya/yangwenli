@@ -55,6 +55,9 @@ class NetworkNode(BaseModel):
     contracts: int = Field(default=0, description="Number of contracts")
     risk_score: Optional[float] = Field(None, description="Average risk score")
     metadata: Optional[Dict[str, Any]] = Field(None, description="Additional metadata")
+    community_id: Optional[int] = Field(None, description="Louvain community ID")
+    community_size: Optional[int] = Field(None, description="Community member count")
+    pagerank: Optional[float] = Field(None, description="PageRank in co-bidding network")
 
 
 class NetworkLink(BaseModel):
@@ -163,6 +166,33 @@ def get_network_graph(
             depth=depth,
             limit=limit,
         )
+
+        # Enrich vendor nodes with graph features (community_id, pagerank) if available
+        vendor_ids = [
+            int(n["id"][2:]) for n in data["nodes"] if n["id"].startswith("v-")
+        ]
+        if vendor_ids:
+            try:
+                cursor = conn.cursor()
+                placeholders = ",".join("?" * len(vendor_ids))
+                cursor.execute(
+                    f"""
+                    SELECT vendor_id, community_id, community_size, pagerank
+                    FROM vendor_graph_features
+                    WHERE vendor_id IN ({placeholders})
+                    """,
+                    vendor_ids,
+                )
+                gf = {row["vendor_id"]: dict(row) for row in cursor.fetchall()}
+                for node in data["nodes"]:
+                    if node["id"].startswith("v-"):
+                        vid = int(node["id"][2:])
+                        if vid in gf:
+                            node["community_id"] = gf[vid]["community_id"]
+                            node["community_size"] = gf[vid]["community_size"]
+                            node["pagerank"] = round(gf[vid]["pagerank"], 6)
+            except Exception:
+                pass  # graph features not built yet — degrade gracefully
 
     if not data["nodes"] and vendor_id:
         raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found or has no connections")
@@ -439,3 +469,78 @@ def get_related_vendors(
     except sqlite3.Error as e:
         logger.error(f"Database error in get_related_vendors: {e}")
         raise HTTPException(status_code=500, detail="Database error occurred")
+
+
+# =============================================================================
+# Communities — Louvain co-bidding clusters
+# =============================================================================
+
+class CommunityVendorItem(BaseModel):
+    vendor_id: int
+    vendor_name: str
+    pagerank: float
+    degree: int
+    avg_risk: float
+    contracts: int
+    total_value: float
+
+
+class CommunityItem(BaseModel):
+    community_id: int
+    size: int
+    avg_risk: float
+    sector_count: int
+    top_vendors: List[CommunityVendorItem]
+
+
+class CommunitiesResponse(BaseModel):
+    communities: List[CommunityItem]
+    total_communities: int
+    graph_ready: bool
+
+
+@router.get("/communities", response_model=CommunitiesResponse)
+def get_communities(
+    min_size: int = Query(3, ge=2, description="Minimum community size"),
+    min_avg_risk: float = Query(0.0, ge=0, le=1, description="Minimum average risk score"),
+    sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector"),
+    limit: int = Query(50, ge=1, le=200, description="Max communities to return"),
+):
+    """
+    Get co-bidding communities detected by Louvain algorithm.
+
+    Returns communities sorted by average risk (highest first).
+    Requires build_vendor_graph.py to have been run.
+    If graph is not yet built, returns graph_ready=false with empty list.
+    """
+    cache_key = f"communities:{min_size}:{min_avg_risk}:{sector_id}:{limit}"
+    cached = _network_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    with get_db() as conn:
+        data = network_service.get_communities(
+            conn,
+            min_size=min_size,
+            min_avg_risk=min_avg_risk,
+            sector_id=sector_id,
+            limit=limit,
+        )
+
+    result = CommunitiesResponse(
+        communities=[
+            CommunityItem(
+                community_id=c["community_id"],
+                size=c["size"],
+                avg_risk=c["avg_risk"],
+                sector_count=c["sector_count"],
+                top_vendors=[CommunityVendorItem(**v) for v in c["top_vendors"]],
+            )
+            for c in data["communities"]
+        ],
+        total_communities=data["total_communities"],
+        graph_ready=data["graph_ready"],
+    )
+
+    _network_cache.set(cache_key, result, ttl=3600)
+    return result

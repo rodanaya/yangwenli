@@ -192,23 +192,23 @@
     "close": "Cerrar"
   },
   "intake": {
-    "title": "Iniciar una Investigacion",
-    "subtitle": "Que deseas investigar?",
-    "byInstitution": "Por Institucion",
+    "title": "Iniciar una Investigación",
+    "subtitle": "¿Qué deseas investigar?",
+    "byInstitution": "Por Institución",
     "byVendor": "Por Proveedor",
-    "byPattern": "Por Patron de Contrato",
+    "byPattern": "Por Patrón de Contrato",
     "byTimePeriod": "Por Periodo de Tiempo",
     "searchPlaceholder": "Buscar...",
-    "institutionPlaceholder": "Buscar nombre de institucion...",
+    "institutionPlaceholder": "Buscar nombre de institución...",
     "vendorPlaceholder": "Buscar nombre de proveedor o RFC...",
     "go": "Buscar",
     "patterns": {
-      "directAward": "Adjudicacion Directa",
-      "singleBid": "Licitacion Unica",
+      "directAward": "Adjudicación Directa",
+      "singleBid": "Licitación Única",
       "decemberRush": "Cierre de Diciembre"
     },
-    "yearFrom": "Desde ano",
-    "yearTo": "Hasta ano",
+    "yearFrom": "Desde año",
+    "yearTo": "Hasta año",
     "browseExisting": "O explora los casos existentes"
   },
   "asfLookup": {

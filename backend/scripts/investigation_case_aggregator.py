@@ -35,12 +35,12 @@ BACKEND_DIR = os.path.dirname(SCRIPT_DIR)
 DB_PATH = os.path.join(BACKEND_DIR, 'RUBLI_NORMALIZED.db')
 
 # Target sectors
-TARGET_SECTORS = [1, 3]  # Salud, Infraestructura
+TARGET_SECTORS = list(range(1, 13))  # All 12 sectors
 
 # Case generation parameters
 TOP_ANOMALOUS_VENDORS = 50      # Start with top N anomalous vendors
 MIN_SUSPICION_SCORE = 0.5       # Minimum score for case inclusion
-MAX_CASES_PER_SECTOR = 15       # Maximum cases per sector
+MAX_CASES_PER_SECTOR = 10       # Maximum cases per sector (10 × 12 = 120 max)
 MIN_CONTRACTS_FOR_CASE = 5      # Minimum contracts for a case
 MIN_VALUE_FOR_CASE = 10_000_000  # Minimum value for a case (10M MXN)
 

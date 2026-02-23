@@ -31,7 +31,7 @@ BACKEND_DIR = os.path.dirname(SCRIPT_DIR)
 DB_PATH = os.path.join(BACKEND_DIR, 'RUBLI_NORMALIZED.db')
 
 # Target sectors
-TARGET_SECTORS = [1, 3]  # Salud, Infraestructura
+TARGET_SECTORS = list(range(1, 13))  # All 12 sectors
 
 
 def get_case_level_explanation(cursor: sqlite3.Cursor, case_id: int, vendors: List) -> Optional[str]:
@@ -275,7 +275,8 @@ def generate_dossiers(sector_ids: Optional[List[int]] = None) -> int:
         cursor.execute("SELECT narrative FROM investigation_cases WHERE id = ?", (cases[0]['id'],))
         row = cursor.fetchone()
         if row:
-            print(row['narrative'][:3000] + "..." if len(row['narrative']) > 3000 else row['narrative'])
+            text = row['narrative'][:3000] + "..." if len(row['narrative']) > 3000 else row['narrative']
+            print(text.encode('utf-8', errors='replace').decode('utf-8'))
 
     conn.close()
     return processed

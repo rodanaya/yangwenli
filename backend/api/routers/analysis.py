@@ -2835,3 +2835,163 @@ def get_institution_rankings(
     except sqlite3.Error as e:
         logger.error(f"Database error in get_institution_rankings: {e}")
         raise HTTPException(status_code=500, detail="Database error occurred")
+
+
+# =============================================================================
+# STRUCTURAL BREAKS ENDPOINT
+# =============================================================================
+
+_structural_breaks_cache: Dict[str, Any] = {}
+_STRUCTURAL_BREAKS_CACHE_TTL = 3600  # 1 hour — historical data, changes rarely
+
+
+@router.get("/structural-breaks")
+def get_structural_breaks():
+    """
+    Detect statistically significant change points in procurement trends.
+    Uses PELT algorithm (ruptures library).
+    Cached for 1 hour since it is computed from historical data.
+    """
+    import time as _time
+
+    cache_key = "structural_breaks"
+    cached = _structural_breaks_cache.get(cache_key)
+    if cached and (_time.time() - cached["ts"]) < _STRUCTURAL_BREAKS_CACHE_TTL:
+        return cached["data"]
+
+    with get_db() as conn:
+        result = analysis_service.get_structural_breaks(conn)
+        _structural_breaks_cache[cache_key] = {"ts": _time.time(), "data": result}
+        return result
+
+
+# =============================================================================
+# ML PRICE ANOMALY ENDPOINT
+# =============================================================================
+
+_ml_anomalies_cache: Dict[str, Any] = {}
+_ML_ANOMALIES_CACHE_TTL = 30 * 60  # 30 minutes — pre-computed table, stable
+
+
+@router.get("/prices/ml-anomalies")
+def get_ml_price_anomalies(
+    sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector (1-12)"),
+    limit: int = Query(20, ge=1, le=50, description="Max results to return (1-50)"),
+    only_new: bool = Query(False, description="If true, return only contracts NOT already in price_hypotheses"),
+):
+    """
+    Return top-scoring contracts from the multi-feature Isolation Forest price anomaly detector.
+
+    These are contracts flagged as price anomalies based on six z-score features
+    (price_ratio, vendor_concentration, ad_period_days, year_end, same_day_count,
+    price_hyp_confidence) using an Isolation Forest model, one per sector.
+
+    Run ``python -m scripts.compute_price_anomaly_scores`` to populate the
+    ``contract_ml_anomalies`` table before calling this endpoint.
+    """
+    import time as _time
+
+    cache_key = f"ml_anomalies:{sector_id}:{limit}:{only_new}"
+    cached = _ml_anomalies_cache.get(cache_key)
+    if cached and (_time.time() - cached["ts"]) < _ML_ANOMALIES_CACHE_TTL:
+        return cached["data"]
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # Check that the table exists; return graceful empty response if not
+            cursor.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='contract_ml_anomalies'"
+            )
+            if not cursor.fetchone():
+                result = {"data": [], "total": 0, "new_detections": 0}
+                _ml_anomalies_cache[cache_key] = {"ts": _time.time(), "data": result}
+                return result
+
+            # ── Build WHERE clauses ──────────────────────────────────────────
+            conditions: List[str] = []
+            params: List[Any] = []
+
+            if sector_id is not None:
+                conditions.append("ma.sector_id = ?")
+                params.append(sector_id)
+
+            if only_new:
+                conditions.append("ma.iqr_flagged = 0")
+
+            where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+
+            # ── Total count ──────────────────────────────────────────────────
+            cursor.execute(
+                f"SELECT COUNT(*) AS cnt FROM contract_ml_anomalies ma {where}",
+                params,
+            )
+            total_row = cursor.fetchone()
+            total = total_row["cnt"] if total_row else 0
+
+            # ── Count of ML-only (not in IQR) ────────────────────────────────
+            new_conds = list(conditions)
+            new_params = list(params)
+            if not only_new:
+                new_conds.append("ma.iqr_flagged = 0")
+            new_where = ("WHERE " + " AND ".join(new_conds)) if new_conds else ""
+            cursor.execute(
+                f"SELECT COUNT(*) AS cnt FROM contract_ml_anomalies ma {new_where}",
+                new_params,
+            )
+            new_row = cursor.fetchone()
+            new_detections = new_row["cnt"] if new_row else 0
+
+            # ── Fetch top rows ordered by anomaly_score DESC ─────────────────
+            cursor.execute(
+                f"""
+                SELECT
+                    ma.contract_id,
+                    ma.anomaly_score,
+                    ma.sector_id,
+                    ma.iqr_flagged,
+                    c.amount_mxn,
+                    c.contract_date,
+                    v.name         AS vendor_name,
+                    s.code         AS sector_code
+                FROM contract_ml_anomalies ma
+                JOIN contracts c ON c.id = ma.contract_id
+                LEFT JOIN vendors v ON v.id = c.vendor_id
+                LEFT JOIN sectors s ON s.id = ma.sector_id
+                {where}
+                ORDER BY ma.anomaly_score DESC
+                LIMIT ?
+                """,
+                params + [limit],
+            )
+            rows = cursor.fetchall()
+
+            data = []
+            for row in rows:
+                sector_code = row["sector_code"] or "otros"
+                # Map sector code to English name using sector_code
+                sector_name = sector_code  # frontend already handles EN display
+                data.append({
+                    "contract_id": row["contract_id"],
+                    "anomaly_score": round(float(row["anomaly_score"]), 4),
+                    "sector_id": row["sector_id"],
+                    "sector_name": sector_name,
+                    "iqr_flagged": bool(row["iqr_flagged"]),
+                    "amount_mxn": float(row["amount_mxn"]) if row["amount_mxn"] else 0.0,
+                    "vendor_name": row["vendor_name"] or "Unknown",
+                    "contract_date": row["contract_date"] or "",
+                })
+
+            result = {
+                "data": data,
+                "total": total,
+                "new_detections": new_detections,
+            }
+
+            _ml_anomalies_cache[cache_key] = {"ts": _time.time(), "data": result}
+            return result
+
+    except sqlite3.Error as exc:
+        logger.error("Database error in get_ml_price_anomalies: %s", exc)
+        raise HTTPException(status_code=500, detail="Database error occurred")

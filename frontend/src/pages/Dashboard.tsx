@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
+import { cn, formatCompactMXN, formatCompactUSD, formatNumber, toTitleCase } from '@/lib/utils'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { analysisApi, investigationApi } from '@/api/client'
 import type { ExecutiveCaseDetail } from '@/api/types'
@@ -266,6 +266,9 @@ export function Dashboard() {
             <h1 className="text-4xl md:text-5xl font-black text-text-primary tracking-tight leading-none">
               {formatCompactMXN(overview?.total_value_mxn || 0)}
             </h1>
+            <p className="text-sm text-text-muted font-mono mt-0.5">
+              ≈ {formatCompactUSD(overview?.total_value_mxn || 0)} USD
+            </p>
             <p className="text-lg text-text-muted mt-1 font-medium">
               {t('underSurveillance')}
             </p>
@@ -289,7 +292,7 @@ export function Dashboard() {
       {/* ================================================================ */}
       <div className="flex items-center gap-2 flex-wrap px-3 py-2 rounded border border-border/20 bg-background-elevated/10">
         <Shield className="h-3 w-3 text-text-muted flex-shrink-0" />
-        <span className="text-[11px] font-bold tracking-wider uppercase text-text-muted font-mono">Data coverage</span>
+        <span className="text-[11px] font-bold tracking-wider uppercase text-text-muted font-mono">{t('dataQualityLabel')}</span>
         <span className="text-border text-[11px]">·</span>
         <span className="text-[11px] text-text-muted font-mono">2002–10 <span className="text-risk-medium">0.1% RFC</span></span>
         <span className="text-border text-[11px]">·</span>
@@ -311,14 +314,14 @@ export function Dashboard() {
         <div className="flex items-center gap-2 mb-1">
           <Radar className="h-4 w-4 text-risk-high" />
           <span className="text-xs font-bold tracking-wider uppercase text-risk-high font-mono">
-            AI Intelligence · 23 Years of Data
+            {t('systemicPatternsLabel')}
           </span>
         </div>
         <h2 className="text-xl font-black text-text-primary mb-1">
-          Three Structural Failures — In Every Administration
+          {t('systemicPatternsTitle')}
         </h2>
         <p className="text-sm text-text-muted mb-4">
-          Our model analyzed 3.1M contracts across 5 governments. These patterns never stopped.
+          {t('systemicPatternsDesc')}
         </p>
         <div className="grid gap-3 md:grid-cols-3">
           {/* Direct Awards */}
@@ -330,14 +333,14 @@ export function Dashboard() {
               <div className="p-1.5 rounded bg-risk-high/10">
                 <Zap className="h-4 w-4 text-risk-high" />
               </div>
-              <span className="text-xs font-bold tracking-wider uppercase text-risk-high font-mono">Direct Awards</span>
+              <span className="text-xs font-bold tracking-wider uppercase text-risk-high font-mono">{t('directAwardCardLabel')}</span>
             </div>
             <div>
               <p className="text-3xl font-black text-text-primary tabular-nums font-mono">
                 {overview ? `${(overview.direct_award_pct || 0).toFixed(0)}%` : '—'}
               </p>
-              <p className="text-sm text-text-secondary mt-1">of contracts skip competition entirely</p>
-              <p className="text-xs text-text-muted mt-1 font-mono">OECD benchmark: 20–30%</p>
+              <p className="text-sm text-text-secondary mt-1">{t('directAwardCardDesc')}</p>
+              <p className="text-xs text-text-muted mt-1 font-mono">{t('oecdDirectAward')}</p>
             </div>
             <ArrowRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" />
           </button>
@@ -351,14 +354,14 @@ export function Dashboard() {
               <div className="p-1.5 rounded bg-risk-critical/10">
                 <Crosshair className="h-4 w-4 text-risk-critical" />
               </div>
-              <span className="text-xs font-bold tracking-wider uppercase text-risk-critical font-mono">Single Bidder</span>
+              <span className="text-xs font-bold tracking-wider uppercase text-risk-critical font-mono">{t('singleBidCardLabel')}</span>
             </div>
             <div>
               <p className="text-3xl font-black text-text-primary tabular-nums font-mono">
                 {overview ? `${(overview.single_bid_pct || 0).toFixed(0)}%` : '—'}
               </p>
-              <p className="text-sm text-text-secondary mt-1">of "competitive" tenders had only one bidder</p>
-              <p className="text-xs text-text-muted mt-1 font-mono">Effectively no competition</p>
+              <p className="text-sm text-text-secondary mt-1">{t('singleBidCardDesc')}</p>
+              <p className="text-xs text-text-muted mt-1 font-mono">{t('singleBidEffective')}</p>
             </div>
             <ArrowRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" />
           </button>
@@ -372,13 +375,13 @@ export function Dashboard() {
               <div className="p-1.5 rounded bg-risk-medium/10">
                 <Activity className="h-4 w-4 text-risk-medium" />
               </div>
-              <span className="text-xs font-bold tracking-wider uppercase text-risk-medium font-mono">December Rush</span>
+              <span className="text-xs font-bold tracking-wider uppercase text-risk-medium font-mono">{t('decemberRushCardLabel')}</span>
             </div>
             <div>
               <p className="text-3xl font-black text-text-primary tabular-nums font-mono">
                 {decemberSpike ? `${decemberSpike.average_spike_ratio.toFixed(1)}x` : '—'}
               </p>
-              <p className="text-sm text-text-secondary mt-1">December spending vs. average month</p>
+              <p className="text-sm text-text-secondary mt-1">{t('decemberSpikeRatio')}</p>
               {monthlyData ? (
                 <div className="mt-2">
                   <div className="h-10">
@@ -396,14 +399,14 @@ export function Dashboard() {
                     </ResponsiveContainer>
                   </div>
                   <p className="text-[10px] text-text-muted font-mono text-center">
-                    Contracts awarded per month · 2023
+                    {t('contractsPerMonth2023')}
                   </p>
                 </div>
               ) : (
                 <p className="text-xs text-text-muted mt-1 font-mono">
                   {decemberSpike
-                    ? `Significant in ${decemberSpike.years_with_significant_spike} of ${decemberSpike.total_years_analyzed} years`
-                    : 'Year-end budget dump pattern'}
+                    ? t('decemberSpikeYears', { significant: decemberSpike.years_with_significant_spike, total: decemberSpike.total_years_analyzed })
+                    : t('yearEndBudgetDump')}
                 </p>
               )}
             </div>
@@ -421,17 +424,17 @@ export function Dashboard() {
             <div>
               <div className="flex items-center gap-2 mb-0.5">
                 <Radar className="h-4 w-4 text-accent" />
-                <h2 className="text-base font-bold text-text-primary">How the AI Flags Corruption</h2>
+                <h2 className="text-base font-bold text-text-primary">{t('howAiWorks')}</h2>
               </div>
               <p className="text-xs text-text-muted">
-                The four statistical signals our v5.0 model learned from 15 documented cases
+                {t('howAiWorksDesc')}
               </p>
             </div>
             <button
               onClick={() => navigate('/methodology')}
               className="text-xs text-accent flex items-center gap-1"
             >
-              Full methodology <ArrowUpRight className="h-3 w-3" />
+              {t('fullMethodologyLink')} <ArrowUpRight className="h-3 w-3" />
             </button>
           </div>
           <div className="grid gap-2 grid-cols-2 md:grid-cols-4">
@@ -463,32 +466,32 @@ export function Dashboard() {
           <div className="flex items-center gap-2 mb-3">
             <Zap className="h-4 w-4 text-risk-critical" />
             <span className="text-xs font-bold tracking-wider uppercase text-risk-critical font-mono">
-              Value Concentration
+              {t('valueConcentrationLabel')}
             </span>
           </div>
           <div className="flex items-center gap-4 mb-3">
             <div>
-              <p className="text-[10px] text-text-muted font-mono uppercase tracking-wide mb-0.5">Share of contracts</p>
+              <p className="text-[10px] text-text-muted font-mono uppercase tracking-wide mb-0.5">{t('valueConcentrationShareContracts')}</p>
               <p className="text-4xl font-black text-text-primary tabular-nums font-mono">
                 {dashLoading ? '—' : `${criticalHighContractPct.toFixed(1)}%`}
               </p>
             </div>
             <ArrowRight className="h-6 w-6 text-risk-critical flex-shrink-0" />
             <div>
-              <p className="text-[10px] text-text-muted font-mono uppercase tracking-wide mb-0.5">Share of total value</p>
+              <p className="text-[10px] text-text-muted font-mono uppercase tracking-wide mb-0.5">{t('valueConcentrationShareValue')}</p>
               <p className="text-4xl font-black text-risk-critical tabular-nums font-mono">
                 {dashLoading ? '—' : `${criticalHighValuePct.toFixed(1)}%`}
               </p>
             </div>
           </div>
           <p className="text-xs text-text-muted leading-relaxed">
-            High and critical-risk contracts are a small fraction of all contracts — but a vastly disproportionate share of total spending.
+            {t('valueConcentrationDesc')}
           </p>
           <button
             onClick={() => navigate('/contracts?risk_level=critical')}
             className="mt-2 text-xs text-accent flex items-center gap-1"
           >
-            View critical-risk contracts <ArrowUpRight className="h-3 w-3" />
+            {t('viewCriticalContracts')} <ArrowUpRight className="h-3 w-3" />
           </button>
         </div>
 
@@ -498,17 +501,17 @@ export function Dashboard() {
             <div className="flex items-center gap-2">
               <ArrowRight className="h-4 w-4 text-accent" />
               <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
-                Where the Money Goes
+                {t('whereTheMoneyGoes')}
               </span>
             </div>
             <button
               onClick={() => navigate('/categories')}
               className="text-xs text-accent flex items-center gap-1"
             >
-              Full breakdown <ArrowUpRight className="h-3 w-3" />
+              {t('fullBreakdown')} <ArrowUpRight className="h-3 w-3" />
             </button>
           </div>
-          <p className="text-xs text-text-muted mb-3">Top institution → vendor flows</p>
+          <p className="text-xs text-text-muted mb-3">{t('whereMoneyGoesSubDesc')}</p>
           {!moneyFlowData ? (
             <div className="space-y-2">
               {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-9" />)}
@@ -534,6 +537,9 @@ export function Dashboard() {
                       <p className="text-xs tabular-nums font-mono text-text-secondary font-semibold">
                         {formatCompactMXN(flow.value)}
                       </p>
+                      <p className="text-[10px] tabular-nums font-mono text-text-muted">
+                        ≈ {formatCompactUSD(flow.value)}
+                      </p>
                       {flow.avg_risk != null && (
                         <p className={cn('text-[10px] font-bold tabular-nums font-mono', riskColor)}>
                           {(flow.avg_risk * 100).toFixed(0)}% risk
@@ -557,15 +563,15 @@ export function Dashboard() {
             <div>
               <div className="flex items-center gap-2 mb-0.5">
                 <Scale className="h-4 w-4 text-accent" />
-                <h2 className="text-base font-bold text-text-primary">23 Years, 5 Governments</h2>
+                <h2 className="text-base font-bold text-text-primary">{t('adminReportCardTitle')}</h2>
               </div>
-              <p className="text-xs text-text-muted">Risk and transparency across every administration</p>
+              <p className="text-xs text-text-muted">{t('adminReportCardDesc')}</p>
             </div>
             <button
               onClick={() => navigate('/administrations')}
               className="text-xs text-accent flex items-center gap-1"
             >
-              Full breakdown <ArrowUpRight className="h-3 w-3" />
+              {t('fullBreakdown')} <ArrowUpRight className="h-3 w-3" />
             </button>
           </div>
           {execLoading ? (
@@ -594,13 +600,13 @@ export function Dashboard() {
                     <p className="text-[9px] text-text-muted font-mono">{admin.years}</p>
                     <div className="mt-1.5 space-y-1">
                       <div>
-                        <p className="text-[9px] text-text-muted font-mono">Direct award</p>
+                        <p className="text-[9px] text-text-muted font-mono">{t('adminDirectAwardShort')}</p>
                         <p className="text-base font-black tabular-nums font-mono text-risk-medium">
                           {admin.direct_award_pct.toFixed(0)}%
                         </p>
                       </div>
                       <div>
-                        <p className="text-[9px] text-text-muted font-mono">High-risk rate</p>
+                        <p className="text-[9px] text-text-muted font-mono">{t('adminHighRiskShort')}</p>
                         <p className={cn('text-base font-black tabular-nums font-mono', hrColor)}>
                           {admin.high_risk_pct.toFixed(1)}%
                         </p>
@@ -623,15 +629,15 @@ export function Dashboard() {
             <div>
               <div className="flex items-center gap-2 mb-0.5">
                 <Target className="h-4 w-4 text-risk-critical" />
-                <h2 className="text-base font-bold text-text-primary">Top Vendors by Contract Value</h2>
+                <h2 className="text-base font-bold text-text-primary">{t('topVendorsByValue')}</h2>
               </div>
-              <p className="text-xs text-text-muted">Largest recipients — with AI risk scores</p>
+              <p className="text-xs text-text-muted">{t('topVendorsByValueDesc')}</p>
             </div>
             <button
               onClick={() => navigate('/network')}
               className="text-xs text-accent flex items-center gap-1"
             >
-              Vendor network <ArrowUpRight className="h-3 w-3" />
+              {t('network')} <ArrowUpRight className="h-3 w-3" />
             </button>
           </div>
           {execLoading ? (
@@ -784,7 +790,7 @@ export function Dashboard() {
             return (
               <div className="mt-3 mb-1 pt-3 border-t border-border/20">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-mono mb-2">
-                  Highest-Scored Active Investigation
+                  {t('smokingGunLabel')}
                 </p>
                 <button
                   onClick={() => navigate('/investigation')}
@@ -832,9 +838,9 @@ export function Dashboard() {
       {/* START INVESTIGATING — 3 action cards */}
       {/* ================================================================ */}
       <div>
-        <h2 className="text-base font-bold text-text-primary mb-1">Start Your Investigation</h2>
+        <h2 className="text-base font-bold text-text-primary mb-1">{t('startInvestigating')}</h2>
         <p className="text-xs text-text-muted mb-3">
-          These are the tools. Search any vendor, institution, contract. Build your own investigation.
+          {t('startInvestigatingDesc')}
         </p>
         <div className="grid gap-3 md:grid-cols-3">
           <button
@@ -845,13 +851,13 @@ export function Dashboard() {
               <div className="p-2 rounded-md bg-accent/10 group-hover:bg-accent/20 transition-colors">
                 <Search className="h-5 w-5 text-accent" />
               </div>
-              <span className="text-sm font-bold text-text-primary">Follow the Money</span>
+              <span className="text-sm font-bold text-text-primary">{t('followTheMoney')}</span>
             </div>
             <p className="text-xs text-text-muted leading-relaxed">
-              Where does $9.56T MXN actually go? Explore 72 spending categories and 12 sectors with AI-scored risk at every level.
+              {t('followTheMoneyDesc')}
             </p>
             <div className="flex items-center gap-1 text-xs text-accent font-medium">
-              Explore categories <ArrowRight className="h-3 w-3" />
+              {t('exploreCategories')} <ArrowRight className="h-3 w-3" />
             </div>
           </button>
 
@@ -863,13 +869,13 @@ export function Dashboard() {
               <div className="p-2 rounded-md bg-accent/10 group-hover:bg-accent/20 transition-colors">
                 <FileSearch className="h-5 w-5 text-accent" />
               </div>
-              <span className="text-sm font-bold text-text-primary">Search Any Contract</span>
+              <span className="text-sm font-bold text-text-primary">{t('searchAnyContract')}</span>
             </div>
             <p className="text-xs text-text-muted leading-relaxed">
-              Search 3.1M contracts by vendor name, institution, or contract description. Each result includes its AI risk score.
+              {t('searchAnyContractDesc')}
             </p>
             <div className="flex items-center gap-1 text-xs text-accent font-medium">
-              Open contract search <ArrowRight className="h-3 w-3" />
+              {t('openContractSearch')} <ArrowRight className="h-3 w-3" />
             </div>
           </button>
 
@@ -881,13 +887,13 @@ export function Dashboard() {
               <div className="p-2 rounded-md bg-accent/10 group-hover:bg-accent/20 transition-colors">
                 <Crosshair className="h-5 w-5 text-accent" />
               </div>
-              <span className="text-sm font-bold text-text-primary">Open an Investigation</span>
+              <span className="text-sm font-bold text-text-primary">{t('openInvestigation')}</span>
             </div>
             <p className="text-xs text-text-muted leading-relaxed">
-              Start from a suspicion — a vendor, institution, or pattern — and build a documented case with AI-powered analysis tools.
+              {t('openInvestigationDesc')}
             </p>
             <div className="flex items-center gap-1 text-xs text-accent font-medium">
-              Open case manager <ArrowRight className="h-3 w-3" />
+              {t('openCaseManager')} <ArrowRight className="h-3 w-3" />
             </div>
           </button>
         </div>
@@ -1083,9 +1089,16 @@ const SectorGrid = memo(function SectorGrid({
               />
             </div>
             {/* Value at risk — separate column, always visible */}
-            <span className="text-xs text-text-muted tabular-nums font-mono w-[68px] text-right flex-shrink-0">
-              {sector.valueAtRisk > 0 ? formatCompactMXN(sector.valueAtRisk) : '—'}
-            </span>
+            <div className="w-[68px] text-right flex-shrink-0">
+              <span className="text-xs text-text-muted tabular-nums font-mono block">
+                {sector.valueAtRisk > 0 ? formatCompactMXN(sector.valueAtRisk) : '—'}
+              </span>
+              {sector.valueAtRisk > 0 && (
+                <span className="text-[9px] text-text-muted/60 tabular-nums font-mono block">
+                  ≈{formatCompactUSD(sector.valueAtRisk)}
+                </span>
+              )}
+            </div>
             {/* High+ rate */}
             <span className="text-xs text-text-muted tabular-nums font-mono w-[52px] text-right flex-shrink-0">
               {sector.riskPct.toFixed(1)}%

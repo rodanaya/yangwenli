@@ -216,5 +216,66 @@ class AnalysisService(BaseService):
         }
 
 
+    def get_structural_breaks(self, conn: sqlite3.Connection) -> dict:
+        """
+        Detect statistically significant change points in 23-year procurement trends.
+        Uses PELT algorithm from ruptures library.
+        Returns breakpoints per metric with the year and delta magnitude.
+        """
+        import numpy as np
+        try:
+            import ruptures as rpt
+        except ImportError:
+            return {"breakpoints": [], "error": "ruptures library not installed"}
+
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT contract_year as year,
+                   SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) as direct_award_pct,
+                   SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) * 100.0 /
+                       NULLIF(SUM(CASE WHEN is_direct_award = 0 THEN 1 ELSE 0 END), 0) as single_bid_pct,
+                   SUM(CASE WHEN risk_level IN ('high', 'critical') THEN 1 ELSE 0 END) * 100.0 / COUNT(*) as high_risk_pct
+            FROM contracts
+            WHERE contract_year IS NOT NULL AND contract_year BETWEEN 2002 AND 2025
+            GROUP BY contract_year
+            ORDER BY contract_year
+            """
+        )
+        rows = cursor.fetchall()
+        if len(rows) < 5:
+            return {"breakpoints": []}
+
+        years = [row[0] for row in rows]
+        metrics = {
+            "direct_award_pct": [row[1] or 0 for row in rows],
+            "single_bid_pct": [row[2] or 0 for row in rows],
+            "high_risk_pct": [row[3] or 0 for row in rows],
+        }
+
+        breakpoints = []
+        for metric_name, series in metrics.items():
+            arr = np.array(series).reshape(-1, 1)
+            try:
+                # PELT with RBF cost — pen=5 gives ~2-4 breaks on this data
+                algo = rpt.Pelt(model="rbf", min_size=2, jump=1).fit(arr)
+                bkps = algo.predict(pen=5)
+                for bp_idx in bkps[:-1]:  # last element is always len(series)
+                    if 0 < bp_idx < len(years):
+                        before = float(np.mean(series[max(0, bp_idx - 3):bp_idx]))
+                        after = float(np.mean(series[bp_idx:min(len(series), bp_idx + 3)]))
+                        delta = round(after - before, 2)
+                        breakpoints.append({
+                            "metric": metric_name,
+                            "year": int(years[bp_idx]),  # year AFTER the break
+                            "delta": delta,
+                            "direction": "increase" if delta > 0 else "decrease",
+                        })
+            except Exception:
+                continue
+
+        return {"breakpoints": breakpoints}
+
+
 # Singleton instance for router use
 analysis_service = AnalysisService()

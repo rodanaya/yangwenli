@@ -330,6 +330,147 @@ class NetworkService(BaseService):
             if len(nodes) >= limit:
                 break
 
+    def get_communities(
+        self,
+        conn: sqlite3.Connection,
+        *,
+        min_size: int = 3,
+        min_avg_risk: float = 0.0,
+        sector_id: int | None = None,
+        limit: int = 50,
+    ) -> dict:
+        """
+        Return top co-bidding communities detected by Louvain algorithm.
+
+        Requires vendor_graph_features table to be populated by
+        backend/scripts/build_vendor_graph.py.
+        """
+        cursor = conn.cursor()
+
+        # Check table exists
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='vendor_graph_features'"
+        )
+        if not cursor.fetchone():
+            return {"communities": [], "total_communities": 0, "graph_ready": False}
+
+        # Summary per community
+        conditions = ["vgf.community_id >= 0", "vgf.community_size >= ?"]
+        params: list[Any] = [min_size]
+
+        if min_avg_risk > 0:
+            conditions.append("vgf.community_avg_risk >= ?")
+            params.append(min_avg_risk)
+
+        where = " AND ".join(conditions)
+
+        cursor.execute(
+            f"""
+            SELECT
+                vgf.community_id,
+                vgf.community_size,
+                vgf.community_avg_risk,
+                COUNT(DISTINCT c.sector_id) as sector_count,
+                SUM(DISTINCT CASE WHEN vgf.betweenness_centrality > 0
+                    THEN vgf.vendor_id ELSE NULL END) as hub_count
+            FROM vendor_graph_features vgf
+            LEFT JOIN contracts c ON vgf.vendor_id = c.vendor_id
+                AND COALESCE(c.amount_mxn, 0) <= {_MAX_CONTRACT_VALUE}
+                {' AND c.sector_id = ' + str(sector_id) if sector_id else ''}
+            WHERE {where}
+            GROUP BY vgf.community_id
+            ORDER BY vgf.community_avg_risk DESC, vgf.community_size DESC
+            LIMIT ?
+            """,
+            (*params, limit),
+        )
+        community_rows = cursor.fetchall()
+
+        communities = []
+        for row in community_rows:
+            comm_id = row["community_id"]
+
+            # Top 5 vendors in this community by pagerank
+            cursor.execute(
+                """
+                SELECT
+                    v.id as vendor_id, v.name as vendor_name,
+                    vgf.pagerank, vgf.degree, vgf.community_avg_risk,
+                    COALESCE(AVG(c.risk_score), 0) as avg_risk,
+                    COUNT(c.id) as contract_count,
+                    COALESCE(SUM(c.amount_mxn), 0) as total_value
+                FROM vendor_graph_features vgf
+                JOIN vendors v ON vgf.vendor_id = v.id
+                LEFT JOIN contracts c ON vgf.vendor_id = c.vendor_id
+                    AND COALESCE(c.amount_mxn, 0) <= ?
+                WHERE vgf.community_id = ?
+                GROUP BY vgf.vendor_id, v.id, v.name, vgf.pagerank, vgf.degree, vgf.community_avg_risk
+                ORDER BY vgf.pagerank DESC
+                LIMIT 5
+                """,
+                (_MAX_CONTRACT_VALUE, comm_id),
+            )
+            top_vendors = [
+                {
+                    "vendor_id": r["vendor_id"],
+                    "vendor_name": r["vendor_name"],
+                    "pagerank": round(r["pagerank"], 6),
+                    "degree": r["degree"],
+                    "avg_risk": round(r["avg_risk"], 4),
+                    "contracts": r["contract_count"],
+                    "total_value": r["total_value"],
+                }
+                for r in cursor.fetchall()
+            ]
+
+            communities.append({
+                "community_id": comm_id,
+                "size": row["community_size"],
+                "avg_risk": round(row["community_avg_risk"], 4),
+                "sector_count": row["sector_count"] or 0,
+                "top_vendors": top_vendors,
+            })
+
+        # Total distinct communities
+        cursor.execute(
+            "SELECT COUNT(DISTINCT community_id) FROM vendor_graph_features WHERE community_id >= 0"
+        )
+        total = cursor.fetchone()[0] or 0
+
+        return {
+            "communities": communities,
+            "total_communities": total,
+            "graph_ready": True,
+        }
+
+    def get_vendor_graph_features(
+        self,
+        conn: sqlite3.Connection,
+        vendor_id: int,
+    ) -> dict | None:
+        """Return graph features for a single vendor (community, pagerank, degree)."""
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='vendor_graph_features'"
+        )
+        if not cursor.fetchone():
+            return None
+
+        cursor.execute(
+            """
+            SELECT community_id, community_size, community_avg_risk,
+                   pagerank, betweenness_centrality, clustering_coefficient,
+                   degree, weighted_degree
+            FROM vendor_graph_features
+            WHERE vendor_id = ?
+            """,
+            (vendor_id,),
+        )
+        row = cursor.fetchone()
+        if not row:
+            return None
+        return dict(row)
+
     def get_co_bidders(
         self,
         conn: sqlite3.Connection,

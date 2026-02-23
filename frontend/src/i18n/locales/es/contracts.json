@@ -1,40 +1,40 @@
 {
   "title": "Contratos",
   "searchPlaceholder": "Buscar por título o número de contrato...",
-  "guidance": "Seleccione un preset para comenzar a investigar, o use filtros para encontrar contratos especificos. Haga clic en cualquier fila para expandir los factores de riesgo. Use la herramienta de comparacion para analizar contratos lado a lado.",
+  "guidance": "Seleccione un preset para comenzar a investigar, o use filtros para encontrar contratos específicos. Haga clic en cualquier fila para expandir los factores de riesgo. Use la herramienta de comparación para analizar contratos lado a lado.",
   "presets": {
-    "sectionLabel": "Presets de Investigacion",
+    "sectionLabel": "Presets de Investigación",
     "suspiciousMonopolies": {
       "label": "Monopolios Sospechosos",
-      "description": "Contratos de riesgo critico con un solo licitante — un proveedor, sin competencia"
+      "description": "Contratos de riesgo crítico con un solo licitante — un proveedor, sin competencia"
     },
     "decemberRush": {
       "label": "Prisa de Diciembre",
-      "description": "Contratos de alto riesgo de fin de ano — vaciado presupuestal antes del cierre fiscal"
+      "description": "Contratos de alto riesgo de fin de año — vaciado presupuestal antes del cierre fiscal"
     },
     "priceManipulation": {
-      "label": "Manipulacion de Precios",
-      "description": "Valores atipicos estadisticos de precios — contratos muy por encima de la norma sectorial"
+      "label": "Manipulación de Precios",
+      "description": "Valores atípicos estadísticos de precios — contratos muy por encima de la norma sectorial"
     },
     "ghostCompanies": {
       "label": "Empresas Fantasma",
-      "description": "Adjudicaciones directas a proveedores fuera de sector — patron clasico de empresa fantasma"
+      "description": "Adjudicaciones directas a proveedores fuera de sector — patrón clásico de empresa fantasma"
     },
     "networkClusters": {
       "label": "Grupos en Red",
-      "description": "Contratos de riesgo critico de miembros de red — grupos coordinados de proveedores"
+      "description": "Contratos de riesgo crítico de miembros de red — grupos coordinados de proveedores"
     },
     "splitContracts": {
       "label": "Contratos Fraccionados",
-      "description": "Fraccionamiento de umbrales — multiples contratos el mismo dia para evadir limites de supervision"
+      "description": "Fraccionamiento de umbrales — múltiples contratos el mismo día para evadir límites de supervisión"
     },
     "recentCritical": {
-      "label": "Recientes y Criticos",
-      "description": "Contratos de riesgo critico de 2024 — actividad sospechosa mas reciente"
+      "label": "Recientes y Críticos",
+      "description": "Contratos de riesgo crítico de 2024 — actividad sospechosa más reciente"
     },
     "biggestDirectAwards": {
       "label": "Mayores Adj. Directas",
-      "description": "Contratos mas grandes sin licitacion competitiva — mayor valor sin competencia"
+      "description": "Contratos más grandes sin licitación competitiva — mayor valor sin competencia"
     }
   },
   "columns": {

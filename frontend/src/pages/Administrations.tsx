@@ -169,6 +169,34 @@ function delta(a: number, b: number): { value: number; direction: 'up' | 'down' 
   return { value: d, direction: Math.abs(d) < 0.01 ? 'flat' : d > 0 ? 'up' : 'down' }
 }
 
+// =============================================================================
+// ML helpers — anomaly detection + correlation
+// =============================================================================
+
+/** Standard z-score of `value` relative to the population `values`. */
+function computeZScore(values: number[], value: number): number {
+  if (values.length < 3) return 0
+  const mean = values.reduce((s, v) => s + v, 0) / values.length
+  const variance = values.reduce((s, v) => s + (v - mean) ** 2, 0) / values.length
+  const std = Math.sqrt(variance)
+  return std > 0.001 ? (value - mean) / std : 0
+}
+
+/** Pearson correlation coefficient between two equal-length series. */
+function pearsonCorr(xs: number[], ys: number[]): number {
+  const n = Math.min(xs.length, ys.length)
+  if (n < 3) return 0
+  const mx = xs.slice(0, n).reduce((s, v) => s + v, 0) / n
+  const my = ys.slice(0, n).reduce((s, v) => s + v, 0) / n
+  let num = 0, dx = 0, dy = 0
+  for (let i = 0; i < n; i++) {
+    num += (xs[i] - mx) * (ys[i] - my)
+    dx += (xs[i] - mx) ** 2
+    dy += (ys[i] - my) ** 2
+  }
+  return dx > 0 && dy > 0 ? num / Math.sqrt(dx * dy) : 0
+}
+
 function DeltaBadge({ val, unit, invertColor }: { val: number; unit: string; invertColor?: boolean }) {
   const abs = Math.abs(val)
   const isUp = val > 0.01
@@ -287,6 +315,86 @@ export default function Administrations() {
     () => events.filter((e) => e.year >= selectedMeta.dataStart && e.year < selectedMeta.end),
     [events, selectedMeta]
   )
+
+  // ── ML: Anomaly detection ─────────────────────────────────────────────────
+  // Flag years in the selected admin where a metric deviates >1.8σ from the
+  // all-time baseline (all 24 years).
+  const yearAnomalies = useMemo(() => {
+    if (!selectedAgg || yoyData.length < 5) return []
+    const allContracts = yoyData.map((y) => y.contracts)
+    const allRisk     = yoyData.map((y) => y.avg_risk * 100)
+    const allDA       = yoyData.map((y) => y.direct_award_pct)
+    const allHR       = yoyData.map((y) => y.high_risk_pct)
+    const anomalies: Array<{ year: number; metric: string; z: number }> = []
+    for (const yr of selectedAgg.years) {
+      const checks = [
+        { metric: 'contracts', z: computeZScore(allContracts, yr.contracts) },
+        { metric: 'risk',      z: computeZScore(allRisk,      yr.avg_risk * 100) },
+        { metric: 'DA%',       z: computeZScore(allDA,        yr.direct_award_pct) },
+        { metric: 'HR%',       z: computeZScore(allHR,        yr.high_risk_pct) },
+      ]
+      for (const c of checks) {
+        if (Math.abs(c.z) >= 1.8) anomalies.push({ year: yr.year, metric: c.metric, z: c.z })
+      }
+    }
+    return anomalies.sort((a, b) => Math.abs(b.z) - Math.abs(a.z)).slice(0, 6)
+  }, [yoyData, selectedAgg])
+
+  // ── ML: Transition statistical significance ───────────────────────────────
+  // Compare each admin-to-admin delta to the distribution of all year-to-year
+  // deltas, producing a z-score (how unusual is this transition?).
+  const transitionSignificance = useMemo(() => {
+    const result = new Map<string, { da: number; sb: number; hr: number }>()
+    if (yoyData.length < 4 || transitions.length === 0) return result
+    const allDeltaDA: number[] = []
+    const allDeltaSB: number[] = []
+    const allDeltaHR: number[] = []
+    for (let i = 1; i < yoyData.length; i++) {
+      allDeltaDA.push(yoyData[i].direct_award_pct - yoyData[i - 1].direct_award_pct)
+      allDeltaSB.push(yoyData[i].single_bid_pct   - yoyData[i - 1].single_bid_pct)
+      allDeltaHR.push(yoyData[i].high_risk_pct    - yoyData[i - 1].high_risk_pct)
+    }
+    for (const t of transitions) {
+      result.set(`${t.from}-${t.to}`, {
+        da: Math.abs(computeZScore(allDeltaDA, t.dDA.value)),
+        sb: Math.abs(computeZScore(allDeltaSB, t.dSB.value)),
+        hr: Math.abs(computeZScore(allDeltaHR, t.dHR.value)),
+      })
+    }
+    return result
+  }, [yoyData, transitions])
+
+  // ── ML: Sector risk correlations ──────────────────────────────────────────
+  // Within the selected admin's years, find sector pairs whose risk score
+  // trajectories moved together (|r| ≥ 0.70).
+  const topSectorCorrelations = useMemo(() => {
+    if (!selectedMeta || sectorYearData.length === 0) return []
+    const adminSY  = sectorYearData.filter(
+      (sy) => sy.year >= selectedMeta.dataStart && sy.year < selectedMeta.end
+    )
+    const years = [...new Set(adminSY.map((r) => r.year))].sort()
+    if (years.length < 3) return []
+    const activeSectors = SECTORS.filter((s) =>
+      adminSY.some((r) => r.sector_id === s.id && r.contracts > 0)
+    )
+    const vectors: Record<number, number[]> = {}
+    for (const sec of activeSectors) {
+      vectors[sec.id] = years.map((yr) => {
+        const row = adminSY.find((r) => r.sector_id === sec.id && r.year === yr)
+        return row ? row.avg_risk * 100 : 0
+      })
+    }
+    const pairs: Array<{ sectorA: string; sectorB: string; r: number }> = []
+    for (let i = 0; i < activeSectors.length; i++) {
+      for (let j = i + 1; j < activeSectors.length; j++) {
+        const r = pearsonCorr(vectors[activeSectors[i].id], vectors[activeSectors[j].id])
+        if (Math.abs(r) >= 0.70 && !isNaN(r)) {
+          pairs.push({ sectorA: activeSectors[i].nameEN, sectorB: activeSectors[j].nameEN, r })
+        }
+      }
+    }
+    return pairs.sort((a, b) => Math.abs(b.r) - Math.abs(a.r)).slice(0, 4)
+  }, [sectorYearData, selectedMeta])
 
   const isLoading = yoyLoading || syLoading
 
@@ -649,6 +757,33 @@ export default function Administrations() {
                 No yearly data available for this administration
               </div>
             )}
+            {yearAnomalies.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-border/20">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <AlertTriangle className="h-3 w-3 text-risk-medium" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-mono">
+                    AI-Detected Anomalies
+                  </span>
+                  <span className="text-[10px] text-text-muted">— years deviating &gt;1.8σ from 23-year baseline</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {yearAnomalies.map((a) => (
+                    <span
+                      key={`${a.year}-${a.metric}`}
+                      className={cn(
+                        'inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-medium',
+                        Math.abs(a.z) >= 2.5
+                          ? 'bg-risk-critical/10 text-risk-critical border border-risk-critical/20'
+                          : 'bg-risk-medium/10 text-risk-medium border border-risk-medium/20'
+                      )}
+                      title={`${a.metric} in ${a.year}: ${a.z.toFixed(2)}σ from all-time average`}
+                    >
+                      {a.year} {a.metric} {a.z > 0 ? '+' : ''}{a.z.toFixed(1)}σ
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -701,6 +836,26 @@ export default function Administrations() {
                 ))}
               </tbody>
             </table>
+            {topSectorCorrelations.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-border/20">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-mono mb-1.5">
+                  Risk Comovement — correlated sector pairs (r ≥ 0.70)
+                </div>
+                <div className="space-y-1">
+                  {topSectorCorrelations.map((p) => (
+                    <div key={`${p.sectorA}-${p.sectorB}`} className="flex items-center gap-2 text-[10px] font-mono">
+                      <span className={cn(
+                        'font-bold',
+                        Math.abs(p.r) >= 0.90 ? 'text-risk-critical' : Math.abs(p.r) >= 0.80 ? 'text-risk-high' : 'text-risk-medium'
+                      )}>
+                        r={p.r > 0 ? '+' : ''}{p.r.toFixed(2)}
+                      </span>
+                      <span className="text-text-muted">{p.sectorA} ↔ {p.sectorB}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -714,6 +869,7 @@ export default function Administrations() {
           <CardContent className="space-y-3">
             {transitions.map((t) => {
               const isRelevant = t.to === selectedAdmin || t.from === selectedAdmin
+              const sig = transitionSignificance.get(`${t.from}-${t.to}`)
               return (
                 <div
                   key={`${t.from}-${t.to}`}
@@ -732,9 +888,9 @@ export default function Administrations() {
                     <span className="text-xs font-semibold text-text-secondary">{t.to}</span>
                   </div>
                   <div className="grid grid-cols-5 gap-2">
-                    <TransitionMetric label="Direct Award" delta={t.dDA.value} unit=" pts" />
-                    <TransitionMetric label="Single Bid" delta={t.dSB.value} unit=" pts" />
-                    <TransitionMetric label="High Risk" delta={t.dHR.value} unit=" pts" />
+                    <TransitionMetric label="Direct Award" delta={t.dDA.value} unit=" pts" significance={sig?.da} />
+                    <TransitionMetric label="Single Bid" delta={t.dSB.value} unit=" pts" significance={sig?.sb} />
+                    <TransitionMetric label="High Risk" delta={t.dHR.value} unit=" pts" significance={sig?.hr} />
                     <TransitionMetric label="Contracts" delta={t.dContracts.value} unit="" isCount />
                     <TransitionMetric label="Vendors" delta={t.dVendors.value} unit="" isCount invertColor />
                   </div>
@@ -881,17 +1037,31 @@ function HeatCell({ value, max }: { value: number; max: number }) {
 }
 
 function TransitionMetric({
-  label, delta: d, unit, isCount, invertColor,
+  label, delta: d, unit, isCount, invertColor, significance,
 }: {
   label: string
   delta: number
   unit: string
   isCount?: boolean
   invertColor?: boolean
+  significance?: number
 }) {
   return (
     <div className="text-center">
-      <div className="text-xs text-text-muted font-mono uppercase">{label}</div>
+      <div className="flex items-center justify-center gap-0.5">
+        <div className="text-xs text-text-muted font-mono uppercase">{label}</div>
+        {significance !== undefined && significance >= 1.8 && (
+          <span
+            className={cn(
+              'text-[9px] font-bold font-mono ml-0.5',
+              significance >= 2.5 ? 'text-risk-critical' : 'text-risk-medium'
+            )}
+            title={`${significance.toFixed(1)}σ from historical norm`}
+          >
+            {significance >= 2.5 ? '!!' : '!'}
+          </span>
+        )}
+      </div>
       <div className="mt-0.5">
         {isCount ? (
           <DeltaBadge
@@ -918,6 +1088,12 @@ interface PatternsViewProps {
 }
 
 function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
+  const { data: breaksData } = useQuery({
+    queryKey: ['analysis', 'structural-breaks'],
+    queryFn: () => analysisApi.getStructuralBreaks(),
+    staleTime: 60 * 60 * 1000, // 1 hour — matches server-side cache TTL
+  })
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -1047,6 +1223,24 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
                     }}
                   />
                 ))}
+                {/* Detected structural breakpoints */}
+                {breaksData?.breakpoints
+                  .filter((bp, i, arr) => arr.findIndex(b => b.year === bp.year) === i)
+                  .map((bp) => (
+                    <ReferenceLine
+                      key={`break-${bp.year}-${bp.metric}`}
+                      x={bp.year}
+                      stroke="#f59e0b"
+                      strokeWidth={1}
+                      strokeDasharray="2 3"
+                      label={{
+                        value: `~${bp.year}`,
+                        position: 'insideTopRight',
+                        fontSize: 8,
+                        fill: '#f59e0b',
+                      }}
+                    />
+                  ))}
                 <Line
                   type="monotone"
                   dataKey="direct_award_pct"
@@ -1083,6 +1277,11 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
             Three systemic patterns — direct awards bypassing competition, single-bidder tenders,
             and AI-flagged high-risk contracts — persist across all administrations regardless of political party.
           </p>
+          {breaksData?.breakpoints && breaksData.breakpoints.length > 0 && (
+            <p className="text-[10px] text-amber-500/80 font-mono mt-1">
+              ⚡ Amber lines = statistically detected regime shifts (PELT algorithm)
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -37,6 +37,10 @@ import esProcurement from './locales/es/procurement.json'
 import enProcurement from './locales/en/procurement.json'
 import esAdministrations from './locales/es/administrations.json'
 import enAdministrations from './locales/en/administrations.json'
+import esPrice from './locales/es/price.json'
+import enPrice from './locales/en/price.json'
+import esNetwork from './locales/es/network.json'
+import enNetwork from './locales/en/network.json'
 
 i18n
   .use(LanguageDetector)
@@ -49,7 +53,8 @@ i18n
         executive: esExecutive, patterns: esPatterns, watchlist: esWatchlist,
         glossary: esGlossary, spending: esSpending,
         moneyflow: esMoneyflow, redflags: esRedflags, temporal: esTemporal,
-        procurement: esProcurement, administrations: esAdministrations,
+        procurement: esProcurement, administrations: esAdministrations, price: esPrice,
+        network: esNetwork,
       },
       en: {
         common: enCommon, sectors: enSectors, nav: enNav, dashboard: enDashboard,
@@ -57,7 +62,8 @@ i18n
         executive: enExecutive, patterns: enPatterns, watchlist: enWatchlist,
         glossary: enGlossary, spending: enSpending,
         moneyflow: enMoneyflow, redflags: enRedflags, temporal: enTemporal,
-        procurement: enProcurement, administrations: enAdministrations,
+        procurement: enProcurement, administrations: enAdministrations, price: enPrice,
+        network: enNetwork,
       },
     },
     lng: localStorage.getItem('i18nextLng') || 'en', // Default to English when no saved preference

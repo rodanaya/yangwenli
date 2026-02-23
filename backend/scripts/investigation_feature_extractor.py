@@ -37,7 +37,7 @@ BACKEND_DIR = os.path.dirname(SCRIPT_DIR)
 DB_PATH = os.path.join(BACKEND_DIR, 'RUBLI_NORMALIZED.db')
 
 # Target sectors for investigation
-TARGET_SECTORS = [1, 3]  # Salud, Infraestructura
+TARGET_SECTORS = list(range(1, 13))  # All 12 sectors
 
 # Minimum contracts to consider a vendor (filter noise)
 MIN_CONTRACTS = 3

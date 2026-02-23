@@ -7,6 +7,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import ReactECharts from 'echarts-for-react'
 import { Network, Search, X, ExternalLink, Users, UserCircle } from 'lucide-react'
 import { RiskBadge } from '@/components/ui/badge'
@@ -44,6 +45,18 @@ function linkWidth(contracts: number): number {
 
 function truncate(name: string, max = 18): string {
   return name.length > max ? name.slice(0, max) + '…' : name
+}
+
+// Community color palette — 12 distinct, perceptually spread colors
+const COMMUNITY_PALETTE = [
+  '#6366f1', '#f59e0b', '#10b981', '#ef4444', '#3b82f6',
+  '#ec4899', '#14b8a6', '#f97316', '#8b5cf6', '#22c55e',
+  '#06b6d4', '#a855f7',
+]
+
+function communityToColor(communityId: number | null | undefined): string {
+  if (communityId == null) return '#64748b'
+  return COMMUNITY_PALETTE[communityId % COMMUNITY_PALETTE.length]
 }
 
 // ---------------------------------------------------------------------------
@@ -84,6 +97,7 @@ function FiltersBar({
   onChange: (patch: Partial<GraphFilters>) => void
   onReset: () => void
 }) {
+  const { t } = useTranslation('network')
   const hasActive =
     filters.sectorId !== undefined ||
     filters.year !== undefined ||
@@ -94,7 +108,7 @@ function FiltersBar({
     <div className="flex flex-wrap items-center gap-3 text-xs">
       {/* Sector */}
       <div className="flex items-center gap-1.5">
-        <label className="text-text-muted shrink-0">Sector:</label>
+        <label className="text-text-muted shrink-0">{t('filterSector')}</label>
         <select
           value={filters.sectorId ?? ''}
           onChange={(e) =>
@@ -102,7 +116,7 @@ function FiltersBar({
           }
           className="h-7 pl-2 pr-6 rounded border border-border bg-background-card text-xs focus:outline-none focus:ring-1 focus:ring-accent"
         >
-          <option value="">All sectors</option>
+          <option value="">{t('filterAllSectors')}</option>
           {SECTORS.map((s) => (
             <option key={s.id} value={s.id}>
               {s.nameEN}
@@ -113,7 +127,7 @@ function FiltersBar({
 
       {/* Year */}
       <div className="flex items-center gap-1.5">
-        <label className="text-text-muted shrink-0">Year:</label>
+        <label className="text-text-muted shrink-0">{t('filterYear')}</label>
         <select
           value={filters.year ?? ''}
           onChange={(e) =>
@@ -121,7 +135,7 @@ function FiltersBar({
           }
           className="h-7 pl-2 pr-6 rounded border border-border bg-background-card text-xs focus:outline-none focus:ring-1 focus:ring-accent"
         >
-          <option value="">All years</option>
+          <option value="">{t('filterAllYears')}</option>
           {YEARS.map((y) => (
             <option key={y} value={y}>
               {y}
@@ -132,7 +146,7 @@ function FiltersBar({
 
       {/* Min contracts */}
       <div className="flex items-center gap-1.5">
-        <label className="text-text-muted shrink-0">Min contracts:</label>
+        <label className="text-text-muted shrink-0">{t('filterMinContracts')}</label>
         <select
           value={filters.minContracts}
           onChange={(e) => onChange({ minContracts: Number(e.target.value) })}
@@ -148,7 +162,7 @@ function FiltersBar({
 
       {/* Depth */}
       <div className="flex items-center gap-1.5">
-        <label className="text-text-muted shrink-0">Depth:</label>
+        <label className="text-text-muted shrink-0">{t('filterDepth')}</label>
         <div className="flex rounded border border-border overflow-hidden">
           {([1, 2] as const).map((d) => (
             <button
@@ -172,10 +186,10 @@ function FiltersBar({
         <button
           onClick={onReset}
           className="flex items-center gap-1 text-text-muted hover:text-text-primary transition-colors"
-          aria-label="Reset filters"
+          aria-label={t('filterReset')}
         >
           <X className="h-3 w-3" />
-          Reset
+          {t('filterReset')}
         </button>
       )}
     </div>
@@ -193,6 +207,7 @@ function SearchBar({
   onSelect: (suggestion: SearchSuggestion) => void
   placeholder?: string
 }) {
+  const { t } = useTranslation('network')
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -263,7 +278,7 @@ function SearchBar({
       <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted pointer-events-none" />
       <input
         type="text"
-        placeholder={placeholder ?? "Search vendor or institution to center graph..."}
+        placeholder={placeholder ?? t('searchPlaceholder')}
         value={query}
         onChange={(e) => {
           setQuery(e.target.value)
@@ -301,7 +316,7 @@ function SearchBar({
                     : 'bg-blue-500/10 text-blue-400'
                 }`}
               >
-                {s.entityType === 'vendor' ? 'Vendor' : 'Institution'}
+                {s.entityType === 'vendor' ? t('typeVendor') : t('typeInstitution')}
               </span>
               <span className="truncate font-medium">{toTitleCase(s.name)}</span>
               {s.subtitle && (
@@ -332,6 +347,7 @@ function SidePanel({
   onClose: () => void
   onLoadCoBidders: (id: number) => void
 }) {
+  const { t } = useTranslation('network')
   const isVendor = node.type === 'vendor'
   // Node IDs are like "v-123" or "i-456"
   const numericId = parseInt(node.id.slice(2), 10)
@@ -348,7 +364,7 @@ function SidePanel({
               isVendor ? 'bg-accent/10 text-accent' : 'bg-blue-500/10 text-blue-400'
             }`}
           >
-            {isVendor ? 'Vendor' : 'Institution'}
+            {isVendor ? t('typeVendor') : t('typeInstitution')}
           </div>
           <h3 className="text-sm font-semibold leading-snug" title={node.name}>
             {toTitleCase(node.name)}
@@ -357,7 +373,7 @@ function SidePanel({
         <button
           onClick={onClose}
           className="shrink-0 text-text-muted hover:text-text-primary mt-0.5"
-          aria-label="Close side panel"
+          aria-label={t('panelClose')}
         >
           <X className="h-4 w-4" />
         </button>
@@ -368,19 +384,35 @@ function SidePanel({
         {/* Risk badge */}
         {node.risk_score != null && (
           <div className="flex items-center justify-between text-xs">
-            <span className="text-text-muted">Risk score</span>
+            <span className="text-text-muted">{t('panelRiskScore')}</span>
             <RiskBadge score={node.risk_score} className="text-xs" />
+          </div>
+        )}
+
+        {/* Community badge — vendors only, shown when graph features are available */}
+        {isVendor && node.community_id != null && node.community_size != null && (
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-text-muted">Co-bid community</span>
+            <span className="flex items-center gap-1.5">
+              <span
+                className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
+                style={{ backgroundColor: communityToColor(node.community_id) }}
+              />
+              <span className="font-mono text-text-secondary">
+                #{node.community_id} · {formatNumber(node.community_size)} vendors
+              </span>
+            </span>
           </div>
         )}
 
         {/* Contract count and value */}
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div className="rounded bg-background-elevated p-2">
-            <div className="text-text-muted mb-0.5">Contracts</div>
+            <div className="text-text-muted mb-0.5">{t('panelContracts')}</div>
             <div className="font-semibold tabular-nums">{formatNumber(node.contracts)}</div>
           </div>
           <div className="rounded bg-background-elevated p-2">
-            <div className="text-text-muted mb-0.5">Value</div>
+            <div className="text-text-muted mb-0.5">{t('panelValue')}</div>
             <div className="font-semibold tabular-nums">{formatCompactMXN(node.value)}</div>
           </div>
         </div>
@@ -392,14 +424,14 @@ function SidePanel({
             className="flex items-center gap-1.5 text-xs text-accent hover:underline w-full text-left"
           >
             <UserCircle className="h-3 w-3 shrink-0" />
-            Open AI profile
+            {t('panelOpenProfile')}
           </button>
           <Link
             to={profileLink}
             className="flex items-center gap-1.5 text-xs text-text-muted hover:text-text-primary hover:underline"
           >
             <ExternalLink className="h-3 w-3 shrink-0" />
-            View full page
+            {t('panelViewPage')}
           </Link>
         </div>
 
@@ -407,14 +439,14 @@ function SidePanel({
         {isVendor && (
           <div className="border-t border-border pt-3 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium">Co-bidders</span>
+              <span className="text-xs font-medium">{t('panelCoBidders')}</span>
               {!coBidders && !coBiddersLoading && (
                 <button
                   onClick={() => onLoadCoBidders(numericId)}
                   className="flex items-center gap-1 text-xs border border-border rounded px-2 py-1 hover:border-accent hover:text-accent transition-colors"
                 >
                   <Users className="h-3 w-3" />
-                  Find
+                  {t('panelFindCoBidders')}
                 </button>
               )}
             </div>
@@ -428,7 +460,7 @@ function SidePanel({
             )}
 
             {coBidders && coBidders.length === 0 && (
-              <p className="text-xs text-text-muted italic">No co-bidders found.</p>
+              <p className="text-xs text-text-muted italic">{t('panelNoCoBidders')}</p>
             )}
 
             {coBidders && coBidders.length > 0 && (
@@ -541,11 +573,13 @@ interface CenterEntity {
 }
 
 export function NetworkGraph() {
+  const { t } = useTranslation('network')
   const [filters, setFilters] = useState<GraphFilters>(DEFAULT_FILTERS)
   const [centerEntity, setCenterEntity] = useState<CenterEntity | null>(null)
   const [selectedNode, setSelectedNode] = useState<NetworkNode | null>(null)
   const [coBidders, setCoBidders] = useState<CoBidderItem[] | null>(null)
   const [coBiddersLoading, setCoBiddersLoading] = useState(false)
+  const [colorMode, setColorMode] = useState<'risk' | 'community'>('risk')
 
   // Clear co-bidder state when selected node changes
   useEffect(() => {
@@ -590,7 +624,11 @@ export function NetworkGraph() {
       const isCenter = node.id === centerNodeId
       const symbolSize = isCenter ? 65 : nodeSymbolSize(node.value, node.type)
       const itemColor =
-        node.type === 'institution' ? '#3b82f6' : riskToColor(node.risk_score)
+        node.type === 'institution'
+          ? '#3b82f6'
+          : colorMode === 'community' && node.community_id != null
+            ? communityToColor(node.community_id)
+            : riskToColor(node.risk_score)
       const showLabel = isCenter || symbolSize > 25
 
       return {
@@ -684,7 +722,7 @@ export function NetworkGraph() {
         },
       ],
     }
-  }, [graphData, centerEntity])
+  }, [graphData, centerEntity, colorMode])
 
   // Click handler for ECharts nodes
   const handleGraphEvents = useMemo(
@@ -738,21 +776,17 @@ export function NetworkGraph() {
       <div>
         <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
           <Network className="h-4.5 w-4.5 text-accent" />
-          Network Explorer
+          {t('pageTitle')}
         </h2>
         {graphData && (
           <p className="text-xs text-text-muted mt-0.5">
-            {graphData.total_nodes} nodes · {graphData.total_links} connections
-            {centerEntity && ` · centered on ${toTitleCase(centerEntity.name)}`}
+            {graphData.total_nodes} {t('statsNodes')} · {graphData.total_links} {t('statsConnections')}
+            {centerEntity && ` · ${t('statsCenteredOn')} ${toTitleCase(centerEntity.name)}`}
           </p>
         )}
       </div>
 
-      <SectionDescription>
-        Force-directed graph of vendor and institution relationships. Search for any vendor or
-        institution to build the graph around it. Click any node to explore its connections and
-        detect co-bidding patterns.
-      </SectionDescription>
+      <SectionDescription>{t('pageDesc')}</SectionDescription>
 
       {/* Co-bidding note */}
       <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-4 py-2.5 text-xs text-amber-400 flex items-start gap-2">
@@ -767,7 +801,7 @@ export function NetworkGraph() {
 
       {/* Toolbar row: search + filters */}
       <div className="flex flex-wrap items-center gap-3">
-        <SearchBar onSelect={handleSearchSelect} placeholder="Search vendor or institution name to begin…" />
+        <SearchBar onSelect={handleSearchSelect} placeholder={t('searchPlaceholder')} />
         {centerEntity && (
           <div className="flex items-center gap-1.5 text-xs bg-accent/10 border border-accent/30 rounded px-2 py-1">
             <span className="text-accent font-medium">
@@ -784,7 +818,32 @@ export function NetworkGraph() {
         )}
       </div>
 
-      <FiltersBar filters={filters} onChange={patchFilters} onReset={resetFilters} />
+      <div className="flex items-center gap-3">
+        <FiltersBar filters={filters} onChange={patchFilters} onReset={resetFilters} />
+        {/* Color mode toggle */}
+        <div className="flex items-center gap-1 rounded border border-border bg-background-elevated text-xs shrink-0">
+          <button
+            onClick={() => setColorMode('risk')}
+            className={`px-2.5 py-1 rounded-sm transition-colors ${
+              colorMode === 'risk'
+                ? 'bg-accent/20 text-accent font-medium'
+                : 'text-text-muted hover:text-text-primary'
+            }`}
+          >
+            Risk
+          </button>
+          <button
+            onClick={() => setColorMode('community')}
+            className={`px-2.5 py-1 rounded-sm transition-colors ${
+              colorMode === 'community'
+                ? 'bg-accent/20 text-accent font-medium'
+                : 'text-text-muted hover:text-text-primary'
+            }`}
+          >
+            Community
+          </button>
+        </div>
+      </div>
 
       {/* Main content: graph + side panel */}
       <div className="flex border border-border rounded-md overflow-hidden" style={{ height: '620px' }}>
@@ -798,14 +857,14 @@ export function NetworkGraph() {
                   <Network className="h-8 w-8 text-accent opacity-70" />
                 </div>
                 <div>
-                  <p className="text-base font-semibold text-text-primary">Vendor Network Explorer</p>
+                  <p className="text-base font-semibold text-text-primary">{t('emptyTitle')}</p>
                   <p className="text-xs text-text-muted mt-1 max-w-xs">
-                    AI-powered relationship mapping. Search any vendor or institution to build its 1st-degree network graph.
+                    {t('emptyDesc')}
                   </p>
                 </div>
               </div>
               <div className="w-full max-w-sm text-center">
-                <p className="text-xs text-text-muted mb-2 uppercase tracking-wider font-medium">Try these examples</p>
+                <p className="text-xs text-text-muted mb-2 uppercase tracking-wider font-medium">{t('examplesLabel')}</p>
                 <div className="flex flex-wrap items-center justify-center gap-2">
                   {[
                     { name: 'IMSS', type: 'institution' as const },
@@ -828,19 +887,19 @@ export function NetworkGraph() {
           {isLoading && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background-card z-10">
               <Network className="h-8 w-8 text-accent animate-pulse" />
-              <p className="text-sm text-text-muted">Loading network...</p>
+              <p className="text-sm text-text-muted">{t('loadingNetwork')}</p>
             </div>
           )}
 
           {isEmpty && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background-card">
               <Network className="h-10 w-10 opacity-30" />
-              <p className="text-sm text-text-muted">No connections found for these filters.</p>
+              <p className="text-sm text-text-muted">{t('noConnections')}</p>
               <button
                 onClick={resetFilters}
                 className="text-xs text-accent hover:underline"
               >
-                Reset filters
+                {t('resetFilters')}
               </button>
             </div>
           )}
@@ -858,7 +917,7 @@ export function NetworkGraph() {
           {!isLoading && !isEmpty && graphData && centerEntity && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 pointer-events-none">
               <div className="bg-background-card/90 border border-border rounded px-3 py-1.5 text-xs text-text-muted text-center backdrop-blur-sm">
-                Click any node to see its details and co-bidding relationships.
+                {t('clickNodeHint')}
               </div>
             </div>
           )}
@@ -880,18 +939,31 @@ export function NetworkGraph() {
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-text-muted">
         <span className="flex items-center gap-1.5">
           <span className="inline-block w-3 h-3 rounded-full bg-[#3b82f6]" />
-          Institution
+          {t('legendInstitution')}
         </span>
-        {(['critical', 'high', 'medium', 'low'] as const).map((level) => (
-          <span key={level} className="flex items-center gap-1.5 capitalize">
-            <span
-              className="inline-block w-3 h-3 rounded-full"
-              style={{ backgroundColor: RISK_COLORS[level] }}
-            />
-            {level} vendor
-          </span>
-        ))}
-        <span className="text-text-muted">· Node size = contract value · Edge width = contract count</span>
+        {colorMode === 'risk' ? (
+          <>
+            {(['critical', 'high', 'medium', 'low'] as const).map((level) => (
+              <span key={level} className="flex items-center gap-1.5">
+                <span
+                  className="inline-block w-3 h-3 rounded-full"
+                  style={{ backgroundColor: RISK_COLORS[level] }}
+                />
+                {t(`legend${level.charAt(0).toUpperCase()}${level.slice(1)}` as `legend${'Critical' | 'High' | 'Medium' | 'Low'}`)}
+              </span>
+            ))}
+          </>
+        ) : (
+          <>
+            {COMMUNITY_PALETTE.slice(0, 6).map((color, i) => (
+              <span key={i} className="flex items-center gap-1.5">
+                <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
+                {i === 0 ? 'Cluster 0 (largest)' : i < 5 ? `Cluster ${i}` : '…more clusters'}
+              </span>
+            ))}
+          </>
+        )}
+        <span className="text-text-muted">· {t('legendSizeNote')}</span>
       </div>
     </div>
   )

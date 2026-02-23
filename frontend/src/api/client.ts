@@ -402,6 +402,19 @@ export interface MonthlyBreakdownResponse {
   december_spike: number | null
 }
 
+// Structural breakpoints types
+export interface StructuralBreakpoint {
+  metric: string       // 'direct_award_pct' | 'single_bid_pct' | 'high_risk_pct'
+  year: number
+  delta: number        // percentage point change
+  direction: 'increase' | 'decrease'
+}
+
+export interface StructuralBreaksResponse {
+  breakpoints: StructuralBreakpoint[]
+  error?: string
+}
+
 // Temporal events types
 export interface TemporalEvent {
   id: string
@@ -646,6 +659,15 @@ export const analysisApi = {
     const { data } = await api.get('/analysis/validation/factor-analysis')
     return data
   },
+
+  /**
+   * Detect statistically significant change points in 23-year procurement trends.
+   * Uses PELT algorithm (ruptures library). Cached server-side for 1 hour.
+   */
+  async getStructuralBreaks(): Promise<StructuralBreaksResponse> {
+    const { data } = await api.get<StructuralBreaksResponse>('/analysis/structural-breaks')
+    return data
+  },
 }
 
 // ============================================================================
@@ -830,6 +852,33 @@ export interface NetworkNode {
   contracts: number
   risk_score: number | null
   metadata?: Record<string, unknown>
+  community_id?: number | null
+  community_size?: number | null
+  pagerank?: number | null
+}
+
+export interface CommunityVendorItem {
+  vendor_id: number
+  vendor_name: string
+  pagerank: number
+  degree: number
+  avg_risk: number
+  contracts: number
+  total_value: number
+}
+
+export interface CommunityItem {
+  community_id: number
+  size: number
+  avg_risk: number
+  sector_count: number
+  top_vendors: CommunityVendorItem[]
+}
+
+export interface CommunitiesResponse {
+  communities: CommunityItem[]
+  total_communities: number
+  graph_ready: boolean
 }
 
 export interface NetworkLink {
@@ -952,6 +1001,20 @@ export const networkApi = {
     total: number
   }> {
     const { data } = await api.get(`/network/related-vendors/${vendorId}?limit=${limit}`)
+    return data
+  },
+
+  /**
+   * Get Louvain co-bidding communities (requires build_vendor_graph.py)
+   */
+  async getCommunities(params?: {
+    min_size?: number
+    min_avg_risk?: number
+    sector_id?: number
+    limit?: number
+  }): Promise<CommunitiesResponse> {
+    const queryParams = params ? buildQueryParams(params as Record<string, unknown>) : ''
+    const { data } = await api.get<CommunitiesResponse>(`/network/communities?${queryParams}`)
     return data
   },
 }
@@ -1126,6 +1189,23 @@ export interface PriceHypothesesFilterParams {
   per_page?: number
 }
 
+export interface MlAnomalyItem {
+  contract_id: number
+  anomaly_score: number
+  sector_id: number
+  sector_name: string
+  iqr_flagged: boolean
+  amount_mxn: number
+  vendor_name: string
+  contract_date: string
+}
+
+export interface MlAnomaliesResponse {
+  data: MlAnomalyItem[]
+  total: number
+  new_detections: number
+}
+
 // ============================================================================
 // Price Hypothesis Endpoints
 // ============================================================================
@@ -1181,6 +1261,20 @@ export const priceApi = {
    */
   async getSummary(): Promise<PriceHypothesesSummary> {
     const { data } = await api.get<PriceHypothesesSummary>('/analysis/price-hypotheses/summary')
+    return data
+  },
+
+  /**
+   * Get ML-detected price anomalies (Isolation Forest, multi-feature).
+   * Populate via: python -m scripts.compute_price_anomaly_scores
+   */
+  async getMlAnomalies(params: {
+    sector_id?: number
+    limit?: number
+    only_new?: boolean
+  } = {}): Promise<MlAnomaliesResponse> {
+    const queryParams = buildQueryParams(params as Record<string, unknown>)
+    const { data } = await api.get<MlAnomaliesResponse>(`/analysis/prices/ml-anomalies?${queryParams}`)
     return data
   },
 }

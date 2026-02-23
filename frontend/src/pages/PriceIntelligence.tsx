@@ -1,12 +1,14 @@
 import { memo, useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
+import ReactECharts from 'echarts-for-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { SECTOR_COLORS, SECTORS, getSectorNameEN } from '@/lib/constants'
 import { priceApi } from '@/api/client'
-import type { PriceHypothesisItem, SectorPriceBaseline, PriceHypothesesFilterParams } from '@/api/client'
+import type { PriceHypothesisItem, SectorPriceBaseline, PriceHypothesesFilterParams, MlAnomaliesResponse } from '@/api/client'
 import {
   TrendingUp,
   AlertTriangle,
@@ -20,6 +22,7 @@ import {
   ArrowDown,
   Check,
   X,
+  Brain,
 } from 'lucide-react'
 
 // ─── MacroStatCard ───────────────────────────────────────────────────────────
@@ -74,6 +77,111 @@ function confidenceColor(level: string): string {
   return CONFIDENCE_COLORS[level] ?? CONFIDENCE_COLORS.low
 }
 
+// ─── SectorAnomalyBar ────────────────────────────────────────────────────────
+
+const SectorAnomalyBar = memo(function SectorAnomalyBar({
+  data,
+}: {
+  data: Array<{ sector_name: string; count: number; total_flagged_value?: number }>
+}) {
+  const sorted = useMemo(() => [...data].sort((a, b) => a.count - b.count), [data])
+
+  const option = useMemo(() => {
+    const names = sorted.map((d) => getSectorNameEN(d.sector_name))
+    const values = sorted.map((d) => ({
+      value: d.count,
+      itemStyle: { color: SECTOR_COLORS[d.sector_name] ?? '#64748b', opacity: 0.85 },
+      extra: d,
+    }))
+    const maxCount = Math.max(...sorted.map((d) => d.count), 1)
+
+    return {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        formatter: (params: any[]) => {
+          const idx = params[0]?.dataIndex ?? 0
+          const row = sorted[idx]
+          return `<strong>${params[0]?.name}</strong><br/>${formatNumber(params[0]?.value)} anomalies${row?.total_flagged_value ? `<br/>${formatCompactMXN(row.total_flagged_value)} flagged` : ''}`
+        },
+      },
+      grid: { left: 110, right: 70, top: 4, bottom: 4, containLabel: false },
+      xAxis: { type: 'value', show: false, max: maxCount * 1.25 },
+      yAxis: {
+        type: 'category',
+        data: names,
+        axisLabel: { fontSize: 11, color: '#9ca3af' },
+        axisLine: { show: false },
+        axisTick: { show: false },
+      },
+      series: [{
+        type: 'bar',
+        data: values,
+        barMaxWidth: 16,
+        label: {
+          show: true,
+          position: 'right',
+          fontSize: 10,
+          color: '#9ca3af',
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          formatter: (p: any) => formatNumber(p.value),
+        },
+      }],
+    }
+  }, [sorted])
+
+  return (
+    <ReactECharts
+      option={option}
+      style={{ height: `${Math.max(sorted.length * 30, 100)}px` }}
+      opts={{ renderer: 'svg' }}
+    />
+  )
+})
+
+// ─── TopAnomalyCard ──────────────────────────────────────────────────────────
+
+function TopAnomalyCard({ item }: { item: PriceHypothesisItem }) {
+  const sectorCode = item.sector_id
+    ? SECTORS.find((s) => s.id === item.sector_id)?.code
+    : undefined
+  const sectorColor = sectorCode ? SECTOR_COLORS[sectorCode] : '#64748b'
+  const confColor = confidenceColor(item.confidence_level ?? 'low')
+  const isExtreme = item.hypothesis_type === 'extreme_overpricing'
+
+  return (
+    <div className={`rounded-lg border p-3 bg-surface-card/30 ${isExtreme ? 'border-risk-critical/25 bg-risk-critical/5' : 'border-risk-high/20'}`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="font-mono text-[10px] text-text-muted">#{item.contract_id}</span>
+        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+          isExtreme ? 'bg-red-500/15 text-red-400' : 'bg-amber-500/15 text-amber-400'
+        }`}>
+          {isExtreme ? 'Extreme' : 'Outlier'}
+        </span>
+      </div>
+      <p className="text-sm font-bold text-text-primary tabular-nums">
+        {item.amount_mxn != null ? formatCompactMXN(item.amount_mxn) : '—'}
+      </p>
+      <div className="flex items-center gap-1.5 mt-1.5 mb-2">
+        <div className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: sectorColor }} />
+        <span className="text-[10px] text-text-muted">{sectorCode ? getSectorNameEN(sectorCode) : '—'}</span>
+      </div>
+      <div>
+        <div className="flex justify-between mb-0.5">
+          <span className="text-[10px] text-text-muted">Confidence</span>
+          <span className="text-[10px] tabular-nums font-semibold" style={{ color: confColor }}>
+            {(item.confidence * 100).toFixed(0)}%
+          </span>
+        </div>
+        <div className="h-1 rounded-full bg-border overflow-hidden">
+          <div className="h-full rounded-full" style={{ width: `${item.confidence * 100}%`, backgroundColor: confColor }} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Small helpers ──────────────────────────────────────────────────────────
 
 function formatTypeName(type: string): string {
@@ -87,6 +195,8 @@ function formatTypeName(type: string): string {
 // ============================================================================
 
 export default function PriceIntelligence() {
+  const { t } = useTranslation('price')
+
   // ── Filter state ────────────────────────────────────────────────────────
   const [hypothesisType, setHypothesisType] = useState<string>('all')
   const [confidenceLevel, setConfidenceLevel] = useState<string>('all')
@@ -149,6 +259,13 @@ export default function PriceIntelligence() {
     },
     staleTime: STALE_TIME,
     enabled: expandedId !== null && !!hypothesesData?.data,
+  })
+
+  // ── ML anomaly detections (Isolation Forest, only_new = IQR-missed) ─────
+  const { data: mlAnomaliesData } = useQuery<MlAnomaliesResponse>({
+    queryKey: ['price-ml-anomalies', sectorId],
+    queryFn: () => priceApi.getMlAnomalies({ sector_id: sectorId, only_new: true, limit: 10 }),
+    staleTime: 30 * 60 * 1000,
   })
 
   // ── Review mutation ───────────────────────────────────────────────────────
@@ -247,50 +364,59 @@ export default function PriceIntelligence() {
 
   return (
     <div className="space-y-5">
-      {/* ── Macro Intelligence Section ────────────────────────────────────── */}
-      <div className="space-y-2">
+
+      {/* ── 1. Intelligence Header ─────────────────────────────────────────── */}
+      <div className="space-y-1.5">
         <div className="flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-accent shrink-0" />
-          <h2 className="text-lg font-bold tracking-tight">Price Outlier Intelligence</h2>
+          <AlertTriangle className="h-3.5 w-3.5 text-risk-critical shrink-0" />
+          <span className="text-[10px] font-bold tracking-widest uppercase text-risk-critical font-mono">
+            {t('intelligenceLabel')}
+          </span>
         </div>
-        <p className="text-xs text-text-muted max-w-2xl">
-          Contracts where the awarded price significantly exceeds sector and category norms.
-          IQR-based statistical outlier detection normalized per sector and year baseline —
-          extreme overpricing flags contracts above Q3&nbsp;+&nbsp;3× IQR.
-        </p>
+        <div className="flex flex-wrap items-end gap-x-6 gap-y-1">
+          <h1 className="text-xl md:text-2xl font-black text-text-primary leading-tight">
+            {summaryLoading
+              ? <Skeleton className="h-7 w-52 inline-block" />
+              : `${formatNumber(totalHypotheses)} ${t('anomaliesDetected')}`}
+          </h1>
+          {!summaryLoading && totalFlaggedValue > 0 && (
+            <p className="text-sm text-risk-critical font-medium tabular-nums font-mono">
+              {formatCompactMXN(totalFlaggedValue)} {t('flaggedValue')}
+            </p>
+          )}
+        </div>
+        <p className="text-xs text-text-muted max-w-2xl leading-relaxed">{t('pageDesc')}</p>
       </div>
 
-      {/* ── Macro stat cards ─────────────────────────────────────────────── */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      {/* ── 2. Macro stat cards ───────────────────────────────────────────── */}
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <MacroStatCard
           loading={summaryLoading}
-          label="PRICE ANOMALIES DETECTED"
+          label={t('totalAnomalies')}
           value={summaryLoading ? '—' : formatNumber(totalHypotheses)}
-          detail="Total flagged contracts across all sectors"
+          detail={t('totalAnomaliesDetail')}
           color="text-risk-high"
           borderColor="border-risk-high/30"
         />
         <MacroStatCard
           loading={summaryLoading}
-          label="VALUE OF FLAGGED CONTRACTS"
+          label={t('totalFlaggedValue')}
           value={summaryLoading ? '—' : formatCompactMXN(totalFlaggedValue)}
-          detail="Total MXN value of anomalous contracts"
+          detail={t('totalFlaggedDetail')}
           color="text-risk-critical"
           borderColor="border-risk-critical/30"
         />
         <MacroStatCard
           loading={summaryLoading}
-          label="TOP ANOMALY SECTOR"
+          label={t('topAnomalySector')}
           value={
             summaryLoading ? '—' :
-            topAnomalySector
-              ? getSectorNameEN(topAnomalySector.sector_name)
-              : '—'
+            topAnomalySector ? getSectorNameEN(topAnomalySector.sector_name) : '—'
           }
           detail={
             topAnomalySector
-              ? `${formatNumber(topAnomalySector.count)} anomalies detected`
-              : 'Most price outliers'
+              ? `${formatNumber(topAnomalySector.count)} ${t('anomaliesDetected').toLowerCase()}`
+              : t('mostPriceOutliers')
           }
           color="text-risk-medium"
           borderColor="border-risk-medium/30"
@@ -298,29 +424,62 @@ export default function PriceIntelligence() {
         />
         <MacroStatCard
           loading={summaryLoading}
-          label="EXTREME OVERPRICING CONFIDENCE"
+          label={t('extremeConfidence')}
           value={summaryLoading ? '—' : avgOverpricingPct}
-          detail="Avg detection confidence (extreme type)"
+          detail={t('extremeConfidenceDetail')}
           color="text-accent"
           borderColor="border-accent/30"
         />
       </div>
 
-      {/* ── Section 2 + 3: Filter bar + Main table ───────────────────────── */}
+      {/* ── 3. Sector Anomaly Map ─────────────────────────────────────────── */}
+      {!summaryLoading && priceSummary?.by_sector && priceSummary.by_sector.length > 0 && (
+        <Card className="border-border/40">
+          <CardHeader className="pb-2 pt-4 px-5">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <TrendingUp className="h-3.5 w-3.5 text-accent" />
+              {t('sectorMapTitle')}
+            </CardTitle>
+            <CardDescription className="text-xs">{t('sectorMapDesc')}</CardDescription>
+          </CardHeader>
+          <CardContent className="px-5 pb-4">
+            <SectorAnomalyBar data={priceSummary.by_sector} />
+          </CardContent>
+        </Card>
+      )}
+      {summaryLoading && <Skeleton className="h-40 w-full rounded-lg" />}
+
+      {/* ── 4. Top 5 Highest-Confidence Anomalies ────────────────────────── */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-sm font-bold text-text-primary">{t('topAnomaliesTitle')}</h2>
+          <span className="text-[10px] text-text-muted font-mono uppercase tracking-wider">{t('sortedByConfidence')}</span>
+        </div>
+        {hypothesesLoading ? (
+          <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-24 w-full rounded-lg" />
+            ))}
+          </div>
+        ) : hypothesesData?.data && hypothesesData.data.length > 0 ? (
+          <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+            {hypothesesData.data.slice(0, 5).map((item) => (
+              <TopAnomalyCard key={item.id} item={item} />
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      {/* ── 5. Anomaly Workbench ──────────────────────────────────────────── */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-sm">
             <AlertTriangle className="h-3.5 w-3.5 text-risk-high" />
-            Price Anomaly Workbench
+            {t('workbenchTitle')}
           </CardTitle>
-          <CardDescription>
-            Sortable, filterable table of all price anomaly hypotheses. Click a row to inspect
-            sector baseline context. Use the action buttons to mark hypotheses valid or invalid.
-          </CardDescription>
+          <CardDescription>{t('workbenchDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-
-          {/* Filter bar */}
           <FilterBar
             hypothesisType={hypothesisType}
             confidenceLevel={confidenceLevel}
@@ -335,8 +494,6 @@ export default function PriceIntelligence() {
             onSortByChange={(v) => { setSortBy(v); resetPage() }}
             onSortOrderToggle={() => { setSortOrder((o) => o === 'desc' ? 'asc' : 'desc'); resetPage() }}
           />
-
-          {/* Table */}
           {hypothesesLoading ? (
             <div className="space-y-2">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -363,12 +520,8 @@ export default function PriceIntelligence() {
               onNotesChange={setReviewNotes}
             />
           ) : (
-            <p className="text-sm text-text-muted py-6 text-center">
-              No price anomaly hypotheses match the current filters.
-            </p>
+            <p className="text-sm text-text-muted py-6 text-center">{t('noResults')}</p>
           )}
-
-          {/* Pagination */}
           {pagination && pagination.total_pages > 1 && (
             <PaginationBar
               page={page}
@@ -379,31 +532,67 @@ export default function PriceIntelligence() {
               onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
             />
           )}
+
+          {/* ── ML-Only Detections panel ────────────────────────────────── */}
+          {mlAnomaliesData && mlAnomaliesData.new_detections > 0 && (
+            <div className="mt-4 rounded-md border border-border/40 bg-background-elevated/20 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Brain className="h-4 w-4 text-accent" aria-hidden="true" />
+                  <span className="text-sm font-bold text-text-primary">ML-Only Detections</span>
+                  <span className="text-xs text-text-muted">
+                    {formatNumber(mlAnomaliesData.new_detections)} contract
+                    {mlAnomaliesData.new_detections !== 1 ? 's' : ''} flagged by multi-feature
+                    Isolation Forest but not IQR
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-2" role="list" aria-label="ML-only anomaly detections">
+                {mlAnomaliesData.data.map((item) => (
+                  <div
+                    key={item.contract_id}
+                    role="listitem"
+                    className="flex items-center justify-between text-xs p-2 rounded bg-background-card border border-border/30"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="font-mono text-accent shrink-0">#{item.contract_id}</span>
+                      <div
+                        className="h-2 w-2 rounded-full shrink-0"
+                        style={{ backgroundColor: SECTOR_COLORS[item.sector_name] ?? '#64748b' }}
+                        aria-hidden="true"
+                      />
+                      <span className="text-text-muted truncate">
+                        {getSectorNameEN(item.sector_name)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0 ml-2">
+                      <span className="tabular-nums text-text-primary">
+                        {formatCompactMXN(item.amount_mxn)}
+                      </span>
+                      <span className="font-mono text-risk-high tabular-nums">
+                        {(item.anomaly_score * 100).toFixed(0)}% anomaly
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* ── Section 4: Sector Baselines (collapsed) ──────────────────────── */}
+      {/* ── 6. Sector Baselines (collapsible) ────────────────────────────── */}
       <Card>
         <details>
           <summary className="cursor-pointer list-none px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Table2 className="h-3.5 w-3.5 text-accent shrink-0" />
-                <span className="text-sm font-semibold text-text-primary">
-                  Sector Price Baselines
-                </span>
-                <span className="text-xs text-text-muted">
-                  — IQR thresholds used for anomaly detection (click to expand)
-                </span>
-              </div>
+            <div className="flex items-center gap-2">
+              <Table2 className="h-3.5 w-3.5 text-accent shrink-0" />
+              <span className="text-sm font-semibold text-text-primary">{t('baselinesTitle')}</span>
+              <span className="text-xs text-text-muted">— {t('baselinesSubtitle')}</span>
             </div>
           </summary>
           <CardContent className="pt-0">
-            <p className="text-xs text-text-muted mb-3">
-              Statistical distribution of contract values per sector. The upper fence
-              (Q3 + 1.5x IQR) is the outlier threshold; the extreme fence (Q3 + 3x IQR)
-              triggers the extreme overpricing flag.
-            </p>
+            <p className="text-xs text-text-muted mb-3">{t('baselinesDesc')}</p>
             {baselinesLoading ? (
               <div className="space-y-2">
                 {Array.from({ length: 6 }).map((_, i) => (
@@ -413,7 +602,7 @@ export default function PriceIntelligence() {
             ) : sortedBaselines.length > 0 ? (
               <BaselineTable data={sortedBaselines} />
             ) : (
-              <p className="text-sm text-text-muted py-4 text-center">No baseline data available</p>
+              <p className="text-sm text-text-muted py-4 text-center">{t('noBaselines')}</p>
             )}
           </CardContent>
         </details>

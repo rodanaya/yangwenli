@@ -629,6 +629,6 @@ if __name__ == "__main__":
     print()
 
     start = datetime.now()
-    run_anomaly_detection([1, 3])  # Salud, Infraestructura
+    run_anomaly_detection(list(range(1, 13)))  # All 12 sectors
     elapsed = (datetime.now() - start).total_seconds()
     print(f"\nAnomaly detection completed in {elapsed:.1f} seconds")
