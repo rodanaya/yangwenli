@@ -99,12 +99,11 @@ describe('Dashboard', () => {
     expect(screen.getByText('Validated Against Real Corruption')).toBeInTheDocument()
   })
 
-  it('renders stat card labels', () => {
+  it('renders new dashboard section headings', () => {
     renderDashboard()
-    expect(screen.getByText('VALUE AT RISK')).toBeInTheDocument()
-    expect(screen.getByText('HIGH-RISK RATE')).toBeInTheDocument()
-    expect(screen.getByText('DIRECT AWARDS')).toBeInTheDocument()
-    expect(screen.getByText('SINGLE BIDDER')).toBeInTheDocument()
-    expect(screen.getByText('MODEL ACCURACY')).toBeInTheDocument()
+    expect(screen.getByText('Value Concentration')).toBeInTheDocument()
+    expect(screen.getByText('The Competition Illusion')).toBeInTheDocument()
+    expect(screen.getByText('23 Years, 5 Governments')).toBeInTheDocument()
+    expect(screen.getByText('Top Vendors by Contract Value')).toBeInTheDocument()
   })
 })

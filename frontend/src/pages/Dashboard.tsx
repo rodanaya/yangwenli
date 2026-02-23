@@ -90,19 +90,22 @@ export function Dashboard() {
   const sectors = fastDashboard?.sectors
   const riskDist = fastDashboard?.risk_distribution
 
-  // Compute value at risk from sectors
-  const valueAtRisk = useMemo(() => {
-    if (!sectors) return { total: 0, pct: 0 }
-    let totalAtRisk = 0
-    let totalValue = 0
-    for (const s of sectors) {
-      const ct = s.total_contracts || 1
-      const hrPct = ((s.high_risk_count || 0) + (s.critical_risk_count || 0)) / ct
-      totalAtRisk += hrPct * (s.total_value_mxn || 0)
-      totalValue += s.total_value_mxn || 0
-    }
-    return { total: totalAtRisk, pct: totalValue > 0 ? (totalAtRisk / totalValue) * 100 : 0 }
-  }, [sectors])
+  // Value concentration: % of contracts that are high/critical vs % of total value they hold
+  const criticalHighContractPct = useMemo(() => {
+    if (!riskDist) return 0
+    return riskDist
+      .filter(d => d.risk_level === 'critical' || d.risk_level === 'high')
+      .reduce((s, d) => s + (d.percentage || 0), 0)
+  }, [riskDist])
+
+  const criticalHighValuePct = useMemo(() => {
+    if (!riskDist) return 0
+    const totalVal = riskDist.reduce((s, d) => s + (d.total_value_mxn || 0), 0)
+    const flaggedVal = riskDist
+      .filter(d => d.risk_level === 'critical' || d.risk_level === 'high')
+      .reduce((s, d) => s + (d.total_value_mxn || 0), 0)
+    return totalVal > 0 ? (flaggedVal / totalVal) * 100 : 0
+  }, [riskDist])
 
   // Sectors sorted by value at risk
   const sectorData = useMemo(() => {
@@ -148,9 +151,6 @@ export function Dashboard() {
 
   const groundTruth = execData?.ground_truth
   const modelAuc = execData?.model?.auc ?? 0.960
-  const highRiskContracts = overview?.high_risk_contracts || 0
-  const totalContracts = overview?.total_contracts || 1
-  const highRiskPct = totalContracts > 0 ? (highRiskContracts / totalContracts) * 100 : 0
 
   const lastUpdated = fastDashboard?.cached_at
     ? new Date(fastDashboard.cached_at).toLocaleString('en-US', {
@@ -290,174 +290,209 @@ export function Dashboard() {
       </div>
 
       {/* ================================================================ */}
-      {/* THE COST OF NO COMPETITION — Impact card                       */}
+      {/* VALUE CONCENTRATION — The 7.9% that holds the money           */}
       {/* ================================================================ */}
-      {dashLoading ? (
-        <Skeleton className="h-28 w-full rounded-lg" />
-      ) : overview ? (
-        <div className="rounded-lg border border-risk-critical/20 bg-risk-critical/5 px-6 py-5">
-          <div className="flex items-start justify-between gap-4">
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Concentration paradox */}
+        <div className="rounded-lg border border-risk-critical/20 bg-risk-critical/5 px-5 py-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Zap className="h-4 w-4 text-risk-critical" />
+            <span className="text-xs font-bold tracking-wider uppercase text-risk-critical font-mono">
+              Value Concentration
+            </span>
+          </div>
+          <div className="flex items-center gap-4 mb-3">
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Zap className="h-4 w-4 text-risk-critical" />
-                <span className="text-xs font-bold tracking-wider uppercase text-risk-critical font-mono">
-                  The Cost of No Competition
-                </span>
-              </div>
-              <p className="text-4xl md:text-5xl font-black text-text-primary tabular-nums font-mono leading-none">
-                {formatCompactMXN((overview.direct_award_pct / 100) * overview.total_value_mxn)}
-              </p>
-              <p className="text-sm text-text-secondary mt-2">
-                awarded without competitive bidding · {(overview.direct_award_pct).toFixed(0)}% of all contracts
-              </p>
-              <p className="text-xs text-text-muted mt-1 font-mono">
-                OECD benchmark: 20–30% direct award rate
+              <p className="text-[10px] text-text-muted font-mono uppercase tracking-wide mb-0.5">Share of contracts</p>
+              <p className="text-4xl font-black text-text-primary tabular-nums font-mono">
+                {dashLoading ? '—' : `${criticalHighContractPct.toFixed(1)}%`}
               </p>
             </div>
-            <button
-              onClick={() => navigate('/contracts?is_direct_award=true')}
-              className="text-xs text-accent flex items-center gap-1 whitespace-nowrap mt-1 flex-shrink-0"
-            >
-              Explore <ArrowUpRight className="h-3 w-3" />
-            </button>
+            <ArrowRight className="h-6 w-6 text-risk-critical flex-shrink-0" />
+            <div>
+              <p className="text-[10px] text-text-muted font-mono uppercase tracking-wide mb-0.5">Share of total value</p>
+              <p className="text-4xl font-black text-risk-critical tabular-nums font-mono">
+                {dashLoading ? '—' : `${criticalHighValuePct.toFixed(1)}%`}
+              </p>
+            </div>
           </div>
+          <p className="text-xs text-text-muted leading-relaxed">
+            High and critical-risk contracts are a small fraction of all contracts — but a vastly disproportionate share of total spending.
+          </p>
+          <button
+            onClick={() => navigate('/contracts?risk_level=critical')}
+            className="mt-2 text-xs text-accent flex items-center gap-1"
+          >
+            View critical-risk contracts <ArrowUpRight className="h-3 w-3" />
+          </button>
         </div>
-      ) : null}
+
+        {/* Competition illusion */}
+        <div className="rounded-lg border border-risk-high/20 bg-risk-high/5 px-5 py-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Crosshair className="h-4 w-4 text-risk-high" />
+            <span className="text-xs font-bold tracking-wider uppercase text-risk-high font-mono">
+              The Competition Illusion
+            </span>
+          </div>
+          <p className="text-4xl font-black text-text-primary tabular-nums font-mono mb-1">
+            {dashLoading ? '—' : `${(overview?.single_bid_pct || 0).toFixed(0)}%`}
+          </p>
+          <p className="text-sm text-text-secondary mb-3">
+            of "competitive" tenders had only one bidder
+          </p>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex-1 h-2 rounded-full bg-background-elevated/50 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-risk-high/60"
+                style={{ width: `${overview?.single_bid_pct || 0}%` }}
+              />
+            </div>
+            <span className="text-xs text-text-muted font-mono flex-shrink-0">{(overview?.single_bid_pct || 0).toFixed(1)}%</span>
+          </div>
+          <p className="text-xs text-text-muted leading-relaxed">
+            Plus {dashLoading ? '—' : `${(overview?.direct_award_pct || 0).toFixed(0)}%`} of all contracts skip competition entirely via direct award. Real competition happens in a minority of procurement.
+          </p>
+          <button
+            onClick={() => navigate('/contracts?is_single_bid=true')}
+            className="mt-2 text-xs text-accent flex items-center gap-1"
+          >
+            Explore single-bid contracts <ArrowUpRight className="h-3 w-3" />
+          </button>
+        </div>
+      </div>
 
       {/* ================================================================ */}
-      {/* 23 YEARS AT A GLANCE — Temporal contract volume + risk trend   */}
+      {/* ADMINISTRATION REPORT CARD — 5 governments compared           */}
       {/* ================================================================ */}
       <Card className="border-border/40">
-        <CardContent className="pt-5 pb-3">
-          <div className="flex items-center justify-between mb-1">
+        <CardContent className="pt-5 pb-4">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <div className="flex items-center gap-2 mb-0.5">
-                <Activity className="h-4 w-4 text-accent" />
-                <h2 className="text-base font-bold text-text-primary">23 Years at a Glance</h2>
+                <Scale className="h-4 w-4 text-accent" />
+                <h2 className="text-base font-bold text-text-primary">23 Years, 5 Governments</h2>
               </div>
-              <p className="text-xs text-text-muted">Contract volume and average risk score · 2002–2024</p>
+              <p className="text-xs text-text-muted">Risk and transparency across every administration</p>
             </div>
             <button
-              onClick={() => navigate('/temporal')}
+              onClick={() => navigate('/administrations')}
               className="text-xs text-accent flex items-center gap-1"
             >
-              Full timeline <ArrowUpRight className="h-3 w-3" />
+              Full breakdown <ArrowUpRight className="h-3 w-3" />
             </button>
           </div>
-          {dashLoading ? (
-            <Skeleton className="h-[160px] w-full mt-3" />
+          {execLoading ? (
+            <div className="grid gap-2 grid-cols-2 md:grid-cols-5">
+              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-32" />)}
+            </div>
           ) : (
-            <div className="mt-2">
-              <ResponsiveContainer width="100%" height={160}>
-                <ComposedChart data={fastDashboard?.yearly_trends || []} margin={{ top: 12, right: 36, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="contractGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.25} />
-                      <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0.0} />
-                    </linearGradient>
-                  </defs>
-                  <ReferenceArea x1={2002} x2={2006} fill="#22c55e" fillOpacity={0.04} label={{ value: 'Fox', position: 'insideTopLeft', fontSize: 8, fill: '#64748b' }} />
-                  <ReferenceArea x1={2006} x2={2012} fill="#3b82f6" fillOpacity={0.04} label={{ value: 'Calderón', position: 'insideTopLeft', fontSize: 8, fill: '#64748b' }} />
-                  <ReferenceArea x1={2012} x2={2018} fill="#ea580c" fillOpacity={0.04} label={{ value: 'Peña', position: 'insideTopLeft', fontSize: 8, fill: '#64748b' }} />
-                  <ReferenceArea x1={2018} x2={2024} fill="#eab308" fillOpacity={0.04} label={{ value: 'AMLO', position: 'insideTopLeft', fontSize: 8, fill: '#64748b' }} />
-                  <XAxis dataKey="year" tick={{ fontSize: 9, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-                  <YAxis yAxisId="left" hide />
-                  <YAxis
-                    yAxisId="right"
-                    orientation="right"
-                    domain={[0, 0.20]}
-                    tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
-                    tick={{ fontSize: 9, fill: '#94a3b8' }}
-                    tickLine={false}
-                    axisLine={false}
-                    width={32}
-                  />
-                  <RechartsTooltip
-                    contentStyle={{ background: 'hsl(var(--background-elevated))', border: '1px solid hsl(var(--border))', borderRadius: '6px', fontSize: '11px' }}
-                    formatter={(value: unknown, name: string) => {
-                      if (name === 'contracts') return [formatNumber(value as number), 'Contracts']
-                      if (name === 'avg_risk') return [`${((value as number) * 100).toFixed(1)}%`, 'Avg Risk']
-                      return [value, name]
-                    }}
-                    labelFormatter={(label: unknown) => `Year: ${label}`}
-                  />
-                  <Area yAxisId="left" type="monotone" dataKey="contracts" stroke="hsl(var(--accent))" strokeWidth={1.5} fill="url(#contractGrad)" dot={false} />
-                  <Line yAxisId="right" type="monotone" dataKey="avg_risk" stroke={RISK_COLORS.high} strokeWidth={1.5} dot={false} strokeDasharray="3 3" />
-                </ComposedChart>
-              </ResponsiveContainer>
-              <div className="flex items-center gap-4 mt-1 px-1">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-4 h-0.5 rounded" style={{ background: 'hsl(var(--accent))' }} />
-                  <span className="text-xs text-text-muted">Contracts/year</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-4 border-t border-dashed" style={{ borderColor: RISK_COLORS.high }} />
-                  <span className="text-xs text-text-muted">Avg risk score</span>
-                </div>
-              </div>
+            <div className="grid gap-2 grid-cols-2 md:grid-cols-5">
+              {(execData?.administrations || []).map((admin) => {
+                const hrColor = admin.high_risk_pct >= 10 ? 'text-risk-critical' :
+                  admin.high_risk_pct >= 8 ? 'text-risk-high' :
+                  admin.high_risk_pct >= 6 ? 'text-risk-medium' : 'text-risk-low'
+                const partyClass = admin.party === 'PAN' ? 'bg-blue-500/15 text-blue-400' :
+                  admin.party === 'PRI' ? 'bg-green-600/15 text-green-500' :
+                  'bg-rose-700/15 text-rose-400'
+                return (
+                  <button
+                    key={admin.name}
+                    onClick={() => navigate('/administrations')}
+                    className="flex flex-col gap-1 p-3 rounded-lg border border-border/30 hover:border-border/60 hover:bg-background-elevated/30 transition-all text-left"
+                  >
+                    <span className={cn('text-[9px] font-bold px-1.5 py-0.5 rounded font-mono self-start', partyClass)}>
+                      {admin.party}
+                    </span>
+                    <p className="text-sm font-bold text-text-primary leading-tight mt-0.5">{admin.name}</p>
+                    <p className="text-[9px] text-text-muted font-mono">{admin.years}</p>
+                    <div className="mt-1.5 space-y-1">
+                      <div>
+                        <p className="text-[9px] text-text-muted font-mono">Direct award</p>
+                        <p className="text-base font-black tabular-nums font-mono text-risk-medium">
+                          {admin.direct_award_pct.toFixed(0)}%
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] text-text-muted font-mono">High-risk rate</p>
+                        <p className={cn('text-base font-black tabular-nums font-mono', hrColor)}>
+                          {admin.high_risk_pct.toFixed(1)}%
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
             </div>
           )}
         </CardContent>
       </Card>
 
       {/* ================================================================ */}
-      {/* 5 KEY METRICS — Bold stat cards */}
+      {/* TOP FLAGGED VENDORS — Largest recipients with AI risk scores   */}
       {/* ================================================================ */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-        {/* Value at risk */}
-        <StatCard
-          loading={dashLoading}
-          label={t('valueFlagged')}
-          value={formatCompactMXN(valueAtRisk.total)}
-          detail={t('valueFlaggedDetail', { pct: valueAtRisk.pct.toFixed(1) })}
-          color="text-risk-critical"
-          borderColor="border-risk-critical/30"
-          onClick={() => navigate('/contracts?risk_level=critical')}
-        />
-        {/* High-risk rate */}
-        <StatCard
-          loading={dashLoading}
-          label={t('contractsShowingRisk')}
-          value={`${highRiskPct.toFixed(1)}%`}
-          detail={t('contractsFlaggedDetail', { num: formatNumber(highRiskContracts) })}
-          sublabel={t('oecdBenchmark')}
-          color="text-risk-high"
-          borderColor="border-risk-high/30"
-          onClick={() => navigate('/contracts?risk_level=high')}
-        />
-        {/* Direct awards */}
-        <StatCard
-          loading={dashLoading}
-          label={t('directAwardRate')}
-          value={`${(overview?.direct_award_pct || 0).toFixed(1)}%`}
-          detail={t('noCompetition')}
-          sublabel={t('oecdDirectAward')}
-          color="text-risk-medium"
-          borderColor="border-risk-medium/30"
-          onClick={() => navigate('/contracts?is_direct_award=true')}
-        />
-        {/* Single bidder */}
-        <StatCard
-          loading={dashLoading}
-          label={t('singleBidRate')}
-          value={`${(overview?.single_bid_pct || 0).toFixed(1)}%`}
-          detail={t('ofContracts')}
-          sublabel={t('oecdSingleBid')}
-          color="text-risk-high"
-          borderColor="border-risk-high/30"
-          onClick={() => navigate('/contracts?is_single_bid=true')}
-        />
-        {/* Model accuracy */}
-        <StatCard
-          loading={execLoading}
-          label={<>{t('detectionAccuracy')} <InfoTooltip termKey="aucRoc" size={11} /></>}
-          value={`${modelAuc.toFixed(3)}`}
-          detail={t('statisticalFramework')}
-          color="text-accent"
-          borderColor="border-accent/30"
-          onClick={() => navigate('/model')}
-        />
-      </div>
+      <Card className="border-border/40">
+        <CardContent className="pt-5 pb-4">
+          <div className="flex items-center justify-between mb-1">
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <Target className="h-4 w-4 text-risk-critical" />
+                <h2 className="text-base font-bold text-text-primary">Top Vendors by Contract Value</h2>
+              </div>
+              <p className="text-xs text-text-muted">Largest recipients — with AI risk scores</p>
+            </div>
+            <button
+              onClick={() => navigate('/network')}
+              className="text-xs text-accent flex items-center gap-1"
+            >
+              Vendor network <ArrowUpRight className="h-3 w-3" />
+            </button>
+          </div>
+          {execLoading ? (
+            <div className="space-y-2 mt-3">
+              {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-8" />)}
+            </div>
+          ) : (
+            <div className="mt-3 space-y-0.5">
+              {(execData?.top_vendors || []).map((vendor, i) => {
+                const riskPct = vendor.avg_risk * 100
+                const riskColor = vendor.avg_risk >= 0.50 ? 'text-risk-critical' :
+                  vendor.avg_risk >= 0.30 ? 'text-risk-high' :
+                  vendor.avg_risk >= 0.10 ? 'text-risk-medium' : 'text-risk-low'
+                const riskBg = vendor.avg_risk >= 0.50 ? 'bg-risk-critical' :
+                  vendor.avg_risk >= 0.30 ? 'bg-risk-high' :
+                  vendor.avg_risk >= 0.10 ? 'bg-risk-medium' : 'bg-risk-low'
+                return (
+                  <button
+                    key={vendor.id}
+                    onClick={() => navigate(`/vendors/${vendor.id}`)}
+                    className="flex items-center gap-2 w-full py-2 px-2 rounded hover:bg-background-elevated/30 transition-colors text-left group"
+                  >
+                    <span className="text-xs text-text-muted font-mono w-4 flex-shrink-0">{i + 1}</span>
+                    <span className="text-sm text-text-secondary font-medium flex-1 truncate group-hover:text-text-primary transition-colors">
+                      {toTitleCase(vendor.name)}
+                    </span>
+                    <span className="text-xs tabular-nums font-mono text-text-muted w-[72px] text-right flex-shrink-0">
+                      {vendor.value_billions.toFixed(1)}B MXN
+                    </span>
+                    <span className="text-xs tabular-nums font-mono text-text-muted w-[52px] text-right flex-shrink-0">
+                      {formatNumber(vendor.contracts)}
+                    </span>
+                    <div className="w-[68px] flex items-center gap-1 flex-shrink-0">
+                      <div className="flex-1 h-1.5 rounded-full bg-background-elevated/50 overflow-hidden">
+                        <div className={cn('h-full rounded-full', riskBg)} style={{ width: `${riskPct}%`, opacity: 0.7 }} />
+                      </div>
+                      <span className={cn('text-xs font-bold tabular-nums font-mono w-[30px] text-right', riskColor)}>
+                        {riskPct.toFixed(0)}%
+                      </span>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* ================================================================ */}
       {/* SECTORS + TRAJECTORY — 2-column grid */}
