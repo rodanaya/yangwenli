@@ -30,6 +30,7 @@ import {
   CartesianGrid,
   Area,
   Bar,
+  Line,
   ComposedChart,
   ReferenceLine,
   ReferenceArea,
