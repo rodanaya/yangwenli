@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 /* Yang Wen-li Theme — Intelligence Platform */
 @theme {
