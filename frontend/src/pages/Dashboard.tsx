@@ -78,7 +78,12 @@ export function Dashboard() {
     staleTime: 5 * 60 * 1000,
   })
 
-  // API call 5: (money-flow removed — using sectorData instead, which is pre-loaded)
+  // API call 5: Money flow — top institution→vendor flows (30ms, uses precomputed table)
+  const { data: moneyFlowData } = useQuery({
+    queryKey: ['analysis', 'money-flow', 'dashboard'],
+    queryFn: () => analysisApi.getMoneyFlow(),
+    staleTime: 10 * 60 * 1000,
+  })
 
   // API call 6: December spike analysis
   const { data: decemberSpike } = useQuery({
@@ -143,6 +148,14 @@ export function Dashboard() {
         contracts: d.contracts,
       }))
   }, [fastDashboard])
+
+  // Top 3 money flows for dashboard teaser
+  const topFlows = useMemo(() => {
+    if (!moneyFlowData?.flows) return []
+    return [...moneyFlowData.flows]
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 3)
+  }, [moneyFlowData])
 
   // Ground truth cases from executive API
   const corruptionCases = useMemo(() => {
@@ -339,38 +352,59 @@ export function Dashboard() {
           </button>
         </div>
 
-        {/* Competition illusion */}
-        <div className="rounded-lg border border-risk-high/20 bg-risk-high/5 px-5 py-5">
-          <div className="flex items-center gap-2 mb-3">
-            <Crosshair className="h-4 w-4 text-risk-high" />
-            <span className="text-xs font-bold tracking-wider uppercase text-risk-high font-mono">
-              The Competition Illusion
-            </span>
-          </div>
-          <p className="text-4xl font-black text-text-primary tabular-nums font-mono mb-1">
-            {dashLoading ? '—' : `${(overview?.single_bid_pct || 0).toFixed(0)}%`}
-          </p>
-          <p className="text-sm text-text-secondary mb-3">
-            of "competitive" tenders had only one bidder
-          </p>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="flex-1 h-2 rounded-full bg-background-elevated/50 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-risk-high/60"
-                style={{ width: `${overview?.single_bid_pct || 0}%` }}
-              />
+        {/* Where the Money Goes */}
+        <div className="rounded-lg border border-border/40 bg-surface-card/30 px-5 py-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <ArrowRight className="h-4 w-4 text-accent" />
+              <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
+                Where the Money Goes
+              </span>
             </div>
-            <span className="text-xs text-text-muted font-mono flex-shrink-0">{(overview?.single_bid_pct || 0).toFixed(1)}%</span>
+            <button
+              onClick={() => navigate('/categories')}
+              className="text-xs text-accent flex items-center gap-1"
+            >
+              Full breakdown <ArrowUpRight className="h-3 w-3" />
+            </button>
           </div>
-          <p className="text-xs text-text-muted leading-relaxed">
-            Plus {dashLoading ? '—' : `${(overview?.direct_award_pct || 0).toFixed(0)}%`} of all contracts skip competition entirely via direct award. Real competition happens in a minority of procurement.
-          </p>
-          <button
-            onClick={() => navigate('/contracts?is_single_bid=true')}
-            className="mt-2 text-xs text-accent flex items-center gap-1"
-          >
-            Explore single-bid contracts <ArrowUpRight className="h-3 w-3" />
-          </button>
+          <p className="text-xs text-text-muted mb-3">Top institution → vendor flows</p>
+          {!moneyFlowData ? (
+            <div className="space-y-2">
+              {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-9" />)}
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {topFlows.map((flow, i) => {
+                const riskColor =
+                  (flow.avg_risk ?? 0) >= 0.50 ? 'text-risk-critical' :
+                  (flow.avg_risk ?? 0) >= 0.30 ? 'text-risk-high' :
+                  (flow.avg_risk ?? 0) >= 0.10 ? 'text-risk-medium' :
+                  'text-risk-low'
+                return (
+                  <div key={i} className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-background-elevated/30 transition-colors">
+                    <span className="text-xs text-text-muted font-mono w-4 flex-shrink-0">{i + 1}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-text-secondary truncate">
+                        {toTitleCase(flow.source_name)}
+                      </p>
+                      <p className="text-xs text-text-muted truncate">→ {toTitleCase(flow.target_name)}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-xs tabular-nums font-mono text-text-secondary font-semibold">
+                        {formatCompactMXN(flow.value)}
+                      </p>
+                      {flow.avg_risk != null && (
+                        <p className={cn('text-[10px] font-bold tabular-nums font-mono', riskColor)}>
+                          {(flow.avg_risk * 100).toFixed(0)}% risk
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       </div>
 
