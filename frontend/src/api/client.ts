@@ -586,6 +586,22 @@ export const analysisApi = {
     const { data } = await api.get<ExecutiveSummaryResponse>('/executive/summary')
     return data
   },
+
+  /**
+   * Get December spike analysis — average spike ratio vs. average month
+   */
+  async getDecemberSpike(startYear = 2015, endYear = 2024): Promise<{
+    years: Array<{ year: number; spike_ratio: number | null; is_significant: boolean }>
+    average_spike_ratio: number
+    years_with_significant_spike: number
+    total_years_analyzed: number
+    description: string
+  }> {
+    const { data } = await api.get(
+      `/analysis/december-spike-analysis?start_year=${startYear}&end_year=${endYear}`
+    )
+    return data
+  },
 }
 
 // ============================================================================

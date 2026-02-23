@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
-import { analysisApi, investigationApi } from '@/api/client'
+import { analysisApi } from '@/api/client'
 import type { ExecutiveCaseDetail } from '@/api/types'
 import {
   ArrowRight,
@@ -20,12 +20,7 @@ import {
   Zap,
   TrendingDown,
   Scale,
-  BookOpen,
-  AlertTriangle,
-  Building2,
   FileSearch,
-  Users,
-  Gavel,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -86,11 +81,18 @@ export function Dashboard() {
     staleTime: 5 * 60 * 1000,
   })
 
-  // API call 5: Investigation summary
-  const { data: investigationSummary } = useQuery({
-    queryKey: ['investigation', 'dashboard-summary'],
-    queryFn: () => investigationApi.getDashboardSummary(),
-    staleTime: 5 * 60 * 1000,
+  // API call 5: Money flow data
+  const { data: moneyFlowData } = useQuery({
+    queryKey: ['analysis', 'money-flow', 'dashboard'],
+    queryFn: () => analysisApi.getMoneyFlow(),
+    staleTime: 10 * 60 * 1000,
+  })
+
+  // API call 6: December spike analysis
+  const { data: decemberSpike } = useQuery({
+    queryKey: ['analysis', 'december-spike'],
+    queryFn: () => analysisApi.getDecemberSpike(),
+    staleTime: 10 * 60 * 1000,
   })
 
   const overview = fastDashboard?.overview
@@ -153,6 +155,14 @@ export function Dashboard() {
     return execData.ground_truth.case_details
   }, [execData])
 
+  // Top 5 money flows sorted by value
+  const topFlows = useMemo(() => {
+    if (!moneyFlowData?.flows) return []
+    return [...moneyFlowData.flows]
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5)
+  }, [moneyFlowData])
+
   const groundTruth = execData?.ground_truth
   const modelAuc = execData?.model?.auc ?? 0.960
   const highRiskContracts = overview?.high_risk_contracts || 0
@@ -209,6 +219,147 @@ export function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* ================================================================ */}
+      {/* THREE SYSTEMIC PATTERNS — AI-found structural failures          */}
+      {/* ================================================================ */}
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <Radar className="h-4 w-4 text-risk-high" />
+          <span className="text-xs font-bold tracking-wider uppercase text-risk-high font-mono">
+            AI Intelligence · 23 Years of Data
+          </span>
+        </div>
+        <h2 className="text-xl font-black text-text-primary mb-1">
+          Three Structural Failures — In Every Administration
+        </h2>
+        <p className="text-sm text-text-muted mb-4">
+          Our model analyzed 3.1M contracts across 5 governments. These patterns never stopped.
+        </p>
+        <div className="grid gap-3 md:grid-cols-3">
+          {/* Direct Awards */}
+          <button
+            onClick={() => navigate('/contracts?is_direct_award=true')}
+            className="flex flex-col gap-3 p-4 rounded-lg border border-risk-high/20 bg-risk-high/5 hover:border-risk-high/40 hover:bg-risk-high/10 transition-all text-left group"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🚨</span>
+              <span className="text-xs font-bold tracking-wider uppercase text-risk-high font-mono">Direct Awards</span>
+            </div>
+            <div>
+              <p className="text-3xl font-black text-text-primary tabular-nums font-mono">
+                {overview ? `${(overview.direct_award_pct || 0).toFixed(0)}%` : '—'}
+              </p>
+              <p className="text-sm text-text-secondary mt-1">of contracts skip competition entirely</p>
+              <p className="text-xs text-text-muted mt-1 font-mono">OECD benchmark: 20–30%</p>
+            </div>
+            <ArrowRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" />
+          </button>
+
+          {/* Single Bidder */}
+          <button
+            onClick={() => navigate('/contracts?is_single_bid=true')}
+            className="flex flex-col gap-3 p-4 rounded-lg border border-risk-critical/20 bg-risk-critical/5 hover:border-risk-critical/40 hover:bg-risk-critical/10 transition-all text-left group"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🔴</span>
+              <span className="text-xs font-bold tracking-wider uppercase text-risk-critical font-mono">Single Bidder</span>
+            </div>
+            <div>
+              <p className="text-3xl font-black text-text-primary tabular-nums font-mono">
+                {overview ? `${(overview.single_bid_pct || 0).toFixed(0)}%` : '—'}
+              </p>
+              <p className="text-sm text-text-secondary mt-1">of "competitive" tenders had only one bidder</p>
+              <p className="text-xs text-text-muted mt-1 font-mono">Effectively no competition</p>
+            </div>
+            <ArrowRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" />
+          </button>
+
+          {/* December Rush */}
+          <button
+            onClick={() => navigate('/administrations')}
+            className="flex flex-col gap-3 p-4 rounded-lg border border-risk-medium/20 bg-risk-medium/5 hover:border-risk-medium/40 hover:bg-risk-medium/10 transition-all text-left group"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">📅</span>
+              <span className="text-xs font-bold tracking-wider uppercase text-risk-medium font-mono">December Rush</span>
+            </div>
+            <div>
+              <p className="text-3xl font-black text-text-primary tabular-nums font-mono">
+                {decemberSpike ? `${decemberSpike.average_spike_ratio.toFixed(1)}x` : '—'}
+              </p>
+              <p className="text-sm text-text-secondary mt-1">December spending vs. average month</p>
+              <p className="text-xs text-text-muted mt-1 font-mono">
+                {decemberSpike
+                  ? `Significant in ${decemberSpike.years_with_significant_spike} of ${decemberSpike.total_years_analyzed} years`
+                  : 'Year-end budget dump pattern'}
+              </p>
+            </div>
+            <ArrowRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" />
+          </button>
+        </div>
+      </div>
+
+      {/* ================================================================ */}
+      {/* WHERE THE MONEY GOES — Top 5 institution→vendor flows           */}
+      {/* ================================================================ */}
+      <Card className="border-border/40">
+        <CardContent className="pt-5 pb-4">
+          <div className="flex items-center justify-between mb-1">
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <ArrowRight className="h-4 w-4 text-accent" />
+                <h2 className="text-base font-bold text-text-primary">Where the Money Goes</h2>
+              </div>
+              <p className="text-xs text-text-muted">
+                Top institution → vendor flows by total contract value
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/categories')}
+              className="text-xs text-accent hover:text-accent flex items-center gap-1"
+            >
+              Full breakdown <ArrowUpRight className="h-3 w-3" />
+            </button>
+          </div>
+
+          {!moneyFlowData ? (
+            <div className="space-y-2 mt-3">
+              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-9" />)}
+            </div>
+          ) : (
+            <div className="mt-3 space-y-1">
+              {topFlows.map((flow, i) => {
+                const riskColor =
+                  (flow.avg_risk ?? 0) >= 0.50 ? 'text-risk-critical' :
+                  (flow.avg_risk ?? 0) >= 0.30 ? 'text-risk-high' :
+                  (flow.avg_risk ?? 0) >= 0.10 ? 'text-risk-medium' :
+                  'text-risk-low'
+                return (
+                  <div key={i} className="flex items-center gap-3 py-1.5 px-2 rounded hover:bg-background-elevated/30 transition-colors">
+                    <span className="text-xs text-text-muted font-mono w-4">{i + 1}</span>
+                    <span className="text-sm text-text-secondary truncate w-[140px] font-medium">
+                      {toTitleCase(flow.source_name)}
+                    </span>
+                    <ArrowRight className="h-3 w-3 text-text-muted flex-shrink-0" />
+                    <span className="text-sm text-text-secondary truncate flex-1 font-medium">
+                      {toTitleCase(flow.target_name)}
+                    </span>
+                    <span className="text-xs tabular-nums font-mono text-text-muted">
+                      {formatCompactMXN(flow.value)}
+                    </span>
+                    {flow.avg_risk != null && (
+                      <span className={cn('text-xs font-bold tabular-nums font-mono', riskColor)}>
+                        {(flow.avg_risk * 100).toFixed(0)}%
+                      </span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* ================================================================ */}
       {/* 5 KEY METRICS — Bold stat cards */}
@@ -270,25 +421,6 @@ export function Dashboard() {
       </div>
 
       {/* ================================================================ */}
-      {/* RISK DISTRIBUTION — Full-width stacked bar */}
-      {/* ================================================================ */}
-      <Card className="border-border/40">
-        <CardContent className="py-4 px-5">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-bold text-text-primary">{t('riskDistribution')}</h2>
-            <span className="text-xs text-text-muted">
-              {t('riskDistLabel', { total: formatNumber(overview?.total_contracts || 0) })}
-            </span>
-          </div>
-          {dashLoading || !riskDist ? (
-            <Skeleton className="h-10 w-full" />
-          ) : (
-            <RiskDistributionBar data={riskDist} />
-          )}
-        </CardContent>
-      </Card>
-
-      {/* ================================================================ */}
       {/* SECTORS + TRAJECTORY — 2-column grid */}
       {/* ================================================================ */}
       <div className="grid gap-4 lg:grid-cols-5">
@@ -334,88 +466,23 @@ export function Dashboard() {
       </div>
 
       {/* ================================================================ */}
-      {/* TOP INSTITUTIONS + VENDORS — 2-column tables */}
+      {/* RISK DISTRIBUTION — Full-width stacked bar */}
       {/* ================================================================ */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Top Institutions */}
-        <Card className="border-border/40">
-          <CardContent className="pt-5 pb-3">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-risk-critical" />
-                <h2 className="text-base font-bold text-text-primary">{t('topInstitutionsRisk')}</h2>
-              </div>
-            </div>
-            <p className="text-xs text-text-muted mb-3">{t('topInstitutionsDesc')}</p>
-            {execLoading ? (
-              <div className="space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-8" />)}</div>
-            ) : execData?.top_institutions ? (
-              <div className="space-y-1">
-                {execData.top_institutions.slice(0, 5).map((inst, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-3 py-1.5 px-2 rounded hover:bg-background-elevated/30 transition-colors"
-                  >
-                    <span className="text-xs font-bold text-text-muted w-5 font-mono">{i + 1}</span>
-                    <span className="text-sm text-text-secondary truncate flex-1 font-medium">
-                      {toTitleCase(inst.name)}
-                    </span>
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <span className="text-xs text-text-muted tabular-nums font-mono">
-                        {formatNumber(inst.contracts)}
-                      </span>
-                      <RiskBadge value={inst.avg_risk} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
-
-        {/* Top Vendors */}
-        <Card className="border-border/40">
-          <CardContent className="pt-5 pb-3">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-risk-high" />
-                <h2 className="text-base font-bold text-text-primary">{t('topVendorsRisk')}</h2>
-              </div>
-              <button
-                onClick={() => navigate('/vendors')}
-                className="text-xs text-accent hover:text-accent flex items-center gap-1"
-              >
-                {t('fullAnalysis')} <ArrowUpRight className="h-3 w-3" />
-              </button>
-            </div>
-            <p className="text-xs text-text-muted mb-3">{t('topVendorsDesc')}</p>
-            {execLoading ? (
-              <div className="space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-8" />)}</div>
-            ) : execData?.top_vendors ? (
-              <div className="space-y-1">
-                {execData.top_vendors.slice(0, 5).map((vendor, i) => (
-                  <button
-                    key={vendor.id}
-                    className="flex items-center gap-3 py-1.5 px-2 rounded hover:bg-background-elevated/30 transition-colors w-full text-left"
-                    onClick={() => navigate(`/vendors/${vendor.id}`)}
-                  >
-                    <span className="text-xs font-bold text-text-muted w-5 font-mono">{i + 1}</span>
-                    <span className="text-sm text-text-secondary truncate flex-1 font-medium">
-                      {toTitleCase(vendor.name)}
-                    </span>
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <span className="text-xs text-text-muted tabular-nums font-mono">
-                        {vendor.value_billions.toFixed(1)}B
-                      </span>
-                      <RiskBadge value={vendor.avg_risk} />
-                    </div>
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
-      </div>
+      <Card className="border-border/40">
+        <CardContent className="py-4 px-5">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-bold text-text-primary">{t('riskDistribution')}</h2>
+            <span className="text-xs text-text-muted">
+              {t('riskDistLabel', { total: formatNumber(overview?.total_contracts || 0) })}
+            </span>
+          </div>
+          {dashLoading || !riskDist ? (
+            <Skeleton className="h-10 w-full" />
+          ) : (
+            <RiskDistributionBar data={riskDist} />
+          )}
+        </CardContent>
+      </Card>
 
       {/* ================================================================ */}
       {/* GROUND TRUTH — Validated against real corruption */}
@@ -466,164 +533,6 @@ export function Dashboard() {
           </div>
         </CardContent>
       </Card>
-
-      {/* ================================================================ */}
-      {/* RED FLAGS + INVESTIGATION — 2-column */}
-      {/* ================================================================ */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Red Flag Patterns */}
-        <Card className="border-border/40">
-          <CardContent className="pt-5 pb-3">
-            <div className="flex items-center gap-2 mb-3">
-              <AlertTriangle className="h-4 w-4 text-risk-high" />
-              <h2 className="text-base font-bold text-text-primary">{t('redFlagPatterns')}</h2>
-            </div>
-            <p className="text-xs text-text-muted mb-4">{t('redFlagDesc')}</p>
-            {!patternData ? (
-              <div className="space-y-3">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-8" />)}</div>
-            ) : (
-              <div className="space-y-2">
-                <PatternRow label={t('criticalRisk')} count={patternData.counts.critical} color="text-risk-critical" />
-                <PatternRow label={t('priceOutliers')} count={patternData.counts.price_outliers} color="text-risk-high" />
-                <PatternRow label={t('decemberRush')} count={patternData.counts.december_rush} color="text-risk-medium" />
-                <PatternRow label={t('splitContracts')} count={patternData.counts.split_contracts} color="text-risk-medium" />
-                <PatternRow label={t('coBidding')} count={patternData.counts.co_bidding} color="text-risk-high" />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Investigation Leads */}
-        <Card className="border-border/40">
-          <CardContent className="pt-5 pb-3">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <FileSearch className="h-4 w-4 text-accent" />
-                <h2 className="text-base font-bold text-text-primary">{t('investigationLeads')}</h2>
-              </div>
-              <button
-                onClick={() => navigate('/investigation')}
-                className="text-xs text-accent hover:text-accent flex items-center gap-1"
-              >
-                {t('fullAnalysis')} <ArrowUpRight className="h-3 w-3" />
-              </button>
-            </div>
-            {!investigationSummary ? (
-              <div className="space-y-3">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-8" />)}</div>
-            ) : (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <InvestigationStat
-                    label={t('mlCases')}
-                    value={investigationSummary.total_cases}
-                    sub={t('generated')}
-                  />
-                  <InvestigationStat
-                    label={t('corroborated')}
-                    value={investigationSummary.corroborated_cases}
-                    sub={t('confirmed')}
-                  />
-                  <InvestigationStat
-                    label={t('hitRate')}
-                    value={investigationSummary.hit_rate ? `${(investigationSummary.hit_rate.rate * 100).toFixed(0)}%` : '—'}
-                    sub={`${investigationSummary.hit_rate?.checked || 0} checked`}
-                  />
-                  <InvestigationStat
-                    label={t('valueAtRiskLabel')}
-                    value={formatCompactMXN(investigationSummary.total_value_at_risk || 0)}
-                    sub={`${investigationSummary.pending_cases} ${t('pendingReview')}`}
-                  />
-                </div>
-                {/* Top corroborated cases */}
-                {investigationSummary.top_corroborated?.length > 0 && (
-                  <div className="border-t border-border/30 pt-3">
-                    <p className="text-xs font-bold tracking-wider uppercase text-text-muted mb-2">TOP CASES</p>
-                    {investigationSummary.top_corroborated.slice(0, 3).map((c, i) => (
-                      <div key={i} className="flex items-center gap-2 py-1">
-                        <span className="text-xs text-text-secondary truncate flex-1">{c.title}</span>
-                        <span className="text-xs text-text-muted tabular-nums font-mono">
-                          {formatCompactMXN(c.total_value_mxn || c.value || 0)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* ================================================================ */}
-      {/* THREE SYSTEMIC PATTERNS — recurring across all administrations */}
-      {/* ================================================================ */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <AlertTriangle className="h-4 w-4 text-risk-high" />
-          <h2 className="text-base font-bold text-text-primary">Three Patterns Our AI Found in Every Administration</h2>
-        </div>
-        <p className="text-xs text-text-muted mb-4">
-          These systemic red flags recur across all governments, all sectors, and all years — the structural fingerprint of Mexico's procurement risk.
-        </p>
-        <div className="grid gap-3 md:grid-cols-3">
-          {/* Direct Awards */}
-          <button
-            onClick={() => navigate('/contracts?is_direct_award=true')}
-            className="flex flex-col gap-3 p-4 rounded-lg border border-risk-high/20 bg-risk-high/5 hover:border-risk-high/40 hover:bg-risk-high/10 transition-all text-left group"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🚨</span>
-              <span className="text-xs font-bold tracking-wider uppercase text-risk-high font-mono">Direct Awards</span>
-            </div>
-            <div>
-              <p className="text-3xl font-black text-text-primary tabular-nums font-mono">
-                {overview ? `${(overview.direct_award_pct || 0).toFixed(0)}%` : '—'}
-              </p>
-              <p className="text-sm text-text-secondary mt-1">of contracts skip competition entirely</p>
-              <p className="text-xs text-text-muted mt-1 font-mono">OECD benchmark: 20–30%</p>
-            </div>
-            <ArrowRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" />
-          </button>
-
-          {/* Single Bidder */}
-          <button
-            onClick={() => navigate('/contracts?is_single_bid=true')}
-            className="flex flex-col gap-3 p-4 rounded-lg border border-risk-critical/20 bg-risk-critical/5 hover:border-risk-critical/40 hover:bg-risk-critical/10 transition-all text-left group"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🔴</span>
-              <span className="text-xs font-bold tracking-wider uppercase text-risk-critical font-mono">Single Bidder</span>
-            </div>
-            <div>
-              <p className="text-3xl font-black text-text-primary tabular-nums font-mono">
-                {overview ? `${(overview.single_bid_pct || 0).toFixed(0)}%` : '—'}
-              </p>
-              <p className="text-sm text-text-secondary mt-1">of "competitive" tenders had only one bidder</p>
-              <p className="text-xs text-text-muted mt-1 font-mono">Effectively no competition</p>
-            </div>
-            <ArrowRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" />
-          </button>
-
-          {/* December Rush */}
-          <button
-            onClick={() => navigate('/administrations')}
-            className="flex flex-col gap-3 p-4 rounded-lg border border-risk-medium/20 bg-risk-medium/5 hover:border-risk-medium/40 hover:bg-risk-medium/10 transition-all text-left group"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">📅</span>
-              <span className="text-xs font-bold tracking-wider uppercase text-risk-medium font-mono">December Rush</span>
-            </div>
-            <div>
-              <p className="text-3xl font-black text-text-primary tabular-nums font-mono">
-                {patternData ? `${((patternData.counts.december_rush / (overview?.total_contracts || 1)) * 100).toFixed(0)}%` : '~18%'}
-              </p>
-              <p className="text-sm text-text-secondary mt-1">of contracts awarded in December</p>
-              <p className="text-xs text-text-muted mt-1 font-mono">Year-end budget dump pattern</p>
-            </div>
-            <ArrowRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" />
-          </button>
-        </div>
-      </div>
 
       {/* ================================================================ */}
       {/* START INVESTIGATING — 3 action cards */}
@@ -1160,53 +1069,6 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
           <span className="text-xs text-text-secondary">Administrations</span>
         </div>
       </div>
-    </div>
-  )
-})
-
-// ============================================================================
-// PATTERN ROW — Single red flag pattern stat
-// ============================================================================
-
-const PatternRow = memo(function PatternRow({
-  label,
-  count,
-  color,
-}: {
-  label: string
-  count: number
-  color: string
-}) {
-  return (
-    <div className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-background-elevated/30 transition-colors">
-      <span className="text-sm text-text-secondary font-medium">{label}</span>
-      <span className={cn('text-lg font-black tabular-nums font-mono', color)}>
-        {formatNumber(count)}
-      </span>
-    </div>
-  )
-})
-
-// ============================================================================
-// INVESTIGATION STAT — Mini stat box
-// ============================================================================
-
-const InvestigationStat = memo(function InvestigationStat({
-  label,
-  value,
-  sub,
-}: {
-  label: string
-  value: number | string
-  sub: string
-}) {
-  return (
-    <div className="bg-background-elevated/30 rounded-lg p-3">
-      <p className="text-xs font-bold tracking-wider uppercase text-text-secondary mb-1">{label}</p>
-      <p className="text-xl font-black text-text-primary tabular-nums font-mono">
-        {typeof value === 'number' ? formatNumber(value) : value}
-      </p>
-      <p className="text-xs text-text-muted mt-0.5">{sub}</p>
     </div>
   )
 })

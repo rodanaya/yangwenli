@@ -94,5 +94,13 @@
   "oecdDirectAward": "OECD benchmark: 20-30%",
   "oecdSingleBid": "OECD alert: >15%",
   "oecdHighRisk": "OECD expected: 2-15%",
-  "sector": "Sector"
+  "sector": "Sector",
+  "whereTheMoneyGoes": "Where the Money Goes",
+  "whereTheMoneyGoesDesc": "Top institution → vendor flows by total contract value",
+  "whereTheMoneyGoesLink": "Full breakdown",
+  "systemicPatternsLabel": "AI Intelligence · 23 Years of Data",
+  "systemicPatternsTitle": "Three Structural Failures — In Every Administration",
+  "systemicPatternsDesc": "Our model analyzed 3.1M contracts across 5 governments. These patterns never stopped.",
+  "decemberSpikeRatio": "December spending vs. average month",
+  "decemberSpikeYears": "Significant in {{significant}} of {{total}} years"
 }

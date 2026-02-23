@@ -94,5 +94,13 @@
   "oecdDirectAward": "Referencia OCDE: 20-30%",
   "oecdSingleBid": "Alerta OCDE: >15%",
   "oecdHighRisk": "OCDE esperado: 2-15%",
-  "sector": "Sector"
+  "sector": "Sector",
+  "whereTheMoneyGoes": "A Dónde Va el Dinero",
+  "whereTheMoneyGoesDesc": "Principales flujos institución → proveedor por valor",
+  "whereTheMoneyGoesLink": "Ver desglose completo",
+  "systemicPatternsLabel": "Inteligencia IA · 23 Años de Datos",
+  "systemicPatternsTitle": "Tres Fallas Estructurales — En Cada Administración",
+  "systemicPatternsDesc": "Nuestro modelo analizó 3.1M contratos en 5 gobiernos. Estos patrones nunca cesaron.",
+  "decemberSpikeRatio": "Gasto en diciembre vs. mes promedio",
+  "decemberSpikeYears": "Significativo en {{significant}} de {{total}} años"
 }
