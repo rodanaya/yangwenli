@@ -7,7 +7,7 @@
  * Fully internationalized (ES/EN) via react-i18next 'executive' namespace.
  */
 
-import { useMemo } from 'react'
+import { useMemo, useRef, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation, Trans } from 'react-i18next'
@@ -214,6 +214,536 @@ function KeyFindings() {
 }
 
 // ============================================================================
+// GRAPHIC 1: Corruption Funnel
+// ============================================================================
+
+function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } },
+      { threshold: 0.1 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  const { risk } = data
+  const layers = [
+    {
+      label: 'All Federal Contracts',
+      sub: '2002–2025',
+      value: '3.1M',
+      pct: 100,
+      color: 'rgba(148,163,184,0.25)',
+      border: 'rgba(148,163,184,0.4)',
+      text: '#94a3b8',
+    },
+    {
+      label: 'Medium+ Risk',
+      sub: 'Statistical anomaly detected',
+      value: '17.5%',
+      pct: 72,
+      color: 'rgba(251,191,36,0.15)',
+      border: 'rgba(251,191,36,0.5)',
+      text: '#fbbf24',
+    },
+    {
+      label: 'High Risk',
+      sub: 'Priority investigation',
+      value: `${(risk.high_pct + risk.critical_pct).toFixed(1)}%`,
+      pct: 48,
+      color: 'rgba(251,146,60,0.18)',
+      border: 'rgba(251,146,60,0.6)',
+      text: '#fb923c',
+    },
+    {
+      label: 'Critical Risk',
+      sub: 'Immediate action required',
+      value: `${risk.critical_pct.toFixed(1)}%`,
+      pct: 28,
+      color: 'rgba(248,113,113,0.2)',
+      border: 'rgba(248,113,113,0.7)',
+      text: '#f87171',
+    },
+  ]
+
+  return (
+    <div ref={ref} className="my-8">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-4 text-center">
+        Risk Stratification — 3.1M Contracts
+      </p>
+      <div className="flex flex-col items-center gap-1">
+        {layers.map((layer, i) => {
+          const w = visible ? layer.pct : 0
+          return (
+            <div
+              key={layer.label}
+              style={{
+                width: `${w}%`,
+                transition: `width 800ms cubic-bezier(0.16,1,0.3,1) ${i * 120}ms`,
+                background: layer.color,
+                border: `1px solid ${layer.border}`,
+                borderRadius:
+                  i === layers.length - 1
+                    ? '0 0 6px 6px'
+                    : i === 0
+                      ? '6px 6px 0 0'
+                      : '0',
+              }}
+              className="relative px-4 py-2.5 min-w-[120px]"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold" style={{ color: layer.text }}>
+                    {layer.label}
+                  </p>
+                  <p className="text-[10px] text-text-muted font-mono">{layer.sub}</p>
+                </div>
+                <span
+                  className="text-lg font-black tabular-nums font-mono"
+                  style={{ color: layer.text }}
+                >
+                  {layer.value}
+                </span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+      {/* Funnel neck arrow */}
+      <div className="flex justify-center mt-1">
+        <div
+          style={{
+            width: `${visible ? 28 : 0}%`,
+            transition: 'width 800ms 480ms cubic-bezier(0.16,1,0.3,1)',
+            overflow: 'hidden',
+          }}
+        >
+          <div className="flex flex-col items-center">
+            <div
+              className="w-0 h-0"
+              style={{
+                borderLeft: '12px solid transparent',
+                borderRight: '12px solid transparent',
+                borderTop: '10px solid rgba(248,113,113,0.5)',
+              }}
+            />
+          </div>
+        </div>
+      </div>
+      <p className="text-center text-[10px] text-risk-critical font-mono mt-1">
+        {visible
+          ? `${risk.critical_pct.toFixed(1)}% · ${(178938).toLocaleString()} contracts · Immediate investigation`
+          : ''}
+      </p>
+    </div>
+  )
+}
+
+// ============================================================================
+// GRAPHIC 2: AI Detection Pipeline
+// ============================================================================
+
+function AIPipelineChart() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [step, setStep] = useState(-1)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          ;[0, 1, 2, 3, 4].forEach((i) => setTimeout(() => setStep(i), i * 220))
+          obs.disconnect()
+        }
+      },
+      { threshold: 0.2 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  const nodes = [
+    {
+      icon: '🗄️',
+      title: 'COMPRANET',
+      sub: '3.1M contracts',
+      detail: '2002–2025',
+      color: '#64748b',
+      bg: 'rgba(100,116,139,0.1)',
+      border: 'rgba(100,116,139,0.3)',
+    },
+    {
+      icon: '📐',
+      title: 'Z-SCORES',
+      sub: '16 features',
+      detail: 'per sector/year',
+      color: '#8b5cf6',
+      bg: 'rgba(139,92,246,0.1)',
+      border: 'rgba(139,92,246,0.3)',
+    },
+    {
+      icon: '📊',
+      title: 'MAHALANOBIS',
+      sub: 'Multivariate',
+      detail: 'anomaly distance',
+      color: '#3b82f6',
+      bg: 'rgba(59,130,246,0.1)',
+      border: 'rgba(59,130,246,0.3)',
+    },
+    {
+      icon: '🧠',
+      title: 'LOGISTIC REG.',
+      sub: '12 sub-models',
+      detail: 'AUC 0.960',
+      color: '#f59e0b',
+      bg: 'rgba(245,158,11,0.1)',
+      border: 'rgba(245,158,11,0.3)',
+    },
+    {
+      icon: '🚨',
+      title: 'RISK SCORE',
+      sub: '0 → 1.0',
+      detail: 'P(corrupt|x)',
+      color: '#f87171',
+      bg: 'rgba(248,113,113,0.12)',
+      border: 'rgba(248,113,113,0.5)',
+    },
+  ]
+
+  return (
+    <div ref={ref} className="my-6">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-4">
+        Detection Pipeline — v5.0 Model Architecture
+      </p>
+
+      {/* Pipeline nodes — horizontal scroll on mobile */}
+      <div className="flex items-stretch gap-0 overflow-x-auto pb-2">
+        {nodes.map((node, i) => (
+          <div key={node.title} className="flex items-center flex-shrink-0">
+            {/* Node box */}
+            <div
+              style={{
+                opacity: step >= i ? 1 : 0,
+                transform:
+                  step >= i ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.92)',
+                transition:
+                  'opacity 400ms ease, transform 400ms cubic-bezier(0.16,1,0.3,1)',
+                background: node.bg,
+                border: `1px solid ${node.border}`,
+                borderRadius: '8px',
+                minWidth: '96px',
+                padding: '10px 8px',
+                textAlign: 'center' as const,
+              }}
+            >
+              <div className="text-2xl mb-1">{node.icon}</div>
+              <p
+                className="text-[10px] font-black tracking-wider font-mono"
+                style={{ color: node.color }}
+              >
+                {node.title}
+              </p>
+              <p className="text-[11px] font-semibold text-text-primary mt-0.5">{node.sub}</p>
+              <p className="text-[9px] text-text-muted font-mono">{node.detail}</p>
+            </div>
+
+            {/* Arrow connector — not after last */}
+            {i < nodes.length - 1 && (
+              <div
+                style={{
+                  opacity: step >= i + 1 ? 1 : 0,
+                  transition: 'opacity 300ms ease',
+                  flexShrink: 0,
+                  width: '28px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <svg width="28" height="20" viewBox="0 0 28 20">
+                  <defs>
+                    <linearGradient id={`pipeGrad${i}`} x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor={nodes[i].color} stopOpacity={0.6} />
+                      <stop offset="100%" stopColor={nodes[i + 1].color} stopOpacity={0.9} />
+                    </linearGradient>
+                  </defs>
+                  <line
+                    x1="2"
+                    y1="10"
+                    x2="20"
+                    y2="10"
+                    stroke={`url(#pipeGrad${i})`}
+                    strokeWidth="1.5"
+                    strokeDasharray="3 2"
+                    style={{
+                      animation:
+                        step >= i + 1 ? 'dashFlow 1.2s linear infinite' : 'none',
+                    }}
+                  />
+                  <polygon
+                    points="20,6 27,10 20,14"
+                    fill={nodes[i + 1].color}
+                    opacity={0.8}
+                  />
+                </svg>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* PU learning note */}
+      <div
+        style={{
+          opacity: step >= 4 ? 1 : 0,
+          transform: step >= 4 ? 'translateY(0)' : 'translateY(8px)',
+          transition: 'opacity 400ms 200ms ease, transform 400ms 200ms ease',
+        }}
+        className="mt-3 flex items-center gap-2 px-3 py-2 rounded border border-border/20 bg-background-elevated/20"
+      >
+        <span className="text-[10px] font-mono text-text-muted">
+          ✦ PU-learning correction c=0.887 (Elkan &amp; Noto 2008) · Bootstrap 95% CI per
+          contract · Temporal split train≤2020 / test≥2021
+        </span>
+      </div>
+
+      {/* Keyframe for dashes */}
+      <style>{`
+        @keyframes dashFlow {
+          from { stroke-dashoffset: 10; }
+          to   { stroke-dashoffset: 0; }
+        }
+      `}</style>
+    </div>
+  )
+}
+
+// ============================================================================
+// GRAPHIC 3: Pattern Web SVG
+// ============================================================================
+
+function PatternWebDiagram() {
+  const ref = useRef<SVGSVGElement>(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } },
+      { threshold: 0.2 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  const cx = 200
+  const cy = 130
+  // Triangle vertices
+  const nodes = [
+    {
+      x: 200,
+      y: 30,
+      label: 'DIRECT AWARD',
+      sub: '71% of contracts',
+      color: '#fb923c',
+      id: 'da',
+    },
+    {
+      x: 70,
+      y: 210,
+      label: 'DECEMBER RUSH',
+      sub: '1.33× spike',
+      color: '#fbbf24',
+      id: 'dr',
+    },
+    {
+      x: 330,
+      y: 210,
+      label: 'CONCENTRATION',
+      sub: '7.9% at risk',
+      color: '#f87171',
+      id: 'vc',
+    },
+  ]
+  // Edges with labels
+  const edges = [
+    { from: 0, to: 1, label: 'no audit trail', labelPos: { x: 108, y: 128 } },
+    {
+      from: 1,
+      to: 2,
+      label: 'rushed spend → capture',
+      labelPos: { x: 200, y: 235 },
+    },
+    {
+      from: 2,
+      to: 0,
+      label: 'dominant vendors win direct',
+      labelPos: { x: 298, y: 128 },
+    },
+  ]
+
+  return (
+    <div className="flex justify-center my-6">
+      <svg
+        ref={ref}
+        viewBox="0 0 400 260"
+        className="w-full max-w-md"
+        style={{ overflow: 'visible' }}
+        aria-label="Pattern web diagram showing how direct award, December rush, and vendor concentration reinforce each other"
+      >
+        {/* Connecting lines */}
+        {edges.map((edge, i) => {
+          const from = nodes[edge.from]
+          const to = nodes[edge.to]
+          return (
+            <g key={i}>
+              <line
+                x1={from.x}
+                y1={from.y}
+                x2={to.x}
+                y2={to.y}
+                stroke="rgba(255,255,255,0.12)"
+                strokeWidth="1.5"
+                strokeDasharray="4 3"
+                style={{
+                  opacity: visible ? 1 : 0,
+                  transition: `opacity 600ms ${i * 150 + 300}ms ease`,
+                  animation: visible ? 'dashFlow 2s linear infinite' : 'none',
+                }}
+              />
+              {/* Edge label */}
+              <text
+                x={edge.labelPos.x}
+                y={edge.labelPos.y}
+                textAnchor="middle"
+                fontSize="7"
+                fill="rgba(148,163,184,0.7)"
+                fontFamily="monospace"
+                style={{
+                  opacity: visible ? 1 : 0,
+                  transition: `opacity 400ms ${i * 150 + 600}ms ease`,
+                }}
+              >
+                {edge.label}
+              </text>
+            </g>
+          )
+        })}
+
+        {/* Center node */}
+        <g>
+          <circle
+            cx={cx}
+            cy={cy}
+            r={visible ? 28 : 0}
+            fill="rgba(248,113,113,0.08)"
+            stroke="rgba(248,113,113,0.3)"
+            strokeWidth="1"
+            style={{ transition: 'r 500ms 800ms cubic-bezier(0.16,1,0.3,1)' }}
+          />
+          <text
+            x={cx}
+            y={cy - 6}
+            textAnchor="middle"
+            fontSize="9"
+            fill="#f87171"
+            fontFamily="monospace"
+            fontWeight="bold"
+            style={{
+              opacity: visible ? 1 : 0,
+              transition: 'opacity 400ms 900ms ease',
+            }}
+          >
+            RISK
+          </text>
+          <text
+            x={cx}
+            y={cy + 7}
+            textAnchor="middle"
+            fontSize="9"
+            fill="#f87171"
+            fontFamily="monospace"
+            fontWeight="bold"
+            style={{
+              opacity: visible ? 1 : 0,
+              transition: 'opacity 400ms 950ms ease',
+            }}
+          >
+            AMPLIFIED
+          </text>
+        </g>
+
+        {/* Outer nodes */}
+        {nodes.map((node, i) => (
+          <g key={node.id}>
+            {/* Pulse ring */}
+            <circle
+              cx={node.x}
+              cy={node.y}
+              r={visible ? 34 : 0}
+              fill="none"
+              stroke={node.color}
+              strokeWidth="0.5"
+              opacity={0.2}
+              style={{
+                transition: `r 600ms ${i * 100 + 200}ms cubic-bezier(0.16,1,0.3,1)`,
+              }}
+            />
+            {/* Main circle */}
+            <circle
+              cx={node.x}
+              cy={node.y}
+              r={visible ? 26 : 0}
+              fill={`${node.color}15`}
+              stroke={node.color}
+              strokeWidth="1.5"
+              style={{
+                transition: `r 500ms ${i * 100 + 200}ms cubic-bezier(0.16,1,0.3,1)`,
+              }}
+            />
+            {/* Label */}
+            <text
+              x={node.x}
+              y={node.y - 4}
+              textAnchor="middle"
+              fontSize="7.5"
+              fill={node.color}
+              fontFamily="monospace"
+              fontWeight="bold"
+              style={{
+                opacity: visible ? 1 : 0,
+                transition: `opacity 400ms ${i * 100 + 500}ms ease`,
+              }}
+            >
+              {node.label}
+            </text>
+            <text
+              x={node.x}
+              y={node.y + 8}
+              textAnchor="middle"
+              fontSize="7"
+              fill="rgba(255,255,255,0.7)"
+              fontFamily="monospace"
+              style={{
+                opacity: visible ? 1 : 0,
+                transition: `opacity 400ms ${i * 100 + 600}ms ease`,
+              }}
+            >
+              {node.sub}
+            </text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+// ============================================================================
 // S1: The Threat Assessment
 // ============================================================================
 
@@ -244,6 +774,8 @@ function SectionThreat({ data }: { data: ExecutiveSummaryResponse }) {
           components={{ bold: <strong className="text-text-primary" /> }}
         />
       </p>
+
+      <CorruptionFunnel data={data} />
 
       <p className="text-sm leading-relaxed text-text-secondary mb-6">
         <Trans
@@ -384,6 +916,8 @@ function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
       <p className="text-sm leading-relaxed text-text-secondary mb-6">
         {t('sPatterns.intro')}
       </p>
+
+      <PatternWebDiagram />
 
       <div className="space-y-4">
         {patterns.map((p, idx) => {
@@ -938,6 +1472,8 @@ function SectionModel({ data }: { data: ExecutiveSummaryResponse }) {
           components={{ bold: <strong className="text-text-primary" /> }}
         />
       </p>
+
+      <AIPipelineChart />
 
       {/* Metric badges */}
       <div className="flex flex-wrap gap-3 mb-8">
