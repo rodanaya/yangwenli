@@ -12,6 +12,7 @@
 
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { ScrollReveal, useCountUp } from '@/hooks/useAnimations'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatNumber, formatCompactMXN } from '@/lib/utils'
@@ -461,10 +462,11 @@ export default function Administrations() {
 
       {/* L0: Admin Selector */}
       <div className="grid grid-cols-5 gap-4">
-        {ADMINISTRATIONS.map((admin) => {
+        {ADMINISTRATIONS.map((admin, idx) => {
           const agg = adminAggs.find((a) => a.name === admin.name)
           const isSelected = selectedAdmin === admin.name
           return (
+            <ScrollReveal key={admin.name} delay={idx * 80} direction="up">
             <button
               key={admin.name}
               onClick={() => setSelectedAdmin(admin.name)}
@@ -515,6 +517,7 @@ export default function Administrations() {
                 </div>
               )}
             </button>
+            </ScrollReveal>
           )
         })}
       </div>
@@ -546,52 +549,26 @@ export default function Administrations() {
       {/* L1: Selected Admin Overview */}
       {selectedAgg && (
         <div className="grid grid-cols-6 gap-4">
-          <StatCard
-            label="Contracts"
-            value={formatNumber(selectedAgg.contracts)}
-            delta={null}
-            icon={FileText}
-            color={selectedMeta.color}
-          />
-          <StatCard
-            label="Total Value"
-            value={formatCompactMXN(selectedAgg.totalValue)}
-            delta={null}
-            icon={Banknote}
-            color={selectedMeta.color}
-          />
-          <StatCard
-            label="Direct Award %"
-            value={`${selectedAgg.directAwardPct.toFixed(1)}%`}
-            delta={selectedAgg.directAwardPct - allTimeAvg.da}
-            unit=" pts"
-            icon={Shield}
-            color={selectedMeta.color}
-          />
-          <StatCard
-            label="Single Bid %"
-            value={`${selectedAgg.singleBidPct.toFixed(1)}%`}
-            delta={selectedAgg.singleBidPct - allTimeAvg.sb}
-            unit=" pts"
-            icon={Users}
-            color={selectedMeta.color}
-          />
-          <StatCard
-            label="High Risk %"
-            value={`${selectedAgg.highRiskPct.toFixed(1)}%`}
-            delta={selectedAgg.highRiskPct - allTimeAvg.hr}
-            unit=" pts"
-            icon={AlertTriangle}
-            color={selectedMeta.color}
-          />
-          <StatCard
-            label="Active Vendors"
-            value={formatNumber(selectedAgg.vendorCount)}
-            delta={null}
-            icon={Activity}
-            color={selectedMeta.color}
-            invertDelta
-          />
+          {[
+            { label: 'Contracts', value: formatNumber(selectedAgg.contracts), delta: null, icon: FileText },
+            { label: 'Total Value', value: formatCompactMXN(selectedAgg.totalValue), delta: null, icon: Banknote },
+            { label: 'Direct Award %', value: `${selectedAgg.directAwardPct.toFixed(1)}%`, delta: selectedAgg.directAwardPct - allTimeAvg.da, unit: ' pts', icon: Shield },
+            { label: 'Single Bid %', value: `${selectedAgg.singleBidPct.toFixed(1)}%`, delta: selectedAgg.singleBidPct - allTimeAvg.sb, unit: ' pts', icon: Users },
+            { label: 'High Risk %', value: `${selectedAgg.highRiskPct.toFixed(1)}%`, delta: selectedAgg.highRiskPct - allTimeAvg.hr, unit: ' pts', icon: AlertTriangle },
+            { label: 'Active Vendors', value: formatNumber(selectedAgg.vendorCount), delta: null, icon: Activity, invertDelta: true },
+          ].map((card, i) => (
+            <ScrollReveal key={card.label} delay={i * 60} direction="up">
+              <StatCard
+                label={card.label}
+                value={card.value}
+                delta={card.delta ?? null}
+                unit={(card as { unit?: string }).unit}
+                icon={card.icon}
+                color={selectedMeta.color}
+                invertDelta={(card as { invertDelta?: boolean }).invertDelta}
+              />
+            </ScrollReveal>
+          ))}
         </div>
       )}
 
@@ -791,6 +768,7 @@ export default function Administrations() {
       {/* L4 + L5 side by side */}
       <div className="grid grid-cols-2 gap-4">
         {/* L4: Sector Heatmap */}
+        <ScrollReveal direction="fade">
         <Card className="bg-card border-border/40">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-mono text-text-primary">
@@ -858,6 +836,7 @@ export default function Administrations() {
             )}
           </CardContent>
         </Card>
+        </ScrollReveal>
 
         {/* L5: Transition Impact */}
         <Card className="bg-card border-border/40">
@@ -867,12 +846,12 @@ export default function Administrations() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {transitions.map((t) => {
+            {transitions.map((t, i) => {
               const isRelevant = t.to === selectedAdmin || t.from === selectedAdmin
               const sig = transitionSignificance.get(`${t.from}-${t.to}`)
               return (
+                <ScrollReveal key={`${t.from}-${t.to}`} delay={i * 100} direction="up">
                 <div
-                  key={`${t.from}-${t.to}`}
                   className={cn(
                     'rounded-lg border p-3 transition-all',
                     isRelevant
@@ -895,6 +874,7 @@ export default function Administrations() {
                     <TransitionMetric label="Vendors" delta={t.dVendors.value} unit="" isCount invertColor />
                   </div>
                 </div>
+                </ScrollReveal>
               )
             })}
             {transitions.length === 0 && (
@@ -945,14 +925,14 @@ export default function Administrations() {
               </h4>
               {adminEvents.length > 0 ? (
                 <div className="space-y-1.5 max-h-[280px] overflow-y-auto pr-1">
-                  {adminEvents.map((e) => {
+                  {adminEvents.map((e, ei) => {
                     const Icon = e.type === 'election' ? Landmark
                       : e.type === 'crisis' ? AlertTriangle
                       : e.type === 'audit' ? Shield
                       : Activity
                     return (
+                      <ScrollReveal key={e.id} delay={ei * 60} direction="left">
                       <div
-                        key={e.id}
                         className="flex items-start gap-2 rounded-md border-l-2 border-border/30 pl-2 py-1"
                         style={{
                           borderLeftColor: e.impact === 'high' ? RISK_COLORS.critical : e.impact === 'medium' ? RISK_COLORS.medium : 'var(--color-border)',
@@ -964,6 +944,7 @@ export default function Administrations() {
                           <div className="text-xs text-text-muted font-mono">{e.date}</div>
                         </div>
                       </div>
+                      </ScrollReveal>
                     )
                   })}
                 </div>
@@ -998,6 +979,17 @@ function StatCard({
   color: string
   invertDelta?: boolean
 }) {
+  // Extract numeric portion for count-up animation
+  const numericMatch = value.replace(/[,%]/g, '').match(/^[\d.]+/)
+  const numericValue = numericMatch ? parseFloat(numericMatch[0]) : 0
+  const isNumeric = numericValue > 0
+  const { ref: countRef, value: countValue } = useCountUp(isNumeric ? numericValue : 0, 1200)
+
+  // Build display: replace numeric part with animated count
+  const displayValue = isNumeric
+    ? value.replace(numericMatch![0], countValue.toLocaleString())
+    : value
+
   return (
     <Card className="bg-card border-border/40">
       <CardContent className="p-4">
@@ -1006,7 +998,7 @@ function StatCard({
           <span className="text-xs font-mono text-text-muted uppercase tracking-wider">{label}</span>
         </div>
         <div className="text-lg font-bold font-mono" style={{ color }}>
-          {value}
+          <span ref={countRef}>{displayValue}</span>
         </div>
         {deltaVal !== null && (
           <div className="mt-0.5">
@@ -1126,6 +1118,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
     <div className="space-y-4">
       {/* Systemic pattern summary cards */}
       <div className="grid grid-cols-3 gap-4">
+        <ScrollReveal delay={0} direction="up">
         <Card className="bg-card border-border/40">
           <CardContent className="p-4">
             <div className="text-xs font-mono text-text-muted uppercase tracking-wider mb-1">Direct Award Rate</div>
@@ -1143,7 +1136,9 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
             </div>
           </CardContent>
         </Card>
+        </ScrollReveal>
 
+        <ScrollReveal delay={80} direction="up">
         <Card className="bg-card border-border/40">
           <CardContent className="p-4">
             <div className="text-xs font-mono text-text-muted uppercase tracking-wider mb-1">Single Bidder Rate</div>
@@ -1158,7 +1153,9 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
             </div>
           </CardContent>
         </Card>
+        </ScrollReveal>
 
+        <ScrollReveal delay={160} direction="up">
         <Card className="bg-card border-border/40">
           <CardContent className="p-4">
             <div className="text-xs font-mono text-text-muted uppercase tracking-wider mb-1">High Risk Rate</div>
@@ -1173,9 +1170,11 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
             </div>
           </CardContent>
         </Card>
+        </ScrollReveal>
       </div>
 
       {/* 23-year trend chart */}
+      <ScrollReveal direction="fade">
       <Card className="bg-card border-border/40">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-mono text-text-primary">
@@ -1284,6 +1283,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
           )}
         </CardContent>
       </Card>
+      </ScrollReveal>
     </div>
   )
 }

@@ -19,6 +19,7 @@ import { SECTOR_COLORS, SECTORS, getSectorNameEN } from '@/lib/constants'
 import { Heatmap } from '@/components/charts/Heatmap'
 import type { SectorStatistics } from '@/api/types'
 import { BarChart3, Layers } from 'lucide-react'
+import { ScrollReveal } from '@/hooks/useAnimations'
 import { StatCard as SharedStatCard } from '@/components/DashboardWidgets'
 import {
   ResponsiveContainer,
@@ -196,6 +197,7 @@ export function Sectors() {
   return (
     <div className="space-y-5">
       {/* Header */}
+      <ScrollReveal direction="fade">
       <div>
         <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
           <BarChart3 className="h-4 w-4 text-accent" />
@@ -205,71 +207,94 @@ export function Sectors() {
           12 sectors covering Mexican federal procurement — click any column header to sort
         </p>
       </div>
+      </ScrollReveal>
 
       {/* Section 1: Stat Cards */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <SharedStatCard
-          label="SECTORS TRACKED"
-          value={aggregates ? String(aggregates.sectorCount) : '—'}
-          detail="Active government sectors"
-          borderColor="border-accent/30"
-          loading={isLoading}
-        />
-        <SharedStatCard
-          label="TOTAL CONTRACTS"
-          value={aggregates ? formatNumber(aggregates.totalContracts) : '—'}
-          detail="All sectors, all years"
-          borderColor="border-blue-500/30"
-          loading={isLoading}
-        />
-        <SharedStatCard
-          label="TOTAL VALUE"
-          value={aggregates ? formatCompactMXN(aggregates.totalValue) : '—'}
-          detail="Validated amounts only"
-          borderColor="border-amber-500/30"
-          loading={isLoading}
-        />
-        <SharedStatCard
-          label="AVG RISK SCORE"
-          value={aggregates ? `${(aggregates.avgRisk * 100).toFixed(1)}%` : '—'}
-          detail="Weighted by contract count"
-          borderColor="border-red-500/30"
-          color={aggregates && aggregates.avgRisk >= 0.3 ? 'text-risk-high' : 'text-text-primary'}
-          loading={isLoading}
-        />
+        <ScrollReveal delay={0} direction="up">
+          <SharedStatCard
+            label="SECTORS TRACKED"
+            value={aggregates ? String(aggregates.sectorCount) : '—'}
+            detail="Active government sectors"
+            borderColor="border-accent/30"
+            loading={isLoading}
+          />
+        </ScrollReveal>
+        <ScrollReveal delay={80} direction="up">
+          <SharedStatCard
+            label="TOTAL CONTRACTS"
+            value={aggregates ? formatNumber(aggregates.totalContracts) : '—'}
+            detail="All sectors, all years"
+            borderColor="border-blue-500/30"
+            loading={isLoading}
+          />
+        </ScrollReveal>
+        <ScrollReveal delay={160} direction="up">
+          <SharedStatCard
+            label="TOTAL VALUE"
+            value={aggregates ? formatCompactMXN(aggregates.totalValue) : '—'}
+            detail="Validated amounts only"
+            borderColor="border-amber-500/30"
+            loading={isLoading}
+          />
+        </ScrollReveal>
+        <ScrollReveal delay={240} direction="up">
+          <SharedStatCard
+            label="AVG RISK SCORE"
+            value={aggregates ? `${(aggregates.avgRisk * 100).toFixed(1)}%` : '—'}
+            detail="Weighted by contract count"
+            borderColor="border-red-500/30"
+            color={aggregates && aggregates.avgRisk >= 0.3 ? 'text-risk-high' : 'text-text-primary'}
+            loading={isLoading}
+          />
+        </ScrollReveal>
       </div>
 
       {/* System Intelligence Chips */}
       {patternCounts && (
         <div className="flex flex-wrap gap-2">
-          <div className="flex items-center gap-1.5 rounded-md border border-risk-critical/20 bg-risk-critical/5 px-3 py-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-risk-critical" />
-            <span className="text-xs font-mono font-medium text-risk-critical">
-              {formatNumber(patternCounts.counts.critical)} Critical Risk
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5 rounded-md border border-amber-500/20 bg-amber-500/5 px-3 py-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-            <span className="text-xs font-mono font-medium text-amber-500">
-              {formatNumber(patternCounts.counts.december_rush)} December Rush
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5 rounded-md border border-border/50 bg-background-elevated/30 px-3 py-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-text-muted" />
-            <span className="text-xs font-mono font-medium text-text-secondary">
-              {formatNumber(patternCounts.counts.co_bidding)} Co-Bidding Flags
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5 rounded-md border border-border/50 bg-background-elevated/30 px-3 py-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-text-muted" />
-            <span className="text-xs font-mono font-medium text-text-secondary">
-              {formatNumber(patternCounts.counts.price_outliers)} Price Outliers
-            </span>
-          </div>
+          <ScrollReveal delay={0} direction="up">
+            <div className="flex items-center gap-1.5 rounded-md border border-risk-critical/20 bg-risk-critical/5 px-3 py-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-risk-critical" />
+              <span className="text-xs font-mono font-medium text-risk-critical">
+                {formatNumber(patternCounts.counts.critical)} Critical Risk
+              </span>
+            </div>
+          </ScrollReveal>
+          <ScrollReveal delay={60} direction="up">
+            <div className="flex items-center gap-1.5 rounded-md border border-amber-500/20 bg-amber-500/5 px-3 py-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+              <span className="text-xs font-mono font-medium text-amber-500">
+                {formatNumber(patternCounts.counts.december_rush)} December Rush
+              </span>
+            </div>
+          </ScrollReveal>
+          <ScrollReveal delay={120} direction="up">
+            <div className="flex items-center gap-1.5 rounded-md border border-border/50 bg-background-elevated/30 px-3 py-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-text-muted" />
+              <span className="text-xs font-mono font-medium text-text-secondary">
+                {formatNumber(patternCounts.counts.co_bidding)} Co-Bidding Flags
+              </span>
+            </div>
+          </ScrollReveal>
+          <ScrollReveal delay={180} direction="up">
+            <div className="flex items-center gap-1.5 rounded-md border border-border/50 bg-background-elevated/30 px-3 py-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-text-muted" />
+              <span className="text-xs font-mono font-medium text-text-secondary">
+                {formatNumber(patternCounts.counts.price_outliers)} Price Outliers
+              </span>
+            </div>
+          </ScrollReveal>
         </div>
       )}
 
       {/* Section 2: Sortable Comparison Table */}
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
       <Card className="overflow-hidden">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-sm">
@@ -332,13 +357,17 @@ export function Sectors() {
                 </tr>
               </thead>
               <tbody>
-                {sortedSectors.map((sector) => {
+                {sortedSectors.map((sector, i) => {
                   const color = SECTOR_COLORS[sector.sector_code] || '#64748b'
                   const topRamo = getTopRamo(sector.sector_code)
                   return (
                     <tr
                       key={sector.sector_id}
                       className="border-b border-border/20 hover:bg-background-elevated/40 transition-colors"
+                      style={{
+                        opacity: 0,
+                        animation: `fadeInUp 600ms cubic-bezier(0.16, 1, 0.3, 1) ${i * 40 + 200}ms both`,
+                      }}
                     >
                       <td className="px-3 py-2.5">
                         <div className="flex items-center gap-2">
@@ -383,6 +412,7 @@ export function Sectors() {
       </Card>
 
       {/* Section 3: Charts (collapsed) */}
+      <ScrollReveal direction="fade">
       <details className="mt-4 group">
         <summary className="flex items-center gap-2 cursor-pointer select-none list-none text-xs font-medium text-text-muted hover:text-text-primary transition-colors py-1">
           <Layers className="h-3.5 w-3.5" />
@@ -491,6 +521,7 @@ export function Sectors() {
           </Card>
         </div>
       </details>
+      </ScrollReveal>
     </div>
   )
 }

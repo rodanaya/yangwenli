@@ -39,6 +39,7 @@ import {
   Network,
 } from 'lucide-react'
 import { NetworkGraphModal } from '@/components/NetworkGraphModal'
+import { ScrollReveal, useCountUp, AnimatedFill } from '@/hooks/useAnimations'
 
 export function VendorProfile() {
   const { id } = useParams<{ id: string }>()
@@ -136,10 +137,24 @@ export function VendorProfile() {
 
   return (
     <div className="space-y-6 stagger-animate">
+      <style>{`
+        @keyframes vpSlideIn {
+          from { opacity: 0; transform: translateY(-12px); filter: blur(3px); }
+          to   { opacity: 1; transform: translateY(0);     filter: blur(0px); }
+        }
+        @keyframes vpFadeUp {
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
       {/* Header — risk-colored left border */}
       <div
-        className="flex items-start justify-between rounded-lg border bg-background-card p-4 animate-slide-up"
-        style={{ borderLeftWidth: '4px', borderLeftColor: riskColor }}
+        className="flex items-start justify-between rounded-lg border bg-background-card p-4"
+        style={{
+          borderLeftWidth: '4px',
+          borderLeftColor: riskColor,
+          animation: 'vpSlideIn 600ms cubic-bezier(0.16, 1, 0.3, 1) both',
+        }}
       >
         <div className="flex items-center gap-4">
           <Link to="/explore?tab=vendors">
@@ -216,34 +231,42 @@ export function VendorProfile() {
         compact
       />
 
-      {/* KPI Row — stagger + hover-lift + risk coloring */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 stagger-animate">
-        <KPICard
-          title="Total Contracts"
-          value={vendor.total_contracts}
-          icon={FileText}
-          subtitle={`${vendor.first_contract_year || '-'} – ${vendor.last_contract_year || '-'}`}
-        />
-        <KPICard
-          title="Total Value"
-          value={vendor.total_value_mxn}
-          icon={DollarSign}
-          format="currency"
-          subtitle={formatCompactUSD(vendor.total_value_mxn)}
-        />
-        <KPICard
-          title="Institutions"
-          value={vendor.total_institutions}
-          icon={Building2}
-          subtitle="Unique agencies"
-        />
-        <KPICard
-          title="High Risk"
-          value={vendor.high_risk_pct}
-          icon={AlertTriangle}
-          format="percent_100"
-          variant={vendor.high_risk_pct > 20 ? 'critical' : vendor.high_risk_pct > 10 ? 'warning' : 'default'}
-        />
+      {/* KPI Row — scroll-triggered stagger */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <ScrollReveal delay={0} direction="up">
+          <KPICard
+            title="Total Contracts"
+            value={vendor.total_contracts}
+            icon={FileText}
+            subtitle={`${vendor.first_contract_year || '-'} – ${vendor.last_contract_year || '-'}`}
+          />
+        </ScrollReveal>
+        <ScrollReveal delay={80} direction="up">
+          <KPICard
+            title="Total Value"
+            value={vendor.total_value_mxn}
+            icon={DollarSign}
+            format="currency"
+            subtitle={formatCompactUSD(vendor.total_value_mxn)}
+          />
+        </ScrollReveal>
+        <ScrollReveal delay={160} direction="up">
+          <KPICard
+            title="Institutions"
+            value={vendor.total_institutions}
+            icon={Building2}
+            subtitle="Unique agencies"
+          />
+        </ScrollReveal>
+        <ScrollReveal delay={240} direction="up">
+          <KPICard
+            title="High Risk"
+            value={vendor.high_risk_pct}
+            icon={AlertTriangle}
+            format="percent_100"
+            variant={vendor.high_risk_pct > 20 ? 'critical' : vendor.high_risk_pct > 10 ? 'warning' : 'default'}
+          />
+        </ScrollReveal>
       </div>
 
       {/* Co-Bidding Alert (v3.2) */}
@@ -326,7 +349,8 @@ export function VendorProfile() {
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left Column - Risk Profile */}
-        <div className="space-y-6 stagger-animate">
+        <ScrollReveal direction="up" delay={0}>
+        <div className="space-y-6">
           {/* Risk Score Gauge */}
           <Card className="hover-lift">
             <CardHeader>
@@ -495,9 +519,11 @@ export function VendorProfile() {
             </CardContent>
           </Card>
         </div>
+        </ScrollReveal>
 
         {/* Right Column - Summary, Contracts, Institutions */}
-        <div className="lg:col-span-2 space-y-6 stagger-animate">
+        <ScrollReveal direction="up" delay={120} className="lg:col-span-2">
+        <div className="space-y-6">
           {/* Vendor Summary */}
           <Card className="hover-lift">
             <CardHeader>
@@ -579,6 +605,7 @@ export function VendorProfile() {
             </CardContent>
           </Card>
         </div>
+        </ScrollReveal>
       </div>
       <ContractDetailModal
         contractId={selectedContractId}
@@ -603,6 +630,11 @@ interface KPICardProps {
 }
 
 function KPICard({ title, value, icon: Icon, format = 'number', subtitle, variant = 'default' }: KPICardProps) {
+  // Count-up for plain number format; other formats are formatted strings
+  const target = (format === 'number' && value !== undefined) ? value : 0
+  const decimals = format === 'percent_100' ? 1 : 0
+  const { ref: countRef, value: animValue } = useCountUp(target, 1200, decimals)
+
   const formattedValue =
     value === undefined
       ? '-'
@@ -612,7 +644,7 @@ function KPICard({ title, value, icon: Icon, format = 'number', subtitle, varian
           ? formatPercentSafe(value, true)
           : format === 'percent_100'
             ? formatPercentSafe(value, false)
-            : formatNumber(value)
+            : formatNumber(Math.round(animValue))
 
   const borderClass =
     variant === 'critical' ? 'border-risk-critical/40' :
@@ -630,7 +662,12 @@ function KPICard({ title, value, icon: Icon, format = 'number', subtitle, varian
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <p className="text-xs font-medium text-text-muted">{title}</p>
-            <p className="text-2xl font-bold tabular-nums text-text-primary">{formattedValue}</p>
+            <p className="text-2xl font-bold tabular-nums text-text-primary">
+              {format === 'number'
+                ? <span ref={countRef}>{formattedValue}</span>
+                : formattedValue
+              }
+            </p>
             {subtitle && <p className="text-xs text-text-muted">{subtitle}</p>}
           </div>
           <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${iconBg}`}>
@@ -749,8 +786,8 @@ function RiskFactorList({ factors }: { factors: Array<{ factor: string; count: n
   }
 
   return (
-    <div className="space-y-3 stagger-animate">
-      {factors.map((f) => {
+    <div className="space-y-3">
+      {factors.map((f, i) => {
         const parsed = parseFactorLabel(f.factor)
         const barColor = getFactorCategoryColor(parsed.category)
         return (
@@ -759,15 +796,12 @@ function RiskFactorList({ factors }: { factors: Array<{ factor: string; count: n
               <span className="text-text-secondary">{parsed.label}</span>
               <span className="text-text-muted tabular-nums">{f.count} ({f.percentage.toFixed(1)}%)</span>
             </div>
-            <div className="h-2 bg-background-elevated rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  width: `${Math.min(f.percentage, 100)}%`,
-                  backgroundColor: barColor,
-                }}
-              />
-            </div>
+            <AnimatedFill
+              pct={Math.min(f.percentage, 100)}
+              color={barColor}
+              delay={i * 80}
+              height="h-2"
+            />
           </div>
         )
       })}
@@ -789,15 +823,11 @@ function PatternBar({ label, value, isPercent100 = false }: { label: string; val
           {displayPct.toFixed(1)}%
         </span>
       </div>
-      <div className="h-1.5 bg-background-elevated rounded-full overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{
-            width: `${barPct}%`,
-            backgroundColor: isHigh ? RISK_COLORS.high : 'var(--color-accent)',
-          }}
-        />
-      </div>
+      <AnimatedFill
+        pct={barPct}
+        color={isHigh ? RISK_COLORS.high : 'var(--color-accent)'}
+        height="h-1.5"
+      />
     </div>
   )
 }
@@ -814,12 +844,16 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 function InstitutionList({ data, maxValue }: { data: any[]; maxValue: number }) {
   return (
     <div className="space-y-2">
-      {data.map((inst: any) => {
+      {data.map((inst: any, i: number) => {
         const pct = maxValue > 0 ? (inst.total_value_mxn / maxValue) * 100 : 0
         return (
           <div
             key={inst.institution_id}
             className="relative flex items-center justify-between p-3 rounded-lg overflow-hidden interactive"
+            style={{
+              opacity: 0,
+              animation: `vpFadeUp 500ms cubic-bezier(0.16, 1, 0.3, 1) ${i * 70}ms both`,
+            }}
           >
             {/* Background proportion bar */}
             <div

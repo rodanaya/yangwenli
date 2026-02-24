@@ -5,6 +5,7 @@
  */
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
+import { ScrollReveal, useCountUp } from '@/hooks/useAnimations'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -465,10 +466,14 @@ function SidePanel({
 
             {coBidders && coBidders.length > 0 && (
               <div className="space-y-1.5">
-                {coBidders.slice(0, 8).map((cb) => (
+                {coBidders.slice(0, 8).map((cb, ci) => (
                   <div
                     key={cb.vendor_id}
                     className="flex items-center justify-between gap-2 text-xs"
+                    style={{
+                      opacity: 0,
+                      animation: `fadeInUp 500ms cubic-bezier(0.16, 1, 0.3, 1) ${ci * 50}ms both`,
+                    }}
                   >
                     <span className="truncate text-text-secondary" title={cb.vendor_name}>
                       {toTitleCase(cb.vendor_name)}
@@ -552,6 +557,15 @@ function ExampleChip({
       {name.length > 30 ? name.slice(0, 30) + '…' : name}
     </button>
   )
+}
+
+// ---------------------------------------------------------------------------
+// GraphStatCount — count-up span for graph stats
+// ---------------------------------------------------------------------------
+
+function GraphStatCount({ value }: { value: number }) {
+  const { ref, value: animated } = useCountUp(value, 800)
+  return <span ref={ref}>{Math.round(animated)}</span>
 }
 
 // ---------------------------------------------------------------------------
@@ -772,6 +786,12 @@ export function NetworkGraph() {
 
   return (
     <div className="space-y-4">
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
       {/* Page header */}
       <div>
         <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
@@ -780,13 +800,14 @@ export function NetworkGraph() {
         </h2>
         {graphData && (
           <p className="text-xs text-text-muted mt-0.5">
-            {graphData.total_nodes} {t('statsNodes')} · {graphData.total_links} {t('statsConnections')}
+            <GraphStatCount value={graphData.total_nodes} /> {t('statsNodes')} · <GraphStatCount value={graphData.total_links} /> {t('statsConnections')}
             {centerEntity && ` · ${t('statsCenteredOn')} ${toTitleCase(centerEntity.name)}`}
           </p>
         )}
       </div>
 
       <SectionDescription>{t('pageDesc')}</SectionDescription>
+      {/* Graph stats are shown inline in the header above */}
 
       {/* Co-bidding note */}
       <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-4 py-2.5 text-xs text-amber-400 flex items-start gap-2">
@@ -818,6 +839,7 @@ export function NetworkGraph() {
         )}
       </div>
 
+      <ScrollReveal direction="fade">
       <div className="flex items-center gap-3">
         <FiltersBar filters={filters} onChange={patchFilters} onReset={resetFilters} />
         {/* Color mode toggle */}
@@ -844,6 +866,7 @@ export function NetworkGraph() {
           </button>
         </div>
       </div>
+      </ScrollReveal>
 
       {/* Main content: graph + side panel */}
       <div className="flex border border-border rounded-md overflow-hidden" style={{ height: '620px' }}>
@@ -871,13 +894,14 @@ export function NetworkGraph() {
                     { name: 'Pisa Farmacéutica', type: 'vendor' as const },
                     { name: 'Secretaría de Comunicaciones y Transportes', type: 'institution' as const },
                     { name: 'PEMEX', type: 'institution' as const },
-                  ].map((example) => (
-                    <ExampleChip
-                      key={example.name}
-                      name={example.name}
-                      entityType={example.type}
-                      onSelect={handleSearchSelect}
-                    />
+                  ].map((example, i) => (
+                    <ScrollReveal key={example.name} delay={i * 60} direction="up">
+                      <ExampleChip
+                        name={example.name}
+                        entityType={example.type}
+                        onSelect={handleSearchSelect}
+                      />
+                    </ScrollReveal>
                   ))}
                 </div>
               </div>
@@ -923,16 +947,26 @@ export function NetworkGraph() {
           )}
         </div>
 
-        {/* Side panel */}
-        {selectedNode && (
-          <SidePanel
-            node={selectedNode}
-            coBidders={coBidders}
-            coBiddersLoading={coBiddersLoading}
-            onClose={() => setSelectedNode(null)}
-            onLoadCoBidders={handleLoadCoBidders}
-          />
-        )}
+        {/* Side panel — always rendered, slide in/out via CSS */}
+        <div
+          style={{
+            transform: selectedNode ? 'translateX(0)' : 'translateX(20px)',
+            opacity: selectedNode ? 1 : 0,
+            transition: 'transform 350ms cubic-bezier(0.16, 1, 0.3, 1), opacity 300ms ease',
+            pointerEvents: selectedNode ? 'auto' : 'none',
+            flexShrink: 0,
+          }}
+        >
+          {selectedNode && (
+            <SidePanel
+              node={selectedNode}
+              coBidders={coBidders}
+              coBiddersLoading={coBiddersLoading}
+              onClose={() => setSelectedNode(null)}
+              onLoadCoBidders={handleLoadCoBidders}
+            />
+          )}
+        </div>
       </div>
 
       {/* Legend */}
