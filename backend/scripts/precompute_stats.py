@@ -209,10 +209,10 @@ def precompute_stats():
     start = time.time()
     pattern_queries = [
         ('pattern_december_rush', "SELECT COUNT(*) FROM contracts WHERE CAST(strftime('%m', contract_date) AS INTEGER) = 12 AND risk_score >= 0.30"),
-        ('pattern_split_contracts', "SELECT COUNT(*) FROM contracts WHERE same_day_count >= 3"),
+        ('pattern_split_contracts', "SELECT COUNT(*) FROM contract_z_features WHERE z_same_day_count > 1.5"),
         ('pattern_single_bid', "SELECT COUNT(*) FROM contracts WHERE is_single_bid = 1"),
         ('pattern_price_outlier', "SELECT COUNT(*) FROM contract_z_features WHERE z_price_ratio > 2.0"),
-        ('pattern_co_bidding', "SELECT COUNT(*) FROM contracts WHERE co_bid_rate > 0.5"),
+        ('pattern_co_bidding', "SELECT COUNT(*) FROM contracts WHERE vendor_id IN (SELECT v.id FROM vendors v JOIN vendor_graph_features vgf ON vgf.vendor_id = v.id WHERE vgf.degree >= 5)"),
     ]
     for key, query in pattern_queries:
         try:
