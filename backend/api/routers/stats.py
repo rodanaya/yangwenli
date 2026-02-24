@@ -226,6 +226,8 @@ class FastDashboardResponse(BaseModel):
     sectors: List[Dict[str, Any]] = Field(..., description="Sector statistics")
     risk_distribution: List[Dict[str, Any]] = Field(..., description="Risk level distribution")
     yearly_trends: List[Dict[str, Any]] = Field(..., description="Year-over-year trends")
+    december_spike: Optional[Dict[str, Any]] = Field(None, description="December spending spike analysis (precomputed)")
+    monthly_2023: Optional[Dict[str, Any]] = Field(None, description="Monthly breakdown for 2023 (precomputed)")
     cached_at: Optional[str] = Field(None, description="When stats were computed")
 
 
@@ -252,6 +254,8 @@ def get_fast_dashboard(response: Response):
                 sectors=[],
                 risk_distribution=[],
                 yearly_trends=[],
+                december_spike=None,
+                monthly_2023=None,
                 cached_at=None
             )
 
@@ -275,6 +279,8 @@ def get_fast_dashboard(response: Response):
             sectors=stats.get('sectors', []),
             risk_distribution=stats.get('risk_distribution', []),
             yearly_trends=stats.get('yearly_trends', []),
+            december_spike=stats.get('december_spike'),
+            monthly_2023=stats.get('monthly_2023'),
             cached_at=cached_at
         )
 

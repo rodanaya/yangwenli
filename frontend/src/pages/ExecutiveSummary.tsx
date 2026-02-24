@@ -32,6 +32,8 @@ import {
   Compass,
   Network,
   CheckCircle,
+  Calendar,
+  TrendingUp,
 } from 'lucide-react'
 
 // ============================================================================
@@ -58,7 +60,7 @@ function usePatternCounts() {
 // Scroll Reveal Hook + Component
 // ============================================================================
 
-function useReveal() {
+function useReveal(threshold = 0.05) {
   const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
   useEffect(() => {
@@ -66,34 +68,141 @@ function useReveal() {
     if (!el) return
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true)
-          observer.disconnect()
-        }
+        if (entry.isIntersecting) { setVisible(true); observer.disconnect() }
       },
-      { threshold: 0.05, rootMargin: '0px 0px -40px 0px' }
+      { threshold, rootMargin: '0px 0px -40px 0px' }
     )
     observer.observe(el)
     return () => observer.disconnect()
-  }, [])
+  }, [threshold])
   return { ref, visible }
 }
 
-function ScrollReveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+function ScrollReveal({ children, delay = 0, direction = 'up' }: { children: React.ReactNode; delay?: number; direction?: 'up' | 'left' | 'right' | 'fade' }) {
   const { ref, visible } = useReveal()
+  const transforms: Record<string, string> = {
+    up: 'translateY(36px)',
+    left: 'translateX(-36px)',
+    right: 'translateX(36px)',
+    fade: 'translateY(0)',
+  }
   return (
     <div
       ref={ref}
       style={{
-        transitionProperty: 'opacity, transform',
-        transitionDuration: '650ms',
+        transitionProperty: 'opacity, transform, filter',
+        transitionDuration: '700ms',
         transitionDelay: `${delay}ms`,
         transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
         opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(28px)',
+        transform: visible ? 'translateY(0) translateX(0)' : transforms[direction],
+        filter: visible ? 'blur(0px)' : 'blur(4px)',
       }}
     >
       {children}
+    </div>
+  )
+}
+
+// Count-up animation hook
+function useCountUp(target: number, duration = 1400, decimals = 0) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const [value, setValue] = useState(0)
+  const startedRef = useRef(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !startedRef.current) {
+          startedRef.current = true
+          let startTime: number
+          let frame: number
+          const animate = (ts: number) => {
+            if (!startTime) startTime = ts
+            const progress = Math.min((ts - startTime) / duration, 1)
+            const eased = 1 - Math.pow(1 - progress, 3)
+            setValue(parseFloat((target * eased).toFixed(decimals)))
+            if (progress < 1) frame = requestAnimationFrame(animate)
+            else setValue(target)
+          }
+          frame = requestAnimationFrame(animate)
+          return () => cancelAnimationFrame(frame)
+        }
+      },
+      { threshold: 0.3 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [target, duration, decimals])
+  return { ref, value }
+}
+
+// Animated bar fill — triggers width transition when element enters viewport
+function AnimatedFill({ pct, color, delay = 0, height = 'h-4' }: { pct: number; color: string; delay?: number; height?: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [width, setWidth] = useState(0)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => setWidth(pct), delay)
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.1 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [pct, delay])
+  return (
+    <div ref={ref} className={`flex-1 ${height} bg-surface-raised rounded overflow-hidden`}>
+      <div
+        className="h-full rounded relative overflow-hidden"
+        style={{
+          width: `${width}%`,
+          background: color,
+          transition: `width 900ms cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      </div>
+    </div>
+  )
+}
+
+// Animated segment — used for risk distribution bars and detection bars
+function AnimatedSegment({ pct, color, delay }: { pct: number; color: string; delay: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [width, setWidth] = useState(0)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => setWidth(pct), delay)
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.1 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [pct, delay])
+  return (
+    <div
+      ref={ref}
+      className="h-full relative overflow-hidden rounded-sm"
+      style={{
+        width: `${width}%`,
+        background: color,
+        transition: `width 1000ms cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
+      }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent" />
     </div>
   )
 }
@@ -116,24 +225,37 @@ export function ExecutiveSummary() {
       <ScrollReveal delay={80}><ReportHeader data={data} /></ScrollReveal>
       <ScrollReveal delay={120}><KeyFindings /></ScrollReveal>
       <Divider />
-      <ScrollReveal><SectionThreat data={data} /></ScrollReveal>
-      <Divider />
-      <ScrollReveal><SectionProof data={data} /></ScrollReveal>
-      <Divider />
-      <ScrollReveal><SectionSectors data={data} navigate={navigate} /></ScrollReveal>
-      <Divider />
-      <ScrollReveal><SectionVendors data={data} navigate={navigate} /></ScrollReveal>
-      <Divider />
-      <ScrollReveal><SectionNetwork patternCounts={patternCounts} /></ScrollReveal>
-      <Divider />
+      {/* 01 — CAN I TRUST IT: Data Foundation */}
       <ScrollReveal><SectionData /></ScrollReveal>
       <Divider />
-      <ScrollReveal><SectionAdministrations data={data} /></ScrollReveal>
+      {/* 02 — WHAT IT FOUND: Three Systemic Patterns */}
+      <ScrollReveal><SectionThreePatterns data={data} /></ScrollReveal>
       <Divider />
+      {/* 03 — HOW IT KNOWS: AI Model */}
       <ScrollReveal><SectionModel data={data} /></ScrollReveal>
       <Divider />
+      {/* 04 — THE THREAT: Risk Scores & Value at Risk */}
+      <ScrollReveal><SectionThreat data={data} /></ScrollReveal>
+      <Divider />
+      {/* 05 — EVERY GOVT: Five Administrations */}
+      <ScrollReveal><SectionAdministrations data={data} /></ScrollReveal>
+      <Divider />
+      {/* 06 — WHO BENEFITS: Top Vendors */}
+      <ScrollReveal><SectionVendors data={data} navigate={navigate} /></ScrollReveal>
+      <Divider />
+      {/* 07 — WHICH SECTORS: Risk Concentration */}
+      <ScrollReveal><SectionSectors data={data} navigate={navigate} /></ScrollReveal>
+      <Divider />
+      {/* 08 — PROOF IT WORKS: Ground Truth Validation */}
+      <ScrollReveal><SectionProof data={data} /></ScrollReveal>
+      <Divider />
+      {/* 09 — THE NETWORK: Co-bidding & Collusion */}
+      <ScrollReveal><SectionNetwork patternCounts={patternCounts} /></ScrollReveal>
+      <Divider />
+      {/* 10 — LIMITATIONS */}
       <ScrollReveal><SectionLimitations /></ScrollReveal>
       <Divider />
+      {/* 11 — NOW WHAT: Recommendations */}
       <ScrollReveal><SectionRecommendations navigate={navigate} /></ScrollReveal>
       <ScrollReveal><ReportFooter data={data} /></ScrollReveal>
     </article>
@@ -154,11 +276,12 @@ function ReportHeader({ data }: { data: ExecutiveSummaryResponse }) {
   return (
     <header className="pt-4">
       {/* Small caps label */}
-      <div className="flex items-center gap-2 mb-6">
-        <Shield className="h-4 w-4 text-accent" />
+      <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full border border-accent/30 bg-accent/5">
+        <Shield className="h-3.5 w-3.5 text-accent" />
         <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
           {t('header.badge')}
         </span>
+        <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
       </div>
 
       {/* Date line */}
@@ -167,7 +290,15 @@ function ReportHeader({ data }: { data: ExecutiveSummaryResponse }) {
       </p>
 
       {/* Title */}
-      <h1 className="text-3xl sm:text-4xl font-bold text-text-primary tracking-tight leading-tight mb-2">
+      <h1
+        className="text-3xl sm:text-4xl font-bold tracking-tight leading-tight mb-2"
+        style={{
+          background: 'linear-gradient(135deg, var(--color-text-primary) 0%, #fbbf24 60%, #f87171 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+        }}
+      >
         {t('header.title')}
       </h1>
       <p className="text-lg text-text-secondary italic mb-8">
@@ -193,10 +324,10 @@ function ReportHeader({ data }: { data: ExecutiveSummaryResponse }) {
 
       {/* Headline stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <HeadlineStat value={formatNumber(headline.total_contracts)} label={t('header.contracts')} />
+        <HeadlineStat value={formatNumber(headline.total_contracts)} label={t('header.contracts')} rawNumber={headline.total_contracts} />
         <HeadlineStat value={formatCompactMXN(headline.total_value)} label={t('header.totalValue')} />
-        <HeadlineStat value={formatNumber(headline.total_vendors)} label={t('header.vendors')} />
-        <HeadlineStat value={formatNumber(headline.total_institutions)} label={t('header.institutions')} />
+        <HeadlineStat value={formatNumber(headline.total_vendors)} label={t('header.vendors')} rawNumber={headline.total_vendors} />
+        <HeadlineStat value={formatNumber(headline.total_institutions)} label={t('header.institutions')} rawNumber={headline.total_institutions} />
       </div>
     </header>
   )
@@ -220,10 +351,12 @@ function KeyFindings() {
       </div>
       <ul className="space-y-2">
         {items.map((item, i) => (
-          <li key={i} className="flex items-start gap-2.5">
-            <CheckCircle className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
-            <span className="text-sm text-text-secondary leading-relaxed">{item}</span>
-          </li>
+          <ScrollReveal key={i} delay={i * 80} direction="left">
+            <li className="flex items-start gap-2.5">
+              <CheckCircle className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+              <span className="text-sm text-text-secondary leading-relaxed">{item}</span>
+            </li>
+          </ScrollReveal>
         ))}
       </ul>
     </div>
@@ -246,7 +379,7 @@ function SectionThreat({ data }: { data: ExecutiveSummaryResponse }) {
 
   return (
     <section>
-      <SectionHeading number="01" title={t('s1.title')} icon={AlertTriangle} />
+      <SectionHeading number="04" title={t('s1.title')} icon={AlertTriangle} />
 
       <p className="text-sm leading-relaxed text-text-secondary mb-4">
         <Trans
@@ -270,32 +403,20 @@ function SectionThreat({ data }: { data: ExecutiveSummaryResponse }) {
         />
       </p>
 
-      {/* Risk distribution bar */}
+      {/* Risk distribution bar — animated fill */}
       <div className="mb-4">
         <p className="text-xs font-bold tracking-wider uppercase text-text-muted font-mono mb-2">
           {t('s1.riskDistLabel')}
         </p>
-        <div className="h-8 rounded-md overflow-hidden flex">
-          <div
-            style={{ width: `${criticalPctValue}%`, background: RISK_COLORS.critical }}
-            className="transition-all"
-            title={`${t('s1.riskLevel.critical')}: ${criticalPctValue.toFixed(1)}%`}
-          />
-          <div
-            style={{ width: `${highPctValue}%`, background: RISK_COLORS.high }}
-            className="transition-all"
-            title={`${t('s1.riskLevel.high')}: ${highPctValue.toFixed(1)}%`}
-          />
-          <div
-            style={{ width: `${mediumPctValue}%`, background: RISK_COLORS.medium }}
-            className="transition-all"
-            title={`${t('s1.riskLevel.medium')}: ${mediumPctValue.toFixed(1)}%`}
-          />
-          <div
-            style={{ width: `${lowPctValue}%`, background: RISK_COLORS.low }}
-            className="transition-all"
-            title={`${t('s1.riskLevel.low')}: ${lowPctValue.toFixed(1)}%`}
-          />
+        <div className="h-8 rounded-md overflow-hidden flex gap-0.5">
+          {[
+            { pct: criticalPctValue, color: RISK_COLORS.critical, label: t('s1.riskLevel.critical'), delay: 0 },
+            { pct: highPctValue, color: RISK_COLORS.high, label: t('s1.riskLevel.high'), delay: 150 },
+            { pct: mediumPctValue, color: RISK_COLORS.medium, label: t('s1.riskLevel.medium'), delay: 300 },
+            { pct: lowPctValue, color: RISK_COLORS.low, label: t('s1.riskLevel.low'), delay: 450 },
+          ].map((seg) => (
+            <AnimatedSegment key={seg.label} pct={seg.pct} color={seg.color} delay={seg.delay} />
+          ))}
         </div>
         <div className="flex justify-between mt-2 text-xs text-text-muted font-mono">
           <span style={{ color: RISK_COLORS.critical }}>{t('s1.riskLevel.critical')} {criticalPctValue.toFixed(0)}%</span>
@@ -311,6 +432,7 @@ function SectionThreat({ data }: { data: ExecutiveSummaryResponse }) {
           value={formatNumber(risk.critical_count)}
           label={t('s1.criticalContracts')}
           color={RISK_COLORS.critical}
+          pulse
         />
         <StatCallout
           value={formatNumber(risk.high_count)}
@@ -347,6 +469,120 @@ function SectionThreat({ data }: { data: ExecutiveSummaryResponse }) {
 }
 
 // ============================================================================
+// S2 (new): Three Systemic Patterns — The Central Narrative
+// ============================================================================
+
+function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
+  const { t } = useTranslation('executive')
+  const { procedures } = data
+
+  const patterns = [
+    {
+      label: t('sPatterns.p1DirectAward.label'),
+      name: t('sPatterns.p1DirectAward.name'),
+      stat: `${procedures.direct_award_pct}%`,
+      statColor: 'var(--color-risk-high)',
+      borderColor: 'border-risk-high/20',
+      bgColor: 'bg-risk-high/5',
+      icon: Scale,
+      iconColor: 'text-risk-high',
+      iconBg: 'bg-risk-high/10',
+      descKey: 'sPatterns.p1DirectAward.desc' as const,
+      descValues: { pct: procedures.direct_award_pct },
+      note: t('sPatterns.p1DirectAward.note'),
+      useTrans: true,
+      glowColor: 'rgba(251, 146, 60, 0.3)',
+    },
+    {
+      label: t('sPatterns.p2December.label'),
+      name: t('sPatterns.p2December.name'),
+      stat: '1.33×',
+      statColor: 'var(--color-risk-medium)',
+      borderColor: 'border-risk-medium/20',
+      bgColor: 'bg-risk-medium/5',
+      icon: Calendar,
+      iconColor: 'text-risk-medium',
+      iconBg: 'bg-risk-medium/10',
+      descKey: 'sPatterns.p2December.desc' as const,
+      descValues: {},
+      note: t('sPatterns.p2December.note'),
+      useTrans: false,
+      glowColor: 'rgba(251, 191, 36, 0.3)',
+    },
+    {
+      label: t('sPatterns.p3Concentration.label'),
+      name: t('sPatterns.p3Concentration.name'),
+      stat: '7.9%',
+      statColor: 'var(--color-risk-critical)',
+      borderColor: 'border-risk-critical/20',
+      bgColor: 'bg-risk-critical/5',
+      icon: TrendingUp,
+      iconColor: 'text-risk-critical',
+      iconBg: 'bg-risk-critical/10',
+      descKey: 'sPatterns.p3Concentration.desc' as const,
+      descValues: {},
+      note: t('sPatterns.p3Concentration.note'),
+      useTrans: false,
+      glowColor: 'rgba(248, 113, 113, 0.3)',
+    },
+  ]
+
+  return (
+    <section>
+      <SectionHeading number="02" title={t('sPatterns.title')} icon={Compass} />
+
+      <p className="text-sm leading-relaxed text-text-secondary mb-6">
+        {t('sPatterns.intro')}
+      </p>
+
+      <div className="space-y-4">
+        {patterns.map((p, idx) => {
+          const Icon = p.icon
+          return (
+            <ScrollReveal key={p.label} delay={idx * 120}>
+              <div
+                className={`border rounded-xl p-6 transition-all duration-500 hover:shadow-lg relative overflow-hidden ${p.borderColor} ${p.bgColor}`}
+                style={{ boxShadow: 'none' }}
+                onMouseEnter={e => (e.currentTarget.style.boxShadow = `0 0 24px 2px ${p.glowColor}`)}
+                onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
+              >
+                {/* Decorative gradient in corner */}
+                <div
+                  className="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-10"
+                  style={{ background: p.statColor }}
+                />
+                <div className="relative flex items-start gap-4">
+                  <div className={`p-2 rounded-md flex-shrink-0 ${p.iconBg}`}>
+                    <Icon className={`h-5 w-5 ${p.iconColor}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-bold tracking-wider uppercase text-text-muted font-mono">
+                      {p.label}
+                    </span>
+                    <h4 className="text-base font-bold text-text-primary mt-0.5 mb-2">{p.name}</h4>
+                    <div className="text-3xl font-black font-mono mb-3 tabular-nums" style={{ color: p.statColor }}>
+                      {p.stat}
+                    </div>
+                    <p className="text-sm leading-relaxed text-text-secondary mb-2">
+                      {p.useTrans ? (
+                        <Trans t={t} i18nKey={p.descKey} values={p.descValues} components={{ bold: <strong className="text-text-primary" /> }} />
+                      ) : (
+                        t(p.descKey)
+                      )}
+                    </p>
+                    <p className="text-xs italic text-text-muted border-t border-border/20 pt-2 mt-2">{p.note}</p>
+                  </div>
+                </div>
+              </div>
+            </ScrollReveal>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+// ============================================================================
 // S2: The Proof — Ground Truth Validation
 // ============================================================================
 
@@ -360,7 +596,7 @@ function SectionProof({ data }: { data: ExecutiveSummaryResponse }) {
 
   return (
     <section>
-      <SectionHeading number="02" title={t('s2.title')} icon={Target} />
+      <SectionHeading number="08" title={t('s2.title')} icon={Target} />
 
       <p className="text-sm leading-relaxed text-text-secondary mb-4">
         <Trans
@@ -392,25 +628,18 @@ function SectionProof({ data }: { data: ExecutiveSummaryResponse }) {
         <p className="text-xs font-bold tracking-wider uppercase text-text-muted font-mono mb-2">
           {t('s2.detectionLabel')}
         </p>
-        {sortedCases.map((c) => (
+        {sortedCases.map((c, idx) => (
           <div key={c.name} className="flex items-center gap-3">
             <div className="w-52 sm:w-64 text-right">
               <span className="text-xs text-text-secondary truncate block">{c.name}</span>
             </div>
             <div className="flex-1 h-5 bg-surface-raised rounded overflow-hidden relative">
-              <div
-                className="h-full rounded transition-all"
-                style={{
-                  width: `${c.high_plus_pct}%`,
-                  background:
-                    c.high_plus_pct >= 90
-                      ? RISK_COLORS.critical
-                      : c.high_plus_pct >= 60
-                        ? RISK_COLORS.high
-                        : RISK_COLORS.medium,
-                }}
+              <AnimatedSegment
+                pct={c.high_plus_pct}
+                color={c.high_plus_pct >= 90 ? RISK_COLORS.critical : c.high_plus_pct >= 60 ? RISK_COLORS.high : RISK_COLORS.medium}
+                delay={idx * 80}
               />
-              <span className="absolute right-2 top-0 bottom-0 flex items-center text-xs font-bold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] font-mono">
+              <span className="absolute right-2 top-0 bottom-0 flex items-center text-xs font-bold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] font-mono z-10">
                 {c.high_plus_pct}%
               </span>
             </div>
@@ -474,7 +703,7 @@ function SectionSectors({
 
   return (
     <section>
-      <SectionHeading number="03" title={t('s3.title')} icon={Scale} />
+      <SectionHeading number="07" title={t('s3.title')} icon={Scale} />
 
       <p className="text-sm leading-relaxed text-text-secondary mb-6">
         <Trans
@@ -493,7 +722,7 @@ function SectionSectors({
         <p className="text-xs font-bold tracking-wider uppercase text-text-muted font-mono mb-2">
           {t('s3.riskLabel')}
         </p>
-        {sortedSectors.map((s) => {
+        {sortedSectors.map((s, idx) => {
           const riskValue = (s.high_plus_pct / 100) * s.value
           const pct = maxRiskValue > 0 ? (riskValue / maxRiskValue) * 100 : 0
           const color = SECTOR_COLORS[s.code] || SECTOR_COLORS.otros
@@ -511,12 +740,7 @@ function SectionSectors({
                   {t(s.code, { ns: 'sectors' })}
                 </span>
               </div>
-              <div className="flex-1 h-4 bg-surface-raised rounded overflow-hidden">
-                <div
-                  className="h-full rounded transition-all"
-                  style={{ width: `${Math.max(pct, 1)}%`, background: color }}
-                />
-              </div>
+              <AnimatedFill pct={Math.max(pct, 1)} color={color} delay={idx * 60} height="h-4" />
               <span className="text-xs text-text-muted w-24 text-right font-mono">
                 {formatCompactMXN(riskValue)}
               </span>
@@ -563,7 +787,7 @@ function SectionVendors({
 
   return (
     <section>
-      <SectionHeading number="04" title={t('s4.title')} icon={Users} />
+      <SectionHeading number="06" title={t('s4.title')} icon={Users} />
 
       <p className="text-sm leading-relaxed text-text-secondary mb-4">
         <Trans
@@ -671,7 +895,7 @@ function SectionNetwork({ patternCounts }: {
 
   return (
     <section>
-      <SectionHeading number="05" title={t('s5.title')} icon={Network} />
+      <SectionHeading number="09" title={t('s5.title')} icon={Network} />
 
       <p className="text-sm leading-relaxed text-text-secondary mb-4">
         <Trans
@@ -729,7 +953,7 @@ function SectionData() {
 
   return (
     <section>
-      <SectionHeading number="06" title={t('s6.title')} icon={Database} />
+      <SectionHeading number="01" title={t('s6.title')} icon={Database} />
 
       <p className="text-sm leading-relaxed text-text-secondary mb-4">
         {t('s6.p1')}
@@ -791,7 +1015,7 @@ function SectionAdministrations({ data }: { data: ExecutiveSummaryResponse }) {
 
   return (
     <section>
-      <SectionHeading number="07" title={t('s7.title')} icon={Landmark} />
+      <SectionHeading number="05" title={t('s7.title')} icon={Landmark} />
 
       <p className="text-sm leading-relaxed text-text-secondary mb-6">
         <Trans
@@ -854,7 +1078,7 @@ function SectionModel({ data }: { data: ExecutiveSummaryResponse }) {
 
   return (
     <section>
-      <SectionHeading number="08" title={t('s8.title')} icon={Brain} />
+      <SectionHeading number="03" title={t('s8.title')} icon={Brain} />
 
       <p className="text-sm leading-relaxed text-text-secondary mb-4">
         <Trans
@@ -956,7 +1180,7 @@ function SectionLimitations() {
 
   return (
     <section>
-      <SectionHeading number="09" title={t('s9.title')} icon={EyeOff} />
+      <SectionHeading number="10" title={t('s9.title')} icon={EyeOff} />
 
       <p className="text-sm leading-relaxed text-text-secondary mb-6">
         {t('s9.p1')}
@@ -1005,7 +1229,7 @@ function SectionRecommendations({ navigate }: { navigate: (path: string) => void
 
   return (
     <section>
-      <SectionHeading number="10" title={t('s10.title')} icon={ArrowRight} />
+      <SectionHeading number="11" title={t('s10.title')} icon={ArrowRight} />
 
       <p className="text-sm leading-relaxed text-text-secondary mb-6">
         {t('s10.p1')}
@@ -1090,33 +1314,59 @@ function SectionHeading({
   icon: React.ElementType
 }) {
   return (
-    <div className="flex items-center gap-3 mb-4">
-      <Icon className="h-5 w-5 text-text-muted flex-shrink-0" />
-      <h2 className="text-xl font-bold text-text-primary">
-        <span className="text-text-muted font-mono text-sm mr-2">{number} —</span>
-        {title}
-      </h2>
+    <div className="mb-5">
+      <div className="flex items-center gap-3 mb-2">
+        <div className="relative">
+          <Icon className="h-5 w-5 text-text-muted flex-shrink-0" />
+        </div>
+        <h2 className="text-xl font-bold text-text-primary">
+          <span className="text-text-muted font-mono text-sm mr-2">{number} —</span>
+          {title}
+        </h2>
+      </div>
+      <div
+        className="h-px ml-8 rounded-full"
+        style={{
+          background: 'linear-gradient(90deg, var(--color-accent) 0%, transparent 60%)',
+          opacity: 0.4,
+        }}
+      />
     </div>
   )
 }
 
-function HeadlineStat({ value, label }: { value: string; label: string }) {
+function HeadlineStat({ value, label, rawNumber }: { value: string; label: string; rawNumber?: number }) {
+  const { ref, value: animated } = useCountUp(rawNumber ?? 0, 1600)
+  const displayValue = rawNumber !== undefined
+    ? (animated >= 1_000_000_000
+        ? `${(animated / 1_000_000_000).toFixed(1)}T`
+        : animated >= 1_000_000
+          ? `${(animated / 1_000_000).toFixed(0)}M`
+          : animated.toLocaleString())
+    : value
+
   return (
-    <div className="text-center py-4 px-2 border border-border/20 rounded-lg bg-surface-raised/20">
-      <div className="text-xl sm:text-2xl font-bold text-text-primary font-mono tracking-tight">
-        {value}
-      </div>
-      <div className="text-xs text-text-muted uppercase tracking-wider font-mono mt-1">
-        {label}
-      </div>
+    <div className="text-center py-4 px-2 border border-border/20 rounded-lg bg-surface-raised/20 hover:bg-surface-raised/40 hover:border-accent/20 transition-all duration-300 group">
+      <span ref={ref}>
+        <div className="text-xl sm:text-2xl font-bold text-text-primary font-mono tracking-tight group-hover:text-accent transition-colors duration-300">
+          {displayValue}
+        </div>
+      </span>
+      <div className="text-xs text-text-muted uppercase tracking-wider font-mono mt-1">{label}</div>
     </div>
   )
 }
 
-function StatCallout({ value, label, color }: { value: string; label: string; color: string }) {
+function StatCallout({ value, label, color, pulse }: { value: string; label: string; color: string; pulse?: boolean }) {
   return (
     <div className="text-center py-2">
-      <div className="text-lg font-bold font-mono" style={{ color }}>
+      <div
+        className="text-lg font-bold font-mono"
+        style={{
+          color,
+          animation: pulse ? 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' : undefined,
+        }}
+      >
         {value}
       </div>
       <div className="text-xs text-text-muted">{label}</div>

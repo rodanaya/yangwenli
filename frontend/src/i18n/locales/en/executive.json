@@ -14,10 +14,10 @@
   "keyFindings": {
     "title": "Key Findings",
     "items": [
-      "Our model would have flagged IMSS fraud 8 years before it was discovered",
-      "7.9% of procurement value shows patterns consistent with corruption",
-      "Price volatility, not procedure type, is the strongest corruption signal",
-      "Validated against 15 real corruption cases with 96% accuracy"
+      "71% of federal contracts skip open competition — a structural feature of Mexican procurement, not an exception",
+      "Every December for 23 years, spending spikes 1.33× — budget dumping repeated across every administration",
+      "7.9% of total procurement value is flagged as high or critical risk, concentrated in a handful of dominant vendors",
+      "Our AI model validated at 96% accuracy: it would have flagged IMSS fraud 8 years before the scandal broke"
     ]
   },
 
@@ -38,6 +38,29 @@
     "price_ratio": "Price Ratio",
     "price_hyp_confidence": "Price Hypothesis",
     "co_bid_rate": "Co-Bidding Rate"
+  },
+
+  "sPatterns": {
+    "title": "Three Systemic Patterns",
+    "intro": "Before asking which contracts are suspicious, the data reveals something more fundamental: three structural patterns that pervade Mexican federal procurement across all administrations, sectors, and decades. These are not anomalies — they are the system.",
+    "p1DirectAward": {
+      "label": "Pattern 01",
+      "name": "The Direct-Award Economy",
+      "desc": "{{pct}}% of all federal contracts are awarded without open competition — either as direct awards or restricted tenders. Conventional anti-corruption frameworks treat direct awards as red flags. The Mexican data reveals something more troubling: <bold>competition itself is largely absent</bold>. There is no tender to rig when there is only one bidder.",
+      "note": "This is not a recent anomaly. The non-competitive rate has remained above 65% across all five administrations since 2002."
+    },
+    "p2December": {
+      "label": "Pattern 02",
+      "name": "The December Rush",
+      "desc": "Every December, contract awards spike 1.33× above the monthly average — a pattern that has repeated without interruption across 23 years and five administrations. It is driven by the fiscal year's use-it-or-lose-it budget logic: agencies rush to commit unspent funds before December 31. Rushed procurement is compromised procurement.",
+      "note": "In years with sufficient data, the spike was statistically significant in 3 of 10 measured years. The pattern is structural; its corruption impact is compounded by deadline pressure."
+    },
+    "p3Concentration": {
+      "label": "Pattern 03",
+      "name": "The Value Concentration Paradox",
+      "desc": "7.9% of total procurement value sits in contracts flagged as high or critical risk — and that risk concentrates in a vanishingly small number of dominant vendors. The vendors who capture the most value are also the most statistically anomalous. Concentration is not just a symptom of corruption; it is its strongest statistical predictor.",
+      "note": "Price volatility — vendors with wildly varying contract sizes — is the #1 corruption signal. The corruption is in who keeps winning, not in which procedure type was used."
+    }
   },
 
   "s1": {

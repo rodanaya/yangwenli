@@ -127,19 +127,18 @@ export function Dashboard() {
     staleTime: 10 * 60 * 1000,
   })
 
-  // API call 6: December spike analysis
-  const { data: decemberSpike } = useQuery({
-    queryKey: ['analysis', 'december-spike'],
-    queryFn: () => analysisApi.getDecemberSpike(),
-    staleTime: 10 * 60 * 1000,
-  })
-
-  // API call 7: Monthly breakdown for December Rush sparkline
-  const { data: monthlyData } = useQuery({
-    queryKey: ['analysis', 'monthly-breakdown', 'dashboard'],
-    queryFn: () => analysisApi.getMonthlyBreakdown(2023),
-    staleTime: 60 * 60 * 1000, // 1 hour — historical data, won't change
-  })
+  // API call 6+7 replaced: december_spike and monthly_2023 are now precomputed
+  // and returned directly in the fast-dashboard response (zero extra API calls)
+  const decemberSpike = fastDashboard?.december_spike as {
+    average_spike_ratio: number
+    years_with_significant_spike: number
+    total_years_analyzed: number
+    pattern_detected: boolean
+    years: Array<{ year: number; spike_ratio: number; is_significant: boolean }>
+  } | null | undefined
+  const monthlyData = fastDashboard?.monthly_2023 as {
+    months: Array<{ month: number; contracts: number; value: number }>
+  } | null | undefined
 
   // API call 8: Top investigation case for Ground Truth "smoking gun"
   const { data: topCaseData } = useQuery({

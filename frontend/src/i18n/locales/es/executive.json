@@ -14,10 +14,10 @@
   "keyFindings": {
     "title": "Hallazgos Clave",
     "items": [
-      "Nuestro modelo habr\u00eda detectado el fraude del IMSS 8 a\u00f1os antes de que fuera descubierto",
-      "El 7.9% del valor de contrataci\u00f3n muestra patrones consistentes con corrupci\u00f3n",
-      "La volatilidad de precios, no el tipo de procedimiento, es la se\u00f1al de corrupci\u00f3n m\u00e1s fuerte",
-      "Validado contra 15 casos reales de corrupci\u00f3n con 96% de precisi\u00f3n"
+      "El 71% de los contratos federales omiten la licitación abierta — una característica estructural, no una excepción",
+      "Cada diciembre durante 23 años, el gasto aumenta 1.33× — vaciado presupuestal repetido en cada administración",
+      "El 7.9% del valor total de contratación está clasificado como riesgo alto o crítico, concentrado en pocos proveedores dominantes",
+      "Nuestro modelo de IA validado con 96% de precisión habría detectado el fraude del IMSS 8 años antes del escándalo"
     ]
   },
 
@@ -38,6 +38,29 @@
     "price_ratio": "Ratio de Precios",
     "price_hyp_confidence": "Hip\u00f3tesis de Precios",
     "co_bid_rate": "Tasa de Co-licitaci\u00f3n"
+  },
+
+  "sPatterns": {
+    "title": "Tres Patrones Sistémicos",
+    "intro": "Antes de preguntar qué contratos son sospechosos, los datos revelan algo más fundamental: tres patrones estructurales que permean la contratación pública federal mexicana en todas las administraciones, sectores y décadas. No son anomalías — son el sistema.",
+    "p1DirectAward": {
+      "label": "Patrón 01",
+      "name": "La Economía de Adjudicación Directa",
+      "desc": "El {{pct}}% de todos los contratos federales se adjudica sin licitación abierta — ya sea como adjudicaciones directas o licitaciones restringidas. Los marcos convencionales anticorrupción tratan las adjudicaciones directas como señales de alerta. Los datos mexicanos revelan algo más preocupante: <bold>la competencia misma está en gran medida ausente</bold>. No hay licitación que manipular cuando solo hay un postor.",
+      "note": "Esta no es una anomalía reciente. La tasa no competitiva se ha mantenido por encima del 65% en las cinco administraciones desde 2002."
+    },
+    "p2December": {
+      "label": "Patrón 02",
+      "name": "La Carrera de Diciembre",
+      "desc": "Cada diciembre, las adjudicaciones de contratos aumentan 1.33× por encima del promedio mensual — un patrón que se ha repetido sin interrupción durante 23 años y cinco administraciones. Es impulsado por la lógica presupuestal de 'úsalo o piérdelo' del año fiscal: las dependencias se apresuran a comprometer fondos no gastados antes del 31 de diciembre. La contratación apresurada es contratación comprometida.",
+      "note": "En años con datos suficientes, el incremento fue estadísticamente significativo en 3 de 10 años medidos. El patrón es estructural; su impacto en la corrupción se agrava por la presión de plazos."
+    },
+    "p3Concentration": {
+      "label": "Patrón 03",
+      "name": "La Paradoja de la Concentración de Valor",
+      "desc": "El 7.9% del valor total de contratación se encuentra en contratos clasificados como riesgo alto o crítico — y ese riesgo se concentra en un número muy reducido de proveedores dominantes. Los proveedores que capturan más valor son también los más estadísticamente anómalos. La concentración no es solo un síntoma de la corrupción; es su predictor estadístico más fuerte.",
+      "note": "La volatilidad de precios — proveedores con montos de contratos que varían enormemente — es la señal #1 de corrupción. La corrupción está en quién sigue ganando, no en qué tipo de procedimiento se usó."
+    }
   },
 
   "s1": {

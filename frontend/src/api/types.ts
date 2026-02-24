@@ -493,6 +493,8 @@ export interface FastDashboardData {
   sectors: DashboardSectorItem[]
   risk_distribution: RiskDistribution[]
   yearly_trends: YearOverYearChange[]
+  december_spike?: Record<string, unknown> | null
+  monthly_2023?: Record<string, unknown> | null
   cached_at: string | null
 }
 

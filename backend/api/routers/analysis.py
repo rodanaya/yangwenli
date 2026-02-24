@@ -8,6 +8,7 @@ price hypothesis analysis, and event-based analysis.
 import sqlite3
 import logging
 import json
+import time as _time
 from typing import Optional, List, Dict, Any, Tuple
 from fastapi import APIRouter, HTTPException, Query, Path
 from pydantic import BaseModel, Field
@@ -300,6 +301,11 @@ def get_monthly_breakdown(
     institution_id: Optional[int] = Query(None, description="Filter by institution"),
 ):
     """Get monthly breakdown of contracts for a specific year."""
+    _cache_key = f"{year}:{sector_id}:{institution_id}"
+    _cached = _monthly_cache.get(_cache_key)
+    if _cached and (_time.time() - _cached["ts"]) < _MONTHLY_CACHE_TTL:
+        return _cached["data"]
+
     try:
         with get_db() as conn:
             cursor = conn.cursor()
@@ -360,11 +366,13 @@ def get_monthly_breakdown(
             if other_months_avg > 0:
                 december_spike = round(monthly_data[12]['value'] / other_months_avg, 2)
 
-            return MonthlyBreakdownResponse(
+            response = MonthlyBreakdownResponse(
                 year=year, months=months, total_contracts=total_contracts,
                 total_value=total_value, avg_risk=round(avg_risk, 4),
                 december_spike=december_spike
             )
+            _monthly_cache[_cache_key] = {"ts": _time.time(), "data": response}
+            return response
 
     except sqlite3.Error as e:
         logger.error(f"Database error in get_monthly_breakdown: {e}")
@@ -373,6 +381,14 @@ def get_monthly_breakdown(
 
 _yoy_cache: Dict[str, Any] = {}
 _YOY_CACHE_TTL = 600  # 10 minutes
+
+# Cache for monthly-breakdown (keyed by (year, sector_id, institution_id)); TTL 1 hour
+_monthly_cache: Dict[str, Any] = {}
+_MONTHLY_CACHE_TTL = 3600
+
+# Cache for december-spike-analysis (keyed by (start_year, end_year, sector_id)); TTL 1 hour
+_dec_spike_cache: Dict[str, Any] = {}
+_DEC_SPIKE_CACHE_TTL = 3600
 
 
 @router.get("/year-over-year", response_model=YearOverYearResponse)
@@ -599,6 +615,11 @@ def get_december_spike_analysis(
     sector_id: Optional[int] = Query(None, ge=1, le=12),
 ):
     """Analyze year-end spending spikes across multiple years."""
+    _spike_key = f"{start_year}:{end_year}:{sector_id}"
+    _spike_cached = _dec_spike_cache.get(_spike_key)
+    if _spike_cached and (_time.time() - _spike_cached["ts"]) < _DEC_SPIKE_CACHE_TTL:
+        return _spike_cached["data"]
+
     try:
         with get_db() as conn:
             cursor = conn.cursor()
@@ -649,7 +670,7 @@ def get_december_spike_analysis(
             spike_ratios = [y["spike_ratio"] for y in years_data if y["spike_ratio"]]
             avg_spike = sum(spike_ratios) / len(spike_ratios) if spike_ratios else 0
 
-            return {
+            result = {
                 "years": years_data,
                 "average_spike_ratio": round(avg_spike, 2),
                 "years_with_significant_spike": sum(1 for y in years_data if y["is_significant"]),
@@ -657,6 +678,8 @@ def get_december_spike_analysis(
                 "pattern_detected": avg_spike > 1.3,
                 "description": f"December spending averages {avg_spike:.1f}x other months" if avg_spike > 1 else "No significant December spike pattern"
             }
+            _dec_spike_cache[_spike_key] = {"ts": _time.time(), "data": result}
+            return result
 
     except sqlite3.Error as e:
         logger.error(f"Database error in get_december_spike_analysis: {e}")
