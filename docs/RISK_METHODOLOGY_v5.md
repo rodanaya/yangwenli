@@ -1,6 +1,6 @@
 # Risk Scoring Methodology v5.0
 
-**Last Updated:** February 16, 2026 | **Contracts:** 3,110,007 | **Years:** 2002-2025
+**Last Updated:** February 24, 2026 | **Contracts:** 3,110,007 | **Years:** 2002-2025
 
 ---
 
@@ -8,14 +8,14 @@
 
 | Level | Threshold | Count | % | Action |
 |-------|-----------|-------|---|--------|
-| **Critical** | >= 0.50 | 178,938 | 5.8% | Immediate investigation |
-| **High** | >= 0.30 | 67,190 | 2.2% | Priority review |
-| **Medium** | >= 0.10 | 294,468 | 9.5% | Watch list |
-| **Low** | < 0.10 | 2,569,411 | 82.6% | Standard monitoring |
+| **Critical** | >= 0.50 | 189,244 | 6.1% | Immediate investigation |
+| **High** | >= 0.30 | 71,981 | 2.3% | Priority review |
+| **Medium** | >= 0.10 | 311,706 | 10.0% | Watch list |
+| **Low** | < 0.10 | 2,537,076 | 81.6% | Standard monitoring |
 
-**High-risk rate: 7.9%** (OECD benchmark: 2-15%)
+**High-risk rate: 8.4%** (OECD benchmark: 2-15%)
 
-**Validation:** Train AUC = 0.967, Test AUC = 0.960 (temporal split), Brier = 0.060
+**Validation (v5.0.2):** Train AUC = 0.965, Test AUC = 0.957 (temporal split), PU c = 0.886
 
 ---
 
@@ -66,8 +66,12 @@ v4.0 trained on 9 corruption cases, but 3 cases (IMSS, Segalmex, COVID-19) contr
 | **13** | **PEMEX-Cotemar Irregularities** | **Procurement fraud** | **Energia** | **1** | **51** |
 | **14** | **SAT Tender Rigging (SixSigma)** | **Tender rigging** | **Hacienda** | **1** | **147** |
 | **15** | **Government Voucher Monopoly** | **Monopoly** | **Energia** | **1** | **2,939** |
+| **16** | **ISSSTE Ambulance Leasing Fraud** | **Overpricing** | **Trabajo** | **1** | **603** |
+| **17** | **Decoaro Ghost Cleaning Company** | **Ghost companies** | **Multiple** | **1** | **46** |
+| **18** | **CONAGUA Ghost Contractor Rotation** | **Ghost companies** | **Ambiente** | **3** | **29** |
+| **19** | **SEGOB-Mainbit IT Monopoly** | **Monopoly** | **Gobernacion** | **1** | **604** |
 
-**Total:** 27 matched vendors, 26,582 contracts across all 12 sectors.
+**Total (v5.0.2):** 33 matched vendors, 27,864 contracts across all 12 sectors.
 
 *Case 9 shares vendors with Case 5 (Odebrecht). Documented for reference.
 
@@ -424,6 +428,7 @@ python -m scripts.precompute_stats
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
+| **5.0.2** | 2026-02-24 | Ground truth expansion: 4 new cases (Trabajo, Ambiente, Gobernacion sectors), total 19 cases, 33 vendors, 27,864 contracts. All 12 sectors now have dedicated sub-models. Train AUC 0.965, Test AUC 0.957, high-risk rate 8.4%. |
 | **5.0.1** | 2026-02-16 | Updated docs to match database: 16 features (4 new behavioral), Train AUC 0.967, Test AUC 0.960, c=0.887, C=10.0/l1=0.25. Fixed views referencing empty risk_scores table. |
 | **5.0.0** | 2026-02-14 | Per-sector sub-models, diversified ground truth (15 cases, 27 vendors), temporal train/test split, Elkan & Noto PU correction, cross-validated ElasticNet. |
 | 4.0.2 | 2026-02-09 | Dampened coefficients, OECD-compliant thresholds. AUC 0.942. |

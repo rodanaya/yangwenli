@@ -75,21 +75,21 @@ For detailed validation rules, see @.claude/rules/data-validation.md
 
 **Three model versions** — v3.3 (weighted checklist), v4.0 (statistical), v5.0 (per-sector calibrated, active):
 
-### v5.0: Per-Sector Calibrated Model (active, 2026-02-14)
+### v5.0: Per-Sector Calibrated Model (active, v5.0.2 2026-02-24)
 
-Per-sector calibrated probabilities P(corrupt|z) with confidence intervals. **Train AUC: 0.967, Test AUC: 0.960** (temporal split), high-risk rate: 7.9%.
+Per-sector calibrated probabilities P(corrupt|z) with confidence intervals. **Train AUC: 0.965, Test AUC: 0.957** (temporal split), high-risk rate: 8.4%.
 
 - 16 z-score features (12 original + 4 new: price_volatility, institution_diversity, win_rate, sector_spread)
 - 12 per-sector logistic regression sub-models + 1 global fallback
-- Diversified ground truth: 15 cases, 27 vendors, 26,582 contracts across all 12 sectors
+- Diversified ground truth: **19 cases, 33 vendors, 27,864 contracts across all 12 sectors**
 - Temporal train/test split (train ≤2020, test ≥2021) — honest generalization
-- Elkan & Noto (2008) PU-learning correction (c=0.887) — breaks v4.0's circular estimator
+- Elkan & Noto (2008) PU-learning correction (c=0.886) — breaks v4.0's circular estimator
 - Cross-validated ElasticNet (C=10.0, l1_ratio=0.25) — no ad-hoc dampening needed
 - 500 bootstrap 95% confidence intervals
 
 **Top predictors**: price_volatility (+1.22), institution_diversity (-0.85), win_rate (+0.73), vendor_concentration (+0.43)
 **Risk Levels**: Critical (>=0.50), High (>=0.30), Medium (>=0.10), Low (<0.10)
-**Distribution**: Critical 5.8%, High 2.2%, Medium 9.5%, Low 82.6%
+**Distribution**: Critical 6.1%, High 2.3%, Medium 10.0%, Low 81.6%
 
 ### v4.0: Statistical Framework (preserved in risk_score_v4)
 
