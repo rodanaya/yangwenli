@@ -63,6 +63,9 @@ IF_RANDOM_STATE = 42
 # Number of top anomalies per sector to persist
 DEFAULT_TOP_N = 50
 
+# Max contracts to load per sector (prevents OOM on large sectors)
+MAX_SAMPLE_SIZE = 200_000
+
 # Z-score features to use for price anomaly detection.
 # These are the 6 most relevant to price manipulation.
 PRICE_FEATURES = [
@@ -208,7 +211,7 @@ def run_isolation_forest(X: np.ndarray) -> np.ndarray:
         n_estimators=IF_N_ESTIMATORS,
         contamination=IF_CONTAMINATION,
         random_state=IF_RANDOM_STATE,
-        n_jobs=-1,
+        n_jobs=1,
     )
     clf.fit(X_scaled)
     raw = clf.decision_function(X_scaled)
@@ -267,6 +270,13 @@ def process_sector(
 
     n_contracts = len(rows)
     logger.info("  Loaded %d contracts", n_contracts)
+
+    # Random sample to avoid OOM on large sectors
+    if n_contracts > MAX_SAMPLE_SIZE:
+        rng = np.random.default_rng(42)
+        indices = rng.choice(n_contracts, size=MAX_SAMPLE_SIZE, replace=False)
+        rows = [rows[i] for i in sorted(indices)]
+        logger.info("  Sampled down to %d contracts (OOM guard)", MAX_SAMPLE_SIZE)
 
     # ------------------------------------------------------------------
     # 3. Build feature matrix
@@ -333,7 +343,8 @@ def process_sector(
     # 8. Update price_hypotheses.ml_anomaly_score for matching contracts
     # ------------------------------------------------------------------
     # Build a mapping: contract_id -> anomaly_score for ALL contracts (not just top_n)
-    score_map: dict[int, float] = {contract_ids[i]: float(scores[i]) for i in range(n_contracts)}
+    # Use len(contract_ids) not n_contracts — they differ after sampling
+    score_map: dict[int, float] = {contract_ids[i]: float(scores[i]) for i in range(len(contract_ids))}
 
     # Fetch contract_ids from price_hypotheses in this sector
     cursor.execute(
@@ -342,15 +353,18 @@ def process_sector(
     )
     hyp_contract_ids = [r[0] for r in cursor.fetchall()]
 
-    updated_hyp = 0
-    for cid in hyp_contract_ids:
-        ml_score = score_map.get(cid)
-        if ml_score is not None:
-            cursor.execute(
-                "UPDATE price_hypotheses SET ml_anomaly_score = ? WHERE contract_id = ? AND sector_id = ?",
-                (ml_score, cid, sector_id),
-            )
-            updated_hyp += 1
+    # Batch update via executemany — ~100x faster than individual UPDATEs
+    updates = [
+        (score_map[cid], cid, sector_id)
+        for cid in hyp_contract_ids
+        if cid in score_map
+    ]
+    updated_hyp = len(updates)
+    if updates:
+        cursor.executemany(
+            "UPDATE price_hypotheses SET ml_anomaly_score = ? WHERE contract_id = ? AND sector_id = ?",
+            updates,
+        )
 
     conn.commit()
 
