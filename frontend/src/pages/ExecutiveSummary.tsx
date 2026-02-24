@@ -207,7 +207,8 @@ function ReportHeader({ data }: { data: ExecutiveSummaryResponse }) {
   const totalValueUSD = headline.total_value / 17.5
 
   return (
-    <header className="pt-4 relative overflow-hidden">
+    <header className="pt-4 relative overflow-hidden logh-frame">
+      <TacticalCorners />
       {/* Particle field background */}
       <div className="absolute inset-0 -mx-4 -mt-4" style={{ height: '320px' }}>
         <ParticleField />
@@ -1894,7 +1895,23 @@ function SectorCallout({ name, color, text }: { name: string; color: string; tex
 }
 
 function Divider() {
-  return <div className="h-px bg-border/20" />
+  return (
+    <div className="relative flex items-center justify-center py-1">
+      <div className="absolute inset-y-1/2 inset-x-0 h-px bg-border/20" />
+      <span className="relative bg-background px-2 text-[10px] text-text-muted/25 font-mono select-none leading-none">✦</span>
+    </div>
+  )
+}
+
+function TacticalCorners() {
+  return (
+    <>
+      <div className="logh-corner logh-corner-tl" />
+      <div className="logh-corner logh-corner-tr" />
+      <div className="logh-corner logh-corner-bl" />
+      <div className="logh-corner logh-corner-br" />
+    </>
+  )
 }
 
 function LoadingSkeleton() {
