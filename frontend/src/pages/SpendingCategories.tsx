@@ -27,6 +27,11 @@ import {
   LineChart,
   Line,
   Legend,
+  ScatterChart,
+  Scatter,
+  ZAxis,
+  ReferenceLine,
+  Cell,
 } from '@/components/charts'
 import {
   ShoppingCart,
@@ -106,6 +111,271 @@ function getTextColor(bgColor: string): string {
 function SortIndicator({ field, sortField, sortDir }: { field: SortField; sortField: SortField; sortDir: SortDir }) {
   if (field !== sortField) return <span className="text-text-muted/40 ml-1">↕</span>
   return <span className="text-accent ml-1">{sortDir === 'desc' ? '▼' : '▲'}</span>
+}
+
+/** Interpolates green→red based on risk score (0→#4ade80, 0.5+→#f87171) */
+function riskToColor(score: number): string {
+  const clamped = Math.min(1, score / 0.5)
+  const r = Math.round(74  + (248 - 74)  * clamped)
+  const g = Math.round(222 + (113 - 222) * clamped)
+  const b = Math.round(128 + (113 - 128) * clamped)
+  return `rgb(${r},${g},${b})`
+}
+
+// =============================================================================
+// Scatter plot tooltip
+// =============================================================================
+
+interface ScatterPayloadItem {
+  payload: ScatterDatum
+}
+
+interface ScatterTooltipProps {
+  active?: boolean
+  payload?: ScatterPayloadItem[]
+}
+
+function CustomScatterTooltip({ active, payload }: ScatterTooltipProps) {
+  if (!active || !payload?.length) return null
+  const d = payload[0].payload
+  return (
+    <div
+      className="rounded-lg border p-3 text-xs font-mono shadow-lg"
+      style={{ backgroundColor: '#0d1117', borderColor: 'rgba(255,255,255,0.08)' }}
+    >
+      <p className="font-bold text-text-primary mb-1.5 max-w-[200px] whitespace-normal text-[11px]">{d.name}</p>
+      <p style={{ color: riskToColor(d.risk) }}>Risk: {(d.risk * 100).toFixed(1)}% ({d.riskLabel})</p>
+      <p className="text-text-secondary">Value: {formatCompactMXN(d.value)}</p>
+      <p className="text-text-muted">Contracts: {formatNumber(d.contracts)}</p>
+      {d.sectorCode && (
+        <p className="text-text-muted capitalize">Sector: {d.sectorCode}</p>
+      )}
+    </div>
+  )
+}
+
+// =============================================================================
+// Scatter plot data type
+// =============================================================================
+
+interface ScatterDatum {
+  x: number       // log10 of total_value_mxn
+  y: number       // avg_risk_score
+  z: number       // sqrt of contracts (for bubble size)
+  name: string
+  value: number
+  risk: number
+  contracts: number
+  riskLabel: string
+  sectorCode: string | null
+  fill: string
+}
+
+// =============================================================================
+// Risk × Value Scatter Chart
+// =============================================================================
+
+function RiskValueScatter({ categories }: { categories: CategoryStat[] }) {
+  const data: ScatterDatum[] = categories
+    .filter(c => c.total_value > 0 && c.avg_risk > 0)
+    .map(c => ({
+      x: Math.log10(c.total_value),
+      y: c.avg_risk,
+      z: Math.sqrt(c.total_contracts || 1),
+      name: c.name_en || c.name_es,
+      value: c.total_value,
+      risk: c.avg_risk,
+      contracts: c.total_contracts,
+      riskLabel: getRiskLabel(c.avg_risk),
+      sectorCode: c.sector_code,
+      fill: c.avg_risk >= 0.5 ? '#f87171'
+          : c.avg_risk >= 0.3 ? '#fb923c'
+          : c.avg_risk >= 0.1 ? '#fbbf24'
+          : '#4ade80',
+    }))
+
+  if (data.length === 0) return null
+
+  const xValues = data.map(d => d.x)
+  const medianX = xValues.sort((a, b) => a - b)[Math.floor(xValues.length / 2)]
+  const avgY = data.reduce((s, d) => s + d.y, 0) / data.length
+
+  // Quadrant labels styled via manual annotation — we use 4 reference areas
+  const xMin = Math.min(...xValues) - 0.2
+  const xMax = Math.max(...xValues) + 0.2
+
+  return (
+    <Card className="bg-card border-border/40">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-mono text-text-primary flex items-center gap-2">
+          <TrendingUp className="h-3.5 w-3.5 text-text-muted" />
+          Risk vs. Value — Category Landscape
+        </CardTitle>
+        <p className="text-[11px] text-text-muted mt-0.5">
+          Each dot = one spending category. Size = contract count. Quadrant = investigation priority.
+        </p>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={420}>
+          <ScatterChart margin={{ top: 30, right: 60, bottom: 50, left: 50 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+            <XAxis
+              type="number"
+              dataKey="x"
+              name="Value (log scale)"
+              domain={[xMin, xMax]}
+              tick={{ fill: '#8b949e', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
+              label={{
+                value: 'Contract Value (log scale MXN) →',
+                position: 'insideBottom',
+                offset: -15,
+                fill: '#8b949e',
+                fontSize: 10,
+              }}
+              tickFormatter={(v: number) => {
+                const val = Math.pow(10, v)
+                if (val >= 1e12) return `${(val / 1e12).toFixed(0)}T`
+                if (val >= 1e9) return `${(val / 1e9).toFixed(0)}B`
+                if (val >= 1e6) return `${(val / 1e6).toFixed(0)}M`
+                return `${val.toFixed(0)}`
+              }}
+            />
+            <YAxis
+              type="number"
+              dataKey="y"
+              name="Risk Score"
+              domain={[0, 1]}
+              tick={{ fill: '#8b949e', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
+              tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
+              label={{
+                value: 'Avg Risk Score →',
+                angle: -90,
+                position: 'insideLeft',
+                offset: 10,
+                fill: '#8b949e',
+                fontSize: 10,
+              }}
+            />
+            <ZAxis type="number" dataKey="z" range={[20, 280]} />
+            <RechartsTooltip content={<CustomScatterTooltip />} />
+            {/* Quadrant dividers */}
+            <ReferenceLine
+              x={medianX}
+              stroke="rgba(255,255,255,0.12)"
+              strokeDasharray="4 4"
+            />
+            <ReferenceLine
+              y={avgY}
+              stroke="rgba(255,255,255,0.12)"
+              strokeDasharray="4 4"
+            />
+            {/* Quadrant labels via CustomLabel */}
+            <ReferenceLine
+              x={xMax - 0.05}
+              stroke="transparent"
+              label={{
+                value: 'INVESTIGATE NOW',
+                position: 'insideTopRight',
+                fill: '#f87171',
+                fontSize: 9,
+                fontFamily: 'var(--font-family-mono)',
+              }}
+            />
+            <ReferenceLine
+              x={xMin + 0.05}
+              stroke="transparent"
+              label={{
+                value: 'WATCH',
+                position: 'insideTopLeft',
+                fill: '#fbbf24',
+                fontSize: 9,
+                fontFamily: 'var(--font-family-mono)',
+              }}
+            />
+            <Scatter
+              data={data}
+              isAnimationActive={false}
+            >
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.fill} fillOpacity={0.75} />
+              ))}
+            </Scatter>
+          </ScatterChart>
+        </ResponsiveContainer>
+        {/* Legend */}
+        <div className="flex items-center gap-4 mt-2 flex-wrap">
+          {[
+            { color: '#f87171', label: 'Critical (≥50%)' },
+            { color: '#fb923c', label: 'High (≥30%)' },
+            { color: '#fbbf24', label: 'Medium (≥10%)' },
+            { color: '#4ade80', label: 'Low (<10%)' },
+          ].map(item => (
+            <div key={item.label} className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+              <span className="text-[10px] text-text-muted font-mono">{item.label}</span>
+            </div>
+          ))}
+          <span className="text-[10px] text-text-muted font-mono ml-auto">Bubble size = contract count</span>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// =============================================================================
+// Mini sparkline for category table rows
+// =============================================================================
+
+interface MiniSparklineProps {
+  values: number[]
+  color?: string
+  width?: number
+  height?: number
+}
+
+function MiniSparkline({ values, color = '#58a6ff', width = 56, height = 20 }: MiniSparklineProps) {
+  if (!values.length || values.every(v => v === 0)) {
+    return <span className="text-[9px] text-text-muted font-mono">—</span>
+  }
+  const max = Math.max(...values)
+  if (max === 0) return <span className="text-[9px] text-text-muted font-mono">—</span>
+
+  const pts = values.map((v, i) => {
+    const x = (i / (values.length - 1)) * (width - 2) + 1
+    const y = height - 2 - ((v / max) * (height - 4)) + 1
+    return `${x.toFixed(1)},${y.toFixed(1)}`
+  }).join(' ')
+
+  const lastVal = values[values.length - 1]
+  const firstNonZero = values.find(v => v > 0) ?? 0
+  const trend = lastVal > firstNonZero * 1.1 ? 'up' : lastVal < firstNonZero * 0.9 ? 'down' : 'flat'
+  const trendColor = trend === 'up' ? '#fb923c' : trend === 'down' ? '#4ade80' : color
+
+  return (
+    <svg
+      width={width}
+      height={height}
+      aria-hidden="true"
+      className="flex-shrink-0"
+      title={`5-year trend: ${values.map(v => formatCompactMXN(v)).join(', ')}`}
+    >
+      <polyline
+        points={pts}
+        fill="none"
+        stroke={trendColor}
+        strokeWidth={1.5}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        opacity={0.8}
+      />
+      {/* Last point dot */}
+      {values.length > 0 && (() => {
+        const lastX = width - 1
+        const lastY = height - 2 - ((lastVal / max) * (height - 4)) + 1
+        return <circle cx={lastX} cy={lastY} r={2} fill={trendColor} />
+      })()}
+    </svg>
+  )
 }
 
 // =============================================================================
@@ -348,6 +618,23 @@ export default function SpendingCategories() {
 
   const TREND_COLORS = ['#3b82f6', '#f97316', '#8b5cf6', '#16a34a', '#dc2626']
 
+  // Build per-category sparkline data from trend items (last 5 available years)
+  const categorySparklines = useMemo(() => {
+    if (!trendsData?.data) return new Map<number, number[]>()
+    const items: TrendItem[] = trendsData.data
+    const map = new Map<number, Map<number, number>>()
+    for (const item of items) {
+      if (!map.has(item.category_id)) map.set(item.category_id, new Map())
+      map.get(item.category_id)!.set(item.year, item.value)
+    }
+    const result = new Map<number, number[]>()
+    const recentYears = Array.from({ length: 5 }, (_, i) => yearTo - 4 + i)
+    for (const [catId, yearMap] of map.entries()) {
+      result.set(catId, recentYears.map(y => yearMap.get(y) ?? 0))
+    }
+    return result
+  }, [trendsData, yearTo])
+
   // Year range options
   const yearOptions = Array.from({ length: MAX_YEAR - MIN_YEAR + 1 }, (_, i) => MIN_YEAR + i)
 
@@ -585,6 +872,11 @@ export default function SpendingCategories() {
         </div>
       )}
 
+      {/* Risk × Value Scatter Chart */}
+      {!summaryLoading && filteredCategories.length > 0 && (
+        <RiskValueScatter categories={filteredCategories} />
+      )}
+
       {/* Section 2: Table */}
       <Card className="overflow-hidden">
         <CardHeader className="pb-2">
@@ -643,6 +935,9 @@ export default function SpendingCategories() {
                       <SortIndicator field="direct_award_pct" sortField={sortField} sortDir={sortDir} />
                     </th>
                     <th className="px-3 py-2.5 text-left font-medium hidden lg:table-cell">Top Vendor</th>
+                    <th className="px-3 py-2.5 text-right font-medium hidden xl:table-cell whitespace-nowrap">
+                      5yr Trend
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -700,6 +995,14 @@ export default function SpendingCategories() {
                             <ArrowUpRight className="h-3 w-3 flex-shrink-0" />
                           </button>
                         ) : '—'}
+                      </td>
+                      <td className="px-3 py-2 text-right hidden xl:table-cell">
+                        <div className="flex items-center justify-end">
+                          <MiniSparkline
+                            values={categorySparklines.get(cat.category_id) ?? []}
+                            color={getRiskColor(cat.avg_risk)}
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))}

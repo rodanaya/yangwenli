@@ -118,13 +118,103 @@ export default ExecutiveSummary
 // S0: Report Header
 // ============================================================================
 
+// ============================================================================
+// Particle Field — floating contract dots for hero background
+// ============================================================================
+
+function ParticleField() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    let raf: number
+    let W = canvas.width = canvas.offsetWidth
+    let H = canvas.height = canvas.offsetHeight
+
+    function resize() {
+      if (!canvas) return
+      W = canvas.width = canvas.offsetWidth
+      H = canvas.height = canvas.offsetHeight
+    }
+    const ro = new ResizeObserver(resize)
+    ro.observe(canvas)
+
+    // ~120 particles: mostly muted (safe), ~12% red (risky)
+    const particles = Array.from({ length: 120 }, () => {
+      const isRisky = Math.random() < 0.12
+      const isMed = Math.random() < 0.08
+      return {
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.8 + 0.6,
+        vx: (Math.random() - 0.5) * 0.18,
+        vy: (Math.random() - 0.5) * 0.18,
+        alpha: Math.random() * 0.5 + 0.15,
+        color: isRisky
+          ? '#f87171'
+          : isMed
+            ? '#fbbf24'
+            : 'rgba(88,166,255,0.6)',
+      }
+    })
+
+    function draw() {
+      if (!ctx) return
+      ctx.clearRect(0, 0, W, H)
+
+      for (const p of particles) {
+        p.x += p.vx
+        p.y += p.vy
+        if (p.x < 0) p.x = W
+        if (p.x > W) p.x = 0
+        if (p.y < 0) p.y = H
+        if (p.y > H) p.y = 0
+
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
+        ctx.fillStyle = p.color
+        ctx.globalAlpha = p.alpha
+        ctx.fill()
+      }
+      ctx.globalAlpha = 1
+      raf = requestAnimationFrame(draw)
+    }
+
+    draw()
+    return () => {
+      cancelAnimationFrame(raf)
+      ro.disconnect()
+    }
+  }, [])
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      style={{ opacity: 0.45 }}
+      aria-hidden
+    />
+  )
+}
+
 function ReportHeader({ data }: { data: ExecutiveSummaryResponse }) {
   const { t } = useTranslation('executive')
   const { headline } = data
   const totalValueUSD = headline.total_value / 17.5
 
   return (
-    <header className="pt-4">
+    <header className="pt-4 relative overflow-hidden">
+      {/* Particle field background */}
+      <div className="absolute inset-0 -mx-4 -mt-4" style={{ height: '320px' }}>
+        <ParticleField />
+        {/* Fade out gradient at bottom */}
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-background pointer-events-none" />
+      </div>
+      <div className="relative z-10">
       {/* Small caps label */}
       <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full border border-accent/30 bg-accent/5">
         <Shield className="h-3.5 w-3.5 text-accent" />
@@ -178,6 +268,7 @@ function ReportHeader({ data }: { data: ExecutiveSummaryResponse }) {
         <HeadlineStat value={formatCompactMXN(headline.total_value)} label={t('header.totalValue')} />
         <HeadlineStat value={formatNumber(headline.total_vendors)} label={t('header.vendors')} rawNumber={headline.total_vendors} />
         <HeadlineStat value={formatNumber(headline.total_institutions)} label={t('header.institutions')} rawNumber={headline.total_institutions} />
+      </div>
       </div>
     </header>
   )

@@ -13,7 +13,7 @@ import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber, getRiskLevel, toTitleCase } from '@/lib/utils'
-import { RISK_COLORS } from '@/lib/constants'
+import { RISK_COLORS, SECTOR_COLORS } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
 import type { MoneyFlowItem, RiskFactorFrequency, FactorCooccurrence } from '@/api/types'
 import {
@@ -26,8 +26,8 @@ import {
   Tooltip as RechartsTooltip,
   CartesianGrid,
   ComposedChart,
-  Line,
   Legend,
+  Line,
 } from '@/components/charts'
 import {
   TrendingUp,
@@ -79,6 +79,27 @@ function liftToColor(lift: number): string {
   if (lift >= 1.5) return 'bg-risk-high/25 text-risk-high'
   if (lift >= 1) return 'bg-risk-medium/20 text-risk-medium'
   return 'bg-zinc-700/30 text-text-muted'
+}
+
+// =============================================================================
+// Sector color resolver — maps institution name fragments to sector colors
+// =============================================================================
+
+/** Attempt to infer sector from institution name for node coloring. */
+function inferSectorColor(name: string): string {
+  const n = name.toLowerCase()
+  if (/salud|imss|issste|insalud|hospital|médico|medico|ssa|cnpss/.test(n)) return SECTOR_COLORS.salud
+  if (/educac|unam|ipn|sep|conacyt|tecnológic|universidad|escuela/.test(n)) return SECTOR_COLORS.educacion
+  if (/infra|scct|conagua|carretera|obra|construcción|caminos|puentes/.test(n)) return SECTOR_COLORS.infraestructura
+  if (/pemex|cfe|energía|energia|petróleo|petroleo|gas|comisión federal/.test(n)) return SECTOR_COLORS.energia
+  if (/defensa|sedena|semar|ejército|ejercito|armada/.test(n)) return SECTOR_COLORS.defensa
+  if (/tecnolog|informática|sistemas|digital|sat\b/.test(n)) return SECTOR_COLORS.tecnologia
+  if (/hacienda|shcp|fisco|tributar|banco de mexico|banxico/.test(n)) return SECTOR_COLORS.hacienda
+  if (/gobernac|interior|segob|migrac|policía|policia|fgr|pgr/.test(n)) return SECTOR_COLORS.gobernacion
+  if (/agricu|sagarpa|sader|campo|forestal|pesca|alimenta/.test(n)) return SECTOR_COLORS.agricultura
+  if (/ambient|ecología|ecologia|semarnat|agua|medio/.test(n)) return SECTOR_COLORS.ambiente
+  if (/trabajo|stps|empleo|laboral/.test(n)) return SECTOR_COLORS.trabajo
+  return SECTOR_COLORS.otros
 }
 
 // =============================================================================
@@ -212,6 +233,295 @@ function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
 }
 
 // =============================================================================
+// Task A — Flow Sankey-style visual nodes
+// =============================================================================
+
+interface FlowRow {
+  sourceId: number
+  sourceName: string
+  targetId: number
+  targetName: string
+  value: number
+  contracts: number
+  avgRisk: number
+  highRiskPct: number
+}
+
+/** Vertical Sankey-style node pair showing sector color on the left node. */
+function SankeyFlowViz({ flows, totalValue }: { flows: FlowRow[]; totalValue: number }) {
+  if (flows.length === 0) return null
+
+  // Take top 8 flows by value for the visual
+  const top = flows.slice(0, 8)
+  const maxVal = top[0]?.value ?? 1
+
+  return (
+    <div className="mb-4 p-3 rounded-lg bg-background-elevated/20 border border-border/30">
+      <p className="text-[10px] text-text-muted uppercase tracking-wider font-mono mb-3">
+        Money Flow — Institution to Vendor (top {top.length} by value)
+      </p>
+      <div className="space-y-1.5">
+        {top.map((flow, i) => {
+          const barWidth = Math.max(4, Math.round((flow.value / maxVal) * 100))
+          const sectorColor = inferSectorColor(flow.sourceName)
+          const riskColor = riskScoreToColor(flow.avgRisk)
+          const valuePct = totalValue > 0 ? (flow.value / totalValue) * 100 : 0
+
+          return (
+            <div key={i} className="flex items-center gap-2 group">
+              {/* Left node — institution with sector color */}
+              <div
+                className="w-[130px] shrink-0 text-right text-[10px] font-bold truncate"
+                style={{ color: sectorColor }}
+                title={flow.sourceName}
+              >
+                {flow.sourceName}
+              </div>
+
+              {/* Flow bar */}
+              <div className="flex-1 relative h-4 flex items-center">
+                <div
+                  className="h-3 rounded-sm transition-all opacity-70 group-hover:opacity-100"
+                  style={{
+                    width: `${barWidth}%`,
+                    background: `linear-gradient(90deg, ${sectorColor}80, ${riskColor}90)`,
+                  }}
+                />
+                {/* Value label inside bar if wide enough */}
+                {barWidth > 25 && (
+                  <span
+                    className="absolute left-1.5 text-[9px] font-mono font-bold text-white/90 leading-none pointer-events-none"
+                    style={{ top: '50%', transform: 'translateY(-50%)' }}
+                  >
+                    {formatCompactMXN(flow.value)}
+                  </span>
+                )}
+              </div>
+
+              {/* Right node — vendor name */}
+              <div
+                className="w-[110px] shrink-0 text-[10px] font-semibold truncate text-text-secondary"
+                title={flow.targetName}
+              >
+                {flow.targetName}
+              </div>
+
+              {/* Value % */}
+              <div className="w-[36px] shrink-0 text-right">
+                <span className="text-[9px] font-mono tabular-nums text-text-muted">
+                  {valuePct.toFixed(1)}%
+                </span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Legend */}
+      <div className="flex gap-4 mt-3 pt-2 border-t border-border/20 text-[9px] text-text-muted">
+        <span>Left color = Sector</span>
+        <span>Right color = Risk level</span>
+        <span>Bar width = Relative value</span>
+      </div>
+    </div>
+  )
+}
+
+// =============================================================================
+// Task A — Concentration alert banner
+// =============================================================================
+
+function ConcentrationAlert({ flows, totalValue }: { flows: FlowRow[]; totalValue: number }) {
+  const alert = useMemo(() => {
+    if (!flows.length || totalValue === 0) return null
+    // Find the single largest flow
+    const top = [...flows].sort((a, b) => b.value - a.value)[0]
+    const pct = (top.value / totalValue) * 100
+    if (pct < 30) return null
+    return { flow: top, pct }
+  }, [flows, totalValue])
+
+  if (!alert) return null
+
+  return (
+    <div
+      className="flex items-start gap-2 px-3 py-2 rounded-lg mb-3 border"
+      style={{
+        background: `${RISK_COLORS.high}15`,
+        borderColor: `${RISK_COLORS.high}40`,
+      }}
+    >
+      <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" style={{ color: RISK_COLORS.high }} />
+      <p className="text-xs leading-snug">
+        <span className="font-bold uppercase tracking-wide" style={{ color: RISK_COLORS.high }}>
+          Concentration:{' '}
+        </span>
+        <span className="text-text-secondary font-semibold">{alert.flow.sourceName}</span>
+        <span className="text-text-muted"> → </span>
+        <span className="text-text-secondary font-semibold">{alert.flow.targetName}</span>
+        <span className="text-text-muted"> represents </span>
+        <span className="font-bold font-mono" style={{ color: RISK_COLORS.high }}>
+          {alert.pct.toFixed(1)}%
+        </span>
+        <span className="text-text-muted"> of shown spend ({formatCompactMXN(alert.flow.value)})</span>
+      </p>
+    </div>
+  )
+}
+
+// =============================================================================
+// Task B — Risk Factor Breakdown (ASCII-bar frequency table)
+// =============================================================================
+
+/** Human-readable labels for the factor keys used in risk analysis */
+const FACTOR_DISPLAY_LABELS: Record<string, string> = {
+  direct_award:       'DIRECT AWARD',
+  single_bid:         'SINGLE BIDDER',
+  price_ratio:        'PRICE ANOMALY',
+  vendor_concentration: 'MARKET CAPTURE',
+  ad_period_days:     'SHORT AD PERIOD',
+  year_end:           'YEAR-END TIMING',
+  same_day_count:     'THRESHOLD SPLIT',
+  network_member_count: 'NETWORK RISK',
+  industry_mismatch:  'INDUSTRY MISMATCH',
+  institution_risk:   'INSTITUTION RISK',
+  price_hyp_confidence: 'PRICE HYPOTHESIS',
+  co_bid_rate:        'CO-BIDDING',
+  price_volatility:   'ERRATIC PRICING',
+  win_rate:           'WIN RATE SPIKE',
+  institution_diversity: 'INSTITUTION SPREAD',
+  sector_spread:      'SECTOR SPREAD',
+}
+
+interface FactorRow {
+  factor: string
+  label: string
+  count: number
+  avg_risk_score: number
+}
+
+function RiskFactorBreakdown({ factors }: { factors: FactorRow[] }) {
+  if (factors.length === 0) return null
+
+  const maxCount = factors[0]?.count ?? 1
+  const top = factors.slice(0, 8)
+
+  return (
+    <div className="rounded-lg border border-border/30 bg-background-elevated/10 p-4 mb-4">
+      <p className="text-[10px] font-bold tracking-widest uppercase text-text-muted font-mono mb-3">
+        Risk Signal Frequency — Top Contributing Factors
+      </p>
+      <div className="space-y-2">
+        {top.map((f, i) => {
+          const barPct = Math.max(2, Math.round((f.count / maxCount) * 100))
+          const color = riskScoreToColor(f.avg_risk_score)
+          const label = FACTOR_DISPLAY_LABELS[f.factor] ?? f.label.toUpperCase()
+
+          return (
+            <div key={i} className="flex items-center gap-3">
+              {/* Factor label */}
+              <div className="w-[150px] shrink-0 text-right">
+                <span className="text-[10px] font-mono font-bold text-text-secondary tracking-wide">
+                  {label}
+                </span>
+              </div>
+
+              {/* Bar */}
+              <div className="flex-1 relative">
+                <div className="h-2.5 rounded-sm w-full bg-border/10 overflow-hidden">
+                  <div
+                    className="h-full rounded-sm transition-all"
+                    style={{
+                      width: `${barPct}%`,
+                      backgroundColor: color,
+                      opacity: 0.85,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Count */}
+              <div className="w-[80px] shrink-0 text-right">
+                <span className="text-[10px] font-mono tabular-nums text-text-muted">
+                  {formatNumber(f.count)} contracts
+                </span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+      <p className="text-[9px] text-text-muted mt-3 leading-relaxed">
+        Bar length = relative frequency. Color = average risk score of flagged contracts.
+        Each contract may trigger multiple factors simultaneously.
+      </p>
+    </div>
+  )
+}
+
+// =============================================================================
+// Task C — Mini risk heatmap (5 squares: low → critical)
+// =============================================================================
+
+/**
+ * Renders 5 × 10px colored squares showing a risk distribution profile.
+ * Inputs are raw counts per level. The squares visualize proportional risk weight.
+ */
+function RiskMiniHeatmap({
+  highRiskPct,
+  avgRisk,
+  title,
+}: {
+  highRiskPct: number
+  avgRisk: number
+  title?: string
+}) {
+  // Build 5 squares: each represents 20% of risk spectrum from low→critical.
+  // We use avgRisk and highRiskPct to construct a rough distribution profile.
+  const squares = useMemo(() => {
+    // Heuristic color assignment for each square slot (0=lowest, 4=highest risk)
+    const levels = [
+      { threshold: 0.0,  color: RISK_COLORS.low },
+      { threshold: 0.05, color: lerpColor(RISK_COLORS.low, RISK_COLORS.medium, 0.5) },
+      { threshold: 0.10, color: RISK_COLORS.medium },
+      { threshold: 0.30, color: RISK_COLORS.high },
+      { threshold: 0.50, color: RISK_COLORS.critical },
+    ]
+    return levels.map(({ threshold, color }) => {
+      // Intensity: how relevant is this risk level given avgRisk?
+      const distance = Math.abs(avgRisk - threshold)
+      const intensity = Math.max(0.15, 1 - distance * 4)
+      return { color, intensity }
+    })
+  }, [avgRisk])
+
+  const tooltipText = title
+    ? `${title}\nAvg risk: ${(avgRisk * 100).toFixed(0)}% · High-risk: ${(highRiskPct * 100).toFixed(0)}%`
+    : `Avg risk: ${(avgRisk * 100).toFixed(0)}% · High-risk: ${(highRiskPct * 100).toFixed(0)}%`
+
+  return (
+    <div
+      className="flex gap-0.5 items-center"
+      role="img"
+      aria-label={tooltipText}
+      title={tooltipText}
+    >
+      {squares.map((sq, i) => (
+        <div
+          key={i}
+          className="rounded-[2px] shrink-0"
+          style={{
+            width: 10,
+            height: 10,
+            backgroundColor: sq.color,
+            opacity: sq.intensity,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+// =============================================================================
 // Main component
 // =============================================================================
 
@@ -331,6 +641,12 @@ export default function ProcurementIntelligence() {
     }
   }, [allFlows, flowData])
 
+  // ── Derived: total value for visible flows (for concentration alert) ───────
+  const visibleFlowsTotal = useMemo(
+    () => filteredFlows.reduce((s, f) => s + f.value, 0),
+    [filteredFlows],
+  )
+
   // ── Derived: consolidated risk factors ───────────────────────────────────
   const factors = useMemo(() => {
     if (!rfData?.factor_frequencies) return []
@@ -366,7 +682,6 @@ export default function ProcurementIntelligence() {
   const hasCoBid = (coBidData?.pairs?.length ?? 0) > 0
   const hasConcentration = (concentrationData?.alerts?.length ?? 0) > 0
   const hasLeads = (leadsData?.leads?.length ?? 0) > 0
-  const showCollusionSection = hasCoBid || hasConcentration
 
   // ==========================================================================
   return (
@@ -409,6 +724,22 @@ export default function ProcurementIntelligence() {
             </div>
           )}
 
+          {/* Task A — Sankey-style flow visualization */}
+          {!flowLoading && filteredFlows.length > 0 && (
+            <SankeyFlowViz
+              flows={filteredFlows}
+              totalValue={visibleFlowsTotal}
+            />
+          )}
+
+          {/* Task A — Concentration alert banner */}
+          {!flowLoading && filteredFlows.length > 0 && (
+            <ConcentrationAlert
+              flows={filteredFlows}
+              totalValue={visibleFlowsTotal}
+            />
+          )}
+
           {/* Filter chips */}
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <Filter className="h-3.5 w-3.5 text-text-muted shrink-0" />
@@ -442,8 +773,8 @@ export default function ProcurementIntelligence() {
             <p className="text-sm text-text-muted text-center py-8">{t('highRiskFlows.empty')}</p>
           ) : (
             <>
-              {/* Column headers */}
-              <div className="grid grid-cols-[20px_1fr_12px_1fr_90px_56px_48px_32px] gap-x-2 px-2 pb-1 text-[10px] text-text-muted uppercase tracking-wide border-b border-border/30 mb-1">
+              {/* Column headers — added Risk Profile column for Task C */}
+              <div className="grid grid-cols-[20px_1fr_12px_1fr_90px_56px_48px_52px_32px] gap-x-2 px-2 pb-1 text-[10px] text-text-muted uppercase tracking-wide border-b border-border/30 mb-1">
                 <span>#</span>
                 <span>{t('highRiskFlows.institution')}</span>
                 <span />
@@ -457,6 +788,8 @@ export default function ProcurementIntelligence() {
                 <button onClick={() => handleSort('contracts')} className="text-left hover:text-text-primary transition-colors">
                   {t('highRiskFlows.contracts')}<SortIcon active={sortKey === 'contracts'} dir={sortDir} />
                 </button>
+                {/* Task C — mini heatmap column header */}
+                <span title="Risk profile: 5 squares from low (green) to critical (red)">Profile</span>
                 <span />
               </div>
 
@@ -467,7 +800,7 @@ export default function ProcurementIntelligence() {
                     <div key={i}>
                       <div
                         className={cn(
-                          'grid grid-cols-[20px_1fr_12px_1fr_90px_56px_48px_32px] gap-x-2 items-center px-2 py-1.5 rounded text-xs transition-colors',
+                          'grid grid-cols-[20px_1fr_12px_1fr_90px_56px_48px_52px_32px] gap-x-2 items-center px-2 py-1.5 rounded text-xs transition-colors',
                           isExpanded
                             ? 'bg-background-elevated/60 ring-1 ring-accent/20'
                             : 'hover:bg-background-elevated/30',
@@ -477,13 +810,17 @@ export default function ProcurementIntelligence() {
                       >
                         <span className="text-text-muted font-mono text-[10px]">{i + 1}</span>
 
-                        {/* Institution */}
+                        {/* Institution — colored dot with sector color */}
                         <button
                           onClick={() => openEntityDrawer(flow.sourceId, 'institution')}
-                          className="text-left truncate text-text-secondary hover:text-accent transition-colors font-medium"
+                          className="text-left truncate text-text-secondary hover:text-accent transition-colors font-medium flex items-center gap-1 min-w-0"
                           title={flow.sourceName}
                         >
-                          {flow.sourceName}
+                          <span
+                            className="w-1.5 h-1.5 rounded-full shrink-0 inline-block"
+                            style={{ backgroundColor: inferSectorColor(flow.sourceName) }}
+                          />
+                          <span className="truncate">{flow.sourceName}</span>
                         </button>
 
                         <ArrowRight className="h-3 w-3 text-text-muted shrink-0" />
@@ -513,6 +850,15 @@ export default function ProcurementIntelligence() {
                         <span className="text-text-muted tabular-nums text-right">
                           {formatNumber(flow.contracts)}
                         </span>
+
+                        {/* Task C — Mini risk heatmap */}
+                        <div className="flex justify-center">
+                          <RiskMiniHeatmap
+                            highRiskPct={flow.highRiskPct}
+                            avgRisk={flow.avgRisk}
+                            title={`${flow.sourceName} → ${flow.targetName}`}
+                          />
+                        </div>
 
                         {/* Expand toggle */}
                         <button
@@ -589,6 +935,11 @@ export default function ProcurementIntelligence() {
             <h2 className="text-base font-bold text-text-primary">{t('riskFactors.title')}</h2>
           </div>
           <p className="text-xs text-text-muted mb-4">{t('riskFactors.subtitle')}</p>
+
+          {/* Task B — Risk Factor Breakdown panel */}
+          {!rfLoading && factors.length > 0 && (
+            <RiskFactorBreakdown factors={factors} />
+          )}
 
           <div className="grid gap-6 md:grid-cols-[1fr_320px]">
             {/* Factor frequency bar chart */}

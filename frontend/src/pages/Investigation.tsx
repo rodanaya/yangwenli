@@ -4,6 +4,7 @@
  * Shows the full pipeline: Detection -> Research -> Corroboration -> Ground Truth
  *
  * Phase 1C: Sortable table replacing card grid. Row click navigates to full detail page.
+ * v3.4: Enhanced card view with risk-coded borders, score badges, progress bars, rank numbers.
  */
 
 import { useState, useMemo } from 'react'
@@ -39,6 +40,8 @@ import {
   FileText,
   Calendar,
   Search,
+  LayoutGrid,
+  List,
 } from 'lucide-react'
 import {
   BarChart,
@@ -120,6 +123,164 @@ const SCORE_COLOR: Record<PriorityLevel, string> = {
   high: 'text-risk-high',
   medium: 'text-risk-medium',
   low: 'text-risk-low',
+}
+
+// ============================================================================
+// RISK SCORE BADGE
+// ============================================================================
+
+function RiskScoreBadge({
+  score,
+  sectorAvg,
+}: {
+  score: number
+  sectorAvg?: number
+}) {
+  const pct = (score * 100).toFixed(0)
+  const priority = getPriority(score)
+  const delta = sectorAvg != null ? ((score - sectorAvg) * 100).toFixed(0) : null
+  const colorClass = SCORE_COLOR[priority.level]
+
+  return (
+    <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+      <span className={cn('text-2xl font-black tabular-nums font-mono leading-none', colorClass)}>
+        {pct}%
+      </span>
+      {delta != null && (
+        <span className="text-[10px] font-mono text-text-muted">
+          {Number(delta) >= 0 ? '+' : ''}{delta}pp vs avg
+        </span>
+      )}
+    </div>
+  )
+}
+
+// ============================================================================
+// RISK PROGRESS BAR
+// ============================================================================
+
+function RiskProgressBar({ score }: { score: number }) {
+  const priority = getPriority(score)
+  const colorClass =
+    priority.level === 'critical' ? 'bg-risk-critical' :
+    priority.level === 'high' ? 'bg-risk-high' :
+    priority.level === 'medium' ? 'bg-risk-medium' :
+    'bg-risk-low'
+
+  return (
+    <div className="h-0.5 w-full bg-border mt-3 rounded-full overflow-hidden">
+      <div
+        className={cn('h-full transition-all duration-700 rounded-full', colorClass)}
+        style={{ width: `${Math.min(score * 100, 100)}%` }}
+      />
+    </div>
+  )
+}
+
+// ============================================================================
+// RISK BORDER + BG TINT HELPERS
+// ============================================================================
+
+function getRiskBorderStyle(score: number): React.CSSProperties {
+  if (score >= 0.5) return { borderLeftWidth: '4px', borderLeftColor: 'var(--color-risk-critical)' }
+  if (score >= 0.3) return { borderLeftWidth: '4px', borderLeftColor: 'var(--color-risk-high)' }
+  if (score >= 0.1) return { borderLeftWidth: '4px', borderLeftColor: 'var(--color-risk-medium)' }
+  return { borderLeftWidth: '4px', borderLeftColor: 'var(--color-risk-low)' }
+}
+
+function getRiskBgClass(score: number): string {
+  if (score >= 0.5) return 'bg-risk-critical/[0.03]'
+  if (score >= 0.3) return 'bg-risk-high/[0.03]'
+  return ''
+}
+
+// ============================================================================
+// CASE CARD (card-grid view)
+// ============================================================================
+
+function CaseCard({
+  caseItem,
+  index,
+  onClick,
+}: {
+  caseItem: InvestigationCaseListItem
+  index: number
+  onClick: () => void
+}) {
+  const priority = getPriority(caseItem.suspicion_score)
+  const sectorColor = SECTOR_COLORS[caseItem.sector_name] || '#64748b'
+  const cleanTitle = toTitleCase(
+    caseItem.title
+      .replace(/ - Anomalous Procurement Pattern$/, '')
+      .replace(/ - Externally Corroborated Investigation$/, '')
+  )
+  const { t } = useTranslation('investigation')
+  const rankNum = String(index + 1).padStart(2, '0')
+
+  return (
+    <div
+      onClick={onClick}
+      className={cn(
+        'relative group cursor-pointer rounded-lg border border-border/50 p-4 transition-all',
+        'hover:border-border hover:bg-background-elevated/60',
+        getRiskBgClass(caseItem.suspicion_score)
+      )}
+      style={getRiskBorderStyle(caseItem.suspicion_score)}
+    >
+      {/* Rank number — large faint background decoration */}
+      <span className="absolute top-0 left-0 text-6xl font-black text-text-muted/10 font-mono leading-none select-none pointer-events-none">
+        {rankNum}
+      </span>
+
+      {/* Card body */}
+      <div className="relative">
+        {/* Top row: sector badge + status + score */}
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span
+              className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+              style={{ backgroundColor: sectorColor + '20', color: sectorColor }}
+            >
+              {getSectorNameEN(caseItem.sector_name)}
+            </span>
+            <span className={cn(
+              'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold font-mono tracking-wider uppercase border',
+              PRIORITY_BADGE[priority.level]
+            )}>
+              P{priority.n}
+            </span>
+            <StatusPill status={caseItem.validation_status} />
+          </div>
+          {/* Risk score badge — top right */}
+          <RiskScoreBadge score={caseItem.suspicion_score} />
+        </div>
+
+        {/* Title */}
+        <h3 className="text-sm font-semibold text-text-primary group-hover:text-accent transition-colors line-clamp-2 leading-snug mb-2">
+          {cleanTitle}
+        </h3>
+
+        {/* Stats row */}
+        <div className="flex items-center gap-3 text-xs text-text-muted tabular-nums font-mono">
+          <span>{formatNumber(caseItem.total_contracts)} {t('card.contracts')}</span>
+          <span className="text-border">|</span>
+          <span>{formatCompactMXN(caseItem.total_value_mxn)}</span>
+          {caseItem.vendor_count > 0 && (
+            <>
+              <span className="text-border">|</span>
+              <span>{caseItem.vendor_count} vendor{caseItem.vendor_count !== 1 ? 's' : ''}</span>
+            </>
+          )}
+        </div>
+
+        {/* Risk progress bar — full width at bottom */}
+        <RiskProgressBar score={caseItem.suspicion_score} />
+
+        {/* Chevron hint */}
+        <ChevronRight className="absolute bottom-0 right-0 h-3.5 w-3.5 text-text-muted/40 group-hover:text-accent transition-colors" />
+      </div>
+    </div>
+  )
 }
 
 // ============================================================================
@@ -331,6 +492,9 @@ export function Investigation() {
   const [sortKey, setSortKey] = useState<SortKey>('suspicion_score')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
 
+  // View mode: 'cards' or 'table'
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards')
+
   // Data queries
   const { data: summary, isLoading: summaryLoading } = useQuery({
     queryKey: ['investigation', 'dashboard-summary'],
@@ -516,6 +680,30 @@ export function Investigation() {
         ))}
 
         <div className="ml-auto flex items-center gap-2">
+          {/* View mode toggle */}
+          <div className="flex items-center border border-border/50 rounded overflow-hidden">
+            <button
+              onClick={() => setViewMode('cards')}
+              className={cn(
+                'px-2 py-1.5 transition-colors',
+                viewMode === 'cards' ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-secondary'
+              )}
+              title="Card view"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={cn(
+                'px-2 py-1.5 transition-colors',
+                viewMode === 'table' ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-secondary'
+              )}
+              title="Table view"
+            >
+              <List className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
           <Filter className="h-3.5 w-3.5 text-text-muted" />
           <select
             className="text-xs bg-background-elevated border border-border/50 rounded px-2 py-1 text-text-secondary"
@@ -541,7 +729,7 @@ export function Investigation() {
         </div>
       </div>
 
-      {/* SORTABLE TABLE */}
+      {/* CASE LIST — card grid or sortable table */}
       {casesLoading ? (
         <div className="space-y-2">
           {[...Array(8)].map((_, i) => (
@@ -550,6 +738,22 @@ export function Investigation() {
         </div>
       ) : cases.length === 0 ? (
         <p className="text-sm text-text-muted py-8 text-center">{t('queue.empty')}</p>
+      ) : viewMode === 'cards' ? (
+        <>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {cases.map((c, i) => (
+              <CaseCard
+                key={c.case_id}
+                caseItem={c}
+                index={i}
+                onClick={() => navigate(`/investigation/${c.case_id}`)}
+              />
+            ))}
+          </div>
+          <p className="text-xs text-text-muted text-right">
+            {cases.length} {cases.length === 1 ? 'case' : 'cases'}
+          </p>
+        </>
       ) : (
         <div className="rounded-lg border border-border/50 overflow-hidden">
           <div className="overflow-x-auto">
@@ -599,10 +803,11 @@ export function Investigation() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/30">
-                {cases.map((c) => (
+                {cases.map((c, i) => (
                   <CaseTableRow
                     key={c.case_id}
                     caseItem={c}
+                    index={i}
                     onClick={() => navigate(`/investigation/${c.case_id}`)}
                   />
                 ))}
@@ -665,9 +870,11 @@ export function Investigation() {
 
 function CaseTableRow({
   caseItem,
+  index,
   onClick,
 }: {
   caseItem: InvestigationCaseListItem
+  index: number
   onClick: () => void
 }) {
   const priority = getPriority(caseItem.suspicion_score)
@@ -682,19 +889,31 @@ function CaseTableRow({
   // The list item doesn't have external_sources — we use vendor_count
   const evidenceCount = caseItem.vendor_count || 0
 
+  // Risk-coded left border via inline style
+  const borderStyle = getRiskBorderStyle(caseItem.suspicion_score)
+
   return (
     <tr
       onClick={onClick}
-      className="hover:bg-background-elevated/40 cursor-pointer transition-colors group"
+      className={cn(
+        'hover:bg-background-elevated/40 cursor-pointer transition-colors group',
+        getRiskBgClass(caseItem.suspicion_score)
+      )}
+      style={borderStyle}
     >
-      {/* Priority badge */}
+      {/* Rank number */}
       <td className="px-3 py-3 whitespace-nowrap">
-        <span className={cn(
-          'inline-flex items-center px-2 py-0.5 rounded text-xs font-bold font-mono tracking-wider uppercase border',
-          PRIORITY_BADGE[priority.level]
-        )}>
-          P{priority.n}
-        </span>
+        <div className="relative flex items-center gap-2">
+          <span className="absolute -left-1 top-1/2 -translate-y-1/2 text-4xl font-black text-text-muted/10 font-mono leading-none select-none pointer-events-none">
+            {String(index + 1).padStart(2, '0')}
+          </span>
+          <span className={cn(
+            'relative inline-flex items-center px-2 py-0.5 rounded text-xs font-bold font-mono tracking-wider uppercase border',
+            PRIORITY_BADGE[priority.level]
+          )}>
+            P{priority.n}
+          </span>
+        </div>
       </td>
 
       {/* Case title */}
@@ -714,11 +933,25 @@ function CaseTableRow({
         </span>
       </td>
 
-      {/* Score */}
+      {/* Score — prominent */}
       <td className="px-3 py-3 whitespace-nowrap">
-        <span className={cn('text-xs font-bold tabular-nums font-mono', SCORE_COLOR[priority.level])}>
-          {(caseItem.suspicion_score * 100).toFixed(0)}%
-        </span>
+        <div className="flex flex-col items-start gap-0.5">
+          <span className={cn('text-sm font-black tabular-nums font-mono', SCORE_COLOR[priority.level])}>
+            {(caseItem.suspicion_score * 100).toFixed(0)}%
+          </span>
+          {/* Mini progress bar in table cell */}
+          <div className="h-0.5 w-12 bg-border rounded-full overflow-hidden">
+            <div
+              className={cn(
+                'h-full rounded-full',
+                priority.level === 'critical' ? 'bg-risk-critical' :
+                priority.level === 'high' ? 'bg-risk-high' :
+                priority.level === 'medium' ? 'bg-risk-medium' : 'bg-risk-low'
+              )}
+              style={{ width: `${Math.min(caseItem.suspicion_score * 100, 100)}%` }}
+            />
+          </div>
+        </div>
       </td>
 
       {/* Contracts */}

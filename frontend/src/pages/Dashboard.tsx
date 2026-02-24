@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react'
+import React, { memo, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
@@ -31,6 +31,7 @@ import {
   Tooltip as RechartsTooltip,
   CartesianGrid,
   Area,
+  AreaChart,
   Bar,
   Cell,
   Line,
@@ -93,6 +94,296 @@ const AI_SIGNALS = [
     bg: 'bg-background-elevated/20' as const,
   },
 ]
+
+// ============================================================================
+// ERA TIMELINE — 5 administrations as proportional horizontal strip
+// ============================================================================
+
+const ERA_DATA = [
+  { name: 'Fox', years: '2001–06', color: '#3b82f6', party: 'PAN', startYear: 2001, endYear: 2006 },
+  { name: 'Calderón', years: '2007–12', color: '#60a5fa', party: 'PAN', startYear: 2007, endYear: 2012 },
+  { name: 'Peña Nieto', years: '2013–18', color: '#22c55e', party: 'PRI', startYear: 2013, endYear: 2018 },
+  { name: 'AMLO', years: '2019–24', color: '#ef4444', party: 'MORENA', startYear: 2019, endYear: 2024 },
+  { name: 'Sheinbaum', years: '2025–', color: '#f97316', party: 'MORENA', startYear: 2025, endYear: 2030 },
+]
+
+const TOTAL_YEARS = 2030 - 2001
+
+function EraTimelineStrip() {
+  const [hoveredEra, setHoveredEra] = React.useState<string | null>(null)
+  const currentYear = 2026
+
+  return (
+    <div className="rounded border border-border/20 overflow-hidden bg-background-elevated/10">
+      {/* Color bar row */}
+      <div className="flex h-2">
+        {ERA_DATA.map((era) => {
+          const widthPct = ((era.endYear - era.startYear) / TOTAL_YEARS) * 100
+          return (
+            <div
+              key={era.name}
+              className="relative transition-opacity duration-150"
+              style={{
+                width: `${widthPct}%`,
+                backgroundColor: era.color,
+                opacity: hoveredEra === null || hoveredEra === era.name ? 1 : 0.35,
+              }}
+              onMouseEnter={() => setHoveredEra(era.name)}
+              onMouseLeave={() => setHoveredEra(null)}
+            />
+          )
+        })}
+      </div>
+      {/* Label row */}
+      <div className="flex">
+        {ERA_DATA.map((era) => {
+          const widthPct = ((era.endYear - era.startYear) / TOTAL_YEARS) * 100
+          const isHovered = hoveredEra === era.name
+          const isCurrent = era.startYear <= currentYear && currentYear < era.endYear
+          const partyBg =
+            era.party === 'PAN' ? 'bg-blue-500/15 text-blue-400' :
+            era.party === 'PRI' ? 'bg-green-600/15 text-green-500' :
+            'bg-rose-700/15 text-rose-400'
+          return (
+            <button
+              key={era.name}
+              className={cn(
+                'relative flex flex-col items-start gap-0.5 px-2 py-1.5 transition-colors text-left',
+                isHovered ? 'bg-background-elevated/40' : ''
+              )}
+              style={{ width: `${widthPct}%` }}
+              onMouseEnter={() => setHoveredEra(era.name)}
+              onMouseLeave={() => setHoveredEra(null)}
+              aria-label={`${era.name} administration, ${era.years}, ${era.party}`}
+            >
+              <div className="flex items-center gap-1 min-w-0 w-full">
+                <span
+                  className="text-[10px] font-bold font-mono truncate"
+                  style={{ color: era.color }}
+                >
+                  {era.name}
+                </span>
+                {isCurrent && (
+                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 animate-pulse" style={{ backgroundColor: era.color }} />
+                )}
+              </div>
+              <div className="flex items-center gap-1 min-w-0">
+                <span className={cn('text-[9px] font-bold px-1 rounded font-mono hidden sm:block', partyBg)}>
+                  {era.party}
+                </span>
+                <span className="text-[9px] text-text-muted font-mono hidden md:block truncate">{era.years}</span>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// RISK GAUGE — SVG half-ring showing critical+high percentage
+// ============================================================================
+
+function RiskGauge({ criticalPct, highPct }: { criticalPct: number; highPct: number }) {
+  const total = criticalPct + highPct
+  const r = 76
+  const cx = 100
+  const cy = 90
+  const strokeWidth = 14
+  // semicircle: from 180° to 0° (left to right along top)
+  // path for a semicircle going left to right
+  const arcLength = Math.PI * r  // circumference of a half-circle
+
+  // Convert percentage to arc offset
+  const criticalLen = (criticalPct / 100) * arcLength
+  const highLen = (highPct / 100) * arcLength
+  const totalLen = criticalLen + highLen
+
+  // SVG arc path for a semicircle (left to right, top half)
+  // Center at (cx, cy), radius r
+  const arcPath = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`
+
+  // Needle angle: 0% = leftmost (180°), 100% = rightmost (0°)
+  // angle in degrees from left (180°) rotating clockwise to right (0°)
+  const needleAngleDeg = 180 - (total / 100) * 180
+  const needleRad = (needleAngleDeg * Math.PI) / 180
+  const needleLen = r - strokeWidth / 2 - 4
+  const needleX = cx + needleLen * Math.cos(needleRad)
+  const needleY = cy - needleLen * Math.sin(needleRad)
+
+  const riskLabel =
+    total >= 15 ? 'ELEVATED' :
+    total >= 8 ? 'MODERATE' : 'LOW'
+  const riskLabelColor =
+    total >= 15 ? '#f87171' :
+    total >= 8 ? '#fbbf24' : '#4ade80'
+
+  const gaugeId = 'dashboardRiskGauge'
+  const gradId = `${gaugeId}-grad`
+
+  return (
+    <div className="flex flex-col items-center">
+      <svg width="200" height="110" viewBox="0 0 200 110" className="overflow-visible" aria-label={`Risk gauge: ${total.toFixed(1)}% at risk`}>
+        <defs>
+          <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#4ade80" />
+            <stop offset="40%" stopColor="#fbbf24" />
+            <stop offset="100%" stopColor="#f87171" />
+          </linearGradient>
+          <style>{`
+            @keyframes gaugeReveal {
+              from { stroke-dashoffset: ${arcLength}px; }
+            }
+            .gauge-track-${gaugeId} { stroke-dasharray: ${arcLength}px; animation: gaugeReveal 1.2s ease-out forwards; }
+            .gauge-high-${gaugeId} { stroke-dasharray: ${arcLength}px; animation: gaugeReveal 1.0s 0.1s ease-out forwards; }
+            .gauge-crit-${gaugeId} { stroke-dasharray: ${arcLength}px; animation: gaugeReveal 0.9s 0.2s ease-out forwards; }
+          `}</style>
+        </defs>
+
+        {/* Background track */}
+        <path
+          d={arcPath}
+          fill="none"
+          stroke="rgba(255,255,255,0.06)"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+        />
+
+        {/* Gradient track (full) */}
+        <path
+          d={arcPath}
+          fill="none"
+          stroke={`url(#${gradId})`}
+          strokeWidth={strokeWidth}
+          strokeLinecap="butt"
+          strokeDasharray={`${arcLength}`}
+          strokeDashoffset={0}
+          opacity={0.18}
+        />
+
+        {/* High risk arc (orange) — starts at left, covers criticalPct+highPct */}
+        <path
+          d={arcPath}
+          fill="none"
+          stroke="#fb923c"
+          strokeWidth={strokeWidth}
+          strokeLinecap="butt"
+          className={`gauge-high-${gaugeId}`}
+          style={{
+            strokeDashoffset: `${arcLength - totalLen}px`,
+          }}
+          opacity={0.85}
+        />
+
+        {/* Critical arc (red) — starts at left, covers only criticalPct */}
+        <path
+          d={arcPath}
+          fill="none"
+          stroke="#f87171"
+          strokeWidth={strokeWidth}
+          strokeLinecap="butt"
+          className={`gauge-crit-${gaugeId}`}
+          style={{
+            strokeDashoffset: `${arcLength - criticalLen}px`,
+          }}
+          opacity={0.9}
+        />
+
+        {/* Needle */}
+        <line
+          x1={cx}
+          y1={cy}
+          x2={needleX}
+          y2={needleY}
+          stroke="#e6edf3"
+          strokeWidth={2}
+          strokeLinecap="round"
+          opacity={0.9}
+        />
+        <circle cx={cx} cy={cy} r={4} fill="#e6edf3" opacity={0.9} />
+
+        {/* Center text */}
+        <text
+          x={cx}
+          y={cy - 10}
+          textAnchor="middle"
+          fill="#e6edf3"
+          fontSize={18}
+          fontWeight="900"
+          fontFamily="var(--font-mono, monospace)"
+        >
+          {total.toFixed(1)}%
+        </text>
+        <text
+          x={cx}
+          y={cy + 6}
+          textAnchor="middle"
+          fill={riskLabelColor}
+          fontSize={8}
+          fontWeight="700"
+          fontFamily="var(--font-mono, monospace)"
+          letterSpacing="0.1em"
+        >
+          {riskLabel}
+        </text>
+
+        {/* Left label: 0% */}
+        <text x={cx - r - 2} y={cy + 14} textAnchor="end" fill="rgba(139,148,158,0.6)" fontSize={8} fontFamily="var(--font-mono, monospace)">0%</text>
+        {/* Right label: 100% */}
+        <text x={cx + r + 2} y={cy + 14} textAnchor="start" fill="rgba(139,148,158,0.6)" fontSize={8} fontFamily="var(--font-mono, monospace)">100%</text>
+      </svg>
+      {/* Legend */}
+      <div className="flex items-center gap-3 mt-1">
+        <div className="flex items-center gap-1">
+          <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#f87171' }} />
+          <span className="text-[10px] text-text-muted font-mono">Critical {criticalPct.toFixed(1)}%</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#fb923c' }} />
+          <span className="text-[10px] text-text-muted font-mono">High {highPct.toFixed(1)}%</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// MINI SPARKLINE — 120×24px area chart for KPI trend embedding
+// ============================================================================
+
+function MiniSparkline({
+  data,
+  dataKey,
+  color,
+}: {
+  data: Array<Record<string, number>>
+  dataKey: string
+  color: string
+}) {
+  const gradId = `spark-${dataKey}-${color.replace('#', '')}`
+  return (
+    <ResponsiveContainer width={120} height={24}>
+      <AreaChart data={data} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={color} stopOpacity={0.3} />
+            <stop offset="95%" stopColor={color} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <Area
+          type="monotone"
+          dataKey={dataKey}
+          stroke={color}
+          strokeWidth={1.5}
+          fill={`url(#${gradId})`}
+          dot={false}
+          isAnimationActive={false}
+        />
+      </AreaChart>
+    </ResponsiveContainer>
+  )
+}
 
 export function Dashboard() {
   const navigate = useNavigate()
@@ -307,6 +598,11 @@ export function Dashboard() {
       </div>
 
       {/* ================================================================ */}
+      {/* ERA TIMELINE — 5 administration segments */}
+      {/* ================================================================ */}
+      <EraTimelineStrip />
+
+      {/* ================================================================ */}
       {/* THREE SYSTEMIC PATTERNS — AI-found structural failures          */}
       {/* ================================================================ */}
       <div>
@@ -468,7 +764,7 @@ export function Dashboard() {
               {t('valueConcentrationLabel')}
             </span>
           </div>
-          <div className="flex items-center gap-4 mb-3">
+          <div className="flex items-center gap-4 mb-3 flex-wrap">
             <div>
               <p className="text-[10px] text-text-muted font-mono uppercase tracking-wide mb-0.5">{t('valueConcentrationShareContracts')}</p>
               <p className="text-4xl font-black text-text-primary tabular-nums font-mono">
@@ -482,6 +778,17 @@ export function Dashboard() {
                 {dashLoading ? '—' : `${criticalHighValuePct.toFixed(1)}%`}
               </p>
             </div>
+            {/* Sparkline: high-risk rate trend */}
+            {riskTrajectory.length > 0 && (
+              <div className="flex flex-col items-end ml-auto">
+                <p className="text-[9px] text-text-muted font-mono uppercase tracking-wide mb-0.5">Risk trend</p>
+                <MiniSparkline
+                  data={riskTrajectory}
+                  dataKey="highRiskPct"
+                  color={RISK_COLORS.critical}
+                />
+              </div>
+            )}
           </div>
           <p className="text-xs text-text-muted leading-relaxed">
             {t('valueConcentrationDesc')}
@@ -731,7 +1038,7 @@ export function Dashboard() {
       </div>
 
       {/* ================================================================ */}
-      {/* RISK DISTRIBUTION — Full-width stacked bar */}
+      {/* RISK DISTRIBUTION — Gauge + Full-width stacked bar             */}
       {/* ================================================================ */}
       <Card className="border-border/40">
         <CardContent className="py-4 px-5">
@@ -742,9 +1049,22 @@ export function Dashboard() {
             </span>
           </div>
           {dashLoading || !riskDist ? (
-            <Skeleton className="h-10 w-full" />
+            <div className="space-y-3">
+              <div className="flex justify-center"><Skeleton className="h-28 w-48" /></div>
+              <Skeleton className="h-10 w-full" />
+            </div>
           ) : (
-            <RiskDistributionBar data={riskDist} />
+            <div className="space-y-4">
+              {/* Half-ring gauge */}
+              <div className="flex justify-center">
+                <RiskGauge
+                  criticalPct={riskDist.find(d => d.risk_level === 'critical')?.percentage ?? 0}
+                  highPct={riskDist.find(d => d.risk_level === 'high')?.percentage ?? 0}
+                />
+              </div>
+              {/* Stacked bar */}
+              <RiskDistributionBar data={riskDist} />
+            </div>
           )}
         </CardContent>
       </Card>

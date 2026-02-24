@@ -10,7 +10,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import ReactECharts from 'echarts-for-react'
-import { Network, Search, X, ExternalLink, Users, UserCircle } from 'lucide-react'
+import { Network, Search, X, ExternalLink, Users, UserCircle, RotateCcw } from 'lucide-react'
 import { RiskBadge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SectionDescription } from '@/components/SectionDescription'
@@ -33,11 +33,12 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max)
 }
 
-function nodeSymbolSize(value: number, nodeType: string): number {
-  if (nodeType === 'institution') {
-    return clamp(Math.sqrt(value / 1e9) * 20 + 15, 12, 45)
-  }
-  return clamp(Math.sqrt(value / 1e9) * 25 + 15, 15, 55)
+function nodeSymbolSize(value: number, _nodeType: string): number {
+  // Scale by log10(total_value + 1), mapped to 8-28px range
+  const log = Math.log10(value + 1)
+  // log10 of typical values: ~9 (1B MXN) to ~12 (1T MXN); normalize to 0-1
+  const normalized = clamp((log - 6) / 7, 0, 1)
+  return clamp(8 + normalized * 20, 8, 28)
 }
 
 function linkWidth(contracts: number): number {
@@ -636,14 +637,21 @@ export function NetworkGraph() {
 
     const nodes = graphData.nodes.map((node: NetworkNode) => {
       const isCenter = node.id === centerNodeId
-      const symbolSize = isCenter ? 65 : nodeSymbolSize(node.value, node.type)
+      const symbolSize = isCenter ? 48 : nodeSymbolSize(node.value, node.type)
       const itemColor =
         node.type === 'institution'
-          ? '#3b82f6'
+          ? '#60a5fa'
           : colorMode === 'community' && node.community_id != null
             ? communityToColor(node.community_id)
             : riskToColor(node.risk_score)
-      const showLabel = isCenter || symbolSize > 25
+      const showLabel = isCenter || symbolSize > 18
+
+      // Glow aura for critical and high risk vendor nodes
+      const riskLevel = node.type === 'vendor' && node.risk_score != null
+        ? getRiskLevelFromScore(node.risk_score)
+        : null
+      const hasShadow = riskLevel === 'critical' || riskLevel === 'high'
+      const shadowColor = riskLevel === 'critical' ? '#f87171' : '#fb923c'
 
       return {
         id: node.id,
@@ -657,8 +665,10 @@ export function NetworkGraph() {
         symbolSize,
         itemStyle: {
           color: itemColor,
-          borderColor: isCenter ? '#ffffff' : undefined,
-          borderWidth: isCenter ? 3 : 0,
+          borderColor: isCenter ? '#ffffff' : hasShadow ? shadowColor : undefined,
+          borderWidth: isCenter ? 3 : hasShadow ? 1.5 : 0,
+          shadowColor: hasShadow ? shadowColor : undefined,
+          shadowBlur: hasShadow ? 12 : undefined,
         },
         label: {
           show: showLabel,
@@ -737,6 +747,78 @@ export function NetworkGraph() {
       ],
     }
   }, [graphData, centerEntity, colorMode])
+
+  // Computed graph stats for the Key Network Stats strip
+  const graphStats = useMemo(() => {
+    if (!graphData) return null
+
+    const totalNodes = graphData.nodes.length
+
+    // High-risk connections: edges where both endpoints are critical or high risk
+    const highRiskNodeIds = new Set(
+      graphData.nodes
+        .filter((n: NetworkNode) => {
+          if (n.type !== 'vendor' || n.risk_score == null) return false
+          const level = getRiskLevelFromScore(n.risk_score)
+          return level === 'critical' || level === 'high'
+        })
+        .map((n: NetworkNode) => n.id)
+    )
+    const highRiskConnections = graphData.links.filter(
+      (l: NetworkLink) => highRiskNodeIds.has(l.source) && highRiskNodeIds.has(l.target)
+    ).length
+
+    // Most connected node (highest degree = count of links touching the node)
+    const degreeMap = new Map<string, number>()
+    graphData.links.forEach((l: NetworkLink) => {
+      degreeMap.set(l.source, (degreeMap.get(l.source) ?? 0) + 1)
+      degreeMap.set(l.target, (degreeMap.get(l.target) ?? 0) + 1)
+    })
+    let mostConnectedName = '—'
+    let maxDegree = 0
+    degreeMap.forEach((degree, nodeId) => {
+      if (degree > maxDegree) {
+        maxDegree = degree
+        const node = graphData.nodes.find((n: NetworkNode) => n.id === nodeId)
+        mostConnectedName = node ? truncate(toTitleCase(node.name), 22) : nodeId
+      }
+    })
+
+    // Densest community: community with most internal edges
+    const communityEdgeCounts = new Map<number, number>()
+    const nodeToComm = new Map<string, number>()
+    graphData.nodes.forEach((n: NetworkNode) => {
+      if (n.community_id != null) nodeToComm.set(n.id, n.community_id)
+    })
+    graphData.links.forEach((l: NetworkLink) => {
+      const sc = nodeToComm.get(l.source)
+      const tc = nodeToComm.get(l.target)
+      if (sc != null && tc != null && sc === tc) {
+        communityEdgeCounts.set(sc, (communityEdgeCounts.get(sc) ?? 0) + 1)
+      }
+    })
+    let densestComm = '—'
+    let maxCommEdges = 0
+    communityEdgeCounts.forEach((count, commId) => {
+      if (count > maxCommEdges) {
+        maxCommEdges = count
+        densestComm = `#${commId} (${count} links)`
+      }
+    })
+
+    return { totalNodes, highRiskConnections, mostConnectedName, maxDegree, densestComm }
+  }, [graphData])
+
+  // ECharts instance ref for reset view
+  const chartRef = useRef<ReactECharts>(null)
+
+  const handleResetView = useCallback(() => {
+    // ECharts restore action resets zoom/pan
+    const instance = chartRef.current?.getEchartsInstance?.()
+    if (instance) {
+      instance.dispatchAction({ type: 'restore' })
+    }
+  }, [])
 
   // Click handler for ECharts nodes
   const handleGraphEvents = useMemo(
@@ -868,6 +950,38 @@ export function NetworkGraph() {
       </div>
       </ScrollReveal>
 
+      {/* Key Network Stats strip — shown when graph data is loaded */}
+      {graphStats && graphData && (
+        <div className="flex flex-wrap gap-6 px-4 py-2 bg-background-elevated/30 rounded border border-border/20 text-xs">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-text-muted uppercase tracking-wider text-[10px] font-medium">Nodes</span>
+            <span className="font-mono font-semibold text-text-primary tabular-nums">{graphStats.totalNodes}</span>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-text-muted uppercase tracking-wider text-[10px] font-medium">High-risk links</span>
+            <span
+              className="font-mono font-semibold tabular-nums"
+              style={{ color: graphStats.highRiskConnections > 0 ? '#f87171' : '#4ade80' }}
+            >
+              {graphStats.highRiskConnections}
+            </span>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-text-muted uppercase tracking-wider text-[10px] font-medium">Most connected</span>
+            <span className="font-mono font-semibold text-text-primary">
+              {graphStats.mostConnectedName}
+              {graphStats.maxDegree > 0 && (
+                <span className="text-text-muted font-normal"> ({graphStats.maxDegree})</span>
+              )}
+            </span>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-text-muted uppercase tracking-wider text-[10px] font-medium">Densest cluster</span>
+            <span className="font-mono font-semibold text-text-primary">{graphStats.densestComm}</span>
+          </div>
+        </div>
+      )}
+
       {/* Main content: graph + side panel */}
       <div className="flex border border-border rounded-md overflow-hidden" style={{ height: '620px' }}>
         {/* Graph area */}
@@ -930,6 +1044,7 @@ export function NetworkGraph() {
 
           {!isLoading && !isEmpty && graphData && (
             <ReactECharts
+              ref={chartRef}
               option={option}
               style={{ height: '100%', width: '100%' }}
               onEvents={handleGraphEvents}
@@ -943,6 +1058,78 @@ export function NetworkGraph() {
               <div className="bg-background-card/90 border border-border rounded px-3 py-1.5 text-xs text-text-muted text-center backdrop-blur-sm">
                 {t('clickNodeHint')}
               </div>
+            </div>
+          )}
+
+          {/* In-graph legend — bottom-right overlay */}
+          {!isLoading && !isEmpty && graphData && (
+            <div className="absolute bottom-3 right-3 flex flex-col gap-2 bg-background-card/90 border border-border/40 rounded-md px-3 py-2.5 text-[10px] backdrop-blur-sm pointer-events-auto">
+              {/* Color legend */}
+              <div className="space-y-1">
+                <div className="text-text-muted uppercase tracking-wider font-medium mb-1">
+                  {colorMode === 'risk' ? 'Risk level' : 'Community'}
+                </div>
+                {colorMode === 'risk' ? (
+                  <>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: '#60a5fa' }}
+                      />
+                      <span className="text-text-secondary">Institution</span>
+                    </div>
+                    {(['critical', 'high', 'medium', 'low'] as const).map((level) => (
+                      <div key={level} className="flex items-center gap-1.5">
+                        <span
+                          className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
+                          style={{
+                            backgroundColor: RISK_COLORS[level],
+                            boxShadow: level === 'critical' || level === 'high'
+                              ? `0 0 5px ${RISK_COLORS[level]}`
+                              : 'none',
+                          }}
+                        />
+                        <span className="text-text-secondary capitalize">{level}</span>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  COMMUNITY_PALETTE.slice(0, 5).map((color, i) => (
+                    <div key={i} className="flex items-center gap-1.5">
+                      <span
+                        className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: color }}
+                      />
+                      <span className="text-text-secondary">
+                        {i === 0 ? 'Cluster 0' : i < 4 ? `Cluster ${i}` : '+ more…'}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Size scale note */}
+              <div className="border-t border-border/30 pt-1.5 space-y-1">
+                <div className="text-text-muted uppercase tracking-wider font-medium">Node size</div>
+                <div className="flex items-center gap-2">
+                  <span className="inline-block rounded-full bg-text-muted/40" style={{ width: 8, height: 8 }} />
+                  <span className="text-text-muted">Low value</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="inline-block rounded-full bg-text-muted/40" style={{ width: 16, height: 16 }} />
+                  <span className="text-text-muted">High value</span>
+                </div>
+              </div>
+
+              {/* Reset view button */}
+              <button
+                onClick={handleResetView}
+                className="flex items-center gap-1.5 text-text-muted hover:text-accent transition-colors border-t border-border/30 pt-1.5 mt-0.5"
+                aria-label="Reset graph view"
+              >
+                <RotateCcw className="h-3 w-3 shrink-0" />
+                <span>Reset view</span>
+              </button>
             </div>
           )}
         </div>

@@ -13,12 +13,12 @@ import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
-import { formatCompactMXN, formatNumber, formatPercentSafe } from '@/lib/utils'
+import { cn, formatCompactMXN, formatNumber, formatPercentSafe } from '@/lib/utils'
 import { sectorApi, analysisApi } from '@/api/client'
 import { SECTOR_COLORS, SECTORS, getSectorNameEN } from '@/lib/constants'
 import { Heatmap } from '@/components/charts/Heatmap'
 import type { SectorStatistics } from '@/api/types'
-import { BarChart3, Layers } from 'lucide-react'
+import { BarChart3, Layers, X } from 'lucide-react'
 import { ScrollReveal } from '@/hooks/useAnimations'
 import { StatCard as SharedStatCard } from '@/components/DashboardWidgets'
 import {
@@ -31,6 +31,11 @@ import {
   Tooltip as RechartsTooltip,
   Cell,
   LabelList,
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
 } from '@/components/charts'
 import { formatCompactUSD } from '@/lib/utils'
 
@@ -74,6 +79,187 @@ function getTopRamo(sectorCode: string): string {
 }
 
 // ============================================================================
+// SECTOR RANKING STRIP — Compact horizontal ranking by avg_risk_score
+// ============================================================================
+
+interface SectorRankingStripProps {
+  sectors: SectorStatistics[]
+  selectedCode: string | null
+  onSelect: (code: string | null) => void
+}
+
+const SectorRankingStrip = memo(function SectorRankingStrip({
+  sectors,
+  selectedCode,
+  onSelect,
+}: SectorRankingStripProps) {
+  const sorted = useMemo(
+    () => [...sectors].sort((a, b) => b.avg_risk_score - a.avg_risk_score),
+    [sectors]
+  )
+  const maxRisk = Math.max(...sorted.map((s) => s.avg_risk_score), 0.01)
+
+  return (
+    <div
+      className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin"
+      role="listbox"
+      aria-label="Sector risk ranking"
+    >
+      {sorted.map((sector, i) => {
+        const color = SECTOR_COLORS[sector.sector_code] || '#64748b'
+        const riskPct = sector.avg_risk_score * 100
+        const barHeight = Math.round((sector.avg_risk_score / maxRisk) * 28)
+        const isSelected = selectedCode === sector.sector_code
+
+        const riskBorderColor =
+          sector.avg_risk_score >= 0.30 ? 'border-risk-critical/40' :
+          sector.avg_risk_score >= 0.20 ? 'border-risk-high/40' :
+          sector.avg_risk_score >= 0.10 ? 'border-risk-medium/30' :
+          'border-border/30'
+
+        return (
+          <button
+            key={sector.sector_id}
+            role="option"
+            aria-selected={isSelected}
+            onClick={() => onSelect(isSelected ? null : sector.sector_code)}
+            className={cn(
+              'flex flex-col items-center gap-1 px-2 py-2 rounded-lg border transition-all flex-shrink-0 min-w-[64px] group',
+              isSelected
+                ? 'border-accent bg-accent/10'
+                : cn('hover:bg-background-elevated/40 hover:border-border/60', riskBorderColor, 'bg-background-elevated/10')
+            )}
+            aria-label={`${getSectorNameEN(sector.sector_code)}: ${riskPct.toFixed(1)}% avg risk, rank ${i + 1}`}
+          >
+            {/* Rank badge */}
+            <span className="text-[9px] font-bold text-text-muted font-mono">#{i + 1}</span>
+            {/* Mini bar chart */}
+            <div className="w-full flex items-end justify-center h-7">
+              <div
+                className="w-4 rounded-t transition-all duration-300"
+                style={{
+                  height: `${Math.max(barHeight, 3)}px`,
+                  backgroundColor: color,
+                  opacity: isSelected ? 1 : 0.7,
+                }}
+              />
+            </div>
+            {/* Color dot + code */}
+            <div className="flex items-center gap-1">
+              <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+              <span
+                className={cn(
+                  'text-[9px] font-bold font-mono uppercase truncate max-w-[44px]',
+                  isSelected ? 'text-accent' : 'text-text-secondary group-hover:text-text-primary'
+                )}
+              >
+                {getSectorNameEN(sector.sector_code).slice(0, 6)}
+              </span>
+            </div>
+            {/* Risk % */}
+            <span
+              className={cn(
+                'text-[10px] font-black tabular-nums font-mono',
+                sector.avg_risk_score >= 0.30 ? 'text-risk-critical' :
+                sector.avg_risk_score >= 0.20 ? 'text-risk-high' :
+                sector.avg_risk_score >= 0.10 ? 'text-risk-medium' :
+                'text-risk-low'
+              )}
+            >
+              {riskPct.toFixed(1)}%
+            </span>
+          </button>
+        )
+      })}
+    </div>
+  )
+})
+
+// ============================================================================
+// SECTOR RADAR — Spider chart showing 6 risk dimensions for a sector
+// ============================================================================
+
+interface SectorRadarProps {
+  sector: SectorStatistics
+  allSectors: SectorStatistics[]
+}
+
+const SectorRadar = memo(function SectorRadar({ sector, allSectors }: SectorRadarProps) {
+  const color = SECTOR_COLORS[sector.sector_code] || '#64748b'
+
+  // Normalize value concentration: sector's share of total value
+  const totalValue = allSectors.reduce((s, sec) => s + sec.total_value_mxn, 0)
+  const valueSharePct = totalValue > 0 ? (sector.total_value_mxn / totalValue) * 100 : 0
+  // Normalize volume: contracts as pct of max
+  const maxContracts = Math.max(...allSectors.map((s) => s.total_contracts), 1)
+  const volumePct = (sector.total_contracts / maxContracts) * 100
+
+  const radarData = [
+    {
+      subject: 'Direct Award',
+      value: Math.min(100, sector.direct_award_pct ?? 0),
+      fullMark: 100,
+    },
+    {
+      subject: 'Single Bid',
+      value: Math.min(100, sector.single_bid_pct ?? 0),
+      fullMark: 100,
+    },
+    {
+      subject: 'Avg Risk',
+      // 0.5 risk → 100 on the radar
+      value: Math.min(100, (sector.avg_risk_score ?? 0) * 200),
+      fullMark: 100,
+    },
+    {
+      subject: 'High Risk %',
+      value: Math.min(100, sector.high_risk_pct ?? 0),
+      fullMark: 100,
+    },
+    {
+      subject: 'Value Share',
+      // normalize to max possible share (capped at 50% = 100 on radar)
+      value: Math.min(100, valueSharePct * 2),
+      fullMark: 100,
+    },
+    {
+      subject: 'Volume',
+      value: Math.min(100, volumePct),
+      fullMark: 100,
+    },
+  ]
+
+  return (
+    <div className="flex flex-col items-center">
+      <RadarChart cx={140} cy={130} outerRadius={95} width={280} height={260} data={radarData}>
+        <PolarGrid stroke="rgba(255,255,255,0.08)" />
+        <PolarAngleAxis
+          dataKey="subject"
+          tick={{ fill: '#8b949e', fontSize: 10, fontFamily: 'var(--font-mono, monospace)' }}
+        />
+        <PolarRadiusAxis
+          angle={90}
+          domain={[0, 100]}
+          tick={false}
+          axisLine={false}
+        />
+        <Radar
+          name={getSectorNameEN(sector.sector_code)}
+          dataKey="value"
+          stroke={color}
+          fill={color}
+          fillOpacity={0.25}
+          strokeWidth={1.5}
+        />
+      </RadarChart>
+      <p className="text-[10px] text-text-muted font-mono text-center -mt-2">
+        Risk dimensions for {getSectorNameEN(sector.sector_code)} · all axes 0–100
+      </p>
+    </div>
+  )
+})
+
+// ============================================================================
 // Main Component
 // ============================================================================
 
@@ -81,6 +267,7 @@ export function Sectors() {
   const navigate = useNavigate()
   const [sortField, setSortField] = useState<SortField>('total_value_mxn')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [selectedSectorCode, setSelectedSectorCode] = useState<string | null>(null)
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['sectors'],
@@ -151,6 +338,12 @@ export function Sectors() {
     return { data: heatmapData, rows: sectorNames, columns: metrics }
   }, [data])
 
+  // Derived: sector object for the selected code (for radar)
+  const selectedSector = useMemo(() => {
+    if (!selectedSectorCode || !data?.data) return null
+    return data.data.find((s) => s.sector_code === selectedSectorCode) ?? null
+  }, [selectedSectorCode, data])
+
   const handleSectorClick = (sectorName: string) => {
     const sector = data?.data.find((s) => getSectorNameEN(s.sector_code) === sectorName)
     if (sector) navigate(`/sectors/${sector.sector_id}`)
@@ -208,6 +401,89 @@ export function Sectors() {
         </p>
       </div>
       </ScrollReveal>
+
+      {/* ================================================================ */}
+      {/* SECTOR RANKING STRIP — All 12 sectors by avg risk, clickable  */}
+      {/* ================================================================ */}
+      {data?.data && data.data.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-mono">
+              Ranked by avg risk score — click to inspect
+            </p>
+            {selectedSectorCode && (
+              <button
+                onClick={() => setSelectedSectorCode(null)}
+                className="text-[10px] text-text-muted hover:text-text-primary flex items-center gap-1 font-mono"
+                aria-label="Clear sector selection"
+              >
+                <X className="h-3 w-3" /> Clear
+              </button>
+            )}
+          </div>
+          <SectorRankingStrip
+            sectors={data.data}
+            selectedCode={selectedSectorCode}
+            onSelect={setSelectedSectorCode}
+          />
+        </div>
+      )}
+
+      {/* ================================================================ */}
+      {/* SECTOR RADAR — Spider chart for the selected sector            */}
+      {/* ================================================================ */}
+      {selectedSector && data?.data && (
+        <Card className="border-accent/20 bg-accent/3">
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-3 h-3 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: SECTOR_COLORS[selectedSector.sector_code] || '#64748b' }}
+                />
+                <h3 className="text-sm font-bold text-text-primary">
+                  {getSectorNameEN(selectedSector.sector_code)} — Risk Profile
+                </h3>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => navigate(`/sectors/${selectedSector.sector_id}`)}
+                  className="text-xs text-accent flex items-center gap-1 hover:underline"
+                >
+                  Full profile ↗
+                </button>
+                <button
+                  onClick={() => setSelectedSectorCode(null)}
+                  className="text-text-muted hover:text-text-primary"
+                  aria-label="Close radar"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 items-center">
+              {/* Radar chart */}
+              <SectorRadar sector={selectedSector} allSectors={data.data} />
+              {/* Key stats sidebar */}
+              <div className="space-y-2.5">
+                {[
+                  { label: 'Total Contracts', value: formatNumber(selectedSector.total_contracts), mono: true },
+                  { label: 'Total Value', value: formatCompactMXN(selectedSector.total_value_mxn), mono: true },
+                  { label: 'Avg Risk Score', value: `${(selectedSector.avg_risk_score * 100).toFixed(1)}%`, mono: true },
+                  { label: 'High Risk %', value: formatPercentSafe(selectedSector.high_risk_pct, false), mono: true },
+                  { label: 'Direct Award %', value: formatPercentSafe(selectedSector.direct_award_pct, false), mono: true },
+                  { label: 'Single Bid %', value: formatPercentSafe(selectedSector.single_bid_pct, false), mono: true },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex items-center justify-between gap-2 py-1.5 border-b border-border/20">
+                    <span className="text-xs text-text-muted">{label}</span>
+                    <span className="text-xs font-bold tabular-nums font-mono text-text-primary">{value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Section 1: Stat Cards */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">

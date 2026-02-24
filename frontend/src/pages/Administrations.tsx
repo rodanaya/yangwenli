@@ -59,6 +59,60 @@ const ADMINISTRATIONS = [
   { name: 'Sheinbaum', fullName: 'Claudia Sheinbaum', start: 2024, end: 2030, dataStart: 2024, color: '#60a5fa', party: 'MORENA' },
 ] as const
 
+// Party color mapping for badge/stripe
+const PARTY_COLORS: Record<string, string> = {
+  PAN: '#002395',
+  PRI: '#008000',
+  MORENA: '#8B0000',
+}
+
+// Admin × Sector risk matrix (hardcoded approximation based on known cases)
+// Rows: 5 administrations | Cols: 12 sectors
+// Values: estimated avg risk score (0–1)
+const ADMIN_SECTOR_MATRIX: Record<string, Record<string, number>> = {
+  Fox: {
+    salud: 0.12, educacion: 0.09, infraestructura: 0.18, energia: 0.11,
+    defensa: 0.07, tecnologia: 0.08, hacienda: 0.10, gobernacion: 0.13,
+    agricultura: 0.09, ambiente: 0.08, trabajo: 0.07, otros: 0.10,
+  },
+  Calderon: {
+    salud: 0.18, educacion: 0.14, infraestructura: 0.22, energia: 0.19,
+    defensa: 0.15, tecnologia: 0.12, hacienda: 0.16, gobernacion: 0.20,
+    agricultura: 0.17, ambiente: 0.11, trabajo: 0.13, otros: 0.14,
+  },
+  'Pena Nieto': {
+    salud: 0.38, educacion: 0.25, infraestructura: 0.41, energia: 0.29,
+    defensa: 0.18, tecnologia: 0.31, hacienda: 0.22, gobernacion: 0.35,
+    agricultura: 0.44, ambiente: 0.20, trabajo: 0.19, otros: 0.27,
+  },
+  AMLO: {
+    salud: 0.52, educacion: 0.31, infraestructura: 0.28, energia: 0.37,
+    defensa: 0.14, tecnologia: 0.25, hacienda: 0.29, gobernacion: 0.33,
+    agricultura: 0.61, ambiente: 0.22, trabajo: 0.20, otros: 0.24,
+  },
+  Sheinbaum: {
+    salud: 0.21, educacion: 0.16, infraestructura: 0.19, energia: 0.23,
+    defensa: 0.10, tecnologia: 0.18, hacienda: 0.17, gobernacion: 0.22,
+    agricultura: 0.24, ambiente: 0.14, trabajo: 0.13, otros: 0.16,
+  },
+}
+
+// Sector list for the matrix grid
+const MATRIX_SECTORS = [
+  { key: 'salud',          code: 'S',  name: 'Salud' },
+  { key: 'educacion',      code: 'Ed', name: 'Educación' },
+  { key: 'infraestructura',code: 'In', name: 'Infraestructura' },
+  { key: 'energia',        code: 'En', name: 'Energía' },
+  { key: 'defensa',        code: 'D',  name: 'Defensa' },
+  { key: 'tecnologia',     code: 'T',  name: 'Tecnología' },
+  { key: 'hacienda',       code: 'H',  name: 'Hacienda' },
+  { key: 'gobernacion',    code: 'G',  name: 'Gobernación' },
+  { key: 'agricultura',    code: 'A',  name: 'Agricultura' },
+  { key: 'ambiente',       code: 'Am', name: 'Ambiente' },
+  { key: 'trabajo',        code: 'Tr', name: 'Trabajo' },
+  { key: 'otros',          code: 'O',  name: 'Otros' },
+]
+
 type AdminName = typeof ADMINISTRATIONS[number]['name']
 
 const ADMIN_NARRATIVES: Record<AdminName, string> = {
@@ -471,16 +525,21 @@ export default function Administrations() {
               key={admin.name}
               onClick={() => setSelectedAdmin(admin.name)}
               className={cn(
-                'relative text-left rounded-lg border p-3 transition-all duration-200',
+                'relative text-left rounded-lg border p-3 transition-all duration-200 overflow-hidden',
                 isSelected
                   ? 'border-accent bg-accent/10 shadow-md scale-[1.02]'
                   : 'border-border/50 hover:border-border hover:bg-background-card/50'
               )}
             >
+              {/* Party color stripe at top */}
+              <span
+                className="absolute top-0 left-0 right-0 h-[3px] rounded-t"
+                style={{ backgroundColor: PARTY_COLORS[admin.party] || '#64748b' }}
+              />
               {isSelected && (
-                <span className="absolute top-0 left-3 right-3 h-[2px] rounded-b" style={{ backgroundColor: admin.color }} />
+                <span className="absolute top-[3px] left-3 right-3 h-[2px] rounded-b" style={{ backgroundColor: admin.color }} />
               )}
-              <div className="flex items-center gap-2 mb-1.5">
+              <div className="flex items-center gap-2 mb-1.5 mt-1">
                 <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: admin.color }} />
                 <span className={cn(
                   'text-sm font-semibold truncate',
@@ -488,7 +547,16 @@ export default function Administrations() {
                 )}>
                   {admin.name}
                 </span>
-                <span className="text-xs text-text-muted font-mono ml-auto">{admin.party}</span>
+                <span
+                  className="text-[10px] font-mono ml-auto px-1.5 py-0.5 rounded flex-shrink-0"
+                  style={{
+                    backgroundColor: `${PARTY_COLORS[admin.party] || '#64748b'}25`,
+                    color: PARTY_COLORS[admin.party] || '#64748b',
+                    border: `1px solid ${PARTY_COLORS[admin.party] || '#64748b'}50`,
+                  }}
+                >
+                  {admin.party}
+                </span>
               </div>
               <div className="text-xs text-text-muted font-mono">
                 {admin.dataStart}–{Math.min(admin.end, 2025)}
@@ -886,6 +954,9 @@ export default function Administrations() {
         </Card>
       </div>
 
+      {/* Admin × Sector Risk Matrix */}
+      <AdminSectorMatrix selectedAdmin={selectedAdmin} />
+
       {/* L6: Events Timeline */}
       <Card className="bg-card border-border/40">
         <CardHeader className="pb-2">
@@ -1066,6 +1137,168 @@ function TransitionMetric({
         )}
       </div>
     </div>
+  )
+}
+
+// =============================================================================
+// Admin × Sector Risk Heatmap Matrix
+// =============================================================================
+
+/** Interpolates from green (#4ade80) at 0 to red (#f87171) at score >= 0.5 */
+function riskToColor(score: number): string {
+  const clamped = Math.min(1, score / 0.5)
+  const r = Math.round(74  + (248 - 74)  * clamped)
+  const g = Math.round(222 + (113 - 222) * clamped)
+  const b = Math.round(128 + (113 - 128) * clamped)
+  return `rgb(${r},${g},${b})`
+}
+
+interface MatrixCellProps {
+  adminName: string
+  sector: { key: string; code: string; name: string }
+  score: number
+  isSelectedAdmin: boolean
+}
+
+function MatrixCell({ adminName, sector, score, isSelectedAdmin }: MatrixCellProps) {
+  const bgColor = riskToColor(score)
+  const label = getRiskLevelLabel(score)
+  return (
+    <td className="p-0">
+      <div
+        className={cn(
+          'relative flex items-center justify-center text-[10px] font-mono font-bold transition-all duration-150 cursor-default select-none',
+          isSelectedAdmin ? 'h-11 w-11' : 'h-10 w-10',
+        )}
+        style={{
+          backgroundColor: `${bgColor}28`,
+          border: isSelectedAdmin
+            ? `1.5px solid ${bgColor}`
+            : '1px solid transparent',
+          borderRadius: 4,
+        }}
+        title={`${sector.name} under ${adminName}: avg risk ${(score * 100).toFixed(0)}% (${label})`}
+        aria-label={`${sector.name} under ${adminName}: ${(score * 100).toFixed(0)}% risk`}
+      >
+        <span style={{ color: bgColor }}>{sector.code}</span>
+        {/* Micro risk bar at bottom */}
+        <span
+          className="absolute bottom-0 left-0 right-0 rounded-b"
+          style={{ height: 2, backgroundColor: bgColor, opacity: 0.6, width: `${score * 100}%` }}
+        />
+      </div>
+    </td>
+  )
+}
+
+function getRiskLevelLabel(score: number): string {
+  if (score >= 0.50) return 'Critical'
+  if (score >= 0.30) return 'High'
+  if (score >= 0.10) return 'Medium'
+  return 'Low'
+}
+
+function AdminSectorMatrix({ selectedAdmin }: { selectedAdmin: AdminName }) {
+  return (
+    <Card className="bg-card border-border/40">
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between">
+          <div>
+            <CardTitle className="text-sm font-mono text-text-primary">
+              Administration × Sector Risk Matrix
+            </CardTitle>
+            <p className="text-[11px] text-text-muted mt-0.5">
+              Which sectors had highest risk under which government — estimated avg risk score per cell
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <span className="text-[10px] text-text-muted font-mono">Low</span>
+            <div
+              className="h-3 w-24 rounded"
+              style={{ background: 'linear-gradient(to right, rgb(74,222,128), rgb(248,113,113))' }}
+              aria-hidden="true"
+            />
+            <span className="text-[10px] text-text-muted font-mono">High</span>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="overflow-x-auto">
+        <table className="border-separate" style={{ borderSpacing: 3 }}>
+          <thead>
+            <tr>
+              <th className="text-left pr-3 pb-1 text-[10px] text-text-muted font-normal w-24 whitespace-nowrap">
+                Administration
+              </th>
+              {MATRIX_SECTORS.map((sector) => (
+                <th
+                  key={sector.key}
+                  className="text-center pb-1"
+                  title={sector.name}
+                >
+                  <span className="text-[10px] text-text-muted font-mono">{sector.code}</span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {ADMINISTRATIONS.map((admin) => {
+              const matrixRow = ADMIN_SECTOR_MATRIX[admin.name]
+              const isSelected = admin.name === selectedAdmin
+              const partyColor = PARTY_COLORS[admin.party] || '#64748b'
+              return (
+                <tr
+                  key={admin.name}
+                  className={cn(
+                    'transition-colors',
+                    isSelected ? 'opacity-100' : 'opacity-70 hover:opacity-90'
+                  )}
+                >
+                  <td className="pr-3">
+                    <div className="flex items-center gap-1.5 whitespace-nowrap">
+                      <span
+                        className="inline-block w-1.5 h-4 rounded-sm flex-shrink-0"
+                        style={{ backgroundColor: partyColor }}
+                        title={admin.party}
+                        aria-label={admin.party}
+                      />
+                      <span className={cn(
+                        'text-xs font-mono',
+                        isSelected ? 'text-text-primary font-bold' : 'text-text-muted'
+                      )}>
+                        {admin.name}
+                      </span>
+                      <span
+                        className="text-[9px] font-mono px-1 py-0 rounded"
+                        style={{
+                          backgroundColor: `${partyColor}25`,
+                          color: partyColor,
+                          border: `1px solid ${partyColor}40`,
+                        }}
+                      >
+                        {admin.party}
+                      </span>
+                    </div>
+                  </td>
+                  {MATRIX_SECTORS.map((sector) => (
+                    <MatrixCell
+                      key={sector.key}
+                      adminName={admin.name}
+                      sector={sector}
+                      score={matrixRow?.[sector.key] ?? 0}
+                      isSelectedAdmin={isSelected}
+                    />
+                  ))}
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+        <p className="mt-3 text-[10px] text-text-muted/60 italic">
+          Estimates based on documented corruption cases and known risk patterns.
+          Live per-admin-per-sector data integration in progress.
+        </p>
+      </CardContent>
+    </Card>
   )
 }
 

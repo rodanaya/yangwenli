@@ -19,8 +19,14 @@ import type { ContractListItem } from '@/api/types'
 import {
   AreaChart,
   Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Cell,
   ResponsiveContainer,
   Tooltip as RechartsTooltip,
+  ReferenceLine,
 } from '@/components/charts'
 import {
   Users,
@@ -40,6 +46,334 @@ import {
 } from 'lucide-react'
 import { NetworkGraphModal } from '@/components/NetworkGraphModal'
 import { ScrollReveal, useCountUp, AnimatedFill } from '@/hooks/useAnimations'
+import { cn } from '@/lib/utils'
+import { RiskWhisker } from '@/components/ui/risk-whisker'
+
+// ============================================================================
+// Model coefficients for the waterfall chart (v5.0 global model)
+// ============================================================================
+const MODEL_COEFFICIENTS: Record<string, number> = {
+  price_volatility: 1.219,
+  institution_diversity: -0.848,
+  win_rate: 0.727,
+  vendor_concentration: 0.428,
+  sector_spread: -0.374,
+  industry_mismatch: 0.305,
+  same_day_count: 0.222,
+  direct_award: 0.182,
+  ad_period_days: -0.104,
+  network_member_count: 0.064,
+  year_end: 0.059,
+  institution_risk: 0.057,
+}
+
+// ============================================================================
+// Simple Tabs implementation (no external dependency needed)
+// ============================================================================
+interface TabsProps {
+  defaultTab: string
+  tabs: Array<{ key: string; label: string; icon?: React.ElementType }>
+  children: React.ReactNode
+}
+
+function SimpleTabs({ defaultTab, tabs, children }: TabsProps) {
+  const [active, setActive] = useState(defaultTab)
+  return (
+    <div>
+      <div className="flex gap-1 border-b border-border/50 mb-6 overflow-x-auto">
+        {tabs.map((tab) => {
+          const Icon = tab.icon
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActive(tab.key)}
+              className={cn(
+                'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors',
+                active === tab.key
+                  ? 'border-accent text-accent'
+                  : 'border-transparent text-text-muted hover:text-text-secondary'
+              )}
+            >
+              {Icon && <Icon className="h-3.5 w-3.5" />}
+              {tab.label}
+            </button>
+          )
+        })}
+      </div>
+      {/* Render only the active tab panel */}
+      {Array.isArray(children)
+        ? (children as React.ReactElement[]).find((c) => c?.props?.tabKey === active)
+        : children}
+    </div>
+  )
+}
+
+function TabPanel({ tabKey: _tabKey, children }: { tabKey: string; children: React.ReactNode }) {
+  return <div>{children}</div>
+}
+
+// ============================================================================
+// Risk Factor Waterfall Chart
+// ============================================================================
+
+interface WaterfallEntry {
+  name: string
+  factorKey: string
+  contribution: number
+  isNegative: boolean
+}
+
+function RiskWaterfallChart({
+  riskFactors,
+  riskScore,
+}: {
+  riskFactors: Array<{ factor: string; count: number; percentage: number }>
+  riskScore: number
+}) {
+  // Build waterfall data from top risk factors combined with model coefficients
+  // We use percentage as a proxy for z-score contribution
+  const data: WaterfallEntry[] = useMemo(() => {
+    const entries: WaterfallEntry[] = riskFactors
+      .map((f) => {
+        // Normalize factor key: strip z_ prefix, lowercase
+        const key = f.factor.replace(/^z_/, '').toLowerCase()
+        const coeff = MODEL_COEFFICIENTS[key] ?? 0
+        // Contribution = normalized percentage × coefficient sign
+        // If coefficient is negative, high percentage → risk-reducing
+        const normalizedPct = f.percentage / 100
+        const contribution = normalizedPct * Math.abs(coeff) * (coeff >= 0 ? 1 : -1)
+        return {
+          name: key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()).slice(0, 14),
+          factorKey: key,
+          contribution,
+          isNegative: contribution < 0,
+        }
+      })
+      .filter((e) => Math.abs(e.contribution) > 0.001)
+      .sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution))
+      .slice(0, 8)
+
+    // Add total bar
+    entries.push({
+      name: 'Total Score',
+      factorKey: '__total__',
+      contribution: riskScore,
+      isNegative: false,
+    })
+
+    return entries
+  }, [riskFactors, riskScore])
+
+  const maxVal = Math.max(...data.map((d) => Math.abs(d.contribution)), 0.1)
+
+  const barColor = (entry: WaterfallEntry) => {
+    if (entry.factorKey === '__total__') return RISK_COLORS[getRiskLevel(riskScore)]
+    if (entry.isNegative) return '#4ade80'
+    return entry.contribution > 0.15 ? '#f87171' : '#fb923c'
+  }
+
+  return (
+    <div>
+      <p className="text-xs text-text-muted mb-3">
+        Positive bars increase risk (red/orange). Negative bars reduce risk (green).
+        Bar height reflects each factor's contribution to the overall score.
+      </p>
+      <div className="h-[220px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 10, right: 10, bottom: 30, left: 10 }}>
+            <XAxis
+              dataKey="name"
+              tick={{ fill: 'var(--color-text-muted)', fontSize: 9 }}
+              angle={-30}
+              textAnchor="end"
+              interval={0}
+            />
+            <YAxis
+              domain={[-maxVal * 1.1, maxVal * 1.1]}
+              tick={{ fill: 'var(--color-text-muted)', fontSize: 9 }}
+              tickFormatter={(v: number) => v.toFixed(2)}
+            />
+            <RechartsTooltip
+              content={({ active, payload }) => {
+                if (active && payload?.[0]) {
+                  const d = payload[0].payload as WaterfallEntry
+                  return (
+                    <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg">
+                      <p className="font-semibold text-text-primary mb-1">{d.name}</p>
+                      <p className={d.isNegative ? 'text-risk-low' : 'text-risk-high'}>
+                        {d.contribution >= 0 ? '+' : ''}{d.contribution.toFixed(3)} contribution
+                      </p>
+                      {d.factorKey !== '__total__' && (
+                        <p className="text-text-muted mt-1">
+                          Model coefficient: {MODEL_COEFFICIENTS[d.factorKey]?.toFixed(3) ?? 'n/a'}
+                        </p>
+                      )}
+                    </div>
+                  )
+                }
+                return null
+              }}
+            />
+            <ReferenceLine y={0} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />
+            <Bar dataKey="contribution" radius={[3, 3, 0, 0]}>
+              {data.map((entry, i) => (
+                <Cell
+                  key={i}
+                  fill={barColor(entry)}
+                  fillOpacity={entry.factorKey === '__total__' ? 1 : 0.85}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      {/* Legend */}
+      <div className="flex items-center gap-4 mt-1 justify-center">
+        <div className="flex items-center gap-1.5">
+          <div className="h-2.5 w-2.5 rounded-sm bg-risk-critical/80" />
+          <span className="text-[10px] text-text-muted">Risk-increasing factor</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="h-2.5 w-2.5 rounded-sm bg-risk-low/80" />
+          <span className="text-[10px] text-text-muted">Risk-reducing factor</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// Activity Calendar (GitHub-style heatmap)
+// ============================================================================
+
+function ActivityCalendar({
+  contracts,
+  sectorColor,
+}: {
+  contracts: ContractListItem[]
+  sectorColor: string
+}) {
+  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+  // Build a map of "year-month" -> { count, value }
+  const cellMap = useMemo(() => {
+    const map = new Map<string, { count: number; value: number }>()
+    for (const c of contracts) {
+      if (!c.contract_year) continue
+      // contract_date may be "YYYY-MM-DD" or absent; fall back to year only
+      let month = 0
+      if (c.contract_date) {
+        const parts = c.contract_date.split('-')
+        month = parts.length >= 2 ? parseInt(parts[1], 10) - 1 : 0
+      }
+      const key = `${c.contract_year}-${month}`
+      const existing = map.get(key) || { count: 0, value: 0 }
+      existing.count += 1
+      existing.value += c.amount_mxn || 0
+      map.set(key, existing)
+    }
+    return map
+  }, [contracts])
+
+  // Determine the last 5 years present in the data
+  const years = useMemo(() => {
+    const allYears = contracts.map((c) => c.contract_year).filter(Boolean) as number[]
+    if (allYears.length === 0) return []
+    const maxYear = Math.max(...allYears)
+    return Array.from({ length: 5 }, (_, i) => maxYear - 4 + i)
+  }, [contracts])
+
+  const maxCount = useMemo(() => {
+    let max = 0
+    for (const v of cellMap.values()) max = Math.max(max, v.count)
+    return max || 1
+  }, [cellMap])
+
+  const [hovered, setHovered] = useState<string | null>(null)
+
+  if (years.length === 0) {
+    return <p className="text-xs text-text-muted">No contract date data available for calendar view.</p>
+  }
+
+  return (
+    <div>
+      <p className="text-xs text-text-muted mb-3">
+        Contract activity over the last 5 years. Darker cells indicate more contracts in that month.
+      </p>
+      {/* Grid: rows = months, cols = years */}
+      <div className="overflow-x-auto">
+        <div className="inline-block min-w-[320px]">
+          {/* Year headers */}
+          <div className="flex mb-1 ml-8">
+            {years.map((yr) => (
+              <div key={yr} className="flex-1 text-center text-[10px] text-text-muted font-mono">
+                {yr}
+              </div>
+            ))}
+          </div>
+          {/* Month rows */}
+          {MONTHS.map((monthLabel, monthIdx) => (
+            <div key={monthIdx} className="flex items-center gap-0.5 mb-0.5">
+              <span className="text-[9px] text-text-muted w-8 flex-shrink-0 text-right pr-1">
+                {monthLabel}
+              </span>
+              {years.map((yr) => {
+                const key = `${yr}-${monthIdx}`
+                const cell = cellMap.get(key)
+                const count = cell?.count ?? 0
+                const opacity = count === 0 ? 0.05 : 0.15 + (count / maxCount) * 0.85
+                const tooltipKey = `${yr}-${monthIdx}`
+                return (
+                  <div
+                    key={yr}
+                    className="flex-1 h-[14px] rounded-sm cursor-default transition-transform hover:scale-110 relative"
+                    style={{ backgroundColor: sectorColor, opacity }}
+                    onMouseEnter={() => setHovered(tooltipKey)}
+                    onMouseLeave={() => setHovered(null)}
+                    title={
+                      count > 0
+                        ? `${MONTHS[monthIdx]} ${yr}: ${count} contract${count !== 1 ? 's' : ''} · ${formatCompactMXN(cell?.value ?? 0)}`
+                        : `${MONTHS[monthIdx]} ${yr}: no contracts`
+                    }
+                  />
+                )
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* Inline hovered tooltip info */}
+      {hovered && (() => {
+        const [yr, mo] = hovered.split('-').map(Number)
+        const cell = cellMap.get(hovered)
+        if (!cell) return null
+        return (
+          <p className="mt-2 text-xs text-text-secondary">
+            <span className="font-semibold">{MONTHS[mo]} {yr}:</span>{' '}
+            {cell.count} contract{cell.count !== 1 ? 's' : ''},{' '}
+            {formatCompactMXN(cell.value)}
+          </p>
+        )
+      })()}
+      {/* Legend */}
+      <div className="flex items-center gap-2 mt-3">
+        <span className="text-[10px] text-text-muted">Less</span>
+        {[0.05, 0.25, 0.5, 0.75, 1].map((op) => (
+          <div
+            key={op}
+            className="h-3 w-3 rounded-sm"
+            style={{ backgroundColor: sectorColor, opacity: op }}
+          />
+        ))}
+        <span className="text-[10px] text-text-muted">More</span>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// Main VendorProfile component
+// ============================================================================
 
 export function VendorProfile() {
   const { id } = useParams<{ id: string }>()
@@ -346,267 +680,475 @@ export function VendorProfile() {
         </Card>
       )}
 
-      {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left Column - Risk Profile */}
-        <ScrollReveal direction="up" delay={0}>
-        <div className="space-y-6">
-          {/* Risk Score Gauge */}
-          <Card className="hover-lift">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-4 w-4" />
-                Risk Profile <InfoTooltip termKey="riskScore" size={13} />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {riskLoading ? (
-                <Skeleton className="h-48" />
-              ) : riskProfile?.avg_risk_score !== undefined ? (
-                <RiskGauge
-                  score={riskProfile.avg_risk_score}
-                  riskVsSectorAvg={riskProfile.risk_vs_sector_avg}
-                  riskPercentile={riskProfile.risk_percentile}
-                  riskTrend={riskProfile.risk_trend}
-                />
-              ) : null}
-            </CardContent>
-          </Card>
+      {/* Tabbed content */}
+      <SimpleTabs
+        defaultTab="overview"
+        tabs={[
+          { key: 'overview', label: 'Overview', icon: BarChart3 },
+          { key: 'risk', label: 'Risk Analysis', icon: Shield },
+          { key: 'history', label: 'Contract History', icon: Activity },
+          { key: 'network', label: 'Network', icon: Network },
+        ]}
+      >
+        {/* TAB 1: Overview */}
+        <TabPanel tabKey="overview">
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Left Column - Risk Profile */}
+            <ScrollReveal direction="up" delay={0}>
+            <div className="space-y-6">
+              {/* Risk Score Gauge */}
+              <Card className="hover-lift">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    Risk Profile <InfoTooltip termKey="riskScore" size={13} />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {riskLoading ? (
+                    <Skeleton className="h-48" />
+                  ) : riskProfile?.avg_risk_score !== undefined ? (
+                    <RiskGauge
+                      score={riskProfile.avg_risk_score}
+                      riskVsSectorAvg={riskProfile.risk_vs_sector_avg}
+                      riskPercentile={riskProfile.risk_percentile}
+                      riskTrend={riskProfile.risk_trend}
+                      lower={riskProfile.risk_confidence_lower}
+                      upper={riskProfile.risk_confidence_upper}
+                    />
+                  ) : null}
+                </CardContent>
+              </Card>
 
-          {/* Risk Trend Mini-Chart */}
-          {riskTrendData.length > 1 && (
+              {/* Procurement Patterns */}
+              <Card className="hover-lift">
+                <CardHeader>
+                  <CardTitle className="text-sm">Procurement Patterns</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <PatternBar
+                    label="Direct Awards"
+                    value={vendor.direct_award_pct}
+                    isPercent100
+                  />
+                  <PatternBar
+                    label="Single Bids"
+                    value={vendor.single_bid_pct}
+                    isPercent100
+                  />
+                  <div className="flex justify-between text-sm">
+                    <span className="text-text-muted">Avg Contract</span>
+                    <span className="font-medium tabular-nums">{formatCompactMXN(vendor.avg_contract_value || 0)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-text-muted">Sectors</span>
+                    <span className="font-medium tabular-nums">{String(vendor.sectors_count || 0)}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            </ScrollReveal>
+
+            {/* Right Column - Summary, Contracts, Institutions */}
+            <ScrollReveal direction="up" delay={120} className="lg:col-span-2">
+            <div className="space-y-6">
+              {/* Vendor Summary */}
+              <Card className="hover-lift">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4" />
+                    Vendor Summary
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <SummaryRow label="Primary Sector" value={vendor.primary_sector_name || 'Not classified'} />
+                    <SummaryRow label="Years Active" value={String(vendor.years_active)} />
+                    <SummaryRow label="Sectors Served" value={String(vendor.sectors_count)} />
+                    {vendor.vendor_group_id && (
+                      <SummaryRow label="Vendor Group" value={vendor.group_name || `Group ${vendor.vendor_group_id}`} />
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Recent Contracts */}
+              <Card className="hover-lift">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Recent Contracts
+                  </CardTitle>
+                  <Link to={`/contracts?vendor_id=${vendorId}`}>
+                    <Button variant="ghost" size="sm">
+                      View all
+                      <ExternalLink className="ml-1 h-3 w-3" />
+                    </Button>
+                  </Link>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {contractsLoading ? (
+                    <div className="p-4 space-y-2">
+                      {[...Array(5)].map((_, i) => (
+                        <Skeleton key={i} className="h-12" />
+                      ))}
+                    </div>
+                  ) : contracts?.data.length ? (
+                    <ScrollArea className="h-[300px]">
+                      <div className="divide-y divide-border">
+                        {contracts.data.map((contract) => (
+                          <ContractRow key={contract.id} contract={contract} onView={(cid) => { setSelectedContractId(cid); setIsDetailOpen(true) }} />
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  ) : (
+                    <div className="p-8 text-center text-text-muted">No contracts found</div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Top Institutions */}
+              <Card className="hover-lift">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4" />
+                    Top Institutions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {institutionsLoading ? (
+                    <div className="space-y-2">
+                      {[...Array(5)].map((_, i) => (
+                        <Skeleton key={i} className="h-10" />
+                      ))}
+                    </div>
+                  ) : institutions?.data?.length ? (
+                    <InstitutionList
+                      data={institutions.data.slice(0, 5)}
+                      maxValue={Math.max(...institutions.data.slice(0, 5).map((i: any) => i.total_value_mxn))}
+                    />
+                  ) : (
+                    <p className="text-sm text-text-muted">No institutions found</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+            </ScrollReveal>
+          </div>
+        </TabPanel>
+
+        {/* TAB 2: Risk Analysis */}
+        <TabPanel tabKey="risk">
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Left: Gauge + Trend */}
+            <div className="space-y-6">
+              <Card className="hover-lift">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    Risk Score <InfoTooltip termKey="riskScore" size={13} />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {riskLoading ? (
+                    <Skeleton className="h-48" />
+                  ) : riskProfile?.avg_risk_score !== undefined ? (
+                    <RiskGauge
+                      score={riskProfile.avg_risk_score}
+                      riskVsSectorAvg={riskProfile.risk_vs_sector_avg}
+                      riskPercentile={riskProfile.risk_percentile}
+                      riskTrend={riskProfile.risk_trend}
+                      lower={riskProfile.risk_confidence_lower}
+                      upper={riskProfile.risk_confidence_upper}
+                    />
+                  ) : null}
+                </CardContent>
+              </Card>
+
+              {/* Risk Trend Mini-Chart */}
+              {riskTrendData.length > 1 && (
+                <Card className="hover-lift">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Activity className="h-4 w-4" />
+                      Risk Trend
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[100px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={riskTrendData}>
+                          <defs>
+                            <linearGradient id="riskGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor={riskColor} stopOpacity={0.3} />
+                              <stop offset="95%" stopColor={riskColor} stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <RechartsTooltip
+                            content={({ active, payload }) => {
+                              if (active && payload?.[0]) {
+                                const d = payload[0].payload
+                                return (
+                                  <div className="rounded border border-border bg-background-card px-2 py-1 text-xs shadow-lg">
+                                    <span className="font-medium">{d.year}</span>
+                                    <span className="ml-2 tabular-nums">{(d.avg * 100).toFixed(1)}%</span>
+                                  </div>
+                                )
+                              }
+                              return null
+                            }}
+                          />
+                          <Area
+                            type="monotone"
+                            dataKey="avg"
+                            stroke={riskColor}
+                            fill="url(#riskGrad)"
+                            strokeWidth={2}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                    {riskProfile?.risk_trend && (
+                      <div className="flex items-center justify-center gap-1.5 mt-2 text-xs text-text-muted">
+                        {riskProfile.risk_trend === 'worsening' && <TrendingUp className="h-3 w-3 text-risk-high" />}
+                        {riskProfile.risk_trend === 'improving' && <TrendingDown className="h-3 w-3 text-risk-low" />}
+                        {riskProfile.risk_trend === 'stable' && <Minus className="h-3 w-3" />}
+                        <span className="capitalize">{riskProfile.risk_trend}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Statistical Anomaly */}
+              {vendor.avg_mahalanobis != null && (
+                <Card
+                  className="hover-lift"
+                  style={{
+                    borderColor: (vendor.pct_anomalous ?? 0) > 20
+                      ? `${RISK_COLORS.critical}60`
+                      : (vendor.pct_anomalous ?? 0) > 10
+                        ? `${RISK_COLORS.high}60`
+                        : undefined,
+                  }}
+                >
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4" />
+                      Statistical Anomaly <InfoTooltip termKey="mahalanobisDistance" size={13} />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-text-muted">Avg Mahalanobis D²</span>
+                      <span className="font-mono tabular-nums">{vendor.avg_mahalanobis.toFixed(1)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-text-muted">Max D²</span>
+                      <span className="font-mono tabular-nums">{vendor.max_mahalanobis?.toFixed(1) ?? '—'}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-text-muted">Anomalous Contracts</span>
+                      <span className={`font-mono tabular-nums ${
+                        (vendor.pct_anomalous ?? 0) > 20 ? 'text-risk-critical' :
+                        (vendor.pct_anomalous ?? 0) > 10 ? 'text-risk-high' :
+                        'text-text-secondary'
+                      }`}>
+                        {vendor.pct_anomalous?.toFixed(1) ?? '0'}%
+                      </span>
+                    </div>
+                    <p className="text-xs text-text-muted pt-1">
+                      Based on chi-squared test (k=12, p&lt;0.05)
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {/* Right: Waterfall + Factor List */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Waterfall Chart */}
+              <Card className="hover-lift">
+                <CardHeader>
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4" />
+                    Risk Factor Contribution (v5.0 Model)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {riskLoading ? (
+                    <Skeleton className="h-[220px]" />
+                  ) : riskProfile?.top_risk_factors?.length ? (
+                    <RiskWaterfallChart
+                      riskFactors={riskProfile.top_risk_factors}
+                      riskScore={riskProfile.avg_risk_score ?? vendor.avg_risk_score ?? 0}
+                    />
+                  ) : (
+                    <p className="text-sm text-text-muted">No risk factor data available</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Risk Factor List */}
+              <Card className="hover-lift">
+                <CardHeader>
+                  <CardTitle className="text-sm">Risk Factor Details</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {riskLoading ? (
+                    <div className="space-y-2">
+                      {[...Array(5)].map((_, i) => (
+                        <Skeleton key={i} className="h-6" />
+                      ))}
+                    </div>
+                  ) : riskProfile?.top_risk_factors?.length ? (
+                    <RiskFactorList factors={riskProfile.top_risk_factors} />
+                  ) : (
+                    <p className="text-sm text-text-muted">No risk factors available</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabPanel>
+
+        {/* TAB 3: Contract History */}
+        <TabPanel tabKey="history">
+          <div className="space-y-6">
+            {/* Activity Calendar */}
             <Card className="hover-lift">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
                   <Activity className="h-4 w-4" />
-                  Risk Trend
+                  Contract Activity Calendar
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[100px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={riskTrendData}>
-                      <defs>
-                        <linearGradient id="riskGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={riskColor} stopOpacity={0.3} />
-                          <stop offset="95%" stopColor={riskColor} stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <RechartsTooltip
-                        content={({ active, payload }) => {
-                          if (active && payload?.[0]) {
-                            const d = payload[0].payload
-                            return (
-                              <div className="rounded border border-border bg-background-card px-2 py-1 text-xs shadow-lg">
-                                <span className="font-medium">{d.year}</span>
-                                <span className="ml-2 tabular-nums">{(d.avg * 100).toFixed(1)}%</span>
-                              </div>
-                            )
-                          }
-                          return null
-                        }}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="avg"
-                        stroke={riskColor}
-                        fill="url(#riskGrad)"
-                        strokeWidth={2}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-                {riskProfile?.risk_trend && (
-                  <div className="flex items-center justify-center gap-1.5 mt-2 text-xs text-text-muted">
-                    {riskProfile.risk_trend === 'worsening' && <TrendingUp className="h-3 w-3 text-risk-high" />}
-                    {riskProfile.risk_trend === 'improving' && <TrendingDown className="h-3 w-3 text-risk-low" />}
-                    {riskProfile.risk_trend === 'stable' && <Minus className="h-3 w-3" />}
-                    <span className="capitalize">{riskProfile.risk_trend}</span>
-                  </div>
+                {contractsLoading ? (
+                  <Skeleton className="h-[220px]" />
+                ) : contracts?.data?.length ? (
+                  <ActivityCalendar
+                    contracts={contracts.data}
+                    sectorColor={sectorColor}
+                  />
+                ) : (
+                  <p className="text-sm text-text-muted">No contract data available</p>
                 )}
               </CardContent>
             </Card>
-          )}
 
-          {/* Statistical Anomaly */}
-          {vendor.avg_mahalanobis != null && (
-            <Card
-              className="hover-lift"
-              style={{
-                borderColor: (vendor.pct_anomalous ?? 0) > 20
-                  ? `${RISK_COLORS.critical}60`
-                  : (vendor.pct_anomalous ?? 0) > 10
-                    ? `${RISK_COLORS.high}60`
-                    : undefined,
-              }}
-            >
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4" />
-                  Statistical Anomaly <InfoTooltip termKey="mahalanobisDistance" size={13} />
+            {/* Full Contracts Table */}
+            <Card className="hover-lift">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  All Contracts
                 </CardTitle>
+                <Link to={`/contracts?vendor_id=${vendorId}`}>
+                  <Button variant="ghost" size="sm">
+                    View all
+                    <ExternalLink className="ml-1 h-3 w-3" />
+                  </Button>
+                </Link>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-text-muted">Avg Mahalanobis D²</span>
-                  <span className="font-mono tabular-nums">{vendor.avg_mahalanobis.toFixed(1)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-text-muted">Max D²</span>
-                  <span className="font-mono tabular-nums">{vendor.max_mahalanobis?.toFixed(1) ?? '—'}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-text-muted">Anomalous Contracts</span>
-                  <span className={`font-mono tabular-nums ${
-                    (vendor.pct_anomalous ?? 0) > 20 ? 'text-risk-critical' :
-                    (vendor.pct_anomalous ?? 0) > 10 ? 'text-risk-high' :
-                    'text-text-secondary'
-                  }`}>
-                    {vendor.pct_anomalous?.toFixed(1) ?? '0'}%
-                  </span>
-                </div>
-                <p className="text-xs text-text-muted pt-1">
-                  Based on chi-squared test (k=12, p&lt;0.05)
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Risk Factor Breakdown */}
-          <Card className="hover-lift">
-            <CardHeader>
-              <CardTitle className="text-sm">Risk Factors</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {riskLoading ? (
-                <div className="space-y-2">
-                  {[...Array(5)].map((_, i) => (
-                    <Skeleton key={i} className="h-6" />
-                  ))}
-                </div>
-              ) : riskProfile?.top_risk_factors?.length ? (
-                <RiskFactorList factors={riskProfile.top_risk_factors} />
-              ) : (
-                <p className="text-sm text-text-muted">No risk factors available</p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Procurement Patterns */}
-          <Card className="hover-lift">
-            <CardHeader>
-              <CardTitle className="text-sm">Procurement Patterns</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <PatternBar
-                label="Direct Awards"
-                value={vendor.direct_award_pct}
-                isPercent100
-              />
-              <PatternBar
-                label="Single Bids"
-                value={vendor.single_bid_pct}
-                isPercent100
-              />
-              <div className="flex justify-between text-sm">
-                <span className="text-text-muted">Avg Contract</span>
-                <span className="font-medium tabular-nums">{formatCompactMXN(vendor.avg_contract_value || 0)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-text-muted">Sectors</span>
-                <span className="font-medium tabular-nums">{String(vendor.sectors_count || 0)}</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        </ScrollReveal>
-
-        {/* Right Column - Summary, Contracts, Institutions */}
-        <ScrollReveal direction="up" delay={120} className="lg:col-span-2">
-        <div className="space-y-6">
-          {/* Vendor Summary */}
-          <Card className="hover-lift">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-4 w-4" />
-                Vendor Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <SummaryRow label="Primary Sector" value={vendor.primary_sector_name || 'Not classified'} />
-                <SummaryRow label="Years Active" value={String(vendor.years_active)} />
-                <SummaryRow label="Sectors Served" value={String(vendor.sectors_count)} />
-                {vendor.vendor_group_id && (
-                  <SummaryRow label="Vendor Group" value={vendor.group_name || `Group ${vendor.vendor_group_id}`} />
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent Contracts */}
-          <Card className="hover-lift">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Recent Contracts
-              </CardTitle>
-              <Link to={`/contracts?vendor_id=${vendorId}`}>
-                <Button variant="ghost" size="sm">
-                  View all
-                  <ExternalLink className="ml-1 h-3 w-3" />
-                </Button>
-              </Link>
-            </CardHeader>
-            <CardContent className="p-0">
-              {contractsLoading ? (
-                <div className="p-4 space-y-2">
-                  {[...Array(5)].map((_, i) => (
-                    <Skeleton key={i} className="h-12" />
-                  ))}
-                </div>
-              ) : contracts?.data.length ? (
-                <ScrollArea className="h-[300px]">
-                  <div className="divide-y divide-border">
-                    {contracts.data.map((contract) => (
-                      <ContractRow key={contract.id} contract={contract} onView={(cid) => { setSelectedContractId(cid); setIsDetailOpen(true) }} />
+              <CardContent className="p-0">
+                {contractsLoading ? (
+                  <div className="p-4 space-y-2">
+                    {[...Array(8)].map((_, i) => (
+                      <Skeleton key={i} className="h-12" />
                     ))}
                   </div>
-                </ScrollArea>
-              ) : (
-                <div className="p-8 text-center text-text-muted">No contracts found</div>
-              )}
-            </CardContent>
-          </Card>
+                ) : contracts?.data.length ? (
+                  <ScrollArea className="h-[400px]">
+                    <div className="divide-y divide-border">
+                      {contracts.data.map((contract) => (
+                        <ContractRow key={contract.id} contract={contract} onView={(cid) => { setSelectedContractId(cid); setIsDetailOpen(true) }} />
+                      ))}
+                    </div>
+                  </ScrollArea>
+                ) : (
+                  <div className="p-8 text-center text-text-muted">No contracts found</div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabPanel>
 
-          {/* Top Institutions */}
-          <Card className="hover-lift">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
-                Top Institutions
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {institutionsLoading ? (
-                <div className="space-y-2">
-                  {[...Array(5)].map((_, i) => (
-                    <Skeleton key={i} className="h-10" />
-                  ))}
-                </div>
-              ) : institutions?.data?.length ? (
-                <InstitutionList
-                  data={institutions.data.slice(0, 5)}
-                  maxValue={Math.max(...institutions.data.slice(0, 5).map((i: any) => i.total_value_mxn))}
-                />
-              ) : (
-                <p className="text-sm text-text-muted">No institutions found</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-        </ScrollReveal>
-      </div>
+        {/* TAB 4: Network */}
+        <TabPanel tabKey="network">
+          <div className="space-y-6">
+            {/* Co-bidding relationships */}
+            {!coBiddersLoading && hasCoBiddingRisk ? (
+              <Card className="hover-lift border-amber-500/40 bg-amber-500/[0.02]">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-risk-medium">
+                    <Users className="h-4 w-4" />
+                    Co-Bidding Partners
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {coBidders?.co_bidders && coBidders.co_bidders.length > 0 && (
+                    <div className="divide-y divide-border rounded-lg border overflow-hidden">
+                      {coBidders.co_bidders.map((partner) => (
+                        <div key={partner.vendor_id} className="flex items-center justify-between p-3 bg-background-card interactive">
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4 text-text-muted" />
+                            <Link
+                              to={`/vendors/${partner.vendor_id}`}
+                              className="text-sm hover:text-accent transition-colors"
+                            >
+                              {toTitleCase(partner.vendor_name)}
+                            </Link>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs text-text-muted tabular-nums">
+                              {partner.co_bid_count} shared procedures
+                            </span>
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                              partner.relationship_strength === 'very_strong' ? 'bg-risk-critical/20 text-risk-critical' :
+                              partner.relationship_strength === 'strong' ? 'bg-risk-medium/20 text-risk-medium' :
+                              'bg-gray-500/20 text-gray-400'
+                            }`}>
+                              {partner.relationship_strength.replace('_', ' ')}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              !coBiddersLoading && (
+                <Card className="hover-lift">
+                  <CardContent className="p-8 text-center text-text-muted">
+                    <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                    <p className="text-sm">No significant co-bidding patterns detected</p>
+                  </CardContent>
+                </Card>
+              )
+            )}
+
+            {/* Open Full Network Graph */}
+            <Card className="hover-lift">
+              <CardContent className="p-6 text-center">
+                <p className="text-sm text-text-muted mb-4">
+                  Explore the full vendor relationship network with interactive graph visualization.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => setNetworkOpen(true)}
+                  className="gap-2"
+                >
+                  <Network className="h-4 w-4" />
+                  Open Network Graph
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </TabPanel>
+      </SimpleTabs>
+
       <ContractDetailModal
         contractId={selectedContractId}
         open={isDetailOpen}
@@ -684,11 +1226,15 @@ function RiskGauge({
   riskVsSectorAvg,
   riskPercentile,
   riskTrend,
+  lower,
+  upper,
 }: {
   score: number
   riskVsSectorAvg?: number
   riskPercentile?: number
   riskTrend?: 'improving' | 'stable' | 'worsening'
+  lower?: number | null
+  upper?: number | null
 }) {
   const percentage = Math.round(score * 100)
   const level = getRiskLevel(score)
@@ -776,6 +1322,12 @@ function RiskGauge({
           </p>
         )}
       </div>
+      {/* 95% CI whisker */}
+      {lower != null && upper != null && (
+        <div className="mt-3">
+          <RiskWhisker score={score} lower={lower} upper={upper} size="lg" showLabels />
+        </div>
+      )}
     </div>
   )
 }
