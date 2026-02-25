@@ -732,6 +732,48 @@ export interface FactorAnalysisValidationResponse {
 }
 
 // ============================================================================
+// External Registry Types (SFP Sanctions + RUPC + ASF)
+// ============================================================================
+
+export interface SFPSanction {
+  id: number
+  rfc: string | null
+  company_name: string
+  sanction_type: string | null
+  sanction_start: string | null
+  sanction_end: string | null
+  amount_mxn: number | null
+  authority: string | null
+}
+
+export interface RUPCVendor {
+  rfc: string
+  company_name: string
+  compliance_grade: string | null
+  status: string | null
+  registered_date: string | null
+  expiry_date: string | null
+}
+
+export interface ASFCaseItem {
+  id: number
+  asf_report_id: string | null
+  entity_name: string
+  finding_type: string
+  amount_mxn: number | null
+  report_year: number | null
+  report_url: string | null
+  summary: string | null
+}
+
+export interface VendorExternalFlags {
+  vendor_id: number
+  sfp_sanctions: SFPSanction[]
+  rupc: RUPCVendor | null
+  asf_cases: ASFCaseItem[]
+}
+
+// ============================================================================
 // Classification Types
 // ============================================================================
 

@@ -143,5 +143,11 @@
   "openContractSearch": "Open contract search",
   "openInvestigation": "Open an Investigation",
   "openInvestigationDesc": "Start from a suspicion — a vendor, institution, or pattern — and build a documented case with AI-powered analysis tools.",
-  "openCaseManager": "Open case manager"
+  "openCaseManager": "Open case manager",
+  "compranetContextLabel": "Research Context",
+  "compranetContextTitle": "The Platform This Database Came From No Longer Exists",
+  "compranetContextBody": "CompraNet — Mexico's federal procurement portal and the source of all 3.1M contracts here — was abolished by Congress on April 10, 2025. Before any law changed, 1.9 million contracts from 2012–2023 had already been removed from public access in August 2024. The independent transparency watchdog INAI was constitutionally eliminated in December 2024. The 3.1M contracts in this database were captured before these changes and may represent one of the most complete surviving records of Mexico's federal procurement history.",
+  "compranetContextDate1": "CompraNet abolished · April 2025",
+  "compranetContextDate2": "INAI eliminated · December 2024",
+  "compranetContextLink": "See platform limitations"
 }

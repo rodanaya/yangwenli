@@ -704,6 +704,11 @@ def get_direct_award_rate():
 
     Returns sectors ranked by percentage of direct awards.
     """
+    cache_key = "direct_award_rate"
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     try:
         with get_db() as conn:
             cursor = conn.cursor()
@@ -732,7 +737,9 @@ def get_direct_award_rate():
                 for i, row in enumerate(rows)
             ]
 
-            return SectorComparisonListResponse(data=items)
+            response = SectorComparisonListResponse(data=items)
+            _cache.set(cache_key, response, SECTORS_CACHE_TTL)
+            return response
 
     except sqlite3.Error as e:
         logger.error(f"Database error in get_direct_award_rate: {e}")
@@ -747,6 +754,11 @@ def get_single_bid_rate():
     Returns sectors ranked by percentage of single-bid contracts
     (competitive procedures with only one bidder).
     """
+    cache_key = "single_bid_rate"
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     try:
         with get_db() as conn:
             cursor = conn.cursor()
@@ -775,7 +787,9 @@ def get_single_bid_rate():
                 for i, row in enumerate(rows)
             ]
 
-            return SectorComparisonListResponse(data=items)
+            response = SectorComparisonListResponse(data=items)
+            _cache.set(cache_key, response, SECTORS_CACHE_TTL)
+            return response
 
     except sqlite3.Error as e:
         logger.error(f"Database error in get_single_bid_rate: {e}")

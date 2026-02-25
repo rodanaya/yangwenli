@@ -135,7 +135,7 @@ def get_network_graph(
     sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector"),
     year: Optional[int] = Query(None, ge=2002, le=2026, description="Filter by year"),
     min_value: Optional[float] = Query(None, ge=0, description="Minimum total value for inclusion"),
-    min_contracts: Optional[int] = Query(10, ge=1, description="Minimum contracts for inclusion"),
+    min_contracts: Optional[int] = Query(None, ge=1, description="Minimum contracts for inclusion (default: 1 for entity queries, 10 for global graph)"),
     depth: int = Query(1, ge=1, le=2, description="Depth of connections to include"),
     limit: int = Query(50, ge=10, le=200, description="Maximum nodes to return"),
 ):
@@ -146,10 +146,15 @@ def get_network_graph(
     Can be centered on a specific vendor or institution, or show top connections.
     Cached for 1 hour for default queries (no specific vendor/institution).
     """
+    # For entity-specific queries (vendor/institution), default to min_contracts=1 so
+    # high-value vendors with few contracts per institution still show their connections.
+    # For the global graph, use 10 to keep the graph manageable.
+    resolved_min_contracts = min_contracts if min_contracts is not None else (1 if vendor_id or institution_id else 10)
+
     # Cache default queries (no specific vendor/institution focus)
     cache_key = None
     if not vendor_id and not institution_id:
-        cache_key = f"graph:{sector_id}:{year}:{min_value}:{min_contracts}:{depth}:{limit}"
+        cache_key = f"graph:{sector_id}:{year}:{min_value}:{resolved_min_contracts}:{depth}:{limit}"
         cached = _network_cache.get(cache_key)
         if cached is not None:
             return cached
@@ -162,7 +167,7 @@ def get_network_graph(
             sector_id=sector_id,
             year=year,
             min_value=min_value,
-            min_contracts=min_contracts,
+            min_contracts=resolved_min_contracts,
             depth=depth,
             limit=limit,
         )

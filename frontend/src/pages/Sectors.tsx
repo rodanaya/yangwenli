@@ -564,7 +564,42 @@ export function Sectors() {
         </div>
       )}
 
-      {/* Section 2: Sortable Comparison Table */}
+      {/* Section 2a: Sector Risk Heatmap — strongest signal, visible by default */}
+      <ScrollReveal direction="fade">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Layers className="h-4 w-4" />
+              Sector Risk Heatmap
+            </CardTitle>
+            <CardDescription>
+              Color encodes relative risk ranking per metric — red is highest risk, green is lowest. Click a row to open that sector's full profile.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-[450px]" />
+            ) : (
+              <Heatmap
+                data={sectorHeatmapData.data}
+                rows={sectorHeatmapData.rows}
+                columns={sectorHeatmapData.columns}
+                height={450}
+                colorRange={['#16a34a', '#f5f5f5', '#dc2626']}
+                valueFormatter={(v, row, col) => {
+                  const cell = sectorHeatmapData.data.find((d) => d.row === row && d.col === col)
+                  const rawValue = (cell as { rawValue?: number })?.rawValue ?? v
+                  if (col === 'Avg Risk') return `${(rawValue * 100).toFixed(1)}%`
+                  return `${rawValue.toFixed(1)}%`
+                }}
+                onCellClick={(row) => handleSectorClick(row)}
+              />
+            )}
+          </CardContent>
+        </Card>
+      </ScrollReveal>
+
+      {/* Section 2b: Sortable Comparison Table */}
       <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(12px); }
@@ -687,16 +722,9 @@ export function Sectors() {
         </CardContent>
       </Card>
 
-      {/* Section 3: Charts (collapsed) */}
+      {/* Section 3: Contract Value by Sector */}
       <ScrollReveal direction="fade">
-      <details className="mt-4 group">
-        <summary className="flex items-center gap-2 cursor-pointer select-none list-none text-xs font-medium text-text-muted hover:text-text-primary transition-colors py-1">
-          <Layers className="h-3.5 w-3.5" />
-          Show charts (value by sector, risk heatmap)
-          <span className="ml-1 group-open:hidden">▶</span>
-          <span className="ml-1 hidden group-open:inline">▼</span>
-        </summary>
-        <div className="mt-4 space-y-5">
+        <div>
           {/* Contract Value by Sector */}
           <Card>
             <CardHeader className="pb-2">
@@ -763,40 +791,7 @@ export function Sectors() {
             </CardContent>
           </Card>
 
-          {/* Sector Risk Heatmap */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Layers className="h-4 w-4" />
-                Sector Risk Heatmap
-              </CardTitle>
-              <CardDescription>
-                Risk indicators by sector (color = relative ranking within each metric). Click a row to open that sector.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-[450px]" />
-              ) : (
-                <Heatmap
-                  data={sectorHeatmapData.data}
-                  rows={sectorHeatmapData.rows}
-                  columns={sectorHeatmapData.columns}
-                  height={450}
-                  colorRange={['#16a34a', '#f5f5f5', '#dc2626']}
-                  valueFormatter={(v, row, col) => {
-                    const cell = sectorHeatmapData.data.find((d) => d.row === row && d.col === col)
-                    const rawValue = (cell as { rawValue?: number })?.rawValue ?? v
-                    if (col === 'Avg Risk') return `${(rawValue * 100).toFixed(1)}%`
-                    return `${rawValue.toFixed(1)}%`
-                  }}
-                  onCellClick={(row) => handleSectorClick(row)}
-                />
-              )}
-            </CardContent>
-          </Card>
         </div>
-      </details>
       </ScrollReveal>
     </div>
   )

@@ -89,10 +89,34 @@
   },
   "compranet": {
     "title": "COMPRANET",
-    "description": "Plataforma electrónica de contrataciones del gobierno federal de México, ahora llamada ComprasMX. Todas las compras gubernamentales federales por encima de ciertos umbrales deben publicarse aquí. Fuente de los 3.1M de contratos en esta base de datos."
+    "description": "Plataforma electrónica de contrataciones del gobierno federal de México, operativa desde 1996 y obligatoria para todas las compras por encima del umbral. Abolida por el Congreso el 10 de abril de 2025, reemplazada por ComprasMX. Antes del reemplazo formal, 1.9 millones de contratos de 2012–2023 ya habían sido eliminados del acceso público en agosto de 2024. Fuente de los 3.1M contratos en esta base de datos."
+  },
+  "licitacionPublica": {
+    "title": "Licitación Pública",
+    "description": "El procedimiento de contratación más transparente bajo la ley mexicana. Obligatorio para contratos por encima de los umbrales de valor legal. Incluye período de publicación pública (mínimo 20 días), licitantes ilimitados y publicación obligatoria en COMPRANET. En la práctica, solo el 29% de los contratos federales usa este procedimiento — el otro 71% omite la competencia abierta."
+  },
+  "laassp": {
+    "title": "LAASSP",
+    "description": "Ley de Adquisiciones, Arrendamientos y Servicios del Sector Público — ley federal de contrataciones de México, promulgada el 4 de enero de 2000. Define cuándo las dependencias deben usar licitación abierta versus adjudicación directa, establece umbrales de valor y requisitos de publicación. La ley original fue abrogada y reemplazada en abril de 2025."
+  },
+  "inai": {
+    "title": "INAI",
+    "description": "Instituto Nacional de Transparencia, Acceso a la Información y Protección de Datos Personales — organismo independiente de transparencia de México, establecido en 2002. Ciudadanos y periodistas podían apelar al INAI cuando las dependencias negaban solicitudes de información. Abolido constitucionalmente el 20 de diciembre de 2024. Reemplazado por 'Transparencia para el Pueblo', organismo bajo la rama ejecutiva, con aproximadamente el 2% del presupuesto anterior del INAI."
+  },
+  "comprasmx": {
+    "title": "ComprasMX",
+    "description": "Plataforma de reemplazo de COMPRANET, lanzada el 18 de abril de 2025. Construida con la misma arquitectura técnica que el 'Tianguis Digital', plataforma de contrataciones de la Ciudad de México durante el mandato de Sheinbaum — que no divulgó contratos durante ese período. Incluye una regla de retención de datos de 5 años que podría eventualmente eliminar registros históricos del acceso público."
   },
   "sector": {
     "title": "Sector",
     "description": "Una de las 12 categorías de gasto del gobierno federal (Salud, Educación, Energía, etc.) clasificadas a partir de los códigos de Ramo presupuestario de México. Cada sector tiene diferentes patrones de contratación y perfiles de riesgo."
+  },
+  "sfp": {
+    "title": "SFP (Secretaría de la Función Pública)",
+    "description": "Ministerio federal de rendición de cuentas de México. Mantiene el registro oficial de empresas sancionadas de la contratación federal (Proveedores y Contratistas Sancionados). Las empresas en esta lista tienen prohibido ganar contratos del gobierno durante el período de sanción."
+  },
+  "rupc": {
+    "title": "RUPC (Registro Único de Proveedores y Contratistas)",
+    "description": "Registro unificado de empresas habilitadas para la contratación federal de México. Las empresas reciben calificaciones de cumplimiento basadas en su historial de desempeño. Estaba alojado en CompraNet (abolido en abril de 2025); continuidad bajo ComprasMX incierta."
   }
 }

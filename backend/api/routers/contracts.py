@@ -8,8 +8,9 @@ Thin router — delegates business logic to ContractService.
 """
 import sqlite3
 import logging
-from typing import Optional, List
+from typing import Optional, List, Any, Dict
 from fastapi import APIRouter, Query, HTTPException, Path
+from pydantic import BaseModel
 
 from ..dependencies import get_db
 from ..models.contract import (
@@ -21,6 +22,30 @@ from ..models.contract import (
     PaginationMeta,
 )
 from ..services.contract_service import contract_service
+
+
+class ContractCompareResponse(BaseModel):
+    data: List[ContractDetail]
+    total: int
+    requested: int
+
+
+class RiskFeatureContribution(BaseModel):
+    feature: str
+    label: str
+    z_score: float
+    coefficient: float
+    contribution: float
+
+
+class RiskExplanationResponse(BaseModel):
+    contract_id: int
+    risk_score: float
+    risk_level: str
+    model_version: Optional[str]
+    confidence_interval: Dict[str, Optional[float]]
+    explanation_available: bool
+    features: List[Dict[str, Any]]
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +155,7 @@ def get_contract_statistics(
         return result
 
 
-@router.get("/compare")
+@router.get("/compare", response_model=ContractCompareResponse)
 def compare_contracts(
     ids: str = Query(..., description="Comma-separated contract IDs (max 10)"),
 ):
@@ -315,22 +340,30 @@ def get_contract_risk(
                     })
                 elif factor.startswith("split_"):
                     # Dynamic split factors - e.g., split_5, split_3
-                    count = factor.split("_")[1] if "_" in factor else "?"
+                    count_str = factor.split("_")[1] if "_" in factor else "?"
+                    try:
+                        count_int = int(count_str)
+                    except ValueError:
+                        count_int = 1
                     factors.append({
                         "code": factor,
-                        "name": f"Threshold Splitting ({count} contracts)",
-                        "description": f"{count} contracts to same vendor on same day",
-                        "weight": 0.05 if int(count) >= 5 else 0.03,
+                        "name": f"Threshold Splitting ({count_str} contracts)",
+                        "description": f"{count_str} contracts to same vendor on same day",
+                        "weight": 0.05 if count_int >= 5 else 0.03,
                         "icon": "scissors",
                     })
                 elif factor.startswith("network_"):
                     # Dynamic network factors - e.g., network_5
-                    count = factor.split("_")[1] if "_" in factor else "?"
+                    count_str = factor.split("_")[1] if "_" in factor else "?"
+                    try:
+                        count_int = int(count_str)
+                    except ValueError:
+                        count_int = 1
                     factors.append({
                         "code": factor,
-                        "name": f"Network Risk ({count} related vendors)",
-                        "description": f"Vendor is in a group of {count} related entities",
-                        "weight": 0.05 if int(count) >= 5 else 0.03,
+                        "name": f"Network Risk ({count_str} related vendors)",
+                        "description": f"Vendor is in a group of {count_str} related entities",
+                        "weight": 0.05 if count_int >= 5 else 0.03,
                         "icon": "git-branch",
                     })
                 elif factor in factor_info:
@@ -363,7 +396,7 @@ def get_contract_risk(
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
-@router.get("/{contract_id}/risk-explain")
+@router.get("/{contract_id}/risk-explain", response_model=RiskExplanationResponse)
 def get_contract_risk_explain(
     contract_id: int = Path(..., description="Contract ID"),
 ):
@@ -388,7 +421,7 @@ def get_contract_risk_explain(
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
-@router.get("/by-vendor/{vendor_id}")
+@router.get("/by-vendor/{vendor_id}", response_model=ContractListResponse)
 def get_contracts_by_vendor(
     vendor_id: int = Path(..., description="Vendor ID"),
     page: int = Query(1, ge=1),
@@ -402,7 +435,7 @@ def get_contracts_by_vendor(
     )
 
 
-@router.get("/by-institution/{institution_id}")
+@router.get("/by-institution/{institution_id}", response_model=ContractListResponse)
 def get_contracts_by_institution(
     institution_id: int = Path(..., description="Institution ID"),
     page: int = Query(1, ge=1),

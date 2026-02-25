@@ -89,10 +89,34 @@
   },
   "compranet": {
     "title": "COMPRANET",
-    "description": "Mexico's federal electronic procurement platform, now called ComprasMX. All federal government purchases above certain thresholds must be published here. Source of all 3.1M contracts in this database."
+    "description": "Mexico's federal electronic procurement platform, operational since 1996 and mandatory for all purchases above threshold. Abolished by Congress on April 10, 2025, replaced by ComprasMX. Before the formal replacement, 1.9 million contracts from 2012–2023 were already removed from public access in August 2024. Source of all 3.1M contracts in this database."
+  },
+  "licitacionPublica": {
+    "title": "Licitación Pública (Open Tender)",
+    "description": "The most transparent procurement procedure under Mexican law. Required for contracts above legal value thresholds. Involves a public notice period (minimum 20 days), unlimited bidders, and mandatory publication on COMPRANET. In practice, only 29% of federal contracts use this procedure — the other 71% skip open competition."
+  },
+  "laassp": {
+    "title": "LAASSP",
+    "description": "Ley de Adquisiciones, Arrendamientos y Servicios del Sector Público — Mexico's federal procurement law, first enacted January 4, 2000. Defines when government agencies must use open competitive bidding vs. direct award, sets value thresholds, and establishes publication requirements. The original law was abrogated and replaced by a new version in April 2025."
+  },
+  "inai": {
+    "title": "INAI",
+    "description": "Instituto Nacional de Transparencia, Acceso a la Información y Protección de Datos Personales — Mexico's independent transparency watchdog, established 2002. Citizens and journalists could appeal to INAI when government agencies denied information requests. Constitutionally abolished December 20, 2024. Replaced by 'Transparencia para el Pueblo,' an agency under the executive branch, operating on approximately 2% of INAI's former budget."
+  },
+  "comprasmx": {
+    "title": "ComprasMX",
+    "description": "CompraNet's replacement platform, launched April 18, 2025. Built on the same technical architecture as 'Tianguis Digital,' Mexico City's procurement platform during Sheinbaum's tenure as head of government — which disclosed no contracts during that period. The new platform operates under a 5-year data retention rule that could eventually remove historical contract records from public access."
   },
   "sector": {
     "title": "Sector",
     "description": "One of 12 federal government spending categories (Health, Education, Energy, etc.) classified from Mexico's 'Ramo' budget codes. Each sector has different procurement patterns and risk profiles."
+  },
+  "sfp": {
+    "title": "SFP (Ministry of Public Administration)",
+    "description": "Secretaría de la Función Pública — Mexico's government accountability ministry. Maintains the official registry of companies sanctioned from federal contracting (Proveedores y Contratistas Sancionados). Companies on this list are prohibited from winning government contracts for the sanction period."
+  },
+  "rupc": {
+    "title": "RUPC (Unified Vendor Registry)",
+    "description": "Registro Único de Proveedores y Contratistas — Mexico's unified registry of companies eligible for federal contracting. Companies receive compliance grades based on performance history. Was hosted on CompraNet (abolished April 2025); continuity under ComprasMX uncertain."
   }
 }

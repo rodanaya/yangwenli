@@ -41,6 +41,7 @@ import {
   ExternalLink,
   AlertTriangle,
   Filter,
+  X,
 } from 'lucide-react'
 
 // =============================================================================
@@ -991,7 +992,7 @@ export default function ProcurementIntelligence() {
                 <div className="rounded-lg border border-accent/30 bg-accent/5 p-3 h-fit">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-bold text-accent uppercase tracking-wide">Selected Factor</span>
-                    <button onClick={() => setSelectedFactor(null)} className="text-text-muted hover:text-text-primary text-xs">✕</button>
+                    <button onClick={() => setSelectedFactor(null)} className="text-text-muted hover:text-text-primary" aria-label="Clear selection"><X className="h-3.5 w-3.5" /></button>
                   </div>
                   <p className="text-sm font-bold text-text-primary mb-3">{selectedFactorData.label}</p>
                   <div className="space-y-1.5 text-xs mb-3">

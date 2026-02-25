@@ -79,7 +79,7 @@ def register_error_handlers(app: FastAPI) -> None:
             content={
                 "error": {
                     "code": "INVALID_INPUT",
-                    "message": str(exc),
+                    "message": "Invalid input provided.",
                 }
             },
         )

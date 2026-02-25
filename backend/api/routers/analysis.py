@@ -183,6 +183,95 @@ class HypothesisReviewRequest(BaseModel):
     review_notes: Optional[str] = Field(None, description="Reviewer notes")
 
 
+# Additional response models for previously-unannotated endpoints
+
+class ModelMetadataResponse(BaseModel):
+    version: str
+    trained_at: Optional[str]
+    auc_test: Optional[float]
+    pu_correction: Optional[float] = None
+    n_contracts: Optional[int] = None
+
+
+class RiskOverviewResponse(BaseModel):
+    overview: Dict[str, Any]
+    risk_distribution: List[Dict[str, Any]]
+    yearly_trends: List[Dict[str, Any]]
+
+
+class PatternCountsResponse(BaseModel):
+    """Dynamic pattern counts — keys vary; use Dict."""
+    model_config = {"extra": "allow"}
+
+
+class YearEndSpikeYear(BaseModel):
+    year: int
+    december_value: float
+    december_contracts: int
+    avg_monthly_value: float
+    spike_ratio: Optional[float]
+    is_significant: bool
+
+
+class DecemberSpikeResponse(BaseModel):
+    years: List[YearEndSpikeYear]
+    average_spike_ratio: float
+    years_with_significant_spike: int
+    total_years_analyzed: int
+    pattern_detected: bool
+    description: str
+
+
+class PriceHypothesesSummaryResponse(BaseModel):
+    status: str
+    overall: Dict[str, Any]
+    by_type: List[Dict[str, Any]]
+    by_sector: List[Dict[str, Any]]
+    by_confidence: List[Dict[str, Any]]
+    recent_runs: List[Dict[str, Any]]
+
+
+class PerCaseDetectionItem(BaseModel):
+    case_name: str
+    case_type: Optional[str] = None
+    total_contracts: int
+    detection_rate: float
+    high_plus_rate: Optional[float] = None
+    critical_rate: float
+    avg_risk_score: float
+
+
+class PerCaseDetectionResponse(BaseModel):
+    data: List[PerCaseDetectionItem]
+    total: int
+
+
+class InstitutionPeriodComparisonResponse(BaseModel):
+    institution_id: int
+    institution_name: str
+    period1: Dict[str, Any]
+    period2: Dict[str, Any]
+    comparison: Dict[str, Any]
+    interpretation: str
+
+
+class MLAnomalyItem(BaseModel):
+    contract_id: int
+    anomaly_score: float
+    sector_id: Optional[int]
+    sector_name: str
+    iqr_flagged: bool
+    amount_mxn: float
+    vendor_name: str
+    contract_date: str
+
+
+class MLAnomaliesResponse(BaseModel):
+    data: List[MLAnomalyItem]
+    total: int
+    new_detections: int
+
+
 # =============================================================================
 # MONTH NAMES CONSTANT
 # =============================================================================
@@ -199,7 +288,7 @@ MONTH_NAMES = [
 # MODEL METADATA ENDPOINT
 # =============================================================================
 
-@router.get("/model/metadata")
+@router.get("/model/metadata", response_model=ModelMetadataResponse)
 def get_model_metadata():
     """
     Return metadata about the active risk model (version, training date, metrics).
@@ -227,7 +316,7 @@ def get_model_metadata():
 # COMBINED RISK OVERVIEW ENDPOINT
 # =============================================================================
 
-@router.get("/risk-overview")
+@router.get("/risk-overview", response_model=RiskOverviewResponse)
 def get_risk_overview():
     """
     Combined risk analysis data for the Risk Analysis page.
@@ -269,7 +358,7 @@ def get_risk_overview():
 _pattern_counts_cache: Dict[str, Any] = {}
 _pattern_counts_ts: float = 0
 
-@router.get("/patterns/counts")
+@router.get("/patterns/counts", response_model=Dict[str, Any])
 def get_pattern_counts():
     """
     Return all pattern match counts in a single request.
@@ -608,7 +697,7 @@ def compare_periods(
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
-@router.get("/december-spike-analysis")
+@router.get("/december-spike-analysis", response_model=DecemberSpikeResponse)
 def get_december_spike_analysis(
     start_year: int = Query(2015, ge=2002, le=2026),
     end_year: int = Query(2024, ge=2002, le=2026),
@@ -780,7 +869,7 @@ def list_price_hypotheses(
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
-@router.get("/price-hypotheses/summary")
+@router.get("/price-hypotheses/summary", response_model=PriceHypothesesSummaryResponse)
 def get_price_hypotheses_summary():
     """Get summary statistics for price hypotheses, computed live across all contracts."""
     try:
@@ -1260,7 +1349,25 @@ class FactorEffectivenessItem(BaseModel):
     effectiveness_score: float
 
 
-@router.get("/validation/per-case-detection")
+# Wrapper response models that depend on the models defined above
+class DetectionRateResponse(BaseModel):
+    results: List[ValidationResultResponse]
+    interpretation: Dict[str, Any]
+
+
+class FalseNegativesResponse(BaseModel):
+    false_negatives: List[FalseNegativeItem]
+    summary: Dict[str, Any]
+    recommendation: str
+
+
+class FactorAnalysisResponse(BaseModel):
+    factors: List[FactorEffectivenessItem]
+    sample_sizes: Dict[str, int]
+    recommendations: List[FactorEffectivenessItem]
+
+
+@router.get("/validation/per-case-detection", response_model=PerCaseDetectionResponse)
 def get_per_case_detection():
     """
     Returns per-case detection statistics from live contract data.
@@ -1413,7 +1520,7 @@ def get_validation_summary():
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
-@router.get("/validation/detection-rate")
+@router.get("/validation/detection-rate", response_model=DetectionRateResponse)
 def get_detection_rate(model_version: Optional[str] = Query(None)):
     """Get detection rate metrics from validation runs."""
     try:
@@ -1487,7 +1594,7 @@ def get_detection_rate(model_version: Optional[str] = Query(None)):
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
-@router.get("/validation/false-negatives")
+@router.get("/validation/false-negatives", response_model=FalseNegativesResponse)
 def get_false_negatives(
     limit: int = Query(50, ge=1, le=200),
     min_amount: Optional[float] = Query(None, description="Minimum contract amount")
@@ -1570,7 +1677,7 @@ def get_false_negatives(
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
-@router.get("/validation/factor-analysis")
+@router.get("/validation/factor-analysis", response_model=FactorAnalysisResponse)
 def get_factor_analysis():
     """Analyze which risk factors are most effective at detecting known bad contracts."""
     try:
@@ -2222,7 +2329,7 @@ def get_investigation_leads(
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
-@router.get("/institution/{institution_id}/period-comparison")
+@router.get("/institution/{institution_id}/period-comparison", response_model=InstitutionPeriodComparisonResponse)
 def get_institution_period_comparison(
     institution_id: int = Path(..., description="Institution ID"),
     period1_start: int = Query(..., ge=2002, le=2026),
@@ -2868,7 +2975,7 @@ _structural_breaks_cache: Dict[str, Any] = {}
 _STRUCTURAL_BREAKS_CACHE_TTL = 3600  # 1 hour — historical data, changes rarely
 
 
-@router.get("/structural-breaks")
+@router.get("/structural-breaks", response_model=Dict[str, Any])
 def get_structural_breaks():
     """
     Detect statistically significant change points in procurement trends.
@@ -2896,7 +3003,7 @@ _ml_anomalies_cache: Dict[str, Any] = {}
 _ML_ANOMALIES_CACHE_TTL = 30 * 60  # 30 minutes — pre-computed table, stable
 
 
-@router.get("/prices/ml-anomalies")
+@router.get("/prices/ml-anomalies", response_model=MLAnomaliesResponse)
 def get_ml_price_anomalies(
     sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector (1-12)"),
     limit: int = Query(20, ge=1, le=50, description="Max results to return (1-50)"),

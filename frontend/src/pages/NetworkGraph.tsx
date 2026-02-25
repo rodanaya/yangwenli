@@ -1014,7 +1014,7 @@ export function NetworkGraph() {
                   {[
                     { name: 'IMSS', type: 'institution' as const },
                     { name: 'Pisa Farmacéutica', type: 'vendor' as const },
-                    { name: 'Secretaría de Comunicaciones y Transportes', type: 'institution' as const },
+                    { name: 'Segalmex', type: 'institution' as const },
                     { name: 'PEMEX', type: 'institution' as const },
                   ].map((example, i) => (
                     <ScrollReveal key={example.name} delay={i * 60} direction="up">

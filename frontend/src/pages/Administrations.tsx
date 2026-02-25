@@ -1511,7 +1511,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
           </p>
           {breaksData?.breakpoints && breaksData.breakpoints.length > 0 && (
             <p className="text-[10px] text-amber-500/80 font-mono mt-1">
-              ⚡ Amber lines = statistically detected regime shifts (PELT algorithm)
+              <Activity className="inline-block h-3 w-3 mr-0.5 align-text-bottom" /> Amber lines = statistically detected regime shifts (PELT algorithm)
             </p>
           )}
         </CardContent>

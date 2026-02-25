@@ -21,6 +21,36 @@
     ]
   },
 
+  "sSystem": {
+    "label": "Contexto",
+    "title": "Cómo Funciona la Contratación Pública — Y Por Qué Importa Ahora",
+    "intro": "Para entender lo que muestran los datos, es útil saber qué deberían mostrar. El sistema de contrataciones federales de México opera bajo la Ley de Adquisiciones, Arrendamientos y Servicios del Sector Público (LAASSP), promulgada por primera vez en 2000. La ley establece tres tipos de procedimientos de contratación, cada uno con diferentes requisitos de transparencia. Por encima de ciertos umbrales, las dependencias federales están legalmente obligadas a usar licitación abierta. El sistema fue diseñado para garantizar que el dinero público fluya hacia la mejor oferta — no la más conectada.",
+    "proceduresTitle": "Los Tres Procedimientos de Contratación",
+    "proc1Name": "Licitación Abierta",
+    "proc1Spanish": "Licitación Pública",
+    "proc1When": "Obligatoria por encima del umbral legal (~$300K MXN para bienes y servicios)",
+    "proc1How": "Convocatoria pública, licitantes ilimitados, período de publicación mínimo de 20 días. Publicación obligatoria en COMPRANET. Procedimiento más transparente.",
+    "proc1Badge": "Transparencia plena",
+    "proc2Name": "Licitación Restringida",
+    "proc2Spanish": "Invitación a ≥3 Personas",
+    "proc2When": "Permitida para contratos de rango medio, o cuando la licitación abierta es considerada impráctica",
+    "proc2How": "Al menos 3 proveedores invitados. Proceso más corto, limitado a las partes invitadas. Menor escrutinio público.",
+    "proc2Badge": "Transparencia parcial",
+    "proc3Name": "Adjudicación Directa",
+    "proc3Spanish": "Adjudicación Directa",
+    "proc3When": "Por debajo del umbral, emergencias, proveedor único, o — bajo la ley 2025 — cuando el contenido es clasificado",
+    "proc3How": "Sin competencia. La dependencia selecciona al proveedor directamente. Se informa después del hecho, frecuentemente con detalle mínimo.",
+    "proc3Badge": "Transparencia mínima",
+    "gapTitle": "La Brecha Entre Ley y Práctica",
+    "gapText": "La ley exige competencia abierta por encima del umbral. En la práctica, el 71% de todos los contratos federales en 23 años omiten la competencia abierta — ya sea por adjudicación directa o licitación restringida. Tres mecanismos explican la brecha: los contratos se dividen para permanecer por debajo de los umbrales (fraccionamiento); las excepciones de emergencia se invocan ampliamente; y la reforma de 2025 ahora permite explícitamente adjudicaciones directas cuando el contenido del contrato es clasificado como información reservada.",
+    "oversightTitle": "La Arquitectura de Supervisión",
+    "oversightText": "Tres instituciones fueron diseñadas para hacer cumplir la transparencia. COMPRANET (1996–2025) era el portal federal obligatorio de contrataciones — toda compra por encima del umbral debía publicarse allí. El INAI era el organismo independiente de transparencia — ciudadanos y periodistas podían apelar a él cuando las dependencias negaban información. La ASF (Auditoría Superior de la Federación) es el tribunal de auditoría federal con poderes independientes de revisión sobre la ejecución de contratos. De estas tres, solo la ASF mantiene plena independencia operacional.",
+    "crisisTitle": "2024–2025: La Infraestructura Está Siendo Desmantelada",
+    "crisisText": "En agosto de 2024 — antes de cualquier cambio legal — 1.9 millones de contratos de 2012–2023 (4.7 billones de MXN) fueron eliminados silenciosamente de la interfaz pública de COMPRANET. En diciembre de 2024, el INAI fue abolido constitucionalmente y reemplazado por 'Transparencia para el Pueblo', un organismo bajo la misma rama ejecutiva que debía supervisar, con aproximadamente el 2% del presupuesto anterior del INAI. En abril de 2025, el Congreso votó 68–23 para abolir formalmente COMPRANET y reemplazarlo con ComprasMX — una plataforma que comparte su arquitectura con el Tianguis Digital, el sistema de compras usado durante el gobierno de Sheinbaum en la Ciudad de México, que no divulgó contratos en ese período. La nueva ley incluye una cláusula de retención de datos de 5 años que analistas estiman eliminaría registros de 2.6 millones de contratos por valor de 9.9 billones de MXN del acceso público oficial.",
+    "crisisNote": "Los 3.1 millones de contratos en esta base de datos fueron capturados antes de estos cambios. Representan un registro histórico que es progresivamente más difícil de acceder a través de canales oficiales. El archivo independiente es la única salvaguarda.",
+    "sources": "Fuentes: Mexicanos Contra la Corrupción y la Impunidad (MCCI) · Fundar Centro de Análisis e Investigación · IMCO · Proceso · Diario Oficial de la Federación (16 de abril de 2025)"
+  },
+
   "predictors": {
     "price_volatility": "Volatilidad de Precios",
     "institution_diversity": "Diversidad Institucional",
@@ -160,7 +190,7 @@
       "Calderon": "El volumen de contratos se duplic\u00f3 con la modernizaci\u00f3n de COMPRANET. La red de empresas fantasma del IMSS comenz\u00f3 operaciones durante este per\u00edodo, con los primeros contratos fechados en 2008.",
       "Pena Nieto": "Mayor volumen de contrataci\u00f3n de cualquier administraci\u00f3n. 73.4% adjudicaciones directas. Per\u00edodo del esc\u00e1ndalo de sobornos de Odebrecht, La Estafa Maestra y el caso de conflicto de inter\u00e9s de Grupo Higa.",
       "AMLO": "Mayor tasa de riesgo observada y mayor porcentaje de adjudicaci\u00f3n directa con 79.5%. Los esc\u00e1ndalos de Segalmex y contrataciones COVID-19 ocurrieron durante esta administraci\u00f3n.",
-      "Sheinbaum": "Solo datos iniciales (2025). Ligera disminuci\u00f3n tanto en tasa de riesgo como en porcentaje de adjudicaci\u00f3n directa respecto al predecesor. Demasiado temprano para una evaluaci\u00f3n concluyente."
+      "Sheinbaum": "Solo datos iniciales (2025). La tasa de adjudicación directa es del 66% — una ligera disminución respecto al 79.5% de López Obrador. Pero las decisiones más significativas de la administración en materia de contrataciones no han estado en los contratos mismos. En abril de 2025, COMPRANET fue abolida por el Congreso. En diciembre de 2024, el INAI fue eliminado constitucionalmente. La nueva ley amplía los supuestos para adjudicaciones directas cuando la información es clasificada, y la cláusula de retención de 5 años amenaza el registro público a largo plazo. Si esto representa modernización u opacidad estructural será medible conforme los datos de ComprasMX estén disponibles."
     }
   },
 

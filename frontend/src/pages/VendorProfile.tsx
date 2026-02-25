@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -15,7 +15,7 @@ import { AddToWatchlistButton } from '@/components/AddToWatchlistButton'
 import { NarrativeCard } from '@/components/NarrativeCard'
 import { ContractDetailModal } from '@/components/ContractDetailModal'
 import { buildVendorNarrative } from '@/lib/narratives'
-import type { ContractListItem } from '@/api/types'
+import type { ContractListItem, VendorExternalFlags } from '@/api/types'
 import {
   AreaChart,
   Area,
@@ -38,11 +38,13 @@ import {
   DollarSign,
   BarChart3,
   TrendingUp,
+  SlidersHorizontal,
   TrendingDown,
   Minus,
   Activity,
   Shield,
   Network,
+  ShieldCheck,
 } from 'lucide-react'
 import { NetworkGraphModal } from '@/components/NetworkGraphModal'
 import { ScrollReveal, useCountUp, AnimatedFill } from '@/hooks/useAnimations'
@@ -378,6 +380,7 @@ function ActivityCalendar({
 export function VendorProfile() {
   const { id } = useParams<{ id: string }>()
   const vendorId = Number(id)
+  const navigate = useNavigate()
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [networkOpen, setNetworkOpen] = useState(false)
@@ -420,6 +423,13 @@ export function VendorProfile() {
     queryFn: () => networkApi.getCoBidders(vendorId, 5, 10),
     enabled: !!vendorId,
     staleTime: 10 * 60 * 1000,
+  })
+
+  // Fetch external registry flags (SFP, RUPC, ASF)
+  const { data: externalFlags } = useQuery({
+    queryKey: ['vendor-external-flags', vendorId],
+    queryFn: () => vendorApi.getExternalFlags(Number(vendorId)),
+    enabled: !!vendorId,
   })
 
   // Determine if vendor has co-bidding risk
@@ -540,6 +550,17 @@ export function VendorProfile() {
             <Network className="h-3.5 w-3.5" />
             View Network
           </button>
+          {vendor.primary_sector_id && (
+            <button
+              onClick={() => navigate(
+                `/contracts?sector_id=${vendor.primary_sector_id}&risk_level=high&sort_by=risk_score&sort_order=desc`
+              )}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-background-elevated border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              Find Similar
+            </button>
+          )}
           <AddToWatchlistButton
             itemType="vendor"
             itemId={vendorId}
@@ -688,6 +709,7 @@ export function VendorProfile() {
           { key: 'risk', label: 'Risk Analysis', icon: Shield },
           { key: 'history', label: 'Contract History', icon: Activity },
           { key: 'network', label: 'Network', icon: Network },
+          { key: 'external', label: 'External Records', icon: ShieldCheck },
         ]}
       >
         {/* TAB 1: Overview */}
@@ -1147,6 +1169,11 @@ export function VendorProfile() {
             </Card>
           </div>
         </TabPanel>
+
+        {/* TAB 5: External Records */}
+        <TabPanel tabKey="external">
+          <ExternalFlagsPanel flags={externalFlags} />
+        </TabPanel>
       </SimpleTabs>
 
       <ContractDetailModal
@@ -1495,6 +1522,159 @@ function VendorProfileSkeleton() {
           <Skeleton className="h-80" />
         </div>
       </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// External Flags Panel (SFP Sanctions + RUPC + ASF)
+// ============================================================================
+
+function ExternalFlagsPanel({ flags }: { flags: VendorExternalFlags | undefined }) {
+  if (!flags) return <div className="text-text-muted text-sm py-8 text-center">Loading external records...</div>
+
+  const hasSanctions = flags.sfp_sanctions.length > 0
+  const hasRUPC = !!flags.rupc
+  const hasASF = flags.asf_cases.length > 0
+  const hasAny = hasSanctions || hasRUPC || hasASF
+
+  return (
+    <div className="space-y-6">
+      {/* Header status */}
+      <div className={cn(
+        "flex items-center gap-3 p-4 rounded border",
+        hasSanctions
+          ? "bg-red-950/20 border-red-500/30"
+          : "bg-surface-2 border-border/50"
+      )}>
+        {hasSanctions ? (
+          <AlertTriangle className="h-5 w-5 text-red-400 shrink-0" />
+        ) : (
+          <Shield className="h-5 w-5 text-text-muted shrink-0" />
+        )}
+        <div>
+          <p className={cn("text-sm font-medium", hasSanctions ? "text-red-300" : "text-text-secondary")}>
+            {hasSanctions
+              ? `${flags.sfp_sanctions.length} SFP sanction record${flags.sfp_sanctions.length > 1 ? 's' : ''} found`
+              : hasAny
+              ? "No SFP sanctions — external records available"
+              : "No external records found for this vendor"}
+          </p>
+          <p className="text-xs text-text-muted mt-0.5">
+            Sources: SFP Proveedores Sancionados · RUPC Vendor Registry · ASF Audit Findings
+          </p>
+        </div>
+      </div>
+
+      {/* SFP Sanctions */}
+      {hasSanctions && (
+        <div>
+          <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wide mb-3">
+            SFP Sanctions
+          </h3>
+          <div className="space-y-2">
+            {flags.sfp_sanctions.map((s) => (
+              <div key={s.id} className="p-3 rounded border border-red-500/20 bg-red-950/10">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-medium text-text-primary">{s.sanction_type || 'Sanction'}</p>
+                    <p className="text-xs text-text-muted mt-0.5">
+                      {s.authority && <span>{s.authority} · </span>}
+                      {s.sanction_start && <span>{s.sanction_start}</span>}
+                      {s.sanction_end && <span> – {s.sanction_end}</span>}
+                    </p>
+                  </div>
+                  {s.amount_mxn && (
+                    <span className="text-xs font-mono text-red-400 shrink-0">
+                      {formatCompactMXN(s.amount_mxn)}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* RUPC Registry */}
+      <div>
+        <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wide mb-3">
+          RUPC Vendor Registry
+        </h3>
+        {hasRUPC ? (
+          <div className="p-3 rounded border border-border/50 bg-surface-2">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-xs text-text-muted">Compliance Grade</p>
+                <p className="font-medium text-text-primary">{flags.rupc!.compliance_grade || '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-text-muted">Status</p>
+                <p className="font-medium text-text-primary">{flags.rupc!.status || '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-text-muted">Registered</p>
+                <p className="font-medium text-text-primary">{flags.rupc!.registered_date || '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-text-muted">Expires</p>
+                <p className="font-medium text-text-primary">{flags.rupc!.expiry_date || '—'}</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-text-muted italic">
+            Not found in RUPC registry.
+            {!flags.vendor_id && " RFC required for RUPC lookup."}
+          </p>
+        )}
+      </div>
+
+      {/* ASF Cases */}
+      <div>
+        <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wide mb-3">
+          ASF Audit Findings
+        </h3>
+        {hasASF ? (
+          <div className="space-y-2">
+            {flags.asf_cases.map((c) => (
+              <div key={c.id} className="p-3 rounded border border-amber-500/20 bg-amber-950/10">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-medium text-text-primary">{c.finding_type}</p>
+                    <p className="text-xs text-text-muted mt-0.5">
+                      {c.entity_name}
+                      {c.report_year && <span> · {c.report_year}</span>}
+                    </p>
+                    {c.summary && <p className="text-xs text-text-muted mt-1 line-clamp-2">{c.summary}</p>}
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    {c.amount_mxn && (
+                      <span className="text-xs font-mono text-amber-400">{formatCompactMXN(c.amount_mxn)}</span>
+                    )}
+                    {c.report_url && (
+                      <a href={c.report_url} target="_blank" rel="noopener noreferrer"
+                         className="text-xs text-accent hover:underline flex items-center gap-1">
+                        Report <ExternalLink className="h-2.5 w-2.5" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-text-muted italic">
+            No ASF audit findings on record. ASF data coverage is limited to scraped records.
+          </p>
+        )}
+      </div>
+
+      {/* Data source notice */}
+      <p className="text-xs text-text-muted border-t border-border/30 pt-4">
+        External data is loaded from public registries and may be incomplete. SFP sanctions and RUPC data
+        must be refreshed manually via backend scripts. ASF coverage depends on web scraping availability.
+      </p>
     </div>
   )
 }

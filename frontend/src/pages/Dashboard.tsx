@@ -22,6 +22,7 @@ import {
   Scale,
   FileSearch,
   AlertTriangle,
+  Layers,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -38,6 +39,7 @@ import {
   ComposedChart,
   ReferenceLine,
   ReferenceArea,
+  Treemap,
 } from '@/components/charts'
 import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN } from '@/lib/constants'
 
@@ -578,6 +580,30 @@ export function Dashboard() {
         <div className="text-[11px] text-text-muted/50 font-mono mt-1">
           Risk model v5.0.2 · AUC 0.960 · {(overview?.total_contracts || 0) > 0 ? formatNumber(overview?.total_contracts || 0) : '3,110,007'} contracts · 2002–2025
         </div>
+
+        {/* WHAT WE FOUND — three anchor claims before the user scrolls */}
+        {overview && (
+          <div className="mt-3 pt-2.5 border-t border-border/20 space-y-1.5">
+            <div className="flex items-baseline gap-2.5">
+              <span className="text-sm font-black font-mono text-risk-high tabular-nums min-w-[3rem]">
+                {`${(overview.direct_award_pct || 0).toFixed(0)}%`}
+              </span>
+              <span className="text-[11px] text-text-muted">of contracts bypass competitive bidding</span>
+            </div>
+            <div className="flex items-baseline gap-2.5">
+              <span className="text-sm font-black font-mono text-risk-medium tabular-nums min-w-[3rem]">
+                {decemberSpike ? `${decemberSpike.average_spike_ratio.toFixed(2)}×` : '1.33×'}
+              </span>
+              <span className="text-[11px] text-text-muted">more contracts awarded in December vs. monthly average</span>
+            </div>
+            <div className="flex items-baseline gap-2.5">
+              <span className="text-sm font-black font-mono text-risk-critical tabular-nums min-w-[3rem]">
+                {criticalHighValuePct > 0 ? `${criticalHighValuePct.toFixed(1)}%` : '~8%'}
+              </span>
+              <span className="text-[11px] text-text-muted">of total contract value linked to high/critical risk</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ================================================================ */}
@@ -710,6 +736,42 @@ export function Dashboard() {
             </div>
             <ArrowRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" />
           </button>
+        </div>
+      </div>
+
+      {/* ================================================================ */}
+      {/* TRANSPARENCY CONTEXT — CompraNet abolished, INAI eliminated    */}
+      {/* ================================================================ */}
+      <div className="rounded-lg border border-border/40 bg-background-card/50 p-5">
+        <div className="flex items-start gap-3">
+          <div className="p-1.5 rounded bg-border/20 shrink-0 mt-0.5">
+            <AlertTriangle className="h-4 w-4 text-text-muted" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold tracking-wider uppercase text-text-muted font-mono mb-1">
+              {t('compranetContextLabel')}
+            </p>
+            <p className="text-sm font-semibold text-text-primary mb-2">
+              {t('compranetContextTitle')}
+            </p>
+            <p className="text-xs text-text-muted leading-relaxed mb-3">
+              {t('compranetContextBody')}
+            </p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-[10px] font-mono text-text-muted px-2 py-0.5 rounded border border-border/40 bg-border/10">
+                {t('compranetContextDate1')}
+              </span>
+              <span className="text-[10px] font-mono text-text-muted px-2 py-0.5 rounded border border-border/40 bg-border/10">
+                {t('compranetContextDate2')}
+              </span>
+              <button
+                onClick={() => navigate('/limitations')}
+                className="text-xs text-accent flex items-center gap-1 ml-auto"
+              >
+                {t('compranetContextLink')} <ArrowUpRight className="h-3 w-3" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -862,6 +924,85 @@ export function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* ================================================================ */}
+      {/* SECTOR SPEND TREEMAP — where the money concentrates            */}
+      {/* ================================================================ */}
+      {sectorData.length > 0 && (
+        <Card className="border-border/40">
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Layers className="h-4 w-4 text-accent" />
+                <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
+                  Spend by Sector
+                </span>
+              </div>
+              <p className="text-[10px] text-text-muted font-mono">
+                Size = total spend · Color = sector · Click to explore
+              </p>
+            </div>
+            <div style={{ height: 240 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <Treemap
+                  data={sectorData.map((s) => ({
+                    name: s.name,
+                    size: s.totalValue,
+                    riskPct: s.riskPct,
+                    code: s.code,
+                    id: s.id,
+                  }))}
+                  dataKey="size"
+                  aspectRatio={4 / 3}
+                  content={({ x, y, width, height, name, code, riskPct }: {
+                    x?: number; y?: number; width?: number; height?: number;
+                    name?: string; code?: string; riskPct?: number
+                  }) => {
+                    const w = width ?? 0
+                    const h = height ?? 0
+                    if (w < 30 || h < 20) return <g />
+                    const fill = SECTOR_COLORS[code ?? ''] ?? '#64748b'
+                    return (
+                      <g>
+                        <rect
+                          x={x} y={y} width={w} height={h}
+                          style={{ fill, fillOpacity: 0.85, stroke: 'var(--color-background)', strokeWidth: 2 }}
+                        />
+                        {w > 60 && h > 30 && (
+                          <text
+                            x={(x ?? 0) + w / 2}
+                            y={(y ?? 0) + h / 2 - (h > 44 ? 8 : 0)}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            style={{ fill: '#fff', fontSize: Math.min(11, w / 6), fontWeight: 700, fontFamily: 'var(--font-mono)' }}
+                          >
+                            {name}
+                          </text>
+                        )}
+                        {w > 60 && h > 44 && (
+                          <text
+                            x={(x ?? 0) + w / 2}
+                            y={(y ?? 0) + h / 2 + 10}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            style={{ fill: 'rgba(255,255,255,0.75)', fontSize: 9, fontFamily: 'var(--font-mono)' }}
+                          >
+                            {(riskPct ?? 0).toFixed(1)}% high-risk
+                          </text>
+                        )}
+                      </g>
+                    )
+                  }}
+                  onClick={(node: { id?: number }) => {
+                    if (node?.id) navigate(`/sectors/${node.id}`)
+                  }}
+                  style={{ cursor: 'pointer' }}
+                />
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* ================================================================ */}
       {/* ADMINISTRATION REPORT CARD — 5 governments compared           */}

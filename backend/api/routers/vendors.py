@@ -8,9 +8,12 @@ Thin router — business logic lives in VendorService.
 """
 import math
 import logging
-from typing import Optional
+import threading
+from datetime import datetime, timedelta
+from typing import Optional, List, Any, Dict
 from fastapi import APIRouter, HTTPException, Query, Path
 from collections import Counter
+from pydantic import BaseModel
 
 from ..dependencies import get_db
 from ..config.constants import MAX_CONTRACT_VALUE
@@ -40,6 +43,54 @@ from ..services.vendor_service import vendor_service
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/vendors", tags=["vendors"])
+
+# Simple TTL cache for expensive aggregate endpoints
+_vendor_cache: Dict[str, Dict[str, Any]] = {}
+_vendor_cache_lock = threading.Lock()
+_VENDOR_CACHE_TTL = 3600  # 1 hour
+
+
+def _get_vendor_cache(key: str) -> Any:
+    with _vendor_cache_lock:
+        entry = _vendor_cache.get(key)
+        if entry and datetime.now() < entry["expires_at"]:
+            return entry["value"]
+        return None
+
+
+def _set_vendor_cache(key: str, value: Any) -> None:
+    with _vendor_cache_lock:
+        _vendor_cache[key] = {"value": value, "expires_at": datetime.now() + timedelta(seconds=_VENDOR_CACHE_TTL)}
+
+
+class ExternalFlagsResponse(BaseModel):
+    vendor_id: int
+    sfp_sanctions: List[Dict[str, Any]]
+    rupc: Optional[Dict[str, Any]]
+    asf_cases: List[Dict[str, Any]]
+
+
+class RiskTimelineEntry(BaseModel):
+    year: int
+    avg_risk_score: Optional[float]
+    contract_count: int
+    total_value: float
+
+
+class VendorRiskTimelineResponse(BaseModel):
+    vendor_id: int
+    vendor_name: str
+    timeline: List[RiskTimelineEntry]
+
+
+class VendorAISummaryResponse(BaseModel):
+    vendor_id: int
+    vendor_name: str
+    summary: str
+    insights: List[str]
+    total_contracts: int
+    avg_risk_score: Optional[float]
+    generated_by: str
 
 
 # =============================================================================
@@ -209,6 +260,11 @@ def get_top_vendors_all(
     Get top vendors by all metrics in a single request.
     Returns top by value, count, and risk in one call (3x fewer requests).
     """
+    cache_key = f"top-all:{limit}"
+    cached = _get_vendor_cache(cache_key)
+    if cached is not None:
+        return cached
+
     with get_db() as conn:
         cursor = conn.cursor()
 
@@ -260,7 +316,9 @@ def get_top_vendors_all(
             for i, row in enumerate(cursor.fetchall())
         ]
 
-        return VendorTopAllResponse(**result)
+        response = VendorTopAllResponse(**result)
+        _set_vendor_cache(cache_key, response)
+        return response
 
 
 @router.get("/top", response_model=VendorTopListResponse)
@@ -276,12 +334,19 @@ def get_top_vendors(
     Returns vendors ranked by the specified metric with aggregate statistics.
     Uses precomputed aggregates when no filters applied for better performance.
     """
+    valid_metrics = {"value", "count", "risk"}
+    if by not in valid_metrics:
+        raise HTTPException(status_code=400, detail=f"Invalid metric '{by}'. Use: value, count, risk")
+
+    cache_key = f"top:{by}:{limit}:{sector_id}:{year}"
+    cached = _get_vendor_cache(cache_key)
+    if cached is not None:
+        return cached
+
     with get_db() as conn:
         cursor = conn.cursor()
 
         valid_metrics = {"value", "count", "risk"}
-        if by not in valid_metrics:
-            raise HTTPException(status_code=400, detail=f"Invalid metric '{by}'. Use: value, count, risk")
 
         # Fast path: use precomputed aggregates when no filters
         if sector_id is None and year is None:
@@ -313,7 +378,9 @@ def get_top_vendors(
                 )
                 for i, row in enumerate(cursor.fetchall())
             ]
-            return VendorTopListResponse(data=vendors, metric=by, total=len(vendors))
+            response = VendorTopListResponse(data=vendors, metric=by, total=len(vendors))
+            _set_vendor_cache(cache_key, response)
+            return response
 
         # Slow path: compute aggregates with filters
         conditions = ["COALESCE(c.amount_mxn, 0) <= ?"]
@@ -357,7 +424,9 @@ def get_top_vendors(
             )
             for i, row in enumerate(cursor.fetchall())
         ]
-        return VendorTopListResponse(data=vendors, metric=by, total=len(vendors))
+        response = VendorTopListResponse(data=vendors, metric=by, total=len(vendors))
+        _set_vendor_cache(cache_key, response)
+        return response
 
 
 @router.get("/{vendor_id:int}", response_model=VendorDetailResponse)
@@ -377,7 +446,7 @@ def get_vendor(
 
         cursor = conn.cursor()
 
-        # Supplement with classification, group, and mahalanobis data
+        # Supplement with classification, group, mahalanobis, and primary sector from precomputed stats
         cursor.execute("""
             SELECT
                 v.phonetic_code, v.group_id,
@@ -385,27 +454,18 @@ def get_vendor(
                 vi.name_es as industry_name, vi.sector_affinity,
                 vg.canonical_name as group_name,
                 COALESCE(vs.institution_count, 0) as total_institutions,
-                vs.avg_mahalanobis, vs.max_mahalanobis
+                vs.avg_mahalanobis, vs.max_mahalanobis,
+                vs.primary_sector_id,
+                s.name_es as primary_sector_name
             FROM vendors v
             LEFT JOIN vendor_classifications vc ON v.id = vc.vendor_id
             LEFT JOIN vendor_industries vi ON vc.industry_id = vi.id
             LEFT JOIN vendor_groups vg ON v.group_id = vg.id
             LEFT JOIN vendor_stats vs ON v.id = vs.vendor_id
+            LEFT JOIN sectors s ON vs.primary_sector_id = s.id
             WHERE v.id = ?
         """, (vendor_id,))
         extra = cursor.fetchone()
-
-        # Primary sector
-        cursor.execute("""
-            SELECT c.sector_id, s.name_es as sector_name, COUNT(*) as cnt
-            FROM contracts c
-            LEFT JOIN sectors s ON c.sector_id = s.id
-            WHERE c.vendor_id = ?
-            GROUP BY c.sector_id
-            ORDER BY cnt DESC
-            LIMIT 1
-        """, (vendor_id,))
-        primary_sector = cursor.fetchone()
 
         total_contracts = detail.get("total_contracts", 0) or 0
         total_value = detail.get("total_value_mxn", 0) or 0
@@ -441,8 +501,8 @@ def get_vendor(
             first_contract_year=first_year,
             last_contract_year=last_year,
             years_active=(last_year - first_year + 1) if first_year and last_year else 0,
-            primary_sector_id=primary_sector["sector_id"] if primary_sector else None,
-            primary_sector_name=primary_sector["sector_name"] if primary_sector else None,
+            primary_sector_id=extra["primary_sector_id"] if extra else None,
+            primary_sector_name=extra["primary_sector_name"] if extra else None,
             sectors_count=detail.get("sector_count", 0) or 0,
             total_institutions=extra["total_institutions"] if extra else 0,
             avg_mahalanobis=round(extra["avg_mahalanobis"], 4) if extra and extra["avg_mahalanobis"] else None,
@@ -890,10 +950,88 @@ def get_vendor_asf_cases(
 
 
 # =============================================================================
+# EXTERNAL FLAGS (SFP Sanctions + RUPC + ASF)
+# =============================================================================
+
+@router.get("/{vendor_id:int}/external-flags", response_model=ExternalFlagsResponse)
+def get_vendor_external_flags(
+    vendor_id: int = Path(..., description="Vendor ID"),
+):
+    """Get external registry flags: SFP sanctions, RUPC grade, ASF cases."""
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT name, rfc FROM vendors WHERE id = ?", (vendor_id,))
+        vendor_row = cursor.fetchone()
+        if not vendor_row:
+            raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
+
+        vendor_name = vendor_row["name"]
+        vendor_rfc = vendor_row["rfc"]
+
+        result = {
+            "vendor_id": vendor_id,
+            "sfp_sanctions": [],
+            "rupc": None,
+            "asf_cases": [],
+        }
+
+        # --- SFP Sanctions ---
+        try:
+            conditions, params = [], []
+            if vendor_rfc:
+                conditions.append("rfc = ?")
+                params.append(vendor_rfc)
+            if vendor_name:
+                conditions.append("company_name LIKE ?")
+                params.append(f"%{vendor_name[:20].strip()}%")
+            if conditions:
+                rows = cursor.execute(
+                    f"SELECT id, rfc, company_name, sanction_type, sanction_start, sanction_end, amount_mxn, authority FROM sfp_sanctions WHERE {' OR '.join(conditions)} LIMIT 20",
+                    params,
+                ).fetchall()
+                result["sfp_sanctions"] = [dict(r) for r in rows]
+        except Exception:
+            pass  # Table may not exist yet
+
+        # --- RUPC grade ---
+        if vendor_rfc:
+            try:
+                row = cursor.execute(
+                    "SELECT rfc, company_name, compliance_grade, status, registered_date, expiry_date FROM rupc_vendors WHERE rfc = ?",
+                    (vendor_rfc,),
+                ).fetchone()
+                if row:
+                    result["rupc"] = dict(row)
+            except Exception:
+                pass  # Table may not exist yet
+
+        # --- ASF cases (existing table) ---
+        try:
+            conditions, params = [], []
+            if vendor_rfc:
+                conditions.append("vendor_rfc = ?")
+                params.append(vendor_rfc)
+            if vendor_name:
+                conditions.append("vendor_name LIKE ?")
+                params.append(f"%{vendor_name[:20].strip()}%")
+            if conditions:
+                rows = cursor.execute(
+                    f"SELECT id, asf_report_id, entity_name, finding_type, amount_mxn, report_year, report_url, summary FROM asf_cases WHERE {' OR '.join(conditions)} ORDER BY report_year DESC LIMIT 20",
+                    params,
+                ).fetchall()
+                result["asf_cases"] = [dict(r) for r in rows]
+        except Exception:
+            pass  # Table may be empty
+
+        return result
+
+
+# =============================================================================
 # EXISTING CLASSIFICATION ENDPOINTS (preserved)
 # =============================================================================
 
-@router.get("/{vendor_id:int}/risk-timeline")
+@router.get("/{vendor_id:int}/risk-timeline", response_model=VendorRiskTimelineResponse)
 def get_vendor_risk_timeline(
     vendor_id: int = Path(..., description="Vendor ID"),
 ):
@@ -942,7 +1080,7 @@ def get_vendor_risk_timeline(
         }
 
 
-@router.get("/{vendor_id:int}/ai-summary")
+@router.get("/{vendor_id:int}/ai-summary", response_model=VendorAISummaryResponse)
 def get_vendor_ai_summary(
     vendor_id: int = Path(..., description="Vendor ID"),
 ):

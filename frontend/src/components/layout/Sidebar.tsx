@@ -15,11 +15,12 @@ import {
   Building2,
   Crosshair,
   Shield,
-  ShoppingCart,
+  Layers,
   Landmark,
   Eye,
   TrendingUp,
 } from 'lucide-react'
+import { RubliLogoMark } from '@/components/ui/RubliLogoMark'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -53,7 +54,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
     items: [
       { i18nKey: 'procurementIntelligence', href: '/procurement-intelligence', icon: TrendingUp },
       { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
-      { i18nKey: 'categories', href: '/categories', icon: ShoppingCart },
+      { i18nKey: 'categories', href: '/categories', icon: Layers },
     ],
   },
   {
@@ -122,7 +123,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <div className="flex h-14 items-center border-b border-border/30 px-3">
         <div className="flex items-center gap-2.5 overflow-hidden">
           <div className="relative flex-shrink-0">
-            <Shield size={20} className="text-accent" />
+            <RubliLogoMark size={20} className="text-accent" />
             <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-signal-live shadow-[0_0_6px_var(--color-signal-live)]" />
           </div>
           {!collapsed && (

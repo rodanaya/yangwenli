@@ -663,6 +663,35 @@ CREATE INDEX IF NOT EXISTS idx_gt_contracts_case ON ground_truth_contracts(case_
 CREATE INDEX IF NOT EXISTS idx_gt_contracts_contract ON ground_truth_contracts(contract_id);
 CREATE INDEX IF NOT EXISTS idx_validation_results_version ON validation_results(model_version);
 CREATE INDEX IF NOT EXISTS idx_validation_results_date ON validation_results(run_date);
+
+-- External data: SFP sanctioned providers registry
+CREATE TABLE IF NOT EXISTS sfp_sanctions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    rfc TEXT,
+    company_name TEXT NOT NULL,
+    sanction_type TEXT,
+    sanction_start TEXT,
+    sanction_end TEXT,
+    amount_mxn REAL,
+    authority TEXT,
+    source_url TEXT,
+    loaded_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_sfp_sanctions_rfc ON sfp_sanctions(rfc);
+CREATE INDEX IF NOT EXISTS idx_sfp_sanctions_name ON sfp_sanctions(company_name);
+
+-- External data: RUPC unified vendor registry
+CREATE TABLE IF NOT EXISTS rupc_vendors (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    rfc TEXT UNIQUE,
+    company_name TEXT NOT NULL,
+    compliance_grade TEXT,
+    status TEXT,
+    registered_date TEXT,
+    expiry_date TEXT,
+    loaded_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_rupc_rfc ON rupc_vendors(rfc);
 """
 
 # =============================================================================

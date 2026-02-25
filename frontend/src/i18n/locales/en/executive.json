@@ -21,6 +21,36 @@
     ]
   },
 
+  "sSystem": {
+    "label": "Context",
+    "title": "How Public Procurement Works — And Why It Matters Now",
+    "intro": "To understand what the data shows, it helps to know what the data is supposed to show. Mexico's federal procurement system operates under the Ley de Adquisiciones, Arrendamientos y Servicios del Sector Público (LAASSP), first enacted in 2000. The law establishes three types of contracting procedures, each with different transparency requirements. Above certain thresholds, federal agencies are legally required to use open competitive bidding. The system was designed to ensure public money flows to the best offer — not the most connected one.",
+    "proceduresTitle": "The Three Procurement Procedures",
+    "proc1Name": "Open Tender",
+    "proc1Spanish": "Licitación Pública",
+    "proc1When": "Required above legal threshold (~$300K MXN for goods and services)",
+    "proc1How": "Public notice, unlimited bidders, minimum 20-day ad period. Mandatory publication on COMPRANET. Most transparent procedure.",
+    "proc1Badge": "Full transparency",
+    "proc2Name": "Restricted Tender",
+    "proc2Spanish": "Invitación a ≥3 Personas",
+    "proc2When": "Allowed for mid-range contracts, or when open bidding is deemed impractical",
+    "proc2How": "At least 3 vendors invited. Shorter process, limited to invited parties. Less public scrutiny.",
+    "proc2Badge": "Partial transparency",
+    "proc3Name": "Direct Award",
+    "proc3Spanish": "Adjudicación Directa",
+    "proc3When": "Below threshold, emergencies, sole-source situations, or — under the 2025 law — when content is classified",
+    "proc3How": "No competition. Agency selects vendor directly. Reported after the fact, often with minimal detail.",
+    "proc3Badge": "Minimal transparency",
+    "gapTitle": "The Gap Between Law and Practice",
+    "gapText": "The law requires open competition above threshold. In practice, 71% of all federal contracts across 23 years skip open competition — either through direct award or restricted tender. Three mechanisms explain the gap: contracts are split to stay below thresholds (threshold splitting); emergency exceptions are invoked broadly; and the 2025 reform now explicitly allows direct awards when contract content is classified as reserved information, embedding opacity directly into the legal framework.",
+    "oversightTitle": "The Oversight Architecture",
+    "oversightText": "Three institutions were designed to enforce transparency. COMPRANET (1996–2025) was the mandatory federal procurement portal — every purchase above threshold was required to be published there. INAI was the independent transparency watchdog — citizens and journalists could appeal to it when agencies refused information requests. The ASF (Auditoría Superior de la Federación) is the federal audit court with independent review powers over contract execution. Of these three, only ASF retains full operational independence.",
+    "crisisTitle": "2024–2025: The Infrastructure Is Being Dismantled",
+    "crisisText": "In August 2024 — before any law changed — 1.9 million contracts from 2012–2023 (4.7 trillion MXN) were silently removed from COMPRANET's public interface. In December 2024, INAI was constitutionally abolished and replaced by 'Transparencia para el Pueblo,' an agency housed within the executive branch it was created to oversee, operating on roughly 2% of INAI's former budget. In April 2025, Congress voted 68–23 to formally abolish COMPRANET and replace it with ComprasMX — a platform that shares its architecture with Tianguis Digital, the procurement system used during Sheinbaum's time as Mexico City head of government, which disclosed no contracts in that period. The new law includes a 5-year data retention clause that analysts estimate would eventually remove records of 2.6 million contracts worth 9.9 trillion MXN from official public access.",
+    "crisisNote": "The 3.1 million contracts in this database were captured before these changes. They represent a historical record that is becoming progressively harder to access through official channels. Independent archiving is the only safeguard.",
+    "sources": "Sources: Mexicanos Contra la Corrupción y la Impunidad (MCCI) · Fundar Centro de Análisis e Investigación · IMCO · Proceso · Diario Oficial de la Federación (April 16, 2025)"
+  },
+
   "predictors": {
     "price_volatility": "Price Volatility",
     "institution_diversity": "Institution Diversity",
@@ -160,7 +190,7 @@
       "Calderon": "Contract volume doubled as COMPRANET modernized. The IMSS ghost company network began operations during this period, with earliest contracts dating to 2008.",
       "Pena Nieto": "Largest procurement volume of any administration. 73.4% direct awards. Period of the Odebrecht bribery scandal, La Estafa Maestra, and the Grupo Higa conflict of interest case.",
       "AMLO": "Highest observed risk rate and highest direct award percentage at 79.5%. The Segalmex and COVID-19 procurement scandals occurred during this administration.",
-      "Sheinbaum": "Early data only (2025). Slight decrease in both risk rate and direct award percentage compared to predecessor. Too early for conclusive assessment."
+      "Sheinbaum": "Early data only (2025). The direct award rate stands at 66% — a slight decrease from López Obrador's 79.5%. But the administration's most consequential procurement decisions have not been in the contracts themselves. In April 2025, COMPRANET — the platform this entire analysis is built on — was abolished by Congress and replaced by ComprasMX. In December 2024, INAI was constitutionally eliminated. The new procurement law expands grounds for direct awards when information is classified, and the 5-year data retention clause threatens the long-term public record. Whether this represents modernization or structural opacity will be measurable as ComprasMX data becomes available for analysis."
     }
   },
 

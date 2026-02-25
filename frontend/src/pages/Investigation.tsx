@@ -42,6 +42,7 @@ import {
   Search,
   LayoutGrid,
   List,
+  Download,
 } from 'lucide-react'
 import {
   BarChart,
@@ -251,8 +252,27 @@ function CaseCard({
             </span>
             <StatusPill status={caseItem.validation_status} />
           </div>
-          {/* Risk score badge — top right */}
-          <RiskScoreBadge score={caseItem.suspicion_score} />
+          {/* Export + risk score — top right */}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                const payload = JSON.stringify(caseItem, null, 2)
+                const blob = new Blob([payload], { type: 'application/json' })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `case-${caseItem.case_id}.json`
+                a.click()
+                URL.revokeObjectURL(url)
+              }}
+              className="p-1 rounded text-text-muted/50 hover:text-accent hover:bg-background-elevated transition-colors"
+              title="Export case data as JSON"
+            >
+              <Download className="h-3 w-3" />
+            </button>
+            <RiskScoreBadge score={caseItem.suspicion_score} />
+          </div>
         </div>
 
         {/* Title */}

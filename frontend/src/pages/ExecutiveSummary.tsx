@@ -7,7 +7,7 @@
  * Fully internationalized (ES/EN) via react-i18next 'executive' namespace.
  */
 
-import { useMemo, useRef, useEffect, useState } from 'react'
+import React, { useMemo, useRef, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation, Trans } from 'react-i18next'
@@ -35,6 +35,7 @@ import {
   CheckCircle,
   Calendar,
   TrendingUp,
+  Globe2,
 } from 'lucide-react'
 
 // ============================================================================
@@ -74,6 +75,9 @@ export function ExecutiveSummary() {
     <article className="max-w-4xl mx-auto pb-20 space-y-16">
       <ScrollReveal delay={80}><ReportHeader data={data} /></ScrollReveal>
       <ScrollReveal delay={120}><KeyFindings /></ScrollReveal>
+      <Divider />
+      {/* 00 — CONTEXT: How the System Works & What's Changing */}
+      <ScrollReveal><SectionSystem /></ScrollReveal>
       <Divider />
       {/* 01 — CAN I TRUST IT: Data Foundation */}
       <ScrollReveal><SectionData /></ScrollReveal>
@@ -213,6 +217,112 @@ function KeyFindings() {
         ))}
       </ul>
     </div>
+  )
+}
+
+// ============================================================================
+// SECTION 00 — THE SYSTEM: How Public Procurement Works
+// ============================================================================
+
+function SectionSystem() {
+  const { t } = useTranslation('executive')
+
+  const procedures = [
+    {
+      nameKey: 'sSystem.proc1Name',
+      spanishKey: 'sSystem.proc1Spanish',
+      whenKey: 'sSystem.proc1When',
+      howKey: 'sSystem.proc1How',
+      badgeKey: 'sSystem.proc1Badge',
+      borderColor: 'border-green-500/25',
+      bgColor: 'bg-green-500/5',
+      labelColor: 'text-green-500',
+      badgeBg: 'bg-green-500/10 text-green-600',
+    },
+    {
+      nameKey: 'sSystem.proc2Name',
+      spanishKey: 'sSystem.proc2Spanish',
+      whenKey: 'sSystem.proc2When',
+      howKey: 'sSystem.proc2How',
+      badgeKey: 'sSystem.proc2Badge',
+      borderColor: 'border-yellow-500/25',
+      bgColor: 'bg-yellow-500/5',
+      labelColor: 'text-yellow-500',
+      badgeBg: 'bg-yellow-500/10 text-yellow-600',
+    },
+    {
+      nameKey: 'sSystem.proc3Name',
+      spanishKey: 'sSystem.proc3Spanish',
+      whenKey: 'sSystem.proc3When',
+      howKey: 'sSystem.proc3How',
+      badgeKey: 'sSystem.proc3Badge',
+      borderColor: 'border-risk-high/25',
+      bgColor: 'bg-risk-high/5',
+      labelColor: 'text-risk-high',
+      badgeBg: 'bg-risk-high/10 text-risk-high',
+    },
+  ]
+
+  return (
+    <section>
+      <SectionHeading number="00" title={t('sSystem.title')} icon={Globe2} />
+
+      <p className="text-sm text-text-secondary leading-relaxed mb-6">
+        {t('sSystem.intro')}
+      </p>
+
+      {/* Three Procedures */}
+      <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-3">
+        {t('sSystem.proceduresTitle')}
+      </p>
+      <div className="grid gap-3 sm:grid-cols-3 mb-6">
+        {procedures.map((p) => (
+          <div key={p.nameKey} className={`rounded-lg border p-4 ${p.borderColor} ${p.bgColor}`}>
+            <div className="flex items-center justify-between mb-2">
+              <span className={`text-xs font-bold font-mono uppercase ${p.labelColor}`}>
+                {t(p.nameKey)}
+              </span>
+              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${p.badgeBg}`}>
+                {t(p.badgeKey)}
+              </span>
+            </div>
+            <p className="text-sm font-bold text-text-primary mb-1 italic">{t(p.spanishKey)}</p>
+            <p className="text-xs text-text-muted leading-relaxed mb-1">{t(p.whenKey)}</p>
+            <p className="text-xs text-text-secondary leading-relaxed">{t(p.howKey)}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* The Gap */}
+      <div className="border border-risk-high/20 bg-risk-high/5 rounded-lg p-5 mb-5">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-risk-high font-mono mb-2">
+          {t('sSystem.gapTitle')}
+        </p>
+        <p className="text-sm text-text-secondary leading-relaxed">{t('sSystem.gapText')}</p>
+      </div>
+
+      {/* Oversight Architecture */}
+      <div className="mb-5">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-2">
+          {t('sSystem.oversightTitle')}
+        </p>
+        <p className="text-sm text-text-secondary leading-relaxed">{t('sSystem.oversightText')}</p>
+      </div>
+
+      {/* Crisis Box */}
+      <div className="border border-border/50 rounded-lg p-5 bg-background-card/50">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-2">
+          {t('sSystem.crisisTitle')}
+        </p>
+        <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          {t('sSystem.crisisText')}
+        </p>
+        <div className="p-3 rounded-md bg-accent/5 border border-accent/15 mb-3">
+          <p className="text-xs text-text-muted italic leading-relaxed">{t('sSystem.crisisNote')}</p>
+        </div>
+        <p className="text-[10px] text-text-muted font-mono">{t('sSystem.sources')}</p>
+      </div>
+    </section>
   )
 }
 
@@ -370,9 +480,17 @@ function AIPipelineChart() {
     return () => obs.disconnect()
   }, [])
 
-  const nodes = [
+  const nodes: {
+    icon: React.ElementType
+    title: string
+    sub: string
+    detail: string
+    color: string
+    bg: string
+    border: string
+  }[] = [
     {
-      icon: '🗄️',
+      icon: Database,
       title: 'COMPRANET',
       sub: '3.1M contracts',
       detail: '2002–2025',
@@ -381,7 +499,7 @@ function AIPipelineChart() {
       border: 'rgba(100,116,139,0.3)',
     },
     {
-      icon: '📐',
+      icon: Scale,
       title: 'Z-SCORES',
       sub: '16 features',
       detail: 'per sector/year',
@@ -390,7 +508,7 @@ function AIPipelineChart() {
       border: 'rgba(139,92,246,0.3)',
     },
     {
-      icon: '📊',
+      icon: Compass,
       title: 'MAHALANOBIS',
       sub: 'Multivariate',
       detail: 'anomaly distance',
@@ -399,7 +517,7 @@ function AIPipelineChart() {
       border: 'rgba(59,130,246,0.3)',
     },
     {
-      icon: '🧠',
+      icon: Brain,
       title: 'LOGISTIC REG.',
       sub: '12 sub-models',
       detail: 'AUC 0.960',
@@ -408,7 +526,7 @@ function AIPipelineChart() {
       border: 'rgba(245,158,11,0.3)',
     },
     {
-      icon: '🚨',
+      icon: AlertTriangle,
       title: 'RISK SCORE',
       sub: '0 → 1.0',
       detail: 'P(corrupt|x)',
@@ -444,7 +562,9 @@ function AIPipelineChart() {
                 textAlign: 'center' as const,
               }}
             >
-              <div className="text-2xl mb-1">{node.icon}</div>
+              <div className="flex justify-center mb-1">
+                {(() => { const NodeIcon = node.icon; return <NodeIcon size={18} style={{ color: node.color }} /> })()}
+              </div>
               <p
                 className="text-[10px] font-black tracking-wider font-mono"
                 style={{ color: node.color }}
@@ -510,7 +630,7 @@ function AIPipelineChart() {
         className="mt-3 flex items-center gap-2 px-3 py-2 rounded border border-border/20 bg-background-elevated/20"
       >
         <span className="text-[10px] font-mono text-text-muted">
-          ✦ PU-learning correction c=0.887 (Elkan &amp; Noto 2008) · Bootstrap 95% CI per
+          PU-learning correction c=0.887 (Elkan &amp; Noto 2008) · Bootstrap 95% CI per
           contract · Temporal split train≤2020 / test≥2021
         </span>
       </div>
@@ -859,6 +979,7 @@ function SectionThreat({ data }: { data: ExecutiveSummaryResponse }) {
 
 function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
   const { t } = useTranslation('executive')
+  const navigate = useNavigate()
   const { procedures } = data
 
   const patterns = [
@@ -964,6 +1085,32 @@ function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
             </ScrollReveal>
           )
         })}
+      </div>
+
+      {/* CASE IN POINT — one documented example to make the patterns concrete */}
+      <div className="mt-6 rounded-xl border border-accent/20 bg-accent/5 p-5">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-accent font-mono mb-2">
+          Case in Point
+        </p>
+        <p className="text-sm font-bold text-text-primary mb-2">
+          IMSS Ghost Company Network · Health Sector · 2018–2022
+        </p>
+        <p className="text-sm leading-relaxed text-text-secondary">
+          Two vendors — Pisa Farmacéutica and DIQN — won{' '}
+          <strong className="text-text-primary">9,366 contracts</strong>{' '}
+          worth billions of pesos through a single institution (IMSS), frequently on the same day,
+          with no competing bids. The model flags{' '}
+          <strong className="text-risk-critical">99.9%</strong> of these contracts as high-risk —
+          the highest detection rate of any documented case. This single case demonstrates
+          all three patterns operating simultaneously: direct award dominance, year-end
+          concentration, and extreme vendor–institution lock-in.
+        </p>
+        <button
+          onClick={() => navigate('/investigation')}
+          className="mt-3 text-xs text-accent flex items-center gap-1 hover:underline font-mono"
+        >
+          View all 19 documented cases <ArrowRight className="h-3 w-3" />
+        </button>
       </div>
     </section>
   )

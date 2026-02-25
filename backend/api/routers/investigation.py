@@ -201,6 +201,53 @@ class DashboardSummaryResponse(BaseModel):
     validation_funnel: Dict[str, int]
 
 
+class TopCaseItem(BaseModel):
+    case_id: str
+    title: str
+    case_type: str
+    sector: str
+    suspicion_score: float
+    total_contracts: int
+    total_value_mxn: float
+    estimated_loss_mxn: float
+
+
+class TopCasesResponse(BaseModel):
+    data: List[TopCaseItem]
+    count: int
+
+
+class PromoteToGTResponse(BaseModel):
+    success: bool
+    investigation_case_id: str
+    ground_truth_case_id: str
+    ground_truth_db_id: int
+    vendors_promoted: int
+    message: str
+
+
+class TopAnomalousVendorItem(BaseModel):
+    vendor_id: int
+    vendor_name: str
+    sector_id: int
+    sector_code: str
+    sector_name: str
+    ensemble_score: float
+    isolation_forest_score: Optional[float] = None
+    total_contracts: int
+    total_value_mxn: float
+    single_bid_ratio: float
+    direct_award_ratio: float
+    price_anomalies: int
+    top_features: List[Dict[str, Any]]
+    explanation: Optional[str] = None
+
+
+class TopAnomalousVendorsResponse(BaseModel):
+    data: List[TopAnomalousVendorItem]
+    count: int
+
+
 # =============================================================================
 # ENDPOINTS
 # =============================================================================
@@ -406,7 +453,7 @@ def get_case(case_id: str = Path(..., description="Case ID (e.g., CASE-SAL-2026-
         )
 
 
-@router.get("/cases/{case_id}/export")
+@router.get("/cases/{case_id}/export", response_model=Dict[str, Any])
 def export_case(
     case_id: str = Path(..., description="Case ID"),
     format: str = Query("markdown", description="Export format: markdown or json"),
@@ -652,7 +699,7 @@ def run_analysis(request: RunAnalysisRequest):
         raise HTTPException(status_code=500, detail="Investigation analysis failed. Check server logs for details.")
 
 
-@router.get("/top/{n}")
+@router.get("/top/{n}", response_model=TopCasesResponse)
 def get_top_cases(
     n: int = Path(..., ge=1, le=50, description="Number of cases to return"),
     sector_id: Optional[int] = Query(None, description="Filter by sector"),
@@ -852,7 +899,7 @@ def add_evidence(
         }
 
 
-@router.post("/cases/{case_id}/promote-to-ground-truth")
+@router.post("/cases/{case_id}/promote-to-ground-truth", response_model=PromoteToGTResponse)
 def promote_to_ground_truth(
     case_id: str = Path(..., description="Case ID"),
     request: PromoteRequest = ...,
@@ -1105,7 +1152,7 @@ def get_model_comparison(
         return results
 
 
-@router.get("/top-anomalous-vendors")
+@router.get("/top-anomalous-vendors", response_model=TopAnomalousVendorsResponse)
 def get_top_anomalous_vendors(
     sector_id: Optional[int] = Query(None, description="Filter by sector"),
     limit: int = Query(20, ge=1, le=100, description="Number of vendors to return"),

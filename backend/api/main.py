@@ -192,12 +192,13 @@ for Mexican federal government procurement (2002-2025).
 API_VERSION = "1.0.0"
 
 # Create FastAPI app
+_docs_enabled = os.environ.get("ENABLE_DOCS", "true").lower() == "true"
 app = FastAPI(
     title=API_TITLE,
     description=API_DESCRIPTION,
     version=API_VERSION,
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url="/docs" if _docs_enabled else None,
+    redoc_url="/redoc" if _docs_enabled else None,
     lifespan=lifespan,
 )
 
@@ -216,6 +217,9 @@ app.add_middleware(RequestLoggingMiddleware)
 cors_origins = os.environ.get(
     "CORS_ORIGINS", "http://localhost:3009,http://127.0.0.1:3009"
 ).split(",")
+if "*" in cors_origins:
+    logger.warning("Wildcard CORS origin rejected for security; falling back to localhost defaults")
+    cors_origins = ["http://localhost:3009", "http://127.0.0.1:3009"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
@@ -232,6 +236,8 @@ async def security_headers(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["X-XSS-Protection"] = "0"
+    if request.headers.get("x-forwarded-proto") == "https":
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
 
 # GZip compression for responses > 1KB
@@ -336,6 +342,7 @@ async def root():
 async def health_check():
     """Health check endpoint with database, backup, and uptime status."""
     import sqlite3
+    from fastapi.responses import JSONResponse
     from .dependencies import DB_PATH
 
     db_exists = verify_database_exists()
@@ -344,6 +351,7 @@ async def health_check():
 
     # Database details
     db_info = {"status": "not found"}
+    db_reachable = False
     if db_exists:
         try:
             conn = sqlite3.connect(str(DB_PATH), timeout=5)
@@ -357,16 +365,23 @@ async def health_check():
                 "size_mb": round(db_size / (1024 * 1024)),
                 "contract_count": contract_count,
             }
+            db_reachable = True
         except Exception:
             db_info = {"status": "error"}
 
-    return {
-        "status": "healthy" if db_exists else "degraded",
-        "version": API_VERSION,
-        "database": db_info,
-        "uptime_seconds": uptime_seconds,
-        "last_backup": backup_info,
-    }
+    overall_status = "healthy" if db_reachable else ("degraded" if db_exists else "unavailable")
+    http_status = 200 if db_reachable else 503
+
+    return JSONResponse(
+        status_code=http_status,
+        content={
+            "status": overall_status,
+            "version": API_VERSION,
+            "database": db_info,
+            "uptime_seconds": uptime_seconds,
+            "last_backup": backup_info,
+        },
+    )
 
 
 @app.get("/metrics", tags=["root"])

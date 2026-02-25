@@ -16,6 +16,7 @@ import type {
   VendorTopItem,
   VendorInstitutionListResponse,
   VendorFilterParams,
+  VendorExternalFlags,
   InstitutionListResponse,
   InstitutionDetailResponse,
   InstitutionRiskProfile,
@@ -239,7 +240,7 @@ export const vendorApi = {
    * Get vendor's institutions
    */
   async getInstitutions(vendorId: number, limit = 50): Promise<VendorInstitutionListResponse> {
-    const { data } = await api.get<VendorInstitutionListResponse>(`/vendors/${vendorId}/institutions?limit=${limit}`)
+    const { data } = await api.get<VendorInstitutionListResponse>(`/vendors/${vendorId}/institutions?per_page=${limit}`)
     return data
   },
 
@@ -248,6 +249,14 @@ export const vendorApi = {
    */
   async search(query: string, limit = 10): Promise<VendorListResponse> {
     const { data } = await api.get<VendorListResponse>(`/vendors?search=${encodeURIComponent(query)}&per_page=${limit}`)
+    return data
+  },
+
+  /**
+   * Get external registry flags: SFP sanctions, RUPC grade, ASF cases
+   */
+  async getExternalFlags(vendorId: number): Promise<VendorExternalFlags> {
+    const { data } = await api.get<VendorExternalFlags>(`/vendors/${vendorId}/external-flags`)
     return data
   },
 }
@@ -298,7 +307,7 @@ export const institutionApi = {
     metric: 'spending' | 'contracts' | 'risk' = 'spending',
     limit = 20
   ): Promise<InstitutionTopListResponse> {
-    const { data } = await api.get<InstitutionTopListResponse>(`/institutions/top?metric=${metric}&limit=${limit}`)
+    const { data } = await api.get<InstitutionTopListResponse>(`/institutions/top?by=${metric}&limit=${limit}`)
     return data
   },
 
@@ -306,7 +315,7 @@ export const institutionApi = {
    * Get institution's vendors
    */
   async getVendors(institutionId: number, limit = 50): Promise<InstitutionVendorListResponse> {
-    const { data } = await api.get<InstitutionVendorListResponse>(`/institutions/${institutionId}/vendors?limit=${limit}`)
+    const { data } = await api.get<InstitutionVendorListResponse>(`/institutions/${institutionId}/vendors?per_page=${limit}`)
     return data
   },
 

@@ -143,5 +143,11 @@
   "openContractSearch": "Abrir búsqueda de contratos",
   "openInvestigation": "Abre una Investigación",
   "openInvestigationDesc": "Comienza desde una sospecha — un proveedor, institución o patrón — y construye un caso documentado con herramientas de análisis IA.",
-  "openCaseManager": "Abrir gestor de casos"
+  "openCaseManager": "Abrir gestor de casos",
+  "compranetContextLabel": "Contexto de Investigación",
+  "compranetContextTitle": "La Plataforma de Esta Base de Datos Fue Abolida en Abril 2025",
+  "compranetContextBody": "COMPRANET — el portal de contrataciones federales y fuente de los 3.1M contratos aquí — fue abolido por el Congreso el 10 de abril de 2025. Antes de cualquier cambio legal, 1.9 millones de contratos de 2012–2023 ya habían sido eliminados del acceso público en agosto de 2024. El INAI, organismo independiente de transparencia, fue eliminado constitucionalmente en diciembre de 2024. Los 3.1M contratos de esta base de datos fueron capturados antes de estos cambios y pueden ser uno de los registros más completos del historial de contrataciones federales de México.",
+  "compranetContextDate1": "COMPRANET abolido · Abril 2025",
+  "compranetContextDate2": "INAI eliminado · Diciembre 2024",
+  "compranetContextLink": "Ver limitaciones de la plataforma"
 }

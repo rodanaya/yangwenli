@@ -1,8 +1,10 @@
 """API router for institution endpoints."""
 import math
 import logging
+import threading
+from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
 from fastapi import APIRouter, HTTPException, Query, Path
-from typing import Optional
 
 from ..dependencies import get_db
 from ..config.constants import MAX_CONTRACT_VALUE
@@ -35,6 +37,24 @@ from ..services.institution_service import institution_service
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/institutions", tags=["institutions"])
+
+# Simple cache for expensive /top endpoint (avoids full 3.1M-row scan on every call)
+_top_cache: Dict[str, Dict[str, Any]] = {}
+_top_cache_lock = threading.Lock()
+_TOP_CACHE_TTL = 3600  # 1 hour
+
+
+def _get_top_cache(key: str) -> Any:
+    with _top_cache_lock:
+        entry = _top_cache.get(key)
+        if entry and datetime.now() < entry["expires_at"]:
+            return entry["value"]
+        return None
+
+
+def _set_top_cache(key: str, value: Any) -> None:
+    with _top_cache_lock:
+        _top_cache[key] = {"value": value, "expires_at": datetime.now() + timedelta(seconds=_TOP_CACHE_TTL)}
 
 # Risk baselines from taxonomy (duplicated here for API use)
 INSTITUTION_RISK_BASELINES = {
@@ -262,6 +282,11 @@ def get_institution_risk_profile(institution_id: int):
 
     Returns risk breakdown by factors and contract risk distribution.
     """
+    cache_key = f"risk-profile:{institution_id}"
+    cached = _get_top_cache(cache_key)
+    if cached is not None:
+        return cached
+
     with get_db() as conn:
         cursor = conn.cursor()
 
@@ -316,7 +341,7 @@ def get_institution_risk_profile(institution_id: int):
         """, (institution_id,))
         avg_risk_row = cursor.fetchone()
 
-        return InstitutionRiskProfile(
+        response = InstitutionRiskProfile(
             institution_id=row["id"],
             institution_name=row["name"],
             institution_type=inst_type,
@@ -329,8 +354,10 @@ def get_institution_risk_profile(institution_id: int):
             total_contracts=row["total_contracts"] or 0,
             total_value=row["total_amount_mxn"] or 0.0,
             contracts_by_risk_level=contracts_by_risk,
-            avg_risk_score=avg_risk_row["avg_risk"] if avg_risk_row else None
+            avg_risk_score=avg_risk_row["avg_risk"] if avg_risk_row else None,
         )
+        _set_top_cache(cache_key, response)
+        return response
 
 
 # =============================================================================
@@ -514,6 +541,11 @@ def get_top_institutions(
 
     Returns institutions ranked by the specified metric with aggregate statistics.
     """
+    cache_key = f"top:{by}:{limit}:{institution_type}:{sector_id}"
+    cached = _get_top_cache(cache_key)
+    if cached is not None:
+        return cached
+
     with get_db() as conn:
         cursor = conn.cursor()
 
@@ -577,11 +609,13 @@ def get_top_institutions(
             for i, row in enumerate(rows)
         ]
 
-        return InstitutionTopListResponse(
+        response = InstitutionTopListResponse(
             data=institutions,
             metric=by,
             total=len(institutions),
         )
+        _set_top_cache(cache_key, response)
+        return response
 
 
 @router.get("/hierarchy", response_model=InstitutionHierarchyResponse)
@@ -591,6 +625,10 @@ def get_institution_hierarchy():
 
     Returns institutions grouped by type with aggregate statistics.
     """
+    cached = _get_top_cache("hierarchy")
+    if cached is not None:
+        return cached
+
     with get_db() as conn:
         cursor = conn.cursor()
 
@@ -628,11 +666,13 @@ def get_institution_hierarchy():
         cursor.execute("SELECT COUNT(*) FROM institutions")
         total_institutions = cursor.fetchone()[0]
 
-        return InstitutionHierarchyResponse(
+        response = InstitutionHierarchyResponse(
             data=hierarchy,
             total_institutions=total_institutions,
             total_types=len(hierarchy),
         )
+        _set_top_cache("hierarchy", response)
+        return response
 
 
 @router.get("/{institution_id:int}/contracts", response_model=ContractListResponse)
