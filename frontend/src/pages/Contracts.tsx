@@ -889,9 +889,9 @@ function ContractRow({
         <ExpandChevron id={contract.id} />
       </td>
 
-      {/* Risk: badge with level label */}
+      {/* Risk: tiered display — nothing for low, dot for medium, badge for high/critical */}
       <td className="px-3 py-2 text-center">
-        {riskLevel ? (
+        {riskLevel === 'critical' || riskLevel === 'high' ? (
           <span
             className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold capitalize"
             style={{ color: riskColor, backgroundColor: `${riskColor}18`, border: `1px solid ${riskColor}40` }}
@@ -899,8 +899,14 @@ function ContractRow({
           >
             {riskLevel}
           </span>
+        ) : riskLevel === 'medium' ? (
+          <span
+            className="inline-flex h-2 w-2 rounded-full mx-auto"
+            style={{ backgroundColor: riskColor, opacity: 0.7 }}
+            title={contract.risk_score != null ? `Medium · ${(contract.risk_score * 100).toFixed(1)}%` : 'Medium'}
+          />
         ) : (
-          <span className="text-xs text-text-muted">—</span>
+          <span className="text-xs text-text-muted/30">·</span>
         )}
       </td>
 

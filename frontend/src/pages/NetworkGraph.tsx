@@ -596,6 +596,14 @@ export function NetworkGraph() {
   const [coBiddersLoading, setCoBiddersLoading] = useState(false)
   const [colorMode, setColorMode] = useState<'risk' | 'community'>('risk')
 
+  // Pre-load IMSS as default center entity on first mount
+  useEffect(() => {
+    institutionApi.search('IMSS', 1).then((result) => {
+      const hit = result?.data?.[0]
+      if (hit) setCenterEntity({ id: hit.id, entityType: 'institution', name: hit.name })
+    }).catch(() => {})
+  }, [])
+
   // Clear co-bidder state when selected node changes
   useEffect(() => {
     setCoBidders(null)

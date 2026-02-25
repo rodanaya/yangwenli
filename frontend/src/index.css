@@ -125,7 +125,10 @@
     @apply focus:px-4 focus:py-2 focus:bg-accent focus:text-white focus:rounded-md;
   }
 
-  /* Typography */
+  /* Typography
+   * Weight scale: 400 body, 500 labels/captions, 600 headings, 700 display, 900 hero numbers
+   * Use font-weight sparingly — only 2-3 weights per page to maintain hierarchy.
+   */
   .text-display {
     font-size: var(--font-size-display);
     line-height: 1.1;
@@ -136,8 +139,9 @@
   h1, .text-h1 { font-size: var(--font-size-h1); line-height: 1.2; font-weight: 600; letter-spacing: -0.01em; }
   h2, .text-h2 { font-size: var(--font-size-h2); line-height: 1.3; font-weight: 600; }
   h3, .text-h3 { font-size: var(--font-size-h3); line-height: 1.4; font-weight: 500; }
-  .text-small { font-size: var(--font-size-small); line-height: 1.5; }
-  .text-tiny { font-size: var(--font-size-tiny); line-height: 1.5; }
+  p, .text-body { font-size: var(--font-size-body); line-height: 1.6; font-weight: 400; }
+  .text-small { font-size: var(--font-size-small); line-height: 1.5; font-weight: 400; }
+  .text-tiny { font-size: var(--font-size-tiny); line-height: 1.5; font-weight: 400; }
 }
 
 /* Scrollbar */
@@ -208,25 +212,6 @@
     box-shadow: 0 0 15px -3px var(--color-accent-glow);
   }
 
-  /* Scanline overlay — subtle CRT/radar effect */
-  .scanline-overlay {
-    position: relative;
-  }
-  .scanline-overlay::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(255,255,255,0.01) 2px,
-      rgba(255,255,255,0.01) 4px
-    );
-    z-index: 1;
-    border-radius: inherit;
-  }
 
   /* Grid pattern for backgrounds */
   .grid-pattern {
@@ -300,91 +285,8 @@
   .data-cell { @apply px-3 py-2 text-sm border-b border-border; }
   .data-cell-header { @apply px-3 py-2 text-xs font-medium text-text-muted uppercase tracking-wider bg-background-elevated border-b border-border; }
 
-  /* LoGH — Tactical frame corners (Legend of the Galactic Heroes) */
-  /* Apply to any hero section: adds 4 subtle L-bracket corners */
-  .logh-frame {
-    position: relative;
-  }
-  .logh-frame > .logh-corner {
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    pointer-events: none;
-    border-color: rgba(88, 166, 255, 0.28);
-    border-style: solid;
-    z-index: 2;
-  }
-  .logh-frame > .logh-corner-tl { top: -1px; left: -1px; border-width: 1.5px 0 0 1.5px; }
-  .logh-frame > .logh-corner-tr { top: -1px; right: -1px; border-width: 1.5px 1.5px 0 0; }
-  .logh-frame > .logh-corner-bl { bottom: -1px; left: -1px; border-width: 0 0 1.5px 1.5px; }
-  .logh-frame > .logh-corner-br { bottom: -1px; right: -1px; border-width: 0 1.5px 1.5px 0; }
 }
 
-/* LoGH — Star field background (dark mode only) */
-/* 50 hand-placed stars across the viewport at 5–8% white opacity */
-/* Named after Yang Wen-li's home: the space between the stars */
-html:not(.dark) body::before { display: none; }
-body::before {
-  content: '';
-  position: fixed;
-  top: 0; left: 0;
-  width: 1px; height: 1px;
-  background: transparent;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 0;
-  box-shadow:
-    142px  87px rgba(255,255,255,0.07),
-    487px 203px rgba(255,255,255,0.05),
-    891px 145px rgba(255,255,255,0.08),
-   1203px  67px rgba(255,255,255,0.06),
-   1654px 289px rgba(255,255,255,0.05),
-     73px 356px rgba(255,255,255,0.07),
-    334px 412px rgba(255,255,255,0.04),
-    678px 523px rgba(255,255,255,0.06),
-   1089px 478px rgba(255,255,255,0.08),
-   1456px 534px rgba(255,255,255,0.05),
-     98px 654px rgba(255,255,255,0.06),
-    567px 701px rgba(255,255,255,0.04),
-   1234px 612px rgba(255,255,255,0.07),
-   1789px 445px rgba(255,255,255,0.05),
-    290px 789px rgba(255,255,255,0.06),
-    754px 834px rgba(255,255,255,0.08),
-   1123px 756px rgba(255,255,255,0.05),
-   1567px 678px rgba(255,255,255,0.06),
-     45px 912px rgba(255,255,255,0.07),
-    423px 956px rgba(255,255,255,0.04),
-    867px 989px rgba(255,255,255,0.06),
-   1345px 934px rgba(255,255,255,0.05),
-   1876px 867px rgba(255,255,255,0.07),
-    234px 534px rgba(255,255,255,0.05),
-    789px 312px rgba(255,255,255,0.06),
-   1456px 189px rgba(255,255,255,0.08),
-   1067px 267px rgba(255,255,255,0.04),
-    378px 678px rgba(255,255,255,0.06),
-    623px 145px rgba(255,255,255,0.07),
-   1678px 823px rgba(255,255,255,0.05),
-    912px 456px rgba(255,255,255,0.06),
-    189px 234px rgba(255,255,255,0.08),
-   1534px 123px rgba(255,255,255,0.05),
-    756px 890px rgba(255,255,255,0.07),
-   1289px 345px rgba(255,255,255,0.04),
-    445px 123px rgba(255,255,255,0.06),
-   1812px 567px rgba(255,255,255,0.05),
-    234px 812px rgba(255,255,255,0.07),
-    978px 723px rgba(255,255,255,0.06),
-   1389px 489px rgba(255,255,255,0.08),
-    567px 589px rgba(255,255,255,0.04),
-   1123px 889px rgba(255,255,255,0.05),
-    789px  67px rgba(255,255,255,0.07),
-   1567px 345px rgba(255,255,255,0.06),
-    123px 456px rgba(255,255,255,0.05),
-   1834px 178px rgba(255,255,255,0.08),
-    345px 267px rgba(255,255,255,0.06),
-    678px 745px rgba(255,255,255,0.04),
-   1234px 178px rgba(255,255,255,0.07),
-   1789px 712px rgba(255,255,255,0.05);
-}
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
@@ -405,94 +307,3 @@ body::before {
   .card { border: 1px solid #e5e7eb; background: white; }
 }
 
-/* ============================================================
-   Legend of the Galactic Heroes — Subtle tactical design
-   ============================================================ */
-
-/* Star field — dark mode only, rendered as body::before */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background: transparent;
-  box-shadow:
-    /* 50 stars scattered across a 1920×1080 viewport */
-    142px 87px 0 0 rgba(255,255,255,0.05),
-    384px 203px 0 0 rgba(255,255,255,0.04),
-    619px 44px 0 0 rgba(255,255,255,0.06),
-    891px 312px 0 0 rgba(255,255,255,0.04),
-    1124px 78px 0 0 rgba(255,255,255,0.05),
-    1387px 196px 0 0 rgba(255,255,255,0.03),
-    1642px 55px 0 0 rgba(255,255,255,0.06),
-    1891px 287px 0 0 rgba(255,255,255,0.04),
-    67px 412px 0 0 rgba(255,255,255,0.05),
-    298px 567px 0 0 rgba(255,255,255,0.03),
-    534px 489px 0 0 rgba(255,255,255,0.07),
-    783px 621px 0 0 rgba(255,255,255,0.04),
-    1012px 445px 0 0 rgba(255,255,255,0.05),
-    1267px 534px 0 0 rgba(255,255,255,0.03),
-    1498px 398px 0 0 rgba(255,255,255,0.06),
-    1756px 512px 0 0 rgba(255,255,255,0.04),
-    89px 734px 0 0 rgba(255,255,255,0.05),
-    341px 812px 0 0 rgba(255,255,255,0.03),
-    578px 756px 0 0 rgba(255,255,255,0.06),
-    823px 889px 0 0 rgba(255,255,255,0.04),
-    1089px 801px 0 0 rgba(255,255,255,0.05),
-    1334px 743px 0 0 rgba(255,255,255,0.03),
-    1601px 867px 0 0 rgba(255,255,255,0.07),
-    1834px 712px 0 0 rgba(255,255,255,0.04),
-    213px 967px 0 0 rgba(255,255,255,0.05),
-    456px 1012px 0 0 rgba(255,255,255,0.03),
-    712px 934px 0 0 rgba(255,255,255,0.06),
-    967px 1045px 0 0 rgba(255,255,255,0.04),
-    1223px 978px 0 0 rgba(255,255,255,0.05),
-    1478px 1023px 0 0 rgba(255,255,255,0.03),
-    /* 2nd layer — slightly brighter accent stars */
-    512px 134px 0 1px rgba(147,197,253,0.06),
-    987px 267px 0 1px rgba(147,197,253,0.05),
-    1456px 145px 0 1px rgba(147,197,253,0.06),
-    234px 678px 0 1px rgba(251,191,36,0.04),
-    1678px 789px 0 1px rgba(251,191,36,0.05),
-    789px 456px 0 1px rgba(147,197,253,0.04),
-    1234px 623px 0 1px rgba(147,197,253,0.06),
-    345px 890px 0 1px rgba(251,191,36,0.04),
-    1567px 934px 0 1px rgba(147,197,253,0.05),
-    890px 1023px 0 1px rgba(147,197,253,0.04),
-    /* 3rd layer — tiny dim points */
-    167px 345px 0 0 rgba(255,255,255,0.03),
-    445px 167px 0 0 rgba(255,255,255,0.03),
-    723px 289px 0 0 rgba(255,255,255,0.04),
-    1001px 178px 0 0 rgba(255,255,255,0.03),
-    1289px 356px 0 0 rgba(255,255,255,0.04),
-    1567px 234px 0 0 rgba(255,255,255,0.03),
-    1845px 412px 0 0 rgba(255,255,255,0.04),
-    112px 1034px 0 0 rgba(255,255,255,0.03),
-    678px 1056px 0 0 rgba(255,255,255,0.04),
-    1789px 1067px 0 0 rgba(255,255,255,0.03);
-}
-
-html:not(.dark) body::before {
-  display: none;
-}
-
-/* Tactical corner brackets — LoGH battle map aesthetic */
-.logh-frame {
-  position: relative;
-}
-
-.logh-corner {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  border-color: rgba(88, 166, 255, 0.28);
-  border-style: solid;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.logh-corner-tl { top: -1px; left: -1px; border-width: 1.5px 0 0 1.5px; }
-.logh-corner-tr { top: -1px; right: -1px; border-width: 1.5px 1.5px 0 0; }
-.logh-corner-bl { bottom: -1px; left: -1px; border-width: 0 0 1.5px 1.5px; }
-.logh-corner-br { bottom: -1px; right: -1px; border-width: 0 1.5px 1.5px 0; }

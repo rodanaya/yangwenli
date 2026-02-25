@@ -67,20 +67,21 @@ function App() {
               <Route
                 index
                 element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <ExecutiveSummary />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="dashboard"
-                element={
                   <SuspenseBoundary fallback={<DashboardSkeleton />}>
                     <Dashboard />
                   </SuspenseBoundary>
                 }
               />
-              <Route path="executive" element={<Navigate to="/" replace />} />
+              <Route
+                path="executive-summary"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <ExecutiveSummary />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route path="dashboard" element={<Navigate to="/" replace />} />
+              <Route path="executive" element={<Navigate to="/executive-summary" replace />} />
               <Route
                 path="explore"
                 element={

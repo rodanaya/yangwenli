@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   LayoutDashboard,
+  ScrollText,
   FileText,
   BarChart3,
   BookOpen,
@@ -11,16 +12,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Network,
-  Eye,
-  Landmark,
   Building2,
-  DollarSign,
   Crosshair,
-  ScrollText,
+  Shield,
   ShoppingCart,
+  Landmark,
+  Eye,
   TrendingUp,
 } from 'lucide-react'
-import { LOGHIcon } from '@/components/LOGHIcon'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -30,68 +29,87 @@ interface SidebarProps {
   onToggle: () => void
 }
 
-interface NavItemDef {
-  i18nKey: string
-  href: string
-  icon: React.ElementType
-  badge?: string | number
-}
-
 interface NavItem {
   title: string
   href: string
   icon: React.ElementType
-  badge?: string | number
 }
 
-// THE STORY — entry point, overview
-const storyNavDefs: NavItemDef[] = [
-  { i18nKey: 'executive', href: '/', icon: ScrollText },
-  { i18nKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
+interface NavSectionDef {
+  sectionKey: string
+  items: { i18nKey: string; href: string; icon: React.ElementType }[]
+}
+
+const NAV_SECTIONS: NavSectionDef[] = [
+  {
+    sectionKey: 'sections.theStory',
+    items: [
+      { i18nKey: 'executive', href: '/executive-summary', icon: ScrollText },
+      { i18nKey: 'dashboard', href: '/', icon: LayoutDashboard },
+    ],
+  },
+  {
+    sectionKey: 'sections.theMoney',
+    items: [
+      { i18nKey: 'procurementIntelligence', href: '/procurement-intelligence', icon: TrendingUp },
+      { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
+      { i18nKey: 'categories', href: '/categories', icon: ShoppingCart },
+    ],
+  },
+  {
+    sectionKey: 'sections.whoAndHow',
+    items: [
+      { i18nKey: 'institutions', href: '/institutions/health', icon: Building2 },
+      { i18nKey: 'network', href: '/network', icon: Network },
+      { i18nKey: 'administrations', href: '/administrations', icon: Landmark },
+    ],
+  },
+  {
+    sectionKey: 'sections.investigateSection',
+    items: [
+      { i18nKey: 'investigation', href: '/investigation', icon: Crosshair },
+      { i18nKey: 'contracts', href: '/contracts', icon: FileText },
+      { i18nKey: 'watchlist', href: '/watchlist', icon: Eye },
+    ],
+  },
+  {
+    sectionKey: 'sections.understandSection',
+    items: [
+      { i18nKey: 'groundTruth', href: '/ground-truth', icon: Shield },
+      { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
+      { i18nKey: 'settings', href: '/settings', icon: Settings },
+    ],
+  },
 ]
 
-// THE MONEY — where funds flow
-const moneyNavDefs: NavItemDef[] = [
-  { i18nKey: 'categories', href: '/categories', icon: ShoppingCart },
-  { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
-  { i18nKey: 'procurementIntelligence', href: '/procurement-intelligence', icon: TrendingUp },
-]
-
-// WHO & HOW — actors and mechanisms
-const whoNavDefs: NavItemDef[] = [
-  { i18nKey: 'institutions', href: '/institutions/health', icon: Building2 },
-  { i18nKey: 'administrations', href: '/administrations', icon: Landmark },
-  { i18nKey: 'pricing', href: '/price-analysis', icon: DollarSign },
-]
-
-// INVESTIGATE — active investigation tools
-const investigateNavDefs: NavItemDef[] = [
-  { i18nKey: 'investigation', href: '/investigation', icon: Crosshair },
-  { i18nKey: 'contracts', href: '/contracts', icon: FileText },
-  { i18nKey: 'network', href: '/network', icon: Network },
-  { i18nKey: 'watchlist', href: '/watchlist', icon: Eye },
-]
-
-// UNDERSTAND — methodology and settings
-const understandNavDefs: NavItemDef[] = [
-  { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
-  { i18nKey: 'settings', href: '/settings', icon: Settings },
-]
-
-function useNavItems(defs: NavItemDef[]): NavItem[] {
-  const { t } = useTranslation('nav')
-  return defs.map((d) => ({ title: t(d.i18nKey), href: d.href, icon: d.icon, badge: d.badge }))
+function NavSection({
+  title,
+  collapsed,
+  children,
+}: {
+  title: string
+  collapsed: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <div>
+      {!collapsed && (
+        <div className="mb-1.5 px-2 flex items-center gap-2">
+          <span className="text-[10px] font-bold tracking-widest uppercase text-text-muted/50 font-mono">
+            {title}
+          </span>
+          <div className="flex-1 h-px bg-border/20" />
+        </div>
+      )}
+      {collapsed && <div className="mb-1 mx-auto w-4 h-px bg-border/30" />}
+      <div className="space-y-0.5">{children}</div>
+    </div>
+  )
 }
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const location = useLocation()
   const { t } = useTranslation('nav')
-
-  const storyNavItems = useNavItems(storyNavDefs)
-  const moneyNavItems = useNavItems(moneyNavDefs)
-  const whoNavItems = useNavItems(whoNavDefs)
-  const investigateNavItems = useNavItems(investigateNavDefs)
-  const understandNavItems = useNavItems(understandNavDefs)
 
   return (
     <aside
@@ -100,11 +118,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         collapsed ? 'w-14' : 'w-56'
       )}
     >
-      {/* Brand — Intelligence signal, no logo badge */}
+      {/* Brand */}
       <div className="flex h-14 items-center border-b border-border/30 px-3">
         <div className="flex items-center gap-2.5 overflow-hidden">
           <div className="relative flex-shrink-0">
-            <LOGHIcon size={20} className="text-accent" />
+            <Shield size={20} className="text-accent" />
             <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-signal-live shadow-[0_0_6px_var(--color-signal-live)]" />
           </div>
           {!collapsed && (
@@ -112,7 +130,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               <span className="text-xs font-bold tracking-wider uppercase text-text-primary font-mono">
                 RUBLI
               </span>
-              <span className="text-xs tracking-wider uppercase text-accent">
+              <span className="text-[10px] tracking-wider uppercase text-accent font-mono">
                 INTEL PLATFORM
               </span>
             </div>
@@ -122,70 +140,31 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
       {/* Navigation */}
       <ScrollArea className="flex-1 py-3">
-        <nav className="space-y-5 px-2">
-          {/* THE STORY */}
-          <NavSection title={t('sections.theStory')} collapsed={collapsed}>
-            {storyNavItems.map((item) => (
-              <SidebarNavItem
-                key={item.href}
-                item={item}
-                collapsed={collapsed}
-                isActive={location.pathname === item.href}
-              />
-            ))}
-          </NavSection>
-
-          {/* THE MONEY */}
-          <NavSection title={t('sections.theMoney')} collapsed={collapsed}>
-            {moneyNavItems.map((item) => (
-              <SidebarNavItem
-                key={item.href}
-                item={item}
-                collapsed={collapsed}
-                isActive={
-                  item.href === '/sectors'
+        <nav className="px-2 space-y-3">
+          {NAV_SECTIONS.map((section) => (
+            <NavSection key={section.sectionKey} title={t(section.sectionKey)} collapsed={collapsed}>
+              {section.items.map((itemDef) => {
+                const title = t(itemDef.i18nKey)
+                const item: NavItem = { title, href: itemDef.href, icon: itemDef.icon }
+                const isActive =
+                  itemDef.href === '/'
+                    ? location.pathname === '/'
+                    : itemDef.href === '/sectors'
                     ? location.pathname === '/sectors' || location.pathname.startsWith('/sectors/')
-                    : location.pathname === item.href
-                }
-              />
-            ))}
-          </NavSection>
-
-          {/* WHO & HOW */}
-          <NavSection title={t('sections.whoAndHow')} collapsed={collapsed}>
-            {whoNavItems.map((item) => (
-              <SidebarNavItem
-                key={item.href}
-                item={item}
-                collapsed={collapsed}
-                isActive={location.pathname === item.href || location.pathname.startsWith(item.href + '/')}
-              />
-            ))}
-          </NavSection>
-
-          {/* INVESTIGATE */}
-          <NavSection title={t('sections.investigateSection')} collapsed={collapsed}>
-            {investigateNavItems.map((item) => (
-              <SidebarNavItem
-                key={item.href}
-                item={item}
-                collapsed={collapsed}
-                isActive={location.pathname === item.href || location.pathname.startsWith(item.href + '/')}
-              />
-            ))}
-          </NavSection>
-
-          {/* UNDERSTAND */}
-          <NavSection title={t('sections.understandSection')} collapsed={collapsed}>
-            {understandNavItems.map((item) => (
-              <SidebarNavItem
-                key={item.href}
-                item={item}
-                collapsed={collapsed}
-                isActive={location.pathname === item.href || location.pathname.startsWith(item.href + '/')}
-              />
-            ))}
-          </NavSection>
+                    : itemDef.href === '/institutions/health'
+                    ? location.pathname.startsWith('/institutions')
+                    : location.pathname === itemDef.href || location.pathname.startsWith(itemDef.href + '/')
+                return (
+                  <SidebarNavItem
+                    key={item.href}
+                    item={item}
+                    collapsed={collapsed}
+                    isActive={isActive}
+                  />
+                )
+              })}
+            </NavSection>
+          ))}
         </nav>
       </ScrollArea>
 
@@ -213,24 +192,6 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   )
 }
 
-function NavSection({ title, collapsed, children }: { title: string; collapsed: boolean; children: React.ReactNode }) {
-  return (
-    <div>
-      {!collapsed && (
-        <div className="mb-1.5 px-2 flex items-center gap-2">
-          <span className="text-xs font-semibold tracking-wider text-text-secondary font-mono">
-            {title}
-          </span>
-          <div className="flex-1 h-px bg-border/30" />
-        </div>
-      )}
-      {collapsed && <div className="mb-1 mx-auto w-4 h-px bg-border/40" />}
-      <div className="space-y-0.5">
-        {children}
-      </div>
-    </div>
-  )
-}
 
 function SidebarNavItem({ item, collapsed, isActive }: { item: NavItem; collapsed: boolean; isActive: boolean }) {
   const Icon = item.icon
@@ -257,11 +218,6 @@ function SidebarNavItem({ item, collapsed, isActive }: { item: NavItem; collapse
         isActive ? 'text-accent' : 'text-text-muted group-hover:text-text-secondary'
       )} aria-hidden="true" />
       {!collapsed && <span className="truncate">{item.title}</span>}
-      {!collapsed && item.badge && (
-        <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded px-1 text-xs font-bold tracking-wide uppercase bg-accent/15 text-accent">
-          {item.badge}
-        </span>
-      )}
     </NavLink>
   )
 

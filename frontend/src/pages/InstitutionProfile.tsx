@@ -267,7 +267,7 @@ export function InstitutionProfile() {
         />
         <KpiChip
           label="High-Risk %"
-          value={highRiskPct != null ? formatPercentSafe(highRiskPct, true) : '—'}
+          value={highRiskPct != null ? formatPercentSafe(highRiskPct, false) : '—'}
           icon={AlertTriangle}
           iconColor={(highRiskPct ?? 0) > 20 ? 'text-risk-critical' : (highRiskPct ?? 0) > 10 ? 'text-risk-high' : 'text-text-muted'}
           highlight={(highRiskPct ?? 0) > 20}

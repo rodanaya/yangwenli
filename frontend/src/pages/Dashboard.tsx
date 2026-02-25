@@ -575,6 +575,9 @@ export function Dashboard() {
             })
           )}
         </div>
+        <div className="text-[11px] text-text-muted/50 font-mono mt-1">
+          Risk model v5.0.2 · AUC 0.960 · {(overview?.total_contracts || 0) > 0 ? formatNumber(overview?.total_contracts || 0) : '3,110,007'} contracts · 2002–2025
+        </div>
       </div>
 
       {/* ================================================================ */}
