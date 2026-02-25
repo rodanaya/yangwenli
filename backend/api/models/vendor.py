@@ -105,7 +105,16 @@ class VendorDetailResponse(BaseModel):
     max_mahalanobis: Optional[float] = Field(None, description="Maximum Mahalanobis distance across contracts")
     pct_anomalous: Optional[float] = Field(None, description="Percentage of contracts with Mahalanobis p-value < 0.05 (D² > 21.026 for k=12)")
 
+    # Name variants (from QuiénEsQuién.Wiki and other sources)
+    name_variants: List["NameVariant"] = Field(default_factory=list, description="Known name aliases")
+
     model_config = ConfigDict(from_attributes=True)
+
+
+class NameVariant(BaseModel):
+    """A known name alias for a vendor."""
+    variant_name: str
+    source: str  # 'qqw', 'manual', 'etl'
 
 
 class VendorRiskProfile(BaseModel):

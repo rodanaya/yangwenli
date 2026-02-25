@@ -61,7 +61,15 @@ class VendorService(BaseService):
 
         # Vendor-table filters
         if search:
-            qb.filter_search(search, ["v.name", "v.name_normalized", "v.rfc"])
+            # Also match known name variants from QQW/manual enrichment
+            qb.filter_search(
+                search,
+                ["v.name", "v.name_normalized", "v.rfc"],
+                extra_subquery=(
+                    "v.id IN (SELECT vendor_id FROM vendor_name_variants "
+                    "WHERE variant_name LIKE ? AND source NOT IN ('qqw_miss', 'qqw_empty'))"
+                ),
+            )
         if has_rfc is True:
             qb.where("v.rfc IS NOT NULL AND v.rfc != ''")
         elif has_rfc is False:

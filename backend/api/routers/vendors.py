@@ -476,6 +476,16 @@ def get_vendor(
         first_year = detail.get("first_contract_year")
         last_year = detail.get("last_contract_year")
 
+        # Fetch name variants (QQW + other sources), excluding internal sentinel rows
+        name_variants_rows = cursor.execute(
+            """SELECT variant_name, source FROM vendor_name_variants
+               WHERE vendor_id = ? AND source NOT IN ('qqw_miss', 'qqw_empty')
+               ORDER BY source, variant_name""",
+            (vendor_id,),
+        ).fetchall()
+        name_variants = [{"variant_name": r["variant_name"], "source": r["source"]}
+                         for r in name_variants_rows]
+
         return VendorDetailResponse(
             id=detail["id"],
             name=detail["name"],
@@ -509,6 +519,7 @@ def get_vendor(
             avg_mahalanobis=round(extra["avg_mahalanobis"], 4) if extra and extra["avg_mahalanobis"] else None,
             max_mahalanobis=round(extra["max_mahalanobis"], 4) if extra and extra["max_mahalanobis"] else None,
             pct_anomalous=round(detail["anomalous_pct"], 2) if detail.get("anomalous_pct") else None,
+            name_variants=name_variants,
         )
 
 
@@ -1092,6 +1103,55 @@ def get_vendor_risk_timeline(
             "vendor_name": vendor["name"],
             "timeline": timeline,
         }
+
+
+@router.get("/{vendor_id:int}/footprint")
+def get_vendor_footprint(
+    vendor_id: int = Path(..., description="Vendor ID"),
+    limit: int = Query(30, ge=5, le=50),
+):
+    """
+    Vendor footprint: (sector, institution) pairs with contract stats.
+    Used for bubble scatter showing geographic/sectoral spread vs concentration.
+    """
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT
+                c.sector_id,
+                COALESCE(sec.name, 'otros') as sector_name,
+                c.institution_id,
+                COALESCE(i.name, 'Unknown') as institution_name,
+                COUNT(*) as contract_count,
+                SUM(c.amount_mxn) as total_value,
+                AVG(c.risk_score) as avg_risk_score
+            FROM contracts c
+            LEFT JOIN sectors sec ON c.sector_id = sec.id
+            LEFT JOIN institutions i ON c.institution_id = i.id
+            WHERE c.vendor_id = ?
+              AND c.amount_mxn > 0
+            GROUP BY c.sector_id, c.institution_id
+            ORDER BY total_value DESC
+            LIMIT ?
+        """, (vendor_id, limit))
+        rows = cur.fetchall()
+
+    if not rows:
+        raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found or has no contracts")
+
+    footprint = [
+        {
+            "sector_id": r["sector_id"],
+            "sector_name": r["sector_name"],
+            "institution_id": r["institution_id"],
+            "institution_name": r["institution_name"],
+            "contract_count": r["contract_count"],
+            "total_value": r["total_value"],
+            "avg_risk_score": r["avg_risk_score"],
+        }
+        for r in rows
+    ]
+    return {"vendor_id": vendor_id, "footprint": footprint}
 
 
 @router.get("/{vendor_id:int}/top-factors")

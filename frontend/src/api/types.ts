@@ -276,6 +276,12 @@ export interface VendorDetailResponse {
   avg_mahalanobis?: number
   max_mahalanobis?: number
   pct_anomalous?: number
+  name_variants: NameVariant[]
+}
+
+export interface NameVariant {
+  variant_name: string
+  source: string  // 'qqw' | 'manual' | 'etl'
 }
 
 export interface VendorRiskProfile {

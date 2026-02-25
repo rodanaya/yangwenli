@@ -552,6 +552,28 @@ export function VendorProfile() {
                   </>
                 )}
               </div>
+              {vendor.name_variants && vendor.name_variants.length > 0 && (
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs text-text-muted">Also known as:</span>
+                  {vendor.name_variants.slice(0, 5).map((v) => (
+                    <span
+                      key={v.variant_name}
+                      className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-background-elevated border border-border/30 text-text-secondary"
+                      title={`Source: ${v.source}`}
+                    >
+                      {v.variant_name}
+                    </span>
+                  ))}
+                  {vendor.name_variants.length > 5 && (
+                    <span className="text-xs text-text-muted">
+                      +{vendor.name_variants.length - 5} more
+                    </span>
+                  )}
+                  <span className="text-xs text-text-muted/50 ml-1">
+                    · QuiénEsQuién.Wiki
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -74,13 +74,31 @@ class QueryBuilder:
             self._params.append(level.lower())
         return self
 
-    def filter_search(self, search: str | None, columns: list[str]) -> QueryBuilder:
-        """Add LIKE search across multiple columns (OR). Returns self."""
+    def filter_search(
+        self,
+        search: str | None,
+        columns: list[str],
+        extra_subquery: str | None = None,
+    ) -> QueryBuilder:
+        """Add LIKE search across multiple columns (OR). Returns self.
+
+        Args:
+            search: Search term (will be wrapped in %...%).
+            columns: Column expressions to LIKE-match.
+            extra_subquery: Optional additional OR clause (e.g. subquery into
+                related table). The caller must include exactly one ? placeholder
+                for the LIKE pattern if needed.
+        """
         if search and columns:
-            like_clauses = [f"{col} LIKE ?" for col in columns]
-            self._conditions.append(f"({' OR '.join(like_clauses)})")
             pattern = f"%{search}%"
-            self._params.extend([pattern] * len(columns))
+            like_clauses = [f"{col} LIKE ?" for col in columns]
+            all_clauses = like_clauses[:]
+            all_params = [pattern] * len(columns)
+            if extra_subquery:
+                all_clauses.append(extra_subquery)
+                all_params.append(pattern)
+            self._conditions.append(f"({' OR '.join(all_clauses)})")
+            self._params.extend(all_params)
         return self
 
     def filter_amount_range(
