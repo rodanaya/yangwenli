@@ -814,7 +814,21 @@ export function NetworkGraph() {
       }
     })
 
-    return { totalNodes, highRiskConnections, mostConnectedName, maxDegree, densestComm }
+    // Top-5 nodes by degree
+    const topByDegree = [...degreeMap.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([nodeId, degree]) => {
+        const node = graphData.nodes.find((n: NetworkNode) => n.id === nodeId)
+        return {
+          name: node ? truncate(toTitleCase(node.name), 24) : nodeId,
+          degree,
+          type: node?.type ?? 'unknown',
+          riskScore: node?.risk_score ?? null,
+        }
+      })
+
+    return { totalNodes, highRiskConnections, mostConnectedName, maxDegree, densestComm, topByDegree }
   }, [graphData])
 
   // ECharts instance ref for reset view
@@ -986,6 +1000,35 @@ export function NetworkGraph() {
           <div className="flex flex-col gap-0.5">
             <span className="text-text-muted uppercase tracking-wider text-[10px] font-medium">Densest cluster</span>
             <span className="font-mono font-semibold text-text-primary">{graphStats.densestComm}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Top-5 most connected nodes */}
+      {graphStats && graphData && graphStats.topByDegree.length > 0 && (
+        <div className="px-4 py-2 bg-background-elevated/20 rounded border border-border/15">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted mb-1.5">Top Connected Nodes</div>
+          <div className="flex flex-col gap-1">
+            {graphStats.topByDegree.map((node, i) => (
+              <div key={node.name + i} className="flex items-center gap-2 text-xs">
+                <span className="text-text-muted font-mono w-4 text-right flex-shrink-0">#{i + 1}</span>
+                <span className="font-medium text-text-primary truncate flex-1">{node.name}</span>
+                <span className="text-text-muted font-mono flex-shrink-0">{node.degree} links</span>
+                {node.riskScore != null && (
+                  <span
+                    className="font-mono text-[10px] flex-shrink-0"
+                    style={{
+                      color: node.riskScore >= 0.5 ? '#f87171'
+                        : node.riskScore >= 0.3 ? '#fb923c'
+                        : node.riskScore >= 0.1 ? '#fbbf24'
+                        : '#4ade80',
+                    }}
+                  >
+                    {(node.riskScore * 100).toFixed(0)}%
+                  </span>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}

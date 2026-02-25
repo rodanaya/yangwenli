@@ -27,6 +27,7 @@ import {
   ResponsiveContainer,
   Tooltip as RechartsTooltip,
   ReferenceLine,
+  ReferenceArea,
 } from '@/components/charts'
 import {
   Users,
@@ -920,6 +921,15 @@ export function VendorProfile() {
                               return null
                             }}
                           />
+                          {riskProfile?.risk_confidence_lower != null &&
+                            riskProfile?.risk_confidence_upper != null && (
+                              <ReferenceArea
+                                y1={riskProfile.risk_confidence_lower}
+                                y2={riskProfile.risk_confidence_upper}
+                                fill={riskColor}
+                                fillOpacity={0.08}
+                              />
+                            )}
                           <Area
                             type="monotone"
                             dataKey="avg"

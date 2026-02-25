@@ -138,6 +138,15 @@ const CONTRACT_PRESETS: ContractPreset[] = [
     description: 'Threshold splitting — multiple same-day contracts to dodge oversight limits',
   },
   {
+    id: 'most-anomalous',
+    label: 'Most Anomalous',
+    icon: AlertTriangle,
+    sort: 'mahalanobis_distance',
+    order: 'desc',
+    filters: {},
+    description: 'Contracts furthest from statistical norms — highest Mahalanobis distance across all risk dimensions',
+  },
+  {
     id: 'recent-critical',
     label: 'Recent & Critical',
     icon: Zap,

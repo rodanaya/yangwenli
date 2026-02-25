@@ -296,6 +296,12 @@ export default function Administrations() {
     staleTime: 5 * 60 * 1000,
   })
 
+  const { data: breaksResp } = useQuery({
+    queryKey: ['analysis', 'structural-breaks'],
+    queryFn: () => analysisApi.getStructuralBreaks(),
+    staleTime: 30 * 60 * 1000,
+  })
+
   const yoyData = yoyResp?.data ?? []
   const sectorYearData = sectorYearResp?.data ?? []
   const events = eventsResp?.events ?? []
@@ -370,6 +376,12 @@ export default function Administrations() {
     () => events.filter((e) => e.year >= selectedMeta.dataStart && e.year < selectedMeta.end),
     [events, selectedMeta]
   )
+
+  // Structural breaks filtered to selected admin's year range
+  const adminBreaks = useMemo(() => {
+    const breaks = breaksResp?.breakpoints ?? []
+    return breaks.filter((b) => b.year >= selectedMeta.dataStart && b.year < selectedMeta.end)
+  }, [breaksResp, selectedMeta])
 
   // ── ML: Anomaly detection ─────────────────────────────────────────────────
   // Flag years in the selected admin where a metric deviates >1.8σ from the
@@ -792,6 +804,21 @@ export default function Administrations() {
                         position: 'top',
                         fontSize: 9,
                         fill: '#64748b',
+                      }}
+                    />
+                  ))}
+                  {adminBreaks.map((b) => (
+                    <ReferenceLine
+                      key={`sb-${b.year}-${b.metric}`}
+                      yAxisId="left"
+                      x={b.year}
+                      stroke="#f59e0b"
+                      strokeDasharray="4 2"
+                      label={{
+                        value: '⚡',
+                        position: 'top',
+                        fontSize: 11,
+                        fill: '#f59e0b',
                       }}
                     />
                   ))}

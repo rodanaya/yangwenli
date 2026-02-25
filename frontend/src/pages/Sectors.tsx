@@ -36,6 +36,8 @@ import {
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
+  LineChart,
+  Line,
 } from '@/components/charts'
 import { formatCompactUSD } from '@/lib/utils'
 
@@ -280,6 +282,25 @@ export function Sectors() {
     queryFn: () => analysisApi.getPatternCounts(),
     staleTime: 15 * 60 * 1000,
   })
+
+  const { data: sectorYearResp } = useQuery({
+    queryKey: ['analysis', 'sector-year-breakdown'],
+    queryFn: () => analysisApi.getSectorYearBreakdown(),
+    staleTime: 10 * 60 * 1000,
+  })
+
+  // ---- Sparkline data: per-sector avg_risk by year ----
+  const sparklinesBySector = useMemo(() => {
+    const items = sectorYearResp?.data ?? []
+    const map = new Map<number, { year: number; avg_risk: number }[]>()
+    items.forEach((d) => {
+      if (!map.has(d.sector_id)) map.set(d.sector_id, [])
+      map.get(d.sector_id)!.push({ year: d.year, avg_risk: d.avg_risk })
+    })
+    // Sort each sector's data by year
+    map.forEach((arr) => arr.sort((a, b) => a.year - b.year))
+    return map
+  }, [sectorYearResp])
 
   // ---- Aggregate stats ----
   const aggregates = useMemo(() => {
@@ -662,6 +683,9 @@ export function Sectors() {
                     Direct Award %
                     <SortIndicator field="direct_award_pct" sortField={sortField} sortDir={sortDir} />
                   </th>
+                  <th className="px-3 py-2.5 text-center font-medium whitespace-nowrap hidden xl:table-cell">
+                    Risk Trend
+                  </th>
                   <th className="px-3 py-2.5 text-left font-medium whitespace-nowrap hidden lg:table-cell">
                     Top Ramo
                   </th>
@@ -709,6 +733,24 @@ export function Sectors() {
                       </td>
                       <td className="px-3 py-2.5 text-right font-mono text-text-secondary tabular-nums">
                         {formatPercentSafe(sector.direct_award_pct, false)}
+                      </td>
+                      <td className="px-3 py-2.5 hidden xl:table-cell">
+                        {(() => {
+                          const spark = sparklinesBySector.get(sector.sector_id)
+                          if (!spark || spark.length < 2) return <span className="text-text-muted text-xs">—</span>
+                          return (
+                            <LineChart width={56} height={28} data={spark}>
+                              <Line
+                                type="monotone"
+                                dataKey="avg_risk"
+                                stroke={color}
+                                strokeWidth={1.5}
+                                dot={false}
+                                isAnimationActive={false}
+                              />
+                            </LineChart>
+                          )
+                        })()}
                       </td>
                       <td className="px-3 py-2.5 text-text-muted font-mono hidden lg:table-cell">
                         {topRamo}
