@@ -259,6 +259,30 @@ export const vendorApi = {
     const { data } = await api.get<VendorExternalFlags>(`/vendors/${vendorId}/external-flags`)
     return data
   },
+
+  /**
+   * Get year-by-year risk timeline for a vendor (contract count, avg risk, total value per year)
+   */
+  async getRiskTimeline(vendorId: number): Promise<{
+    vendor_id: number
+    vendor_name: string
+    timeline: Array<{ year: number; avg_risk_score: number | null; contract_count: number; total_value: number }>
+  }> {
+    const { data } = await api.get(`/vendors/${vendorId}/risk-timeline`)
+    return data
+  },
+
+  /**
+   * Get top risk factors by frequency across a vendor's contracts (for Watchlist attribution)
+   */
+  async getTopFactors(vendorId: number, limit = 5): Promise<{
+    vendor_id: number
+    total_contracts: number
+    factors: Array<{ factor: string; count: number; pct: number }>
+  }> {
+    const { data } = await api.get(`/vendors/${vendorId}/top-factors?limit=${limit}`)
+    return data
+  },
 }
 
 // ============================================================================
@@ -607,6 +631,19 @@ export const analysisApi = {
    */
   async getFalseNegatives(limit = 50): Promise<Record<string, unknown>> {
     const { data } = await api.get(`/analysis/validation/false-negatives?limit=${limit}`)
+    return data
+  },
+
+  /**
+   * Get per-factor lift: detection rate on ground-truth contracts vs population base rate.
+   * lift > 1.0 means the factor is over-represented in known corrupt contracts.
+   */
+  async getFactorLift(): Promise<{
+    factors: Array<{ factor: string; gt_count: number; gt_rate: number; base_rate: number; lift: number }>
+    gt_total: number
+    population_total: number
+  }> {
+    const { data } = await api.get('/analysis/validation/factor-lift')
     return data
   },
 

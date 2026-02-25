@@ -21,13 +21,17 @@ import {
   Area,
   BarChart,
   Bar,
+  ComposedChart,
+  Line,
   XAxis,
   YAxis,
+  CartesianGrid,
   Cell,
   ResponsiveContainer,
   Tooltip as RechartsTooltip,
   ReferenceLine,
   ReferenceArea,
+  Legend as RechartsLegend,
 } from '@/components/charts'
 import {
   Users,
@@ -431,6 +435,14 @@ export function VendorProfile() {
     queryKey: ['vendor-external-flags', vendorId],
     queryFn: () => vendorApi.getExternalFlags(Number(vendorId)),
     enabled: !!vendorId,
+  })
+
+  // Fetch year-by-year lifecycle (contract count + risk per year)
+  const { data: lifecycleData } = useQuery({
+    queryKey: ['vendor', vendorId, 'risk-timeline'],
+    queryFn: () => vendorApi.getRiskTimeline(vendorId),
+    enabled: !!vendorId,
+    staleTime: 10 * 60 * 1000,
   })
 
   // Determine if vendor has co-bidding risk
@@ -948,6 +960,75 @@ export function VendorProfile() {
                         <span className="capitalize">{riskProfile.risk_trend}</span>
                       </div>
                     )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Vendor Lifecycle Chart */}
+              {lifecycleData && lifecycleData.timeline.length > 1 && (
+                <Card className="hover-lift">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4" />
+                      Contract Lifecycle
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[120px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <ComposedChart data={lifecycleData.timeline} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+                          <CartesianGrid strokeDasharray="2 2" stroke="rgba(255,255,255,0.05)" />
+                          <XAxis
+                            dataKey="year"
+                            tick={{ fill: 'var(--color-text-muted)', fontSize: 9, fontFamily: 'var(--font-family-mono)' }}
+                          />
+                          <YAxis
+                            yAxisId="left"
+                            tick={{ fill: 'var(--color-text-muted)', fontSize: 9 }}
+                            width={28}
+                          />
+                          <YAxis
+                            yAxisId="right"
+                            orientation="right"
+                            domain={[0, 1]}
+                            tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
+                            tick={{ fill: 'var(--color-text-muted)', fontSize: 9 }}
+                            width={32}
+                          />
+                          <RechartsTooltip
+                            contentStyle={{
+                              backgroundColor: 'var(--color-card)',
+                              border: '1px solid var(--color-border)',
+                              borderRadius: 6,
+                              fontSize: 10,
+                            }}
+                            formatter={(value: unknown, name?: string) => {
+                              if (name === 'Risk') return [`${(Number(value) * 100).toFixed(1)}%`, name]
+                              return [Number(value).toLocaleString(), name ?? '']
+                            }}
+                          />
+                          <RechartsLegend wrapperStyle={{ fontSize: 9 }} />
+                          <Bar
+                            yAxisId="left"
+                            dataKey="contract_count"
+                            name="Contracts"
+                            fill={riskColor}
+                            fillOpacity={0.45}
+                            radius={[2, 2, 0, 0]}
+                            maxBarSize={20}
+                          />
+                          <Line
+                            yAxisId="right"
+                            type="monotone"
+                            dataKey="avg_risk_score"
+                            name="Risk"
+                            stroke={riskColor}
+                            strokeWidth={2}
+                            dot={{ r: 2 }}
+                          />
+                        </ComposedChart>
+                      </ResponsiveContainer>
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -1546,32 +1627,36 @@ function ExternalFlagsPanel({ flags }: { flags: VendorExternalFlags | undefined 
   const hasSanctions = flags.sfp_sanctions.length > 0
   const hasRUPC = !!flags.rupc
   const hasASF = flags.asf_cases.length > 0
-  const hasAny = hasSanctions || hasRUPC || hasASF
+  const hasEFOS = !!flags.sat_efos
+  const isEFOSDefinitivo = flags.sat_efos?.stage === 'definitivo'
+  const hasAny = hasSanctions || hasRUPC || hasASF || hasEFOS
 
   return (
     <div className="space-y-6">
       {/* Header status */}
       <div className={cn(
         "flex items-center gap-3 p-4 rounded border",
-        hasSanctions
+        (hasSanctions || isEFOSDefinitivo)
           ? "bg-red-950/20 border-red-500/30"
           : "bg-surface-2 border-border/50"
       )}>
-        {hasSanctions ? (
+        {(hasSanctions || isEFOSDefinitivo) ? (
           <AlertTriangle className="h-5 w-5 text-red-400 shrink-0" />
         ) : (
           <Shield className="h-5 w-5 text-text-muted shrink-0" />
         )}
         <div>
-          <p className={cn("text-sm font-medium", hasSanctions ? "text-red-300" : "text-text-secondary")}>
-            {hasSanctions
+          <p className={cn("text-sm font-medium", (hasSanctions || isEFOSDefinitivo) ? "text-red-300" : "text-text-secondary")}>
+            {isEFOSDefinitivo
+              ? "CRITICAL: Vendor confirmed on SAT Art. 69-B ghost company list"
+              : hasSanctions
               ? `${flags.sfp_sanctions.length} SFP sanction record${flags.sfp_sanctions.length > 1 ? 's' : ''} found`
               : hasAny
               ? "No SFP sanctions — external records available"
               : "No external records found for this vendor"}
           </p>
           <p className="text-xs text-text-muted mt-0.5">
-            Sources: SFP Proveedores Sancionados · RUPC Vendor Registry · ASF Audit Findings
+            Sources: SFP Proveedores Sancionados · RUPC Vendor Registry · ASF Audit Findings · SAT Art. 69-B EFOS
           </p>
         </div>
       </div>

@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { watchlistApi, type WatchlistItem, type WatchlistItemUpdate } from '@/api/client'
+import { watchlistApi, vendorApi, type WatchlistItem, type WatchlistItemUpdate } from '@/api/client'
 import {
   Eye,
   EyeOff,
@@ -30,6 +30,8 @@ import {
   Minus,
   Search,
   Loader2,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
@@ -549,6 +551,15 @@ function WatchlistRow({
   onRemove,
   onOpenDrawer,
 }: WatchlistRowProps) {
+  const [expanded, setExpanded] = useState(false)
+
+  const { data: topFactors, isLoading: factorsLoading } = useQuery({
+    queryKey: ['vendor', item.item_id, 'top-factors'],
+    queryFn: () => vendorApi.getTopFactors(item.item_id, 5),
+    enabled: expanded && item.item_type === 'vendor',
+    staleTime: 10 * 60 * 1000,
+  })
+
   function handleEntityClick() {
     if (item.item_type === 'vendor' || item.item_type === 'institution') {
       onOpenDrawer(item.item_id, item.item_type)
@@ -558,6 +569,7 @@ function WatchlistRow({
   }
 
   return (
+    <>
     <tr className="hover:bg-background-elevated/40 transition-colors">
       {/* Entity */}
       <td className="px-4 py-3">
@@ -652,6 +664,16 @@ function WatchlistRow({
       {/* Actions */}
       <td className="px-4 py-3">
         <div className="flex items-center justify-end gap-1">
+          {/* Factor attribution expand — vendor only */}
+          {item.item_type === 'vendor' && (
+            <button
+              onClick={() => setExpanded((v) => !v)}
+              title={expanded ? 'Hide risk factors' : 'Show risk factors'}
+              className="p-1 rounded hover:bg-accent/10 text-text-muted hover:text-accent transition-colors"
+            >
+              {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </button>
+          )}
           {/* Investigate button — only for vendor/institution */}
           {item.item_type !== 'contract' && (
             <button
@@ -668,6 +690,44 @@ function WatchlistRow({
         </div>
       </td>
     </tr>
+    {/* Factor attribution expansion row */}
+    {expanded && item.item_type === 'vendor' && (
+      <tr className="bg-background-elevated/30 border-b border-border/30">
+        <td colSpan={9} className="px-6 py-3">
+          {factorsLoading ? (
+            <p className="text-xs text-text-muted italic">Loading risk factors…</p>
+          ) : !topFactors?.factors.length ? (
+            <p className="text-xs text-text-muted">No risk factor data available for this vendor.</p>
+          ) : (
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-mono mb-2">
+                Top risk factors · {topFactors.total_contracts} contracts analysed
+              </p>
+              {topFactors.factors.map((f) => (
+                <div key={f.factor} className="flex items-center gap-3">
+                  <span className="text-xs text-text-secondary w-36 truncate capitalize font-mono">
+                    {f.factor.replace(/_/g, ' ')}
+                  </span>
+                  <div className="flex-1 h-1.5 bg-border/30 rounded-full overflow-hidden max-w-[200px]">
+                    <div
+                      className="h-full rounded-full bg-risk-high/70"
+                      style={{ width: `${Math.min(100, f.pct)}%` }}
+                    />
+                  </div>
+                  <span className="text-xs tabular-nums text-text-muted font-mono">
+                    {f.pct.toFixed(0)}%
+                  </span>
+                  <span className="text-[10px] text-text-muted">
+                    ({f.count.toLocaleString()})
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </td>
+      </tr>
+    )}
+    </>
   )
 }
 

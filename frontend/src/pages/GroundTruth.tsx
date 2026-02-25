@@ -34,6 +34,8 @@ import {
   CartesianGrid,
   Tooltip as RechartsTooltip,
   Legend,
+  Cell,
+  LabelList,
 } from '@/components/charts'
 
 // ============================================================================
@@ -241,6 +243,12 @@ export default function GroundTruth() {
     queryKey: ['detectionRate'],
     queryFn: () => analysisApi.getDetectionRate(),
     staleTime: 5 * 60 * 1000,
+  })
+
+  const { data: factorLiftData, isLoading: factorLiftLoading } = useQuery({
+    queryKey: ['factorLift'],
+    queryFn: () => analysisApi.getFactorLift(),
+    staleTime: 30 * 60 * 1000,
   })
 
   // --------------------------------------------------------------------------
@@ -586,7 +594,98 @@ export default function GroundTruth() {
       </Card>
 
       {/* ================================================================== */}
-      {/* Section C — Model Comparison Bar Chart                            */}
+      {/* Section C — Factor Lift vs Ground Truth                          */}
+      {/* ================================================================== */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Crosshair className="h-4 w-4 text-accent" aria-hidden="true" />
+            Factor Lift vs Ground Truth
+          </CardTitle>
+          <CardDescription>
+            How much more often each risk factor appears in documented corruption cases vs the general contract
+            population. Lift &gt; 1.0 = over-represented in known-bad contracts.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {factorLiftLoading ? (
+            <Skeleton className="h-64 w-full" />
+          ) : !factorLiftData?.factors.length ? (
+            <p className="text-sm text-text-secondary text-center py-8">No factor lift data available.</p>
+          ) : (
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  layout="vertical"
+                  data={factorLiftData.factors.slice(0, 12).map((f) => ({
+                    factor: f.factor.replace(/_/g, ' '),
+                    lift: parseFloat(f.lift.toFixed(2)),
+                    gt_rate: parseFloat((f.gt_rate * 100).toFixed(1)),
+                    base_rate: parseFloat((f.base_rate * 100).toFixed(1)),
+                  }))}
+                  margin={{ top: 4, right: 60, left: 100, bottom: 4 }}
+                  aria-label="Factor lift horizontal bar chart"
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} horizontal={false} />
+                  <XAxis
+                    type="number"
+                    domain={[0, 'dataMax']}
+                    tickFormatter={(v: number) => `${v}×`}
+                    tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                    axisLine={{ stroke: 'var(--color-border)' }}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="factor"
+                    width={96}
+                    tick={{ fill: 'var(--color-text-secondary)', fontSize: 9 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <RechartsTooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null
+                      const d = payload[0].payload
+                      return (
+                        <div className="rounded-lg border border-border bg-background-card p-3 shadow-lg text-xs space-y-1">
+                          <p className="font-semibold text-text-primary capitalize">{d.factor}</p>
+                          <p className="text-text-secondary">
+                            Lift: <span className="font-mono text-accent">{d.lift}×</span>
+                          </p>
+                          <p className="text-text-secondary">
+                            GT rate: <span className="font-mono">{d.gt_rate}%</span>
+                          </p>
+                          <p className="text-text-secondary">
+                            Base rate: <span className="font-mono">{d.base_rate}%</span>
+                          </p>
+                        </div>
+                      )
+                    }}
+                  />
+                  <Bar dataKey="lift" name="Lift" radius={[0, 3, 3, 0]} maxBarSize={18}>
+                    {factorLiftData.factors.slice(0, 12).map((f) => (
+                      <Cell
+                        key={f.factor}
+                        fill={f.lift >= 3 ? RISK_COLORS.critical : f.lift >= 2 ? RISK_COLORS.high : f.lift >= 1.5 ? RISK_COLORS.medium : RISK_COLORS.low}
+                        fillOpacity={0.85}
+                      />
+                    ))}
+                    <LabelList
+                      dataKey="lift"
+                      position="right"
+                      formatter={(v: number) => `${v}×`}
+                      style={{ fill: 'var(--color-text-muted)', fontSize: 9, fontFamily: 'monospace' }}
+                    />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ================================================================== */}
+      {/* Section D — Model Comparison Bar Chart                            */}
       {/* ================================================================== */}
       <Card>
         <CardHeader>

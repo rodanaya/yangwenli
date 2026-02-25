@@ -766,11 +766,19 @@ export interface ASFCaseItem {
   summary: string | null
 }
 
+export interface SATEFOSRecord {
+  rfc: string
+  company_name: string
+  stage: 'presunto' | 'definitivo' | 'favorecido' | 'desvirtuado'
+  dof_date: string | null
+}
+
 export interface VendorExternalFlags {
   vendor_id: number
   sfp_sanctions: SFPSanction[]
   rupc: RUPCVendor | null
   asf_cases: ASFCaseItem[]
+  sat_efos: SATEFOSRecord | null
 }
 
 // ============================================================================

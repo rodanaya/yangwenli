@@ -2799,6 +2799,130 @@ def get_risk_factor_analysis(
 
 
 # =============================================================================
+# FACTOR LIFT VS GROUND TRUTH ENDPOINT
+# =============================================================================
+
+class FactorLiftItem(BaseModel):
+    factor: str
+    gt_count: int
+    gt_rate: float
+    base_rate: float
+    lift: float
+
+class FactorLiftResponse(BaseModel):
+    factors: List[FactorLiftItem]
+    gt_total: int
+    population_total: int
+
+
+_factor_lift_cache: Dict[str, Any] = {}
+_factor_lift_cache_ts: float = 0
+_FACTOR_LIFT_CACHE_TTL = 1800  # 30 minutes
+
+
+@router.get("/validation/factor-lift", response_model=FactorLiftResponse)
+def get_factor_lift():
+    """
+    Per-factor lift: detection rate on ground-truth contracts vs population base rate.
+
+    lift = P(factor | ground_truth) / P(factor | all_contracts)
+    Values > 1.0 mean this factor is over-represented in known corrupt contracts.
+    """
+    from collections import Counter
+
+    global _factor_lift_cache, _factor_lift_cache_ts
+
+    now = _time.time()
+    if _factor_lift_cache and (now - _factor_lift_cache_ts) < _FACTOR_LIFT_CACHE_TTL:
+        return _factor_lift_cache
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # Ground truth vendor IDs
+            cursor.execute("""
+                SELECT DISTINCT vendor_id FROM ground_truth_vendors
+                WHERE vendor_id IS NOT NULL
+            """)
+            gt_vendor_ids = [r["vendor_id"] for r in cursor.fetchall()]
+
+            if not gt_vendor_ids:
+                result = FactorLiftResponse(factors=[], gt_total=0, population_total=0)
+                return result
+
+            placeholders = ",".join("?" * len(gt_vendor_ids))
+
+            # GT contracts with factors
+            cursor.execute(f"""
+                SELECT risk_factors FROM contracts
+                WHERE vendor_id IN ({placeholders})
+                  AND risk_factors IS NOT NULL AND risk_factors != ''
+            """, gt_vendor_ids)
+            gt_rows = cursor.fetchall()
+            gt_total = len(gt_rows)
+
+            # Population sample
+            cursor.execute("""
+                SELECT risk_factors FROM contracts
+                WHERE risk_factors IS NOT NULL AND risk_factors != ''
+                LIMIT 500000
+            """)
+            pop_rows = cursor.fetchall()
+            pop_total = len(pop_rows)
+
+            if gt_total == 0 or pop_total == 0:
+                result = FactorLiftResponse(factors=[], gt_total=gt_total, population_total=pop_total)
+                return result
+
+            def parse_factors(rows: list) -> Counter:
+                c: Counter = Counter()
+                for row in rows:
+                    seen: set = set()
+                    for token in row["risk_factors"].split(","):
+                        token = token.strip()
+                        if not token:
+                            continue
+                        base = token.split(":")[0]
+                        if base not in seen:
+                            c[base] += 1
+                            seen.add(base)
+                return c
+
+            gt_counter = parse_factors(gt_rows)
+            pop_counter = parse_factors(pop_rows)
+
+            factors: list = []
+            for factor, gt_count in gt_counter.most_common(20):
+                pop_count = pop_counter.get(factor, 0)
+                gt_rate = gt_count / gt_total
+                base_rate = pop_count / pop_total if pop_total > 0 else 0.0
+                lift = gt_rate / base_rate if base_rate > 0 else 0.0
+                factors.append(FactorLiftItem(
+                    factor=factor,
+                    gt_count=gt_count,
+                    gt_rate=round(gt_rate, 4),
+                    base_rate=round(base_rate, 4),
+                    lift=round(lift, 3),
+                ))
+
+            factors.sort(key=lambda x: x.lift, reverse=True)
+
+            result = FactorLiftResponse(
+                factors=factors[:15],
+                gt_total=gt_total,
+                population_total=pop_total,
+            )
+            _factor_lift_cache = result
+            _factor_lift_cache_ts = now
+            return result
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error in get_factor_lift: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
+# =============================================================================
 # INSTITUTION RANKINGS ENDPOINT
 # =============================================================================
 

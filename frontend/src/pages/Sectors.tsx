@@ -184,52 +184,33 @@ const SectorRankingStrip = memo(function SectorRankingStrip({
 interface SectorRadarProps {
   sector: SectorStatistics
   allSectors: SectorStatistics[]
+  compareSector?: SectorStatistics | null
 }
 
-const SectorRadar = memo(function SectorRadar({ sector, allSectors }: SectorRadarProps) {
-  const color = SECTOR_COLORS[sector.sector_code] || '#64748b'
-
-  // Normalize value concentration: sector's share of total value
+function buildRadarData(sector: SectorStatistics, allSectors: SectorStatistics[]) {
   const totalValue = allSectors.reduce((s, sec) => s + sec.total_value_mxn, 0)
   const valueSharePct = totalValue > 0 ? (sector.total_value_mxn / totalValue) * 100 : 0
-  // Normalize volume: contracts as pct of max
   const maxContracts = Math.max(...allSectors.map((s) => s.total_contracts), 1)
   const volumePct = (sector.total_contracts / maxContracts) * 100
-
-  const radarData = [
-    {
-      subject: 'Direct Award',
-      value: Math.min(100, sector.direct_award_pct ?? 0),
-      fullMark: 100,
-    },
-    {
-      subject: 'Single Bid',
-      value: Math.min(100, sector.single_bid_pct ?? 0),
-      fullMark: 100,
-    },
-    {
-      subject: 'Avg Risk',
-      // 0.5 risk → 100 on the radar
-      value: Math.min(100, (sector.avg_risk_score ?? 0) * 200),
-      fullMark: 100,
-    },
-    {
-      subject: 'High Risk %',
-      value: Math.min(100, sector.high_risk_pct ?? 0),
-      fullMark: 100,
-    },
-    {
-      subject: 'Value Share',
-      // normalize to max possible share (capped at 50% = 100 on radar)
-      value: Math.min(100, valueSharePct * 2),
-      fullMark: 100,
-    },
-    {
-      subject: 'Volume',
-      value: Math.min(100, volumePct),
-      fullMark: 100,
-    },
+  return [
+    { subject: 'Direct Award', value: Math.min(100, sector.direct_award_pct ?? 0), fullMark: 100 },
+    { subject: 'Single Bid',   value: Math.min(100, sector.single_bid_pct ?? 0),   fullMark: 100 },
+    { subject: 'Avg Risk',     value: Math.min(100, (sector.avg_risk_score ?? 0) * 200), fullMark: 100 },
+    { subject: 'High Risk %',  value: Math.min(100, sector.high_risk_pct ?? 0),    fullMark: 100 },
+    { subject: 'Value Share',  value: Math.min(100, valueSharePct * 2),             fullMark: 100 },
+    { subject: 'Volume',       value: Math.min(100, volumePct),                    fullMark: 100 },
   ]
+}
+
+const SectorRadar = memo(function SectorRadar({ sector, allSectors, compareSector }: SectorRadarProps) {
+  const color = SECTOR_COLORS[sector.sector_code] || '#64748b'
+  const compareColor = compareSector ? (SECTOR_COLORS[compareSector.sector_code] || '#64748b') : null
+
+  // Merge primary + compare data into single series for RadarChart
+  const radarData = buildRadarData(sector, allSectors).map((d, i) => ({
+    ...d,
+    compareValue: compareSector ? buildRadarData(compareSector, allSectors)[i].value : undefined,
+  }))
 
   return (
     <div className="flex flex-col items-center">
@@ -239,12 +220,7 @@ const SectorRadar = memo(function SectorRadar({ sector, allSectors }: SectorRada
           dataKey="subject"
           tick={{ fill: '#8b949e', fontSize: 10, fontFamily: 'var(--font-mono, monospace)' }}
         />
-        <PolarRadiusAxis
-          angle={90}
-          domain={[0, 100]}
-          tick={false}
-          axisLine={false}
-        />
+        <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
         <Radar
           name={getSectorNameEN(sector.sector_code)}
           dataKey="value"
@@ -253,9 +229,22 @@ const SectorRadar = memo(function SectorRadar({ sector, allSectors }: SectorRada
           fillOpacity={0.25}
           strokeWidth={1.5}
         />
+        {compareSector && compareColor && (
+          <Radar
+            name={getSectorNameEN(compareSector.sector_code)}
+            dataKey="compareValue"
+            stroke={compareColor}
+            fill={compareColor}
+            fillOpacity={0.15}
+            strokeWidth={1.5}
+            strokeDasharray="4 2"
+          />
+        )}
       </RadarChart>
       <p className="text-[10px] text-text-muted font-mono text-center -mt-2">
-        Risk dimensions for {getSectorNameEN(sector.sector_code)} · all axes 0–100
+        {compareSector
+          ? `${getSectorNameEN(sector.sector_code)} vs ${getSectorNameEN(compareSector.sector_code)} · all axes 0–100`
+          : `Risk dimensions for ${getSectorNameEN(sector.sector_code)} · all axes 0–100`}
       </p>
     </div>
   )
@@ -270,6 +259,7 @@ export function Sectors() {
   const [sortField, setSortField] = useState<SortField>('total_value_mxn')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [selectedSectorCode, setSelectedSectorCode] = useState<string | null>(null)
+  const [compareSectorCode, setCompareSectorCode] = useState<string | null>(null)
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['sectors'],
@@ -365,6 +355,11 @@ export function Sectors() {
     return data.data.find((s) => s.sector_code === selectedSectorCode) ?? null
   }, [selectedSectorCode, data])
 
+  const compareSector = useMemo(() => {
+    if (!compareSectorCode || !data?.data) return null
+    return data.data.find((s) => s.sector_code === compareSectorCode) ?? null
+  }, [compareSectorCode, data])
+
   const handleSectorClick = (sectorName: string) => {
     const sector = data?.data.find((s) => getSectorNameEN(s.sector_code) === sectorName)
     if (sector) navigate(`/sectors/${sector.sector_id}`)
@@ -445,7 +440,7 @@ export function Sectors() {
           <SectorRankingStrip
             sectors={data.data}
             selectedCode={selectedSectorCode}
-            onSelect={setSelectedSectorCode}
+            onSelect={(code) => { setSelectedSectorCode(code); setCompareSectorCode(null) }}
           />
         </div>
       )}
@@ -467,6 +462,22 @@ export function Sectors() {
                 </h3>
               </div>
               <div className="flex items-center gap-3">
+                {/* Compare dropdown */}
+                <select
+                  value={compareSectorCode ?? ''}
+                  onChange={(e) => setCompareSectorCode(e.target.value || null)}
+                  className="text-xs bg-background border border-border rounded px-2 py-0.5 text-text-secondary focus:outline-none focus:border-accent"
+                  aria-label="Compare with sector"
+                >
+                  <option value="">Compare…</option>
+                  {data.data
+                    .filter((s) => s.sector_code !== selectedSector.sector_code)
+                    .map((s) => (
+                      <option key={s.sector_code} value={s.sector_code}>
+                        {getSectorNameEN(s.sector_code)}
+                      </option>
+                    ))}
+                </select>
                 <button
                   onClick={() => navigate(`/sectors/${selectedSector.sector_id}`)}
                   className="text-xs text-accent flex items-center gap-1 hover:underline"
@@ -474,7 +485,7 @@ export function Sectors() {
                   Full profile ↗
                 </button>
                 <button
-                  onClick={() => setSelectedSectorCode(null)}
+                  onClick={() => { setSelectedSectorCode(null); setCompareSectorCode(null) }}
                   className="text-text-muted hover:text-text-primary"
                   aria-label="Close radar"
                 >
@@ -484,7 +495,7 @@ export function Sectors() {
             </div>
             <div className="grid gap-4 md:grid-cols-2 items-center">
               {/* Radar chart */}
-              <SectorRadar sector={selectedSector} allSectors={data.data} />
+              <SectorRadar sector={selectedSector} allSectors={data.data} compareSector={compareSector} />
               {/* Key stats sidebar */}
               <div className="space-y-2.5">
                 {[

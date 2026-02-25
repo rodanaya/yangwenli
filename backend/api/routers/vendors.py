@@ -68,6 +68,7 @@ class ExternalFlagsResponse(BaseModel):
     sfp_sanctions: List[Dict[str, Any]]
     rupc: Optional[Dict[str, Any]]
     asf_cases: List[Dict[str, Any]]
+    sat_efos: Optional[Dict[str, Any]]
 
 
 class RiskTimelineEntry(BaseModel):
@@ -974,6 +975,7 @@ def get_vendor_external_flags(
             "sfp_sanctions": [],
             "rupc": None,
             "asf_cases": [],
+            "sat_efos": None,
         }
 
         # --- SFP Sanctions ---
@@ -1005,6 +1007,18 @@ def get_vendor_external_flags(
                     result["rupc"] = dict(row)
             except Exception:
                 pass  # Table may not exist yet
+
+        # --- SAT EFOS ghost company list ---
+        if vendor_rfc:
+            try:
+                row = cursor.execute(
+                    "SELECT rfc, company_name, stage, dof_date FROM sat_efos_vendors WHERE rfc = ?",
+                    (vendor_rfc,),
+                ).fetchone()
+                if row:
+                    result["sat_efos"] = dict(row)
+            except Exception:
+                pass  # Table may be empty
 
         # --- ASF cases (existing table) ---
         try:
@@ -1078,6 +1092,52 @@ def get_vendor_risk_timeline(
             "vendor_name": vendor["name"],
             "timeline": timeline,
         }
+
+
+@router.get("/{vendor_id:int}/top-factors")
+def get_vendor_top_factors(
+    vendor_id: int = Path(..., description="Vendor ID"),
+    limit: int = Query(5, ge=1, le=15),
+):
+    """
+    Top risk factors (by frequency) across this vendor's contracts.
+    Used by the Watchlist for delta attribution context.
+    """
+    from collections import Counter
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT name FROM vendors WHERE id = ?", (vendor_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
+
+        cursor.execute("""
+            SELECT risk_factors, COUNT(*) AS cnt
+            FROM contracts
+            WHERE vendor_id = ?
+              AND risk_factors IS NOT NULL AND risk_factors != ''
+            GROUP BY risk_factors
+            ORDER BY cnt DESC
+            LIMIT 2000
+        """, (vendor_id,))
+
+        factor_counter: Counter = Counter()
+        total_contracts = 0
+        for row in cursor.fetchall():
+            for token in row["risk_factors"].split(","):
+                token = token.strip()
+                if not token:
+                    continue
+                base = token.split(":")[0]
+                factor_counter[base] += row["cnt"]
+            total_contracts += row["cnt"]
+
+        factors = [
+            {"factor": f, "count": c, "pct": round(c / total_contracts * 100, 1) if total_contracts > 0 else 0}
+            for f, c in factor_counter.most_common(limit)
+        ]
+        return {"vendor_id": vendor_id, "total_contracts": total_contracts, "factors": factors}
 
 
 @router.get("/{vendor_id:int}/ai-summary", response_model=VendorAISummaryResponse)
