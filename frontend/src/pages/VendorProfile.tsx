@@ -1765,10 +1765,58 @@ function ExternalFlagsPanel({ flags }: { flags: VendorExternalFlags | undefined 
         )}
       </div>
 
+      {/* SAT Art. 69-B EFOS */}
+      <div>
+        <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wide mb-3">
+          SAT Art. 69-B Ghost Company List
+        </h3>
+        {hasEFOS ? (
+          <div className={cn(
+            "p-3 rounded border",
+            isEFOSDefinitivo
+              ? "border-red-500/40 bg-red-950/15"
+              : "border-amber-500/30 bg-amber-950/10"
+          )}>
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={cn(
+                    "text-xs font-semibold px-1.5 py-0.5 rounded uppercase tracking-wide",
+                    isEFOSDefinitivo
+                      ? "bg-red-500/20 text-red-300"
+                      : "bg-amber-500/20 text-amber-300"
+                  )}>
+                    {flags.sat_efos!.stage}
+                  </span>
+                </div>
+                <p className="text-sm font-medium text-text-primary">{flags.sat_efos!.company_name}</p>
+                {flags.sat_efos!.dof_date && (
+                  <p className="text-xs text-text-muted mt-0.5">Published DOF: {flags.sat_efos!.dof_date}</p>
+                )}
+                <p className="text-xs text-text-muted mt-1">
+                  {isEFOSDefinitivo
+                    ? "Confirmed ghost company — invoices from this vendor are presumed fraudulent under Art. 69-B CFF."
+                    : flags.sat_efos!.stage === 'presunto'
+                    ? "Under review as presumed ghost company (Art. 69-B CFF)."
+                    : flags.sat_efos!.stage === 'favorecido'
+                    ? "Received invoices from a confirmed ghost company."
+                    : "Successfully challenged Art. 69-B classification."}
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-text-muted italic">
+            Not found on SAT Art. 69-B EFOS/EDOS ghost company list.
+          </p>
+        )}
+      </div>
+
       {/* Data source notice */}
       <p className="text-xs text-text-muted border-t border-border/30 pt-4">
         External data is loaded from public registries and may be incomplete. SFP sanctions and RUPC data
         must be refreshed manually via backend scripts. ASF coverage depends on web scraping availability.
+        SAT Art. 69-B list updated monthly via <code className="font-mono">scripts/load_sat_efos.py</code>.
       </p>
     </div>
   )
