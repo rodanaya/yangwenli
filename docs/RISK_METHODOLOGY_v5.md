@@ -1,6 +1,6 @@
 # Risk Scoring Methodology v5.0
 
-**Last Updated:** February 16, 2026 | **Contracts:** 3,110,007 | **Years:** 2002-2025
+**Last Updated:** February 26, 2026 | **Contracts:** 3,110,007 | **Years:** 2002-2025
 
 ---
 
@@ -70,10 +70,16 @@ v4.0 trained on 9 corruption cases, but 3 cases (IMSS, Segalmex, COVID-19) contr
 | **17** | **Decoaro Ghost Cleaning Company** | **Ghost companies** | **Multiple** | **1** | **46** |
 | **18** | **CONAGUA Ghost Contractor Rotation** | **Ghost companies** | **Ambiente** | **3** | **29** |
 | **19** | **SEGOB-Mainbit IT Monopoly** | **Monopoly** | **Gobernacion** | **1** | **604** |
+| **20** | **IMSS Overpriced Medicines (Ethomedical Network)** | **Overpricing** | **Salud** | — | — |
+| **21** | **Tren Maya Direct Award Irregularities (FONATUR)** | **Procurement fraud** | **Infraestructura** | — | — |
+| **22** | **SAT EFOS Art. 69-B Definitivo Ghost Network** | **Ghost companies** | **Multiple** | **38** | **122** |
 
-**Total (v5.0.1):** 27 matched vendors, 26,582 contracts across all 12 sectors.
+**Total (v5.0.1, active model):** 27 matched vendors, 26,582 contracts across all 12 sectors.
+
+**Pending v5.1 retrain:** Cases 20–22 inserted in DB but model not yet retrained. Case 22 adds 38 RFC-matched vendors (SAT-confirmed ghost companies), targeting a fraud pattern currently invisible to the model (avg risk score 0.028 on confirmed EFOS definitivo vendors). See v5.1 roadmap below.
 
 *Case 9 shares vendors with Case 5 (Odebrecht). Documented for reference.
+†Cases 20–21 inserted in ground_truth_cases; vendor matching pending.
 
 ---
 
@@ -254,6 +260,20 @@ v5.0 expands from 12 to 16 z-score features by adding 4 new vendor-behavior feat
 - PEMEX-Cotemar (100% critical), SixSigma (87.8% high+)
 - IPN Cartel (64.6% high+) — smaller vendor, less concentrated
 
+### Known Blind Spot: SAT EFOS Definitivo (Case 22)
+
+**38 confirmed ghost companies score avg 0.028 under the current v5.0 model — below the medium threshold.**
+
+This is Limitation 9.2 in practice: the model was trained on large, concentrated vendors. EFOS definitivo companies are small shells with few contracts per RFC, so `vendor_concentration`, `price_volatility`, and `win_rate` all stay near zero. The pattern is fundamentally different:
+
+| Feature | Training cases (IMSS etc.) | EFOS definitivo vendors |
+|---------|---------------------------|------------------------|
+| Avg contracts per vendor | 1,565 | 3 |
+| Vendor concentration | High | Near zero |
+| Pattern | Large monopoly | Small shell + invoice fraud |
+
+Case 22 is in the DB and will be included in the v5.1 retraining.
+
 ---
 
 ## 7. Risk Level Thresholds
@@ -366,7 +386,8 @@ Scores are **investigation triage**, not verdicts.
 | Limitation | Impact | Fixable? |
 |-----------|--------|----------|
 | Execution-phase fraud invisible | Construction/infrastructure underscored | Partial (needs ASF data) |
-| Training bias (3 dominant cases) | Small-vendor corruption underdetected | Yes (more ground truth) |
+| Training bias (3 dominant cases) | Small-vendor corruption underdetected | Yes (more ground truth — Case 22 in v5.1) |
+| **Ghost company blind spot** | **EFOS definitivo vendors score avg 0.028** | **Yes (Case 22 pending v5.1 retrain)** |
 | Vendor deduplication unsolved | True concentration understated pre-2018 | Partial (RFC blocking) |
 | Co-bidding signal = zero | Bid rotation not in risk score | Yes (needs collusion ground truth) |
 | Pre-2010 data quality | 25% of records less reliable | No (structural COMPRANET limit) |
@@ -428,6 +449,7 @@ python -m scripts.precompute_stats
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
+| **5.1.0** | TBD | Ground truth expansion: Case 22 (SAT EFOS, 38 vendors), Cases 20–21 (pending vendor match). External data integration: SAT EFOS 13,960 records, SFP sanctions 1,954 records (22 RFC-matched). ASF audit findings (scraper in progress). Ghost company blind spot fix. |
 | **5.0.1** | 2026-02-16 | Updated docs to match database: 16 features (4 new behavioral), Train AUC 0.967, Test AUC 0.960, c=0.887, C=10.0/l1=0.25. Fixed views referencing empty risk_scores table. **Active version.** |
 | **5.0.0** | 2026-02-14 | Per-sector sub-models, diversified ground truth (15 cases, 27 vendors), temporal train/test split, Elkan & Noto PU correction, cross-validated ElasticNet. |
 | 4.0.2 | 2026-02-09 | Dampened coefficients, OECD-compliant thresholds. AUC 0.942. |
