@@ -1321,3 +1321,39 @@ export interface ThresholdGamingResponse {
   by_sector: ThresholdGamingSector[]
 }
 
+// ============================================================================
+// ASF Institution Findings Types
+// ============================================================================
+
+export interface ASFInstitutionFinding {
+  year: number
+  observations_total: number | null
+  amount_mxn: number | null
+  observations_solved: number | null
+  finding_type: string | null
+  recovery_rate: number | null
+}
+
+export interface ASFInstitutionResponse {
+  institution_id: number
+  ramo_code: number | null
+  findings: ASFInstitutionFinding[]
+  total_amount_mxn: number
+  years_audited: number
+}
+
+export interface SectorASFFinding {
+  year: number
+  total_observations: number
+  total_amount_mxn: number
+  institutions_audited: number
+  observations_solved: number
+}
+
+export interface SectorASFResponse {
+  sector_id: number
+  sector_name: string
+  findings: SectorASFFinding[]
+  total_amount_mxn: number
+  years_audited: number
+}

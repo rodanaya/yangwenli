@@ -56,6 +56,8 @@ import type {
   ExecutiveSummaryResponse,
   FastDashboardData,
   RiskExplanation,
+  ASFInstitutionResponse,
+  SectorASFResponse,
 } from './types'
 
 // API Base URL - proxied through Vite in development
@@ -461,6 +463,14 @@ export const institutionApi = {
     const { data } = await api.get<ConcentrationRankingsResponse>(`/institutions/concentration-rankings?${q}`)
     return data
   },
+
+  /**
+   * Get ASF audit findings for an institution
+   */
+  async getASFFindings(institutionId: number): Promise<ASFInstitutionResponse> {
+    const { data } = await api.get<ASFInstitutionResponse>(`/institutions/${institutionId}/asf-findings`)
+    return data
+  },
 }
 
 // ============================================================================
@@ -824,6 +834,14 @@ export const analysisApi = {
 
   async getThresholdGaming(): Promise<ThresholdGamingResponse> {
     const { data } = await api.get<ThresholdGamingResponse>('/analysis/threshold-gaming')
+    return data
+  },
+
+  /**
+   * Get ASF audit findings for a sector
+   */
+  async getSectorASFFindings(sectorId: number): Promise<SectorASFResponse> {
+    const { data } = await api.get<SectorASFResponse>(`/analysis/sectors/${sectorId}/asf-findings`)
     return data
   },
 }

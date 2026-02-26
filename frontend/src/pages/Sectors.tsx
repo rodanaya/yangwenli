@@ -18,7 +18,7 @@ import { sectorApi, analysisApi, institutionApi } from '@/api/client'
 import { SECTOR_COLORS, SECTORS, getSectorNameEN } from '@/lib/constants'
 import { Heatmap } from '@/components/charts/Heatmap'
 import type { SectorStatistics } from '@/api/types'
-import { BarChart3, Layers, X } from 'lucide-react'
+import { AlertTriangle, BarChart3, Layers, X } from 'lucide-react'
 import { ScrollReveal } from '@/hooks/useAnimations'
 import { StatCard as SharedStatCard } from '@/components/DashboardWidgets'
 import {
@@ -38,6 +38,7 @@ import {
   PolarRadiusAxis,
   LineChart,
   Line,
+  ComposedChart,
   ScatterChart,
   Scatter,
   ZAxis,
@@ -295,6 +296,13 @@ export function Sectors() {
     staleTime: 60 * 60 * 1000,
   })
 
+  const { data: sectorASF } = useQuery({
+    queryKey: ['sector-asf-findings', selectedSector?.sector_id],
+    queryFn: () => analysisApi.getSectorASFFindings(selectedSector!.sector_id),
+    staleTime: 24 * 60 * 60 * 1000,
+    enabled: !!selectedSector?.sector_id,
+  })
+
   // ---- Sparkline data: per-sector avg_risk by year ----
   const sparklinesBySector = useMemo(() => {
     const items = sectorYearResp?.data ?? []
@@ -529,6 +537,55 @@ export function Sectors() {
                 ))}
               </div>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {sectorASF && sectorASF.findings.length > 0 && (
+        <Card className="mt-4">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              ASF Audit History · {sectorASF.sector_name}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-3 mb-3 text-center text-sm">
+              <div>
+                <div className="font-semibold">{formatCompactMXN(sectorASF.total_amount_mxn)}</div>
+                <div className="text-xs text-muted-foreground">Total Questioned</div>
+              </div>
+              <div>
+                <div className="font-semibold">{sectorASF.years_audited}</div>
+                <div className="text-xs text-muted-foreground">Years Audited</div>
+              </div>
+              <div>
+                <div className="font-semibold">
+                  {sectorASF.findings.reduce((s, f) => s + f.institutions_audited, 0)}
+                </div>
+                <div className="text-xs text-muted-foreground">Institutions</div>
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={120}>
+              <ComposedChart data={sectorASF.findings} margin={{ top: 4, right: 8, bottom: 4, left: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+                <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                <YAxis tickFormatter={(v: number) => `${(v / 1e9).toFixed(0)}B`} tick={{ fontSize: 10 }} />
+                <RechartsTooltip formatter={(value: unknown) => [formatCompactMXN(value as number), 'Questioned']} />
+                <Bar dataKey="total_amount_mxn" fill="#ef4444" opacity={0.5} />
+                <Bar
+                  dataKey="total_amount_mxn"
+                  fill="#22c55e"
+                  opacity={0.6}
+                  data={sectorASF.findings.map(f => ({
+                    ...f,
+                    total_amount_mxn: f.observations_solved > 0
+                      ? (f.total_amount_mxn * f.observations_solved / Math.max(f.total_observations, 1))
+                      : 0
+                  }))}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       )}

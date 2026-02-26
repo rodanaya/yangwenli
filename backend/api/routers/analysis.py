@@ -26,6 +26,7 @@ from ..helpers.analysis_helpers import (
     pct_change,
 )
 from ..services.analysis_service import analysis_service
+from ..models.asf import SectorASFResponse, SectorASFFinding
 
 logger = logging.getLogger(__name__)
 
@@ -3592,3 +3593,100 @@ def get_threshold_gaming():
 
         _threshold_gaming_cache["tg"] = {"ts": _time.time(), "data": result}
         return result
+
+
+# ---------------------------------------------------------------------------
+# ASF sector-level findings
+# ---------------------------------------------------------------------------
+
+# Sector-to-ramo mapping (from CLAUDE.md taxonomy)
+_SECTOR_RAMOS: dict[int, list[int]] = {
+    1: [12, 50, 51],              # salud
+    2: [11, 25, 48],              # educacion
+    3: [9, 15, 21],               # infraestructura
+    4: [18, 45, 46, 52, 53],      # energia
+    5: [7, 13],                   # defensa
+    6: [38, 42],                  # tecnologia
+    7: [6, 23, 24],               # hacienda
+    8: [1, 2, 3, 4, 5, 17, 22, 27, 35, 36, 43],  # gobernacion
+    9: [8],                       # agricultura
+    10: [16],                     # ambiente
+    11: [14, 19, 40],             # trabajo
+    12: [],                       # otros
+}
+
+_SECTOR_NAMES: dict[int, str] = {
+    1: "salud", 2: "educacion", 3: "infraestructura", 4: "energia",
+    5: "defensa", 6: "tecnologia", 7: "hacienda", 8: "gobernacion",
+    9: "agricultura", 10: "ambiente", 11: "trabajo", 12: "otros",
+}
+
+_asf_sector_cache: dict = {}
+_asf_sector_cache_lock = __import__("threading").Lock()
+_ASF_SECTOR_TTL = 86400  # 24 hours
+
+
+@router.get("/sectors/{sector_id}/asf-findings", response_model=SectorASFResponse)
+def get_sector_asf_findings(sector_id: int = Path(..., ge=1, le=12)):
+    """Get ASF audit findings aggregated for a sector."""
+    import threading as _threading
+
+    cache_key = f"asf_sector_{sector_id}"
+    with _asf_sector_cache_lock:
+        entry = _asf_sector_cache.get(cache_key)
+        if entry and __import__("datetime").datetime.now() < entry["expires_at"]:
+            return entry["value"]
+
+    ramo_codes = _SECTOR_RAMOS.get(sector_id, [])
+    sector_name = _SECTOR_NAMES.get(sector_id, "otros")
+
+    findings: list[SectorASFFinding] = []
+    total_amount = 0.0
+
+    if ramo_codes:
+        placeholders = ",".join("?" * len(ramo_codes))
+        with get_db() as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute(
+                f"""
+                SELECT audit_year,
+                       SUM(observations_total)            AS total_obs,
+                       SUM(amount_mxn)                    AS total_amount,
+                       COUNT(DISTINCT institution_name)   AS institutions_audited,
+                       SUM(observations_solved)           AS total_solved
+                FROM asf_institution_findings
+                WHERE ramo_code IN ({placeholders})
+                GROUP BY audit_year
+                ORDER BY audit_year
+                """,
+                ramo_codes,
+            ).fetchall()
+
+            for r in rows:
+                amt = r["total_amount"] or 0.0
+                total_amount += amt
+                findings.append(
+                    SectorASFFinding(
+                        year=r["audit_year"],
+                        total_observations=r["total_obs"] or 0,
+                        total_amount_mxn=amt,
+                        institutions_audited=r["institutions_audited"] or 0,
+                        observations_solved=r["total_solved"] or 0,
+                    )
+                )
+
+    result = SectorASFResponse(
+        sector_id=sector_id,
+        sector_name=sector_name,
+        findings=findings,
+        total_amount_mxn=total_amount,
+        years_audited=len(findings),
+    )
+
+    with _asf_sector_cache_lock:
+        from datetime import datetime as _dt, timedelta as _td
+        _asf_sector_cache[cache_key] = {
+            "value": result,
+            "expires_at": _dt.now() + _td(seconds=_ASF_SECTOR_TTL),
+        }
+    return result

@@ -47,6 +47,9 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip as RechartsTooltip,
+  ComposedChart,
+  Bar,
+  Line,
 } from '@/components/charts'
 
 // ─── Risk level palette ───────────────────────────────────────────────────────
@@ -133,6 +136,13 @@ export function InstitutionProfile() {
     queryFn: () => institutionApi.getPeerComparison(institutionId),
     enabled: !!institutionId,
     staleTime: 10 * 60 * 1000,
+  })
+
+  const { data: asfData, isLoading: asfLoading } = useQuery({
+    queryKey: ['institution-asf-findings', institutionId],
+    queryFn: () => institutionApi.getASFFindings(institutionId),
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    enabled: !!institutionId,
   })
 
   // ── Derived values ──────────────────────────────────────────────────────────
@@ -691,6 +701,67 @@ export function InstitutionProfile() {
                 </ScrollArea>
               ) : (
                 <p className="p-4 text-sm text-text-muted">No contracts found</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* ASF Audit Findings */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                ASF Audit Findings
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {asfLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-12" />
+                  <Skeleton className="h-12" />
+                  <Skeleton className="h-8" />
+                </div>
+              ) : !asfData || asfData.findings.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No ASF audit findings on record</p>
+              ) : (
+                <div className="space-y-4">
+                  {/* KPI strip */}
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div>
+                      <div className="text-lg font-semibold">{formatCompactMXN(asfData.total_amount_mxn)}</div>
+                      <div className="text-xs text-muted-foreground">Total Questioned</div>
+                    </div>
+                    <div>
+                      <div className="text-lg font-semibold">{asfData.years_audited}</div>
+                      <div className="text-xs text-muted-foreground">Years Audited</div>
+                    </div>
+                    <div>
+                      <div className="text-lg font-semibold">
+                        {asfData.findings[asfData.findings.length - 1]?.recovery_rate != null
+                          ? `${((asfData.findings[asfData.findings.length - 1].recovery_rate ?? 0) * 100).toFixed(0)}%`
+                          : 'N/A'}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Solved Rate</div>
+                    </div>
+                  </div>
+                  {/* Bar + line chart */}
+                  <ResponsiveContainer width="100%" height={160}>
+                    <ComposedChart data={asfData.findings} margin={{ top: 4, right: 8, bottom: 4, left: 8 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
+                      <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                      <YAxis yAxisId="left" tickFormatter={(v: number) => `${(v / 1e9).toFixed(1)}B`} tick={{ fontSize: 10 }} />
+                      <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
+                      <RechartsTooltip
+                        formatter={(value: unknown, name: string) => {
+                          const num = value as number
+                          if (name === 'amount_mxn') return [formatCompactMXN(num), 'Amount']
+                          return [num, name === 'observations_total' ? 'Observations' : 'Solved']
+                        }}
+                      />
+                      <Bar yAxisId="left" dataKey="amount_mxn" fill="hsl(var(--muted))" opacity={0.8} name="amount_mxn" />
+                      <Line yAxisId="right" type="monotone" dataKey="observations_total" stroke="#f59e0b" dot={false} name="observations_total" />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
               )}
             </CardContent>
           </Card>

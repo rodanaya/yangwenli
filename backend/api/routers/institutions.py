@@ -35,6 +35,7 @@ from ..models.common import PaginationMeta
 from ..models.contract import ContractListItem, ContractListResponse, PaginationMeta as ContractPaginationMeta
 from pydantic import BaseModel
 from ..services.institution_service import institution_service
+from ..models.asf import ASFInstitutionResponse, ASFInstitutionFinding
 
 logger = logging.getLogger(__name__)
 
@@ -1587,3 +1588,80 @@ def get_institution_officials(
             ),
             "data_available": has_oficial_firmante and len(officials) > 0,
         }
+
+
+# ---------------------------------------------------------------------------
+# ASF (Auditoría Superior de la Federación) findings for an institution
+# ---------------------------------------------------------------------------
+
+# Simple 24h cache for ASF findings (changes at most annually)
+_asf_inst_cache: Dict[str, Any] = {}
+_asf_inst_cache_lock = threading.Lock()
+_ASF_INST_CACHE_TTL = 86400  # 24 hours
+
+
+@router.get("/{institution_id:int}/asf-findings", response_model=ASFInstitutionResponse)
+def get_institution_asf_findings(institution_id: int = Path(..., ge=1)):
+    """Get ASF audit findings for an institution by its ramo_id."""
+    import sqlite3 as _sqlite3
+
+    cache_key = f"asf_inst_{institution_id}"
+    with _asf_inst_cache_lock:
+        entry = _asf_inst_cache.get(cache_key)
+        if entry and datetime.now() < entry["expires_at"]:
+            return entry["value"]
+
+    with get_db() as conn:
+        conn.row_factory = _sqlite3.Row
+        # Get institution's ramo_id
+        inst = conn.execute(
+            "SELECT id, ramo_id FROM institutions WHERE id = ?",
+            (institution_id,),
+        ).fetchone()
+        if not inst:
+            raise HTTPException(status_code=404, detail="Institution not found")
+
+        ramo_code = inst["ramo_id"]
+        findings = []
+        if ramo_code:
+            rows = conn.execute(
+                """
+                SELECT audit_year, observations_total, amount_mxn,
+                       observations_solved, finding_type
+                FROM asf_institution_findings
+                WHERE ramo_code = ?
+                ORDER BY audit_year
+                """,
+                (ramo_code,),
+            ).fetchall()
+
+            for r in rows:
+                obs_total = r["observations_total"] or 0
+                obs_solved = r["observations_solved"] or 0
+                recovery_rate = (obs_solved / obs_total) if obs_total > 0 else None
+                findings.append(
+                    ASFInstitutionFinding(
+                        year=r["audit_year"],
+                        observations_total=r["observations_total"],
+                        amount_mxn=r["amount_mxn"],
+                        observations_solved=r["observations_solved"],
+                        finding_type=r["finding_type"],
+                        recovery_rate=round(recovery_rate, 3) if recovery_rate is not None else None,
+                    )
+                )
+
+        total_amount = sum(f.amount_mxn or 0 for f in findings)
+        result = ASFInstitutionResponse(
+            institution_id=institution_id,
+            ramo_code=ramo_code,
+            findings=findings,
+            total_amount_mxn=total_amount,
+            years_audited=len(findings),
+        )
+
+    with _asf_inst_cache_lock:
+        _asf_inst_cache[cache_key] = {
+            "value": result,
+            "expires_at": datetime.now() + timedelta(seconds=_ASF_INST_CACHE_TTL),
+        }
+    return result
