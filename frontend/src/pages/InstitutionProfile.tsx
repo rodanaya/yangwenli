@@ -121,6 +121,20 @@ export function InstitutionProfile() {
     staleTime: 5 * 60 * 1000,
   })
 
+  const { data: vendorLoyalty, isLoading: loyaltyLoading } = useQuery({
+    queryKey: ['institution', institutionId, 'vendor-loyalty'],
+    queryFn: () => institutionApi.getVendorLoyalty(institutionId, 10),
+    enabled: !!institutionId,
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const { data: peerComparison, isLoading: peerLoading } = useQuery({
+    queryKey: ['institution', institutionId, 'peer-comparison'],
+    queryFn: () => institutionApi.getPeerComparison(institutionId),
+    enabled: !!institutionId,
+    staleTime: 10 * 60 * 1000,
+  })
+
   // ── Derived values ──────────────────────────────────────────────────────────
 
   const riskScore = institution?.risk_baseline ?? institution?.avg_risk_score ?? 0
@@ -385,6 +399,77 @@ export function InstitutionProfile() {
             </CardContent>
           </Card>
 
+          {/* Peer Comparison */}
+          {(peerLoading || peerComparison) && (
+          <Card className="border-border/40">
+            <CardHeader className="pb-2 pt-4">
+              <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                <Users className="h-3.5 w-3.5 text-accent" />
+                Peer Comparison
+                {peerComparison && (
+                  <span className="ml-auto text-[10px] font-normal text-text-muted normal-case">
+                    vs {peerComparison.peer_count} peers
+                  </span>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pb-4">
+              {peerLoading ? (
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, i) => <div key={i} className="space-y-1"><div className="h-3 w-24 bg-background-elevated rounded" /><div className="h-2 bg-background-elevated rounded" /></div>)}
+                </div>
+              ) : peerComparison?.metrics?.length ? (
+                <div className="space-y-3.5">
+                  {peerComparison.metrics.map((m) => {
+                    const pct = m.percentile
+                    const isWorse = pct > 75
+                    const isBetter = pct < 25
+                    const markerColor = isWorse ? '#dc2626' : isBetter ? '#16a34a' : '#eab308'
+                    return (
+                      <div key={m.metric}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs text-text-secondary">{m.label}</span>
+                          <span className="text-xs font-mono font-bold" style={{ color: markerColor }}>
+                            P{pct}
+                          </span>
+                        </div>
+                        {/* Strip: full width = peer range, shaded band = p25-p75, marker = this institution */}
+                        <div className="relative h-2 rounded-full bg-background-elevated overflow-visible">
+                          {/* IQR band */}
+                          <div
+                            className="absolute top-0 h-full rounded-full bg-text-muted/20"
+                            style={{
+                              left: `${m.peer_p25}%`,
+                              width: `${m.peer_p75 - m.peer_p25}%`,
+                            }}
+                          />
+                          {/* Median line */}
+                          <div
+                            className="absolute top-0 h-full w-px bg-text-muted/50"
+                            style={{ left: `${m.peer_median}%` }}
+                          />
+                          {/* This institution marker */}
+                          <div
+                            className="absolute top-1/2 -translate-y-1/2 h-3 w-1.5 rounded-sm"
+                            style={{ left: `${pct}%`, backgroundColor: markerColor }}
+                          />
+                        </div>
+                        <div className="flex justify-between mt-0.5 text-[10px] text-text-muted/60 font-mono">
+                          <span>min</span>
+                          <span>median</span>
+                          <span>max</span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <p className="text-xs text-text-muted">Insufficient peers for comparison</p>
+              )}
+            </CardContent>
+          </Card>
+          )}
+
         </div>
 
         {/* RIGHT COLUMN (2/3) */}
@@ -453,6 +538,84 @@ export function InstitutionProfile() {
               )}
             </CardContent>
           </Card>
+
+          {/* Vendor Loyalty Heatmap */}
+          {(loyaltyLoading || (vendorLoyalty?.vendors?.length ?? 0) > 0) && (
+          <Card className="border-border/40">
+            <CardHeader className="pb-2 pt-4">
+              <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                <TrendingUp className="h-3.5 w-3.5 text-accent" />
+                Vendor Loyalty — Long-term Relationships
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pb-4">
+              {loyaltyLoading ? (
+                <Skeleton className="h-32" />
+              ) : vendorLoyalty && vendorLoyalty.vendors.length > 0 ? (
+                <div className="overflow-x-auto">
+                  {/* Show last 8 years as columns */}
+                  {(() => {
+                    const allYears = vendorLoyalty.year_range ?? []
+                    const displayYears = allYears.slice(-8)
+                    const topVendors = vendorLoyalty.vendors.slice(0, 8)
+                    return (
+                      <table className="w-full border-separate" style={{ borderSpacing: 2 }}>
+                        <thead>
+                          <tr>
+                            <th className="text-left text-[10px] text-text-muted font-normal pb-1 pr-2 min-w-[100px]">Vendor</th>
+                            {displayYears.map((yr) => (
+                              <th key={yr} className="text-center text-[10px] text-text-muted font-mono font-normal pb-1 min-w-[28px]">{yr}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {topVendors.map((v) => {
+                            const yearMap = new Map(v.years.map((y) => [y.year, y]))
+                            return (
+                              <tr key={v.vendor_id}>
+                                <td className="pr-2 py-0.5">
+                                  <Link to={`/vendors/${v.vendor_id}`} className="text-[10px] text-text-secondary hover:text-accent truncate block max-w-[100px]" title={v.vendor_name}>
+                                    {v.vendor_name.length > 16 ? v.vendor_name.slice(0, 16) + '…' : v.vendor_name}
+                                  </Link>
+                                </td>
+                                {displayYears.map((yr) => {
+                                  const cell = yearMap.get(yr)
+                                  const risk = cell?.avg_risk ?? 0
+                                  const count = cell?.contract_count ?? 0
+                                  const intensity = Math.min(1, risk / 0.5)
+                                  const r = Math.round(74 + (248 - 74) * intensity)
+                                  const g = Math.round(222 + (113 - 222) * intensity)
+                                  const b = Math.round(128 + (113 - 128) * intensity)
+                                  const color = `rgb(${r},${g},${b})`
+                                  return (
+                                    <td key={yr} className="p-0">
+                                      <div
+                                        className="h-6 w-full rounded flex items-center justify-center text-[9px] font-mono"
+                                        style={{
+                                          backgroundColor: count > 0 ? `${color}30` : 'transparent',
+                                          border: count > 0 ? `1px solid ${color}50` : '1px solid transparent',
+                                          color: count > 0 ? color : 'transparent',
+                                        }}
+                                        title={count > 0 ? `${count} contracts · risk ${(risk * 100).toFixed(0)}%` : 'No contracts'}
+                                      >
+                                        {count > 0 ? count : ''}
+                                      </div>
+                                    </td>
+                                  )
+                                })}
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    )
+                  })()}
+                  <p className="mt-2 text-[10px] text-text-muted/50 italic">Cells show contract count · color = avg risk score</p>
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
+          )}
 
           {/* High-Risk Contracts */}
           <Card className="border-border/40">

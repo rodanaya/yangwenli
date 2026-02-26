@@ -445,6 +445,14 @@ export function VendorProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
+  // Fetch sector × institution footprint
+  const { data: footprintData } = useQuery({
+    queryKey: ['vendor', vendorId, 'footprint'],
+    queryFn: () => vendorApi.getFootprint(vendorId),
+    enabled: !!vendorId,
+    staleTime: 10 * 60 * 1000,
+  })
+
   // Determine if vendor has co-bidding risk
   const hasCoBiddingRisk = coBidders?.co_bidders?.some(
     (cb) => cb.relationship_strength === 'very_strong' || cb.relationship_strength === 'strong'
@@ -889,6 +897,72 @@ export function VendorProfile() {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Sector × Institution Footprint */}
+              {footprintData && footprintData.footprint.length > 0 && (
+              <Card className="hover-lift">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <BarChart3 className="h-4 w-4" />
+                    Procurement Footprint
+                  </CardTitle>
+                  <p className="text-xs text-text-muted mt-0.5">Sector × institution relationships, sized by total value</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-1.5 max-h-[260px] overflow-y-auto">
+                    {footprintData.footprint.slice(0, 20).map((fp, idx) => {
+                      const maxVal = footprintData.footprint[0]?.total_value ?? 1
+                      const barPct = (fp.total_value / maxVal) * 100
+                      const risk = fp.avg_risk_score ?? 0
+                      const riskIntensity = Math.min(1, risk / 0.5)
+                      const r2 = Math.round(74 + (248 - 74) * riskIntensity)
+                      const g2 = Math.round(222 + (113 - 222) * riskIntensity)
+                      const b2 = Math.round(128 + (113 - 128) * riskIntensity)
+                      const riskColor = `rgb(${r2},${g2},${b2})`
+                      const sectorColor = SECTOR_COLORS[fp.sector_name?.toLowerCase() ?? ''] || SECTOR_COLORS.otros
+                      return (
+                        <div key={idx} className="flex items-center gap-2 group">
+                          <span
+                            className="w-1 h-5 rounded-sm flex-shrink-0"
+                            style={{ backgroundColor: sectorColor }}
+                            title={fp.sector_name}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-1 mb-0.5">
+                              <Link
+                                to={`/institutions/${fp.institution_id}`}
+                                className="text-[11px] text-text-secondary hover:text-accent truncate"
+                                title={fp.institution_name}
+                              >
+                                {fp.institution_name.length > 28 ? fp.institution_name.slice(0, 28) + '…' : fp.institution_name}
+                              </Link>
+                              <div className="flex items-center gap-1.5 flex-shrink-0">
+                                <span className="text-[10px] font-mono text-text-muted">{formatCompactMXN(fp.total_value)}</span>
+                                <span
+                                  className="text-[9px] font-mono px-1 rounded"
+                                  style={{ backgroundColor: `${riskColor}20`, color: riskColor }}
+                                >
+                                  {(risk * 100).toFixed(0)}%
+                                </span>
+                              </div>
+                            </div>
+                            <div className="h-1 rounded-full bg-background-elevated overflow-hidden">
+                              <div
+                                className="h-full rounded-full"
+                                style={{ width: `${barPct}%`, backgroundColor: `${sectorColor}80` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <p className="mt-2 text-[10px] text-text-muted/50 italic">
+                    Color = sector · badge = avg risk score · sorted by total value
+                  </p>
+                </CardContent>
+              </Card>
+              )}
             </div>
             </ScrollReveal>
           </div>

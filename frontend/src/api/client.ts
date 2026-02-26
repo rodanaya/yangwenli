@@ -283,6 +283,22 @@ export const vendorApi = {
     const { data } = await api.get(`/vendors/${vendorId}/top-factors?limit=${limit}`)
     return data
   },
+
+  async getFootprint(vendorId: number): Promise<{
+    vendor_id: number
+    footprint: Array<{
+      sector_id: number
+      sector_name: string
+      institution_id: number
+      institution_name: string
+      contract_count: number
+      total_value: number
+      avg_risk_score: number | null
+    }>
+  }> {
+    const { data } = await api.get(`/vendors/${vendorId}/footprint`)
+    return data
+  },
 }
 
 // ============================================================================
@@ -362,6 +378,44 @@ export const institutionApi = {
     timeline: Array<{ year: number; avg_risk_score: number | null; contract_count: number; total_value: number }>
   }> {
     const { data } = await api.get(`/institutions/${institutionId}/risk-timeline`)
+    return data
+  },
+
+  async getVendorLoyalty(institutionId: number, topN = 15): Promise<{
+    institution_id: number
+    vendors: Array<{
+      vendor_id: number
+      vendor_name: string
+      total_value: number
+      first_year: number
+      last_year: number
+      year_count: number
+      years: Array<{ year: number; contract_count: number; total_value: number; avg_risk: number | null }>
+    }>
+    year_range: number[]
+  }> {
+    const { data } = await api.get(`/institutions/${institutionId}/vendor-loyalty?top_n=${topN}`)
+    return data
+  },
+
+  async getPeerComparison(institutionId: number): Promise<{
+    institution_id: number
+    institution_name: string
+    institution_type: string | null
+    peer_count: number
+    metrics: Array<{
+      metric: string
+      label: string
+      value: number
+      peer_min: number
+      peer_p25: number
+      peer_median: number
+      peer_p75: number
+      peer_max: number
+      percentile: number
+    }>
+  }> {
+    const { data } = await api.get(`/institutions/${institutionId}/peer-comparison`)
     return data
   },
 }

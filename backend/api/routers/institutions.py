@@ -2,8 +2,9 @@
 import math
 import logging
 import threading
+from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query, Path
 
 from ..dependencies import get_db
@@ -32,6 +33,7 @@ from ..models.institution import (
 )
 from ..models.common import PaginationMeta
 from ..models.contract import ContractListItem, ContractListResponse, PaginationMeta as ContractPaginationMeta
+from pydantic import BaseModel
 from ..services.institution_service import institution_service
 
 logger = logging.getLogger(__name__)
@@ -828,6 +830,254 @@ def get_institution_vendors(
             data=vendors,
             total=result["total_vendors"],
         )
+
+
+# =============================================================================
+# Vendor loyalty heatmap
+# =============================================================================
+
+class VendorYearPoint(BaseModel):
+    year: int
+    contract_count: int
+    total_value: float
+    avg_risk: Optional[float]
+
+class VendorLoyaltyItem(BaseModel):
+    vendor_id: int
+    vendor_name: str
+    total_value: float
+    first_year: int
+    last_year: int
+    year_count: int
+    years: List[VendorYearPoint]
+
+class VendorLoyaltyResponse(BaseModel):
+    institution_id: int
+    vendors: List[VendorLoyaltyItem]
+    year_range: List[int]
+
+_loyalty_cache: Dict[int, Any] = {}
+_loyalty_cache_ts: Dict[int, float] = {}
+_loyalty_lock = threading.Lock()
+
+@router.get("/{institution_id:int}/vendor-loyalty", response_model=VendorLoyaltyResponse)
+def get_vendor_loyalty(
+    institution_id: int = Path(...),
+    top_n: int = Query(15, ge=5, le=25),
+):
+    """
+    Per-vendor yearly contract activity for an institution.
+    Returns top N vendors by total value, with per-year breakdown.
+    Useful for detecting long-term capture relationships.
+    """
+    cache_key = institution_id * 100 + top_n
+    with _loyalty_lock:
+        ts = _loyalty_cache_ts.get(cache_key, 0)
+        if datetime.now().timestamp() - ts < 1800 and cache_key in _loyalty_cache:
+            return _loyalty_cache[cache_key]
+
+    with get_db() as conn:
+        cur = conn.cursor()
+        # Top N vendors by total value at this institution
+        cur.execute("""
+            SELECT v.id as vendor_id, v.name as vendor_name,
+                   SUM(c.amount_mxn) as total_value
+            FROM contracts c
+            JOIN vendors v ON c.vendor_id = v.id
+            WHERE c.institution_id = ?
+              AND c.amount_mxn > 0
+            GROUP BY v.id, v.name
+            ORDER BY total_value DESC
+            LIMIT ?
+        """, (institution_id, top_n))
+        top_vendors = cur.fetchall()
+
+        if not top_vendors:
+            raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found or has no vendors")
+
+        vendor_ids = [r["vendor_id"] for r in top_vendors]
+        placeholder = ",".join("?" * len(vendor_ids))
+
+        # Per-vendor, per-year breakdown
+        cur.execute(f"""
+            SELECT vendor_id, contract_year,
+                   COUNT(*) as contract_count,
+                   SUM(amount_mxn) as total_value,
+                   AVG(risk_score) as avg_risk
+            FROM contracts
+            WHERE institution_id = ?
+              AND vendor_id IN ({placeholder})
+              AND amount_mxn > 0
+            GROUP BY vendor_id, contract_year
+            ORDER BY vendor_id, contract_year
+        """, (institution_id, *vendor_ids))
+        rows = cur.fetchall()
+
+    # Build vendor → year map
+    by_vendor: Dict[int, Dict[int, dict]] = defaultdict(dict)
+    all_years: set = set()
+    for r in rows:
+        by_vendor[r["vendor_id"]][r["contract_year"]] = {
+            "contract_count": r["contract_count"],
+            "total_value": r["total_value"],
+            "avg_risk": r["avg_risk"],
+        }
+        all_years.add(r["contract_year"])
+
+    year_range = sorted(all_years)
+
+    vendor_items = []
+    for v in top_vendors:
+        vid = v["vendor_id"]
+        yd = by_vendor.get(vid, {})
+        years_with_data = sorted(yd.keys())
+        vendor_items.append(VendorLoyaltyItem(
+            vendor_id=vid,
+            vendor_name=v["vendor_name"],
+            total_value=v["total_value"],
+            first_year=min(years_with_data) if years_with_data else 0,
+            last_year=max(years_with_data) if years_with_data else 0,
+            year_count=len(years_with_data),
+            years=[
+                VendorYearPoint(
+                    year=yr,
+                    contract_count=yd[yr]["contract_count"],
+                    total_value=yd[yr]["total_value"],
+                    avg_risk=yd[yr]["avg_risk"],
+                )
+                for yr in year_range
+                if yr in yd
+            ],
+        ))
+
+    result = VendorLoyaltyResponse(
+        institution_id=institution_id,
+        vendors=vendor_items,
+        year_range=year_range,
+    )
+    with _loyalty_lock:
+        _loyalty_cache[cache_key] = result
+        _loyalty_cache_ts[cache_key] = datetime.now().timestamp()
+    return result
+
+
+# =============================================================================
+# Institution peer comparison
+# =============================================================================
+
+class PeerMetric(BaseModel):
+    metric: str
+    label: str
+    value: float
+    peer_min: float
+    peer_p25: float
+    peer_median: float
+    peer_p75: float
+    peer_max: float
+    percentile: int
+
+class PeerComparisonResponse(BaseModel):
+    institution_id: int
+    institution_name: str
+    institution_type: Optional[str]
+    peer_count: int
+    metrics: List[PeerMetric]
+
+_peer_cache: Dict[int, Any] = {}
+_peer_cache_ts: Dict[int, float] = {}
+_peer_lock = threading.Lock()
+
+def _percentile_rank(value: float, values: List[float]) -> int:
+    if not values:
+        return 50
+    below = sum(1 for v in values if v < value)
+    return round(below / len(values) * 100)
+
+@router.get("/{institution_id:int}/peer-comparison", response_model=PeerComparisonResponse)
+def get_peer_comparison(institution_id: int = Path(...)):
+    """
+    Compare an institution against peers of the same institution_type.
+    Returns percentile ranks and distribution (min/p25/median/p75/max) for
+    avg_risk_score, high_risk_pct, and direct_award_pct.
+    """
+    with _peer_lock:
+        ts = _peer_cache_ts.get(institution_id, 0)
+        if datetime.now().timestamp() - ts < 3600 and institution_id in _peer_cache:
+            return _peer_cache[institution_id]
+
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT i.id, i.name, i.institution_type,
+                   ist.avg_risk_score, ist.high_risk_pct, ist.direct_award_pct
+            FROM institutions i
+            JOIN institution_stats ist ON i.id = ist.institution_id
+            WHERE i.id = ?
+        """, (institution_id,))
+        target = cur.fetchone()
+        if not target:
+            raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
+
+        itype = target["institution_type"]
+        if itype:
+            cur.execute("""
+                SELECT ist.avg_risk_score, ist.high_risk_pct, ist.direct_award_pct
+                FROM institutions i
+                JOIN institution_stats ist ON i.id = ist.institution_id
+                WHERE i.institution_type = ?
+                  AND ist.avg_risk_score IS NOT NULL
+                  AND i.id != ?
+            """, (itype, institution_id))
+        else:
+            cur.execute("""
+                SELECT ist.avg_risk_score, ist.high_risk_pct, ist.direct_award_pct
+                FROM institution_stats ist
+                WHERE ist.avg_risk_score IS NOT NULL
+                  AND ist.institution_id != ?
+            """, (institution_id,))
+        peers = cur.fetchall()
+
+    def dist(vals: List[float], value: float) -> PeerMetric:
+        return PeerMetric(
+            metric="",
+            label="",
+            value=value,
+            peer_min=min(vals) if vals else 0.0,
+            peer_p25=sorted(vals)[len(vals)//4] if vals else 0.0,
+            peer_median=sorted(vals)[len(vals)//2] if vals else 0.0,
+            peer_p75=sorted(vals)[3*len(vals)//4] if vals else 0.0,
+            peer_max=max(vals) if vals else 0.0,
+            percentile=_percentile_rank(value, vals),
+        )
+
+    risk_vals = [p["avg_risk_score"] for p in peers if p["avg_risk_score"] is not None]
+    hr_vals   = [p["high_risk_pct"] for p in peers if p["high_risk_pct"] is not None]
+    da_vals   = [p["direct_award_pct"] for p in peers if p["direct_award_pct"] is not None]
+
+    def make_metric(key: str, label: str, val: Optional[float], peer_vals: List[float]) -> PeerMetric:
+        v = val if val is not None else 0.0
+        m = dist(peer_vals, v)
+        m.metric = key
+        m.label = label
+        return m
+
+    metrics = [
+        make_metric("avg_risk_score", "Avg Risk Score", target["avg_risk_score"], risk_vals),
+        make_metric("high_risk_pct",  "High Risk %",    target["high_risk_pct"],  hr_vals),
+        make_metric("direct_award_pct", "Direct Award %", target["direct_award_pct"], da_vals),
+    ]
+
+    result = PeerComparisonResponse(
+        institution_id=institution_id,
+        institution_name=target["name"],
+        institution_type=itype,
+        peer_count=len(peers),
+        metrics=metrics,
+    )
+    with _peer_lock:
+        _peer_cache[institution_id] = result
+        _peer_cache_ts[institution_id] = datetime.now().timestamp()
+    return result
 
 
 # =============================================================================

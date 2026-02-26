@@ -273,9 +273,12 @@ function DeltaBadge({ val, unit, invertColor }: { val: number; unit: string; inv
 // Component
 // =============================================================================
 
+type MatrixMetric = 'risk' | 'da' | 'hr' | 'sb'
+
 export default function Administrations() {
   const [selectedAdmin, setSelectedAdmin] = useState<AdminName>('AMLO')
   const [activeTab, setActiveTab] = useState<'overview' | 'patterns'>('overview')
+  const [matrixMetric, setMatrixMetric] = useState<MatrixMetric>('risk')
 
   // Data queries
   const { data: yoyResp, isLoading: yoyLoading } = useQuery({
@@ -370,6 +373,32 @@ export default function Administrations() {
     }
     return result
   }, [adminAggs])
+
+  // Live Admin × Sector Matrix — computed from sectorYearData (all administrations at once)
+  const liveAdminSectorMatrix = useMemo(() => {
+    if (sectorYearData.length === 0) return null
+    const result: Record<string, Record<string, { risk: number; da: number; hr: number; sb: number }>> = {}
+    for (const admin of ADMINISTRATIONS) {
+      const adminRows = sectorYearData.filter(
+        (sy) => sy.year >= admin.dataStart && sy.year < admin.end
+      )
+      result[admin.name] = {}
+      MATRIX_SECTORS.forEach((sector, idx) => {
+        const sectorId = idx + 1 // MATRIX_SECTORS is ordered exactly sector_id 1–12
+        const rows = adminRows.filter((r) => r.sector_id === sectorId)
+        const totalContracts = rows.reduce((s, r) => s + r.contracts, 0)
+        result[admin.name][sector.key] = totalContracts === 0
+          ? { risk: 0, da: 0, hr: 0, sb: 0 }
+          : {
+              risk: rows.reduce((s, r) => s + r.avg_risk * r.contracts, 0) / totalContracts,
+              da: rows.reduce((s, r) => s + r.direct_award_pct * r.contracts, 0) / totalContracts,
+              hr: rows.reduce((s, r) => s + r.high_risk_pct * r.contracts, 0) / totalContracts,
+              sb: rows.reduce((s, r) => s + (r.single_bid_pct ?? 0) * r.contracts, 0) / totalContracts,
+            }
+      })
+    }
+    return result
+  }, [sectorYearData])
 
   // Events filtered to selected admin
   const adminEvents = useMemo(
@@ -982,7 +1011,12 @@ export default function Administrations() {
       </div>
 
       {/* Admin × Sector Risk Matrix */}
-      <AdminSectorMatrix selectedAdmin={selectedAdmin} />
+      <AdminSectorMatrix
+        selectedAdmin={selectedAdmin}
+        liveMatrix={liveAdminSectorMatrix}
+        metric={matrixMetric}
+        onMetricChange={setMatrixMetric}
+      />
 
       {/* L6: Events Timeline */}
       <Card className="bg-card border-border/40">
@@ -1171,25 +1205,45 @@ function TransitionMetric({
 // Admin × Sector Risk Heatmap Matrix
 // =============================================================================
 
-/** Interpolates from green (#4ade80) at 0 to red (#f87171) at score >= 0.5 */
-function riskToColor(score: number): string {
-  const clamped = Math.min(1, score / 0.5)
-  const r = Math.round(74  + (248 - 74)  * clamped)
-  const g = Math.round(222 + (113 - 222) * clamped)
-  const b = Math.round(128 + (113 - 128) * clamped)
+/** Interpolates from green (#4ade80) to red (#f87171) — t must be 0–1 */
+function intensityToColor(t: number): string {
+  const c = Math.min(1, Math.max(0, t))
+  const r = Math.round(74  + (248 - 74)  * c)
+  const g = Math.round(222 + (113 - 222) * c)
+  const b = Math.round(128 + (113 - 128) * c)
   return `rgb(${r},${g},${b})`
+}
+
+type LiveCell = { risk: number; da: number; hr: number; sb: number }
+
+function getCellIntensity(metric: MatrixMetric, v: LiveCell): number {
+  switch (metric) {
+    case 'risk': return Math.min(1, v.risk / 0.5)
+    case 'da':   return Math.min(1, Math.max(0, (v.da - 20) / 80))
+    case 'hr':   return Math.min(1, v.hr / 30)
+    case 'sb':   return Math.min(1, v.sb / 40)
+  }
+}
+
+function getCellDisplay(metric: MatrixMetric, v: LiveCell): string {
+  switch (metric) {
+    case 'risk': return (v.risk * 100).toFixed(0) + '%'
+    case 'da':   return v.da.toFixed(0) + '%'
+    case 'hr':   return v.hr.toFixed(0) + '%'
+    case 'sb':   return v.sb.toFixed(0) + '%'
+  }
 }
 
 interface MatrixCellProps {
   adminName: string
   sector: { key: string; code: string; name: string }
-  score: number
+  intensity: number
+  displayText: string
   isSelectedAdmin: boolean
 }
 
-function MatrixCell({ adminName, sector, score, isSelectedAdmin }: MatrixCellProps) {
-  const bgColor = riskToColor(score)
-  const label = getRiskLevelLabel(score)
+function MatrixCell({ adminName, sector, intensity, displayText, isSelectedAdmin }: MatrixCellProps) {
+  const bgColor = intensityToColor(intensity)
   return (
     <td className="p-0">
       <div
@@ -1199,53 +1253,81 @@ function MatrixCell({ adminName, sector, score, isSelectedAdmin }: MatrixCellPro
         )}
         style={{
           backgroundColor: `${bgColor}28`,
-          border: isSelectedAdmin
-            ? `1.5px solid ${bgColor}`
-            : '1px solid transparent',
+          border: isSelectedAdmin ? `1.5px solid ${bgColor}` : '1px solid transparent',
           borderRadius: 4,
         }}
-        title={`${sector.name} under ${adminName}: avg risk ${(score * 100).toFixed(0)}% (${label})`}
-        aria-label={`${sector.name} under ${adminName}: ${(score * 100).toFixed(0)}% risk`}
+        title={`${sector.name} · ${adminName}: ${displayText}`}
+        aria-label={`${sector.name} under ${adminName}: ${displayText}`}
       >
         <span style={{ color: bgColor }}>{sector.code}</span>
-        {/* Micro risk bar at bottom */}
         <span
-          className="absolute bottom-0 left-0 right-0 rounded-b"
-          style={{ height: 2, backgroundColor: bgColor, opacity: 0.6, width: `${score * 100}%` }}
+          className="absolute bottom-0 left-0 rounded-b"
+          style={{ height: 2, backgroundColor: bgColor, opacity: 0.6, width: `${intensity * 100}%` }}
         />
       </div>
     </td>
   )
 }
 
-function getRiskLevelLabel(score: number): string {
-  if (score >= 0.50) return 'Critical'
-  if (score >= 0.30) return 'High'
-  if (score >= 0.10) return 'Medium'
-  return 'Low'
+const METRIC_LABELS: Record<MatrixMetric, string> = {
+  risk: 'Avg Risk',
+  da:   'Direct Award %',
+  hr:   'High Risk %',
+  sb:   'Single Bid %',
 }
 
-function AdminSectorMatrix({ selectedAdmin }: { selectedAdmin: AdminName }) {
+function AdminSectorMatrix({
+  selectedAdmin,
+  liveMatrix,
+  metric,
+  onMetricChange,
+}: {
+  selectedAdmin: AdminName
+  liveMatrix: Record<string, Record<string, { risk: number; da: number; hr: number; sb: number }>> | null
+  metric: MatrixMetric
+  onMetricChange: (m: MatrixMetric) => void
+}) {
+  const isLive = liveMatrix !== null
   return (
     <Card className="bg-card border-border/40">
       <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
             <CardTitle className="text-sm font-mono text-text-primary">
-              Administration × Sector Risk Matrix
+              Administration × Sector Matrix
             </CardTitle>
             <p className="text-[11px] text-text-muted mt-0.5">
-              Which sectors had highest risk under which government — estimated avg risk score per cell
+              {isLive ? 'Live data from COMPRANET — click a metric to change view' : 'Estimated values (data loading…)'}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <span className="text-[10px] text-text-muted font-mono">Low</span>
-            <div
-              className="h-3 w-24 rounded"
-              style={{ background: 'linear-gradient(to right, rgb(74,222,128), rgb(248,113,113))' }}
-              aria-hidden="true"
-            />
-            <span className="text-[10px] text-text-muted font-mono">High</span>
+            {/* Metric toggle */}
+            <div className="flex items-center gap-0.5 rounded-md border border-border/40 p-0.5 bg-background-elevated/30">
+              {(Object.keys(METRIC_LABELS) as MatrixMetric[]).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => onMetricChange(m)}
+                  className={cn(
+                    'px-2 py-0.5 rounded text-[10px] font-mono transition-colors',
+                    metric === m
+                      ? 'bg-accent/20 text-accent'
+                      : 'text-text-muted hover:text-text-primary'
+                  )}
+                >
+                  {METRIC_LABELS[m].replace(' %', '')}
+                </button>
+              ))}
+            </div>
+            {/* Gradient legend */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-text-muted font-mono">Low</span>
+              <div
+                className="h-3 w-20 rounded"
+                style={{ background: 'linear-gradient(to right, rgb(74,222,128), rgb(248,113,113))' }}
+                aria-hidden="true"
+              />
+              <span className="text-[10px] text-text-muted font-mono">High</span>
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -1257,11 +1339,7 @@ function AdminSectorMatrix({ selectedAdmin }: { selectedAdmin: AdminName }) {
                 Administration
               </th>
               {MATRIX_SECTORS.map((sector) => (
-                <th
-                  key={sector.key}
-                  className="text-center pb-1"
-                  title={sector.name}
-                >
+                <th key={sector.key} className="text-center pb-1" title={sector.name}>
                   <span className="text-[10px] text-text-muted font-mono">{sector.code}</span>
                 </th>
               ))}
@@ -1269,16 +1347,14 @@ function AdminSectorMatrix({ selectedAdmin }: { selectedAdmin: AdminName }) {
           </thead>
           <tbody>
             {ADMINISTRATIONS.map((admin) => {
-              const matrixRow = ADMIN_SECTOR_MATRIX[admin.name]
+              const liveRow = liveMatrix?.[admin.name]
+              const fallbackRow = ADMIN_SECTOR_MATRIX[admin.name]
               const isSelected = admin.name === selectedAdmin
               const partyColor = PARTY_COLORS[admin.party] || '#64748b'
               return (
                 <tr
                   key={admin.name}
-                  className={cn(
-                    'transition-colors',
-                    isSelected ? 'opacity-100' : 'opacity-70 hover:opacity-90'
-                  )}
+                  className={cn('transition-colors', isSelected ? 'opacity-100' : 'opacity-70 hover:opacity-90')}
                 >
                   <td className="pr-3">
                     <div className="flex items-center gap-1.5 whitespace-nowrap">
@@ -1286,44 +1362,52 @@ function AdminSectorMatrix({ selectedAdmin }: { selectedAdmin: AdminName }) {
                         className="inline-block w-1.5 h-4 rounded-sm flex-shrink-0"
                         style={{ backgroundColor: partyColor }}
                         title={admin.party}
-                        aria-label={admin.party}
                       />
-                      <span className={cn(
-                        'text-xs font-mono',
-                        isSelected ? 'text-text-primary font-bold' : 'text-text-muted'
-                      )}>
+                      <span className={cn('text-xs font-mono', isSelected ? 'text-text-primary font-bold' : 'text-text-muted')}>
                         {admin.name}
                       </span>
                       <span
                         className="text-[9px] font-mono px-1 py-0 rounded"
-                        style={{
-                          backgroundColor: `${partyColor}25`,
-                          color: partyColor,
-                          border: `1px solid ${partyColor}40`,
-                        }}
+                        style={{ backgroundColor: `${partyColor}25`, color: partyColor, border: `1px solid ${partyColor}40` }}
                       >
                         {admin.party}
                       </span>
                     </div>
                   </td>
-                  {MATRIX_SECTORS.map((sector) => (
-                    <MatrixCell
-                      key={sector.key}
-                      adminName={admin.name}
-                      sector={sector}
-                      score={matrixRow?.[sector.key] ?? 0}
-                      isSelectedAdmin={isSelected}
-                    />
-                  ))}
+                  {MATRIX_SECTORS.map((sector) => {
+                    let intensity: number
+                    let displayText: string
+                    if (liveRow) {
+                      const cell = liveRow[sector.key] ?? { risk: 0, da: 0, hr: 0, sb: 0 }
+                      intensity = getCellIntensity(metric, cell)
+                      displayText = getCellDisplay(metric, cell)
+                    } else {
+                      // Fallback: use hardcoded risk approximations
+                      const score = fallbackRow?.[sector.key] ?? 0
+                      intensity = Math.min(1, score / 0.5)
+                      displayText = (score * 100).toFixed(0) + '%'
+                    }
+                    return (
+                      <MatrixCell
+                        key={sector.key}
+                        adminName={admin.name}
+                        sector={sector}
+                        intensity={intensity}
+                        displayText={displayText}
+                        isSelectedAdmin={isSelected}
+                      />
+                    )
+                  })}
                 </tr>
               )
             })}
           </tbody>
         </table>
-        <p className="mt-3 text-[10px] text-text-muted/60 italic">
-          Estimates based on documented corruption cases and known risk patterns.
-          Live per-admin-per-sector data integration in progress.
-        </p>
+        {isLive && (
+          <p className="mt-2 text-[10px] text-text-muted/50 italic">
+            Source: COMPRANET contracts weighted by volume · {METRIC_LABELS[metric]}
+          </p>
+        )}
       </CardContent>
     </Card>
   )
