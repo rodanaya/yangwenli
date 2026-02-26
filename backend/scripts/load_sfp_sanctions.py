@@ -5,10 +5,11 @@ SFP maintains a registry of companies sanctioned from government contracting.
 Data source: datos.gob.mx — Proveedores y Contratistas Sancionados
 
 Usage:
-    python -m scripts.load_sfp_sanctions [--url URL] [--dry-run]
+    python -m scripts.load_sfp_sanctions [--url URL] [--file PATH] [--dry-run]
 
-Note: If the primary URL fails, the script exits cleanly. Run manually
-with --url to provide an updated download link.
+Examples:
+    python -m scripts.load_sfp_sanctions --file downloads/proveedores_sancionados.csv
+    python -m scripts.load_sfp_sanctions --url https://...
 """
 import argparse
 import csv
@@ -29,13 +30,18 @@ DEFAULT_URL = "https://datosabiertos.funcionpublica.gob.mx/datosabiertos/sanc/pr
 
 COLUMN_MAP = {
     # Possible Spanish column name variations
+    # Includes both modern portal format and 2021 archive format
     "rfc": ["rfc", "RFC", "rfc_proveedor"],
-    "company_name": ["nombre", "razon_social", "nombre_razon_social", "empresa"],
-    "sanction_type": ["tipo_sancion", "tipo", "sancion"],
-    "sanction_start": ["fecha_inicio", "fecha_inicio_sancion"],
-    "sanction_end": ["fecha_fin", "fecha_fin_sancion"],
+    "company_name": ["nombre", "razon_social", "nombre_razon_social", "empresa",
+                     "proveedor o contratista"],
+    "sanction_type": ["tipo_sancion", "tipo", "sancion",
+                      "sentido de resolucion"],
+    "sanction_start": ["fecha_inicio", "fecha_inicio_sancion",
+                       "fecha de notificacion"],
+    "sanction_end": ["fecha_fin", "fecha_fin_sancion",
+                     "fecha de resolucion"],
     "amount_mxn": ["monto", "monto_sancion", "importe"],
-    "authority": ["autoridad", "institucion"],
+    "authority": ["autoridad", "institucion", "dependencia"],
 }
 
 
@@ -48,18 +54,8 @@ def _find_col(header: list[str], candidates: list[str]) -> Optional[int]:
     return None
 
 
-def download_and_parse(url: str) -> list[dict]:
-    """Download CSV from URL and return list of sanitized dicts."""
-    try:
-        import httpx
-        logger.info(f"Downloading SFP sanctions from {url}")
-        resp = httpx.get(url, timeout=60.0, follow_redirects=True)
-        resp.raise_for_status()
-        content = resp.text
-    except Exception as e:
-        logger.warning(f"Failed to download SFP data: {e}")
-        return []
-
+def parse_csv(content: str, source: str) -> list[dict]:
+    """Parse CSV content and return list of sanitized dicts."""
     records = []
     reader = csv.reader(io.StringIO(content))
     header = next(reader, None)
@@ -93,11 +89,44 @@ def download_and_parse(url: str) -> list[dict]:
             "sanction_end": get("sanction_end"),
             "amount_mxn": amount,
             "authority": get("authority"),
-            "source_url": url,
+            "source_url": source,
         })
 
     logger.info(f"Parsed {len(records)} records")
     return records
+
+
+def load_from_file(path: str) -> list[dict]:
+    """Load CSV from a local file path."""
+    p = Path(path)
+    if not p.exists():
+        logger.error(f"File not found: {p.resolve()}")
+        return []
+    logger.info(f"Reading SFP sanctions from local file: {p.resolve()}")
+    # Try UTF-8 first, fall back to latin-1 (common for Mexican government CSVs)
+    for encoding in ("utf-8-sig", "latin-1"):
+        try:
+            content = p.read_text(encoding=encoding)
+            records = parse_csv(content, source=str(p.resolve()))
+            if records:
+                return records
+        except UnicodeDecodeError:
+            continue
+    logger.error("Could not decode file with utf-8-sig or latin-1")
+    return []
+
+
+def load_from_url(url: str) -> list[dict]:
+    """Download CSV from URL."""
+    try:
+        import httpx
+        logger.info(f"Downloading SFP sanctions from {url}")
+        resp = httpx.get(url, timeout=60.0, follow_redirects=True)
+        resp.raise_for_status()
+        return parse_csv(resp.text, source=url)
+    except Exception as e:
+        logger.warning(f"Failed to download SFP data: {e}")
+        return []
 
 
 def save_to_db(records: list[dict], db_path: Path = DB_PATH) -> int:
@@ -146,13 +175,19 @@ def save_to_db(records: list[dict], db_path: Path = DB_PATH) -> int:
 
 def main():
     parser = argparse.ArgumentParser(description="Load SFP sanctioned providers")
-    parser.add_argument("--url", default=DEFAULT_URL, help="CSV download URL")
+    source = parser.add_mutually_exclusive_group()
+    source.add_argument("--file", help="Path to local CSV file")
+    source.add_argument("--url", default=None, help="CSV download URL")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
-    records = download_and_parse(args.url)
+    if args.file:
+        records = load_from_file(args.file)
+    else:
+        records = load_from_url(args.url or DEFAULT_URL)
+
     if not records:
-        logger.warning("No records parsed — check URL or run with --url")
+        logger.warning("No records parsed — use --file /path/to/proveedores_sancionados.csv")
         return
 
     if args.dry_run:
