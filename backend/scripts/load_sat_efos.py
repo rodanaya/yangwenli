@@ -33,7 +33,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 DB_PATH = Path(__file__).parent.parent / "RUBLI_NORMALIZED.db"
 
 # SAT datos abiertos — Article 69-B cumulative list (updated monthly)
-DEFAULT_URL = "http://omawww.sat.gob.mx/tramitesyservicios/Paginas/documentos/69_B_listado_completo_05_06_2025.csv"
+DEFAULT_URL = "http://omawww.sat.gob.mx/tramitesyservicios/Paginas/documentos/Listado_Completo_69_articulo69.csv"
 
 # Stage normalization map — SAT uses inconsistent Spanish terms across years
 STAGE_MAP = {
@@ -53,14 +53,22 @@ COLUMN_MAP = {
     "company_name": [
         "nombre", "razon_social", "nombre_contribuyente",
         "nombre_o_razon_social", "contribuyente",
+        "razón social", "raz\u00f3n social",  # accent variants
+        "nombre del contribuyente",           # Azure Blob format
     ],
     "stage": [
         "situacion", "estado", "situacion_contribuyente",
         "tipo", "estatus",
+        "supuesto", "SUPUESTO",              # current SAT CSV header
+        "situaci\u00f3n del contribuyente",  # Azure Blob format (accented)
+        "situacion del contribuyente",        # Azure Blob format (unaccented)
     ],
     "dof_date": [
         "fecha_dof", "fecha_publicacion_dof", "fecha",
         "fecha_primera_publicacion", "publicacion_dof",
+        "fechas de primera publicacion",      # current SAT CSV header
+        "publicaci\u00f3n p\u00e1gina sat presuntos",  # Azure Blob format
+        "publicacion pagina sat presuntos",
     ],
 }
 
@@ -212,14 +220,69 @@ def print_stage_summary(records: list[dict]) -> None:
         logger.info(f"  {stage:>15}: {count:>7,}")
 
 
+def load_from_file(path: str) -> list[dict]:
+    """Load CSV from a local file path (Latin-1 / UTF-8)."""
+    p = Path(path)
+    if not p.exists():
+        logger.error(f"File not found: {p.resolve()}")
+        return []
+    logger.info(f"Reading SAT EFOS from local file: {p.resolve()}")
+    for encoding in ("utf-8-sig", "latin-1", "cp1252"):
+        try:
+            content = p.read_text(encoding=encoding)
+            # Skip leading metadata lines until we hit the RFC header
+            lines = content.split("\n")
+            for i, line in enumerate(lines[:10]):
+                if "RFC" in line and "Nombre" in line:
+                    content = "\n".join(lines[i:])
+                    break
+            records = []
+            reader = csv.reader(io.StringIO(content))
+            header = [h.strip() for h in next(reader, [])]
+            if not header:
+                continue
+            logger.info(f"Header columns: {header[:8]}")
+            col_idx = {field: _find_col(header, candidates) for field, candidates in COLUMN_MAP.items()}
+            logger.info(f"Column mapping: {col_idx}")
+            for row in reader:
+                if not any(row):
+                    continue
+                def get(field):
+                    idx = col_idx.get(field)
+                    if idx is not None and idx < len(row):
+                        return row[idx].strip() or None
+                    return None
+                rfc = get("rfc")
+                if not rfc or len(rfc) < 10:
+                    continue
+                records.append({
+                    "rfc": rfc.upper(),
+                    "company_name": get("company_name") or "Unknown",
+                    "stage": _normalize_stage(get("stage")),
+                    "dof_date": get("dof_date"),
+                })
+            if records:
+                logger.info(f"Parsed {len(records)} records from {p.name}")
+                return records
+        except UnicodeDecodeError:
+            continue
+    logger.error("Could not parse file")
+    return []
+
+
 def main():
     parser = argparse.ArgumentParser(description="Load SAT Art. 69-B EFOS/EDOS ghost company list")
-    parser.add_argument("--url", default=DEFAULT_URL, help="Direct CSV download URL from SAT")
+    source = parser.add_mutually_exclusive_group()
+    source.add_argument("--url", default=None, help="Direct CSV download URL from SAT")
+    source.add_argument("--file", help="Local CSV file path")
     parser.add_argument("--dry-run", action="store_true", help="Parse but do not write to DB")
     parser.add_argument("--show-sample", action="store_true", help="Print first 5 records")
     args = parser.parse_args()
 
-    records = download_and_parse(args.url)
+    if args.file:
+        records = load_from_file(args.file)
+    else:
+        records = download_and_parse(args.url or DEFAULT_URL)
     if not records:
         logger.warning("No records parsed — check URL or network access")
         logger.info(
