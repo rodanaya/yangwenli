@@ -15,7 +15,9 @@ import {
   Beaker,
   FileText,
   History,
+  FlaskConical,
 } from 'lucide-react'
+import { RiskFactorTable } from '@/components/RiskExplainer'
 import {
   BarChart,
   Bar,
@@ -457,6 +459,18 @@ export function Methodology() {
                 4 new features (price_volatility, institution_diversity, win_rate, sector_spread) absorb
                 variance previously captured by vendor_concentration alone, producing a more balanced model.
               </p>
+            </div>
+          </CollapsibleSection>
+
+          {/* Section 3b: Risk Factor Evidence Base */}
+          <CollapsibleSection id="risk-evidence" title="Risk Factor Evidence Base" icon={FlaskConical} defaultOpen={false}>
+            <div className="space-y-3">
+              <p className="text-xs text-text-secondary leading-relaxed">
+                Each risk factor is grounded in peer-reviewed literature on procurement corruption.
+                The table below shows each factor's learned coefficient, global evidence strength, and
+                key source. Hover over a factor name for mechanism details.
+              </p>
+              <RiskFactorTable />
             </div>
           </CollapsibleSection>
 

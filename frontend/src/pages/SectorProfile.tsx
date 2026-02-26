@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
 import { cn, formatCompactMXN, formatCompactUSD, formatNumber, formatPercentSafe, toTitleCase } from '@/lib/utils'
-import { sectorApi, vendorApi, analysisApi, priceApi, investigationApi } from '@/api/client'
+import { sectorApi, vendorApi, analysisApi, priceApi, investigationApi, caseLibraryApi } from '@/api/client'
 import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
 import {
   BarChart3,
@@ -166,6 +166,13 @@ export function SectorProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
+  const { data: sectorCases } = useQuery({
+    queryKey: ['cases', 'by-sector', sectorId],
+    queryFn: () => caseLibraryApi.getBySector(sectorId),
+    enabled: !!sectorId,
+    staleTime: 10 * 60 * 1000,
+  })
+
   const { data: priceAnomalies, isLoading: priceAnomaliesLoading } = useQuery({
     queryKey: ['price', 'hypotheses', sectorId],
     queryFn: () => priceApi.getHypotheses({ sector_id: sectorId, per_page: 6, sort_by: 'confidence', sort_order: 'desc' }),
@@ -315,6 +322,46 @@ export function SectorProfile() {
                 ) : priceBaseline ? (
                   <PriceDistribution baseline={priceBaseline} color={sectorColor} />
                 ) : null}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* DOCUMENTED CASES */}
+          {sectorCases && sectorCases.length > 0 && (
+            <Card className="border-border/40">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <Shield className="h-4 w-4 text-risk-critical" />
+                  Documented Cases
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1 pb-3">
+                {sectorCases.map((c) => (
+                  <Link
+                    key={c.slug}
+                    to={`/cases/${c.slug}`}
+                    className="flex items-center justify-between py-1.5 border-b border-border/20 hover:text-accent transition-colors text-sm group"
+                  >
+                    <span className="truncate text-xs text-text-secondary group-hover:text-accent transition-colors">
+                      {c.name_en}
+                    </span>
+                    <span className={cn(
+                      'text-[10px] px-1.5 py-0.5 rounded font-mono ml-2 flex-shrink-0',
+                      c.legal_status === 'convicted' ? 'bg-risk-low/15 text-risk-low' :
+                      c.legal_status === 'impunity' || c.legal_status === 'acquitted' ? 'bg-risk-high/15 text-risk-high' :
+                      c.legal_status === 'investigation' ? 'bg-risk-medium/15 text-risk-medium' :
+                      'bg-surface text-text-muted'
+                    )}>
+                      {c.legal_status}
+                    </span>
+                  </Link>
+                ))}
+                <Link
+                  to={`/cases?sector_id=${sectorId}`}
+                  className="text-xs text-text-muted hover:text-accent mt-2 block pt-1 transition-colors"
+                >
+                  View all →
+                </Link>
               </CardContent>
             </Card>
           )}

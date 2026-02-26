@@ -437,6 +437,16 @@ function SidePanel({
           </Link>
         </div>
 
+        {/* Triangle Hub Alert (Wachs, Fazekas & Kertész 2021) */}
+        {isVendor && node.cobid_clustering_coeff != null && node.cobid_clustering_coeff > 0.5 && (
+          <div className="text-xs p-2 rounded bg-red-950/30 border border-red-500/30">
+            <strong className="text-red-400">Triangle Hub Alert:</strong> This vendor appears in{' '}
+            <span className="font-mono font-bold">{node.cobid_triangle_count ?? 0}</span> co-bidding triangles.
+            High triangle density is a validated collusion ring indicator
+            (Wachs, Fazekas &amp; Kertész 2021).
+          </div>
+        )}
+
         {/* Co-bidders section (vendors only) */}
         {isVendor && (
           <div className="border-t border-border pt-3 space-y-2">

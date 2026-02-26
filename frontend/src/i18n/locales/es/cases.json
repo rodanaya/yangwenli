@@ -1,0 +1,91 @@
+{
+  "title": "Biblioteca de Casos",
+  "subtitle": "43 casos de corrupción documentados — de la investigación a la condena",
+  "statsBar": {
+    "totalCases": "Casos documentados",
+    "totalAmount": "Pérdidas estimadas",
+    "gtLinked": "Vinculados a ML",
+    "compranetVisible": "Visibles en COMPRANET"
+  },
+  "filters": {
+    "all": "Todos los casos",
+    "fraudType": "Tipo de fraude",
+    "administration": "Administración",
+    "legalStatus": "Estado legal",
+    "search": "Buscar casos...",
+    "clearFilters": "Limpiar filtros"
+  },
+  "fraudTypes": {
+    "ghost_company": "Empresa Fantasma",
+    "bid_rigging": "Manipulación de Licitación",
+    "overpricing": "Sobreprecios",
+    "conflict_of_interest": "Conflicto de Interés",
+    "embezzlement": "Desfalco",
+    "bribery": "Soborno",
+    "procurement_fraud": "Fraude en Adquisiciones",
+    "monopoly": "Monopolio",
+    "emergency_fraud": "Fraude de Emergencia",
+    "tender_rigging": "Manipulación de Concurso",
+    "other": "Otro"
+  },
+  "administrations": {
+    "fox": "Fox (2000–2006)",
+    "calderon": "Calderón (2006–2012)",
+    "epn": "Peña Nieto (2012–2018)",
+    "amlo": "AMLO (2018–2024)",
+    "sheinbaum": "Sheinbaum (2024–)"
+  },
+  "legalStatuses": {
+    "investigation": "En investigación",
+    "prosecuted": "Procesado",
+    "convicted": "Condenado",
+    "acquitted": "Absuelto",
+    "dismissed": "Desestimado",
+    "impunity": "Impunidad",
+    "unresolved": "Sin resolver"
+  },
+  "severity": {
+    "1": "Bajo",
+    "2": "Medio",
+    "3": "Alto",
+    "4": "Crítico"
+  },
+  "compranetVisibility": {
+    "high": "Completamente visible en COMPRANET",
+    "partial": "Parcialmente visible",
+    "invisible": "No visible en COMPRANET"
+  },
+  "card": {
+    "yearRange": "{{start}}–{{end}}",
+    "discovered": "Descubierto {{year}}",
+    "amountRange": "{{low}} – {{high}} MXN",
+    "amountLow": "~{{low}} MXN",
+    "mlLinked": "Vinculado a ML",
+    "viewDetail": "Ver caso"
+  },
+  "detail": {
+    "backToLibrary": "← Biblioteca de Casos",
+    "keyActors": "Actores Clave",
+    "sources": "Fuentes",
+    "compranetNote": "Cobertura COMPRANET",
+    "legalNote": "Estado Legal",
+    "amountNote": "Monto",
+    "roles": {
+      "vendor": "Proveedor",
+      "official": "Funcionario",
+      "institution": "Institución",
+      "journalist": "Periodista"
+    },
+    "sourceTypes": {
+      "journalism": "Periodismo",
+      "audit": "Auditoría",
+      "legal": "Registro legal",
+      "academic": "Académico",
+      "official": "Oficial"
+    },
+    "noKeyActors": "Sin actores clave documentados",
+    "noSources": "Sin fuentes registradas"
+  },
+  "noResults": "Ningún caso coincide con los filtros actuales.",
+  "loading": "Cargando casos..."
+}

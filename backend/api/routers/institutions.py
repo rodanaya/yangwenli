@@ -199,6 +199,90 @@ def get_institution(institution_id: int):
         if avg_risk_score is not None:
             avg_risk_score = round(avg_risk_score, 4)
 
+        # Longest-tenured vendors at this institution (Coviello & Gagliarducci 2017)
+        cursor = conn.cursor()
+        tenure_rows = cursor.execute("""
+            SELECT vit.vendor_id, v.name AS vendor_name,
+                   vit.first_contract_year, vit.last_contract_year,
+                   vit.total_contracts,
+                   vs.avg_risk_score AS avg_risk
+            FROM vendor_institution_tenure vit
+            JOIN vendors v ON vit.vendor_id = v.id
+            LEFT JOIN vendor_stats vs ON vit.vendor_id = vs.vendor_id
+            WHERE vit.institution_id = ?
+            ORDER BY (vit.last_contract_year - vit.first_contract_year) DESC, vit.total_contracts DESC
+            LIMIT 10
+        """, (institution_id,)).fetchall()
+        longest_tenured = [
+            {
+                "vendor_id": r["vendor_id"],
+                "vendor_name": r["vendor_name"],
+                "first_contract_year": r["first_contract_year"],
+                "last_contract_year": r["last_contract_year"],
+                "tenure_years": (r["last_contract_year"] - r["first_contract_year"] + 1),
+                "total_contracts": r["total_contracts"],
+                "avg_risk_score": round(r["avg_risk"], 4) if r["avg_risk"] else None,
+            }
+            for r in tenure_rows
+        ]
+
+        # Supplier diversity: HHI over recent years (Prozorro analytics; Fazekas CRI)
+        hhi_rows = cursor.execute("""
+            WITH vendor_shares AS (
+                SELECT contract_year, vendor_id,
+                       SUM(COALESCE(amount_mxn, 0)) AS vendor_value
+                FROM contracts
+                WHERE institution_id = ? AND vendor_id IS NOT NULL
+                  AND contract_year IS NOT NULL AND amount_mxn > 0
+                GROUP BY contract_year, vendor_id
+            ),
+            year_totals AS (
+                SELECT contract_year,
+                       SUM(vendor_value) AS total_value,
+                       COUNT(DISTINCT vendor_id) AS unique_vendors
+                FROM vendor_shares GROUP BY contract_year
+            )
+            SELECT vs.contract_year,
+                   ROUND(SUM((vs.vendor_value * 100.0 / yt.total_value) *
+                             (vs.vendor_value * 100.0 / yt.total_value)), 1) AS hhi,
+                   yt.unique_vendors
+            FROM vendor_shares vs
+            JOIN year_totals yt ON vs.contract_year = yt.contract_year
+            WHERE yt.total_value > 0
+            GROUP BY vs.contract_year
+            ORDER BY vs.contract_year DESC
+            LIMIT 10
+        """, (institution_id,)).fetchall()
+
+        supplier_diversity = None
+        if hhi_rows:
+            hhi_list = [{"year": r["contract_year"], "hhi": float(r["hhi"]), "unique_vendors": int(r["unique_vendors"])} for r in hhi_rows]
+            current = hhi_list[0]
+            recent_5 = hhi_list[:5]
+            hhi_5yr_avg = round(sum(h["hhi"] for h in recent_5) / len(recent_5), 1)
+
+            def _concentration_level(h: float) -> str:
+                if h >= 2500: return "high"
+                if h >= 1000: return "medium"
+                return "low"
+
+            trend = "stable"
+            if len(hhi_list) >= 3:
+                if hhi_list[0]["hhi"] > hhi_list[2]["hhi"] * 1.1:
+                    trend = "increasing"
+                elif hhi_list[0]["hhi"] < hhi_list[2]["hhi"] * 0.9:
+                    trend = "decreasing"
+
+            supplier_diversity = {
+                "hhi_current_year": current["hhi"],
+                "hhi_5yr_avg": hhi_5yr_avg,
+                "unique_vendors_current_year": current["unique_vendors"],
+                "concentration_level": _concentration_level(current["hhi"]),
+                "trend": trend,
+                "history": hhi_list,
+                "prozorro_note": "Ukraine's Prozorro flags institutions with HHI >4000 as concentrated purchasing.",
+            }
+
         return InstitutionDetailResponse(
             id=detail["id"],
             name=detail["name"],
@@ -225,6 +309,8 @@ def get_institution(institution_id: int):
             avg_risk_score=avg_risk_score,
             direct_award_rate=round(direct_award_rate, 2),
             direct_award_count=direct_award_count,
+            longest_tenured_vendors=longest_tenured,
+            supplier_diversity=supplier_diversity,
         )
 
 
@@ -1198,3 +1284,306 @@ def list_autonomy_levels():
             data=levels,
             total=len(levels)
         )
+
+
+# =============================================================================
+# CRI SCATTER — Fazekas-style institution risk scatter (Section 12.3)
+# =============================================================================
+
+_cri_scatter_cache: Dict[str, Any] = {}
+_CRI_SCATTER_TTL = 6 * 3600  # 6 hours
+
+@router.get("/cri-scatter")
+def get_cri_scatter(
+    sector_id: Optional[int] = Query(None, description="Filter by sector"),
+    min_contracts: int = Query(100, ge=10, description="Minimum contracts to include"),
+    limit: int = Query(200, ge=10, le=500, description="Max institutions to return"),
+):
+    """
+    Fazekas-style CRI scatter: institutions plotted by direct_award_pct (X)
+    vs avg_risk_score (Y), bubble size = total_contracts.
+    Used in Sectors.tsx to visualize institutional risk landscape.
+    """
+    import time as _t
+    cache_key = f"cri_{sector_id}_{min_contracts}_{limit}"
+    cached = _cri_scatter_cache.get(cache_key)
+    if cached and (_t.time() - cached["ts"]) < _CRI_SCATTER_TTL:
+        return cached["data"]
+
+    with get_db() as conn:
+        import sqlite3
+        conn.row_factory = sqlite3.Row
+
+        params: List[Any] = [min_contracts]
+        sector_filter = ""
+        if sector_id:
+            sector_filter = "AND i.sector_id = ?"
+            params.append(sector_id)
+
+        rows = conn.execute(f"""
+            SELECT
+                i.id,
+                i.name,
+                i.sector_id,
+                s.code AS sector_code,
+                ist.total_contracts,
+                ROUND(ist.avg_risk_score, 4) AS avg_risk,
+                ROUND(ist.direct_award_pct, 2) AS direct_award_pct,
+                ROUND(ist.single_bid_pct, 2) AS single_bid_pct,
+                ROUND(ist.high_risk_count * 100.0 / NULLIF(ist.total_contracts, 0), 2) AS high_risk_pct
+            FROM institution_stats ist
+            JOIN institutions i ON i.id = ist.institution_id
+            JOIN sectors s ON s.id = i.sector_id
+            WHERE ist.total_contracts >= ? {sector_filter}
+            ORDER BY ist.total_contracts DESC
+            LIMIT ?
+        """, params + [limit]).fetchall()
+
+        data = [
+            {
+                "id": r["id"],
+                "name": r["name"],
+                "sector_id": r["sector_id"],
+                "sector_code": r["sector_code"] or "otros",
+                "total_contracts": r["total_contracts"],
+                "avg_risk": float(r["avg_risk"] or 0),
+                "direct_award_pct": float(r["direct_award_pct"] or 0),
+                "single_bid_pct": float(r["single_bid_pct"] or 0),
+                "high_risk_pct": float(r["high_risk_pct"] or 0),
+            }
+            for r in rows
+        ]
+
+        result = {"data": data, "total": len(data)}
+        _cri_scatter_cache[cache_key] = {"ts": _t.time(), "data": result}
+        return result
+
+
+# ---------------------------------------------------------------------------
+# Concentration Rankings (HHI-based supplier diversity)
+# ---------------------------------------------------------------------------
+_hhi_cache: Dict[str, Any] = {}
+_HHI_TTL = 7200  # 2 hours
+
+
+@router.get("/concentration-rankings")
+def get_concentration_rankings(
+    year: Optional[int] = Query(None, description="Year to compute HHI for. Defaults to most recent."),
+    sector_id: Optional[int] = Query(None, description="Filter by sector"),
+    limit: int = Query(20, ge=5, le=100, description="Number of institutions to return"),
+):
+    """
+    Institutions ranked by Herfindahl-Hirschman Index (HHI) of vendor concentration.
+    HHI = sum of squared market shares (0-10000 scale).
+    >2500 = highly concentrated; <1000 = competitive.
+    Based on Prozorro (Ukraine) analytics / Fazekas CRI methodology.
+    """
+    import time as _time
+    import sqlite3
+    cache_key = f"hhi_{year}_{sector_id}_{limit}"
+    cached = _hhi_cache.get(cache_key)
+    if cached and (_time.time() - cached["ts"]) < _HHI_TTL:
+        return cached["data"]
+
+    with get_db() as conn:
+        conn.row_factory = sqlite3.Row
+
+        # Determine year to use
+        if year is None:
+            year = conn.execute("SELECT MAX(contract_year) FROM contracts WHERE contract_year IS NOT NULL").fetchone()[0]
+
+        sector_filter = "AND i.sector_id = ?" if sector_id else ""
+        params: List[Any] = [year, year, limit]
+        if sector_id:
+            params = [year, year, sector_id, limit]
+
+        rows = conn.execute(f"""
+            WITH vendor_shares AS (
+                SELECT institution_id, vendor_id,
+                       SUM(COALESCE(amount_mxn, 0)) AS vendor_value
+                FROM contracts
+                WHERE contract_year = ? AND institution_id IS NOT NULL
+                  AND vendor_id IS NOT NULL AND amount_mxn > 0
+                GROUP BY institution_id, vendor_id
+            ),
+            inst_totals AS (
+                SELECT institution_id,
+                       SUM(vendor_value) AS total_value,
+                       COUNT(DISTINCT vendor_id) AS unique_vendors
+                FROM vendor_shares GROUP BY institution_id
+            ),
+            hhi_calc AS (
+                SELECT vs.institution_id,
+                       ROUND(SUM((vs.vendor_value * 100.0 / it.total_value) *
+                                 (vs.vendor_value * 100.0 / it.total_value)), 1) AS hhi,
+                       it.unique_vendors,
+                       it.total_value
+                FROM vendor_shares vs
+                JOIN inst_totals it ON vs.institution_id = it.institution_id
+                WHERE it.total_value > 0
+                GROUP BY vs.institution_id
+            )
+            SELECT h.institution_id, h.hhi, h.unique_vendors, h.total_value,
+                   i.name AS institution_name, i.siglas, i.sector_id
+            FROM hhi_calc h
+            JOIN institutions i ON h.institution_id = i.id
+            WHERE h.unique_vendors >= 3
+            {sector_filter}
+            ORDER BY h.hhi DESC
+            LIMIT ?
+        """, params).fetchall()
+
+        def _concentration_level(hhi: float) -> str:
+            if hhi >= 2500: return "high"
+            if hhi >= 1000: return "medium"
+            return "low"
+
+        most_concentrated = [
+            {
+                "institution_id": r["institution_id"],
+                "name": r["institution_name"],
+                "siglas": r["siglas"],
+                "sector_id": r["sector_id"],
+                "hhi": float(r["hhi"]),
+                "unique_vendors": int(r["unique_vendors"]),
+                "total_value_mxn": float(r["total_value"]),
+                "concentration_level": _concentration_level(float(r["hhi"])),
+            }
+            for r in rows
+        ]
+
+        # Also compute least concentrated (most diverse)
+        params_asc: List[Any] = [year, year, limit]
+        if sector_id:
+            params_asc = [year, year, sector_id, limit]
+
+        rows_asc = conn.execute(f"""
+            WITH vendor_shares AS (
+                SELECT institution_id, vendor_id,
+                       SUM(COALESCE(amount_mxn, 0)) AS vendor_value
+                FROM contracts
+                WHERE contract_year = ? AND institution_id IS NOT NULL
+                  AND vendor_id IS NOT NULL AND amount_mxn > 0
+                GROUP BY institution_id, vendor_id
+            ),
+            inst_totals AS (
+                SELECT institution_id,
+                       SUM(vendor_value) AS total_value,
+                       COUNT(DISTINCT vendor_id) AS unique_vendors
+                FROM vendor_shares GROUP BY institution_id
+            ),
+            hhi_calc AS (
+                SELECT vs.institution_id,
+                       ROUND(SUM((vs.vendor_value * 100.0 / it.total_value) *
+                                 (vs.vendor_value * 100.0 / it.total_value)), 1) AS hhi,
+                       it.unique_vendors,
+                       it.total_value
+                FROM vendor_shares vs
+                JOIN inst_totals it ON vs.institution_id = it.institution_id
+                WHERE it.total_value > 0
+                GROUP BY vs.institution_id
+            )
+            SELECT h.institution_id, h.hhi, h.unique_vendors, h.total_value,
+                   i.name AS institution_name, i.siglas, i.sector_id
+            FROM hhi_calc h
+            JOIN institutions i ON h.institution_id = i.id
+            WHERE h.unique_vendors >= 10
+            {sector_filter}
+            ORDER BY h.hhi ASC
+            LIMIT ?
+        """, params_asc).fetchall()
+
+        least_concentrated = [
+            {
+                "institution_id": r["institution_id"],
+                "name": r["institution_name"],
+                "siglas": r["siglas"],
+                "sector_id": r["sector_id"],
+                "hhi": float(r["hhi"]),
+                "unique_vendors": int(r["unique_vendors"]),
+                "total_value_mxn": float(r["total_value"]),
+                "concentration_level": _concentration_level(float(r["hhi"])),
+            }
+            for r in rows_asc
+        ]
+
+        result = {
+            "year": year,
+            "most_concentrated": most_concentrated,
+            "least_concentrated": least_concentrated,
+            "note": "HHI >2500 = highly concentrated (few dominant vendors). Based on Prozorro analytics / Fazekas CRI methodology.",
+        }
+        _hhi_cache[cache_key] = {"ts": _time.time(), "data": result}
+        return result
+
+
+@router.get("/{institution_id:int}/officials")
+def get_institution_officials(
+    institution_id: int = Path(..., description="Institution ID"),
+    min_contracts: int = Query(10, ge=1, description="Minimum contracts per official"),
+    limit: int = Query(50, ge=1, le=200, description="Max officials to return"),
+):
+    """
+    Risk profiles for signing officials at this institution (2018+ COMPRANET data).
+
+    Based on Coviello & Gagliarducci (2017) who found official tenure is the most
+    predictive variable for single-bid rates in procurement.
+
+    NOTE: Requires 'oficial_firmante' field populated via compute_official_profiles.py.
+    Returns empty list if field is not available in the database.
+    """
+    import sqlite3
+    with get_db() as conn:
+        conn.row_factory = sqlite3.Row
+
+        # Check if table has data for this institution
+        officials = conn.execute("""
+            SELECT official_name, total_contracts, first_contract_year, last_contract_year,
+                   single_bid_pct, direct_award_pct, avg_risk_score,
+                   vendor_diversity, hhi_vendors
+            FROM official_risk_profiles
+            WHERE institution_id = ?
+              AND total_contracts >= ?
+            ORDER BY avg_risk_score DESC
+            LIMIT ?
+        """, (institution_id, min_contracts, limit)).fetchall()
+
+        has_oficial_firmante = "oficial_firmante" in [
+            c[1] for c in conn.execute("PRAGMA table_info(contracts)").fetchall()
+        ]
+
+        def _interpret(r) -> str:
+            parts = []
+            if r["vendor_diversity"] <= 3:
+                parts.append(f"contracted with only {r['vendor_diversity']} unique vendor(s)")
+            if r["hhi_vendors"] and r["hhi_vendors"] > 2500:
+                parts.append(f"highly concentrated vendors (HHI {r['hhi_vendors']:.0f})")
+            if r["single_bid_pct"] > 50:
+                parts.append(f"{r['single_bid_pct']:.0f}% single-bid procedures")
+            if r["direct_award_pct"] > 80:
+                parts.append(f"{r['direct_award_pct']:.0f}% direct awards")
+            return ("This official " + ", ".join(parts) + ".") if parts else ""
+
+        return {
+            "institution_id": institution_id,
+            "officials": [
+                {
+                    "official_name": r["official_name"],
+                    "total_contracts": r["total_contracts"],
+                    "first_contract_year": r["first_contract_year"],
+                    "last_contract_year": r["last_contract_year"],
+                    "single_bid_pct": round(r["single_bid_pct"] or 0, 1),
+                    "direct_award_pct": round(r["direct_award_pct"] or 0, 1),
+                    "avg_risk_score": round(r["avg_risk_score"] or 0, 4),
+                    "vendor_diversity": r["vendor_diversity"],
+                    "hhi_vendors": round(r["hhi_vendors"] or 0, 1),
+                    "interpretation": _interpret(r),
+                }
+                for r in officials
+            ],
+            "note": (
+                "Official-level analysis available for 2018+ contracts (COMPRANET Structure C/D). "
+                + ("Data not yet populated — run compute_official_profiles.py to enable." if not has_oficial_firmante else "")
+            ),
+            "data_available": has_oficial_firmante and len(officials) > 0,
+        }

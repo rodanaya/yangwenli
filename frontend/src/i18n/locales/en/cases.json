@@ -1,0 +1,91 @@
+{
+  "title": "Case Library",
+  "subtitle": "43 documented corruption cases — from investigation to conviction",
+  "statsBar": {
+    "totalCases": "Documented cases",
+    "totalAmount": "Estimated losses",
+    "gtLinked": "ML-linked",
+    "compranetVisible": "COMPRANET visible"
+  },
+  "filters": {
+    "all": "All cases",
+    "fraudType": "Fraud type",
+    "administration": "Administration",
+    "legalStatus": "Legal status",
+    "search": "Search cases...",
+    "clearFilters": "Clear filters"
+  },
+  "fraudTypes": {
+    "ghost_company": "Ghost Company",
+    "bid_rigging": "Bid Rigging",
+    "overpricing": "Overpricing",
+    "conflict_of_interest": "Conflict of Interest",
+    "embezzlement": "Embezzlement",
+    "bribery": "Bribery",
+    "procurement_fraud": "Procurement Fraud",
+    "monopoly": "Monopoly",
+    "emergency_fraud": "Emergency Fraud",
+    "tender_rigging": "Tender Rigging",
+    "other": "Other"
+  },
+  "administrations": {
+    "fox": "Fox (2000–2006)",
+    "calderon": "Calderón (2006–2012)",
+    "epn": "Peña Nieto (2012–2018)",
+    "amlo": "AMLO (2018–2024)",
+    "sheinbaum": "Sheinbaum (2024–)"
+  },
+  "legalStatuses": {
+    "investigation": "Under investigation",
+    "prosecuted": "Prosecuted",
+    "convicted": "Convicted",
+    "acquitted": "Acquitted",
+    "dismissed": "Dismissed",
+    "impunity": "Impunity",
+    "unresolved": "Unresolved"
+  },
+  "severity": {
+    "1": "Low",
+    "2": "Medium",
+    "3": "High",
+    "4": "Critical"
+  },
+  "compranetVisibility": {
+    "high": "Fully visible in COMPRANET",
+    "partial": "Partially visible",
+    "invisible": "Not visible in COMPRANET"
+  },
+  "card": {
+    "yearRange": "{{start}}–{{end}}",
+    "discovered": "Discovered {{year}}",
+    "amountRange": "{{low}} – {{high}} MXN",
+    "amountLow": "~{{low}} MXN",
+    "mlLinked": "ML-linked",
+    "viewDetail": "View case"
+  },
+  "detail": {
+    "backToLibrary": "← Case Library",
+    "keyActors": "Key Actors",
+    "sources": "Sources",
+    "compranetNote": "COMPRANET Coverage",
+    "legalNote": "Legal Status",
+    "amountNote": "Amount",
+    "roles": {
+      "vendor": "Vendor",
+      "official": "Official",
+      "institution": "Institution",
+      "journalist": "Journalist"
+    },
+    "sourceTypes": {
+      "journalism": "Journalism",
+      "audit": "Audit",
+      "legal": "Legal record",
+      "academic": "Academic",
+      "official": "Official"
+    },
+    "noKeyActors": "No key actors documented",
+    "noSources": "No sources on record"
+  },
+  "noResults": "No cases match the current filters.",
+  "loading": "Loading cases..."
+}

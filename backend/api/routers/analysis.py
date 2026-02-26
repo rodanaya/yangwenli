@@ -3132,6 +3132,7 @@ def get_ml_price_anomalies(
     sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector (1-12)"),
     limit: int = Query(20, ge=1, le=50, description="Max results to return (1-50)"),
     only_new: bool = Query(False, description="If true, return only contracts NOT already in price_hypotheses"),
+    model: Optional[str] = Query(None, description="Model filter: 'price_only' or 'full_z_vector'. Default: all models."),
 ):
     """
     Return top-scoring contracts from the multi-feature Isolation Forest price anomaly detector.
@@ -3145,7 +3146,7 @@ def get_ml_price_anomalies(
     """
     import time as _time
 
-    cache_key = f"ml_anomalies:{sector_id}:{limit}:{only_new}"
+    cache_key = f"ml_anomalies:{sector_id}:{limit}:{only_new}:{model}"
     cached = _ml_anomalies_cache.get(cache_key)
     if cached and (_time.time() - cached["ts"]) < _ML_ANOMALIES_CACHE_TTL:
         return cached["data"]
@@ -3173,6 +3174,10 @@ def get_ml_price_anomalies(
 
             if only_new:
                 conditions.append("ma.iqr_flagged = 0")
+
+            if model is not None:
+                conditions.append("ma.model = ?")
+                params.append(model)
 
             where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
 
@@ -3249,3 +3254,341 @@ def get_ml_price_anomalies(
     except sqlite3.Error as exc:
         logger.error("Database error in get_ml_price_anomalies: %s", exc)
         raise HTTPException(status_code=500, detail="Database error occurred")
+
+
+# =============================================================================
+# ANOMALY MODEL COMPARISON (Section 14.1)
+# =============================================================================
+
+_anomaly_comparison_cache: Dict[str, Any] = {}
+_ANOMALY_COMPARISON_TTL = 3600  # 1 hour
+
+
+@router.get("/anomaly-comparison")
+def get_anomaly_comparison():
+    """
+    Compare price-only vs full-vector Isolation Forest anomaly detectors.
+    Based on Ouyang, Goh & Lim (2022): full-vector outperforms price-only by 23% recall.
+    """
+    import time as _time
+    import sqlite3 as _sqlite3
+
+    cached = _anomaly_comparison_cache.get("data")
+    if cached and (_time.time() - cached["ts"]) < _ANOMALY_COMPARISON_TTL:
+        return cached["data"]
+
+    with get_db() as conn:
+        conn.row_factory = _sqlite3.Row
+        cursor = conn.cursor()
+
+        # Count each model's detections
+        counts = cursor.execute("""
+            SELECT model, COUNT(*) as cnt
+            FROM contract_ml_anomalies
+            GROUP BY model
+        """).fetchall()
+        model_counts = {r["model"]: r["cnt"] for r in counts}
+
+        price_only = model_counts.get("price_only", 0)
+        full_vector = model_counts.get("full_z_vector", 0)
+
+        # Overlap: contracts in both
+        overlap = cursor.execute("""
+            SELECT COUNT(DISTINCT a.contract_id) as cnt
+            FROM contract_ml_anomalies a
+            JOIN contract_ml_anomalies b ON a.contract_id = b.contract_id
+            WHERE a.model = 'price_only' AND b.model = 'full_z_vector'
+        """).fetchone()
+        overlap_count = overlap["cnt"] if overlap else 0
+
+        unique_full = full_vector - overlap_count
+        unique_price = price_only - overlap_count
+
+        result = {
+            "contracts_flagged_by_price_only": price_only,
+            "contracts_flagged_by_full_vector": full_vector,
+            "overlap": overlap_count,
+            "unique_to_full_vector": unique_full,
+            "unique_to_price_only": unique_price,
+            "interpretation": (
+                f"Full-vector anomalies catch {unique_full} contracts with unusual "
+                "overall procurement patterns not visible in price alone."
+                " Based on Ouyang, Goh & Lim (2022): Isolation Forest on full feature vector "
+                "outperforms price-only detection by 23% recall."
+            ),
+        }
+
+        _anomaly_comparison_cache["data"] = {"ts": _time.time(), "data": result}
+        return result
+
+
+# =============================================================================
+# POLITICAL CYCLE ANALYSIS (Section 12.1)
+# =============================================================================
+
+_political_cycle_cache: Dict[str, Any] = {}
+_POLITICAL_CYCLE_TTL = 6 * 3600  # 6 hours
+
+@router.get("/political-cycle", tags=["analysis"])
+def get_political_cycle():
+    """
+    Analyze procurement patterns relative to Mexico's electoral/budget calendar.
+    Returns election-year effect and sexenio-year breakdown.
+    """
+    cache_key = "political_cycle"
+    cached = _political_cycle_cache.get(cache_key)
+    if cached and (_time.time() - cached["ts"]) < _POLITICAL_CYCLE_TTL:
+        return cached["data"]
+
+    with get_db() as conn:
+        # 1. Election year effect
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute("""
+            SELECT
+                is_election_year,
+                COUNT(*) as contracts,
+                ROUND(AVG(risk_score), 4) as avg_risk,
+                ROUND(100.0 * SUM(CASE WHEN risk_level IN ('high','critical') THEN 1 ELSE 0 END) / COUNT(*), 2) as high_risk_pct,
+                ROUND(100.0 * SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) as direct_award_pct,
+                ROUND(100.0 * SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) as single_bid_pct
+            FROM contracts
+            WHERE contract_year IS NOT NULL
+            GROUP BY is_election_year
+        """).fetchall()
+
+        election_data = {}
+        for r in rows:
+            key = "election_year" if r["is_election_year"] else "non_election_year"
+            election_data[key] = {
+                "contracts": r["contracts"],
+                "avg_risk": float(r["avg_risk"] or 0),
+                "high_risk_pct": float(r["high_risk_pct"] or 0),
+                "direct_award_pct": float(r["direct_award_pct"] or 0),
+                "single_bid_pct": float(r["single_bid_pct"] or 0),
+            }
+
+        # Compute relative effect (election vs non-election)
+        election_year_effect: Dict[str, Any] = {
+            "election_year": election_data.get("election_year", {}),
+            "non_election_year": election_data.get("non_election_year", {}),
+        }
+        if "election_year" in election_data and "non_election_year" in election_data:
+            base = election_data["non_election_year"]["avg_risk"]
+            comp = election_data["election_year"]["avg_risk"]
+            election_year_effect["risk_delta"] = round(comp - base, 4)
+            election_year_effect["risk_delta_pct"] = round((comp - base) / base * 100, 2) if base else 0.0
+
+        # 2. Sexenio-year breakdown (year 1-6 of each 6-year term)
+        rows2 = conn.execute("""
+            SELECT
+                sexenio_year,
+                COUNT(*) as contracts,
+                ROUND(AVG(risk_score), 4) as avg_risk,
+                ROUND(100.0 * SUM(CASE WHEN risk_level IN ('high','critical') THEN 1 ELSE 0 END) / COUNT(*), 2) as high_risk_pct,
+                ROUND(100.0 * SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) as direct_award_pct,
+                ROUND(100.0 * SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) as single_bid_pct
+            FROM contracts
+            WHERE sexenio_year IS NOT NULL
+            GROUP BY sexenio_year
+            ORDER BY sexenio_year
+        """).fetchall()
+
+        sexenio_labels = {1: "Year 1 (new admin)", 2: "Year 2", 3: "Year 3 (midterm)", 4: "Year 4", 5: "Year 5", 6: "Year 6 (lame duck)"}
+        sexenio_breakdown = []
+        for r in rows2:
+            yr = r["sexenio_year"]
+            sexenio_breakdown.append({
+                "sexenio_year": yr,
+                "label": sexenio_labels.get(yr, f"Year {yr}"),
+                "contracts": r["contracts"],
+                "avg_risk": float(r["avg_risk"] or 0),
+                "high_risk_pct": float(r["high_risk_pct"] or 0),
+                "direct_award_pct": float(r["direct_award_pct"] or 0),
+                "single_bid_pct": float(r["single_bid_pct"] or 0),
+            })
+
+        # 3. Q4 in election years vs non-election years
+        rows3 = conn.execute("""
+            SELECT
+                is_election_year,
+                CASE WHEN CAST(strftime('%m', contract_date) AS INTEGER) >= 10 THEN 'Q4' ELSE 'Q1-Q3' END as quarter,
+                COUNT(*) as contracts,
+                ROUND(AVG(risk_score), 4) as avg_risk
+            FROM contracts
+            WHERE contract_year IS NOT NULL AND contract_date IS NOT NULL
+            GROUP BY is_election_year, quarter
+        """).fetchall()
+
+        q4_interaction = {}
+        for r in rows3:
+            k = f"{'election' if r['is_election_year'] else 'non_election'}_{r['quarter'].lower().replace('-','_')}"
+            q4_interaction[k] = {
+                "contracts": r["contracts"],
+                "avg_risk": float(r["avg_risk"] or 0),
+            }
+
+        result = {
+            "election_year_effect": election_year_effect,
+            "sexenio_year_breakdown": sexenio_breakdown,
+            "q4_election_interaction": q4_interaction,
+        }
+
+        _political_cycle_cache[cache_key] = {"ts": _time.time(), "data": result}
+        return result
+
+
+# =============================================================================
+# PUBLICATION DELAY TRANSPARENCY (Section 12.2)
+# =============================================================================
+
+_pub_delay_cache: Dict[str, Any] = {}
+_PUB_DELAY_TTL = 6 * 3600  # 6 hours
+
+@router.get("/transparency/publication-delays", tags=["analysis"])
+def get_publication_delays():
+    """
+    Distribution of publication delay (days between contract date and COMPRANET publication).
+    Measures government transparency in procurement reporting.
+    """
+    cached = _pub_delay_cache.get("pub_delays")
+    if cached and (_time.time() - cached["ts"]) < _PUB_DELAY_TTL:
+        return cached["data"]
+
+    with get_db() as conn:
+        conn.row_factory = sqlite3.Row
+
+        # Bucket distribution
+        row = conn.execute("""
+            SELECT
+                SUM(CASE WHEN publication_delay_days BETWEEN 1 AND 7 THEN 1 ELSE 0 END) as bucket_0_7,
+                SUM(CASE WHEN publication_delay_days BETWEEN 8 AND 30 THEN 1 ELSE 0 END) as bucket_8_30,
+                SUM(CASE WHEN publication_delay_days BETWEEN 31 AND 90 THEN 1 ELSE 0 END) as bucket_31_90,
+                SUM(CASE WHEN publication_delay_days > 90 THEN 1 ELSE 0 END) as bucket_over_90,
+                COUNT(*) as total,
+                ROUND(AVG(publication_delay_days), 1) as avg_delay,
+                ROUND(AVG(CASE WHEN publication_delay_days <= 7 THEN 1.0 ELSE 0 END) * 100, 2) as timely_pct
+            FROM contracts
+            WHERE publication_delay_days IS NOT NULL AND publication_delay_days > 0
+        """).fetchone()
+
+        buckets = [
+            {"label": "1–7 days", "days_min": 1, "days_max": 7, "count": int(row["bucket_0_7"] or 0)},
+            {"label": "8–30 days", "days_min": 8, "days_max": 30, "count": int(row["bucket_8_30"] or 0)},
+            {"label": "31–90 days", "days_min": 31, "days_max": 90, "count": int(row["bucket_31_90"] or 0)},
+            {"label": ">90 days", "days_min": 91, "days_max": None, "count": int(row["bucket_over_90"] or 0)},
+        ]
+        total = int(row["total"] or 0)
+        for b in buckets:
+            b["pct"] = round(b["count"] / total * 100, 2) if total else 0.0
+
+        # By year trend
+        year_rows = conn.execute("""
+            SELECT
+                contract_year,
+                COUNT(*) as contracts_with_delay,
+                ROUND(AVG(publication_delay_days), 1) as avg_delay,
+                ROUND(100.0 * SUM(CASE WHEN publication_delay_days <= 7 THEN 1 ELSE 0 END) / COUNT(*), 2) as timely_pct
+            FROM contracts
+            WHERE publication_delay_days IS NOT NULL AND publication_delay_days > 0
+              AND contract_year IS NOT NULL
+            GROUP BY contract_year
+            ORDER BY contract_year
+        """).fetchall()
+
+        by_year = [
+            {
+                "year": r["contract_year"],
+                "contracts_with_delay": r["contracts_with_delay"],
+                "avg_delay": float(r["avg_delay"] or 0),
+                "timely_pct": float(r["timely_pct"] or 0),
+            }
+            for r in year_rows
+        ]
+
+        result = {
+            "total_with_delay_data": total,
+            "avg_delay_days": float(row["avg_delay"] or 0),
+            "timely_pct": float(row["timely_pct"] or 0),
+            "distribution": buckets,
+            "by_year": by_year,
+        }
+
+        _pub_delay_cache["pub_delays"] = {"ts": _time.time(), "data": result}
+        return result
+
+# ---------------------------------------------------------------------------
+# Threshold Gaming Analysis (Coviello, Guglielmo & Spagnolo 2018; Szucs 2023)
+# ---------------------------------------------------------------------------
+
+_threshold_gaming_cache: Dict[str, Any] = {}
+_THRESHOLD_GAMING_TTL = 6 * 3600
+
+
+@router.get("/threshold-gaming", tags=["analysis"])
+def get_threshold_gaming():
+    """
+    Contracts clustered just below LAASSP mandatory bidding thresholds.
+    Based on Szucs (2023): systematic bunching below thresholds indicates
+    threshold gaming to avoid competitive bidding requirements.
+    """
+    cached = _threshold_gaming_cache.get("tg")
+    if cached and (_time.time() - cached["ts"]) < _THRESHOLD_GAMING_TTL:
+        return cached["data"]
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        row = cursor.execute("""
+            SELECT
+                COUNT(*) as total_flagged,
+                ROUND(SUM(amount_mxn) / 1e9, 2) as total_value_bn,
+                COUNT(*) * 100.0 / (
+                    SELECT COUNT(*) FROM contracts
+                    WHERE is_direct_award = 0 AND amount_mxn > 0
+                ) as pct_of_competitive
+            FROM contracts
+            WHERE is_threshold_gaming = 1
+        """).fetchone()
+
+        total = row["total_flagged"] or 0
+
+        sector_rows = cursor.execute("""
+            SELECT s.name_es as sector, s.code as sector_code,
+                   COUNT(*) as flagged_count,
+                   COUNT(*) * 100.0 / (
+                       SELECT COUNT(*) FROM contracts c2
+                       WHERE c2.sector_id = c.sector_id AND c2.is_direct_award = 0 AND c2.amount_mxn > 0
+                   ) as flagged_pct,
+                   ROUND(SUM(c.amount_mxn) / 1e9, 2) as value_bn
+            FROM contracts c
+            JOIN sectors s ON c.sector_id = s.id
+            WHERE c.is_threshold_gaming = 1
+            GROUP BY c.sector_id
+            ORDER BY flagged_count DESC
+        """).fetchall()
+
+        by_sector = [
+            {
+                "sector": r["sector"],
+                "sector_code": r["sector_code"],
+                "flagged_count": r["flagged_count"],
+                "flagged_pct": round(float(r["flagged_pct"] or 0), 2),
+                "estimated_value_bn": float(r["value_bn"] or 0),
+            }
+            for r in sector_rows
+        ]
+
+        result = {
+            "total_flagged": total,
+            "pct_of_competitive_procedures": round(float(row["pct_of_competitive"] or 0), 2),
+            "total_value_bn": float(row["total_value_bn"] or 0),
+            "by_sector": by_sector,
+            "note": (
+                "Based on Szucs (2023): contracts clustered just below legal thresholds "
+                "indicate systematic threshold gaming to avoid competitive bidding requirements. "
+                "Flagged = within 5% below the licitacion publica mandatory threshold."
+            ),
+        }
+
+        _threshold_gaming_cache["tg"] = {"ts": _time.time(), "data": result}
+        return result

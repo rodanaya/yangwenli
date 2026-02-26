@@ -898,6 +898,49 @@ export function VendorProfile() {
                 </CardContent>
               </Card>
 
+              {/* Institutional Tenure (Coviello & Gagliarducci 2017) */}
+              {vendor.top_institutions && vendor.top_institutions.length > 0 && (
+                <Card className="hover-lift">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      Institutional Relationships
+                    </CardTitle>
+                    <p className="text-xs text-text-muted mt-0.5 italic">
+                      Long-tenured vendor relationships correlate with higher single-bid rates
+                      and prices (Coviello &amp; Gagliarducci 2017)
+                    </p>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="divide-y divide-border/30">
+                      {vendor.top_institutions.map((inst) => (
+                        <div key={inst.institution_id} className="flex items-center justify-between px-4 py-2 hover:bg-background-elevated/50">
+                          <div className="flex-1 min-w-0">
+                            <Link to={`/administrations?institution_id=${inst.institution_id}`}
+                              className="text-xs font-medium text-text-primary hover:text-primary truncate block">
+                              {inst.institution_name}
+                            </Link>
+                            <span className="text-xs text-text-muted">
+                              {inst.first_contract_year}–{inst.last_contract_year} · {inst.total_contracts.toLocaleString()} contracts
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 ml-3 flex-shrink-0">
+                            <span className="font-mono text-xs text-text-secondary">
+                              {inst.tenure_years} yrs
+                            </span>
+                            {inst.tenure_years > 15 && (
+                              <span className="text-xs bg-amber-900/40 text-amber-300 px-1.5 py-0.5 rounded font-medium">
+                                LONG
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Sector × Institution Footprint */}
               {footprintData && footprintData.footprint.length > 0 && (
               <Card className="hover-lift">

@@ -5,6 +5,14 @@
 
 import axios, { type AxiosError, type AxiosInstance } from 'axios'
 import type {
+  ScandalListItem,
+  ScandalDetail,
+  ScandalStats,
+  CaseLibraryParams,
+  PoliticalCycleResponse,
+  PublicationDelayResponse,
+  ThresholdGamingResponse,
+  ConcentrationRankingsResponse,
   ContractListResponse,
   ContractDetail,
   ContractFilterParams,
@@ -418,6 +426,41 @@ export const institutionApi = {
     const { data } = await api.get(`/institutions/${institutionId}/peer-comparison`)
     return data
   },
+
+  async getCriScatter(params: { sector_id?: number; min_contracts?: number; limit?: number } = {}): Promise<{
+    data: Array<{
+      id: number
+      name: string
+      sector_id: number
+      sector_code: string
+      total_contracts: number
+      avg_risk: number
+      direct_award_pct: number
+      single_bid_pct: number
+      high_risk_pct: number
+    }>
+    total: number
+  }> {
+    const q = new URLSearchParams()
+    if (params.sector_id) q.set('sector_id', String(params.sector_id))
+    if (params.min_contracts) q.set('min_contracts', String(params.min_contracts))
+    if (params.limit) q.set('limit', String(params.limit))
+    const { data } = await api.get(`/institutions/cri-scatter?${q}`)
+    return data
+  },
+
+  async getConcentrationRankings(params: {
+    year?: number
+    sector_id?: number
+    limit?: number
+  } = {}): Promise<ConcentrationRankingsResponse> {
+    const q = new URLSearchParams()
+    if (params.year) q.set('year', String(params.year))
+    if (params.sector_id) q.set('sector_id', String(params.sector_id))
+    if (params.limit) q.set('limit', String(params.limit))
+    const { data } = await api.get<ConcentrationRankingsResponse>(`/institutions/concentration-rankings?${q}`)
+    return data
+  },
 }
 
 // ============================================================================
@@ -768,6 +811,21 @@ export const analysisApi = {
     const { data } = await api.get<StructuralBreaksResponse>('/analysis/structural-breaks')
     return data
   },
+
+  async getPoliticalCycle(): Promise<PoliticalCycleResponse> {
+    const { data } = await api.get<PoliticalCycleResponse>('/analysis/political-cycle')
+    return data
+  },
+
+  async getPublicationDelays(): Promise<PublicationDelayResponse> {
+    const { data } = await api.get<PublicationDelayResponse>('/analysis/transparency/publication-delays')
+    return data
+  },
+
+  async getThresholdGaming(): Promise<ThresholdGamingResponse> {
+    const { data } = await api.get<ThresholdGamingResponse>('/analysis/threshold-gaming')
+    return data
+  },
 }
 
 // ============================================================================
@@ -955,6 +1013,9 @@ export interface NetworkNode {
   community_id?: number | null
   community_size?: number | null
   pagerank?: number | null
+  // Co-bidding triangle clustering (Wachs, Fazekas & Kertész 2021)
+  cobid_clustering_coeff?: number | null
+  cobid_triangle_count?: number | null
 }
 
 export interface CommunityVendorItem {
@@ -1372,6 +1433,7 @@ export const priceApi = {
     sector_id?: number
     limit?: number
     only_new?: boolean
+    model?: string
   } = {}): Promise<MlAnomaliesResponse> {
     const queryParams = buildQueryParams(params as Record<string, unknown>)
     const { data } = await api.get<MlAnomaliesResponse>(`/analysis/prices/ml-anomalies?${queryParams}`)
@@ -1490,6 +1552,32 @@ export const categoriesApi = {
   },
 }
 
+// ============================================================================
+// Case Library Endpoints
+// ============================================================================
+
+export const caseLibraryApi = {
+  async getAll(params: CaseLibraryParams = {}): Promise<ScandalListItem[]> {
+    const { data } = await api.get<ScandalListItem[]>('/cases', { params })
+    return data
+  },
+
+  async getStats(): Promise<ScandalStats> {
+    const { data } = await api.get<ScandalStats>('/cases/stats')
+    return data
+  },
+
+  async getBySlug(slug: string): Promise<ScandalDetail> {
+    const { data } = await api.get<ScandalDetail>(`/cases/${slug}`)
+    return data
+  },
+
+  async getBySector(sectorId: number): Promise<ScandalListItem[]> {
+    const { data } = await api.get<ScandalListItem[]>(`/cases/by-sector/${sectorId}`)
+    return data
+  },
+}
+
 // Default export with all API modules
 export default {
   sector: sectorApi,
@@ -1503,4 +1591,5 @@ export default {
   network: networkApi,
   investigation: investigationApi,
   categories: categoriesApi,
+  cases: caseLibraryApi,
 }

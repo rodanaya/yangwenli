@@ -118,5 +118,119 @@
   "rupc": {
     "title": "RUPC (Unified Vendor Registry)",
     "description": "Registro Único de Proveedores y Contratistas — Mexico's unified registry of companies eligible for federal contracting. Companies receive compliance grades based on performance history. Was hosted on CompraNet (abolished April 2025); continuity under ComprasMX uncertain."
+  },
+  "risk_factors": {
+    "vendor_concentration": {
+      "label": "Vendor Concentration",
+      "coefficient": "+0.428",
+      "validation_strength": "Strong (multiple country datasets)",
+      "key_citation": "Fazekas & Tóth (2016), Political Research Quarterly",
+      "mexico_note": "RUBLI's strongest predictor. Reflects concentration-based corruption patterns in IMSS Ghost Companies, Segalmex, and COVID-19 cases — the three largest training cases."
+    },
+    "price_volatility": {
+      "label": "Price Volatility",
+      "coefficient": "+1.219",
+      "validation_strength": "Strong (RUBLI v5.0 top predictor)",
+      "key_citation": "Porter & Zona (1993): Price manipulation detectable in bid distributions",
+      "mexico_note": "New in v5.0. Vendors with wildly varying contract amounts relative to sector norms. The strongest predictor in the v5.0 global model."
+    },
+    "institution_diversity": {
+      "label": "Institution Diversity",
+      "coefficient": "-0.848",
+      "validation_strength": "Negative — protective factor",
+      "key_citation": "Coviello & Mariniello (2014): Competition and transparency reduce award concentration",
+      "mexico_note": "Vendors serving many different institutions are less suspicious — they have legitimate broad reach. Negative coefficient."
+    },
+    "win_rate": {
+      "label": "Win Rate",
+      "coefficient": "+0.727",
+      "validation_strength": "Strong — abnormal win rates suggest market capture",
+      "key_citation": "Conley & Decarolis (2016): Bid rings detectable via win pattern analysis",
+      "mexico_note": "New in v5.0. A vendor winning contracts at a rate far above the sector baseline signals preferential access."
+    },
+    "single_bid": {
+      "label": "Single Bid",
+      "coefficient": "+0.013",
+      "validation_strength": "Strong globally, weak in Mexico",
+      "key_citation": "Charron et al. (2017), Journal of Politics",
+      "mexico_note": "Low coefficient because competitive procedures with 1 bidder are rare in Mexico — direct award is used instead when competition is restricted. Z-score normalization accounts for sector baseline."
+    },
+    "direct_award": {
+      "label": "Direct Award",
+      "coefficient": "+0.182",
+      "validation_strength": "Moderate — context-dependent",
+      "key_citation": "OECD (2016): Preventing Corruption in Public Procurement",
+      "mexico_note": "Mexico issues ~70% of contracts as direct awards. The z-score normalizes this baseline. Positive coefficient in v5.0 (was negative in v4.0 before diversifying ground truth)."
+    },
+    "industry_mismatch": {
+      "label": "Industry Mismatch",
+      "coefficient": "+0.305",
+      "validation_strength": "Moderate",
+      "key_citation": "Fazekas & Kocsis (2020), British Journal of Political Science",
+      "mexico_note": "Vendor's primary industry doesn't match the contract sector. A food distributor winning IT contracts, or a cleaning company winning construction contracts."
+    },
+    "same_day_count": {
+      "label": "Same-Day Award Count",
+      "coefficient": "+0.222",
+      "validation_strength": "Moderate — threshold splitting signal",
+      "key_citation": "ISO 37001 Anti-Bribery Management Systems",
+      "mexico_note": "Multiple contracts awarded to the same vendor on the same day, suggesting artificial splitting to stay below competitive bidding thresholds."
+    },
+    "network_member_count": {
+      "label": "Network Membership",
+      "coefficient": "+0.064",
+      "validation_strength": "Moderate",
+      "key_citation": "Fazekas, Skuhrovec & Wachs (2020): Network analysis of procurement graphs",
+      "mexico_note": "Vendor belongs to a group of related entities sharing officers, addresses, or bidding patterns. In v4.0 this was negative (artifact); v5.0 corrected to +0.064."
+    },
+    "year_end": {
+      "label": "Year-End Award",
+      "coefficient": "+0.059",
+      "validation_strength": "Weak — CI crosses zero",
+      "key_citation": "IMCO (Mexico): Budget rushing in December",
+      "mexico_note": "Contract awarded in December, consistent with budget-flushing behavior. Weak predictor in RUBLI — direct awards are common year-round."
+    },
+    "institution_risk": {
+      "label": "Institution Risk Type",
+      "coefficient": "+0.057",
+      "validation_strength": "Weak",
+      "key_citation": "IMF CRI Methodology",
+      "mexico_note": "Some institution types (municipalities, state agencies) have historically higher irregularity rates than federal agencies."
+    },
+    "ad_period_days": {
+      "label": "Advertisement Period",
+      "coefficient": "-0.104",
+      "validation_strength": "Negative — longer periods = more risk in Mexico",
+      "key_citation": "EU Directive 2014/24 minimum timelines",
+      "mexico_note": "Negative sign is counterintuitive: known-bad vendors tend to operate through normal-length procedures rather than rushed ones. Z-score captures deviation from sector baseline."
+    },
+    "sector_spread": {
+      "label": "Sector Spread",
+      "coefficient": "-0.374",
+      "validation_strength": "Negative — protective factor",
+      "key_citation": "Fazekas & Kocsis (2020)",
+      "mexico_note": "New in v5.0. Vendors operating across many sectors are less suspicious — diversified business reduces corruption probability."
+    },
+    "price_ratio": {
+      "label": "Price Ratio",
+      "coefficient": "-0.015",
+      "validation_strength": "Near-zero — unreliable in Mexico",
+      "key_citation": "World Bank INT (2019): Warning Signs of Fraud",
+      "mexico_note": "Contract amount vs. sector median. Near-zero coefficient because price_volatility (new v5.0 feature) absorbs much of the price signal."
+    },
+    "co_bid_rate": {
+      "label": "Co-Bid Rate",
+      "coefficient": "0.000",
+      "validation_strength": "No signal in current training data",
+      "key_citation": "Porter & Zona (1993): Co-bidding as collusion indicator",
+      "mexico_note": "Regularized to zero. Co-bidding patterns don't discriminate in Mexico's training data because dominant cases involve concentration, not coordinated bidding rings. Collusion Detection tab provides separate heuristic analysis."
+    },
+    "price_hyp_confidence": {
+      "label": "Price Hypothesis Confidence",
+      "coefficient": "+0.001",
+      "validation_strength": "Near-zero",
+      "key_citation": "Tukey IQR method for outlier detection",
+      "mexico_note": "IQR-based statistical outlier confidence score. Near-zero coefficient — price_volatility and price_ratio absorb the price signal more effectively."
+    }
   }
 }

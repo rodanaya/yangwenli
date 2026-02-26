@@ -440,6 +440,12 @@ export function Dashboard() {
     staleTime: 30 * 60 * 1000,
   })
 
+  const { data: pubDelayData } = useQuery({
+    queryKey: ['analysis', 'publication-delays'],
+    queryFn: () => analysisApi.getPublicationDelays(),
+    staleTime: 6 * 60 * 60 * 1000,
+  })
+
   const overview = fastDashboard?.overview
   const sectors = fastDashboard?.sectors
   const riskDist = fastDashboard?.risk_distribution
@@ -625,6 +631,34 @@ export function Dashboard() {
           See limitations <ArrowUpRight className="h-3 w-3" />
         </button>
       </div>
+
+      {/* ================================================================ */}
+      {/* PUBLICATION TRANSPARENCY — compact inline card                  */}
+      {/* ================================================================ */}
+      {pubDelayData && (
+        <div className="flex items-center gap-3 flex-wrap px-3 py-2 rounded border border-border/20 bg-background-elevated/10">
+          <Activity className="h-3 w-3 text-text-muted flex-shrink-0" />
+          <span className="text-[11px] font-bold tracking-wider uppercase text-text-muted font-mono">Publication Delay</span>
+          <span className="text-border text-[11px]">·</span>
+          <span className="text-[11px] text-text-muted font-mono">
+            avg <span className={pubDelayData.avg_delay_days > 30 ? 'text-risk-medium' : 'text-text-secondary'}>{pubDelayData.avg_delay_days.toFixed(0)} days</span>
+          </span>
+          <span className="text-border text-[11px]">·</span>
+          <span className="text-[11px] text-text-muted font-mono">
+            <span className={pubDelayData.timely_pct < 20 ? 'text-risk-high' : pubDelayData.timely_pct < 50 ? 'text-risk-medium' : 'text-risk-low'}>{pubDelayData.timely_pct.toFixed(0)}%</span> published within 7 days
+          </span>
+          <span className="text-border text-[11px]">·</span>
+          <span className="text-[11px] text-text-muted font-mono">
+            {pubDelayData.distribution.find(d => d.label === '>90 days')?.pct.toFixed(0)}% delayed {'>'}90 days
+          </span>
+          <button
+            onClick={() => navigate('/administrations')}
+            className="ml-auto text-[11px] text-accent flex items-center gap-0.5 hover:underline font-mono"
+          >
+            Explore cycles <ArrowUpRight className="h-3 w-3" />
+          </button>
+        </div>
+      )}
 
       {/* ================================================================ */}
       {/* ERA TIMELINE — 5 administration segments */}

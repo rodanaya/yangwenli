@@ -132,6 +132,8 @@ export interface ContractDetail extends ContractBase {
   is_multiannual: boolean
   is_high_value: boolean
   is_year_end: boolean
+  threshold_proximity?: number
+  is_threshold_gaming: boolean
   risk_factors?: string[]
   risk_confidence?: string
   risk_confidence_lower?: number
@@ -277,11 +279,35 @@ export interface VendorDetailResponse {
   max_mahalanobis?: number
   pct_anomalous?: number
   name_variants: NameVariant[]
+  top_institutions: VendorTenureInstitution[]
+  // Co-bidding triangle clustering (Wachs, Fazekas & Kertész 2021)
+  cobid_clustering_coeff?: number
+  cobid_triangle_count?: number
 }
 
 export interface NameVariant {
   variant_name: string
   source: string  // 'qqw' | 'manual' | 'etl'
+}
+
+export interface VendorTenureInstitution {
+  institution_id: number
+  institution_name: string
+  first_contract_year: number
+  last_contract_year: number
+  tenure_years: number
+  total_contracts: number
+  total_amount_mxn: number
+}
+
+export interface LongestTenuredVendor {
+  vendor_id: number
+  vendor_name: string
+  first_contract_year: number
+  last_contract_year: number
+  tenure_years: number
+  total_contracts: number
+  avg_risk_score?: number
 }
 
 export interface VendorRiskProfile {
@@ -398,6 +424,11 @@ export interface InstitutionDetailResponse extends InstitutionResponse {
   avg_contract_value?: number
   high_risk_contract_count?: number
   high_risk_percentage?: number
+  avg_risk_score?: number
+  direct_award_rate?: number
+  direct_award_count?: number
+  longest_tenured_vendors: LongestTenuredVendor[]
+  supplier_diversity?: SupplierDiversity
 }
 
 export interface InstitutionRiskProfile {
@@ -1095,3 +1126,198 @@ export interface InvestigationFilterParams {
   page?: number
   per_page?: number
 }
+
+// ============================================================================
+// Case Library Types
+// ============================================================================
+
+export type FraudType =
+  | 'ghost_company'
+  | 'bid_rigging'
+  | 'overpricing'
+  | 'conflict_of_interest'
+  | 'embezzlement'
+  | 'bribery'
+  | 'procurement_fraud'
+  | 'monopoly'
+  | 'emergency_fraud'
+  | 'tender_rigging'
+  | 'other'
+
+export type Administration = 'fox' | 'calderon' | 'epn' | 'amlo' | 'sheinbaum'
+
+export type LegalStatus =
+  | 'investigation'
+  | 'prosecuted'
+  | 'convicted'
+  | 'acquitted'
+  | 'dismissed'
+  | 'impunity'
+  | 'unresolved'
+
+export type CompranetVisibility = 'high' | 'partial' | 'invisible'
+
+export interface KeyActor {
+  name: string
+  role: 'vendor' | 'official' | 'institution' | 'journalist'
+  title?: string
+  note?: string
+}
+
+export interface ScandalSource {
+  title: string
+  outlet: string
+  date?: string
+  type: 'journalism' | 'audit' | 'legal' | 'academic' | 'official'
+  url?: string
+}
+
+export interface ScandalListItem {
+  id: number
+  name_en: string
+  name_es: string
+  slug: string
+  fraud_type: FraudType
+  administration: Administration
+  sector_id?: number
+  sector_ids: number[]
+  contract_year_start?: number
+  contract_year_end?: number
+  discovery_year?: number
+  amount_mxn_low?: number
+  amount_mxn_high?: number
+  severity: number
+  legal_status: LegalStatus
+  compranet_visibility: CompranetVisibility
+  summary_en: string
+  is_verified: number
+  ground_truth_case_id?: number
+}
+
+export interface ScandalDetail extends ScandalListItem {
+  amount_note?: string
+  legal_status_note?: string
+  compranet_note?: string
+  summary_es?: string
+  key_actors: KeyActor[]
+  sources: ScandalSource[]
+  investigation_case_ids: number[]
+}
+
+export interface ScandalStats {
+  total_cases: number
+  total_amount_mxn_low: number
+  cases_by_fraud_type: { fraud_type: string; count: number }[]
+  cases_by_administration: { administration: string; count: number }[]
+  cases_by_legal_status: { legal_status: string; count: number }[]
+  cases_by_severity: { severity: number; count: number }[]
+  gt_linked_count: number
+  compranet_visible_count: number
+}
+
+export interface CaseLibraryParams {
+  fraud_type?: FraudType
+  administration?: Administration
+  sector_id?: number
+  legal_status?: LegalStatus
+  severity_min?: number
+  compranet_visibility?: CompranetVisibility
+  search?: string
+}
+
+// Political Cycle Analysis
+export interface SexenioYearBreakdown {
+  sexenio_year: number
+  label: string
+  contracts: number
+  avg_risk: number
+  high_risk_pct: number
+  direct_award_pct: number
+  single_bid_pct: number
+}
+
+export interface ElectionYearGroup {
+  contracts: number
+  avg_risk: number
+  high_risk_pct: number
+  direct_award_pct: number
+  single_bid_pct: number
+}
+
+export interface PoliticalCycleResponse {
+  election_year_effect: {
+    election_year?: ElectionYearGroup
+    non_election_year?: ElectionYearGroup
+    risk_delta?: number
+    risk_delta_pct?: number
+  }
+  sexenio_year_breakdown: SexenioYearBreakdown[]
+  q4_election_interaction: Record<string, { contracts: number; avg_risk: number }>
+}
+
+// Publication Delay Transparency
+export interface DelayBucket {
+  label: string
+  count: number
+  pct: number
+  days_min?: number
+  days_max?: number | null
+}
+
+export interface PublicationDelayResponse {
+  total_with_delay_data: number
+  avg_delay_days: number
+  timely_pct: number
+  distribution: DelayBucket[]
+  by_year: { year: number; contracts_with_delay: number; avg_delay: number; timely_pct: number }[]
+}
+
+// Supplier Diversity / HHI (Prozorro analytics; Fazekas CRI)
+export interface SupplierDiversityHistory {
+  year: number
+  hhi: number
+  unique_vendors: number
+}
+
+export interface SupplierDiversity {
+  hhi_current_year: number
+  hhi_5yr_avg: number
+  unique_vendors_current_year: number
+  concentration_level: 'low' | 'medium' | 'high'
+  trend: 'increasing' | 'decreasing' | 'stable'
+  history: SupplierDiversityHistory[]
+  prozorro_note: string
+}
+
+export interface ConcentrationRankingItem {
+  institution_id: number
+  name: string
+  siglas?: string
+  sector_id?: number
+  hhi: number
+  unique_vendors: number
+  total_value_mxn: number
+  concentration_level: 'low' | 'medium' | 'high'
+}
+
+export interface ConcentrationRankingsResponse {
+  year: number
+  most_concentrated: ConcentrationRankingItem[]
+  least_concentrated: ConcentrationRankingItem[]
+  note: string
+}
+
+// Threshold Gaming (Szucs 2023 / Coviello et al. 2018)
+export interface ThresholdGamingSector {
+  sector_id: number
+  sector_name: string
+  flagged_contracts: number
+  total_value_mxn: number
+}
+
+export interface ThresholdGamingResponse {
+  total_flagged: number
+  pct_of_competitive_procedures: number
+  by_sector: ThresholdGamingSector[]
+}
+

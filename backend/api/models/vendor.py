@@ -108,6 +108,16 @@ class VendorDetailResponse(BaseModel):
     # Name variants (from QuiénEsQuién.Wiki and other sources)
     name_variants: List["NameVariant"] = Field(default_factory=list, description="Known name aliases")
 
+    # Institutional tenure (Coviello & Gagliarducci 2017)
+    top_institutions: List["VendorTenureInstitution"] = Field(
+        default_factory=list,
+        description="Longest-tenured institution relationships"
+    )
+
+    # Co-bidding triangle clustering (Wachs, Fazekas & Kertész 2021)
+    cobid_clustering_coeff: Optional[float] = Field(None, description="Co-bidding clustering coefficient")
+    cobid_triangle_count: Optional[int] = Field(None, description="Number of co-bidding triangles")
+
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -115,6 +125,28 @@ class NameVariant(BaseModel):
     """A known name alias for a vendor."""
     variant_name: str
     source: str  # 'qqw', 'manual', 'etl'
+
+
+class VendorTenureInstitution(BaseModel):
+    """Tenure relationship between vendor and institution (Coviello & Gagliarducci 2017)."""
+    institution_id: int
+    institution_name: str
+    first_contract_year: int
+    last_contract_year: int
+    tenure_years: int
+    total_contracts: int
+    total_amount_mxn: float
+
+
+class LongestTenuredVendor(BaseModel):
+    """Longest-tenured vendor at an institution."""
+    vendor_id: int
+    vendor_name: str
+    first_contract_year: int
+    last_contract_year: int
+    tenure_years: int
+    total_contracts: int
+    avg_risk_score: Optional[float] = None
 
 
 class VendorRiskProfile(BaseModel):

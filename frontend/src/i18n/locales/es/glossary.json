@@ -118,5 +118,119 @@
   "rupc": {
     "title": "RUPC (Registro Único de Proveedores y Contratistas)",
     "description": "Registro unificado de empresas habilitadas para la contratación federal de México. Las empresas reciben calificaciones de cumplimiento basadas en su historial de desempeño. Estaba alojado en CompraNet (abolido en abril de 2025); continuidad bajo ComprasMX incierta."
+  },
+  "risk_factors": {
+    "vendor_concentration": {
+      "label": "Concentración de Proveedor",
+      "coefficient": "+0.428",
+      "validation_strength": "Fuerte (múltiples países)",
+      "key_citation": "Fazekas & Tóth (2016), Political Research Quarterly",
+      "mexico_note": "El predictor más fuerte de RUBLI. Refleja los patrones de corrupción basados en concentración: IMSS Empresas Fantasma, Segalmex y COVID-19."
+    },
+    "price_volatility": {
+      "label": "Volatilidad de Precio",
+      "coefficient": "+1.219",
+      "validation_strength": "Fuerte (predictor principal v5.0)",
+      "key_citation": "Porter & Zona (1993): La manipulación de precios es detectable",
+      "mexico_note": "Nuevo en v5.0. Proveedores con montos de contrato muy variables respecto a la norma del sector."
+    },
+    "institution_diversity": {
+      "label": "Diversidad Institucional",
+      "coefficient": "-0.848",
+      "validation_strength": "Negativo — factor protector",
+      "key_citation": "Coviello & Mariniello (2014)",
+      "mexico_note": "Los proveedores que atienden a muchas instituciones son menos sospechosos. Coeficiente negativo."
+    },
+    "win_rate": {
+      "label": "Tasa de Éxito",
+      "coefficient": "+0.727",
+      "validation_strength": "Fuerte",
+      "key_citation": "Conley & Decarolis (2016)",
+      "mexico_note": "Nuevo en v5.0. Un proveedor que gana contratos muy por encima de la tasa base del sector sugiere acceso preferencial."
+    },
+    "single_bid": {
+      "label": "Licitación con Un Solo Postor",
+      "coefficient": "+0.013",
+      "validation_strength": "Fuerte globalmente, débil en México",
+      "key_citation": "Charron et al. (2017), Journal of Politics",
+      "mexico_note": "Coeficiente bajo porque en México se usa la adjudicación directa en lugar de licitaciones con un solo postor."
+    },
+    "direct_award": {
+      "label": "Adjudicación Directa",
+      "coefficient": "+0.182",
+      "validation_strength": "Moderado — dependiente del contexto",
+      "key_citation": "OCDE (2016): Prevención de la Corrupción en Compras Públicas",
+      "mexico_note": "México emite ~70% de contratos por adjudicación directa. La puntuación z normaliza esta base."
+    },
+    "industry_mismatch": {
+      "label": "Discrepancia de Industria",
+      "coefficient": "+0.305",
+      "validation_strength": "Moderado",
+      "key_citation": "Fazekas & Kocsis (2020)",
+      "mexico_note": "La industria principal del proveedor no corresponde al sector del contrato."
+    },
+    "same_day_count": {
+      "label": "Contratos en el Mismo Día",
+      "coefficient": "+0.222",
+      "validation_strength": "Moderado — señal de fraccionamiento",
+      "key_citation": "ISO 37001 Sistemas Antisoborno",
+      "mexico_note": "Múltiples contratos adjudicados al mismo proveedor el mismo día, sugiriendo fraccionamiento artificial."
+    },
+    "network_member_count": {
+      "label": "Membresía en Red",
+      "coefficient": "+0.064",
+      "validation_strength": "Moderado",
+      "key_citation": "Fazekas, Skuhrovec & Wachs (2020)",
+      "mexico_note": "El proveedor pertenece a un grupo de entidades relacionadas. Corregido a positivo en v5.0."
+    },
+    "year_end": {
+      "label": "Contrato de Fin de Año",
+      "coefficient": "+0.059",
+      "validation_strength": "Débil — IC cruza cero",
+      "key_citation": "IMCO (México): Presupuesto de diciembre",
+      "mexico_note": "Contrato adjudicado en diciembre, consistente con el comportamiento de gasto de presupuesto residual."
+    },
+    "institution_risk": {
+      "label": "Riesgo Institucional",
+      "coefficient": "+0.057",
+      "validation_strength": "Débil",
+      "key_citation": "Metodología CRI del FMI",
+      "mexico_note": "Algunos tipos de instituciones tienen históricamente tasas de irregularidades más altas."
+    },
+    "ad_period_days": {
+      "label": "Período de Publicación",
+      "coefficient": "-0.104",
+      "validation_strength": "Negativo en México",
+      "key_citation": "Directiva UE 2014/24",
+      "mexico_note": "Signo negativo: los proveedores corruptos conocidos tienden a operar mediante procedimientos de duración normal, no apresurados."
+    },
+    "sector_spread": {
+      "label": "Distribución Sectorial",
+      "coefficient": "-0.374",
+      "validation_strength": "Negativo — factor protector",
+      "key_citation": "Fazekas & Kocsis (2020)",
+      "mexico_note": "Nuevo en v5.0. Los proveedores que operan en muchos sectores son menos sospechosos."
+    },
+    "price_ratio": {
+      "label": "Ratio de Precio",
+      "coefficient": "-0.015",
+      "validation_strength": "Casi nulo",
+      "key_citation": "Banco Mundial INT (2019)",
+      "mexico_note": "Monto del contrato vs. mediana sectorial. Casi nulo porque price_volatility absorbe mejor la señal de precio."
+    },
+    "co_bid_rate": {
+      "label": "Tasa de Co-Licitación",
+      "coefficient": "0.000",
+      "validation_strength": "Sin señal en datos de entrenamiento",
+      "key_citation": "Porter & Zona (1993)",
+      "mexico_note": "Regularizado a cero. Los patrones de co-licitación no discriminan en los datos de entrenamiento de México."
+    },
+    "price_hyp_confidence": {
+      "label": "Confianza Hipótesis de Precio",
+      "coefficient": "+0.001",
+      "validation_strength": "Casi nulo",
+      "key_citation": "Método IQR de Tukey",
+      "mexico_note": "Puntuación de confianza del outlier estadístico. Casi nulo — price_volatility absorbe la señal de forma más efectiva."
+    }
   }
 }

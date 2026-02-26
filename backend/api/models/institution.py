@@ -1,6 +1,6 @@
 """Pydantic models for institution endpoints."""
 from pydantic import BaseModel, ConfigDict, Field
-from typing import List, Optional
+from typing import Any, List, Optional
 from datetime import datetime
 from .common import PaginationMeta
 
@@ -87,6 +87,16 @@ class InstitutionDetailResponse(InstitutionResponse):
     avg_risk_score: Optional[float] = Field(None, description="Average risk score of contracts")
     direct_award_rate: Optional[float] = Field(None, description="Percentage of direct award contracts")
     direct_award_count: Optional[int] = Field(None, description="Count of direct award contracts")
+    # Vendor tenure (Coviello & Gagliarducci 2017)
+    longest_tenured_vendors: List[Any] = Field(
+        default_factory=list,
+        description="Vendors with longest tenure at this institution"
+    )
+    # Supplier diversity / HHI (Prozorro analytics; Fazekas CRI)
+    supplier_diversity: Optional[Any] = Field(
+        None,
+        description="HHI-based supplier diversity metrics (Herfindahl-Hirschman Index)"
+    )
 
 
 class InstitutionRiskProfile(BaseModel):

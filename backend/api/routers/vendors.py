@@ -34,6 +34,7 @@ from ..models.vendor import (
     VendorTopAllResponse,
     VendorComparisonItem,
     VendorComparisonResponse,
+    VendorTenureInstitution,
 )
 from ..models.asf import ASFCase
 from ..models.common import PaginationMeta
@@ -451,6 +452,7 @@ def get_vendor(
         cursor.execute("""
             SELECT
                 v.phonetic_code, v.group_id,
+                v.cobid_clustering_coeff, v.cobid_triangle_count,
                 vc.industry_id, vc.industry_code, vc.industry_confidence,
                 vi.name_es as industry_name, vi.sector_affinity,
                 vg.canonical_name as group_name,
@@ -486,6 +488,30 @@ def get_vendor(
         name_variants = [{"variant_name": r["variant_name"], "source": r["source"]}
                          for r in name_variants_rows]
 
+        # Fetch top institution tenures (Coviello & Gagliarducci 2017)
+        tenure_rows = cursor.execute("""
+            SELECT vit.institution_id, i.name AS institution_name,
+                   vit.first_contract_year, vit.last_contract_year,
+                   vit.total_contracts, COALESCE(vit.total_amount_mxn, 0) AS total_amount_mxn
+            FROM vendor_institution_tenure vit
+            JOIN institutions i ON vit.institution_id = i.id
+            WHERE vit.vendor_id = ?
+            ORDER BY (vit.last_contract_year - vit.first_contract_year) DESC, vit.total_contracts DESC
+            LIMIT 10
+        """, (vendor_id,)).fetchall()
+        top_institutions = [
+            VendorTenureInstitution(
+                institution_id=r["institution_id"],
+                institution_name=r["institution_name"],
+                first_contract_year=r["first_contract_year"],
+                last_contract_year=r["last_contract_year"],
+                tenure_years=(r["last_contract_year"] - r["first_contract_year"] + 1),
+                total_contracts=r["total_contracts"],
+                total_amount_mxn=r["total_amount_mxn"],
+            )
+            for r in tenure_rows
+        ]
+
         return VendorDetailResponse(
             id=detail["id"],
             name=detail["name"],
@@ -520,6 +546,9 @@ def get_vendor(
             max_mahalanobis=round(extra["max_mahalanobis"], 4) if extra and extra["max_mahalanobis"] else None,
             pct_anomalous=round(detail["anomalous_pct"], 2) if detail.get("anomalous_pct") else None,
             name_variants=name_variants,
+            top_institutions=top_institutions,
+            cobid_clustering_coeff=round(extra["cobid_clustering_coeff"], 6) if extra and extra["cobid_clustering_coeff"] else None,
+            cobid_triangle_count=extra["cobid_triangle_count"] if extra else None,
         )
 
 

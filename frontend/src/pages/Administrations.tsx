@@ -18,7 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatNumber, formatCompactMXN } from '@/lib/utils'
 import { SECTORS, RISK_COLORS } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
-import type { YearOverYearChange } from '@/api/types'
+import type { YearOverYearChange, SexenioYearBreakdown } from '@/api/types'
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -1427,7 +1427,13 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
   const { data: breaksData } = useQuery({
     queryKey: ['analysis', 'structural-breaks'],
     queryFn: () => analysisApi.getStructuralBreaks(),
-    staleTime: 60 * 60 * 1000, // 1 hour — matches server-side cache TTL
+    staleTime: 60 * 60 * 1000,
+  })
+
+  const { data: politicalData } = useQuery({
+    queryKey: ['analysis', 'political-cycle'],
+    queryFn: () => analysisApi.getPoliticalCycle(),
+    staleTime: 6 * 60 * 60 * 1000,
   })
 
   if (isLoading) {
@@ -1628,6 +1634,77 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
         </CardContent>
       </Card>
       </ScrollReveal>
+
+      {/* Political Budget Cycle — sexenio-year breakdown */}
+      {politicalData && politicalData.sexenio_year_breakdown.length > 0 && (
+        <ScrollReveal direction="fade">
+        <Card className="bg-card border-border/40">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-mono text-text-primary">
+              Political Budget Cycle — Risk by Sexenio Year
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-3 text-xs text-text-muted leading-relaxed">
+              Mexico's 6-year presidential cycle creates predictable budget rhythms.
+              Year 1 = new administration (election year). Year 3 = midterm elections. Year 6 = lame-duck spending surge.
+            </div>
+            <ResponsiveContainer width="100%" height={220}>
+              <ComposedChart
+                data={politicalData.sexenio_year_breakdown}
+                margin={{ top: 10, right: 20, bottom: 5, left: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.2} />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fill: 'var(--color-text-muted)', fontSize: 9, fontFamily: 'var(--font-family-mono)' }}
+                  interval={0}
+                />
+                <YAxis
+                  yAxisId="risk"
+                  domain={[0, 12]}
+                  tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                  tickFormatter={(v: number) => `${v}%`}
+                  width={36}
+                />
+                <YAxis
+                  yAxisId="da"
+                  orientation="right"
+                  domain={[60, 85]}
+                  tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                  tickFormatter={(v: number) => `${v}%`}
+                  width={36}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'var(--color-card)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 8,
+                    fontSize: 11,
+                    fontFamily: 'var(--font-family-mono)',
+                  }}
+                  formatter={(value: unknown, name?: string) => [`${Number(value).toFixed(1)}%`, name]}
+                />
+                <Legend wrapperStyle={{ fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
+                <Bar yAxisId="risk" dataKey="high_risk_pct" name="High Risk %" fill={RISK_COLORS.high} opacity={0.85} radius={[2, 2, 0, 0]} />
+                <Line yAxisId="da" type="monotone" dataKey="direct_award_pct" name="Direct Award %" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
+              </ComposedChart>
+            </ResponsiveContainer>
+            {politicalData.election_year_effect.risk_delta !== undefined && (
+              <p className="mt-2 text-[11px] text-text-muted font-mono">
+                Election year avg risk: {((politicalData.election_year_effect.election_year?.avg_risk ?? 0) * 100).toFixed(2)}%
+                {' vs '}{((politicalData.election_year_effect.non_election_year?.avg_risk ?? 0) * 100).toFixed(2)}% non-election
+                {' ('}
+                <span className={politicalData.election_year_effect.risk_delta > 0 ? 'text-risk-high' : 'text-risk-low'}>
+                  {politicalData.election_year_effect.risk_delta > 0 ? '+' : ''}{(politicalData.election_year_effect.risk_delta * 100).toFixed(3)}pp
+                </span>
+                {')'}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+        </ScrollReveal>
+      )}
     </div>
   )
 }

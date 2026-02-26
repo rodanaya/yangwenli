@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
 import { cn, formatCompactMXN, formatNumber, formatPercentSafe } from '@/lib/utils'
-import { sectorApi, analysisApi } from '@/api/client'
+import { sectorApi, analysisApi, institutionApi } from '@/api/client'
 import { SECTOR_COLORS, SECTORS, getSectorNameEN } from '@/lib/constants'
 import { Heatmap } from '@/components/charts/Heatmap'
 import type { SectorStatistics } from '@/api/types'
@@ -38,6 +38,10 @@ import {
   PolarRadiusAxis,
   LineChart,
   Line,
+  ScatterChart,
+  Scatter,
+  ZAxis,
+  ReferenceLine,
 } from '@/components/charts'
 import { formatCompactUSD } from '@/lib/utils'
 
@@ -277,6 +281,18 @@ export function Sectors() {
     queryKey: ['analysis', 'sector-year-breakdown'],
     queryFn: () => analysisApi.getSectorYearBreakdown(),
     staleTime: 10 * 60 * 1000,
+  })
+
+  const { data: criScatterData } = useQuery({
+    queryKey: ['institutions', 'cri-scatter'],
+    queryFn: () => institutionApi.getCriScatter({ min_contracts: 200, limit: 200 }),
+    staleTime: 60 * 60 * 1000,
+  })
+
+  const { data: concentrationData } = useQuery({
+    queryKey: ['institutions', 'concentration-rankings', selectedSector?.sector_id],
+    queryFn: () => institutionApi.getConcentrationRankings({ sector_id: selectedSector?.sector_id, limit: 10 }),
+    staleTime: 60 * 60 * 1000,
   })
 
   // ---- Sparkline data: per-sector avg_risk by year ----
@@ -846,6 +862,159 @@ export function Sectors() {
 
         </div>
       </ScrollReveal>
+
+      {/* ================================================================ */}
+      {/* CRI SCATTER — Institution Risk Landscape (Fazekas-style)         */}
+      {/* ================================================================ */}
+      {criScatterData && criScatterData.data.length > 0 && (
+        <ScrollReveal direction="fade">
+          <Card className="bg-card border-border/40">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-mono text-text-primary">
+                Institution Risk Landscape — Direct Award vs Risk Score
+              </CardTitle>
+              <CardDescription className="text-xs text-text-muted">
+                Each bubble = one institution. X: direct award rate. Y: avg risk score. Size: contract volume. Top-right quadrant = highest concern.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={360}>
+                <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.2} />
+                  <XAxis
+                    type="number"
+                    dataKey="direct_award_pct"
+                    name="Direct Award %"
+                    domain={[0, 100]}
+                    tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                    tickFormatter={(v: number) => `${v}%`}
+                    label={{ value: 'Direct Award Rate', position: 'insideBottom', offset: -10, fontSize: 10, fill: 'var(--color-text-muted)' }}
+                  />
+                  <YAxis
+                    type="number"
+                    dataKey="avg_risk"
+                    name="Avg Risk"
+                    domain={[0, 0.5]}
+                    tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                    tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
+                    label={{ value: 'Avg Risk', angle: -90, position: 'insideLeft', offset: 10, fontSize: 10, fill: 'var(--color-text-muted)' }}
+                    width={40}
+                  />
+                  <ZAxis type="number" dataKey="total_contracts" range={[20, 600]} name="Contracts" />
+                  <ReferenceLine x={70} stroke="#f59e0b" strokeDasharray="3 3" strokeOpacity={0.5} />
+                  <ReferenceLine y={0.30} stroke="#ef4444" strokeDasharray="3 3" strokeOpacity={0.5} />
+                  <RechartsTooltip
+                    cursor={{ strokeDasharray: '3 3' }}
+                    contentStyle={{
+                      backgroundColor: 'var(--color-card)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 8,
+                      fontSize: 11,
+                      fontFamily: 'var(--font-family-mono)',
+                    }}
+                    content={({ payload }) => {
+                      if (!payload?.length) return null
+                      const d = payload[0]?.payload
+                      if (!d) return null
+                      return (
+                        <div className="p-2 max-w-[240px]">
+                          <div className="font-semibold text-text-primary text-[11px] leading-tight mb-1">{d.name}</div>
+                          <div className="text-[10px] text-text-muted space-y-0.5">
+                            <div>Sector: {d.sector_code}</div>
+                            <div>Contracts: {d.total_contracts.toLocaleString()}</div>
+                            <div>Avg Risk: {(d.avg_risk * 100).toFixed(2)}%</div>
+                            <div>Direct Award: {d.direct_award_pct.toFixed(1)}%</div>
+                            <div>Single Bid: {d.single_bid_pct.toFixed(1)}%</div>
+                          </div>
+                        </div>
+                      )
+                    }}
+                  />
+                  <Scatter
+                    data={criScatterData.data}
+                    fill="#64748b"
+                    fillOpacity={0.7}
+                    shape={(props: Record<string, unknown>) => {
+                      const { cx, cy, r } = props as { cx: number; cy: number; r: number; payload: Record<string, unknown> }
+                      const payload = props.payload as { sector_code: string }
+                      const color = SECTOR_COLORS[payload.sector_code] || '#64748b'
+                      return <circle cx={cx} cy={cy} r={r || 4} fill={color} fillOpacity={0.65} stroke={color} strokeOpacity={0.9} strokeWidth={0.5} />
+                    }}
+                  />
+                </ScatterChart>
+              </ResponsiveContainer>
+              <p className="mt-2 text-[10px] text-text-muted font-mono">
+                Dashed amber line = 70% direct award threshold · Dashed red line = 30% high-risk threshold · Bubble color = sector · Size = contract volume
+              </p>
+            </CardContent>
+          </Card>
+        </ScrollReveal>
+      )}
+
+      {/* ================================================================ */}
+      {/* MARKET HEALTH — Supplier Diversity (HHI)                        */}
+      {/* ================================================================ */}
+      {concentrationData && concentrationData.most_concentrated.length > 0 && (
+        <ScrollReveal direction="fade">
+          <Card className="bg-card border-border/40">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-mono text-text-primary">
+                Market Health — Supplier Diversity (HHI)
+              </CardTitle>
+              <CardDescription className="text-xs text-text-muted">
+                Herfindahl-Hirschman Index per institution ({concentrationData.year}). HHI &gt;2,500 = highly concentrated; &lt;1,000 = competitive.
+                Source: Prozorro (Ukraine) analytics / Fazekas CRI methodology.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-[10px] text-text-muted font-mono mb-3 p-2 bg-muted/20 rounded border border-border/30">
+                HHI = sum of squared market shares (0–10,000 scale). EU antitrust challenges mergers creating HHI &gt;2,500.
+                In procurement, high HHI indicates limited effective competition.
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[600px] text-xs">
+                  <thead>
+                    <tr className="border-b border-border/40">
+                      <th className="text-left py-1.5 pr-4 font-mono text-text-muted">Institution</th>
+                      <th className="text-right py-1.5 pr-4 font-mono text-text-muted">HHI</th>
+                      <th className="text-right py-1.5 pr-4 font-mono text-text-muted">Unique Vendors</th>
+                      <th className="text-right py-1.5 pr-4 font-mono text-text-muted">Total Value</th>
+                      <th className="text-left py-1.5 font-mono text-text-muted">Level</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {concentrationData.most_concentrated.slice(0, 10).map((inst) => (
+                      <tr key={inst.institution_id} className="border-b border-border/20 hover:bg-muted/10">
+                        <td className="py-1.5 pr-4 text-text-secondary max-w-[220px] truncate" title={inst.name}>
+                          {inst.siglas || inst.name.slice(0, 30)}
+                        </td>
+                        <td className={`py-1.5 pr-4 text-right font-mono font-bold ${
+                          inst.hhi >= 2500 ? 'text-risk-critical' : inst.hhi >= 1000 ? 'text-amber-400' : 'text-emerald-400'
+                        }`}>
+                          {inst.hhi.toLocaleString()}
+                        </td>
+                        <td className="py-1.5 pr-4 text-right font-mono text-text-muted">{inst.unique_vendors}</td>
+                        <td className="py-1.5 pr-4 text-right font-mono text-text-muted">{formatCompactMXN(inst.total_value_mxn)}</td>
+                        <td className="py-1.5">
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${
+                            inst.concentration_level === 'high'
+                              ? 'bg-red-950/40 text-red-400 border border-red-500/30'
+                              : inst.concentration_level === 'medium'
+                              ? 'bg-amber-950/30 text-amber-400 border border-amber-500/30'
+                              : 'bg-emerald-950/30 text-emerald-400 border border-emerald-500/30'
+                          }`}>
+                            {inst.concentration_level}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </ScrollReveal>
+      )}
     </div>
   )
 }

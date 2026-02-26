@@ -19,6 +19,7 @@ import {
   Landmark,
   Eye,
   TrendingUp,
+  Library,
 } from 'lucide-react'
 import { RubliLogoMark } from '@/components/ui/RubliLogoMark'
 import { LanguageToggle } from '@/components/LanguageToggle'
@@ -69,6 +70,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
     sectionKey: 'sections.investigateSection',
     items: [
       { i18nKey: 'investigation', href: '/investigation', icon: Crosshair },
+      { i18nKey: 'caseLibrary', href: '/cases', icon: Library },
       { i18nKey: 'contracts', href: '/contracts', icon: FileText },
       { i18nKey: 'watchlist', href: '/watchlist', icon: Eye },
     ],

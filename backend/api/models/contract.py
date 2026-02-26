@@ -91,6 +91,13 @@ class ContractDetail(ContractBase):
     data_quality_score: Optional[float] = None
     data_quality_grade: Optional[str] = None
 
+    # Threshold proximity (Coviello et al. 2018; Szucs 2023)
+    threshold_proximity: Optional[float] = None
+    is_threshold_gaming: bool = False
+
+    # Full-vector ML anomaly score (Ouyang, Goh & Lim 2022)
+    ml_anomaly_score_full: Optional[float] = None
+
     # Metadata
     source_structure: Optional[str] = None
     source_year: Optional[int] = None

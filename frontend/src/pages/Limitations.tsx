@@ -180,6 +180,41 @@ const LIMITATIONS = [
     ],
     workaround: 'Monitor the Ground Truth page for newly added cases. After major scandals are documented, the model should be retrained to incorporate the new patterns.',
   },
+  {
+    id: 'contract-modifications',
+    icon: Search,
+    title: 'Contract Modifications Invisible — Renegotiation Is Where Corruption Hides',
+    severity: 'medium',
+    summary: 'RUBLI cannot see post-award contract renegotiations and modifications. In complex infrastructure, up to 50% of contracts are renegotiated — and the cost overruns are often where corruption occurs.',
+    body: [
+      'RUBLI analyzes contract award data only. After a contract is signed, modifications — cost overruns, scope changes, extended timelines, substituted deliverables — are not recorded in COMPRANET in a format this system can track.',
+      'Bajari, McMillan & Tadelis (2009) documented that up to 50% of complex public works contracts are renegotiated after award, with an average 14% cost overrun. In corruption-prone contexts, the initial competitive bid is intentionally lowball — modifications are planned from the start to extract the true rent.',
+      'This means RUBLI\'s risk scores for large infrastructure projects reflect the procurement phase only. A contract that scored clean at award can represent a significant corruption outcome once modifications are applied. The Tren Maya (tourist train), Pemex refinery construction, and major hospital projects in Mexico have all shown 100%+ cost overruns in ASF (Auditoría Superior de la Federación) audit reports — while their original procurement contracts appear normal.',
+    ],
+    blind_spots: [
+      'Post-award cost overruns billed via contract amendments',
+      'Scope expansions that inflate the real contract value after competitive award',
+      'Substitution of contracted goods/services during execution',
+      'Multi-year projects where year 1 appears clean but years 2–5 are corrupt',
+    ],
+    sectors_most_affected: ['Infraestructura', 'Energía (PEMEX, CFE)', 'Large civil works, hospital construction'],
+    workaround: 'Cross-reference RUBLI findings with ASF Cuenta Pública reports (asf.gob.mx). The ASF audits execution phase and routinely documents cost overruns. Integration of ASF findings into RUBLI scores is a planned Phase 6 enhancement.',
+  },
+  {
+    id: 'mexico-concentration',
+    icon: BarChart3,
+    title: 'Vendor Concentration Is Mexico-Specific — A Calibration Caveat',
+    severity: 'low',
+    summary: 'RUBLI\'s strongest predictor (vendor concentration) differs from the globally dominant predictor (single bidding). This reflects Mexico\'s structural preference for direct awards rather than competitive procedures.',
+    body: [
+      'In the global procurement corruption literature, single bidding — a competitive procedure with only one vendor — is the most universally validated warning indicator (Fazekas & Tóth 2016; Charron et al. 2017). In European datasets, this pattern has the strongest predictive power.',
+      'In RUBLI (trained on Mexico\'s 3.1M contracts), vendor concentration is the strongest predictor (+0.428 global coefficient), while single bidding has a near-zero coefficient (+0.013). This divergence is not a modeling error — it reflects Mexico\'s procurement structure.',
+      'In Mexico, roughly 70% of contracts are direct awards. When direct award is the norm, single-bid competitive procedures are rare even for clean procurement. The z-score normalization accounts for this baseline. But the training data (79% from IMSS, Segalmex, COVID-19 cases) reinforces concentration as the dominant signal because these cases involved large vendors capturing institutional monopolies.',
+      'Implication: RUBLI is well-calibrated for Mexico\'s documented corruption patterns — concentration-based capture is the primary mechanism. It may underperform on corruption forms more common in European datasets: cover bidding in competitive procedures and bid rotation rings, which are less prevalent in Mexico\'s direct-award-heavy system.',
+    ],
+    impact: 'RUBLI\'s high-risk flags are most reliable for identifying vendor capture and market concentration. For collusion detection in competitive procedures, supplement with the Vendor Profile → Collusion Detection tab.',
+    workaround: 'When investigating bid-rigging in competitive procedures, use the Co-bidding analysis tool rather than relying on risk scores alone. Risk scores are calibrated for Mexico\'s dominant corruption form (concentration), not for collusion rings.',
+  },
 ] as const
 
 const SEVERITY_COLORS = {
@@ -214,6 +249,8 @@ const SUMMARY_ROWS = [
   { limitation: 'Correlation ≠ causation', impact: 'Scores require investigative follow-up', fixable: 'no', fix: 'By design — model informs, not concludes' },
   { limitation: 'Structural concentration', impact: 'Some sectors over-flagged', fixable: 'yes', fix: 'Sector-specific priors or exclusion lists' },
   { limitation: 'Temporal stationarity', impact: 'New fraud patterns may be undetected', fixable: 'yes', fix: 'Periodic retraining with new cases' },
+  { limitation: 'Contract modifications invisible', impact: 'Infrastructure/energy execution-phase costs untracked', fixable: 'partial', fix: 'Requires ASF audit data integration (Phase 6)' },
+  { limitation: 'Mexico-specific concentration model', impact: 'Bid-rotation collusion in competitive procedures underdetected', fixable: 'yes', fix: 'Add collusion-ring ground truth cases to training data' },
 ] as const
 
 // ============================================================================

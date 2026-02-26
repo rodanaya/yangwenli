@@ -41,6 +41,8 @@ const InvestigationCaseDetail = lazy(() => import('@/pages/InvestigationCaseDeta
 const ExecutiveSummary = lazy(() => import('@/pages/ExecutiveSummary'))
 const SpendingCategories = lazy(() => import('@/pages/SpendingCategories'))
 const Limitations = lazy(() => import('@/pages/Limitations'))
+const CaseLibrary = lazy(() => import('@/pages/CaseLibrary'))
+const CaseDetail = lazy(() => import('@/pages/CaseDetail'))
 
 // Enhanced QueryClient configuration for better caching and UX
 const queryClient = new QueryClient({
@@ -191,6 +193,22 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <Limitations />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="cases"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <CaseLibrary />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="cases/:slug"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <CaseDetail />
                   </SuspenseBoundary>
                 }
               />

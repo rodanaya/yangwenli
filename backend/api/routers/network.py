@@ -58,6 +58,8 @@ class NetworkNode(BaseModel):
     community_id: Optional[int] = Field(None, description="Louvain community ID")
     community_size: Optional[int] = Field(None, description="Community member count")
     pagerank: Optional[float] = Field(None, description="PageRank in co-bidding network")
+    cobid_clustering_coeff: Optional[float] = Field(None, description="Co-bidding clustering coefficient (Wachs et al. 2021)")
+    cobid_triangle_count: Optional[int] = Field(None, description="Number of co-bidding triangles")
 
 
 class NetworkLink(BaseModel):
@@ -182,9 +184,11 @@ def get_network_graph(
                 placeholders = ",".join("?" * len(vendor_ids))
                 cursor.execute(
                     f"""
-                    SELECT vendor_id, community_id, community_size, pagerank
-                    FROM vendor_graph_features
-                    WHERE vendor_id IN ({placeholders})
+                    SELECT vgf.vendor_id, vgf.community_id, vgf.community_size, vgf.pagerank,
+                           v.cobid_clustering_coeff, v.cobid_triangle_count
+                    FROM vendor_graph_features vgf
+                    JOIN vendors v ON vgf.vendor_id = v.id
+                    WHERE vgf.vendor_id IN ({placeholders})
                     """,
                     vendor_ids,
                 )
@@ -196,6 +200,9 @@ def get_network_graph(
                             node["community_id"] = gf[vid]["community_id"]
                             node["community_size"] = gf[vid]["community_size"]
                             node["pagerank"] = round(gf[vid]["pagerank"], 6)
+                            if gf[vid]["cobid_clustering_coeff"] is not None:
+                                node["cobid_clustering_coeff"] = round(gf[vid]["cobid_clustering_coeff"], 6)
+                                node["cobid_triangle_count"] = gf[vid]["cobid_triangle_count"]
             except Exception:
                 pass  # graph features not built yet — degrade gracefully
 

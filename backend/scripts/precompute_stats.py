@@ -226,8 +226,147 @@ def precompute_stats():
             print(f"   Warning: pattern count {key} failed: {e}")
     print(f"   Done ({time.time() - start:.1f}s)")
 
+    # 7. Political cycle stats
+    print("7. Computing political cycle stats...")
+    start = time.time()
+    try:
+        rows = cursor.execute("""
+            SELECT
+                is_election_year,
+                COUNT(*) as contracts,
+                ROUND(AVG(risk_score), 4) as avg_risk,
+                ROUND(100.0 * SUM(CASE WHEN risk_level IN ('high','critical') THEN 1 ELSE 0 END) / COUNT(*), 2) as high_risk_pct,
+                ROUND(100.0 * SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) as direct_award_pct
+            FROM contracts
+            WHERE contract_year IS NOT NULL
+            GROUP BY is_election_year
+        """).fetchall()
+        election_data = {}
+        for r in rows:
+            key = "election_year" if r["is_election_year"] else "non_election_year"
+            election_data[key] = {"contracts": r["contracts"], "avg_risk": round(r["avg_risk"] or 0, 4), "high_risk_pct": round(r["high_risk_pct"] or 0, 2), "direct_award_pct": round(r["direct_award_pct"] or 0, 2)}
+
+        srows = cursor.execute("""
+            SELECT sexenio_year,
+                COUNT(*) as contracts,
+                ROUND(AVG(risk_score), 4) as avg_risk,
+                ROUND(100.0 * SUM(CASE WHEN risk_level IN ('high','critical') THEN 1 ELSE 0 END) / COUNT(*), 2) as high_risk_pct,
+                ROUND(100.0 * SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) as direct_award_pct
+            FROM contracts WHERE sexenio_year IS NOT NULL
+            GROUP BY sexenio_year ORDER BY sexenio_year
+        """).fetchall()
+        labels = {1: "Year 1 (new admin)", 2: "Year 2", 3: "Year 3 (midterm)", 4: "Year 4", 5: "Year 5", 6: "Year 6 (lame duck)"}
+        sexenio_breakdown = [{"sexenio_year": r["sexenio_year"], "label": labels.get(r["sexenio_year"], f"Year {r['sexenio_year']}"), "contracts": r["contracts"], "avg_risk": round(r["avg_risk"] or 0, 4), "high_risk_pct": round(r["high_risk_pct"] or 0, 2), "direct_award_pct": round(r["direct_award_pct"] or 0, 2)} for r in srows]
+
+        stats['political_cycle'] = {"election_year_effect": election_data, "sexenio_year_breakdown": sexenio_breakdown}
+        print(f"   Done ({time.time() - start:.1f}s)")
+    except Exception as e:
+        print(f"   Warning: political cycle stats failed: {e}")
+
+    # 8. Publication delay stats
+    print("8. Computing publication delay stats...")
+    start = time.time()
+    try:
+        row = cursor.execute("""
+            SELECT
+                SUM(CASE WHEN publication_delay_days BETWEEN 1 AND 7 THEN 1 ELSE 0 END) as b_0_7,
+                SUM(CASE WHEN publication_delay_days BETWEEN 8 AND 30 THEN 1 ELSE 0 END) as b_8_30,
+                SUM(CASE WHEN publication_delay_days BETWEEN 31 AND 90 THEN 1 ELSE 0 END) as b_31_90,
+                SUM(CASE WHEN publication_delay_days > 90 THEN 1 ELSE 0 END) as b_over_90,
+                COUNT(*) as total,
+                ROUND(AVG(publication_delay_days), 1) as avg_delay,
+                ROUND(100.0 * SUM(CASE WHEN publication_delay_days <= 7 THEN 1 ELSE 0 END) / COUNT(*), 2) as timely_pct
+            FROM contracts
+            WHERE publication_delay_days IS NOT NULL AND publication_delay_days > 0
+        """).fetchone()
+        total_d = int(row["total"] or 0)
+        buckets = [
+            {"label": "1–7 days", "count": int(row["b_0_7"] or 0), "pct": round(int(row["b_0_7"] or 0) / total_d * 100, 2) if total_d else 0},
+            {"label": "8–30 days", "count": int(row["b_8_30"] or 0), "pct": round(int(row["b_8_30"] or 0) / total_d * 100, 2) if total_d else 0},
+            {"label": "31–90 days", "count": int(row["b_31_90"] or 0), "pct": round(int(row["b_31_90"] or 0) / total_d * 100, 2) if total_d else 0},
+            {"label": ">90 days", "count": int(row["b_over_90"] or 0), "pct": round(int(row["b_over_90"] or 0) / total_d * 100, 2) if total_d else 0},
+        ]
+        stats['publication_delays'] = {"total": total_d, "avg_delay_days": float(row["avg_delay"] or 0), "timely_pct": float(row["timely_pct"] or 0), "distribution": buckets}
+        print(f"   Done ({time.time() - start:.1f}s)")
+    except Exception as e:
+        print(f"   Warning: publication delay stats failed: {e}")
+
+    # 9. Institution HHI (supplier diversity) per sector per year
+    print("9. Computing institution HHI stats...")
+    start = time.time()
+    try:
+        # HHI per institution per year: sum of squared market shares (0-10000 scale)
+        # Use primary_sector_id from institutions table for sector join
+        hhi_rows = cursor.execute("""
+            WITH vendor_shares AS (
+                SELECT
+                    institution_id,
+                    contract_year,
+                    vendor_id,
+                    SUM(COALESCE(amount_mxn, 0)) AS vendor_value
+                FROM contracts
+                WHERE institution_id IS NOT NULL AND vendor_id IS NOT NULL
+                  AND contract_year IS NOT NULL AND amount_mxn > 0
+                GROUP BY institution_id, contract_year, vendor_id
+            ),
+            institution_totals AS (
+                SELECT institution_id, contract_year,
+                       SUM(vendor_value) AS total_value,
+                       COUNT(DISTINCT vendor_id) AS unique_vendors
+                FROM vendor_shares GROUP BY institution_id, contract_year
+            ),
+            hhi_calc AS (
+                SELECT vs.institution_id, vs.contract_year,
+                       ROUND(SUM((vs.vendor_value * 100.0 / it.total_value) *
+                                 (vs.vendor_value * 100.0 / it.total_value)), 1) AS hhi,
+                       it.unique_vendors
+                FROM vendor_shares vs
+                JOIN institution_totals it
+                  ON vs.institution_id = it.institution_id AND vs.contract_year = it.contract_year
+                WHERE it.total_value > 0
+                GROUP BY vs.institution_id, vs.contract_year
+            )
+            SELECT h.institution_id, h.contract_year, h.hhi, h.unique_vendors,
+                   i.name AS institution_name, i.sector_id
+            FROM hhi_calc h
+            JOIN institutions i ON h.institution_id = i.id
+            ORDER BY h.contract_year DESC, h.hhi DESC
+        """).fetchall()
+
+        # Build per-institution lookups: {institution_id: [{year, hhi, unique_vendors}...]}
+        from collections import defaultdict
+        inst_hhi = defaultdict(list)
+        for r in hhi_rows:
+            inst_hhi[int(r["institution_id"])].append({
+                "year": int(r["contract_year"]),
+                "hhi": float(r["hhi"]),
+                "unique_vendors": int(r["unique_vendors"]),
+            })
+
+        # Also compute per-sector average HHI by year
+        sector_hhi_map = defaultdict(lambda: defaultdict(list))
+        for r in hhi_rows:
+            if r["sector_id"]:
+                sector_hhi_map[int(r["sector_id"])][int(r["contract_year"])].append(float(r["hhi"]))
+
+        sector_hhi_trend = {}
+        for sid, years in sector_hhi_map.items():
+            sector_hhi_trend[str(sid)] = [
+                {"year": yr, "avg_hhi": round(sum(vals) / len(vals), 1)}
+                for yr, vals in sorted(years.items())
+            ]
+
+        stats['institution_hhi'] = {
+            "by_institution": {str(k): v for k, v in inst_hhi.items()},
+            "sector_avg_trend": sector_hhi_trend,
+        }
+        print(f"   Done ({time.time() - start:.1f}s) — {len(inst_hhi)} institutions")
+    except Exception as e:
+        print(f"   Warning: HHI computation failed: {e}")
+        import traceback; traceback.print_exc()
+
     # Save all stats to database
-    print("\n7. Saving to database...")
+    print("\n10. Saving to database...")
     for key, value in stats.items():
         cursor.execute("""
             INSERT OR REPLACE INTO precomputed_stats (stat_key, stat_value, updated_at)
