@@ -66,6 +66,18 @@ GRUPO_TO_SECTOR = {
     "Deuda": "hacienda",
 }
 
+# Known functional group names that may appear standalone (without "Grupo Funcional" prefix)
+# Some PDFs omit the prefix, especially Gasto Federalizado audits
+KNOWN_GRUPOS = {
+    "Desarrollo Social",
+    "Gobierno",
+    "Desarrollo Económico",
+    "Gasto Federalizado",
+    "Deuda",
+    "Bienestar",
+    "Seguridad Nacional",
+}
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Wayback discovery
@@ -199,9 +211,16 @@ def parse_audit_pdf(pdf_bytes: bytes, source_url: str) -> dict | None:
             finding_type = "observation"
 
             for i, line in enumerate(lines[:20]):
-                # Functional group: "Grupo Funcional Desarrollo Social"
-                if line.startswith("Grupo Funcional"):
-                    functional_group = line.replace("Grupo Funcional", "").strip()
+                # Functional group — two structural variants:
+                # 1) "Grupo Funcional Desarrollo Social" (standard)
+                # 2) "Gasto Federalizado" alone (some audits omit the prefix)
+                # Note: OCR sometimes produces "Grupo Funciona" (missing trailing 'l')
+                if re.match(r"Grupo\s+Funcional?", line, re.IGNORECASE):
+                    functional_group = re.sub(r"Grupo\s+Funcional?\s*", "", line, flags=re.IGNORECASE).strip()
+                elif functional_group is None and any(
+                    g.lower() in line.lower() for g in KNOWN_GRUPOS
+                ):
+                    functional_group = line.strip()
                 # Audit ID line: "Auditoría De Cumplimiento a Inversiones Físicas: 2021-2-13J2Y-22-0002-2022"
                 elif re.search(r"Auditor[ií]a", line, re.IGNORECASE) and ":" in line:
                     # Finding type: everything between "Auditoría" and the colon
@@ -254,31 +273,35 @@ def parse_audit_pdf(pdf_bytes: bytes, source_url: str) -> dict | None:
             for page in pdf.pages[1:4]:
                 all_pages_text += "\n" + (page.extract_text() or "")
 
-            # Pattern A: Total with two numbers → use second (Importe Revisado)
-            m_total = re.search(
-                r"Total\s+([\d,]+\.?\d*)\s+([\d,]+\.?\d*)",
-                all_pages_text,
-                re.IGNORECASE,
-            )
-            if m_total:
-                raw = m_total.group(2).replace(",", "")
-                try:
-                    amount_mxn = float(raw) * 1_000  # thousands → pesos
-                except ValueError:
-                    pass
+            # Pattern B (checked first): Muestra Auditada / Universo Seleccionado
+            # These are specific and reliable for investment/physical audits
+            for pattern in [r"Muestra\s+Auditada\s+([\d,]+\.\d+)",
+                             r"Muestra\s+Auditada\s+([\d,]+)",
+                             r"Universo\s+Seleccionado\s+([\d,]+\.\d+)",
+                             r"Universo\s+Seleccionado\s+([\d,]+)"]:
+                m_sample = re.search(pattern, all_pages_text, re.IGNORECASE)
+                if m_sample:
+                    raw = m_sample.group(1).replace(",", "")
+                    try:
+                        amount_mxn = float(raw) * 1_000  # thousands → pesos
+                    except ValueError:
+                        pass
+                    break
 
-            # Pattern B: Muestra Auditada / Universo Seleccionado
+            # Pattern A: "Total X Y" — two decimal amounts (Importe Ejercido + Importe Revisado)
+            # Uses decimal-required format to avoid matching count columns like "Total 285 159 ..."
             if amount_mxn is None:
-                for pattern in [r"Muestra\s+Auditada\s+([\d,]+\.?\d*)",
-                                 r"Universo\s+Seleccionado\s+([\d,]+\.?\d*)"]:
-                    m_sample = re.search(pattern, all_pages_text, re.IGNORECASE)
-                    if m_sample:
-                        raw = m_sample.group(1).replace(",", "")
-                        try:
-                            amount_mxn = float(raw) * 1_000
-                        except ValueError:
-                            pass
-                        break
+                m_total = re.search(
+                    r"Total\s+([\d,]+\.\d+)\s+([\d,]+\.\d+)",
+                    all_pages_text,
+                    re.IGNORECASE,
+                )
+                if m_total:
+                    raw = m_total.group(2).replace(",", "")
+                    try:
+                        amount_mxn = float(raw) * 1_000  # thousands → pesos
+                    except ValueError:
+                        pass
 
             return {
                 "asf_report_id": audit_id,
@@ -348,97 +371,191 @@ def main():
     parser = argparse.ArgumentParser(description="Scrape ASF audit PDFs via Wayback Machine")
     parser.add_argument("--year", type=int, default=2021, help="Fiscal year (default: 2021)")
     parser.add_argument("--limit", type=int, default=500, help="Max PDFs to process (default: 500)")
-    parser.add_argument("--batch", type=int, default=10, help="Save to DB every N PDFs (default: 10)")
-    parser.add_argument("--delay", type=float, default=1.5, help="Seconds between PDF downloads (default: 1.5)")
+    parser.add_argument("--delay", type=float, default=1.2, help="Seconds between PDF downloads (default: 1.2)")
     parser.add_argument("--dry-run", action="store_true", help="Parse but don't write to DB")
+    parser.add_argument(
+        "--output", type=str, default=None,
+        help="Path to write JSONL results file (default: auto-generated in script dir)"
+    )
     args = parser.parse_args()
 
-    conn = None
+    # Output JSONL file — written incrementally, DB insert happens at end
+    if args.output:
+        out_path = Path(args.output)
+    else:
+        out_path = Path(__file__).parent / f"asf_scraped_{args.year}.jsonl"
+
+    logger.info(f"Output file: {out_path}")
+
+    # Load already-scraped URLs from DB + existing JSONL to skip duplicates
+    # Uses report_url (always present) rather than asf_report_id (complex format)
     already_scraped: set[str] = set()
-
     if not args.dry_run:
-        conn = sqlite3.connect(str(DB_PATH))
-        conn.execute("PRAGMA busy_timeout = 30000")
-        already_scraped = get_already_scraped(conn)
-        logger.info(f"Already in DB: {len(already_scraped)} audit reports")
+        import json as _json_skip
+        try:
+            conn_check = sqlite3.connect(str(DB_PATH))
+            conn_check.execute("PRAGMA busy_timeout = 5000")
+            rows = conn_check.execute(
+                "SELECT DISTINCT report_url FROM asf_cases WHERE report_url IS NOT NULL"
+            ).fetchall()
+            already_scraped.update(r[0] for r in rows)
+            conn_check.close()
+            logger.info(f"Already in DB: {len(already_scraped)} URLs")
+        except sqlite3.Error as e:
+            logger.warning(f"Could not load DB URLs (DB busy?): {e}")
+        # Also load from existing JSONL (crash recovery — don't re-scrape what's been parsed)
+        if out_path.exists():
+            try:
+                with open(out_path, encoding="utf-8") as f_skip:
+                    for line in f_skip:
+                        line = line.strip()
+                        if line:
+                            try:
+                                rec_skip = _json_skip.loads(line)
+                                if rec_skip.get("report_url"):
+                                    already_scraped.add(rec_skip["report_url"])
+                            except ValueError:
+                                pass
+                logger.info(f"Total URLs to skip (DB + JSONL): {len(already_scraped)}")
+            except Exception as e:
+                logger.warning(f"Could not load JSONL skip URLs: {e}")
 
-    # Step 1: Discover archived PDF URLs from Wayback CDX
-    pdf_urls = get_archived_urls(args.year, limit=args.limit * 3)  # fetch extra to allow for skips
+    # Step 1: Discover archived PDF URLs
+    pdf_urls = get_archived_urls(args.year, limit=args.limit * 2)
 
     session = requests.Session()
     session.headers.update(HEADERS)
 
     processed = 0
-    inserted = 0
+    parsed = 0
     failed = 0
     skipped = 0
-    batch: list[dict] = []
+    records: list[dict] = []
 
-    for timestamp, original_url in pdf_urls:
-        if processed >= args.limit:
-            break
+    # Open JSONL file for incremental writes
+    jsonl_file = None if args.dry_run else open(out_path, "a", encoding="utf-8")
 
-        # Extract audit ID from URL to check if already scraped
-        m = re.search(r"/(\d{4}_\d+_\w+)\.pdf$", original_url, re.IGNORECASE)
-        url_audit_key = m.group(1) if m else None
+    try:
+        import json as _json
 
-        # Skip if already in DB (using URL key as proxy before parsing)
-        if url_audit_key and conn:
-            # Check if any record matches this year+number pattern
-            short_id = url_audit_key.replace("_a", "").replace("_", "-")
-            if any(short_id in aid for aid in already_scraped):
+        for timestamp, original_url in pdf_urls:
+            if processed >= args.limit:
+                break
+
+            # Skip if URL already in DB or current JSONL
+            if original_url in already_scraped:
                 skipped += 1
                 continue
 
-        processed += 1
-        logger.info(f"[{processed}/{args.limit}] Fetching {original_url} (ts={timestamp})")
+            processed += 1
+            logger.info(f"[{processed}/{args.limit}] {original_url}")
 
-        # Step 2: Download PDF
-        pdf_bytes = fetch_pdf_bytes(timestamp, original_url, session)
-        if not pdf_bytes:
-            failed += 1
+            # Download PDF
+            pdf_bytes = fetch_pdf_bytes(timestamp, original_url, session)
+            if not pdf_bytes:
+                failed += 1
+                time.sleep(args.delay)
+                continue
+
+            # Parse PDF
+            rec = parse_audit_pdf(pdf_bytes, original_url)
+            if not rec:
+                logger.warning(f"  Parse failed: {original_url}")
+                failed += 1
+                time.sleep(args.delay)
+                continue
+
+            amount_str = f"{rec['amount_mxn']:,.0f} MXN" if rec.get("amount_mxn") else "N/A"
+            logger.info(
+                f"  [{rec['finding_type'][:30]}] {rec['entity_name'][:50]} | "
+                f"ID: {rec['asf_report_id']} | {amount_str}"
+            )
+            parsed += 1
+
+            if not args.dry_run and jsonl_file:
+                jsonl_file.write(_json.dumps(rec, ensure_ascii=False) + "\n")
+                jsonl_file.flush()
+            else:
+                records.append(rec)
+
             time.sleep(args.delay)
-            continue
 
-        # Step 3: Parse PDF
-        rec = parse_audit_pdf(pdf_bytes, original_url)
-        if not rec:
-            logger.warning(f"  Could not parse: {original_url}")
-            failed += 1
-            time.sleep(args.delay)
-            continue
+        logger.info(f"Scrape done: parsed={parsed}, failed={failed}, skipped={skipped}")
 
-        logger.info(f"  Entity: {rec['entity_name'][:60]}")
-        logger.info(f"  Type: {rec['finding_type']} | ID: {rec['asf_report_id']} | "
-                    f"Amount: {rec['amount_mxn']:,.0f} MXN" if rec['amount_mxn'] else
-                    f"  Type: {rec['finding_type']} | ID: {rec['asf_report_id']} | Amount: N/A")
+    finally:
+        if jsonl_file:
+            jsonl_file.close()
 
-        if args.dry_run:
-            inserted += 1
-        else:
-            batch.append(rec)
-            if len(batch) >= args.batch:
-                for r in batch:
-                    if insert_record(conn, r):
-                        inserted += 1
-                batch.clear()
-                logger.info(f"  Progress: {inserted} inserted, {failed} failed, {skipped} skipped")
+    # Step 3: Bulk-insert from JSONL into DB (single connection, short lock)
+    if args.dry_run:
+        logger.info(f"Dry run — {parsed} records parsed, no DB writes")
+        return
 
-        time.sleep(args.delay)
+    if not out_path.exists():
+        logger.info("No output file to insert")
+        return
 
-    # Final batch
-    if not args.dry_run and batch and conn:
-        for r in batch:
-            if insert_record(conn, r):
-                inserted += 1
+    import json as _json
 
-    if conn:
+    # Read all JSONL records
+    all_records: list[dict] = []
+    with open(out_path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                try:
+                    all_records.append(_json.loads(line))
+                except ValueError:
+                    pass
+
+    if not all_records:
+        logger.info("No records in JSONL file to insert")
+        return
+
+    logger.info(f"Inserting {len(all_records)} records from JSONL into DB ...")
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.execute("PRAGMA busy_timeout = 60000")
+    conn.execute("PRAGMA synchronous = NORMAL")
+    inserted = 0
+    skipped_dup = 0
+    total = 0
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        for rec in all_records:
+            try:
+                conn.execute(
+                    """INSERT OR IGNORE INTO asf_cases
+                       (asf_report_id, entity_name, vendor_name, vendor_rfc,
+                        finding_type, amount_mxn, report_year, report_url, summary, scraped_at)
+                       VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                    (
+                        rec.get("asf_report_id"), rec.get("entity_name", "Unknown"),
+                        rec.get("vendor_name"), rec.get("vendor_rfc"),
+                        rec.get("finding_type", "observation"), rec.get("amount_mxn"),
+                        rec.get("report_year"), rec.get("report_url"),
+                        rec.get("summary"), rec.get("scraped_at"),
+                    ),
+                )
+                changed = conn.execute("SELECT changes()").fetchone()[0]
+                if changed:
+                    inserted += 1
+                else:
+                    skipped_dup += 1
+            except sqlite3.Error as e:
+                logger.error(f"Insert error {rec.get('asf_report_id')}: {e}")
+        conn.commit()
         total = conn.execute("SELECT COUNT(*) FROM asf_cases").fetchone()[0]
+    except sqlite3.Error as e:
+        logger.error(f"Transaction error: {e}")
+        conn.rollback()
+    finally:
         conn.close()
-        logger.info(f"Done. Inserted: {inserted}, Failed: {failed}, Skipped: {skipped}")
-        logger.info(f"Total asf_cases in DB: {total}")
-    else:
-        logger.info(f"Dry run done. Parsed: {inserted}, Failed: {failed}")
+
+    logger.info(f"Inserted {inserted} new, skipped {skipped_dup} duplicates. Total in asf_cases: {total}")
+    # Remove JSONL file after successful insert
+    if inserted > 0:
+        out_path.unlink(missing_ok=True)
+        logger.info(f"Deleted JSONL file: {out_path}")
 
 
 if __name__ == "__main__":
