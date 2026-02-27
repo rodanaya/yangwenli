@@ -560,7 +560,7 @@ export function VendorProfile() {
       `}</style>
       {/* Header — risk-colored left border */}
       <div
-        className="flex items-start justify-between rounded-lg border bg-background-card p-4"
+        className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 rounded-lg border bg-background-card p-4"
         style={{
           borderLeftWidth: '4px',
           borderLeftColor: riskColor,

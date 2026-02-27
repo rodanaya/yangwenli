@@ -871,7 +871,7 @@ export function InstitutionProfile() {
               ) : (
                 <div className="space-y-4">
                   {/* KPI strip */}
-                  <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-center">
                     <div>
                       <div className="text-lg font-semibold">{formatCompactMXN(asfData.total_amount_mxn)}</div>
                       <div className="text-xs text-muted-foreground">Total Questioned</div>

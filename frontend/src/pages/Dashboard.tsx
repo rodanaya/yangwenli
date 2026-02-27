@@ -1,6 +1,7 @@
 import React, { memo, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -390,6 +391,7 @@ function MiniSparkline({
 
 export function Dashboard() {
   const navigate = useNavigate()
+  const { open: openEntityDrawer } = useEntityDrawer()
   const { t } = useTranslation('dashboard')
   // API call 1: Fast precomputed dashboard stats
   const { data: fastDashboard, isLoading: dashLoading, error: dashError } = useQuery({
@@ -560,7 +562,7 @@ export function Dashboard() {
           )}
         </div>
         {dashLoading ? (
-          <Skeleton className="h-14 w-96" />
+          <Skeleton className="h-14 w-full max-w-sm" />
         ) : (
           <div>
             <h1 className="text-4xl md:text-5xl font-black text-text-primary tracking-tight leading-none">
@@ -943,10 +945,10 @@ export function Dashboard() {
                   <div key={i} className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-background-elevated/30 transition-colors">
                     <span className="text-xs text-text-muted font-mono w-4 flex-shrink-0">{i + 1}</span>
                     <div className="flex-1 min-w-0">
-                      <button onClick={() => navigate(`/institutions/${flow.source_id}`)} className="text-xs font-semibold text-text-secondary truncate block hover:text-accent transition-colors">
+                      <button onClick={() => openEntityDrawer(flow.source_id, 'institution')} className="text-xs font-semibold text-text-secondary truncate block hover:text-accent transition-colors">
                         {toTitleCase(flow.source_name)}
                       </button>
-                      <button onClick={() => navigate(`/vendors/${flow.target_id}`)} className="text-xs text-text-muted truncate block hover:text-accent transition-colors">
+                      <button onClick={() => openEntityDrawer(flow.target_id, 'vendor')} className="text-xs text-text-muted truncate block hover:text-accent transition-colors">
                         → {toTitleCase(flow.target_name)}
                       </button>
                     </div>
@@ -1153,7 +1155,7 @@ export function Dashboard() {
                 return (
                   <button
                     key={vendor.id}
-                    onClick={() => navigate(`/vendors/${vendor.id}`)}
+                    onClick={() => openEntityDrawer(vendor.id, 'vendor')}
                     className="flex items-center gap-2 w-full py-2 px-2 rounded hover:bg-background-elevated/30 transition-colors text-left group"
                   >
                     <span className="text-xs text-text-muted font-mono w-4 flex-shrink-0">{i + 1}</span>
