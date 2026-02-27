@@ -34,8 +34,8 @@ import {
 // ============================================================================
 
 const V5_COEFFICIENTS = [
-  { name: 'Price Volatility', coeff: 1.219, note: 'NEW in v5.0 — strongest predictor' },
-  { name: 'Win Rate', coeff: 0.727, note: 'NEW in v5.0' },
+  { name: 'Price Volatility', coeff: 1.219, note: 'Strongest predictor' },
+  { name: 'Win Rate', coeff: 0.727, note: '' },
   { name: 'Vendor Concentration', coeff: 0.428, note: '' },
   { name: 'Industry Mismatch', coeff: 0.305, note: '' },
   { name: 'Same-Day Contracts', coeff: 0.222, note: '' },
@@ -48,8 +48,8 @@ const V5_COEFFICIENTS = [
   { name: 'Price Hyp. Confidence', coeff: 0.001, note: '' },
   { name: 'Co-Bid Rate', coeff: 0.0, note: 'Regularized to zero' },
   { name: 'Ad Period Days', coeff: -0.104, note: '' },
-  { name: 'Institution Diversity', coeff: -0.848, note: 'NEW in v5.0 — serves many institutions = less risky' },
-  { name: 'Sector Spread', coeff: -0.374, note: 'NEW in v5.0 — cross-sector = less risky' },
+  { name: 'Institution Diversity', coeff: -0.848, note: 'Serves many institutions = less risky' },
+  { name: 'Sector Spread', coeff: -0.374, note: 'Cross-sector operations = less risky' },
 ] as const
 
 const V33_WEIGHTS = [
@@ -353,12 +353,12 @@ export function Methodology() {
         <div className="space-y-4">
 
           {/* Section 2: Model Overview */}
-          <CollapsibleSection id="overview" title="Model Overview (v5.0)" icon={Shield}>
+          <CollapsibleSection id="overview" title="Model Overview (v5.1)" icon={Shield}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
                 Every risk score is a <strong className="text-text-primary">calibrated probability</strong>{' '}
                 <Mono>P(corrupt|features)</Mono> with 95% confidence intervals. Unlike the previous weighted
-                checklist, v5.0 scores have direct probabilistic meaning: a score of 0.35 means we estimate
+                checklist, v5.1 scores have direct probabilistic meaning: a score of 0.35 means we estimate
                 a 35% likelihood that this contract exhibits corruption indicators.
               </p>
 
@@ -422,7 +422,7 @@ export function Methodology() {
 
               <p className="text-xs text-text-muted">
                 High-risk rate: <strong className="text-text-secondary">7.9%</strong> (critical + high), within OECD benchmark of 2-15%.
-                v5.0 replaced the v4.0 statistical framework as the primary model on February 14, 2026.
+                v5.1 is the active model, replacing v5.0 on February 27, 2026.
               </p>
             </div>
           </CollapsibleSection>
@@ -432,7 +432,7 @@ export function Methodology() {
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
                 Each contract is described by 16 z-score features normalized by sector and year baselines.
-                v5.0 adds 4 new behavioral features: price_volatility, institution_diversity, win_rate, and sector_spread.
+                v5.1 uses 4 behavioral features added in v5.0: price_volatility, institution_diversity, win_rate, and sector_spread.
                 The chart below shows the learned cross-validated ElasticNet coefficients.
                 Positive coefficients increase estimated corruption probability; negative coefficients decrease it.
               </p>
@@ -487,7 +487,7 @@ export function Methodology() {
                   Price Volatility is the strongest predictor (+1.22)
                 </p>
                 <p className="text-xs text-text-muted mt-1 leading-relaxed">
-                  Vendors with wildly varying contract sizes are the strongest corruption signal in v5.0.
+                  Vendors with wildly varying contract sizes are the strongest corruption signal.
                   This is followed by institution diversity (-0.85, protective factor) and win rate (+0.73).
                   Vendor concentration (+0.43) remains important but is no longer the dominant predictor,
                   as the 4 new behavioral features absorb much of the variance it previously captured alone.
@@ -500,7 +500,7 @@ export function Methodology() {
                   COUNTERINTUITIVE
                 </p>
                 <p className="text-sm font-bold text-text-primary">
-                  Direct awards now CORRECTLY increase risk in v5.0
+                  Direct awards now CORRECTLY increase risk (fixed in v5.0, retained in v5.1)
                 </p>
                 <div className="mt-2 space-y-2">
                   <div className="flex gap-2">
@@ -769,7 +769,7 @@ export function Methodology() {
                       <tr className="border-b border-border/50">
                         <th className="text-left py-2 pr-3 text-text-muted font-medium">Metric</th>
                         <th className="text-right py-2 pr-3 text-text-muted font-medium">v3.3</th>
-                        <th className="text-right py-2 pr-3 text-text-muted font-medium">v5.0</th>
+                        <th className="text-right py-2 pr-3 text-text-muted font-medium">v5.1</th>
                         <th className="text-right py-2 text-text-muted font-medium">Change</th>
                       </tr>
                     </thead>

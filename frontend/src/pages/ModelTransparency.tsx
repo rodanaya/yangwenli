@@ -1,8 +1,8 @@
 /**
  * Model Transparency Page
  *
- * Explains the v5.0 risk scoring model: coefficients, validation metrics,
- * per-case detection performance, model comparison (v3.3 vs v5.0), and
+ * Explains the v5.1 risk scoring model: coefficients, validation metrics,
+ * per-case detection performance, model comparison (v3.3 vs v5.1), and
  * known limitations. All data is hardcoded from methodology documentation.
  */
 
@@ -79,15 +79,15 @@ const MODEL_COEFFICIENTS: Coefficient[] = [
 ]
 
 const VALIDATION_METRICS = {
-  auc_roc: 0.960,
+  auc_roc: 0.957,
   brier_score: 0.060,
   detection_rate_medium_plus: 0.998,
   detection_rate_high_plus: 0.930,
-  high_risk_rate: 0.079,
-  pu_correction: 0.887,
-  ground_truth_cases: 15,
-  ground_truth_vendors: 27,
-  ground_truth_contracts: 26582,
+  high_risk_rate: 0.090,
+  pu_correction: 0.8815,
+  ground_truth_cases: 22,
+  ground_truth_vendors: 65,
+  ground_truth_contracts: 26704,
 } as const
 
 interface CaseDetection {
@@ -117,7 +117,7 @@ const CASE_DETECTION: CaseDetection[] = [
 
 const MODEL_COMPARISON = {
   v33: { auc: 0.584, detection: 67.1, high_plus: 18.3, brier: 0.411, lift: 1.22 },
-  v50: { auc: 0.960, detection: 99.8, high_plus: 93.0, brier: 0.060, lift: 4.04 },
+  v50: { auc: 0.957, detection: 99.8, high_plus: 93.0, brier: 0.060, lift: 4.04 },
 } as const
 
 const SECTOR_MODELS = [
@@ -740,7 +740,7 @@ export default function ModelTransparency() {
                 />
                 <RechartsTooltip content={<ComparisonTooltip />} cursor={{ fill: '#ffffff08' }} />
                 <Bar dataKey="v33" name="v3.3 (Checklist)" fill="#64748b" radius={[4, 4, 0, 0]} barSize={28} />
-                <Bar dataKey="v50" name="v5.0 (Per-Sector)" fill="#58a6ff" radius={[4, 4, 0, 0]} barSize={28} />
+                <Bar dataKey="v50" name="v5.1 (Per-Sector)" fill="#58a6ff" radius={[4, 4, 0, 0]} barSize={28} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -908,7 +908,7 @@ export default function ModelTransparency() {
             icon={Users}
             title="Ground Truth Concentration"
             color="#f87171"
-            description="While v5.0 diversified to 15 cases across all 12 sectors (up from 9 cases in 3 sectors), three cases (IMSS, Segalmex, COVID-19) still account for 79% of the 26,582 training contracts. Vendor concentration remains dominant across most per-sector sub-models."
+            description="v5.1 includes 22 documented cases across all 12 sectors (including SAT EFOS ghost companies). However, three cases (IMSS, Segalmex, COVID-19) still account for the majority of training contracts. Vendor concentration remains dominant across most per-sector sub-models."
           />
           <LimitationCard
             icon={TrendingDown}
@@ -920,7 +920,7 @@ export default function ModelTransparency() {
             icon={Lock}
             title="No Causal Claims"
             color="#58a6ff"
-            description="A high P(corrupt|z) indicates a statistical anomaly consistent with corruption patterns observed in 15 documented cases. It does not prove corruption. Some sectors (defense, energy) have structural reasons for high vendor concentration that are legitimate."
+            description="A high P(corrupt|z) indicates a statistical anomaly consistent with corruption patterns observed in 22 documented cases. It does not prove corruption. Some sectors (defense, energy) have structural reasons for high vendor concentration that are legitimate."
           />
           <LimitationCard
             icon={Database}
@@ -964,13 +964,13 @@ export default function ModelTransparency() {
               {
                 step: 3,
                 title: 'Per-Sector Logistic Regression',
-                description: 'Cross-validated ElasticNet (C=10.0, l1_ratio=0.25) with 12 per-sector sub-models trained on 26,582 known-bad contracts converts z-scores into corruption probabilities.',
+                description: 'Cross-validated ElasticNet (C=10.0, l1_ratio=0.25) with 12 per-sector sub-models trained on known-bad contracts from 22 corruption cases converts z-scores into corruption probabilities.',
                 icon: TrendingUp,
               },
               {
                 step: 4,
                 title: 'PU Correction + CI',
-                description: 'Elkan & Noto (2008) holdout PU-learning correction (c=0.887) adjusts for unlabeled corrupt contracts. Bootstrap (500 resamples) provides 95% confidence intervals.',
+                description: 'Elkan & Noto (2008) holdout PU-learning correction (c=0.8815) adjusts for unlabeled corrupt contracts. Bootstrap (500 resamples) provides 95% confidence intervals.',
                 icon: Shield,
               },
             ].map((item) => (

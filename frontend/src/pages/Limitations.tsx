@@ -48,9 +48,9 @@ const LIMITATIONS = [
     icon: BarChart3,
     title: 'Training Data Bias — Three Cases Dominate',
     severity: 'high',
-    summary: 'The risk model was trained on 15 documented corruption cases, but 79% of training contracts come from just three mega-cases in health and agriculture.',
+    summary: 'The risk model was trained on 22 documented corruption cases (including SAT EFOS ghost companies), but the signal remains concentrated in three large health/agriculture mega-cases.',
     body: [
-      'The v5.0 model improved significantly over v4.0 by diversifying from 9 to 15 ground truth cases across all 12 sectors. However, the training signal is still concentrated:',
+      'The v5.1 model expanded ground truth to include Case 22 (SAT EFOS ghost companies) and now covers all 12 sectors. However, the training signal is still concentrated:',
       'IMSS Ghost Companies (9,366 contracts) + Segalmex (6,326) + COVID-19 Procurement (5,371) = ~21,000 of ~27,000 labeled contracts. These three cases all involve large, concentrated vendors in the health/agriculture sectors. The model has effectively learned: large vendor + high concentration + same institution = risk.',
       'Corruption that doesn\'t match this pattern is systematically underdetected. A local official awarding contracts to a family member\'s new shell company — few contracts, small amounts, not concentrated — may score low because it doesn\'t resemble IMSS Pisa.',
     ],
@@ -175,7 +175,7 @@ const LIMITATIONS = [
     severity: 'low',
     summary: 'The model was trained on contracts through 2020. Corruption patterns may evolve, and new patterns in 2021–2025 data may go undetected.',
     body: [
-      'The v5.0 model uses a temporal train/test split: trained on contracts ≤2020, tested on ≥2021. The test AUC of 0.960 (vs train 0.967) confirms good generalization to the near future.',
+      'The v5.1 model uses a temporal train/test split: trained on contracts ≤2020, tested on ≥2021. The test AUC of 0.957 (vs train 0.964) confirms good generalization to the near future.',
       'However, the model assumes corruption patterns are relatively stable over time — that what was corrupt in 2018 is structured similarly to what is corrupt in 2024. If a new administration introduces fundamentally different procurement fraud mechanisms, the model may be slow to detect them.',
       'Recalibration with new ground truth cases should occur when major new corruption cases are documented.',
     ],

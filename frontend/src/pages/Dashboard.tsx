@@ -59,7 +59,7 @@ import { GlobalSearch } from '@/components/GlobalSearch'
 // 8. NAVIGATE DEEPER — 6 link cards
 // ============================================================================
 
-// v5.0 model top-4 predictors (from RISK_METHODOLOGY_v5.md global model coefficients)
+// v5.1 model top-4 predictors (from RISK_METHODOLOGY_v5.md global model coefficients)
 const AI_SIGNALS = [
   {
     icon: TrendingDown,
@@ -866,7 +866,7 @@ export function Dashboard() {
             ))}
           </div>
           <p className="text-[10px] text-text-muted mt-3 font-mono">
-            Coefficient = log-odds contribution to corruption probability. v5.0 · Train AUC 0.967 · Test AUC 0.960
+            Coefficient = log-odds contribution to corruption probability. v5.1 · Train AUC 0.964 · Test AUC 0.957
           </p>
         </CardContent>
       </Card>

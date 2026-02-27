@@ -539,7 +539,7 @@ function AIPipelineChart() {
   return (
     <div ref={ref} className="my-6">
       <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-4">
-        Detection Pipeline — v5.0 Model Architecture
+        Detection Pipeline — v5.1 Model Architecture
       </p>
 
       {/* Pipeline nodes — horizontal scroll on mobile */}
@@ -1818,7 +1818,7 @@ function ReportFooter({ data }: { data: ExecutiveSummaryResponse }) {
       </p>
       <p className="text-xs text-text-secondary font-mono">
         {new Date(data.generated_at).toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' })}
-        {' '}&middot; {t('footer.compranet')} &middot; Model v5.0 (AUC {data.model.auc})
+        {' '}&middot; {t('footer.compranet')} &middot; Model v5.1 (AUC {data.model.auc})
       </p>
       <p className="text-xs text-text-secondary font-mono">
         {formatNumber(data.headline.total_contracts)} {t('header.contracts').toLowerCase()}
