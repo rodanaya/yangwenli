@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { FolderSidebar } from '@/components/FolderSidebar'
 import { watchlistApi, vendorApi, type WatchlistItem, type WatchlistItemUpdate } from '@/api/client'
 import {
   Eye,
@@ -32,6 +33,7 @@ import {
   Loader2,
   ChevronDown,
   ChevronUp,
+  Download,
 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
@@ -256,6 +258,49 @@ export function Watchlist() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all')
+  const [activeFolderId, setActiveFolderId] = useState<number | null>(null)
+
+  // Folder queries
+  const { data: foldersData } = useQuery({
+    queryKey: ['watchlist-folders'],
+    queryFn: async () => {
+      try {
+        const { data } = await import('@/api/client').then(m => m.default ?? m).catch(() => null) as any
+        // Use axios instance via watchlistApi pattern — inline fetch as fallback
+        const res = await fetch(`/api/v1/watchlist/folders`)
+        if (!res.ok) return []
+        const json = await res.json()
+        return json.folders ?? json ?? []
+      } catch { return [] }
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+  const folders = foldersData ?? []
+
+  const createFolderMutation = useMutation({
+    mutationFn: async ({ name, color }: { name: string; color: string }) => {
+      const res = await fetch(`/api/v1/watchlist/folders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, color }),
+      })
+      if (!res.ok) throw new Error('Failed to create folder')
+      return res.json()
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['watchlist-folders'] }),
+  })
+
+  const deleteFolderMutation = useMutation({
+    mutationFn: async (folderId: number) => {
+      const res = await fetch(`/api/v1/watchlist/folders/${folderId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Failed to delete folder')
+      return res.json()
+    },
+    onSuccess: () => {
+      setActiveFolderId(null)
+      queryClient.invalidateQueries({ queryKey: ['watchlist-folders'] })
+    },
+  })
 
   // Stats query (separate so header cards always show totals)
   const { data: statsData, isLoading: statsLoading } = useQuery({
@@ -358,7 +403,31 @@ export function Watchlist() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex gap-4">
+      {/* Folder sidebar */}
+      <div className="w-[200px] shrink-0 space-y-3">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted px-1">Folders</p>
+        <FolderSidebar
+          folders={folders}
+          activeFolderId={activeFolderId ?? undefined}
+          onSelect={(id) => setActiveFolderId(id)}
+          onCreateFolder={(name, color) => createFolderMutation.mutate({ name, color })}
+          onDeleteFolder={(id) => deleteFolderMutation.mutate(id)}
+        />
+        {activeFolderId && (
+          <a
+            href={`/api/v1/watchlist/folders/export/${activeFolderId}`}
+            download={`folder-${activeFolderId}-dossier.json`}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs text-accent hover:bg-accent/10 transition-colors"
+          >
+            <Download className="h-3.5 w-3.5" />
+            Export Dossier
+          </a>
+        )}
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -524,6 +593,7 @@ export function Watchlist() {
           )}
         </CardContent>
       </Card>
+    </div>
     </div>
   )
 }

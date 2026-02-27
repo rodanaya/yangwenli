@@ -8,6 +8,11 @@ import { RiskBadge, Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { formatCompactMXN, formatNumber, formatPercentSafe, formatDate, toTitleCase, formatCompactUSD, getRiskLevel } from '@/lib/utils'
 import { vendorApi, networkApi } from '@/api/client'
+import { SanctionsAlertBanner } from '@/components/SanctionsAlertBanner'
+import { WaterfallRiskChart } from '@/components/WaterfallRiskChart'
+import { RedThreadPanel } from '@/components/RedThreadPanel'
+import { PercentileBadge } from '@/components/PercentileBadge'
+import { GenerateReportButton } from '@/components/GenerateReportButton'
 import { RISK_COLORS, SECTOR_COLORS } from '@/lib/constants'
 import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
@@ -462,6 +467,38 @@ export function VendorProfile() {
     staleTime: 30 * 60 * 1000,
   })
 
+  // F2: Ground truth status
+  const { data: groundTruthStatus } = useQuery({
+    queryKey: ['vendor', vendorId, 'ground-truth-status'],
+    queryFn: () => vendorApi.getGroundTruthStatus(vendorId),
+    enabled: !!vendorId,
+    staleTime: 30 * 60 * 1000,
+  })
+
+  // F1: Risk waterfall (z-score contributions)
+  const { data: waterfallData, isLoading: waterfallLoading } = useQuery({
+    queryKey: ['vendor', vendorId, 'risk-waterfall'],
+    queryFn: () => vendorApi.getRiskWaterfall(vendorId),
+    enabled: !!vendorId,
+    staleTime: 10 * 60 * 1000,
+  })
+
+  // F7: Peer comparison
+  const { data: peerComparison } = useQuery({
+    queryKey: ['vendor', vendorId, 'peer-comparison'],
+    queryFn: () => vendorApi.getPeerComparison(vendorId),
+    enabled: !!vendorId,
+    staleTime: 10 * 60 * 1000,
+  })
+
+  // F4: Linked scandals
+  const { data: linkedScandals } = useQuery({
+    queryKey: ['vendor', vendorId, 'linked-scandals'],
+    queryFn: () => vendorApi.getLinkedScandals(vendorId),
+    enabled: !!vendorId,
+    staleTime: 30 * 60 * 1000,
+  })
+
   // Determine if vendor has co-bidding risk
   const hasCoBiddingRisk = coBidders?.co_bidders?.some(
     (cb) => cb.relationship_strength === 'very_strong' || cb.relationship_strength === 'strong'
@@ -544,17 +581,26 @@ export function VendorProfile() {
               <Users className="h-6 w-6" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl font-semibold">{toTitleCase(vendor.name)}</h1>
-                {/* Ground truth badge: vendor documented in known corruption case */}
-                {/* TODO: Add vendorApi.getGroundTruthStatus(vendorId) endpoint to fetch case association */}
-                {externalFlags?.sfp_sanctions && externalFlags.sfp_sanctions.length > 0 && (
-                  <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-red-100 text-red-800 rounded-full border border-red-200">
+                {/* F2: Ground truth badge */}
+                {groundTruthStatus?.is_known_bad && groundTruthStatus.cases.map((c) => (
+                  <Link
+                    key={c.case_id}
+                    to={`/cases/${c.scandal_slug}`}
+                    className="ml-1 px-2 py-0.5 text-xs font-medium bg-red-500/20 text-red-300 rounded-full border border-red-500/40 hover:bg-red-500/30 transition-colors"
+                  >
+                    Documented: {c.case_name}
+                  </Link>
+                ))}
+                {/* SFP/EFOS badges (fallback when no ground truth) */}
+                {!groundTruthStatus?.is_known_bad && externalFlags?.sfp_sanctions && externalFlags.sfp_sanctions.length > 0 && (
+                  <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-red-500/20 text-red-300 rounded-full border border-red-500/40">
                     SFP Sanctioned
                   </span>
                 )}
-                {externalFlags?.sat_efos?.stage === 'definitivo' && (
-                  <span className="ml-1 px-2 py-0.5 text-xs font-medium bg-red-100 text-red-800 rounded-full border border-red-200">
+                {!groundTruthStatus?.is_known_bad && externalFlags?.sat_efos?.stage === 'definitivo' && (
+                  <span className="ml-1 px-2 py-0.5 text-xs font-medium bg-red-500/20 text-red-300 rounded-full border border-red-500/40">
                     SAT EFOS Definitivo
                   </span>
                 )}
@@ -627,6 +673,11 @@ export function VendorProfile() {
               Find Similar
             </button>
           )}
+          <GenerateReportButton
+            reportType="vendor"
+            entityId={vendorId}
+            entityName={toTitleCase(vendor.name)}
+          />
           <AddToWatchlistButton
             itemType="vendor"
             itemId={vendorId}
@@ -652,7 +703,7 @@ export function VendorProfile() {
         compact
       />
 
-      {/* KPI Row — scroll-triggered stagger */}
+      {/* KPI Row — scroll-triggered stagger + F7 Percentile Badges */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <ScrollReveal delay={0} direction="up">
           <KPICard
@@ -660,6 +711,11 @@ export function VendorProfile() {
             value={vendor.total_contracts}
             icon={FileText}
             subtitle={`${vendor.first_contract_year || '-'} – ${vendor.last_contract_year || '-'}`}
+            percentileBadge={(() => {
+              const pc = peerComparison as any
+              const item = Array.isArray(pc) ? pc.find((p: any) => p.metric === 'contract_count') : null
+              return item ? <PercentileBadge percentile={item.percentile} metric="contracts" sector={vendor.primary_sector_name || undefined} /> : undefined
+            })()}
           />
         </ScrollReveal>
         <ScrollReveal delay={80} direction="up">
@@ -669,6 +725,11 @@ export function VendorProfile() {
             icon={DollarSign}
             format="currency"
             subtitle={formatCompactUSD(vendor.total_value_mxn)}
+            percentileBadge={(() => {
+              const pc = peerComparison as any
+              const item = Array.isArray(pc) ? pc.find((p: any) => p.metric === 'total_value') : null
+              return item ? <PercentileBadge percentile={item.percentile} metric="total value" sector={vendor.primary_sector_name || undefined} /> : undefined
+            })()}
           />
         </ScrollReveal>
         <ScrollReveal delay={160} direction="up">
@@ -686,6 +747,11 @@ export function VendorProfile() {
             icon={AlertTriangle}
             format="percent_100"
             variant={vendor.high_risk_pct > 20 ? 'critical' : vendor.high_risk_pct > 10 ? 'warning' : 'default'}
+            percentileBadge={(() => {
+              const pc = peerComparison as any
+              const item = Array.isArray(pc) ? pc.find((p: any) => p.metric === 'risk_score') : null
+              return item ? <PercentileBadge percentile={item.percentile} metric="risk score" sector={vendor.primary_sector_name || undefined} /> : undefined
+            })()}
           />
         </ScrollReveal>
       </div>
@@ -767,22 +833,46 @@ export function VendorProfile() {
         </Card>
       )}
 
-      {/* External flags summary — promoted above tabs for visibility */}
-      {externalFlags && (externalFlags.sfp_sanctions.length > 0 || externalFlags.sat_efos?.stage === 'definitivo') && (
-        <div className="p-3 rounded-lg border border-red-500/30 bg-red-950/20 flex items-center gap-3">
-          <AlertTriangle className="h-5 w-5 text-red-400 shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-red-300">
-              {externalFlags.sat_efos?.stage === 'definitivo'
-                ? 'CRITICAL: Confirmed SAT Art. 69-B ghost company (EFOS definitivo)'
-                : `${externalFlags.sfp_sanctions.length} SFP sanction record${externalFlags.sfp_sanctions.length > 1 ? 's' : ''} found`}
-            </p>
-            <p className="text-xs text-text-muted mt-0.5">
-              See External Records tab for details
-            </p>
-          </div>
+      {/* F2: Ground truth known-bad banner */}
+      {groundTruthStatus?.is_known_bad && groundTruthStatus.cases.length > 0 && (
+        <div className="p-3 rounded-lg border border-red-500/40 bg-red-950/30 space-y-1">
+          {groundTruthStatus.cases.map((c) => (
+            <div key={c.case_id} className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-red-400 shrink-0" />
+              <p className="text-sm text-red-300">
+                Documented in{' '}
+                <Link to={`/cases/${c.scandal_slug}`} className="font-semibold underline hover:text-red-200">
+                  {c.case_name}
+                </Link>
+                {' '}&mdash; {c.fraud_type}
+              </p>
+            </div>
+          ))}
         </div>
       )}
+
+      {/* F3: SanctionsAlertBanner (proper component) */}
+      {externalFlags && (() => {
+        const sanctions = [
+          ...externalFlags.sfp_sanctions.map((s: any) => ({
+            list_type: 'sfp' as const,
+            match_method: (s.match_method || 'rfc') as 'rfc' | 'name_fuzzy',
+            match_confidence: s.match_confidence ?? 1,
+            sanction_type: s.sanction_type,
+          })),
+          ...(externalFlags.sat_efos ? [{
+            list_type: (externalFlags.sat_efos.stage === 'definitivo' ? 'efos_definitivo' : 'efos_presunto') as 'efos_definitivo' | 'efos_presunto',
+            match_method: 'rfc' as const,
+            match_confidence: 1,
+          }] : []),
+        ]
+        return sanctions.length > 0 ? (
+          <SanctionsAlertBanner
+            sanctions={sanctions}
+            vendorName={toTitleCase(vendor.name)}
+          />
+        ) : null
+      })()}
 
       {/* Tabbed content */}
       <SimpleTabs
@@ -891,6 +981,113 @@ export function VendorProfile() {
                   </CardContent>
                 </Card>
               )}
+
+              {/* F4: Linked Scandals */}
+              {(() => {
+                const scandals = linkedScandals as any
+                if (!scandals?.scandals?.length) return null
+                return (
+                  <Card className="hover-lift border-red-500/20">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-sm">
+                        <AlertTriangle className="h-4 w-4 text-red-400" />
+                        Known Scandals
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {scandals.scandals.map((s: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between p-2 rounded bg-red-500/5 border border-red-500/10">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Link
+                              to={`/cases/${s.scandal_slug || s.case_id}`}
+                              className="text-sm font-medium text-red-300 hover:text-red-200 truncate"
+                            >
+                              {s.case_name || s.name}
+                            </Link>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 shrink-0">
+                              {s.fraud_type}
+                            </span>
+                          </div>
+                          {s.contract_count != null && (
+                            <span className="text-xs text-text-muted tabular-nums shrink-0 ml-2">
+                              {s.contract_count} contracts
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )
+              })()}
+
+              {/* F6: Red Thread Panel — investigative leads */}
+              {(() => {
+                const items: Array<{
+                  type: 'co_bidder' | 'investigation_case' | 'sanctions' | 'scandal' | 'high_risk_vendor' | 'asf_finding'
+                  label: string
+                  count?: number
+                  href: string
+                }> = []
+
+                // Ground truth
+                if (groundTruthStatus?.is_known_bad) {
+                  for (const c of groundTruthStatus.cases) {
+                    items.push({
+                      type: 'scandal',
+                      label: `Known corruption case: ${c.case_name}`,
+                      href: `/cases/${c.scandal_slug}`,
+                    })
+                  }
+                }
+
+                // SFP sanctions
+                if (externalFlags?.sfp_sanctions?.length) {
+                  items.push({
+                    type: 'sanctions',
+                    label: `${externalFlags.sfp_sanctions.length} SFP sanction${externalFlags.sfp_sanctions.length > 1 ? 's' : ''}`,
+                    count: externalFlags.sfp_sanctions.length,
+                    href: '#external',
+                  })
+                }
+
+                // EFOS
+                if (externalFlags?.sat_efos) {
+                  items.push({
+                    type: 'sanctions',
+                    label: `SAT EFOS ${externalFlags.sat_efos.stage}`,
+                    href: '#external',
+                  })
+                }
+
+                // Co-bidding
+                const coBidCount = coBidders?.co_bidders?.length ?? 0
+                if (coBidCount > 0) {
+                  items.push({
+                    type: 'co_bidder',
+                    label: `${coBidCount} co-bidding partner${coBidCount > 1 ? 's' : ''}`,
+                    count: coBidCount,
+                    href: '#network',
+                  })
+                }
+
+                // ASF cases
+                if (externalFlags?.asf_cases?.length) {
+                  items.push({
+                    type: 'asf_finding',
+                    label: `${externalFlags.asf_cases.length} ASF audit finding${externalFlags.asf_cases.length > 1 ? 's' : ''}`,
+                    count: externalFlags.asf_cases.length,
+                    href: '#external',
+                  })
+                }
+
+                if (items.length === 0) return null
+                return (
+                  <RedThreadPanel
+                    items={items}
+                    entityName={toTitleCase(vendor.name)}
+                  />
+                )
+              })()}
 
               {/* Vendor Summary */}
               <Card className="hover-lift">
@@ -1294,7 +1491,36 @@ export function VendorProfile() {
 
             {/* Right: Waterfall + Factor List */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Waterfall Chart */}
+              {/* F1: WaterfallRiskChart (proper component with z-score data) */}
+              {waterfallData && waterfallData.length >= 3 && (
+                <Card className="hover-lift">
+                  <CardHeader>
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4" />
+                      Risk Factor Contribution (v5.0 Z-Scores)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <WaterfallRiskChart features={waterfallData} />
+                  </CardContent>
+                </Card>
+              )}
+              {waterfallLoading && (
+                <Card className="hover-lift">
+                  <CardHeader>
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4" />
+                      Risk Factor Contribution (v5.0 Z-Scores)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-[220px]" />
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Fallback: inline waterfall from risk profile factors */}
+              {!waterfallData?.length && !waterfallLoading && (
               <Card className="hover-lift">
                 <CardHeader>
                   <CardTitle className="text-sm flex items-center gap-2">
@@ -1315,6 +1541,7 @@ export function VendorProfile() {
                   )}
                 </CardContent>
               </Card>
+              )}
 
               {/* Risk Factor List */}
               <Card className="hover-lift">
@@ -1501,9 +1728,10 @@ interface KPICardProps {
   format?: 'number' | 'currency' | 'percent' | 'percent_100'
   subtitle?: string
   variant?: 'default' | 'warning' | 'critical'
+  percentileBadge?: React.ReactNode
 }
 
-function KPICard({ title, value, icon: Icon, format = 'number', subtitle, variant = 'default' }: KPICardProps) {
+function KPICard({ title, value, icon: Icon, format = 'number', subtitle, variant = 'default', percentileBadge }: KPICardProps) {
   // Count-up for plain number format; other formats are formatted strings
   const target = (format === 'number' && value !== undefined) ? value : 0
   const decimals = format === 'percent_100' ? 1 : 0
@@ -1536,12 +1764,15 @@ function KPICard({ title, value, icon: Icon, format = 'number', subtitle, varian
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <p className="text-xs font-medium text-text-muted">{title}</p>
-            <p className="text-2xl font-bold tabular-nums text-text-primary">
-              {format === 'number'
-                ? <span ref={countRef}>{formattedValue}</span>
-                : formattedValue
-              }
-            </p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-2xl font-bold tabular-nums text-text-primary">
+                {format === 'number'
+                  ? <span ref={countRef}>{formattedValue}</span>
+                  : formattedValue
+                }
+              </p>
+              {percentileBadge}
+            </div>
             {subtitle && <p className="text-xs text-text-muted">{subtitle}</p>}
           </div>
           <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${iconBg}`}>

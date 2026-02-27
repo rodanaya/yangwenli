@@ -8,6 +8,7 @@ import { RiskBadge } from '@/components/ui/badge'
 import { cn, formatCompactMXN, formatCompactUSD, formatNumber, formatPercentSafe, toTitleCase } from '@/lib/utils'
 import { sectorApi, vendorApi, analysisApi, priceApi, investigationApi, caseLibraryApi, institutionApi } from '@/api/client'
 import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
+import { GenerateReportButton } from '@/components/GenerateReportButton'
 import {
   BarChart3,
   Building2,
@@ -239,14 +240,15 @@ export function SectorProfile() {
               <p className="text-xs text-text-muted mt-0.5 font-mono uppercase tracking-widest">Sector · {sector.code}</p>
             </div>
           </div>
-          {stats && (
-            <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-4">
+            {stats && (
               <div className="text-right">
                 <p className="text-3xl font-black tabular-nums text-text-primary">{formatCompactMXN(stats.total_value_mxn)}</p>
                 <p className="text-xs text-text-muted">total procurement value</p>
               </div>
-            </div>
-          )}
+            )}
+            <GenerateReportButton reportType="sector" entityId={sectorId} entityName={sector.name} variant="outline" />
+          </div>
         </div>
       </div>
 

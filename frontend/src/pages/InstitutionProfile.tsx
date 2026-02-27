@@ -21,6 +21,10 @@ import { NarrativeCard } from '@/components/NarrativeCard'
 import { ContractDetailModal } from '@/components/ContractDetailModal'
 import { AddToWatchlistButton } from '@/components/AddToWatchlistButton'
 import { buildInstitutionNarrative } from '@/lib/narratives'
+import { WaterfallRiskChart } from '@/components/WaterfallRiskChart'
+import { RedThreadPanel } from '@/components/RedThreadPanel'
+import { PercentileBadge } from '@/components/PercentileBadge'
+import { GenerateReportButton } from '@/components/GenerateReportButton'
 import type { ContractListItem, InstitutionVendorItem } from '@/api/types'
 import {
   Building2,
@@ -153,6 +157,18 @@ export function InstitutionProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
+  // Waterfall risk breakdown
+  const { data: waterfallData, isLoading: waterfallLoading } = useQuery({
+    queryKey: ['institution-risk-waterfall', institutionId],
+    queryFn: async () => {
+      const res = await fetch(`/api/v1/institutions/${institutionId}/risk-waterfall`)
+      if (!res.ok) return null
+      return res.json()
+    },
+    enabled: !!institutionId,
+    staleTime: 30 * 60 * 1000,
+  })
+
   // ── Derived values ──────────────────────────────────────────────────────────
 
   const riskScore = institution?.risk_baseline ?? institution?.avg_risk_score ?? 0
@@ -188,6 +204,67 @@ export function InstitutionProfile() {
         label: LEVEL_LABELS[lvl],
       }))
   }, [riskProfile])
+
+  // Red thread items for investigation leads
+  const redThreadItems = useMemo(() => {
+    const items: Array<{
+      type: 'co_bidder' | 'investigation_case' | 'sanctions' | 'scandal' | 'high_risk_vendor' | 'asf_finding'
+      label: string
+      count?: number
+      href: string
+      riskLevel?: 'critical' | 'high' | 'medium' | 'low'
+    }> = []
+
+    // High-risk vendors
+    const highRiskVendors = vendors?.data?.filter(
+      (v) => v.avg_risk_score != null && v.avg_risk_score >= 0.3
+    )
+    if (highRiskVendors && highRiskVendors.length > 0) {
+      items.push({
+        type: 'high_risk_vendor',
+        label: `${highRiskVendors.length} high-risk vendor${highRiskVendors.length > 1 ? 's' : ''}`,
+        count: highRiskVendors.length,
+        href: '#vendors',
+        riskLevel: highRiskVendors.some((v) => (v.avg_risk_score ?? 0) >= 0.5) ? 'critical' : 'high',
+      })
+    }
+
+    // Known scandals in sector
+    if (sectorCases && sectorCases.length > 0) {
+      items.push({
+        type: 'scandal',
+        label: `${sectorCases.length} documented scandal${sectorCases.length > 1 ? 's' : ''} in sector`,
+        count: sectorCases.length,
+        href: `/cases`,
+      })
+    }
+
+    // ASF findings
+    if (asfData && asfData.findings.length > 0) {
+      items.push({
+        type: 'asf_finding',
+        label: `${asfData.findings.length} ASF audit year${asfData.findings.length > 1 ? 's' : ''} with findings`,
+        count: asfData.findings.length,
+        href: '#asf',
+        riskLevel: 'high',
+      })
+    }
+
+    // Vendor concentration (from peer comparison if available)
+    if (peerComparison?.metrics) {
+      const concMetric = peerComparison.metrics.find((m) => m.metric === 'vendor_concentration' || m.metric === 'hhi')
+      if (concMetric && concMetric.percentile > 75) {
+        items.push({
+          type: 'investigation_case',
+          label: `P${concMetric.percentile} concentration vs peers`,
+          href: '#concentration',
+          riskLevel: concMetric.percentile > 90 ? 'critical' : 'high',
+        })
+      }
+    }
+
+    return items
+  }, [vendors, sectorCases, asfData, peerComparison])
 
   // ── Loading / error states ──────────────────────────────────────────────────
 
@@ -265,6 +342,11 @@ export function InstitutionProfile() {
               All Contracts
             </button>
           </Link>
+          <GenerateReportButton
+            reportType="institution"
+            entityId={institutionId}
+            entityName={toTitleCase(institution.name)}
+          />
           <AddToWatchlistButton
             itemType="institution"
             itemId={institutionId}
@@ -283,41 +365,66 @@ export function InstitutionProfile() {
       />
 
       {/* ── KPI STRIP ──────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <KpiChip
-          label="Total Contracts"
-          value={formatNumber(totalContracts)}
-          icon={FileText}
-          iconColor="text-accent"
-        />
-        <KpiChip
-          label="Total Spending"
-          value={formatCompactMXN(totalValue)}
-          sub={formatCompactUSD(totalValue)}
-          icon={DollarSign}
-          iconColor="text-accent"
-        />
-        <KpiChip
-          label="High-Risk %"
-          value={highRiskPct != null ? formatPercentSafe(highRiskPct, false) : '—'}
-          icon={AlertTriangle}
-          iconColor={(highRiskPct ?? 0) > 20 ? 'text-risk-critical' : (highRiskPct ?? 0) > 10 ? 'text-risk-high' : 'text-text-muted'}
-          highlight={(highRiskPct ?? 0) > 20}
-        />
-        <KpiChip
-          label="Risk Baseline"
-          value={formatPercentSafe(riskScore, true)}
-          icon={Shield}
-          iconColor={riskColor}
-          style={{ color: riskColor }}
-        />
-        <KpiChip
-          label="Unique Vendors"
-          value={formatNumber(vendorCount)}
-          icon={Users}
-          iconColor="text-text-muted"
-        />
-      </div>
+      {(() => {
+        // Build a map of metric -> percentile from peer comparison
+        const peerPercentiles = new Map<string, number>()
+        peerComparison?.metrics?.forEach((m) => {
+          peerPercentiles.set(m.metric, m.percentile)
+        })
+
+        return (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <KpiChip
+              label="Total Contracts"
+              value={formatNumber(totalContracts)}
+              icon={FileText}
+              iconColor="text-accent"
+              badge={peerPercentiles.has('contract_count')
+                ? <PercentileBadge percentile={peerPercentiles.get('contract_count')!} metric="Contracts" />
+                : undefined}
+            />
+            <KpiChip
+              label="Total Spending"
+              value={formatCompactMXN(totalValue)}
+              sub={formatCompactUSD(totalValue)}
+              icon={DollarSign}
+              iconColor="text-accent"
+              badge={peerPercentiles.has('total_value')
+                ? <PercentileBadge percentile={peerPercentiles.get('total_value')!} metric="Spending" />
+                : undefined}
+            />
+            <KpiChip
+              label="High-Risk %"
+              value={highRiskPct != null ? formatPercentSafe(highRiskPct, false) : '—'}
+              icon={AlertTriangle}
+              iconColor={(highRiskPct ?? 0) > 20 ? 'text-risk-critical' : (highRiskPct ?? 0) > 10 ? 'text-risk-high' : 'text-text-muted'}
+              highlight={(highRiskPct ?? 0) > 20}
+              badge={peerPercentiles.has('high_risk_pct')
+                ? <PercentileBadge percentile={peerPercentiles.get('high_risk_pct')!} metric="High-Risk %" />
+                : undefined}
+            />
+            <KpiChip
+              label="Risk Baseline"
+              value={formatPercentSafe(riskScore, true)}
+              icon={Shield}
+              iconColor={riskColor}
+              style={{ color: riskColor }}
+              badge={peerPercentiles.has('avg_risk_score')
+                ? <PercentileBadge percentile={peerPercentiles.get('avg_risk_score')!} metric="Risk" />
+                : undefined}
+            />
+            <KpiChip
+              label="Unique Vendors"
+              value={formatNumber(vendorCount)}
+              icon={Users}
+              iconColor="text-text-muted"
+              badge={peerPercentiles.has('vendor_count')
+                ? <PercentileBadge percentile={peerPercentiles.get('vendor_count')!} metric="Vendors" />
+                : undefined}
+            />
+          </div>
+        )
+      })()}
 
       {/* ── AI INTELLIGENCE BRIEF ─────────────────────────────────────────── */}
       <div className="flex items-center gap-2 px-1">
@@ -330,6 +437,14 @@ export function InstitutionProfile() {
         paragraphs={buildInstitutionNarrative(institution, vendors?.data ?? null)}
         compact
       />
+
+      {/* ── RED THREAD PANEL ──────────────────────────────────────────────── */}
+      {redThreadItems.length > 0 && (
+        <RedThreadPanel
+          items={redThreadItems}
+          entityName={toTitleCase(institution.name)}
+        />
+      )}
 
       {/* ── MAIN GRID ──────────────────────────────────────────────────────── */}
       <div className="grid gap-5 lg:grid-cols-3">
@@ -388,6 +503,29 @@ export function InstitutionProfile() {
               )}
             </CardContent>
           </Card>
+
+          {/* Risk Factor Breakdown (Waterfall) */}
+          {(waterfallLoading || waterfallData?.features?.length > 0) && (
+          <Card className="border-border/40">
+            <CardHeader className="pb-2 pt-4">
+              <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                <Shield className="h-3.5 w-3.5 text-accent" />
+                Risk Factor Breakdown
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pb-4">
+              {waterfallLoading ? (
+                <Skeleton className="h-48" />
+              ) : waterfallData?.features?.length > 0 ? (
+                <WaterfallRiskChart
+                  features={waterfallData.features}
+                  baseScore={waterfallData.base_score}
+                  finalScore={waterfallData.final_score}
+                />
+              ) : null}
+            </CardContent>
+          </Card>
+          )}
 
           {/* Institution Details */}
           <Card className="border-border/40">
@@ -823,6 +961,7 @@ function KpiChip({
   iconColor,
   highlight,
   style,
+  badge,
 }: {
   label: string
   value: string
@@ -831,6 +970,7 @@ function KpiChip({
   iconColor: string
   highlight?: boolean
   style?: React.CSSProperties
+  badge?: React.ReactNode
 }) {
   return (
     <div className={cn(
@@ -839,7 +979,10 @@ function KpiChip({
     )}>
       <div className="flex items-center justify-between">
         <span className="text-xs text-text-muted">{label}</span>
-        <Icon className={cn('h-3.5 w-3.5', iconColor)} />
+        <div className="flex items-center gap-1">
+          {badge}
+          <Icon className={cn('h-3.5 w-3.5', iconColor)} />
+        </div>
       </div>
       <p className="text-lg font-black tabular-nums font-mono text-text-primary leading-none" style={style}>
         {value}
