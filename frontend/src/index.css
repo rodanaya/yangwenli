@@ -282,6 +282,9 @@
   .interactive { @apply transition-colors duration-150 cursor-pointer; }
   .interactive:hover { @apply bg-background-elevated; }
 
+  .interactive-card { cursor: pointer; transition: box-shadow 0.15s, transform 0.1s; }
+  .interactive-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); transform: translateY(-1px); }
+
   .data-cell { @apply px-3 py-2 text-sm border-b border-border; }
   .data-cell-header { @apply px-3 py-2 text-xs font-medium text-text-muted uppercase tracking-wider bg-background-elevated border-b border-border; }
 

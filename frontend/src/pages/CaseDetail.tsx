@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { caseLibraryApi } from '@/api/client'
 import { Badge } from '@/components/ui/badge'
@@ -94,9 +94,11 @@ export default function CaseDetail() {
             {t(`legalStatuses.${data.legal_status}`)}
           </Badge>
           {data.ground_truth_case_id != null && (
-            <Badge variant="outline" className="text-xs border-accent/50 text-accent">
-              {t('card.mlLinked')}
-            </Badge>
+            <Link to="/methodology" className="no-underline">
+              <Badge variant="outline" className="text-xs border-accent/50 text-accent hover:bg-accent/10 transition-colors cursor-pointer">
+                {t('card.mlLinked')} — View in Model Validation
+              </Badge>
+            </Link>
           )}
         </div>
         <h1 className="text-2xl font-bold font-mono text-text-primary">{name}</h1>

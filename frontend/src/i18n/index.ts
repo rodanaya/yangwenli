@@ -19,20 +19,14 @@ import esInvestigation from './locales/es/investigation.json'
 import enInvestigation from './locales/en/investigation.json'
 import esExecutive from './locales/es/executive.json'
 import enExecutive from './locales/en/executive.json'
-import esPatterns from './locales/es/patterns.json'
-import enPatterns from './locales/en/patterns.json'
 import esWatchlist from './locales/es/watchlist.json'
 import enWatchlist from './locales/en/watchlist.json'
 import esGlossary from './locales/es/glossary.json'
 import enGlossary from './locales/en/glossary.json'
 import esSpending from './locales/es/spending.json'
 import enSpending from './locales/en/spending.json'
-import esMoneyflow from './locales/es/moneyflow.json'
-import enMoneyflow from './locales/en/moneyflow.json'
 import esRedflags from './locales/es/redflags.json'
 import enRedflags from './locales/en/redflags.json'
-import esTemporal from './locales/es/temporal.json'
-import enTemporal from './locales/en/temporal.json'
 import esProcurement from './locales/es/procurement.json'
 import enProcurement from './locales/en/procurement.json'
 import esAdministrations from './locales/es/administrations.json'
@@ -43,6 +37,10 @@ import esNetwork from './locales/es/network.json'
 import enNetwork from './locales/en/network.json'
 import esCases from './locales/es/cases.json'
 import enCases from './locales/en/cases.json'
+import esLimitations from './locales/es/limitations.json'
+import enLimitations from './locales/en/limitations.json'
+import esMethodology from './locales/es/methodology.json'
+import enMethodology from './locales/en/methodology.json'
 
 i18n
   .use(LanguageDetector)
@@ -52,20 +50,22 @@ i18n
       es: {
         common: esCommon, sectors: esSectors, nav: esNav, dashboard: esDashboard,
         explore: esExplore, contracts: esContracts, investigation: esInvestigation,
-        executive: esExecutive, patterns: esPatterns, watchlist: esWatchlist,
+        executive: esExecutive, watchlist: esWatchlist,
         glossary: esGlossary, spending: esSpending,
-        moneyflow: esMoneyflow, redflags: esRedflags, temporal: esTemporal,
+        redflags: esRedflags,
         procurement: esProcurement, administrations: esAdministrations, price: esPrice,
         network: esNetwork, cases: esCases,
+        limitations: esLimitations, methodology: esMethodology,
       },
       en: {
         common: enCommon, sectors: enSectors, nav: enNav, dashboard: enDashboard,
         explore: enExplore, contracts: enContracts, investigation: enInvestigation,
-        executive: enExecutive, patterns: enPatterns, watchlist: enWatchlist,
+        executive: enExecutive, watchlist: enWatchlist,
         glossary: enGlossary, spending: enSpending,
-        moneyflow: enMoneyflow, redflags: enRedflags, temporal: enTemporal,
+        redflags: enRedflags,
         procurement: enProcurement, administrations: enAdministrations, price: enPrice,
         network: enNetwork, cases: enCases,
+        limitations: enLimitations, methodology: enMethodology,
       },
     },
     lng: localStorage.getItem('i18nextLng') || 'en', // Default to English when no saved preference

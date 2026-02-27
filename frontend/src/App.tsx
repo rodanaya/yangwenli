@@ -29,7 +29,6 @@ const SectorProfile = lazy(() => import('@/pages/SectorProfile'))
 const Settings = lazy(() => import('@/pages/Settings'))
 const NetworkGraph = lazy(() => import('@/pages/NetworkGraph'))
 const Watchlist = lazy(() => import('@/pages/Watchlist'))
-const DetectivePatterns = lazy(() => import('@/pages/DetectivePatterns'))
 const Administrations = lazy(() => import('@/pages/Administrations'))
 const ProcurementIntelligence = lazy(() => import('@/pages/ProcurementIntelligence'))
 const GroundTruth = lazy(() => import('@/pages/GroundTruth'))
@@ -92,14 +91,7 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
-              <Route
-                path="patterns"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <DetectivePatterns />
-                  </SuspenseBoundary>
-                }
-              />
+              <Route path="patterns" element={<Navigate to="/administrations" replace />} />
               <Route
                 path="administrations"
                 element={

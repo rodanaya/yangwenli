@@ -54,6 +54,10 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
           </div>
         ) : contract ? (
           <div className="space-y-5">
+            {/* Sanctions Alert Banner */}
+            {/* TODO: Fetch vendorApi.getExternalFlags(contract.vendor_id) to show SFP/EFOS sanctions inline.
+                For now, users can click through to the vendor profile to see external flags. */}
+
             {/* Section 1: Overview */}
             <section>
               <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">{t('detail.overview')}</h3>

@@ -1,0 +1,127 @@
+{
+  "pageTitle": "Risk Scoring Methodology",
+  "pageSubtitle": "v5.0 Per-Sector Calibrated Model — 16 features, temporal validation, PU-learning",
+  "contents": "CONTENTS",
+  "sections": {
+    "overview": "Model Overview",
+    "features": "The 16 Features",
+    "findings": "Key Findings",
+    "validation": "Ground Truth Validation",
+    "methods": "Statistical Methods",
+    "limitations": "Limitations",
+    "v33": "Previous Model (v3.3)",
+    "dataSources": "Data Sources",
+    "references": "References"
+  },
+  "overview": {
+    "description": "RUBLI v5.0 scores every contract with a calibrated corruption probability using per-sector logistic regression trained on 15 documented cases. Scores are honest out-of-sample estimates — the model was trained on contracts through 2020 and tested on 2021+.",
+    "modelVersion": "Model version",
+    "trainAUC": "Train AUC",
+    "testAUC": "Test AUC",
+    "highRiskRate": "High-risk rate",
+    "oecdBenchmark": "OECD benchmark: 2-15%"
+  },
+  "riskLevels": {
+    "title": "Risk Levels",
+    "level": "Level",
+    "threshold": "Threshold",
+    "meaning": "Meaning",
+    "distribution": "Distribution",
+    "count": "Count",
+    "disclaimer": "Risk scores are calibrated probabilities with 95% confidence intervals. A high score indicates statistical anomaly consistent with corruption patterns — it does not constitute proof."
+  },
+  "coefficients": {
+    "title": "v5.0 Global Model Coefficients",
+    "subtitle": "16 z-score features ranked by absolute coefficient magnitude. Positive = increases risk; negative = decreases risk."
+  },
+  "keyFindings": {
+    "title": "What the Model Learned",
+    "concentration": "Concentration is the dominant signal",
+    "concentrationDetail": "Vendor concentration, price volatility, and win rate are the top 3 predictors. These reflect Mexico's documented corruption pattern: large vendors capturing institutional monopolies.",
+    "directAward": "Direct awards now increase risk",
+    "directAwardDetail": "In v4.0, the direct_award coefficient was -0.197 (counterintuitive). With diversified ground truth and new features in v5.0, it correctly flipped to +0.182.",
+    "singleBidWeak": "Single bidding is a weak signal",
+    "singleBidDetail": "Despite being the #1 indicator in European datasets, single bidding has a near-zero coefficient in Mexico. This reflects the 70% direct award rate — competitive procedures are rare, so single bids carry less information.",
+    "coBiddingZero": "Co-bidding provides zero signal",
+    "coBiddingZeroDetail": "Regularized to exactly 0.000 in all models. The training cases involve concentration, not collusion rings."
+  },
+  "validation": {
+    "title": "Ground Truth Validation",
+    "description": "Detection rates on 15 documented corruption cases (26,582 contracts from 27 matched vendors).",
+    "case": "Case",
+    "type": "Type",
+    "contracts": "Contracts",
+    "detected": "Detected",
+    "highPlus": "High+",
+    "avgScore": "Avg Score",
+    "footnote": "* Case 9 shares vendors with Case 5 (Odebrecht). Documented for reference."
+  },
+  "statisticalMethods": {
+    "zScore": "Z-Score Normalization",
+    "zScoreDesc": "Each feature is standardized relative to its sector and year baseline. A direct award in Defensa (80% are direct) is less suspicious than in Educación (50% are direct). Z-scores capture this context.",
+    "zScoreFormula": "z = (x - μ(sector, year)) / max(σ(sector, year), 0.001)",
+    "mahalanobis": "Mahalanobis Distance",
+    "mahalanobisDesc": "Measures how unusual a contract's feature vector is in multidimensional space. Replaces the 5 hardcoded interaction pairs from v3.3 with a full covariance matrix that captures all pairwise relationships.",
+    "mahalanobisFormula": "D²(z) = zᵀ Σ⁻¹ z",
+    "perSector": "Per-Sector Logistic Regression",
+    "perSectorDesc": "v5.0 trains 12 dedicated models (one per sector) plus a global fallback. Corruption patterns differ by sector — Energía is driven by industry mismatch, while Agricultura is driven by vendor concentration (+1.82).",
+    "perSectorFormula": "P(corrupt|z) = σ(β₀ + βᵀz) / c, where c = 0.887 (PU correction)"
+  },
+  "modelComparison": {
+    "title": "Model Comparison: v3.3 → v5.0",
+    "metric": "Metric",
+    "v33": "v3.3",
+    "v50": "v5.0",
+    "improvement": "Improvement"
+  },
+  "v33": {
+    "title": "Previous Model: v3.3 (Weighted Checklist)",
+    "description": "v3.3 used 8 expert-weighted factors based on IMF CRI methodology. Preserved in risk_score_v3 column for comparison."
+  },
+  "dataSources": {
+    "title": "Data Sources — COMPRANET",
+    "description": "Data quality varies significantly by period. Risk scores for 2002–2010 are directional estimates, not precise probabilities.",
+    "structure": "Structure",
+    "years": "Years",
+    "quality": "Quality",
+    "rfc": "RFC Coverage",
+    "notes": "Notes"
+  },
+  "references": {
+    "title": "References"
+  },
+  "groundTruth": {
+    "pageTitle": "Ground Truth War Room",
+    "pageSubtitle": "Documented corruption cases validate the risk detection model",
+    "callout": "This page measures RUBLI's detection capability against real, documented Mexican procurement corruption cases. Each case was independently investigated by journalists, auditors, or prosecutors. Our model never saw these labels during training — the detection rates shown here represent genuine out-of-sample predictive performance.",
+    "groundTruthCases": "Ground Truth Cases",
+    "documentedCases": "Documented corruption cases",
+    "vendorsMatched": "Vendors Matched",
+    "inCompranet": "In COMPRANET records",
+    "totalValueAtRisk": "Total Value at Risk",
+    "estimatedFraud": "Estimated fraud across all cases",
+    "perCaseDetection": "Per-Case Detection",
+    "liveDetectionRates": "Live detection rates computed from current risk scores. Click a row to expand.",
+    "noCasesFound": "No ground truth cases found in the database.",
+    "failedToLoad": "Failed to load case data.",
+    "failedSummary": "Failed to load summary data. Please try refreshing.",
+    "criticalRate": "Critical Rate",
+    "confidence": "Confidence",
+    "matchedVia": "Matched via vendor RFC/name in",
+    "contractsJoin": "table. Contracts join on",
+    "factorLift": "Factor Lift vs Ground Truth",
+    "factorLiftDesc": "How much more often each risk factor appears in documented corruption cases vs the general contract population. Lift > 1.0 = over-represented in known-bad contracts.",
+    "noFactorLift": "No factor lift data available.",
+    "modelComparisonDesc": "Detection rate comparison across model versions (v3.3, v4.0, v5.0). High+ = score >= 0.30, Critical = score >= 0.50.",
+    "noModelComparison": "No model comparison data available. Run validate_risk_model.py to generate results."
+  },
+  "modelTransparency": {
+    "pageTitle": "Model Transparency",
+    "howItWorks": "How the Risk Model Works",
+    "coefficientExplorer": "Coefficient Explorer",
+    "perSectorModels": "Per-Sector Models",
+    "validationMetrics": "Validation Metrics",
+    "knownLimitations": "Known Limitations",
+    "disclaimer": "Risk scores are calibrated probabilities, not legal conclusions. High scores indicate statistical patterns consistent with documented corruption — they do not constitute proof."
+  }
+}

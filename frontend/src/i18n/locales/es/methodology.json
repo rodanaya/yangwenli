@@ -1,0 +1,127 @@
+{
+  "pageTitle": "Metodología de Puntuación de Riesgo",
+  "pageSubtitle": "Modelo Calibrado por Sector v5.0 — 16 características, validación temporal, aprendizaje PU",
+  "contents": "CONTENIDO",
+  "sections": {
+    "overview": "Descripción del Modelo",
+    "features": "Las 16 Características",
+    "findings": "Hallazgos Clave",
+    "validation": "Validación de Verdad Fundamental",
+    "methods": "Métodos Estadísticos",
+    "limitations": "Limitaciones",
+    "v33": "Modelo Anterior (v3.3)",
+    "dataSources": "Fuentes de Datos",
+    "references": "Referencias"
+  },
+  "overview": {
+    "description": "RUBLI v5.0 califica cada contrato con una probabilidad calibrada de corrupción usando regresión logística por sector entrenada en 15 casos documentados. Las puntuaciones son estimaciones honestas fuera de muestra — el modelo fue entrenado con contratos hasta 2020 y probado con 2021+.",
+    "modelVersion": "Versión del modelo",
+    "trainAUC": "AUC Entrenamiento",
+    "testAUC": "AUC Prueba",
+    "highRiskRate": "Tasa de alto riesgo",
+    "oecdBenchmark": "Referencia OCDE: 2-15%"
+  },
+  "riskLevels": {
+    "title": "Niveles de Riesgo",
+    "level": "Nivel",
+    "threshold": "Umbral",
+    "meaning": "Significado",
+    "distribution": "Distribución",
+    "count": "Cantidad",
+    "disclaimer": "Las puntuaciones de riesgo son probabilidades calibradas con intervalos de confianza del 95%. Una puntuación alta indica anomalía estadística consistente con patrones de corrupción — no constituye prueba."
+  },
+  "coefficients": {
+    "title": "Coeficientes del Modelo Global v5.0",
+    "subtitle": "16 características z-score ordenadas por magnitud absoluta del coeficiente. Positivo = aumenta riesgo; negativo = disminuye riesgo."
+  },
+  "keyFindings": {
+    "title": "Lo Que Aprendió el Modelo",
+    "concentration": "La concentración es la señal dominante",
+    "concentrationDetail": "La concentración de proveedores, la volatilidad de precios y la tasa de victorias son los 3 principales predictores. Estos reflejan el patrón documentado de corrupción en México: grandes proveedores capturando monopolios institucionales.",
+    "directAward": "Las adjudicaciones directas ahora aumentan el riesgo",
+    "directAwardDetail": "En v4.0, el coeficiente de adjudicación directa era -0.197 (contraintuitivo). Con verdad fundamental diversificada y nuevas características en v5.0, se corrigió a +0.182.",
+    "singleBidWeak": "Licitante único es una señal débil",
+    "singleBidDetail": "A pesar de ser el indicador #1 en conjuntos de datos europeos, la licitación con un solo participante tiene un coeficiente cercano a cero en México. Esto refleja la tasa de adjudicación directa del 70% — los procedimientos competitivos son raros, por lo que las licitaciones únicas aportan menos información.",
+    "coBiddingZero": "La co-licitación no provee señal",
+    "coBiddingZeroDetail": "Regularizada a exactamente 0.000 en todos los modelos. Los casos de entrenamiento involucran concentración, no anillos de colusión."
+  },
+  "validation": {
+    "title": "Validación de Verdad Fundamental",
+    "description": "Tasas de detección en 15 casos documentados de corrupción (26,582 contratos de 27 proveedores coincidentes).",
+    "case": "Caso",
+    "type": "Tipo",
+    "contracts": "Contratos",
+    "detected": "Detectados",
+    "highPlus": "Alto+",
+    "avgScore": "Puntaje Promedio",
+    "footnote": "* El Caso 9 comparte proveedores con el Caso 5 (Odebrecht). Documentado como referencia."
+  },
+  "statisticalMethods": {
+    "zScore": "Normalización Z-Score",
+    "zScoreDesc": "Cada característica se estandariza respecto a su línea base de sector y año. Una adjudicación directa en Defensa (80% son directas) es menos sospechosa que en Educación (50% son directas). Los z-scores capturan este contexto.",
+    "zScoreFormula": "z = (x - μ(sector, año)) / máx(σ(sector, año), 0.001)",
+    "mahalanobis": "Distancia de Mahalanobis",
+    "mahalanobisDesc": "Mide qué tan inusual es el vector de características de un contrato en el espacio multidimensional. Reemplaza los 5 pares de interacción codificados del v3.3 con una matriz de covarianza completa que captura todas las relaciones por pares.",
+    "mahalanobisFormula": "D²(z) = zᵀ Σ⁻¹ z",
+    "perSector": "Regresión Logística por Sector",
+    "perSectorDesc": "v5.0 entrena 12 modelos dedicados (uno por sector) más un respaldo global. Los patrones de corrupción difieren por sector — Energía es impulsado por desajuste industrial, mientras que Agricultura es impulsado por concentración de proveedores (+1.82).",
+    "perSectorFormula": "P(corrupto|z) = σ(β₀ + βᵀz) / c, donde c = 0.887 (corrección PU)"
+  },
+  "modelComparison": {
+    "title": "Comparación de Modelos: v3.3 → v5.0",
+    "metric": "Métrica",
+    "v33": "v3.3",
+    "v50": "v5.0",
+    "improvement": "Mejora"
+  },
+  "v33": {
+    "title": "Modelo Anterior: v3.3 (Lista de Verificación Ponderada)",
+    "description": "v3.3 usaba 8 factores ponderados por expertos basados en la metodología IMF CRI. Preservado en la columna risk_score_v3 para comparación."
+  },
+  "dataSources": {
+    "title": "Fuentes de Datos — COMPRANET",
+    "description": "La calidad de los datos varía significativamente por período. Las puntuaciones de riesgo para 2002–2010 son estimaciones direccionales, no probabilidades precisas.",
+    "structure": "Estructura",
+    "years": "Años",
+    "quality": "Calidad",
+    "rfc": "Cobertura RFC",
+    "notes": "Notas"
+  },
+  "references": {
+    "title": "Referencias"
+  },
+  "groundTruth": {
+    "pageTitle": "Sala de Guerra de Verdad Fundamental",
+    "pageSubtitle": "Los casos documentados de corrupción validan el modelo de detección de riesgo",
+    "callout": "Esta página mide la capacidad de detección de RUBLI contra casos reales y documentados de corrupción en contrataciones mexicanas. Cada caso fue investigado independientemente por periodistas, auditores o fiscales. Nuestro modelo nunca vio estas etiquetas durante el entrenamiento — las tasas de detección mostradas aquí representan un rendimiento predictivo genuino fuera de muestra.",
+    "groundTruthCases": "Casos de Verdad Fundamental",
+    "documentedCases": "Casos documentados de corrupción",
+    "vendorsMatched": "Proveedores Coincidentes",
+    "inCompranet": "En registros de COMPRANET",
+    "totalValueAtRisk": "Valor Total en Riesgo",
+    "estimatedFraud": "Fraude estimado en todos los casos",
+    "perCaseDetection": "Detección por Caso",
+    "liveDetectionRates": "Tasas de detección en vivo calculadas a partir de las puntuaciones de riesgo actuales. Haga clic en una fila para expandir.",
+    "noCasesFound": "No se encontraron casos de verdad fundamental en la base de datos.",
+    "failedToLoad": "No se pudieron cargar los datos del caso.",
+    "failedSummary": "No se pudieron cargar los datos de resumen. Intente actualizar la página.",
+    "criticalRate": "Tasa Crítica",
+    "confidence": "Confianza",
+    "matchedVia": "Coincidencia por RFC/nombre de proveedor en",
+    "contractsJoin": "tabla. Contratos se unen por",
+    "factorLift": "Lift de Factores vs Verdad Fundamental",
+    "factorLiftDesc": "Con qué frecuencia adicional aparece cada factor de riesgo en casos documentados de corrupción vs la población general de contratos. Lift > 1.0 = sobrerrepresentado en contratos conocidos como malos.",
+    "noFactorLift": "No hay datos de lift de factores disponibles.",
+    "modelComparisonDesc": "Comparación de tasas de detección entre versiones de modelos (v3.3, v4.0, v5.0). Alto+ = puntuación >= 0.30, Crítico = puntuación >= 0.50.",
+    "noModelComparison": "No hay datos de comparación de modelos disponibles. Ejecute validate_risk_model.py para generar resultados."
+  },
+  "modelTransparency": {
+    "pageTitle": "Transparencia del Modelo",
+    "howItWorks": "Cómo Funciona el Modelo de Riesgo",
+    "coefficientExplorer": "Explorador de Coeficientes",
+    "perSectorModels": "Modelos por Sector",
+    "validationMetrics": "Métricas de Validación",
+    "knownLimitations": "Limitaciones Conocidas",
+    "disclaimer": "Las puntuaciones de riesgo son probabilidades calibradas, no conclusiones legales. Las puntuaciones altas indican patrones estadísticos consistentes con corrupción documentada — no constituyen prueba."
+  }
+}

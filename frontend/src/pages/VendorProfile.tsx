@@ -535,7 +535,21 @@ export function VendorProfile() {
               <Users className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold">{toTitleCase(vendor.name)}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-semibold">{toTitleCase(vendor.name)}</h1>
+                {/* Ground truth badge: vendor documented in known corruption case */}
+                {/* TODO: Add vendorApi.getGroundTruthStatus(vendorId) endpoint to fetch case association */}
+                {externalFlags?.sfp_sanctions && externalFlags.sfp_sanctions.length > 0 && (
+                  <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-red-100 text-red-800 rounded-full border border-red-200">
+                    SFP Sanctioned
+                  </span>
+                )}
+                {externalFlags?.sat_efos?.stage === 'definitivo' && (
+                  <span className="ml-1 px-2 py-0.5 text-xs font-medium bg-red-100 text-red-800 rounded-full border border-red-200">
+                    SAT EFOS Definitivo
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-2 text-sm text-text-muted">
                 {vendor.rfc && <span className="font-mono">{vendor.rfc}</span>}
                 {vendor.primary_sector_name && (
@@ -742,6 +756,23 @@ export function VendorProfile() {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* External flags summary — promoted above tabs for visibility */}
+      {externalFlags && (externalFlags.sfp_sanctions.length > 0 || externalFlags.sat_efos?.stage === 'definitivo') && (
+        <div className="p-3 rounded-lg border border-red-500/30 bg-red-950/20 flex items-center gap-3">
+          <AlertTriangle className="h-5 w-5 text-red-400 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-red-300">
+              {externalFlags.sat_efos?.stage === 'definitivo'
+                ? 'CRITICAL: Confirmed SAT Art. 69-B ghost company (EFOS definitivo)'
+                : `${externalFlags.sfp_sanctions.length} SFP sanction record${externalFlags.sfp_sanctions.length > 1 ? 's' : ''} found`}
+            </p>
+            <p className="text-xs text-text-muted mt-0.5">
+              See External Records tab for details
+            </p>
+          </div>
+        </div>
       )}
 
       {/* Tabbed content */}

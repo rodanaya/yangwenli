@@ -1,0 +1,149 @@
+{
+  "pageTitle": "Platform Limitations",
+  "pageDescription": "RUBLI is a statistical early-warning tool, not an audit system. Understanding what it cannot detect is as important as understanding what it can.",
+  "summary": "Summary",
+  "whatThisMisses": "What this misses",
+  "whyHardToFix": "Why it's hard to fix",
+  "impact": "Impact",
+  "workaround": "Workaround",
+  "mostAffected": "Most affected",
+  "fixableWithData": "Fixable with more data",
+  "partialFix": "Partial fix possible",
+  "structuralConstraint": "Structural constraint",
+  "interpretationGuidance": "Interpretation guidance",
+  "interpretationText": "Risk scores are calibrated statistical estimates, not legal determinations. A high score indicates patterns statistically consistent with documented corruption — it does not constitute proof of wrongdoing. A low score does not certify a contract as clean. RUBLI is designed to help investigators prioritize their limited resources, not to replace investigation.",
+  "severity": {
+    "high": "High Impact",
+    "medium": "Medium Impact",
+    "low": "Low Impact"
+  },
+  "summaryTable": {
+    "limitation": "Limitation",
+    "impact": "Impact",
+    "fixable": "Fixable",
+    "pathToFix": "Path to fix"
+  },
+  "cards": {
+    "executionPhase": {
+      "title": "Procurement-Phase Only — Execution Fraud Is Invisible",
+      "summary": "The platform sees contract award data only. Fraud that occurs after a contract is signed cannot be detected.",
+      "body1": "RUBLI analyzes data from COMPRANET at the moment of contract award. It cannot see what happens during project execution — cost overruns, ghost workers, material substitution, inflated invoicing, or kickback payments.",
+      "body2": "This is the primary reason Building Construction (1.1T MXN, #1 by value) shows only 3.4% average risk despite being Mexico's historically most corrupt procurement sector. Grupo Higa's Casa Blanca scandal, Odebrecht's bribery of PEMEX officials, and overruns on the Tren Maya all involved fraud mechanisms entirely invisible to procurement records.",
+      "workaround": "Cross-reference high-value construction contracts with Auditoría Superior de la Federación (ASF) audit reports, which cover execution-phase irregularities."
+    },
+    "trainingBias": {
+      "title": "Training Data Bias — Three Cases Dominate",
+      "summary": "The risk model was trained on 15 documented corruption cases, but 79% of training contracts come from just three mega-cases in health and agriculture.",
+      "body1": "The v5.0 model improved significantly over v4.0 by diversifying from 9 to 15 ground truth cases across all 12 sectors. However, the training signal is still concentrated:",
+      "body2": "IMSS Ghost Companies (9,366 contracts) + Segalmex (6,326) + COVID-19 Procurement (5,371) = ~21,000 of ~27,000 labeled contracts. These three cases all involve large, concentrated vendors in the health/agriculture sectors. The model has effectively learned: large vendor + high concentration + same institution = risk.",
+      "body3": "Corruption that doesn't match this pattern is systematically underdetected. A local official awarding contracts to a family member's new shell company — few contracts, small amounts, not concentrated — may score low because it doesn't resemble IMSS Pisa.",
+      "workaround": "When investigating specific institutions or officials, do not rely on risk scores alone. Use the Contracts filter to find direct awards and single-bid contracts regardless of score."
+    },
+    "vendorDedup": {
+      "title": "Vendor Deduplication — The Unsolved Identity Problem",
+      "summary": "The same company appears under hundreds of name variations. Without a canonical vendor identity, concentration and network analysis undercount market share for pre-2018 data.",
+      "body1": "COMPRANET stores vendor names as free-text strings entered by different government agencies across 23 years. The same company routinely appears as dozens of different strings:",
+      "body2": "\"FARMACEUTICOS MAYPO S.A DE CV\" / \"FARMACEUTICOS MAYPO SA DE CV\" / \"FARMACEUTICOS MAYPO S.A. DE C.V.\" / \"FARMACEUTICOS MAYPO\" — these are the same vendor, but the platform counts them separately without an RFC to link them.",
+      "body3": "The platform uses RFC (Mexican tax ID) as the primary match key when available. But RFC coverage is 0.1% (2002–2010), 15.7% (2010–2017), 30.3% (2018–2022), 47.4% (2023–2025). Half the database has no RFC.",
+      "impact": "True vendor concentration and market share is higher than displayed for 2002–2017 data. The \"Top Vendor\" shown per category is the single name-string with the most contracts — the real dominant vendor may be spread across multiple name variants.",
+      "workaround": "When investigating a specific vendor, search by partial name to find all variants. Use the RFC displayed on the vendor profile to identify the canonical entity.",
+      "whyHard": {
+        "rfcPartial": "RFC coverage is partial",
+        "rfcPartialDetail": "Only 47% of current data has RFC; 2002–2010 data has almost none.",
+        "fuzzyMerge": "Fuzzy matching creates false merges",
+        "fuzzyMergeDetail": "\"DISTRIBUIDORA LA IDEAL\" and \"DISTRIBUIDORA LA IDEAL JALISCO\" may be unrelated regional companies.",
+        "shellNames": "Shell company names are intentionally similar",
+        "shellNamesDetail": "La Estafa Maestra used \"GC ROGU\" and \"GC CINCO\" to look like variants. Merging them destroys the network signal you are trying to detect.",
+        "restructure": "Companies restructure to escape blacklists",
+        "restructureDetail": "A sanctioned vendor reappears under a new entity. Merging obscures the fresh start; not merging understates their history.",
+        "noRegistry": "No canonical business registry",
+        "noRegistryDetail": "Mexico has no publicly accessible, machine-readable vendor registry that maps all RFC variations to a canonical entity."
+      }
+    },
+    "cobidding": {
+      "title": "Co-Bidding Signal — Regularized to Zero",
+      "summary": "The model learned that co-bidding patterns don't discriminate between corrupt and clean vendors in our training data. Bid rotation and cover bidding are not reflected in the risk score.",
+      "body1": "The co_bid_rate feature was regularized to exactly 0.000 in both the global and all 12 per-sector models. This means that vendors who consistently appear in the same procedures — even when one always loses to let the other win — receive no additional risk penalty in their score.",
+      "body2": "The reason is structural: the documented corruption cases used for training involve large established vendors (LICONSA, Pisa, DIQN) that win through market concentration and volume, not through coordinated bidding rings. The model learned what it was shown.",
+      "body3": "The Collusion Detection feature on vendor profiles uses a separate heuristic (shared procedures, win/loss ratio analysis), but this analysis does not feed back into the contract-level risk score.",
+      "workaround": "Use the Vendor Profile → Collusion Detection tab to analyze specific vendors for co-bidding patterns. This is a separate analysis from the risk score."
+    },
+    "dataQuality": {
+      "title": "Data Quality Degrades for Pre-2010 Records",
+      "summary": "COMPRANET data from 2002–2010 has 0.1% RFC coverage, many missing fields, and systematic encoding corruption. Risk scores for this period are directional, not precise.",
+      "body1": "COMPRANET changed its data structure four times between 2002 and 2025. The earliest structure (2002–2010) has the fewest fields and the lowest data quality:",
+      "workaround": "Apply greater skepticism to risk scores on pre-2011 contracts. Use year filters to compare patterns within the same data structure era.",
+      "table": {
+        "period": "Period",
+        "rfcCoverage": "RFC Coverage",
+        "quality": "Quality",
+        "notes": "Notes"
+      }
+    },
+    "causal": {
+      "title": "Correlation, Not Causation",
+      "summary": "A high risk score means statistical similarity to known corrupt contracts — not proof of corruption. A low score does not mean a contract is clean.",
+      "body1": "The risk score is a calibrated probability: a score of 0.85 means the contract's statistical characteristics resemble those of contracts from documented corruption cases. It does not mean the contract is corrupt.",
+      "body2": "A legitimate bulk medicine purchase by IMSS from a major pharmaceutical supplier will score high for the same reasons a fraudulent one does — large amount, concentrated vendor, same institution. The model cannot distinguish intent from structure.",
+      "body3": "Similarly, a low-scoring contract is not certified clean. New corruption patterns — ones the model has never seen — will score low until a documented case is added to the ground truth.",
+      "workaround": "Treat risk scores as investigation triage, not verdicts. High scores indicate where to look; investigation and external evidence establish what happened."
+    },
+    "structuralConcentration": {
+      "title": "Structural Concentration — Some Sectors Have Legitimate Monopolies",
+      "summary": "Certain sectors have quasi-monopolies driven by regulation, clearance requirements, or market structure — not corruption. The model partially corrects for this but not completely.",
+      "body1": "The z-score normalization compares each contract to sector and year baselines, which partially handles structural concentration. But some patterns remain:",
+      "body2": "Energía: CFE and PEMEX have preferred suppliers for specialized equipment due to technical certification requirements, not favoritism. Edenred and Sodexo hold ~90% of the meal voucher market in Mexico — a near-duopoly that predates COMPRANET.",
+      "body3": "Defensa: Security clearance requirements legally limit competition. Single-bid rates in defense are structurally high and do not indicate irregularity.",
+      "body4": "Insurance (29.5% avg risk): The insurance market for government contracts is dominated by 5-6 carriers. Concentration is regulatory, not corrupt.",
+      "workaround": "Compare risk scores within the same sector and vendor type, not across sectors. A construction vendor with a 0.40 score is more suspicious than an insurance carrier with the same score."
+    },
+    "dataPipeline": {
+      "title": "Data Pipeline Disruption — CompraNet Abolished April 2025",
+      "summary": "The platform that supplied this entire database was abolished in April 2025. Future data continuity is uncertain, and historical records are already disappearing from official public access.",
+      "body1": "COMPRANET — Mexico's federal procurement portal, operational since 1996 — was abolished by Congress on April 10, 2025, and replaced by ComprasMX. The transition creates three concrete risks for procurement research.",
+      "body2": "First: before any law changed, 1.9 million contracts from 2012–2023 (representing 4.7 trillion MXN) were silently removed from COMPRANET's public interface in August 2024. These records may exist only in offline archives and in databases that captured them before the deletion.",
+      "body3": "Second: the new Ley de Adquisiciones (April 2025) contains a 5-year data retention clause. Under this rule, contracts older than five years could be legally deleted from the official platform — potentially eliminating records of 2.6 million contracts worth 9.9 trillion MXN from public view.",
+      "body4": "Third: INAI — the independent transparency body citizens could appeal to when agencies refused information requests — was constitutionally abolished in December 2024. Its replacement, \"Transparencia para el Pueblo,\" operates under the same executive branch it is meant to oversee, with approximately 2% of INAI's former budget.",
+      "workaround": "The 3.1M contracts in this database were captured before the transition. For future research, monitor datos.gob.mx for archived CompraNet exports. For current contracts, ComprasMX is at upcp-compranet.buengobierno.gob.mx. Cross-reference findings with MCCI (contralacorrupcion.mx) which maintains independent archives."
+    },
+    "temporal": {
+      "title": "Temporal Stationarity — Model May Become Stale",
+      "summary": "The model was trained on contracts through 2020. Corruption patterns may evolve, and new patterns in 2021–2025 data may go undetected.",
+      "body1": "The v5.0 model uses a temporal train/test split: trained on contracts ≤2020, tested on ≥2021. The test AUC of 0.960 (vs train 0.967) confirms good generalization to the near future.",
+      "body2": "However, the model assumes corruption patterns are relatively stable over time — that what was corrupt in 2018 is structured similarly to what is corrupt in 2024. If a new administration introduces fundamentally different procurement fraud mechanisms, the model may be slow to detect them.",
+      "body3": "Recalibration with new ground truth cases should occur when major new corruption cases are documented.",
+      "workaround": "Monitor the Ground Truth page for newly added cases. After major scandals are documented, the model should be retrained to incorporate the new patterns."
+    },
+    "contractModifications": {
+      "title": "Contract Modifications Invisible — Renegotiation Is Where Corruption Hides",
+      "summary": "RUBLI cannot see post-award contract renegotiations and modifications. In complex infrastructure, up to 50% of contracts are renegotiated — and the cost overruns are often where corruption occurs.",
+      "body1": "RUBLI analyzes contract award data only. After a contract is signed, modifications — cost overruns, scope changes, extended timelines, substituted deliverables — are not recorded in COMPRANET in a format this system can track.",
+      "body2": "Bajari, McMillan & Tadelis (2009) documented that up to 50% of complex public works contracts are renegotiated after award, with an average 14% cost overrun. In corruption-prone contexts, the initial competitive bid is intentionally lowball — modifications are planned from the start to extract the true rent.",
+      "body3": "This means RUBLI's risk scores for large infrastructure projects reflect the procurement phase only. A contract that scored clean at award can represent a significant corruption outcome once modifications are applied. The Tren Maya (tourist train), Pemex refinery construction, and major hospital projects in Mexico have all shown 100%+ cost overruns in ASF (Auditoría Superior de la Federación) audit reports — while their original procurement contracts appear normal.",
+      "workaround": "Cross-reference RUBLI findings with ASF Cuenta Pública reports (asf.gob.mx). The ASF audits execution phase and routinely documents cost overruns. Integration of ASF findings into RUBLI scores is a planned Phase 6 enhancement."
+    },
+    "mexicoConcentration": {
+      "title": "Vendor Concentration Is Mexico-Specific — A Calibration Caveat",
+      "summary": "RUBLI's strongest predictor (vendor concentration) differs from the globally dominant predictor (single bidding). This reflects Mexico's structural preference for direct awards rather than competitive procedures.",
+      "body1": "In the global procurement corruption literature, single bidding — a competitive procedure with only one vendor — is the most universally validated warning indicator (Fazekas & Tóth 2016; Charron et al. 2017). In European datasets, this pattern has the strongest predictive power.",
+      "body2": "In RUBLI (trained on Mexico's 3.1M contracts), vendor concentration is the strongest predictor (+0.428 global coefficient), while single bidding has a near-zero coefficient (+0.013). This divergence is not a modeling error — it reflects Mexico's procurement structure.",
+      "body3": "In Mexico, roughly 70% of contracts are direct awards. When direct award is the norm, single-bid competitive procedures are rare even for clean procurement. The z-score normalization accounts for this baseline. But the training data (79% from IMSS, Segalmex, COVID-19 cases) reinforces concentration as the dominant signal because these cases involved large vendors capturing institutional monopolies.",
+      "body4": "Implication: RUBLI is well-calibrated for Mexico's documented corruption patterns — concentration-based capture is the primary mechanism. It may underperform on corruption forms more common in European datasets: cover bidding in competitive procedures and bid rotation rings, which are less prevalent in Mexico's direct-award-heavy system.",
+      "impact": "RUBLI's high-risk flags are most reliable for identifying vendor capture and market concentration. For collusion detection in competitive procedures, supplement with the Vendor Profile → Collusion Detection tab.",
+      "workaround": "When investigating bid-rigging in competitive procedures, use the Co-bidding analysis tool rather than relying on risk scores alone. Risk scores are calibrated for Mexico's dominant corruption form (concentration), not for collusion rings."
+    }
+  },
+  "summaryRows": {
+    "executionPhase": { "limitation": "Execution-phase fraud invisible", "impact": "Construction/infrastructure underscored", "fix": "Requires ASF audit data integration" },
+    "trainingBias": { "limitation": "Training bias (3 dominant cases)", "impact": "Small-vendor & multi-sector corruption underdetected", "fix": "Add more labeled ground truth cases" },
+    "vendorDedup": { "limitation": "Vendor deduplication unsolved", "impact": "True concentration understated pre-2018", "fix": "RFC + address blocking (partial fix only)" },
+    "cobidding": { "limitation": "Co-bidding signal = zero", "impact": "Bid rotation & cover bidding not in risk score", "fix": "Need collusion-specific ground truth" },
+    "dataPipeline": { "limitation": "CompraNet abolished, data pipeline disrupted", "impact": "Future data unavailable; 1.9M historical contracts already deleted", "fix": "Dependent on government platform decisions" },
+    "dataQuality": { "limitation": "Pre-2010 data quality", "impact": "25% of records less reliable", "fix": "Structural COMPRANET limitation" },
+    "causal": { "limitation": "Correlation ≠ causation", "impact": "Scores require investigative follow-up", "fix": "By design — model informs, not concludes" },
+    "structuralConcentration": { "limitation": "Structural concentration", "impact": "Some sectors over-flagged", "fix": "Sector-specific priors or exclusion lists" },
+    "temporal": { "limitation": "Temporal stationarity", "impact": "New fraud patterns may be undetected", "fix": "Periodic retraining with new cases" },
+    "contractModifications": { "limitation": "Contract modifications invisible", "impact": "Infrastructure/energy execution-phase costs untracked", "fix": "Requires ASF audit data integration (Phase 6)" },
+    "mexicoConcentration": { "limitation": "Mexico-specific concentration model", "impact": "Bid-rotation collusion in competitive procedures underdetected", "fix": "Add collusion-ring ground truth cases to training data" }
+  }
+}

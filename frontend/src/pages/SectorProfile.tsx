@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
 import { cn, formatCompactMXN, formatCompactUSD, formatNumber, formatPercentSafe, toTitleCase } from '@/lib/utils'
-import { sectorApi, vendorApi, analysisApi, priceApi, investigationApi, caseLibraryApi } from '@/api/client'
+import { sectorApi, vendorApi, analysisApi, priceApi, investigationApi, caseLibraryApi, institutionApi } from '@/api/client'
 import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
 import {
   BarChart3,
+  Building2,
   Users,
   FileText,
   AlertTriangle,
@@ -176,6 +177,13 @@ export function SectorProfile() {
   const { data: priceAnomalies, isLoading: priceAnomaliesLoading } = useQuery({
     queryKey: ['price', 'hypotheses', sectorId],
     queryFn: () => priceApi.getHypotheses({ sector_id: sectorId, per_page: 6, sort_by: 'confidence', sort_order: 'desc' }),
+    enabled: !!sectorId,
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const { data: sectorInstitutions } = useQuery({
+    queryKey: ['institutions', 'by-sector', sectorId],
+    queryFn: () => institutionApi.getAll({ sector_id: sectorId, per_page: 15, sort_by: 'total_amount_mxn', sort_order: 'desc' }),
     enabled: !!sectorId,
     staleTime: 10 * 60 * 1000,
   })
@@ -535,6 +543,35 @@ export function SectorProfile() {
               )}
             </CardContent>
           </Card>
+
+          {/* INSTITUTIONS IN SECTOR */}
+          {sectorInstitutions && sectorInstitutions.data && sectorInstitutions.data.length > 0 && (
+            <Card>
+              <CardContent className="pt-5 pb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Building2 className="h-4 w-4 text-text-muted" />
+                  <h2 className="text-sm font-bold text-text-primary">Top Institutions</h2>
+                  <span className="text-xs text-text-muted">({sectorInstitutions.data.length})</span>
+                </div>
+                <div className="space-y-1">
+                  {sectorInstitutions.data.slice(0, 10).map((inst: { id: number; name: string; total_amount_mxn?: number; contract_count?: number }) => (
+                    <Link
+                      key={inst.id}
+                      to={`/institutions/${inst.id}`}
+                      className="flex items-center justify-between p-2 rounded hover:bg-background-elevated/30 transition-colors group"
+                    >
+                      <span className="text-xs font-medium text-text-secondary group-hover:text-accent transition-colors truncate flex-1 mr-3">
+                        {toTitleCase(inst.name)}
+                      </span>
+                      <span className="text-xs text-text-muted tabular-nums whitespace-nowrap">
+                        {inst.total_amount_mxn ? formatCompactMXN(inst.total_amount_mxn) : `${formatNumber(inst.contract_count ?? 0)} contracts`}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* QUICK ACTIONS */}
           <div className="grid gap-3 md:grid-cols-3">

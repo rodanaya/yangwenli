@@ -44,6 +44,13 @@
     "modelComparison": "Model Comparison",
     "liveData": "Live Data"
   },
+  "notFound": {
+    "code": "404 · PAGE NOT FOUND",
+    "title": "This page doesn't exist",
+    "description": "The page you're looking for may have moved or never existed. Try navigating back to the dashboard.",
+    "backHome": "Back to Dashboard",
+    "viewContracts": "View All Contracts"
+  },
   "welcome": {
     "subtitle": "Red Unificada de Busqueda de Licitaciones Irregulares — AI-Powered Corruption Detection for Mexican Government Procurement",
     "step1Title": "3.1 Million Contracts Analyzed",

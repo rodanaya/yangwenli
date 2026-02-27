@@ -41,7 +41,7 @@ import {
   ReferenceArea,
   Treemap,
 } from '@/components/charts'
-import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN } from '@/lib/constants'
+import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN, CURRENT_MODEL_VERSION } from '@/lib/constants'
 
 // ============================================================================
 // Dashboard: Bold, data-dense intelligence overview
@@ -584,30 +584,31 @@ export function Dashboard() {
           )}
         </div>
         <div className="text-[11px] text-text-muted/50 font-mono mt-1">
-          Risk model v5.0.2 · AUC 0.960 · {(overview?.total_contracts || 0) > 0 ? formatNumber(overview?.total_contracts || 0) : '3,110,007'} contracts · 2002–2025
+          {/* TODO: Replace with analysisApi.getModelMetadata() when endpoint is available */}
+          Risk model {CURRENT_MODEL_VERSION} · AUC 0.960 · {(overview?.total_contracts || 0) > 0 ? formatNumber(overview?.total_contracts || 0) : '3,110,007'} contracts · 2002–2025
         </div>
 
         {/* WHAT WE FOUND — three anchor claims before the user scrolls */}
         {overview && (
           <div className="mt-3 pt-2.5 border-t border-border/20 space-y-1.5">
-            <div className="flex items-baseline gap-2.5">
+            <button onClick={() => navigate('/contracts?is_direct_award=true')} className="flex items-baseline gap-2.5 hover:opacity-80 transition-opacity">
               <span className="text-sm font-black font-mono text-risk-high tabular-nums min-w-[3rem]">
                 {`${(overview.direct_award_pct || 0).toFixed(0)}%`}
               </span>
               <span className="text-[11px] text-text-muted">of contracts bypass competitive bidding</span>
-            </div>
-            <div className="flex items-baseline gap-2.5">
+            </button>
+            <button onClick={() => navigate('/administrations')} className="flex items-baseline gap-2.5 hover:opacity-80 transition-opacity">
               <span className="text-sm font-black font-mono text-risk-medium tabular-nums min-w-[3rem]">
                 {decemberSpike ? `${decemberSpike.average_spike_ratio.toFixed(2)}×` : '1.33×'}
               </span>
               <span className="text-[11px] text-text-muted">more contracts awarded in December vs. monthly average</span>
-            </div>
-            <div className="flex items-baseline gap-2.5">
+            </button>
+            <button onClick={() => navigate('/contracts?risk_level=critical&risk_level=high')} className="flex items-baseline gap-2.5 hover:opacity-80 transition-opacity">
               <span className="text-sm font-black font-mono text-risk-critical tabular-nums min-w-[3rem]">
                 {criticalHighValuePct > 0 ? `${criticalHighValuePct.toFixed(1)}%` : '~8%'}
               </span>
               <span className="text-[11px] text-text-muted">of total contract value linked to high/critical risk</span>
-            </div>
+            </button>
           </div>
         )}
       </div>
@@ -933,10 +934,12 @@ export function Dashboard() {
                   <div key={i} className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-background-elevated/30 transition-colors">
                     <span className="text-xs text-text-muted font-mono w-4 flex-shrink-0">{i + 1}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-text-secondary truncate">
+                      <button onClick={() => navigate(`/institutions/${flow.source_id}`)} className="text-xs font-semibold text-text-secondary truncate block hover:text-accent transition-colors">
                         {toTitleCase(flow.source_name)}
-                      </p>
-                      <p className="text-xs text-text-muted truncate">→ {toTitleCase(flow.target_name)}</p>
+                      </button>
+                      <button onClick={() => navigate(`/vendors/${flow.target_id}`)} className="text-xs text-text-muted truncate block hover:text-accent transition-colors">
+                        → {toTitleCase(flow.target_name)}
+                      </button>
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-xs tabular-nums font-mono text-text-secondary font-semibold">

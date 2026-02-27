@@ -44,6 +44,13 @@
     "modelComparison": "Comparación de Modelos",
     "liveData": "Datos en Vivo"
   },
+  "notFound": {
+    "code": "404 · PÁGINA NO ENCONTRADA",
+    "title": "Esta página no existe",
+    "description": "La página que buscas puede haberse movido o nunca existió. Intenta navegar de vuelta al panel principal.",
+    "backHome": "Volver al Panel",
+    "viewContracts": "Ver Todos los Contratos"
+  },
   "welcome": {
     "subtitle": "Red Unificada de Busqueda de Licitaciones Irregulares — Detección de Corrupción con IA para Contrataciones del Gobierno de México",
     "step1Title": "3.1 Millones de Contratos Analizados",

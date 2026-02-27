@@ -1,4 +1,5 @@
 import { memo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import {
@@ -229,11 +230,11 @@ const SEVERITY_BG = {
   low: 'bg-risk-medium/10 border-risk-medium/20',
 } as const
 
-const SEVERITY_LABELS = {
+const SEVERITY_LABELS: Record<string, string> = {
   high: 'High Impact',
   medium: 'Medium Impact',
   low: 'Low Impact',
-} as const
+}
 
 // ============================================================================
 // Summary Table Data
@@ -276,6 +277,7 @@ function FixableIcon({ fixable }: { fixable: 'yes' | 'partial' | 'no' }) {
 }
 
 const LimitationCard = memo(function LimitationCard({ lim }: { lim: typeof LIMITATIONS[number] }) {
+  const { t } = useTranslation('limitations')
   const Icon = lim.icon
   return (
     <Card id={lim.id} className="scroll-mt-4">
@@ -304,7 +306,7 @@ const LimitationCard = memo(function LimitationCard({ lim }: { lim: typeof LIMIT
         {/* Blind spots list */}
         {'blind_spots' in lim && lim.blind_spots && (
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">What this misses</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">{t('whatThisMisses')}</p>
             <ul className="space-y-1">
               {(lim.blind_spots as readonly string[]).map((s) => (
                 <li key={s} className="flex items-start gap-2 text-xs text-text-primary">
@@ -319,7 +321,7 @@ const LimitationCard = memo(function LimitationCard({ lim }: { lim: typeof LIMIT
         {/* Why hard (vendor dedup) */}
         {'why_hard' in lim && lim.why_hard && (
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">Why it's hard to fix</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">{t('whyHardToFix')}</p>
             <div className="space-y-2">
               {(lim.why_hard as readonly { label: string; detail: string }[]).map((item) => (
                 <div key={item.label} className="flex items-start gap-2 text-xs">
@@ -334,7 +336,7 @@ const LimitationCard = memo(function LimitationCard({ lim }: { lim: typeof LIMIT
         {/* Impact note */}
         {'impact' in lim && lim.impact && (
           <div className="p-3 rounded-md bg-border/20 border border-border/40">
-            <p className="text-xs text-text-primary"><span className="font-medium">Impact: </span>{lim.impact}</p>
+            <p className="text-xs text-text-primary"><span className="font-medium">{t('impact')}: </span>{lim.impact}</p>
           </div>
         )}
 
@@ -344,10 +346,10 @@ const LimitationCard = memo(function LimitationCard({ lim }: { lim: typeof LIMIT
             <table className="w-full text-xs border-collapse">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="px-2 py-1.5 text-left text-text-muted font-medium">Period</th>
-                  <th className="px-2 py-1.5 text-right text-text-muted font-medium">RFC Coverage</th>
-                  <th className="px-2 py-1.5 text-left text-text-muted font-medium">Quality</th>
-                  <th className="px-2 py-1.5 text-left text-text-muted font-medium hidden sm:table-cell">Notes</th>
+                  <th className="px-2 py-1.5 text-left text-text-muted font-medium">{t('cards.dataQuality.table.period')}</th>
+                  <th className="px-2 py-1.5 text-right text-text-muted font-medium">{t('cards.dataQuality.table.rfcCoverage')}</th>
+                  <th className="px-2 py-1.5 text-left text-text-muted font-medium">{t('cards.dataQuality.table.quality')}</th>
+                  <th className="px-2 py-1.5 text-left text-text-muted font-medium hidden sm:table-cell">{t('cards.dataQuality.table.notes')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
@@ -367,7 +369,7 @@ const LimitationCard = memo(function LimitationCard({ lim }: { lim: typeof LIMIT
         {/* Sectors affected */}
         {'sectors_most_affected' in lim && lim.sectors_most_affected && (
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-text-muted">Most affected:</span>
+            <span className="text-xs text-text-muted">{t('mostAffected')}:</span>
             {(lim.sectors_most_affected as readonly string[]).map((s) => (
               <span key={s} className="text-xs px-2 py-0.5 rounded bg-border/30 text-text-muted border border-border/40">{s}</span>
             ))}
@@ -379,7 +381,7 @@ const LimitationCard = memo(function LimitationCard({ lim }: { lim: typeof LIMIT
           <div className="flex items-start gap-2 p-3 rounded-md bg-accent/5 border border-accent/15">
             <Info className="h-3.5 w-3.5 text-accent shrink-0 mt-0.5" />
             <p className="text-xs text-text-primary">
-              <span className="font-medium text-accent">Workaround: </span>
+              <span className="font-medium text-accent">{t('workaround')}: </span>
               {lim.workaround}
             </p>
           </div>
@@ -394,16 +396,18 @@ const LimitationCard = memo(function LimitationCard({ lim }: { lim: typeof LIMIT
 // ============================================================================
 
 export default function Limitations() {
+  const { t } = useTranslation('limitations')
+
   return (
     <div className="space-y-6 max-w-4xl">
       {/* Header */}
       <div>
         <div className="flex items-center gap-2 mb-1">
           <AlertTriangle className="h-4.5 w-4.5 text-risk-high" />
-          <h2 className="text-lg font-bold tracking-tight">Platform Limitations</h2>
+          <h2 className="text-lg font-bold tracking-tight">{t('pageTitle')}</h2>
         </div>
         <p className="text-xs text-text-muted">
-          RUBLI is a statistical early-warning tool, not an audit system. Understanding what it cannot detect is as important as understanding what it can.
+          {t('pageDescription')}
         </p>
       </div>
 
@@ -431,17 +435,17 @@ export default function Limitations() {
       {/* Summary table */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Summary</CardTitle>
+          <CardTitle className="text-sm">{t('summary')}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead className="border-b border-border">
                 <tr>
-                  <th className="px-4 py-2.5 text-left text-text-muted font-medium">Limitation</th>
-                  <th className="px-4 py-2.5 text-left text-text-muted font-medium hidden md:table-cell">Impact</th>
-                  <th className="px-4 py-2.5 text-center text-text-muted font-medium w-16">Fixable</th>
-                  <th className="px-4 py-2.5 text-left text-text-muted font-medium hidden lg:table-cell">Path to fix</th>
+                  <th className="px-4 py-2.5 text-left text-text-muted font-medium">{t('summaryTable.limitation')}</th>
+                  <th className="px-4 py-2.5 text-left text-text-muted font-medium hidden md:table-cell">{t('summaryTable.impact')}</th>
+                  <th className="px-4 py-2.5 text-center text-text-muted font-medium w-16">{t('summaryTable.fixable')}</th>
+                  <th className="px-4 py-2.5 text-left text-text-muted font-medium hidden lg:table-cell">{t('summaryTable.pathToFix')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
@@ -460,9 +464,9 @@ export default function Limitations() {
               </tbody>
             </table>
             <div className="flex items-center gap-4 px-4 py-2 border-t border-border/40 text-xs text-text-muted">
-              <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3 w-3 text-risk-low" /> Fixable with more data</span>
-              <span className="flex items-center gap-1.5"><MinusCircle className="h-3 w-3 text-risk-medium" /> Partial fix possible</span>
-              <span className="flex items-center gap-1.5"><XCircle className="h-3 w-3 text-risk-critical" /> Structural constraint</span>
+              <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3 w-3 text-risk-low" /> {t('fixableWithData')}</span>
+              <span className="flex items-center gap-1.5"><MinusCircle className="h-3 w-3 text-risk-medium" /> {t('partialFix')}</span>
+              <span className="flex items-center gap-1.5"><XCircle className="h-3 w-3 text-risk-critical" /> {t('structuralConstraint')}</span>
             </div>
           </div>
         </CardContent>
@@ -478,8 +482,8 @@ export default function Limitations() {
       {/* Footer disclaimer */}
       <div className="p-4 rounded-lg border border-border/50 bg-background-card/50">
         <p className="text-xs text-text-muted leading-relaxed">
-          <span className="font-medium text-text-primary">Interpretation guidance: </span>
-          Risk scores are calibrated statistical estimates, not legal determinations. A high score indicates patterns statistically consistent with documented corruption — it does not constitute proof of wrongdoing. A low score does not certify a contract as clean. RUBLI is designed to help investigators prioritize their limited resources, not to replace investigation.
+          <span className="font-medium text-text-primary">{t('interpretationGuidance')}: </span>
+          {t('interpretationText')}
         </p>
       </div>
     </div>

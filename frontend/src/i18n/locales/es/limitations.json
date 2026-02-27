@@ -1,0 +1,149 @@
+{
+  "pageTitle": "Limitaciones de la Plataforma",
+  "pageDescription": "RUBLI es una herramienta estadística de alerta temprana, no un sistema de auditoría. Entender lo que no puede detectar es tan importante como entender lo que sí puede.",
+  "summary": "Resumen",
+  "whatThisMisses": "Lo que no detecta",
+  "whyHardToFix": "Por qué es difícil de corregir",
+  "impact": "Impacto",
+  "workaround": "Alternativa",
+  "mostAffected": "Más afectados",
+  "fixableWithData": "Corregible con más datos",
+  "partialFix": "Corrección parcial posible",
+  "structuralConstraint": "Limitación estructural",
+  "interpretationGuidance": "Guía de interpretación",
+  "interpretationText": "Las puntuaciones de riesgo son estimaciones estadísticas calibradas, no determinaciones legales. Una puntuación alta indica patrones estadísticamente consistentes con corrupción documentada — no constituye prueba de irregularidad. Una puntuación baja no certifica que un contrato esté limpio. RUBLI está diseñado para ayudar a los investigadores a priorizar sus recursos limitados, no para reemplazar la investigación.",
+  "severity": {
+    "high": "Impacto Alto",
+    "medium": "Impacto Medio",
+    "low": "Impacto Bajo"
+  },
+  "summaryTable": {
+    "limitation": "Limitación",
+    "impact": "Impacto",
+    "fixable": "Corregible",
+    "pathToFix": "Ruta para corregir"
+  },
+  "cards": {
+    "executionPhase": {
+      "title": "Solo Fase de Licitación — El Fraude en Ejecución Es Invisible",
+      "summary": "La plataforma solo ve datos de adjudicación de contratos. El fraude que ocurre después de firmar un contrato no puede detectarse.",
+      "body1": "RUBLI analiza datos de COMPRANET al momento de la adjudicación del contrato. No puede ver lo que sucede durante la ejecución del proyecto — sobrecostos, trabajadores fantasma, sustitución de materiales, facturación inflada o pagos de sobornos.",
+      "body2": "Esta es la razón principal por la que Construcción (1.1B MXN, #1 por valor) muestra solo 3.4% de riesgo promedio a pesar de ser históricamente el sector de contratación más corrupto de México. El escándalo de la Casa Blanca de Grupo Higa, el soborno de Odebrecht a funcionarios de PEMEX y los sobrecostos del Tren Maya involucraron mecanismos de fraude completamente invisibles para los registros de contratación.",
+      "workaround": "Cruzar contratos de construcción de alto valor con informes de auditoría de la Auditoría Superior de la Federación (ASF), que cubren irregularidades en la fase de ejecución."
+    },
+    "trainingBias": {
+      "title": "Sesgo en Datos de Entrenamiento — Tres Casos Dominan",
+      "summary": "El modelo de riesgo fue entrenado con 15 casos documentados de corrupción, pero el 79% de los contratos de entrenamiento provienen de solo tres mega-casos en salud y agricultura.",
+      "body1": "El modelo v5.0 mejoró significativamente respecto al v4.0 al diversificar de 9 a 15 casos de verdad fundamental en los 12 sectores. Sin embargo, la señal de entrenamiento sigue concentrada:",
+      "body2": "Empresas fantasma del IMSS (9,366 contratos) + Segalmex (6,326) + Contrataciones COVID-19 (5,371) = ~21,000 de ~27,000 contratos etiquetados. Estos tres casos involucran proveedores grandes y concentrados en los sectores de salud/agricultura. El modelo ha aprendido efectivamente: proveedor grande + alta concentración + misma institución = riesgo.",
+      "body3": "La corrupción que no coincide con este patrón es sistemáticamente subdetectada. Un funcionario local adjudicando contratos a la empresa fantasma de un familiar — pocos contratos, montos pequeños, no concentrado — puede obtener una puntuación baja porque no se parece a IMSS Pisa.",
+      "workaround": "Al investigar instituciones u oficiales específicos, no confíe solo en las puntuaciones de riesgo. Use el filtro de Contratos para encontrar adjudicaciones directas y licitaciones con un solo participante independientemente de la puntuación."
+    },
+    "vendorDedup": {
+      "title": "Deduplicación de Proveedores — El Problema de Identidad Sin Resolver",
+      "summary": "La misma empresa aparece bajo cientos de variaciones de nombre. Sin una identidad canónica de proveedor, el análisis de concentración y redes subestima la participación de mercado para datos anteriores a 2018.",
+      "body1": "COMPRANET almacena nombres de proveedores como texto libre ingresado por diferentes dependencias gubernamentales durante 23 años. La misma empresa aparece rutinariamente como docenas de cadenas diferentes:",
+      "body2": "\"FARMACEUTICOS MAYPO S.A DE CV\" / \"FARMACEUTICOS MAYPO SA DE CV\" / \"FARMACEUTICOS MAYPO S.A. DE C.V.\" / \"FARMACEUTICOS MAYPO\" — son el mismo proveedor, pero la plataforma los cuenta por separado sin un RFC que los vincule.",
+      "body3": "La plataforma usa el RFC (Registro Federal de Contribuyentes) como clave principal de coincidencia cuando está disponible. Pero la cobertura de RFC es 0.1% (2002–2010), 15.7% (2010–2017), 30.3% (2018–2022), 47.4% (2023–2025). La mitad de la base de datos no tiene RFC.",
+      "impact": "La concentración real de proveedores y la participación de mercado es mayor que la mostrada para datos de 2002–2017. El \"Proveedor Principal\" mostrado por categoría es la cadena de nombre único con más contratos — el proveedor dominante real puede estar distribuido entre múltiples variantes de nombre.",
+      "workaround": "Al investigar un proveedor específico, busque por nombre parcial para encontrar todas las variantes. Use el RFC mostrado en el perfil del proveedor para identificar la entidad canónica.",
+      "whyHard": {
+        "rfcPartial": "La cobertura de RFC es parcial",
+        "rfcPartialDetail": "Solo el 47% de los datos actuales tiene RFC; los datos de 2002–2010 casi no tienen.",
+        "fuzzyMerge": "La coincidencia difusa crea fusiones falsas",
+        "fuzzyMergeDetail": "\"DISTRIBUIDORA LA IDEAL\" y \"DISTRIBUIDORA LA IDEAL JALISCO\" pueden ser empresas regionales no relacionadas.",
+        "shellNames": "Los nombres de empresas fantasma son intencionalmente similares",
+        "shellNamesDetail": "La Estafa Maestra usó \"GC ROGU\" y \"GC CINCO\" para parecer variantes. Fusionarlos destruye la señal de red que se intenta detectar.",
+        "restructure": "Las empresas se reestructuran para escapar de listas negras",
+        "restructureDetail": "Un proveedor sancionado reaparece bajo una nueva entidad. Fusionar oculta el nuevo comienzo; no fusionar subestima su historial.",
+        "noRegistry": "No existe un registro canónico de empresas",
+        "noRegistryDetail": "México no tiene un registro de proveedores accesible públicamente y legible por máquina que mapee todas las variaciones de RFC a una entidad canónica."
+      }
+    },
+    "cobidding": {
+      "title": "Señal de Co-Licitación — Regularizada a Cero",
+      "summary": "El modelo aprendió que los patrones de co-licitación no discriminan entre proveedores corruptos y limpios en nuestros datos de entrenamiento. La rotación de ofertas y las ofertas de cobertura no se reflejan en la puntuación de riesgo.",
+      "body1": "La característica co_bid_rate fue regularizada a exactamente 0.000 en el modelo global y en los 12 modelos por sector. Esto significa que los proveedores que aparecen consistentemente en los mismos procedimientos — incluso cuando uno siempre pierde para dejar ganar al otro — no reciben penalización adicional de riesgo.",
+      "body2": "La razón es estructural: los casos documentados de corrupción usados para el entrenamiento involucran proveedores grandes establecidos (LICONSA, Pisa, DIQN) que ganan a través de concentración de mercado y volumen, no a través de anillos de licitación coordinados. El modelo aprendió lo que se le mostró.",
+      "body3": "La función de Detección de Colusión en los perfiles de proveedores usa una heurística separada (procedimientos compartidos, análisis de ratio de victorias/derrotas), pero este análisis no retroalimenta la puntuación de riesgo a nivel de contrato.",
+      "workaround": "Use la pestaña Perfil de Proveedor → Detección de Colusión para analizar proveedores específicos por patrones de co-licitación. Es un análisis separado de la puntuación de riesgo."
+    },
+    "dataQuality": {
+      "title": "La Calidad de Datos Se Degrada para Registros Anteriores a 2010",
+      "summary": "Los datos de COMPRANET de 2002–2010 tienen 0.1% de cobertura de RFC, muchos campos faltantes y corrupción sistemática de codificación. Las puntuaciones de riesgo para este período son direccionales, no precisas.",
+      "body1": "COMPRANET cambió su estructura de datos cuatro veces entre 2002 y 2025. La estructura más antigua (2002–2010) tiene la menor cantidad de campos y la calidad de datos más baja:",
+      "workaround": "Aplique mayor escepticismo a las puntuaciones de riesgo de contratos anteriores a 2011. Use filtros por año para comparar patrones dentro de la misma era de estructura de datos.",
+      "table": {
+        "period": "Período",
+        "rfcCoverage": "Cobertura RFC",
+        "quality": "Calidad",
+        "notes": "Notas"
+      }
+    },
+    "causal": {
+      "title": "Correlación, No Causalidad",
+      "summary": "Una puntuación de riesgo alta significa similitud estadística con contratos corruptos conocidos — no prueba de corrupción. Una puntuación baja no significa que un contrato esté limpio.",
+      "body1": "La puntuación de riesgo es una probabilidad calibrada: una puntuación de 0.85 significa que las características estadísticas del contrato se asemejan a las de contratos de casos documentados de corrupción. No significa que el contrato sea corrupto.",
+      "body2": "Una compra legítima de medicamentos al mayoreo del IMSS a un gran proveedor farmacéutico obtendrá una puntuación alta por las mismas razones que una fraudulenta — monto grande, proveedor concentrado, misma institución. El modelo no puede distinguir intención de estructura.",
+      "body3": "De igual forma, un contrato con puntuación baja no está certificado como limpio. Nuevos patrones de corrupción — que el modelo nunca ha visto — obtendrán puntuaciones bajas hasta que se agregue un caso documentado a la verdad fundamental.",
+      "workaround": "Trate las puntuaciones de riesgo como triaje de investigación, no como veredictos. Las puntuaciones altas indican dónde buscar; la investigación y la evidencia externa establecen lo que sucedió."
+    },
+    "structuralConcentration": {
+      "title": "Concentración Estructural — Algunos Sectores Tienen Monopolios Legítimos",
+      "summary": "Ciertos sectores tienen cuasi-monopolios impulsados por regulación, requisitos de seguridad o estructura de mercado — no por corrupción. El modelo corrige parcialmente esto pero no completamente.",
+      "body1": "La normalización por z-score compara cada contrato con las líneas base del sector y año, lo cual maneja parcialmente la concentración estructural. Pero algunos patrones persisten:",
+      "body2": "Energía: CFE y PEMEX tienen proveedores preferidos para equipo especializado debido a requisitos de certificación técnica, no favoritismo. Edenred y Sodexo poseen ~90% del mercado de vales de despensa en México — un cuasi-duopolio que precede a COMPRANET.",
+      "body3": "Defensa: Los requisitos de habilitación de seguridad limitan legalmente la competencia. Las tasas de licitante único en defensa son estructuralmente altas y no indican irregularidad.",
+      "body4": "Seguros (29.5% riesgo promedio): El mercado de seguros para contratos gubernamentales está dominado por 5-6 aseguradoras. La concentración es regulatoria, no corrupta.",
+      "workaround": "Compare puntuaciones de riesgo dentro del mismo sector y tipo de proveedor, no entre sectores. Un proveedor de construcción con puntuación 0.40 es más sospechoso que una aseguradora con la misma puntuación."
+    },
+    "dataPipeline": {
+      "title": "Interrupción del Flujo de Datos — CompraNet Abolido en Abril 2025",
+      "summary": "La plataforma que suministraba toda esta base de datos fue abolida en abril de 2025. La continuidad futura de datos es incierta, y los registros históricos ya están desapareciendo del acceso público oficial.",
+      "body1": "COMPRANET — el portal federal de contrataciones de México, operativo desde 1996 — fue abolido por el Congreso el 10 de abril de 2025, y reemplazado por ComprasMX. La transición crea tres riesgos concretos para la investigación de contrataciones.",
+      "body2": "Primero: antes de que cambiara cualquier ley, 1.9 millones de contratos de 2012–2023 (representando 4.7 billones de MXN) fueron silenciosamente eliminados de la interfaz pública de COMPRANET en agosto de 2024. Estos registros pueden existir solo en archivos fuera de línea y en bases de datos que los capturaron antes de la eliminación.",
+      "body3": "Segundo: la nueva Ley de Adquisiciones (abril 2025) contiene una cláusula de retención de datos de 5 años. Bajo esta regla, los contratos con más de cinco años de antigüedad podrían ser legalmente eliminados de la plataforma oficial — potencialmente eliminando registros de 2.6 millones de contratos con valor de 9.9 billones de MXN de la vista pública.",
+      "body4": "Tercero: el INAI — el órgano independiente de transparencia al que los ciudadanos podían apelar cuando las dependencias se negaban a proporcionar información — fue constitucionalmente abolido en diciembre de 2024. Su reemplazo, \"Transparencia para el Pueblo,\" opera bajo el mismo poder ejecutivo que se supone debe supervisar, con aproximadamente el 2% del presupuesto anterior del INAI.",
+      "workaround": "Los 3.1M de contratos en esta base de datos fueron capturados antes de la transición. Para investigación futura, monitoree datos.gob.mx para exportaciones archivadas de CompraNet. Para contratos actuales, ComprasMX está en upcp-compranet.buengobierno.gob.mx. Cruce hallazgos con MCCI (contralacorrupcion.mx) que mantiene archivos independientes."
+    },
+    "temporal": {
+      "title": "Estacionariedad Temporal — El Modelo Puede Volverse Obsoleto",
+      "summary": "El modelo fue entrenado con contratos hasta 2020. Los patrones de corrupción pueden evolucionar, y nuevos patrones en datos de 2021–2025 pueden no ser detectados.",
+      "body1": "El modelo v5.0 usa una división temporal entrenamiento/prueba: entrenado con contratos ≤2020, probado con ≥2021. El AUC de prueba de 0.960 (vs entrenamiento 0.967) confirma buena generalización al futuro cercano.",
+      "body2": "Sin embargo, el modelo asume que los patrones de corrupción son relativamente estables en el tiempo — que lo que era corrupto en 2018 tiene una estructura similar a lo corrupto en 2024. Si una nueva administración introduce mecanismos de fraude en contrataciones fundamentalmente diferentes, el modelo puede ser lento para detectarlos.",
+      "body3": "La recalibración con nuevos casos de verdad fundamental debe ocurrir cuando se documenten nuevos casos importantes de corrupción.",
+      "workaround": "Monitoree la página de Verdad Fundamental para casos recién agregados. Después de que se documenten escándalos importantes, el modelo debe reentrenarse para incorporar los nuevos patrones."
+    },
+    "contractModifications": {
+      "title": "Modificaciones de Contratos Invisibles — La Renegociación Es Donde Se Oculta la Corrupción",
+      "summary": "RUBLI no puede ver las renegociaciones y modificaciones posteriores a la adjudicación. En infraestructura compleja, hasta el 50% de los contratos se renegocian — y los sobrecostos son frecuentemente donde ocurre la corrupción.",
+      "body1": "RUBLI analiza solo datos de adjudicación de contratos. Después de firmarse un contrato, las modificaciones — sobrecostos, cambios de alcance, extensiones de plazos, sustitución de entregables — no se registran en COMPRANET en un formato que este sistema pueda rastrear.",
+      "body2": "Bajari, McMillan y Tadelis (2009) documentaron que hasta el 50% de los contratos complejos de obra pública se renegocian después de la adjudicación, con un sobrecosto promedio del 14%. En contextos propensos a la corrupción, la oferta competitiva inicial es intencionalmente baja — las modificaciones se planifican desde el principio para extraer la renta real.",
+      "body3": "Esto significa que las puntuaciones de riesgo de RUBLI para grandes proyectos de infraestructura reflejan solo la fase de contratación. Un contrato que obtuvo puntuación limpia en la adjudicación puede representar un resultado significativo de corrupción una vez que se aplican las modificaciones. El Tren Maya, la construcción de refinerías de Pemex y los grandes proyectos hospitalarios en México han mostrado sobrecostos del 100%+ en informes de auditoría de la ASF — mientras que sus contratos originales de contratación aparecen normales.",
+      "workaround": "Cruce los hallazgos de RUBLI con los informes de Cuenta Pública de la ASF (asf.gob.mx). La ASF audita la fase de ejecución y documenta rutinariamente los sobrecostos. La integración de hallazgos de la ASF en las puntuaciones de RUBLI es una mejora planificada para la Fase 6."
+    },
+    "mexicoConcentration": {
+      "title": "La Concentración de Proveedores Es Específica de México — Una Advertencia de Calibración",
+      "summary": "El predictor más fuerte de RUBLI (concentración de proveedores) difiere del predictor globalmente dominante (licitante único). Esto refleja la preferencia estructural de México por adjudicaciones directas en lugar de procedimientos competitivos.",
+      "body1": "En la literatura global sobre corrupción en contrataciones, la licitación con un solo participante — un procedimiento competitivo con un solo proveedor — es el indicador de alerta más universalmente validado (Fazekas y Tóth 2016; Charron et al. 2017). En conjuntos de datos europeos, este patrón tiene el poder predictivo más fuerte.",
+      "body2": "En RUBLI (entrenado con 3.1M contratos de México), la concentración de proveedores es el predictor más fuerte (coeficiente global +0.428), mientras que la licitación con un solo participante tiene un coeficiente cercano a cero (+0.013). Esta divergencia no es un error de modelado — refleja la estructura de contrataciones de México.",
+      "body3": "En México, aproximadamente el 70% de los contratos son adjudicaciones directas. Cuando la adjudicación directa es la norma, los procedimientos competitivos con un solo licitante son raros incluso en contrataciones limpias. La normalización por z-score tiene en cuenta esta línea base. Pero los datos de entrenamiento (79% de casos IMSS, Segalmex, COVID-19) refuerzan la concentración como la señal dominante porque estos casos involucraron grandes proveedores capturando monopolios institucionales.",
+      "body4": "Implicación: RUBLI está bien calibrado para los patrones documentados de corrupción de México — la captura basada en concentración es el mecanismo principal. Puede tener un rendimiento inferior en formas de corrupción más comunes en conjuntos de datos europeos: ofertas de cobertura en procedimientos competitivos y anillos de rotación de ofertas, que son menos prevalentes en el sistema mexicano dominado por adjudicaciones directas.",
+      "impact": "Las alertas de alto riesgo de RUBLI son más confiables para identificar captura de proveedores y concentración de mercado. Para detección de colusión en procedimientos competitivos, complemente con la pestaña Perfil de Proveedor → Detección de Colusión.",
+      "workaround": "Al investigar manipulación de licitaciones en procedimientos competitivos, use la herramienta de análisis de Co-licitación en lugar de confiar solo en las puntuaciones de riesgo. Las puntuaciones de riesgo están calibradas para la forma dominante de corrupción en México (concentración), no para anillos de colusión."
+    }
+  },
+  "summaryRows": {
+    "executionPhase": { "limitation": "Fraude en fase de ejecución invisible", "impact": "Construcción/infraestructura subvalorados", "fix": "Requiere integración de datos de auditoría ASF" },
+    "trainingBias": { "limitation": "Sesgo de entrenamiento (3 casos dominantes)", "impact": "Corrupción de pequeños proveedores y multi-sector subdetectada", "fix": "Agregar más casos de verdad fundamental etiquetados" },
+    "vendorDedup": { "limitation": "Deduplicación de proveedores sin resolver", "impact": "Concentración real subestimada pre-2018", "fix": "Bloqueo por RFC + dirección (corrección parcial)" },
+    "cobidding": { "limitation": "Señal de co-licitación = cero", "impact": "Rotación de ofertas y cobertura no en puntuación de riesgo", "fix": "Necesita verdad fundamental específica de colusión" },
+    "dataPipeline": { "limitation": "CompraNet abolido, flujo de datos interrumpido", "impact": "Datos futuros no disponibles; 1.9M contratos históricos ya eliminados", "fix": "Depende de decisiones de plataforma gubernamental" },
+    "dataQuality": { "limitation": "Calidad de datos pre-2010", "impact": "25% de registros menos confiables", "fix": "Limitación estructural de COMPRANET" },
+    "causal": { "limitation": "Correlación ≠ causalidad", "impact": "Puntuaciones requieren seguimiento investigativo", "fix": "Por diseño — el modelo informa, no concluye" },
+    "structuralConcentration": { "limitation": "Concentración estructural", "impact": "Algunos sectores sobre-señalizados", "fix": "Priors específicos por sector o listas de exclusión" },
+    "temporal": { "limitation": "Estacionariedad temporal", "impact": "Nuevos patrones de fraude pueden no ser detectados", "fix": "Reentrenamiento periódico con nuevos casos" },
+    "contractModifications": { "limitation": "Modificaciones de contratos invisibles", "impact": "Costos de ejecución en infraestructura/energía no rastreados", "fix": "Requiere integración de datos de auditoría ASF (Fase 6)" },
+    "mexicoConcentration": { "limitation": "Modelo de concentración específico de México", "impact": "Colusión por rotación de ofertas en procedimientos competitivos subdetectada", "fix": "Agregar casos de verdad fundamental de anillos de colusión" }
+  }
+}

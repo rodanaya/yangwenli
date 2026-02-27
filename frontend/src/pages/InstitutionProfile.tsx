@@ -15,7 +15,7 @@ import {
   toTitleCase,
   cn,
 } from '@/lib/utils'
-import { institutionApi } from '@/api/client'
+import { institutionApi, caseLibraryApi } from '@/api/client'
 import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { NarrativeCard } from '@/components/NarrativeCard'
 import { ContractDetailModal } from '@/components/ContractDetailModal'
@@ -143,6 +143,14 @@ export function InstitutionProfile() {
     queryFn: () => institutionApi.getASFFindings(institutionId),
     staleTime: 24 * 60 * 60 * 1000, // 24 hours
     enabled: !!institutionId,
+  })
+
+  // Known scandals for this institution's sector
+  const { data: sectorCases } = useQuery({
+    queryKey: ['cases', 'by-sector', institution?.sector_id],
+    queryFn: () => caseLibraryApi.getBySector(institution!.sector_id!),
+    enabled: !!institution?.sector_id,
+    staleTime: 10 * 60 * 1000,
   })
 
   // ── Derived values ──────────────────────────────────────────────────────────
@@ -768,6 +776,33 @@ export function InstitutionProfile() {
 
         </div>
       </div>
+
+      {/* Known Scandals in this sector */}
+      {sectorCases && sectorCases.length > 0 && (
+        <Card>
+          <CardContent className="pt-5 pb-4">
+            <div className="flex items-center gap-2 mb-3">
+              <AlertTriangle className="h-4 w-4 text-risk-high opacity-70" />
+              <h2 className="text-sm font-bold text-text-primary">Known Scandals in Sector</h2>
+              <span className="text-xs text-text-muted">({sectorCases.length})</span>
+            </div>
+            <div className="space-y-1.5">
+              {sectorCases.slice(0, 5).map((c) => (
+                <Link
+                  key={c.slug}
+                  to={`/cases/${c.slug}`}
+                  className="flex items-center justify-between p-2 rounded hover:bg-background-elevated/30 transition-colors group"
+                >
+                  <span className="text-xs font-medium text-text-secondary group-hover:text-accent transition-colors truncate">
+                    {c.name_en || c.name_es}
+                  </span>
+                  <ChevronRight className="h-3 w-3 text-text-muted flex-shrink-0" />
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <ContractDetailModal
         contractId={selectedContractId}

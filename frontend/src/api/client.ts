@@ -58,6 +58,84 @@ import type {
   RiskExplanation,
   ASFInstitutionResponse,
   SectorASFResponse,
+  DataQualityResponse,
+  MonthlyBreakdownResponse,
+  StructuralBreaksResponse,
+  TemporalEventsResponse,
+  WatchlistResponse,
+  WatchlistItem,
+  WatchlistItemCreate,
+  WatchlistItemUpdate,
+  WatchlistStats,
+  WatchlistChanges,
+  NetworkGraphResponse,
+  NetworkGraphParams,
+  CoBiddersResponse,
+  CommunitiesResponse,
+  PriceHypothesisItem,
+  PriceHypothesesResponse,
+  PriceHypothesisDetailResponse,
+  MlAnomaliesResponse,
+  FastDashboardResponse,
+  VendorGroundTruthStatus,
+  VendorWaterfallContribution,
+  VendorReport,
+  InstitutionReport,
+  SectorReport,
+  ThematicReport,
+  ReportTypeSummary,
+  FeatureImportanceItem,
+  ModelComparisonItem,
+  CommunityDetailResponse,
+  ComparePeriodResponse,
+  InstitutionRiskFactorResponse,
+} from './types'
+
+// Re-export types that were moved from client.ts to types.ts for backward compatibility
+export type {
+  GradeDistribution,
+  StructureQuality,
+  FieldCompleteness,
+  KeyIssue,
+  DataQualityResponse,
+  MonthlyDataPoint,
+  MonthlyBreakdownResponse,
+  StructuralBreakpoint,
+  StructuralBreaksResponse,
+  TemporalEvent,
+  TemporalEventsResponse,
+  WatchlistItem,
+  WatchlistChanges,
+  WatchlistResponse,
+  WatchlistItemCreate,
+  WatchlistItemUpdate,
+  WatchlistStats,
+  NetworkNode,
+  NetworkLink,
+  NetworkGraphResponse,
+  NetworkGraphParams,
+  CoBidderItem,
+  CoBiddersResponse,
+  CommunityItem,
+  CommunitiesResponse,
+  PriceHypothesisItem,
+  PriceHypothesesResponse,
+  PriceHypothesisDetailResponse,
+  MlAnomalyItem,
+  MlAnomaliesResponse,
+  FastDashboardResponse,
+  VendorGroundTruthStatus,
+  VendorWaterfallContribution,
+  VendorReport,
+  InstitutionReport,
+  SectorReport,
+  ThematicReport,
+  ReportTypeSummary,
+  FeatureImportanceItem,
+  ModelComparisonItem,
+  CommunityDetailResponse,
+  ComparePeriodResponse,
+  InstitutionRiskFactorResponse,
 } from './types'
 
 // API Base URL - proxied through Vite in development
@@ -180,6 +258,26 @@ export const contractApi = {
     const { data } = await api.get<RiskExplanation>(`/contracts/${contractId}/risk-explain`)
     return data
   },
+
+  async getRiskBreakdown(contractId: number): Promise<Record<string, unknown>> {
+    const { data } = await api.get(`/contracts/${contractId}/risk`)
+    return data
+  },
+
+  async getPriceAnalysis(contractId: number): Promise<Record<string, unknown>> {
+    const { data } = await api.get(`/analysis/contracts/${contractId}/price-analysis`)
+    return data
+  },
+
+  async getByVendor(vendorId: number, page = 1): Promise<Record<string, unknown>> {
+    const { data } = await api.get(`/contracts/by-vendor/${vendorId}?page=${page}`)
+    return data
+  },
+
+  async getByInstitution(institutionId: number, page = 1): Promise<Record<string, unknown>> {
+    const { data } = await api.get(`/contracts/by-institution/${institutionId}?page=${page}`)
+    return data
+  },
 }
 
 // ============================================================================
@@ -291,6 +389,46 @@ export const vendorApi = {
     factors: Array<{ factor: string; count: number; pct: number }>
   }> {
     const { data } = await api.get(`/vendors/${vendorId}/top-factors?limit=${limit}`)
+    return data
+  },
+
+  async getGroundTruthStatus(vendorId: number): Promise<VendorGroundTruthStatus> {
+    const { data } = await api.get<VendorGroundTruthStatus>(`/vendors/${vendorId}/ground-truth-status`)
+    return data
+  },
+
+  async getRiskWaterfall(vendorId: number): Promise<VendorWaterfallContribution[]> {
+    const { data } = await api.get<VendorWaterfallContribution[]>(`/vendors/${vendorId}/risk-waterfall`)
+    return data
+  },
+
+  async getPeerComparison(vendorId: number): Promise<Record<string, unknown>> {
+    const { data } = await api.get(`/vendors/${vendorId}/peer-comparison`)
+    return data
+  },
+
+  async getLinkedScandals(vendorId: number): Promise<Record<string, unknown>> {
+    const { data } = await api.get(`/vendors/${vendorId}/linked-scandals`)
+    return data
+  },
+
+  async getAsfCases(vendorId: number): Promise<Record<string, unknown>> {
+    const { data } = await api.get(`/vendors/${vendorId}/asf-cases`)
+    return data
+  },
+
+  async compare(ids: number[]): Promise<Record<string, unknown>> {
+    const { data } = await api.get(`/vendors/compare?ids=${ids.join(',')}`)
+    return data
+  },
+
+  async getVerified(): Promise<Record<string, unknown>> {
+    const { data } = await api.get('/vendors/verified')
+    return data
+  },
+
+  async getClassification(vendorId: number): Promise<Record<string, unknown>> {
+    const { data } = await api.get(`/vendors/${vendorId}/classification`)
     return data
   },
 
@@ -471,107 +609,36 @@ export const institutionApi = {
     const { data } = await api.get<ASFInstitutionResponse>(`/institutions/${institutionId}/asf-findings`)
     return data
   },
+
+  async compare(ids: number[]): Promise<Record<string, unknown>> {
+    const { data } = await api.get(`/institutions/compare?ids=${ids.join(',')}`)
+    return data
+  },
+
+  async getHierarchy(): Promise<Record<string, unknown>> {
+    const { data } = await api.get('/institutions/hierarchy')
+    return data
+  },
+
+  async getTypes(): Promise<Record<string, unknown>> {
+    const { data } = await api.get('/institutions/types')
+    return data
+  },
+
+  async getSizeTiers(): Promise<Record<string, unknown>> {
+    const { data } = await api.get('/institutions/size-tiers')
+    return data
+  },
+
+  async getOfficials(institutionId: number): Promise<Record<string, unknown>> {
+    const { data } = await api.get(`/institutions/${institutionId}/officials`)
+    return data
+  },
 }
 
 // ============================================================================
 // Analysis Endpoints
 // ============================================================================
-
-// Fast dashboard response type — uses typed interfaces from types.ts
-export type FastDashboardResponse = FastDashboardData
-
-// Data Quality types
-export interface GradeDistribution {
-  grade: string
-  count: number
-  percentage: number
-}
-
-export interface StructureQuality {
-  structure: string
-  years: string
-  contract_count: number
-  avg_quality_score: number
-  rfc_coverage: number
-  quality_description: string
-}
-
-export interface FieldCompleteness {
-  field_name: string
-  fill_rate: number
-  null_count: number
-  total_count: number
-}
-
-export interface KeyIssue {
-  field: string
-  issue_type: string
-  severity: string
-  description: string
-  affected_count: number
-}
-
-export interface DataQualityResponse {
-  overall_score: number
-  total_contracts: number
-  grade_distribution: GradeDistribution[]
-  by_structure: StructureQuality[]
-  field_completeness: FieldCompleteness[]
-  key_issues: KeyIssue[]
-  last_calculated: string | null
-}
-
-// Monthly breakdown types
-export interface MonthlyDataPoint {
-  month: number
-  month_name: string
-  contracts: number
-  value: number
-  avg_risk: number
-  direct_award_count: number
-  single_bid_count: number
-  is_year_end: boolean
-}
-
-export interface MonthlyBreakdownResponse {
-  year: number
-  months: MonthlyDataPoint[]
-  total_contracts: number
-  total_value: number
-  avg_risk: number
-  december_spike: number | null
-}
-
-// Structural breakpoints types
-export interface StructuralBreakpoint {
-  metric: string       // 'direct_award_pct' | 'single_bid_pct' | 'high_risk_pct'
-  year: number
-  delta: number        // percentage point change
-  direction: 'increase' | 'decrease'
-}
-
-export interface StructuralBreaksResponse {
-  breakpoints: StructuralBreakpoint[]
-  error?: string
-}
-
-// Temporal events types
-export interface TemporalEvent {
-  id: string
-  date: string
-  year: number
-  month: number | null
-  type: string
-  title: string
-  description: string
-  impact: string
-  source: string | null
-}
-
-export interface TemporalEventsResponse {
-  events: TemporalEvent[]
-  total: number
-}
 
 export const analysisApi = {
   /**
@@ -844,6 +911,35 @@ export const analysisApi = {
     const { data } = await api.get<SectorASFResponse>(`/analysis/sectors/${sectorId}/asf-findings`)
     return data
   },
+
+  async comparePeriods(p1s: string, p1e: string, p2s: string, p2e: string): Promise<ComparePeriodResponse> {
+    const { data } = await api.get<ComparePeriodResponse>(
+      `/analysis/compare-periods?p1_start=${p1s}&p1_end=${p1e}&p2_start=${p2s}&p2_end=${p2e}`
+    )
+    return data
+  },
+
+  async getInstitutionRiskFactors(limit = 10): Promise<InstitutionRiskFactorResponse[]> {
+    const { data } = await api.get<InstitutionRiskFactorResponse[]>(`/analysis/institution-risk-factors?limit=${limit}`)
+    return data
+  },
+
+  async getModelMetadata(): Promise<Record<string, unknown>> {
+    const { data } = await api.get('/analysis/model/metadata')
+    return data
+  },
+
+  async getFeatureImportance(sectorId?: number): Promise<FeatureImportanceItem[]> {
+    const { data } = await api.get<FeatureImportanceItem[]>(
+      `/investigation/feature-importance${sectorId ? `?sector_id=${sectorId}` : ''}`
+    )
+    return data
+  },
+
+  async getModelComparison(): Promise<ModelComparisonItem[]> {
+    const { data } = await api.get<ModelComparisonItem[]>('/investigation/model-comparison')
+    return data
+  },
 }
 
 // ============================================================================
@@ -872,85 +968,14 @@ export const exportApi = {
     })
     return data
   },
-}
 
-// ============================================================================
-// Watchlist Types
-// ============================================================================
-
-export interface WatchlistItem {
-  id: number
-  item_type: 'vendor' | 'institution' | 'contract'
-  item_id: number
-  item_name: string
-  reason: string
-  priority: 'high' | 'medium' | 'low'
-  status: 'watching' | 'investigating' | 'resolved'
-  notes: string | null
-  alert_threshold: number | null
-  alerts_enabled: boolean
-  risk_score: number | null
-  risk_score_at_creation: number | null
-  created_at: string
-  updated_at: string
-}
-
-export interface WatchlistChanges {
-  watchlist_id: number
-  item_type: 'vendor' | 'institution' | 'contract'
-  item_id: number
-  risk_score_at_creation: number | null
-  current_risk_score: number | null
-  risk_change: number | null
-  recent_contracts: Array<{
-    id: number
-    amount_mxn: number
-    risk_score: number | null
-    contract_date: string | null
-    sector_id: number | null
-  }>
-}
-
-export interface WatchlistResponse {
-  data: WatchlistItem[]
-  total: number
-  by_status: {
-    watching: number
-    investigating: number
-    resolved: number
-  }
-  by_priority: {
-    high: number
-    medium: number
-    low: number
-  }
-  high_priority_count: number
-}
-
-export interface WatchlistItemCreate {
-  item_type: 'vendor' | 'institution' | 'contract'
-  item_id: number
-  reason: string
-  priority?: 'high' | 'medium' | 'low'
-  notes?: string
-  alert_threshold?: number
-}
-
-export interface WatchlistItemUpdate {
-  status?: 'watching' | 'investigating' | 'resolved'
-  priority?: 'high' | 'medium' | 'low'
-  notes?: string
-  alert_threshold?: number
-  alerts_enabled?: boolean
-}
-
-export interface WatchlistStats {
-  total: number
-  watching: number
-  investigating: number
-  resolved: number
-  high_priority: number
-  with_alerts: number
+  async downloadExcel(filters: Record<string, unknown> = {}): Promise<Blob> {
+    const queryParams = buildQueryParams(filters)
+    const { data } = await api.get(`/export/contracts/excel?${queryParams}`, {
+      responseType: 'blob',
+    })
+    return data
+  },
 }
 
 // ============================================================================
@@ -1014,100 +1039,6 @@ export const watchlistApi = {
     const { data } = await api.get<WatchlistChanges>(`/watchlist/${id}/changes`)
     return data
   },
-}
-
-// ============================================================================
-// Network Graph Types
-// ============================================================================
-
-export interface NetworkNode {
-  id: string
-  type: 'vendor' | 'institution'
-  name: string
-  value: number
-  contracts: number
-  risk_score: number | null
-  metadata?: Record<string, unknown>
-  community_id?: number | null
-  community_size?: number | null
-  pagerank?: number | null
-  // Co-bidding triangle clustering (Wachs, Fazekas & Kertész 2021)
-  cobid_clustering_coeff?: number | null
-  cobid_triangle_count?: number | null
-}
-
-export interface CommunityVendorItem {
-  vendor_id: number
-  vendor_name: string
-  pagerank: number
-  degree: number
-  avg_risk: number
-  contracts: number
-  total_value: number
-}
-
-export interface CommunityItem {
-  community_id: number
-  size: number
-  avg_risk: number
-  sector_count: number
-  top_vendors: CommunityVendorItem[]
-}
-
-export interface CommunitiesResponse {
-  communities: CommunityItem[]
-  total_communities: number
-  graph_ready: boolean
-}
-
-export interface NetworkLink {
-  source: string
-  target: string
-  value: number
-  contracts: number
-  avg_risk: number | null
-  relationship?: string
-}
-
-export interface NetworkGraphResponse {
-  nodes: NetworkNode[]
-  links: NetworkLink[]
-  total_nodes: number
-  total_links: number
-  total_value: number
-}
-
-export interface NetworkGraphParams {
-  vendor_id?: number
-  institution_id?: number
-  sector_id?: number
-  year?: number
-  min_value?: number
-  min_contracts?: number
-  depth?: number
-  limit?: number
-}
-
-export interface CoBidderItem {
-  vendor_id: number
-  vendor_name: string
-  co_bid_count: number
-  win_count: number
-  loss_count: number
-  same_winner_ratio: number
-  relationship_strength: 'weak' | 'moderate' | 'strong' | 'very_strong'
-}
-
-export interface CoBiddersResponse {
-  vendor_id: number
-  vendor_name: string
-  co_bidders: CoBidderItem[]
-  total_procedures: number
-  suspicious_patterns: Array<{
-    pattern: string
-    description: string
-    vendors: Array<{ id: number; name: string; [key: string]: unknown }>
-  }>
 }
 
 // ============================================================================
@@ -1183,6 +1114,11 @@ export const networkApi = {
     return data
   },
 
+  async getCommunityDetail(communityId: number): Promise<CommunityDetailResponse> {
+    const { data } = await api.get<CommunityDetailResponse>(`/network/communities/${communityId}`)
+    return data
+  },
+
   /**
    * Get Louvain co-bidding communities (requires build_vendor_graph.py)
    */
@@ -1199,80 +1135,8 @@ export const networkApi = {
 }
 
 // ============================================================================
-// Price Hypothesis Types
+// Price Hypothesis Endpoints (types that stayed local for priceApi use)
 // ============================================================================
-
-export interface PriceHypothesisItem {
-  id: number
-  hypothesis_id: string
-  contract_id: number
-  hypothesis_type: string
-  confidence: number
-  confidence_level: string
-  explanation: string
-  supporting_evidence: Array<{
-    evidence_type: string
-    description: string
-    value: unknown
-    comparison_value?: unknown
-    source?: string
-  }>
-  recommended_action: string
-  literature_reference: string
-  sector_id?: number
-  vendor_id?: number
-  amount_mxn?: number
-  is_reviewed: boolean
-  is_valid?: boolean
-  review_notes?: string
-  created_at: string
-}
-
-export interface PriceHypothesesResponse {
-  data: PriceHypothesisItem[]
-  pagination: {
-    page: number
-    per_page: number
-    total: number
-    total_pages: number
-  }
-  summary: {
-    total_hypotheses: number
-    by_confidence: {
-      very_high: number
-      high: number
-      medium: number
-      low: number
-    }
-    reviewed_count: number
-    confirmed_count: number
-    total_flagged_value: number
-  }
-}
-
-export interface PriceHypothesisDetailResponse {
-  hypothesis: PriceHypothesisItem
-  contract: Record<string, unknown>
-  sector_baseline?: {
-    sector_id: number
-    median: number
-    p75: number
-    p95: number
-    upper_fence: number
-    extreme_fence: number
-    mean: number
-    std_dev: number
-    sample_count: number
-  }
-  vendor_profile?: {
-    vendor_id: number
-    avg_contract_value: number
-    median_contract_value: number
-    contract_count: number
-    price_trend: string
-  }
-  similar_contracts: Array<Record<string, unknown>>
-}
 
 export interface SectorPriceBaseline {
   sector_id: number
@@ -1366,23 +1230,6 @@ export interface PriceHypothesesFilterParams {
   sort_order?: string
   page?: number
   per_page?: number
-}
-
-export interface MlAnomalyItem {
-  contract_id: number
-  anomaly_score: number
-  sector_id: number
-  sector_name: string
-  iqr_flagged: boolean
-  amount_mxn: number
-  vendor_name: string
-  contract_date: string
-}
-
-export interface MlAnomaliesResponse {
-  data: MlAnomalyItem[]
-  total: number
-  new_detections: number
 }
 
 // ============================================================================
@@ -1543,8 +1390,81 @@ export const investigationApi = {
   /**
    * Get SHAP-based vendor explanation
    */
-  async getVendorExplanation(vendorId: number, sectorId: number): Promise<Record<string, unknown>> {
-    const { data } = await api.get(`/investigation/vendors/${vendorId}/explanation?sector_id=${sectorId}`)
+  async getVendorExplanation(vendorId: number, sectorId?: number): Promise<Record<string, unknown>> {
+    const { data } = await api.get(`/investigation/vendors/${vendorId}/explanation${sectorId ? `?sector_id=${sectorId}` : ''}`)
+    return data
+  },
+
+  async getTopAnomalousVendors(limit = 20, sectorId?: number): Promise<Record<string, unknown>> {
+    const { data } = await api.get(`/investigation/top-anomalous-vendors?limit=${limit}${sectorId ? `&sector_id=${sectorId}` : ''}`)
+    return data
+  },
+
+  async runPipeline(): Promise<Record<string, unknown>> {
+    const { data } = await api.post('/investigation/run', {})
+    return data
+  },
+
+  async getCaseExport(caseId: number): Promise<Record<string, unknown>> {
+    const { data } = await api.get(`/investigation/cases/${caseId}/export`)
+    return data
+  },
+
+  async getCaseAsfMatches(caseId: number): Promise<Record<string, unknown>> {
+    const { data } = await api.get(`/investigation/cases/${caseId}/asf-matches`)
+    return data
+  },
+}
+
+// ============================================================================
+// Report Endpoints
+// ============================================================================
+
+export const reportApi = {
+  async getVendorReport(id: number): Promise<VendorReport> {
+    const { data } = await api.get<VendorReport>(`/reports/vendor/${id}`)
+    return data
+  },
+
+  async getInstitutionReport(id: number): Promise<InstitutionReport> {
+    const { data } = await api.get<InstitutionReport>(`/reports/institution/${id}`)
+    return data
+  },
+
+  async getSectorReport(id: number): Promise<SectorReport> {
+    const { data } = await api.get<SectorReport>(`/reports/sector/${id}`)
+    return data
+  },
+
+  async getThematicReport(theme: string): Promise<ThematicReport> {
+    const { data } = await api.get<ThematicReport>(`/reports/thematic/${theme}`)
+    return data
+  },
+
+  async getAvailableReports(): Promise<ReportTypeSummary> {
+    const { data } = await api.get<ReportTypeSummary>('/reports/')
+    return data
+  },
+}
+
+// ============================================================================
+// Stats Endpoints
+// ============================================================================
+
+export const statsApi = {
+  async getDatabase(): Promise<Record<string, unknown>> {
+    const { data } = await api.get('/stats/database')
+    return data
+  },
+}
+
+// ============================================================================
+// Industries Endpoints
+// ============================================================================
+
+export const industriesApi = {
+  async getAll(): Promise<Record<string, unknown>> {
+    const { data } = await api.get('/industries')
     return data
   },
 }
@@ -1610,4 +1530,7 @@ export default {
   investigation: investigationApi,
   categories: categoriesApi,
   cases: caseLibraryApi,
+  report: reportApi,
+  stats: statsApi,
+  industries: industriesApi,
 }

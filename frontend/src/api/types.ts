@@ -1357,3 +1357,488 @@ export interface SectorASFResponse {
   total_amount_mxn: number
   years_audited: number
 }
+
+// ============================================================================
+// Data Quality Types (moved from client.ts)
+// ============================================================================
+
+export interface GradeDistribution {
+  grade: string
+  count: number
+  percentage: number
+}
+
+export interface StructureQuality {
+  structure: string
+  years: string
+  contract_count: number
+  avg_quality_score: number
+  rfc_coverage: number
+  quality_description: string
+}
+
+export interface FieldCompleteness {
+  field_name: string
+  fill_rate: number
+  null_count: number
+  total_count: number
+}
+
+export interface KeyIssue {
+  field: string
+  issue_type: string
+  severity: string
+  description: string
+  affected_count: number
+}
+
+export interface DataQualityResponse {
+  overall_score: number
+  total_contracts: number
+  grade_distribution: GradeDistribution[]
+  by_structure: StructureQuality[]
+  field_completeness: FieldCompleteness[]
+  key_issues: KeyIssue[]
+  last_calculated: string | null
+}
+
+// ============================================================================
+// Monthly Breakdown Types (moved from client.ts)
+// ============================================================================
+
+export interface MonthlyDataPoint {
+  month: number
+  month_name: string
+  contracts: number
+  value: number
+  avg_risk: number
+  direct_award_count: number
+  single_bid_count: number
+  is_year_end: boolean
+}
+
+export interface MonthlyBreakdownResponse {
+  year: number
+  months: MonthlyDataPoint[]
+  total_contracts: number
+  total_value: number
+  avg_risk: number
+  december_spike: number | null
+}
+
+// ============================================================================
+// Structural Breakpoints Types (moved from client.ts)
+// ============================================================================
+
+export interface StructuralBreakpoint {
+  metric: string       // 'direct_award_pct' | 'single_bid_pct' | 'high_risk_pct'
+  year: number
+  delta: number        // percentage point change
+  direction: 'increase' | 'decrease'
+}
+
+export interface StructuralBreaksResponse {
+  breakpoints: StructuralBreakpoint[]
+  error?: string
+}
+
+// ============================================================================
+// Temporal Events Types (moved from client.ts)
+// ============================================================================
+
+export interface TemporalEvent {
+  id: string
+  date: string
+  year: number
+  month: number | null
+  type: string
+  title: string
+  description: string
+  impact: string
+  source: string | null
+}
+
+export interface TemporalEventsResponse {
+  events: TemporalEvent[]
+  total: number
+}
+
+// ============================================================================
+// Watchlist Types (moved from client.ts)
+// ============================================================================
+
+export interface WatchlistItem {
+  id: number
+  item_type: 'vendor' | 'institution' | 'contract'
+  item_id: number
+  item_name: string
+  reason: string
+  priority: 'high' | 'medium' | 'low'
+  status: 'watching' | 'investigating' | 'resolved'
+  notes: string | null
+  alert_threshold: number | null
+  alerts_enabled: boolean
+  risk_score: number | null
+  risk_score_at_creation: number | null
+  created_at: string
+  updated_at: string
+}
+
+export interface WatchlistChanges {
+  watchlist_id: number
+  item_type: 'vendor' | 'institution' | 'contract'
+  item_id: number
+  risk_score_at_creation: number | null
+  current_risk_score: number | null
+  risk_change: number | null
+  recent_contracts: Array<{
+    id: number
+    amount_mxn: number
+    risk_score: number | null
+    contract_date: string | null
+    sector_id: number | null
+  }>
+}
+
+export interface WatchlistResponse {
+  data: WatchlistItem[]
+  total: number
+  by_status: {
+    watching: number
+    investigating: number
+    resolved: number
+  }
+  by_priority: {
+    high: number
+    medium: number
+    low: number
+  }
+  high_priority_count: number
+}
+
+export interface WatchlistItemCreate {
+  item_type: 'vendor' | 'institution' | 'contract'
+  item_id: number
+  reason: string
+  priority?: 'high' | 'medium' | 'low'
+  notes?: string
+  alert_threshold?: number
+}
+
+export interface WatchlistItemUpdate {
+  status?: 'watching' | 'investigating' | 'resolved'
+  priority?: 'high' | 'medium' | 'low'
+  notes?: string
+  alert_threshold?: number
+  alerts_enabled?: boolean
+}
+
+export interface WatchlistStats {
+  total: number
+  watching: number
+  investigating: number
+  resolved: number
+  high_priority: number
+  with_alerts: number
+}
+
+// ============================================================================
+// Network Graph Types (moved from client.ts)
+// ============================================================================
+
+export interface NetworkNode {
+  id: string
+  type: 'vendor' | 'institution'
+  name: string
+  value: number
+  contracts: number
+  risk_score: number | null
+  metadata?: Record<string, unknown>
+  community_id?: number | null
+  community_size?: number | null
+  pagerank?: number | null
+  // Co-bidding triangle clustering (Wachs, Fazekas & Kertész 2021)
+  cobid_clustering_coeff?: number | null
+  cobid_triangle_count?: number | null
+}
+
+export interface CommunityVendorItem {
+  vendor_id: number
+  vendor_name: string
+  pagerank: number
+  degree: number
+  avg_risk: number
+  contracts: number
+  total_value: number
+}
+
+export interface CommunityItem {
+  community_id: number
+  size: number
+  avg_risk: number
+  sector_count: number
+  top_vendors: CommunityVendorItem[]
+}
+
+export interface CommunitiesResponse {
+  communities: CommunityItem[]
+  total_communities: number
+  graph_ready: boolean
+}
+
+export interface NetworkLink {
+  source: string
+  target: string
+  value: number
+  contracts: number
+  avg_risk: number | null
+  relationship?: string
+}
+
+export interface NetworkGraphResponse {
+  nodes: NetworkNode[]
+  links: NetworkLink[]
+  total_nodes: number
+  total_links: number
+  total_value: number
+}
+
+export interface NetworkGraphParams {
+  vendor_id?: number
+  institution_id?: number
+  sector_id?: number
+  year?: number
+  min_value?: number
+  min_contracts?: number
+  depth?: number
+  limit?: number
+}
+
+export interface CoBidderItem {
+  vendor_id: number
+  vendor_name: string
+  co_bid_count: number
+  win_count: number
+  loss_count: number
+  same_winner_ratio: number
+  relationship_strength: 'weak' | 'moderate' | 'strong' | 'very_strong'
+}
+
+export interface CoBiddersResponse {
+  vendor_id: number
+  vendor_name: string
+  co_bidders: CoBidderItem[]
+  total_procedures: number
+  suspicious_patterns: Array<{
+    pattern: string
+    description: string
+    vendors: Array<{ id: number; name: string; [key: string]: unknown }>
+  }>
+}
+
+// ============================================================================
+// Price Hypothesis Types (moved from client.ts)
+// ============================================================================
+
+export interface PriceHypothesisItem {
+  id: number
+  hypothesis_id: string
+  contract_id: number
+  hypothesis_type: string
+  confidence: number
+  confidence_level: string
+  explanation: string
+  supporting_evidence: Array<{
+    evidence_type: string
+    description: string
+    value: unknown
+    comparison_value?: unknown
+    source?: string
+  }>
+  recommended_action: string
+  literature_reference: string
+  sector_id?: number
+  vendor_id?: number
+  amount_mxn?: number
+  is_reviewed: boolean
+  is_valid?: boolean
+  review_notes?: string
+  created_at: string
+}
+
+export interface PriceHypothesesResponse {
+  data: PriceHypothesisItem[]
+  pagination: {
+    page: number
+    per_page: number
+    total: number
+    total_pages: number
+  }
+  summary: {
+    total_hypotheses: number
+    by_confidence: {
+      very_high: number
+      high: number
+      medium: number
+      low: number
+    }
+    reviewed_count: number
+    confirmed_count: number
+    total_flagged_value: number
+  }
+}
+
+export interface PriceHypothesisDetailResponse {
+  hypothesis: PriceHypothesisItem
+  contract: Record<string, unknown>
+  sector_baseline?: {
+    sector_id: number
+    median: number
+    p75: number
+    p95: number
+    upper_fence: number
+    extreme_fence: number
+    mean: number
+    std_dev: number
+    sample_count: number
+  }
+  vendor_profile?: {
+    vendor_id: number
+    avg_contract_value: number
+    median_contract_value: number
+    contract_count: number
+    price_trend: string
+  }
+  similar_contracts: Array<Record<string, unknown>>
+}
+
+export interface MlAnomalyItem {
+  contract_id: number
+  anomaly_score: number
+  sector_id: number
+  sector_name: string
+  iqr_flagged: boolean
+  amount_mxn: number
+  vendor_name: string
+  contract_date: string
+}
+
+export interface MlAnomaliesResponse {
+  data: MlAnomalyItem[]
+  total: number
+  new_detections: number
+}
+
+// ============================================================================
+// Fast Dashboard Response Type (moved from client.ts)
+// ============================================================================
+
+export type FastDashboardResponse = FastDashboardData
+
+// ============================================================================
+// New Types for API expansion
+// ============================================================================
+
+export interface VendorGroundTruthStatus {
+  is_known_bad: boolean
+  cases: Array<{
+    case_id: number
+    scandal_slug: string
+    fraud_type: string
+    case_name: string
+  }>
+}
+
+export interface VendorWaterfallContribution {
+  feature: string
+  z_score: number
+  coefficient: number
+  contribution: number
+  label_es: string
+  label_en: string
+}
+
+export interface VendorReport {
+  vendor_id: number
+  vendor_name: string
+  generated_at: string
+  summary: string
+  risk_score: number
+  contract_count: number
+}
+
+export interface InstitutionReport {
+  institution_id: number
+  institution_name: string
+  generated_at: string
+  summary: string
+}
+
+export interface SectorReport {
+  sector_id: number
+  sector_name: string
+  generated_at: string
+  summary: string
+}
+
+export interface ThematicReport {
+  theme: string
+  generated_at: string
+  summary: string
+}
+
+export interface ReportTypeSummary {
+  vendor_count: number
+  institution_count: number
+  sector_count: number
+  thematic_count: number
+}
+
+export interface FeatureImportanceItem {
+  feature: string
+  importance: number
+  description_es: string
+  description_en: string
+}
+
+export interface ModelComparisonItem {
+  model: string
+  auc: number
+  brier: number
+  high_rate: number
+}
+
+export interface CommunityDetailResponse {
+  community_id: number
+  size: number
+  avg_risk_score: number
+  members: Array<{
+    vendor_id: number
+    vendor_name: string
+    risk_score: number
+  }>
+}
+
+export interface ComparePeriodResponse {
+  period1: {
+    start: string
+    end: string
+    total_value: number
+    avg_risk: number
+  }
+  period2: {
+    start: string
+    end: string
+    total_value: number
+    avg_risk: number
+  }
+  delta_risk: number
+  delta_value: number
+}
+
+export interface InstitutionRiskFactorResponse {
+  factor: string
+  value: number
+  sector_median: number
+  percentile: number
+}

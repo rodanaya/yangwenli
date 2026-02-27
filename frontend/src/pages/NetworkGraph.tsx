@@ -671,22 +671,35 @@ export function NetworkGraph() {
       const hasShadow = riskLevel === 'critical' || riskLevel === 'high'
       const shadowColor = riskLevel === 'critical' ? '#f87171' : '#fb923c'
 
+      // TODO: Add is_sanctioned field to network graph node data from /network/graph endpoint
+      // When available, sanctioned nodes will get a red border ring
+      const isSanctioned = (node as NetworkNode & { is_sanctioned?: boolean }).is_sanctioned === true
+      const borderColor = isCenter ? '#ffffff'
+        : isSanctioned ? '#dc2626'
+        : hasShadow ? shadowColor
+        : undefined
+      const borderWidth = isCenter ? 3
+        : isSanctioned ? 2.5
+        : hasShadow ? 1.5
+        : 0
+
       return {
         id: node.id,
-        name: node.name,
+        name: isSanctioned ? `${node.name}` : node.name,
         value: node.value,
         contracts: node.contracts,
         risk_score: node.risk_score,
         node_type: node.type,
+        is_sanctioned: isSanctioned,
         // Store the full raw node for the side panel
         extra: node,
         symbolSize,
         itemStyle: {
           color: itemColor,
-          borderColor: isCenter ? '#ffffff' : hasShadow ? shadowColor : undefined,
-          borderWidth: isCenter ? 3 : hasShadow ? 1.5 : 0,
-          shadowColor: hasShadow ? shadowColor : undefined,
-          shadowBlur: hasShadow ? 12 : undefined,
+          borderColor,
+          borderWidth,
+          shadowColor: isSanctioned ? '#dc2626' : hasShadow ? shadowColor : undefined,
+          shadowBlur: isSanctioned ? 15 : hasShadow ? 12 : undefined,
         },
         label: {
           show: showLabel,
