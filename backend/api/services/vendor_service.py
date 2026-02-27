@@ -15,6 +15,7 @@ import structlog
 from .base_service import BaseService
 from .query_builder import QueryBuilder
 from .pagination import paginate_query, PaginatedResult
+from ..config.constants import RISK_THRESHOLDS_V4 as THRESHOLDS
 
 logger = structlog.get_logger("rubli.services.vendor")
 
@@ -80,10 +81,10 @@ class VendorService(BaseService):
             qb.where("s.primary_sector_id = ?", sector_id)
         if risk_level is not None:
             risk_ranges = {
-                "critical": ("s.avg_risk_score >= ?", [0.50]),
-                "high": ("s.avg_risk_score >= ? AND s.avg_risk_score < ?", [0.30, 0.50]),
-                "medium": ("s.avg_risk_score >= ? AND s.avg_risk_score < ?", [0.10, 0.30]),
-                "low": ("s.avg_risk_score < ?", [0.10]),
+                "critical": ("s.avg_risk_score >= ?", [THRESHOLDS['critical']]),
+                "high": ("s.avg_risk_score >= ? AND s.avg_risk_score < ?", [THRESHOLDS['high'], THRESHOLDS['critical']]),
+                "medium": ("s.avg_risk_score >= ? AND s.avg_risk_score < ?", [THRESHOLDS['medium'], THRESHOLDS['high']]),
+                "low": ("s.avg_risk_score < ?", [THRESHOLDS['medium']]),
             }
             if risk_level in risk_ranges:
                 cond, vals = risk_ranges[risk_level]

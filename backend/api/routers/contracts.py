@@ -13,6 +13,7 @@ from fastapi import APIRouter, Query, HTTPException, Path
 from pydantic import BaseModel
 
 from ..dependencies import get_db
+from ..config.constants import MAX_CONTRACT_VALUE
 from ..models.contract import (
     ContractListItem,
     ContractDetail,
@@ -96,6 +97,13 @@ def list_contracts(
     **Performance note**: This endpoint returns paginated results from 3.1M contracts.
     Always use filters to narrow results for better performance.
     """
+    # Validate max_amount against system maximum
+    if max_amount is not None and max_amount > MAX_CONTRACT_VALUE:
+        raise HTTPException(
+            status_code=422,
+            detail=f"max_amount exceeds maximum allowed value of {MAX_CONTRACT_VALUE}",
+        )
+
     # Validate risk_level before database operations
     if risk_level is not None:
         if risk_level.lower() not in VALID_RISK_LEVELS:

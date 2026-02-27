@@ -274,6 +274,7 @@ def get_top_vendors_all(
         cursor = conn.cursor()
 
         result: dict[str, list] = {}
+        # safe: sort_field values are hardcoded in the loop, not from user input
         for metric, sort_field in [("value", "total_amount_mxn"), ("count", "total_contracts")]:
             cursor.execute(f"""
                 SELECT id, name, rfc, {sort_field} as metric_value,
@@ -582,7 +583,7 @@ def get_vendor_contracts(
         if not vendor:
             raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
 
-        # Build WHERE clause
+        # safe: conditions list contains only hardcoded column names, values are parameterized
         conditions = ["c.vendor_id = ?", "COALESCE(c.amount_mxn, 0) <= ?"]
         params = [vendor_id, MAX_CONTRACT_VALUE]
 
@@ -598,6 +599,7 @@ def get_vendor_contracts(
 
         where_clause = " AND ".join(conditions)
 
+        # safe: sort_by is mapped through whitelist, never used as raw user input
         sort_map = {
             "contract_date": "c.contract_date",
             "amount_mxn": "c.amount_mxn",
@@ -984,6 +986,7 @@ def get_vendor_asf_cases(
         if not conditions:
             return []
 
+        # safe: column names are hardcoded ('vendor_rfc', 'vendor_name'), not from user input
         where_clause = " OR ".join(conditions)
         rows = cursor.execute(
             f"SELECT * FROM asf_cases WHERE {where_clause} ORDER BY report_year DESC LIMIT 50",
@@ -1027,6 +1030,7 @@ def get_vendor_external_flags(
 
         # --- SFP Sanctions ---
         try:
+            # safe: column names are hardcoded ('rfc', 'company_name'), not from user input
             conditions, params = [], []
             if vendor_rfc:
                 conditions.append("rfc = ?")
@@ -1069,6 +1073,7 @@ def get_vendor_external_flags(
 
         # --- ASF cases (existing table) ---
         try:
+            # safe: column names are hardcoded ('vendor_rfc', 'vendor_name'), not from user input
             conditions, params = [], []
             if vendor_rfc:
                 conditions.append("vendor_rfc = ?")
@@ -1475,6 +1480,11 @@ def get_vendor_footprint(
     """
     with get_db() as conn:
         cur = conn.cursor()
+
+        cur.execute("SELECT id FROM vendors WHERE id = ?", (vendor_id,))
+        if not cur.fetchone():
+            raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
+
         cur.execute("""
             SELECT
                 c.sector_id,

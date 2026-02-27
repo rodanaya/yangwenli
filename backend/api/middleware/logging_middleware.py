@@ -55,11 +55,15 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             "status": response.status_code,
         }
 
-        # Add query params for non-health endpoints
+        # Add query params for non-health endpoints (redact PII)
         if request.url.path not in ("/health", "/", "/docs", "/openapi.json"):
             query_params = dict(request.query_params)
             if query_params:
-                log_data["query_params"] = query_params
+                SENSITIVE_PARAMS = {"vendor_rfc", "rfc", "tax_id", "rfc_proveedor"}
+                log_data["query_params"] = {
+                    k: ("[REDACTED]" if k.lower() in SENSITIVE_PARAMS else v)
+                    for k, v in query_params.items()
+                }
 
         if response.status_code >= 500:
             logger.error("request_completed", **log_data)

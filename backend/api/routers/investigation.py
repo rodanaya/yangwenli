@@ -541,6 +541,8 @@ def get_case_asf_matches(
             if not conditions:
                 continue
 
+            # Safe: where_clause is built from hardcoded column names only;
+            # all values are parameterized via params list.
             where_clause = " OR ".join(conditions)
             rows = cursor.execute(
                 f"SELECT * FROM asf_cases WHERE {where_clause} LIMIT 20",
@@ -573,8 +575,8 @@ def get_stats():
                 SUM(total_value_mxn) as total_value,
                 SUM(estimated_loss_mxn) as total_loss,
                 AVG(suspicion_score) as avg_score,
-                SUM(CASE WHEN suspicion_score >= 0.6 THEN 1 ELSE 0 END) as critical,
-                SUM(CASE WHEN suspicion_score >= 0.4 AND suspicion_score < 0.6 THEN 1 ELSE 0 END) as high
+                SUM(CASE WHEN suspicion_score >= 0.50 THEN 1 ELSE 0 END) as critical,
+                SUM(CASE WHEN suspicion_score >= 0.30 AND suspicion_score < 0.50 THEN 1 ELSE 0 END) as high
             FROM investigation_cases
         """)
         stats = cursor.fetchone()

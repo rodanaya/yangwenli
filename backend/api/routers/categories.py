@@ -91,12 +91,13 @@ def get_category_contracts(
     year: Optional[int] = Query(None, ge=2002, le=2026),
 ):
     """Return paginated contracts for a specific category."""
-    # Validate sort_by and sort_order against allowed values (defense-in-depth)
+    # Whitelist sort_by to prevent SQL injection — only these column names are allowed
     allowed_sorts = {"amount_mxn", "contract_date", "risk_score", "contract_year"}
     if sort_by not in allowed_sorts:
         sort_by = "amount_mxn"
     if sort_order not in ("asc", "desc"):
         sort_order = "desc"
+    # safe: sort_by and sort_order are whitelisted above, never raw user input
 
     with get_db() as conn:
         cur = conn.cursor()
@@ -118,6 +119,7 @@ def get_category_contracts(
             conditions.append("c.contract_year = ?")
             params.append(year)
 
+        # safe: conditions list contains only hardcoded column names, values are parameterized
         where = " AND ".join(conditions)
         offset = (page - 1) * per_page
 

@@ -155,11 +155,19 @@ class InstitutionService(BaseService):
                 i.classification_confidence, i.data_quality_grade,
                 it.risk_baseline as type_risk_baseline,
                 st.risk_adjustment as size_risk_adjustment,
-                al.risk_baseline as autonomy_risk_baseline
+                al.risk_baseline as autonomy_risk_baseline,
+                ins.total_contracts as stats_total_contracts,
+                ins.total_value_mxn as stats_total_value_mxn,
+                ins.avg_risk_score as stats_avg_risk_score,
+                ins.high_risk_count as stats_high_risk_count,
+                ins.high_risk_pct as stats_high_risk_pct,
+                ins.direct_award_count as stats_direct_award_count,
+                ins.direct_award_pct as stats_direct_award_pct
             FROM institutions i
             LEFT JOIN institution_types it ON i.institution_type_id = it.id
             LEFT JOIN size_tiers st ON i.size_tier = st.code
             LEFT JOIN autonomy_levels al ON i.autonomy_level = al.code
+            LEFT JOIN institution_stats ins ON i.id = ins.institution_id
             WHERE i.id = ?
             """,
             (institution_id,),
@@ -167,20 +175,28 @@ class InstitutionService(BaseService):
         if row is None:
             return None
 
-        # Fetch pre-computed stats
-        stats_row = self._execute_one(
-            conn,
-            """
-            SELECT total_contracts, total_value_mxn, avg_risk_score,
-                   high_risk_count, high_risk_pct, direct_award_count, direct_award_pct
-            FROM institution_stats
-            WHERE institution_id = ?
-            """,
-            (institution_id,),
-        )
-
         result = dict(row)
-        result["stats"] = dict(stats_row) if stats_row else None
+        # Extract stats from the joined row into a nested dict
+        stats_keys = [
+            "stats_total_contracts", "stats_total_value_mxn", "stats_avg_risk_score",
+            "stats_high_risk_count", "stats_high_risk_pct",
+            "stats_direct_award_count", "stats_direct_award_pct",
+        ]
+        has_stats = any(result.get(k) is not None for k in stats_keys)
+        if has_stats:
+            result["stats"] = {
+                "total_contracts": result.pop("stats_total_contracts"),
+                "total_value_mxn": result.pop("stats_total_value_mxn"),
+                "avg_risk_score": result.pop("stats_avg_risk_score"),
+                "high_risk_count": result.pop("stats_high_risk_count"),
+                "high_risk_pct": result.pop("stats_high_risk_pct"),
+                "direct_award_count": result.pop("stats_direct_award_count"),
+                "direct_award_pct": result.pop("stats_direct_award_pct"),
+            }
+        else:
+            for k in stats_keys:
+                result.pop(k, None)
+            result["stats"] = None
         return result
 
     def get_institution_vendors(

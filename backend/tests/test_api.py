@@ -47,14 +47,14 @@ class TestDocs:
     """Tests for API documentation endpoints."""
 
     def test_swagger_docs(self, client):
-        """Test Swagger docs are accessible."""
+        """Docs disabled by default (ENABLE_DOCS=false). Expect 404."""
         response = client.get("/docs")
-        assert response.status_code == 200
+        assert response.status_code == 404
 
     def test_redoc_docs(self, client):
-        """Test ReDoc docs are accessible."""
+        """ReDoc disabled by default (ENABLE_DOCS=false). Expect 404."""
         response = client.get("/redoc")
-        assert response.status_code == 200
+        assert response.status_code == 404
 
 
 class TestCORS:

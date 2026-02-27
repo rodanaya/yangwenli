@@ -424,6 +424,7 @@ def get_institution_risk_waterfall(
             raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
 
         import json
+        # safe: _INST_Z_COLS is a hardcoded module-level constant, not from user input
         avg_cols = ", ".join(f"AVG(czf.{col}) as {col}" for col in _INST_Z_COLS)
         row = conn.execute(f"""
             SELECT {avg_cols}, COUNT(*) as cnt
@@ -887,7 +888,7 @@ def get_institution_contracts(
         if not institution:
             raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
 
-        # Build WHERE clause
+        # safe: conditions list contains only hardcoded column names, values are parameterized
         conditions = ["c.institution_id = ?", "COALESCE(c.amount_mxn, 0) <= ?"]
         params = [institution_id, MAX_CONTRACT_VALUE]
 
@@ -901,7 +902,7 @@ def get_institution_contracts(
 
         where_clause = " AND ".join(conditions)
 
-        # Sort field mapping
+        # safe: sort_by is mapped through whitelist, never used as raw user input
         SORT_FIELD_MAPPING = {
             "contract_date": "c.contract_date",
             "amount_mxn": "c.amount_mxn",
@@ -1066,6 +1067,11 @@ def get_vendor_loyalty(
 
     with get_db() as conn:
         cur = conn.cursor()
+
+        cur.execute("SELECT id FROM institutions WHERE id = ?", (institution_id,))
+        if not cur.fetchone():
+            raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
+
         # Top N vendors by total value at this institution
         cur.execute("""
             SELECT v.id as vendor_id, v.name as vendor_name,
@@ -1637,6 +1643,9 @@ def get_institution_officials(
     import sqlite3
     with get_db() as conn:
         conn.row_factory = sqlite3.Row
+
+        if not conn.execute("SELECT id FROM institutions WHERE id = ?", (institution_id,)).fetchone():
+            raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
 
         # Check if table has data for this institution
         officials = conn.execute("""

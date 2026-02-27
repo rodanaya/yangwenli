@@ -1,5 +1,5 @@
 """
-Compute Factor Baselines for Z-Score Normalization (Risk Model v4.0)
+Compute Factor Baselines for Z-Score Normalization (Risk Model v5.0 Pipeline, 16 features)
 
 For each (factor, sector_id, year) combination, computes:
   μ(s,t) = mean of factor values
@@ -12,7 +12,7 @@ Fallback hierarchy:
   3. (factor, global)
 
 Creates table: factor_baselines
-  ~12 factors × 12 sectors × 24 years ≈ 3,456 rows + sector/global fallbacks
+  ~16 factors × 12 sectors × 24 years ≈ 4,608 rows + sector/global fallbacks
 
 Usage:
     python -m scripts.compute_factor_baselines [--min-sector-year 30] [--min-sector 100]
@@ -475,7 +475,7 @@ def main():
     args = parser.parse_args()
 
     print("=" * 60)
-    print("RISK MODEL v4.0: Compute Factor Baselines")
+    print("RISK MODEL v5.0: Compute Factor Baselines")
     print("=" * 60)
     print(f"\nDatabase: {DB_PATH}")
     print(f"Min sector-year: {args.min_sector_year}")

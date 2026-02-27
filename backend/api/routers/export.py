@@ -97,6 +97,12 @@ def export_contracts_csv(
     Returns filtered contracts in CSV format for download.
     Maximum {MAX_EXPORT_ROWS} rows per export to prevent memory issues.
     """
+    if max_amount is not None and max_amount > MAX_CONTRACT_VALUE:
+        raise HTTPException(
+            status_code=422,
+            detail=f"max_amount exceeds maximum allowed value of {MAX_CONTRACT_VALUE}",
+        )
+
     try:
         with get_db() as conn:
             cursor = conn.cursor()
@@ -239,6 +245,12 @@ def export_contracts_excel(
     Returns filtered contracts in Excel format for download.
     Maximum {MAX_EXPORT_ROWS} rows per export to prevent memory issues.
     """
+    if max_amount is not None and max_amount > MAX_CONTRACT_VALUE:
+        raise HTTPException(
+            status_code=422,
+            detail=f"max_amount exceeds maximum allowed value of {MAX_CONTRACT_VALUE}",
+        )
+
     try:
         # Import openpyxl here to make it optional
         try:

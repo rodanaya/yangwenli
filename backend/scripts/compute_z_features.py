@@ -1,14 +1,14 @@
 """
-Compute Z-Score Features for Risk Model v4.0
+Compute Z-Score Features for Risk Model v5.0 Pipeline (16 features)
 
-For each contract, computes a 12-dimensional z-score vector using
+For each contract, computes a 16-dimensional z-score vector using
 pre-computed baselines from factor_baselines table.
 
 Continuous:  z_i = (x_i - μ(s,t)) / max(σ(s,t), ε)     where ε = 0.001
 Binary:      z_i = (x_i - p(s,t)) / √(p(s,t)(1-p(s,t)))  (Bernoulli z-score)
 
 Creates table: contract_z_features
-  3.1M rows × 12 z-columns + mahalanobis_distance (filled later)
+  3.1M rows × 16 z-columns + mahalanobis_distance (filled later)
 
 Usage:
     python -m scripts.compute_z_features [--batch-size 50000]
@@ -438,7 +438,7 @@ def main():
     args = parser.parse_args()
 
     print("=" * 60)
-    print("RISK MODEL v4.0: Compute Z-Score Features")
+    print("RISK MODEL v5.0: Compute Z-Score Features")
     print("=" * 60)
     print(f"\nDatabase: {DB_PATH}")
     print(f"Batch size: {args.batch_size:,}")

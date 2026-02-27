@@ -6,7 +6,8 @@ Provides CRUD operations for tracking suspicious vendors, contracts, and institu
 
 import sqlite3
 import logging
-from typing import Optional, List
+import time as _time
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, Query, Path
 from pydantic import BaseModel, Field
@@ -128,15 +129,17 @@ def get_item_name_and_risk(conn: sqlite3.Connection, item_type: str, item_id: in
 
     if item_type == 'vendor':
         cursor.execute("""
-            SELECT v.name,
-                   (SELECT AVG(risk_score) FROM contracts WHERE vendor_id = v.id) as risk
-            FROM vendors v WHERE v.id = ?
+            SELECT v.name, s.avg_risk_score as risk
+            FROM vendors v
+            LEFT JOIN vendor_stats s ON v.id = s.vendor_id
+            WHERE v.id = ?
         """, (item_id,))
     elif item_type == 'institution':
         cursor.execute("""
-            SELECT i.name,
-                   (SELECT AVG(risk_score) FROM contracts WHERE institution_id = i.id) as risk
-            FROM institutions i WHERE i.id = ?
+            SELECT i.name, s.avg_risk_score as risk
+            FROM institutions i
+            LEFT JOIN institution_stats s ON i.id = s.institution_id
+            WHERE i.id = ?
         """, (item_id,))
     elif item_type == 'contract':
         cursor.execute("""
@@ -150,6 +153,49 @@ def get_item_name_and_risk(conn: sqlite3.Connection, item_type: str, item_id: in
     if row:
         return row[0], row[1]
     return None, None
+
+
+def batch_load_names_and_risks(conn: sqlite3.Connection, rows: list) -> dict:
+    """Batch-load names and risk scores for all watchlist items, avoiding N+1 queries."""
+    vendor_ids = [r["item_id"] for r in rows if r["item_type"] == "vendor"]
+    institution_ids = [r["item_id"] for r in rows if r["item_type"] == "institution"]
+    contract_ids = [r["item_id"] for r in rows if r["item_type"] == "contract"]
+
+    vendors_map = {}
+    if vendor_ids:
+        placeholders = ",".join("?" * len(vendor_ids))
+        cursor = conn.cursor()
+        cursor.execute(
+            f"SELECT v.id, v.name, s.avg_risk_score FROM vendors v LEFT JOIN vendor_stats s ON v.id = s.vendor_id WHERE v.id IN ({placeholders})",
+            vendor_ids,
+        )
+        vendors_map = {r[0]: (r[1], r[2]) for r in cursor.fetchall()}
+
+    institutions_map = {}
+    if institution_ids:
+        placeholders = ",".join("?" * len(institution_ids))
+        cursor = conn.cursor()
+        cursor.execute(
+            f"SELECT i.id, i.name, s.avg_risk_score FROM institutions i LEFT JOIN institution_stats s ON i.id = s.institution_id WHERE i.id IN ({placeholders})",
+            institution_ids,
+        )
+        institutions_map = {r[0]: (r[1], r[2]) for r in cursor.fetchall()}
+
+    contracts_map = {}
+    if contract_ids:
+        placeholders = ",".join("?" * len(contract_ids))
+        cursor = conn.cursor()
+        cursor.execute(
+            f"SELECT id, COALESCE(contract_number, 'Contract ' || id), risk_score FROM contracts WHERE id IN ({placeholders})",
+            contract_ids,
+        )
+        contracts_map = {r[0]: (r[1], r[2]) for r in cursor.fetchall()}
+
+    lookup = {}
+    lookup["vendor"] = vendors_map
+    lookup["institution"] = institutions_map
+    lookup["contract"] = contracts_map
+    return lookup
 
 
 # =============================================================================
@@ -199,9 +245,17 @@ def list_watchlist_items(
                     updated_at DESC
             """, params)
 
+            all_rows = cursor.fetchall()
+
+            # Batch-load names and risk scores (replaces N+1 get_item_name_and_risk calls)
+            lookup = batch_load_names_and_risks(conn, all_rows)
+
             items = []
-            for row in cursor.fetchall():
-                name, risk = get_item_name_and_risk(conn, row["item_type"], row["item_id"])
+            for row in all_rows:
+                type_map = lookup.get(row["item_type"], {})
+                name_risk = type_map.get(row["item_id"])
+                name = name_risk[0] if name_risk else None
+                risk = name_risk[1] if name_risk else None
                 rsc = row["risk_score_at_creation"] if "risk_score_at_creation" in row.keys() else None
                 items.append(WatchlistItem(
                     id=row["id"],
@@ -315,6 +369,7 @@ def add_watchlist_item(item: WatchlistItemCreate):
                   item.notes, item.alert_threshold, risk_score_at_creation, now, now))
 
             conn.commit()
+            _invalidate_watchlist_stats_cache()
             item_id = cursor.lastrowid
 
             return WatchlistItem(
@@ -339,9 +394,27 @@ def add_watchlist_item(item: WatchlistItemCreate):
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
+_watchlist_stats_cache: Dict[str, Any] = {}
+_watchlist_stats_cache_ts: float = 0.0
+_WATCHLIST_STATS_CACHE_TTL = 300  # 5 minutes
+
+
+def _invalidate_watchlist_stats_cache():
+    """Clear the stats cache after mutations."""
+    global _watchlist_stats_cache, _watchlist_stats_cache_ts
+    _watchlist_stats_cache = {}
+    _watchlist_stats_cache_ts = 0.0
+
+
 @router.get("/stats", response_model=WatchlistStatsResponse)
 def get_watchlist_stats():
     """Get watchlist statistics."""
+    global _watchlist_stats_cache, _watchlist_stats_cache_ts
+
+    now = _time.time()
+    if _watchlist_stats_cache and (now - _watchlist_stats_cache_ts) < _WATCHLIST_STATS_CACHE_TTL:
+        return _watchlist_stats_cache
+
     try:
         with get_db() as conn:
             ensure_watchlist_table(conn)
@@ -359,7 +432,7 @@ def get_watchlist_stats():
             """)
             row = cursor.fetchone()
 
-            return WatchlistStatsResponse(
+            result = WatchlistStatsResponse(
                 total=row["total"] or 0,
                 watching=row["watching"] or 0,
                 investigating=row["investigating"] or 0,
@@ -367,6 +440,10 @@ def get_watchlist_stats():
                 high_priority=row["high_priority"] or 0,
                 with_alerts=row["with_alerts"] or 0
             )
+
+            _watchlist_stats_cache = result
+            _watchlist_stats_cache_ts = now
+            return result
 
     except sqlite3.Error as e:
         logger.error(f"Database error in get_watchlist_stats: {e}")
@@ -532,6 +609,7 @@ def update_watchlist_item(
                     WHERE id = ?
                 """, params)
                 conn.commit()
+                _invalidate_watchlist_stats_cache()
 
             # Fetch updated record
             cursor.execute("SELECT * FROM watchlist_items WHERE id = ?", (watchlist_id,))
@@ -576,6 +654,7 @@ def delete_watchlist_item(watchlist_id: int = Path(..., description="Watchlist i
 
             cursor.execute("DELETE FROM watchlist_items WHERE id = ?", (watchlist_id,))
             conn.commit()
+            _invalidate_watchlist_stats_cache()
 
             return {"message": "Item removed from watchlist", "id": watchlist_id}
 

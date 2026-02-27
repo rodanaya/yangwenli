@@ -92,7 +92,25 @@ class ContractService(BaseService):
         if search:
             qb.filter_search(search, ["c.title", "c.description"])
         if risk_factor:
-            qb.where("c.risk_factors LIKE ?", f"%{risk_factor}%")
+            # Map known risk_factor values to indexed boolean/type columns
+            # to avoid full-table LIKE scan on unindexed TEXT column
+            _RISK_FACTOR_COLUMN_MAP = {
+                "direct_award": ("c.is_direct_award = ?", 1),
+                "single_bid": ("c.is_single_bid = ?", 1),
+                "year_end": ("c.is_year_end = ?", 1),
+                "price_hyp": ("c.price_hypothesis_type IS NOT NULL", None),
+            }
+            mapped = _RISK_FACTOR_COLUMN_MAP.get(risk_factor)
+            if mapped:
+                clause, val = mapped
+                if val is not None:
+                    qb.where(clause, val)
+                else:
+                    qb.where(clause)
+            else:
+                # Fallback to LIKE for other factors (co_bid, network, split, etc.)
+                # Leading wildcard prevents index use; pagination limits blast radius
+                qb.where("c.risk_factors LIKE ?", f"%{risk_factor}%")
 
         qb.sort(
             sort_by,

@@ -308,9 +308,12 @@ def get_model_metadata():
                 "auc_test": row["auc_roc"],
                 "pu_correction": row["pu_correction_factor"],
             }
+    except sqlite3.OperationalError as e:
+        logger.error(f"DB error in get_model_metadata: {e}")
+        raise HTTPException(status_code=503, detail="Database temporarily unavailable")
     except Exception as e:
-        logger.error(f"Error in get_model_metadata: {e}")
-        return {"version": "v5.0", "trained_at": "2026-02-14", "n_contracts": 3110007, "auc_test": 0.960}
+        logger.error(f"Unexpected error in get_model_metadata: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # =============================================================================
@@ -818,9 +821,18 @@ def list_price_hypotheses(
                 is_valid=is_valid
             )
 
-            sort_map = {"confidence": "confidence", "amount": "amount_mxn", "created_at": "created_at"}
-            sort_col = sort_map.get(sort_by, "confidence")
-            sort_dir = "DESC" if sort_order.lower() == "desc" else "ASC"
+            VALID_SORT_OPTIONS = {
+                ("confidence", "asc"): "ORDER BY confidence ASC",
+                ("confidence", "desc"): "ORDER BY confidence DESC",
+                ("amount", "asc"): "ORDER BY amount_mxn ASC",
+                ("amount", "desc"): "ORDER BY amount_mxn DESC",
+                ("created_at", "asc"): "ORDER BY created_at ASC",
+                ("created_at", "desc"): "ORDER BY created_at DESC",
+            }
+            order_clause = VALID_SORT_OPTIONS.get(
+                (sort_by, sort_order.lower() if sort_order else "desc"),
+                "ORDER BY confidence DESC"
+            )
 
             cursor.execute(f"SELECT COUNT(*) FROM price_hypotheses WHERE {where_clause}", params)
             total = cursor.fetchone()[0]
@@ -833,7 +845,7 @@ def list_price_hypotheses(
                        vendor_id, amount_mxn, is_reviewed, is_valid, review_notes, created_at
                 FROM price_hypotheses
                 WHERE {where_clause}
-                ORDER BY {sort_col} {sort_dir}
+                {order_clause}
                 LIMIT ? OFFSET ?
             """, params + [per_page, offset])
 
@@ -1101,8 +1113,6 @@ def get_price_hypothesis_detail(hypothesis_id: str = Path(...)):
                 similar_contracts=similar_contracts
             )
 
-    except HTTPException:
-        raise
     except sqlite3.Error as e:
         logger.error(f"Database error in get_price_hypothesis_detail: {e}")
         raise HTTPException(status_code=500, detail="Database error occurred")
@@ -1129,8 +1139,6 @@ def review_price_hypothesis(hypothesis_id: str = Path(...), review: HypothesisRe
             return {"success": True, "hypothesis_id": hypothesis_id,
                     "is_valid": review.is_valid, "review_notes": review.review_notes}
 
-    except HTTPException:
-        raise
     except sqlite3.Error as e:
         logger.error(f"Database error in review_price_hypothesis: {e}")
         raise HTTPException(status_code=500, detail="Database error occurred")
@@ -1233,8 +1241,6 @@ def get_contract_price_analysis(contract_id: int = Path(...)):
                 is_outlier=is_outlier, outlier_type=outlier_type
             )
 
-    except HTTPException:
-        raise
     except sqlite3.Error as e:
         logger.error(f"Database error in get_contract_price_analysis: {e}")
         raise HTTPException(status_code=500, detail="Database error occurred")
@@ -1959,6 +1965,7 @@ def get_co_bidding_patterns(
             vendor_names = {}
             if vendor_ids:
                 placeholders = ','.join(['?' for _ in vendor_ids])
+                # Safe: placeholders are '?' joined, vendor_ids are ints from prior DB query
                 cursor.execute(f"SELECT id, name FROM vendors WHERE id IN ({placeholders})", list(vendor_ids))
                 vendor_names = {row['id']: row['name'] for row in cursor.fetchall()}
 

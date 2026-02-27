@@ -186,6 +186,7 @@ def list_sectors(
                     return response
 
             # Slow path: live query when filtering by year
+            # safe: year_filter is a hardcoded SQL fragment, year value is parameterized
             year_filter = "AND c.contract_year = ?" if year else ""
             params = [year] if year else []
 
@@ -382,6 +383,7 @@ def get_sector_trends(
         with get_db() as conn:
             cursor = conn.cursor()
 
+            # safe: conditions list contains only hardcoded column names, values are parameterized
             conditions = ["sector_id = ?", "contract_year IS NOT NULL"]
             params = [sector_id]
 
@@ -565,6 +567,7 @@ def get_risk_distribution(
                     return result
 
             # Slow path: live query with filters
+            # safe: conditions list contains only hardcoded column names, values are parameterized
             conditions = []
             params = []
 

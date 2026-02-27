@@ -34,6 +34,9 @@ except ImportError:
     _rate_limit_exceeded_handler = None
     get_remote_address = None
     RateLimitExceeded = None
+    logging.getLogger("rubli.api").critical(
+        "Rate limiting DISABLED — install slowapi for production"
+    )
 
 from .dependencies import verify_database_exists
 from .middleware import RequestLoggingMiddleware, register_error_handlers
@@ -194,7 +197,7 @@ for Mexican federal government procurement (2002-2025).
 API_VERSION = "1.0.0"
 
 # Create FastAPI app
-_docs_enabled = os.environ.get("ENABLE_DOCS", "true").lower() == "true"
+_docs_enabled = os.environ.get("ENABLE_DOCS", "false").lower() == "true"
 app = FastAPI(
     title=API_TITLE,
     description=API_DESCRIPTION,
@@ -220,8 +223,8 @@ cors_origins = os.environ.get(
     "CORS_ORIGINS", "http://localhost:3009,http://127.0.0.1:3009"
 ).split(",")
 if "*" in cors_origins:
-    logger.warning("Wildcard CORS origin rejected for security; falling back to localhost defaults")
-    cors_origins = ["http://localhost:3009", "http://127.0.0.1:3009"]
+    logger.error("CORS wildcard '*' is not allowed. Set explicit origins in CORS_ORIGINS env var.")
+    raise ValueError("CORS_ORIGINS cannot contain '*'")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,

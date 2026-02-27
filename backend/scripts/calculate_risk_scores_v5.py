@@ -20,9 +20,12 @@ import sys
 import sqlite3
 import json
 import argparse
+import logging
 import numpy as np
 from pathlib import Path
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 DB_PATH = Path(__file__).parent.parent / "RUBLI_NORMALIZED.db"
 
@@ -216,6 +219,12 @@ def main():
         global_cal, sector_cals = load_v5_calibrations(conn)
         if global_cal is None:
             return 1
+
+        # Validate PU correction factor is within expected range
+        pu_c = global_cal['pu_correction']
+        if not (0.80 < pu_c < 0.95):
+            raise ValueError(f"PU correction factor {pu_c:.4f} is outside expected range (0.80, 0.95). Re-run calibration.")
+        logger.info(f"PU correction factor: {pu_c:.4f}")
 
         # Count
         cursor.execute("SELECT COUNT(*) FROM contract_z_features")
