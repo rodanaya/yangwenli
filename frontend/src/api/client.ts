@@ -940,7 +940,7 @@ export const analysisApi = {
     return data
   },
 
-  async getModelMetadata(): Promise<Record<string, unknown>> {
+  async getModelMetadata(): Promise<{ version: string; trained_at: string; auc_test: number; pu_correction?: number }> {
     const { data } = await api.get('/analysis/model/metadata')
     return data
   },

@@ -423,6 +423,15 @@ export function Dashboard() {
     staleTime: 10 * 60 * 1000,
   })
 
+  // Model metadata — version + AUC pulled live from model_calibration table
+  const { data: modelMeta } = useQuery({
+    queryKey: ['analysis', 'model-metadata'],
+    queryFn: () => analysisApi.getModelMetadata(),
+    staleTime: 60 * 60 * 1000, // 1h — changes only after retraining
+    retry: 0,
+    refetchOnWindowFocus: false,
+  })
+
   // API call 6+7 replaced: december_spike and monthly_2023 are now precomputed
   // and returned directly in the fast-dashboard response (zero extra API calls)
   const decemberSpike = fastDashboard?.december_spike as {
@@ -588,8 +597,7 @@ export function Dashboard() {
           )}
         </div>
         <div className="text-[11px] text-text-muted/50 font-mono mt-1">
-          {/* TODO: Replace with analysisApi.getModelMetadata() when endpoint is available */}
-          Risk model {CURRENT_MODEL_VERSION} · AUC 0.960 · {(overview?.total_contracts || 0) > 0 ? formatNumber(overview?.total_contracts || 0) : '3,110,007'} contracts · 2002–2025
+          Risk model {modelMeta?.version ?? CURRENT_MODEL_VERSION} · AUC {modelMeta?.auc_test != null ? modelMeta.auc_test.toFixed(3) : '0.960'} · {(overview?.total_contracts || 0) > 0 ? formatNumber(overview?.total_contracts || 0) : '3,110,007'} contracts · 2002–2025
         </div>
 
         {/* WHAT WE FOUND — three anchor claims before the user scrolls */}
