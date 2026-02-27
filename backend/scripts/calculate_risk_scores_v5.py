@@ -176,6 +176,8 @@ def main():
     parser = argparse.ArgumentParser(description='Risk Scoring v5.0')
     parser.add_argument('--batch-size', type=int, default=50000)
     parser.add_argument('--dry-run', action='store_true')
+    parser.add_argument('--start-id', type=int, default=0,
+                        help='Resume from this contract_id (skip already-scored rows)')
     args = parser.parse_args()
 
     print("=" * 60)
@@ -186,9 +188,9 @@ def main():
         print(f"ERROR: Database not found: {DB_PATH}")
         return 1
 
-    conn = sqlite3.connect(DB_PATH, timeout=60)
+    conn = sqlite3.connect(DB_PATH, timeout=300, isolation_level=None)  # autocommit mode
     conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA busy_timeout=60000")
+    conn.execute("PRAGMA busy_timeout=300000")  # 5 min wait for lock
     conn.execute("PRAGMA synchronous=OFF")  # Fast writes (safe: we can re-score if interrupted)
     conn.execute("PRAGMA cache_size=-200000")  # 200MB page cache
 
@@ -221,7 +223,7 @@ def main():
         print(f"\nScoring {total:,} contracts...")
 
         processed = 0
-        last_id = 0  # cursor-based pagination (avoids slow OFFSET)
+        last_id = args.start_id  # cursor-based pagination (avoids slow OFFSET)
         score_dist = {'critical': 0, 'high': 0, 'medium': 0, 'low': 0}
 
         while True:
@@ -276,7 +278,7 @@ def main():
                 ))
 
             if not args.dry_run:
-                cursor.execute("BEGIN IMMEDIATE TRANSACTION")
+                conn.execute("BEGIN")
                 cursor.executemany("""
                     UPDATE contracts
                     SET risk_score = ?,
@@ -287,7 +289,7 @@ def main():
                         risk_model_version = ?
                     WHERE id = ?
                 """, updates)
-                cursor.execute("COMMIT")
+                conn.execute("COMMIT")
 
             processed += len(rows)
             last_id = int(contract_ids[-1])

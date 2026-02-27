@@ -98,3 +98,9 @@ backend/DEBUG_LOG.txt
 frontend/npm-cache/
 npm-cache/
 =0.45.0
+
+# Vite cache
+.vite/
+
+# Database backup directories
+backend/backups/
