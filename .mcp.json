@@ -1,27 +1,19 @@
 {
   "mcpServers": {
-    "rubli-procurement": {
-      "type": "stdio",
-      "command": "python",
+    "fetch": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-fetch"],
+      "description": "Fetch web content — used for ASF scraping and external data sources"
+    },
+    "filesystem": {
+      "command": "cmd",
       "args": [
-        "D:/Python/yangwenli/backend/mcp_server.py"
+        "/c", "npx", "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "D:/Python/yangwenli/original_data",
+        "D:/Python/yangwenli/backend/backups"
       ],
-      "env": {}
-    },
-    "sqlite": {
-      "type": "stdio",
-      "command": "cmd",
-      "args": ["/c", "npx", "-y", "mcp-server-sqlite-npx", "D:\\Python\\yangwenli\\backend\\RUBLI_NORMALIZED.db"]
-    },
-    "shadcn": {
-      "type": "stdio",
-      "command": "cmd",
-      "args": ["/c", "npx", "shadcn@latest", "mcp"]
-    },
-    "mcp-echarts": {
-      "type": "stdio",
-      "command": "cmd",
-      "args": ["/c", "npx", "-y", "mcp-echarts"]
+      "description": "Structured read access to original_data/ COMPRANET CSVs and backups"
     }
   }
 }

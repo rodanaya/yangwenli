@@ -5,6 +5,32 @@
 
 ---
 
+## Core Behavior
+
+### Working Style
+- **Implementation first**: When asked to do something, start coding immediately. Only produce a plan document if the user explicitly says "make a plan" or "plan this". Keep plans concise — numbered bullet points, not essays.
+- **When interrupted**: If the user says "stop", "wait", or rejects a tool call — immediately pause and ask what they want changed. Do NOT restart the same action or re-enter plan mode. Wait for explicit direction before proceeding.
+- **Incremental delivery**: After each file change, show a 1-line summary. Deliver value incrementally rather than building toward a big reveal.
+- **No unsolicited refactoring**: Only change what was asked. Don't clean up surrounding code, add docstrings, or improve unrelated things.
+
+### Architecture
+- **Backend entry point**: `uvicorn api.main:app --port 8001` from `backend/` directory (NOT `main:app`)
+- **DB startup**: `_startup_checks()` in `api/main.py` scans 3.1M rows on startup — takes 30-60s cold. Expected behavior.
+- **Test command**: `python -m pytest backend/tests/ -q --tb=short -p no:cacheprovider` (251+ tests)
+
+### Language & Compatibility
+- **Python 3.11**: No backslashes inside f-string expressions. Use intermediate variables: `val = x\ny = f"{val}"` not `f"{x\n}"`.
+- **TypeScript**: Run `npx tsc --noEmit` from `frontend/` after changes. Fix all type errors before committing.
+- **Target**: All 251+ backend tests passing. `npx tsc --noEmit` = 0 errors.
+
+### Multi-Agent Coordination
+- Before starting DB or scoring pipeline work, ask if another process is already running on that task.
+- Do not revert or modify DB scores/WAL files without confirming no parallel work is in progress.
+- Check `.claude/ACTIVE_WORK.md` before spawning agents (if it exists) to avoid collisions.
+- Two agents must never write to the same DB table or scoring column simultaneously.
+
+---
+
 ## Quick Reference
 
 | Item | Value |
@@ -175,6 +201,32 @@ This project follows the **"Ask Before Acting"** pattern:
 5. Claude summarizes what was learned
 
 Nothing irreversible happens without your explicit approval.
+
+---
+
+## Headless & Session Recovery
+
+### Headless mode — for long batch runs
+Use `scripts/headless-pipeline.sh` for scoring, ETL, and stats runs that don't need watching:
+```bash
+./scripts/headless-pipeline.sh "score contracts from id 1500000"
+./scripts/headless-pipeline.sh "run precompute_stats"
+```
+Logs go to `.claude/headless-runs/`. A beep sounds when done (Stop hook).
+
+### Resume interrupted sessions
+```bash
+claude --continue          # resume the most recent conversation
+claude --resume <id>       # resume a specific session by ID
+```
+Use after cutting a session short — Claude picks up with full context.
+
+### Worktree isolation for risky changes
+When spawning Task agents for model retraining, large refactors, or experimental pipeline changes, pass `isolation: "worktree"` so the agent works on a throwaway branch:
+```
+Task(isolation: "worktree") → agent works on temp branch → review diff → merge or discard
+```
+Use for: risk model retraining, schema migrations, experimental features.
 
 ---
 
