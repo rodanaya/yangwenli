@@ -42,6 +42,7 @@ import {
   Treemap,
 } from '@/components/charts'
 import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN, CURRENT_MODEL_VERSION } from '@/lib/constants'
+import { GlobalSearch } from '@/components/GlobalSearch'
 
 // ============================================================================
 // Dashboard: Bold, data-dense intelligence overview
@@ -540,9 +541,10 @@ export function Dashboard() {
         </div>
       )}
       {/* ================================================================ */}
-      {/* HERO — Giant value headline */}
+      {/* HERO — Two-column: value headline left + global search right    */}
       {/* ================================================================ */}
-      <div className="pb-2">
+      <div className="pb-2 grid grid-cols-1 md:grid-cols-[5fr_3fr] gap-6 items-start">
+      <div>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Shield className="h-4 w-4 text-accent" />
@@ -611,6 +613,13 @@ export function Dashboard() {
             </button>
           </div>
         )}
+      </div>
+
+      {/* RIGHT COLUMN — Search */}
+      <div className="md:pt-8">
+        <p className="text-xs text-text-muted mb-2 font-mono uppercase tracking-wider">Investigate an entity</p>
+        <GlobalSearch />
+      </div>
       </div>
 
       {/* ================================================================ */}

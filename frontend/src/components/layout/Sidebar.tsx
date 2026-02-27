@@ -20,6 +20,7 @@ import {
   Eye,
   TrendingUp,
   Library,
+  GitBranch,
 } from 'lucide-react'
 import { RubliLogoMark } from '@/components/ui/RubliLogoMark'
 import { LanguageToggle } from '@/components/LanguageToggle'
@@ -54,6 +55,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
     sectionKey: 'sections.theMoney',
     items: [
       { i18nKey: 'procurementIntelligence', href: '/procurement-intelligence', icon: TrendingUp },
+      { i18nKey: 'moneyFlow', href: '/money-flow', icon: GitBranch },
       { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
       { i18nKey: 'categories', href: '/categories', icon: Layers },
     ],

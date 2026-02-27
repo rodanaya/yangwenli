@@ -42,6 +42,7 @@ const SpendingCategories = lazy(() => import('@/pages/SpendingCategories'))
 const Limitations = lazy(() => import('@/pages/Limitations'))
 const CaseLibrary = lazy(() => import('@/pages/CaseLibrary'))
 const CaseDetail = lazy(() => import('@/pages/CaseDetail'))
+const MoneyFlow = lazy(() => import('@/pages/MoneyFlow'))
 
 // Enhanced QueryClient configuration for better caching and UX
 const queryClient = new QueryClient({
@@ -263,7 +264,14 @@ function App() {
               />
 
               {/* Redirects from merged/renamed pages */}
-              <Route path="money-flow" element={<Navigate to="/procurement-intelligence" replace />} />
+              <Route
+                path="money-flow"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <MoneyFlow />
+                  </SuspenseBoundary>
+                }
+              />
               <Route path="red-flags" element={<Navigate to="/procurement-intelligence" replace />} />
               <Route path="detective-patterns" element={<Navigate to="/administrations" replace />} />
               <Route path="spending-categories" element={<Navigate to="/categories" replace />} />
