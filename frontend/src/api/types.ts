@@ -1358,6 +1358,22 @@ export interface SectorASFResponse {
   years_audited: number
 }
 
+export interface ASFInstitutionSummaryItem {
+  entity_name: string
+  finding_count: number
+  total_amount_mxn: number
+  earliest_year: number | null
+  latest_year: number | null
+  matched_risk_score: number | null
+  matched_institution_name: string | null
+}
+
+export interface ASFInstitutionSummaryResponse {
+  items: ASFInstitutionSummaryItem[]
+  total_findings: number
+  total_amount_mxn: number
+}
+
 // ============================================================================
 // Data Quality Types (moved from client.ts)
 // ============================================================================

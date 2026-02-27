@@ -282,7 +282,7 @@ def main():
                     float(ci_lo_r[i]),
                     float(ci_hi_r[i]),
                     float(mah_r[i]) if mah[i] > 0 else None,
-                    'v5.0',
+                    'v5.1',
                     int(contract_ids[i]),
                 ))
 

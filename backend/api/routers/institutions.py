@@ -1733,30 +1733,42 @@ def get_institution_asf_findings(institution_id: int = Path(..., ge=1)):
 
         ramo_code = inst["ramo_id"]
         findings = []
-        if ramo_code:
+
+        # Get institution name for fuzzy matching against asf_cases.entity_name
+        inst_row = conn.execute(
+            "SELECT name FROM institutions WHERE id = ?",
+            (institution_id,),
+        ).fetchone()
+        inst_name = inst_row["name"] if inst_row else ""
+
+        if inst_name:
             rows = conn.execute(
                 """
-                SELECT audit_year, observations_total, amount_mxn,
-                       observations_solved, finding_type
-                FROM asf_institution_findings
-                WHERE ramo_code = ?
-                ORDER BY audit_year
+                SELECT report_year AS audit_year,
+                       NULL        AS observations_total,
+                       amount_mxn,
+                       NULL        AS observations_solved,
+                       finding_type
+                FROM asf_cases
+                WHERE amount_mxn IS NOT NULL
+                  AND (
+                      LOWER(entity_name) LIKE '%' || LOWER(SUBSTR(?, 1, 20)) || '%'
+                      OR LOWER(?) LIKE '%' || LOWER(SUBSTR(entity_name, 1, 20)) || '%'
+                  )
+                ORDER BY report_year
                 """,
-                (ramo_code,),
+                (inst_name, inst_name),
             ).fetchall()
 
             for r in rows:
-                obs_total = r["observations_total"] or 0
-                obs_solved = r["observations_solved"] or 0
-                recovery_rate = (obs_solved / obs_total) if obs_total > 0 else None
                 findings.append(
                     ASFInstitutionFinding(
-                        year=r["audit_year"],
+                        year=r["audit_year"] or 0,
                         observations_total=r["observations_total"],
                         amount_mxn=r["amount_mxn"],
                         observations_solved=r["observations_solved"],
                         finding_type=r["finding_type"],
-                        recovery_rate=round(recovery_rate, 3) if recovery_rate is not None else None,
+                        recovery_rate=None,
                     )
                 )
 

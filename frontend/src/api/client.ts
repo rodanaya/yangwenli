@@ -58,6 +58,7 @@ import type {
   RiskExplanation,
   ASFInstitutionResponse,
   SectorASFResponse,
+  ASFInstitutionSummaryResponse,
   DataQualityResponse,
   MonthlyBreakdownResponse,
   StructuralBreaksResponse,
@@ -916,6 +917,14 @@ export const analysisApi = {
    */
   async getSectorASFFindings(sectorId: number): Promise<SectorASFResponse> {
     const { data } = await api.get<SectorASFResponse>(`/analysis/sectors/${sectorId}/asf-findings`)
+    return data
+  },
+
+  /**
+   * Get ASF audit findings aggregated by entity, cross-referenced with RUBLI risk scores
+   */
+  async getASFInstitutionSummary(): Promise<ASFInstitutionSummaryResponse> {
+    const { data } = await api.get<ASFInstitutionSummaryResponse>('/analysis/asf-institution-summary')
     return data
   },
 

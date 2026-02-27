@@ -8,7 +8,7 @@
  * Journalist-friendly: HHI renamed to "Vendor Concentration" with plain-language tooltip.
  */
 
-import { useState, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -18,7 +18,7 @@ import { formatCompactMXN, formatNumber, getRiskLevel, toTitleCase } from '@/lib
 import { RISK_COLORS } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
 import { StatCard as SharedStatCard } from '@/components/DashboardWidgets'
-import type { InstitutionHealthItem } from '@/api/types'
+import type { InstitutionHealthItem, PublicationDelayResponse, ASFInstitutionSummaryItem } from '@/api/types'
 import {
   Building2,
   AlertTriangle,
@@ -30,6 +30,9 @@ import {
   Percent,
   ChevronRight,
   Skull,
+  Clock,
+  LayoutGrid,
+  FileSearch,
 } from 'lucide-react'
 import {
   ScatterChart,
@@ -137,6 +140,283 @@ function BarTooltip({ active, payload }: { active?: boolean; payload?: Array<{ p
 }
 
 // =============================================================================
+// F10: Institution × Risk-Factor Heatmap
+// =============================================================================
+
+const HEATMAP_COLS: { key: keyof InstitutionHealthItem; label: string; fmt: (v: number) => string }[] = [
+  { key: 'avg_risk_score',   label: 'Avg Risk',       fmt: v => `${(v * 100).toFixed(1)}%` },
+  { key: 'high_risk_pct',    label: 'High-Risk %',    fmt: v => `${(v * 100).toFixed(1)}%` },
+  { key: 'direct_award_pct', label: 'Direct Award',   fmt: v => `${(v * 100).toFixed(1)}%` },
+  { key: 'single_bid_pct',   label: 'Single Bid',     fmt: v => `${(v * 100).toFixed(1)}%` },
+  { key: 'hhi',              label: 'Concentration',  fmt: v => v.toFixed(3) },
+  { key: 'top_vendor_share', label: 'Top Vendor',     fmt: v => `${(v * 100).toFixed(1)}%` },
+]
+
+function InstitutionHeatmap({ items }: { items: InstitutionHealthItem[] }) {
+  const navigate = useNavigate()
+  const rows = useMemo(
+    () => [...items].sort((a, b) => b.avg_risk_score - a.avg_risk_score).slice(0, 20),
+    [items]
+  )
+
+  // Per-column min/max for normalisation
+  const colStats = useMemo(() =>
+    HEATMAP_COLS.map(col => {
+      const vals = rows.map(r => r[col.key] as number)
+      return { min: Math.min(...vals), max: Math.max(...vals) }
+    }),
+    [rows]
+  )
+
+  const getIntensity = (colIdx: number, value: number): number => {
+    const { min, max } = colStats[colIdx]
+    return max === min ? 0 : (value - min) / (max - min)
+  }
+
+  // Red heat: low intensity → near white, high → deep red
+  const cellStyle = (intensity: number): React.CSSProperties => {
+    const r = Math.round(255 - intensity * 110)
+    const g = Math.round(255 - intensity * 200)
+    const b = Math.round(255 - intensity * 200)
+    return {
+      backgroundColor: `rgb(${r},${g},${b})`,
+      color: intensity > 0.55 ? '#fff' : 'var(--color-text-primary)',
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <LayoutGrid className="h-4 w-4 text-accent" />
+          Institution × Risk-Factor Heatmap
+        </CardTitle>
+        <CardDescription>
+          Top 20 highest-risk institutions across 6 risk dimensions. Darker red = higher relative value within that column.
+          Click a row to open the institution profile.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="p-0 overflow-x-auto">
+        <table className="w-full text-xs border-collapse" role="table" aria-label="Risk factor heatmap">
+          <thead>
+            <tr className="bg-background-elevated/40 text-text-muted">
+              <th className="px-3 py-2 text-left font-medium min-w-[180px] border-b border-border/30">Institution</th>
+              {HEATMAP_COLS.map(col => (
+                <th key={col.key} className="px-2 py-2 text-center font-medium whitespace-nowrap border-b border-border/30 min-w-[80px]">
+                  {col.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((item, rowIdx) => (
+              <tr
+                key={item.institution_id}
+                className="border-b border-border/10 cursor-pointer hover:outline hover:outline-1 hover:outline-accent/40 transition-all"
+                onClick={() => navigate(`/institutions/${item.institution_id}`)}
+              >
+                <td className="px-3 py-1.5 font-medium text-text-primary truncate max-w-[220px]" title={toTitleCase(item.institution_name)}>
+                  <span className="text-text-muted mr-1.5 font-mono tabular-nums">{rowIdx + 1}</span>
+                  {toTitleCase(item.institution_name)}
+                </td>
+                {HEATMAP_COLS.map((col, ci) => {
+                  const val = item[col.key] as number
+                  const intensity = getIntensity(ci, val)
+                  return (
+                    <td
+                      key={col.key}
+                      className="px-2 py-1.5 text-center font-mono tabular-nums"
+                      style={cellStyle(intensity)}
+                      title={`${col.label}: ${col.fmt(val)}`}
+                    >
+                      {col.fmt(val)}
+                    </td>
+                  )
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="px-3 py-2 text-[10px] text-text-muted">
+          Colour scale is relative within each column — the darkest cell in each column equals the highest value among these 20 institutions.
+        </p>
+      </CardContent>
+    </Card>
+  )
+}
+
+// =============================================================================
+// ASF Cross-Reference Section
+// =============================================================================
+
+type ASFSortField = 'finding_count' | 'total_amount_mxn' | 'matched_risk_score'
+
+function ASFCrossReferenceSection({
+  asfData,
+  totalFindings,
+}: {
+  asfData: ASFInstitutionSummaryItem[]
+  totalFindings: number
+}) {
+  const [sortField, setSortField] = useState<ASFSortField>('finding_count')
+  const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc')
+
+  const sorted = useMemo(() => {
+    return [...asfData].sort((a, b) => {
+      const aVal = (a[sortField] as number | null) ?? -1
+      const bVal = (b[sortField] as number | null) ?? -1
+      return sortDir === 'desc' ? bVal - aVal : aVal - bVal
+    })
+  }, [asfData, sortField, sortDir])
+
+  const handleSort = (field: ASFSortField) => {
+    if (field === sortField) {
+      setSortDir(d => d === 'desc' ? 'asc' : 'desc')
+    } else {
+      setSortField(field)
+      setSortDir('desc')
+    }
+  }
+
+  // How many matched rows have a risk score AND finding count > 0
+  const convergentCount = asfData.filter(r => r.matched_risk_score !== null && r.matched_risk_score >= 0.30).length
+  const highRiskWithASF = asfData.filter(r => r.matched_risk_score !== null && r.matched_risk_score >= 0.30 && r.finding_count > 0).length
+
+  const SortIndicatorASF = ({ field }: { field: ASFSortField }) => {
+    if (field !== sortField) return <span className="ml-1 opacity-30">↕</span>
+    return <span className="ml-1">{sortDir === 'desc' ? '↓' : '↑'}</span>
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+          <FileSearch className="h-4 w-4 text-accent" />
+          ASF Audit Cross-Reference
+        </CardTitle>
+        <CardDescription className="text-xs">
+          Independent external validation — {totalFindings} ASF findings matched against RUBLI risk scores.
+          {' '}
+          <span className="text-text-secondary">
+            {highRiskWithASF} institutions have both high RUBLI risk (≥0.30) and ASF findings — convergent evidence.
+          </span>
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="px-4 pb-2 flex gap-4 text-xs text-text-muted">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-risk-critical inline-block" />
+            High RUBLI + ASF = strongest cases
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-risk-medium inline-block" />
+            High RUBLI, no match = procurement phase only
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-border inline-block" />
+            No match = execution-phase fraud
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs" role="table" aria-label="ASF institution cross-reference">
+            <thead>
+              <tr className="border-b border-border bg-background-elevated/30 text-text-muted">
+                <th className="px-3 py-2.5 text-left font-medium min-w-[200px]">Entity</th>
+                <th
+                  className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                  onClick={() => handleSort('finding_count')}
+                >
+                  Findings
+                  <SortIndicatorASF field="finding_count" />
+                </th>
+                <th
+                  className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                  onClick={() => handleSort('total_amount_mxn')}
+                >
+                  Total Flagged
+                  <SortIndicatorASF field="total_amount_mxn" />
+                </th>
+                <th
+                  className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                  onClick={() => handleSort('matched_risk_score')}
+                >
+                  RUBLI Risk Score
+                  <SortIndicatorASF field="matched_risk_score" />
+                </th>
+                <th className="px-3 py-2.5 text-right font-medium whitespace-nowrap">Years</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.slice(0, 50).map((row) => {
+                const riskScore = row.matched_risk_score
+                const dotColor =
+                  riskScore === null ? 'var(--color-border)' :
+                  riskScore >= 0.50 ? 'var(--color-risk-critical)' :
+                  riskScore >= 0.30 ? 'var(--color-risk-high)' :
+                  riskScore >= 0.10 ? 'var(--color-risk-medium)' :
+                  'var(--color-risk-low)'
+                return (
+                  <tr key={row.entity_name} className="border-b border-border/30 hover:bg-background-elevated/20 transition-colors">
+                    <td className="px-3 py-2 font-medium text-text-primary">
+                      {toTitleCase(row.entity_name)}
+                      {row.matched_institution_name && (
+                        <span className="ml-1.5 text-xs text-text-muted font-normal">
+                          ≈ {toTitleCase(row.matched_institution_name).slice(0, 30)}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums text-text-secondary">
+                      {row.finding_count}
+                    </td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums text-text-secondary">
+                      {row.total_amount_mxn > 0 ? formatCompactMXN(row.total_amount_mxn) : '—'}
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      {riskScore !== null ? (
+                        <span className="flex items-center justify-end gap-1.5">
+                          <span
+                            className="w-2 h-2 rounded-full inline-block shrink-0"
+                            style={{ backgroundColor: dotColor }}
+                          />
+                          <span className="font-mono tabular-nums text-text-secondary">
+                            {(riskScore * 100).toFixed(1)}%
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="text-text-muted">—</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 text-right text-text-muted whitespace-nowrap">
+                      {row.earliest_year && row.latest_year
+                        ? row.earliest_year === row.latest_year
+                          ? String(row.earliest_year)
+                          : `${row.earliest_year}–${row.latest_year}`
+                        : '—'}
+                    </td>
+                  </tr>
+                )
+              })}
+              {sorted.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-3 py-8 text-center text-text-muted">
+                    No ASF data available.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+          {sorted.length > 50 && (
+            <p className="px-3 py-2 text-xs text-text-muted">
+              Showing top 50 of {sorted.length} entities.
+            </p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -147,11 +427,24 @@ export default function InstitutionHealth() {
   const [sortDir, setSortDir] = useState<SortDir>('desc')
 
   // ---------- Data fetching ----------
+  const { data: delayData } = useQuery<PublicationDelayResponse>({
+    queryKey: ['publication-delays'],
+    queryFn: () => analysisApi.getPublicationDelays(),
+    staleTime: 60 * 60 * 1000,
+  })
+
   // Always fetch sorted by value server-side; client sorts the result
   const { data, isLoading, isError } = useQuery({
     queryKey: ['institution-rankings', 'value', minContracts],
     queryFn: () => analysisApi.getInstitutionRankings('value', minContracts, 200),
     staleTime: 10 * 60 * 1000,
+  })
+
+  // ASF audit cross-reference
+  const { data: asfData } = useQuery({
+    queryKey: ['asf-institution-summary'],
+    queryFn: () => analysisApi.getASFInstitutionSummary(),
+    staleTime: 60 * 60 * 1000,
   })
 
   const items = data?.data ?? []
@@ -313,6 +606,104 @@ export default function InstitutionHealth() {
           borderColor="border-risk-high/30"
         />
       </div>
+
+      {/* ============================================================ */}
+      {/* PUBLICATION DELAY TRANSPARENCY                             */}
+      {/* ============================================================ */}
+      {delayData && (
+        <Card className="border-border/40">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-accent" />
+                <CardTitle className="text-sm font-mono">Publication Delay Transparency</CardTitle>
+              </div>
+              <span className="text-xs text-text-muted font-mono">
+                {formatNumber(delayData.total_with_delay_data)} contracts with timing data
+              </span>
+            </div>
+            <CardDescription className="text-xs">
+              Days between procedure publication and contract award. Shorter windows compress vendor preparation time and favour pre-selected suppliers.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <div className="rounded-lg border border-border/30 bg-background-elevated/20 p-3 text-center">
+                <div className="text-[11px] text-text-muted uppercase tracking-wider mb-1">Avg Delay</div>
+                <div className="text-2xl font-bold font-mono text-text-primary">
+                  {delayData.avg_delay_days.toFixed(1)}
+                </div>
+                <div className="text-[11px] text-text-muted">days</div>
+              </div>
+              <div className="rounded-lg border border-border/30 bg-background-elevated/20 p-3 text-center">
+                <div className="text-[11px] text-text-muted uppercase tracking-wider mb-1">Timely (&lt;15 days)</div>
+                <div
+                  className="text-2xl font-bold font-mono"
+                  style={{ color: delayData.timely_pct > 50 ? RISK_COLORS.high : RISK_COLORS.low }}
+                >
+                  {delayData.timely_pct.toFixed(1)}%
+                </div>
+                <div className="text-[11px] text-text-muted">of procedures</div>
+              </div>
+              <div className="rounded-lg border border-border/30 bg-background-elevated/20 p-3 text-center">
+                <div className="text-[11px] text-text-muted uppercase tracking-wider mb-1">Rushed (&lt;5 days)</div>
+                <div className="text-2xl font-bold font-mono text-risk-critical">
+                  {(delayData.distribution.find(b => b.label?.includes('0') || b.days_max === 5)?.pct ?? 0).toFixed(1)}%
+                </div>
+                <div className="text-[11px] text-text-muted">of procedures</div>
+              </div>
+            </div>
+
+            {delayData.distribution.length > 0 && (
+              <ResponsiveContainer width="100%" height={160}>
+                <BarChart
+                  data={delayData.distribution}
+                  margin={{ top: 4, right: 16, bottom: 24, left: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} vertical={false} />
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }}
+                    angle={-30}
+                    textAnchor="end"
+                    interval={0}
+                  />
+                  <YAxis
+                    tickFormatter={(v: number) => `${v.toFixed(0)}%`}
+                    tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }}
+                    width={36}
+                  />
+                  <RechartsTooltip
+                    contentStyle={{
+                      backgroundColor: 'var(--color-card)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 6,
+                      fontSize: 11,
+                    }}
+                    formatter={(v: unknown) => [`${(v as number).toFixed(1)}%`, 'Share of procedures']}
+                  />
+                  <Bar dataKey="pct" name="pct" radius={[3, 3, 0, 0]}>
+                    {delayData.distribution.map((entry, i) => (
+                      <Cell
+                        key={i}
+                        fill={
+                          (entry.days_max ?? Infinity) <= 5
+                            ? RISK_COLORS.critical
+                            : (entry.days_max ?? Infinity) <= 15
+                            ? RISK_COLORS.high
+                            : (entry.days_max ?? Infinity) <= 30
+                            ? RISK_COLORS.medium
+                            : RISK_COLORS.low
+                        }
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* ============================================================ */}
       {/* DANGER RANKINGS — Two ranked lists above the full table    */}
@@ -583,11 +974,14 @@ export default function InstitutionHealth() {
         </CardContent>
       </Card>
 
-      {/* Section 3: Charts (collapsed) */}
+      {/* Section 3: ASF Audit Cross-Reference */}
+      <ASFCrossReferenceSection asfData={asfData?.items ?? []} totalFindings={asfData?.total_findings ?? 0} />
+
+      {/* Section 4: Charts (collapsed) */}
       <details className="mt-4 group">
         <summary className="flex items-center gap-2 cursor-pointer select-none list-none text-xs font-medium text-text-muted hover:text-text-primary transition-colors py-1">
           <BarChart3 className="h-3.5 w-3.5" />
-          Show charts (risk vs concentration scatter, top 10 concentrated)
+          Show charts (risk vs concentration scatter, top 10 concentrated, risk-factor heatmap)
           <span className="ml-1 group-open:hidden">▶</span>
           <span className="ml-1 hidden group-open:inline">▼</span>
         </summary>
@@ -703,6 +1097,10 @@ export default function InstitutionHealth() {
               )}
             </CardContent>
           </Card>
+        </div>
+
+          {/* F10: Institution × Risk-Factor Heatmap */}
+          {sortedItems.length > 0 && <InstitutionHeatmap items={sortedItems} />}
         </div>
       </details>
     </div>

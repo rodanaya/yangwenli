@@ -12,7 +12,7 @@ import time as _time
 from typing import Optional, List, Dict, Any, Tuple
 from fastapi import APIRouter, HTTPException, Query, Path
 from pydantic import BaseModel, Field
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from ..dependencies import get_db
 from ..config.constants import MAX_CONTRACT_VALUE
@@ -26,7 +26,7 @@ from ..helpers.analysis_helpers import (
     pct_change,
 )
 from ..services.analysis_service import analysis_service
-from ..models.asf import SectorASFResponse, SectorASFFinding
+from ..models.asf import SectorASFResponse, SectorASFFinding, ASFInstitutionSummaryItem, ASFInstitutionSummaryResponse
 
 logger = logging.getLogger(__name__)
 
@@ -3708,4 +3708,87 @@ def get_sector_asf_findings(sector_id: int = Path(..., ge=1, le=12)):
             "value": result,
             "expires_at": _dt.now() + _td(seconds=_ASF_SECTOR_TTL),
         }
+    return result
+
+
+# ---------------------------------------------------------------------------
+# ASF Institution Summary (cross-reference with RUBLI risk scores)
+# ---------------------------------------------------------------------------
+
+_asf_inst_summary_cache: dict = {}
+_asf_inst_summary_lock = __import__("threading").Lock()
+_ASF_INST_SUMMARY_TTL = 86400  # 24 hours
+
+
+@router.get("/asf-institution-summary", response_model=ASFInstitutionSummaryResponse)
+def get_asf_institution_summary():
+    """
+    Aggregate ASF audit findings by entity and cross-reference with RUBLI risk scores.
+
+    Narrative: Do institutions with high RUBLI risk scores also have ASF findings?
+    - High RUBLI + ASF = convergent evidence (strongest cases)
+    - High RUBLI, no ASF = procurement-phase only (execution fraud not yet audited)
+    - Low RUBLI + ASF = execution-phase fraud (Limitation 9.1 made visible)
+    """
+    with _asf_inst_summary_lock:
+        entry = _asf_inst_summary_cache.get("data")
+        if entry and datetime.now() < entry["expires_at"]:
+            return entry["value"]
+
+    with get_db() as conn:
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            """
+            SELECT
+                a.entity_name,
+                COUNT(*)                                                        AS finding_count,
+                SUM(CASE WHEN a.amount_mxn < 100000000000 THEN a.amount_mxn
+                         ELSE 0 END)                                           AS total_amount_mxn,
+                MIN(a.report_year)                                              AS earliest_year,
+                MAX(a.report_year)                                              AS latest_year,
+                AVG(i.avg_risk_score)                                          AS matched_risk_score,
+                i.institution_name                                              AS matched_institution_name
+            FROM asf_cases a
+            LEFT JOIN institution_stats i
+                ON LOWER(i.institution_name) LIKE '%' || LOWER(SUBSTR(a.entity_name, 1, 20)) || '%'
+                OR LOWER(a.entity_name) LIKE '%' || LOWER(SUBSTR(i.institution_name, 1, 20)) || '%'
+            WHERE a.amount_mxn IS NOT NULL
+            GROUP BY a.entity_name
+            ORDER BY finding_count DESC
+            """
+        ).fetchall()
+
+    items = []
+    total_findings = 0
+    total_amount = 0.0
+
+    for r in rows:
+        amt = r["total_amount_mxn"] or 0.0
+        cnt = r["finding_count"] or 0
+        total_findings += cnt
+        total_amount += amt
+        items.append(
+            ASFInstitutionSummaryItem(
+                entity_name=r["entity_name"],
+                finding_count=cnt,
+                total_amount_mxn=amt,
+                earliest_year=r["earliest_year"],
+                latest_year=r["latest_year"],
+                matched_risk_score=round(r["matched_risk_score"], 4) if r["matched_risk_score"] is not None else None,
+                matched_institution_name=r["matched_institution_name"],
+            )
+        )
+
+    result = ASFInstitutionSummaryResponse(
+        items=items,
+        total_findings=total_findings,
+        total_amount_mxn=total_amount,
+    )
+
+    with _asf_inst_summary_lock:
+        _asf_inst_summary_cache["data"] = {
+            "value": result,
+            "expires_at": datetime.now() + timedelta(seconds=_ASF_INST_SUMMARY_TTL),
+        }
+
     return result

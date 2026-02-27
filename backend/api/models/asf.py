@@ -75,3 +75,27 @@ class SectorASFResponse(BaseModel):
     findings: List[SectorASFFinding]
     total_amount_mxn: float
     years_audited: int
+
+
+# ---------------------------------------------------------------------------
+# Cross-reference: ASF cases aggregated by entity + matched to RUBLI scores
+# ---------------------------------------------------------------------------
+
+class ASFInstitutionSummaryItem(BaseModel):
+    """ASF audit findings for one entity, with optional RUBLI risk score match."""
+
+    entity_name: str
+    finding_count: int
+    total_amount_mxn: float
+    earliest_year: Optional[int] = None
+    latest_year: Optional[int] = None
+    matched_risk_score: Optional[float] = None
+    matched_institution_name: Optional[str] = None
+
+
+class ASFInstitutionSummaryResponse(BaseModel):
+    """All ASF entities with their RUBLI risk score cross-reference."""
+
+    items: List[ASFInstitutionSummaryItem]
+    total_findings: int
+    total_amount_mxn: float
