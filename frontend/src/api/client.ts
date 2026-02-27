@@ -1532,6 +1532,58 @@ export const caseLibraryApi = {
   },
 }
 
+// ============================================================================
+// Federated Search Types & Endpoints
+// ============================================================================
+
+export interface FederatedVendorResult {
+  id: number
+  name: string
+  rfc?: string | null
+  contracts: number
+  risk_score?: number | null
+}
+
+export interface FederatedInstitutionResult {
+  id: number
+  name: string
+  institution_type?: string | null
+  total_contracts?: number | null
+}
+
+export interface FederatedContractResult {
+  id: number
+  title: string
+  amount?: number | null
+  risk_level?: string | null
+  year?: number | null
+}
+
+export interface FederatedCaseResult {
+  slug: string
+  title: string
+  year?: number | null
+  sector?: string | null
+}
+
+export interface FederatedSearchResponse {
+  query: string
+  vendors: FederatedVendorResult[]
+  institutions: FederatedInstitutionResult[]
+  contracts: FederatedContractResult[]
+  cases: FederatedCaseResult[]
+  total: number
+}
+
+export const searchApi = {
+  async federated(q: string, limit = 5): Promise<FederatedSearchResponse> {
+    const { data } = await api.get<FederatedSearchResponse>('/search', {
+      params: { q, limit },
+    })
+    return data
+  },
+}
+
 // Default export with all API modules
 export default {
   sector: sectorApi,
@@ -1549,4 +1601,5 @@ export default {
   report: reportApi,
   stats: statsApi,
   industries: industriesApi,
+  search: searchApi,
 }

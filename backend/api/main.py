@@ -67,6 +67,7 @@ from .routers.export import router as export_router
 from .routers.executive import router as executive_router
 from .routers.categories import router as categories_router
 from .routers.cases import router as cases_router
+from .routers.search import router as search_router
 
 logger = structlog.get_logger("rubli.api")
 
@@ -265,6 +266,7 @@ app.include_router(investigation_router, prefix="/api/v1")
 app.include_router(executive_router, prefix="/api/v1")
 app.include_router(categories_router, prefix="/api/v1")
 app.include_router(cases_router, prefix="/api/v1")
+app.include_router(search_router, prefix="/api/v1")
 
 
 def _get_latest_backup_info() -> dict | None:

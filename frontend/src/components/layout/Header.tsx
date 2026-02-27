@@ -18,7 +18,6 @@ const ROUTE_I18N_KEYS: Record<string, string> = {
   '/executive-summary': 'executive',
   '/explore': 'explore',
   '/patterns': 'patterns',
-  '/red-flags': 'redFlags',
   '/money-flow': 'moneyFlow',
   '/temporal': 'temporal',
   '/administrations': 'administrations',

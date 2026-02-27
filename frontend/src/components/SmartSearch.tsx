@@ -1,20 +1,37 @@
 /**
- * Smart Search Component
- * Enhanced search with typeahead suggestions and category prefixes
+ * Smart Search Component — Section 4.4
+ * Federated search across vendors, institutions, contracts, and cases.
+ * Replaces two parallel queries with a single /api/v1/search call.
  */
 
 import { memo, useState, useCallback, useRef, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Search, X, Building2, Users, FileText, Loader2, Clock, TrendingUp } from 'lucide-react'
-import { vendorApi, institutionApi } from '@/api/client'
+import { useNavigate } from 'react-router-dom'
+import {
+  Search, X, Building2, Users, FileText, BookOpen,
+  Loader2, Clock, TrendingUp,
+} from 'lucide-react'
+import { searchApi } from '@/api/client'
 import { useDebouncedValue } from '@/hooks/useDebouncedSearch'
 
-interface SearchSuggestion {
-  type: 'vendor' | 'institution' | 'recent' | 'popular'
-  id?: number
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface RecentSuggestion {
+  type: 'recent' | 'popular'
+  label: string
+}
+
+interface EntitySuggestion {
+  type: 'vendor' | 'institution' | 'contract' | 'case'
+  id: number | string    // number for vendor/institution/contract, slug string for case
   label: string
   sublabel?: string
+  riskLevel?: string | null
 }
+
+type SearchSuggestion = RecentSuggestion | EntitySuggestion
 
 interface SmartSearchProps {
   value: string
@@ -25,7 +42,10 @@ interface SmartSearchProps {
   autoFocus?: boolean
 }
 
-// Recent searches (stored in localStorage)
+// ---------------------------------------------------------------------------
+// Recent searches
+// ---------------------------------------------------------------------------
+
 const RECENT_SEARCHES_KEY = 'rubli-recent-searches'
 const MAX_RECENT_SEARCHES = 5
 
@@ -44,23 +64,52 @@ function addRecentSearch(query: string) {
   localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(recent.slice(0, MAX_RECENT_SEARCHES)))
 }
 
-// Popular searches (could be from API)
-const POPULAR_SEARCHES = [
-  'PEMEX',
-  'CFE',
-  'IMSS',
-  'Salud',
-  'Infraestructura',
-]
+const POPULAR_SEARCHES = ['PEMEX', 'CFE', 'IMSS', 'Salud', 'Infraestructura']
+
+// ---------------------------------------------------------------------------
+// Risk badge helper
+// ---------------------------------------------------------------------------
+
+function RiskBadge({ level }: { level?: string | null }) {
+  if (!level) return null
+  const colors: Record<string, string> = {
+    critical: 'bg-red-500/20 text-red-400',
+    high: 'bg-orange-500/20 text-orange-400',
+    medium: 'bg-yellow-500/20 text-yellow-400',
+    low: 'bg-green-500/20 text-green-400',
+  }
+  return (
+    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium uppercase ${colors[level] ?? ''}`}>
+      {level}
+    </span>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Group header
+// ---------------------------------------------------------------------------
+
+function GroupHeader({ label }: { label: string }) {
+  return (
+    <p className="px-3 pt-2 pb-0.5 text-[10px] font-semibold tracking-widest text-text-muted uppercase">
+      {label}
+    </p>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export const SmartSearch = memo(function SmartSearch({
   value,
   onChange,
   onSelect,
-  placeholder = 'Search contracts, vendors, institutions...',
+  placeholder = 'Search vendors, institutions, contracts…',
   className = '',
   autoFocus = false,
 }: SmartSearchProps) {
+  const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const [recentSearches, setRecentSearches] = useState<string[]>([])
   const [activeIndex, setActiveIndex] = useState(-1)
@@ -70,55 +119,58 @@ export const SmartSearch = memo(function SmartSearch({
 
   const debouncedValue = useDebouncedValue(value, 300)
 
-  // Load recent searches on mount
   useEffect(() => {
     setRecentSearches(getRecentSearches())
   }, [])
 
-  // Fetch vendor suggestions
-  const { data: vendors, isLoading: vendorsLoading } = useQuery({
-    queryKey: ['vendors', 'search', debouncedValue],
-    queryFn: () => vendorApi.search(debouncedValue, 5),
-    enabled: debouncedValue.length >= 2 && !debouncedValue.startsWith('institution:'),
+  // Single federated query
+  const { data: federated, isLoading } = useQuery({
+    queryKey: ['search', 'federated', debouncedValue],
+    queryFn: () => searchApi.federated(debouncedValue, 5),
+    enabled: debouncedValue.length >= 2,
+    staleTime: 30_000,
   })
 
-  // Fetch institution suggestions
-  const { data: institutions, isLoading: institutionsLoading } = useQuery({
-    queryKey: ['institutions', 'search', debouncedValue],
-    queryFn: () => institutionApi.search(debouncedValue, 5),
-    enabled: debouncedValue.length >= 2 && !debouncedValue.startsWith('vendor:'),
-  })
+  // Build grouped suggestions
+  const suggestions: EntitySuggestion[] = []
 
-  const isLoading = vendorsLoading || institutionsLoading
-
-  // Build suggestions list
-  const suggestions: SearchSuggestion[] = []
-
-  // Add vendor suggestions
-  if (vendors?.data) {
-    vendors.data.slice(0, 3).forEach((v) => {
+  if (federated) {
+    federated.vendors.forEach((v) =>
       suggestions.push({
         type: 'vendor',
         id: v.id,
         label: v.name,
-        sublabel: v.rfc || `${v.total_contracts} contracts`,
+        sublabel: v.rfc ?? `${v.contracts} contracts`,
+        riskLevel: null,
       })
-    })
-  }
-
-  // Add institution suggestions
-  if (institutions?.data) {
-    institutions.data.slice(0, 3).forEach((i) => {
+    )
+    federated.institutions.forEach((i) =>
       suggestions.push({
         type: 'institution',
         id: i.id,
         label: i.name,
-        sublabel: i.institution_type || '',
+        sublabel: i.institution_type ?? undefined,
       })
-    })
+    )
+    federated.contracts.forEach((c) =>
+      suggestions.push({
+        type: 'contract',
+        id: c.id,
+        label: c.title,
+        sublabel: c.year ? String(c.year) : undefined,
+        riskLevel: c.risk_level,
+      })
+    )
+    federated.cases.forEach((cs) =>
+      suggestions.push({
+        type: 'case',
+        id: cs.slug,
+        label: cs.title,
+        sublabel: cs.sector ?? (cs.year ? String(cs.year) : undefined),
+      })
+    )
   }
 
-  // Show recent searches when input is empty
   const showRecent = !value && recentSearches.length > 0
   const showPopular = !value && !showRecent
 
@@ -141,6 +193,7 @@ export const SmartSearch = memo(function SmartSearch({
     [onChange]
   )
 
+  // Navigate to entity page on selection
   const handleSuggestionClick = useCallback(
     (suggestion: SearchSuggestion) => {
       if (suggestion.type === 'recent' || suggestion.type === 'popular') {
@@ -149,11 +202,26 @@ export const SmartSearch = memo(function SmartSearch({
       } else {
         onSelect?.(suggestion)
         onChange('')
+        // Navigate to entity detail
+        switch (suggestion.type) {
+          case 'vendor':
+            navigate(`/vendors/${suggestion.id}`)
+            break
+          case 'institution':
+            navigate(`/institutions/${suggestion.id}`)
+            break
+          case 'contract':
+            navigate(`/contracts/${suggestion.id}`)
+            break
+          case 'case':
+            navigate(`/cases/${suggestion.id}`)
+            break
+        }
       }
       setIsOpen(false)
       inputRef.current?.blur()
     },
-    [onChange, onSelect]
+    [onChange, onSelect, navigate]
   )
 
   const handleSubmit = useCallback(
@@ -178,20 +246,14 @@ export const SmartSearch = memo(function SmartSearch({
     setActiveIndex(-1)
   }, [])
 
-  // Build all selectable items for keyboard navigation
-  const allItems = (() => {
-    const items: SearchSuggestion[] = []
-    if (suggestions.length > 0) {
-      items.push(...suggestions)
-    } else if (showRecent) {
-      items.push(...recentSearches.map((s) => ({ type: 'recent' as const, label: s })))
-    } else if (showPopular) {
-      items.push(...POPULAR_SEARCHES.map((s) => ({ type: 'popular' as const, label: s })))
-    }
-    return items
+  // All keyboard-navigable items
+  const allItems: SearchSuggestion[] = (() => {
+    if (suggestions.length > 0) return suggestions
+    if (showRecent) return recentSearches.map((s) => ({ type: 'recent' as const, label: s }))
+    if (showPopular) return POPULAR_SEARCHES.map((s) => ({ type: 'popular' as const, label: s }))
+    return []
   })()
 
-  // Keyboard navigation
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (!isOpen || allItems.length === 0) {
@@ -202,7 +264,6 @@ export const SmartSearch = memo(function SmartSearch({
         }
         return
       }
-
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault()
@@ -228,28 +289,56 @@ export const SmartSearch = memo(function SmartSearch({
     [isOpen, allItems, activeIndex, handleSuggestionClick]
   )
 
-  // Reset active index when suggestions change
   useEffect(() => {
     setActiveIndex(-1)
   }, [debouncedValue])
 
-  const getIcon = (type: SearchSuggestion['type']) => {
-    switch (type) {
-      case 'vendor':
-        return <Users className="h-4 w-4 text-text-muted" />
-      case 'institution':
-        return <Building2 className="h-4 w-4 text-text-muted" />
-      case 'recent':
-        return <Clock className="h-4 w-4 text-text-muted" />
-      case 'popular':
-        return <TrendingUp className="h-4 w-4 text-text-muted" />
-      default:
-        return <FileText className="h-4 w-4 text-text-muted" />
-    }
+  const ICON_MAP: Record<EntitySuggestion['type'], React.ReactNode> = {
+    vendor: <Users className="h-4 w-4 text-text-muted flex-shrink-0" />,
+    institution: <Building2 className="h-4 w-4 text-text-muted flex-shrink-0" />,
+    contract: <FileText className="h-4 w-4 text-text-muted flex-shrink-0" />,
+    case: <BookOpen className="h-4 w-4 text-text-muted flex-shrink-0" />,
   }
 
   const showDropdown =
     isOpen && (suggestions.length > 0 || showRecent || showPopular || isLoading)
+
+  // Group suggestions by type for rendering
+  const vendorSuggestions = suggestions.filter((s) => s.type === 'vendor')
+  const institutionSuggestions = suggestions.filter((s) => s.type === 'institution')
+  const contractSuggestions = suggestions.filter((s) => s.type === 'contract')
+  const caseSuggestions = suggestions.filter((s) => s.type === 'case')
+
+  function renderEntityRow(suggestion: EntitySuggestion, globalIndex: number) {
+    return (
+      <button
+        key={`${suggestion.type}-${suggestion.id}`}
+        id={`search-option-${globalIndex}`}
+        type="button"
+        role="option"
+        aria-selected={globalIndex === activeIndex}
+        onClick={() => handleSuggestionClick(suggestion)}
+        className={`w-full px-3 py-2 text-left flex items-center gap-3 transition-colors ${
+          globalIndex === activeIndex ? 'bg-accent/10' : 'hover:bg-background-elevated'
+        }`}
+      >
+        {ICON_MAP[suggestion.type]}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate">{suggestion.label}</p>
+          {suggestion.sublabel && (
+            <p className="text-xs text-text-muted truncate">{suggestion.sublabel}</p>
+          )}
+        </div>
+        {suggestion.riskLevel && <RiskBadge level={suggestion.riskLevel} />}
+      </button>
+    )
+  }
+
+  // Calculate group offsets for global keyboard index
+  const vendorOffset = 0
+  const institutionOffset = vendorOffset + vendorSuggestions.length
+  const contractOffset = institutionOffset + institutionSuggestions.length
+  const caseOffset = contractOffset + contractSuggestions.length
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
@@ -274,10 +363,11 @@ export const SmartSearch = memo(function SmartSearch({
             aria-label="Search contracts, vendors, institutions"
             className="w-full h-9 pl-9 pr-8 rounded-lg border border-border bg-background-card text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
           />
-          {value && (
+          {value && !isLoading && (
             <button
               type="button"
               onClick={handleClear}
+              aria-label="Clear search"
               className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-background-elevated"
             >
               <X className="h-3.5 w-3.5 text-text-muted" />
@@ -297,113 +387,103 @@ export const SmartSearch = memo(function SmartSearch({
           aria-label="Search suggestions"
           aria-live="polite"
           aria-atomic="false"
-          className="absolute top-full left-0 right-0 mt-1 rounded-lg border border-border bg-background-card shadow-lg z-50 overflow-hidden animate-slide-up"
+          className="absolute top-full left-0 right-0 mt-1 rounded-lg border border-border bg-background-card shadow-lg z-50 overflow-hidden animate-slide-up max-h-[420px] overflow-y-auto"
         >
-          {/* Loading state */}
+          {/* Loading */}
           {isLoading && debouncedValue.length >= 2 && (
-            <div className="px-3 py-2 text-sm text-text-muted flex items-center gap-2" role="status">
+            <div className="px-3 py-3 text-sm text-text-muted flex items-center gap-2" role="status">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Searching...
+              Searching…
             </div>
           )}
 
-          {/* Suggestions */}
+          {/* Grouped results */}
           {!isLoading && suggestions.length > 0 && (
-            <div className="py-1">
-              {suggestions.map((suggestion, index) => (
-                <button
-                  key={`${suggestion.type}-${suggestion.id || index}`}
-                  id={`search-option-${index}`}
-                  type="button"
-                  role="option"
-                  aria-selected={index === activeIndex}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                  className={`w-full px-3 py-2 text-left flex items-center gap-3 transition-colors ${
-                    index === activeIndex ? 'bg-accent/10' : 'hover:bg-background-elevated'
-                  }`}
-                >
-                  {getIcon(suggestion.type)}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{suggestion.label}</p>
-                    {suggestion.sublabel && (
-                      <p className="text-xs text-text-muted truncate">{suggestion.sublabel}</p>
-                    )}
-                  </div>
-                  <span className="text-xs text-text-muted uppercase tracking-wide">
-                    {suggestion.type}
-                  </span>
-                </button>
-              ))}
+            <div className="pb-1">
+              {vendorSuggestions.length > 0 && (
+                <div>
+                  <GroupHeader label="Vendors" />
+                  {vendorSuggestions.map((s, i) => renderEntityRow(s, vendorOffset + i))}
+                </div>
+              )}
+              {institutionSuggestions.length > 0 && (
+                <div>
+                  <GroupHeader label="Institutions" />
+                  {institutionSuggestions.map((s, i) => renderEntityRow(s, institutionOffset + i))}
+                </div>
+              )}
+              {contractSuggestions.length > 0 && (
+                <div>
+                  <GroupHeader label="Contracts" />
+                  {contractSuggestions.map((s, i) => renderEntityRow(s, contractOffset + i))}
+                </div>
+              )}
+              {caseSuggestions.length > 0 && (
+                <div>
+                  <GroupHeader label="Cases" />
+                  {caseSuggestions.map((s, i) => renderEntityRow(s, caseOffset + i))}
+                </div>
+              )}
             </div>
           )}
 
           {/* Recent searches */}
           {showRecent && (
             <div className="py-1">
-              <p className="px-3 py-1 text-xs text-text-muted font-medium" id="recent-searches-label">Recent searches</p>
-              {recentSearches.map((search, index) => {
-                const optionIndex = index
-                return (
-                  <button
-                    key={`recent-${index}`}
-                    id={`search-option-${optionIndex}`}
-                    type="button"
-                    role="option"
-                    aria-selected={optionIndex === activeIndex}
-                    onClick={() =>
-                      handleSuggestionClick({ type: 'recent', label: search })
-                    }
-                    className={`w-full px-3 py-2 text-left flex items-center gap-3 transition-colors ${
-                      optionIndex === activeIndex ? 'bg-accent/10' : 'hover:bg-background-elevated'
-                    }`}
-                  >
-                    <Clock className="h-4 w-4 text-text-muted" />
-                    <span className="text-sm">{search}</span>
-                  </button>
-                )
-              })}
+              <GroupHeader label="Recent" />
+              {recentSearches.map((search, i) => (
+                <button
+                  key={`recent-${i}`}
+                  id={`search-option-${i}`}
+                  type="button"
+                  role="option"
+                  aria-selected={i === activeIndex}
+                  onClick={() => handleSuggestionClick({ type: 'recent', label: search })}
+                  className={`w-full px-3 py-2 text-left flex items-center gap-3 transition-colors ${
+                    i === activeIndex ? 'bg-accent/10' : 'hover:bg-background-elevated'
+                  }`}
+                >
+                  <Clock className="h-4 w-4 text-text-muted flex-shrink-0" />
+                  <span className="text-sm">{search}</span>
+                </button>
+              ))}
             </div>
           )}
 
           {/* Popular searches */}
           {showPopular && (
             <div className="py-1">
-              <p className="px-3 py-1 text-xs text-text-muted font-medium" id="popular-searches-label">Popular searches</p>
-              {POPULAR_SEARCHES.map((search, index) => {
-                const optionIndex = index
-                return (
-                  <button
-                    key={`popular-${index}`}
-                    id={`search-option-${optionIndex}`}
-                    type="button"
-                    role="option"
-                    aria-selected={optionIndex === activeIndex}
-                    onClick={() =>
-                      handleSuggestionClick({ type: 'popular', label: search })
-                    }
-                    className={`w-full px-3 py-2 text-left flex items-center gap-3 transition-colors ${
-                      optionIndex === activeIndex ? 'bg-accent/10' : 'hover:bg-background-elevated'
-                    }`}
-                  >
-                    <TrendingUp className="h-4 w-4 text-text-muted" />
-                    <span className="text-sm">{search}</span>
-                  </button>
-                )
-              })}
+              <GroupHeader label="Popular" />
+              {POPULAR_SEARCHES.map((search, i) => (
+                <button
+                  key={`popular-${i}`}
+                  id={`search-option-${i}`}
+                  type="button"
+                  role="option"
+                  aria-selected={i === activeIndex}
+                  onClick={() => handleSuggestionClick({ type: 'popular', label: search })}
+                  className={`w-full px-3 py-2 text-left flex items-center gap-3 transition-colors ${
+                    i === activeIndex ? 'bg-accent/10' : 'hover:bg-background-elevated'
+                  }`}
+                >
+                  <TrendingUp className="h-4 w-4 text-text-muted flex-shrink-0" />
+                  <span className="text-sm">{search}</span>
+                </button>
+              ))}
             </div>
           )}
 
           {/* No results */}
           {!isLoading && debouncedValue.length >= 2 && suggestions.length === 0 && (
             <div className="px-3 py-4 text-center">
-              <p className="text-sm text-text-muted">No results found for "{debouncedValue}"</p>
+              <p className="text-sm text-text-muted">No results for "{debouncedValue}"</p>
               <p className="text-xs text-text-muted mt-1">
-                Try searching by vendor name, RFC, or institution
+                Try a vendor name, RFC, institution, or case
               </p>
             </div>
           )}
 
-          {/* Search tip */}
+          {/* Min chars hint */}
           {value && value.length < 2 && (
             <div className="px-3 py-2 text-xs text-text-muted">
               Type at least 2 characters to search
