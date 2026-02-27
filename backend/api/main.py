@@ -53,6 +53,7 @@ from .routers import (
     network_router,
     analysis_router,
     watchlist_router,
+    watchlist_folders_router,
     reports_router,
     investigation_router,
 )
@@ -254,6 +255,7 @@ app.include_router(sectors_router, prefix="/api/v1")
 app.include_router(export_router, prefix="/api/v1")
 app.include_router(network_router, prefix="/api/v1")
 app.include_router(analysis_router, prefix="/api/v1")
+app.include_router(watchlist_folders_router, prefix="/api/v1")
 app.include_router(watchlist_router, prefix="/api/v1")
 app.include_router(reports_router, prefix="/api/v1")
 app.include_router(investigation_router, prefix="/api/v1")

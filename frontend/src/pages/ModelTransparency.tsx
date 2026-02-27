@@ -351,6 +351,7 @@ function LimitationCard({
 
 export default function ModelTransparency() {
   const [selectedSector, setSelectedSector] = useState(0)
+  const [coeffSectorId, setCoeffSectorId] = useState<number | undefined>(undefined)
 
   // ------------------------------------------------------------------
   // Model metadata from API (freshness badge)
@@ -367,36 +368,85 @@ export default function ModelTransparency() {
   })
 
   // ------------------------------------------------------------------
+  // Live feature importance from API (per-sector or global)
+  // ------------------------------------------------------------------
+  const { data: featureImportance } = useQuery({
+    queryKey: ['feature-importance', coeffSectorId],
+    queryFn: () => analysisApi.getFeatureImportance(coeffSectorId),
+    staleTime: 60 * 60 * 1000,
+  })
+
+  // ------------------------------------------------------------------
+  // Live model comparison from API
+  // ------------------------------------------------------------------
+  const { data: modelComparison } = useQuery({
+    queryKey: ['model-comparison'],
+    queryFn: () => analysisApi.getModelComparison(),
+    staleTime: 60 * 60 * 1000,
+  })
+
+  // ------------------------------------------------------------------
   // L2: Prepare coefficient chart data (sorted by beta descending)
+  // Prefer live API data; fallback to hardcoded
   // ------------------------------------------------------------------
   const coefficientData = useMemo(() => {
+    if (featureImportance && featureImportance.length > 0) {
+      return featureImportance
+        .map((f) => {
+          const direction = f.importance > 0.01 ? 'positive' : f.importance < -0.01 ? 'negative' : 'neutral'
+          return {
+            factor: f.feature,
+            beta: f.importance,
+            raw_beta: f.importance,
+            ci_lower: f.importance,
+            ci_upper: f.importance,
+            direction,
+            label: FACTOR_LABELS[f.feature] ?? f.feature.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+            displayBeta: f.importance,
+            errorLower: 0,
+            errorUpper: 0,
+            fill: DIRECTION_COLORS[direction],
+            note: f.description_en || undefined,
+          }
+        })
+        .sort((a, b) => b.beta - a.beta)
+    }
     return MODEL_COEFFICIENTS
       .map((c) => ({
         ...c,
         label: FACTOR_LABELS[c.factor] ?? c.factor,
-        // For the chart, use the dampened beta value
         displayBeta: c.beta,
-        // Error bar deltas relative to beta
         errorLower: c.beta - c.ci_lower,
         errorUpper: c.ci_upper - c.beta,
         fill: DIRECTION_COLORS[c.direction],
       }))
       .sort((a, b) => b.beta - a.beta)
-  }, [])
+  }, [featureImportance])
 
   // ------------------------------------------------------------------
   // L3: Prepare comparison chart data
+  // Prefer live API data; fallback to hardcoded
   // ------------------------------------------------------------------
   const comparisonData = useMemo(() => {
+    if (modelComparison && modelComparison.length >= 2) {
+      const v33 = modelComparison.find((m) => m.model === 'v3.3')
+      const v50 = modelComparison.find((m) => m.model === 'v5.0')
+      if (v33 && v50) {
+        return [
+          { metric: 'AUC-ROC', v33: v33.auc, v50: v50.auc },
+          { metric: 'High+ Rate', v33: v33.high_rate * 100, v50: v50.high_rate * 100 },
+          { metric: '1 - Brier', v33: 1 - v33.brier, v50: 1 - v50.brier },
+        ]
+      }
+    }
     return [
       { metric: 'AUC-ROC', v33: MODEL_COMPARISON.v33.auc, v50: MODEL_COMPARISON.v50.auc },
       { metric: 'Detection %', v33: MODEL_COMPARISON.v33.detection, v50: MODEL_COMPARISON.v50.detection },
       { metric: 'High+ %', v33: MODEL_COMPARISON.v33.high_plus, v50: MODEL_COMPARISON.v50.high_plus },
       { metric: 'Lift', v33: MODEL_COMPARISON.v33.lift, v50: MODEL_COMPARISON.v50.lift },
-      // Invert Brier score: lower is better, so show (1 - brier) for visual clarity
       { metric: '1 - Brier', v33: 1 - MODEL_COMPARISON.v33.brier, v50: 1 - MODEL_COMPARISON.v50.brier },
     ]
-  }, [])
+  }, [modelComparison])
 
   return (
     <div className="space-y-6">
@@ -423,8 +473,10 @@ export default function ModelTransparency() {
       <div className="flex items-start gap-2 rounded-md border border-blue-500/20 bg-blue-500/[0.04] px-3 py-2 text-xs text-text-muted">
         <Info className="h-3.5 w-3.5 text-blue-400 shrink-0 mt-0.5" aria-hidden="true" />
         <span>
-          All data on this page is <strong className="text-text-primary">static documentation</strong> derived from the v5.0 methodology report — not queried from the live database.
-          To recompute, run <code className="font-mono text-text-secondary">calibrate_risk_model_v5</code> and <code className="font-mono text-text-secondary">calculate_risk_scores_v5</code>.
+          {featureImportance
+            ? <>Coefficient chart and model comparison are loaded from the <strong className="text-text-primary">live API</strong>. Use the sector selector to view per-sector model weights.</>
+            : <>Falling back to <strong className="text-text-primary">static documentation</strong> data. Live endpoints will be used when available.</>
+          }
         </span>
       </div>
 
@@ -479,11 +531,33 @@ export default function ModelTransparency() {
           </div>
         </CardHeader>
         <CardContent>
-          <SectionDescription variant="callout" className="mb-4">
-            Each coefficient represents the change in log-odds of corruption per 1 standard deviation increase
-            in the z-scored feature. Positive values increase risk; negative values decrease it.
-            Error bars show 95% bootstrap confidence intervals (1,000 resamples).
-          </SectionDescription>
+          <div className="flex items-center gap-3 mb-4">
+            <SectionDescription variant="callout" className="flex-1">
+              Each coefficient represents the change in log-odds of corruption per 1 standard deviation increase
+              in the z-scored feature. Positive values increase risk; negative values decrease it.
+              {!featureImportance && ' Error bars show 95% bootstrap confidence intervals (1,000 resamples).'}
+            </SectionDescription>
+            <select
+              value={coeffSectorId ?? ''}
+              onChange={(e) => setCoeffSectorId(e.target.value ? Number(e.target.value) : undefined)}
+              className="rounded border border-border bg-background-elevated px-2 py-1 text-xs text-text-primary shrink-0"
+              aria-label="Select sector for coefficients"
+            >
+              <option value="">Global (all sectors)</option>
+              <option value="1">Salud</option>
+              <option value="2">Educacion</option>
+              <option value="3">Infraestructura</option>
+              <option value="4">Energia</option>
+              <option value="5">Defensa</option>
+              <option value="6">Tecnologia</option>
+              <option value="7">Hacienda</option>
+              <option value="8">Gobernacion</option>
+              <option value="9">Agricultura</option>
+              <option value="10">Ambiente</option>
+              <option value="11">Trabajo</option>
+              <option value="12">Otros</option>
+            </select>
+          </div>
 
           <div className="h-[560px]">
             <ResponsiveContainer width="100%" height="100%">

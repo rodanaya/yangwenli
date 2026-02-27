@@ -364,6 +364,107 @@ def get_institution_risk_timeline(
         }
 
 
+# =============================================================================
+# INSTITUTION RISK WATERFALL
+# =============================================================================
+
+class InstitutionWaterfallItem(BaseModel):
+    feature: str
+    z_score: float
+    coefficient: float
+    contribution: float
+    label_en: str
+
+
+class InstitutionWaterfallResponse(BaseModel):
+    institution_id: int
+    items: List[InstitutionWaterfallItem]
+    total_contracts: int
+
+
+_INST_FEATURE_LABELS = {
+    "single_bid": "Single Bidding",
+    "direct_award": "Direct Award",
+    "price_ratio": "Price Ratio",
+    "vendor_concentration": "Vendor Concentration",
+    "ad_period_days": "Ad Period Length",
+    "year_end": "Year-End Timing",
+    "same_day_count": "Same-Day Contracts",
+    "network_member_count": "Network Membership",
+    "co_bid_rate": "Co-Bidding Rate",
+    "price_hyp_confidence": "Price Outlier Confidence",
+    "industry_mismatch": "Industry Mismatch",
+    "institution_risk": "Institution Risk",
+    "price_volatility": "Price Volatility",
+    "sector_spread": "Sector Spread",
+    "win_rate": "Win Rate",
+    "institution_diversity": "Institution Diversity",
+}
+
+_INST_Z_COLS = [
+    "z_single_bid", "z_direct_award", "z_price_ratio", "z_vendor_concentration",
+    "z_ad_period_days", "z_year_end", "z_same_day_count", "z_network_member_count",
+    "z_co_bid_rate", "z_price_hyp_confidence", "z_industry_mismatch", "z_institution_risk",
+    "z_price_volatility", "z_sector_spread", "z_win_rate", "z_institution_diversity",
+]
+
+
+@router.get("/{institution_id:int}/risk-waterfall", response_model=InstitutionWaterfallResponse)
+def get_institution_risk_waterfall(
+    institution_id: int = Path(..., description="Institution ID"),
+):
+    """Returns per-feature risk contributions for an institution (average across contracts)."""
+    cache_key = f"inst_wf:{institution_id}"
+    cached = _get_top_cache(cache_key)
+    if cached is not None:
+        return cached
+
+    with get_db() as conn:
+        if not conn.execute("SELECT id FROM institutions WHERE id = ?", (institution_id,)).fetchone():
+            raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
+
+        import json
+        avg_cols = ", ".join(f"AVG(czf.{col}) as {col}" for col in _INST_Z_COLS)
+        row = conn.execute(f"""
+            SELECT {avg_cols}, COUNT(*) as cnt
+            FROM contract_z_features czf
+            JOIN contracts c ON czf.contract_id = c.id
+            WHERE c.institution_id = ?
+        """, (institution_id,)).fetchone()
+
+        if not row or row["cnt"] == 0:
+            result = InstitutionWaterfallResponse(institution_id=institution_id, items=[], total_contracts=0)
+            _set_top_cache(cache_key, result)
+            return result
+
+        # Load global coefficients
+        cal_row = conn.execute(
+            "SELECT coefficients FROM model_calibration WHERE sector_id IS NULL ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+        coefficients = json.loads(cal_row["coefficients"]) if cal_row else {}
+
+        items = []
+        for z_col in _INST_Z_COLS:
+            feature_name = z_col[2:]
+            z_val = row[z_col] or 0.0
+            coeff = coefficients.get(feature_name, 0.0)
+            contribution = z_val * coeff
+            items.append(InstitutionWaterfallItem(
+                feature=feature_name,
+                z_score=round(z_val, 4),
+                coefficient=round(coeff, 4),
+                contribution=round(contribution, 4),
+                label_en=_INST_FEATURE_LABELS.get(feature_name, feature_name),
+            ))
+
+        items.sort(key=lambda x: abs(x.contribution), reverse=True)
+        result = InstitutionWaterfallResponse(
+            institution_id=institution_id, items=items, total_contracts=row["cnt"]
+        )
+        _set_top_cache(cache_key, result)
+        return result
+
+
 @router.get("/{institution_id:int}/risk-profile", response_model=InstitutionRiskProfile)
 def get_institution_risk_profile(institution_id: int):
     """

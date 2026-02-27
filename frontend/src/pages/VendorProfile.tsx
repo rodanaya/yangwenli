@@ -50,6 +50,7 @@ import {
   Shield,
   Network,
   ShieldCheck,
+  Brain,
 } from 'lucide-react'
 import { NetworkGraphModal } from '@/components/NetworkGraphModal'
 import { ScrollReveal, useCountUp, AnimatedFill } from '@/hooks/useAnimations'
@@ -453,6 +454,14 @@ export function VendorProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
+  // Fetch AI pattern analysis summary
+  const { data: aiSummary, isLoading: aiLoading } = useQuery({
+    queryKey: ['vendor', vendorId, 'ai-summary'],
+    queryFn: () => vendorApi.getAiSummary(vendorId),
+    enabled: !!vendorId,
+    staleTime: 30 * 60 * 1000,
+  })
+
   // Determine if vendor has co-bidding risk
   const hasCoBiddingRisk = coBidders?.co_bidders?.some(
     (cb) => cb.relationship_strength === 'very_strong' || cb.relationship_strength === 'strong'
@@ -848,6 +857,41 @@ export function VendorProfile() {
             {/* Right Column - Summary, Contracts, Institutions */}
             <ScrollReveal direction="up" delay={120} className="lg:col-span-2">
             <div className="space-y-6">
+              {/* AI Pattern Analysis */}
+              {(aiLoading || (aiSummary && aiSummary.insights.length > 0)) && (
+                <Card className="hover-lift">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Brain className="h-4 w-4" />
+                      AI Pattern Analysis
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {aiLoading ? (
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-4 w-5/6" />
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {aiSummary!.insights.map((insight, i) => (
+                          <div key={i} className="flex items-start gap-2">
+                            <span className="text-amber-500 mt-0.5 shrink-0">&#x25CF;</span>
+                            <p className="text-sm text-text-secondary">{insight}</p>
+                          </div>
+                        ))}
+                        {aiSummary!.summary && (
+                          <p className="text-sm text-text-muted mt-3 pt-3 border-t border-border/30">
+                            {aiSummary!.summary}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Vendor Summary */}
               <Card className="hover-lift">
                 <CardHeader>

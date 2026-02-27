@@ -1794,6 +1794,16 @@ export interface ReportTypeSummary {
   thematic_count: number
 }
 
+export interface VendorAISummary {
+  vendor_id: number
+  vendor_name: string
+  summary: string
+  insights: string[]
+  total_contracts: number
+  avg_risk_score: number | null
+  generated_by: string
+}
+
 export interface FeatureImportanceItem {
   feature: string
   importance: number

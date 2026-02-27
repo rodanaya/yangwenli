@@ -221,9 +221,9 @@ def cases_by_sector(sector_id: int):
     return result
 
 
-@router.get("/{slug}", response_model=ScandalDetail)
+@router.get("/{slug}")
 def get_case(slug: str):
-    """Full detail for a single scandal case."""
+    """Full detail for a single scandal case, including linked vendors from ground truth."""
     cache_key = f"detail:{slug}"
     cached = _get(cache_key)
     if cached is not None:
@@ -235,9 +235,42 @@ def get_case(slug: str):
             (slug,),
         ).fetchone()
 
-    if row is None:
-        raise HTTPException(status_code=404, detail=f"Case '{slug}' not found")
+        if row is None:
+            raise HTTPException(status_code=404, detail=f"Case '{slug}' not found")
 
-    result = _row_to_detail(row)
+        result = _row_to_detail(row)
+
+        # Add linked_vendors from ground_truth if this scandal has a ground_truth_case_id
+        linked_vendors = []
+        gt_case_id = row["ground_truth_case_id"]
+        if gt_case_id:
+            vendor_rows = conn.execute("""
+                SELECT gtv.vendor_id, gtv.vendor_name_source, gtv.role,
+                       gtv.evidence_strength, gtv.match_method,
+                       v.name as vendor_name,
+                       COUNT(c.id) as contract_count,
+                       AVG(c.risk_score) as avg_risk_score
+                FROM ground_truth_vendors gtv
+                LEFT JOIN vendors v ON gtv.vendor_id = v.id
+                LEFT JOIN contracts c ON c.vendor_id = gtv.vendor_id
+                WHERE gtv.case_id = ?
+                GROUP BY gtv.id
+                ORDER BY contract_count DESC
+                LIMIT 50
+            """, (gt_case_id,)).fetchall()
+
+            for vr in vendor_rows:
+                linked_vendors.append({
+                    "vendor_id": vr["vendor_id"],
+                    "vendor_name": vr["vendor_name"] or vr["vendor_name_source"],
+                    "role": vr["role"],
+                    "evidence_strength": vr["evidence_strength"],
+                    "match_method": vr["match_method"],
+                    "contract_count": vr["contract_count"] or 0,
+                    "avg_risk_score": round(vr["avg_risk_score"], 4) if vr["avg_risk_score"] else None,
+                })
+
+        result["linked_vendors"] = linked_vendors
+
     _set(cache_key, result)
     return result

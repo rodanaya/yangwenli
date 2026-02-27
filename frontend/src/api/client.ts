@@ -84,6 +84,7 @@ import type {
   SectorReport,
   ThematicReport,
   ReportTypeSummary,
+  VendorAISummary,
   FeatureImportanceItem,
   ModelComparisonItem,
   CommunityDetailResponse,
@@ -131,6 +132,7 @@ export type {
   SectorReport,
   ThematicReport,
   ReportTypeSummary,
+  VendorAISummary,
   FeatureImportanceItem,
   ModelComparisonItem,
   CommunityDetailResponse,
@@ -445,6 +447,11 @@ export const vendorApi = {
     }>
   }> {
     const { data } = await api.get(`/vendors/${vendorId}/footprint`)
+    return data
+  },
+
+  async getAiSummary(vendorId: number): Promise<VendorAISummary> {
+    const { data } = await api.get<VendorAISummary>(`/vendors/${vendorId}/ai-summary`)
     return data
   },
 }

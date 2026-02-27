@@ -6,6 +6,7 @@ related vendors, and top vendors analysis.
 
 Thin router — business logic lives in VendorService.
 """
+import json
 import math
 import logging
 import threading
@@ -70,6 +71,8 @@ class ExternalFlagsResponse(BaseModel):
     rupc: Optional[Dict[str, Any]]
     asf_cases: List[Dict[str, Any]]
     sat_efos: Optional[Dict[str, Any]]
+    match_method: Optional[str] = None  # 'rfc' | 'name_fuzzy'
+    match_confidence: Optional[int] = None  # 0-100
 
 
 class RiskTimelineEntry(BaseModel):
@@ -1010,12 +1013,16 @@ def get_vendor_external_flags(
         vendor_name = vendor_row["name"]
         vendor_rfc = vendor_row["rfc"]
 
+        # Determine match method based on RFC availability
+        has_rfc = bool(vendor_rfc)
         result = {
             "vendor_id": vendor_id,
             "sfp_sanctions": [],
             "rupc": None,
             "asf_cases": [],
             "sat_efos": None,
+            "match_method": "rfc" if has_rfc else "name_fuzzy",
+            "match_confidence": 99 if has_rfc else 75,
         }
 
         # --- SFP Sanctions ---
@@ -1078,6 +1085,329 @@ def get_vendor_external_flags(
         except Exception:
             pass  # Table may be empty
 
+        return result
+
+
+# =============================================================================
+# GROUND TRUTH STATUS
+# =============================================================================
+
+class GroundTruthCaseInfo(BaseModel):
+    case_id: int
+    case_name: str
+    case_type: str
+    role: Optional[str] = None
+    evidence_strength: Optional[str] = None
+
+
+class GroundTruthStatusResponse(BaseModel):
+    is_known_bad: bool
+    cases: List[GroundTruthCaseInfo] = []
+
+
+@router.get("/{vendor_id:int}/ground-truth-status", response_model=GroundTruthStatusResponse)
+def get_vendor_ground_truth_status(
+    vendor_id: int = Path(..., description="Vendor ID"),
+):
+    """Returns whether a vendor appears in documented corruption cases."""
+    cache_key = f"gt_status:{vendor_id}"
+    cached = _get_vendor_cache(cache_key)
+    if cached is not None:
+        return cached
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT id FROM vendors WHERE id = ?", (vendor_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
+
+        rows = cursor.execute("""
+            SELECT gtc.id as case_id, gtc.case_name, gtc.case_type,
+                   gtv.role, gtv.evidence_strength
+            FROM ground_truth_vendors gtv
+            JOIN ground_truth_cases gtc ON gtv.case_id = gtc.id
+            WHERE gtv.vendor_id = ?
+        """, (vendor_id,)).fetchall()
+
+        cases = [
+            GroundTruthCaseInfo(
+                case_id=r["case_id"],
+                case_name=r["case_name"],
+                case_type=r["case_type"],
+                role=r["role"],
+                evidence_strength=r["evidence_strength"],
+            )
+            for r in rows
+        ]
+
+        result = GroundTruthStatusResponse(is_known_bad=len(cases) > 0, cases=cases)
+        _set_vendor_cache(cache_key, result)
+        return result
+
+
+# =============================================================================
+# RISK WATERFALL
+# =============================================================================
+
+class RiskWaterfallItem(BaseModel):
+    feature: str
+    z_score: float
+    coefficient: float
+    contribution: float
+    label_en: str
+
+
+class RiskWaterfallResponse(BaseModel):
+    vendor_id: int
+    items: List[RiskWaterfallItem]
+    total_contracts: int
+
+
+_FEATURE_LABELS = {
+    "single_bid": "Single Bidding",
+    "direct_award": "Direct Award",
+    "price_ratio": "Price Ratio",
+    "vendor_concentration": "Vendor Concentration",
+    "ad_period_days": "Ad Period Length",
+    "year_end": "Year-End Timing",
+    "same_day_count": "Same-Day Contracts",
+    "network_member_count": "Network Membership",
+    "co_bid_rate": "Co-Bidding Rate",
+    "price_hyp_confidence": "Price Outlier Confidence",
+    "industry_mismatch": "Industry Mismatch",
+    "institution_risk": "Institution Risk",
+    "price_volatility": "Price Volatility",
+    "sector_spread": "Sector Spread",
+    "win_rate": "Win Rate",
+    "institution_diversity": "Institution Diversity",
+}
+
+_Z_FEATURE_COLS = [
+    "z_single_bid", "z_direct_award", "z_price_ratio", "z_vendor_concentration",
+    "z_ad_period_days", "z_year_end", "z_same_day_count", "z_network_member_count",
+    "z_co_bid_rate", "z_price_hyp_confidence", "z_industry_mismatch", "z_institution_risk",
+    "z_price_volatility", "z_sector_spread", "z_win_rate", "z_institution_diversity",
+]
+
+
+def _load_global_coefficients(conn) -> Dict[str, float]:
+    """Load global model coefficients from model_calibration."""
+    row = conn.execute(
+        "SELECT coefficients FROM model_calibration WHERE sector_id IS NULL ORDER BY id DESC LIMIT 1"
+    ).fetchone()
+    if not row:
+        return {}
+    return json.loads(row["coefficients"])
+
+
+def _build_waterfall(conn, filter_col: str, filter_id: int) -> tuple:
+    """Build risk waterfall items for a vendor or institution. Returns (items, total_contracts)."""
+    avg_cols = ", ".join(f"AVG(czf.{col}) as {col}" for col in _Z_FEATURE_COLS)
+    row = conn.execute(f"""
+        SELECT {avg_cols}, COUNT(*) as cnt
+        FROM contract_z_features czf
+        JOIN contracts c ON czf.contract_id = c.id
+        WHERE c.{filter_col} = ?
+    """, (filter_id,)).fetchone()
+
+    if not row or row["cnt"] == 0:
+        return [], 0
+
+    coefficients = _load_global_coefficients(conn)
+    if not coefficients:
+        return [], row["cnt"]
+
+    items = []
+    for z_col in _Z_FEATURE_COLS:
+        feature_name = z_col[2:]  # strip "z_" prefix
+        z_val = row[z_col] or 0.0
+        coeff = coefficients.get(feature_name, 0.0)
+        contribution = z_val * coeff
+        items.append(RiskWaterfallItem(
+            feature=feature_name,
+            z_score=round(z_val, 4),
+            coefficient=round(coeff, 4),
+            contribution=round(contribution, 4),
+            label_en=_FEATURE_LABELS.get(feature_name, feature_name),
+        ))
+
+    items.sort(key=lambda x: abs(x.contribution), reverse=True)
+    return items, row["cnt"]
+
+
+@router.get("/{vendor_id:int}/risk-waterfall", response_model=RiskWaterfallResponse)
+def get_vendor_risk_waterfall(
+    vendor_id: int = Path(..., description="Vendor ID"),
+):
+    """Returns per-feature risk contributions for a vendor (average across contracts)."""
+    cache_key = f"waterfall:{vendor_id}"
+    cached = _get_vendor_cache(cache_key)
+    if cached is not None:
+        return cached
+
+    with get_db() as conn:
+        if not conn.execute("SELECT id FROM vendors WHERE id = ?", (vendor_id,)).fetchone():
+            raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
+
+        items, total = _build_waterfall(conn, "vendor_id", vendor_id)
+
+        result = RiskWaterfallResponse(vendor_id=vendor_id, items=items, total_contracts=total)
+        _set_vendor_cache(cache_key, result)
+        return result
+
+
+# =============================================================================
+# PEER COMPARISON
+# =============================================================================
+
+class PeerComparisonMetric(BaseModel):
+    metric: str
+    value: Optional[float]
+    peer_median: Optional[float]
+    percentile: Optional[float]
+    label_en: str
+
+
+class PeerComparisonResponse(BaseModel):
+    vendor_id: int
+    sector_id: Optional[int]
+    metrics: List[PeerComparisonMetric]
+
+
+@router.get("/{vendor_id:int}/peer-comparison", response_model=PeerComparisonResponse)
+def get_vendor_peer_comparison(
+    vendor_id: int = Path(..., description="Vendor ID"),
+):
+    """Returns vendor metrics vs sector median and percentile."""
+    cache_key = f"peer:{vendor_id}"
+    cached = _get_vendor_cache(cache_key)
+    if cached is not None:
+        return cached
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        vs = cursor.execute("""
+            SELECT vendor_id, total_contracts, total_value_mxn, avg_risk_score,
+                   direct_award_pct, single_bid_pct, primary_sector_id
+            FROM vendor_stats WHERE vendor_id = ?
+        """, (vendor_id,)).fetchone()
+        if not vs:
+            raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found or has no stats")
+
+        sector_id = vs["primary_sector_id"]
+
+        metric_defs = [
+            ("avg_risk_score", "avg_risk_score", "Average Risk Score"),
+            ("total_contracts", "total_contracts", "Total Contracts"),
+            ("total_value_mxn", "total_value_mxn", "Total Contract Value (MXN)"),
+            ("direct_award_pct", "direct_award_pct", "Direct Award Rate"),
+            ("single_bid_pct", "single_bid_pct", "Single Bid Rate"),
+        ]
+
+        metrics = []
+        for col, _, label in metric_defs:
+            vendor_val = vs[col]
+
+            # Get percentile within sector
+            if sector_id:
+                pct_row = cursor.execute(f"""
+                    SELECT
+                        (SELECT COUNT(*) FROM vendor_stats WHERE primary_sector_id = ? AND {col} <= ?) * 100.0 /
+                        NULLIF((SELECT COUNT(*) FROM vendor_stats WHERE primary_sector_id = ?), 0) as pctile,
+                        (SELECT {col} FROM vendor_stats WHERE primary_sector_id = ?
+                         ORDER BY {col} LIMIT 1 OFFSET
+                         (SELECT COUNT(*) / 2 FROM vendor_stats WHERE primary_sector_id = ?)) as median_val
+                """, (sector_id, vendor_val or 0, sector_id, sector_id, sector_id)).fetchone()
+            else:
+                pct_row = cursor.execute(f"""
+                    SELECT
+                        (SELECT COUNT(*) FROM vendor_stats WHERE {col} <= ?) * 100.0 /
+                        NULLIF((SELECT COUNT(*) FROM vendor_stats), 0) as pctile,
+                        (SELECT {col} FROM vendor_stats
+                         ORDER BY {col} LIMIT 1 OFFSET
+                         (SELECT COUNT(*) / 2 FROM vendor_stats)) as median_val
+                """, (vendor_val or 0,)).fetchone()
+
+            metrics.append(PeerComparisonMetric(
+                metric=col,
+                value=round(vendor_val, 4) if vendor_val is not None else None,
+                peer_median=round(pct_row["median_val"], 4) if pct_row and pct_row["median_val"] is not None else None,
+                percentile=round(pct_row["pctile"], 1) if pct_row and pct_row["pctile"] is not None else None,
+                label_en=label,
+            ))
+
+        result = PeerComparisonResponse(vendor_id=vendor_id, sector_id=sector_id, metrics=metrics)
+        _set_vendor_cache(cache_key, result)
+        return result
+
+
+# =============================================================================
+# LINKED SCANDALS
+# =============================================================================
+
+class LinkedScandalItem(BaseModel):
+    case_id: int
+    case_name: str
+    case_type: str
+    role: Optional[str] = None
+    evidence_strength: Optional[str] = None
+    contract_count: int = 0
+    avg_risk_score: Optional[float] = None
+
+
+class LinkedScandalsResponse(BaseModel):
+    vendor_id: int
+    scandals: List[LinkedScandalItem]
+
+
+@router.get("/{vendor_id:int}/linked-scandals", response_model=LinkedScandalsResponse)
+def get_vendor_linked_scandals(
+    vendor_id: int = Path(..., description="Vendor ID"),
+):
+    """Returns documented scandals connected to this vendor with contract details."""
+    cache_key = f"scandals:{vendor_id}"
+    cached = _get_vendor_cache(cache_key)
+    if cached is not None:
+        return cached
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT id FROM vendors WHERE id = ?", (vendor_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
+
+        rows = cursor.execute("""
+            SELECT gtc.id as case_id, gtc.case_name, gtc.case_type,
+                   gtv.role, gtv.evidence_strength
+            FROM ground_truth_vendors gtv
+            JOIN ground_truth_cases gtc ON gtv.case_id = gtc.id
+            WHERE gtv.vendor_id = ?
+        """, (vendor_id,)).fetchall()
+
+        # Get contract counts and avg risk for this vendor
+        stats_row = cursor.execute("""
+            SELECT COUNT(*) as cnt, AVG(risk_score) as avg_rs
+            FROM contracts WHERE vendor_id = ?
+        """, (vendor_id,)).fetchone()
+
+        scandals = [
+            LinkedScandalItem(
+                case_id=r["case_id"],
+                case_name=r["case_name"],
+                case_type=r["case_type"],
+                role=r["role"],
+                evidence_strength=r["evidence_strength"],
+                contract_count=stats_row["cnt"] if stats_row else 0,
+                avg_risk_score=round(stats_row["avg_rs"], 4) if stats_row and stats_row["avg_rs"] else None,
+            )
+            for r in rows
+        ]
+
+        result = LinkedScandalsResponse(vendor_id=vendor_id, scandals=scandals)
+        _set_vendor_cache(cache_key, result)
         return result
 
 
