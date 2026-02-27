@@ -46,7 +46,7 @@ import {
 } from '@/components/charts'
 
 // ============================================================================
-// Hardcoded Model Data (from v5.0 methodology documentation)
+// Hardcoded Model Data (from v5.1 methodology documentation)
 // ============================================================================
 
 interface Coefficient {
@@ -60,8 +60,8 @@ interface Coefficient {
 }
 
 const MODEL_COEFFICIENTS: Coefficient[] = [
-  { factor: 'price_volatility', beta: 1.219, raw_beta: 1.219, ci_lower: 1.016, ci_upper: 1.431, direction: 'positive', note: 'NEW in v5.0 — strongest predictor' },
-  { factor: 'win_rate', beta: 0.727, raw_beta: 0.727, ci_lower: 0.648, ci_upper: 0.833, direction: 'positive', note: 'NEW in v5.0' },
+  { factor: 'price_volatility', beta: 1.219, raw_beta: 1.219, ci_lower: 1.016, ci_upper: 1.431, direction: 'positive', note: 'Strongest predictor' },
+  { factor: 'win_rate', beta: 0.727, raw_beta: 0.727, ci_lower: 0.648, ci_upper: 0.833, direction: 'positive', note: '' },
   { factor: 'vendor_concentration', beta: 0.428, raw_beta: 0.428, ci_lower: 0.277, ci_upper: 0.597, direction: 'positive' },
   { factor: 'industry_mismatch', beta: 0.305, raw_beta: 0.305, ci_lower: 0.263, ci_upper: 0.345, direction: 'positive' },
   { factor: 'same_day_count', beta: 0.222, raw_beta: 0.222, ci_lower: 0.172, ci_upper: 0.286, direction: 'positive' },
@@ -74,8 +74,8 @@ const MODEL_COEFFICIENTS: Coefficient[] = [
   { factor: 'co_bid_rate', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'neutral', note: 'Regularized to zero' },
   { factor: 'price_ratio', beta: -0.015, raw_beta: -0.015, ci_lower: -0.098, ci_upper: 0.080, direction: 'neutral' },
   { factor: 'ad_period_days', beta: -0.104, raw_beta: -0.104, ci_lower: -0.180, ci_upper: -0.032, direction: 'negative' },
-  { factor: 'sector_spread', beta: -0.374, raw_beta: -0.374, ci_lower: -0.443, ci_upper: -0.316, direction: 'negative', note: 'NEW in v5.0 — cross-sector = less risky' },
-  { factor: 'institution_diversity', beta: -0.848, raw_beta: -0.848, ci_lower: -0.933, ci_upper: -0.777, direction: 'negative', note: 'NEW in v5.0 — serves many institutions = less risky' },
+  { factor: 'sector_spread', beta: -0.374, raw_beta: -0.374, ci_lower: -0.443, ci_upper: -0.316, direction: 'negative', note: 'Cross-sector = less risky' },
+  { factor: 'institution_diversity', beta: -0.848, raw_beta: -0.848, ci_lower: -0.933, ci_upper: -0.777, direction: 'negative', note: 'Serves many institutions = less risky' },
 ]
 
 const VALIDATION_METRICS = {
@@ -703,16 +703,16 @@ export default function ModelTransparency() {
       </Card>
 
       {/* ================================================================ */}
-      {/* L3: Model Comparison — v3.3 vs v5.0                              */}
+      {/* L3: Model Comparison — v3.3 vs v5.1                              */}
       {/* ================================================================ */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-text-muted" aria-hidden="true" />
             <div>
-              <CardTitle>Model Comparison: v3.3 vs v5.0</CardTitle>
+              <CardTitle>Model Comparison: v3.3 vs v5.1</CardTitle>
               <CardDescription>
-                Per-sector framework (v5.0) dramatically outperforms the weighted checklist (v3.3) on every metric
+                Per-sector framework (v5.1) dramatically outperforms the weighted checklist (v3.3) on every metric
               </CardDescription>
             </div>
           </div>
@@ -753,7 +753,7 @@ export default function ModelTransparency() {
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm bg-[#58a6ff]" />
-              v5.0 Per-Sector Framework
+              v5.1 Per-Sector Framework
             </span>
           </div>
 
@@ -764,7 +764,7 @@ export default function ModelTransparency() {
                 <tr className="border-b border-border/30">
                   <th className="text-left py-2 pr-4 text-text-muted font-medium">Metric</th>
                   <th className="text-right py-2 px-3 text-text-muted font-medium">v3.3</th>
-                  <th className="text-right py-2 px-3 text-text-muted font-medium">v5.0</th>
+                  <th className="text-right py-2 px-3 text-text-muted font-medium">v5.1</th>
                   <th className="text-right py-2 pl-3 text-text-muted font-medium">Delta</th>
                 </tr>
               </thead>

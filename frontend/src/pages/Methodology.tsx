@@ -64,10 +64,10 @@ const V33_WEIGHTS = [
 ] as const
 
 const RISK_LEVELS_V5 = [
-  { level: 'Critical', threshold: '>= 0.50', meaning: '>= 50% estimated corruption probability', pct: '5.8%', count: '178,938', color: '#f87171' },
-  { level: 'High', threshold: '>= 0.30', meaning: '>= 30% estimated probability', pct: '2.2%', count: '67,190', color: '#fb923c' },
-  { level: 'Medium', threshold: '>= 0.10', meaning: '>= 10% estimated probability', pct: '9.5%', count: '294,468', color: '#fbbf24' },
-  { level: 'Low', threshold: '< 0.10', meaning: '< 10% probability', pct: '82.6%', count: '2,569,411', color: '#4ade80' },
+  { level: 'Critical', threshold: '>= 0.50', meaning: '>= 50% estimated corruption probability', pct: '6.1%', count: '190,638', color: '#f87171' },
+  { level: 'High', threshold: '>= 0.30', meaning: '>= 30% estimated probability', pct: '2.9%', count: '89,588', color: '#fb923c' },
+  { level: 'Medium', threshold: '>= 0.10', meaning: '>= 10% estimated probability', pct: '13.2%', count: '410,462', color: '#fbbf24' },
+  { level: 'Low', threshold: '< 0.10', meaning: '< 10% probability', pct: '77.8%', count: '2,419,319', color: '#4ade80' },
 ] as const
 
 const CORRUPTION_CASES = [
@@ -333,8 +333,8 @@ export function Methodology() {
       <div className="flex flex-wrap gap-2">
         {[
           { label: '3.1M Contracts', variant: 'default' as const },
-          { label: 'AUC 0.960', variant: 'default' as const },
-          { label: '15 Cases Validated', variant: 'default' as const },
+          { label: 'AUC 0.957', variant: 'default' as const },
+          { label: '22 Cases Validated', variant: 'default' as const },
           { label: '12 Sectors', variant: 'default' as const },
         ].map((kpi) => (
           <Badge
@@ -421,7 +421,7 @@ export function Methodology() {
               </div>
 
               <p className="text-xs text-text-muted">
-                High-risk rate: <strong className="text-text-secondary">7.9%</strong> (critical + high), within OECD benchmark of 2-15%.
+                High-risk rate: <strong className="text-text-secondary">9.0%</strong> (critical + high), within OECD benchmark of 2-15%.
                 v5.1 is the active model, replacing v5.0 on February 27, 2026.
               </p>
             </div>
@@ -608,7 +608,7 @@ export function Methodology() {
               {/* Validation metrics */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {[
-                  { label: 'Test AUC-ROC', value: '0.960' },
+                  { label: 'Test AUC-ROC', value: '0.957' },
                   { label: 'Brier Score', value: '0.060' },
                   { label: 'Lift', value: '4.04x' },
                   { label: 'Detection Rate', value: '99.8%' },
@@ -665,12 +665,12 @@ export function Methodology() {
               <div>
                 <p className="text-xs font-semibold text-text-primary mb-1">Per-Sector Logistic Regression</p>
                 <p className="text-xs text-text-secondary leading-relaxed">
-                  Cross-validated ElasticNet (C=10.0, l1_ratio=0.25) trained on 26,582 known-bad contracts from
-                  15 corruption cases with temporal split (train on contracts &lt;= 2020, test on &gt;= 2021).
+                  Cross-validated ElasticNet (C=10.0, l1_ratio=0.25) trained on 26,704 known-bad contracts from
+                  22 corruption cases with temporal split (train on contracts &lt;= 2020, test on &gt;= 2021).
                   12 per-sector sub-models + 1 global fallback capture sector-specific corruption patterns.
                 </p>
                 <p className="text-xs text-text-muted mt-1">
-                  Train AUC: 0.967, Test AUC: 0.960. No ad-hoc coefficient dampening needed -- ElasticNet
+                  Train AUC: 0.964, Test AUC: 0.957. No ad-hoc coefficient dampening needed — ElasticNet
                   regularization naturally controls coefficient magnitudes.
                 </p>
               </div>
@@ -683,8 +683,8 @@ export function Methodology() {
                   we apply a Positive-Unlabeled learning correction: <Mono>P(corrupt|x) = P(labeled=1|x) / c</Mono>
                 </p>
                 <p className="text-xs text-text-muted mt-1">
-                  Estimated c = 0.887 using Elkan & Noto holdout method (20% held-out positives) -- meaning
-                  ~89% of truly corrupt contracts would be labeled if we had perfect coverage. This replaces
+                  Estimated c = 0.8815 using Elkan & Noto holdout method (20% held-out positives) — meaning
+                  ~88% of truly corrupt contracts would be labeled if we had perfect coverage. This replaces
                   v4.0's circular estimator (c=0.890) with an honest out-of-sample estimate.
                 </p>
               </div>

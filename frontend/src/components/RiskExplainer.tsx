@@ -18,7 +18,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { BookOpen, TrendingUp, TrendingDown, Minus, FlaskConical } from 'lucide-react'
 
 // ---------------------------------------------------------------------------
-// FACTOR_EXPLANATIONS — evidence base for all 16 v5.0 risk features
+// FACTOR_EXPLANATIONS — evidence base for all 16 v5.1 risk features
 // ---------------------------------------------------------------------------
 
 export interface FactorExplanation {
@@ -54,7 +54,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Rent-Seeking Theory (Tullock 1967): Rents are extracted through price inflation above competitive levels. Porter & Zona (1993): Price manipulation is detectable in bid distributions — colluding firms show unusual variance patterns.',
     citation: 'Porter & Zona (1993): Price manipulation detectable in bid distributions',
     rubli_note:
-      'Top global predictor in v5.0 (+1.219). New feature not in v4.0. Vendors with wildly varying contract amounts relative to sector norms scored the highest.',
+      'Top global predictor in v5.1 (+1.219). Vendors with wildly varying contract amounts relative to sector norms scored the highest.',
   },
   institution_diversity: {
     title: 'Institution Diversity',
@@ -66,7 +66,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Competition Theory (Coviello & Mariniello 2014): Competition and transparency reduce award concentration. Vendors serving many buyers have more accountability exposure and less ability to corrupt all of them simultaneously.',
     citation: 'Coviello & Mariniello (2014): Competition and transparency reduce award concentration',
     rubli_note:
-      'Strong protective factor (-0.848). Negative coefficient means more institutions served = lower risk. Part of the "behavioral features" added in v5.0 to capture vendor-level patterns.',
+      'Strong protective factor (-0.848). Negative coefficient means more institutions served = lower risk. Part of the behavioral features added in v5.0/v5.1 to capture vendor-level patterns.',
   },
   win_rate: {
     title: 'Win Rate',
@@ -78,7 +78,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Bid-Ring Theory (Conley & Decarolis 2016): Bid rings are detectable via win pattern analysis. Abnormally high win rates are a key indicator of market capture through collusion or corruption.',
     citation: 'Conley & Decarolis (2016): Bid rings detectable via win pattern analysis',
     rubli_note:
-      'New in v5.0 (+0.727). A vendor winning contracts at a rate far above the sector baseline signals preferential access. The z-score normalizes by sector and year.',
+      'Win rate (+0.727). A vendor winning contracts at a rate far above the sector baseline signals preferential access. The z-score normalizes by sector and year.',
   },
   sector_spread: {
     title: 'Sector Spread',
@@ -90,7 +90,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Agency Theory: Corruption requires sustained access to specific procurement officials. Operating across many sectors dilutes the benefit of any single corrupt relationship.',
     citation: 'Fazekas & Kocsis (2020)',
     rubli_note:
-      'New in v5.0 (-0.374). Protective factor similar to institution_diversity but at the sector level. Vendors operating in 6+ sectors score significantly lower.',
+      'Sector spread (-0.374). Protective factor similar to institution_diversity but at the sector level. Vendors operating in 6+ sectors score significantly lower.',
   },
   industry_mismatch: {
     title: 'Industry Mismatch',
@@ -126,7 +126,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Principal-Agent Theory: Discretion is the second enabling condition (after monopoly). Direct awards maximize official discretion — the awarding official can choose any vendor without justifying the choice through price competition.',
     citation: 'OECD (2016): Preventing Corruption in Public Procurement',
     rubli_note:
-      'Coefficient +0.182 in v5.0 (was -0.197 in v4.0 before ground truth diversification). Mexico issues ~70% of contracts as direct awards — the z-score normalizes by sector/year baseline, so this measures excess direct awards above sector norms.',
+      'Coefficient +0.182 in v5.1 (was -0.197 in v4.0 before ground truth diversification). Mexico issues ~70% of contracts as direct awards — the z-score normalizes by sector/year baseline, so this measures excess direct awards above sector norms.',
   },
   ad_period_days: {
     title: 'Advertisement Period',
@@ -150,7 +150,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Network Theory of Corruption (Wachs et al. 2021): Procurement fraud often involves coordinated networks of companies. Network membership — being connected to other vendors — is a risk signal.',
     citation: 'Fazekas, Skuhrovec & Wachs (2020): Network analysis of procurement graphs',
     rubli_note:
-      'Corrected to positive in v5.0 (+0.064). In v4.0 this was negative (-4.11) — a training artifact. The Louvain community detection (v3.3 feature) detected 1,837 vendor communities. Strongest in Hacienda (+0.77) and Infraestructura (+0.61) per-sector models.',
+      'Corrected to positive in v5.1 (+0.064). In v4.0 this was negative (-4.11) — a training artifact. The Louvain community detection (v3.3 feature) detected 1,837 vendor communities. Strongest in Hacienda (+0.77) and Infraestructura (+0.61) per-sector models.',
   },
   year_end: {
     title: 'Year-End Award',
@@ -198,7 +198,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Overpricing Theory (World Bank INT 2019): Warning signs of fraud include prices significantly above market rates. The IQR method identifies statistical outliers in contract amounts.',
     citation: 'World Bank INT (2019): Warning Signs of Fraud',
     rubli_note:
-      'Near-zero coefficient (-0.015) in v5.0. Most of the price signal is captured by price_volatility (new v5.0 feature). The simple price ratio remains as a feature but contributes minimally to the final score.',
+      'Near-zero coefficient (-0.015). Most of the price signal is captured by price_volatility. The simple price ratio remains as a feature but contributes minimally to the final score.',
   },
   co_bid_rate: {
     title: 'Co-Bid Rate',
@@ -210,7 +210,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Bid-Ring Theory (Porter & Zona 1993): Co-bidding as a collusion indicator. Vendors that consistently appear together and alternate wins are likely coordinating rather than genuinely competing.',
     citation: 'Porter & Zona (1993): Co-bidding as collusion indicator',
     rubli_note:
-      'Regularized to zero in v5.0. Co-bidding patterns do not discriminate in Mexico\'s training data because the dominant corruption cases (IMSS, Segalmex, COVID) involve market concentration, not coordinated bidding rings. The Collusion Detection tab provides separate heuristic analysis.',
+      'Regularized to zero in v5.1. Co-bidding patterns do not discriminate in Mexico\'s training data because the dominant corruption cases (IMSS, Segalmex, COVID) involve market concentration, not coordinated bidding rings. The Collusion Detection tab provides separate heuristic analysis.',
   },
   price_hyp_confidence: {
     title: 'Price Hypothesis Confidence',
@@ -478,7 +478,7 @@ export function RiskFactorTable({ factors, className }: RiskFactorTableProps) {
         <span className="flex items-center gap-1"><TrendingUp size={11} className="text-risk-critical" /> Increases risk</span>
         <span className="flex items-center gap-1"><TrendingDown size={11} className="text-risk-low" /> Decreases risk (protective)</span>
         <span className="flex items-center gap-1"><Minus size={11} /> Negligible / regularized to zero</span>
-        <span className="flex items-center gap-1"><FlaskConical size={11} /> Coefficients from v5.0 ElasticNet model (C=10.0, l1_ratio=0.25)</span>
+        <span className="flex items-center gap-1"><FlaskConical size={11} /> Coefficients from v5.1 ElasticNet model (C=10.0, l1_ratio=0.25)</span>
       </div>
     </div>
   )
@@ -491,7 +491,7 @@ export function RiskFactorTable({ factors, className }: RiskFactorTableProps) {
 function getEvidenceStrength(factor: string): string {
   const map: Record<string, string> = {
     vendor_concentration: 'Strong (multiple countries)',
-    price_volatility: 'Strong (v5.0 top predictor)',
+    price_volatility: 'Strong (v5.1 top predictor)',
     institution_diversity: 'Negative — protective factor',
     win_rate: 'Strong — abnormal rates = market capture',
     sector_spread: 'Negative — protective factor',

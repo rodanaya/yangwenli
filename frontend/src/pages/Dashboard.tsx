@@ -830,7 +830,7 @@ export function Dashboard() {
       </div>
 
       {/* ================================================================ */}
-      {/* HOW THE AI WORKS — Top 4 v5.0 model predictors                */}
+      {/* HOW THE AI WORKS — Top 4 v5.1 model predictors                */}
       {/* ================================================================ */}
       <Card className="border-border/40">
         <CardContent className="pt-5 pb-4">
