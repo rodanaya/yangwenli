@@ -226,6 +226,28 @@ class PromoteToGTResponse(BaseModel):
     message: str
 
 
+class CaseReviewResponse(BaseModel):
+    """Response from reviewing a case."""
+    success: bool
+    case_id: str
+    status: str
+
+
+class AddEvidenceResponse(BaseModel):
+    """Response from adding evidence to a case."""
+    success: bool
+    case_id: str
+    total_evidence: int
+    status: str
+
+
+class CaseExportResponse(BaseModel):
+    """Response for case export."""
+    case_id: str
+    format: str
+    content: Optional[str] = None
+
+
 class TopAnomalousVendorItem(BaseModel):
     vendor_id: int
     vendor_name: str
@@ -453,7 +475,7 @@ def get_case(case_id: str = Path(..., description="Case ID (e.g., CASE-SAL-2026-
         )
 
 
-@router.get("/cases/{case_id}/export", response_model=Dict[str, Any])
+@router.get("/cases/{case_id}/export", response_model=CaseExportResponse)
 def export_case(
     case_id: str = Path(..., description="Case ID"),
     format: str = Query("markdown", description="Export format: markdown or json"),
@@ -619,7 +641,7 @@ def get_stats():
         )
 
 
-@router.put("/cases/{case_id}/review")
+@router.put("/cases/{case_id}/review", response_model=CaseReviewResponse)
 def review_case(
     case_id: str = Path(..., description="Case ID"),
     request: ReviewRequest = ...,
@@ -835,7 +857,7 @@ def get_dashboard_summary():
         )
 
 
-@router.put("/cases/{case_id}/evidence")
+@router.put("/cases/{case_id}/evidence", response_model=AddEvidenceResponse)
 def add_evidence(
     case_id: str = Path(..., description="Case ID"),
     request: AddEvidenceRequest = ...,

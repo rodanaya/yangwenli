@@ -882,9 +882,18 @@ def list_price_hypotheses(
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
+_price_hyp_summary_cache: Dict[str, Any] = {}
+_PRICE_HYP_SUMMARY_CACHE_TTL = 3600  # 1 hour — expensive full-table scan
+
+
 @router.get("/price-hypotheses/summary", response_model=PriceHypothesesSummaryResponse)
 def get_price_hypotheses_summary():
     """Get summary statistics for price hypotheses, computed live across all contracts."""
+    cache_key = "price_hyp_summary"
+    cached = _price_hyp_summary_cache.get(cache_key)
+    if cached and (_time.time() - cached["ts"]) < _PRICE_HYP_SUMMARY_CACHE_TTL:
+        return cached["data"]
+
     try:
         with get_db() as conn:
             cursor = conn.cursor()
@@ -988,7 +997,7 @@ def get_price_hypotheses_summary():
                     for r in cursor.fetchall()
                 ]
 
-            return {
+            result = {
                 "status": "active",
                 "overall": {
                     "total_hypotheses": live_total_flagged,
@@ -1004,6 +1013,9 @@ def get_price_hypotheses_summary():
                 "by_confidence": by_confidence,
                 "recent_runs": recent_runs,
             }
+
+            _price_hyp_summary_cache[cache_key] = {"ts": _time.time(), "data": result}
+            return result
 
     except sqlite3.Error as e:
         logger.error(f"Database error in get_price_hypotheses_summary: {e}")
