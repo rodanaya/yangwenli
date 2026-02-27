@@ -8,10 +8,12 @@
     "theMoney": "EL DINERO",
     "whoAndHow": "QUIÉN Y CÓMO",
     "investigateSection": "INVESTIGAR",
-    "understandSection": "ENTENDER"
+    "understandSection": "ENTENDER",
+    "myWorkspace": "MI ESPACIO"
   },
   "executive": "Resumen Ejecutivo",
-  "dashboard": "El Informe",
+  "dashboard": "Panel",
+  "explore": "Explorar",
   "patterns": "Patrones de Fraude",
   "procurementIntelligence": "Inteligencia de Compras",
   "moneyFlow": "Flujo de Dinero",
@@ -20,11 +22,12 @@
   "institutions": "Salud Institucional",
   "pricing": "Inteligencia de Precios",
   "categories": "Categorías de Gasto",
-  "contracts": "Todos los Contratos",
-  "network": "Red de Proveedores",
+  "contracts": "Contratos",
+  "network": "Red",
   "watchlist": "Mi Vigilancia",
-  "investigation": "Gestor de Casos",
-  "caseLibrary": "Biblioteca de Casos",
+  "workspace": "Espacio de Trabajo",
+  "investigation": "Investigación",
+  "caseLibrary": "Casos",
   "sectors": "Sectores",
   "groundTruth": "Verdad Base",
   "model": "Transparencia del Modelo",
@@ -32,5 +35,7 @@
   "limitations": "Limitaciones",
   "settings": "Configuración",
   "expandSidebar": "Expandir barra lateral",
-  "collapseSidebar": "Contraer barra lateral"
+  "collapseSidebar": "Contraer barra lateral",
+  "openMenu": "Abrir menú",
+  "closeMenu": "Cerrar menú"
 }

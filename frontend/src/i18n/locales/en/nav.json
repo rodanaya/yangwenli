@@ -8,10 +8,12 @@
     "theMoney": "THE MONEY",
     "whoAndHow": "WHO & HOW",
     "investigateSection": "INVESTIGATE",
-    "understandSection": "UNDERSTAND"
+    "understandSection": "UNDERSTAND",
+    "myWorkspace": "MY WORKSPACE"
   },
   "executive": "Executive Summary",
-  "dashboard": "The Brief",
+  "dashboard": "Dashboard",
+  "explore": "Explore",
   "patterns": "Fraud Patterns",
   "procurementIntelligence": "Procurement Intelligence",
   "moneyFlow": "Money Flow",
@@ -20,11 +22,12 @@
   "institutions": "Institution Health",
   "pricing": "Price Intelligence",
   "categories": "Spending Categories",
-  "contracts": "All Contracts",
-  "network": "Vendor Network",
+  "contracts": "Contracts",
+  "network": "Network",
   "watchlist": "My Watchlist",
-  "investigation": "Case Manager",
-  "caseLibrary": "Case Library",
+  "workspace": "Workspace",
+  "investigation": "Investigation",
+  "caseLibrary": "Cases",
   "sectors": "Sectors",
   "groundTruth": "Ground Truth",
   "model": "Model Transparency",
@@ -32,5 +35,7 @@
   "limitations": "Limitations",
   "settings": "Settings",
   "expandSidebar": "Expand sidebar",
-  "collapseSidebar": "Collapse sidebar"
+  "collapseSidebar": "Collapse sidebar",
+  "openMenu": "Open menu",
+  "closeMenu": "Close menu"
 }

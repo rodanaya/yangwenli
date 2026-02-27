@@ -10,5 +10,9 @@ export { usePrefetchOnHover, usePrefetchList } from './usePrefetchOnHover'
 export { useSavedViews } from './useSavedViews'
 export type { SavedView } from './useSavedViews'
 
+// URL state hooks (nuqs-backed)
+export { useUrlFilters, useUrlSearch } from './useUrlFilters'
+export type { UrlFilters, RiskLevel } from './useUrlFilters'
+
 // Re-export existing hooks
 export { useTheme } from './useTheme'

@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Search, Moon, Sun, X, Database, Activity, Shield } from 'lucide-react'
+import { Search, Moon, Sun, X, Database, Activity, Shield, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { SmartSearch } from '@/components/SmartSearch'
@@ -13,7 +13,9 @@ import { cn } from '@/lib/utils'
 // Route path → nav i18n key mapping
 const ROUTE_I18N_KEYS: Record<string, string> = {
   '/': 'dashboard',
+  '/dashboard': 'dashboard',
   '/executive': 'executive',
+  '/executive-summary': 'executive',
   '/explore': 'explore',
   '/patterns': 'patterns',
   '/red-flags': 'redFlags',
@@ -25,6 +27,7 @@ const ROUTE_I18N_KEYS: Record<string, string> = {
   '/contracts': 'contracts',
   '/network': 'network',
   '/watchlist': 'watchlist',
+  '/workspace': 'workspace',
   '/investigation': 'investigation',
   '/sectors': 'sectors',
   '/ground-truth': 'groundTruth',
@@ -32,9 +35,10 @@ const ROUTE_I18N_KEYS: Record<string, string> = {
   '/methodology': 'methodology',
   '/settings': 'settings',
   '/categories': 'categories',
+  '/cases': 'caseLibrary',
 }
 
-export function Header() {
+export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { t } = useTranslation('nav')
@@ -120,8 +124,18 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-border/40 bg-background/80 px-4 md:px-5 backdrop-blur-md">
-      {/* Left — Breadcrumb path */}
+      {/* Left — Hamburger (mobile) + Breadcrumb path */}
       <div className="flex items-center gap-1.5 min-w-0 text-sm">
+        {/* Hamburger — mobile only */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 flex-shrink-0 md:hidden mr-1"
+          onClick={onMenuClick}
+          aria-label="Open menu"
+        >
+          <Menu className="h-4 w-4 text-text-muted" />
+        </Button>
         {currentPath !== '/' && (
           <>
             <span className="text-text-muted hidden sm:inline">{parentPath}</span>

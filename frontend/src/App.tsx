@@ -2,6 +2,7 @@ import { lazy } from 'react'
 import { NotFound } from './pages/NotFound'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider, keepPreviousData } from '@tanstack/react-query'
+import { NuqsAdapter } from 'nuqs/adapters/react-router'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ToastProvider } from '@/components/ui/toast'
 import { MainLayout } from '@/components/layout/MainLayout'
@@ -43,6 +44,8 @@ const Limitations = lazy(() => import('@/pages/Limitations'))
 const CaseLibrary = lazy(() => import('@/pages/CaseLibrary'))
 const CaseDetail = lazy(() => import('@/pages/CaseDetail'))
 const MoneyFlow = lazy(() => import('@/pages/MoneyFlow'))
+// Workspace is the new name for Watchlist
+const Workspace = lazy(() => import('@/pages/Watchlist'))
 
 // Enhanced QueryClient configuration for better caching and UX
 const queryClient = new QueryClient({
@@ -64,6 +67,7 @@ function App() {
         <TooltipProvider delayDuration={300}>
           <EntityDrawerProvider>
           <BrowserRouter>
+          <NuqsAdapter>
           <Routes>
             <Route path="/" element={<MainLayout />}>
               <Route
@@ -82,7 +86,14 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
-              <Route path="dashboard" element={<Navigate to="/" replace />} />
+              <Route
+                path="dashboard"
+                element={
+                  <SuspenseBoundary fallback={<DashboardSkeleton />}>
+                    <Dashboard />
+                  </SuspenseBoundary>
+                }
+              />
               <Route path="executive" element={<Navigate to="/executive-summary" replace />} />
               <Route
                 path="explore"
@@ -134,13 +145,14 @@ function App() {
                 }
               />
               <Route
-                path="watchlist"
+                path="workspace"
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <Watchlist />
+                    <Workspace />
                   </SuspenseBoundary>
                 }
               />
+              <Route path="watchlist" element={<Navigate to="/workspace" replace />} />
               <Route
                 path="investigation/:caseId"
                 element={
@@ -292,6 +304,7 @@ function App() {
             </Route>
           </Routes>
           <EntityProfileDrawer />
+          </NuqsAdapter>
           </BrowserRouter>
           </EntityDrawerProvider>
         </TooltipProvider>

@@ -7,6 +7,7 @@ import { WelcomeModal } from '@/components/WelcomeModal'
 
 export function MainLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -21,18 +22,35 @@ export function MainLayout() {
       {/* First-visit onboarding */}
       <WelcomeModal />
 
+      {/* Mobile backdrop — tapping closes the sidebar */}
+      {mobileSidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setMobileSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar */}
-      <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+      <Sidebar
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        mobileOpen={mobileSidebarOpen}
+        onMobileClose={() => setMobileSidebarOpen(false)}
+      />
 
       {/* Main content area */}
       <div
         className={cn(
           'relative flex min-h-screen flex-col transition-all duration-300',
-          sidebarCollapsed ? 'pl-14' : 'pl-56'
+          // Mobile: no left padding (sidebar is overlay)
+          'pl-0',
+          // Desktop: left padding based on sidebar width
+          sidebarCollapsed ? 'md:pl-14' : 'md:pl-56'
         )}
       >
         {/* Header */}
-        <Header />
+        <Header onMenuClick={() => setMobileSidebarOpen(true)} />
 
         {/* Page content */}
         <main id="main-content" className="flex-1 px-5 py-5" tabIndex={-1}>
