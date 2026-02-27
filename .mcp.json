@@ -10,10 +10,9 @@
       "args": [
         "/c", "npx", "-y",
         "@modelcontextprotocol/server-filesystem",
-        "D:/Python/yangwenli/original_data",
-        "D:/Python/yangwenli/backend/backups"
+        "D:/Python/yangwenli"
       ],
-      "description": "Structured read access to original_data/ COMPRANET CSVs and backups"
+      "description": "Read/write access to the full project directory"
     }
   }
 }

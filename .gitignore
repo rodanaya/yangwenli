@@ -93,6 +93,9 @@ CLAUDE.md
 CLAUDE.local.md
 .claude/settings.local.json
 
+# Strategic planning docs (out of scope for Mexico project)
+docs/EXPANSION_FEASIBILITY.md
+
 # Temporary/debug files
 backend/DEBUG_LOG.txt
 frontend/npm-cache/
