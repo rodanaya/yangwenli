@@ -19,6 +19,7 @@ import {
   getRiskLevel,
 } from '@/lib/utils'
 import { contractApi, exportApi } from '@/api/client'
+import { TableExportButton } from '@/components/TableExportButton'
 import { SECTORS, RISK_COLORS } from '@/lib/constants'
 import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 import type { ContractFilterParams, ContractListItem } from '@/api/types'
@@ -372,6 +373,21 @@ export function Contracts() {
     return { totalValue, avgRisk, criticalCount, highPlusCount, daPct }
   }, [data])
 
+  const pageExportData = useMemo(() => {
+    if (!data?.data?.length) return []
+    return data.data.map((c) => ({
+      id: c.id,
+      title: c.title ?? '',
+      vendor_name: c.vendor_name ?? '',
+      amount_mxn: c.amount_mxn,
+      risk_level: c.risk_level ?? '',
+      risk_score: c.risk_score != null ? Number(c.risk_score.toFixed(4)) : '',
+      year: c.year ?? '',
+      procedure_type: c.procedure_type ?? '',
+      sector_name: c.sector_name ?? '',
+    }))
+  }, [data])
+
   const activeFilterTags = useMemo(() => {
     const tags: { key: string; label: string }[] = []
     if (filters.search) tags.push({ key: 'search', label: `"${filters.search}"` })
@@ -445,6 +461,10 @@ export function Contracts() {
           >
             {isExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
           </Button>
+          <TableExportButton
+            data={pageExportData}
+            filename="contracts-page"
+          />
         </div>
       </div>
 

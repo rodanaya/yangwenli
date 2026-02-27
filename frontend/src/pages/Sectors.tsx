@@ -6,7 +6,7 @@
  * Section 3: Charts gallery (collapsed in <details>)
  */
 
-import { memo, useMemo, useState } from 'react'
+import { memo, useMemo, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -19,6 +19,7 @@ import { SECTOR_COLORS, SECTORS, getSectorNameEN } from '@/lib/constants'
 import { Heatmap } from '@/components/charts/Heatmap'
 import type { SectorStatistics } from '@/api/types'
 import { AlertTriangle, BarChart3, Layers, X } from 'lucide-react'
+import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { ScrollReveal } from '@/hooks/useAnimations'
 import { StatCard as SharedStatCard } from '@/components/DashboardWidgets'
 import {
@@ -265,6 +266,7 @@ export function Sectors() {
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [selectedSectorCode, setSelectedSectorCode] = useState<string | null>(null)
   const [compareSectorCode, setCompareSectorCode] = useState<string | null>(null)
+  const sectorValueChartRef = useRef<HTMLDivElement>(null)
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['sectors'],
@@ -854,10 +856,13 @@ export function Sectors() {
           {/* Contract Value by Sector */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <BarChart3 className="h-3.5 w-3.5 text-accent" />
-                Contract Value by Sector
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <BarChart3 className="h-3.5 w-3.5 text-accent" />
+                  Contract Value by Sector
+                </CardTitle>
+                <ChartDownloadButton targetRef={sectorValueChartRef} filename="sectors-contract-value" />
+              </div>
               {topSector && (
                 <CardDescription className="text-xs">
                   {getSectorNameEN(topSector.sector_code)} leads with {formatCompactMXN(topSector.total_value_mxn)} — {((topSector.total_value_mxn / (data?.total_value_mxn || 1)) * 100).toFixed(0)}% of all procurement
@@ -865,7 +870,7 @@ export function Sectors() {
               )}
             </CardHeader>
             <CardContent>
-              <div className="h-[340px]">
+              <div className="h-[340px]" ref={sectorValueChartRef}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartSectors} layout="vertical" margin={{ right: 80 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} horizontal={false} />

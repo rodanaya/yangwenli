@@ -10,7 +10,7 @@
  * L6: Events Timeline
  */
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ScrollReveal, useCountUp } from '@/hooks/useAnimations'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -46,6 +46,7 @@ import {
   Activity,
   Info,
 } from 'lucide-react'
+import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 
 // =============================================================================
 // Constants
@@ -279,6 +280,7 @@ export default function Administrations() {
   const [selectedAdmin, setSelectedAdmin] = useState<AdminName>('AMLO')
   const [activeTab, setActiveTab] = useState<'overview' | 'patterns' | 'political' | 'compare'>('overview')
   const [matrixMetric, setMatrixMetric] = useState<MatrixMetric>('risk')
+  const systemicChartRef = useRef<HTMLDivElement>(null)
 
   // Data queries
   const { data: yoyResp, isLoading: yoyLoading } = useQuery({
@@ -1553,12 +1555,16 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
       <ScrollReveal direction="fade">
       <Card className="bg-card border-border/40">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-mono text-text-primary">
-            Systemic Patterns — 23-Year Timeline (2002–2025)
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-mono text-text-primary">
+              Systemic Patterns — 23-Year Timeline (2002–2025)
+            </CardTitle>
+            <ChartDownloadButton targetRef={systemicChartRef} filename="systemic-patterns-23yr" />
+          </div>
         </CardHeader>
         <CardContent>
           {yoyData.length > 0 ? (
+            <div ref={systemicChartRef}>
             <ResponsiveContainer width="100%" height={360}>
               <ComposedChart data={yoyData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.2} />
@@ -1642,6 +1648,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
                 />
               </ComposedChart>
             </ResponsiveContainer>
+            </div>
           ) : (
             <div className="h-[360px] flex items-center justify-center text-text-muted text-sm">
               No data available

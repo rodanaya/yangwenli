@@ -6,7 +6,7 @@
  * Section 3: Charts (treemap, trend lines) — collapsed in <details>
  */
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -42,6 +42,7 @@ import {
   Brain,
   BarChart3,
 } from 'lucide-react'
+import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { getSectorNameEN } from '@/lib/constants'
 
 // =============================================================================
@@ -499,6 +500,7 @@ export default function SpendingCategories() {
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [trendCount, setTrendCount] = useState<number | null>(10)
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
+  const trendChartRef = useRef<HTMLDivElement>(null)
 
   const { data: summaryData, isLoading: summaryLoading } = useQuery({
     queryKey: ['categories', 'summary'],
@@ -1152,7 +1154,8 @@ export default function SpendingCategories() {
           {/* Trend Chart */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2">
+              <div className="flex items-start justify-between gap-2">
+              <CardTitle className="flex items-center gap-2 flex-1">
                 <TrendingUp className="h-4 w-4 text-text-muted" />
                 {t('trends.title')}
                 {selectedCategoryName ? (
@@ -1189,6 +1192,8 @@ export default function SpendingCategories() {
                   </div>
                 )}
               </CardTitle>
+              <ChartDownloadButton targetRef={trendChartRef} filename="spending-category-trends" />
+              </div>
               <CardDescription>
                 {t('trends.description')}
               </CardDescription>
@@ -1197,7 +1202,7 @@ export default function SpendingCategories() {
               {trendsLoading ? (
                 <ChartSkeleton height={320} type="area" />
               ) : trendChartData.years.length > 0 ? (
-                <div style={{ height: 320 }}>
+                <div style={{ height: 320 }} ref={trendChartRef}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart margin={{ top: 10, right: 30, bottom: 0, left: 10 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />

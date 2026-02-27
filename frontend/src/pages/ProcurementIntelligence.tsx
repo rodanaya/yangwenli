@@ -6,6 +6,7 @@
  */
 
 import { useState, useMemo } from 'react'
+import { TableExportButton } from '@/components/TableExportButton'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -638,6 +639,22 @@ export default function ProcurementIntelligence() {
     return rows.length
   }, [allFlows, riskFilter])
 
+  // ── Derived: export data for flows table ─────────────────────────────────
+  const flowsExportData = useMemo(() => {
+    if (!allFlows.length) return []
+    let rows = allFlows
+    if (riskFilter === 'high') rows = rows.filter(r => r.avgRisk >= 0.3)
+    if (riskFilter === 'critical') rows = rows.filter(r => r.avgRisk >= 0.5)
+    return rows.map(f => ({
+      institution: f.sourceName,
+      vendor: f.targetName,
+      value_mxn: f.value,
+      contracts: f.contracts,
+      avg_risk_score: Number(f.avgRisk.toFixed(4)),
+      high_risk_pct: Number(f.highRiskPct.toFixed(4)),
+    }))
+  }, [allFlows, riskFilter])
+
   // ── Derived: summary stats ────────────────────────────────────────────────
   const summaryStats = useMemo(() => {
     if (!allFlows.length) return null
@@ -711,9 +728,12 @@ export default function ProcurementIntelligence() {
       <Card className="border-border/40">
         <CardContent className="pt-5 pb-4">
           {/* Header */}
-          <div className="flex items-center gap-2 mb-1">
-            <DollarSign className="h-4 w-4 text-accent" />
-            <h2 className="text-base font-bold text-text-primary">{t('highRiskFlows.title')}</h2>
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-accent" />
+              <h2 className="text-base font-bold text-text-primary">{t('highRiskFlows.title')}</h2>
+            </div>
+            <TableExportButton data={flowsExportData} filename="procurement-money-flows" />
           </div>
           <p className="text-xs text-text-muted mb-3">{t('highRiskFlows.subtitle')}</p>
 
