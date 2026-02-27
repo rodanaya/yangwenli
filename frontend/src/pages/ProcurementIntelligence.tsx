@@ -15,7 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber, getRiskLevel, toTitleCase } from '@/lib/utils'
 import { RISK_COLORS, SECTOR_COLORS } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
-import type { MoneyFlowItem, RiskFactorFrequency, FactorCooccurrence } from '@/api/types'
+import type { MoneyFlowItem, RiskFactorFrequency, FactorCooccurrence, ThresholdGamingResponse } from '@/api/types'
 import {
   BarChart,
   Bar,
@@ -42,6 +42,7 @@ import {
   AlertTriangle,
   Filter,
   X,
+  Target,
 } from 'lucide-react'
 
 // =============================================================================
@@ -569,6 +570,12 @@ export default function ProcurementIntelligence() {
     queryKey: ['december-spike'],
     queryFn: () => analysisApi.getDecemberSpike(2010, 2024),
     staleTime: 30 * 60 * 1000,
+  })
+
+  const { data: thresholdData } = useQuery<ThresholdGamingResponse>({
+    queryKey: ['threshold-gaming'],
+    queryFn: () => analysisApi.getThresholdGaming(),
+    staleTime: 60 * 60 * 1000,
   })
 
   // Batch 2: expensive queries — only fire after user requests them
@@ -1150,6 +1157,73 @@ export default function ProcurementIntelligence() {
                 Normal year
               </span>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ─── SECTION 3.5: THRESHOLD GAMING ──────────────────────────────── */}
+      {thresholdData && (
+        <Card className="border-border/40">
+          <CardContent className="pt-5 pb-4">
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4 text-risk-high" />
+                <h2 className="text-base font-bold text-text-primary">Threshold Gaming</h2>
+              </div>
+              <span className="text-xs text-text-muted font-mono">
+                {formatNumber(thresholdData.total_flagged)} contracts ·{' '}
+                <span className="font-bold text-risk-high">
+                  {thresholdData.pct_of_competitive_procedures.toFixed(1)}%
+                </span>{' '}
+                of competitive procedures
+              </span>
+            </div>
+            <p className="text-xs text-text-muted mb-4">
+              Contracts clustered just below procurement thresholds — a known indicator of artificial splitting
+              to avoid competitive bidding requirements (Szucs 2023, Coviello et al. 2018).
+            </p>
+
+            {thresholdData.by_sector.length > 0 && (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart
+                  data={thresholdData.by_sector.slice(0, 10).map((s) => ({
+                    name: s.sector_name.charAt(0).toUpperCase() + s.sector_name.slice(1),
+                    flagged: s.flagged_contracts,
+                    value_b: s.total_value_mxn / 1e9,
+                  }))}
+                  margin={{ top: 4, right: 16, bottom: 24, left: 0 }}
+                  layout="vertical"
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} horizontal={false} />
+                  <XAxis
+                    type="number"
+                    tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }}
+                    tickFormatter={(v: number) => formatNumber(v)}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }}
+                    width={88}
+                  />
+                  <RechartsTooltip
+                    contentStyle={{
+                      backgroundColor: 'var(--color-card)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 6,
+                      fontSize: 11,
+                    }}
+                    formatter={(v: unknown, name?: string) => [
+                      name === 'flagged'
+                        ? formatNumber(v as number)
+                        : `${(v as number).toFixed(1)}B MXN`,
+                      name === 'flagged' ? 'Flagged Contracts' : 'Total Value',
+                    ]}
+                  />
+                  <Bar dataKey="flagged" name="flagged" fill={RISK_COLORS.high} radius={[0, 3, 3, 0]} opacity={0.85} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       )}

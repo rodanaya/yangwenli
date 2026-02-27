@@ -10,14 +10,14 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import ReactECharts from 'echarts-for-react'
-import { Network, Search, X, ExternalLink, Users, UserCircle, RotateCcw } from 'lucide-react'
+import { Network, Search, X, ExternalLink, Users, UserCircle, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react'
 import { RiskBadge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SectionDescription } from '@/components/SectionDescription'
 import { formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { RISK_COLORS, getRiskLevelFromScore, SECTORS } from '@/lib/constants'
 import { networkApi, vendorApi, institutionApi } from '@/api/client'
-import type { NetworkNode, NetworkLink, CoBidderItem } from '@/api/client'
+import type { NetworkNode, NetworkLink, CoBidderItem, CommunitiesResponse } from '@/api/client'
 import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
 
 // ---------------------------------------------------------------------------
@@ -605,6 +605,15 @@ export function NetworkGraph() {
   const [coBidders, setCoBidders] = useState<CoBidderItem[] | null>(null)
   const [coBiddersLoading, setCoBiddersLoading] = useState(false)
   const [colorMode, setColorMode] = useState<'risk' | 'community'>('risk')
+  const [showCommunities, setShowCommunities] = useState(false)
+
+  // Community explorer query — only fires when user opens the panel
+  const { data: commData, isLoading: commLoading } = useQuery<CommunitiesResponse>({
+    queryKey: ['communities', 'explorer'],
+    queryFn: () => networkApi.getCommunities({ limit: 20, min_size: 3 }),
+    staleTime: 30 * 60 * 1000,
+    enabled: showCommunities,
+  })
 
   // Pre-load IMSS as default center entity on first mount
   useEffect(() => {
@@ -1259,6 +1268,116 @@ export function NetworkGraph() {
           </>
         )}
         <span className="text-text-muted">· {t('legendSizeNote')}</span>
+      </div>
+
+      {/* ── F7: Community Explorer ──────────────────────────────────────────── */}
+      <div className="border border-border/30 rounded-lg overflow-hidden">
+        <button
+          onClick={() => setShowCommunities(!showCommunities)}
+          className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-background-elevated/30 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-accent" />
+            <span className="text-sm font-medium text-text-primary">Community Explorer</span>
+            <span className="text-xs text-text-muted">
+              Louvain vendor clusters detected via co-bidding graph
+            </span>
+          </div>
+          {showCommunities ? (
+            <ChevronUp className="h-4 w-4 text-text-muted" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-text-muted" />
+          )}
+        </button>
+
+        {showCommunities && (
+          <div className="px-4 pb-4 pt-2 border-t border-border/20">
+            {commLoading && (
+              <div className="space-y-2">
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            )}
+            {commData && !commLoading && (
+              <>
+                {!commData.graph_ready && (
+                  <p className="text-xs text-text-muted bg-background-elevated/40 rounded p-3 mb-3">
+                    Community graph not yet built. Run <code className="font-mono text-accent">python -m scripts.build_vendor_graph</code> to generate communities.
+                  </p>
+                )}
+                {commData.graph_ready && commData.communities.length === 0 && (
+                  <p className="text-xs text-text-muted text-center py-4">No communities found.</p>
+                )}
+                {commData.graph_ready && commData.communities.length > 0 && (
+                  <>
+                    <p className="text-xs text-text-muted mb-3">
+                      {commData.total_communities.toLocaleString()} communities detected ·{' '}
+                      showing top {commData.communities.length} by size.
+                      Click a cluster to load its network.
+                    </p>
+                    <div className="space-y-2">
+                      {commData.communities.map((comm) => {
+                        const commColor = COMMUNITY_PALETTE[comm.community_id % COMMUNITY_PALETTE.length]
+                        const riskLevel = getRiskLevelFromScore(comm.avg_risk)
+                        return (
+                          <div
+                            key={comm.community_id}
+                            className="flex items-start gap-3 p-3 rounded border border-border/20 hover:border-border/50 hover:bg-background-elevated/20 transition-all cursor-pointer group"
+                            onClick={() => {
+                              // Load first top vendor as center if available
+                              const topVendor = comm.top_vendors?.[0]
+                              if (topVendor) {
+                                setShowCommunities(false)
+                                // Navigate to vendor in graph
+                                setCenterEntity({ id: topVendor.vendor_id, entityType: 'vendor', name: topVendor.vendor_name })
+                                setColorMode('community')
+                              }
+                            }}
+                          >
+                            <div
+                              className="w-2.5 h-2.5 rounded-full mt-0.5 shrink-0"
+                              style={{ backgroundColor: commColor }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-xs font-mono font-medium text-text-primary">
+                                  Cluster #{comm.community_id}
+                                </span>
+                                <span className="text-[11px] text-text-muted">
+                                  {comm.size.toLocaleString()} vendors
+                                </span>
+                                <span
+                                  className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                                  style={{
+                                    color: RISK_COLORS[riskLevel],
+                                    backgroundColor: `${RISK_COLORS[riskLevel]}18`,
+                                  }}
+                                >
+                                  {(comm.avg_risk * 100).toFixed(1)}% avg risk
+                                </span>
+                                <span className="text-[11px] text-text-muted">
+                                  {comm.sector_count} sector{comm.sector_count !== 1 ? 's' : ''}
+                                </span>
+                              </div>
+                              {comm.top_vendors?.length > 0 && (
+                                <div className="text-[11px] text-text-muted truncate">
+                                  {comm.top_vendors.slice(0, 3).map(v => toTitleCase(v.vendor_name)).join(' · ')}
+                                  {comm.top_vendors.length > 3 ? ' · …' : ''}
+                                </div>
+                              )}
+                            </div>
+                            <ExternalLink className="h-3.5 w-3.5 text-text-muted/40 group-hover:text-accent shrink-0 transition-colors mt-0.5" />
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

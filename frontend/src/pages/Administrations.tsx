@@ -18,7 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatNumber, formatCompactMXN } from '@/lib/utils'
 import { SECTORS, RISK_COLORS } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
-import type { YearOverYearChange, SexenioYearBreakdown } from '@/api/types'
+import type { YearOverYearChange, SexenioYearBreakdown, ComparePeriodResponse, PoliticalCycleResponse } from '@/api/types'
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -277,7 +277,7 @@ type MatrixMetric = 'risk' | 'da' | 'hr' | 'sb'
 
 export default function Administrations() {
   const [selectedAdmin, setSelectedAdmin] = useState<AdminName>('AMLO')
-  const [activeTab, setActiveTab] = useState<'overview' | 'patterns'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'patterns' | 'political' | 'compare'>('overview')
   const [matrixMetric, setMatrixMetric] = useState<MatrixMetric>('risk')
 
   // Data queries
@@ -545,12 +545,38 @@ export default function Administrations() {
           >
             Systemic Patterns
           </button>
+          <button
+            onClick={() => setActiveTab('political')}
+            className={cn(
+              'px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
+              activeTab === 'political'
+                ? 'bg-accent/20 text-accent'
+                : 'text-text-muted hover:text-text-primary'
+            )}
+          >
+            Political Cycle
+          </button>
+          <button
+            onClick={() => setActiveTab('compare')}
+            className={cn(
+              'px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
+              activeTab === 'compare'
+                ? 'bg-accent/20 text-accent'
+                : 'text-text-muted hover:text-text-primary'
+            )}
+          >
+            Period Comparison
+          </button>
         </div>
       </div>
 
       {activeTab === 'patterns' && (
         <PatternsView yoyData={yoyData} allTimeAvg={allTimeAvg} isLoading={yoyLoading} />
       )}
+
+      {activeTab === 'political' && <PoliticalCycleView />}
+
+      {activeTab === 'compare' && <ComparePeriodView />}
 
       {activeTab === 'overview' && (
       <>
@@ -1704,6 +1730,404 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
           </CardContent>
         </Card>
         </ScrollReveal>
+      )}
+    </div>
+  )
+}
+
+// =============================================================================
+// F4: Political Cycle View
+// =============================================================================
+
+function PoliticalCycleView() {
+  const { data, isLoading } = useQuery<PoliticalCycleResponse>({
+    queryKey: ['political-cycle'],
+    queryFn: () => analysisApi.getPoliticalCycle(),
+    staleTime: 30 * 60 * 1000,
+  })
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-72 w-full" />
+      </div>
+    )
+  }
+  if (!data) return null
+
+  const { election_year_effect, sexenio_year_breakdown } = data
+
+  const breakdownData = sexenio_year_breakdown.map((r) => ({
+    label: r.label,
+    avg_risk_pct: +(r.avg_risk * 100).toFixed(3),
+    high_risk_pct: +r.high_risk_pct.toFixed(2),
+    direct_award_pct: +r.direct_award_pct.toFixed(2),
+    contracts: r.contracts,
+  }))
+
+  return (
+    <div className="space-y-6">
+      {/* Election Year Effect — 3 cards */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-mono flex items-center gap-2">
+            <Activity className="h-4 w-4 text-accent" />
+            Election Year Effect
+          </CardTitle>
+          <p className="text-xs text-text-muted">Average procurement risk in election vs non-election years (2002–2025)</p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-4">
+            {/* Election years card */}
+            <div className="rounded-lg border border-border/40 bg-background-elevated/20 p-4 text-center space-y-1">
+              <div className="text-[11px] text-text-muted uppercase tracking-wider">Election Years</div>
+              <div
+                className="text-3xl font-bold font-mono"
+                style={{ color: RISK_COLORS.high }}
+              >
+                {((election_year_effect.election_year?.avg_risk ?? 0) * 100).toFixed(2)}%
+              </div>
+              <div className="text-[11px] text-text-muted">avg risk score</div>
+              <div className="text-xs font-mono text-text-secondary mt-2">
+                DA: {(election_year_effect.election_year?.direct_award_pct ?? 0).toFixed(1)}%
+                {' · '}
+                High-Risk: {(election_year_effect.election_year?.high_risk_pct ?? 0).toFixed(1)}%
+              </div>
+              <div className="text-[11px] text-text-muted font-mono">
+                {formatNumber(election_year_effect.election_year?.contracts ?? 0)} contracts
+              </div>
+            </div>
+
+            {/* Non-election years card */}
+            <div className="rounded-lg border border-border/40 bg-background-elevated/20 p-4 text-center space-y-1">
+              <div className="text-[11px] text-text-muted uppercase tracking-wider">Non-Election Years</div>
+              <div
+                className="text-3xl font-bold font-mono"
+                style={{ color: RISK_COLORS.low }}
+              >
+                {((election_year_effect.non_election_year?.avg_risk ?? 0) * 100).toFixed(2)}%
+              </div>
+              <div className="text-[11px] text-text-muted">avg risk score</div>
+              <div className="text-xs font-mono text-text-secondary mt-2">
+                DA: {(election_year_effect.non_election_year?.direct_award_pct ?? 0).toFixed(1)}%
+                {' · '}
+                High-Risk: {(election_year_effect.non_election_year?.high_risk_pct ?? 0).toFixed(1)}%
+              </div>
+              <div className="text-[11px] text-text-muted font-mono">
+                {formatNumber(election_year_effect.non_election_year?.contracts ?? 0)} contracts
+              </div>
+            </div>
+
+            {/* Delta card */}
+            <div className="rounded-lg border border-border/40 bg-background-elevated/20 p-4 text-center space-y-1">
+              <div className="text-[11px] text-text-muted uppercase tracking-wider">Risk Delta</div>
+              {election_year_effect.risk_delta !== undefined ? (
+                <>
+                  <div
+                    className={cn(
+                      'text-3xl font-bold font-mono',
+                      election_year_effect.risk_delta > 0 ? 'text-risk-high' : 'text-risk-low',
+                    )}
+                  >
+                    {election_year_effect.risk_delta > 0 ? '+' : ''}
+                    {(election_year_effect.risk_delta * 100).toFixed(3)}pp
+                  </div>
+                  <div className="text-[11px] text-text-muted">election − non-election</div>
+                  {election_year_effect.risk_delta_pct !== undefined && (
+                    <div className="text-xs font-mono text-text-secondary mt-2">
+                      {election_year_effect.risk_delta_pct > 0 ? '+' : ''}
+                      {election_year_effect.risk_delta_pct.toFixed(1)}% relative
+                    </div>
+                  )}
+                  <div className="text-[11px] text-text-muted mt-1">
+                    {election_year_effect.risk_delta > 0
+                      ? 'Higher risk in election years'
+                      : election_year_effect.risk_delta < 0
+                      ? 'Lower risk in election years'
+                      : 'No significant difference'}
+                  </div>
+                </>
+              ) : (
+                <div className="text-text-muted text-sm">Insufficient data</div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Sexenio Year Breakdown Chart */}
+      {breakdownData.length > 0 && (
+        <ScrollReveal>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-mono flex items-center gap-2">
+                <Landmark className="h-4 w-4 text-accent" />
+                Sexenio Year Breakdown
+              </CardTitle>
+              <p className="text-xs text-text-muted">
+                Average procurement risk across Years 1–6 of the presidential term (all administrations pooled)
+              </p>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={280}>
+                <ComposedChart data={breakdownData} margin={{ top: 8, right: 24, bottom: 8, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                  />
+                  <YAxis
+                    yAxisId="risk"
+                    tickFormatter={(v: number) => `${v.toFixed(1)}%`}
+                    tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                    width={40}
+                  />
+                  <YAxis
+                    yAxisId="da"
+                    orientation="right"
+                    tickFormatter={(v: number) => `${v.toFixed(0)}%`}
+                    tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                    width={36}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'var(--color-card)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 8,
+                      fontSize: 11,
+                      fontFamily: 'var(--font-family-mono)',
+                    }}
+                    formatter={(value: unknown, name?: string) => [
+                      typeof value === 'number' ? `${value.toFixed(2)}%` : value,
+                      name,
+                    ]}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
+                  <Bar
+                    yAxisId="risk"
+                    dataKey="avg_risk_pct"
+                    name="Avg Risk %"
+                    fill={RISK_COLORS.high}
+                    opacity={0.85}
+                    radius={[2, 2, 0, 0]}
+                  />
+                  <Bar
+                    yAxisId="risk"
+                    dataKey="high_risk_pct"
+                    name="High Risk %"
+                    fill={RISK_COLORS.critical}
+                    opacity={0.6}
+                    radius={[2, 2, 0, 0]}
+                  />
+                  <Line
+                    yAxisId="da"
+                    type="monotone"
+                    dataKey="direct_award_pct"
+                    name="Direct Award %"
+                    stroke="#3b82f6"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+              <p className="text-[11px] text-text-muted mt-2 font-mono">
+                Year 1 = first year of administration, Year 6 = final year before election.
+                Higher risk in late sexenio years may indicate &quot;budget dump&quot; spending.
+              </p>
+            </CardContent>
+          </Card>
+        </ScrollReveal>
+      )}
+    </div>
+  )
+}
+
+// =============================================================================
+// F9: Period Comparison View
+// =============================================================================
+
+function ComparePeriodView() {
+  const [p1Start, setP1Start] = useState('2012')
+  const [p1End, setP1End] = useState('2018')
+  const [p2Start, setP2Start] = useState('2018')
+  const [p2End, setP2End] = useState('2024')
+  const [enabled, setEnabled] = useState(false)
+
+  const { data, isLoading, isFetching } = useQuery<ComparePeriodResponse>({
+    queryKey: ['compare-periods', p1Start, p1End, p2Start, p2End],
+    queryFn: () => analysisApi.comparePeriods(p1Start, p1End, p2Start, p2End),
+    enabled,
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const inputCls =
+    'w-20 h-8 px-2 rounded border border-border/40 bg-background-elevated/60 text-sm font-mono focus:outline-none focus:border-accent/50 transition-colors text-text-primary'
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-mono flex items-center gap-2">
+            <ArrowRight className="h-4 w-4 text-accent" />
+            Period Comparison
+          </CardTitle>
+          <p className="text-xs text-text-muted">
+            Compare procurement risk and total spending between any two time windows
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-8 mb-5">
+            <div>
+              <div className="text-xs text-text-muted font-medium mb-2 uppercase tracking-wider">Period 1</div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={2002}
+                  max={2025}
+                  value={p1Start}
+                  onChange={(e) => { setP1Start(e.target.value); setEnabled(false) }}
+                  className={inputCls}
+                />
+                <span className="text-text-muted text-xs">–</span>
+                <input
+                  type="number"
+                  min={2002}
+                  max={2025}
+                  value={p1End}
+                  onChange={(e) => { setP1End(e.target.value); setEnabled(false) }}
+                  className={inputCls}
+                />
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-text-muted font-medium mb-2 uppercase tracking-wider">Period 2</div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={2002}
+                  max={2025}
+                  value={p2Start}
+                  onChange={(e) => { setP2Start(e.target.value); setEnabled(false) }}
+                  className={inputCls}
+                />
+                <span className="text-text-muted text-xs">–</span>
+                <input
+                  type="number"
+                  min={2002}
+                  max={2025}
+                  value={p2End}
+                  onChange={(e) => { setP2End(e.target.value); setEnabled(false) }}
+                  className={inputCls}
+                />
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => setEnabled(true)}
+            disabled={isFetching}
+            className="px-4 py-2 bg-accent/15 text-accent border border-accent/30 rounded text-xs font-medium hover:bg-accent/25 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isFetching ? 'Loading…' : 'Compare Periods'}
+          </button>
+        </CardContent>
+      </Card>
+
+      {isLoading && (
+        <div className="grid grid-cols-2 gap-6">
+          <Skeleton className="h-36" />
+          <Skeleton className="h-36" />
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+        </div>
+      )}
+
+      {data && !isLoading && (
+        <div className="grid grid-cols-2 gap-6">
+          {/* Period 1 card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xs font-mono text-text-muted">
+                Period 1 · {data.period1.start} – {data.period1.end}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <div className="text-[11px] text-text-muted">Total Value</div>
+                <div className="text-2xl font-bold font-mono">{formatCompactMXN(data.period1.total_value)}</div>
+              </div>
+              <div>
+                <div className="text-[11px] text-text-muted">Avg Risk Score</div>
+                <div className="text-2xl font-bold font-mono" style={{ color: RISK_COLORS.high }}>
+                  {(data.period1.avg_risk * 100).toFixed(3)}%
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Period 2 card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xs font-mono text-text-muted">
+                Period 2 · {data.period2.start} – {data.period2.end}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <div className="text-[11px] text-text-muted">Total Value</div>
+                <div className="text-2xl font-bold font-mono">{formatCompactMXN(data.period2.total_value)}</div>
+              </div>
+              <div>
+                <div className="text-[11px] text-text-muted">Avg Risk Score</div>
+                <div className="text-2xl font-bold font-mono" style={{ color: RISK_COLORS.high }}>
+                  {(data.period2.avg_risk * 100).toFixed(3)}%
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Risk delta */}
+          <Card className="border-border/40">
+            <CardContent className="pt-5">
+              <div className="text-[11px] text-text-muted mb-1 uppercase tracking-wider">Risk Delta (P2 − P1)</div>
+              <div
+                className={cn(
+                  'text-3xl font-bold font-mono',
+                  data.delta_risk > 0 ? 'text-risk-high' : data.delta_risk < 0 ? 'text-risk-low' : 'text-text-secondary',
+                )}
+              >
+                {data.delta_risk > 0 ? '+' : ''}{(data.delta_risk * 100).toFixed(3)}pp
+              </div>
+              <div className="text-xs text-text-muted mt-1">
+                {data.delta_risk > 0
+                  ? 'Risk increased in Period 2'
+                  : data.delta_risk < 0
+                  ? 'Risk decreased in Period 2'
+                  : 'No change in risk'}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Value delta */}
+          <Card className="border-border/40">
+            <CardContent className="pt-5">
+              <div className="text-[11px] text-text-muted mb-1 uppercase tracking-wider">Spending Delta (P2 − P1)</div>
+              <div
+                className={cn(
+                  'text-3xl font-bold font-mono',
+                  data.delta_value > 0 ? 'text-accent' : 'text-risk-high',
+                )}
+              >
+                {data.delta_value > 0 ? '+' : ''}{formatCompactMXN(data.delta_value)}
+              </div>
+              <div className="text-xs text-text-muted mt-1">
+                {data.delta_value > 0
+                  ? 'Higher spending in Period 2'
+                  : 'Lower spending in Period 2'}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   )

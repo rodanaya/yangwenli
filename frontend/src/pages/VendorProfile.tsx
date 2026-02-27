@@ -1631,43 +1631,106 @@ export function VendorProfile() {
         {/* TAB 4: Network */}
         <TabPanel tabKey="network">
           <div className="space-y-6">
-            {/* Co-bidding relationships */}
-            {!coBiddersLoading && hasCoBiddingRisk ? (
+            {/* F8: Co-Bidding Collusion Panel */}
+            {coBiddersLoading ? (
+              <div className="space-y-2">
+                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
+              </div>
+            ) : hasCoBiddingRisk ? (
               <Card className="hover-lift border-amber-500/40 bg-amber-500/[0.02]">
                 <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center gap-2 text-risk-medium">
-                    <Users className="h-4 w-4" />
-                    Co-Bidding Partners
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2 text-risk-medium">
+                      <Users className="h-4 w-4" />
+                      Co-Bidding Analysis
+                    </CardTitle>
+                    {coBidders?.total_procedures != null && (
+                      <span className="text-xs text-text-muted font-mono">
+                        {coBidders.total_procedures} procedures analyzed
+                      </span>
+                    )}
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  {coBidders?.co_bidders && coBidders.co_bidders.length > 0 && (
-                    <div className="divide-y divide-border rounded-lg border overflow-hidden">
-                      {coBidders.co_bidders.map((partner) => (
-                        <div key={partner.vendor_id} className="flex items-center justify-between p-3 bg-background-card interactive">
-                          <div className="flex items-center gap-2">
-                            <Users className="h-4 w-4 text-text-muted" />
-                            <Link
-                              to={`/vendors/${partner.vendor_id}`}
-                              className="text-sm hover:text-accent transition-colors"
-                            >
-                              {toTitleCase(partner.vendor_name)}
-                            </Link>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs text-text-muted tabular-nums">
-                              {partner.co_bid_count} shared procedures
-                            </span>
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${
-                              partner.relationship_strength === 'very_strong' ? 'bg-risk-critical/20 text-risk-critical' :
-                              partner.relationship_strength === 'strong' ? 'bg-risk-medium/20 text-risk-medium' :
-                              'bg-gray-500/20 text-gray-400'
-                            }`}>
-                              {partner.relationship_strength.replace('_', ' ')}
-                            </span>
+                <CardContent className="space-y-4">
+                  {/* Suspicious Patterns Alert */}
+                  {coBidders?.suspicious_patterns && coBidders.suspicious_patterns.length > 0 && (
+                    <div className="space-y-2">
+                      {coBidders.suspicious_patterns.map((sp, i) => (
+                        <div
+                          key={i}
+                          className="flex items-start gap-2 p-3 rounded-lg border border-risk-high/30 bg-risk-high/[0.05]"
+                        >
+                          <AlertTriangle className="h-3.5 w-3.5 text-risk-high shrink-0 mt-0.5" />
+                          <div className="min-w-0">
+                            <div className="text-xs font-semibold text-risk-high capitalize">
+                              {sp.pattern.replace(/_/g, ' ')}
+                            </div>
+                            <div className="text-xs text-text-muted mt-0.5">{sp.description}</div>
+                            {sp.vendors?.length > 0 && (
+                              <div className="text-[11px] text-text-muted mt-1 font-mono">
+                                Involves: {sp.vendors.slice(0, 3).map(v => toTitleCase(v.name)).join(', ')}
+                                {sp.vendors.length > 3 ? ` +${sp.vendors.length - 3} more` : ''}
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
+                    </div>
+                  )}
+
+                  {/* Partner list with detailed stats */}
+                  {coBidders?.co_bidders && coBidders.co_bidders.length > 0 && (
+                    <div className="divide-y divide-border rounded-lg border overflow-hidden">
+                      {coBidders.co_bidders.map((partner) => {
+                        const totalBids = partner.win_count + partner.loss_count
+                        const winPct = totalBids > 0 ? (partner.win_count / totalBids) * 100 : null
+                        const isCoverBidder = winPct !== null && winPct < 10 && partner.co_bid_count >= 3
+                        const isAlwaysWinner = winPct !== null && winPct > 90 && partner.co_bid_count >= 3
+                        return (
+                          <div
+                            key={partner.vendor_id}
+                            className="p-3 bg-background-card hover:bg-background-elevated/30 transition-colors"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Users className="h-3.5 w-3.5 text-text-muted shrink-0" />
+                                <Link
+                                  to={`/vendors/${partner.vendor_id}`}
+                                  className="text-sm font-medium hover:text-accent transition-colors truncate"
+                                >
+                                  {toTitleCase(partner.vendor_name)}
+                                </Link>
+                                {(isCoverBidder || isAlwaysWinner) && (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-risk-critical/15 text-risk-critical font-mono shrink-0">
+                                    {isCoverBidder ? 'cover bidder?' : 'always wins?'}
+                                  </span>
+                                )}
+                              </div>
+                              <span className={`text-[11px] px-2 py-0.5 rounded-full shrink-0 ${
+                                partner.relationship_strength === 'very_strong' ? 'bg-risk-critical/20 text-risk-critical' :
+                                partner.relationship_strength === 'strong' ? 'bg-risk-high/20 text-risk-high' :
+                                partner.relationship_strength === 'moderate' ? 'bg-risk-medium/20 text-risk-medium' :
+                                'bg-gray-500/20 text-gray-400'
+                              }`}>
+                                {partner.relationship_strength.replace('_', ' ')}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-4 mt-2 text-[11px] font-mono text-text-muted">
+                              <span>{partner.co_bid_count} shared procedures</span>
+                              {winPct !== null && (
+                                <span>
+                                  wins: <span className={winPct > 60 ? 'text-risk-high' : winPct < 15 ? 'text-risk-medium' : 'text-text-secondary'}>{winPct.toFixed(0)}%</span>
+                                </span>
+                              )}
+                              {partner.same_winner_ratio > 0.5 && (
+                                <span className="text-risk-medium">
+                                  same winner {(partner.same_winner_ratio * 100).toFixed(0)}% of time
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
                 </CardContent>
@@ -1678,6 +1741,7 @@ export function VendorProfile() {
                   <CardContent className="p-8 text-center text-text-muted">
                     <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
                     <p className="text-sm">No significant co-bidding patterns detected</p>
+                    <p className="text-xs mt-1">Requires ≥3 shared competitive procedures with another vendor</p>
                   </CardContent>
                 </Card>
               )
