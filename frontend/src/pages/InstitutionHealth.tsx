@@ -1097,8 +1097,6 @@ export default function InstitutionHealth() {
               )}
             </CardContent>
           </Card>
-        </div>
-
           {/* F10: Institution × Risk-Factor Heatmap */}
           {sortedItems.length > 0 && <InstitutionHeatmap items={sortedItems} />}
         </div>

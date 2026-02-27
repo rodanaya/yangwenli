@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
+import { useUrlSearch } from '@/hooks'
 import { useQuery } from '@tanstack/react-query'
 import { caseLibraryApi } from '@/api/client'
 import type { ScandalListItem, FraudType, Administration, LegalStatus, CaseLibraryParams } from '@/api/types'
@@ -122,7 +123,7 @@ export default function CaseLibrary() {
   const navigate = useNavigate()
 
   const [filters, setFilters] = useState<CaseLibraryParams>({})
-  const [search, setSearch] = useState('')
+  const { search, setSearch } = useUrlSearch()
 
   const queryParams: CaseLibraryParams = useMemo(
     () => ({ ...filters, search: search || undefined }),
@@ -152,13 +153,13 @@ export default function CaseLibrary() {
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-text-muted" />
           <Input
-            value={search}
+            value={search ?? ''}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('filters.search')}
             className="pl-8 h-8 text-sm bg-card"
           />
           {search && (
-            <button className="absolute right-2 top-2" onClick={() => setSearch('')}>
+            <button className="absolute right-2 top-2" onClick={() => setSearch(null)}>
               <X className="h-3.5 w-3.5 text-text-muted" />
             </button>
           )}
@@ -214,7 +215,7 @@ export default function CaseLibrary() {
             variant="ghost"
             size="sm"
             className="h-8 text-xs text-text-muted"
-            onClick={() => { setFilters({}); setSearch('') }}
+            onClick={() => { setFilters({}); setSearch(null) }}
           >
             <X className="h-3 w-3 mr-1" /> {t('filters.clearFilters')}
           </Button>

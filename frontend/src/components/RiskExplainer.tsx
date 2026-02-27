@@ -37,7 +37,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
     coefficient: 0.428,
     direction: 'positive',
     mechanism:
-      'When one vendor captures a disproportionate share of an institution's contracts, it suggests either a legitimate monopoly or exclusive access through corruption. Ghost company networks captured >90% of institutional spending in documented cases.',
+      "When one vendor captures a disproportionate share of an institution's contracts, it suggests either a legitimate monopoly or exclusive access through corruption. Ghost company networks captured >90% of institutional spending in documented cases.",
     theory:
       'Principal-Agent Theory (Klitgaard 1988): Monopoly power is the primary enabling condition for procurement corruption — it eliminates price competition and reduces the ability to compare against market rates.',
     citation: 'Fazekas & Kocsis (2020), British Journal of Political Science',
