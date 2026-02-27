@@ -138,31 +138,100 @@ def load_baselines(conn: sqlite3.Connection) -> dict:
 
 
 def load_auxiliary_data(conn: sqlite3.Connection):
-    """Load vendor concentration, network, co-bidding, institution, industry data."""
+    """Load vendor concentration, network, co-bidding, institution, industry data.
+
+    FIX C1 (temporal leakage): Vendor-level features (vendor_concentration,
+    win_rate, price_volatility, institution_diversity, sector_spread) are now
+    loaded from vendor_rolling_stats table, keyed by (vendor_id, sector_id,
+    as_of_year). Each contract uses stats from as_of_year = contract_year - 1
+    to prevent future data from leaking into features. For the earliest year
+    with no prior history, falls back to as_of_year = contract_year.
+    """
     cursor = conn.cursor()
 
-    # Vendor concentration by sector
-    print("  Loading vendor concentration...")
-    cursor.execute("""
-        SELECT vendor_id, sector_id, SUM(amount_mxn) as val
-        FROM contracts
-        WHERE vendor_id IS NOT NULL AND sector_id IS NOT NULL AND amount_mxn > 0
-        GROUP BY vendor_id, sector_id
-    """)
-    vendor_sector_val = {}
-    sector_totals = defaultdict(float)
-    for r in cursor.fetchall():
-        vendor_sector_val[(r[0], r[1])] = r[2]
-        sector_totals[r[1]] += r[2]
+    # Check if vendor_rolling_stats exists (required for temporal fix)
+    cursor.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='vendor_rolling_stats'"
+    )
+    has_rolling_stats = cursor.fetchone() is not None
+    if has_rolling_stats:
+        print("  [C1 FIX] Using vendor_rolling_stats for temporal-safe vendor features")
+    else:
+        print("  WARNING: vendor_rolling_stats not found. Run compute_vendor_rolling_stats.py first.")
+        print("           Falling back to all-time vendor features (temporal leakage present).")
 
-    # Network groups
+    # --- Rolling vendor stats (C1 fix) ---
+    # Load into dict: (vendor_id, sector_id, as_of_year) -> row dict
+    rolling_stats = {}
+    if has_rolling_stats:
+        print("  Loading vendor rolling stats...")
+        cursor.execute("""
+            SELECT vendor_id, sector_id, as_of_year,
+                   total_value, total_count, sum_sq_amount,
+                   comp_wins, comp_total,
+                   n_institutions, inst_hhi, n_sectors
+            FROM vendor_rolling_stats
+        """)
+        for r in cursor.fetchall():
+            rolling_stats[(r[0], r[1], r[2])] = {
+                'total_value': r[3],
+                'total_count': r[4],
+                'sum_sq_amount': r[5],
+                'comp_wins': r[6],
+                'comp_total': r[7],
+                'n_institutions': r[8],
+                'inst_hhi': r[9],
+                'n_sectors': r[10],
+            }
+        print(f"    Loaded {len(rolling_stats):,} rolling stat entries")
+
+    # Sector totals by year (for rolling vendor_concentration denominator)
+    # We need cumulative sector totals up to each year
+    sector_year_totals = {}
+    if has_rolling_stats:
+        print("  Loading sector cumulative totals by year...")
+        cursor.execute("""
+            SELECT sector_id, contract_year,
+                   SUM(CASE WHEN amount_mxn > 0 THEN amount_mxn ELSE 0 END) as annual_val
+            FROM contracts
+            WHERE sector_id IS NOT NULL AND contract_year IS NOT NULL
+            GROUP BY sector_id, contract_year
+            ORDER BY sector_id, contract_year
+        """)
+        # Accumulate per sector
+        sector_cum = defaultdict(float)
+        rows_by_sector_year = defaultdict(list)
+        for r in cursor.fetchall():
+            rows_by_sector_year[r[0]].append((r[1], r[2]))
+        for sid, year_vals in rows_by_sector_year.items():
+            cum = 0.0
+            for yr, val in sorted(year_vals):
+                cum += val
+                sector_year_totals[(sid, yr)] = cum
+
+    # --- All-time fallback vendor data (used when rolling stats unavailable) ---
+    vendor_sector_val_alltime = {}
+    sector_totals_alltime = defaultdict(float)
+    if not has_rolling_stats:
+        print("  Loading vendor concentration (all-time fallback)...")
+        cursor.execute("""
+            SELECT vendor_id, sector_id, SUM(amount_mxn) as val
+            FROM contracts
+            WHERE vendor_id IS NOT NULL AND sector_id IS NOT NULL AND amount_mxn > 0
+            GROUP BY vendor_id, sector_id
+        """)
+        for r in cursor.fetchall():
+            vendor_sector_val_alltime[(r[0], r[1])] = r[2]
+            sector_totals_alltime[r[1]] += r[2]
+
+    # Network groups (not vendor-level temporal — group membership is static)
     print("  Loading network groups...")
     cursor.execute("SELECT vendor_id, group_id FROM vendor_aliases")
     vendor_group = {r[0]: r[1] for r in cursor.fetchall()}
     cursor.execute("SELECT group_id, COUNT(*) FROM vendor_aliases GROUP BY group_id")
     group_sizes = {r[0]: r[1] for r in cursor.fetchall()}
 
-    # Co-bidding
+    # Co-bidding (static, not temporal)
     print("  Loading co-bidding rates...")
     co_bid_rates = {}
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='vendor_co_bidding'")
@@ -170,14 +239,14 @@ def load_auxiliary_data(conn: sqlite3.Connection):
         cursor.execute("SELECT vendor_id, MAX(co_bid_rate) FROM vendor_co_bidding GROUP BY vendor_id")
         co_bid_rates = {r[0]: r[1] for r in cursor.fetchall()}
 
-    # Institution risk
+    # Institution risk (static by institution type)
     print("  Loading institution risk...")
     sys.path.insert(0, str(Path(__file__).parent))
     from calculate_risk_scores import INSTITUTION_RISK_BASELINES
     cursor.execute("SELECT id, institution_type FROM institutions WHERE institution_type IS NOT NULL")
     inst_baselines = {r[0]: INSTITUTION_RISK_BASELINES.get(r[1], 0.25) for r in cursor.fetchall()}
 
-    # Vendor industries
+    # Vendor industries (static classification)
     print("  Loading vendor industries...")
     cursor.execute("""
         SELECT vc.vendor_id, vi.sector_affinity
@@ -187,7 +256,7 @@ def load_auxiliary_data(conn: sqlite3.Connection):
     """)
     vendor_affinity = {r[0]: r[1] for r in cursor.fetchall()}
 
-    # Threshold splitting
+    # Threshold splitting (per-contract, no temporal issue)
     print("  Loading splitting patterns...")
     cursor.execute("""
         SELECT vendor_id, institution_id, contract_date, COUNT(*)
@@ -199,7 +268,7 @@ def load_auxiliary_data(conn: sqlite3.Connection):
     """)
     splitting = {(r[0], r[1], r[2]): r[3] for r in cursor.fetchall()}
 
-    # Sector medians
+    # Sector medians (for price_ratio — uses P50 from sector_price_baselines if available)
     print("  Loading sector medians...")
     cursor.execute("""
         SELECT sector_id, AVG(amount_mxn)
@@ -219,84 +288,96 @@ def load_auxiliary_data(conn: sqlite3.Connection):
         for r in cursor.fetchall():
             sector_medians[r[0]] = r[1]
 
-    # Price volatility: per (vendor, sector) stddev of amounts / sector median
-    print("  Loading vendor price volatility...")
-    cursor.execute("""
-        SELECT vendor_id, sector_id,
-               AVG(amount_mxn) as avg_amt,
-               AVG(amount_mxn * amount_mxn) as avg_amt_sq,
-               COUNT(*) as cnt
-        FROM contracts
-        WHERE vendor_id IS NOT NULL AND sector_id IS NOT NULL
-          AND amount_mxn > 0 AND amount_mxn < 100000000000
-        GROUP BY vendor_id, sector_id
-        HAVING COUNT(*) >= 3
-    """)
-    vendor_price_vol = {}
-    for r in cursor.fetchall():
-        vid, sid, avg_amt, avg_amt_sq, cnt = r
-        variance = max(avg_amt_sq - avg_amt * avg_amt, 0)
-        stddev = math.sqrt(variance) if variance > 0 else 0
-        median = sector_medians.get(sid, 1)
-        vendor_price_vol[(vid, sid)] = stddev / median if median > 0 else 0
+    # --- All-time fallback data for vendor features (when no rolling stats) ---
+    vendor_price_vol_alltime = {}
+    vendor_sector_count_alltime = {}
+    vendor_comp_wins_alltime = {}
+    sector_comp_totals_alltime = {}
+    vendor_inst_hhi_alltime = {}
 
-    # Sector spread: distinct sectors per vendor
-    print("  Loading vendor sector spread...")
-    cursor.execute("""
-        SELECT vendor_id, COUNT(DISTINCT sector_id) as sector_count
-        FROM contracts
-        WHERE vendor_id IS NOT NULL AND sector_id IS NOT NULL
-        GROUP BY vendor_id
-    """)
-    vendor_sector_count = {r[0]: r[1] for r in cursor.fetchall()}
+    if not has_rolling_stats:
+        print("  Loading vendor price volatility (all-time fallback)...")
+        cursor.execute("""
+            SELECT vendor_id, sector_id,
+                   AVG(amount_mxn) as avg_amt,
+                   AVG(amount_mxn * amount_mxn) as avg_amt_sq,
+                   COUNT(*) as cnt
+            FROM contracts
+            WHERE vendor_id IS NOT NULL AND sector_id IS NOT NULL
+              AND amount_mxn > 0 AND amount_mxn < 100000000000
+            GROUP BY vendor_id, sector_id
+            HAVING COUNT(*) >= 3
+        """)
+        for r in cursor.fetchall():
+            vid, sid, avg_amt, avg_amt_sq, cnt = r
+            variance = max(avg_amt_sq - avg_amt * avg_amt, 0)
+            stddev = math.sqrt(variance) if variance > 0 else 0
+            median = sector_medians.get(sid, 1)
+            vendor_price_vol_alltime[(vid, sid)] = stddev / median if median > 0 else 0
 
-    # Competitive win rate: vendor share of competitive contracts per sector
-    print("  Loading vendor competitive win rates...")
-    cursor.execute("""
-        SELECT vendor_id, sector_id, COUNT(*) as comp_wins
-        FROM contracts
-        WHERE vendor_id IS NOT NULL AND sector_id IS NOT NULL
-          AND is_direct_award = 0
-        GROUP BY vendor_id, sector_id
-    """)
-    vendor_comp_wins = {}
-    for r in cursor.fetchall():
-        vendor_comp_wins[(r[0], r[1])] = r[2]
+        print("  Loading vendor sector spread (all-time fallback)...")
+        cursor.execute("""
+            SELECT vendor_id, COUNT(DISTINCT sector_id) as sector_count
+            FROM contracts
+            WHERE vendor_id IS NOT NULL AND sector_id IS NOT NULL
+            GROUP BY vendor_id
+        """)
+        vendor_sector_count_alltime = {r[0]: r[1] for r in cursor.fetchall()}
 
-    cursor.execute("""
-        SELECT sector_id, COUNT(*) as total_comp
-        FROM contracts
-        WHERE sector_id IS NOT NULL AND is_direct_award = 0
-        GROUP BY sector_id
-    """)
-    sector_comp_totals = {r[0]: r[1] for r in cursor.fetchall()}
+        print("  Loading vendor competitive win rates (all-time fallback)...")
+        cursor.execute("""
+            SELECT vendor_id, sector_id, COUNT(*) as comp_wins
+            FROM contracts
+            WHERE vendor_id IS NOT NULL AND sector_id IS NOT NULL
+              AND is_direct_award = 0
+            GROUP BY vendor_id, sector_id
+        """)
+        for r in cursor.fetchall():
+            vendor_comp_wins_alltime[(r[0], r[1])] = r[2]
 
-    # Institution diversity: HHI per vendor
-    print("  Loading vendor institution diversity (HHI)...")
-    cursor.execute("""
-        SELECT vendor_id, institution_id, COUNT(*) as cnt
-        FROM contracts
-        WHERE vendor_id IS NOT NULL AND institution_id IS NOT NULL
-        GROUP BY vendor_id, institution_id
-    """)
-    vendor_inst_counts = defaultdict(dict)
-    vendor_total_contracts = defaultdict(int)
-    for r in cursor.fetchall():
-        vendor_inst_counts[r[0]][r[1]] = r[2]
-        vendor_total_contracts[r[0]] += r[2]
+        cursor.execute("""
+            SELECT sector_id, COUNT(*) as total_comp
+            FROM contracts
+            WHERE sector_id IS NOT NULL AND is_direct_award = 0
+            GROUP BY sector_id
+        """)
+        sector_comp_totals_alltime = {r[0]: r[1] for r in cursor.fetchall()}
 
-    vendor_inst_hhi = {}
-    for vid, inst_map in vendor_inst_counts.items():
-        total = vendor_total_contracts[vid]
-        if total > 0:
-            hhi = sum((cnt / total) ** 2 for cnt in inst_map.values())
-            vendor_inst_hhi[vid] = hhi
-        else:
-            vendor_inst_hhi[vid] = 1.0
+        print("  Loading vendor institution diversity (all-time fallback)...")
+        cursor.execute("""
+            SELECT vendor_id, institution_id, COUNT(*) as cnt
+            FROM contracts
+            WHERE vendor_id IS NOT NULL AND institution_id IS NOT NULL
+            GROUP BY vendor_id, institution_id
+        """)
+        vendor_inst_counts = defaultdict(dict)
+        vendor_total_contracts = defaultdict(int)
+        for r in cursor.fetchall():
+            vendor_inst_counts[r[0]][r[1]] = r[2]
+            vendor_total_contracts[r[0]] += r[2]
+
+        for vid, inst_map in vendor_inst_counts.items():
+            total = vendor_total_contracts[vid]
+            if total > 0:
+                hhi = sum((cnt / total) ** 2 for cnt in inst_map.values())
+                vendor_inst_hhi_alltime[vid] = hhi
+            else:
+                vendor_inst_hhi_alltime[vid] = 1.0
 
     return {
-        'vendor_sector_val': vendor_sector_val,
-        'sector_totals': sector_totals,
+        # Rolling stats (C1 fix)
+        'has_rolling_stats': has_rolling_stats,
+        'rolling_stats': rolling_stats,
+        'sector_year_totals': sector_year_totals,
+        # All-time fallbacks (used only when rolling stats unavailable)
+        'vendor_sector_val': vendor_sector_val_alltime,
+        'sector_totals': sector_totals_alltime,
+        'vendor_price_vol': vendor_price_vol_alltime,
+        'vendor_sector_count': vendor_sector_count_alltime,
+        'vendor_comp_wins': vendor_comp_wins_alltime,
+        'sector_comp_totals': sector_comp_totals_alltime,
+        'vendor_inst_hhi': vendor_inst_hhi_alltime,
+        # Static data (no temporal issue)
         'vendor_group': vendor_group,
         'group_sizes': group_sizes,
         'co_bid_rates': co_bid_rates,
@@ -304,18 +385,39 @@ def load_auxiliary_data(conn: sqlite3.Connection):
         'vendor_affinity': vendor_affinity,
         'splitting': splitting,
         'sector_medians': sector_medians,
-        'vendor_price_vol': vendor_price_vol,
-        'vendor_sector_count': vendor_sector_count,
-        'vendor_comp_wins': vendor_comp_wins,
-        'sector_comp_totals': sector_comp_totals,
-        'vendor_inst_hhi': vendor_inst_hhi,
     }
+
+
+def _get_rolling_stats(aux, vendor_id, sector_id, year):
+    """Get vendor rolling stats for (vendor, sector) as of year-1.
+
+    FIX C1: Uses data up to year-1 to prevent temporal leakage.
+    Falls back to current year if no prior history exists (earliest year).
+    Returns None if no rolling stats available at all (vendor has no history),
+    which means features default to 0 (sector average z-score).
+    """
+    rs = aux['rolling_stats']
+    # Prefer year-1 (strictly past data)
+    key_prev = (vendor_id, sector_id, year - 1)
+    if key_prev in rs:
+        return rs[key_prev]
+    # Fallback: current year (for vendors in their earliest year)
+    key_curr = (vendor_id, sector_id, year)
+    if key_curr in rs:
+        return rs[key_curr]
+    # No history at all — return None, caller uses defaults (z-score = 0)
+    return None
 
 
 def compute_raw_features(row, aux):
     """Extract raw feature values from a contract row.
 
     Returns dict of factor_name -> raw value.
+
+    FIX C1: Vendor-level features use rolling stats from vendor_rolling_stats
+    table (as_of_year = contract_year - 1) to prevent temporal leakage.
+    For vendors with no history, features default to 0.0, producing
+    z-scores of ~0 (sector average).
     """
     (cid, vendor_id, inst_id, sector_id, amount,
      is_da, is_sb, is_ye, pub_date, con_date,
@@ -324,25 +426,96 @@ def compute_raw_features(row, aux):
     features = {}
     amount = amount or 0
 
-    # Binary
+    # Binary (no temporal issue — these are per-contract flags)
     features['single_bid'] = 1 if is_sb else 0
     features['direct_award'] = 1 if is_da else 0
     features['year_end'] = 1 if is_ye else 0
 
-    # Price ratio
+    # Price ratio (per-contract, no temporal issue)
     if amount > 0 and amount < 100_000_000_000 and sector_id in aux['sector_medians']:
         median = aux['sector_medians'][sector_id]
         features['price_ratio'] = amount / median if median > 0 else 0.0
     else:
         features['price_ratio'] = 0.0
 
-    # Vendor concentration
-    if vendor_id and sector_id:
-        vs_val = aux['vendor_sector_val'].get((vendor_id, sector_id), 0)
-        st_val = aux['sector_totals'].get(sector_id, 1)
-        features['vendor_concentration'] = vs_val / st_val if st_val > 0 else 0.0
+    # --- Vendor-level features: use rolling stats (C1 fix) or all-time fallback ---
+    use_rolling = aux['has_rolling_stats']
+
+    if use_rolling and vendor_id and sector_id and year:
+        rstats = _get_rolling_stats(aux, vendor_id, sector_id, year)
+
+        # Vendor concentration = vendor's cumulative sector value / sector cumulative total
+        if rstats and rstats['total_value'] > 0:
+            # Get sector cumulative total as of year-1 (or current year fallback)
+            syt = aux['sector_year_totals']
+            sect_total = syt.get((sector_id, year - 1), syt.get((sector_id, year), 1.0))
+            features['vendor_concentration'] = rstats['total_value'] / sect_total if sect_total > 0 else 0.0
+        else:
+            features['vendor_concentration'] = 0.0
+
+        # Price volatility = rolling stddev / sector median
+        if rstats and rstats['total_count'] >= 3:
+            cnt = rstats['total_count']
+            avg = rstats['total_value'] / cnt if cnt > 0 else 0
+            avg_sq = rstats['sum_sq_amount'] / cnt if cnt > 0 else 0
+            variance = max(avg_sq - avg * avg, 0)
+            stddev = math.sqrt(variance) if variance > 0 else 0
+            median = aux['sector_medians'].get(sector_id, 1)
+            features['price_volatility'] = stddev / median if median > 0 else 0.0
+        else:
+            features['price_volatility'] = 0.0
+
+        # Win rate = vendor's cumulative comp wins / sector cumulative comp total
+        if rstats and rstats['comp_total'] > 0:
+            features['win_rate'] = rstats['comp_wins'] / rstats['comp_total'] if rstats['comp_total'] > 0 else 0.0
+        else:
+            features['win_rate'] = 0.0
+
+        # Institution diversity (HHI from rolling stats)
+        if rstats:
+            features['institution_diversity'] = rstats['inst_hhi']
+        else:
+            features['institution_diversity'] = 1.0
+
+        # Sector spread (n_sectors from rolling stats)
+        if rstats:
+            features['sector_spread'] = float(rstats['n_sectors'])
+        else:
+            features['sector_spread'] = 1.0
+
     else:
-        features['vendor_concentration'] = 0.0
+        # All-time fallback (when vendor_rolling_stats table doesn't exist)
+        if vendor_id and sector_id:
+            vs_val = aux['vendor_sector_val'].get((vendor_id, sector_id), 0)
+            st_val = aux['sector_totals'].get(sector_id, 1)
+            features['vendor_concentration'] = vs_val / st_val if st_val > 0 else 0.0
+        else:
+            features['vendor_concentration'] = 0.0
+
+        if vendor_id and sector_id:
+            features['price_volatility'] = aux['vendor_price_vol'].get(
+                (vendor_id, sector_id), 0.0)
+        else:
+            features['price_volatility'] = 0.0
+
+        if vendor_id and sector_id:
+            comp_wins = aux['vendor_comp_wins'].get((vendor_id, sector_id), 0)
+            comp_total = aux['sector_comp_totals'].get(sector_id, 1)
+            features['win_rate'] = comp_wins / comp_total if comp_total > 0 else 0.0
+        else:
+            features['win_rate'] = 0.0
+
+        if vendor_id:
+            features['institution_diversity'] = aux['vendor_inst_hhi'].get(vendor_id, 1.0)
+        else:
+            features['institution_diversity'] = 1.0
+
+        if vendor_id:
+            features['sector_spread'] = float(aux['vendor_sector_count'].get(vendor_id, 1))
+        else:
+            features['sector_spread'] = 1.0
+
+    # --- Non-vendor-level features (no temporal issue) ---
 
     # Ad period days
     features['ad_period_days'] = 0.0
@@ -386,33 +559,6 @@ def compute_raw_features(row, aux):
 
     # Institution risk
     features['institution_risk'] = aux['inst_baselines'].get(inst_id, 0.25) if inst_id else 0.25
-
-    # Price volatility (vendor price stddev / sector median)
-    if vendor_id and sector_id:
-        features['price_volatility'] = aux['vendor_price_vol'].get(
-            (vendor_id, sector_id), 0.0)
-    else:
-        features['price_volatility'] = 0.0
-
-    # Sector spread (distinct sectors per vendor)
-    if vendor_id:
-        features['sector_spread'] = float(aux['vendor_sector_count'].get(vendor_id, 1))
-    else:
-        features['sector_spread'] = 1.0
-
-    # Win rate (vendor competitive contract share in sector)
-    if vendor_id and sector_id:
-        comp_wins = aux['vendor_comp_wins'].get((vendor_id, sector_id), 0)
-        comp_total = aux['sector_comp_totals'].get(sector_id, 1)
-        features['win_rate'] = comp_wins / comp_total if comp_total > 0 else 0.0
-    else:
-        features['win_rate'] = 0.0
-
-    # Institution diversity (HHI of vendor's institution distribution)
-    if vendor_id:
-        features['institution_diversity'] = aux['vendor_inst_hhi'].get(vendor_id, 1.0)
-    else:
-        features['institution_diversity'] = 1.0
 
     return features
 

@@ -65,11 +65,11 @@
   },
   "confidenceInterval": {
     "title": "Intervalo de Confianza",
-    "description": "El rango dentro del cual probablemente cae la verdadera puntuación de riesgo (95% de confianza). Una puntuación de 0.35 [0.22, 0.48] significa que estimamos 35% de probabilidad de corrupción, pero podría estar razonablemente entre 22% y 48%."
+    "description": "El rango dentro del cual probablemente cae la verdadera puntuación de riesgo (95% de confianza). Una puntuación de 0.35 [0.22, 0.48] significa que el indicador de riesgo es 0.35, pero dada la incertidumbre de los datos podría estar razonablemente entre 0.22 y 0.48."
   },
   "calibratedProbability": {
-    "title": "Probabilidad Calibrada",
-    "description": "Una puntuación de riesgo que representa una probabilidad real estimada de corrupción, no un número arbitrario. Nuestro modelo v5.0 produce probabilidades calibradas validadas contra casos documentados de corrupción."
+    "title": "Puntuación de Riesgo",
+    "description": "Un indicador estadístico de riesgo que mide la similitud con patrones documentados de corrupción. La puntuación se deriva de regresión logística pero debe interpretarse como un indicador de riesgo, no como una probabilidad literal de corrupción."
   },
   "perSectorModel": {
     "title": "Modelo por Sector",

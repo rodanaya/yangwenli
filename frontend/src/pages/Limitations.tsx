@@ -127,7 +127,7 @@ const LIMITATIONS = [
     severity: 'medium',
     summary: 'A high risk score means statistical similarity to known corrupt contracts — not proof of corruption. A low score does not mean a contract is clean.',
     body: [
-      'The risk score is a calibrated probability: a score of 0.85 means the contract\'s statistical characteristics resemble those of contracts from documented corruption cases. It does not mean the contract is corrupt.',
+      'The risk score is a statistical indicator: a score of 0.85 means the contract\'s procurement characteristics closely resemble those from documented corruption cases. It does not mean the contract is corrupt.',
       'A legitimate bulk medicine purchase by IMSS from a major pharmaceutical supplier will score high for the same reasons a fraudulent one does — large amount, concentrated vendor, same institution. The model cannot distinguish intent from structure.',
       'Similarly, a low-scoring contract is not certified clean. New corruption patterns — ones the model has never seen — will score low until a documented case is added to the ground truth.',
     ],
@@ -211,10 +211,10 @@ const LIMITATIONS = [
       'In the global procurement corruption literature, single bidding — a competitive procedure with only one vendor — is the most universally validated warning indicator (Fazekas & Tóth 2016; Charron et al. 2017). In European datasets, this pattern has the strongest predictive power.',
       'In RUBLI (trained on Mexico\'s 3.1M contracts), vendor concentration is the strongest predictor (+0.428 global coefficient), while single bidding has a near-zero coefficient (+0.013). This divergence is not a modeling error — it reflects Mexico\'s procurement structure.',
       'In Mexico, roughly 70% of contracts are direct awards. When direct award is the norm, single-bid competitive procedures are rare even for clean procurement. The z-score normalization accounts for this baseline. But the training data (79% from IMSS, Segalmex, COVID-19 cases) reinforces concentration as the dominant signal because these cases involved large vendors capturing institutional monopolies.',
-      'Implication: RUBLI is well-calibrated for Mexico\'s documented corruption patterns — concentration-based capture is the primary mechanism. It may underperform on corruption forms more common in European datasets: cover bidding in competitive procedures and bid rotation rings, which are less prevalent in Mexico\'s direct-award-heavy system.',
+      'Implication: RUBLI is well-tuned for Mexico\'s documented corruption patterns — concentration-based capture is the primary mechanism. It may underperform on corruption forms more common in European datasets: cover bidding in competitive procedures and bid rotation rings, which are less prevalent in Mexico\'s direct-award-heavy system.',
     ],
     impact: 'RUBLI\'s high-risk flags are most reliable for identifying vendor capture and market concentration. For collusion detection in competitive procedures, supplement with the Vendor Profile → Collusion Detection tab.',
-    workaround: 'When investigating bid-rigging in competitive procedures, use the Co-bidding analysis tool rather than relying on risk scores alone. Risk scores are calibrated for Mexico\'s dominant corruption form (concentration), not for collusion rings.',
+    workaround: 'When investigating bid-rigging in competitive procedures, use the Co-bidding analysis tool rather than relying on risk scores alone. Risk scores are tuned for Mexico\'s dominant corruption form (concentration), not for collusion rings.',
   },
 ] as const
 

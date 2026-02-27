@@ -450,6 +450,80 @@ def get_watchlist_stats():
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
+@router.get("/alerts/check")
+def check_alerts():
+    """
+    Return watchlist items whose current risk score has reached or exceeded
+    their configured alert threshold (4.3C Alert System).
+
+    Only items with alerts_enabled=1 and a non-null alert_threshold are
+    considered.  The current_risk_score is resolved live from vendor_stats /
+    institution_stats / contracts so the comparison is always fresh.
+
+    Returns a list (possibly empty) of matching watchlist items enriched with
+    their current risk score.
+    """
+    try:
+        with get_db() as conn:
+            ensure_watchlist_table(conn)
+            rows = conn.execute("""
+                SELECT * FROM watchlist_items
+                WHERE alerts_enabled = 1
+                  AND alert_threshold IS NOT NULL
+                ORDER BY updated_at DESC
+            """).fetchall()
+
+            triggered = []
+            for row in rows:
+                item_type = row["item_type"]
+                item_id = row["item_id"]
+                threshold = row["alert_threshold"]
+
+                # Resolve current risk score
+                current_risk: float | None = None
+                if item_type == "vendor":
+                    r = conn.execute(
+                        "SELECT avg_risk_score FROM vendor_stats WHERE vendor_id = ?",
+                        (item_id,)
+                    ).fetchone()
+                    if r:
+                        current_risk = r[0]
+                elif item_type == "institution":
+                    r = conn.execute(
+                        "SELECT avg_risk_score FROM institution_stats WHERE institution_id = ?",
+                        (item_id,)
+                    ).fetchone()
+                    if r:
+                        current_risk = r[0]
+                elif item_type == "contract":
+                    r = conn.execute(
+                        "SELECT risk_score FROM contracts WHERE id = ?",
+                        (item_id,)
+                    ).fetchone()
+                    if r:
+                        current_risk = r[0]
+
+                if current_risk is not None and current_risk >= threshold:
+                    name, _ = get_item_name_and_risk(conn, item_type, item_id)
+                    triggered.append({
+                        "id": row["id"],
+                        "item_type": item_type,
+                        "item_id": item_id,
+                        "item_name": name or f"Unknown {item_type}",
+                        "alert_threshold": threshold,
+                        "current_risk_score": round(current_risk, 4),
+                        "priority": row["priority"],
+                        "status": row["status"],
+                        "notes": row["notes"],
+                    })
+
+            return triggered
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error in check_alerts: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
 @router.get("/{watchlist_id}", response_model=WatchlistItem)
 def get_watchlist_item(watchlist_id: int = Path(..., description="Watchlist item ID")):
     """Get a specific watchlist item."""

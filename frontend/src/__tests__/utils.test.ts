@@ -69,10 +69,10 @@ describe('Risk model version', () => {
 
 describe('Risk thresholds (v4.0)', () => {
   it('defines correct v4.0 thresholds', () => {
-    // v4.0: calibrated probability thresholds
-    // Critical: >= 0.50 (>=50% corruption probability)
-    // High: >= 0.30 (>=30% probability)
-    // Medium: >= 0.10 (>=10% probability)
+    // v4.0+ risk score thresholds
+    // Critical: >= 0.50 (very high similarity to known corruption patterns)
+    // High: >= 0.30 (high similarity)
+    // Medium: >= 0.10 (moderate similarity)
     // Low: < 0.10
 
     expect(RISK_THRESHOLDS.critical).toBe(0.50)

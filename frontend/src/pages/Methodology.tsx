@@ -18,6 +18,7 @@ import {
   FlaskConical,
 } from 'lucide-react'
 import { RiskFactorTable } from '@/components/RiskExplainer'
+import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
 import {
   BarChart,
   Bar,
@@ -64,10 +65,10 @@ const V33_WEIGHTS = [
 ] as const
 
 const RISK_LEVELS_V5 = [
-  { level: 'Critical', threshold: '>= 0.50', meaning: '>= 50% estimated corruption probability', pct: '6.1%', count: '190,638', color: '#f87171' },
-  { level: 'High', threshold: '>= 0.30', meaning: '>= 30% estimated probability', pct: '2.9%', count: '89,588', color: '#fb923c' },
-  { level: 'Medium', threshold: '>= 0.10', meaning: '>= 10% estimated probability', pct: '13.2%', count: '410,462', color: '#fbbf24' },
-  { level: 'Low', threshold: '< 0.10', meaning: '< 10% probability', pct: '77.8%', count: '2,419,319', color: '#4ade80' },
+  { level: 'Critical', threshold: '>= 0.50', meaning: 'Very high similarity to known corruption patterns', pct: '6.1%', count: '190,638', color: '#f87171' },
+  { level: 'High', threshold: '>= 0.30', meaning: 'High similarity to known corruption patterns', pct: '2.9%', count: '89,588', color: '#fb923c' },
+  { level: 'Medium', threshold: '>= 0.10', meaning: 'Moderate similarity to known corruption patterns', pct: '13.2%', count: '410,462', color: '#fbbf24' },
+  { level: 'Low', threshold: '< 0.10', meaning: 'Low similarity to known corruption patterns', pct: '77.8%', count: '2,419,319', color: '#4ade80' },
 ] as const
 
 const CORRUPTION_CASES = [
@@ -356,10 +357,9 @@ export function Methodology() {
           <CollapsibleSection id="overview" title="Model Overview (v5.1)" icon={Shield}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
-                Every risk score is a <strong className="text-text-primary">calibrated probability</strong>{' '}
-                <Mono>P(corrupt|features)</Mono> with 95% confidence intervals. Unlike the previous weighted
-                checklist, v5.1 scores have direct probabilistic meaning: a score of 0.35 means we estimate
-                a 35% likelihood that this contract exhibits corruption indicators.
+                Every risk score is a <strong className="text-text-primary">statistical corruption risk indicator</strong>{' '}
+                <Mono>S(corrupt|features)</Mono> with 95% confidence intervals. Unlike the previous weighted
+                checklist, v5.1 scores measure statistical similarity to documented corruption patterns: a score of 0.35 means this contract's procurement characteristics closely resemble those from known corruption cases.
               </p>
 
               <div className="p-3 rounded-md bg-accent/5 border border-accent/10">
@@ -376,9 +376,12 @@ export function Methodology() {
 
               {/* Risk level thresholds table */}
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2 font-mono">
-                  RISK LEVEL THRESHOLDS
-                </p>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-text-muted font-mono">
+                    RISK LEVEL THRESHOLDS
+                  </p>
+                  <RiskScoreDisclaimer />
+                </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs" role="table" aria-label="Risk level thresholds">
                     <thead>
@@ -434,7 +437,7 @@ export function Methodology() {
                 Each contract is described by 16 z-score features normalized by sector and year baselines.
                 v5.1 uses 4 behavioral features added in v5.0: price_volatility, institution_diversity, win_rate, and sector_spread.
                 The chart below shows the learned cross-validated ElasticNet coefficients.
-                Positive coefficients increase estimated corruption probability; negative coefficients decrease it.
+                Positive coefficients increase the risk score; negative coefficients decrease it.
               </p>
 
               <CoefficientChart />
@@ -694,8 +697,8 @@ export function Methodology() {
                 <p className="text-xs font-semibold text-text-primary mb-1">Bootstrap Confidence Intervals</p>
                 <p className="text-xs text-text-secondary leading-relaxed">
                   Each contract receives a 95% confidence interval from 500 bootstrap resamples of the
-                  training data. A score of 0.35 [0.22, 0.48] means: we estimate 35% corruption probability,
-                  but given data uncertainty, it could be as low as 22% or as high as 48%.
+                  training data. A score of 0.35 [0.22, 0.48] means: the risk indicator is 0.35,
+                  but given data uncertainty, it could be as low as 0.22 or as high as 0.48.
                 </p>
               </div>
             </div>
@@ -888,8 +891,8 @@ export function Methodology() {
                 </div>
               ))}
               <p className="text-xs text-text-muted pt-2">
-                Risk scores are calibrated probabilities with confidence intervals. A high score indicates
-                statistical anomaly consistent with corruption patterns -- it does not constitute proof of wrongdoing.
+                Risk scores are statistical indicators with confidence intervals. A high score indicates
+                similarity to documented corruption patterns -- it does not constitute proof of wrongdoing.
               </p>
             </div>
           </CollapsibleSection>

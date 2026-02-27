@@ -9,7 +9,7 @@ Improvements over v4.0:
   5. Expanded ground truth (15 cases, 27 vendors across all 12 sectors)
 
 Usage:
-    python -m scripts.calibrate_risk_model_v5 [--n-bootstrap 500] [--random-sample 15000]
+    python -m scripts.calibrate_risk_model_v5 [--n-bootstrap 1000] [--random-sample 15000]
 """
 
 import sys
@@ -144,7 +144,8 @@ def load_training_data(conn, random_sample_size=15000, temporal_split=True):
 
 
 def elkan_noto_pu_correction(X_pos, y_pos_dummy, X_neg, holdout_fraction=0.2,
-                              C=0.1, random_state=42):
+                              best_C=0.1, best_l1_ratio=0.0,
+                              random_state=42):
     """Elkan & Noto (2008) PU-learning correction.
 
     Holds out a fraction of labeled positives, trains on the rest + negatives,
@@ -167,11 +168,20 @@ def elkan_noto_pu_correction(X_pos, y_pos_dummy, X_neg, holdout_fraction=0.2,
     X_train = np.vstack([X_pos_train, X_neg])
     y_train = np.array([1] * len(X_pos_train) + [0] * len(X_neg))
 
-    weight_ratio = min(len(X_neg) / max(len(X_pos_train), 1), 20)
-    model = LogisticRegression(
-        C=C, class_weight={0: 1, 1: weight_ratio},
-        max_iter=1000, solver='lbfgs', random_state=random_state
-    )
+    # Upweight positives since they are the minority class of interest in PU learning
+    weight_ratio = min(len(X_pos_train) / max(len(X_neg), 1), 20)
+    if best_l1_ratio == 0.0:
+        model = LogisticRegression(
+            C=best_C, penalty='l2',
+            class_weight={0: 1, 1: weight_ratio},
+            max_iter=1000, solver='lbfgs', random_state=random_state
+        )
+    else:
+        model = LogisticRegression(
+            C=best_C, penalty='elasticnet', l1_ratio=best_l1_ratio,
+            class_weight={0: 1, 1: weight_ratio},
+            max_iter=2000, solver='saga', random_state=random_state
+        )
     model.fit(X_train, y_train)
 
     # c = mean predicted probability on held-out positives
@@ -192,7 +202,8 @@ def cross_validate_hyperparams(X, y, n_folds=5):
 
     n_pos = np.sum(y == 1)
     n_neg = np.sum(y == 0)
-    weight_ratio = min(n_neg / max(n_pos, 1), 20)
+    # Upweight positives since they are the minority class of interest in PU learning
+    weight_ratio = min(n_pos / max(n_neg, 1), 20)
 
     best_score = -1
     best_params = (0.1, 0.0)
@@ -252,15 +263,63 @@ def cross_validate_hyperparams(X, y, n_folds=5):
     return best_params
 
 
+def _run_bootstrap(X_train, y_train, C, l1_ratio, weight_ratio, n_bootstrap,
+                    rng=None):
+    """Run bootstrap resampling to compute coefficient CIs.
+
+    Returns bootstrap_ci dict and list of bootstrap coefficient arrays.
+    """
+    if rng is None:
+        rng = np.random.RandomState(42)
+    bootstrap_coefs = []
+    skipped = 0
+    for b in range(n_bootstrap):
+        idx = rng.choice(len(y_train), size=len(y_train), replace=True)
+        X_b, y_b = X_train[idx], y_train[idx]
+        if np.sum(y_b == 1) < 2:
+            skipped += 1
+            continue
+        try:
+            if l1_ratio == 0.0:
+                m = LogisticRegression(C=C, penalty='l2',
+                                       class_weight={0: 1, 1: weight_ratio},
+                                       max_iter=500, solver='lbfgs', random_state=b)
+            else:
+                m = LogisticRegression(C=C, penalty='elasticnet', l1_ratio=l1_ratio,
+                                       class_weight={0: 1, 1: weight_ratio},
+                                       max_iter=1000, solver='saga', random_state=b)
+            m.fit(X_b, y_b)
+            bootstrap_coefs.append(m.coef_[0].tolist())
+        except Exception:
+            skipped += 1
+            continue
+        if (b + 1) % 100 == 0:
+            print(f"    Bootstrap {b + 1}/{n_bootstrap}")
+
+    print(f"  Bootstrap: {skipped}/{n_bootstrap} iterations skipped "
+          f"(insufficient positive resamples)")
+
+    bootstrap_ci = {}
+    if bootstrap_coefs:
+        coef_array = np.array(bootstrap_coefs)
+        ci_lower = np.percentile(coef_array, 2.5, axis=0)
+        ci_upper = np.percentile(coef_array, 97.5, axis=0)
+        for i, factor in enumerate(FACTOR_NAMES):
+            bootstrap_ci[factor] = [float(ci_lower[i]), float(ci_upper[i])]
+
+    return bootstrap_ci
+
+
 def fit_global_model(X_train, y_train, X_test, y_test, C, l1_ratio,
-                     n_bootstrap=500):
+                     n_bootstrap=1000):
     """Fit global model with best hyperparameters.
 
     Returns model, diagnostics dict.
     """
     n_pos = np.sum(y_train == 1)
     n_neg = np.sum(y_train == 0)
-    weight_ratio = min(n_neg / max(n_pos, 1), 20)
+    # Upweight positives since they are the minority class of interest in PU learning
+    weight_ratio = min(n_pos / max(n_neg, 1), 20)
 
     # Fit primary model
     if l1_ratio == 0.0:
@@ -277,15 +336,22 @@ def fit_global_model(X_train, y_train, X_test, y_test, C, l1_ratio,
         )
     base_model.fit(X_train, y_train)
 
-    # Platt scaling
+    # Platt scaling — extract sigmoid parameters for use at inference
+    platt_a = 0.0
+    platt_b = 0.0
     try:
         n_splits = min(3, n_pos)
         if n_splits >= 2:
             calibrated = CalibratedClassifierCV(base_model, cv=n_splits, method='sigmoid')
             calibrated.fit(X_train, y_train)
+            # Extract Platt sigmoid parameters: P = 1/(1+exp(A*f+B))
+            platt_a = float(calibrated.calibrated_classifiers_[0].calibrators_[0].a_)
+            platt_b = float(calibrated.calibrated_classifiers_[0].calibrators_[0].b_)
+            print(f"  Platt scaling: A={platt_a:.4f}, B={platt_b:.4f}")
         else:
             calibrated = base_model
-    except Exception:
+    except Exception as e:
+        print(f"  Platt scaling failed ({e}), using raw sigmoid")
         calibrated = base_model
 
     # Metrics on TRAIN set
@@ -321,42 +387,18 @@ def fit_global_model(X_train, y_train, X_test, y_test, C, l1_ratio,
 
     # Bootstrap CIs
     print(f"\n  Running {n_bootstrap} bootstrap iterations...")
-    bootstrap_coefs = []
-    rng = np.random.RandomState(42)
-    for b in range(n_bootstrap):
-        idx = rng.choice(len(y_train), size=len(y_train), replace=True)
-        X_b, y_b = X_train[idx], y_train[idx]
-        if np.sum(y_b == 1) < 2:
-            continue
-        try:
-            if l1_ratio == 0.0:
-                m = LogisticRegression(C=C, penalty='l2',
-                                       class_weight={0: 1, 1: weight_ratio},
-                                       max_iter=500, solver='lbfgs', random_state=b)
-            else:
-                m = LogisticRegression(C=C, penalty='elasticnet', l1_ratio=l1_ratio,
-                                       class_weight={0: 1, 1: weight_ratio},
-                                       max_iter=1000, solver='saga', random_state=b)
-            m.fit(X_b, y_b)
-            bootstrap_coefs.append(m.coef_[0].tolist())
-        except Exception:
-            continue
-        if (b + 1) % 100 == 0:
-            print(f"    Bootstrap {b + 1}/{n_bootstrap}")
-
-    bootstrap_ci = {}
-    if bootstrap_coefs:
-        coef_array = np.array(bootstrap_coefs)
-        ci_lower = np.percentile(coef_array, 2.5, axis=0)
-        ci_upper = np.percentile(coef_array, 97.5, axis=0)
-        for i, factor in enumerate(FACTOR_NAMES):
-            bootstrap_ci[factor] = [float(ci_lower[i]), float(ci_upper[i])]
+    bootstrap_ci = _run_bootstrap(
+        X_train, y_train, C, l1_ratio, weight_ratio, n_bootstrap,
+        rng=np.random.RandomState(42)
+    )
 
     diagnostics = {
         'intercept': float(base_model.intercept_[0]),
         'coefficients': coefficients,
         'train_auc': float(train_auc),
         'bootstrap_ci': bootstrap_ci,
+        'platt_a': platt_a,
+        'platt_b': platt_b,
         'C': C,
         'l1_ratio': l1_ratio,
         'n_pos_train': int(np.sum(y_train == 1)),
@@ -367,10 +409,10 @@ def fit_global_model(X_train, y_train, X_test, y_test, C, l1_ratio,
     return base_model, calibrated, diagnostics
 
 
-def fit_sector_models(data, C, l1_ratio):
+def fit_sector_models(data, C, l1_ratio, n_bootstrap=200):
     """Fit per-sector sub-models for sectors with enough data.
 
-    Returns dict: sector_id -> {intercept, coefficients, auc, n_contracts}
+    Returns dict: sector_id -> {intercept, coefficients, auc, n_contracts, ...}
     """
     sector_models = {}
     X_train = data['X_train']
@@ -391,7 +433,8 @@ def fit_sector_models(data, C, l1_ratio):
         X_s_train = X_train[train_mask]
         y_s_train = y_train[train_mask]
 
-        weight_ratio = min(n_neg / max(n_pos, 1), 20)
+        # Upweight positives since they are the minority class of interest in PU learning
+        weight_ratio = min(n_pos / max(n_neg, 1), 20)
 
         try:
             if l1_ratio == 0.0:
@@ -411,6 +454,19 @@ def fit_sector_models(data, C, l1_ratio):
             print(f"  Sector {sector_id}: FAILED ({e})")
             continue
 
+        # Platt scaling for sector model
+        platt_a = 0.0
+        platt_b = 0.0
+        try:
+            n_splits = min(3, n_pos)
+            if n_splits >= 2:
+                cal = CalibratedClassifierCV(model, cv=n_splits, method='sigmoid')
+                cal.fit(X_s_train, y_s_train)
+                platt_a = float(cal.calibrated_classifiers_[0].calibrators_[0].a_)
+                platt_b = float(cal.calibrated_classifiers_[0].calibrators_[0].b_)
+        except Exception:
+            pass
+
         # Train AUC
         y_s_train_prob = model.predict_proba(X_s_train)[:, 1]
         train_auc = roc_auc_score(y_s_train, y_s_train_prob) if n_pos >= 2 else 0
@@ -429,6 +485,13 @@ def fit_sector_models(data, C, l1_ratio):
         for i, factor in enumerate(FACTOR_NAMES):
             coefs[factor] = float(model.coef_[0][i])
 
+        # Per-sector bootstrap CIs
+        print(f"    Sector {sector_id}: running {n_bootstrap} bootstrap iterations...")
+        sector_bootstrap_ci = _run_bootstrap(
+            X_s_train, y_s_train, C, l1_ratio, weight_ratio, n_bootstrap,
+            rng=np.random.RandomState(42 + sector_id)
+        )
+
         sector_models[sector_id] = {
             'intercept': float(model.intercept_[0]),
             'coefficients': coefs,
@@ -436,6 +499,9 @@ def fit_sector_models(data, C, l1_ratio):
             'test_auc': test_auc,
             'n_pos_train': int(n_pos),
             'n_neg_train': int(n_neg),
+            'bootstrap_ci': sector_bootstrap_ci,
+            'platt_a': platt_a,
+            'platt_b': platt_b,
         }
 
         test_str = f"test={test_auc:.4f}" if test_auc else "test=N/A"
@@ -481,11 +547,14 @@ def save_calibration(conn, diagnostics, pu_correction, sector_models,
             likelihood_ratios TEXT,
             pu_correction_factor REAL,
             auc_roc REAL,
+            test_auc REAL,
             brier_score REAL,
             log_loss_val REAL,
             average_precision REAL,
             calibration_curve TEXT,
             bootstrap_ci TEXT,
+            platt_a REAL DEFAULT 0.0,
+            platt_b REAL DEFAULT 0.0,
             n_positive INTEGER,
             n_negative INTEGER,
             n_bootstrap INTEGER,
@@ -509,11 +578,12 @@ def save_calibration(conn, diagnostics, pu_correction, sector_models,
     cursor.execute("""
         INSERT INTO model_calibration
             (model_version, run_id, sector_id, intercept, coefficients,
-             likelihood_ratios, pu_correction_factor, auc_roc,
+             likelihood_ratios, pu_correction_factor, auc_roc, test_auc,
              brier_score, log_loss_val, average_precision,
-             bootstrap_ci, n_positive, n_negative, n_bootstrap,
+             bootstrap_ci, platt_a, platt_b,
+             n_positive, n_negative, n_bootstrap,
              hyperparameters, temporal_metrics)
-        VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         'v5.0', run_id,
         diagnostics['intercept'],
@@ -521,10 +591,13 @@ def save_calibration(conn, diagnostics, pu_correction, sector_models,
         json.dumps(diagnostics.get('likelihood_ratios', {})),
         pu_correction,
         diagnostics.get('test_auc') or diagnostics['train_auc'],
+        diagnostics.get('test_auc'),
         diagnostics.get('test_brier'),
         None,
         diagnostics.get('test_average_precision'),
         json.dumps(diagnostics.get('bootstrap_ci', {})),
+        diagnostics.get('platt_a', 0.0),
+        diagnostics.get('platt_b', 0.0),
         diagnostics['n_pos_train'], diagnostics['n_neg_train'],
         n_bootstrap, hyper, temporal,
     ))
@@ -534,14 +607,20 @@ def save_calibration(conn, diagnostics, pu_correction, sector_models,
         cursor.execute("""
             INSERT INTO model_calibration
                 (model_version, run_id, sector_id, intercept, coefficients,
-                 pu_correction_factor, auc_roc, n_positive, n_negative,
+                 pu_correction_factor, auc_roc, test_auc,
+                 bootstrap_ci, platt_a, platt_b,
+                 n_positive, n_negative,
                  hyperparameters, temporal_metrics)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             'v5.0', run_id, sector_id,
             sm['intercept'], json.dumps(sm['coefficients']),
             pu_correction,
             sm.get('test_auc') or sm['train_auc'],
+            sm.get('test_auc'),
+            json.dumps(sm.get('bootstrap_ci', {})),
+            sm.get('platt_a', 0.0),
+            sm.get('platt_b', 0.0),
             sm['n_pos_train'], sm['n_neg_train'],
             hyper,
             json.dumps({'train_auc': sm['train_auc'], 'test_auc': sm.get('test_auc')}),
@@ -554,7 +633,7 @@ def save_calibration(conn, diagnostics, pu_correction, sector_models,
 
 def main():
     parser = argparse.ArgumentParser(description='Risk Model v5.0 Calibration')
-    parser.add_argument('--n-bootstrap', type=int, default=500)
+    parser.add_argument('--n-bootstrap', type=int, default=1000)
     parser.add_argument('--random-sample', type=int, default=15000)
     parser.add_argument('--no-temporal-split', action='store_true',
                         help='Disable temporal split (use all data for train+test)')
@@ -612,26 +691,29 @@ def main():
             print(f"  {factor:<25} {lr:.2f}x{marker}")
 
         # ================================================================
-        # STEP 3: Elkan & Noto PU correction
+        # STEP 3: Cross-validate hyperparameters
         # ================================================================
         print("\n" + "=" * 60)
-        print("STEP 3: Elkan & Noto PU-learning correction")
-        print("=" * 60)
-        X_pos = X_train[y_train == 1]
-        X_neg = X_train[y_train == 0]
-        pu_c = elkan_noto_pu_correction(X_pos, None, X_neg, holdout_fraction=0.2)
-        print(f"  PU correction factor c = {pu_c:.4f}")
-        print(f"  (v4.0 had c = 0.890 — circular estimate)")
-        print(f"  (Elkan & Noto holdout gives honest estimate)")
-
-        # ================================================================
-        # STEP 4: Cross-validate hyperparameters
-        # ================================================================
-        print("\n" + "=" * 60)
-        print("STEP 4: Hyperparameter cross-validation")
+        print("STEP 3: Hyperparameter cross-validation")
         print("=" * 60)
         best_C, best_l1 = cross_validate_hyperparams(X_train, y_train, n_folds=5)
         print(f"\n  Best: C={best_C}, l1_ratio={best_l1}")
+
+        # ================================================================
+        # STEP 4: Elkan & Noto PU correction (using CV-selected hyperparams)
+        # ================================================================
+        print("\n" + "=" * 60)
+        print("STEP 4: Elkan & Noto PU-learning correction")
+        print("=" * 60)
+        X_pos = X_train[y_train == 1]
+        X_neg = X_train[y_train == 0]
+        pu_c = elkan_noto_pu_correction(
+            X_pos, None, X_neg, holdout_fraction=0.2,
+            best_C=best_C, best_l1_ratio=best_l1,
+        )
+        print(f"  PU correction factor c = {pu_c:.4f}")
+        print(f"  (v4.0 had c = 0.890 — circular estimate)")
+        print(f"  (Elkan & Noto holdout gives honest estimate)")
 
         # ================================================================
         # STEP 5: Fit global model
@@ -665,7 +747,10 @@ def main():
             print("\n" + "=" * 60)
             print("STEP 6: Per-sector sub-models")
             print("=" * 60)
-            sector_models = fit_sector_models(data, best_C, best_l1)
+            sector_n_bootstrap = max(args.n_bootstrap // 5, 100)
+            sector_models = fit_sector_models(
+                data, best_C, best_l1, n_bootstrap=sector_n_bootstrap
+            )
             print(f"\n  Trained {len(sector_models)} sector models")
             print(f"  Sectors using global fallback: "
                   f"{sorted(set(range(1,13)) - set(sector_models.keys()))}")
@@ -694,6 +779,24 @@ def main():
             print(f"Test AUC (temporal, >={TEST_YEAR_MIN}): {diagnostics['test_auc']:.4f}")
         print(f"Sector models: {len(sector_models)}")
         print(f"Time: {elapsed:.1f}s")
+
+        # Summary table of all models (FIX M7)
+        print(f"\n{'=' * 60}")
+        print("MODEL SUMMARY")
+        print(f"{'=' * 60}")
+        print(f"  {'Model':<20} {'n_train_pos':>12} {'test_auc':>10}")
+        print(f"  {'-'*20} {'-'*12} {'-'*10}")
+        global_test_auc = diagnostics.get('test_auc')
+        global_auc_str = f"{global_test_auc:.4f}" if global_test_auc else "N/A"
+        print(f"  {'Global':<20} {diagnostics['n_pos_train']:>12} {global_auc_str:>10}")
+        for sid in range(1, 13):
+            if sid in sector_models:
+                sm = sector_models[sid]
+                t_auc = sm.get('test_auc')
+                auc_str = f"{t_auc:.4f}" if t_auc else "N/A"
+                print(f"  {'Sector ' + str(sid):<20} {sm['n_pos_train']:>12} {auc_str:>10}")
+            else:
+                print(f"  {'Sector ' + str(sid):<20} {'(global fallback)':>24}")
 
     except Exception as e:
         print(f"\nFATAL ERROR: {e}")

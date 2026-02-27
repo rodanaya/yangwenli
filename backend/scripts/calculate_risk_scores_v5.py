@@ -65,11 +65,14 @@ def load_v5_calibrations(conn):
             'coef_vector': coef_vector,
             'pu_correction': row[2] or 1.0,
             'bootstrap_ci': json.loads(row[3]) if row[3] else {},
+            'platt_a': row[4] if row[4] is not None else 0.0,
+            'platt_b': row[5] if row[5] is not None else 0.0,
         }
 
     # Load global model (sector_id IS NULL)
     cursor.execute("""
-        SELECT intercept, coefficients, pu_correction_factor, bootstrap_ci
+        SELECT intercept, coefficients, pu_correction_factor, bootstrap_ci,
+               platt_a, platt_b
         FROM model_calibration
         WHERE model_version = 'v5.0' AND sector_id IS NULL
         ORDER BY created_at DESC
@@ -82,11 +85,13 @@ def load_v5_calibrations(conn):
 
     global_cal = parse_cal(row)
     print(f"  Global model: intercept={global_cal['intercept']:.4f}, "
-          f"PU_c={global_cal['pu_correction']:.4f}")
+          f"PU_c={global_cal['pu_correction']:.4f}, "
+          f"Platt A={global_cal['platt_a']:.4f}, B={global_cal['platt_b']:.4f}")
 
     # Load sector models
     cursor.execute("""
-        SELECT sector_id, intercept, coefficients, pu_correction_factor
+        SELECT sector_id, intercept, coefficients, pu_correction_factor,
+               bootstrap_ci, platt_a, platt_b
         FROM model_calibration
         WHERE model_version = 'v5.0' AND sector_id IS NOT NULL
         ORDER BY created_at DESC
@@ -100,11 +105,14 @@ def load_v5_calibrations(conn):
         seen.add(sid)
         coefficients = json.loads(row[2])
         coef_vector = np.array([coefficients.get(f, 0.0) for f in FACTOR_NAMES])
+        sector_ci = json.loads(row[4]) if row[4] else {}
         sector_cals[sid] = {
             'intercept': row[1],
             'coef_vector': coef_vector,
             'pu_correction': row[3] or global_cal['pu_correction'],
-            'bootstrap_ci': global_cal['bootstrap_ci'],  # Use global CIs
+            'bootstrap_ci': sector_ci if sector_ci else global_cal['bootstrap_ci'],
+            'platt_a': row[5] if row[5] is not None else 0.0,
+            'platt_b': row[6] if row[6] is not None else 0.0,
         }
 
     print(f"  Sector models: {sorted(sector_cals.keys())}")
@@ -155,7 +163,15 @@ def compute_predictions(Z, sectors, global_cal, sector_cals):
 
         # Vectorized logit: (m,) = intercept + Z @ coef
         logits = cal['intercept'] + Z_sect @ cal['coef_vector']
-        raw_p = sigmoid(logits)
+
+        # Apply Platt scaling if available, otherwise raw sigmoid
+        platt_a = cal.get('platt_a', 0.0)
+        platt_b = cal.get('platt_b', 0.0)
+        if platt_a != 0.0 or platt_b != 0.0:
+            # Platt transform: P = 1/(1+exp(A*f+B)) where f is raw logit
+            raw_p = sigmoid(-(platt_a * logits + platt_b))
+        else:
+            raw_p = sigmoid(logits)
         p = np.minimum(raw_p / cal['pu_correction'], 1.0)
         probs[mask] = p
 

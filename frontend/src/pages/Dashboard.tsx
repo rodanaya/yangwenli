@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatCompactUSD, formatNumber, toTitleCase } from '@/lib/utils'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
+import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
 import { analysisApi, investigationApi } from '@/api/client'
 import type { ExecutiveCaseDetail } from '@/api/types'
 import {
@@ -866,7 +867,7 @@ export function Dashboard() {
             ))}
           </div>
           <p className="text-[10px] text-text-muted mt-3 font-mono">
-            Coefficient = log-odds contribution to corruption probability. v5.1 · Train AUC 0.964 · Test AUC 0.957
+            Coefficient = log-odds contribution to risk score. v5.1 · Train AUC 0.964 · Test AUC 0.957
           </p>
         </CardContent>
       </Card>
@@ -1243,7 +1244,10 @@ export function Dashboard() {
       <Card className="border-border/40">
         <CardContent className="py-4 px-5">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-bold text-text-primary">{t('riskDistribution')}</h2>
+            <div className="flex items-center gap-1.5">
+              <h2 className="text-base font-bold text-text-primary">{t('riskDistribution')}</h2>
+              <RiskScoreDisclaimer />
+            </div>
             <span className="text-xs text-text-muted">
               {t('riskDistLabel', { total: formatNumber(overview?.total_contracts || 0) })}
             </span>

@@ -23,6 +23,10 @@ tests/__pycache__
 
 # Databases are mounted as volumes, not copied into image
 *.db
+*.db-shm
+*.db-wal
+*.db-journal
 *.db.gz
+*.db.backup*
 backups/
 original_data/

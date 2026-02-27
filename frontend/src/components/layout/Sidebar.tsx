@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
@@ -22,6 +23,7 @@ import { RubliLogoMark } from '@/components/ui/RubliLogoMark'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { watchlistApi } from '@/api/client'
 
 export interface SidebarProps {
   collapsed: boolean
@@ -111,6 +113,16 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   // On mobile: use mobileOpen for collapse decision (always show full sidebar when open)
   const isCollapsed = collapsed && !mobileOpen
 
+  // 4.3C Alert System — poll for triggered watchlist alerts every 5 minutes
+  const { data: alerts } = useQuery({
+    queryKey: ['watchlist-alerts-check'],
+    queryFn: () => watchlistApi.checkAlerts(),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 0,
+  })
+  const alertCount = alerts?.length ?? 0
+
   return (
     <aside
       className={cn(
@@ -175,12 +187,15 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
                     : itemDef.href === '/investigation'
                     ? location.pathname === '/investigation' || location.pathname.startsWith('/investigation/')
                     : location.pathname === itemDef.href || location.pathname.startsWith(itemDef.href + '/')
+                // Show alert badge on the Workspace nav item (4.3C Alert System)
+                const badge = itemDef.href === '/workspace' && alertCount > 0 ? alertCount : 0
                 return (
                   <SidebarNavItem
                     key={item.href}
                     item={item}
                     collapsed={isCollapsed}
                     isActive={isActive}
+                    badge={badge}
                   />
                 )
               })}
@@ -233,7 +248,17 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   )
 }
 
-function SidebarNavItem({ item, collapsed, isActive }: { item: NavItem; collapsed: boolean; isActive: boolean }) {
+function SidebarNavItem({
+  item,
+  collapsed,
+  isActive,
+  badge = 0,
+}: {
+  item: NavItem
+  collapsed: boolean
+  isActive: boolean
+  badge?: number
+}) {
   const Icon = item.icon
 
   const linkContent = (
@@ -252,14 +277,29 @@ function SidebarNavItem({ item, collapsed, isActive }: { item: NavItem; collapse
       {isActive && (
         <span className="absolute left-0 top-1 bottom-1 w-[2px] rounded-r bg-accent shadow-[0_0_6px_var(--color-accent-glow)]" />
       )}
-      <Icon
-        className={cn(
-          'h-4 w-4 flex-shrink-0 transition-colors',
-          isActive ? 'text-accent' : 'text-text-muted group-hover:text-text-secondary'
+      {/* Icon — show badge dot in collapsed mode */}
+      <span className="relative flex-shrink-0">
+        <Icon
+          className={cn(
+            'h-4 w-4 transition-colors',
+            isActive ? 'text-accent' : 'text-text-muted group-hover:text-text-secondary'
+          )}
+          aria-hidden="true"
+        />
+        {badge > 0 && collapsed && (
+          <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-orange-500" aria-hidden="true" />
         )}
-        aria-hidden="true"
-      />
+      </span>
       {!collapsed && <span className="truncate">{item.title}</span>}
+      {/* Alert badge — only visible in expanded mode */}
+      {badge > 0 && !collapsed && (
+        <span
+          className="ml-auto flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white px-1"
+          aria-label={`${badge} alert${badge !== 1 ? 's' : ''}`}
+        >
+          {badge > 9 ? '9+' : badge}
+        </span>
+      )}
     </NavLink>
   )
 

@@ -16,6 +16,7 @@ import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { analysisApi } from '@/api/client'
 import type { ExecutiveSummaryResponse } from '@/api/types'
 import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
+import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
 import { ScrollReveal, useCountUp, AnimatedFill, AnimatedSegment } from '@/hooks/useAnimations'
 import {
   AlertTriangle,
@@ -910,9 +911,12 @@ function SectionThreat({ data }: { data: ExecutiveSummaryResponse }) {
 
       {/* Risk distribution bar — animated fill */}
       <div className="mb-4">
-        <p className="text-xs font-bold tracking-wider uppercase text-text-muted font-mono mb-2">
-          {t('s1.riskDistLabel')}
-        </p>
+        <div className="flex items-center gap-1.5 mb-2">
+          <p className="text-xs font-bold tracking-wider uppercase text-text-muted font-mono">
+            {t('s1.riskDistLabel')}
+          </p>
+          <RiskScoreDisclaimer />
+        </div>
         <div className="h-8 rounded-md overflow-hidden flex gap-0.5">
           {[
             { pct: criticalPctValue, color: RISK_COLORS.critical, label: t('s1.riskLevel.critical'), delay: 0 },

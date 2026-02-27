@@ -18,6 +18,7 @@ import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { AddToWatchlistButton } from '@/components/AddToWatchlistButton'
 import { NarrativeCard } from '@/components/NarrativeCard'
+import { RiskFeedbackButton } from '@/components/RiskFeedbackButton'
 import { ContractDetailModal } from '@/components/ContractDetailModal'
 import { buildVendorNarrative } from '@/lib/narratives'
 import type { ContractListItem, VendorExternalFlags } from '@/api/types'
@@ -685,7 +686,10 @@ export function VendorProfile() {
             defaultReason={`Risk score: ${((vendor.avg_risk_score ?? 0) * 100).toFixed(0)}%`}
           />
           {vendor.avg_risk_score !== undefined && (
-            <RiskBadge score={vendor.avg_risk_score} className="text-base px-3 py-1" />
+            <div className="flex items-center gap-1">
+              <RiskBadge score={vendor.avg_risk_score} className="text-base px-3 py-1" />
+              <RiskFeedbackButton entityType="vendor" entityId={vendorId} />
+            </div>
           )}
         </div>
       </div>

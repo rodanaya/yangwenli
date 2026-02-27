@@ -525,7 +525,7 @@ export default function ModelTransparency() {
             <div>
               <CardTitle>What Drives Risk Scores?</CardTitle>
               <CardDescription>
-                Logistic regression coefficients — larger bars mean stronger influence on corruption probability
+                Logistic regression coefficients — larger bars mean stronger influence on the risk score
               </CardDescription>
             </div>
           </div>
@@ -941,7 +941,7 @@ export default function ModelTransparency() {
             <div>
               <CardTitle>How the Score is Computed</CardTitle>
               <CardDescription>
-                End-to-end pipeline from raw contract data to calibrated probability
+                End-to-end pipeline from raw contract data to risk score
               </CardDescription>
             </div>
           </div>
@@ -964,7 +964,7 @@ export default function ModelTransparency() {
               {
                 step: 3,
                 title: 'Per-Sector Logistic Regression',
-                description: 'Cross-validated ElasticNet (C=10.0, l1_ratio=0.25) with 12 per-sector sub-models trained on known-bad contracts from 22 corruption cases converts z-scores into corruption probabilities.',
+                description: 'Cross-validated ElasticNet (C=10.0, l1_ratio=0.25) with 12 per-sector sub-models trained on known-bad contracts from 22 corruption cases converts z-scores into risk scores.',
                 icon: TrendingUp,
               },
               {
@@ -997,7 +997,7 @@ export default function ModelTransparency() {
 
           {/* Risk thresholds reference */}
           <div className="mt-4 pt-3 border-t border-border/20">
-            <p className="text-xs text-text-muted mb-2 font-medium">Risk Level Thresholds (calibrated probabilities)</p>
+            <p className="text-xs text-text-muted mb-2 font-medium">Risk Level Thresholds</p>
             <div className="flex flex-wrap gap-4">
               {(Object.entries(RISK_THRESHOLDS) as Array<[keyof typeof RISK_THRESHOLDS, number]>)
                 .filter(([level]) => level !== 'low')

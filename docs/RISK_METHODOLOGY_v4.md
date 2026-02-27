@@ -1,5 +1,7 @@
 # Risk Scoring Methodology v4.0
 
+> **Superseded**: v4.0 is preserved for reference. Active model is v5.2 (see RISK_METHODOLOGY_v5.md).
+
 **Last Updated:** February 9, 2026 | **Contracts:** 3,110,017 | **Years:** 2002-2025
 
 ---

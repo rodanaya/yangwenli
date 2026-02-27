@@ -998,6 +998,19 @@ export const exportApi = {
 // Watchlist Endpoints
 // ============================================================================
 
+/** Alert item returned by /watchlist/alerts/check (feature 4.3C) */
+export interface WatchlistAlertItem {
+  id: number
+  item_type: string
+  item_id: number
+  item_name: string
+  alert_threshold: number
+  current_risk_score: number
+  priority: string
+  status: string
+  notes: string | null
+}
+
 export const watchlistApi = {
   /**
    * Get all watchlist items with optional filters
@@ -1053,6 +1066,15 @@ export const watchlistApi = {
    */
   async getChanges(id: number): Promise<WatchlistChanges> {
     const { data } = await api.get<WatchlistChanges>(`/watchlist/${id}/changes`)
+    return data
+  },
+
+  /**
+   * 4.3C Alert System — return watchlist items whose current risk score has
+   * reached or exceeded their configured alert threshold.
+   */
+  async checkAlerts(): Promise<WatchlistAlertItem[]> {
+    const { data } = await api.get<WatchlistAlertItem[]>('/watchlist/alerts/check')
     return data
   },
 }
@@ -1584,6 +1606,49 @@ export const searchApi = {
   },
 }
 
+// ============================================================================
+// Feedback API (feature 4.7 — False Positive Feedback Loop)
+// ============================================================================
+
+export interface FeedbackRecord {
+  id: number
+  entity_type: string
+  entity_id: number
+  feedback_type: 'not_suspicious' | 'confirmed_suspicious' | 'needs_review'
+  reason?: string | null
+  created_at: string
+}
+
+export interface FeedbackIn {
+  entity_type: string
+  entity_id: number
+  feedback_type: string
+  reason?: string
+}
+
+export const feedbackApi = {
+  /** Retrieve analyst feedback for an entity, or null if none recorded. */
+  async get(entityType: string, entityId: number): Promise<FeedbackRecord | null> {
+    const { data } = await api.get<FeedbackRecord | null>('/feedback', {
+      params: { entity_type: entityType, entity_id: entityId },
+    })
+    return data
+  },
+
+  /** Submit or update feedback (upsert). */
+  async submit(body: FeedbackIn): Promise<FeedbackRecord> {
+    const { data } = await api.post<FeedbackRecord>('/feedback', body)
+    return data
+  },
+
+  /** Remove feedback for an entity. */
+  async remove(entityType: string, entityId: number): Promise<void> {
+    await api.delete('/feedback', {
+      params: { entity_type: entityType, entity_id: entityId },
+    })
+  },
+}
+
 // Default export with all API modules
 export default {
   sector: sectorApi,
@@ -1602,4 +1667,5 @@ export default {
   stats: statsApi,
   industries: industriesApi,
   search: searchApi,
+  feedback: feedbackApi,
 }

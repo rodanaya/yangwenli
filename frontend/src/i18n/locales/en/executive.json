@@ -4,7 +4,7 @@
     "dateline": "February 2026  |  RUBLI Intelligence Platform",
     "title": "9.6 Trillion Pesos Under the Microscope",
     "subtitle": "A Comprehensive Analysis of Mexican Federal Procurement, 2002-2025",
-    "lead": "Between 2002 and 2025, the Mexican federal government awarded {{totalContracts}} public procurement contracts worth a combined {{totalValue}} — roughly {{totalValueUSD}}. This report presents the findings of a systematic, AI-driven analysis of every one of those contracts. Using a 16-feature per-sector calibrated model validated against fifteen documented corruption cases, we identified patterns consistent with fraud, collusion, and abuse in contracts worth an estimated {{valueAtRisk}} — {{pct}}% of all procurement value. These findings do not constitute proof of wrongdoing. They are statistical signals that warrant investigation.",
+    "lead": "Between 2002 and 2025, the Mexican federal government awarded {{totalContracts}} public procurement contracts worth a combined {{totalValue}} — roughly {{totalValueUSD}}. This report presents the findings of a systematic, AI-driven analysis of every one of those contracts. Using a 16-feature per-sector risk model validated against fifteen documented corruption cases, we identified patterns consistent with fraud, collusion, and abuse in contracts worth an estimated {{valueAtRisk}} — {{pct}}% of all procurement value. These findings do not constitute proof of wrongdoing. They are statistical signals that warrant investigation.",
     "contracts": "Contracts",
     "totalValue": "Total Value",
     "vendors": "Vendors",
@@ -196,7 +196,7 @@
 
   "s8": {
     "title": "How We Know",
-    "p1": "The v5.0 model transforms procurement analysis from a weighted indicator checklist to a <bold>calibrated probability framework</bold>. Every contract receives a score representing the estimated probability of corruption, derived from 16 features normalized against sector and year baselines using z-scores, with multivariate anomaly detection via Mahalanobis distance and Bayesian logistic regression trained on {{contracts}} known-bad contracts.",
+    "p1": "The v5.0 model transforms procurement analysis from a weighted indicator checklist to a <bold>statistical risk scoring framework</bold>. Every contract receives a score measuring similarity to documented corruption patterns, derived from 16 features normalized against sector and year baselines using z-scores, with multivariate anomaly detection via Mahalanobis distance and logistic regression trained on {{contracts}} known-bad contracts.",
     "discriminationPower": "Discrimination power",
     "calibrationQuality": "Calibration quality",
     "vsRandom": "vs random baseline",
@@ -262,6 +262,6 @@
     "sectors": "12 sectors",
     "quote": "\"There are things that cannot be measured in terms of victory or defeat.\"",
     "copyright": "\u00a9 {{year}} RUBLI Project. All Rights Reserved.",
-    "disclaimer": "Risk scores are calibrated probabilities with confidence intervals. A high score indicates statistical anomaly consistent with corruption patterns \u2014 it does not constitute proof of wrongdoing."
+    "disclaimer": "Risk scores are statistical indicators with confidence intervals. A high score indicates similarity to documented corruption patterns \u2014 it does not constitute proof of wrongdoing."
   }
 }

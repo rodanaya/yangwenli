@@ -1,11 +1,11 @@
 {
   "riskScore": {
     "title": "Risk Score",
-    "description": "A calibrated probability (0-1) estimating the likelihood that a contract involves corruption patterns. Based on 16 statistical features compared against documented corruption cases. Higher = more suspicious."
+    "description": "A statistical indicator (0-1) measuring similarity to documented corruption patterns. Based on 16 features compared against known corruption cases. Higher = more similar to known-bad contracts."
   },
   "riskLevel": {
     "title": "Risk Level",
-    "description": "Categorization based on risk score: Critical (>=50%), High (>=30%), Medium (>=10%), Low (<10%). These thresholds are aligned with OECD procurement benchmarks."
+    "description": "Categorization based on risk score: Critical (>=0.50), High (>=0.30), Medium (>=0.10), Low (<0.10). These thresholds are aligned with OECD procurement benchmarks."
   },
   "singleBid": {
     "title": "Single Bid",
@@ -65,11 +65,11 @@
   },
   "confidenceInterval": {
     "title": "Confidence Interval",
-    "description": "The range within which the true risk score likely falls (95% confidence). A score of 0.35 [0.22, 0.48] means we estimate 35% corruption probability, but it could reasonably be between 22% and 48%."
+    "description": "The range within which the true risk score likely falls (95% confidence). A score of 0.35 [0.22, 0.48] means the risk indicator is 0.35, but given data uncertainty it could reasonably be between 0.22 and 0.48."
   },
   "calibratedProbability": {
-    "title": "Calibrated Probability",
-    "description": "A risk score that represents an actual estimated probability of corruption, not an arbitrary number. Our v5.0 model produces calibrated probabilities validated against documented corruption cases."
+    "title": "Risk Score",
+    "description": "A statistical risk indicator measuring similarity to documented corruption patterns. The score is derived from logistic regression but should be interpreted as a risk indicator, not a literal probability of corruption."
   },
   "perSectorModel": {
     "title": "Per-Sector Model",
@@ -209,7 +209,7 @@
       "coefficient": "-0.374",
       "validation_strength": "Negative — protective factor",
       "key_citation": "Fazekas & Kocsis (2020)",
-      "mexico_note": "New in v5.0. Vendors operating across many sectors are less suspicious — diversified business reduces corruption probability."
+      "mexico_note": "New in v5.0. Vendors operating across many sectors are less suspicious — diversified business reduces the risk score."
     },
     "price_ratio": {
       "label": "Price Ratio",

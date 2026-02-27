@@ -110,25 +110,58 @@ def load_factor_data(conn: sqlite3.Connection) -> dict:
 
     print("\nLoading factor data from contracts...")
 
-    # Load sector price medians for price_ratio computation
-    cursor.execute("""
-        SELECT sector_id, AVG(amount_mxn) as median_approx
-        FROM contracts
-        WHERE amount_mxn > 0 AND amount_mxn < 100000000000
-          AND sector_id IS NOT NULL
-        GROUP BY sector_id
-    """)
-    sector_medians = {r[0]: r[1] for r in cursor.fetchall()}
+    # FIX M4: Load sector price P50 (true median) instead of AVG.
+    # Prefer sector_price_baselines.percentile_50 if available; otherwise
+    # compute approximate median using the OFFSET method (middle row).
+    sector_medians = {}
 
-    # Try IQR baselines if available
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='sector_price_baselines'")
-    if cursor.fetchone():
+    has_price_baselines = cursor.fetchone() is not None
+
+    if has_price_baselines:
+        # Use pre-computed P50 from sector_price_baselines
+        print("  [M4 FIX] Using sector_price_baselines P50 for sector medians")
         cursor.execute("""
             SELECT sector_id, percentile_50
             FROM sector_price_baselines
             WHERE contract_type = 'all' AND year IS NULL AND percentile_50 > 0
         """)
-        for r in cursor.fetchall():
+        sector_medians = {r[0]: r[1] for r in cursor.fetchall()}
+
+    if not sector_medians:
+        # Compute approximate P50 using the OFFSET method (middle row)
+        print("  [M4 FIX] Computing approximate P50 per sector (OFFSET method)")
+        cursor.execute("""
+            SELECT DISTINCT sector_id FROM contracts
+            WHERE sector_id IS NOT NULL AND amount_mxn > 0 AND amount_mxn < 100000000000
+        """)
+        sector_ids = [r[0] for r in cursor.fetchall()]
+
+        for sid in sector_ids:
+            # Get the middle row for this sector — this is the P50 (median)
+            cursor.execute("""
+                SELECT amount_mxn FROM (
+                    SELECT amount_mxn,
+                           ROW_NUMBER() OVER (ORDER BY amount_mxn) AS rn,
+                           COUNT(*) OVER () AS cnt
+                    FROM contracts
+                    WHERE amount_mxn > 0 AND amount_mxn < 100000000000
+                      AND sector_id = ?
+                ) WHERE rn = (cnt + 1) / 2
+            """, (sid,))
+            row = cursor.fetchone()
+            if row:
+                sector_medians[sid] = row[0]
+
+    # Fallback: if any sectors still missing, use AVG as last resort
+    cursor.execute("""
+        SELECT sector_id, AVG(amount_mxn)
+        FROM contracts
+        WHERE amount_mxn > 0 AND amount_mxn < 100000000000 AND sector_id IS NOT NULL
+        GROUP BY sector_id
+    """)
+    for r in cursor.fetchall():
+        if r[0] not in sector_medians:
             sector_medians[r[0]] = r[1]
 
     # Load vendor concentration

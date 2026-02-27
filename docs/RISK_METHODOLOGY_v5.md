@@ -17,6 +17,8 @@
 
 **Validation (v5.0.1):** Train AUC = 0.967, Test AUC = 0.960 (temporal split), PU c = 0.887
 
+> **Score Interpretation Note**: Risk scores are statistical risk indicators measuring similarity to documented corruption patterns — not calibrated probabilities of corruption. The Positive-Unlabeled learning framework estimates similarity to *known* corruption cases (selected from high-profile documented scandals). A score of 0.50 does not mean a 50% probability of corruption; it means the contract's procurement characteristics closely resemble those from known cases. Use scores for investigation triage, not as probabilistic estimates.
+
 ---
 
 ## Overview
@@ -278,14 +280,14 @@ Case 22 is in the DB and will be included in the v5.1 retraining.
 
 ## 7. Risk Level Thresholds
 
-v5.0 uses the same thresholds as v4.0 since scores are calibrated probabilities:
+v5.0 uses the same thresholds as v4.0. Scores are statistical risk indicators, not literal corruption probabilities (see Score Interpretation Note above):
 
 | Level | Threshold | Meaning |
 |-------|-----------|---------|
-| **Critical** | >= 0.50 | ≥50% estimated corruption probability |
-| **High** | >= 0.30 | ≥30% estimated probability |
-| **Medium** | >= 0.10 | ≥10% estimated probability |
-| **Low** | < 0.10 | <10% probability |
+| **Critical** | >= 0.50 | Strongest similarity to documented corruption patterns |
+| **High** | >= 0.30 | Strong similarity to documented corruption patterns |
+| **Medium** | >= 0.10 | Moderate similarity to documented corruption patterns |
+| **Low** | < 0.10 | Low similarity to documented corruption patterns |
 
 ---
 
@@ -299,7 +301,7 @@ CI_lower = σ(β₀ + βᵀz - 1.96 × SE(logit)) / c
 CI_upper = σ(β₀ + βᵀz + 1.96 × SE(logit)) / c
 ```
 
-Per-sector models use the global model's bootstrap CIs for robustness.
+Per-sector models use independently computed bootstrap CIs based on sector-specific training data. Global model uses 1,000 bootstrap resamples; per-sector counts vary by sector size.
 
 ---
 
@@ -367,9 +369,9 @@ Some sectors have quasi-monopolies driven by regulation, clearance requirements,
 
 The z-score normalization partially handles this by comparing within sector/year, but concentration signals persist.
 
-### 9.7 PU Learning Assumption
+### 9.7 PU Learning Assumption — SCAR Violation
 
-The Elkan & Noto correction assumes labeled positives are representative of all corrupt contracts. If undiscovered corruption has fundamentally different statistical patterns from our 15 documented cases, the correction factor (c=0.887) may misestimate the true positive rate.
+The Elkan & Noto correction assumes labeled positives are a **S**elected **C**ompletely **A**t **R**andom (SCAR) sample of all corrupt contracts. The labeled positives are NOT a random sample of corrupt contracts. They are contracts from **publicly documented, high-profile scandals** — IMSS, Segalmex, COVID procurement — selected because they attracted regulatory and media attention. Selection probability is correlated with vendor size, sector prominence, and media visibility. The SCAR assumption is structurally violated. The correction factor c=0.887 estimates how well the model detects cases **similar to already-known scandals**. True coverage of all corruption (including undiscovered, small-scale, or non-media-visible fraud) is likely far lower (estimated 0.10–0.30). This is a fundamental limitation of any model trained on documented cases only.
 
 ### 9.8 Temporal Stationarity
 
@@ -380,6 +382,10 @@ The model was trained on contracts ≤2020 and tested on ≥2021 (AUC 0.960). It
 A risk score of 0.85 means: *"This contract has statistical characteristics similar to contracts from documented corruption cases."* It does not mean the contract is corrupt. A legitimate bulk medicine purchase by IMSS from a major pharmaceutical supplier scores high for the same reasons a fraudulent one does — large amount, concentrated vendor, same institution.
 
 Scores are **investigation triage**, not verdicts.
+
+### 9.10 Temporal Feature Leakage — Being Fixed in v5.2
+
+Vendor-level features (vendor_concentration, win_rate, price_volatility, institution_diversity, sector_spread) are currently computed using full-dataset history (2002–2025). A contract from 2019 has its vendor_concentration computed using 2020–2025 activity. This constitutes indirect leakage of future information into the training set, inflating the reported Test AUC of 0.960. The true prospective performance on genuinely unseen vendors is unknown but expected to be lower. **v5.2 fix**: Point-in-time feature computation using rolling aggregates (features for year T use only data from years ≤ T−1). A new `compute_vendor_rolling_stats.py` pipeline step produces a `vendor_rolling_stats` table for this purpose.
 
 ### Summary
 
@@ -392,9 +398,10 @@ Scores are **investigation triage**, not verdicts.
 | Co-bidding signal = zero | Bid rotation not in risk score | Yes (needs collusion ground truth) |
 | Pre-2010 data quality | 25% of records less reliable | No (structural COMPRANET limit) |
 | Structural concentration | Some sectors over-flagged | Yes (sector-specific priors) |
-| PU assumption | Correction factor may be off | Partial (better labeled data) |
+| PU assumption (SCAR violated) | c=0.887 only covers scandal-similar corruption; true coverage estimated 0.10–0.30 | Partial (better labeled data) |
 | Temporal stationarity | New fraud patterns may be missed | Yes (periodic retraining) |
 | Correlation ≠ causation | Scores require follow-up investigation | No (by design) |
+| Temporal feature leakage (vendor aggregates use future data) | Test AUC inflated, true generalization unknown | Yes (v5.2 point-in-time features) |
 
 ---
 
@@ -433,7 +440,7 @@ python -m scripts.precompute_stats
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `risk_score` | REAL | Active v5.0 calibrated probability |
+| `risk_score` | REAL | Active v5.0 risk indicator score |
 | `risk_score_v3` | REAL | Preserved v3.3 checklist scores |
 | `risk_score_v4` | REAL | Preserved v4.0 scores |
 | `risk_score_v5` | REAL | Preserved v5.0 scores |
@@ -449,8 +456,9 @@ python -m scripts.precompute_stats
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
+| **5.2.0** | TBD | Temporal feature leakage fix (point-in-time vendor stats), per-sector bootstrap CIs, Platt scaling applied at inference, PU correction hyperparameter alignment, class weight correction, 1,000 bootstrap resamples, per-sector AUCs persisted. Score framing updated: "risk indicators" not "calibrated probabilities." |
 | **5.1.0** | TBD | Ground truth expansion: Case 22 (SAT EFOS, 38 vendors), Cases 20–21 (pending vendor match). External data integration: SAT EFOS 13,960 records, SFP sanctions 1,954 records (22 RFC-matched). ASF audit findings (scraper in progress). Ghost company blind spot fix. |
-| **5.0.1** | 2026-02-16 | Updated docs to match database: 16 features (4 new behavioral), Train AUC 0.967, Test AUC 0.960, c=0.887, C=10.0/l1=0.25. Fixed views referencing empty risk_scores table. **Active version.** |
+| **5.0.1** | 2026-02-16 | Updated docs to match database: 16 features (4 new behavioral), Train AUC 0.967, Test AUC 0.960, c=0.887, C=10.0/l1=0.25. Fixed views referencing empty risk_scores table. Superseded by v5.2. |
 | **5.0.0** | 2026-02-14 | Per-sector sub-models, diversified ground truth (15 cases, 27 vendors), temporal train/test split, Elkan & Noto PU correction, cross-validated ElasticNet. |
 | 4.0.2 | 2026-02-09 | Dampened coefficients, OECD-compliant thresholds. AUC 0.942. |
 | 4.0.1 | 2026-02-09 | Retrained with diversified ground truth (9 cases). AUC 0.951. |
@@ -472,4 +480,4 @@ python -m scripts.precompute_stats
 
 ---
 
-*Risk scores are calibrated probabilities with confidence intervals. A high score indicates statistical anomaly consistent with corruption patterns — it does not constitute proof of wrongdoing.*
+*Risk scores are statistical risk indicators with confidence intervals, measuring similarity to documented corruption patterns. A high score does not constitute proof of wrongdoing — it indicates the contract's procurement characteristics closely resemble those from known corruption cases.*

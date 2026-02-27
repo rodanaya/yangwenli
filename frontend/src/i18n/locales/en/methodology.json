@@ -14,7 +14,7 @@
     "references": "References"
   },
   "overview": {
-    "description": "RUBLI v5.0 scores every contract with a calibrated corruption probability using per-sector logistic regression trained on 15 documented cases. Scores are honest out-of-sample estimates — the model was trained on contracts through 2020 and tested on 2021+.",
+    "description": "RUBLI v5.0 scores every contract with a statistical risk indicator using per-sector logistic regression trained on 15 documented cases. Scores measure similarity to known corruption patterns — the model was trained on contracts through 2020 and tested on 2021+.",
     "modelVersion": "Model version",
     "trainAUC": "Train AUC",
     "testAUC": "Test AUC",
@@ -28,7 +28,7 @@
     "meaning": "Meaning",
     "distribution": "Distribution",
     "count": "Count",
-    "disclaimer": "Risk scores are calibrated probabilities with 95% confidence intervals. A high score indicates statistical anomaly consistent with corruption patterns — it does not constitute proof."
+    "disclaimer": "Risk scores are statistical indicators with 95% confidence intervals. A high score indicates similarity to documented corruption patterns — it does not constitute proof."
   },
   "coefficients": {
     "title": "v5.0 Global Model Coefficients",
@@ -65,7 +65,7 @@
     "mahalanobisFormula": "D²(z) = zᵀ Σ⁻¹ z",
     "perSector": "Per-Sector Logistic Regression",
     "perSectorDesc": "v5.0 trains 12 dedicated models (one per sector) plus a global fallback. Corruption patterns differ by sector — Energía is driven by industry mismatch, while Agricultura is driven by vendor concentration (+1.82).",
-    "perSectorFormula": "P(corrupt|z) = σ(β₀ + βᵀz) / c, where c = 0.887 (PU correction)"
+    "perSectorFormula": "S(z) = σ(β₀ + βᵀz) / c, where c = 0.887 (PU correction)"
   },
   "modelComparison": {
     "title": "Model Comparison: v3.3 → v5.0",
@@ -80,7 +80,7 @@
   },
   "dataSources": {
     "title": "Data Sources — COMPRANET",
-    "description": "Data quality varies significantly by period. Risk scores for 2002–2010 are directional estimates, not precise probabilities.",
+    "description": "Data quality varies significantly by period. Risk scores for 2002–2010 are directional estimates with lower reliability.",
     "structure": "Structure",
     "years": "Years",
     "quality": "Quality",
@@ -122,6 +122,6 @@
     "perSectorModels": "Per-Sector Models",
     "validationMetrics": "Validation Metrics",
     "knownLimitations": "Known Limitations",
-    "disclaimer": "Risk scores are calibrated probabilities, not legal conclusions. High scores indicate statistical patterns consistent with documented corruption — they do not constitute proof."
+    "disclaimer": "Risk scores are statistical indicators, not legal conclusions. High scores indicate similarity to documented corruption patterns — they do not constitute proof."
   }
 }

@@ -56,7 +56,7 @@
     "step1Title": "3.1 Million Contracts Analyzed",
     "step1Desc": "We analyze every federal procurement contract from 2002-2025, worth over 9 trillion MXN. Our AI model detects patterns consistent with corruption, validated against 15 real documented cases.",
     "step2Title": "Risk Scores You Can Trust",
-    "step2Desc": "Each contract receives a calibrated probability score (0-100%) estimating corruption risk. Critical (50%+), High (30%+), Medium (10%+), Low (<10%). Hover over any metric with a help icon for an explanation.",
+    "step2Desc": "Each contract receives a risk score (0-1) measuring similarity to documented corruption patterns. Critical (0.50+), High (0.30+), Medium (0.10+), Low (<0.10). Hover over any metric with a help icon for an explanation.",
     "step3Title": "Explore and Investigate",
     "step3Desc": "Search vendors, institutions, and contracts. Track suspicious entities on your Watchlist. Use the Network view to see vendor relationships and potential collusion patterns.",
     "step4Title": "Start with the Executive Summary",
