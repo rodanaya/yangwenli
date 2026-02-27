@@ -3740,20 +3740,26 @@ def get_asf_institution_summary():
         rows = conn.execute(
             """
             SELECT
-                a.entity_name,
+                TRIM(LOWER(a.entity_name))                                      AS entity_key,
+                MIN(a.entity_name)                                              AS entity_name,
                 COUNT(*)                                                        AS finding_count,
                 SUM(CASE WHEN a.amount_mxn < 100000000000 THEN a.amount_mxn
                          ELSE 0 END)                                           AS total_amount_mxn,
                 MIN(a.report_year)                                              AS earliest_year,
                 MAX(a.report_year)                                              AS latest_year,
-                AVG(i.avg_risk_score)                                          AS matched_risk_score,
-                i.institution_name                                              AS matched_institution_name
+                AVG(ist.avg_risk_score)                                        AS matched_risk_score,
+                MIN(ins.name)                                                  AS matched_institution_name
             FROM asf_cases a
-            LEFT JOIN institution_stats i
-                ON LOWER(i.institution_name) LIKE '%' || LOWER(SUBSTR(a.entity_name, 1, 20)) || '%'
-                OR LOWER(a.entity_name) LIKE '%' || LOWER(SUBSTR(i.institution_name, 1, 20)) || '%'
+            LEFT JOIN institutions ins
+                ON LENGTH(a.entity_name) >= 15
+                AND LENGTH(ins.name) >= 15
+                AND (
+                    LOWER(ins.name) LIKE '%' || LOWER(SUBSTR(a.entity_name, 1, 40)) || '%'
+                    OR LOWER(a.entity_name) LIKE '%' || LOWER(SUBSTR(ins.name, 1, 40)) || '%'
+                )
+            LEFT JOIN institution_stats ist ON ist.institution_id = ins.id
             WHERE a.amount_mxn IS NOT NULL
-            GROUP BY a.entity_name
+            GROUP BY TRIM(LOWER(a.entity_name))
             ORDER BY finding_count DESC
             """
         ).fetchall()
