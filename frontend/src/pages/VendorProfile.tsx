@@ -375,7 +375,7 @@ function ActivityCalendar({
       })()}
       {/* Legend */}
       <div className="flex items-center gap-2 mt-3">
-        <span className="text-[10px] text-text-muted">Less</span>
+        <span className="text-[10px] text-text-muted">{t('history.calendarLess')}</span>
         {[0.05, 0.25, 0.5, 0.75, 1].map((op) => (
           <div
             key={op}
@@ -383,7 +383,7 @@ function ActivityCalendar({
             style={{ backgroundColor: sectorColor, opacity: op }}
           />
         ))}
-        <span className="text-[10px] text-text-muted">More</span>
+        <span className="text-[10px] text-text-muted">{t('history.calendarMore')}</span>
       </div>
     </div>
   )
@@ -1317,7 +1317,7 @@ export function VendorProfile() {
                     })}
                   </div>
                   <p className="mt-2 text-[10px] text-text-muted/50 italic">
-                    Color = sector · badge = avg risk score · sorted by total value
+                    {t('cards.footprintLegend')}
                   </p>
                   </div>
                 </CardContent>
@@ -1337,7 +1337,7 @@ export function VendorProfile() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="h-4 w-4" />
-                    Risk Score <InfoTooltip termKey="riskScore" size={13} />
+                    {t('risk.riskScore')} <InfoTooltip termKey="riskScore" size={13} />
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -1362,7 +1362,7 @@ export function VendorProfile() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <Activity className="h-4 w-4" />
-                      Risk Trend
+                      {t('risk.riskTrend')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -1431,7 +1431,7 @@ export function VendorProfile() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <BarChart3 className="h-4 w-4" />
-                      Contract Lifecycle
+                      {t('risk.contractLifecycle')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -1509,20 +1509,20 @@ export function VendorProfile() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <BarChart3 className="h-4 w-4" />
-                      Statistical Anomaly <InfoTooltip termKey="mahalanobisDistance" size={13} />
+                      {t('risk.statisticalAnomaly')} <InfoTooltip termKey="mahalanobisDistance" size={13} />
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-text-muted">Avg Mahalanobis D²</span>
+                      <span className="text-text-muted">{t('risk.avgMahalanobis')}</span>
                       <span className="font-mono tabular-nums">{vendor.avg_mahalanobis.toFixed(1)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-text-muted">Max D²</span>
+                      <span className="text-text-muted">{t('risk.maxD2')}</span>
                       <span className="font-mono tabular-nums">{vendor.max_mahalanobis?.toFixed(1) ?? '—'}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-text-muted">Anomalous Contracts</span>
+                      <span className="text-text-muted">{t('risk.anomalousContracts')}</span>
                       <span className={`font-mono tabular-nums ${
                         (vendor.pct_anomalous ?? 0) > 20 ? 'text-risk-critical' :
                         (vendor.pct_anomalous ?? 0) > 10 ? 'text-risk-high' :
@@ -1532,7 +1532,7 @@ export function VendorProfile() {
                       </span>
                     </div>
                     <p className="text-xs text-text-muted pt-1">
-                      Based on chi-squared test (k=12, p&lt;0.05)
+                      {t('risk.chiSquaredNote')}
                     </p>
                   </CardContent>
                 </Card>
@@ -1547,7 +1547,7 @@ export function VendorProfile() {
                   <CardHeader>
                     <CardTitle className="text-sm flex items-center gap-2">
                       <BarChart3 className="h-4 w-4" />
-                      Risk Factor Contribution (v5.0 Z-Scores)
+                      {t('risk.riskFactorContribution')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -1560,7 +1560,7 @@ export function VendorProfile() {
                   <CardHeader>
                     <CardTitle className="text-sm flex items-center gap-2">
                       <BarChart3 className="h-4 w-4" />
-                      Risk Factor Contribution (v5.0 Z-Scores)
+                      {t('risk.riskFactorContribution')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -1575,7 +1575,7 @@ export function VendorProfile() {
                 <CardHeader>
                   <CardTitle className="text-sm flex items-center gap-2">
                     <BarChart3 className="h-4 w-4" />
-                    Risk Factor Contribution (v5.0 Model)
+                    {t('risk.riskFactorContributionFallback')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -1587,7 +1587,7 @@ export function VendorProfile() {
                       riskScore={riskProfile.avg_risk_score ?? vendor.avg_risk_score ?? 0}
                     />
                   ) : (
-                    <p className="text-sm text-text-muted">No risk factor data available</p>
+                    <p className="text-sm text-text-muted">{t('risk.noRiskFactorData')}</p>
                   )}
                 </CardContent>
               </Card>
@@ -1596,7 +1596,7 @@ export function VendorProfile() {
               {/* Risk Factor List */}
               <Card className="hover-lift">
                 <CardHeader>
-                  <CardTitle className="text-sm">Risk Factor Details</CardTitle>
+                  <CardTitle className="text-sm">{t('risk.riskFactorDetails')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {riskLoading ? (
@@ -1608,7 +1608,7 @@ export function VendorProfile() {
                   ) : riskProfile?.top_risk_factors?.length ? (
                     <RiskFactorList factors={riskProfile.top_risk_factors} />
                   ) : (
-                    <p className="text-sm text-text-muted">No risk factors available</p>
+                    <p className="text-sm text-text-muted">{t('risk.noRiskFactors')}</p>
                   )}
                 </CardContent>
               </Card>
@@ -1624,7 +1624,7 @@ export function VendorProfile() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="h-4 w-4" />
-                  Contract Activity Calendar
+                  {t('history.activityCalendar')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1636,7 +1636,7 @@ export function VendorProfile() {
                     sectorColor={sectorColor}
                   />
                 ) : (
-                  <p className="text-sm text-text-muted">No contract data available</p>
+                  <p className="text-sm text-text-muted">{t('history.noContractData')}</p>
                 )}
               </CardContent>
             </Card>
@@ -1646,11 +1646,11 @@ export function VendorProfile() {
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
-                  All Contracts
+                  {t('history.allContracts')}
                 </CardTitle>
                 <Link to={`/contracts?vendor_id=${vendorId}`}>
                   <Button variant="ghost" size="sm">
-                    View all
+                    {t('cards.viewAll')}
                     <ExternalLink className="ml-1 h-3 w-3" />
                   </Button>
                 </Link>
@@ -1671,7 +1671,7 @@ export function VendorProfile() {
                     </div>
                   </ScrollArea>
                 ) : (
-                  <div className="p-8 text-center text-text-muted">No contracts found</div>
+                  <div className="p-8 text-center text-text-muted">{t('cards.noContractsFound')}</div>
                 )}
               </CardContent>
             </Card>
@@ -1692,11 +1692,11 @@ export function VendorProfile() {
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2 text-risk-medium">
                       <Users className="h-4 w-4" />
-                      Co-Bidding Analysis
+                      {t('coBidding.analysisTitle')}
                     </CardTitle>
                     {coBidders?.total_procedures != null && (
                       <span className="text-xs text-text-muted font-mono">
-                        {coBidders.total_procedures} procedures analyzed
+                        {coBidders.total_procedures} {t('coBidding.proceduresAnalyzed')}
                       </span>
                     )}
                   </div>
@@ -1718,7 +1718,7 @@ export function VendorProfile() {
                             <div className="text-xs text-text-muted mt-0.5">{sp.description}</div>
                             {sp.vendors?.length > 0 && (
                               <div className="text-[11px] text-text-muted mt-1 font-mono">
-                                Involves: {sp.vendors.slice(0, 3).map(v => toTitleCase(v.name)).join(', ')}
+                                {t('coBidding.involves')} {sp.vendors.slice(0, 3).map(v => toTitleCase(v.name)).join(', ')}
                                 {sp.vendors.length > 3 ? ` +${sp.vendors.length - 3} more` : ''}
                               </div>
                             )}
@@ -1752,7 +1752,7 @@ export function VendorProfile() {
                                 </Link>
                                 {(isCoverBidder || isAlwaysWinner) && (
                                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-risk-critical/15 text-risk-critical font-mono shrink-0">
-                                    {isCoverBidder ? 'cover bidder?' : 'always wins?'}
+                                    {isCoverBidder ? t('coBidding.coverBidder') : t('coBidding.alwaysWins')}
                                   </span>
                                 )}
                               </div>
@@ -1766,15 +1766,15 @@ export function VendorProfile() {
                               </span>
                             </div>
                             <div className="flex items-center gap-4 mt-2 text-[11px] font-mono text-text-muted">
-                              <span>{partner.co_bid_count} shared procedures</span>
+                              <span>{partner.co_bid_count} {t('coBidding.sharedProcedures')}</span>
                               {winPct !== null && (
                                 <span>
-                                  wins: <span className={winPct > 60 ? 'text-risk-high' : winPct < 15 ? 'text-risk-medium' : 'text-text-secondary'}>{winPct.toFixed(0)}%</span>
+                                  {t('coBidding.wins')}: <span className={winPct > 60 ? 'text-risk-high' : winPct < 15 ? 'text-risk-medium' : 'text-text-secondary'}>{winPct.toFixed(0)}%</span>
                                 </span>
                               )}
                               {partner.same_winner_ratio > 0.5 && (
                                 <span className="text-risk-medium">
-                                  same winner {(partner.same_winner_ratio * 100).toFixed(0)}% of time
+                                  {t('coBidding.sameWinner')} {(partner.same_winner_ratio * 100).toFixed(0)}% {t('coBidding.ofTime')}
                                 </span>
                               )}
                             </div>
@@ -1790,8 +1790,8 @@ export function VendorProfile() {
                 <Card className="hover-lift">
                   <CardContent className="p-8 text-center text-text-muted">
                     <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    <p className="text-sm">No significant co-bidding patterns detected</p>
-                    <p className="text-xs mt-1">Requires ≥3 shared competitive procedures with another vendor</p>
+                    <p className="text-sm">{t('coBidding.noPatternsTitle')}</p>
+                    <p className="text-xs mt-1">{t('coBidding.noPatternsDescription')}</p>
                   </CardContent>
                 </Card>
               )
@@ -1801,7 +1801,7 @@ export function VendorProfile() {
             <Card className="hover-lift">
               <CardContent className="p-6 text-center">
                 <p className="text-sm text-text-muted mb-4">
-                  Explore the full vendor relationship network with interactive graph visualization.
+                  {t('network.networkGraphDescription')}
                 </p>
                 <Button
                   variant="outline"
@@ -1809,7 +1809,7 @@ export function VendorProfile() {
                   className="gap-2"
                 >
                   <Network className="h-4 w-4" />
-                  Open Network Graph
+                  {t('network.openNetworkGraph')}
                 </Button>
               </CardContent>
             </Card>
@@ -2382,4 +2382,3 @@ function ExternalFlagsPanel({ flags }: { flags: VendorExternalFlags | undefined 
 }
 
 export default VendorProfile
-        
