@@ -1,11 +1,11 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Search, Moon, Sun, X, Database, Activity, Shield, Menu } from 'lucide-react'
+import { Search, Moon, Sun, Database, Activity, Shield, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { SmartSearch } from '@/components/SmartSearch'
+import { CommandPalette } from '@/components/CommandPalette'
 import { useTheme } from '@/hooks/useTheme'
 import { analysisApi } from '@/api/client'
 import { cn } from '@/lib/utils'
@@ -43,7 +43,6 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const { t } = useTranslation('nav')
   const { theme, toggleTheme } = useTheme()
   const [searchOpen, setSearchOpen] = useState(false)
-  const [searchValue, setSearchValue] = useState('')
 
   // Fetch anomaly count for notifications — non-blocking, cached aggressively
   const { data: anomalies } = useQuery({
@@ -86,14 +85,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
-        setSearchOpen((prev) => {
-          if (prev) setSearchValue('')
-          return !prev
-        })
-      }
-      if (e.key === 'Escape' && searchOpen) {
-        setSearchValue('')
-        setSearchOpen(false)
+        setSearchOpen((prev) => !prev)
       }
     }
 
@@ -105,21 +97,6 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const i18nKey = ROUTE_I18N_KEYS[currentPath]
   const title = i18nKey ? t(i18nKey) : getBreadcrumbTitle(currentPath)
   const parentPath = getParentPath(currentPath)
-
-  const handleSearchSelect = useCallback(
-    (suggestion: { type: string; id?: number; label: string }) => {
-      if (suggestion.type === 'vendor' && suggestion.id) {
-        navigate(`/vendors/${suggestion.id}`)
-      } else if (suggestion.type === 'institution' && suggestion.id) {
-        navigate(`/institutions/${suggestion.id}`)
-      } else {
-        navigate(`/contracts?search=${encodeURIComponent(suggestion.label)}`)
-      }
-      setSearchValue('')
-      setSearchOpen(false)
-    },
-    [navigate]
-  )
 
   return (
     <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-border/40 bg-background/80 px-4 md:px-5 backdrop-blur-md">
@@ -146,44 +123,25 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
 
       {/* Right — Status indicators + actions */}
       <div className="flex items-center gap-1">
-        {/* Search trigger */}
-        {searchOpen ? (
-          <div className="flex items-center gap-1.5 animate-slide-in-right">
-            <SmartSearch
-              value={searchValue}
-              onChange={setSearchValue}
-              onSelect={handleSearchSelect}
-              className="w-full max-w-56"
-              autoFocus
-            />
+        {/* Search trigger — opens centered CommandPalette modal */}
+        <Tooltip>
+          <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 flex-shrink-0"
-              onClick={() => { setSearchValue(''); setSearchOpen(false) }}
-              aria-label="Close search"
+              className="h-7 w-7"
+              onClick={() => setSearchOpen(true)}
+              aria-label="Open search (Ctrl+K)"
             >
-              <X className="h-3.5 w-3.5" />
+              <Search className="h-3.5 w-3.5 text-text-muted" />
             </Button>
-          </div>
-        ) : (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={() => setSearchOpen(true)}
-                aria-label="Open search (Ctrl+K)"
-              >
-                <Search className="h-3.5 w-3.5 text-text-muted" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p className="text-xs">Search <kbd className="ml-1 text-xs px-1 py-0.5 rounded bg-background-elevated border border-border text-text-muted">Ctrl+K</kbd></p>
-            </TooltipContent>
-          </Tooltip>
-        )}
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="text-xs">Search <kbd className="ml-1 text-xs px-1 py-0.5 rounded bg-background-elevated border border-border text-text-muted">Ctrl+K</kbd></p>
+          </TooltipContent>
+        </Tooltip>
+
+        <CommandPalette open={searchOpen} onOpenChange={setSearchOpen} />
 
         {/* Divider */}
         <div className="h-4 w-px bg-border/40 mx-1 hidden sm:block" />
