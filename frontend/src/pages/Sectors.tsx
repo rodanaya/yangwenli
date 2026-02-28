@@ -7,6 +7,7 @@
  */
 
 import { memo, useMemo, useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -261,6 +262,7 @@ const SectorRadar = memo(function SectorRadar({ sector, allSectors, compareSecto
 // ============================================================================
 
 export function Sectors() {
+  const { t } = useTranslation('sectors')
   const navigate = useNavigate()
   const [sortField, setSortField] = useState<SortField>('total_value_mxn')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
@@ -420,7 +422,7 @@ export function Sectors() {
     return (
       <Card>
         <CardContent className="p-8 text-center text-text-muted">
-          <p>Failed to load sectors</p>
+          <p>{t('page.failedToLoad')}</p>
           <p className="text-sm">{(error as Error).message}</p>
         </CardContent>
       </Card>
@@ -436,10 +438,10 @@ export function Sectors() {
       <div>
         <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
           <BarChart3 className="h-4 w-4 text-accent" />
-          Sectors Overview
+          {t('page.title')}
         </h2>
         <p className="text-xs text-text-muted mt-0.5">
-          12 sectors covering Mexican federal procurement — click any column header to sort
+          {t('page.subtitle')}
         </p>
       </div>
       </ScrollReveal>
