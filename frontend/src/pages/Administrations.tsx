@@ -512,7 +512,7 @@ export default function Administrations() {
                 : 'text-text-muted hover:text-text-primary'
             )}
           >
-            Administration Overview
+            {t('tabs.overview')}
           </button>
           <button
             onClick={() => setActiveTab('patterns')}
@@ -523,7 +523,7 @@ export default function Administrations() {
                 : 'text-text-muted hover:text-text-primary'
             )}
           >
-            Systemic Patterns
+            {t('tabs.patterns')}
           </button>
           <button
             onClick={() => setActiveTab('political')}
@@ -534,7 +534,7 @@ export default function Administrations() {
                 : 'text-text-muted hover:text-text-primary'
             )}
           >
-            Political Cycle
+            {t('tabs.political')}
           </button>
           <button
             onClick={() => setActiveTab('compare')}
@@ -545,7 +545,7 @@ export default function Administrations() {
                 : 'text-text-muted hover:text-text-primary'
             )}
           >
-            Period Comparison
+            {t('tabs.compare')}
           </button>
         </div>
       </div>
@@ -609,10 +609,10 @@ export default function Administrations() {
                 {admin.dataStart}–{Math.min(admin.end, 2025)}
               </div>
               <div className="mt-2 text-xs font-mono text-text-secondary">
-                {agg ? formatNumber(agg.contracts) : '0'} contracts
+                {agg ? formatNumber(agg.contracts) : '0'} {t('contracts')}
               </div>
               {isSelected && (
-                <div className="mt-1 text-xs text-accent font-mono">Selected</div>
+                <div className="mt-1 text-xs text-accent font-mono">{t('selected')}</div>
               )}
               {/* Mini sparkline */}
               {agg && agg.years.length > 1 && (
@@ -641,7 +641,7 @@ export default function Administrations() {
       <div className="flex items-start gap-3 rounded-lg border border-border/40 bg-card px-4 py-3">
         <Info className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
         <div>
-          <span className="text-xs font-semibold text-accent uppercase tracking-wider mr-2">Context</span>
+          <span className="text-xs font-semibold text-accent uppercase tracking-wider mr-2">{t('narrative')}</span>
           <span className="text-sm text-text-secondary leading-relaxed">
             {ADMIN_NARRATIVES[selectedAdmin]}
           </span>
