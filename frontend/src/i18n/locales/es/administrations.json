@@ -49,5 +49,12 @@
   "sectorCorrelations": "Correlaciones de Riesgo Sectorial",
   "sectorCorrelationsNote": "Pares de sectores con trayectorias de riesgo correlacionadas (|r| ≥ 0.70) durante esta administracion",
   "correlation": "correlacion",
-  "transitionFrom": "→"
+  "transitionFrom": "→",
+  "heatmap": {
+    "sector": "Sector",
+    "directAward": "Adj. Directa",
+    "singleBid": "Lic. Unica",
+    "highRisk": "Alto Riesgo",
+    "avgRisk": "Riesgo Prom."
+  }
 }

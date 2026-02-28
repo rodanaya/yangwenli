@@ -909,11 +909,11 @@ export default function Administrations() {
             <table className="w-full text-xs font-mono">
               <thead>
                 <tr className="border-b border-border/30">
-                  <th className="text-left px-3 py-2.5 text-xs text-text-muted font-medium">Sector</th>
-                  <th className="text-right px-3 py-2.5 text-xs text-text-muted font-medium" title="Percentage of contracts awarded directly without competitive bidding">Direct Award</th>
-                  <th className="text-right px-3 py-2.5 text-xs text-text-muted font-medium" title="Percentage of competitive procedures with only one bidder">Single Bid</th>
-                  <th className="text-right px-3 py-2.5 text-xs text-text-muted font-medium" title="Percentage of contracts scored as high or critical risk">High Risk</th>
-                  <th className="text-right px-3 py-2.5 text-xs text-text-muted font-medium" title="Average risk score (0-100%)">Avg Risk</th>
+                  <th className="text-left px-3 py-2.5 text-xs text-text-muted font-medium">{t('heatmap.sector')}</th>
+                  <th className="text-right px-3 py-2.5 text-xs text-text-muted font-medium" title="Percentage of contracts awarded directly without competitive bidding">{t('heatmap.directAward')}</th>
+                  <th className="text-right px-3 py-2.5 text-xs text-text-muted font-medium" title="Percentage of competitive procedures with only one bidder">{t('heatmap.singleBid')}</th>
+                  <th className="text-right px-3 py-2.5 text-xs text-text-muted font-medium" title="Percentage of contracts scored as high or critical risk">{t('heatmap.highRisk')}</th>
+                  <th className="text-right px-3 py-2.5 text-xs text-text-muted font-medium" title="Average risk score (0-100%)">{t('heatmap.avgRisk')}</th>
                 </tr>
               </thead>
               <tbody>

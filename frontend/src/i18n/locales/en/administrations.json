@@ -49,5 +49,12 @@
   "sectorCorrelations": "Sector Risk Correlations",
   "sectorCorrelationsNote": "Sector pairs with correlated risk trajectories (|r| ≥ 0.70) during this administration",
   "correlation": "correlation",
-  "transitionFrom": "→"
+  "transitionFrom": "→",
+  "heatmap": {
+    "sector": "Sector",
+    "directAward": "Direct Award",
+    "singleBid": "Single Bid",
+    "highRisk": "High Risk",
+    "avgRisk": "Avg Risk"
+  }
 }
