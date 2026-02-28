@@ -1681,6 +1681,17 @@ export function VendorProfile() {
         {/* TAB 4: Network */}
         <TabPanel tabKey="network">
           <div className="space-y-6">
+            {/* High Clustering Alert Banner */}
+            {vendor?.cobid_clustering_coeff != null && vendor.cobid_clustering_coeff > 0.6 && (
+              <div className="flex items-start gap-3 p-4 rounded-lg border border-red-500/40 bg-red-500/[0.06]">
+                <AlertTriangle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
+                <p className="text-sm text-red-300">
+                  <span className="font-semibold">High network clustering detected.</span>{' '}
+                  This vendor&apos;s bidding partners form a tightly connected group, consistent with coordinated bid-rigging. See co-bidding patterns below.
+                </p>
+              </div>
+            )}
+
             {/* F8: Co-Bidding Collusion Panel */}
             {coBiddersLoading ? (
               <div className="space-y-2">
@@ -1781,6 +1792,71 @@ export function VendorProfile() {
                           </div>
                         )
                       })}
+                    </div>
+                  )}
+
+                  {/* Network Topology — clustering metrics (Wachs-Fazekas 2021) */}
+                  {vendor?.cobid_clustering_coeff != null && vendor.cobid_clustering_coeff > 0 && (
+                    <div className="pt-2 border-t border-border/50">
+                      <p className="text-xs font-medium text-text-muted uppercase tracking-wide mb-3 flex items-center gap-1.5">
+                        Network Topology
+                        <InfoTooltip termKey="clusteringCoefficient" size={12} />
+                      </p>
+                      <div className="flex gap-3">
+                        {/* Clustering Coefficient pill */}
+                        <div className={cn(
+                          'flex-1 rounded-lg border px-4 py-3',
+                          vendor.cobid_clustering_coeff > 0.6
+                            ? 'border-red-500/40 bg-red-500/[0.06]'
+                            : vendor.cobid_clustering_coeff >= 0.3
+                            ? 'border-amber-500/40 bg-amber-500/[0.06]'
+                            : 'border-green-500/40 bg-green-500/[0.06]'
+                        )}>
+                          <p className="text-[10px] text-text-muted uppercase tracking-wide mb-1 flex items-center gap-1">
+                            Clustering Coefficient
+                            <InfoTooltip termKey="clusteringCoefficient" size={11} />
+                          </p>
+                          <p className={cn(
+                            'text-xl font-bold tabular-nums',
+                            vendor.cobid_clustering_coeff > 0.6
+                              ? 'text-red-400'
+                              : vendor.cobid_clustering_coeff >= 0.3
+                              ? 'text-amber-400'
+                              : 'text-green-400'
+                          )}>
+                            {(vendor.cobid_clustering_coeff * 100).toFixed(0)}%
+                          </p>
+                          <p className={cn(
+                            'text-[10px] mt-0.5',
+                            vendor.cobid_clustering_coeff > 0.6
+                              ? 'text-red-400/80'
+                              : vendor.cobid_clustering_coeff >= 0.3
+                              ? 'text-amber-400/80'
+                              : 'text-green-400/80'
+                          )}>
+                            {vendor.cobid_clustering_coeff > 0.6
+                              ? 'High clustering — possible cartel structure'
+                              : vendor.cobid_clustering_coeff >= 0.3
+                              ? 'Moderate clustering'
+                              : 'Low clustering'}
+                          </p>
+                        </div>
+
+                        {/* Closed Triangles pill */}
+                        {vendor.cobid_triangle_count != null && (
+                          <div className="flex-1 rounded-lg border border-border/60 bg-background-card px-4 py-3">
+                            <p className="text-[10px] text-text-muted uppercase tracking-wide mb-1">
+                              Closed Triangles
+                            </p>
+                            <p className="text-xl font-bold tabular-nums text-text-primary">
+                              {vendor.cobid_triangle_count.toLocaleString()}
+                            </p>
+                            <p className="text-[10px] text-text-muted mt-0.5">
+                              Bidding triangles detected
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </CardContent>

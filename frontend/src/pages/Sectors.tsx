@@ -752,7 +752,7 @@ export function Sectors() {
                     onClick={() => handleSort('avg_risk_score')}
                     aria-sort={sortField === 'avg_risk_score' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
                   >
-                    Avg Risk Score
+                    {t('table.avgRiskScore')}
                     <SortIndicator field="avg_risk_score" sortField={sortField} sortDir={sortDir} />
                   </th>
                   <th
@@ -760,7 +760,7 @@ export function Sectors() {
                     onClick={() => handleSort('high_risk_pct')}
                     aria-sort={sortField === 'high_risk_pct' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
                   >
-                    High-Risk %
+                    {t('table.highRiskPct')}
                     <SortIndicator field="high_risk_pct" sortField={sortField} sortDir={sortDir} />
                   </th>
                   <th
@@ -768,14 +768,14 @@ export function Sectors() {
                     onClick={() => handleSort('direct_award_pct')}
                     aria-sort={sortField === 'direct_award_pct' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
                   >
-                    Direct Award %
+                    {t('table.directAwardPct')}
                     <SortIndicator field="direct_award_pct" sortField={sortField} sortDir={sortDir} />
                   </th>
                   <th className="px-3 py-2.5 text-center font-medium whitespace-nowrap hidden xl:table-cell">
-                    Risk Trend
+                    {t('table.riskTrend')}
                   </th>
                   <th className="px-3 py-2.5 text-left font-medium whitespace-nowrap hidden lg:table-cell">
-                    Top Ramo
+                    {t('table.topRamo')}
                   </th>
                 </tr>
               </thead>
@@ -861,7 +861,7 @@ export function Sectors() {
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-sm">
                   <BarChart3 className="h-3.5 w-3.5 text-accent" />
-                  Contract Value by Sector
+                  {t('valueChart.title')}
                 </CardTitle>
                 <ChartDownloadButton targetRef={sectorValueChartRef} filename="sectors-contract-value" />
               </div>
