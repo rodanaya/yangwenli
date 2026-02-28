@@ -972,7 +972,7 @@ export default function Administrations() {
         <Card className="bg-card border-border/40">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-mono text-text-primary">
-              Transition Impact
+              {t('transitionImpact')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -1009,7 +1009,7 @@ export default function Administrations() {
             })}
             {transitions.length === 0 && (
               <div className="py-8 text-center text-text-muted text-sm">
-                Insufficient data for transition analysis
+                {t('insufficientData')}
               </div>
             )}
           </CardContent>
@@ -1028,7 +1028,7 @@ export default function Administrations() {
       <Card className="bg-card border-border/40">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-mono text-text-primary">
-            Key Events — {selectedAdmin} ({selectedMeta.dataStart}–{Math.min(selectedMeta.end - 1, 2025)})
+            {t('keyEvents', { admin: selectedAdmin, start: selectedMeta.dataStart, end: Math.min(selectedMeta.end - 1, 2025) })}
           </CardTitle>
         </CardHeader>
         <CardContent>
