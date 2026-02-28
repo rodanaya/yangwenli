@@ -20,6 +20,7 @@ import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { AddToWatchlistButton } from '@/components/AddToWatchlistButton'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
+import { TableExportButton } from '@/components/TableExportButton'
 import { NarrativeCard } from '@/components/NarrativeCard'
 import { RiskFeedbackButton } from '@/components/RiskFeedbackButton'
 import { ContractDetailModal } from '@/components/ContractDetailModal'
@@ -535,15 +536,18 @@ export function VendorProfile() {
 
   if (vendorError || !vendor) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
+      <div className="flex flex-col items-center justify-center py-20 px-4">
+        <div className="flex items-center justify-center h-16 w-16 rounded-full bg-background-card border border-border mb-5">
+          <AlertTriangle className="h-8 w-8 text-risk-high" />
+        </div>
         <h2 className="text-lg font-semibold mb-2">{t('notFound')}</h2>
-        <p className="text-text-muted mb-4">{t('notFoundDescription')}</p>
-        <Link to="/explore?tab=vendors">
-          <Button variant="outline">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t('backToVendors')}
-          </Button>
-        </Link>
+        <p className="text-sm text-text-muted mb-6 text-center max-w-sm">
+          {t('notFoundDescription')}
+        </p>
+        <Button variant="outline" onClick={() => navigate(-1)}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          {t('backToVendors')}
+        </Button>
       </div>
     )
   }
@@ -1155,12 +1159,29 @@ export function VendorProfile() {
                     <FileText className="h-4 w-4" />
                     {t('cards.recentContracts')}
                   </CardTitle>
-                  <Link to={`/contracts?vendor_id=${vendorId}`}>
-                    <Button variant="ghost" size="sm">
-                      {t('cards.viewAll')}
-                      <ExternalLink className="ml-1 h-3 w-3" />
-                    </Button>
-                  </Link>
+                  <div className="flex items-center gap-1">
+                    <TableExportButton
+                      data={(contracts?.data ?? []).map((c) => ({
+                        contract_number: c.contract_number ?? '',
+                        institution: c.institution_name ?? '',
+                        amount_mxn: c.amount_mxn ?? 0,
+                        contract_date: c.contract_date ?? '',
+                        contract_year: c.contract_year ?? '',
+                        risk_score: c.risk_score ?? '',
+                        risk_level: c.risk_level ?? '',
+                        procedure_type: c.procedure_type ?? '',
+                        is_direct_award: c.is_direct_award ? 'yes' : 'no',
+                        is_single_bid: c.is_single_bid ? 'yes' : 'no',
+                      }))}
+                      filename={`vendor-contracts-${vendorId}`}
+                    />
+                    <Link to={`/contracts?vendor_id=${vendorId}`}>
+                      <Button variant="ghost" size="sm">
+                        {t('cards.viewAll')}
+                        <ExternalLink className="ml-1 h-3 w-3" />
+                      </Button>
+                    </Link>
+                  </div>
                 </CardHeader>
                 <CardContent className="p-0">
                   {contractsLoading ? (

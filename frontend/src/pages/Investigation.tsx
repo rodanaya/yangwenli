@@ -19,6 +19,7 @@ import { SECTOR_COLORS, getSectorNameEN } from '@/lib/constants'
 import { PageHero } from '@/components/DashboardWidgets'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { TableExportButton } from '@/components/TableExportButton'
+import { EmptyState } from '@/components/EmptyState'
 import type {
   InvestigationCaseListItem,
   InvestigationDashboardSummary,
@@ -774,7 +775,17 @@ export function Investigation() {
           ))}
         </div>
       ) : cases.length === 0 ? (
-        <p className="text-sm text-text-muted py-8 text-center">{t('queue.empty')}</p>
+        <EmptyState
+          icon={statusFilter !== 'all' || minScore !== undefined || priorityFilter !== 'all' ? Filter : Search}
+          title="No investigation cases found"
+          description={
+            statusFilter !== 'all' || minScore !== undefined || priorityFilter !== 'all'
+              ? 'Try adjusting your filters'
+              : 'No cases have been created yet'
+          }
+          variant="no-results"
+          useIllustration={false}
+        />
       ) : viewMode === 'cards' ? (
         <>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">

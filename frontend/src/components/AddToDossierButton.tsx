@@ -15,7 +15,7 @@ import { DossierCreateDialog } from '@/components/DossierCreateDialog'
 export type { DossierSummary }
 
 interface AddToDossierButtonProps {
-  entityType: 'vendor' | 'institution'
+  entityType: 'vendor' | 'institution' | 'note'
   entityId: number
   entityName: string
   className?: string

@@ -287,9 +287,15 @@ export function InstitutionProfile() {
 
   if (institutionError || !institution) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-background-elevated border border-border/40 mb-4">
+          <Building2 className="h-8 w-8 text-text-muted" aria-hidden="true" />
+        </div>
         <h2 className="text-lg font-semibold mb-2">Institution Not Found</h2>
-        <p className="text-text-muted mb-4">The requested institution could not be found.</p>
+        <p className="text-sm text-text-muted mb-6 max-w-sm">
+          The institution with ID <span className="font-mono text-accent">{institutionId}</span> could not be found.
+          It may have been removed or the ID is incorrect.
+        </p>
         <Link to="/institutions/health">
           <Button variant="outline">
             <ArrowLeft className="mr-2 h-4 w-4" />

@@ -20,12 +20,28 @@ export default function Landing() {
   }, [navigate])
 
   // Fetch pre-computed dashboard stats for live numbers
-  const { data: fastDashboard } = useQuery<FastDashboardData>({
+  const { data: fastDashboard, isError: dashboardError } = useQuery<FastDashboardData>({
     queryKey: ['dashboard', 'fast'],
     queryFn: () => analysisApi.getFastDashboard(),
     staleTime: 10 * 60 * 1000,
     retry: 0,
   })
+
+  if (dashboardError) {
+    return (
+      <div className="min-h-screen bg-[#080c14] text-white flex flex-col items-center justify-center gap-4">
+        <AlertTriangle className="h-10 w-10 text-yellow-400" aria-hidden="true" />
+        <p className="text-lg font-semibold">Could not load platform data</p>
+        <p className="text-sm text-white/50">The backend may be starting up. Please wait a moment.</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-2 px-4 py-2 rounded-lg text-sm font-medium bg-white/10 hover:bg-white/20 border border-white/20 transition-colors"
+        >
+          Reload page
+        </button>
+      </div>
+    )
+  }
 
   // IntersectionObserver for scroll-reveal — no scrollama needed for this pattern
   useEffect(() => {
