@@ -1,4 +1,15 @@
 {
+  "pageTitle": "Flujo de Dinero",
+  "pageSubtitle": "Flujos de contratación Institución → Proveedor. Grosor = valor del contrato. Haga clic en un flujo para investigar.",
+  "riskLabel": "Riesgo:",
+  "loading": "Cargando datos de flujo de dinero…",
+  "showingFlows": "Mostrando {{count}} flujos por un total de {{total}} · {{nodes}} entidades",
+  "noRiskMatch": "Ningún flujo coincide con el filtro de riesgo actual",
+  "noRiskMatchHint": "Intente habilitar más niveles de riesgo usando los botones de filtro arriba.",
+  "legend": {
+    "nodeColor": "Color del nodo = nivel de riesgo:",
+    "leftRight": "Izquierda = instituciones · Derecha = proveedores"
+  },
   "trackingLabel": "ANALISIS DE FLUJO DE FONDOS",
   "title": "Sigue el Dinero",
   "subtitle": "Rastreando el flujo de fondos de contratacion publica de instituciones a proveedores",

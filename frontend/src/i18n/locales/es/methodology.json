@@ -1,6 +1,6 @@
 {
   "pageTitle": "Metodología de Puntuación de Riesgo",
-  "pageSubtitle": "Modelo Calibrado por Sector v5.0 — 16 características, validación temporal, aprendizaje PU",
+  "pageSubtitle": "Modelo Calibrado por Sector v5.1 — 16 características, validación temporal, aprendizaje PU",
   "contents": "CONTENIDO",
   "sections": {
     "overview": "Descripción del Modelo",
@@ -14,7 +14,7 @@
     "references": "Referencias"
   },
   "overview": {
-    "description": "RUBLI v5.0 califica cada contrato con una probabilidad calibrada de corrupción usando regresión logística por sector entrenada en 15 casos documentados. Las puntuaciones son estimaciones honestas fuera de muestra — el modelo fue entrenado con contratos hasta 2020 y probado con 2021+.",
+    "description": "RUBLI v5.1 califica cada contrato con un indicador estadístico de riesgo usando regresión logística por sector entrenada en 22 casos documentados. Las puntuaciones miden similitud con patrones de corrupción conocidos — el modelo fue entrenado con contratos hasta 2020 y probado con 2021+.",
     "modelVersion": "Versión del modelo",
     "trainAUC": "AUC Entrenamiento",
     "testAUC": "AUC Prueba",
@@ -31,7 +31,7 @@
     "disclaimer": "Las puntuaciones de riesgo son probabilidades calibradas con intervalos de confianza del 95%. Una puntuación alta indica anomalía estadística consistente con patrones de corrupción — no constituye prueba."
   },
   "coefficients": {
-    "title": "Coeficientes del Modelo Global v5.0",
+    "title": "Coeficientes del Modelo Global v5.1",
     "subtitle": "16 características z-score ordenadas por magnitud absoluta del coeficiente. Positivo = aumenta riesgo; negativo = disminuye riesgo."
   },
   "keyFindings": {
@@ -39,7 +39,7 @@
     "concentration": "La concentración es la señal dominante",
     "concentrationDetail": "La concentración de proveedores, la volatilidad de precios y la tasa de victorias son los 3 principales predictores. Estos reflejan el patrón documentado de corrupción en México: grandes proveedores capturando monopolios institucionales.",
     "directAward": "Las adjudicaciones directas ahora aumentan el riesgo",
-    "directAwardDetail": "En v4.0, el coeficiente de adjudicación directa era -0.197 (contraintuitivo). Con verdad fundamental diversificada y nuevas características en v5.0, se corrigió a +0.182.",
+    "directAwardDetail": "En v4.0, el coeficiente de adjudicación directa era -0.197 (contraintuitivo). Con verdad fundamental diversificada y nuevas características en v5.1, se corrigió a +0.182.",
     "singleBidWeak": "Licitante único es una señal débil",
     "singleBidDetail": "A pesar de ser el indicador #1 en conjuntos de datos europeos, la licitación con un solo participante tiene un coeficiente cercano a cero en México. Esto refleja la tasa de adjudicación directa del 70% — los procedimientos competitivos son raros, por lo que las licitaciones únicas aportan menos información.",
     "coBiddingZero": "La co-licitación no provee señal",
@@ -47,7 +47,7 @@
   },
   "validation": {
     "title": "Validación de Verdad Fundamental",
-    "description": "Tasas de detección en 15 casos documentados de corrupción (26,582 contratos de 27 proveedores coincidentes).",
+    "description": "Tasas de detección en 22 casos documentados de corrupción (26,704 contratos de 27 proveedores coincidentes).",
     "case": "Caso",
     "type": "Tipo",
     "contracts": "Contratos",
@@ -64,7 +64,7 @@
     "mahalanobisDesc": "Mide qué tan inusual es el vector de características de un contrato en el espacio multidimensional. Reemplaza los 5 pares de interacción codificados del v3.3 con una matriz de covarianza completa que captura todas las relaciones por pares.",
     "mahalanobisFormula": "D²(z) = zᵀ Σ⁻¹ z",
     "perSector": "Regresión Logística por Sector",
-    "perSectorDesc": "v5.0 entrena 12 modelos dedicados (uno por sector) más un respaldo global. Los patrones de corrupción difieren por sector — Energía es impulsado por desajuste industrial, mientras que Agricultura es impulsado por concentración de proveedores (+1.82).",
+    "perSectorDesc": "v5.1 entrena 12 modelos dedicados (uno por sector) más un respaldo global. Los patrones de corrupción difieren por sector — Energía es impulsado por desajuste industrial, mientras que Agricultura es impulsado por concentración de proveedores (+1.82).",
     "perSectorFormula": "P(corrupto|z) = σ(β₀ + βᵀz) / c, donde c = 0.887 (corrección PU)"
   },
   "modelComparison": {

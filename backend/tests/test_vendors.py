@@ -194,6 +194,49 @@ class TestVendorAISummary:
         assert response.status_code == 404
 
 
+class TestVendorGroundTruthStatus:
+    """Tests for GET /vendors/{vendor_id}/ground-truth-status endpoint."""
+
+    def test_vendor_ground_truth_status_returns_object(self, client, base_url):
+        """Endpoint should return is_known_bad and cases list."""
+        list_response = client.get(f"{base_url}/vendors?per_page=1")
+        if list_response.status_code == 200 and list_response.json()["data"]:
+            vendor_id = list_response.json()["data"][0]["id"]
+            response = client.get(
+                f"{base_url}/vendors/{vendor_id}/ground-truth-status"
+            )
+            assert response.status_code == 200
+            data = response.json()
+            assert "is_known_bad" in data
+            assert isinstance(data["is_known_bad"], bool)
+            assert "cases" in data
+            assert isinstance(data["cases"], list)
+
+    def test_vendor_ground_truth_status_not_found(self, client, base_url):
+        """Non-existent vendor should return 404."""
+        response = client.get(f"{base_url}/vendors/999999999/ground-truth-status")
+        assert response.status_code == 404
+
+    def test_vendor_ground_truth_status_known_bad_shape(self, client, base_url):
+        """Known-bad vendor case items should have required fields."""
+        # Try a few vendors to find a GT-linked one
+        list_response = client.get(f"{base_url}/vendors?per_page=20")
+        if list_response.status_code != 200:
+            return
+        for vendor in list_response.json().get("data", []):
+            response = client.get(
+                f"{base_url}/vendors/{vendor['id']}/ground-truth-status"
+            )
+            assert response.status_code == 200
+            data = response.json()
+            if data.get("is_known_bad") and data.get("cases"):
+                case = data["cases"][0]
+                assert "case_id" in case
+                assert "case_name" in case
+                assert "case_type" in case
+                break
+
+
 class TestVendorVerified:
     """Tests for existing verified vendor endpoints."""
 

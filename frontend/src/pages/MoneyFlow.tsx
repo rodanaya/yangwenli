@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { analysisApi } from '@/api/client'
 import { SankeyDiagram } from '@/components/SankeyDiagram'
 import { GitBranch } from 'lucide-react'
@@ -23,10 +24,10 @@ const SECTORS = [
 const YEARS = Array.from({ length: 24 }, (_, i) => 2025 - i)
 
 const RISK_LEVELS = [
-  { key: 'critical', label: 'Critical', color: '#f87171' },
-  { key: 'high', label: 'High', color: '#fb923c' },
-  { key: 'medium', label: 'Medium', color: '#fbbf24' },
-  { key: 'low', label: 'Low', color: '#4ade80' },
+  { key: 'critical', color: '#f87171' },
+  { key: 'high', color: '#fb923c' },
+  { key: 'medium', color: '#fbbf24' },
+  { key: 'low', color: '#4ade80' },
 ]
 
 function formatMXN(v: number) {
@@ -37,6 +38,8 @@ function formatMXN(v: number) {
 }
 
 export default function MoneyFlow() {
+  const { t } = useTranslation('moneyflow')
+  const { t: tc } = useTranslation('common')
   const [sectorId, setSectorId] = useState<number | undefined>(undefined)
   const [year, setYear] = useState<number | undefined>(2024)
   const [riskFilter, setRiskFilter] = useState<string[]>(['critical', 'high', 'medium', 'low'])
@@ -113,9 +116,9 @@ export default function MoneyFlow() {
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-bold text-text-primary font-mono tracking-tight">Money Flow</h1>
+        <h1 className="text-2xl font-bold text-text-primary font-mono tracking-tight">{t('pageTitle')}</h1>
         <p className="text-sm text-text-muted mt-1">
-          Institution → Vendor procurement flows. Thickness = contract value. Click a flow to investigate.
+          {t('pageSubtitle')}
         </p>
       </div>
 
@@ -127,10 +130,10 @@ export default function MoneyFlow() {
             onValueChange={v => setSectorId(v === 'all' ? undefined : Number(v))}
           >
             <SelectTrigger className="w-44 h-8 text-xs">
-              <SelectValue placeholder="All sectors" />
+              <SelectValue placeholder={t('filters.allSectors')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All sectors</SelectItem>
+              <SelectItem value="all">{t('filters.allSectors')}</SelectItem>
               {SECTORS.map(s => (
                 <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
               ))}
@@ -142,10 +145,10 @@ export default function MoneyFlow() {
             onValueChange={v => setYear(v === 'all' ? undefined : Number(v))}
           >
             <SelectTrigger className="w-28 h-8 text-xs">
-              <SelectValue placeholder="All years" />
+              <SelectValue placeholder={t('filters.allYears')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All years</SelectItem>
+              <SelectItem value="all">{t('filters.allYears')}</SelectItem>
               {YEARS.map(y => (
                 <SelectItem key={y} value={String(y)}>{y}</SelectItem>
               ))}
@@ -153,7 +156,7 @@ export default function MoneyFlow() {
           </Select>
 
           <div className="flex gap-1.5 items-center flex-wrap">
-            <span className="text-xs text-text-muted">Risk:</span>
+            <span className="text-xs text-text-muted">{t('riskLabel')}</span>
             {RISK_LEVELS.map(r => (
               <button
                 key={r.key}
@@ -165,7 +168,7 @@ export default function MoneyFlow() {
                     : { borderColor: 'rgb(71 85 105 / 0.4)', color: 'rgb(148 163 184)', opacity: 0.5 }
                 }
               >
-                {r.label}
+                {tc(r.key)}
               </button>
             ))}
           </div>
@@ -173,8 +176,7 @@ export default function MoneyFlow() {
 
         {totalValue > 0 && (
           <p className="text-xs text-text-muted">
-            Showing <span className="text-text-secondary font-medium">{links.length} flows</span> totaling{' '}
-            <span className="text-accent font-medium">{formatMXN(totalValue)}</span> · {nodes.length} entities
+            {t('showingFlows', { count: links.length, total: formatMXN(totalValue), nodes: nodes.length })}
           </p>
         )}
       </div>
@@ -183,24 +185,24 @@ export default function MoneyFlow() {
       <div ref={containerRef} className="bg-background-elevated border border-border/30 rounded-lg p-6">
         {isLoading && (
           <div className="flex items-center justify-center h-64 text-text-muted text-sm">
-            Loading money flow data…
+            {t('loading')}
           </div>
         )}
         {!isLoading && (error || !data?.flows?.length) && (
           <div className="flex flex-col items-center justify-center h-64 gap-3 text-center px-6">
             <GitBranch className="h-10 w-10 text-text-muted/40" aria-hidden="true" />
-            <p className="text-sm font-medium text-text-secondary">No money flow data for the selected filters</p>
+            <p className="text-sm font-medium text-text-secondary">{t('emptyMessage')}</p>
             <p className="text-xs text-text-muted max-w-xs">
-              Try selecting a different sector or year to see procurement flows between institutions and vendors.
+              {t('emptyHint')}
             </p>
           </div>
         )}
         {!isLoading && nodes.length === 0 && data?.flows?.length ? (
           <div className="flex flex-col items-center justify-center h-64 gap-3 text-center px-6">
             <GitBranch className="h-10 w-10 text-text-muted/40" aria-hidden="true" />
-            <p className="text-sm font-medium text-text-secondary">No flows match the current risk filter</p>
+            <p className="text-sm font-medium text-text-secondary">{t('noRiskMatch')}</p>
             <p className="text-xs text-text-muted max-w-xs">
-              Try enabling more risk levels using the filter buttons above.
+              {t('noRiskMatchHint')}
             </p>
           </div>
         ) : null}
@@ -216,14 +218,14 @@ export default function MoneyFlow() {
 
       {/* Legend */}
       <div className="flex flex-wrap gap-4 text-xs text-text-muted">
-        <span className="font-medium">Node color = risk level:</span>
+        <span className="font-medium">{t('legend.nodeColor')}</span>
         {RISK_LEVELS.map(r => (
           <span key={r.key} className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: r.color }} />
-            {r.label}
+            {tc(r.key)}
           </span>
         ))}
-        <span className="ml-auto opacity-60">Left = institutions · Right = vendors</span>
+        <span className="ml-auto opacity-60">{t('legend.leftRight')}</span>
       </div>
     </div>
   )

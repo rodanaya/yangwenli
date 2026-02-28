@@ -86,6 +86,9 @@
     "noKeyActors": "Sin actores clave documentados",
     "noSources": "Sin fuentes registradas"
   },
+  "loadError": "Error al cargar los casos.",
+  "resultCount": "{{count}} casos",
+  "noResultsHint": "Intente ajustar su búsqueda o filtros",
   "noResults": "Ningún caso coincide con los filtros actuales.",
   "loading": "Cargando casos..."
 }

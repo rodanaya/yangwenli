@@ -183,6 +183,53 @@ class TestInstitutionRiskTimeline:
         assert response.status_code == 404
 
 
+class TestInstitutionGroundTruthStatus:
+    """Tests for GET /institutions/{id}/ground-truth-status endpoint."""
+
+    def test_institution_ground_truth_status_returns_object(self, client, base_url):
+        """Endpoint should return a dict with is_ground_truth_related key."""
+        list_response = client.get(f"{base_url}/institutions?per_page=1")
+        if list_response.status_code == 200 and list_response.json()["data"]:
+            institution_id = list_response.json()["data"][0]["id"]
+            response = client.get(
+                f"{base_url}/institutions/{institution_id}/ground-truth-status"
+            )
+            assert response.status_code == 200
+            data = response.json()
+            assert "is_ground_truth_related" in data
+            assert isinstance(data["is_ground_truth_related"], bool)
+
+    def test_institution_ground_truth_status_false_shape(self, client, base_url):
+        """Non-linked institution returns only is_ground_truth_related=False."""
+        # Use a high institution ID unlikely to have GT contracts
+        response = client.get(f"{base_url}/institutions/1/ground-truth-status")
+        assert response.status_code == 200
+        data = response.json()
+        assert "is_ground_truth_related" in data
+        if not data["is_ground_truth_related"]:
+            # If False, only the one field should be present
+            assert "case_name" not in data
+
+    def test_institution_ground_truth_status_true_shape(self, client, base_url):
+        """When GT-related, response includes case_name, fraud_type, contract_count."""
+        # Try several institutions until we find a GT-linked one (or confirm shape)
+        list_response = client.get(f"{base_url}/institutions?per_page=20")
+        if list_response.status_code != 200:
+            return
+        for inst in list_response.json().get("data", []):
+            response = client.get(
+                f"{base_url}/institutions/{inst['id']}/ground-truth-status"
+            )
+            assert response.status_code == 200
+            data = response.json()
+            if data.get("is_ground_truth_related"):
+                assert "case_name" in data
+                assert "case_type" in data
+                assert "contract_count" in data
+                assert isinstance(data["contract_count"], int)
+                break
+
+
 class TestInstitutionTypes:
     """Tests for GET /institutions/types endpoint."""
 

@@ -86,6 +86,9 @@
     "noKeyActors": "No key actors documented",
     "noSources": "No sources on record"
   },
+  "loadError": "Failed to load cases.",
+  "resultCount": "{{count}} cases",
+  "noResultsHint": "Try adjusting your search or filters",
   "noResults": "No cases match the current filters.",
   "loading": "Loading cases..."
 }

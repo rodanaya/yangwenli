@@ -249,14 +249,14 @@ export default function CaseLibrary() {
       {error && (
         <div className="flex items-center gap-2 text-sm text-destructive p-4 bg-destructive/10 rounded-lg">
           <AlertCircle className="h-4 w-4" />
-          <span>Failed to load cases.</span>
+          <span>{t('loadError')}</span>
         </div>
       )}
 
       {!isLoading && !error && data && (
         <>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-text-muted">{data.length} cases</p>
+            <p className="text-xs text-text-muted">{t('resultCount', { count: data.length })}</p>
             <TableExportButton
               data={data.map((c) => ({
                 title: c.name_en,
@@ -273,8 +273,8 @@ export default function CaseLibrary() {
             <div className="flex flex-col items-center justify-center py-20 gap-4 text-text-muted">
               <Search className="h-10 w-10 opacity-30" />
               <div className="text-center">
-                <p className="text-sm font-medium">No cases found</p>
-                <p className="text-xs mt-1 opacity-70">Try adjusting your search or filters</p>
+                <p className="text-sm font-medium">{t('noResults')}</p>
+                <p className="text-xs mt-1 opacity-70">{t('noResultsHint')}</p>
               </div>
               <Button
                 variant="outline"
@@ -282,7 +282,7 @@ export default function CaseLibrary() {
                 className="h-8 text-xs"
                 onClick={() => { setFilters({}); setSearch(null) }}
               >
-                <X className="h-3 w-3 mr-1" /> Clear filters
+                <X className="h-3 w-3 mr-1" /> {t('filters.clearFilters')}
               </Button>
             </div>
           ) : (

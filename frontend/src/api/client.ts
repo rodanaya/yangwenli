@@ -622,7 +622,7 @@ export const institutionApi = {
   async getGroundTruthStatus(institutionId: number): Promise<{
     is_ground_truth_related: boolean
     case_name?: string
-    fraud_type?: string
+    case_type?: string
     contract_count?: number
   }> {
     const { data } = await api.get(`/institutions/${institutionId}/ground-truth-status`)

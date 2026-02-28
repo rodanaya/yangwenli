@@ -1,4 +1,15 @@
 {
+  "pageTitle": "Money Flow",
+  "pageSubtitle": "Institution → Vendor procurement flows. Thickness = contract value. Click a flow to investigate.",
+  "riskLabel": "Risk:",
+  "loading": "Loading money flow data…",
+  "showingFlows": "Showing {{count}} flows totaling {{total}} · {{nodes}} entities",
+  "noRiskMatch": "No flows match the current risk filter",
+  "noRiskMatchHint": "Try enabling more risk levels using the filter buttons above.",
+  "legend": {
+    "nodeColor": "Node color = risk level:",
+    "leftRight": "Left = institutions · Right = vendors"
+  },
   "trackingLabel": "FUND FLOW ANALYSIS",
   "title": "Follow the Money",
   "subtitle": "Tracing the flow of public procurement funds from institutions to vendors",

@@ -1718,15 +1718,12 @@ def get_institution_ground_truth_status(institution_id: int = Path(..., ge=1)):
     with get_db() as conn:
         conn.row_factory = _sqlite3.Row
         row = conn.execute("""
-            SELECT gtc.case_name, gtc.fraud_type, COUNT(c.id) as contract_count
+            SELECT gtc.case_name, gtc.case_type, COUNT(c.id) as contract_count
             FROM contracts c
-            JOIN ground_truth_vendors gtv ON (
-                (c.vendor_id = gtv.vendor_id AND gtv.vendor_id IS NOT NULL)
-                OR (c.vendor_name = gtv.vendor_name_source AND gtv.vendor_id IS NULL)
-            )
+            JOIN ground_truth_vendors gtv ON c.vendor_id = gtv.vendor_id
             JOIN ground_truth_cases gtc ON gtv.case_id = gtc.id
-            WHERE c.institution_id = ?
-            GROUP BY gtc.case_name, gtc.fraud_type
+            WHERE c.institution_id = ? AND gtv.vendor_id IS NOT NULL
+            GROUP BY gtc.case_name, gtc.case_type
             ORDER BY contract_count DESC
             LIMIT 1
         """, (institution_id,)).fetchone()
@@ -1735,7 +1732,7 @@ def get_institution_ground_truth_status(institution_id: int = Path(..., ge=1)):
             return {
                 "is_ground_truth_related": True,
                 "case_name": row["case_name"],
-                "fraud_type": row["fraud_type"],
+                "case_type": row["case_type"],
                 "contract_count": row["contract_count"],
             }
         return {"is_ground_truth_related": False}
