@@ -1036,22 +1036,15 @@ export default function Administrations() {
             {/* Ground truth note */}
             <div>
               <h4 className="text-xs font-semibold text-text-muted tracking-wider uppercase mb-0.5">
-                Documented Corruption Cases
+                {t('documentedCases')}
               </h4>
               <p className="text-xs text-text-muted/70 italic mb-3">
-                Manually verified from public records and ASF investigations — not ML-detected
+                {t('documentedCasesNote')}
               </p>
               <div className="flex items-start gap-2 rounded-md border border-border/30 bg-card-hover/20 p-3">
                 <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" />
                 <p className="text-xs text-text-secondary leading-relaxed">
-                  Known corruption cases documented in this period are tracked in the{' '}
-                  <a
-                    href="/ground-truth"
-                    className="text-accent underline underline-offset-2 hover:no-underline"
-                  >
-                    Ground Truth
-                  </a>{' '}
-                  section, including vendor matches, contract counts, and detection rates for each case.
+                  {t('groundTruthNote')}
                 </p>
               </div>
             </div>
@@ -1059,7 +1052,7 @@ export default function Administrations() {
             {/* Events */}
             <div>
               <h4 className="text-xs font-semibold text-text-muted tracking-wider uppercase mb-2">
-                Key Events
+                {t('keyEvents', { admin: selectedAdmin, start: selectedMeta.dataStart, end: Math.min(selectedMeta.end - 1, 2025) })}
               </h4>
               {adminEvents.length > 0 ? (
                 <div className="space-y-1.5 max-h-[280px] overflow-y-auto pr-1">
@@ -1088,7 +1081,7 @@ export default function Administrations() {
                 </div>
               ) : (
                 <div className="py-6 text-center text-text-muted text-xs">
-                  No events recorded for this period
+                  {t('noEvents')}
                 </div>
               )}
             </div>
