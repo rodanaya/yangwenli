@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { analysisApi } from '@/api/client'
 import { SankeyDiagram } from '@/components/SankeyDiagram'
+import { GitBranch } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -186,13 +187,21 @@ export default function MoneyFlow() {
           </div>
         )}
         {!isLoading && (error || !data?.flows?.length) && (
-          <div className="flex items-center justify-center h-64 text-text-muted text-sm">
-            No money flow data available for this selection.
+          <div className="flex flex-col items-center justify-center h-64 gap-3 text-center px-6">
+            <GitBranch className="h-10 w-10 text-text-muted/40" aria-hidden="true" />
+            <p className="text-sm font-medium text-text-secondary">No money flow data for the selected filters</p>
+            <p className="text-xs text-text-muted max-w-xs">
+              Try selecting a different sector or year to see procurement flows between institutions and vendors.
+            </p>
           </div>
         )}
         {!isLoading && nodes.length === 0 && data?.flows?.length ? (
-          <div className="flex items-center justify-center h-64 text-text-muted text-sm">
-            No flows match the current risk filter.
+          <div className="flex flex-col items-center justify-center h-64 gap-3 text-center px-6">
+            <GitBranch className="h-10 w-10 text-text-muted/40" aria-hidden="true" />
+            <p className="text-sm font-medium text-text-secondary">No flows match the current risk filter</p>
+            <p className="text-xs text-text-muted max-w-xs">
+              Try enabling more risk levels using the filter buttons above.
+            </p>
           </div>
         ) : null}
         {!isLoading && nodes.length > 0 && links.length > 0 && (

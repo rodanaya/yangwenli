@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { AddToDossierButton } from '@/components/AddToDossierButton'
+import { TableExportButton } from '@/components/TableExportButton'
 import { AlertCircle, Search, X } from 'lucide-react'
 
 // ── severity colour ──────────────────────────────────────────────────────────
@@ -43,49 +45,62 @@ function CaseCard({ cas, onClick }: { cas: ScandalListItem; onClick: () => void 
   const name = i18n.language === 'es' ? cas.name_es : cas.name_en
 
   return (
-    <button
-      onClick={onClick}
-      className="w-full text-left bg-card border border-border/60 rounded-lg p-4 hover:border-accent/50 hover:bg-card/80 transition-all group"
-    >
-      {/* Header row */}
-      <div className="flex items-start justify-between gap-3 mb-2">
-        <span className="text-sm font-semibold text-text-primary group-hover:text-accent transition-colors leading-snug">
-          {name}
-        </span>
-        <span className={`text-[10px] font-bold px-2 py-0.5 rounded flex-shrink-0 ${SEVERITY_COLORS[cas.severity] ?? SEVERITY_COLORS[2]}`}>
-          {t(`severity.${cas.severity}`)}
-        </span>
-      </div>
-
-      {/* Summary */}
-      <p className="text-xs text-text-muted line-clamp-2 mb-3">
-        {cas.summary_en}
-      </p>
-
-      {/* Tags row */}
-      <div className="flex flex-wrap gap-1.5 items-center">
-        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-          {t(`fraudTypes.${cas.fraud_type}`)}
-        </Badge>
-        <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${LEGAL_STATUS_COLORS[cas.legal_status] ?? ''}`}>
-          {t(`legalStatuses.${cas.legal_status}`)}
-        </Badge>
-        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-          {t(`administrations.${cas.administration}`)}
-        </Badge>
-        {cas.amount_mxn_low && (
-          <span className="text-[10px] text-text-muted ml-auto font-mono">
-            {formatMXN(cas.amount_mxn_low)}
-            {cas.amount_mxn_high ? ` – ${formatMXN(cas.amount_mxn_high)}` : '+'}
+    <div className="bg-card border border-border/60 rounded-lg p-4 hover:border-accent/50 hover:bg-card/80 transition-all group flex flex-col">
+      {/* Clickable body */}
+      <button
+        onClick={onClick}
+        className="w-full text-left flex-1"
+      >
+        {/* Header row */}
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <span className="text-sm font-semibold text-text-primary group-hover:text-accent transition-colors leading-snug">
+            {name}
           </span>
-        )}
-        {cas.ground_truth_case_id != null && (
-          <span className="text-[10px] text-accent ml-auto font-mono">
-            {t('card.mlLinked')}
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded flex-shrink-0 ${SEVERITY_COLORS[cas.severity] ?? SEVERITY_COLORS[2]}`}>
+            {t(`severity.${cas.severity}`)}
           </span>
-        )}
+        </div>
+
+        {/* Summary */}
+        <p className="text-xs text-text-muted line-clamp-2 mb-3">
+          {cas.summary_en}
+        </p>
+
+        {/* Tags row */}
+        <div className="flex flex-wrap gap-1.5 items-center">
+          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+            {t(`fraudTypes.${cas.fraud_type}`)}
+          </Badge>
+          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${LEGAL_STATUS_COLORS[cas.legal_status] ?? ''}`}>
+            {t(`legalStatuses.${cas.legal_status}`)}
+          </Badge>
+          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+            {t(`administrations.${cas.administration}`)}
+          </Badge>
+          {cas.amount_mxn_low && (
+            <span className="text-[10px] text-text-muted ml-auto font-mono">
+              {formatMXN(cas.amount_mxn_low)}
+              {cas.amount_mxn_high ? ` – ${formatMXN(cas.amount_mxn_high)}` : '+'}
+            </span>
+          )}
+          {cas.ground_truth_case_id != null && (
+            <span className="text-[10px] text-accent ml-auto font-mono">
+              {t('card.mlLinked')}
+            </span>
+          )}
+        </div>
+      </button>
+
+      {/* Footer: dossier action */}
+      <div className="flex justify-end mt-3 pt-2 border-t border-border/30">
+        <AddToDossierButton
+          entityType="note"
+          entityId={cas.id}
+          entityName={cas.name_en}
+          className="h-7 text-xs"
+        />
       </div>
-    </button>
+    </div>
   )
 }
 

@@ -18,6 +18,7 @@ import { formatCompactMXN, formatNumber, getRiskLevel, toTitleCase } from '@/lib
 import { RISK_COLORS } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
 import { StatCard as SharedStatCard } from '@/components/DashboardWidgets'
+import { RiskFeedbackButton } from '@/components/RiskFeedbackButton'
 import type { InstitutionHealthItem, PublicationDelayResponse, ASFInstitutionSummaryItem } from '@/api/types'
 import {
   Building2,
