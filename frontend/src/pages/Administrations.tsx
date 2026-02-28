@@ -653,9 +653,9 @@ export default function Administrations() {
         <div className="flex items-start gap-3 px-4 py-3 rounded-lg border border-risk-medium/30 bg-risk-medium/5">
           <AlertTriangle className="h-4 w-4 text-risk-medium mt-0.5 flex-shrink-0" />
           <div>
-            <p className="text-sm font-semibold text-risk-medium">Incomplete Dataset</p>
+            <p className="text-sm font-semibold text-risk-medium">{t('incompleteDataset')}</p>
             <p className="text-xs text-text-muted mt-0.5">
-              Sheinbaum's administration began October 2024. This data covers ~4 months vs. 6-year full terms for other presidents. Direct comparisons may be misleading.
+              {t('incompleteDatasetDescription')}
             </p>
           </div>
         </div>

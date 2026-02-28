@@ -915,6 +915,9 @@ export default function InstitutionHealth() {
                   <th className="px-3 py-2.5 text-right font-medium whitespace-nowrap hidden lg:table-cell">
                     Risk Level
                   </th>
+                  <th className="px-3 py-2.5 text-center font-medium whitespace-nowrap w-10">
+                    <span className="sr-only">Actions</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -961,6 +964,13 @@ export default function InstitutionHealth() {
                     </td>
                     <td className="px-3 py-2 text-right hidden lg:table-cell">
                       <RiskBadge score={item.avg_risk_score} className="text-xs px-1.5 py-0" />
+                    </td>
+                    <td className="px-3 py-2 text-center" onClick={e => e.stopPropagation()}>
+                      <RiskFeedbackButton
+                        entityType="institution"
+                        entityId={item.institution_id}
+                        className="h-5 w-5"
+                      />
                     </td>
                   </tr>
                 ))}

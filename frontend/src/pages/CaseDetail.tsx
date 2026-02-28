@@ -5,6 +5,7 @@ import { caseLibraryApi } from '@/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { AlertCircle, ArrowLeft, ExternalLink } from 'lucide-react'
 
 const SEVERITY_COLORS: Record<number, string> = {
@@ -101,7 +102,15 @@ export default function CaseDetail() {
             </Link>
           )}
         </div>
-        <h1 className="text-2xl font-bold font-mono text-text-primary">{name}</h1>
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="text-2xl font-bold font-mono text-text-primary">{name}</h1>
+          <AddToDossierButton
+            entityType="note"
+            entityId={data.id}
+            entityName={data.name_en}
+            className="flex-shrink-0"
+          />
+        </div>
         <div className="flex flex-wrap gap-4 mt-2 text-xs text-text-muted">
           {(data.contract_year_start || data.contract_year_end) && (
             <span>

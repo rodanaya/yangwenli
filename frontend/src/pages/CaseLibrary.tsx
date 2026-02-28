@@ -255,9 +255,36 @@ export default function CaseLibrary() {
 
       {!isLoading && !error && data && (
         <>
-          <p className="text-xs text-text-muted mb-3">{data.length} cases</p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-text-muted">{data.length} cases</p>
+            <TableExportButton
+              data={data.map((c) => ({
+                title: c.name_en,
+                fraud_type: c.fraud_type,
+                severity: c.severity,
+                amount_min: c.amount_mxn_low ?? '',
+                amount_max: c.amount_mxn_high ?? '',
+                legal_status: c.legal_status,
+              }))}
+              filename="case-library"
+            />
+          </div>
           {data.length === 0 ? (
-            <div className="text-center py-16 text-text-muted">{t('noResults')}</div>
+            <div className="flex flex-col items-center justify-center py-20 gap-4 text-text-muted">
+              <Search className="h-10 w-10 opacity-30" />
+              <div className="text-center">
+                <p className="text-sm font-medium">No cases found</p>
+                <p className="text-xs mt-1 opacity-70">Try adjusting your search or filters</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs"
+                onClick={() => { setFilters({}); setSearch(null) }}
+              >
+                <X className="h-3 w-3 mr-1" /> Clear filters
+              </Button>
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {data.map((cas) => (
