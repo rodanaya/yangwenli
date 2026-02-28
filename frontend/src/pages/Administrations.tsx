@@ -716,9 +716,9 @@ export default function Administrations() {
                   </tr>
                 </thead>
                 <tbody>
-                  {ADMIN_METRICS.map((metric) => (
+                  {ADMIN_METRIC_KEYS.map((metric) => (
                     <tr key={metric.key} className="border-b border-border/30">
-                      <td className="py-2 pr-4 text-xs text-text-muted">{metric.label}</td>
+                      <td className="py-2 pr-4 text-xs text-text-muted">{t(metric.labelKey)}</td>
                       {adminAggs.map((a) => {
                         const value = a[metric.key] as number
                         return (
@@ -747,7 +747,7 @@ export default function Administrations() {
         <Card className="bg-card border-border/40">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-mono text-text-primary">
-              Yearly Trends — {selectedAdmin} ({selectedMeta.dataStart}–{Math.min(selectedMeta.end - 1, 2025)})
+              {t('yearlyTrends', { admin: selectedAdmin, start: selectedMeta.dataStart, end: Math.min(selectedMeta.end - 1, 2025) })}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -861,7 +861,7 @@ export default function Administrations() {
               </ResponsiveContainer>
             ) : (
               <div className="h-[320px] flex items-center justify-center text-text-muted text-sm">
-                No yearly data available for this administration
+                {t('noData')}
               </div>
             )}
             {yearAnomalies.length > 0 && (
@@ -869,9 +869,9 @@ export default function Administrations() {
                 <div className="flex items-center gap-1.5 mb-2">
                   <AlertTriangle className="h-3 w-3 text-risk-medium" />
                   <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-mono">
-                    AI-Detected Anomalies
+                    {t('aiDetectedAnomalies')}
                   </span>
-                  <span className="text-[10px] text-text-muted">— years deviating &gt;1.8σ from 23-year baseline</span>
+                  <span className="text-[10px] text-text-muted">— {t('anomaliesNote')}</span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {yearAnomalies.map((a) => (
