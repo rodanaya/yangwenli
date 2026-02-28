@@ -1,6 +1,7 @@
 {
   "title": "Lista de Vigilancia",
   "subtitle": "Proveedores e instituciones bajo monitoreo",
+  "subtitleFull": "Rastrea entidades y monitorea cambios en la puntuación de riesgo a lo largo del tiempo",
   "addToWatchlist": "Agregar a vigilancia",
   "removeFromWatchlist": "Quitar de vigilancia",
   "columns": {
@@ -10,17 +11,82 @@
     "dateAdded": "Fecha Agregado",
     "riskScore": "Puntuación de Riesgo",
     "contracts": "Contratos",
-    "status": "Estado"
+    "status": "Estado",
+    "entity": "Entidad",
+    "priority": "Prioridad",
+    "riskAtAdd": "Riesgo al Agregar",
+    "currentRisk": "Riesgo Actual",
+    "change": "Cambio",
+    "added": "Agregado",
+    "actions": "Acciones"
   },
   "types": {
     "vendor": "Proveedor",
     "institution": "Institución",
-    "contract": "Contrato"
+    "contract": "Contrato",
+    "vendors": "Proveedores",
+    "institutions": "Instituciones",
+    "contracts": "Contratos"
+  },
+  "status": {
+    "all": "Todos los Estados",
+    "watching": "Vigilando",
+    "investigating": "Investigando",
+    "resolved": "Resuelto",
+    "startInvestigating": "Iniciar investigación",
+    "markResolved": "Marcar como resuelto"
+  },
+  "priority": {
+    "all": "Todas las Prioridades",
+    "high": "Alta",
+    "medium": "Media",
+    "low": "Baja"
+  },
+  "filters": {
+    "allTypes": "Todos los Tipos",
+    "allStatus": "Todos los Estados",
+    "allPriority": "Todas las Prioridades"
+  },
+  "statCards": {
+    "watching": "Vigilando",
+    "investigating": "Investigando",
+    "highPriority": "Alta Prioridad",
+    "resolved": "Resuelto"
+  },
+  "tabs": {
+    "entities": "Entidades",
+    "dossiers": "Expedientes"
+  },
+  "table": {
+    "trackedEntities": "Entidades Rastreadas",
+    "item": "elemento",
+    "items": "elementos"
   },
   "empty": "La lista de vigilancia está vacía.",
   "emptyDescription": "Agrega proveedores o instituciones para monitorear sus contratos y riesgos.",
   "emptyAction": "Explorar proveedores",
+  "emptyWorkspace": "Tu espacio de trabajo está vacío",
+  "emptyWorkspaceDescription": "Guarda proveedores, instituciones o contratos para rastrear su riesgo a lo largo del tiempo. Usa el ícono de marcador en cualquier página de perfil para agregar una entidad aquí.",
+  "browseVendors": "Explorar proveedores",
+  "browseInstitutions": "Explorar instituciones",
+  "noItemsMatch": "Ningún elemento coincide con tus filtros",
+  "noItemsMatchDescription": "Intenta ajustar o limpiar los filtros activos para ver más resultados.",
+  "clearFilters": "Limpiar filtros",
   "notes": "Notas",
   "addNote": "Agregar nota",
-  "exportList": "Exportar lista"
+  "exportList": "Exportar lista",
+  "exportDossier": "Exportar Expediente",
+  "refresh": "Actualizar",
+  "investigate": "Investigar",
+  "confirm": "Confirmar",
+  "cancel": "Cancelar",
+  "folders": "Carpetas",
+  "errorTitle": "Lista de Vigilancia",
+  "errorDescription": "Rastrea e investiga patrones sospechosos",
+  "errorMessage": "Error al cargar los datos de la lista de vigilancia",
+  "retry": "Reintentar",
+  "riskFactors": "Principales factores de riesgo",
+  "contractsAnalysed": "contratos analizados",
+  "loadingRiskFactors": "Cargando factores de riesgo…",
+  "noRiskFactorData": "No hay datos de factores de riesgo disponibles para este proveedor."
 }

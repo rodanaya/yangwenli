@@ -1,6 +1,7 @@
 {
   "title": "Watchlist",
   "subtitle": "Vendors and institutions under monitoring",
+  "subtitleFull": "Track entities and monitor risk score changes over time",
   "addToWatchlist": "Add to watchlist",
   "removeFromWatchlist": "Remove from watchlist",
   "columns": {
@@ -10,17 +11,82 @@
     "dateAdded": "Date Added",
     "riskScore": "Risk Score",
     "contracts": "Contracts",
-    "status": "Status"
+    "status": "Status",
+    "entity": "Entity",
+    "priority": "Priority",
+    "riskAtAdd": "Risk at Add",
+    "currentRisk": "Current Risk",
+    "change": "Change",
+    "added": "Added",
+    "actions": "Actions"
   },
   "types": {
     "vendor": "Vendor",
     "institution": "Institution",
-    "contract": "Contract"
+    "contract": "Contract",
+    "vendors": "Vendors",
+    "institutions": "Institutions",
+    "contracts": "Contracts"
+  },
+  "status": {
+    "all": "All Status",
+    "watching": "Watching",
+    "investigating": "Investigating",
+    "resolved": "Resolved",
+    "startInvestigating": "Start investigating",
+    "markResolved": "Mark resolved"
+  },
+  "priority": {
+    "all": "All Priority",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
+  },
+  "filters": {
+    "allTypes": "All Types",
+    "allStatus": "All Status",
+    "allPriority": "All Priority"
+  },
+  "statCards": {
+    "watching": "Watching",
+    "investigating": "Investigating",
+    "highPriority": "High Priority",
+    "resolved": "Resolved"
+  },
+  "tabs": {
+    "entities": "Entities",
+    "dossiers": "Dossiers"
+  },
+  "table": {
+    "trackedEntities": "Tracked Entities",
+    "item": "item",
+    "items": "items"
   },
   "empty": "Your watchlist is empty.",
   "emptyDescription": "Add vendors or institutions to monitor their contracts and risks.",
   "emptyAction": "Explore vendors",
+  "emptyWorkspace": "Your workspace is empty",
+  "emptyWorkspaceDescription": "Save vendors, institutions, or contracts to track their risk over time. Use the bookmark icon on any profile page to add an entity here.",
+  "browseVendors": "Browse vendors",
+  "browseInstitutions": "Browse institutions",
+  "noItemsMatch": "No items match your filters",
+  "noItemsMatchDescription": "Try adjusting or clearing the active filters to see more results.",
+  "clearFilters": "Clear filters",
   "notes": "Notes",
   "addNote": "Add note",
-  "exportList": "Export list"
+  "exportList": "Export list",
+  "exportDossier": "Export Dossier",
+  "refresh": "Refresh",
+  "investigate": "Investigate",
+  "confirm": "Confirm",
+  "cancel": "Cancel",
+  "folders": "Folders",
+  "errorTitle": "Watchlist",
+  "errorDescription": "Track and investigate suspicious patterns",
+  "errorMessage": "Failed to load watchlist data",
+  "retry": "Retry",
+  "riskFactors": "Top risk factors",
+  "contractsAnalysed": "contracts analysed",
+  "loadingRiskFactors": "Loading risk factors…",
+  "noRiskFactorData": "No risk factor data available for this vendor."
 }

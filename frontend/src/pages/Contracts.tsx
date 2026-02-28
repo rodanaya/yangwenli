@@ -19,6 +19,7 @@ import {
   getRiskLevel,
 } from '@/lib/utils'
 import { contractApi, exportApi } from '@/api/client'
+import { RiskFeedbackButton } from '@/components/RiskFeedbackButton'
 import { TableExportButton } from '@/components/TableExportButton'
 import { SECTORS, RISK_COLORS } from '@/lib/constants'
 import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
@@ -920,23 +921,30 @@ function ContractRow({
 
       {/* Risk: tiered display — nothing for low, dot for medium, badge for high/critical */}
       <td className="px-3 py-2 text-center">
-        {riskLevel === 'critical' || riskLevel === 'high' ? (
-          <span
-            className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold capitalize"
-            style={{ color: riskColor, backgroundColor: `${riskColor}18`, border: `1px solid ${riskColor}40` }}
-            title={contract.risk_score != null ? `${(contract.risk_score * 100).toFixed(1)}%` : riskLevel}
-          >
-            {riskLevel}
-          </span>
-        ) : riskLevel === 'medium' ? (
-          <span
-            className="inline-flex h-2 w-2 rounded-full mx-auto"
-            style={{ backgroundColor: riskColor, opacity: 0.7 }}
-            title={contract.risk_score != null ? `Medium · ${(contract.risk_score * 100).toFixed(1)}%` : 'Medium'}
+        <div className="inline-flex items-center gap-1 justify-center">
+          {riskLevel === 'critical' || riskLevel === 'high' ? (
+            <span
+              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold capitalize"
+              style={{ color: riskColor, backgroundColor: `${riskColor}18`, border: `1px solid ${riskColor}40` }}
+              title={contract.risk_score != null ? `${(contract.risk_score * 100).toFixed(1)}%` : riskLevel}
+            >
+              {riskLevel}
+            </span>
+          ) : riskLevel === 'medium' ? (
+            <span
+              className="inline-flex h-2 w-2 rounded-full"
+              style={{ backgroundColor: riskColor, opacity: 0.7 }}
+              title={contract.risk_score != null ? `Medium · ${(contract.risk_score * 100).toFixed(1)}%` : 'Medium'}
+            />
+          ) : (
+            <span className="text-xs text-text-muted/30">·</span>
+          )}
+          <RiskFeedbackButton
+            entityType="contract"
+            entityId={contract.id}
+            className="h-5 w-5"
           />
-        ) : (
-          <span className="text-xs text-text-muted/30">·</span>
-        )}
+        </div>
       </td>
 
       {/* Amount */}

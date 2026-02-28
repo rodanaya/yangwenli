@@ -48,6 +48,13 @@ const MoneyFlow = lazy(() => import('@/pages/MoneyFlow'))
 // Workspace is the new name for Watchlist
 const Workspace = lazy(() => import('@/pages/Watchlist'))
 
+// First-visit routing: redirect "/" to Landing for new users, Dashboard for returning users
+function FirstVisitRedirect() {
+  const seen = localStorage.getItem('rubli_seen_landing')
+  if (!seen) return <Navigate to="/landing" replace />
+  return <Navigate to="/dashboard" replace />
+}
+
 // Enhanced QueryClient configuration for better caching and UX
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -80,14 +87,7 @@ function App() {
               }
             />
             <Route path="/" element={<MainLayout />}>
-              <Route
-                index
-                element={
-                  <SuspenseBoundary fallback={<DashboardSkeleton />}>
-                    <Dashboard />
-                  </SuspenseBoundary>
-                }
-              />
+              <Route index element={<FirstVisitRedirect />} />
               <Route
                 path="executive-summary"
                 element={

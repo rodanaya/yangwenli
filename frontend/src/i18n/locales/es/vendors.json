@@ -1,0 +1,109 @@
+{
+  "notFound": "Proveedor No Encontrado",
+  "notFoundDescription": "El proveedor solicitado no pudo ser encontrado.",
+  "backToVendors": "Volver a Proveedores",
+  "alsoKnownAs": "También conocido como:",
+  "viewNetwork": "Ver Red",
+  "findSimilar": "Buscar Similares",
+  "tabs": {
+    "overview": "Resumen",
+    "risk": "Análisis de Riesgo",
+    "history": "Historial de Contratos",
+    "network": "Red",
+    "external": "Registros Externos"
+  },
+  "kpi": {
+    "totalContracts": "Total de Contratos",
+    "totalValue": "Valor Total",
+    "institutions": "Instituciones",
+    "uniqueAgencies": "Agencias únicas",
+    "highRisk": "Alto Riesgo"
+  },
+  "coBidding": {
+    "title": "Patrón de Coofertamiento Detectado",
+    "description": "Este proveedor aparece frecuentemente en los mismos procedimientos con socios específicos.",
+    "suspiciousPatterns": "patrón(es) sospechoso(s) detectado(s).",
+    "topPartners": "Principales Socios de Coofertamiento",
+    "sharedProcedures": "procedimientos compartidos",
+    "detectedPatterns": "Patrones Detectados",
+    "coverBidding": "Posible Oferta de Cobertura",
+    "bidRotation": "Posible Rotación de Ofertas",
+    "noPatternsTitle": "No se detectaron patrones significativos de coofertamiento",
+    "noPatternsDescription": "Requiere ≥3 procedimientos competitivos compartidos con otro proveedor",
+    "analysisTitle": "Análisis de Coofertamiento",
+    "proceduresAnalyzed": "procedimientos analizados",
+    "coverBidder": "¿oferente de cobertura?",
+    "alwaysWins": "¿siempre gana?",
+    "wins": "victorias:",
+    "sameWinner": "mismo ganador",
+    "ofTime": "de las veces",
+    "involves": "Involucra:"
+  },
+  "groundTruth": {
+    "documentedIn": "Documentado en"
+  },
+  "cards": {
+    "riskProfile": "Perfil de Riesgo",
+    "procurementPatterns": "Patrones de Contratación",
+    "directAwards": "Adjudicaciones Directas",
+    "singleBids": "Licitaciones Únicas",
+    "avgContract": "Contrato Promedio",
+    "sectors": "Sectores",
+    "aiPatternAnalysis": "Análisis de Patrones con IA",
+    "knownScandals": "Escándalos Conocidos",
+    "vendorSummary": "Resumen del Proveedor",
+    "primarySector": "Sector Principal",
+    "yearsActive": "Años Activo",
+    "sectorsServed": "Sectores Atendidos",
+    "vendorGroup": "Grupo de Proveedores",
+    "notClassified": "Sin clasificar",
+    "recentContracts": "Contratos Recientes",
+    "viewAll": "Ver todos",
+    "noContractsFound": "No se encontraron contratos",
+    "topInstitutions": "Principales Instituciones",
+    "noInstitutionsFound": "No se encontraron instituciones",
+    "institutionalRelationships": "Relaciones Institucionales",
+    "institutionalRelationshipsNote": "Las relaciones prolongadas con proveedores se correlacionan con mayores tasas de licitación única y precios (Coviello & Gagliarducci 2017)",
+    "procurementFootprint": "Huella de Contratación",
+    "procurementFootprintNote": "Relaciones sector × institución, dimensionadas por valor total",
+    "footprintLegend": "Color = sector · insignia = puntuación de riesgo promedio · ordenado por valor total",
+    "yrs": "años",
+    "long": "LARGO"
+  },
+  "risk": {
+    "riskScore": "Puntuación de Riesgo",
+    "riskTrend": "Tendencia de Riesgo",
+    "contractLifecycle": "Ciclo de Vida del Contrato",
+    "statisticalAnomaly": "Anomalía Estadística",
+    "avgMahalanobis": "D² Mahalanobis Promedio",
+    "maxD2": "D² Máximo",
+    "anomalousContracts": "Contratos Anómalos",
+    "chiSquaredNote": "Basado en prueba chi-cuadrado (k=12, p<0.05)",
+    "riskFactorContribution": "Contribución de Factores de Riesgo (Puntuaciones Z v5.0)",
+    "riskFactorContributionFallback": "Contribución de Factores de Riesgo (Modelo v5.0)",
+    "riskFactorDetails": "Detalles de Factores de Riesgo",
+    "noRiskFactorData": "No hay datos de factores de riesgo disponibles",
+    "noRiskFactors": "No hay factores de riesgo disponibles"
+  },
+  "history": {
+    "activityCalendar": "Calendario de Actividad de Contratos",
+    "calendarDescription": "Actividad de contratos en los últimos 5 años. Las celdas más oscuras indican más contratos en ese mes.",
+    "noCalendarData": "No hay datos de fecha de contratos disponibles para la vista de calendario.",
+    "noContractData": "No hay datos de contratos disponibles",
+    "allContracts": "Todos los Contratos",
+    "calendarLess": "Menos",
+    "calendarMore": "Más"
+  },
+  "network": {
+    "openNetworkGraph": "Abrir Gráfico de Red",
+    "networkGraphDescription": "Explore la red completa de relaciones de proveedores con visualización gráfica interactiva."
+  },
+  "waterfall": {
+    "description": "Las barras positivas aumentan el riesgo (rojo/naranja). Las barras negativas reducen el riesgo (verde). La altura de la barra refleja la contribución de cada factor a la puntuación total.",
+    "totalScore": "Puntuación Total",
+    "contribution": "contribución",
+    "modelCoefficient": "Coeficiente del modelo",
+    "riskIncreasing": "Factor que aumenta el riesgo",
+    "riskReducing": "Factor que reduce el riesgo"
+  }
+}

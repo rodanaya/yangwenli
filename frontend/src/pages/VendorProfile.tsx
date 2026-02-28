@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,6 +17,8 @@ import { RISK_COLORS, SECTOR_COLORS } from '@/lib/constants'
 import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { AddToWatchlistButton } from '@/components/AddToWatchlistButton'
+import { AddToDossierButton } from '@/components/AddToDossierButton'
+import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { NarrativeCard } from '@/components/NarrativeCard'
 import { RiskFeedbackButton } from '@/components/RiskFeedbackButton'
 import { ContractDetailModal } from '@/components/ContractDetailModal'
@@ -396,6 +398,8 @@ export function VendorProfile() {
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [networkOpen, setNetworkOpen] = useState(false)
+  const riskTimelineChartRef = useRef<HTMLDivElement>(null)
+  const footprintChartRef = useRef<HTMLDivElement>(null)
 
   // Fetch vendor details
   const { data: vendor, isLoading: vendorLoading, error: vendorError } = useQuery({
@@ -601,8 +605,19 @@ export function VendorProfile() {
                   </span>
                 )}
                 {!groundTruthStatus?.is_known_bad && externalFlags?.sat_efos?.stage === 'definitivo' && (
-                  <span className="ml-1 px-2 py-0.5 text-xs font-medium bg-red-500/20 text-red-300 rounded-full border border-red-500/40">
-                    SAT EFOS Definitivo
+                  <span
+                    className="ml-1 px-2 py-0.5 text-xs font-medium bg-red-500/20 text-red-300 rounded-full border border-red-500/40 cursor-help"
+                    title="Definitivo: Tax authority has formally confirmed this is a ghost company. Presunto: Under investigation."
+                  >
+                    SAT EFOS Definitivo (Confirmed)
+                  </span>
+                )}
+                {!groundTruthStatus?.is_known_bad && externalFlags?.sat_efos?.stage === 'presunto' && (
+                  <span
+                    className="ml-1 px-2 py-0.5 text-xs font-medium bg-amber-500/20 text-amber-300 rounded-full border border-amber-500/40 cursor-help"
+                    title="Definitivo: Tax authority has formally confirmed this is a ghost company. Presunto: Under investigation."
+                  >
+                    SAT EFOS Presunto (Alleged)
                   </span>
                 )}
               </div>
@@ -684,6 +699,11 @@ export function VendorProfile() {
             itemId={vendorId}
             itemName={toTitleCase(vendor.name)}
             defaultReason={`Risk score: ${((vendor.avg_risk_score ?? 0) * 100).toFixed(0)}%`}
+          />
+          <AddToDossierButton
+            entityType="vendor"
+            entityId={vendorId}
+            entityName={toTitleCase(vendor.name)}
           />
           {vendor.avg_risk_score !== undefined && (
             <div className="flex items-center gap-1">

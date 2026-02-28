@@ -108,7 +108,7 @@ const REFERENCES = [
 ] as const
 
 const MODEL_COMPARISON = [
-  { metric: 'AUC-ROC', v33: '0.584', v50: '0.960', improvement: '+64%' },
+  { metric: 'AUC-ROC', v33: '0.584', v50: '0.9572', improvement: '+64%' },
   { metric: 'Brier Score', v33: '0.411', v50: '0.060', improvement: '-85%' },
   { metric: 'Detection Rate (med+)', v33: '67.1%', v50: '99.8%', improvement: '+33pp' },
   { metric: 'High+ Detection', v33: '18.3%', v50: '93.0%', improvement: '+75pp' },
@@ -334,7 +334,7 @@ export function Methodology() {
       <div className="flex flex-wrap gap-2">
         {[
           { label: '3.1M Contracts', variant: 'default' as const },
-          { label: 'AUC 0.957', variant: 'default' as const },
+          { label: 'AUC 0.9572', variant: 'default' as const },
           { label: '22 Cases Validated', variant: 'default' as const },
           { label: '12 Sectors', variant: 'default' as const },
         ].map((kpi) => (
@@ -611,7 +611,7 @@ export function Methodology() {
               {/* Validation metrics */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {[
-                  { label: 'Test AUC-ROC', value: '0.957' },
+                  { label: 'Test AUC-ROC', value: '0.9572' },
                   { label: 'Brier Score', value: '0.060' },
                   { label: 'Lift', value: '4.04x' },
                   { label: 'Detection Rate', value: '99.8%' },
@@ -673,7 +673,7 @@ export function Methodology() {
                   12 per-sector sub-models + 1 global fallback capture sector-specific corruption patterns.
                 </p>
                 <p className="text-xs text-text-muted mt-1">
-                  Train AUC: 0.964, Test AUC: 0.957. No ad-hoc coefficient dampening needed — ElasticNet
+                  Train AUC: 0.9642, Test AUC: 0.9572. No ad-hoc coefficient dampening needed — ElasticNet
                   regularization naturally controls coefficient magnitudes.
                 </p>
               </div>

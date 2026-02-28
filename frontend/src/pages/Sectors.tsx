@@ -552,7 +552,7 @@ export function Sectors() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-3 mb-3 text-center text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3 text-center text-sm">
               <div>
                 <div className="font-semibold">{formatCompactMXN(sectorASF.total_amount_mxn)}</div>
                 <div className="text-xs text-muted-foreground">Total Questioned</div>

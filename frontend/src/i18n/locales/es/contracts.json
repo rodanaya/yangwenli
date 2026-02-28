@@ -28,6 +28,10 @@
       "label": "Contratos Fraccionados",
       "description": "Fraccionamiento de umbrales — múltiples contratos el mismo día para evadir límites de supervisión"
     },
+    "mostAnomalous": {
+      "label": "Más Anómalos",
+      "description": "Contratos más alejados de las normas estadísticas — mayor distancia de Mahalanobis en todas las dimensiones de riesgo"
+    },
     "recentCritical": {
       "label": "Recientes y Críticos",
       "description": "Contratos de riesgo crítico de 2024 — actividad sospechosa más reciente"
@@ -40,6 +44,7 @@
   "columns": {
     "id": "ID",
     "title": "Título",
+    "risk": "Riesgo",
     "vendor": "Proveedor",
     "institution": "Institución",
     "amount": "Monto (MXN)",
@@ -49,8 +54,10 @@
     "riskScore": "Puntuación de Riesgo",
     "riskLevel": "Nivel de Riesgo",
     "procedureType": "Tipo de Procedimiento",
+    "procedure": "Procedimiento",
     "isDirectAward": "Adj. Directa",
-    "isSingleBid": "Licitación Única"
+    "isSingleBid": "Licitación Única",
+    "anomalyScore": "Anomalía D²"
   },
   "detail": {
     "title": "Detalle del Contrato",
@@ -73,22 +80,44 @@
   },
   "filters": {
     "sector": "Sector",
+    "allSectors": "Todos los Sectores",
     "year": "Año",
+    "allYears": "Todos los Años",
     "riskLevel": "Nivel de Riesgo",
     "directAward": "Adjudicación Directa",
     "singleBid": "Licitación Única",
-    "minAmount": "Monto Mínimo",
-    "maxAmount": "Monto Máximo",
-    "riskFactor": "Factor de Riesgo"
+    "minAmount": "Mín (MXN)",
+    "maxAmount": "Máx (MXN)",
+    "minAmountPlaceholder": "Monto mínimo",
+    "maxAmountPlaceholder": "Monto máximo",
+    "riskFactor": "Factor de Riesgo",
+    "allFactors": "Todos los Factores",
+    "perPage": "Por página",
+    "clearAll": "Limpiar todo"
   },
   "stats": {
     "totalContracts": "Total de Contratos",
     "totalValue": "Valor Total",
+    "pageTotal": "Total de página",
     "avgRisk": "Riesgo Promedio",
+    "critical": "Críticos",
+    "highPlus": "Alto+",
+    "direct": "Directos",
     "directAwardRate": "Tasa de Adj. Directa",
     "singleBidRate": "Tasa de Licitación Única"
   },
+  "table": {
+    "anomalyTooltip": "Distancia de Mahalanobis — qué tan estadísticamente inusual es este contrato en todas las dimensiones de riesgo. Mayor = más inusual.",
+    "selectForCompare": "Seleccionar para comparar",
+    "clearSelection": "Limpiar selección",
+    "viewFullDetails": "Ver detalles completos",
+    "fullDetails": "Detalles completos"
+  },
   "empty": "No se encontraron contratos con los filtros seleccionados.",
+  "emptyInitial": "3.1 Millones de Contratos · 2002–2025",
+  "emptyInitialDesc": "Busque cualquier contrato, institución o nombre de proveedor para comenzar. O use los filtros de arriba para explorar por sector, año o nivel de riesgo.",
+  "emptyFiltered": "Ningún contrato coincide con sus filtros",
+  "emptyFilteredDesc": "Intente ajustar su búsqueda o borrar los filtros activos",
   "riskLevels": {
     "critical": "Crítico",
     "high": "Alto",

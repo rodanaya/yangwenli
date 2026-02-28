@@ -5,6 +5,7 @@
  */
 
 import { useState, useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
@@ -99,10 +100,11 @@ function RiskDelta({ scoreAtCreation, currentScore }: RiskDeltaProps) {
 }
 
 function TypeBadge({ type }: { type: WatchlistItem['item_type'] }) {
+  const { t } = useTranslation('watchlist')
   const config = {
-    vendor: { label: 'Vendor', Icon: Users, cls: 'bg-accent/10 text-accent border-accent/20' },
-    institution: { label: 'Institution', Icon: Building2, cls: 'bg-sector-gobernacion/10 text-sector-gobernacion border-sector-gobernacion/20' },
-    contract: { label: 'Contract', Icon: FileText, cls: 'bg-text-muted/10 text-text-muted border-text-muted/20' },
+    vendor: { label: t('types.vendor'), Icon: Users, cls: 'bg-accent/10 text-accent border-accent/20' },
+    institution: { label: t('types.institution'), Icon: Building2, cls: 'bg-sector-gobernacion/10 text-sector-gobernacion border-sector-gobernacion/20' },
+    contract: { label: t('types.contract'), Icon: FileText, cls: 'bg-text-muted/10 text-text-muted border-text-muted/20' },
   }
   const { label, Icon, cls } = config[type]
   return (
@@ -259,6 +261,7 @@ export function Watchlist() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { open: openEntityDrawer } = useEntityDrawer()
+  const { t } = useTranslation('watchlist')
 
   const [activeTab, setActiveTab] = useState<'entities' | 'dossiers'>('entities')
   const [dossierDialogOpen, setDossierDialogOpen] = useState(false)
@@ -410,17 +413,17 @@ export function Watchlist() {
         <div>
           <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
             <Eye className="h-4.5 w-4.5 text-accent" />
-            Watchlist
+            {t('errorTitle')}
           </h2>
-          <p className="text-xs text-text-muted mt-0.5">Track and investigate suspicious patterns</p>
+          <p className="text-xs text-text-muted mt-0.5">{t('errorDescription')}</p>
         </div>
         <Card className="border-risk-critical/30 bg-risk-critical/5">
           <CardContent className="p-6 text-center">
             <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-risk-critical opacity-50" />
-            <p className="text-text-muted mb-4">Failed to load watchlist data</p>
+            <p className="text-text-muted mb-4">{t('errorMessage')}</p>
             <Button variant="outline" onClick={() => refetch()}>
               <RefreshCw className="h-4 w-4 mr-2" />
-              Retry
+              {t('retry')}
             </Button>
           </CardContent>
         </Card>
@@ -432,7 +435,7 @@ export function Watchlist() {
     <div className="flex gap-4">
       {/* Folder sidebar */}
       <div className="w-[200px] shrink-0 space-y-3">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted px-1">Folders</p>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted px-1">{t('folders')}</p>
         <FolderSidebar
           folders={folders}
           activeFolderId={activeFolderId ?? undefined}
@@ -447,7 +450,7 @@ export function Watchlist() {
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs text-accent hover:bg-accent/10 transition-colors"
           >
             <Download className="h-3.5 w-3.5" />
-            Export Dossier
+            {t('exportDossier')}
           </a>
         )}
       </div>
@@ -459,22 +462,22 @@ export function Watchlist() {
         <div>
           <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
             <Eye className="h-4.5 w-4.5 text-accent" />
-            Watchlist
+            {t('title')}
           </h2>
           <p className="text-xs text-text-muted mt-0.5">
-            Track entities and monitor risk score changes over time
+            {t('subtitleFull')}
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
           <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-          Refresh
+          {t('refresh')}
         </Button>
       </div>
 
       {/* Stat cards — 4 cards */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <StatCard
-          label="Watching"
+          label={t('statCards.watching')}
           value={stats.watching}
           color="text-accent"
           icon={Eye}
@@ -482,7 +485,7 @@ export function Watchlist() {
           loading={statsLoading}
         />
         <StatCard
-          label="Investigating"
+          label={t('statCards.investigating')}
           value={stats.investigating}
           color="text-risk-high"
           icon={AlertTriangle}
@@ -490,14 +493,14 @@ export function Watchlist() {
           loading={statsLoading}
         />
         <StatCard
-          label="High Priority"
+          label={t('statCards.highPriority')}
           value={stats.highPriority}
           color="text-risk-critical"
           icon={AlertTriangle}
           loading={statsLoading}
         />
         <StatCard
-          label="Resolved"
+          label={t('statCards.resolved')}
           value={stats.resolved}
           color="text-risk-low"
           icon={CheckCircle}
@@ -517,19 +520,19 @@ export function Watchlist() {
               value={s}
               active={statusFilter === s}
               onClick={() => setStatusFilter(s)}
-              label={s === 'all' ? 'All Status' : s.charAt(0).toUpperCase() + s.slice(1)}
+              label={s === 'all' ? t('status.all') : t(`status.${s}`)}
             />
           ))}
         </div>
         {/* Type chips */}
         <div className="flex items-center gap-1.5">
-          {(['all', 'vendor', 'institution', 'contract'] as TypeFilter[]).map((t) => (
+          {(['all', 'vendor', 'institution', 'contract'] as TypeFilter[]).map((tp) => (
             <FilterChip
-              key={t}
-              value={t}
-              active={typeFilter === t}
-              onClick={() => setTypeFilter(t)}
-              label={t === 'all' ? 'All Types' : t.charAt(0).toUpperCase() + t.slice(1) + 's'}
+              key={tp}
+              value={tp}
+              active={typeFilter === tp}
+              onClick={() => setTypeFilter(tp)}
+              label={tp === 'all' ? t('filters.allTypes') : t(`types.${tp}s`)}
             />
           ))}
         </div>
@@ -541,7 +544,7 @@ export function Watchlist() {
               value={p}
               active={priorityFilter === p}
               onClick={() => setPriorityFilter(p)}
-              label={p === 'all' ? 'All Priority' : p.charAt(0).toUpperCase() + p.slice(1)}
+              label={p === 'all' ? t('priority.all') : t(`priority.${p}`)}
             />
           ))}
         </div>
@@ -576,13 +579,60 @@ export function Watchlist() {
             </div>
           ) : items.length === 0 ? (
             /* Empty state */
-            <div className="p-12 text-center text-text-muted">
-              <EyeOff className="h-12 w-12 mx-auto mb-4 opacity-25" />
-              <p className="text-sm font-medium mb-1">Your watchlist is empty</p>
-              <p className="text-xs max-w-sm mx-auto">
-                Use the + button on any vendor or institution profile to track entities of interest and monitor risk score changes over time.
-              </p>
-            </div>
+            (() => {
+              const hasFilters =
+                statusFilter !== 'all' || typeFilter !== 'all' || priorityFilter !== 'all'
+              if (hasFilters) {
+                return (
+                  <div className="p-12 text-center text-text-muted">
+                    <Filter className="h-12 w-12 mx-auto mb-4 opacity-25" />
+                    <p className="text-sm font-medium mb-1">No items match your filters</p>
+                    <p className="text-xs max-w-sm mx-auto mb-4">
+                      Try adjusting or clearing the active filters to see more results.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setStatusFilter('all')
+                        setTypeFilter('all')
+                        setPriorityFilter('all')
+                      }}
+                    >
+                      Clear filters
+                    </Button>
+                  </div>
+                )
+              }
+              return (
+                <div className="p-12 text-center text-text-muted">
+                  <EyeOff className="h-12 w-12 mx-auto mb-4 opacity-25" />
+                  <p className="text-sm font-medium mb-1">Your workspace is empty</p>
+                  <p className="text-xs max-w-sm mx-auto mb-4">
+                    Save vendors, institutions, or contracts to track their risk over time.
+                    Use the bookmark icon on any profile page to add an entity here.
+                  </p>
+                  <div className="flex justify-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.location.assign('/explore?tab=vendors')}
+                    >
+                      <Search className="h-3.5 w-3.5 mr-1.5" />
+                      Browse vendors
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.location.assign('/explore?tab=institutions')}
+                    >
+                      <Building2 className="h-3.5 w-3.5 mr-1.5" />
+                      Browse institutions
+                    </Button>
+                  </div>
+                </div>
+              )
+            })()
           ) : (
             /* Table */
             <div className="overflow-x-auto">

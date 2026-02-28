@@ -28,6 +28,10 @@
       "label": "Split Contracts",
       "description": "Threshold splitting — multiple same-day contracts to dodge oversight limits"
     },
+    "mostAnomalous": {
+      "label": "Most Anomalous",
+      "description": "Contracts furthest from statistical norms — highest Mahalanobis distance across all risk dimensions"
+    },
     "recentCritical": {
       "label": "Recent & Critical",
       "description": "2024 critical-risk contracts — most recent suspicious activity"
@@ -40,6 +44,7 @@
   "columns": {
     "id": "ID",
     "title": "Title",
+    "risk": "Risk",
     "vendor": "Vendor",
     "institution": "Institution",
     "amount": "Amount (MXN)",
@@ -48,9 +53,11 @@
     "sector": "Sector",
     "riskScore": "Risk Score",
     "riskLevel": "Risk Level",
-    "procedureType": "Procedure Type",
+    "procedureType": "Procedure",
+    "procedure": "Procedure",
     "isDirectAward": "Direct Award",
-    "isSingleBid": "Single Bid"
+    "isSingleBid": "Single Bid",
+    "anomalyScore": "Anomaly D²"
   },
   "detail": {
     "title": "Contract Detail",
@@ -73,22 +80,44 @@
   },
   "filters": {
     "sector": "Sector",
+    "allSectors": "All Sectors",
     "year": "Year",
+    "allYears": "All Years",
     "riskLevel": "Risk Level",
     "directAward": "Direct Award",
     "singleBid": "Single Bid",
-    "minAmount": "Min Amount",
-    "maxAmount": "Max Amount",
-    "riskFactor": "Risk Factor"
+    "minAmount": "Min (MXN)",
+    "maxAmount": "Max (MXN)",
+    "minAmountPlaceholder": "Min amount",
+    "maxAmountPlaceholder": "Max amount",
+    "riskFactor": "Risk Factor",
+    "allFactors": "All Factors",
+    "perPage": "Per page",
+    "clearAll": "Clear all"
   },
   "stats": {
     "totalContracts": "Total Contracts",
     "totalValue": "Total Value",
+    "pageTotal": "Page total",
     "avgRisk": "Avg Risk",
+    "critical": "Critical",
+    "highPlus": "High+",
+    "direct": "Direct",
     "directAwardRate": "Direct Award Rate",
     "singleBidRate": "Single Bid Rate"
   },
+  "table": {
+    "anomalyTooltip": "Mahalanobis distance — how statistically unusual this contract is across all risk dimensions. Higher = more unusual.",
+    "selectForCompare": "Select to compare",
+    "clearSelection": "Clear selection",
+    "viewFullDetails": "View full details",
+    "fullDetails": "Full details"
+  },
   "empty": "No contracts found matching your filters.",
+  "emptyInitial": "3.1 Million Contracts · 2002–2025",
+  "emptyInitialDesc": "Search any contract, institution, or vendor name to begin. Or use the filters above to browse by sector, year, or risk level.",
+  "emptyFiltered": "No contracts match your filters",
+  "emptyFilteredDesc": "Try adjusting your search or clearing the active filters",
   "riskLevels": {
     "critical": "Critical",
     "high": "High",

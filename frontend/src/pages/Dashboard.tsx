@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useState } from 'react'
+import React, { memo, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
@@ -45,6 +45,7 @@ import {
 } from '@/components/charts'
 import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN, CURRENT_MODEL_VERSION } from '@/lib/constants'
 import { GlobalSearch } from '@/components/GlobalSearch'
+import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 
 // ============================================================================
 // Dashboard: Bold, data-dense intelligence overview
@@ -395,7 +396,7 @@ export function Dashboard() {
   const { open: openEntityDrawer } = useEntityDrawer()
   const { t } = useTranslation('dashboard')
   // API call 1: Fast precomputed dashboard stats
-  const { data: fastDashboard, isLoading: dashLoading, error: dashError } = useQuery({
+  const { data: fastDashboard, isLoading: dashLoading, error: dashError, refetch: dashRefetch } = useQuery({
     queryKey: ['dashboard', 'fast'],
     queryFn: () => analysisApi.getFastDashboard(),
     staleTime: 5 * 60 * 1000,
@@ -516,6 +517,11 @@ export function Dashboard() {
       }))
   }, [fastDashboard])
 
+  // Refs for chart export buttons
+  const riskTrajectoryRef = useRef<HTMLDivElement>(null)
+  const sectorTreemapRef = useRef<HTMLDivElement>(null)
+  const riskDistRef = useRef<HTMLDivElement>(null)
+
   // Top 3 money flows for dashboard teaser
   const topFlows = useMemo(() => {
     if (!moneyFlowData?.flows) return []
@@ -544,12 +550,15 @@ export function Dashboard() {
       {dashError && (
         <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-risk-critical/30 bg-risk-critical/5 mb-2">
           <AlertTriangle className="h-4 w-4 text-risk-critical flex-shrink-0" />
-          <p className="text-sm text-risk-critical">
-            Dashboard data failed to load. Some sections may be unavailable.{' '}
-            <button onClick={() => window.location.reload()} className="underline hover:no-underline">
-              Reload page
-            </button>
+          <p className="text-sm text-risk-critical flex-1">
+            Dashboard data failed to load. Some sections may be unavailable.
           </p>
+          <button
+            onClick={() => void dashRefetch()}
+            className="text-sm text-risk-critical underline hover:no-underline font-medium flex-shrink-0"
+          >
+            Retry
+          </button>
         </div>
       )}
       {/* ================================================================ */}
@@ -597,8 +606,18 @@ export function Dashboard() {
             })
           )}
         </div>
-        <div className="text-[11px] text-text-muted/50 font-mono mt-1">
-          Risk model {modelMeta?.version ?? CURRENT_MODEL_VERSION} · AUC {modelMeta?.auc_test != null ? modelMeta.auc_test.toFixed(3) : '0.960'} · {(overview?.total_contracts || 0) > 0 ? formatNumber(overview?.total_contracts || 0) : '3,110,007'} contracts · 2002–2025
+        <div className="text-[11px] text-text-muted/50 font-mono mt-1 flex items-center gap-1 flex-wrap">
+          <span>Risk model {modelMeta?.version ?? CURRENT_MODEL_VERSION}</span>
+          <span className="text-text-muted/30">·</span>
+          <span>AUC {modelMeta?.auc_test != null ? modelMeta.auc_test.toFixed(3) : '0.960'}</span>
+          <span className="text-text-muted/30">·</span>
+          <InfoTooltip content="Label Coverage (c): proportion of corrupt contracts the model reliably detects among all known cases. Elkan & Noto (2008) PU-learning correction.">
+            <span className="cursor-help border-b border-dotted border-text-muted/30">
+              c={modelMeta?.pu_correction != null ? modelMeta.pu_correction.toFixed(3) : '0.882'}
+            </span>
+          </InfoTooltip>
+          <span className="text-text-muted/30">·</span>
+          <span>{(overview?.total_contracts || 0) > 0 ? formatNumber(overview?.total_contracts || 0) : '3,110,007'} contracts · 2002–2025</span>
         </div>
 
         {/* WHAT WE FOUND — three anchor claims before the user scrolls */}
@@ -852,7 +871,7 @@ export function Dashboard() {
               {t('fullMethodologyLink')} <ArrowUpRight className="h-3 w-3" />
             </button>
           </div>
-          <div className="grid gap-2 grid-cols-2 md:grid-cols-4">
+          <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
             {AI_SIGNALS.map((signal) => (
               <div key={signal.label} className={cn('rounded-lg border p-3', signal.border, signal.bg)}>
                 <div className="flex items-center gap-2 mb-2">
@@ -875,7 +894,7 @@ export function Dashboard() {
       {/* ================================================================ */}
       {/* VALUE CONCENTRATION — The 7.9% that holds the money           */}
       {/* ================================================================ */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         {/* Concentration paradox */}
         <div className="rounded-lg border border-risk-critical/20 bg-risk-critical/5 px-5 py-5">
           <div className="flex items-center gap-2 mb-3">
@@ -995,11 +1014,14 @@ export function Dashboard() {
                   Spend by Sector
                 </span>
               </div>
-              <p className="text-[10px] text-text-muted font-mono">
-                Size = total spend · Color = sector · Click to explore
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] text-text-muted font-mono">
+                  Size = total spend · Color = sector · Click to explore
+                </p>
+                <ChartDownloadButton targetRef={sectorTreemapRef} filename="rubli-sector-spend" />
+              </div>
             </div>
-            <div style={{ height: 240 }}>
+            <div ref={sectorTreemapRef} style={{ height: 240 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <Treemap
                   data={sectorData.map((s) => ({
@@ -1082,11 +1104,11 @@ export function Dashboard() {
             </button>
           </div>
           {execLoading ? (
-            <div className="grid gap-2 grid-cols-2 md:grid-cols-5">
+            <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-5">
               {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-32" />)}
             </div>
           ) : (
-            <div className="grid gap-2 grid-cols-2 md:grid-cols-5">
+            <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-5">
               {(execData?.administrations || []).map((admin) => {
                 const hrColor = admin.high_risk_pct >= 10 ? 'text-risk-critical' :
                   admin.high_risk_pct >= 8 ? 'text-risk-high' :
@@ -1228,11 +1250,14 @@ export function Dashboard() {
                 </div>
                 <p className="text-xs text-text-muted">{t('riskTrajectoryDesc')}</p>
               </div>
+              <ChartDownloadButton targetRef={riskTrajectoryRef} filename="rubli-risk-trajectory" />
             </div>
             {dashLoading ? (
               <div className="h-[340px] flex items-center justify-center"><Skeleton className="h-full w-full" /></div>
             ) : (
-              <RiskTrajectoryChart data={riskTrajectory} />
+              <div ref={riskTrajectoryRef}>
+                <RiskTrajectoryChart data={riskTrajectory} />
+              </div>
             )}
           </CardContent>
         </Card>

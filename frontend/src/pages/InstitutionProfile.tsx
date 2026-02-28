@@ -20,6 +20,7 @@ import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { NarrativeCard } from '@/components/NarrativeCard'
 import { ContractDetailModal } from '@/components/ContractDetailModal'
 import { AddToWatchlistButton } from '@/components/AddToWatchlistButton'
+import { RiskFeedbackButton } from '@/components/RiskFeedbackButton'
 import { buildInstitutionNarrative } from '@/lib/narratives'
 import { WaterfallRiskChart } from '@/components/WaterfallRiskChart'
 import { RedThreadPanel } from '@/components/RedThreadPanel'
@@ -353,6 +354,10 @@ export function InstitutionProfile() {
             itemName={toTitleCase(institution.name)}
           />
           <RiskBadge score={riskScore} className="text-sm px-2.5 py-1" />
+          <RiskFeedbackButton
+            entityType="institution"
+            entityId={institutionId}
+          />
         </div>
       </div>
 

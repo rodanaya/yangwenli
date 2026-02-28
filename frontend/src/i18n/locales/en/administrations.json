@@ -33,5 +33,21 @@
     "highRisk": "High Risk %",
     "activeVendors": "Active Vendors",
     "vsAvg": "vs avg"
-  }
+  },
+  "tabs": {
+    "overview": "Administration Overview",
+    "patterns": "Systemic Patterns",
+    "political": "Political Cycle",
+    "compare": "Period Comparison"
+  },
+  "selected": "Selected",
+  "contracts": "contracts",
+  "incompleteDataset": "Incomplete Dataset",
+  "incompleteDatasetDescription": "Sheinbaum's administration began October 2024. This data covers ~4 months vs. 6-year full terms for other presidents. Direct comparisons may be misleading.",
+  "aiDetectedAnomalies": "AI-Detected Anomalies",
+  "anomaliesNote": "years deviating >1.8σ from 23-year baseline",
+  "sectorCorrelations": "Sector Risk Correlations",
+  "sectorCorrelationsNote": "Sector pairs with correlated risk trajectories (|r| ≥ 0.70) during this administration",
+  "correlation": "correlation",
+  "transitionFrom": "→"
 }

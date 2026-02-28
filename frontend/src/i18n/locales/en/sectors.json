@@ -10,5 +10,68 @@
   "agricultura": "Agriculture",
   "ambiente": "Environment",
   "trabajo": "Labor",
-  "otros": "Other"
+  "otros": "Other",
+  "page": {
+    "title": "Sectors Overview",
+    "subtitle": "12 sectors covering Mexican federal procurement — click any column header to sort",
+    "rankedBy": "Ranked by avg risk score — click to inspect",
+    "clear": "Clear",
+    "fullProfile": "Full profile",
+    "compareWith": "Compare…",
+    "failedToLoad": "Failed to load sectors"
+  },
+  "statCards": {
+    "sectorsTracked": "SECTORS TRACKED",
+    "sectorsTrackedDetail": "Active government sectors",
+    "totalContracts": "TOTAL CONTRACTS",
+    "totalContractsDetail": "All sectors, all years",
+    "totalValue": "TOTAL VALUE",
+    "totalValueDetail": "Validated amounts only",
+    "avgRiskScore": "AVG RISK SCORE",
+    "avgRiskScoreDetail": "Weighted by contract count"
+  },
+  "chips": {
+    "criticalRisk": "Critical Risk",
+    "decemberRush": "December Rush",
+    "coBiddingFlags": "Co-Bidding Flags",
+    "priceOutliers": "Price Outliers"
+  },
+  "heatmap": {
+    "title": "Sector Risk Heatmap",
+    "description": "Color encodes relative risk ranking per metric — red is highest risk, green is lowest. Click a row to open that sector's full profile.",
+    "avgRisk": "Avg Risk",
+    "directAward": "Direct Award %",
+    "singleBid": "Single Bid %",
+    "highRisk": "High Risk %"
+  },
+  "table": {
+    "title": "Sector Comparison",
+    "subtitle": "Click column headers to sort. Click a sector name to view its full profile.",
+    "sector": "Sector",
+    "totalContracts": "Total Contracts",
+    "totalValueMxn": "Total Value (MXN)",
+    "avgRiskScore": "Avg Risk Score",
+    "highRiskPct": "High-Risk %",
+    "directAwardPct": "Direct Award %",
+    "riskTrend": "Risk Trend",
+    "topRamo": "Top Ramo"
+  },
+  "valueChart": {
+    "title": "Contract Value by Sector"
+  },
+  "radar": {
+    "directAward": "Direct Award",
+    "singleBid": "Single Bid",
+    "avgRisk": "Avg Risk",
+    "highRisk": "High Risk %",
+    "valueShare": "Value Share",
+    "volume": "Volume",
+    "axisLabel": "all axes 0–100",
+    "vsLabel": "vs"
+  },
+  "asf": {
+    "totalQuestioned": "Total Questioned",
+    "yearsAudited": "Years Audited",
+    "institutions": "Institutions"
+  }
 }

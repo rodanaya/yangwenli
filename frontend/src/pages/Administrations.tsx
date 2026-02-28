@@ -500,10 +500,10 @@ export default function Administrations() {
     return (
       <div className="space-y-6 p-6">
         <Skeleton className="h-10 w-80" />
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-24" />)}
         </div>
-        <div className="grid grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-20" />)}
         </div>
         <Skeleton className="h-80" />
@@ -514,7 +514,7 @@ export default function Administrations() {
   return (
     <div className="space-y-6 p-6 max-w-[1600px] mx-auto">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-text-primary font-mono tracking-tight">
             Administration Analysis
@@ -524,7 +524,7 @@ export default function Administrations() {
           </p>
         </div>
         {/* Tab Switcher */}
-        <div className="flex items-center gap-1 rounded-lg border border-border/50 p-0.5 bg-background-elevated/30 flex-shrink-0">
+        <div className="flex flex-wrap items-center gap-1 rounded-lg border border-border/50 p-0.5 bg-background-elevated/30 sm:flex-shrink-0">
           <button
             onClick={() => setActiveTab('overview')}
             className={cn(
@@ -584,7 +584,7 @@ export default function Administrations() {
       <>
 
       {/* L0: Admin Selector */}
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {ADMINISTRATIONS.map((admin, idx) => {
           const agg = adminAggs.find((a) => a.name === admin.name)
           const isSelected = selectedAdmin === admin.name
@@ -685,7 +685,7 @@ export default function Administrations() {
 
       {/* L1: Selected Admin Overview */}
       {selectedAgg && (
-        <div className="grid grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           {[
             { label: 'Contracts', value: formatNumber(selectedAgg.contracts), delta: null, icon: FileText },
             { label: 'Total Value', value: formatCompactMXN(selectedAgg.totalValue), delta: null, icon: Banknote },
@@ -710,7 +710,7 @@ export default function Administrations() {
       )}
 
       {/* L2 + L3 side by side */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* L2: Administration Comparison Table */}
         <Card className="bg-card border-border/40">
           <CardHeader className="pb-2">
@@ -918,7 +918,7 @@ export default function Administrations() {
       </div>
 
       {/* L4 + L5 side by side */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* L4: Sector Heatmap */}
         <ScrollReveal direction="fade">
         <Card className="bg-card border-border/40">
@@ -1018,7 +1018,7 @@ export default function Administrations() {
                     <span className="h-2 w-2 rounded-full" style={{ backgroundColor: t.toColor }} />
                     <span className="text-xs font-semibold text-text-secondary">{t.to}</span>
                   </div>
-                  <div className="grid grid-cols-5 gap-2">
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                     <TransitionMetric label="Direct Award" delta={t.dDA.value} unit=" pts" significance={sig?.da} />
                     <TransitionMetric label="Single Bid" delta={t.dSB.value} unit=" pts" significance={sig?.sb} />
                     <TransitionMetric label="High Risk" delta={t.dHR.value} unit=" pts" significance={sig?.hr} />
@@ -1054,7 +1054,7 @@ export default function Administrations() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Ground truth note */}
             <div>
               <h4 className="text-xs font-semibold text-text-muted tracking-wider uppercase mb-0.5">
@@ -1467,7 +1467,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24" />)}
         </div>
         <Skeleton className="h-80" />
@@ -1495,7 +1495,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
   return (
     <div className="space-y-4">
       {/* Systemic pattern summary cards */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <ScrollReveal delay={0} direction="up">
         <Card className="bg-card border-border/40">
           <CardContent className="p-4">
@@ -1785,7 +1785,7 @@ function PoliticalCycleView() {
           <p className="text-xs text-text-muted">Average procurement risk in election vs non-election years (2002–2025)</p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Election years card */}
             <div className="rounded-lg border border-border/40 bg-background-elevated/20 p-4 text-center space-y-1">
               <div className="text-[11px] text-text-muted uppercase tracking-wider">Election Years</div>
@@ -1984,7 +1984,7 @@ function ComparePeriodView() {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-8 mb-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-5">
             <div>
               <div className="text-xs text-text-muted font-medium mb-2 uppercase tracking-wider">Period 1</div>
               <div className="flex items-center gap-2">
@@ -2041,7 +2041,7 @@ function ComparePeriodView() {
       </Card>
 
       {isLoading && (
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <Skeleton className="h-36" />
           <Skeleton className="h-36" />
           <Skeleton className="h-28" />
@@ -2050,7 +2050,7 @@ function ComparePeriodView() {
       )}
 
       {data && !isLoading && (
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Period 1 card */}
           <Card>
             <CardHeader>

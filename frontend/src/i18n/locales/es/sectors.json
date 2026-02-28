@@ -10,5 +10,68 @@
   "agricultura": "Agricultura",
   "ambiente": "Ambiente",
   "trabajo": "Trabajo",
-  "otros": "Otros"
+  "otros": "Otros",
+  "page": {
+    "title": "Resumen de Sectores",
+    "subtitle": "12 sectores de contratación federal mexicana — haz clic en cualquier encabezado de columna para ordenar",
+    "rankedBy": "Ordenados por puntuación de riesgo promedio — haz clic para inspeccionar",
+    "clear": "Limpiar",
+    "fullProfile": "Perfil completo",
+    "compareWith": "Comparar…",
+    "failedToLoad": "Error al cargar sectores"
+  },
+  "statCards": {
+    "sectorsTracked": "SECTORES RASTREADOS",
+    "sectorsTrackedDetail": "Sectores gubernamentales activos",
+    "totalContracts": "TOTAL DE CONTRATOS",
+    "totalContractsDetail": "Todos los sectores, todos los años",
+    "totalValue": "VALOR TOTAL",
+    "totalValueDetail": "Solo montos validados",
+    "avgRiskScore": "RIESGO PROMEDIO",
+    "avgRiskScoreDetail": "Ponderado por número de contratos"
+  },
+  "chips": {
+    "criticalRisk": "Riesgo Crítico",
+    "decemberRush": "Prisa de Diciembre",
+    "coBiddingFlags": "Alertas de Coofertamiento",
+    "priceOutliers": "Valores Atípicos de Precio"
+  },
+  "heatmap": {
+    "title": "Mapa de Calor de Riesgo Sectorial",
+    "description": "El color codifica el ranking relativo de riesgo por métrica — rojo es el mayor riesgo, verde es el menor. Haz clic en una fila para abrir el perfil completo de ese sector.",
+    "avgRisk": "Riesgo Promedio",
+    "directAward": "Adj. Directa %",
+    "singleBid": "Lic. Única %",
+    "highRisk": "Alto Riesgo %"
+  },
+  "table": {
+    "title": "Comparación de Sectores",
+    "subtitle": "Haz clic en los encabezados de columna para ordenar. Haz clic en un nombre de sector para ver su perfil completo.",
+    "sector": "Sector",
+    "totalContracts": "Total de Contratos",
+    "totalValueMxn": "Valor Total (MXN)",
+    "avgRiskScore": "Riesgo Promedio",
+    "highRiskPct": "Alto Riesgo %",
+    "directAwardPct": "Adj. Directa %",
+    "riskTrend": "Tendencia de Riesgo",
+    "topRamo": "Ramo Principal"
+  },
+  "valueChart": {
+    "title": "Valor de Contratos por Sector"
+  },
+  "radar": {
+    "directAward": "Adj. Directa",
+    "singleBid": "Lic. Única",
+    "avgRisk": "Riesgo Prom.",
+    "highRisk": "Alto Riesgo %",
+    "valueShare": "Participación",
+    "volume": "Volumen",
+    "axisLabel": "todos los ejes 0–100",
+    "vsLabel": "vs"
+  },
+  "asf": {
+    "totalQuestioned": "Total Cuestionado",
+    "yearsAudited": "Años Auditados",
+    "institutions": "Instituciones"
+  }
 }

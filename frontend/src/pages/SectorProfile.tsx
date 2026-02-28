@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,6 +9,8 @@ import { cn, formatCompactMXN, formatCompactUSD, formatNumber, formatPercentSafe
 import { sectorApi, vendorApi, analysisApi, priceApi, investigationApi, caseLibraryApi, institutionApi } from '@/api/client'
 import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
 import { GenerateReportButton } from '@/components/GenerateReportButton'
+import { ChartDownloadButton } from '@/components/ChartDownloadButton'
+import { TableExportButton } from '@/components/TableExportButton'
 import {
   BarChart3,
   Building2,
@@ -49,6 +51,11 @@ import {
   Legend,
   ReferenceLine,
 } from '@/components/charts'
+
+// ─── pagination constants ─────────────────────────────────────────────────────
+
+const VENDOR_LIST_PER_PAGE = 20
+const INSTITUTION_LIST_PER_PAGE = 15
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -109,6 +116,11 @@ export function SectorProfile() {
   const sectorId = Number(id)
   const currentYear = useMemo(() => new Date().getFullYear() - 1, [])
   const [selectedYear, setSelectedYear] = useState(currentYear)
+
+  // refs for chart download
+  const trendChartRef = useRef<HTMLDivElement>(null)
+  const monthlyChartRef = useRef<HTMLDivElement>(null)
+  const vendorChartRef = useRef<HTMLDivElement>(null)
   const yearOptions = useMemo(() => {
     const years: number[] = []
     for (let y = currentYear; y >= 2010; y--) years.push(y)
@@ -128,8 +140,8 @@ export function SectorProfile() {
   })
 
   const { data: topVendors, isLoading: vendorsLoading } = useQuery({
-    queryKey: ['vendors', 'top', 'value', { sector_id: sectorId }],
-    queryFn: () => vendorApi.getTop('value', 10, { sector_id: sectorId }),
+    queryKey: ['vendors', 'top', 'value', { sector_id: sectorId, per_page: VENDOR_LIST_PER_PAGE }],
+    queryFn: () => vendorApi.getTop('value', VENDOR_LIST_PER_PAGE, { sector_id: sectorId }),
     enabled: !!sectorId,
   })
 
@@ -184,7 +196,7 @@ export function SectorProfile() {
 
   const { data: sectorInstitutions } = useQuery({
     queryKey: ['institutions', 'by-sector', sectorId],
-    queryFn: () => institutionApi.getAll({ sector_id: sectorId, per_page: 15, sort_by: 'total_amount_mxn', sort_order: 'desc' }),
+    queryFn: () => institutionApi.getAll({ sector_id: sectorId, per_page: INSTITUTION_LIST_PER_PAGE, sort_by: 'total_amount_mxn', sort_order: 'desc' }),
     enabled: !!sectorId,
     staleTime: 10 * 60 * 1000,
   })
@@ -383,17 +395,22 @@ export function SectorProfile() {
           {/* TREND AREA */}
           <Card className="border-border/40 overflow-hidden">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4" style={{ color: sectorColor }} />
-                Contract Value — 2010 to {currentYear}
-              </CardTitle>
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4" style={{ color: sectorColor }} />
+                  Contract Value — 2010 to {currentYear}
+                </CardTitle>
+                <ChartDownloadButton targetRef={trendChartRef} filename={`rubli-sector-${sector.code}-spend`} />
+              </div>
             </CardHeader>
             <CardContent className="-mx-2">
-              {sector.trends?.length ? (
-                <TrendArea data={sector.trends} color={sectorColor} />
-              ) : (
-                <p className="text-sm text-text-muted px-4">No trend data available</p>
-              )}
+              <div ref={trendChartRef}>
+                {sector.trends?.length ? (
+                  <TrendArea data={sector.trends} color={sectorColor} />
+                ) : (
+                  <p className="text-sm text-text-muted px-4 py-8 text-center">No trend data available for this sector</p>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -408,50 +425,55 @@ export function SectorProfile() {
                   </CardTitle>
                   <p className="text-xs text-text-muted mt-0.5">How each month deviates from the sector's own monthly average</p>
                 </div>
-                {/* year selector */}
-                <div className="flex flex-wrap gap-1 justify-end">
-                  {yearOptions.slice(0, 8).map((y) => (
-                    <button
-                      key={y}
-                      onClick={() => setSelectedYear(y)}
-                      className={cn(
-                        'rounded px-2 py-0.5 text-xs font-mono tabular-nums transition-all',
-                        y === selectedYear
-                          ? 'font-bold text-background'
-                          : 'text-text-muted hover:text-text-primary hover:bg-background-elevated'
-                      )}
-                      style={y === selectedYear ? { background: sectorColor } : undefined}
-                    >
-                      {y}
-                    </button>
-                  ))}
-                  {yearOptions.length > 8 && (
-                    <select
-                      value={yearOptions.indexOf(selectedYear) >= 8 ? selectedYear : ''}
-                      onChange={(e) => e.target.value && setSelectedYear(Number(e.target.value))}
-                      className="rounded px-1.5 py-0.5 text-xs text-text-muted bg-background-elevated border border-border/40 hover:border-border cursor-pointer"
-                    >
-                      <option value="">older…</option>
-                      {yearOptions.slice(8).map((y) => (
-                        <option key={y} value={y}>{y}</option>
-                      ))}
-                    </select>
-                  )}
+                {/* year selector + chart download */}
+                <div className="flex flex-col items-end gap-1">
+                  <ChartDownloadButton targetRef={monthlyChartRef} filename={`rubli-sector-${sector.code}-monthly-${selectedYear}`} />
+                  <div className="flex flex-wrap gap-1 justify-end">
+                    {yearOptions.slice(0, 8).map((y) => (
+                      <button
+                        key={y}
+                        onClick={() => setSelectedYear(y)}
+                        className={cn(
+                          'rounded px-2 py-0.5 text-xs font-mono tabular-nums transition-all',
+                          y === selectedYear
+                            ? 'font-bold text-background'
+                            : 'text-text-muted hover:text-text-primary hover:bg-background-elevated'
+                        )}
+                        style={y === selectedYear ? { background: sectorColor } : undefined}
+                      >
+                        {y}
+                      </button>
+                    ))}
+                    {yearOptions.length > 8 && (
+                      <select
+                        value={yearOptions.indexOf(selectedYear) >= 8 ? selectedYear : ''}
+                        onChange={(e) => e.target.value && setSelectedYear(Number(e.target.value))}
+                        className="rounded px-1.5 py-0.5 text-xs text-text-muted bg-background-elevated border border-border/40 hover:border-border cursor-pointer"
+                      >
+                        <option value="">older…</option>
+                        {yearOptions.slice(8).map((y) => (
+                          <option key={y} value={y}>{y}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              {monthlyLoading ? (
-                <Skeleton className="h-72 w-full" />
-              ) : monthlyData?.months?.length ? (
-                <MonthlyDeviation
-                  data={monthlyData.months}
-                  decemberSpike={monthlyData.december_spike}
-                  color={sectorColor}
-                />
-              ) : (
-                <p className="text-sm text-text-muted">No monthly data</p>
-              )}
+              <div ref={monthlyChartRef}>
+                {monthlyLoading ? (
+                  <Skeleton className="h-72 w-full" />
+                ) : monthlyData?.months?.length ? (
+                  <MonthlyDeviation
+                    data={monthlyData.months}
+                    decemberSpike={monthlyData.december_spike}
+                    color={sectorColor}
+                  />
+                ) : (
+                  <p className="text-sm text-text-muted py-8 text-center">No monthly data available for this sector</p>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -462,16 +484,33 @@ export function SectorProfile() {
                 <Users className="h-4 w-4" style={{ color: sectorColor }} />
                 Top Vendors
               </CardTitle>
-              <Link to={`/vendors?sector_id=${sectorId}`}>
-                <Button variant="ghost" size="sm" className="text-xs">All <ExternalLink className="ml-1 h-3 w-3" /></Button>
-              </Link>
+              <div className="flex items-center gap-1">
+                <TableExportButton
+                  data={(topVendors?.data ?? []).map((v: { vendor_id?: number; vendor_name?: string; name?: string; total_value_mxn?: number; contract_count?: number; avg_risk_score?: number }) => ({
+                    vendor_id: v.vendor_id ?? '',
+                    vendor_name: v.vendor_name ?? v.name ?? '',
+                    total_value_mxn: v.total_value_mxn ?? '',
+                    contract_count: v.contract_count ?? '',
+                    avg_risk_score: v.avg_risk_score ?? '',
+                  }))}
+                  filename={`rubli-sector-${sector.code}-vendors`}
+                />
+                <ChartDownloadButton targetRef={vendorChartRef} filename={`rubli-sector-${sector.code}-vendors`} />
+                <Link to={`/vendors?sector_id=${sectorId}`}>
+                  <Button variant="ghost" size="sm" className="text-xs">All <ExternalLink className="ml-1 h-3 w-3" /></Button>
+                </Link>
+              </div>
             </CardHeader>
             <CardContent>
-              {vendorsLoading ? (
-                <div className="space-y-2">{[...Array(5)].map((_,i) => <Skeleton key={i} className="h-12" />)}</div>
-              ) : topVendors?.data ? (
-                <VendorBars data={topVendors.data} color={sectorColor} />
-              ) : null}
+              <div ref={vendorChartRef}>
+                {vendorsLoading ? (
+                  <div className="space-y-2">{[...Array(5)].map((_,i) => <Skeleton key={i} className="h-12" />)}</div>
+                ) : topVendors?.data ? (
+                  <VendorBars data={topVendors.data} color={sectorColor} />
+                ) : (
+                  <p className="text-sm text-text-muted py-8 text-center">No vendor data available for this sector</p>
+                )}
+              </div>
             </CardContent>
           </Card>
 

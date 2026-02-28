@@ -1,0 +1,109 @@
+{
+  "notFound": "Vendor Not Found",
+  "notFoundDescription": "The requested vendor could not be found.",
+  "backToVendors": "Back to Vendors",
+  "alsoKnownAs": "Also known as:",
+  "viewNetwork": "View Network",
+  "findSimilar": "Find Similar",
+  "tabs": {
+    "overview": "Overview",
+    "risk": "Risk Analysis",
+    "history": "Contract History",
+    "network": "Network",
+    "external": "External Records"
+  },
+  "kpi": {
+    "totalContracts": "Total Contracts",
+    "totalValue": "Total Value",
+    "institutions": "Institutions",
+    "uniqueAgencies": "Unique agencies",
+    "highRisk": "High Risk"
+  },
+  "coBidding": {
+    "title": "Co-Bidding Pattern Detected",
+    "description": "This vendor frequently appears in the same procedures with specific partners.",
+    "suspiciousPatterns": "suspicious pattern(s) detected.",
+    "topPartners": "Top Co-Bidding Partners",
+    "sharedProcedures": "shared procedures",
+    "detectedPatterns": "Detected Patterns",
+    "coverBidding": "Potential Cover Bidding",
+    "bidRotation": "Potential Bid Rotation",
+    "noPatternsTitle": "No significant co-bidding patterns detected",
+    "noPatternsDescription": "Requires ≥3 shared competitive procedures with another vendor",
+    "analysisTitle": "Co-Bidding Analysis",
+    "proceduresAnalyzed": "procedures analyzed",
+    "coverBidder": "cover bidder?",
+    "alwaysWins": "always wins?",
+    "wins": "wins:",
+    "sameWinner": "same winner",
+    "ofTime": "of time",
+    "involves": "Involves:"
+  },
+  "groundTruth": {
+    "documentedIn": "Documented in"
+  },
+  "cards": {
+    "riskProfile": "Risk Profile",
+    "procurementPatterns": "Procurement Patterns",
+    "directAwards": "Direct Awards",
+    "singleBids": "Single Bids",
+    "avgContract": "Avg Contract",
+    "sectors": "Sectors",
+    "aiPatternAnalysis": "AI Pattern Analysis",
+    "knownScandals": "Known Scandals",
+    "vendorSummary": "Vendor Summary",
+    "primarySector": "Primary Sector",
+    "yearsActive": "Years Active",
+    "sectorsServed": "Sectors Served",
+    "vendorGroup": "Vendor Group",
+    "notClassified": "Not classified",
+    "recentContracts": "Recent Contracts",
+    "viewAll": "View all",
+    "noContractsFound": "No contracts found",
+    "topInstitutions": "Top Institutions",
+    "noInstitutionsFound": "No institutions found",
+    "institutionalRelationships": "Institutional Relationships",
+    "institutionalRelationshipsNote": "Long-tenured vendor relationships correlate with higher single-bid rates and prices (Coviello & Gagliarducci 2017)",
+    "procurementFootprint": "Procurement Footprint",
+    "procurementFootprintNote": "Sector × institution relationships, sized by total value",
+    "footprintLegend": "Color = sector · badge = avg risk score · sorted by total value",
+    "yrs": "yrs",
+    "long": "LONG"
+  },
+  "risk": {
+    "riskScore": "Risk Score",
+    "riskTrend": "Risk Trend",
+    "contractLifecycle": "Contract Lifecycle",
+    "statisticalAnomaly": "Statistical Anomaly",
+    "avgMahalanobis": "Avg Mahalanobis D²",
+    "maxD2": "Max D²",
+    "anomalousContracts": "Anomalous Contracts",
+    "chiSquaredNote": "Based on chi-squared test (k=12, p<0.05)",
+    "riskFactorContribution": "Risk Factor Contribution (v5.0 Z-Scores)",
+    "riskFactorContributionFallback": "Risk Factor Contribution (v5.0 Model)",
+    "riskFactorDetails": "Risk Factor Details",
+    "noRiskFactorData": "No risk factor data available",
+    "noRiskFactors": "No risk factors available"
+  },
+  "history": {
+    "activityCalendar": "Contract Activity Calendar",
+    "calendarDescription": "Contract activity over the last 5 years. Darker cells indicate more contracts in that month.",
+    "noCalendarData": "No contract date data available for calendar view.",
+    "noContractData": "No contract data available",
+    "allContracts": "All Contracts",
+    "calendarLess": "Less",
+    "calendarMore": "More"
+  },
+  "network": {
+    "openNetworkGraph": "Open Network Graph",
+    "networkGraphDescription": "Explore the full vendor relationship network with interactive graph visualization."
+  },
+  "waterfall": {
+    "description": "Positive bars increase risk (red/orange). Negative bars reduce risk (green). Bar height reflects each factor's contribution to the overall score.",
+    "totalScore": "Total Score",
+    "contribution": "contribution",
+    "modelCoefficient": "Model coefficient",
+    "riskIncreasing": "Risk-increasing factor",
+    "riskReducing": "Risk-reducing factor"
+  }
+}
