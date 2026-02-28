@@ -70,6 +70,15 @@ function App() {
           <BrowserRouter>
           <NuqsAdapter>
           <Routes>
+            {/* Landing page — full-screen, no sidebar */}
+            <Route
+              path="landing"
+              element={
+                <SuspenseBoundary fallback={<DashboardSkeleton />}>
+                  <Landing />
+                </SuspenseBoundary>
+              }
+            />
             <Route path="/" element={<MainLayout />}>
               <Route
                 index
