@@ -51,6 +51,19 @@
     "backHome": "Back to Dashboard",
     "viewContracts": "View All Contracts"
   },
+  "dossier": {
+    "addToDossier": "Add to Dossier",
+    "noDossiers": "No active dossiers yet",
+    "newDossier": "New Dossier...",
+    "newTitle": "New Investigation Dossier",
+    "nameLabel": "Name *",
+    "description": "Description",
+    "descriptionPlaceholder": "What is this investigation about?",
+    "color": "Color",
+    "cancel": "Cancel",
+    "create": "Create Dossier",
+    "creating": "Creating\u2026"
+  },
   "welcome": {
     "subtitle": "Red Unificada de Busqueda de Licitaciones Irregulares — AI-Powered Corruption Detection for Mexican Government Procurement",
     "step1Title": "3.1 Million Contracts Analyzed",

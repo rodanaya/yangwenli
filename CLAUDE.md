@@ -99,23 +99,28 @@ For detailed validation rules, see @.claude/rules/data-validation.md
 
 ## Risk Scoring Model
 
-**Three model versions** — v3.3 (weighted checklist), v4.0 (statistical), v5.0 (per-sector calibrated, active):
+**Model versions** — v3.3 (weighted checklist), v4.0 (statistical), v5.1 (calibrated), v5.2 (in DB, calibration in progress):
 
-### v5.0: Per-Sector Calibrated Model (active, v5.0.1 2026-02-16)
+> **DB STATE (2026-02-28)**: All 3.1M contracts scored with `risk_model_version='v5.2'` by another session.
+> v5.2 high-risk rate is currently **46.2%** (calibration issue — target is ~9%). Constants.py still says v5.1.
+> Frontend/API serve v5.1 metadata. DB scores are v5.2 but not yet properly calibrated.
+> To fix: rerun `calibrate_risk_model_v5` + `calculate_risk_scores_v5` with correct v5.2 parameters.
 
-Per-sector calibrated probabilities P(corrupt|z) with confidence intervals. **Train AUC: 0.967, Test AUC: 0.960** (temporal split), high-risk rate: 7.9%.
+### v5.1: Per-Sector Calibrated Model (metadata active, scores replaced by v5.2 in DB)
+
+Per-sector calibrated probabilities P(corrupt|z) with confidence intervals. **Train AUC: 0.964, Test AUC: 0.957** (temporal split), high-risk rate: 9.0%.
 
 - 16 z-score features (12 original + 4 new: price_volatility, institution_diversity, win_rate, sector_spread)
 - 12 per-sector logistic regression sub-models + 1 global fallback
-- Diversified ground truth: **15 cases, 27 vendors, 26,582 contracts across all 12 sectors**
+- Diversified ground truth: **22 cases, 27 vendors, 26,582 contracts across all 12 sectors**
 - Temporal train/test split (train ≤2020, test ≥2021) — honest generalization
-- Elkan & Noto (2008) PU-learning correction (c=0.887) — breaks v4.0's circular estimator
+- Elkan & Noto (2008) PU-learning correction (c=0.882) — breaks v4.0's circular estimator
 - Cross-validated ElasticNet (C=10.0, l1_ratio=0.25) — no ad-hoc dampening needed
 - 500 bootstrap 95% confidence intervals
 
 **Top predictors**: price_volatility (+1.22), institution_diversity (-0.85), win_rate (+0.73), vendor_concentration (+0.43)
 **Risk Levels**: Critical (>=0.50), High (>=0.30), Medium (>=0.10), Low (<0.10)
-**Distribution**: Critical 5.8%, High 2.2%, Medium 9.5%, Low 82.6%
+**Distribution**: Critical 6.1%, High 2.9%, Medium 13.2%, Low 77.9%
 
 ### v4.0: Statistical Framework (preserved in risk_score_v4)
 
@@ -145,7 +150,7 @@ Calibrated probabilities P(corrupt|z) with confidence intervals. **AUC-ROC: 0.94
 **Interaction effects**: 5 pairs, up to +15% bonus. Score capped at 1.0.
 **Risk Levels**: Critical (>=0.50), High (0.35-0.50), Medium (0.20-0.35), Low (<0.20)
 
-For methodology details, see @docs/RISK_METHODOLOGY_v5.md (v5.0, active), @docs/RISK_METHODOLOGY_v4.md (v4.0), @docs/RISK_METHODOLOGY.md (v3.3), and @docs/MODEL_COMPARISON_REPORT.md (v3.3 vs v4.0 comparison)
+For methodology details, see @docs/RISK_METHODOLOGY_v5.md (v5.1, active), @docs/RISK_METHODOLOGY_v4.md (v4.0), @docs/RISK_METHODOLOGY.md (v3.3), and @docs/MODEL_COMPARISON_REPORT.md (v3.3 vs v4.0 comparison)
 
 ---
 

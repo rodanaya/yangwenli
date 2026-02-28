@@ -96,7 +96,14 @@
   },
   "network": {
     "openNetworkGraph": "Abrir Gráfico de Red",
-    "networkGraphDescription": "Explore la red completa de relaciones de proveedores con visualización gráfica interactiva."
+    "networkGraphDescription": "Explore la red completa de relaciones de proveedores con visualización gráfica interactiva.",
+    "topology": "Topología de Red",
+    "clusteringCoefficient": "Coeficiente de Agrupamiento",
+    "closedTriangles": "Triángulos Cerrados",
+    "biddingTrianglesDetected": "Triángulos de licitación detectados",
+    "highClustering": "Alta agrupación — posible estructura de cartel",
+    "moderateClustering": "Agrupación moderada",
+    "lowClustering": "Baja agrupación"
   },
   "waterfall": {
     "description": "Las barras positivas aumentan el riesgo (rojo/naranja). Las barras negativas reducen el riesgo (verde). La altura de la barra refleja la contribución de cada factor a la puntuación total.",

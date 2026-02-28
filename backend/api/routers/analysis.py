@@ -190,8 +190,10 @@ class ModelMetadataResponse(BaseModel):
     version: str
     trained_at: Optional[str]
     auc_test: Optional[float]
+    auc_train: Optional[float] = None
     pu_correction: Optional[float] = None
     n_contracts: Optional[int] = None
+    updated_at: Optional[str] = None
 
 
 class RiskOverviewResponse(BaseModel):
@@ -298,15 +300,32 @@ def get_model_metadata():
         with get_db() as conn:
             cursor = conn.cursor()
             row = cursor.execute(
-                "SELECT model_version, created_at, auc_roc, pu_correction_factor FROM model_calibration ORDER BY created_at DESC LIMIT 1"
+                "SELECT model_version, created_at, auc_roc, test_auc, "
+                "pu_correction_factor, temporal_metrics "
+                "FROM model_calibration WHERE sector_id IS NULL "
+                "ORDER BY created_at DESC LIMIT 1"
             ).fetchone()
             if not row:
-                return {"version": "v5.0", "trained_at": "2026-02-14", "n_contracts": 3110007, "auc_test": 0.960}
+                return {
+                    "version": "v5.1", "trained_at": "2026-02-27",
+                    "n_contracts": 3110007, "auc_test": 0.957,
+                    "auc_train": 0.964, "pu_correction": 0.882,
+                    "updated_at": "2026-02-27",
+                }
+            train_auc = None
+            if row["temporal_metrics"]:
+                try:
+                    tm = json.loads(row["temporal_metrics"])
+                    train_auc = tm.get("train_auc")
+                except (json.JSONDecodeError, TypeError):
+                    pass
             return {
                 "version": row["model_version"],
                 "trained_at": row["created_at"],
-                "auc_test": row["auc_roc"],
+                "auc_test": row["test_auc"] or row["auc_roc"],
+                "auc_train": round(train_auc, 3) if train_auc else None,
                 "pu_correction": row["pu_correction_factor"],
+                "updated_at": row["created_at"],
             }
     except sqlite3.OperationalError as e:
         logger.error(f"DB error in get_model_metadata: {e}")

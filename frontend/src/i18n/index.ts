@@ -39,6 +39,8 @@ import esCases from './locales/es/cases.json'
 import enCases from './locales/en/cases.json'
 import esVendors from './locales/es/vendors.json'
 import enVendors from './locales/en/vendors.json'
+import esInstitutions from './locales/es/institutions.json'
+import enInstitutions from './locales/en/institutions.json'
 import esLimitations from './locales/es/limitations.json'
 import enLimitations from './locales/en/limitations.json'
 import esMethodology from './locales/es/methodology.json'
@@ -56,7 +58,7 @@ i18n
         glossary: esGlossary, spending: esSpending,
         redflags: esRedflags,
         procurement: esProcurement, administrations: esAdministrations, price: esPrice,
-        network: esNetwork, cases: esCases, vendors: esVendors,
+        network: esNetwork, cases: esCases, vendors: esVendors, institutions: esInstitutions,
         limitations: esLimitations, methodology: esMethodology,
       },
       en: {
@@ -66,7 +68,7 @@ i18n
         glossary: enGlossary, spending: enSpending,
         redflags: enRedflags,
         procurement: enProcurement, administrations: enAdministrations, price: enPrice,
-        network: enNetwork, cases: enCases, vendors: enVendors,
+        network: enNetwork, cases: enCases, vendors: enVendors, institutions: enInstitutions,
         limitations: enLimitations, methodology: enMethodology,
       },
     },

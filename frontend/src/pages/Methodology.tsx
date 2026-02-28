@@ -87,6 +87,13 @@ const CORRUPTION_CASES = [
   { name: 'Grupo Higa / Casa Blanca', type: 'Conflict of interest', contracts: '3', detection: '100%', highPlus: '33.3%', avgScore: '0.359' },
   { name: 'Oceanografia PEMEX Fraud', type: 'Procurement fraud', contracts: '2', detection: '50.0%', highPlus: '0%', avgScore: '0.152' },
   { name: 'PEMEX Emilio Lozoya', type: 'Bribery', contracts: '0*', detection: '--', highPlus: '--', avgScore: '--' },
+  { name: 'ISSSTE Ambulance Leasing Fraud', type: 'Overpricing', contracts: '603', detection: '--', highPlus: '--', avgScore: '--' },
+  { name: 'Decoaro Ghost Cleaning Company', type: 'Ghost companies', contracts: '46', detection: '--', highPlus: '--', avgScore: '--' },
+  { name: 'CONAGUA Ghost Contractor Rotation', type: 'Ghost companies', contracts: '29', detection: '--', highPlus: '--', avgScore: '--' },
+  { name: 'SEGOB-Mainbit IT Monopoly', type: 'Monopoly', contracts: '604', detection: '--', highPlus: '--', avgScore: '--' },
+  { name: 'IMSS Overpriced Medicines (Ethomedical)', type: 'Overpricing', contracts: '--', detection: '--', highPlus: '--', avgScore: '--' },
+  { name: 'Tren Maya Direct Award Irregularities', type: 'Procurement fraud', contracts: '--', detection: '--', highPlus: '--', avgScore: '--' },
+  { name: 'SAT EFOS Art. 69-B Ghost Network', type: 'Ghost companies', contracts: '122', detection: '41.8%', highPlus: '27.9%', avgScore: '0.283' },
 ] as const
 
 const DATA_STRUCTURES = [
@@ -562,7 +569,7 @@ export function Methodology() {
           <CollapsibleSection id="validation" title="Ground Truth Validation" icon={Target}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
-                The model was trained and validated against <strong className="text-text-primary">15 documented
+                The model was trained and validated against <strong className="text-text-primary">22 documented
                 Mexican corruption cases</strong>, matching 27 vendors to 26,582 contracts across all 12 sectors in the COMPRANET database.
               </p>
 
@@ -605,7 +612,10 @@ export function Methodology() {
               </div>
               <p className="text-xs text-text-muted">
                 *Case 9 (PEMEX Emilio Lozoya) shares vendors with the Odebrecht case. Documented for reference
-                but does not contribute additional training data.
+                but does not contribute additional training data. Cases 16–19 are in the database but inactive
+                (caused v5.0.2 regression). Cases 20–21 have vendor matching pending. Case 22 (SAT EFOS,
+                38 RFC-confirmed ghost companies) is included in the active v5.1 model — avg score improved
+                from 0.028 (v5.0) to 0.283 (v5.1), but 58.2% of EFOS contracts still score below medium.
               </p>
 
               {/* Validation metrics */}
@@ -710,7 +720,7 @@ export function Methodology() {
               {[
                 {
                   title: 'Ground truth concentration',
-                  text: 'While diversified to 15 cases across all 12 sectors (up from 9 in 3 sectors), three cases (IMSS, Segalmex, COVID-19) still account for 79% of the 26,582 training contracts. Vendor concentration remains the dominant predictor in most per-sector sub-models.',
+                  text: 'While diversified to 22 cases across all 12 sectors (up from 9 in 3 sectors), three cases (IMSS, Segalmex, COVID-19) still account for 79% of the 26,582 training contracts. Vendor concentration remains the dominant predictor in most per-sector sub-models.',
                 },
                 {
                   title: 'Small-case detection is weaker',

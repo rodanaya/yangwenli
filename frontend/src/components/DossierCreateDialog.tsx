@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,6 +18,7 @@ interface DossierCreateDialogProps {
 }
 
 export function DossierCreateDialog({ open, onOpenChange, onSubmit, loading }: DossierCreateDialogProps) {
+  const { t } = useTranslation('common')
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [color, setColor] = useState('#3b82f6')
@@ -34,11 +36,11 @@ export function DossierCreateDialog({ open, onOpenChange, onSubmit, loading }: D
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>New Investigation Dossier</DialogTitle>
+          <DialogTitle>{t('dossier.newTitle')}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div>
-            <label className="text-xs font-medium text-text-secondary block mb-1">Name *</label>
+            <label className="text-xs font-medium text-text-secondary block mb-1">{t('dossier.nameLabel')}</label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -48,17 +50,17 @@ export function DossierCreateDialog({ open, onOpenChange, onSubmit, loading }: D
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-text-secondary block mb-1">Description</label>
+            <label className="text-xs font-medium text-text-secondary block mb-1">{t('dossier.description')}</label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="What is this investigation about?"
+              placeholder={t('dossier.descriptionPlaceholder')}
               rows={2}
               className="resize-none text-sm"
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-text-secondary block mb-1">Color</label>
+            <label className="text-xs font-medium text-text-secondary block mb-1">{t('dossier.color')}</label>
             <div className="flex gap-2 flex-wrap">
               {PRESET_COLORS.map((c) => (
                 <button
@@ -79,10 +81,10 @@ export function DossierCreateDialog({ open, onOpenChange, onSubmit, loading }: D
           </div>
           <div className="flex gap-2 justify-end pt-2">
             <Button type="button" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t('dossier.cancel')}
             </Button>
             <Button type="submit" size="sm" disabled={!name.trim() || loading}>
-              {loading ? 'Creating\u2026' : 'Create Dossier'}
+              {loading ? t('dossier.creating') : t('dossier.create')}
             </Button>
           </div>
         </form>

@@ -51,6 +51,19 @@
     "backHome": "Volver al Panel",
     "viewContracts": "Ver Todos los Contratos"
   },
+  "dossier": {
+    "addToDossier": "Agregar al expediente",
+    "noDossiers": "A\u00fan no hay expedientes activos",
+    "newDossier": "Nuevo expediente...",
+    "newTitle": "Nuevo Expediente de Investigaci\u00f3n",
+    "nameLabel": "Nombre *",
+    "description": "Descripci\u00f3n",
+    "descriptionPlaceholder": "\u00bfDe qu\u00e9 trata esta investigaci\u00f3n?",
+    "color": "Color",
+    "cancel": "Cancelar",
+    "create": "Crear expediente",
+    "creating": "Creando\u2026"
+  },
   "welcome": {
     "subtitle": "Red Unificada de Busqueda de Licitaciones Irregulares — Detección de Corrupción con IA para Contrataciones del Gobierno de México",
     "step1Title": "3.1 Millones de Contratos Analizados",

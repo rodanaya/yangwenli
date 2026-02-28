@@ -1,0 +1,50 @@
+{
+  "title": "Institution Rankings",
+  "subtitle": "Government institutions ranked by procurement risk and vendor concentration — click column headers to sort",
+  "tableDescription": "{{count}} institutions. Click column headers to sort. Click an institution name to view its profile.",
+  "minimumContracts": "Minimum contracts:",
+  "institutionsTracked": "INSTITUTIONS TRACKED",
+  "withMinContracts": "With {{count}}+ contracts",
+  "avgVendorConcentration": "AVG VENDOR CONCENTRATION",
+  "marketOverall": "{{label}} market overall",
+  "highRiskInstitutions": "HIGH-RISK INSTITUTIONS",
+  "avgRiskAbove30": "Avg risk score above 30%",
+  "columns": {
+    "institution": "Institution",
+    "contracts": "Contracts",
+    "totalValue": "Total Value (MXN)",
+    "avgRiskScore": "Avg Risk Score",
+    "vendors": "Vendors",
+    "concentration": "Concentration",
+    "concentrationTooltip": "Vendor Concentration: 1.0 = single vendor, 0.0 = perfectly competitive",
+    "riskLevel": "Risk Level"
+  },
+  "heatmap": {
+    "avgRisk": "Avg Risk",
+    "highRiskPct": "High-Risk %",
+    "directAward": "Direct Award",
+    "singleBid": "Single Bid",
+    "concentration": "Concentration",
+    "topVendor": "Top Vendor"
+  },
+  "scatter": {
+    "vendorConcentration": "Vendor Concentration",
+    "avgRiskScore": "Avg Risk Score"
+  },
+  "publicationDelay": {
+    "title": "Publication Delay Transparency",
+    "contractsWithTimingData": "{{count}} contracts with timing data",
+    "description": "Days between procedure publication and contract award. Shorter windows compress vendor preparation time and favour pre-selected suppliers.",
+    "avgDelay": "Avg Delay",
+    "days": "days",
+    "timely": "Timely (<15 days)",
+    "ofProcedures": "of procedures",
+    "slowest": "Slowest (P95)",
+    "daysLabel": "days"
+  },
+  "concentration": {
+    "competitive": "Competitive",
+    "moderate": "Moderate",
+    "concentrated": "Concentrated"
+  }
+}

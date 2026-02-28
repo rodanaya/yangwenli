@@ -75,8 +75,8 @@ export default function Landing() {
 
   // risk_distribution is RiskDistribution[] — find critical and high percentages
   const riskDist: RiskDistribution[] = fastDashboard?.risk_distribution ?? []
-  const criticalPct = riskDist.find((r) => r.risk_level === 'critical')?.percentage ?? 5.8
-  const highPct = riskDist.find((r) => r.risk_level === 'high')?.percentage ?? 2.2
+  const criticalPct = riskDist.find((r) => r.risk_level === 'critical')?.percentage ?? 6.1
+  const highPct = riskDist.find((r) => r.risk_level === 'high')?.percentage ?? 2.9
 
   const CHAPTERS = [
     {
@@ -100,7 +100,7 @@ export default function Landing() {
     {
       tag: 'The Risk',
       heading: `${(criticalPct + highPct).toFixed(1)}% of Contracts Flagged High-Risk`,
-      body: `RUBLI's AI model — trained on 15 documented corruption scandals — identifies ${criticalPct.toFixed(1)}% of contracts as Critical and ${highPct.toFixed(1)}% as High risk. That's over 270,000 contracts worth investigating.`,
+      body: `RUBLI's AI model — trained on 22 documented corruption cases — identifies ${criticalPct.toFixed(1)}% of contracts as Critical and ${highPct.toFixed(1)}% as High risk. That's over 270,000 contracts worth investigating.`,
       icon: AlertTriangle,
       color: '#dc2626',
       stat: `${criticalPct.toFixed(1)}%`,

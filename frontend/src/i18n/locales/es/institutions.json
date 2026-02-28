@@ -1,0 +1,50 @@
+{
+  "title": "Clasificación de Instituciones",
+  "subtitle": "Instituciones gubernamentales clasificadas por riesgo de contratación y concentración de proveedores — haga clic en los encabezados para ordenar",
+  "tableDescription": "{{count}} instituciones. Haga clic en los encabezados para ordenar. Haga clic en el nombre de una institución para ver su perfil.",
+  "minimumContracts": "Contratos mínimos:",
+  "institutionsTracked": "INSTITUCIONES RASTREADAS",
+  "withMinContracts": "Con {{count}}+ contratos",
+  "avgVendorConcentration": "CONCENTRACIÓN PROMEDIO DE PROVEEDORES",
+  "marketOverall": "Mercado {{label}} en general",
+  "highRiskInstitutions": "INSTITUCIONES DE ALTO RIESGO",
+  "avgRiskAbove30": "Puntuación de riesgo promedio superior al 30%",
+  "columns": {
+    "institution": "Institución",
+    "contracts": "Contratos",
+    "totalValue": "Valor Total (MXN)",
+    "avgRiskScore": "Puntuación de Riesgo Promedio",
+    "vendors": "Proveedores",
+    "concentration": "Concentración",
+    "concentrationTooltip": "Concentración de Proveedores: 1.0 = proveedor único, 0.0 = perfectamente competitivo",
+    "riskLevel": "Nivel de Riesgo"
+  },
+  "heatmap": {
+    "avgRisk": "Riesgo Prom.",
+    "highRiskPct": "% Alto Riesgo",
+    "directAward": "Adj. Directa",
+    "singleBid": "Licitación Única",
+    "concentration": "Concentración",
+    "topVendor": "Proveedor Top"
+  },
+  "scatter": {
+    "vendorConcentration": "Concentración de Proveedores",
+    "avgRiskScore": "Puntuación de Riesgo Promedio"
+  },
+  "publicationDelay": {
+    "title": "Transparencia de Demora en Publicación",
+    "contractsWithTimingData": "{{count}} contratos con datos de tiempo",
+    "description": "Días entre la publicación del procedimiento y la adjudicación del contrato. Ventanas más cortas comprimen el tiempo de preparación de proveedores y favorecen a proveedores preseleccionados.",
+    "avgDelay": "Demora Promedio",
+    "days": "días",
+    "timely": "Oportuno (<15 días)",
+    "ofProcedures": "de procedimientos",
+    "slowest": "Más lento (P95)",
+    "daysLabel": "días"
+  },
+  "concentration": {
+    "competitive": "Competitivo",
+    "moderate": "Moderado",
+    "concentrated": "Concentrado"
+  }
+}

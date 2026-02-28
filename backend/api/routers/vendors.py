@@ -105,7 +105,7 @@ class VendorAISummaryResponse(BaseModel):
 @router.get("", response_model=VendorListResponse)
 def list_vendors(
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
-    per_page: int = Query(50, ge=1, le=200, description="Items per page"),
+    per_page: int = Query(50, ge=1, le=100, description="Items per page (max 100)"),
     search: Optional[str] = Query(None, min_length=2, description="Search vendor name or RFC"),
     sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by primary sector"),
     risk_level: Optional[str] = Query(None, description="Filter by risk level: critical, high, medium, low"),
@@ -121,6 +121,15 @@ def list_vendors(
     Returns vendors with aggregate statistics from their contracts.
     Supports filtering by search term, sector, contract count, and RFC presence.
     """
+    # Validate risk_level before database operations
+    VALID_RISK_LEVELS = {"low", "medium", "high", "critical"}
+    if risk_level is not None:
+        if risk_level.lower() not in VALID_RISK_LEVELS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid risk_level '{risk_level}'. Must be one of: {', '.join(sorted(VALID_RISK_LEVELS))}"
+            )
+
     with get_db() as conn:
         result = vendor_service.list_vendors(
             conn,
@@ -1038,12 +1047,15 @@ def get_vendor_external_flags(
             if vendor_name:
                 conditions.append("company_name LIKE ?")
                 params.append(f"%{vendor_name[:20].strip()}%")
-            if conditions:
+            if not conditions:
+                rows = []
+            else:
+                where_clause = ' OR '.join(conditions)
                 rows = cursor.execute(
-                    f"SELECT id, rfc, company_name, sanction_type, sanction_start, sanction_end, amount_mxn, authority FROM sfp_sanctions WHERE {' OR '.join(conditions)} LIMIT 20",
+                    f"SELECT id, rfc, company_name, sanction_type, sanction_start, sanction_end, amount_mxn, authority FROM sfp_sanctions WHERE {where_clause} LIMIT 20",
                     params,
                 ).fetchall()
-                result["sfp_sanctions"] = [dict(r) for r in rows]
+            result["sfp_sanctions"] = [dict(r) for r in rows]
         except Exception:
             pass  # Table may not exist yet
 
@@ -1081,12 +1093,15 @@ def get_vendor_external_flags(
             if vendor_name:
                 conditions.append("vendor_name LIKE ?")
                 params.append(f"%{vendor_name[:20].strip()}%")
-            if conditions:
+            if not conditions:
+                rows = []
+            else:
+                where_clause = ' OR '.join(conditions)
                 rows = cursor.execute(
-                    f"SELECT id, asf_report_id, entity_name, finding_type, amount_mxn, report_year, report_url, summary FROM asf_cases WHERE {' OR '.join(conditions)} ORDER BY report_year DESC LIMIT 20",
+                    f"SELECT id, asf_report_id, entity_name, finding_type, amount_mxn, report_year, report_url, summary FROM asf_cases WHERE {where_clause} ORDER BY report_year DESC LIMIT 20",
                     params,
                 ).fetchall()
-                result["asf_cases"] = [dict(r) for r in rows]
+            result["asf_cases"] = [dict(r) for r in rows]
         except Exception:
             pass  # Table may be empty
 

@@ -68,21 +68,25 @@ import { cn } from '@/lib/utils'
 import { RiskWhisker } from '@/components/ui/risk-whisker'
 
 // ============================================================================
-// Model coefficients for the waterfall chart (v5.0 global model)
+// Model coefficients for the waterfall chart (v5.1 global model, from DB 2026-02-28)
 // ============================================================================
 const MODEL_COEFFICIENTS: Record<string, number> = {
-  price_volatility: 1.219,
-  institution_diversity: -0.848,
-  win_rate: 0.727,
-  vendor_concentration: 0.428,
-  sector_spread: -0.374,
-  industry_mismatch: 0.305,
-  same_day_count: 0.222,
-  direct_award: 0.182,
-  ad_period_days: -0.104,
-  network_member_count: 0.064,
-  year_end: 0.059,
-  institution_risk: 0.057,
+  price_volatility: 1.332,
+  vendor_concentration: 0.760,
+  institution_diversity: -0.324,
+  sector_spread: 0.290,
+  price_hyp_confidence: 0.185,
+  ad_period_days: -0.150,
+  institution_risk: 0.108,
+  network_member_count: 0.103,
+  industry_mismatch: 0.099,
+  same_day_count: 0.076,
+  price_ratio: 0.045,
+  direct_award: 0.039,
+  single_bid: -0.026,
+  win_rate: 0.025,
+  year_end: 0.004,
+  co_bid_rate: 0.000,
 }
 
 // ============================================================================
@@ -453,7 +457,7 @@ export function VendorProfile() {
   })
 
   // Fetch year-by-year lifecycle (contract count + risk per year)
-  const { data: lifecycleData } = useQuery({
+  const { data: lifecycleData, error: lifecycleError } = useQuery({
     queryKey: ['vendor', vendorId, 'risk-timeline'],
     queryFn: () => vendorApi.getRiskTimeline(vendorId),
     enabled: !!vendorId,
@@ -461,7 +465,7 @@ export function VendorProfile() {
   })
 
   // Fetch sector × institution footprint
-  const { data: footprintData } = useQuery({
+  const { data: footprintData, error: footprintError } = useQuery({
     queryKey: ['vendor', vendorId, 'footprint'],
     queryFn: () => vendorApi.getFootprint(vendorId),
     enabled: !!vendorId,
@@ -469,7 +473,7 @@ export function VendorProfile() {
   })
 
   // Fetch AI pattern analysis summary
-  const { data: aiSummary, isLoading: aiLoading } = useQuery({
+  const { data: aiSummary, isLoading: aiLoading, error: aiError } = useQuery({
     queryKey: ['vendor', vendorId, 'ai-summary'],
     queryFn: () => vendorApi.getAiSummary(vendorId),
     enabled: !!vendorId,
@@ -477,7 +481,7 @@ export function VendorProfile() {
   })
 
   // F2: Ground truth status
-  const { data: groundTruthStatus } = useQuery({
+  const { data: groundTruthStatus, error: groundTruthError } = useQuery({
     queryKey: ['vendor', vendorId, 'ground-truth-status'],
     queryFn: () => vendorApi.getGroundTruthStatus(vendorId),
     enabled: !!vendorId,
@@ -485,7 +489,7 @@ export function VendorProfile() {
   })
 
   // F1: Risk waterfall (z-score contributions)
-  const { data: waterfallData, isLoading: waterfallLoading } = useQuery({
+  const { data: waterfallData, isLoading: waterfallLoading, error: waterfallError } = useQuery({
     queryKey: ['vendor', vendorId, 'risk-waterfall'],
     queryFn: () => vendorApi.getRiskWaterfall(vendorId),
     enabled: !!vendorId,
@@ -493,7 +497,7 @@ export function VendorProfile() {
   })
 
   // F7: Peer comparison
-  const { data: peerComparison } = useQuery({
+  const { data: peerComparison, error: peerComparisonError } = useQuery({
     queryKey: ['vendor', vendorId, 'peer-comparison'],
     queryFn: () => vendorApi.getPeerComparison(vendorId),
     enabled: !!vendorId,
@@ -605,6 +609,12 @@ export function VendorProfile() {
                     Documented: {c.case_name}
                   </Link>
                 ))}
+                {groundTruthError && (
+                  <span className="ml-1 px-2 py-0.5 text-xs text-text-muted flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3 text-amber-500" />
+                    Could not check case status
+                  </span>
+                )}
                 {/* SFP/EFOS badges (fallback when no ground truth) */}
                 {!groundTruthStatus?.is_known_bad && externalFlags?.sfp_sanctions && externalFlags.sfp_sanctions.length > 0 && (
                   <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-red-500/20 text-red-300 rounded-full border border-red-500/40">
@@ -799,6 +809,13 @@ export function VendorProfile() {
         </ScrollReveal>
       </div>
 
+      {peerComparisonError && (
+        <div className="flex items-center gap-2 text-sm text-text-muted px-1">
+          <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0" />
+          <span>Could not load peer comparison data. Try refreshing.</span>
+        </div>
+      )}
+
       {/* Co-Bidding Alert (v3.2) */}
       {!coBiddersLoading && hasCoBiddingRisk && (
         <Card className="border-amber-500/50 bg-amber-500/5 animate-slide-up">
@@ -991,7 +1008,7 @@ export function VendorProfile() {
             <ScrollReveal direction="up" delay={120} className="lg:col-span-2">
             <div className="space-y-6">
               {/* AI Pattern Analysis */}
-              {(aiLoading || (aiSummary && aiSummary.insights.length > 0)) && (
+              {(aiLoading || aiError || (aiSummary && aiSummary.insights.length > 0)) && (
                 <Card className="hover-lift">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -1000,7 +1017,12 @@ export function VendorProfile() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {aiLoading ? (
+                    {aiError ? (
+                      <div className="flex items-center gap-2 text-sm text-text-muted p-4">
+                        <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                        <span>Could not load this section. Try refreshing.</span>
+                      </div>
+                    ) : aiLoading ? (
                       <div className="space-y-2">
                         <Skeleton className="h-4 w-full" />
                         <Skeleton className="h-4 w-3/4" />
@@ -1273,6 +1295,22 @@ export function VendorProfile() {
               )}
 
               {/* Sector × Institution Footprint */}
+              {footprintError && (
+                <Card className="hover-lift">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <BarChart3 className="h-4 w-4" />
+                      {t('cards.procurementFootprint')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-2 text-sm text-text-muted p-4">
+                      <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                      <span>Could not load this section. Try refreshing.</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
               {footprintData && footprintData.footprint.length > 0 && (
               <Card className="hover-lift">
                 <CardHeader>
@@ -1447,6 +1485,22 @@ export function VendorProfile() {
               )}
 
               {/* Vendor Lifecycle Chart */}
+              {lifecycleError && (
+                <Card className="hover-lift">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4" />
+                      {t('risk.contractLifecycle')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-2 text-sm text-text-muted p-4">
+                      <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                      <span>Could not load this section. Try refreshing.</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
               {lifecycleData && lifecycleData.timeline.length > 1 && (
                 <Card className="hover-lift">
                   <CardHeader className="pb-2">
@@ -1573,6 +1627,22 @@ export function VendorProfile() {
                   </CardHeader>
                   <CardContent>
                     <WaterfallRiskChart features={waterfallData} />
+                  </CardContent>
+                </Card>
+              )}
+              {waterfallError && !waterfallData && (
+                <Card className="hover-lift">
+                  <CardHeader>
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4" />
+                      {t('risk.riskFactorContribution')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-2 text-sm text-text-muted p-4">
+                      <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                      <span>Could not load this section. Try refreshing.</span>
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -1820,7 +1890,7 @@ export function VendorProfile() {
                   {vendor?.cobid_clustering_coeff != null && vendor.cobid_clustering_coeff > 0 && (
                     <div className="pt-2 border-t border-border/50">
                       <p className="text-xs font-medium text-text-muted uppercase tracking-wide mb-3 flex items-center gap-1.5">
-                        Network Topology
+                        {t('network.topology')}
                         <InfoTooltip termKey="clusteringCoefficient" size={12} />
                       </p>
                       <div className="flex gap-3">
@@ -1834,7 +1904,7 @@ export function VendorProfile() {
                             : 'border-green-500/40 bg-green-500/[0.06]'
                         )}>
                           <p className="text-[10px] text-text-muted uppercase tracking-wide mb-1 flex items-center gap-1">
-                            Clustering Coefficient
+                            {t('network.clusteringCoefficient')}
                             <InfoTooltip termKey="clusteringCoefficient" size={11} />
                           </p>
                           <p className={cn(
@@ -1856,10 +1926,10 @@ export function VendorProfile() {
                               : 'text-green-400/80'
                           )}>
                             {vendor.cobid_clustering_coeff > 0.6
-                              ? 'High clustering — possible cartel structure'
+                              ? t('network.highClustering')
                               : vendor.cobid_clustering_coeff >= 0.3
-                              ? 'Moderate clustering'
-                              : 'Low clustering'}
+                              ? t('network.moderateClustering')
+                              : t('network.lowClustering')}
                           </p>
                         </div>
 
@@ -1867,13 +1937,13 @@ export function VendorProfile() {
                         {vendor.cobid_triangle_count != null && (
                           <div className="flex-1 rounded-lg border border-border/60 bg-background-card px-4 py-3">
                             <p className="text-[10px] text-text-muted uppercase tracking-wide mb-1">
-                              Closed Triangles
+                              {t('network.closedTriangles')}
                             </p>
                             <p className="text-xl font-bold tabular-nums text-text-primary">
                               {vendor.cobid_triangle_count.toLocaleString()}
                             </p>
                             <p className="text-[10px] text-text-muted mt-0.5">
-                              Bidding triangles detected
+                              {t('network.biddingTrianglesDetected')}
                             </p>
                           </div>
                         )}

@@ -33,7 +33,7 @@ RISK_THRESHOLDS_V4 = {
 RISK_THRESHOLDS_V5 = RISK_THRESHOLDS_V4
 
 # Active model version
-CURRENT_MODEL_VERSION = 'v5.0'
+CURRENT_MODEL_VERSION = 'v5.1'
 
 
 def get_risk_level(score: float, model_version: str = None) -> str:

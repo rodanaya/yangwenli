@@ -1710,6 +1710,37 @@ _asf_inst_cache_lock = threading.Lock()
 _ASF_INST_CACHE_TTL = 86400  # 24 hours
 
 
+@router.get("/{institution_id:int}/ground-truth-status")
+def get_institution_ground_truth_status(institution_id: int = Path(..., ge=1)):
+    """Check if any ground truth vendor has contracts with this institution."""
+    import sqlite3 as _sqlite3
+
+    with get_db() as conn:
+        conn.row_factory = _sqlite3.Row
+        row = conn.execute("""
+            SELECT gtc.case_name, gtc.fraud_type, COUNT(c.id) as contract_count
+            FROM contracts c
+            JOIN ground_truth_vendors gtv ON (
+                (c.vendor_id = gtv.vendor_id AND gtv.vendor_id IS NOT NULL)
+                OR (c.vendor_name = gtv.vendor_name_source AND gtv.vendor_id IS NULL)
+            )
+            JOIN ground_truth_cases gtc ON gtv.case_id = gtc.id
+            WHERE c.institution_id = ?
+            GROUP BY gtc.case_name, gtc.fraud_type
+            ORDER BY contract_count DESC
+            LIMIT 1
+        """, (institution_id,)).fetchone()
+
+        if row:
+            return {
+                "is_ground_truth_related": True,
+                "case_name": row["case_name"],
+                "fraud_type": row["fraud_type"],
+                "contract_count": row["contract_count"],
+            }
+        return {"is_ground_truth_related": False}
+
+
 @router.get("/{institution_id:int}/asf-findings", response_model=ASFInstitutionResponse)
 def get_institution_asf_findings(institution_id: int = Path(..., ge=1)):
     """Get ASF audit findings for an institution by its ramo_id."""

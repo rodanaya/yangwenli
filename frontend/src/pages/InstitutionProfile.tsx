@@ -162,15 +162,13 @@ export function InstitutionProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
-  // TODO: Ground truth status for institutions
-  // There is no /institutions/{id}/ground-truth-status endpoint yet.
-  // When added, mirror the same pattern as vendorApi.getGroundTruthStatus:
-  //   const { data: groundTruthStatus } = useQuery({
-  //     queryKey: ['institution', institutionId, 'ground-truth-status'],
-  //     queryFn: () => institutionApi.getGroundTruthStatus(institutionId),
-  //     enabled: !!institutionId,
-  //   })
-  // Then show a red badge in the header linking to the case, identical to VendorProfile.
+  // Ground truth status: does this institution have contracts from known-bad vendors?
+  const { data: groundTruthStatus } = useQuery({
+    queryKey: ['institution', institutionId, 'ground-truth-status'],
+    queryFn: () => institutionApi.getGroundTruthStatus(institutionId),
+    enabled: !!institutionId,
+    staleTime: 30 * 60 * 1000,
+  })
 
   // Waterfall risk breakdown
   const { data: waterfallData, isLoading: waterfallLoading } = useQuery({
@@ -339,6 +337,11 @@ export function InstitutionProfile() {
               {institution.institution_type && (
                 <Badge variant="secondary" className="text-xs px-1.5 py-0 h-4">
                   {institution.institution_type.replace(/_/g, ' ')}
+                </Badge>
+              )}
+              {groundTruthStatus?.is_ground_truth_related && (
+                <Badge variant="destructive" className="text-xs px-1.5 py-0 h-4">
+                  ML-Linked: {groundTruthStatus.case_name}
                 </Badge>
               )}
               {institution.geographic_scope && (

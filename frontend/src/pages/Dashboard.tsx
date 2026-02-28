@@ -561,7 +561,7 @@ export function Dashboard() {
   }, [execData])
 
   const groundTruth = execData?.ground_truth
-  const modelAuc = execData?.model?.auc ?? 0.960
+  const modelAuc = execData?.model?.auc ?? 0.957
 
   const lastUpdated = fastDashboard?.cached_at
     ? new Date(fastDashboard.cached_at).toLocaleString('en-US', {
@@ -633,7 +633,7 @@ export function Dashboard() {
         <div className="text-[11px] text-text-muted/50 font-mono mt-1 flex items-center gap-1 flex-wrap">
           <span>Risk model {modelMeta?.version ?? CURRENT_MODEL_VERSION}</span>
           <span className="text-text-muted/30">·</span>
-          <span>AUC {modelMeta?.auc_test != null ? modelMeta.auc_test.toFixed(3) : '0.960'}</span>
+          <span>AUC {modelMeta?.auc_test != null ? modelMeta.auc_test.toFixed(3) : '0.957'}</span>
           <span className="text-text-muted/30">·</span>
           <InfoTooltip content="Label Coverage (c): proportion of corrupt contracts the model reliably detects among all known cases. Elkan & Noto (2008) PU-learning correction.">
             <span className="cursor-help border-b border-dotted border-text-muted/30">

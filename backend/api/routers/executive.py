@@ -209,15 +209,16 @@ def _build_summary(conn) -> dict:
     ]
 
     # 10. Ground truth validation (hardcoded — stable between retraining)
-    # Updated to v5.0: 15 cases, 27 vendors, 26,582 contracts
+    # Updated to v5.1: 22 cases in DB (27+ vendors matched, ~26,704 contracts)
+    # Active in model: Cases 1-15 + Case 22 (SAT EFOS 38 vendors); Cases 16-19 inactive; 20-21 vendor match pending
     ground_truth = {
-        "cases": 15,
-        "vendors": 27,
-        "contracts": 26582,
+        "cases": 22,
+        "vendors": 65,
+        "contracts": 26704,
         "detection_rate": 99.8,
         "high_plus_rate": 93.0,
-        "auc": 0.960,
-        "train_auc": 0.967,
+        "auc": 0.957,
+        "train_auc": 0.964,
         "case_details": [
             {"name": "IMSS Ghost Companies", "type": "Ghost companies",
              "contracts": 9366, "high_plus_pct": 99.0, "avg_score": 0.977, "sector": "salud"},
@@ -247,36 +248,64 @@ def _build_summary(conn) -> dict:
              "contracts": 3, "high_plus_pct": 33.3, "avg_score": 0.359, "sector": "infraestructura"},
             {"name": "Oceanografia PEMEX", "type": "Invoice fraud",
              "contracts": 2, "high_plus_pct": 0.0, "avg_score": 0.152, "sector": "energia"},
+            {"name": "SAT EFOS Ghost Company Network", "type": "Ghost companies",
+             "contracts": 122, "high_plus_pct": 27.9, "avg_score": 0.283, "sector": "gobernacion"},
         ],
     }
 
-    # 11. Model info (hardcoded — v5.0 per-sector calibrated)
-    model = {
-        "version": "v5.0",
-        "features": 16,
-        "sub_models": 13,
-        "auc": 0.960,
-        "train_auc": 0.967,
-        "brier": 0.060,
-        "lift": 4.04,
-        "pu_correction": 0.887,
-        "top_predictors": [
-            {"name": "price_volatility", "beta": 1.219, "direction": "positive"},
-            {"name": "institution_diversity", "beta": -0.848, "direction": "negative"},
-            {"name": "win_rate", "beta": 0.727, "direction": "positive"},
-            {"name": "vendor_concentration", "beta": 0.428, "direction": "positive"},
-            {"name": "sector_spread", "beta": -0.374, "direction": "negative"},
-            {"name": "industry_mismatch", "beta": 0.305, "direction": "positive"},
-            {"name": "same_day_count", "beta": 0.222, "direction": "positive"},
-            {"name": "direct_award", "beta": 0.182, "direction": "positive"},
-            {"name": "ad_period_days", "beta": -0.104, "direction": "negative"},
-        ],
-        "counterintuitive": [
-            "Institution diversity is protective — vendors serving many institutions are less suspicious.",
-            "Sector spread reduces risk — genuinely diversified vendors operate across sectors.",
-            "Price volatility is the #1 predictor — vendors with wildly varying contract sizes are most suspicious.",
-        ],
-    }
+    # 11. Model info — live from model_calibration table
+    cal_row = cur.execute(
+        "SELECT model_version, test_auc, brier_score, pu_correction_factor, "
+        "created_at, temporal_metrics "
+        "FROM model_calibration WHERE sector_id IS NULL "
+        "ORDER BY created_at DESC LIMIT 1"
+    ).fetchone()
+
+    if cal_row:
+        train_auc = None
+        if cal_row["temporal_metrics"]:
+            try:
+                tm = json.loads(cal_row["temporal_metrics"])
+                train_auc = tm.get("train_auc")
+            except (json.JSONDecodeError, TypeError):
+                pass
+        model = {
+            "version": cal_row["model_version"],
+            "features": 16,
+            "sub_models": 13,
+            "auc": round(cal_row["test_auc"], 3) if cal_row["test_auc"] else None,
+            "train_auc": round(train_auc, 3) if train_auc else None,
+            "brier": round(cal_row["brier_score"], 3) if cal_row["brier_score"] else None,
+            "pu_correction": round(cal_row["pu_correction_factor"], 3) if cal_row["pu_correction_factor"] else None,
+        }
+    else:
+        model = {
+            "version": "v5.1",
+            "features": 16,
+            "sub_models": 13,
+            "auc": 0.957,
+            "train_auc": 0.964,
+            "brier": 0.060,
+            "pu_correction": 0.882,
+        }
+
+    # Static model interpretation (stable between retrainings)
+    model["top_predictors"] = [
+        {"name": "price_volatility", "beta": 1.219, "direction": "positive"},
+        {"name": "institution_diversity", "beta": -0.848, "direction": "negative"},
+        {"name": "win_rate", "beta": 0.727, "direction": "positive"},
+        {"name": "vendor_concentration", "beta": 0.428, "direction": "positive"},
+        {"name": "sector_spread", "beta": -0.374, "direction": "negative"},
+        {"name": "industry_mismatch", "beta": 0.305, "direction": "positive"},
+        {"name": "same_day_count", "beta": 0.222, "direction": "positive"},
+        {"name": "direct_award", "beta": 0.182, "direction": "positive"},
+        {"name": "ad_period_days", "beta": -0.104, "direction": "negative"},
+    ]
+    model["counterintuitive"] = [
+        "Institution diversity is protective — vendors serving many institutions are less suspicious.",
+        "Sector spread reduces risk — genuinely diversified vendors operate across sectors.",
+        "Price volatility is the #1 predictor — vendors with wildly varying contract sizes are most suspicious.",
+    ]
 
     return {
         "headline": headline,

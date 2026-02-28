@@ -619,6 +619,16 @@ export const institutionApi = {
   /**
    * Get ASF audit findings for an institution
    */
+  async getGroundTruthStatus(institutionId: number): Promise<{
+    is_ground_truth_related: boolean
+    case_name?: string
+    fraud_type?: string
+    contract_count?: number
+  }> {
+    const { data } = await api.get(`/institutions/${institutionId}/ground-truth-status`)
+    return data
+  },
+
   async getASFFindings(institutionId: number): Promise<ASFInstitutionResponse> {
     const { data } = await api.get<ASFInstitutionResponse>(`/institutions/${institutionId}/asf-findings`)
     return data

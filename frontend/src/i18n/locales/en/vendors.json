@@ -96,7 +96,14 @@
   },
   "network": {
     "openNetworkGraph": "Open Network Graph",
-    "networkGraphDescription": "Explore the full vendor relationship network with interactive graph visualization."
+    "networkGraphDescription": "Explore the full vendor relationship network with interactive graph visualization.",
+    "topology": "Network Topology",
+    "clusteringCoefficient": "Clustering Coefficient",
+    "closedTriangles": "Closed Triangles",
+    "biddingTrianglesDetected": "Bidding triangles detected",
+    "highClustering": "High clustering — possible cartel structure",
+    "moderateClustering": "Moderate clustering",
+    "lowClustering": "Low clustering"
   },
   "waterfall": {
     "description": "Positive bars increase risk (red/orange). Negative bars reduce risk (green). Bar height reflects each factor's contribution to the overall score.",

@@ -53,6 +53,7 @@ const LIMITATIONS = [
       'The v5.1 model expanded ground truth to include Case 22 (SAT EFOS ghost companies) and now covers all 12 sectors. However, the training signal is still concentrated:',
       'IMSS Ghost Companies (9,366 contracts) + Segalmex (6,326) + COVID-19 Procurement (5,371) = ~21,000 of ~27,000 labeled contracts. These three cases all involve large, concentrated vendors in the health/agriculture sectors. The model has effectively learned: large vendor + high concentration + same institution = risk.',
       'Corruption that doesn\'t match this pattern is systematically underdetected. A local official awarding contracts to a family member\'s new shell company — few contracts, small amounts, not concentrated — may score low because it doesn\'t resemble IMSS Pisa.',
+      'Partial fix in v5.1: Case 22 (SAT Art. 69-B Definitivo, 38 RFC-confirmed ghost companies) was added to the training set. Average risk score for EFOS vendors improved from 0.028 (v5.0) to 0.283 (v5.1). However, 58.2% of EFOS contracts still score below the medium threshold — the fundamental detection gap remains because EFOS vendors have very few contracts per RFC (avg 3), unlike the large concentrated vendors (avg 1,565 contracts) that dominate training data.',
     ],
     blind_spots: [
       'Small-vendor corruption (new shell companies, low contract volume)',
@@ -243,6 +244,7 @@ const SEVERITY_LABELS: Record<string, string> = {
 const SUMMARY_ROWS = [
   { limitation: 'Execution-phase fraud invisible', impact: 'Construction/infrastructure underscored', fixable: 'partial', fix: 'Requires ASF audit data integration' },
   { limitation: 'Training bias (3 dominant cases)', impact: 'Small-vendor & multi-sector corruption underdetected', fixable: 'yes', fix: 'Add more labeled ground truth cases' },
+  { limitation: 'Ghost company blind spot (partial fix in v5.1)', impact: 'EFOS vendors avg 0.283 (up from 0.028); 58% still score low', fixable: 'partial', fix: 'Case 22 added; pattern fundamentally different from training majority' },
   { limitation: 'Vendor deduplication unsolved', impact: 'True concentration understated pre-2018', fixable: 'partial', fix: 'RFC + address blocking (partial fix only)' },
   { limitation: 'Co-bidding signal = zero', impact: 'Bid rotation & cover bidding not in risk score', fixable: 'yes', fix: 'Need collusion-specific ground truth' },
   { limitation: 'CompraNet abolished, data pipeline disrupted', impact: 'Future data unavailable; 1.9M historical contracts already deleted', fixable: 'no', fix: 'Dependent on government platform decisions' },

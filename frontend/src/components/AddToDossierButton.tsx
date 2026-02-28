@@ -5,6 +5,7 @@
  */
 
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { FolderPlus, Folder, Plus, Loader2, CheckCircle, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -27,6 +28,7 @@ export function AddToDossierButton({
   entityName,
   className,
 }: AddToDossierButtonProps) {
+  const { t } = useTranslation('common')
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const [success, setSuccess] = useState<number | null>(null) // dossier id just added to
@@ -87,11 +89,11 @@ export function AddToDossierButton({
         size="sm"
         onClick={() => setOpen((prev) => !prev)}
         className={className}
-        aria-label="Add to Dossier"
+        aria-label={t('dossier.addToDossier')}
         aria-expanded={open}
       >
         <FolderPlus className="h-4 w-4 mr-1.5" />
-        Add to Dossier
+        {t('dossier.addToDossier')}
         <ChevronDown className={`h-3 w-3 ml-1 transition-transform ${open ? 'rotate-180' : ''}`} />
       </Button>
 
@@ -103,7 +105,7 @@ export function AddToDossierButton({
         >
           <div className="px-3 py-2 border-b border-border/40">
             <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">
-              Add to Dossier
+              {t('dossier.addToDossier')}
             </p>
           </div>
 
@@ -114,7 +116,7 @@ export function AddToDossierButton({
               </div>
             ) : activeDossiers.length === 0 ? (
               <p className="text-xs text-text-muted px-3 py-3 text-center">
-                No active dossiers yet
+                {t('dossier.noDossiers')}
               </p>
             ) : (
               activeDossiers.map((dossier: DossierSummary) => {
@@ -160,7 +162,7 @@ export function AddToDossierButton({
               className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-accent hover:bg-accent/5 transition-colors"
             >
               <Plus className="h-3.5 w-3.5" />
-              New Dossier...
+              {t('dossier.newDossier')}
             </button>
           </div>
         </div>

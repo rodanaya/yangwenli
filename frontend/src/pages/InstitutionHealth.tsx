@@ -9,6 +9,7 @@
  */
 
 import React, { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -422,6 +423,7 @@ function ASFCrossReferenceSection({
 // =============================================================================
 
 export default function InstitutionHealth() {
+  const { t } = useTranslation('institutions')
   const navigate = useNavigate()
   const [minContracts, setMinContracts] = useState(100)
   const [sortField, setSortField] = useState<SortField>('total_value')
@@ -555,10 +557,10 @@ export default function InstitutionHealth() {
       <div>
         <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
           <Building2 className="h-4 w-4 text-accent" />
-          Institution Rankings
+          {t('title')}
         </h2>
         <p className="text-xs text-text-muted mt-0.5">
-          Government institutions ranked by procurement risk and vendor concentration — click column headers to sort
+          {t('subtitle')}
         </p>
       </div>
 
@@ -566,7 +568,7 @@ export default function InstitutionHealth() {
       <div className="flex items-center gap-3 flex-wrap">
         <SlidersHorizontal className="h-3.5 w-3.5 text-text-muted" />
         <label htmlFor="min-contracts" className="text-xs text-text-muted whitespace-nowrap">
-          Minimum contracts:
+          {t('minimumContracts')}
         </label>
         <select
           id="min-contracts"
@@ -584,25 +586,25 @@ export default function InstitutionHealth() {
       <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
         <SharedStatCard
           loading={isLoading}
-          label="INSTITUTIONS TRACKED"
+          label={t('institutionsTracked')}
           value={data ? formatNumber(data.total_institutions) : '—'}
-          detail={`With ${formatNumber(minContracts)}+ contracts`}
+          detail={t('withMinContracts', { count: formatNumber(minContracts) })}
           color="text-accent"
           borderColor="border-accent/30"
         />
         <SharedStatCard
           loading={isLoading}
-          label="AVG VENDOR CONCENTRATION"
+          label={t('avgVendorConcentration')}
           value={summary ? summary.avgConcentration.toFixed(3) : '—'}
-          detail={summary ? getConcentrationLabel(summary.avgConcentration) + ' market overall' : '—'}
+          detail={summary ? t('marketOverall', { label: getConcentrationLabel(summary.avgConcentration) }) : '—'}
           color="text-risk-medium"
           borderColor="border-risk-medium/30"
         />
         <SharedStatCard
           loading={isLoading}
-          label="HIGH-RISK INSTITUTIONS"
+          label={t('highRiskInstitutions')}
           value={summary ? String(summary.highRiskCount) : '—'}
-          detail="Avg risk score above 30%"
+          detail={t('avgRiskAbove30')}
           color="text-risk-high"
           borderColor="border-risk-high/30"
         />
@@ -857,10 +859,10 @@ export default function InstitutionHealth() {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-sm">
             <TrendingUp className="h-3.5 w-3.5 text-accent" />
-            Institution Rankings
+            {t('title')}
           </CardTitle>
           <CardDescription className="text-xs">
-            {sortedItems.length} institutions. Click column headers to sort. Click an institution name to view its profile.
+            {t('tableDescription', { count: sortedItems.length })}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -869,13 +871,13 @@ export default function InstitutionHealth() {
               <thead>
                 <tr className="border-b border-border bg-background-elevated/30 text-text-muted">
                   <th className="px-3 py-2.5 text-left font-medium w-8">#</th>
-                  <th className="px-3 py-2.5 text-left font-medium min-w-[200px]">Institution</th>
+                  <th className="px-3 py-2.5 text-left font-medium min-w-[200px]">{t('columns.institution')}</th>
                   <th
                     className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
                     onClick={() => handleSort('total_contracts')}
                     aria-sort={sortField === 'total_contracts' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
                   >
-                    Contracts
+                    {t('columns.contracts')}
                     <SortIndicator field="total_contracts" sortField={sortField} sortDir={sortDir} />
                   </th>
                   <th
@@ -883,7 +885,7 @@ export default function InstitutionHealth() {
                     onClick={() => handleSort('total_value')}
                     aria-sort={sortField === 'total_value' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
                   >
-                    Total Value (MXN)
+                    {t('columns.totalValue')}
                     <SortIndicator field="total_value" sortField={sortField} sortDir={sortDir} />
                   </th>
                   <th
@@ -891,7 +893,7 @@ export default function InstitutionHealth() {
                     onClick={() => handleSort('avg_risk_score')}
                     aria-sort={sortField === 'avg_risk_score' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
                   >
-                    Avg Risk Score
+                    {t('columns.avgRiskScore')}
                     <SortIndicator field="avg_risk_score" sortField={sortField} sortDir={sortDir} />
                   </th>
                   <th
@@ -899,21 +901,21 @@ export default function InstitutionHealth() {
                     onClick={() => handleSort('vendor_count')}
                     aria-sort={sortField === 'vendor_count' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
                   >
-                    Vendors
+                    {t('columns.vendors')}
                     <SortIndicator field="vendor_count" sortField={sortField} sortDir={sortDir} />
                   </th>
                   <th
                     className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap group"
                     onClick={() => handleSort('hhi')}
                     aria-sort={sortField === 'hhi' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
-                    title="Vendor Concentration: 1.0 = single vendor, 0.0 = perfectly competitive"
+                    title={t('columns.concentrationTooltip')}
                   >
-                    Concentration
+                    {t('columns.concentration')}
                     <SortIndicator field="hhi" sortField={sortField} sortDir={sortDir} />
                     <span className="ml-1 text-text-muted/50 font-normal">ⓘ</span>
                   </th>
                   <th className="px-3 py-2.5 text-right font-medium whitespace-nowrap hidden lg:table-cell">
-                    Risk Level
+                    {t('columns.riskLevel')}
                   </th>
                   <th className="px-3 py-2.5 text-center font-medium whitespace-nowrap w-10">
                     <span className="sr-only">Actions</span>
