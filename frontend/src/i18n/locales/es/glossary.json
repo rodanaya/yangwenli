@@ -51,6 +51,10 @@
     "title": "Patrón de Co-licitación",
     "description": "Cuando dos o más proveedores aparecen consistentemente juntos en procedimientos de licitación. Puede indicar especialización legítima, pero altas tasas de co-licitación con victorias alternadas sugieren rotación de ofertas (una forma de colusión)."
   },
+  "clusteringCoefficient": {
+    "title": "Coeficiente de Agrupamiento",
+    "description": "Coeficiente de agrupamiento Wachs-Fazekas (2021): mide qué tan interconectados están entre sí los socios de co-licitación de este proveedor. Un valor cercano a 1.0 significa que todos los co-licitantes también licitan entre sí — una característica de los anillos estructurados de manipulación de ofertas."
+  },
   "yearEnd": {
     "title": "Cierre de Año Fiscal",
     "description": "Contratos otorgados en diciembre, cuando las dependencias se apresuran a gastar el presupuesto restante. Este 'gasto de fin de año' crea presión para adjudicar rápidamente, reduciendo la supervisión y aumentando el riesgo de corrupción."

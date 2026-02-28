@@ -666,7 +666,7 @@ export function Sectors() {
             <div className="flex items-center gap-1.5 rounded-md border border-border/50 bg-background-elevated/30 px-3 py-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-text-muted" />
               <span className="text-xs font-mono font-medium text-text-secondary">
-                {formatNumber(patternCounts.counts.price_outliers)} Price Outliers
+                {formatNumber(patternCounts.counts.price_outliers)} {t('chips.priceOutliers')}
               </span>
             </div>
           </ScrollReveal>
@@ -679,10 +679,10 @@ export function Sectors() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Layers className="h-4 w-4" />
-              Sector Risk Heatmap
+              {t('heatmap.title')}
             </CardTitle>
             <CardDescription>
-              Color encodes relative risk ranking per metric — red is highest risk, green is lowest. Click a row to open that sector's full profile.
+              {t('heatmap.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -719,10 +719,10 @@ export function Sectors() {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-sm">
             <BarChart3 className="h-3.5 w-3.5 text-accent" />
-            Sector Comparison
+            {t('table.title')}
           </CardTitle>
           <CardDescription className="text-xs">
-            Click column headers to sort. Click a sector name to view its full profile.
+            {t('table.subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -730,13 +730,13 @@ export function Sectors() {
             <table className="w-full min-w-[780px] text-xs" role="table">
               <thead>
                 <tr className="border-b border-border bg-background-elevated/30 text-text-muted">
-                  <th className="px-3 py-2.5 text-left font-medium">Sector</th>
+                  <th className="px-3 py-2.5 text-left font-medium">{t('table.sector')}</th>
                   <th
                     className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
                     onClick={() => handleSort('total_contracts')}
                     aria-sort={sortField === 'total_contracts' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
                   >
-                    Total Contracts
+                    {t('table.totalContracts')}
                     <SortIndicator field="total_contracts" sortField={sortField} sortDir={sortDir} />
                   </th>
                   <th
@@ -744,7 +744,7 @@ export function Sectors() {
                     onClick={() => handleSort('total_value_mxn')}
                     aria-sort={sortField === 'total_value_mxn' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
                   >
-                    Total Value (MXN)
+                    {t('table.totalValueMxn')}
                     <SortIndicator field="total_value_mxn" sortField={sortField} sortDir={sortDir} />
                   </th>
                   <th

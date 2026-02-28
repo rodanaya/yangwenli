@@ -1276,11 +1276,32 @@ export function Dashboard() {
               </div>
               <ChartDownloadButton targetRef={riskTrajectoryRef} filename="rubli-risk-trajectory" />
             </div>
+            {/* Sector selector */}
+            <div className="mb-3">
+              <select
+                className="text-xs font-mono bg-background-elevated/30 border border-border/40 rounded px-2 py-1 text-text-secondary focus:outline-none focus:border-accent/60 cursor-pointer"
+                value={selectedTrajectorySectorId ?? ''}
+                onChange={(e) => setSelectedTrajectorySectorId(e.target.value === '' ? null : Number(e.target.value))}
+                aria-label="Filter risk trajectory by sector"
+              >
+                <option value="">All Sectors</option>
+                {sectorData.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
             {dashLoading ? (
               <div className="h-[340px] flex items-center justify-center"><Skeleton className="h-full w-full" /></div>
             ) : (
               <div ref={riskTrajectoryRef}>
-                <RiskTrajectoryChart data={riskTrajectory} />
+                <RiskTrajectoryChart
+                  data={riskTrajectory}
+                  sectorTrajectory={selectedTrajectorySectorId !== null ? sectorTrajectory : undefined}
+                  sectorColor={selectedTrajectorySectorId !== null
+                    ? (SECTOR_COLORS[sectorData.find((s) => s.id === selectedTrajectorySectorId)?.code ?? ''] ?? '#64748b')
+                    : undefined}
+                  yearlyTrends={fastDashboard?.yearly_trends}
+                />
               </div>
             )}
           </CardContent>
