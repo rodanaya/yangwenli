@@ -115,6 +115,7 @@ const CASE_DETECTION: CaseDetection[] = [
   { case_name: 'La Estafa Maestra', contracts: 10, detection_pct: 90.0, high_plus_pct: 0.0, avg_score: 0.179 },
   { case_name: 'Grupo Higa', contracts: 3, detection_pct: 100.0, high_plus_pct: 33.3, avg_score: 0.359 },
   { case_name: 'Oceanografia PEMEX', contracts: 2, detection_pct: 50.0, high_plus_pct: 0.0, avg_score: 0.152 },
+  { case_name: 'SAT EFOS Ghost Network', contracts: 122, detection_pct: 41.8, high_plus_pct: 27.9, avg_score: 0.283 },
 ]
 
 const MODEL_COMPARISON = {

@@ -94,28 +94,28 @@ export function InstitutionProfile() {
     staleTime: 5 * 60 * 1000,
   })
 
-  const { data: riskProfile, isLoading: riskProfileLoading } = useQuery({
+  const { data: riskProfile, isLoading: riskProfileLoading, error: riskProfileError } = useQuery({
     queryKey: ['institution', institutionId, 'risk-profile'],
     queryFn: () => institutionApi.getRiskProfile(institutionId),
     enabled: !!institutionId,
     staleTime: 5 * 60 * 1000,
   })
 
-  const { data: riskTimeline, isLoading: timelineLoading } = useQuery({
+  const { data: riskTimeline, isLoading: timelineLoading, error: timelineError } = useQuery({
     queryKey: ['institution', institutionId, 'risk-timeline'],
     queryFn: () => institutionApi.getRiskTimeline(institutionId),
     enabled: !!institutionId,
     staleTime: 10 * 60 * 1000,
   })
 
-  const { data: vendors, isLoading: vendorsLoading } = useQuery({
+  const { data: vendors, isLoading: vendorsLoading, error: vendorsError } = useQuery({
     queryKey: ['institution', institutionId, 'vendors'],
     queryFn: () => institutionApi.getVendors(institutionId, 15),
     enabled: !!institutionId,
     staleTime: 5 * 60 * 1000,
   })
 
-  const { data: recentContracts, isLoading: recentLoading } = useQuery({
+  const { data: recentContracts, isLoading: recentLoading, error: contractsError } = useQuery({
     queryKey: ['institution', institutionId, 'contracts', 'recent'],
     queryFn: () => institutionApi.getContracts(institutionId, { per_page: 10 }),
     enabled: !!institutionId,
@@ -133,14 +133,14 @@ export function InstitutionProfile() {
     staleTime: 5 * 60 * 1000,
   })
 
-  const { data: vendorLoyalty, isLoading: loyaltyLoading } = useQuery({
+  const { data: vendorLoyalty, isLoading: loyaltyLoading, error: loyaltyError } = useQuery({
     queryKey: ['institution', institutionId, 'vendor-loyalty'],
     queryFn: () => institutionApi.getVendorLoyalty(institutionId, 10),
     enabled: !!institutionId,
     staleTime: 10 * 60 * 1000,
   })
 
-  const { data: peerComparison, isLoading: peerLoading } = useQuery({
+  const { data: peerComparison, isLoading: peerLoading, error: peerError } = useQuery({
     queryKey: ['institution', institutionId, 'peer-comparison'],
     queryFn: () => institutionApi.getPeerComparison(institutionId),
     enabled: !!institutionId,
@@ -498,6 +498,8 @@ export function InstitutionProfile() {
                 <div className="space-y-2">
                   {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-6" />)}
                 </div>
+              ) : riskProfileError ? (
+                <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load risk data.</p>
               ) : riskDistribution.length > 0 ? (
                 <div className="space-y-2.5">
                   {riskDistribution.map((r) => (
@@ -607,6 +609,8 @@ export function InstitutionProfile() {
                 <div className="space-y-3">
                   {[...Array(3)].map((_, i) => <div key={i} className="space-y-1"><div className="h-3 w-24 bg-background-elevated rounded" /><div className="h-2 bg-background-elevated rounded" /></div>)}
                 </div>
+              ) : peerError ? (
+                <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load peer data.</p>
               ) : peerComparison?.metrics?.length ? (
                 <div className="space-y-3.5">
                   {peerComparison.metrics.map((m) => {
@@ -691,6 +695,8 @@ export function InstitutionProfile() {
             <CardContent className="pb-4">
               {timelineLoading ? (
                 <Skeleton className="h-40" />
+              ) : timelineError ? (
+                <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load risk timeline.</p>
               ) : (riskTimeline?.timeline?.length ?? 0) > 1 ? (
                 <div className="relative" ref={riskTimelineChartRef}>
                   <ChartDownloadButton
@@ -724,6 +730,8 @@ export function InstitutionProfile() {
                 <div className="space-y-2">
                   {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-8" />)}
                 </div>
+              ) : vendorsError ? (
+                <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load vendor data.</p>
               ) : vendors?.data?.length ? (
                 <VendorRankedList
                   vendors={vendors.data.slice(0, 10)}
@@ -747,6 +755,8 @@ export function InstitutionProfile() {
             <CardContent className="pb-4">
               {loyaltyLoading ? (
                 <Skeleton className="h-32" />
+              ) : loyaltyError ? (
+                <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load loyalty data.</p>
               ) : vendorLoyalty && vendorLoyalty.vendors.length > 0 ? (
                 <div className="relative overflow-x-auto" ref={vendorLoyaltyChartRef}>
                   <ChartDownloadButton
@@ -878,6 +888,8 @@ export function InstitutionProfile() {
                 <div className="p-4 space-y-2">
                   {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10" />)}
                 </div>
+              ) : contractsError ? (
+                <p className="text-xs text-rose-400/80 p-4 text-center">Failed to load contracts.</p>
               ) : recentContracts?.data?.length ? (
                 <ScrollArea className="max-h-[280px]">
                   <div className="divide-y divide-border/30">

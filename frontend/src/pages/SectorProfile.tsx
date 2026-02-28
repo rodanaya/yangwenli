@@ -133,26 +133,26 @@ export function SectorProfile() {
     enabled: !!sectorId,
   })
 
-  const { data: riskDist, isLoading: riskLoading } = useQuery({
+  const { data: riskDist, isLoading: riskLoading, error: riskDistError } = useQuery({
     queryKey: ['sector', sectorId, 'risk-distribution'],
     queryFn: () => sectorApi.getRiskDistribution(sectorId),
     enabled: !!sectorId,
   })
 
-  const { data: topVendors, isLoading: vendorsLoading } = useQuery({
+  const { data: topVendors, isLoading: vendorsLoading, error: topVendorsError } = useQuery({
     queryKey: ['vendors', 'top', 'value', { sector_id: sectorId, per_page: VENDOR_LIST_PER_PAGE }],
     queryFn: () => vendorApi.getTop('value', VENDOR_LIST_PER_PAGE, { sector_id: sectorId }),
     enabled: !!sectorId,
   })
 
-  const { data: monthlyData, isLoading: monthlyLoading } = useQuery({
+  const { data: monthlyData, isLoading: monthlyLoading, error: monthlyError } = useQuery({
     queryKey: ['analysis', 'monthly', selectedYear, sectorId],
     queryFn: () => analysisApi.getMonthlyBreakdown(selectedYear, sectorId),
     enabled: !!sectorId,
     staleTime: 10 * 60 * 1000,
   })
 
-  const { data: riskFactors, isLoading: riskFactorsLoading } = useQuery({
+  const { data: riskFactors, isLoading: riskFactorsLoading, error: riskFactorsError } = useQuery({
     queryKey: ['analysis', 'risk-factors', sectorId],
     queryFn: () => analysisApi.getRiskFactorAnalysis(sectorId),
     enabled: !!sectorId,
@@ -290,6 +290,8 @@ export function SectorProfile() {
             <CardContent className="pt-2">
               {riskLoading ? (
                 <Skeleton className="h-56 w-full rounded-xl" />
+              ) : riskDistError ? (
+                <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load risk data.</p>
               ) : riskDist?.data ? (
                 <RiskDonut data={riskDist.data} color={sectorColor} />
               ) : null}
@@ -308,6 +310,8 @@ export function SectorProfile() {
             <CardContent className="pt-3">
               {riskFactorsLoading ? (
                 <div className="space-y-3">{[...Array(5)].map((_,i) => <Skeleton key={i} className="h-10" />)}</div>
+              ) : riskFactorsError ? (
+                <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load risk factors.</p>
               ) : riskFactors?.factor_frequencies?.length ? (
                 <FactorRankList data={riskFactors.factor_frequencies} color={sectorColor} />
               ) : (
@@ -464,6 +468,8 @@ export function SectorProfile() {
               <div ref={monthlyChartRef}>
                 {monthlyLoading ? (
                   <Skeleton className="h-72 w-full" />
+                ) : monthlyError ? (
+                  <p className="text-xs text-rose-400/80 py-8 text-center">Failed to load monthly data.</p>
                 ) : monthlyData?.months?.length ? (
                   <MonthlyDeviation
                     data={monthlyData.months}
@@ -505,6 +511,8 @@ export function SectorProfile() {
               <div ref={vendorChartRef}>
                 {vendorsLoading ? (
                   <div className="space-y-2">{[...Array(5)].map((_,i) => <Skeleton key={i} className="h-12" />)}</div>
+                ) : topVendorsError ? (
+                  <p className="text-xs text-rose-400/80 py-8 text-center">Failed to load vendor data.</p>
                 ) : topVendors?.data ? (
                   <VendorBars data={topVendors.data} color={sectorColor} />
                 ) : (
