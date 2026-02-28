@@ -294,6 +294,44 @@ def run():
     conn.commit()
     print(f"  Cleaned orphaned indexes from dropped tables")
 
+    # ── Step 5b: Create runtime-writable tables ──
+    step("Step 5b/7: Creating runtime-writable tables (dossiers, feedback)")
+    runtime_tables = [
+        """CREATE TABLE IF NOT EXISTS investigation_dossiers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT,
+            status TEXT DEFAULT "active" CHECK(status IN ("active","archived","closed")),
+            color TEXT DEFAULT "#64748b",
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )""",
+        """CREATE TABLE IF NOT EXISTS dossier_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            dossier_id INTEGER NOT NULL REFERENCES investigation_dossiers(id) ON DELETE CASCADE,
+            item_type TEXT NOT NULL CHECK(item_type IN ("vendor","institution","contract","note")),
+            item_id INTEGER,
+            item_name TEXT NOT NULL,
+            annotation TEXT,
+            color TEXT DEFAULT "#64748b",
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )""",
+        """CREATE TABLE IF NOT EXISTS risk_feedback (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            entity_type TEXT NOT NULL,
+            entity_id TEXT NOT NULL,
+            feedback_type TEXT NOT NULL,
+            analyst_note TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(entity_type, entity_id)
+        )""",
+    ]
+    for sql in runtime_tables:
+        cur.execute(sql)
+    conn.commit()
+    print(f"  Created: investigation_dossiers, dossier_items, risk_feedback")
+
     # ── Step 6: Run ANALYZE ──
     step("Step 6/7: Running ANALYZE for query planner")
     t0 = time.time()

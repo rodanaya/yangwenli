@@ -19,6 +19,7 @@ import { EntityDrawerProvider } from '@/contexts/EntityDrawerContext'
 import { EntityProfileDrawer } from '@/components/EntityProfileDrawer'
 
 // Lazy load all page components for code splitting
+const Landing = lazy(() => import('@/pages/Landing'))
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const Contracts = lazy(() => import('@/pages/Contracts'))
 const Explore = lazy(() => import('@/pages/explore'))

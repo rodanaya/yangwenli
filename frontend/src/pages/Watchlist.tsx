@@ -12,8 +12,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { FolderSidebar } from '@/components/FolderSidebar'
-import { watchlistApi, vendorApi, type WatchlistItem, type WatchlistItemUpdate } from '@/api/client'
+import { DossierCard } from '@/components/DossierCard'
+import { DossierCreateDialog } from '@/components/DossierCreateDialog'
+import { watchlistApi, vendorApi, dossierApi, type WatchlistItem, type WatchlistItemUpdate } from '@/api/client'
 import {
   Eye,
   EyeOff,
@@ -34,6 +37,8 @@ import {
   ChevronDown,
   ChevronUp,
   Download,
+  FolderOpen,
+  Plus,
 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
@@ -255,6 +260,8 @@ export function Watchlist() {
   const queryClient = useQueryClient()
   const { open: openEntityDrawer } = useEntityDrawer()
 
+  const [activeTab, setActiveTab] = useState<'entities' | 'dossiers'>('entities')
+  const [dossierDialogOpen, setDossierDialogOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all')
@@ -338,6 +345,25 @@ export function Watchlist() {
       queryClient.invalidateQueries({ queryKey: ['watchlist'] })
       queryClient.invalidateQueries({ queryKey: ['watchlist-stats'] })
     },
+  })
+
+  // Dossier queries and mutations
+  const { data: dossiers, isLoading: dossiersLoading } = useQuery({
+    queryKey: ['dossiers'],
+    queryFn: () => dossierApi.list(),
+    enabled: activeTab === 'dossiers',
+    staleTime: 60 * 1000,
+  })
+
+  const createDossier = useMutation({
+    mutationFn: (data: { name: string; description: string; color: string }) =>
+      dossierApi.create(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['dossiers'] }),
+  })
+
+  const deleteDossier = useMutation({
+    mutationFn: (id: number) => dossierApi.remove(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['dossiers'] }),
   })
 
   const isLoading = itemsLoading

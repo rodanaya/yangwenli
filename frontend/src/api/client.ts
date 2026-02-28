@@ -1649,6 +1649,61 @@ export const feedbackApi = {
   },
 }
 
+// ============================================================================
+// Dossier API (feature 4.3A — Case Dossier System)
+// ============================================================================
+
+export interface DossierSummary {
+  id: number
+  name: string
+  description?: string | null
+  status: 'active' | 'archived' | 'closed'
+  color: string
+  item_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface DossierItem {
+  id: number
+  dossier_id: number
+  item_type: 'vendor' | 'institution' | 'contract' | 'note'
+  item_id?: number | null
+  item_name: string
+  annotation?: string | null
+  color: string
+  created_at: string
+}
+
+export const dossierApi = {
+  async list(status?: string): Promise<DossierSummary[]> {
+    const { data } = await api.get<DossierSummary[]>('/workspace/dossiers', { params: status ? { status } : {} })
+    return data
+  },
+  async create(body: { name: string; description?: string; color?: string }): Promise<DossierSummary> {
+    const { data } = await api.post<DossierSummary>('/workspace/dossiers', body)
+    return data
+  },
+  async update(id: number, body: { name: string; description?: string; status?: string; color?: string }): Promise<DossierSummary> {
+    const { data } = await api.patch<DossierSummary>(`/workspace/dossiers/${id}`, body)
+    return data
+  },
+  async remove(id: number): Promise<void> {
+    await api.delete(`/workspace/dossiers/${id}`)
+  },
+  async listItems(dossierId: number): Promise<DossierItem[]> {
+    const { data } = await api.get<DossierItem[]>(`/workspace/dossiers/${dossierId}/items`)
+    return data
+  },
+  async addItem(dossierId: number, item: { item_type: string; item_id?: number; item_name: string; annotation?: string }): Promise<DossierItem> {
+    const { data } = await api.post<DossierItem>(`/workspace/dossiers/${dossierId}/items`, item)
+    return data
+  },
+  async removeItem(dossierId: number, itemId: number): Promise<void> {
+    await api.delete(`/workspace/dossiers/${dossierId}/items/${itemId}`)
+  },
+}
+
 // Default export with all API modules
 export default {
   sector: sectorApi,
@@ -1668,4 +1723,5 @@ export default {
   industries: industriesApi,
   search: searchApi,
   feedback: feedbackApi,
+  dossiers: dossierApi,
 }
