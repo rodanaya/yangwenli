@@ -589,10 +589,21 @@ export function SectorProfile() {
           {sectorInstitutions && sectorInstitutions.data && sectorInstitutions.data.length > 0 && (
             <Card>
               <CardContent className="pt-5 pb-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Building2 className="h-4 w-4 text-text-muted" />
-                  <h2 className="text-sm font-bold text-text-primary">Top Institutions</h2>
-                  <span className="text-xs text-text-muted">({sectorInstitutions.data.length})</span>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-text-muted" />
+                    <h2 className="text-sm font-bold text-text-primary">Top Institutions</h2>
+                    <span className="text-xs text-text-muted">({sectorInstitutions.data.length})</span>
+                  </div>
+                  <TableExportButton
+                    data={sectorInstitutions.data.map((inst: { id: number; name: string; total_amount_mxn?: number; contract_count?: number }) => ({
+                      institution_id: inst.id,
+                      institution_name: inst.name,
+                      total_amount_mxn: inst.total_amount_mxn ?? '',
+                      contract_count: inst.contract_count ?? '',
+                    }))}
+                    filename={`rubli-sector-${sector.code}-institutions`}
+                  />
                 </div>
                 <div className="space-y-1">
                   {sectorInstitutions.data.slice(0, 10).map((inst: { id: number; name: string; total_amount_mxn?: number; contract_count?: number }) => (

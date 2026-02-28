@@ -665,12 +665,12 @@ export default function Administrations() {
       {selectedAgg && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           {[
-            { label: 'Contracts', value: formatNumber(selectedAgg.contracts), delta: null, icon: FileText },
-            { label: 'Total Value', value: formatCompactMXN(selectedAgg.totalValue), delta: null, icon: Banknote },
-            { label: 'Direct Award %', value: `${selectedAgg.directAwardPct.toFixed(1)}%`, delta: selectedAgg.directAwardPct - allTimeAvg.da, unit: ' pts', icon: Shield },
-            { label: 'Single Bid %', value: `${selectedAgg.singleBidPct.toFixed(1)}%`, delta: selectedAgg.singleBidPct - allTimeAvg.sb, unit: ' pts', icon: Users },
-            { label: 'High Risk %', value: `${selectedAgg.highRiskPct.toFixed(1)}%`, delta: selectedAgg.highRiskPct - allTimeAvg.hr, unit: ' pts', icon: AlertTriangle },
-            { label: 'Active Vendors', value: formatNumber(selectedAgg.vendorCount), delta: null, icon: Activity, invertDelta: true },
+            { label: t('statCards.contracts'), value: formatNumber(selectedAgg.contracts), delta: null, icon: FileText },
+            { label: t('statCards.totalValue'), value: formatCompactMXN(selectedAgg.totalValue), delta: null, icon: Banknote },
+            { label: t('statCards.directAward'), value: `${selectedAgg.directAwardPct.toFixed(1)}%`, delta: selectedAgg.directAwardPct - allTimeAvg.da, unit: ' pts', icon: Shield },
+            { label: t('statCards.singleBid'), value: `${selectedAgg.singleBidPct.toFixed(1)}%`, delta: selectedAgg.singleBidPct - allTimeAvg.sb, unit: ' pts', icon: Users },
+            { label: t('statCards.highRisk'), value: `${selectedAgg.highRiskPct.toFixed(1)}%`, delta: selectedAgg.highRiskPct - allTimeAvg.hr, unit: ' pts', icon: AlertTriangle },
+            { label: t('statCards.activeVendors'), value: formatNumber(selectedAgg.vendorCount), delta: null, icon: Activity, invertDelta: true },
           ].map((card, i) => (
             <ScrollReveal key={card.label} delay={i * 60} direction="up">
               <StatCard
@@ -693,7 +693,7 @@ export default function Administrations() {
         <Card className="bg-card border-border/40">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-mono text-text-primary">
-              Administration Comparison
+              {t('comparisonTable')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -701,7 +701,7 @@ export default function Administrations() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left py-2 pr-4 text-text-muted font-normal text-xs">Metric</th>
+                    <th className="text-left py-2 pr-4 text-text-muted font-normal text-xs">{t('table.metric')}</th>
                     {adminAggs.map((a) => (
                       <th
                         key={a.name}
@@ -1141,7 +1141,7 @@ function StatCard({
         {deltaVal !== null && (
           <div className="mt-0.5">
             <DeltaBadge val={deltaVal} unit={unit || ''} invertColor={invertDelta} />
-            <span className="text-xs text-text-muted ml-1">vs avg</span>
+            <span className="text-xs text-text-muted ml-1">{t('statCards.vsAvg')}</span>
           </div>
         )}
       </CardContent>

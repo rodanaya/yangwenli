@@ -978,8 +978,9 @@ export default function InstitutionHealth() {
             </table>
           </div>
           {sortedItems.length === 0 && (
-            <div className="flex items-center justify-center h-32 text-text-muted text-sm">
-              No institutions match the current filters.
+            <div className="flex flex-col items-center justify-center h-32 gap-2 text-text-muted">
+              <Building2 className="h-6 w-6 opacity-40" />
+              <span className="text-sm">No institutions found</span>
             </div>
           )}
         </CardContent>

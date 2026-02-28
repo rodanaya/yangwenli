@@ -298,6 +298,12 @@ export function InvestigationCaseDetail() {
 
         {/* Action buttons */}
         <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+          <AddToDossierButton
+            entityType="note"
+            entityId={detail.id}
+            entityName={detail.title}
+            className="h-8 text-xs"
+          />
           {/* ASF Lookup */}
           <a
             href={asfSearchUrl}
