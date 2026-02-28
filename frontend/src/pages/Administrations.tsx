@@ -11,6 +11,7 @@
  */
 
 import { useMemo, useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { ScrollReveal, useCountUp } from '@/hooks/useAnimations'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -125,37 +126,13 @@ const ADMIN_NARRATIVES: Record<AdminName, string> = {
 }
 
 // Comparison table metric definitions — use fields from AdminAgg
-const ADMIN_METRICS = [
-  {
-    key: 'contractsPerYear' as const,
-    label: 'Contracts / Year',
-    format: (v: number) => formatNumber(Math.round(v)),
-  },
-  {
-    key: 'valuePerYear' as const,
-    label: 'Avg Annual Spend',
-    format: (v: number) => formatCompactMXN(v),
-  },
-  {
-    key: 'avgRisk' as const,
-    label: 'Avg Risk Score',
-    format: (v: number) => (v * 100).toFixed(1) + '%',
-  },
-  {
-    key: 'directAwardPct' as const,
-    label: 'Direct Award %',
-    format: (v: number) => v.toFixed(1) + '%',
-  },
-  {
-    key: 'highRiskPct' as const,
-    label: 'High Risk %',
-    format: (v: number) => v.toFixed(1) + '%',
-  },
-  {
-    key: 'singleBidPct' as const,
-    label: 'Single Bid %',
-    format: (v: number) => v.toFixed(1) + '%',
-  },
+const ADMIN_METRIC_KEYS = [
+  { key: 'contractsPerYear' as const, labelKey: 'metrics.contractsPerYear', format: (v: number) => formatNumber(Math.round(v)) },
+  { key: 'valuePerYear' as const,     labelKey: 'metrics.avgAnnualSpend',   format: (v: number) => formatCompactMXN(v) },
+  { key: 'avgRisk' as const,          labelKey: 'metrics.avgRiskScore',     format: (v: number) => (v * 100).toFixed(1) + '%' },
+  { key: 'directAwardPct' as const,   labelKey: 'metrics.directAwardPct',   format: (v: number) => v.toFixed(1) + '%' },
+  { key: 'highRiskPct' as const,      labelKey: 'metrics.highRiskPct',      format: (v: number) => v.toFixed(1) + '%' },
+  { key: 'singleBidPct' as const,     labelKey: 'metrics.singleBidPct',     format: (v: number) => v.toFixed(1) + '%' },
 ]
 
 // =============================================================================
@@ -277,6 +254,7 @@ function DeltaBadge({ val, unit, invertColor }: { val: number; unit: string; inv
 type MatrixMetric = 'risk' | 'da' | 'hr' | 'sb'
 
 export default function Administrations() {
+  const { t } = useTranslation('administrations')
   const [selectedAdmin, setSelectedAdmin] = useState<AdminName>('AMLO')
   const [activeTab, setActiveTab] = useState<'overview' | 'patterns' | 'political' | 'compare'>('overview')
   const [matrixMetric, setMatrixMetric] = useState<MatrixMetric>('risk')
@@ -517,10 +495,10 @@ export default function Administrations() {
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-text-primary font-mono tracking-tight">
-            Administration Analysis
+            {t('title')}
           </h1>
           <p className="text-sm text-text-muted mt-1">
-            Deep dive into procurement patterns across Mexican presidential administrations (2002–2025)
+            {t('subtitle')}
           </p>
         </div>
         {/* Tab Switcher */}

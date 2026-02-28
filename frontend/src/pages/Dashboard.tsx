@@ -1834,27 +1834,84 @@ const ADMINISTRATIONS = [
   { name: 'Sheinbaum', start: 2024, end: 2030, color: '#dc2626' },
 ]
 
+interface RiskTrajectoryChartProps {
+  data: Array<{ year: number; highRiskPct: number; avgRisk: number; contracts: number }>
+  /** Per-sector trajectory — if set, rendered as a colored line while aggregate becomes gray reference */
+  sectorTrajectory?: Array<{ year: number; highRiskPct: number; avgRisk: number; contracts: number }>
+  /** Hex color for the sector line */
+  sectorColor?: string
+  /** Full yearly_trends from fast-dashboard — used to extract risk_stddev for CI bands */
+  yearlyTrends?: Array<{ year: number; avg_risk: number; risk_stddev?: number }>
+}
+
 const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
   data,
-}: {
-  data: Array<{ year: number; highRiskPct: number; avgRisk: number; contracts: number }>
-}) {
+  sectorTrajectory,
+  sectorColor,
+  yearlyTrends,
+}: RiskTrajectoryChartProps) {
   const { t } = useTranslation('dashboard')
   const { t: tc } = useTranslation('common')
+
+  const hasSectorOverlay = sectorTrajectory !== undefined && sectorTrajectory.length > 0
+
+  // Merge sector data into the aggregate rows so ComposedChart can render both on same x-axis
+  const mergedData = useMemo(() => {
+    if (!hasSectorOverlay) return data
+    const sectorMap = new Map(sectorTrajectory.map((d) => [d.year, d.highRiskPct]))
+    return data.map((row) => ({
+      ...row,
+      sectorHighRiskPct: sectorMap.get(row.year) ?? null,
+    }))
+  }, [data, sectorTrajectory, hasSectorOverlay])
+
+  // Build a stddev lookup from yearlyTrends — only used when risk_stddev is present
+  const hasStddev = yearlyTrends ? yearlyTrends.some((d) => d.risk_stddev != null) : false
+  const stddevMap = useMemo(() => {
+    if (!yearlyTrends || !hasStddev) return new Map<number, number>()
+    return new Map(
+      yearlyTrends
+        .filter((d) => d.risk_stddev != null)
+        .map((d) => [d.year, (d.risk_stddev as number) * 100]),
+    )
+  }, [yearlyTrends, hasStddev])
+
+  // Merge stddev into chart data for CI band rendering
+  const chartData = useMemo(() => {
+    if (!hasStddev) return mergedData
+    return mergedData.map((row) => {
+      const sd = stddevMap.get(row.year)
+      if (sd == null) return row
+      return {
+        ...row,
+        ciLower: Math.max(0, row.highRiskPct - sd),
+        ciUpper: row.highRiskPct + sd,
+      }
+    })
+  }, [mergedData, stddevMap, hasStddev])
 
   const minYear = data.length > 0 ? data[0].year : 2010
   const maxYear = data.length > 0 ? data[data.length - 1].year : 2025
   const maxContracts = Math.max(...data.map((d) => d.contracts), 1)
 
+  // Aggregate line color: gray when sector overlay active, orange otherwise
+  const aggregateColor = hasSectorOverlay ? 'rgba(139,148,158,0.45)' : RISK_COLORS.high
+
   return (
     <div className="h-[340px]">
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={data}>
+        <ComposedChart data={chartData}>
           <defs>
             <linearGradient id="riskGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={RISK_COLORS.high} stopOpacity={0.4} />
-              <stop offset="100%" stopColor={RISK_COLORS.high} stopOpacity={0.05} />
+              <stop offset="0%" stopColor={hasSectorOverlay ? 'rgba(139,148,158,0.3)' : RISK_COLORS.high} stopOpacity={hasSectorOverlay ? 0.15 : 0.4} />
+              <stop offset="100%" stopColor={hasSectorOverlay ? 'rgba(139,148,158,0.1)' : RISK_COLORS.high} stopOpacity={0.02} />
             </linearGradient>
+            {hasStddev && (
+              <linearGradient id="ciGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={RISK_COLORS.high} stopOpacity={0.12} />
+                <stop offset="100%" stopColor={RISK_COLORS.high} stopOpacity={0.05} />
+              </linearGradient>
+            )}
           </defs>
           {/* Presidential administration bands */}
           {ADMINISTRATIONS.map((admin) => {
@@ -1903,15 +1960,33 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
           <RechartsTooltip
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
-                const d = payload[0].payload
+                const d = payload[0].payload as {
+                  year: number
+                  highRiskPct: number
+                  contracts: number
+                  sectorHighRiskPct?: number | null
+                  ciLower?: number
+                  ciUpper?: number
+                }
                 return (
                   <div className="chart-tooltip">
                     <p className="font-bold text-sm text-text-primary">{d.year}</p>
                     <div className="space-y-0.5 mt-1">
                       <p className="text-xs text-text-muted tabular-nums">
-                        <span className="inline-block w-2.5 h-2.5 rounded-full mr-1.5" style={{ backgroundColor: RISK_COLORS.high }} />
-                        {t('highRiskRate')}: <strong className="text-text-secondary">{d.highRiskPct.toFixed(1)}%</strong>
+                        <span className="inline-block w-2.5 h-2.5 rounded-full mr-1.5" style={{ backgroundColor: aggregateColor }} />
+                        {t('highRiskRate')} (all): <strong className="text-text-secondary">{d.highRiskPct.toFixed(1)}%</strong>
                       </p>
+                      {hasSectorOverlay && d.sectorHighRiskPct != null && (
+                        <p className="text-xs text-text-muted tabular-nums">
+                          <span className="inline-block w-2.5 h-2.5 rounded-full mr-1.5" style={{ backgroundColor: sectorColor }} />
+                          {t('highRiskRate')} (sector): <strong className="text-text-secondary">{d.sectorHighRiskPct.toFixed(1)}%</strong>
+                        </p>
+                      )}
+                      {hasStddev && d.ciLower != null && d.ciUpper != null && (
+                        <p className="text-xs text-text-muted/70 tabular-nums">
+                          Confidence band: ±1 std dev [{d.ciLower.toFixed(1)}%–{d.ciUpper.toFixed(1)}%]
+                        </p>
+                      )}
                       <p className="text-xs text-text-secondary tabular-nums">
                         {formatNumber(d.contracts)} {tc('contracts').toLowerCase()}
                       </p>
@@ -1940,24 +2015,84 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
             radius={[2, 2, 0, 0]}
             barSize={16}
           />
-          {/* High-risk rate area */}
+          {/* CI band: ±1 stddev shaded area — only rendered when stddev data is present */}
+          {hasStddev && (
+            <Area
+              yAxisId="left"
+              type="monotone"
+              dataKey="ciUpper"
+              stroke="none"
+              fill={RISK_COLORS.high}
+              fillOpacity={0.10}
+              dot={false}
+              activeDot={false}
+              legendType="none"
+              tooltipType="none"
+              isAnimationActive={false}
+              connectNulls
+            />
+          )}
+          {hasStddev && (
+            <Area
+              yAxisId="left"
+              type="monotone"
+              dataKey="ciLower"
+              stroke="none"
+              fill="var(--color-background-base)"
+              fillOpacity={1}
+              dot={false}
+              activeDot={false}
+              legendType="none"
+              tooltipType="none"
+              isAnimationActive={false}
+              connectNulls
+            />
+          )}
+          {/* Aggregate high-risk rate area (gray when sector overlay active) */}
           <Area
             yAxisId="left"
             type="monotone"
             dataKey="highRiskPct"
-            stroke={RISK_COLORS.high}
-            strokeWidth={2}
+            stroke={aggregateColor}
+            strokeWidth={hasSectorOverlay ? 1.5 : 2}
             fill="url(#riskGradient)"
             dot={false}
-            activeDot={{ r: 4, stroke: RISK_COLORS.high, strokeWidth: 2, fill: 'var(--color-background-base)' }}
+            activeDot={hasSectorOverlay ? false : { r: 4, stroke: RISK_COLORS.high, strokeWidth: 2, fill: 'var(--color-background-base)' }}
+            strokeDasharray={hasSectorOverlay ? '4 3' : undefined}
           />
+          {/* Per-sector line — only rendered when a sector is selected */}
+          {hasSectorOverlay && (
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="sectorHighRiskPct"
+              stroke={sectorColor}
+              strokeWidth={2.5}
+              dot={false}
+              activeDot={{ r: 4, stroke: sectorColor, strokeWidth: 2, fill: 'var(--color-background-base)' }}
+              connectNulls
+            />
+          )}
         </ComposedChart>
       </ResponsiveContainer>
       <div className="flex items-center justify-center gap-4 mt-1 flex-wrap">
-        <div className="flex items-center gap-1.5">
-          <div className="h-0.5 w-4 rounded" style={{ backgroundColor: RISK_COLORS.high }} />
-          <span className="text-xs text-text-muted">{t('highRiskRate')}</span>
-        </div>
+        {hasSectorOverlay ? (
+          <>
+            <div className="flex items-center gap-1.5">
+              <div className="h-0.5 w-4 rounded" style={{ backgroundColor: sectorColor }} />
+              <span className="text-xs text-text-muted">Sector</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="h-0.5 w-4 rounded opacity-50" style={{ borderTop: '1.5px dashed rgba(139,148,158,0.6)' }} />
+              <span className="text-xs text-text-muted">All sectors (ref)</span>
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center gap-1.5">
+            <div className="h-0.5 w-4 rounded" style={{ backgroundColor: RISK_COLORS.high }} />
+            <span className="text-xs text-text-muted">{t('highRiskRate')}</span>
+          </div>
+        )}
         <div className="flex items-center gap-1.5">
           <div className="h-3 w-3 rounded-sm bg-text-muted opacity-15" />
           <span className="text-xs text-text-muted">{tc('contracts')}</span>
@@ -1966,6 +2101,12 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
           <div className="h-2.5 w-2.5 rounded-sm opacity-30" style={{ backgroundColor: '#8b5cf6' }} />
           <span className="text-xs text-text-secondary">Administrations</span>
         </div>
+        {hasStddev && (
+          <div className="flex items-center gap-1.5">
+            <div className="h-3 w-4 rounded-sm" style={{ backgroundColor: RISK_COLORS.high, opacity: 0.12 }} />
+            <span className="text-xs text-text-muted">±1 std dev</span>
+          </div>
+        )}
       </div>
     </div>
   )
