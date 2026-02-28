@@ -216,6 +216,7 @@ function StatCard({ label, value, color, icon: Icon, onClick, loading }: StatCar
 
 function RemoveButton({ onConfirm, disabled }: { onConfirm: () => void; disabled: boolean }) {
   const [confirming, setConfirming] = useState(false)
+  const { t } = useTranslation('watchlist')
 
   if (confirming) {
     return (
@@ -225,13 +226,13 @@ function RemoveButton({ onConfirm, disabled }: { onConfirm: () => void; disabled
           className="text-xs text-risk-critical hover:underline"
           disabled={disabled}
         >
-          Confirm
+          {t('confirm')}
         </button>
         <button
           onClick={() => setConfirming(false)}
           className="text-xs text-text-muted hover:underline"
         >
-          Cancel
+          {t('cancel')}
         </button>
       </span>
     )
@@ -556,9 +557,9 @@ export function Watchlist() {
           <CardTitle className="flex items-center justify-between text-sm">
             <span className="flex items-center gap-2">
               <Eye className="h-4 w-4" />
-              Tracked Entities
+              {t('table.trackedEntities')}
             </span>
-            <Badge variant="secondary">{items.length} item{items.length !== 1 ? 's' : ''}</Badge>
+            <Badge variant="secondary">{items.length} {items.length !== 1 ? t('table.items') : t('table.item')}</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -586,9 +587,9 @@ export function Watchlist() {
                 return (
                   <div className="p-12 text-center text-text-muted">
                     <Filter className="h-12 w-12 mx-auto mb-4 opacity-25" />
-                    <p className="text-sm font-medium mb-1">No items match your filters</p>
+                    <p className="text-sm font-medium mb-1">{t('noItemsMatch')}</p>
                     <p className="text-xs max-w-sm mx-auto mb-4">
-                      Try adjusting or clearing the active filters to see more results.
+                      {t('noItemsMatchDescription')}
                     </p>
                     <Button
                       variant="outline"
@@ -599,7 +600,7 @@ export function Watchlist() {
                         setPriorityFilter('all')
                       }}
                     >
-                      Clear filters
+                      {t('clearFilters')}
                     </Button>
                   </div>
                 )
@@ -607,10 +608,9 @@ export function Watchlist() {
               return (
                 <div className="p-12 text-center text-text-muted">
                   <EyeOff className="h-12 w-12 mx-auto mb-4 opacity-25" />
-                  <p className="text-sm font-medium mb-1">Your workspace is empty</p>
+                  <p className="text-sm font-medium mb-1">{t('emptyWorkspace')}</p>
                   <p className="text-xs max-w-sm mx-auto mb-4">
-                    Save vendors, institutions, or contracts to track their risk over time.
-                    Use the bookmark icon on any profile page to add an entity here.
+                    {t('emptyWorkspaceDescription')}
                   </p>
                   <div className="flex justify-center gap-2">
                     <Button
@@ -619,7 +619,7 @@ export function Watchlist() {
                       onClick={() => window.location.assign('/explore?tab=vendors')}
                     >
                       <Search className="h-3.5 w-3.5 mr-1.5" />
-                      Browse vendors
+                      {t('browseVendors')}
                     </Button>
                     <Button
                       variant="outline"
@@ -627,7 +627,7 @@ export function Watchlist() {
                       onClick={() => window.location.assign('/explore?tab=institutions')}
                     >
                       <Building2 className="h-3.5 w-3.5 mr-1.5" />
-                      Browse institutions
+                      {t('browseInstitutions')}
                     </Button>
                   </div>
                 </div>
@@ -639,15 +639,15 @@ export function Watchlist() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border text-xs text-text-muted">
-                    <th className="text-left px-4 py-3 font-medium">Entity</th>
-                    <th className="text-left px-3 py-3 font-medium">Type</th>
-                    <th className="text-left px-3 py-3 font-medium">Priority</th>
-                    <th className="text-left px-3 py-3 font-medium">Status</th>
-                    <th className="text-right px-3 py-3 font-medium">Risk at Add</th>
-                    <th className="text-right px-3 py-3 font-medium">Current Risk</th>
-                    <th className="text-right px-3 py-3 font-medium">Change</th>
-                    <th className="text-left px-3 py-3 font-medium">Added</th>
-                    <th className="text-right px-4 py-3 font-medium">Actions</th>
+                    <th className="text-left px-4 py-3 font-medium">{t('columns.entity')}</th>
+                    <th className="text-left px-3 py-3 font-medium">{t('columns.type')}</th>
+                    <th className="text-left px-3 py-3 font-medium">{t('columns.priority')}</th>
+                    <th className="text-left px-3 py-3 font-medium">{t('columns.status')}</th>
+                    <th className="text-right px-3 py-3 font-medium">{t('columns.riskAtAdd')}</th>
+                    <th className="text-right px-3 py-3 font-medium">{t('columns.currentRisk')}</th>
+                    <th className="text-right px-3 py-3 font-medium">{t('columns.change')}</th>
+                    <th className="text-left px-3 py-3 font-medium">{t('columns.added')}</th>
+                    <th className="text-right px-4 py-3 font-medium">{t('columns.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -698,6 +698,7 @@ function WatchlistRow({
   onOpenDrawer,
 }: WatchlistRowProps) {
   const [expanded, setExpanded] = useState(false)
+  const { t } = useTranslation('watchlist')
 
   const { data: topFactors, isLoading: factorsLoading } = useQuery({
     queryKey: ['vendor', item.item_id, 'top-factors'],
@@ -760,7 +761,7 @@ function WatchlistRow({
               ) : (
                 <AlertTriangle className="h-3 w-3" />
               )}
-              Start investigating
+              {t('status.startInvestigating')}
             </button>
           )}
           {item.status === 'investigating' && (
@@ -774,7 +775,7 @@ function WatchlistRow({
               ) : (
                 <CheckCircle className="h-3 w-3" />
               )}
-              Mark resolved
+              {t('status.markResolved')}
             </button>
           )}
         </div>
@@ -828,7 +829,7 @@ function WatchlistRow({
               className="flex items-center gap-1 px-2 py-1 rounded text-xs border border-border hover:border-accent hover:text-accent transition-colors text-text-muted"
             >
               <Search className="h-3 w-3" />
-              Investigate
+              {t('investigate')}
             </button>
           )}
           {/* Remove */}
@@ -841,13 +842,13 @@ function WatchlistRow({
       <tr className="bg-background-elevated/30 border-b border-border/30">
         <td colSpan={9} className="px-6 py-3">
           {factorsLoading ? (
-            <p className="text-xs text-text-muted italic">Loading risk factors…</p>
+            <p className="text-xs text-text-muted italic">{t('loadingRiskFactors')}</p>
           ) : !topFactors?.factors.length ? (
-            <p className="text-xs text-text-muted">No risk factor data available for this vendor.</p>
+            <p className="text-xs text-text-muted">{t('noRiskFactorData')}</p>
           ) : (
             <div className="space-y-1.5">
               <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-mono mb-2">
-                Top risk factors · {topFactors.total_contracts} contracts analysed
+                {t('riskFactors')} · {topFactors.total_contracts} {t('contractsAnalysed')}
               </p>
               {topFactors.factors.map((f) => (
                 <div key={f.factor} className="flex items-center gap-3">
