@@ -557,17 +557,17 @@ export function Sectors() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3 text-center text-sm">
               <div>
                 <div className="font-semibold">{formatCompactMXN(sectorASF.total_amount_mxn)}</div>
-                <div className="text-xs text-muted-foreground">Total Questioned</div>
+                <div className="text-xs text-muted-foreground">{t('asf.totalQuestioned')}</div>
               </div>
               <div>
                 <div className="font-semibold">{sectorASF.years_audited}</div>
-                <div className="text-xs text-muted-foreground">Years Audited</div>
+                <div className="text-xs text-muted-foreground">{t('asf.yearsAudited')}</div>
               </div>
               <div>
                 <div className="font-semibold">
                   {sectorASF.findings.reduce((s, f) => s + f.institutions_audited, 0)}
                 </div>
-                <div className="text-xs text-muted-foreground">Institutions</div>
+                <div className="text-xs text-muted-foreground">{t('asf.institutions')}</div>
               </div>
             </div>
             <ResponsiveContainer width="100%" height={120}>
