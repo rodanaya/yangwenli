@@ -138,7 +138,10 @@ def precompute_stats():
             contract_year,
             COUNT(*) as contracts,
             COALESCE(SUM(amount_mxn), 0) as value,
-            COALESCE(AVG(risk_score), 0) as avg_risk
+            COALESCE(AVG(risk_score), 0) as avg_risk,
+            SQRT(
+                MAX(0, AVG(risk_score * risk_score) - AVG(risk_score) * AVG(risk_score))
+            ) as risk_stddev
         FROM contracts
         WHERE contract_year IS NOT NULL
         GROUP BY contract_year
@@ -151,6 +154,7 @@ def precompute_stats():
             'contracts': row['contracts'],
             'value_mxn': row['value'],
             'avg_risk': round(row['avg_risk'], 4),
+            'risk_stddev': round(row['risk_stddev'] or 0, 4),
         })
     stats['yearly_trends'] = yearly
     print(f"   Done ({time.time() - start:.1f}s)")

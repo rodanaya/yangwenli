@@ -578,6 +578,7 @@ export interface YearOverYearChange {
   institution_count: number
   contracts_change_pct?: number
   value_change_pct?: number
+  risk_stddev?: number
 }
 
 export interface AnomalyItem {
