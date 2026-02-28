@@ -453,7 +453,7 @@ export function Sectors() {
         <div>
           <div className="flex items-center justify-between mb-2">
             <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-mono">
-              Ranked by avg risk score — click to inspect
+              {t('page.rankedBy')}
             </p>
             {selectedSectorCode && (
               <button
@@ -461,7 +461,7 @@ export function Sectors() {
                 className="text-[10px] text-text-muted hover:text-text-primary flex items-center gap-1 font-mono"
                 aria-label="Clear sector selection"
               >
-                <X className="h-3 w-3" /> Clear
+                <X className="h-3 w-3" /> {t('page.clear')}
               </button>
             )}
           </div>
@@ -497,7 +497,7 @@ export function Sectors() {
                   className="text-xs bg-background border border-border rounded px-2 py-0.5 text-text-secondary focus:outline-none focus:border-accent"
                   aria-label="Compare with sector"
                 >
-                  <option value="">Compare…</option>
+                  <option value="">{t('page.compareWith')}</option>
                   {data.data
                     .filter((s) => s.sector_code !== selectedSector.sector_code)
                     .map((s) => (
@@ -510,7 +510,7 @@ export function Sectors() {
                   onClick={() => navigate(`/sectors/${selectedSector.sector_id}`)}
                   className="text-xs text-accent flex items-center gap-1 hover:underline"
                 >
-                  Full profile ↗
+                  {t('page.fullProfile')}
                 </button>
                 <button
                   onClick={() => { setSelectedSectorCode(null); setCompareSectorCode(null) }}
@@ -527,12 +527,12 @@ export function Sectors() {
               {/* Key stats sidebar */}
               <div className="space-y-2.5">
                 {[
-                  { label: 'Total Contracts', value: formatNumber(selectedSector.total_contracts), mono: true },
-                  { label: 'Total Value', value: formatCompactMXN(selectedSector.total_value_mxn), mono: true },
-                  { label: 'Avg Risk Score', value: `${(selectedSector.avg_risk_score * 100).toFixed(1)}%`, mono: true },
-                  { label: 'High Risk %', value: formatPercentSafe(selectedSector.high_risk_pct, false), mono: true },
-                  { label: 'Direct Award %', value: formatPercentSafe(selectedSector.direct_award_pct, false), mono: true },
-                  { label: 'Single Bid %', value: formatPercentSafe(selectedSector.single_bid_pct, false), mono: true },
+                  { label: t('table.totalContracts'), value: formatNumber(selectedSector.total_contracts), mono: true },
+                  { label: t('table.totalValueMxn'), value: formatCompactMXN(selectedSector.total_value_mxn), mono: true },
+                  { label: t('table.avgRiskScore'), value: `${(selectedSector.avg_risk_score * 100).toFixed(1)}%`, mono: true },
+                  { label: t('table.highRiskPct'), value: formatPercentSafe(selectedSector.high_risk_pct, false), mono: true },
+                  { label: t('table.directAwardPct'), value: formatPercentSafe(selectedSector.direct_award_pct, false), mono: true },
+                  { label: t('heatmap.singleBid'), value: formatPercentSafe(selectedSector.single_bid_pct, false), mono: true },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex items-center justify-between gap-2 py-1.5 border-b border-border/20">
                     <span className="text-xs text-text-muted">{label}</span>
