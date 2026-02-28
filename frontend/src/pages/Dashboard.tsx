@@ -517,6 +517,30 @@ export function Dashboard() {
       }))
   }, [fastDashboard])
 
+  // Sector selector for Risk Trajectory chart (null = "All Sectors")
+  const [selectedTrajectorySectorId, setSelectedTrajectorySectorId] = useState<number | null>(null)
+
+  // API call: sector × year breakdown for per-sector risk trajectories
+  const { data: sectorYearData } = useQuery({
+    queryKey: ['analysis', 'sector-year-breakdown'],
+    queryFn: () => analysisApi.getSectorYearBreakdown(),
+    staleTime: 10 * 60 * 1000,
+  })
+
+  // Per-sector trajectory filtered to the selected sector
+  const sectorTrajectory = useMemo(() => {
+    if (selectedTrajectorySectorId === null || !sectorYearData?.data) return []
+    return sectorYearData.data
+      .filter((d) => d.sector_id === selectedTrajectorySectorId && d.year >= 2010)
+      .map((d) => ({
+        year: d.year,
+        highRiskPct: (d.avg_risk || 0) * 100,
+        avgRisk: (d.avg_risk || 0) * 100,
+        contracts: d.contracts,
+      }))
+      .sort((a, b) => a.year - b.year)
+  }, [sectorYearData, selectedTrajectorySectorId])
+
   // Refs for chart export buttons
   const riskTrajectoryRef = useRef<HTMLDivElement>(null)
   const sectorTreemapRef = useRef<HTMLDivElement>(null)

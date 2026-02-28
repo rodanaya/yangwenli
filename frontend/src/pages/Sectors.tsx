@@ -598,36 +598,36 @@ export function Sectors() {
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <ScrollReveal delay={0} direction="up">
           <SharedStatCard
-            label="SECTORS TRACKED"
+            label={t('statCards.sectorsTracked')}
             value={aggregates ? String(aggregates.sectorCount) : '—'}
-            detail="Active government sectors"
+            detail={t('statCards.sectorsTrackedDetail')}
             borderColor="border-accent/30"
             loading={isLoading}
           />
         </ScrollReveal>
         <ScrollReveal delay={80} direction="up">
           <SharedStatCard
-            label="TOTAL CONTRACTS"
+            label={t('statCards.totalContracts')}
             value={aggregates ? formatNumber(aggregates.totalContracts) : '—'}
-            detail="All sectors, all years"
+            detail={t('statCards.totalContractsDetail')}
             borderColor="border-blue-500/30"
             loading={isLoading}
           />
         </ScrollReveal>
         <ScrollReveal delay={160} direction="up">
           <SharedStatCard
-            label="TOTAL VALUE"
+            label={t('statCards.totalValue')}
             value={aggregates ? formatCompactMXN(aggregates.totalValue) : '—'}
-            detail="Validated amounts only"
+            detail={t('statCards.totalValueDetail')}
             borderColor="border-amber-500/30"
             loading={isLoading}
           />
         </ScrollReveal>
         <ScrollReveal delay={240} direction="up">
           <SharedStatCard
-            label="AVG RISK SCORE"
+            label={t('statCards.avgRiskScore')}
             value={aggregates ? `${(aggregates.avgRisk * 100).toFixed(1)}%` : '—'}
-            detail="Weighted by contract count"
+            detail={t('statCards.avgRiskScoreDetail')}
             borderColor="border-red-500/30"
             color={aggregates && aggregates.avgRisk >= 0.3 ? 'text-risk-high' : 'text-text-primary'}
             loading={isLoading}
@@ -642,7 +642,7 @@ export function Sectors() {
             <div className="flex items-center gap-1.5 rounded-md border border-risk-critical/20 bg-risk-critical/5 px-3 py-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-risk-critical" />
               <span className="text-xs font-mono font-medium text-risk-critical">
-                {formatNumber(patternCounts.counts.critical)} Critical Risk
+                {formatNumber(patternCounts.counts.critical)} {t('chips.criticalRisk')}
               </span>
             </div>
           </ScrollReveal>
@@ -650,7 +650,7 @@ export function Sectors() {
             <div className="flex items-center gap-1.5 rounded-md border border-amber-500/20 bg-amber-500/5 px-3 py-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
               <span className="text-xs font-mono font-medium text-amber-500">
-                {formatNumber(patternCounts.counts.december_rush)} December Rush
+                {formatNumber(patternCounts.counts.december_rush)} {t('chips.decemberRush')}
               </span>
             </div>
           </ScrollReveal>
@@ -658,7 +658,7 @@ export function Sectors() {
             <div className="flex items-center gap-1.5 rounded-md border border-border/50 bg-background-elevated/30 px-3 py-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-text-muted" />
               <span className="text-xs font-mono font-medium text-text-secondary">
-                {formatNumber(patternCounts.counts.co_bidding)} Co-Bidding Flags
+                {formatNumber(patternCounts.counts.co_bidding)} {t('chips.coBiddingFlags')}
               </span>
             </div>
           </ScrollReveal>
