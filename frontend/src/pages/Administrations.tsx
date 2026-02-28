@@ -902,7 +902,7 @@ export default function Administrations() {
         <Card className="bg-card border-border/40">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-mono text-text-primary">
-              Sector Risk Profile — {selectedAdmin}
+              {t('sectorProfile', { admin: selectedAdmin })}
             </CardTitle>
           </CardHeader>
           <CardContent className="overflow-x-auto">
@@ -947,7 +947,7 @@ export default function Administrations() {
             {topSectorCorrelations.length > 0 && (
               <div className="mt-3 pt-3 border-t border-border/20">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-mono mb-1.5">
-                  Risk Comovement — correlated sector pairs (r ≥ 0.70)
+                  {t('sectorCorrelations')} — {t('sectorCorrelationsNote')}
                 </div>
                 <div className="space-y-1">
                   {topSectorCorrelations.map((p) => (
