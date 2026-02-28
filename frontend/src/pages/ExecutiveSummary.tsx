@@ -18,6 +18,7 @@ import type { ExecutiveSummaryResponse } from '@/api/types'
 import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
 import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
 import { ScrollReveal, useCountUp, AnimatedFill, AnimatedSegment } from '@/hooks/useAnimations'
+import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import {
   AlertTriangle,
   Target,
@@ -65,11 +66,29 @@ function usePatternCounts() {
 
 export function ExecutiveSummary() {
   const navigate = useNavigate()
-  const { data, isLoading } = useExecutiveSummary()
+  const { data, isLoading, isError, refetch } = useExecutiveSummary()
   const { data: patternCounts } = usePatternCounts()
 
-  if (isLoading || !data) {
+  if (isLoading) {
     return <LoadingSkeleton />
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="max-w-4xl mx-auto py-24 flex flex-col items-center gap-4 text-center">
+        <AlertTriangle className="h-10 w-10 text-risk-critical" />
+        <h2 className="text-lg font-bold text-text-primary">Failed to load Executive Summary</h2>
+        <p className="text-sm text-text-muted max-w-sm">
+          The report data could not be retrieved. Check your connection and try again.
+        </p>
+        <button
+          onClick={() => void refetch()}
+          className="px-4 py-2 text-sm font-semibold rounded-md bg-accent text-background-base hover:bg-accent/90 transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -1131,6 +1150,7 @@ function SectionProof({ data }: { data: ExecutiveSummaryResponse }) {
     () => [...gt.case_details].sort((a, b) => b.high_plus_pct - a.high_plus_pct),
     [gt.case_details]
   )
+  const detectionChartRef = useRef<HTMLDivElement>(null)
 
   return (
     <section>
@@ -1162,10 +1182,13 @@ function SectionProof({ data }: { data: ExecutiveSummaryResponse }) {
       </p>
 
       {/* Detection rate bars */}
-      <div className="space-y-2 mb-6">
-        <p className="text-xs font-bold tracking-wider uppercase text-text-muted font-mono mb-2">
-          {t('s2.detectionLabel')}
-        </p>
+      <div ref={detectionChartRef} className="space-y-2 mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs font-bold tracking-wider uppercase text-text-muted font-mono">
+            {t('s2.detectionLabel')}
+          </p>
+          <ChartDownloadButton targetRef={detectionChartRef} filename="rubli-ground-truth-detection" />
+        </div>
         {sortedCases.map((c, idx) => (
           <div key={c.name} className="flex items-center gap-3">
             <div className="w-52 sm:w-64 text-right">
@@ -1613,6 +1636,7 @@ function SectionModel({ data }: { data: ExecutiveSummaryResponse }) {
   const { t } = useTranslation('executive')
   const { model } = data
   const maxBeta = Math.max(...model.top_predictors.map((p) => Math.abs(p.beta)))
+  const coeffChartRef = useRef<HTMLDivElement>(null)
 
   return (
     <section>
@@ -1637,10 +1661,13 @@ function SectionModel({ data }: { data: ExecutiveSummaryResponse }) {
       </div>
 
       {/* Coefficient chart */}
-      <div className="mb-6">
-        <p className="text-xs font-bold tracking-wider uppercase text-text-muted font-mono mb-3">
-          {t('s8.coeffLabel')}
-        </p>
+      <div ref={coeffChartRef} className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs font-bold tracking-wider uppercase text-text-muted font-mono">
+            {t('s8.coeffLabel')}
+          </p>
+          <ChartDownloadButton targetRef={coeffChartRef} filename="rubli-model-coefficients" />
+        </div>
         <div className="space-y-2">
           {model.top_predictors.map((p) => {
             const isPositive = p.beta > 0

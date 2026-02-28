@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -171,7 +172,7 @@ function RiskWaterfallChart({
 
     // Add total bar
     entries.push({
-      name: 'Total Score',
+      name: t('waterfall.totalScore'),
       factorKey: '__total__',
       contribution: riskScore,
       isNegative: false,
@@ -188,11 +189,11 @@ function RiskWaterfallChart({
     return entry.contribution > 0.15 ? '#f87171' : '#fb923c'
   }
 
+  const { t } = useTranslation('vendors')
   return (
     <div>
       <p className="text-xs text-text-muted mb-3">
-        Positive bars increase risk (red/orange). Negative bars reduce risk (green).
-        Bar height reflects each factor's contribution to the overall score.
+        {t('waterfall.description')}
       </p>
       <div className="h-[220px]">
         <ResponsiveContainer width="100%" height="100%">
@@ -217,11 +218,11 @@ function RiskWaterfallChart({
                     <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg">
                       <p className="font-semibold text-text-primary mb-1">{d.name}</p>
                       <p className={d.isNegative ? 'text-risk-low' : 'text-risk-high'}>
-                        {d.contribution >= 0 ? '+' : ''}{d.contribution.toFixed(3)} contribution
+                        {d.contribution >= 0 ? '+' : ''}{d.contribution.toFixed(3)} {t('waterfall.contribution')}
                       </p>
                       {d.factorKey !== '__total__' && (
                         <p className="text-text-muted mt-1">
-                          Model coefficient: {MODEL_COEFFICIENTS[d.factorKey]?.toFixed(3) ?? 'n/a'}
+                          {t('waterfall.modelCoefficient')}: {MODEL_COEFFICIENTS[d.factorKey]?.toFixed(3) ?? 'n/a'}
                         </p>
                       )}
                     </div>
@@ -247,11 +248,11 @@ function RiskWaterfallChart({
       <div className="flex items-center gap-4 mt-1 justify-center">
         <div className="flex items-center gap-1.5">
           <div className="h-2.5 w-2.5 rounded-sm bg-risk-critical/80" />
-          <span className="text-[10px] text-text-muted">Risk-increasing factor</span>
+          <span className="text-[10px] text-text-muted">{t('waterfall.riskIncreasing')}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="h-2.5 w-2.5 rounded-sm bg-risk-low/80" />
-          <span className="text-[10px] text-text-muted">Risk-reducing factor</span>
+          <span className="text-[10px] text-text-muted">{t('waterfall.riskReducing')}</span>
         </div>
       </div>
     </div>
@@ -269,6 +270,7 @@ function ActivityCalendar({
   contracts: ContractListItem[]
   sectorColor: string
 }) {
+  const { t } = useTranslation('vendors')
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
   // Build a map of "year-month" -> { count, value }
@@ -308,13 +310,13 @@ function ActivityCalendar({
   const [hovered, setHovered] = useState<string | null>(null)
 
   if (years.length === 0) {
-    return <p className="text-xs text-text-muted">No contract date data available for calendar view.</p>
+    return <p className="text-xs text-text-muted">{t('history.noCalendarData')}</p>
   }
 
   return (
     <div>
       <p className="text-xs text-text-muted mb-3">
-        Contract activity over the last 5 years. Darker cells indicate more contracts in that month.
+        {t('history.calendarDescription')}
       </p>
       {/* Grid: rows = months, cols = years */}
       <div className="overflow-x-auto">
@@ -392,6 +394,7 @@ function ActivityCalendar({
 // ============================================================================
 
 export function VendorProfile() {
+  const { t } = useTranslation('vendors')
   const { id } = useParams<{ id: string }>()
   const vendorId = Number(id)
   const navigate = useNavigate()
@@ -533,12 +536,12 @@ export function VendorProfile() {
   if (vendorError || !vendor) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <h2 className="text-lg font-semibold mb-2">Vendor Not Found</h2>
-        <p className="text-text-muted mb-4">The requested vendor could not be found.</p>
+        <h2 className="text-lg font-semibold mb-2">{t('notFound')}</h2>
+        <p className="text-text-muted mb-4">{t('notFoundDescription')}</p>
         <Link to="/explore?tab=vendors">
           <Button variant="outline">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Vendors
+            {t('backToVendors')}
           </Button>
         </Link>
       </div>
@@ -644,10 +647,22 @@ export function VendorProfile() {
                     <span>{vendor.industry_name}</span>
                   </>
                 )}
+                {vendor.group_name && (
+                  <>
+                    <span>·</span>
+                    <span
+                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-amber-500/15 text-amber-300 border border-amber-500/30"
+                      title="This vendor belongs to a related network group"
+                    >
+                      <Users className="h-2.5 w-2.5" />
+                      {vendor.group_name}
+                    </span>
+                  </>
+                )}
               </div>
               {vendor.name_variants && vendor.name_variants.length > 0 && (
                 <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                  <span className="text-xs text-text-muted">Also known as:</span>
+                  <span className="text-xs text-text-muted">{t('alsoKnownAs')}</span>
                   {vendor.name_variants.slice(0, 5).map((v) => (
                     <span
                       key={v.variant_name}
@@ -676,7 +691,7 @@ export function VendorProfile() {
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-background-elevated border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
           >
             <Network className="h-3.5 w-3.5" />
-            View Network
+            {t('viewNetwork')}
           </button>
           {vendor.primary_sector_id && (
             <button
@@ -686,7 +701,7 @@ export function VendorProfile() {
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-background-elevated border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
-              Find Similar
+              {t('findSimilar')}
             </button>
           )}
           <GenerateReportButton
@@ -731,7 +746,7 @@ export function VendorProfile() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <ScrollReveal delay={0} direction="up">
           <KPICard
-            title="Total Contracts"
+            title={t('kpi.totalContracts')}
             value={vendor.total_contracts}
             icon={FileText}
             subtitle={`${vendor.first_contract_year || '-'} – ${vendor.last_contract_year || '-'}`}
@@ -744,7 +759,7 @@ export function VendorProfile() {
         </ScrollReveal>
         <ScrollReveal delay={80} direction="up">
           <KPICard
-            title="Total Value"
+            title={t('kpi.totalValue')}
             value={vendor.total_value_mxn}
             icon={DollarSign}
             format="currency"
@@ -758,15 +773,15 @@ export function VendorProfile() {
         </ScrollReveal>
         <ScrollReveal delay={160} direction="up">
           <KPICard
-            title="Institutions"
+            title={t('kpi.institutions')}
             value={vendor.total_institutions}
             icon={Building2}
-            subtitle="Unique agencies"
+            subtitle={t('kpi.uniqueAgencies')}
           />
         </ScrollReveal>
         <ScrollReveal delay={240} direction="up">
           <KPICard
-            title="High Risk"
+            title={t('kpi.highRisk')}
             value={vendor.high_risk_pct}
             icon={AlertTriangle}
             format="percent_100"
@@ -786,15 +801,15 @@ export function VendorProfile() {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-risk-medium">
               <Users className="h-5 w-5" />
-              Co-Bidding Pattern Detected <InfoTooltip termKey="cobidding" size={13} />
+              {t('coBidding.title')} <InfoTooltip termKey="cobidding" size={13} />
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-text-muted mb-4">
-              This vendor frequently appears in the same procedures with specific partners.
+              {t('coBidding.description')}
               {coBidders?.suspicious_patterns?.length ? (
                 <span className="text-risk-medium font-medium ml-1">
-                  {coBidders.suspicious_patterns.length} suspicious pattern(s) detected.
+                  {coBidders.suspicious_patterns.length} {t('coBidding.suspiciousPatterns')}
                 </span>
               ) : null}
             </p>
@@ -803,7 +818,7 @@ export function VendorProfile() {
             {coBidders?.co_bidders && coBidders.co_bidders.length > 0 && (
               <div className="space-y-2">
                 <p className="text-xs font-medium text-text-muted uppercase tracking-wide">
-                  Top Co-Bidding Partners
+                  {t('coBidding.topPartners')}
                 </p>
                 <div className="divide-y divide-border rounded-lg border overflow-hidden">
                   {coBidders.co_bidders.slice(0, 5).map((partner) => (
@@ -819,7 +834,7 @@ export function VendorProfile() {
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="text-xs text-text-muted tabular-nums">
-                          {partner.co_bid_count} shared procedures
+                          {partner.co_bid_count} {t('coBidding.sharedProcedures')}
                         </span>
                         <span className={`text-xs px-2 py-0.5 rounded-full ${
                           partner.relationship_strength === 'very_strong' ? 'bg-risk-critical/20 text-risk-critical' :
@@ -839,13 +854,13 @@ export function VendorProfile() {
             {coBidders?.suspicious_patterns && coBidders.suspicious_patterns.length > 0 && (
               <div className="mt-4 space-y-2">
                 <p className="text-xs font-medium text-text-muted uppercase tracking-wide">
-                  Detected Patterns
+                  {t('coBidding.detectedPatterns')}
                 </p>
                 {coBidders.suspicious_patterns.map((pattern, idx) => (
                   <div key={idx} className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
                     <p className="text-sm font-medium text-risk-medium">
-                      {pattern.pattern === 'potential_cover_bidding' ? 'Potential Cover Bidding' :
-                       pattern.pattern === 'potential_bid_rotation' ? 'Potential Bid Rotation' :
+                      {pattern.pattern === 'potential_cover_bidding' ? t('coBidding.coverBidding') :
+                       pattern.pattern === 'potential_bid_rotation' ? t('coBidding.bidRotation') :
                        pattern.pattern}
                     </p>
                     <p className="text-xs text-text-muted mt-1">{pattern.description}</p>
@@ -902,11 +917,11 @@ export function VendorProfile() {
       <SimpleTabs
         defaultTab="overview"
         tabs={[
-          { key: 'overview', label: 'Overview', icon: BarChart3 },
-          { key: 'risk', label: 'Risk Analysis', icon: Shield },
-          { key: 'history', label: 'Contract History', icon: Activity },
-          { key: 'network', label: 'Network', icon: Network },
-          { key: 'external', label: 'External Records', icon: ShieldCheck },
+          { key: 'overview', label: t('tabs.overview'), icon: BarChart3 },
+          { key: 'risk', label: t('tabs.risk'), icon: Shield },
+          { key: 'history', label: t('tabs.history'), icon: Activity },
+          { key: 'network', label: t('tabs.network'), icon: Network },
+          { key: 'external', label: t('tabs.external'), icon: ShieldCheck },
         ]}
       >
         {/* TAB 1: Overview */}
@@ -920,7 +935,7 @@ export function VendorProfile() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="h-4 w-4" />
-                    Risk Profile <InfoTooltip termKey="riskScore" size={13} />
+                    {t('cards.riskProfile')} <InfoTooltip termKey="riskScore" size={13} />
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -942,25 +957,25 @@ export function VendorProfile() {
               {/* Procurement Patterns */}
               <Card className="hover-lift">
                 <CardHeader>
-                  <CardTitle className="text-sm">Procurement Patterns</CardTitle>
+                  <CardTitle className="text-sm">{t('cards.procurementPatterns')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <PatternBar
-                    label="Direct Awards"
+                    label={t('cards.directAwards')}
                     value={vendor.direct_award_pct}
                     isPercent100
                   />
                   <PatternBar
-                    label="Single Bids"
+                    label={t('cards.singleBids')}
                     value={vendor.single_bid_pct}
                     isPercent100
                   />
                   <div className="flex justify-between text-sm">
-                    <span className="text-text-muted">Avg Contract</span>
+                    <span className="text-text-muted">{t('cards.avgContract')}</span>
                     <span className="font-medium tabular-nums">{formatCompactMXN(vendor.avg_contract_value || 0)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-text-muted">Sectors</span>
+                    <span className="text-text-muted">{t('cards.sectors')}</span>
                     <span className="font-medium tabular-nums">{String(vendor.sectors_count || 0)}</span>
                   </div>
                 </CardContent>
@@ -977,7 +992,7 @@ export function VendorProfile() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Brain className="h-4 w-4" />
-                      AI Pattern Analysis
+                      {t('cards.aiPatternAnalysis')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -1015,7 +1030,7 @@ export function VendorProfile() {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-sm">
                         <AlertTriangle className="h-4 w-4 text-red-400" />
-                        Known Scandals
+                        {t('cards.knownScandals')}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
@@ -1118,16 +1133,16 @@ export function VendorProfile() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="h-4 w-4" />
-                    Vendor Summary
+                    {t('cards.vendorSummary')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    <SummaryRow label="Primary Sector" value={vendor.primary_sector_name || 'Not classified'} />
-                    <SummaryRow label="Years Active" value={String(vendor.years_active)} />
-                    <SummaryRow label="Sectors Served" value={String(vendor.sectors_count)} />
+                    <SummaryRow label={t('cards.primarySector')} value={vendor.primary_sector_name || t('cards.notClassified')} />
+                    <SummaryRow label={t('cards.yearsActive')} value={String(vendor.years_active)} />
+                    <SummaryRow label={t('cards.sectorsServed')} value={String(vendor.sectors_count)} />
                     {vendor.vendor_group_id && (
-                      <SummaryRow label="Vendor Group" value={vendor.group_name || `Group ${vendor.vendor_group_id}`} />
+                      <SummaryRow label={t('cards.vendorGroup')} value={vendor.group_name || `Group ${vendor.vendor_group_id}`} />
                     )}
                   </div>
                 </CardContent>
@@ -1138,11 +1153,11 @@ export function VendorProfile() {
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="h-4 w-4" />
-                    Recent Contracts
+                    {t('cards.recentContracts')}
                   </CardTitle>
                   <Link to={`/contracts?vendor_id=${vendorId}`}>
                     <Button variant="ghost" size="sm">
-                      View all
+                      {t('cards.viewAll')}
                       <ExternalLink className="ml-1 h-3 w-3" />
                     </Button>
                   </Link>
@@ -1163,7 +1178,7 @@ export function VendorProfile() {
                       </div>
                     </ScrollArea>
                   ) : (
-                    <div className="p-8 text-center text-text-muted">No contracts found</div>
+                    <div className="p-8 text-center text-text-muted">{t('cards.noContractsFound')}</div>
                   )}
                 </CardContent>
               </Card>
@@ -1173,7 +1188,7 @@ export function VendorProfile() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Building2 className="h-4 w-4" />
-                    Top Institutions
+                    {t('cards.topInstitutions')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -1189,7 +1204,7 @@ export function VendorProfile() {
                       maxValue={Math.max(...institutions.data.slice(0, 5).map((i: any) => i.total_value_mxn))}
                     />
                   ) : (
-                    <p className="text-sm text-text-muted">No institutions found</p>
+                    <p className="text-sm text-text-muted">{t('cards.noInstitutionsFound')}</p>
                   )}
                 </CardContent>
               </Card>
@@ -1200,11 +1215,10 @@ export function VendorProfile() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Building2 className="h-4 w-4" />
-                      Institutional Relationships
+                      {t('cards.institutionalRelationships')}
                     </CardTitle>
                     <p className="text-xs text-text-muted mt-0.5 italic">
-                      Long-tenured vendor relationships correlate with higher single-bid rates
-                      and prices (Coviello &amp; Gagliarducci 2017)
+                      {t('cards.institutionalRelationshipsNote')}
                     </p>
                   </CardHeader>
                   <CardContent className="p-0">
@@ -1222,11 +1236,11 @@ export function VendorProfile() {
                           </div>
                           <div className="flex items-center gap-2 ml-3 flex-shrink-0">
                             <span className="font-mono text-xs text-text-secondary">
-                              {inst.tenure_years} yrs
+                              {inst.tenure_years} {t('cards.yrs')}
                             </span>
                             {inst.tenure_years > 15 && (
                               <span className="text-xs bg-amber-900/40 text-amber-300 px-1.5 py-0.5 rounded font-medium">
-                                LONG
+                                {t('cards.long')}
                               </span>
                             )}
                           </div>
@@ -1243,11 +1257,17 @@ export function VendorProfile() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-sm">
                     <BarChart3 className="h-4 w-4" />
-                    Procurement Footprint
+                    {t('cards.procurementFootprint')}
                   </CardTitle>
-                  <p className="text-xs text-text-muted mt-0.5">Sector × institution relationships, sized by total value</p>
+                  <p className="text-xs text-text-muted mt-0.5">{t('cards.procurementFootprintNote')}</p>
                 </CardHeader>
                 <CardContent>
+                  <div className="relative" ref={footprintChartRef}>
+                    <ChartDownloadButton
+                      targetRef={footprintChartRef}
+                      filename={`vendor-${vendorId}-footprint`}
+                      className="absolute top-0 right-0 z-10"
+                    />
                   <div className="space-y-1.5 max-h-[260px] overflow-y-auto">
                     {footprintData.footprint.slice(0, 20).map((fp, idx) => {
                       const maxVal = footprintData.footprint[0]?.total_value ?? 1
@@ -1299,6 +1319,7 @@ export function VendorProfile() {
                   <p className="mt-2 text-[10px] text-text-muted/50 italic">
                     Color = sector · badge = avg risk score · sorted by total value
                   </p>
+                  </div>
                 </CardContent>
               </Card>
               )}
@@ -1345,7 +1366,12 @@ export function VendorProfile() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-[100px]">
+                    <div className="relative h-[100px]" ref={riskTimelineChartRef}>
+                      <ChartDownloadButton
+                        targetRef={riskTimelineChartRef}
+                        filename={`vendor-${vendorId}-risk-trend`}
+                        className="absolute top-0 right-0 z-10"
+                      />
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={riskTrendData}>
                           <defs>
@@ -2356,3 +2382,4 @@ function ExternalFlagsPanel({ flags }: { flags: VendorExternalFlags | undefined 
 }
 
 export default VendorProfile
+        

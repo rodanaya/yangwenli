@@ -290,8 +290,9 @@ export const contractApi = {
 export const vendorApi = {
   /**
    * Get paginated list of vendors with filters
+   * @param year - Filter to vendors with contracts in this year
    */
-  async getAll(params: VendorFilterParams = {}): Promise<VendorListResponse> {
+  async getAll(params: VendorFilterParams & { year?: number } = {}): Promise<VendorListResponse> {
     const queryParams = buildQueryParams(params as Record<string, unknown>)
     const { data } = await api.get<VendorListResponse>(`/vendors?${queryParams}`)
     return data
@@ -337,6 +338,7 @@ export const vendorApi = {
 
   /**
    * Get top vendors by ALL metrics in a single request (3x fewer calls)
+   * @deprecated - defined but not yet wired to any UI
    */
   async getTopAll(limit = 5): Promise<{
     value: VendorTopItem[]
@@ -420,16 +422,19 @@ export const vendorApi = {
     return data
   },
 
+  /** @deprecated - defined but not yet wired to any UI */
   async compare(ids: number[]): Promise<Record<string, unknown>> {
     const { data } = await api.get(`/vendors/compare?ids=${ids.join(',')}`)
     return data
   },
 
+  /** @deprecated - defined but not yet wired to any UI */
   async getVerified(): Promise<Record<string, unknown>> {
     const { data } = await api.get('/vendors/verified')
     return data
   },
 
+  /** @deprecated - defined but not yet wired to any UI */
   async getClassification(vendorId: number): Promise<Record<string, unknown>> {
     const { data } = await api.get(`/vendors/${vendorId}/classification`)
     return data
@@ -464,8 +469,9 @@ export const vendorApi = {
 export const institutionApi = {
   /**
    * Get paginated list of institutions with filters
+   * @param year - Filter to institutions with contracts in this year
    */
-  async getAll(params: InstitutionFilterParams = {}): Promise<InstitutionListResponse> {
+  async getAll(params: InstitutionFilterParams & { year?: number } = {}): Promise<InstitutionListResponse> {
     const queryParams = buildQueryParams(params as Record<string, unknown>)
     const { data } = await api.get<InstitutionListResponse>(`/institutions?${queryParams}`)
     return data
@@ -618,26 +624,31 @@ export const institutionApi = {
     return data
   },
 
+  /** @deprecated - defined but not yet wired to any UI */
   async compare(ids: number[]): Promise<Record<string, unknown>> {
     const { data } = await api.get(`/institutions/compare?ids=${ids.join(',')}`)
     return data
   },
 
+  /** @deprecated - defined but not yet wired to any UI */
   async getHierarchy(): Promise<Record<string, unknown>> {
     const { data } = await api.get('/institutions/hierarchy')
     return data
   },
 
+  /** @deprecated - defined but not yet wired to any UI */
   async getTypes(): Promise<Record<string, unknown>> {
     const { data } = await api.get('/institutions/types')
     return data
   },
 
+  /** @deprecated - defined but not yet wired to any UI */
   async getSizeTiers(): Promise<Record<string, unknown>> {
     const { data } = await api.get('/institutions/size-tiers')
     return data
   },
 
+  /** @deprecated - defined but not yet wired to any UI */
   async getOfficials(institutionId: number): Promise<Record<string, unknown>> {
     const { data } = await api.get(`/institutions/${institutionId}/officials`)
     return data

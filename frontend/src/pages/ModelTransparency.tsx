@@ -6,11 +6,13 @@
  * known limitations. All data is hardcoded from methodology documentation.
  */
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { SectionDescription } from '@/components/SectionDescription'
+import { ChartDownloadButton } from '@/components/ChartDownloadButton'
+import { TableExportButton } from '@/components/TableExportButton'
 import { cn, formatNumber } from '@/lib/utils'
 import { RISK_COLORS, RISK_THRESHOLDS, CURRENT_MODEL_VERSION } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
@@ -353,6 +355,10 @@ export default function ModelTransparency() {
   const [selectedSector, setSelectedSector] = useState(0)
   const [coeffSectorId, setCoeffSectorId] = useState<number | undefined>(undefined)
 
+  // refs for chart download
+  const coeffChartRef = useRef<HTMLDivElement>(null)
+  const comparisonChartRef = useRef<HTMLDivElement>(null)
+
   // ------------------------------------------------------------------
   // Model metadata from API (freshness badge)
   // ------------------------------------------------------------------
@@ -520,14 +526,17 @@ export default function ModelTransparency() {
       {/* ================================================================ */}
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <Scale className="h-4 w-4 text-text-muted" aria-hidden="true" />
-            <div>
-              <CardTitle>What Drives Risk Scores?</CardTitle>
-              <CardDescription>
-                Logistic regression coefficients — larger bars mean stronger influence on the risk score
-              </CardDescription>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Scale className="h-4 w-4 text-text-muted" aria-hidden="true" />
+              <div>
+                <CardTitle>What Drives Risk Scores?</CardTitle>
+                <CardDescription>
+                  Logistic regression coefficients — larger bars mean stronger influence on the risk score
+                </CardDescription>
+              </div>
             </div>
+            <ChartDownloadButton targetRef={coeffChartRef} filename="rubli-model-coefficients" />
           </div>
         </CardHeader>
         <CardContent>
@@ -559,7 +568,7 @@ export default function ModelTransparency() {
             </select>
           </div>
 
-          <div className="h-[560px]">
+          <div ref={coeffChartRef} className="h-[560px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={coefficientData}
@@ -707,19 +716,22 @@ export default function ModelTransparency() {
       {/* ================================================================ */}
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-text-muted" aria-hidden="true" />
-            <div>
-              <CardTitle>Model Comparison: v3.3 vs v5.1</CardTitle>
-              <CardDescription>
-                Per-sector framework (v5.1) dramatically outperforms the weighted checklist (v3.3) on every metric
-              </CardDescription>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-text-muted" aria-hidden="true" />
+              <div>
+                <CardTitle>Model Comparison: v3.3 vs v5.1</CardTitle>
+                <CardDescription>
+                  Per-sector framework (v5.1) dramatically outperforms the weighted checklist (v3.3) on every metric
+                </CardDescription>
+              </div>
             </div>
+            <ChartDownloadButton targetRef={comparisonChartRef} filename="rubli-model-comparison" />
           </div>
         </CardHeader>
         <CardContent>
           {/* Side-by-side comparison chart */}
-          <div className="h-[280px]">
+          <div ref={comparisonChartRef} className="h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={comparisonData}
@@ -814,14 +826,26 @@ export default function ModelTransparency() {
       {/* ================================================================ */}
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-text-muted" aria-hidden="true" />
-            <div>
-              <CardTitle>Per-Case Detection Performance</CardTitle>
-              <CardDescription>
-                How the model performs on each of the 15 documented corruption cases
-              </CardDescription>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Shield className="h-4 w-4 text-text-muted" aria-hidden="true" />
+              <div>
+                <CardTitle>Per-Case Detection Performance</CardTitle>
+                <CardDescription>
+                  How the model performs on each of the 15 documented corruption cases
+                </CardDescription>
+              </div>
             </div>
+            <TableExportButton
+              data={CASE_DETECTION.map((row) => ({
+                case_name: row.case_name,
+                contracts: row.contracts,
+                detection_pct: row.detection_pct,
+                high_plus_pct: row.high_plus_pct,
+                avg_score: row.avg_score,
+              }))}
+              filename="rubli-per-case-detection"
+            />
           </div>
         </CardHeader>
         <CardContent>

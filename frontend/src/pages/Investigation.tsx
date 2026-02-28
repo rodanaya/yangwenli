@@ -7,7 +7,7 @@
  * v3.4: Enhanced card view with risk-coded borders, score badges, progress bars, rank numbers.
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -17,6 +17,8 @@ import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { investigationApi } from '@/api/client'
 import { SECTOR_COLORS, getSectorNameEN } from '@/lib/constants'
 import { PageHero } from '@/components/DashboardWidgets'
+import { ChartDownloadButton } from '@/components/ChartDownloadButton'
+import { TableExportButton } from '@/components/TableExportButton'
 import type {
   InvestigationCaseListItem,
   InvestigationDashboardSummary,
@@ -515,6 +517,9 @@ export function Investigation() {
   // View mode: 'cards' or 'table'
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards')
 
+  // Chart refs for export
+  const sectorChartRef = useRef<HTMLDivElement>(null)
+
   // Data queries
   const { data: summary, isLoading: summaryLoading } = useQuery({
     queryKey: ['investigation', 'dashboard-summary'],
@@ -724,6 +729,18 @@ export function Investigation() {
             </button>
           </div>
 
+          <TableExportButton
+            data={cases.map((c) => ({
+              title: c.title,
+              sector: c.sector_name,
+              suspicion_score: c.suspicion_score,
+              total_contracts: c.total_contracts,
+              total_value_mxn: c.total_value_mxn,
+              vendor_count: c.vendor_count,
+              validation_status: c.validation_status,
+            }))}
+            filename="rubli-investigation-cases"
+          />
           <Filter className="h-3.5 w-3.5 text-text-muted" />
           <select
             className="text-xs bg-background-elevated border border-border/50 rounded px-2 py-1 text-text-secondary"
@@ -844,8 +861,11 @@ export function Investigation() {
       {sectorBreakdown.length > 0 && (
         <Card>
           <CardContent className="pt-5 pb-4">
-            <h2 className="text-sm font-bold text-text-primary mb-3">{t('sections.bySector')}</h2>
-            <div className="h-[200px]">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-bold text-text-primary">{t('sections.bySector')}</h2>
+              <ChartDownloadButton targetRef={sectorChartRef} filename="rubli-investigation-by-sector" />
+            </div>
+            <div ref={sectorChartRef} className="h-[200px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={sectorBreakdown} layout="vertical" margin={{ left: 80, right: 20 }}>
                   <XAxis type="number" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} />

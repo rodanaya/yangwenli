@@ -207,8 +207,17 @@ def load_factor_data(conn: sqlite3.Connection) -> dict:
 
     # Load institution types
     print("  Loading institution types...")
-    sys.path.insert(0, str(Path(__file__).parent))
-    from calculate_risk_scores import INSTITUTION_RISK_BASELINES
+    INSTITUTION_RISK_BASELINES = {
+        'autonomous_constitutional': 0.10, 'judicial': 0.10,
+        'regulatory_agency': 0.15, 'federal_secretariat': 0.15,
+        'legislative': 0.15, 'military': 0.15, 'research_education': 0.18,
+        'federal_agency': 0.20, 'educational': 0.20,
+        'state_enterprise_finance': 0.22, 'health_institution': 0.25,
+        'state_enterprise_infra': 0.25, 'social_security': 0.25,
+        'other': 0.25, 'state_enterprise_energy': 0.28,
+        'social_program': 0.30, 'state_government': 0.30,
+        'state_agency': 0.30, 'municipal': 0.35,
+    }
     cursor.execute("SELECT id, institution_type FROM institutions WHERE institution_type IS NOT NULL")
     inst_baselines = {}
     for r in cursor.fetchall():

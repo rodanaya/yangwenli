@@ -5,7 +5,7 @@
  * Fetches live data from the API — no hardcoded constants.
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -13,6 +13,8 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SectionDescription } from '@/components/SectionDescription'
 import { cn, formatNumber, formatCompactMXN } from '@/lib/utils'
+import { ChartDownloadButton } from '@/components/ChartDownloadButton'
+import { TableExportButton } from '@/components/TableExportButton'
 import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
 import {
@@ -212,6 +214,10 @@ export default function GroundTruth() {
   // Expanded row state
   const [expandedRow, setExpandedRow] = useState<string | null>(null)
 
+  // Chart refs for export
+  const factorLiftChartRef = useRef<HTMLDivElement>(null)
+  const modelComparisonChartRef = useRef<HTMLDivElement>(null)
+
   // --------------------------------------------------------------------------
   // Data fetching
   // --------------------------------------------------------------------------
@@ -388,13 +394,30 @@ export default function GroundTruth() {
       {/* ================================================================== */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="h-4 w-4 text-accent" aria-hidden="true" />
-            {t('groundTruth.caseName')} — Per-Case Detection
-          </CardTitle>
-          <CardDescription>
-            Live detection rates computed from current risk scores. Click a row to expand.
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-4 w-4 text-accent" aria-hidden="true" />
+                {t('groundTruth.caseName')} — Per-Case Detection
+              </CardTitle>
+              <CardDescription>
+                Live detection rates computed from current risk scores. Click a row to expand.
+              </CardDescription>
+            </div>
+            <TableExportButton
+              data={cases.map((c) => ({
+                case_name: c.case_name,
+                case_type: c.case_type ?? '',
+                sector_name: c.sector_name ?? '',
+                vendors_matched: c.vendors_matched,
+                total_contracts: c.total_contracts,
+                detection_rate: c.detection_rate,
+                avg_risk_score: c.avg_risk_score,
+                estimated_fraud_mxn: c.estimated_fraud_mxn ?? '',
+              }))}
+              filename="rubli-ground-truth-detection"
+            />
+          </div>
         </CardHeader>
         <CardContent>
           {perCaseLoading ? (
@@ -598,14 +621,19 @@ export default function GroundTruth() {
       {/* ================================================================== */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Crosshair className="h-4 w-4 text-accent" aria-hidden="true" />
-            Factor Lift vs Ground Truth
-          </CardTitle>
-          <CardDescription>
-            How much more often each risk factor appears in documented corruption cases vs the general contract
-            population. Lift &gt; 1.0 = over-represented in known-bad contracts.
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Crosshair className="h-4 w-4 text-accent" aria-hidden="true" />
+                Factor Lift vs Ground Truth
+              </CardTitle>
+              <CardDescription>
+                How much more often each risk factor appears in documented corruption cases vs the general contract
+                population. Lift &gt; 1.0 = over-represented in known-bad contracts.
+              </CardDescription>
+            </div>
+            <ChartDownloadButton targetRef={factorLiftChartRef} filename="rubli-factor-lift" />
+          </div>
         </CardHeader>
         <CardContent>
           {factorLiftLoading ? (
@@ -613,7 +641,7 @@ export default function GroundTruth() {
           ) : !factorLiftData?.factors.length ? (
             <p className="text-sm text-text-secondary text-center py-8">No factor lift data available.</p>
           ) : (
-            <div className="h-[300px]">
+            <div ref={factorLiftChartRef} className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   layout="vertical"
@@ -689,14 +717,19 @@ export default function GroundTruth() {
       {/* ================================================================== */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-4 w-4 text-accent" aria-hidden="true" />
-            {t('groundTruth.modelComparison')}
-          </CardTitle>
-          <CardDescription>
-            Detection rate comparison across model versions (v3.3, v4.0, v5.0).
-            High+ = score ≥ 0.30, Critical = score ≥ 0.50.
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-4 w-4 text-accent" aria-hidden="true" />
+                {t('groundTruth.modelComparison')}
+              </CardTitle>
+              <CardDescription>
+                Detection rate comparison across model versions (v3.3, v4.0, v5.0).
+                High+ = score ≥ 0.30, Critical = score ≥ 0.50.
+              </CardDescription>
+            </div>
+            <ChartDownloadButton targetRef={modelComparisonChartRef} filename="rubli-model-comparison" />
+          </div>
         </CardHeader>
         <CardContent>
           {detectionLoading ? (
@@ -706,7 +739,7 @@ export default function GroundTruth() {
               No model comparison data available. Run validate_risk_model.py to generate results.
             </p>
           ) : (
-            <div className="h-[260px]">
+            <div ref={modelComparisonChartRef} className="h-[260px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={modelComparisonData}

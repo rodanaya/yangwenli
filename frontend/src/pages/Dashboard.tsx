@@ -1273,9 +1273,12 @@ export function Dashboard() {
               <h2 className="text-base font-bold text-text-primary">{t('riskDistribution')}</h2>
               <RiskScoreDisclaimer />
             </div>
-            <span className="text-xs text-text-muted">
-              {t('riskDistLabel', { total: formatNumber(overview?.total_contracts || 0) })}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-text-muted">
+                {t('riskDistLabel', { total: formatNumber(overview?.total_contracts || 0) })}
+              </span>
+              <ChartDownloadButton targetRef={riskDistRef} filename="rubli-risk-distribution" />
+            </div>
           </div>
           {dashLoading || !riskDist ? (
             <div className="space-y-3">
@@ -1283,7 +1286,7 @@ export function Dashboard() {
               <Skeleton className="h-10 w-full" />
             </div>
           ) : (
-            <div className="space-y-4">
+            <div ref={riskDistRef} className="space-y-4">
               {/* Half-ring gauge */}
               <div className="flex justify-center">
                 <RiskGauge

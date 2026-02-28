@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -20,6 +20,8 @@ import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { NarrativeCard } from '@/components/NarrativeCard'
 import { ContractDetailModal } from '@/components/ContractDetailModal'
 import { AddToWatchlistButton } from '@/components/AddToWatchlistButton'
+import { AddToDossierButton } from '@/components/AddToDossierButton'
+import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { RiskFeedbackButton } from '@/components/RiskFeedbackButton'
 import { buildInstitutionNarrative } from '@/lib/narratives'
 import { WaterfallRiskChart } from '@/components/WaterfallRiskChart'
@@ -82,6 +84,8 @@ export function InstitutionProfile() {
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [networkOpen, setNetworkOpen] = useState(false)
+  const riskTimelineChartRef = useRef<HTMLDivElement>(null)
+  const vendorLoyaltyChartRef = useRef<HTMLDivElement>(null)
 
   const { data: institution, isLoading: institutionLoading, error: institutionError } = useQuery({
     queryKey: ['institution', institutionId],
@@ -157,6 +161,16 @@ export function InstitutionProfile() {
     enabled: !!institution?.sector_id,
     staleTime: 10 * 60 * 1000,
   })
+
+  // TODO: Ground truth status for institutions
+  // There is no /institutions/{id}/ground-truth-status endpoint yet.
+  // When added, mirror the same pattern as vendorApi.getGroundTruthStatus:
+  //   const { data: groundTruthStatus } = useQuery({
+  //     queryKey: ['institution', institutionId, 'ground-truth-status'],
+  //     queryFn: () => institutionApi.getGroundTruthStatus(institutionId),
+  //     enabled: !!institutionId,
+  //   })
+  // Then show a red badge in the header linking to the case, identical to VendorProfile.
 
   // Waterfall risk breakdown
   const { data: waterfallData, isLoading: waterfallLoading } = useQuery({
@@ -352,6 +366,11 @@ export function InstitutionProfile() {
             itemType="institution"
             itemId={institutionId}
             itemName={toTitleCase(institution.name)}
+          />
+          <AddToDossierButton
+            entityType="institution"
+            entityId={institutionId}
+            entityName={toTitleCase(institution.name)}
           />
           <RiskBadge score={riskScore} className="text-sm px-2.5 py-1" />
           <RiskFeedbackButton
@@ -664,10 +683,17 @@ export function InstitutionProfile() {
               {timelineLoading ? (
                 <Skeleton className="h-40" />
               ) : (riskTimeline?.timeline?.length ?? 0) > 1 ? (
-                <RiskTimelineChart
-                  data={riskTimeline!.timeline}
-                  riskColor={riskColor}
-                />
+                <div className="relative" ref={riskTimelineChartRef}>
+                  <ChartDownloadButton
+                    targetRef={riskTimelineChartRef}
+                    filename={`institution-${institutionId}-risk-timeline`}
+                    className="absolute top-0 right-0 z-10"
+                  />
+                  <RiskTimelineChart
+                    data={riskTimeline!.timeline}
+                    riskColor={riskColor}
+                  />
+                </div>
               ) : (
                 <div className="h-40 flex items-center justify-center text-sm text-text-muted">
                   Insufficient timeline data
@@ -713,7 +739,12 @@ export function InstitutionProfile() {
               {loyaltyLoading ? (
                 <Skeleton className="h-32" />
               ) : vendorLoyalty && vendorLoyalty.vendors.length > 0 ? (
-                <div className="overflow-x-auto">
+                <div className="relative overflow-x-auto" ref={vendorLoyaltyChartRef}>
+                  <ChartDownloadButton
+                    targetRef={vendorLoyaltyChartRef}
+                    filename={`institution-${institutionId}-vendor-loyalty`}
+                    className="absolute top-0 right-0 z-10"
+                  />
                   {/* Show last 8 years as columns */}
                   {(() => {
                     const allYears = vendorLoyalty.year_range ?? []

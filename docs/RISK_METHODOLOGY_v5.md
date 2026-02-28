@@ -78,7 +78,7 @@ v4.0 trained on 9 corruption cases, but 3 cases (IMSS, Segalmex, COVID-19) contr
 
 **Total (v5.0.1, active model):** 27 matched vendors, 26,582 contracts across all 12 sectors.
 
-**Pending v5.1 retrain:** Cases 20–22 inserted in DB but model not yet retrained. Case 22 adds 38 RFC-matched vendors (SAT-confirmed ghost companies), targeting a fraud pattern currently invisible to the model (avg risk score 0.028 on confirmed EFOS definitivo vendors). See v5.1 roadmap below.
+**Note (v5.1 active):** Cases 20–22 inserted in DB. Case 22 (38 RFC-matched SAT-confirmed ghost companies) is included in the v5.1 model (trained Feb 27, 2026). EFOS definitivo vendor avg risk score improved from 0.028 (v5.0) to 0.283 (v5.1). Cases 20–21 vendor matching still pending.
 
 *Case 9 shares vendors with Case 5 (Odebrecht). Documented for reference.
 †Cases 20–21 inserted in ground_truth_cases; vendor matching pending.
@@ -262,19 +262,19 @@ v5.0 expands from 12 to 16 z-score features by adding 4 new vendor-behavior feat
 - PEMEX-Cotemar (100% critical), SixSigma (87.8% high+)
 - IPN Cartel (64.6% high+) — smaller vendor, less concentrated
 
-### Known Blind Spot: SAT EFOS Definitivo (Case 22)
+### Partially Addressed Blind Spot: SAT EFOS Definitivo (Case 22)
 
-**38 confirmed ghost companies score avg 0.028 under the current v5.0 model — below the medium threshold.**
+**38 confirmed ghost companies score avg 0.283 under v5.1 (up from 0.028 under v5.0).** Case 22 is included in v5.1 (active model, trained Feb 27, 2026).
 
-This is Limitation 9.2 in practice: the model was trained on large, concentrated vendors. EFOS definitivo companies are small shells with few contracts per RFC, so `vendor_concentration`, `price_volatility`, and `win_rate` all stay near zero. The pattern is fundamentally different:
+Detection improved significantly but remains partial: 41.8% medium+, 27.9% high+, 21.3% critical. 58.2% of EFOS contracts still score low. This reflects the fundamental pattern difference — EFOS vendors are small shells with few contracts per RFC, unlike the large concentrated vendors that dominate training data:
 
 | Feature | Training cases (IMSS etc.) | EFOS definitivo vendors |
 |---------|---------------------------|------------------------|
 | Avg contracts per vendor | 1,565 | 3 |
 | Vendor concentration | High | Near zero |
 | Pattern | Large monopoly | Small shell + invoice fraud |
-
-Case 22 is in the DB and will be included in the v5.1 retraining.
+| v5.0 avg score | 0.853 | 0.028 |
+| v5.1 avg score | — | 0.283 |
 
 ---
 
@@ -392,8 +392,8 @@ Vendor-level features (vendor_concentration, win_rate, price_volatility, institu
 | Limitation | Impact | Fixable? |
 |-----------|--------|----------|
 | Execution-phase fraud invisible | Construction/infrastructure underscored | Partial (needs ASF data) |
-| Training bias (3 dominant cases) | Small-vendor corruption underdetected | Yes (more ground truth — Case 22 in v5.1) |
-| **Ghost company blind spot** | **EFOS definitivo vendors score avg 0.028** | **Yes (Case 22 pending v5.1 retrain)** |
+| Training bias (3 dominant cases) | Small-vendor corruption underdetected | Partial (Case 22 added in v5.1, but 3 large cases still dominate) |
+| **Ghost company blind spot (partial fix)** | **EFOS definitivo vendors score avg 0.283 in v5.1 (up from 0.028 in v5.0); 58.2% still score low** | **Partial (Case 22 in v5.1; pattern fundamentally different from training majority)** |
 | Vendor deduplication unsolved | True concentration understated pre-2018 | Partial (RFC blocking) |
 | Co-bidding signal = zero | Bid rotation not in risk score | Yes (needs collusion ground truth) |
 | Pre-2010 data quality | 25% of records less reliable | No (structural COMPRANET limit) |

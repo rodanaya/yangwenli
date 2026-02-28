@@ -22,7 +22,7 @@ import { contractApi, exportApi } from '@/api/client'
 import { RiskFeedbackButton } from '@/components/RiskFeedbackButton'
 import { TableExportButton } from '@/components/TableExportButton'
 import { SECTORS, RISK_COLORS } from '@/lib/constants'
-import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
+import { useDebouncedSearch, useDebouncedValue } from '@/hooks/useDebouncedSearch'
 import type { ContractFilterParams, ContractListItem } from '@/api/types'
 import { RISK_FACTORS } from '@/api/types'
 import {
@@ -74,117 +74,117 @@ type ContractSortField =
 
 interface ContractPreset {
   id: string
-  label: string
+  labelKey: string
   icon: React.ComponentType<{ className?: string }>
   sort: ContractSortField
   order: 'asc' | 'desc'
   filters: Partial<Record<string, string>>
-  description?: string
+  descriptionKey: string
 }
 
-// NOTE: PRESET_TRANSLATION_KEYS removed — preset labels use static strings directly
-
-const CONTRACT_PRESETS: ContractPreset[] = [
+// Preset definitions — labels/descriptions resolved via t() inside the component (Fix 3)
+const CONTRACT_PRESET_DEFS: ContractPreset[] = [
   {
     id: 'suspicious-monopolies',
-    label: 'Suspicious Monopolies',
+    labelKey: 'presets.suspiciousMonopolies.label',
     icon: Crown,
     sort: 'amount_mxn',
     order: 'desc',
     filters: { risk_level: 'critical', is_single_bid: 'true' },
-    description: 'Critical-risk single-bidder contracts — one vendor, no competition',
+    descriptionKey: 'presets.suspiciousMonopolies.description',
   },
   {
     id: 'december-rush',
-    label: 'December Rush',
+    labelKey: 'presets.decemberRush.label',
     icon: Flame,
     sort: 'amount_mxn',
     order: 'desc',
     filters: { risk_level: 'high', risk_factor: 'year_end' },
-    description: 'High-risk year-end contracts — budget dumps before fiscal close',
+    descriptionKey: 'presets.decemberRush.description',
   },
   {
     id: 'price-manipulation',
-    label: 'Price Manipulation',
+    labelKey: 'presets.priceManipulation.label',
     icon: TrendingUp,
     sort: 'risk_score',
     order: 'desc',
     filters: { risk_factor: 'price_hyp', risk_level: 'high' },
-    description: 'Statistical price outliers — contracts priced far above sector norm',
+    descriptionKey: 'presets.priceManipulation.description',
   },
   {
     id: 'ghost-companies',
-    label: 'Ghost Companies',
+    labelKey: 'presets.ghostCompanies.label',
     icon: AlertTriangle,
     sort: 'amount_mxn',
     order: 'desc',
     filters: { risk_factor: 'industry_mismatch', is_direct_award: 'true' },
-    description: 'Direct awards to out-of-industry vendors — classic ghost company pattern',
+    descriptionKey: 'presets.ghostCompanies.description',
   },
   {
     id: 'network-clusters',
-    label: 'Network Clusters',
+    labelKey: 'presets.networkClusters.label',
     icon: Users,
     sort: 'risk_score',
     order: 'desc',
     filters: { risk_factor: 'network', risk_level: 'critical' },
-    description: 'Critical-risk network member contracts — coordinated vendor groups',
+    descriptionKey: 'presets.networkClusters.description',
   },
   {
     id: 'split-contracts',
-    label: 'Split Contracts',
+    labelKey: 'presets.splitContracts.label',
     icon: Scissors,
     sort: 'contract_date',
     order: 'desc',
     filters: { risk_factor: 'split' },
-    description: 'Threshold splitting — multiple same-day contracts to dodge oversight limits',
+    descriptionKey: 'presets.splitContracts.description',
   },
   {
     id: 'most-anomalous',
-    label: 'Most Anomalous',
+    labelKey: 'presets.mostAnomalous.label',
     icon: AlertTriangle,
     sort: 'mahalanobis_distance',
     order: 'desc',
     filters: {},
-    description: 'Contracts furthest from statistical norms — highest Mahalanobis distance across all risk dimensions',
+    descriptionKey: 'presets.mostAnomalous.description',
   },
   {
     id: 'recent-critical',
-    label: 'Recent & Critical',
+    labelKey: 'presets.recentCritical.label',
     icon: Zap,
     sort: 'contract_date',
     order: 'desc',
     filters: { year: '2024', risk_level: 'critical' },
-    description: '2024 critical-risk contracts — most recent suspicious activity',
+    descriptionKey: 'presets.recentCritical.description',
   },
   {
     id: 'largest-direct-awards',
-    label: 'Biggest Direct Awards',
+    labelKey: 'presets.biggestDirectAwards.label',
     icon: Target,
     sort: 'amount_mxn',
     order: 'desc',
     filters: { is_direct_award: 'true' },
-    description: 'Largest contracts bypassing competitive tender — highest value without competition',
+    descriptionKey: 'presets.biggestDirectAwards.description',
   },
 ]
 
 interface ColumnDef {
   key: string
-  label: string
+  labelKey: string
   align: 'left' | 'center' | 'right'
   sortField?: ContractSortField
   hideBelow?: string
 }
 
-const CONTRACT_COLUMNS: ColumnDef[] = [
-  { key: 'risk', label: 'Risk', align: 'center', sortField: 'risk_score' },
-  { key: 'amount', label: 'Amount (MXN)', align: 'right', sortField: 'amount_mxn' },
-  { key: 'vendor', label: 'Vendor', align: 'left', sortField: 'vendor_name' },
-  { key: 'institution', label: 'Institution', align: 'left', sortField: 'institution_name' },
-  { key: 'sector', label: 'Sector', align: 'left', sortField: 'sector_id' },
-  { key: 'date', label: 'Date', align: 'right', sortField: 'contract_date' },
-  { key: 'procedure', label: 'Procedure', align: 'left' },
-  { key: 'anomaly', label: 'Anomaly D\u00B2', align: 'right', sortField: 'mahalanobis_distance' },
+// Column definitions — labels resolved via t() inside the component (Fix 4)
+const CONTRACT_COLUMN_DEFS: ColumnDef[] = [
+  { key: 'risk', labelKey: 'columns.risk', align: 'center', sortField: 'risk_score' },
+  { key: 'amount', labelKey: 'columns.amount', align: 'right', sortField: 'amount_mxn' },
+  { key: 'vendor', labelKey: 'columns.vendor', align: 'left', sortField: 'vendor_name' },
+  { key: 'institution', labelKey: 'columns.institution', align: 'left', sortField: 'institution_name' },
+  { key: 'sector', labelKey: 'columns.sector', align: 'left', sortField: 'sector_id' },
+  { key: 'date', labelKey: 'columns.date', align: 'right', sortField: 'contract_date' },
+  { key: 'procedure', labelKey: 'columns.procedure', align: 'left' },
+  { key: 'anomaly', labelKey: 'columns.anomalyScore', align: 'right', sortField: 'mahalanobis_distance' },
 ]
 
 // =============================================================================
@@ -204,9 +204,16 @@ export function Contracts() {
     isPending: isSearchPending,
   } = useDebouncedSearch(searchParams.get('search') || '', { delay: 300, minLength: 2 })
 
+  // Fix 1: Amount range local state + 500ms debounce
+  const [minAmountInput, setMinAmountInput] = useState<string>(searchParams.get('min_amount') || '')
+  const [maxAmountInput, setMaxAmountInput] = useState<string>(searchParams.get('max_amount') || '')
+  const debouncedMinAmount = useDebouncedValue(minAmountInput, 500)
+  const debouncedMaxAmount = useDebouncedValue(maxAmountInput, 500)
+
   const sortBy = (searchParams.get('sort_by') as ContractSortField) || 'contract_date'
   const sortOrder = (searchParams.get('sort_order') as 'asc' | 'desc') || 'desc'
 
+  // Fix 6: filters always reads per_page from URL (no hardcoded fallback at query level)
   const filters: ContractFilterParams = useMemo(() => ({
     page: Number(searchParams.get('page')) || 1,
     per_page: Number(searchParams.get('per_page')) || 50,
@@ -218,11 +225,14 @@ export function Contracts() {
     risk_factor: searchParams.get('risk_factor') || undefined,
     is_direct_award: searchParams.get('is_direct_award') === 'true' ? true : undefined,
     is_single_bid: searchParams.get('is_single_bid') === 'true' ? true : undefined,
+    min_amount: searchParams.get('min_amount') ? Number(searchParams.get('min_amount')) : undefined,
+    max_amount: searchParams.get('max_amount') ? Number(searchParams.get('max_amount')) : undefined,
     search: debouncedSearch || undefined,
     sort_by: sortBy,
     sort_order: sortOrder,
   }), [searchParams, debouncedSearch, sortBy, sortOrder])
 
+  // Sync debounced search to URL
   useEffect(() => {
     const currentSearch = searchParams.get('search') || ''
     if (debouncedSearch !== currentSearch) {
@@ -236,6 +246,36 @@ export function Contracts() {
       setSearchParams(newParams, { replace: true })
     }
   }, [debouncedSearch, searchParams, setSearchParams])
+
+  // Fix 1: Sync debounced min_amount to URL
+  useEffect(() => {
+    const currentMin = searchParams.get('min_amount') || ''
+    if (debouncedMinAmount !== currentMin) {
+      const newParams = new URLSearchParams(searchParams)
+      if (debouncedMinAmount) {
+        newParams.set('min_amount', debouncedMinAmount)
+        newParams.set('page', '1')
+      } else {
+        newParams.delete('min_amount')
+      }
+      setSearchParams(newParams, { replace: true })
+    }
+  }, [debouncedMinAmount, searchParams, setSearchParams])
+
+  // Fix 1: Sync debounced max_amount to URL
+  useEffect(() => {
+    const currentMax = searchParams.get('max_amount') || ''
+    if (debouncedMaxAmount !== currentMax) {
+      const newParams = new URLSearchParams(searchParams)
+      if (debouncedMaxAmount) {
+        newParams.set('max_amount', debouncedMaxAmount)
+        newParams.set('page', '1')
+      } else {
+        newParams.delete('max_amount')
+      }
+      setSearchParams(newParams, { replace: true })
+    }
+  }, [debouncedMaxAmount, searchParams, setSearchParams])
 
   const toast = useToast()
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null)
@@ -304,7 +344,7 @@ export function Contracts() {
   }, [searchParams, setSearchParams, sortBy, sortOrder])
 
   const applyPreset = useCallback((presetId: string) => {
-    const preset = CONTRACT_PRESETS.find((p) => p.id === presetId)
+    const preset = CONTRACT_PRESET_DEFS.find((p) => p.id === presetId)
     if (!preset) return
     const newParams = new URLSearchParams()
     newParams.set('sort_by', preset.sort)
@@ -314,12 +354,16 @@ export function Contracts() {
     }
     newParams.set('page', '1')
     setSearchInput('')
+    setMinAmountInput('')
+    setMaxAmountInput('')
     setSearchParams(newParams)
     setActivePreset(presetId)
   }, [setSearchParams, setSearchInput])
 
   const clearAllFilters = useCallback(() => {
     setSearchInput('')
+    setMinAmountInput('')
+    setMaxAmountInput('')
     setSearchParams({})
     setActivePreset(null)
   }, [setSearchParams, setSearchInput])
@@ -360,7 +404,17 @@ export function Contracts() {
   // --- Computed ---
 
   const showSearchLoading = isSearchPending || (isFetching && searchInput !== debouncedSearch)
-  const hasActiveFilters = !!(filters.search || filters.sector_id || filters.year || filters.risk_level || filters.risk_factor || filters.is_direct_award || filters.is_single_bid)
+  const hasActiveFilters = !!(
+    filters.search ||
+    filters.sector_id ||
+    filters.year ||
+    filters.risk_level ||
+    filters.risk_factor ||
+    filters.is_direct_award ||
+    filters.is_single_bid ||
+    filters.min_amount ||
+    filters.max_amount
+  )
 
   const pageStats = useMemo(() => {
     if (!data?.data?.length) return null
@@ -404,8 +458,17 @@ export function Contracts() {
     }
     if (filters.is_direct_award) tags.push({ key: 'is_direct_award', label: 'Direct Awards' })
     if (filters.is_single_bid) tags.push({ key: 'is_single_bid', label: 'Single Bidders' })
+    if (filters.min_amount) tags.push({ key: 'min_amount', label: `\u2265 ${formatCompactMXN(filters.min_amount)}` })
+    if (filters.max_amount) tags.push({ key: 'max_amount', label: `\u2264 ${formatCompactMXN(filters.max_amount)}` })
     return tags
   }, [filters])
+
+  // Remove a filter tag — amount tags also clear local input state
+  const removeFilterTag = useCallback((key: string) => {
+    if (key === 'min_amount') { setMinAmountInput(''); return }
+    if (key === 'max_amount') { setMaxAmountInput(''); return }
+    updateFilter(key, undefined)
+  }, [updateFilter])
 
   // --- Render ---
 
@@ -421,7 +484,7 @@ export function Contracts() {
         </div>
         <h1 className="text-3xl font-black text-text-primary tracking-tight">3.1M Contracts. Search Everything.</h1>
         <p className="text-sm text-text-muted mt-1">
-          Every government contract from 2002–2025, searchable by vendor, institution, sector, or risk level.
+          Every government contract from 2002\u20132025, searchable by vendor, institution, sector, or risk level.
         </p>
       </div>
 
@@ -469,7 +532,7 @@ export function Contracts() {
         </div>
       </div>
 
-      {/* Full-width search bar — primary entry point */}
+      {/* Full-width search bar */}
       <div className="relative">
         {showSearchLoading ? (
           <Loader2 className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted animate-spin pointer-events-none" />
@@ -478,7 +541,7 @@ export function Contracts() {
         )}
         <input
           type="text"
-          placeholder="Search contracts, institutions, or vendors…"
+          placeholder="Search contracts, institutions, or vendors\u2026"
           className="h-11 w-full rounded-lg border border-border bg-background-card pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-colors"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
@@ -495,15 +558,15 @@ export function Contracts() {
         )}
       </div>
 
-      {/* Preset chips */}
+      {/* Preset chips — Fix 3: labels via t() */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
-        {CONTRACT_PRESETS.map((preset) => {
+        {CONTRACT_PRESET_DEFS.map((preset) => {
           const Icon = preset.icon
           const isActive = activePreset === preset.id
           return (
             <button
               key={preset.id}
-              title={preset.description}
+              title={t(preset.descriptionKey)}
               onClick={() => isActive ? clearAllFilters() : applyPreset(preset.id)}
               className={cn(
                 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-all',
@@ -513,15 +576,15 @@ export function Contracts() {
               )}
             >
               <Icon className="h-3 w-3" />
-              {preset.label}
+              {t(preset.labelKey)}
             </button>
           )
         })}
       </div>
 
-      {/* Filter bar — compact inline row */}
+      {/* Filter bar */}
       <div className="flex items-center gap-2 flex-wrap">
-        {/* Risk level chips */}
+        {/* Risk level chips — Fix 2: labels via t() */}
         <div className="flex items-center gap-1" role="group" aria-label="Filter by risk level">
           {(['critical', 'high', 'medium', 'low'] as const).map((level) => {
             const isActive = filters.risk_level === level
@@ -531,16 +594,16 @@ export function Contracts() {
                 key={level}
                 onClick={() => updateFilter('risk_level', isActive ? undefined : level)}
                 className={cn(
-                  'px-2.5 py-1 rounded-full text-xs border transition-colors whitespace-nowrap capitalize',
+                  'px-2.5 py-1 rounded-full text-xs border transition-colors whitespace-nowrap',
                   isActive
                     ? 'border-current font-semibold'
                     : 'border-border text-text-muted hover:border-current'
                 )}
                 style={isActive ? { color, borderColor: color, backgroundColor: `${color}18` } : { color: isActive ? color : undefined }}
                 aria-pressed={isActive}
-                title={`Filter by ${level} risk`}
+                title={`Filter by ${t(`riskLevels.${level}`)} risk`}
               >
-                {level}
+                {t(`riskLevels.${level}`)}
               </button>
             )
           })}
@@ -553,7 +616,7 @@ export function Contracts() {
           onChange={(e) => updateFilter('sector_id', e.target.value ? Number(e.target.value) : undefined)}
           aria-label="Filter by sector"
         >
-          <option value="">All Sectors</option>
+          <option value="">{t('filters.allSectors')}</option>
           {SECTORS.map((s) => (
             <option key={s.id} value={s.id}>{s.nameEN}</option>
           ))}
@@ -566,7 +629,7 @@ export function Contracts() {
           onChange={(e) => updateFilter('year', e.target.value ? Number(e.target.value) : undefined)}
           aria-label="Filter by year"
         >
-          <option value="">All Years</option>
+          <option value="">{t('filters.allYears')}</option>
           {Array.from({ length: 24 }, (_, i) => 2025 - i).map((year) => (
             <option key={year} value={year}>{year}</option>
           ))}
@@ -579,11 +642,55 @@ export function Contracts() {
           onChange={(e) => updateFilter('risk_factor', e.target.value || undefined)}
           aria-label="Filter by risk factor"
         >
-          <option value="">All Factors</option>
+          <option value="">{t('filters.allFactors')}</option>
           {RISK_FACTORS.map((f) => (
             <option key={f.value} value={f.value}>{f.label}</option>
           ))}
         </select>
+
+        {/* Fix 1: Min amount input with debounce */}
+        <div className="relative">
+          <input
+            type="number"
+            placeholder={t('filters.minAmountPlaceholder')}
+            aria-label={t('filters.minAmount')}
+            className="h-8 w-28 rounded-md border border-border bg-background-card px-2 pr-6 text-xs focus:outline-none focus:ring-1 focus:ring-accent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            value={minAmountInput}
+            onChange={(e) => { setMinAmountInput(e.target.value); setActivePreset(null) }}
+            min={0}
+          />
+          {minAmountInput && (
+            <button
+              onClick={() => setMinAmountInput('')}
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors"
+              aria-label={`Clear ${t('filters.minAmount')}`}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
+        </div>
+
+        {/* Fix 1: Max amount input with debounce */}
+        <div className="relative">
+          <input
+            type="number"
+            placeholder={t('filters.maxAmountPlaceholder')}
+            aria-label={t('filters.maxAmount')}
+            className="h-8 w-28 rounded-md border border-border bg-background-card px-2 pr-6 text-xs focus:outline-none focus:ring-1 focus:ring-accent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            value={maxAmountInput}
+            onChange={(e) => { setMaxAmountInput(e.target.value); setActivePreset(null) }}
+            min={0}
+          />
+          {maxAmountInput && (
+            <button
+              onClick={() => setMaxAmountInput('')}
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors"
+              aria-label={`Clear ${t('filters.maxAmount')}`}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
+        </div>
 
         {/* Direct award toggle */}
         <button
@@ -596,7 +703,7 @@ export function Contracts() {
           )}
           aria-pressed={!!filters.is_direct_award}
         >
-          Direct Award
+          {t('filters.directAward')}
         </button>
 
         {/* Single bid toggle */}
@@ -610,13 +717,13 @@ export function Contracts() {
           )}
           aria-pressed={!!filters.is_single_bid}
         >
-          Single Bid
+          {t('filters.singleBid')}
         </button>
 
-        {/* Per page */}
+        {/* Per page — Fix 6: value always from filters.per_page */}
         <select
           className="h-8 rounded-md border border-border bg-background-card px-2 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
-          value={filters.per_page || 50}
+          value={filters.per_page}
           onChange={(e) => updateFilter('per_page', Number(e.target.value))}
           aria-label="Results per page"
         >
@@ -629,7 +736,7 @@ export function Contracts() {
         {hasActiveFilters && (
           <Button variant="ghost" size="sm" className="h-8 text-xs px-2 text-text-muted hover:text-text-primary" onClick={clearAllFilters}>
             <X className="h-3 w-3 mr-1" />
-            Clear all
+            {t('filters.clearAll')}
           </Button>
         )}
       </div>
@@ -638,19 +745,19 @@ export function Contracts() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         {pageStats && (
           <div className="flex items-center gap-3 flex-wrap">
-            <StatPill label="Page total" value={formatCompactMXN(pageStats.totalValue)} />
+            <StatPill label={t('stats.pageTotal')} value={formatCompactMXN(pageStats.totalValue)} />
             <StatPill
-              label="Avg risk"
+              label={t('stats.avgRisk')}
               value={`${(pageStats.avgRisk * 100).toFixed(0)}%`}
               color={RISK_COLORS[getRiskLevel(pageStats.avgRisk)]}
             />
             {pageStats.criticalCount > 0 && (
-              <StatPill label="Critical" value={String(pageStats.criticalCount)} color={RISK_COLORS.critical} />
+              <StatPill label={t('stats.critical')} value={String(pageStats.criticalCount)} color={RISK_COLORS.critical} />
             )}
             {pageStats.highPlusCount > 0 && (
-              <StatPill label="High+" value={String(pageStats.highPlusCount)} color={RISK_COLORS.high} />
+              <StatPill label={t('stats.highPlus')} value={String(pageStats.highPlusCount)} color={RISK_COLORS.high} />
             )}
-            <StatPill label="Direct" value={`${pageStats.daPct.toFixed(0)}%`} />
+            <StatPill label={t('stats.direct')} value={`${pageStats.daPct.toFixed(0)}%`} />
           </div>
         )}
 
@@ -659,7 +766,7 @@ export function Contracts() {
             {activeFilterTags.map((tag) => (
               <button
                 key={tag.key}
-                onClick={() => updateFilter(tag.key, undefined)}
+                onClick={() => removeFilterTag(tag.key)}
                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20 transition-colors"
                 title={`Remove ${tag.label} filter`}
               >
@@ -698,16 +805,16 @@ export function Contracts() {
             !hasActiveFilters ? (
               <div className="p-12 text-center">
                 <FileText className="h-14 w-14 mx-auto mb-4 opacity-10" />
-                <p className="text-base font-semibold text-text-primary mb-1">3.1 Million Contracts · 2002–2025</p>
+                <p className="text-base font-semibold text-text-primary mb-1">{t('emptyInitial')}</p>
                 <p className="text-xs text-text-muted max-w-xs mx-auto leading-relaxed">
-                  Search any contract, institution, or vendor name to begin. Or use the filters above to browse by sector, year, or risk level.
+                  {t('emptyInitialDesc')}
                 </p>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <FileSearch className="h-8 w-8 text-text-muted mb-3" />
-                <p className="text-sm font-medium text-text-secondary">No contracts match your filters</p>
-                <p className="text-xs text-text-muted mt-1">Try adjusting your search or clearing the active filters</p>
+                <p className="text-sm font-medium text-text-secondary">{t('emptyFiltered')}</p>
+                <p className="text-xs text-text-muted mt-1">{t('emptyFilteredDesc')}</p>
               </div>
             )
           ) : (
@@ -717,20 +824,21 @@ export function Contracts() {
               <table className="w-full min-w-[700px]" role="table" aria-label="Contracts list">
                 <thead className="sticky top-0 z-10 bg-background-card/95 backdrop-blur-sm border-b-2 border-border">
                   <tr>
-                    <th className="px-2 py-2.5 w-8" title="Select to compare">
+                    <th className="px-2 py-2.5 w-8" title={t('table.selectForCompare')}>
                       {compareIds.size > 0 && (
                         <button
                           onClick={clearCompare}
                           className="text-xs text-text-muted hover:text-text-primary transition-colors"
-                          title="Clear selection"
-                          aria-label="Clear comparison selection"
+                          title={t('table.clearSelection')}
+                          aria-label={t('table.clearSelection')}
                         >
                           <X className="h-3.5 w-3.5" />
                         </button>
                       )}
                     </th>
                     <th className="px-2 py-2.5 w-8" />
-                    {CONTRACT_COLUMNS.map((col) => (
+                    {/* Fix 4: Column headers via t() */}
+                    {CONTRACT_COLUMN_DEFS.map((col) => (
                       <th
                         key={col.key}
                         className={cn(
@@ -741,8 +849,9 @@ export function Contracts() {
                           col.sortField && sortBy === col.sortField ? 'text-accent' : 'text-text-muted'
                         )}
                         onClick={col.sortField ? () => handleSort(col.sortField!) : undefined}
+                        title={col.key === 'anomaly' ? t('table.anomalyTooltip') : undefined}
                       >
-                        {col.label}
+                        {t(col.labelKey)}
                         {col.sortField && sortBy === col.sortField && (
                           sortOrder === 'desc'
                             ? <ChevronDown className="h-3 w-3 inline ml-0.5" />
@@ -773,7 +882,7 @@ export function Contracts() {
         </CardContent>
       </Card>
 
-      {/* Pagination */}
+      {/* Pagination — Fix 6: use filters.per_page throughout */}
       {data && data.pagination.total > 0 && (
         <div className="flex items-center justify-between">
           <p className="text-xs text-text-muted tabular-nums">
@@ -892,6 +1001,7 @@ function ContractRow({
   onToggleCompare: (id: number) => void
   onOpenVendorDrawer: (id: number, type: 'vendor' | 'institution') => void
 }) {
+  const { t } = useTranslation('contracts')
   const anomalyInfo = getAnomalyInfo(contract.mahalanobis_distance)
   const riskLevel = contract.risk_score != null ? getRiskLevel(contract.risk_score) : (contract.risk_level ?? null)
   const riskColor = riskLevel ? RISK_COLORS[riskLevel] : undefined
@@ -919,25 +1029,27 @@ function ContractRow({
         <ExpandChevron id={contract.id} />
       </td>
 
-      {/* Risk: tiered display — nothing for low, dot for medium, badge for high/critical */}
+      {/* Risk: tiered display — Fix 2: use t() for risk level labels */}
       <td className="px-3 py-2 text-center">
         <div className="inline-flex items-center gap-1 justify-center">
           {riskLevel === 'critical' || riskLevel === 'high' ? (
             <span
-              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold capitalize"
+              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold"
               style={{ color: riskColor, backgroundColor: `${riskColor}18`, border: `1px solid ${riskColor}40` }}
-              title={contract.risk_score != null ? `${(contract.risk_score * 100).toFixed(1)}%` : riskLevel}
+              title={contract.risk_score != null ? `${(contract.risk_score * 100).toFixed(1)}%` : (riskLevel ?? undefined)}
             >
-              {riskLevel}
+              {t(`riskLevels.${riskLevel}`)}
             </span>
           ) : riskLevel === 'medium' ? (
             <span
               className="inline-flex h-2 w-2 rounded-full"
               style={{ backgroundColor: riskColor, opacity: 0.7 }}
-              title={contract.risk_score != null ? `Medium · ${(contract.risk_score * 100).toFixed(1)}%` : 'Medium'}
+              title={contract.risk_score != null
+                ? `${t('riskLevels.medium')} \u00B7 ${(contract.risk_score * 100).toFixed(1)}%`
+                : t('riskLevels.medium')}
             />
           ) : (
-            <span className="text-xs text-text-muted/30">·</span>
+            <span className="text-xs text-text-muted/30">\u00B7</span>
           )}
           <RiskFeedbackButton
             entityType="contract"
@@ -966,7 +1078,7 @@ function ContractRow({
           </button>
         ) : (
           <span className="text-xs text-text-muted truncate block" title={contract.vendor_name || ''}>
-            {contract.vendor_name ? toTitleCase(contract.vendor_name) : '—'}
+            {contract.vendor_name ? toTitleCase(contract.vendor_name) : '\u2014'}
           </span>
         )}
       </td>
@@ -984,7 +1096,7 @@ function ContractRow({
           </Link>
         ) : (
           <span className="text-xs text-text-muted truncate block" title={contract.institution_name || ''}>
-            {contract.institution_name ? toTitleCase(contract.institution_name) : '—'}
+            {contract.institution_name ? toTitleCase(contract.institution_name) : '\u2014'}
           </span>
         )}
       </td>
@@ -996,7 +1108,7 @@ function ContractRow({
             {sector.nameEN}
           </span>
         ) : (
-          <span className="text-xs text-text-muted">—</span>
+          <span className="text-xs text-text-muted">\u2014</span>
         )}
       </td>
 
@@ -1005,29 +1117,29 @@ function ContractRow({
         <span className="text-xs text-text-muted tabular-nums whitespace-nowrap">
           {contract.contract_date
             ? contract.contract_date.slice(0, 7)
-            : contract.contract_year || '—'}
+            : contract.contract_year || '\u2014'}
         </span>
       </td>
 
       {/* Procedure type */}
       <td className="px-3 py-2 max-w-[120px]">
         <span className="text-xs text-text-muted truncate block" title={contract.procedure_type || ''}>
-          {contract.procedure_type || '—'}
+          {contract.procedure_type || '\u2014'}
         </span>
       </td>
 
-      {/* Anomaly (Mahalanobis D²) */}
+      {/* Anomaly (Mahalanobis D\u00B2) — Fix 5: 2 decimal places + i18n tooltip */}
       <td className="px-3 py-2 text-right">
         {contract.mahalanobis_distance != null ? (
           <span
             className="text-xs tabular-nums font-mono"
             style={anomalyInfo ? { color: anomalyInfo.dotClass.includes('red') ? RISK_COLORS.critical : anomalyInfo.dotClass.includes('amber') ? RISK_COLORS.medium : 'inherit' } : undefined}
-            title={anomalyInfo ? `${anomalyInfo.label} anomaly` : undefined}
+            title={t('table.anomalyTooltip')}
           >
-            {contract.mahalanobis_distance.toFixed(1)}
+            {contract.mahalanobis_distance.toFixed(2)}
           </span>
         ) : (
-          <span className="text-xs text-text-muted">—</span>
+          <span className="text-xs text-text-muted">\u2014</span>
         )}
       </td>
 
@@ -1035,7 +1147,7 @@ function ContractRow({
       <td className="px-2 py-2 text-right">
         <button
           className="text-text-muted hover:text-accent transition-colors p-1"
-          title="View full details"
+          title={t('table.viewFullDetails')}
           onClick={(e) => { e.stopPropagation(); onView(contract.id) }}
           aria-label={`View details for ${contract.contract_number || contract.id}`}
         >
@@ -1085,7 +1197,7 @@ function ContractRow({
           {contract.procedure_type && <p>Procedure: {contract.procedure_type}</p>}
           {contract.contract_number && <p>Number: {contract.contract_number}</p>}
           {anomalyInfo && contract.mahalanobis_distance != null && (
-            <p>Anomaly: {anomalyInfo.label} (D\u00B2={contract.mahalanobis_distance.toFixed(1)})</p>
+            <p>Anomaly: {anomalyInfo.label} (D\u00B2={contract.mahalanobis_distance.toFixed(2)})</p>
           )}
         </div>
       </div>
@@ -1129,7 +1241,7 @@ function ContractRow({
           onClick={(e) => { e.stopPropagation(); onView(contract.id) }}
         >
           <Eye className="h-3 w-3" />
-          Full details
+          {t('table.fullDetails')}
         </button>
       </div>
     </div>
