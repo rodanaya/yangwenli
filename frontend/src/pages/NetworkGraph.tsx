@@ -860,7 +860,37 @@ export function NetworkGraph() {
         }
       })
 
-    return { totalNodes, highRiskConnections, mostConnectedName, maxDegree, densestComm, topByDegree }
+    // Additional metrics for the analytics panel
+    const edgeCount = graphData.links.length
+    const degreeValues = [...degreeMap.values()]
+    const avgDegree = degreeValues.length > 0
+      ? degreeValues.reduce((a, b) => a + b, 0) / totalNodes
+      : 0
+    const highRiskNodeCount = graphData.nodes.filter((n: NetworkNode) => {
+      if (n.type !== 'vendor' || n.risk_score == null) return false
+      const level = getRiskLevelFromScore(n.risk_score)
+      return level === 'critical' || level === 'high'
+    }).length
+    // Graph density: actual edges / max possible edges (undirected)
+    const density = totalNodes > 1
+      ? edgeCount / (totalNodes * (totalNodes - 1) / 2)
+      : 0
+    // Top 3 for the analytics panel (shorter list)
+    const top3Connected = topByDegree.slice(0, 3)
+
+    return {
+      totalNodes,
+      highRiskConnections,
+      mostConnectedName,
+      maxDegree,
+      densestComm,
+      topByDegree,
+      edgeCount,
+      avgDegree,
+      highRiskNodeCount,
+      density,
+      top3Connected,
+    }
   }, [graphData])
 
   // ECharts instance ref for reset view
@@ -1308,6 +1338,89 @@ export function NetworkGraph() {
         )}
         <span className="text-text-muted">· {t('legendSizeNote')}</span>
       </div>
+
+      {/* ── Network Analytics Panel ─────────────────────────────────────────── */}
+      {graphStats && graphData && (
+        <div className="rounded-lg border border-border/30 bg-background-elevated/20 px-4 py-3 space-y-3">
+          <div className="text-xs font-semibold text-text-muted uppercase tracking-wider">Network Analytics</div>
+
+          {/* Metric grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="rounded-md bg-white/5 p-3">
+              <div className="text-xs text-text-muted mb-0.5">Nodes</div>
+              <div className="text-lg font-bold font-mono tabular-nums">{graphStats.totalNodes}</div>
+            </div>
+            <div className="rounded-md bg-white/5 p-3">
+              <div className="text-xs text-text-muted mb-0.5">Connections</div>
+              <div className="text-lg font-bold font-mono tabular-nums">{graphStats.edgeCount}</div>
+            </div>
+            <div className="rounded-md bg-white/5 p-3">
+              <div className="text-xs text-text-muted mb-0.5">Avg Degree</div>
+              <div className="text-lg font-bold font-mono tabular-nums">{graphStats.avgDegree.toFixed(1)}</div>
+            </div>
+            <div className={`rounded-md p-3 ${graphStats.highRiskNodeCount > 0 ? 'bg-red-500/10 border border-red-500/20' : 'bg-white/5'}`}>
+              <div className={`text-xs mb-0.5 ${graphStats.highRiskNodeCount > 0 ? 'text-red-400/70' : 'text-text-muted'}`}>
+                High-Risk Nodes
+              </div>
+              <div className={`text-lg font-bold font-mono tabular-nums ${graphStats.highRiskNodeCount > 0 ? 'text-red-400' : 'text-text-primary'}`}>
+                {graphStats.highRiskNodeCount}
+              </div>
+            </div>
+          </div>
+
+          {/* Secondary metrics + top connected */}
+          <div className="flex flex-wrap gap-6 text-xs pt-1 border-t border-border/20">
+            {/* Graph density */}
+            <div>
+              <span className="text-text-muted">Graph density: </span>
+              <span className="font-mono text-text-primary">{(graphStats.density * 100).toFixed(2)}%</span>
+            </div>
+            {/* High-risk connections */}
+            {graphStats.highRiskConnections > 0 && (
+              <div>
+                <span className="text-text-muted">High-risk links: </span>
+                <span className="font-mono text-red-400">{graphStats.highRiskConnections}</span>
+              </div>
+            )}
+            {/* Suspicious clusters from community data */}
+            {commData?.graph_ready && commData.total_communities > 0 && (
+              <div>
+                <span className="text-text-muted">Co-bid clusters: </span>
+                <span className="font-mono text-amber-400">{commData.total_communities.toLocaleString()}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Top 3 most connected */}
+          {graphStats.top3Connected.length > 0 && (
+            <div className="pt-1 border-t border-border/20">
+              <div className="text-xs text-text-muted mb-2">Most Connected</div>
+              <div className="space-y-1.5">
+                {graphStats.top3Connected.map((n, i) => (
+                  <div key={n.name + i} className="flex items-center gap-2">
+                    <span className="text-xs text-text-muted/60 w-4 font-mono">{i + 1}.</span>
+                    <span className="text-xs text-text-primary truncate flex-1">{n.name}</span>
+                    <span className="text-xs font-mono text-cyan-400 shrink-0">{n.degree} links</span>
+                    {n.riskScore != null && (
+                      <span
+                        className="text-[10px] font-mono shrink-0"
+                        style={{
+                          color: n.riskScore >= 0.5 ? '#f87171'
+                            : n.riskScore >= 0.3 ? '#fb923c'
+                            : n.riskScore >= 0.1 ? '#fbbf24'
+                            : '#4ade80',
+                        }}
+                      >
+                        {(n.riskScore * 100).toFixed(0)}%
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── F7: Community Explorer ──────────────────────────────────────────── */}
       <div className="border border-border/30 rounded-lg overflow-hidden">

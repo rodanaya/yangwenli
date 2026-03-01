@@ -25,7 +25,7 @@ import { NarrativeCard } from '@/components/NarrativeCard'
 import { RiskFeedbackButton } from '@/components/RiskFeedbackButton'
 import { ContractDetailModal } from '@/components/ContractDetailModal'
 import { buildVendorNarrative } from '@/lib/narratives'
-import type { ContractListItem, VendorExternalFlags } from '@/api/types'
+import type { ContractListItem, VendorExternalFlags, VendorWaterfallContribution } from '@/api/types'
 import {
   AreaChart,
   Area,
@@ -42,6 +42,10 @@ import {
   ReferenceLine,
   ReferenceArea,
   Legend as RechartsLegend,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  Radar,
 } from '@/components/charts'
 import {
   Users,
@@ -390,6 +394,138 @@ function ActivityCalendar({
         ))}
         <span className="text-[10px] text-text-muted">{t('history.calendarMore')}</span>
       </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// Risk Factor Radar Chart
+// ============================================================================
+
+// The 6 factors we want to surface on the radar, mapped from waterfall feature keys
+const RADAR_FACTOR_KEYS = [
+  { key: 'price_volatility',     label: 'Price Volatility' },
+  { key: 'vendor_concentration', label: 'Concentration' },
+  { key: 'win_rate',             label: 'Win Rate' },
+  { key: 'direct_award',        label: 'Direct Award' },
+  { key: 'industry_mismatch',   label: 'Sector Mismatch' },
+  { key: 'single_bid',          label: 'Single Bid' },
+]
+
+function RiskRadarChart({ waterfallData }: { waterfallData: VendorWaterfallContribution[] }) {
+  const radarData = useMemo(() => {
+    // Build a lookup by feature key from the waterfall data
+    const lookup = new Map<string, VendorWaterfallContribution>()
+    for (const item of waterfallData) {
+      lookup.set(item.feature, item)
+    }
+
+    return RADAR_FACTOR_KEYS.map(({ key, label }) => {
+      const item = lookup.get(key)
+      if (!item) return { factor: label, value: 0, rawZ: 0 }
+
+      // Contribution is already coefficient × z_score. Normalise to [0,1] for the chart
+      // by clamping to [-3, 3] z-score range and mapping to 0–1.
+      const clampedZ = Math.max(-3, Math.min(3, item.z_score))
+      // For negative-coefficient factors (like direct_award when negative), use absolute
+      // z-score magnitude as the "presence" signal, but direction is shown via contribution
+      const presence = (clampedZ + 3) / 6   // 0 = z=-3, 0.5 = z=0, 1 = z=+3
+      return { factor: label, value: Math.round(presence * 100) / 100, rawZ: item.z_score }
+    })
+  }, [waterfallData])
+
+  const hasData = radarData.some((d) => d.value > 0)
+  if (!hasData) {
+    return (
+      <p className="text-xs text-text-muted text-center py-4">
+        No z-score data available for radar chart
+      </p>
+    )
+  }
+
+  return (
+    <div>
+      <p className="text-xs text-text-muted mb-3">
+        Each axis shows how this vendor&apos;s z-score compares across 6 key risk dimensions.
+        Values toward the edge indicate higher deviation from sector norms.
+      </p>
+      <ResponsiveContainer width="100%" height={260}>
+        <RadarChart data={radarData} margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
+          <PolarGrid stroke="#1e293b" />
+          <PolarAngleAxis
+            dataKey="factor"
+            tick={{ fontSize: 11, fill: '#94a3b8' }}
+          />
+          <RechartsTooltip
+            content={({ active, payload }) => {
+              if (active && payload?.[0]) {
+                const d = payload[0].payload as { factor: string; value: number; rawZ: number }
+                return (
+                  <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg">
+                    <p className="font-semibold text-text-primary mb-1">{d.factor}</p>
+                    <p className="text-text-muted">
+                      z-score: <span className={d.rawZ > 1 ? 'text-risk-high' : d.rawZ < -1 ? 'text-risk-low' : 'text-text-secondary'}>
+                        {d.rawZ.toFixed(2)}
+                      </span>
+                    </p>
+                  </div>
+                )
+              }
+              return null
+            }}
+          />
+          <Radar
+            dataKey="value"
+            stroke="#06b6d4"
+            fill="#06b6d4"
+            fillOpacity={0.15}
+            strokeWidth={2}
+          />
+        </RadarChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
+// ============================================================================
+// Top Risk Factor Bars (top 3 contributing factors)
+// ============================================================================
+
+function TopRiskFactorBars({ waterfallData }: { waterfallData: VendorWaterfallContribution[] }) {
+  const topFactors = useMemo(() => {
+    return [...waterfallData]
+      .filter((f) => f.contribution > 0)
+      .sort((a, b) => b.contribution - a.contribution)
+      .slice(0, 3)
+      .map((f) => ({
+        name: f.feature,
+        label: f.label_en || f.feature.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+        score: f.contribution,
+      }))
+  }, [waterfallData])
+
+  if (topFactors.length === 0) {
+    return <p className="text-xs text-text-muted">No contributing risk factors found.</p>
+  }
+
+  const maxScore = Math.max(...topFactors.map((f) => f.score), 0.01)
+
+  return (
+    <div className="space-y-2">
+      {topFactors.map((f) => (
+        <div key={f.name}>
+          <div className="flex justify-between text-xs mb-1">
+            <span className="text-text-muted">{f.label}</span>
+            <span className="text-text-primary font-mono">{f.score.toFixed(3)}</span>
+          </div>
+          <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-amber-500 to-red-500 rounded-full transition-all duration-1000"
+              style={{ width: `${Math.min((f.score / maxScore) * 100, 100)}%` }}
+            />
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
@@ -1682,6 +1818,36 @@ export function VendorProfile() {
                   )}
                 </CardContent>
               </Card>
+              )}
+
+              {/* Risk Radar Chart — 6-axis z-score spider */}
+              {waterfallData && waterfallData.length >= 3 && (
+                <Card className="hover-lift">
+                  <CardHeader>
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Activity className="h-4 w-4" />
+                      Risk Factor Radar
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <RiskRadarChart waterfallData={waterfallData} />
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Top 3 Contributing Factors — bar summary */}
+              {waterfallData && waterfallData.length >= 1 && (
+                <Card className="hover-lift">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4" />
+                      Top Contributing Factors
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <TopRiskFactorBars waterfallData={waterfallData} />
+                  </CardContent>
+                </Card>
               )}
 
               {/* Risk Factor List */}

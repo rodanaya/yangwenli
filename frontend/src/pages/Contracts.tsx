@@ -428,6 +428,26 @@ export function Contracts() {
     return { totalValue, avgRisk, criticalCount, highPlusCount, daPct }
   }, [data])
 
+  // Risk distribution histogram data computed from current page results
+  const riskHistogram = useMemo(() => {
+    if (!data?.data?.length) return null
+    const buckets = [
+      { label: '0–0.1', min: 0, max: 0.1, color: '#4ade80', count: 0 },
+      { label: '0.1–0.2', min: 0.1, max: 0.2, color: '#fbbf24', count: 0 },
+      { label: '0.2–0.3', min: 0.2, max: 0.3, color: '#fbbf24', count: 0 },
+      { label: '0.3–0.5', min: 0.3, max: 0.5, color: '#fb923c', count: 0 },
+      { label: '0.5–1.0', min: 0.5, max: 1.01, color: '#f87171', count: 0 },
+    ]
+    for (const c of data.data) {
+      const score = c.risk_score ?? 0
+      for (const b of buckets) {
+        if (score >= b.min && score < b.max) { b.count++; break }
+      }
+    }
+    const maxCount = Math.max(...buckets.map((b) => b.count), 1)
+    return buckets.map((b) => ({ ...b, pct: (b.count / maxCount) * 100 }))
+  }, [data])
+
   const pageExportData = useMemo(() => {
     if (!data?.data?.length) return []
     return data.data.map((c) => ({
@@ -741,6 +761,26 @@ export function Contracts() {
         )}
       </div>
 
+      {/* Risk distribution mini-histogram */}
+      {riskHistogram && (
+        <div className="flex items-end gap-1.5 h-10" aria-label="Risk score distribution for current page" role="img">
+          {riskHistogram.map((bucket) => (
+            <div key={bucket.label} className="flex flex-col items-center gap-0.5" title={`${bucket.label}: ${bucket.count} contracts`}>
+              <div
+                className="w-8 rounded-t transition-all duration-300"
+                style={{
+                  height: `${Math.max(4, (bucket.pct / 100) * 28)}px`,
+                  backgroundColor: bucket.color,
+                  opacity: bucket.count === 0 ? 0.15 : 0.75,
+                }}
+              />
+              <span className="text-[9px] text-text-muted/60 font-mono leading-none">{bucket.label}</span>
+            </div>
+          ))}
+          <span className="ml-1 text-[10px] text-text-muted/50 self-center leading-tight">page<br/>dist.</span>
+        </div>
+      )}
+
       {/* Summary stats + Active filters */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         {pageStats && (
@@ -1031,27 +1071,44 @@ function ContractRow({
         <ExpandChevron id={contract.id} />
       </td>
 
-      {/* Risk: tiered display — Fix 2: use t() for risk level labels */}
-      <td className="px-3 py-2 text-center">
-        <div className="inline-flex items-center gap-1 justify-center">
-          {riskLevel === 'critical' || riskLevel === 'high' ? (
+      {/* Risk: mini-bar + colored pill */}
+      <td className="px-3 py-2">
+        <div className="flex flex-col items-center gap-1">
+          {/* Colored risk level pill */}
+          {riskLevel ? (
             <span
-              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold"
-              style={{ color: riskColor, backgroundColor: `${riskColor}18`, border: `1px solid ${riskColor}40` }}
-              title={contract.risk_score != null ? `${(contract.risk_score * 100).toFixed(1)}%` : (riskLevel ?? undefined)}
+              className={cn(
+                'px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap',
+                riskLevel === 'critical' && 'bg-red-500/20 text-red-400 border border-red-500/30',
+                riskLevel === 'high' && 'bg-orange-500/20 text-orange-400 border border-orange-500/30',
+                riskLevel === 'medium' && 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
+                riskLevel === 'low' && 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
+              )}
+              title={contract.risk_score != null ? `Score: ${contract.risk_score.toFixed(3)}` : undefined}
             >
-              {t(`riskLevels.${riskLevel}`)}
+              {riskLevel}
             </span>
-          ) : riskLevel === 'medium' ? (
-            <span
-              className="inline-flex h-2 w-2 rounded-full"
-              style={{ backgroundColor: riskColor, opacity: 0.7 }}
-              title={contract.risk_score != null
-                ? `${t('riskLevels.medium')} \u00B7 ${(contract.risk_score * 100).toFixed(1)}%`
-                : t('riskLevels.medium')}
-            />
           ) : (
-            <span className="text-xs text-text-muted/30">\u00B7</span>
+            <span className="text-xs text-text-muted/30">&middot;</span>
+          )}
+          {/* Mini score bar */}
+          {contract.risk_score != null && (
+            <div className="flex items-center gap-1.5">
+              <div className="h-1 w-14 bg-white/10 rounded-full overflow-hidden flex-shrink-0">
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{
+                    width: `${Math.min(contract.risk_score * 100, 100)}%`,
+                    backgroundColor:
+                      contract.risk_score >= 0.5 ? '#f87171'
+                      : contract.risk_score >= 0.3 ? '#fb923c'
+                      : contract.risk_score >= 0.1 ? '#fbbf24'
+                      : '#4ade80',
+                  }}
+                />
+              </div>
+              <span className="font-mono text-[10px] text-text-muted tabular-nums">{contract.risk_score.toFixed(3)}</span>
+            </div>
           )}
           <RiskFeedbackButton
             entityType="contract"
@@ -1255,7 +1312,7 @@ function ContractRow({
       cells={cells}
       detail={detail}
       colSpan={11}
-      className={cn('hover:bg-accent/[0.04] transition-colors group', rowBorder)}
+      className={cn('hover:bg-white/[0.02] cursor-pointer transition-colors group', rowBorder)}
     />
   )
 }

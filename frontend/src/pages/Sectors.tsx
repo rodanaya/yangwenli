@@ -45,6 +45,7 @@ import {
   Scatter,
   ZAxis,
   ReferenceLine,
+  Treemap,
 } from '@/components/charts'
 import { formatCompactUSD } from '@/lib/utils'
 
@@ -258,6 +259,145 @@ const SectorRadar = memo(function SectorRadar({ sector, allSectors, compareSecto
 })
 
 // ============================================================================
+// MINI SPARKLINE — SVG polyline for risk trend
+// ============================================================================
+
+function MiniSparkline({ points, color = '#06b6d4' }: { points: number[]; color?: string }) {
+  if (points.length < 2) return <span className="text-text-muted text-xs font-mono">—</span>
+  const max = Math.max(...points)
+  const min = Math.min(...points)
+  const range = max - min || 1
+  const w = 60
+  const h = 24
+  const coords = points
+    .map((v, i) => `${(i / (points.length - 1)) * w},${h - ((v - min) / range) * (h - 4) - 2}`)
+    .join(' ')
+  const trend = points[points.length - 1] - points[0]
+  const trendColor = trend > 0.005 ? '#f87171' : trend < -0.005 ? '#4ade80' : '#94a3b8'
+  return (
+    <div className="flex items-center gap-1">
+      <svg width={w} height={h} className="overflow-visible flex-shrink-0" aria-hidden="true">
+        <polyline
+          points={coords}
+          fill="none"
+          stroke={color}
+          strokeWidth={1.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity={0.85}
+        />
+        {/* End dot */}
+        {points.length > 0 && (() => {
+          const lastX = w
+          const lastY = h - ((points[points.length - 1] - min) / range) * (h - 4) - 2
+          return <circle cx={lastX} cy={lastY} r={2} fill={color} />
+        })()}
+      </svg>
+      <span className="text-[9px] font-mono" style={{ color: trendColor }}>
+        {trend > 0 ? '▲' : trend < 0 ? '▼' : '—'}
+      </span>
+    </div>
+  )
+}
+
+// ============================================================================
+// RISK INTENSITY BAR — Horizontal fill bar from green→red
+// ============================================================================
+
+function RiskIntensityBar({ score, maxScore = 0.6 }: { score: number; maxScore?: number }) {
+  const pct = Math.min(1, score / maxScore) * 100
+  const r = Math.round(22 + (220 - 22) * (pct / 100))
+  const g = Math.round(197 - (197 - 38) * (pct / 100))
+  const b = Math.round(38 * (1 - pct / 100))
+  const barColor = `rgb(${r},${g},${b})`
+  return (
+    <div
+      className="relative h-1.5 w-full rounded-full overflow-hidden bg-white/5"
+      role="meter"
+      aria-valuenow={Math.round(pct)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label={`Risk intensity ${score.toFixed(3)}`}
+      title={`Risk intensity: ${(score * 100).toFixed(1)}%`}
+    >
+      <div
+        className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
+        style={{ width: `${pct}%`, backgroundColor: barColor }}
+      />
+    </div>
+  )
+}
+
+// ============================================================================
+// SECTOR TREEMAP — contract value by sector, colored by sector color
+// ============================================================================
+
+interface TreemapContentProps {
+  x?: number
+  y?: number
+  width?: number
+  height?: number
+  name?: string
+  value?: number
+  color?: string
+  avg_risk_score?: number
+}
+
+function SectorTreemapContent(props: TreemapContentProps) {
+  const { x = 0, y = 0, width = 0, height = 0, name = '', value = 0, color = '#64748b', avg_risk_score = 0 } = props
+  if (width < 20 || height < 20) return null
+  const showLabel = width > 60 && height > 36
+  const showValue = width > 80 && height > 52
+  const riskPct = (avg_risk_score * 100).toFixed(1)
+  return (
+    <g>
+      <rect
+        x={x + 1}
+        y={y + 1}
+        width={width - 2}
+        height={height - 2}
+        rx={4}
+        style={{ fill: color, fillOpacity: 0.82, stroke: 'rgba(0,0,0,0.3)', strokeWidth: 1 }}
+      />
+      {showLabel && (
+        <text
+          x={x + width / 2}
+          y={y + (showValue ? height / 2 - 8 : height / 2)}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          style={{
+            fill: '#fff',
+            fontSize: Math.min(13, Math.max(9, width / 8)),
+            fontWeight: 700,
+            fontFamily: 'var(--font-mono, monospace)',
+            textShadow: '0 1px 2px rgba(0,0,0,0.6)',
+            pointerEvents: 'none',
+          }}
+        >
+          {name}
+        </text>
+      )}
+      {showValue && (
+        <text
+          x={x + width / 2}
+          y={y + height / 2 + 10}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          style={{
+            fill: 'rgba(255,255,255,0.75)',
+            fontSize: Math.min(10, Math.max(8, width / 11)),
+            fontFamily: 'var(--font-mono, monospace)',
+            pointerEvents: 'none',
+          }}
+        >
+          {formatCompactMXN(value)} · {riskPct}%
+        </text>
+      )}
+    </g>
+  )
+}
+
+// ============================================================================
 // Main Component
 // ============================================================================
 
@@ -268,6 +408,7 @@ export function Sectors() {
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [selectedSectorCode, setSelectedSectorCode] = useState<string | null>(null)
   const [compareSectorCode, setCompareSectorCode] = useState<string | null>(null)
+  const [tableViewMode, setTableViewMode] = useState<'list' | 'treemap'>('list')
   const sectorValueChartRef = useRef<HTMLDivElement>(null)
 
   const { data, isLoading, error } = useQuery({
@@ -405,6 +546,23 @@ export function Sectors() {
   // ---- Sorted sectors for value chart ----
   const chartSectors = useMemo(() => {
     return [...(data?.data ?? [])].sort((a, b) => b.total_value_mxn - a.total_value_mxn)
+  }, [data])
+
+  // ---- Treemap data: sectors sized by total_value_mxn ----
+  const treemapData = useMemo(() => {
+    return (data?.data ?? []).map((s) => ({
+      name: getSectorNameEN(s.sector_code),
+      value: s.total_value_mxn,
+      color: SECTOR_COLORS[s.sector_code] || '#64748b',
+      avg_risk_score: s.avg_risk_score,
+      sector_code: s.sector_code,
+    }))
+  }, [data])
+
+  // ---- Max avg_risk_score across all sectors (for intensity bar scaling) ----
+  const maxSectorRisk = useMemo(() => {
+    const scores = (data?.data ?? []).map((s) => s.avg_risk_score)
+    return Math.max(...scores, 0.01)
   }, [data])
 
   if (isLoading) {
@@ -717,138 +875,235 @@ export function Sectors() {
       `}</style>
       <Card className="overflow-hidden">
         <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-sm">
-            <BarChart3 className="h-3.5 w-3.5 text-accent" />
-            {t('table.title')}
-          </CardTitle>
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <BarChart3 className="h-3.5 w-3.5 text-accent" />
+              {t('table.title')}
+            </CardTitle>
+            {/* View toggle: List | Treemap */}
+            <div
+              className="flex items-center rounded-md border border-border/50 overflow-hidden text-[11px] font-mono select-none"
+              role="group"
+              aria-label="Table view mode"
+            >
+              <button
+                onClick={() => setTableViewMode('list')}
+                className={cn(
+                  'px-3 py-1 transition-colors',
+                  tableViewMode === 'list'
+                    ? 'bg-accent text-black font-bold'
+                    : 'text-text-muted hover:text-text-primary hover:bg-background-elevated/40'
+                )}
+                aria-pressed={tableViewMode === 'list'}
+              >
+                List
+              </button>
+              <button
+                onClick={() => setTableViewMode('treemap')}
+                className={cn(
+                  'px-3 py-1 transition-colors border-l border-border/50',
+                  tableViewMode === 'treemap'
+                    ? 'bg-accent text-black font-bold'
+                    : 'text-text-muted hover:text-text-primary hover:bg-background-elevated/40'
+                )}
+                aria-pressed={tableViewMode === 'treemap'}
+              >
+                Treemap
+              </button>
+            </div>
+          </div>
           <CardDescription className="text-xs">
-            {t('table.subtitle')}
+            {tableViewMode === 'treemap'
+              ? 'Sectors sized by total contract value — color = sector, label shows value and avg risk score'
+              : t('table.subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[780px] text-xs" role="table">
-              <thead>
-                <tr className="border-b border-border bg-background-elevated/30 text-text-muted">
-                  <th className="px-3 py-2.5 text-left font-medium">{t('table.sector')}</th>
-                  <th
-                    className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
-                    onClick={() => handleSort('total_contracts')}
-                    aria-sort={sortField === 'total_contracts' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
-                  >
-                    {t('table.totalContracts')}
-                    <SortIndicator field="total_contracts" sortField={sortField} sortDir={sortDir} />
-                  </th>
-                  <th
-                    className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
-                    onClick={() => handleSort('total_value_mxn')}
-                    aria-sort={sortField === 'total_value_mxn' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
-                  >
-                    {t('table.totalValueMxn')}
-                    <SortIndicator field="total_value_mxn" sortField={sortField} sortDir={sortDir} />
-                  </th>
-                  <th
-                    className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
-                    onClick={() => handleSort('avg_risk_score')}
-                    aria-sort={sortField === 'avg_risk_score' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
-                  >
-                    {t('table.avgRiskScore')}
-                    <SortIndicator field="avg_risk_score" sortField={sortField} sortDir={sortDir} />
-                  </th>
-                  <th
-                    className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
-                    onClick={() => handleSort('high_risk_pct')}
-                    aria-sort={sortField === 'high_risk_pct' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
-                  >
-                    {t('table.highRiskPct')}
-                    <SortIndicator field="high_risk_pct" sortField={sortField} sortDir={sortDir} />
-                  </th>
-                  <th
-                    className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
-                    onClick={() => handleSort('direct_award_pct')}
-                    aria-sort={sortField === 'direct_award_pct' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
-                  >
-                    {t('table.directAwardPct')}
-                    <SortIndicator field="direct_award_pct" sortField={sortField} sortDir={sortDir} />
-                  </th>
-                  <th className="px-3 py-2.5 text-center font-medium whitespace-nowrap hidden xl:table-cell">
-                    {t('table.riskTrend')}
-                  </th>
-                  <th className="px-3 py-2.5 text-left font-medium whitespace-nowrap hidden lg:table-cell">
-                    {t('table.topRamo')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedSectors.map((sector, i) => {
-                  const color = SECTOR_COLORS[sector.sector_code] || '#64748b'
-                  const topRamo = getTopRamo(sector.sector_code)
-                  return (
-                    <tr
-                      key={sector.sector_id}
-                      className="border-b border-border/20 hover:bg-background-elevated/40 transition-colors"
-                      style={{
-                        opacity: 0,
-                        animation: `fadeInUp 600ms cubic-bezier(0.16, 1, 0.3, 1) ${i * 40 + 200}ms both`,
-                      }}
-                    >
-                      <td className="px-3 py-2.5">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                            style={{ backgroundColor: color }}
-                            aria-hidden="true"
-                          />
-                          <Link
-                            to={`/sectors/${sector.sector_id}`}
-                            className="font-medium text-text-primary hover:text-accent transition-colors"
-                          >
-                            {getSectorNameEN(sector.sector_code)}
-                          </Link>
+          {tableViewMode === 'treemap' ? (
+            /* ---- TREEMAP VIEW ---- */
+            <div className="p-4">
+              <ResponsiveContainer width="100%" height={420}>
+                <Treemap
+                  data={treemapData}
+                  dataKey="value"
+                  aspectRatio={4 / 3}
+                  content={(props: Record<string, unknown>) => {
+                    const { x, y, width, height, name, value, color, avg_risk_score } = props as TreemapContentProps
+                    return (
+                      <SectorTreemapContent
+                        x={x}
+                        y={y}
+                        width={width}
+                        height={height}
+                        name={name}
+                        value={value}
+                        color={color}
+                        avg_risk_score={avg_risk_score}
+                      />
+                    )
+                  }}
+                >
+                  <RechartsTooltip
+                    content={({ payload }) => {
+                      if (!payload?.length) return null
+                      const d = payload[0]?.payload as {
+                        name: string
+                        value: number
+                        avg_risk_score: number
+                        color: string
+                      }
+                      if (!d) return null
+                      return (
+                        <div className="rounded-lg border border-border bg-background-card p-3 shadow-lg text-xs">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
+                            <span className="font-bold text-text-primary">{d.name}</span>
+                          </div>
+                          <div className="text-text-muted space-y-0.5 font-mono">
+                            <div>Value: {formatCompactMXN(d.value)}</div>
+                            <div>Avg Risk: {(d.avg_risk_score * 100).toFixed(1)}%</div>
+                          </div>
                         </div>
-                      </td>
-                      <td className="px-3 py-2.5 text-right font-mono text-text-secondary tabular-nums">
-                        {formatNumber(sector.total_contracts)}
-                      </td>
-                      <td className="px-3 py-2.5 text-right font-mono text-text-secondary tabular-nums">
-                        {formatCompactMXN(sector.total_value_mxn)}
-                      </td>
-                      <td className="px-3 py-2.5 text-right">
-                        <RiskBadge score={sector.avg_risk_score} className="text-xs px-1.5 py-0" />
-                      </td>
-                      <td className="px-3 py-2.5 text-right font-mono text-text-secondary tabular-nums">
-                        {formatPercentSafe(sector.high_risk_pct, false)}
-                      </td>
-                      <td className="px-3 py-2.5 text-right font-mono text-text-secondary tabular-nums">
-                        {formatPercentSafe(sector.direct_award_pct, false)}
-                      </td>
-                      <td className="px-3 py-2.5 hidden xl:table-cell">
-                        {(() => {
-                          const spark = sparklinesBySector.get(sector.sector_id)
-                          if (!spark || spark.length < 2) return <span className="text-text-muted text-xs">—</span>
-                          return (
-                            <LineChart width={56} height={28} data={spark}>
-                              <Line
-                                type="monotone"
-                                dataKey="avg_risk"
-                                stroke={color}
-                                strokeWidth={1.5}
-                                dot={false}
-                                isAnimationActive={false}
-                              />
-                            </LineChart>
-                          )
-                        })()}
-                      </td>
-                      <td className="px-3 py-2.5 text-text-muted font-mono hidden lg:table-cell">
-                        {topRamo}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                      )
+                    }}
+                  />
+                </Treemap>
+              </ResponsiveContainer>
+              <p className="mt-2 text-[10px] text-text-muted font-mono text-center">
+                Rectangle area ∝ total contract value · Color = sector · Value shown when space permits
+              </p>
+            </div>
+          ) : (
+            /* ---- LIST VIEW ---- */
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[820px] text-xs" role="table">
+                <thead>
+                  <tr className="border-b border-border bg-background-elevated/30 text-text-muted">
+                    <th className="px-3 py-2.5 text-left font-medium">{t('table.sector')}</th>
+                    <th
+                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                      onClick={() => handleSort('total_contracts')}
+                      aria-sort={sortField === 'total_contracts' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
+                    >
+                      {t('table.totalContracts')}
+                      <SortIndicator field="total_contracts" sortField={sortField} sortDir={sortDir} />
+                    </th>
+                    <th
+                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                      onClick={() => handleSort('total_value_mxn')}
+                      aria-sort={sortField === 'total_value_mxn' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
+                    >
+                      {t('table.totalValueMxn')}
+                      <SortIndicator field="total_value_mxn" sortField={sortField} sortDir={sortDir} />
+                    </th>
+                    <th
+                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                      onClick={() => handleSort('avg_risk_score')}
+                      aria-sort={sortField === 'avg_risk_score' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
+                    >
+                      {t('table.avgRiskScore')}
+                      <SortIndicator field="avg_risk_score" sortField={sortField} sortDir={sortDir} />
+                    </th>
+                    <th
+                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                      onClick={() => handleSort('high_risk_pct')}
+                      aria-sort={sortField === 'high_risk_pct' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
+                    >
+                      {t('table.highRiskPct')}
+                      <SortIndicator field="high_risk_pct" sortField={sortField} sortDir={sortDir} />
+                    </th>
+                    <th
+                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                      onClick={() => handleSort('direct_award_pct')}
+                      aria-sort={sortField === 'direct_award_pct' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
+                    >
+                      {t('table.directAwardPct')}
+                      <SortIndicator field="direct_award_pct" sortField={sortField} sortDir={sortDir} />
+                    </th>
+                    <th className="px-3 py-2.5 text-left font-medium whitespace-nowrap hidden xl:table-cell w-[80px]">
+                      Risk Intensity
+                    </th>
+                    <th className="px-3 py-2.5 text-center font-medium whitespace-nowrap hidden xl:table-cell">
+                      {t('table.riskTrend')}
+                    </th>
+                    <th className="px-3 py-2.5 text-left font-medium whitespace-nowrap hidden lg:table-cell">
+                      {t('table.topRamo')}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedSectors.map((sector, i) => {
+                    const color = SECTOR_COLORS[sector.sector_code] || '#64748b'
+                    const topRamo = getTopRamo(sector.sector_code)
+                    const spark = sparklinesBySector.get(sector.sector_id)
+                    const sparkPoints = spark ? spark.map((d) => d.avg_risk) : []
+                    return (
+                      <tr
+                        key={sector.sector_id}
+                        className="border-b border-border/20 hover:bg-background-elevated/40 transition-colors"
+                        style={{
+                          opacity: 0,
+                          animation: `fadeInUp 600ms cubic-bezier(0.16, 1, 0.3, 1) ${i * 40 + 200}ms both`,
+                        }}
+                      >
+                        <td className="px-3 py-2.5">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <div
+                              className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: color }}
+                              aria-hidden="true"
+                            />
+                            <Link
+                              to={`/sectors/${sector.sector_id}`}
+                              className="font-medium text-text-primary hover:text-accent transition-colors"
+                            >
+                              {getSectorNameEN(sector.sector_code)}
+                            </Link>
+                            {/* ASF audit badge — shown when this sector has audit findings loaded */}
+                            {sectorASF && sectorASF.sector_id === sector.sector_id && sectorASF.findings.length > 0 && (
+                              <span
+                                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 flex-shrink-0"
+                                title={`ASF: ${sectorASF.findings.length} audit year${sectorASF.findings.length !== 1 ? 's' : ''} with findings`}
+                                aria-label={`ASF audit findings: ${sectorASF.findings.length} years`}
+                              >
+                                ASF {sectorASF.findings.length}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono text-text-secondary tabular-nums">
+                          {formatNumber(sector.total_contracts)}
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono text-text-secondary tabular-nums">
+                          {formatCompactMXN(sector.total_value_mxn)}
+                        </td>
+                        <td className="px-3 py-2.5 text-right">
+                          <RiskBadge score={sector.avg_risk_score} className="text-xs px-1.5 py-0" />
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono text-text-secondary tabular-nums">
+                          {formatPercentSafe(sector.high_risk_pct, false)}
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono text-text-secondary tabular-nums">
+                          {formatPercentSafe(sector.direct_award_pct, false)}
+                        </td>
+                        {/* Risk Intensity Bar */}
+                        <td className="px-3 py-2.5 hidden xl:table-cell w-[80px]">
+                          <RiskIntensityBar score={sector.avg_risk_score} maxScore={maxSectorRisk} />
+                        </td>
+                        {/* Sparkline */}
+                        <td className="px-3 py-2.5 hidden xl:table-cell">
+                          <MiniSparkline points={sparkPoints} color={color} />
+                        </td>
+                        <td className="px-3 py-2.5 text-text-muted font-mono hidden lg:table-cell">
+                          {topRamo}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
 

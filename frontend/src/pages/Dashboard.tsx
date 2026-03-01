@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useRef, useState } from 'react'
+import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
@@ -39,6 +39,8 @@ import {
   Cell,
   Line,
   ComposedChart,
+  PieChart,
+  Pie,
   ReferenceLine,
   ReferenceArea,
   Treemap,
@@ -46,6 +48,7 @@ import {
 import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN, CURRENT_MODEL_VERSION } from '@/lib/constants'
 import { GlobalSearch } from '@/components/GlobalSearch'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
+import { ModelDetectionStory } from '@/components/ModelDetectionStory'
 
 // ============================================================================
 // Dashboard: Bold, data-dense intelligence overview
@@ -517,6 +520,16 @@ export function Dashboard() {
       }))
   }, [fastDashboard])
 
+  // Animated KPI: briefly pulse numbers when data first arrives
+  const [justLoaded, setJustLoaded] = useState(false)
+  useEffect(() => {
+    if (!dashLoading && overview) {
+      setJustLoaded(true)
+      const timer = setTimeout(() => setJustLoaded(false), 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [dashLoading, overview])
+
   // Sector selector for Risk Trajectory chart (null = "All Sectors")
   const [selectedTrajectorySectorId, setSelectedTrajectorySectorId] = useState<number | null>(null)
 
@@ -608,7 +621,7 @@ export function Dashboard() {
           <Skeleton className="h-14 w-full max-w-sm" />
         ) : (
           <div>
-            <h1 className="text-4xl md:text-5xl font-black text-text-primary tracking-tight leading-none">
+            <h1 className={cn('text-4xl md:text-5xl font-black text-text-primary tracking-tight leading-none transition-opacity', justLoaded && 'animate-pulse')}>
               {formatCompactMXN(overview?.total_value_mxn || 0)}
             </h1>
             <p className="text-sm text-text-muted font-mono mt-0.5">
@@ -642,6 +655,15 @@ export function Dashboard() {
           </InfoTooltip>
           <span className="text-text-muted/30">·</span>
           <span>{(overview?.total_contracts || 0) > 0 ? formatNumber(overview?.total_contracts || 0) : '3,110,007'} contracts · 2002–2025</span>
+        </div>
+        {/* Model Confidence Badge */}
+        <div className="mt-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+            <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-xs font-mono text-emerald-400">
+              AUC {modelMeta?.auc_test != null ? modelMeta.auc_test.toFixed(3) : '0.957'} · {modelMeta?.version ?? CURRENT_MODEL_VERSION}
+            </span>
+          </div>
         </div>
 
         {/* WHAT WE FOUND — three anchor claims before the user scrolls */}
@@ -1332,12 +1354,13 @@ export function Dashboard() {
             </div>
           ) : (
             <div ref={riskDistRef} className="space-y-4">
-              {/* Half-ring gauge */}
-              <div className="flex justify-center">
+              {/* Gauge + Donut row */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                 <RiskGauge
                   criticalPct={riskDist.find(d => d.risk_level === 'critical')?.percentage ?? 0}
                   highPct={riskDist.find(d => d.risk_level === 'high')?.percentage ?? 0}
                 />
+                <RiskDonutChart data={riskDist} />
               </div>
               {/* Stacked bar */}
               <RiskDistributionBar data={riskDist} />
@@ -1377,7 +1400,13 @@ export function Dashboard() {
               {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-7" />)}
             </div>
           ) : (
-            <CaseDetectionChart cases={corruptionCases} />
+            <>
+              <CaseDetectionChart cases={corruptionCases} />
+              {/* ML Detection Story — full per-case breakdown with sorting */}
+              <div className="mt-4">
+                <ModelDetectionStory collapsible defaultCollapsed={false} />
+              </div>
+            </>
           )}
           {/* SMOKING GUN — one concrete high-risk investigation lead */}
           {topCaseData?.data?.[0] && (() => {
@@ -1614,6 +1643,81 @@ const RiskDistributionBar = memo(function RiskDistributionBar({
 })
 
 // ============================================================================
+// RISK DONUT CHART — Small PieChart showing 4 risk levels
+// ============================================================================
+
+const DONUT_COLORS: Record<string, string> = {
+  critical: '#f87171',
+  high: '#fb923c',
+  medium: '#fbbf24',
+  low: '#4ade80',
+}
+
+const RiskDonutChart = memo(function RiskDonutChart({
+  data,
+}: {
+  data: Array<{ risk_level: string; count: number; percentage: number; total_value_mxn: number }>
+}) {
+  const chartData = ['critical', 'high', 'medium', 'low'].map((level) => {
+    const item = data.find((d) => d.risk_level === level)
+    return {
+      name: level.charAt(0).toUpperCase() + level.slice(1),
+      value: item?.percentage ?? 0,
+      count: item?.count ?? 0,
+    }
+  }).filter((d) => d.value > 0)
+
+  return (
+    <div className="flex flex-col items-center">
+      <PieChart width={170} height={170} aria-label="Risk level distribution donut chart">
+        <Pie
+          data={chartData}
+          cx={85}
+          cy={85}
+          innerRadius={60}
+          outerRadius={80}
+          paddingAngle={2}
+          dataKey="value"
+          isAnimationActive
+        >
+          {chartData.map((entry) => (
+            <Cell
+              key={entry.name}
+              fill={DONUT_COLORS[entry.name.toLowerCase()] ?? '#64748b'}
+              opacity={0.88}
+            />
+          ))}
+        </Pie>
+        <RechartsTooltip
+          content={({ active, payload }) => {
+            if (active && payload && payload.length) {
+              const d = payload[0].payload as { name: string; value: number; count: number }
+              return (
+                <div className="chart-tooltip text-xs">
+                  <p className="font-bold text-text-primary">{d.name}</p>
+                  <p className="text-text-muted tabular-nums font-mono">
+                    {d.value.toFixed(1)}% · {formatNumber(d.count)}
+                  </p>
+                </div>
+              )
+            }
+            return null
+          }}
+        />
+      </PieChart>
+      <div className="flex items-center gap-2 flex-wrap justify-center mt-0.5">
+        {chartData.map((d) => (
+          <div key={d.name} className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: DONUT_COLORS[d.name.toLowerCase()] ?? '#64748b', opacity: 0.88 }} />
+            <span className="text-[10px] text-text-muted font-mono">{d.name} {d.value.toFixed(1)}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+})
+
+// ============================================================================
 // RISK BADGE — Colored percentage badge
 // ============================================================================
 
@@ -1695,10 +1799,18 @@ const SectorGrid = memo(function SectorGrid({
                 </span>
               )}
             </div>
-            {/* High+ rate */}
-            <span className="text-xs text-text-muted tabular-nums font-mono w-[52px] text-right flex-shrink-0">
-              {sector.riskPct.toFixed(1)}%
-            </span>
+            {/* High+ rate with mini risk bar */}
+            <div className="w-[52px] flex-shrink-0 flex flex-col items-end gap-0.5">
+              <span className="text-xs text-text-muted tabular-nums font-mono">
+                {sector.riskPct.toFixed(1)}%
+              </span>
+              <div className="w-full h-1 rounded-full bg-background-elevated/40 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-amber-500 to-red-500"
+                  style={{ width: `${Math.min(sector.riskPct, 100)}%` }}
+                />
+              </div>
+            </div>
             {/* Direct award rate */}
             <span className="text-xs text-text-muted tabular-nums font-mono w-[40px] text-right flex-shrink-0">
               {sector.directAwardPct.toFixed(0)}%

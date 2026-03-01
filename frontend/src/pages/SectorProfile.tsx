@@ -29,6 +29,8 @@ import {
   Shield,
   Brain,
   FlaskConical,
+  Info,
+  ShieldAlert,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -218,6 +220,75 @@ export function SectorProfile() {
   const priceBaseline = priceBaselines?.[0]
   const caseData = topCases?.data ?? []
 
+  // ── SECTOR INTELLIGENCE insights ─────────────────────────────────────────
+  const insights = useMemo(() => {
+    const result: Array<{
+      type: 'warning' | 'info' | 'critical' | 'positive'
+      title: string
+      body: string
+      icon: 'AlertTriangle' | 'Info' | 'ShieldAlert' | 'TrendingUp' | 'Users'
+    }> = []
+
+    if (!stats) return result
+
+    // High-risk rate vs OECD benchmark (critical + high / total)
+    const highRiskRate = stats.total_contracts > 0
+      ? (stats.high_risk_count + stats.critical_risk_count) / stats.total_contracts
+      : 0
+    if (highRiskRate > 0.15) {
+      result.push({
+        type: 'critical',
+        title: 'Above OECD Benchmark',
+        body: `${(highRiskRate * 100).toFixed(1)}% high-risk rate exceeds the 15% OECD maximum benchmark.`,
+        icon: 'AlertTriangle',
+      })
+    } else if (highRiskRate < 0.02 && stats.total_contracts > 1000) {
+      result.push({
+        type: 'positive',
+        title: 'Below OECD Minimum',
+        body: `${(highRiskRate * 100).toFixed(1)}% high-risk rate is unusually low — may indicate data quality gaps.`,
+        icon: 'Info',
+      })
+    }
+
+    // Direct award rate (field is a fraction 0–1)
+    if (stats.direct_award_pct > 0.7) {
+      result.push({
+        type: 'warning',
+        title: 'High Direct Award Rate',
+        body: `${(stats.direct_award_pct * 100).toFixed(0)}% of contracts are direct awards, limiting competitive transparency.`,
+        icon: 'ShieldAlert',
+      })
+    }
+
+    // Top vendor share derived from topVendors list vs sector total
+    const topVendorValue = topVendors?.data?.[0]?.total_value_mxn
+    if (topVendorValue && stats.total_value_mxn > 0) {
+      const topShare = topVendorValue / stats.total_value_mxn
+      if (topShare > 0.3) {
+        const vendorName = topVendors!.data[0]?.vendor_name ?? topVendors!.data[0]?.name ?? 'Top vendor'
+        result.push({
+          type: 'warning',
+          title: 'Vendor Concentration Risk',
+          body: `${vendorName} holds ${(topShare * 100).toFixed(1)}% of sector contract value — a key corruption risk indicator.`,
+          icon: 'TrendingUp',
+        })
+      }
+    }
+
+    // Single bid rate
+    if (stats.single_bid_pct > 0.25) {
+      result.push({
+        type: 'warning',
+        title: 'Single-Bid Procedures',
+        body: `${(stats.single_bid_pct * 100).toFixed(0)}% of competitive procedures had only one bidder.`,
+        icon: 'Users',
+      })
+    }
+
+    return result
+  }, [stats, topVendors])
+
   return (
     <div className="space-y-6">
 
@@ -271,6 +342,45 @@ export function SectorProfile() {
         <KPICard title="Vendors" value={stats?.total_vendors} icon={Users} color={sectorColor} />
         <KPICard title="High + Critical" value={(stats?.high_risk_count ?? 0) + (stats?.critical_risk_count ?? 0)} icon={AlertTriangle} color="#ef4444" />
       </div>
+
+      {/* ── SECTOR INTELLIGENCE ─────────────────────────────────────────── */}
+      {insights.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Brain className="h-4 w-4 text-text-muted" />
+            <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Sector Intelligence</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {insights.map((insight, i) => {
+              const borderColor =
+                insight.type === 'critical' ? 'border-red-500/30 bg-red-500/5' :
+                insight.type === 'warning'  ? 'border-amber-500/30 bg-amber-500/5' :
+                insight.type === 'positive' ? 'border-emerald-500/30 bg-emerald-500/5' :
+                'border-cyan-500/30 bg-cyan-500/5'
+              const textColor =
+                insight.type === 'critical' ? 'text-red-400' :
+                insight.type === 'warning'  ? 'text-amber-400' :
+                insight.type === 'positive' ? 'text-emerald-400' :
+                'text-cyan-400'
+              const IconComponent =
+                insight.icon === 'AlertTriangle' ? AlertTriangle :
+                insight.icon === 'ShieldAlert'   ? ShieldAlert :
+                insight.icon === 'TrendingUp'    ? TrendingUp :
+                insight.icon === 'Users'         ? Users :
+                Info
+              return (
+                <div key={i} className={`rounded-lg border p-4 ${borderColor}`}>
+                  <div className={`flex items-center gap-1.5 text-sm font-semibold mb-1 ${textColor}`}>
+                    <IconComponent className="h-3.5 w-3.5 flex-shrink-0" />
+                    {insight.title}
+                  </div>
+                  <div className="text-xs text-text-muted leading-relaxed">{insight.body}</div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* ── MAIN GRID ───────────────────────────────────────────────────── */}
       <div className="grid gap-6 lg:grid-cols-3">

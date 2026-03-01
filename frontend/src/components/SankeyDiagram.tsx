@@ -16,12 +16,23 @@ interface SankeyLinkInput {
   avgRisk: number
 }
 
+export interface SankeyNodeSelected {
+  id: string
+  name: string
+  type: 'institution' | 'vendor'
+  riskLevel: string
+  totalValue: number
+  contractCount: number
+}
+
 interface SankeyDiagramProps {
   nodes: SankeyNodeInput[]
   links: SankeyLinkInput[]
   width?: number
   height?: number
   onFlowClick?: (sourceId: string, targetId: string) => void
+  onNodeClick?: (node: SankeyNodeSelected) => void
+  selectedNodeId?: string
 }
 
 const RISK_COLORS: Record<string, string> = {
@@ -44,6 +55,8 @@ export function SankeyDiagram({
   width = 900,
   height = 500,
   onFlowClick,
+  onNodeClick,
+  selectedNodeId,
 }: SankeyDiagramProps) {
   const [tooltip, setTooltip] = useState<{
     x: number
@@ -91,15 +104,29 @@ export function SankeyDiagram({
           {sLinks.map((link, i) => {
             const src = link.source as any
             const tgt = link.target as any
-            const sc = RISK_COLORS[src.riskLevel] ?? RISK_COLORS.unknown
-            const tc = RISK_COLORS[tgt.riskLevel] ?? RISK_COLORS.unknown
+            const ld = link as any
+            // Color by avgRisk: high avg risk -> red, low -> green, otherwise use node colors
+            const avgRisk: number = ld.avgRisk ?? 0
+            let flowColor: string
+            if (avgRisk >= 0.5) flowColor = RISK_COLORS.critical
+            else if (avgRisk >= 0.3) flowColor = RISK_COLORS.high
+            else if (avgRisk >= 0.1) flowColor = RISK_COLORS.medium
+            else flowColor = RISK_COLORS.low
+            // If avgRisk is 0 (no data), fall back to node risk colors
+            const sc = avgRisk > 0 ? flowColor : (RISK_COLORS[src.riskLevel] ?? RISK_COLORS.unknown)
+            const tc = avgRisk > 0 ? flowColor : (RISK_COLORS[tgt.riskLevel] ?? RISK_COLORS.unknown)
             return (
               <linearGradient key={i} id={`lg-${i}`} x1="0%" x2="100%">
-                <stop offset="0%" stopColor={sc} stopOpacity={0.4} />
-                <stop offset="100%" stopColor={tc} stopOpacity={0.4} />
+                <stop offset="0%" stopColor={sc} stopOpacity={0.45} />
+                <stop offset="100%" stopColor={tc} stopOpacity={0.35} />
               </linearGradient>
             )
           })}
+          <style>{`
+            @keyframes sankeyDash {
+              to { stroke-dashoffset: -20; }
+            }
+          `}</style>
         </defs>
 
         {/* Links */}
@@ -108,14 +135,21 @@ export function SankeyDiagram({
           const src = link.source as any
           const tgt = link.target as any
           const ld = link as any
+          const strokeW = Math.max(1, (link as any).width ?? 1)
+          const isSourceSelected = selectedNodeId && (src.id === selectedNodeId || tgt.id === selectedNodeId)
           return (
             <path
               key={i}
               d={pathD || ''}
               fill="none"
               stroke={`url(#lg-${i})`}
-              strokeWidth={Math.max(1, (link as any).width ?? 1)}
-              className="cursor-pointer transition-opacity hover:opacity-75"
+              strokeWidth={strokeW}
+              strokeDasharray={`${strokeW * 2} ${strokeW}`}
+              className="cursor-pointer transition-opacity"
+              opacity={selectedNodeId && !isSourceSelected ? 0.2 : 1}
+              style={{
+                animation: 'sankeyDash 1.2s linear infinite',
+              }}
               onClick={() => onFlowClick?.(src.id, tgt.id)}
               onMouseEnter={e =>
                 setTooltip({
@@ -138,21 +172,51 @@ export function SankeyDiagram({
           const y0 = n.y0 ?? 0
           const y1 = n.y1 ?? 0
           const isLeft = x0 < width / 2
+          const isSelected = selectedNodeId === n.id
+          // Compute contract count from connected links
+          const nodeLinks = (sLinks as any[]).filter(
+            l => (l.source as any).id === n.id || (l.target as any).id === n.id
+          )
+          const contractCount = nodeLinks.reduce((s: number, l: any) => s + (l.contractCount ?? 0), 0)
           return (
-            <g key={i}>
+            <g
+              key={i}
+              className="cursor-pointer"
+              onClick={() => onNodeClick?.({
+                id: n.id,
+                name: n.name,
+                type: n.type,
+                riskLevel: n.riskLevel,
+                totalValue: n.value ?? 0,
+                contractCount,
+              })}
+            >
+              {isSelected && (
+                <rect
+                  x={x0 - 3}
+                  y={y0 - 3}
+                  width={Math.max(1, x1 - x0) + 6}
+                  height={Math.max(1, y1 - y0) + 6}
+                  fill="none"
+                  stroke="#06b6d4"
+                  strokeWidth={2}
+                  rx={4}
+                  opacity={0.9}
+                />
+              )}
               <rect
                 x={x0}
                 y={y0}
                 width={Math.max(1, x1 - x0)}
                 height={Math.max(1, y1 - y0)}
                 fill={color}
-                opacity={0.85}
+                opacity={selectedNodeId && !isSelected ? 0.4 : 0.9}
                 rx={2}
                 onMouseEnter={e =>
                   setTooltip({
                     x: e.clientX,
                     y: e.clientY,
-                    content: `${n.name}\n${formatMXN(n.value ?? 0)}`,
+                    content: `${n.name}\n${formatMXN(n.value ?? 0)}\n${contractCount} contracts`,
                   })
                 }
                 onMouseLeave={() => setTooltip(null)}
@@ -163,7 +227,8 @@ export function SankeyDiagram({
                 dy="0.35em"
                 textAnchor={isLeft ? 'start' : 'end'}
                 fontSize={11}
-                fill="currentColor"
+                fill={isSelected ? '#06b6d4' : 'currentColor'}
+                fontWeight={isSelected ? 600 : 400}
                 className="text-text-secondary pointer-events-none"
               >
                 {n.name.length > 24 ? n.name.slice(0, 24) + '…' : n.name}

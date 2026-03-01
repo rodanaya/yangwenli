@@ -38,6 +38,8 @@ import {
   Calendar,
   TrendingUp,
   Globe2,
+  DollarSign,
+  Zap,
 } from 'lucide-react'
 
 // ============================================================================
@@ -94,7 +96,9 @@ export function ExecutiveSummary() {
   return (
     <article className="max-w-4xl mx-auto pb-20 space-y-16">
       <ScrollReveal delay={80}><ReportHeader data={data} /></ScrollReveal>
-      <ScrollReveal delay={120}><KeyFindings /></ScrollReveal>
+      <ScrollReveal delay={100}><StatBombs data={data} /></ScrollReveal>
+      <ScrollReveal delay={120}><WhatWeFound data={data} /></ScrollReveal>
+      <ScrollReveal delay={140}><KeyFindings /></ScrollReveal>
       <Divider />
       {/* 00 — CONTEXT: How the System Works & What's Changing */}
       <ScrollReveal><SectionSystem /></ScrollReveal>
@@ -207,6 +211,144 @@ function ReportHeader({ data }: { data: ExecutiveSummaryResponse }) {
       </div>
       </div>
     </header>
+  )
+}
+
+// ============================================================================
+// Hero Stat Bombs — dramatic number callouts after the header
+// ============================================================================
+
+function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
+  const { risk } = data
+  const highRiskRate = (risk.high_pct + risk.critical_pct).toFixed(1)
+
+  const bombs = [
+    {
+      value: `${highRiskRate}%`,
+      label: 'High-Risk Rate',
+      sub: 'Within OECD 2-15% benchmark',
+      glow: 'rgba(248,113,113,0.3)',
+      color: '#f87171',
+    },
+    {
+      value: '3.1M',
+      label: 'Contracts Analyzed',
+      sub: '2002 – 2025 · All federal procurement',
+      glow: 'rgba(6,182,212,0.3)',
+      color: '#22d3ee',
+    },
+    {
+      value: '0.957',
+      label: 'Model AUC',
+      sub: 'Train/test temporal split · v5.1',
+      glow: 'rgba(34,197,94,0.3)',
+      color: '#4ade80',
+    },
+    {
+      value: '22',
+      label: 'Documented Cases',
+      sub: 'Ground truth for corruption detection',
+      glow: 'rgba(251,191,36,0.3)',
+      color: '#fbbf24',
+    },
+  ]
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {bombs.map((b, i) => (
+        <ScrollReveal key={b.label} delay={i * 80}>
+          <div
+            className="relative rounded-xl border border-border/20 bg-surface-raised/20 p-5 text-center overflow-hidden hover:border-opacity-60 transition-all duration-300"
+            style={{ borderColor: `${b.color}33` }}
+            onMouseEnter={e => (e.currentTarget.style.boxShadow = `0 0 32px 4px ${b.glow}`)}
+            onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
+          >
+            {/* Subtle radial glow background */}
+            <div
+              className="absolute inset-0 opacity-5 pointer-events-none"
+              style={{ background: `radial-gradient(ellipse at 50% 50%, ${b.color}, transparent 70%)` }}
+            />
+            <div
+              className="text-4xl sm:text-5xl font-black font-mono text-white tracking-tight relative z-10"
+              style={{ textShadow: `0 0 40px ${b.glow}` }}
+            >
+              {b.value}
+            </div>
+            <div className="text-xs text-text-muted uppercase tracking-widest mt-1.5 font-mono relative z-10">
+              {b.label}
+            </div>
+            <div className="text-[10px] mt-0.5 font-mono relative z-10" style={{ color: `${b.color}99` }}>
+              {b.sub}
+            </div>
+          </div>
+        </ScrollReveal>
+      ))}
+    </div>
+  )
+}
+
+// ============================================================================
+// What We Found — bold finding highlight cards
+// ============================================================================
+
+function WhatWeFound({ data }: { data: ExecutiveSummaryResponse }) {
+  const { risk } = data
+  const highRiskValue = (risk.high_value ?? 0) + (risk.critical_value ?? 0)
+
+  const findings = [
+    {
+      icon: AlertTriangle,
+      value: formatCompactMXN(highRiskValue),
+      desc: 'in contracts flagged as high or critical risk',
+      borderColor: 'border-red-500/20',
+      bgColor: 'bg-red-500/5',
+      iconColor: 'text-red-400',
+      valueColor: 'text-red-400',
+    },
+    {
+      icon: TrendingUp,
+      value: '71%',
+      desc: 'of contracts awarded without open competition (direct award)',
+      borderColor: 'border-orange-500/20',
+      bgColor: 'bg-orange-500/5',
+      iconColor: 'text-orange-400',
+      valueColor: 'text-orange-400',
+    },
+    {
+      icon: DollarSign,
+      value: '1.33×',
+      desc: 'more contracts signed in December vs other months — the budget-dump pattern',
+      borderColor: 'border-amber-500/20',
+      bgColor: 'bg-amber-500/5',
+      iconColor: 'text-amber-400',
+      valueColor: 'text-amber-400',
+    },
+    {
+      icon: Zap,
+      value: '99.9%',
+      desc: 'of IMSS ghost company contracts detected at high or critical risk',
+      borderColor: 'border-cyan-500/20',
+      bgColor: 'bg-cyan-500/5',
+      iconColor: 'text-cyan-400',
+      valueColor: 'text-cyan-400',
+    },
+  ]
+
+  return (
+    <div className="grid sm:grid-cols-2 gap-4">
+      {findings.map((f, i) => {
+        const Icon = f.icon
+        return (
+          <ScrollReveal key={f.desc} delay={i * 80}>
+            <div className={`rounded-xl border p-5 ${f.borderColor} ${f.bgColor}`}>
+              <Icon className={`h-6 w-6 mb-3 ${f.iconColor}`} />
+              <div className={`text-2xl font-bold mb-1 ${f.valueColor}`}>{f.value}</div>
+              <div className="text-sm text-text-muted">{f.desc}</div>
+            </div>
+          </ScrollReveal>
+        )
+      })}
+    </div>
   )
 }
 
@@ -887,6 +1029,132 @@ function PatternWebDiagram() {
 }
 
 // ============================================================================
+// Risk Level Infographic — 4-tier visual stack
+// ============================================================================
+
+function RiskLevelInfographic({ data }: { data: ExecutiveSummaryResponse }) {
+  const { risk } = data
+  const ref = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } },
+      { threshold: 0.15 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  const tiers = [
+    {
+      level: 'CRITICAL',
+      color: '#f87171',
+      bg: 'rgba(248,113,113,0.08)',
+      border: 'rgba(248,113,113,0.35)',
+      pct: `${risk.critical_pct.toFixed(1)}%`,
+      count: (201_745).toLocaleString(),
+      contracts: '201,745 contracts',
+      action: 'Immediate investigation',
+      barWidth: risk.critical_pct,
+    },
+    {
+      level: 'HIGH',
+      color: '#fb923c',
+      bg: 'rgba(251,146,60,0.07)',
+      border: 'rgba(251,146,60,0.3)',
+      pct: `${risk.high_pct.toFixed(1)}%`,
+      count: (126_553).toLocaleString(),
+      contracts: '126,553 contracts',
+      action: 'Priority review',
+      barWidth: risk.high_pct,
+    },
+    {
+      level: 'MEDIUM',
+      color: '#fbbf24',
+      bg: 'rgba(251,191,36,0.06)',
+      border: 'rgba(251,191,36,0.25)',
+      pct: `${risk.medium_pct.toFixed(1)}%`,
+      count: '~1.36M',
+      contracts: '~1.36M contracts',
+      action: 'Watch list',
+      barWidth: risk.medium_pct,
+    },
+    {
+      level: 'LOW',
+      color: '#4ade80',
+      bg: 'rgba(74,222,128,0.04)',
+      border: 'rgba(74,222,128,0.2)',
+      pct: `${risk.low_pct.toFixed(1)}%`,
+      count: '~1.42M',
+      contracts: '~1.42M contracts',
+      action: 'Standard monitoring',
+      barWidth: risk.low_pct,
+    },
+  ]
+
+  const maxBar = Math.max(...tiers.map(t => t.barWidth))
+
+  return (
+    <div ref={ref} className="my-6">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-3">
+        Risk Level Distribution — 3.1M Contracts
+      </p>
+      <div className="space-y-2">
+        {tiers.map((tier, i) => (
+          <div
+            key={tier.level}
+            className="rounded-lg border overflow-hidden"
+            style={{
+              background: tier.bg,
+              borderColor: tier.border,
+              opacity: visible ? 1 : 0,
+              transform: visible ? 'translateX(0)' : 'translateX(-16px)',
+              transition: `opacity 400ms ${i * 80}ms ease, transform 400ms ${i * 80}ms ease`,
+            }}
+          >
+            <div className="flex items-center gap-3 px-4 py-3">
+              {/* Level badge */}
+              <div
+                className="text-[10px] font-black tracking-widest font-mono px-2 py-1 rounded w-20 text-center flex-shrink-0"
+                style={{ color: tier.color, background: `${tier.color}18`, border: `1px solid ${tier.color}40` }}
+              >
+                {tier.level}
+              </div>
+              {/* Bar */}
+              <div className="flex-1 relative h-6 rounded overflow-hidden bg-background-elevated/40">
+                <div
+                  className="absolute inset-y-0 left-0 rounded"
+                  style={{
+                    width: visible ? `${(tier.barWidth / maxBar) * 100}%` : '0%',
+                    background: `linear-gradient(90deg, ${tier.color}60, ${tier.color}30)`,
+                    transition: `width 700ms ${200 + i * 100}ms cubic-bezier(0.16,1,0.3,1)`,
+                  }}
+                />
+                <div className="absolute inset-0 flex items-center px-2">
+                  <span className="text-xs font-bold font-mono" style={{ color: tier.color }}>
+                    {tier.pct}
+                  </span>
+                  <span className="text-[10px] text-text-muted font-mono ml-2 hidden sm:inline">
+                    · {tier.contracts}
+                  </span>
+                </div>
+              </div>
+              {/* Action */}
+              <div className="text-[10px] text-text-muted font-mono w-32 text-right flex-shrink-0 hidden sm:block">
+                {tier.action}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
 // S1: The Threat Assessment
 // ============================================================================
 
@@ -917,6 +1185,9 @@ function SectionThreat({ data }: { data: ExecutiveSummaryResponse }) {
           components={{ bold: <strong className="text-text-primary" /> }}
         />
       </p>
+
+      {/* Risk Level Infographic — 4-tier visual stack */}
+      <RiskLevelInfographic data={data} />
 
       <CorruptionFunnel data={data} />
 
@@ -1140,6 +1411,93 @@ function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
 }
 
 // ============================================================================
+// Corruption Cases Timeline — vertical chronological list
+// ============================================================================
+
+const TIMELINE_CASES = [
+  { year: 2004, name: 'La Estafa Maestra', sector: 'gobernacion', type: 'Ghost companies', impact: '~$7.7B MXN' },
+  { year: 2012, name: 'Grupo Higa / Casa Blanca', sector: 'infraestructura', type: 'Conflict of interest', impact: 'Undisclosed' },
+  { year: 2014, name: 'Odebrecht-PEMEX Bribery', sector: 'energia', type: 'Bribery', impact: '$10.5M USD' },
+  { year: 2015, name: 'Oceanografia PEMEX Fraud', sector: 'energia', type: 'Invoice fraud', impact: '$400M MXN' },
+  { year: 2016, name: 'IPN Cartel de la Limpieza', sector: 'educacion', type: 'Bid rigging', impact: '$180M MXN' },
+  { year: 2017, name: 'IMSS Ghost Company Network', sector: 'salud', type: 'Ghost companies', impact: '$2.8B MXN' },
+  { year: 2018, name: 'SAT Tender Rigging (SixSigma)', sector: 'hacienda', type: 'Tender rigging', impact: '$320M MXN' },
+  { year: 2019, name: 'SEGOB-Mainbit IT Monopoly', sector: 'gobernacion', type: 'Monopoly', impact: '$1.1B MXN' },
+  { year: 2020, name: 'COVID-19 Emergency Procurement', sector: 'salud', type: 'Embezzlement', impact: '$3.4B MXN' },
+  { year: 2020, name: 'Segalmex Food Distribution', sector: 'agricultura', type: 'Procurement fraud', impact: '$15B MXN' },
+  { year: 2021, name: 'Edenred Government Voucher Monopoly', sector: 'energia', type: 'Monopoly', impact: '$8.9B MXN' },
+  { year: 2021, name: 'Toka IT Monopoly', sector: 'tecnologia', type: 'Monopoly', impact: '$2.1B MXN' },
+  { year: 2022, name: 'SAT EFOS Ghost Network (Case 22)', sector: 'otros', type: 'Ghost companies', impact: '38 confirmed RFCs' },
+] as const
+
+function CorruptionTimeline() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } },
+      { threshold: 0.05 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  return (
+    <div ref={ref} className="mb-6">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-4">
+        Ground Truth Cases — Chronological Timeline
+      </p>
+      <div className="relative">
+        {/* Vertical line */}
+        <div className="absolute left-4 top-0 bottom-0 w-px bg-border/30" />
+        <div className="space-y-0">
+          {TIMELINE_CASES.map((c, i) => {
+            const dotColor = SECTOR_COLORS[c.sector] ?? SECTOR_COLORS.otros
+            return (
+              <div
+                key={`${c.year}-${c.name}`}
+                className="relative pl-10 pb-5"
+                style={{
+                  opacity: visible ? 1 : 0,
+                  transform: visible ? 'translateX(0)' : 'translateX(-12px)',
+                  transition: `opacity 350ms ${i * 55}ms ease, transform 350ms ${i * 55}ms ease`,
+                }}
+              >
+                {/* Dot */}
+                <div
+                  className="absolute left-2.5 top-1.5 w-3 h-3 rounded-full border-2 flex-shrink-0"
+                  style={{
+                    borderColor: dotColor,
+                    background: `${dotColor}33`,
+                    boxShadow: `0 0 6px ${dotColor}55`,
+                  }}
+                />
+                {/* Content */}
+                <div className="text-[10px] text-text-muted font-mono mb-0.5">{c.year}</div>
+                <div className="text-sm font-semibold text-text-primary leading-tight">{c.name}</div>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span
+                    className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                    style={{ color: dotColor, background: `${dotColor}18`, border: `1px solid ${dotColor}30` }}
+                  >
+                    {c.type}
+                  </span>
+                  <span className="text-[10px] text-text-muted font-mono capitalize">{c.sector}</span>
+                  <span className="text-[10px] text-text-muted font-mono">&middot; {c.impact}</span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
 // S2: The Proof — Ground Truth Validation
 // ============================================================================
 
@@ -1210,6 +1568,9 @@ function SectionProof({ data }: { data: ExecutiveSummaryResponse }) {
           </div>
         ))}
       </div>
+
+      {/* Corruption Cases Timeline */}
+      <CorruptionTimeline />
 
       {/* Early warning callout */}
       <div className="border-l-2 border-accent/50 bg-accent/[0.03] rounded-r-md px-5 py-4 mb-6">
@@ -1629,6 +1990,100 @@ function SectionAdministrations({ data }: { data: ExecutiveSummaryResponse }) {
 }
 
 // ============================================================================
+// Model Evolution AUC Comparison Bars
+// ============================================================================
+
+function ModelEvolutionBars() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } },
+      { threshold: 0.2 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  const versions = [
+    {
+      version: 'v3.3',
+      label: 'Weighted Checklist',
+      auc: 0.584,
+      barColor: '#f87171',
+      tag: '8 rule-based factors',
+    },
+    {
+      version: 'v4.0',
+      label: 'Statistical Framework',
+      auc: 0.942,
+      barColor: '#fbbf24',
+      tag: 'Z-scores + Mahalanobis',
+    },
+    {
+      version: 'v5.1',
+      label: 'Per-Sector Sub-Models',
+      auc: 0.957,
+      barColor: '#4ade80',
+      tag: 'Active · 16 features · ElasticNet',
+    },
+  ]
+
+  const maxAuc = 1.0
+
+  return (
+    <div ref={ref} className="mb-8">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-3">
+        Model Evolution — AUC-ROC (higher = better discrimination)
+      </p>
+      <div className="space-y-3">
+        {versions.map((v, i) => (
+          <div key={v.version} className="flex items-center gap-3">
+            <div className="flex-shrink-0 w-10 text-xs font-black font-mono text-text-muted text-right">
+              {v.version}
+            </div>
+            <div className="flex-1 relative h-8 rounded bg-surface-raised/30 overflow-hidden">
+              <div
+                className="absolute inset-y-0 left-0 rounded"
+                style={{
+                  width: visible ? `${(v.auc / maxAuc) * 100}%` : '0%',
+                  background: `linear-gradient(90deg, ${v.barColor}70, ${v.barColor}40)`,
+                  borderRight: `2px solid ${v.barColor}`,
+                  transition: `width 700ms ${150 + i * 130}ms cubic-bezier(0.16,1,0.3,1)`,
+                }}
+              />
+              <div className="absolute inset-0 flex items-center px-3 gap-3">
+                <span className="text-sm font-bold font-mono" style={{ color: v.barColor }}>
+                  {v.auc.toFixed(3)}
+                </span>
+                <span className="text-xs text-text-muted hidden sm:inline">{v.label}</span>
+              </div>
+            </div>
+            <div
+              className="flex-shrink-0 text-[10px] font-mono px-2 py-0.5 rounded hidden sm:block"
+              style={{
+                color: v.barColor,
+                background: `${v.barColor}14`,
+                border: `1px solid ${v.barColor}30`,
+              }}
+            >
+              {v.tag}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center justify-between mt-1 px-13 text-[9px] font-mono text-text-muted">
+        <span className="pl-14">0.50 (random)</span>
+        <span>1.00 (perfect)</span>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
 // S8: How We Know — Model Transparency
 // ============================================================================
 
@@ -1652,6 +2107,9 @@ function SectionModel({ data }: { data: ExecutiveSummaryResponse }) {
       </p>
 
       <AIPipelineChart />
+
+      {/* Model evolution AUC comparison */}
+      <ModelEvolutionBars />
 
       {/* Metric badges */}
       <div className="flex flex-wrap gap-3 mb-8">
