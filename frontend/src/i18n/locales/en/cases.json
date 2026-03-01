@@ -61,7 +61,13 @@
     "amountRange": "{{low}} – {{high}} MXN",
     "amountLow": "~{{low}} MXN",
     "mlLinked": "ML-linked",
-    "viewDetail": "View case"
+    "mlTrainingData": "Model training data",
+    "viewDetail": "View case",
+    "compranetFull": "Full COMPRANET",
+    "compranetPartial": "Partial COMPRANET",
+    "compranetInvisible": "Not in COMPRANET",
+    "yearSingle": "{{year}}",
+    "contracts": "{{count}} contracts"
   },
   "detail": {
     "backToLibrary": "← Case Library",

@@ -470,7 +470,7 @@ function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
       </div>
       <p className="text-center text-[10px] text-risk-critical font-mono mt-1">
         {visible
-          ? `${risk.critical_pct.toFixed(1)}% · ${(178938).toLocaleString()} contracts · Immediate investigation`
+          ? `${risk.critical_pct.toFixed(1)}% · ${(201745).toLocaleString()} contracts · Immediate investigation`
           : ''}
       </p>
     </div>

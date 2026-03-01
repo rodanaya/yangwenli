@@ -108,7 +108,7 @@
     "highRiskContracts": "High-risk contracts",
     "directAwards": "Direct awards",
     "singleBidders": "Single bidders",
-    "p3": "A counterintuitive finding: <bold>direct awards are not the primary risk signal</bold>. In our model, direct award procedures carry only a slightly positive coefficient (+0.182), providing minimal discriminating signal. The real red flag is not how a contract is awarded, but <bold>who keeps winning</bold>. Price volatility — vendors with wildly varying contract sizes — is the strongest single predictor of corruption in v5.0."
+    "p3": "A counterintuitive finding: <bold>direct awards are not the primary risk signal</bold>. In our model, direct award procedures carry only a slightly positive coefficient (+0.182), providing minimal discriminating signal. The real red flag is not how a contract is awarded, but <bold>who keeps winning</bold>. Price volatility — vendors with wildly varying contract sizes — is the strongest single predictor of corruption in v5.1."
   },
 
   "s2": {
@@ -196,7 +196,7 @@
 
   "s8": {
     "title": "How We Know",
-    "p1": "The v5.0 model transforms procurement analysis from a weighted indicator checklist to a <bold>statistical risk scoring framework</bold>. Every contract receives a score measuring similarity to documented corruption patterns, derived from 16 features normalized against sector and year baselines using z-scores, with multivariate anomaly detection via Mahalanobis distance and logistic regression trained on {{contracts}} known-bad contracts.",
+    "p1": "The v5.1 model transforms procurement analysis from a weighted indicator checklist to a <bold>statistical risk scoring framework</bold>. Every contract receives a score measuring similarity to documented corruption patterns, derived from 16 features normalized against sector and year baselines using z-scores, with multivariate anomaly detection via Mahalanobis distance and logistic regression trained on {{contracts}} known-bad contracts.",
     "discriminationPower": "Discrimination power",
     "calibrationQuality": "Calibration quality",
     "vsRandom": "vs random baseline",

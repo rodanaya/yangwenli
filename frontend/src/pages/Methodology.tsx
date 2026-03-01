@@ -65,10 +65,10 @@ const V33_WEIGHTS = [
 ] as const
 
 const RISK_LEVELS_V5 = [
-  { level: 'Critical', threshold: '>= 0.50', meaning: 'Very high similarity to known corruption patterns', pct: '6.1%', count: '190,638', color: '#f87171' },
-  { level: 'High', threshold: '>= 0.30', meaning: 'High similarity to known corruption patterns', pct: '2.9%', count: '89,588', color: '#fb923c' },
-  { level: 'Medium', threshold: '>= 0.10', meaning: 'Moderate similarity to known corruption patterns', pct: '13.2%', count: '410,462', color: '#fbbf24' },
-  { level: 'Low', threshold: '< 0.10', meaning: 'Low similarity to known corruption patterns', pct: '77.8%', count: '2,419,319', color: '#4ade80' },
+  { level: 'Critical', threshold: '>= 0.50', meaning: 'Very high similarity to known corruption patterns', pct: '6.5%', count: '201,745', color: '#f87171' },
+  { level: 'High', threshold: '>= 0.30', meaning: 'High similarity to known corruption patterns', pct: '4.1%', count: '126,553', color: '#fb923c' },
+  { level: 'Medium', threshold: '>= 0.10', meaning: 'Moderate similarity to known corruption patterns', pct: '43.9%', count: '~1,363,000', color: '#fbbf24' },
+  { level: 'Low', threshold: '< 0.10', meaning: 'Low similarity to known corruption patterns', pct: '45.6%', count: '~1,415,000', color: '#4ade80' },
 ] as const
 
 const CORRUPTION_CASES = [
@@ -431,7 +431,7 @@ export function Methodology() {
               </div>
 
               <p className="text-xs text-text-muted">
-                High-risk rate: <strong className="text-text-secondary">9.0%</strong> (critical + high), within OECD benchmark of 2-15%.
+                High-risk rate: <strong className="text-text-secondary">10.6%</strong> (critical + high), within OECD benchmark of 2-15%.
                 v5.1 is the active model, replacing v5.0 on February 27, 2026.
               </p>
             </div>
@@ -777,7 +777,7 @@ export function Methodology() {
                   MODEL COMPARISON
                 </p>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-xs" role="table" aria-label="Model comparison v3.3 vs v5.0">
+                  <table className="w-full text-xs" role="table" aria-label="Model comparison v3.3 vs v5.1">
                     <thead>
                       <tr className="border-b border-border/50">
                         <th className="text-left py-2 pr-3 text-text-muted font-medium">Metric</th>

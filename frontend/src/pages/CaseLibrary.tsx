@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { TableExportButton } from '@/components/TableExportButton'
-import { AlertCircle, Search, X } from 'lucide-react'
+import { AlertCircle, Search, X, Eye, EyeOff, Activity } from 'lucide-react'
+import { RISK_COLORS } from '@/lib/constants'
 
 // ── severity colour ──────────────────────────────────────────────────────────
 const SEVERITY_COLORS: Record<number, string> = {
@@ -32,6 +33,29 @@ const LEGAL_STATUS_COLORS: Record<string, string> = {
   unresolved: 'border-muted text-muted-foreground',
 }
 
+// ── fraud type colours (distinct hue per category) ───────────────────────────
+const FRAUD_TYPE_COLORS: Record<string, string> = {
+  ghost_company:       'border-red-500/60 text-red-400 bg-red-500/10',
+  bid_rigging:         'border-orange-500/60 text-orange-400 bg-orange-500/10',
+  overpricing:         'border-amber-500/60 text-amber-400 bg-amber-500/10',
+  conflict_of_interest:'border-purple-500/60 text-purple-400 bg-purple-500/10',
+  embezzlement:        'border-rose-500/60 text-rose-400 bg-rose-500/10',
+  bribery:             'border-pink-500/60 text-pink-400 bg-pink-500/10',
+  procurement_fraud:   'border-yellow-500/60 text-yellow-400 bg-yellow-500/10',
+  monopoly:            'border-blue-500/60 text-blue-400 bg-blue-500/10',
+  emergency_fraud:     'border-cyan-500/60 text-cyan-400 bg-cyan-500/10',
+  tender_rigging:      'border-indigo-500/60 text-indigo-400 bg-indigo-500/10',
+}
+
+// ── COMPRANET visibility config ───────────────────────────────────────────────
+type CompranetVisibility = 'high' | 'partial' | 'invisible'
+
+const COMPRANET_CONFIG: Record<CompranetVisibility, { icon: typeof Eye; cls: string; dotCls: string }> = {
+  high:      { icon: Eye,    cls: 'text-green-400',  dotCls: 'bg-green-400' },
+  partial:   { icon: Eye,    cls: 'text-yellow-400', dotCls: 'bg-yellow-400' },
+  invisible: { icon: EyeOff, cls: 'text-text-muted', dotCls: 'bg-muted-foreground' },
+}
+
 function formatMXN(n?: number | null): string {
   if (!n) return '?'
   if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B`
@@ -44,12 +68,43 @@ function CaseCard({ cas, onClick }: { cas: ScandalListItem; onClick: () => void 
   const { t, i18n } = useTranslation('cases')
   const name = i18n.language === 'es' ? cas.name_es : cas.name_en
 
+  const isMLLinked = cas.ground_truth_case_id != null
+  const visibility = (cas.compranet_visibility ?? 'invisible') as CompranetVisibility
+  const visCfg = COMPRANET_CONFIG[visibility] ?? COMPRANET_CONFIG.invisible
+  const VisIcon = visCfg.icon
+
+  // Derive year display
+  const yearLabel = cas.contract_year_start
+    ? cas.contract_year_end && cas.contract_year_end !== cas.contract_year_start
+      ? `${cas.contract_year_start}–${cas.contract_year_end}`
+      : String(cas.contract_year_start)
+    : null
+
+  // Border accent for severity 4 (critical) cases
+  const cardBorder = cas.severity === 4
+    ? 'border-red-500/40 hover:border-red-500/60'
+    : 'border-border/60 hover:border-accent/50'
+
   return (
-    <div className="bg-card border border-border/60 rounded-lg p-4 hover:border-accent/50 hover:bg-card/80 transition-all group flex flex-col">
+    <div className={`bg-card border ${cardBorder} rounded-lg hover:bg-card/80 transition-all group flex flex-col overflow-hidden`}>
+      {/* ML training data banner */}
+      {isMLLinked && (
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-accent/10 border-b border-accent/20">
+          <span className="relative flex h-2 w-2 flex-shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: RISK_COLORS.high }} />
+            <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: RISK_COLORS.high }} />
+          </span>
+          <Activity className="h-3 w-3 text-accent flex-shrink-0" />
+          <span className="text-[10px] font-semibold text-accent tracking-wide uppercase">
+            {t('card.mlTrainingData')}
+          </span>
+        </div>
+      )}
+
       {/* Clickable body */}
       <button
         onClick={onClick}
-        className="w-full text-left flex-1"
+        className="w-full text-left flex-1 p-4"
       >
         {/* Header row */}
         <div className="flex items-start justify-between gap-3 mb-2">
@@ -66,33 +121,48 @@ function CaseCard({ cas, onClick }: { cas: ScandalListItem; onClick: () => void 
           {cas.summary_en}
         </p>
 
+        {/* KPI row — year range, compranet visibility, amount */}
+        <div className="flex items-center gap-2 mb-3 text-[10px] text-text-muted font-mono">
+          {yearLabel && (
+            <span className="flex items-center gap-1">
+              <span className="opacity-60">⧗</span>
+              {yearLabel}
+            </span>
+          )}
+          {yearLabel && <span className="opacity-30">·</span>}
+          <span className={`flex items-center gap-1 ${visCfg.cls}`} title={t(`compranetVisibility.${visibility}`)}>
+            <VisIcon className="h-3 w-3" />
+            {visibility === 'high' ? t('card.compranetFull')
+              : visibility === 'partial' ? t('card.compranetPartial')
+              : t('card.compranetInvisible')}
+          </span>
+          {cas.amount_mxn_low && (
+            <>
+              <span className="opacity-30">·</span>
+              <span className="ml-auto">
+                {formatMXN(cas.amount_mxn_low)}
+                {cas.amount_mxn_high ? `–${formatMXN(cas.amount_mxn_high)}` : '+'}
+              </span>
+            </>
+          )}
+        </div>
+
         {/* Tags row */}
         <div className="flex flex-wrap gap-1.5 items-center">
-          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+          <Badge
+            variant="outline"
+            className={`text-[10px] px-1.5 py-0 ${FRAUD_TYPE_COLORS[cas.fraud_type] ?? ''}`}
+          >
             {t(`fraudTypes.${cas.fraud_type}`)}
           </Badge>
           <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${LEGAL_STATUS_COLORS[cas.legal_status] ?? ''}`}>
             {t(`legalStatuses.${cas.legal_status}`)}
           </Badge>
-          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-            {t(`administrations.${cas.administration}`)}
-          </Badge>
-          {cas.amount_mxn_low && (
-            <span className="text-[10px] text-text-muted ml-auto font-mono">
-              {formatMXN(cas.amount_mxn_low)}
-              {cas.amount_mxn_high ? ` – ${formatMXN(cas.amount_mxn_high)}` : '+'}
-            </span>
-          )}
-          {cas.ground_truth_case_id != null && (
-            <span className="text-[10px] text-accent ml-auto font-mono">
-              {t('card.mlLinked')}
-            </span>
-          )}
         </div>
       </button>
 
       {/* Footer: dossier action */}
-      <div className="flex justify-end mt-3 pt-2 border-t border-border/30">
+      <div className="flex justify-end px-4 py-2 border-t border-border/30">
         <AddToDossierButton
           entityType="note"
           entityId={cas.id}

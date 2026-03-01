@@ -70,6 +70,6 @@
   },
   "methodology": {
     "title": "Metodologia",
-    "content": "Los flujos de fondos se agregan de 3.1M contratos de contratacion publica (2002-2025). Los colores de las barras reflejan la puntuacion de riesgo promedio v5.0 para cada flujo: verde (<10%), ambar (10-30%), naranja (30-50%) y rojo (>=50%). El valor de flujo de alto riesgo suma todos los flujos donde el riesgo promedio supera el 30%. Use los filtros de ano y sector para acotar el analisis."
+    "content": "Los flujos de fondos se agregan de 3.1M contratos de contratacion publica (2002-2025). Los colores de las barras reflejan la puntuacion de riesgo promedio v5.1 para cada flujo: verde (<10%), ambar (10-30%), naranja (30-50%) y rojo (>=50%). El valor de flujo de alto riesgo suma todos los flujos donde el riesgo promedio supera el 30%. Use los filtros de ano y sector para acotar el analisis."
   }
 }

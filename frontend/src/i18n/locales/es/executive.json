@@ -108,7 +108,7 @@
     "highRiskContracts": "Contratos de alto riesgo",
     "directAwards": "Adjudicaciones directas",
     "singleBidders": "Licitantes \u00fanicos",
-    "p3": "Un hallazgo contraintuitivo: <bold>las adjudicaciones directas no son la principal se\u00f1al de riesgo</bold>. En nuestro modelo, los procedimientos de adjudicaci\u00f3n directa tienen solo un coeficiente ligeramente positivo (+0.182), proporcionando m\u00ednima capacidad discriminatoria. La verdadera se\u00f1al de alerta no es c\u00f3mo se adjudica un contrato, sino <bold>qui\u00e9n sigue ganando</bold>. La volatilidad de precios \u2014 proveedores con montos de contratos que var\u00edan dr\u00e1sticamente \u2014 es el predictor individual m\u00e1s fuerte de corrupci\u00f3n en v5.0."
+    "p3": "Un hallazgo contraintuitivo: <bold>las adjudicaciones directas no son la principal se\u00f1al de riesgo</bold>. En nuestro modelo, los procedimientos de adjudicaci\u00f3n directa tienen solo un coeficiente ligeramente positivo (+0.182), proporcionando m\u00ednima capacidad discriminatoria. La verdadera se\u00f1al de alerta no es c\u00f3mo se adjudica un contrato, sino <bold>qui\u00e9n sigue ganando</bold>. La volatilidad de precios \u2014 proveedores con montos de contratos que var\u00edan dr\u00e1sticamente \u2014 es el predictor individual m\u00e1s fuerte de corrupci\u00f3n en v5.1."
   },
 
   "s2": {
@@ -196,7 +196,7 @@
 
   "s8": {
     "title": "C\u00f3mo lo Sabemos",
-    "p1": "El modelo v5.0 transforma el an\u00e1lisis de contrataci\u00f3n de una lista de verificaci\u00f3n de indicadores ponderados a un <bold>marco de probabilidades calibradas</bold>. Cada contrato recibe una puntuaci\u00f3n que representa la probabilidad estimada de corrupci\u00f3n, derivada de 16 variables normalizadas contra l\u00edneas base sectoriales y anuales usando z-scores, con detecci\u00f3n de anomal\u00edas multivariada v\u00eda distancia de Mahalanobis y regresi\u00f3n log\u00edstica bayesiana entrenada con {{contracts}} contratos confirmados como irregulares.",
+    "p1": "El modelo v5.1 transforma el an\u00e1lisis de contrataci\u00f3n de una lista de verificaci\u00f3n de indicadores ponderados a un <bold>marco de indicadores estadísticos de riesgo</bold>. Cada contrato recibe una puntuaci\u00f3n que refleja su similitud con patrones de corrupción documentados, derivada de 16 variables normalizadas contra l\u00edneas base sectoriales y anuales usando z-scores, con detecci\u00f3n de anomal\u00edas multivariada v\u00eda distancia de Mahalanobis y regresi\u00f3n log\u00edstica bayesiana entrenada con {{contracts}} contratos confirmados como irregulares.",
     "discriminationPower": "Poder discriminatorio",
     "calibrationQuality": "Calidad de calibraci\u00f3n",
     "vsRandom": "vs l\u00ednea base aleatoria",
@@ -262,6 +262,6 @@
     "sectors": "12 sectores",
     "quote": "\"Hay cosas que no pueden medirse en t\u00e9rminos de victoria o derrota.\"",
     "copyright": "\u00a9 {{year}} Proyecto RUBLI. Todos los Derechos Reservados.",
-    "disclaimer": "Las puntuaciones de riesgo son probabilidades calibradas con intervalos de confianza. Una puntuaci\u00f3n alta indica anomal\u00eda estad\u00edstica consistente con patrones de corrupci\u00f3n \u2014 no constituye prueba de irregularidades."
+    "disclaimer": "Las puntuaciones de riesgo son indicadores estadísticos de riesgo con intervalos de confianza. Una puntuaci\u00f3n alta indica anomal\u00eda estad\u00edstica consistente con patrones de corrupci\u00f3n \u2014 no constituye prueba de irregularidades."
   }
 }

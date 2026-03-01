@@ -79,8 +79,8 @@
     "maxD2": "D² Máximo",
     "anomalousContracts": "Contratos Anómalos",
     "chiSquaredNote": "Basado en prueba chi-cuadrado (k=12, p<0.05)",
-    "riskFactorContribution": "Contribución de Factores de Riesgo (Puntuaciones Z v5.0)",
-    "riskFactorContributionFallback": "Contribución de Factores de Riesgo (Modelo v5.0)",
+    "riskFactorContribution": "Contribución de Factores de Riesgo (Puntuaciones Z v5.1)",
+    "riskFactorContributionFallback": "Contribución de Factores de Riesgo (Modelo v5.1)",
     "riskFactorDetails": "Detalles de Factores de Riesgo",
     "noRiskFactorData": "No hay datos de factores de riesgo disponibles",
     "noRiskFactors": "No hay factores de riesgo disponibles"

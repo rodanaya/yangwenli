@@ -1359,8 +1359,8 @@ export function Dashboard() {
               </div>
               <p className="text-xs text-text-muted">
                 {t('retroactiveDetection', {
-                  detected: groundTruth?.cases ?? 15,
-                  total: groundTruth?.cases ?? 15,
+                  detected: groundTruth?.cases ?? 22,
+                  total: groundTruth?.cases ?? 22,
                   num: formatNumber(groundTruth?.contracts ?? 26582),
                 })}
               </p>
@@ -1418,8 +1418,8 @@ export function Dashboard() {
               <Zap className="h-3.5 w-3.5 text-accent" />
               <span className="text-xs text-text-muted font-medium">
                 {t('casesDetected', {
-                  detected: groundTruth?.cases ?? 15,
-                  total: groundTruth?.cases ?? 15,
+                  detected: groundTruth?.cases ?? 22,
+                  total: groundTruth?.cases ?? 22,
                 })}
               </span>
             </div>

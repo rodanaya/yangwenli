@@ -18,6 +18,10 @@ import {
   Library,
   Briefcase,
   X,
+  History,
+  Zap,
+  Info,
+  FlaskConical,
 } from 'lucide-react'
 import { RubliLogoMark } from '@/components/ui/RubliLogoMark'
 import { LanguageToggle } from '@/components/LanguageToggle'
@@ -51,11 +55,13 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { i18nKey: 'dashboard', href: '/', icon: LayoutDashboard },
       { i18nKey: 'explore', href: '/explore', icon: Layers },
       { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
+      { i18nKey: 'administrations', href: '/administrations', icon: History },
     ],
   },
   {
     sectionKey: 'sections.investigate',
     items: [
+      { i18nKey: 'procurementIntelligence', href: '/procurement-intelligence', icon: Zap },
       { i18nKey: 'investigation', href: '/investigation', icon: Crosshair },
       { i18nKey: 'network', href: '/network', icon: Network },
       { i18nKey: 'contracts', href: '/contracts', icon: FileText },
@@ -70,9 +76,11 @@ const NAV_SECTIONS: NavSectionDef[] = [
   },
 ]
 
-// After-divider items (Methodology + Settings)
+// After-divider items (Methodology, Limitations, Model Transparency, Settings)
 const NAV_BOTTOM: { i18nKey: string; href: string; icon: React.ElementType }[] = [
   { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
+  { i18nKey: 'model', href: '/model', icon: FlaskConical },
+  { i18nKey: 'limitations', href: '/limitations', icon: Info },
   { i18nKey: 'settings', href: '/settings', icon: Settings },
 ]
 

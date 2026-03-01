@@ -68,7 +68,7 @@
     "perSectorFormula": "S(z) = σ(β₀ + βᵀz) / c, where c = 0.887 (PU correction)"
   },
   "modelComparison": {
-    "title": "Model Comparison: v3.3 → v5.0",
+    "title": "Model Comparison: v3.3 → v5.1",
     "metric": "Metric",
     "v33": "v3.3",
     "v50": "v5.0",
@@ -112,7 +112,7 @@
     "factorLift": "Factor Lift vs Ground Truth",
     "factorLiftDesc": "How much more often each risk factor appears in documented corruption cases vs the general contract population. Lift > 1.0 = over-represented in known-bad contracts.",
     "noFactorLift": "No factor lift data available.",
-    "modelComparisonDesc": "Detection rate comparison across model versions (v3.3, v4.0, v5.0). High+ = score >= 0.30, Critical = score >= 0.50.",
+    "modelComparisonDesc": "Detection rate comparison across model versions (v3.3, v4.0, v5.1). High+ = score >= 0.30, Critical = score >= 0.50.",
     "noModelComparison": "No model comparison data available. Run validate_risk_model.py to generate results."
   },
   "modelTransparency": {

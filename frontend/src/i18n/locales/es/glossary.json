@@ -37,7 +37,7 @@
   },
   "aucRoc": {
     "title": "AUC-ROC",
-    "description": "Área Bajo la Curva ROC — mide qué tan bien el modelo distingue contratos corruptos de limpios. 0.5 = adivinanza aleatoria, 1.0 = perfecto. Nuestro modelo v5.0 alcanza 0.960 (AUC de prueba)."
+    "description": "Área Bajo la Curva ROC — mide qué tan bien el modelo distingue contratos corruptos de limpios. 0.5 = adivinanza aleatoria, 1.0 = perfecto. Nuestro modelo v5.1 alcanza 0.957 (AUC de prueba)."
   },
   "industryMismatch": {
     "title": "Discrepancia de Industria",

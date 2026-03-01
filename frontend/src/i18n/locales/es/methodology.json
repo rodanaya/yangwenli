@@ -28,7 +28,7 @@
     "meaning": "Significado",
     "distribution": "Distribución",
     "count": "Cantidad",
-    "disclaimer": "Las puntuaciones de riesgo son probabilidades calibradas con intervalos de confianza del 95%. Una puntuación alta indica anomalía estadística consistente con patrones de corrupción — no constituye prueba."
+    "disclaimer": "Las puntuaciones de riesgo son indicadores estadísticos de riesgo con intervalos de confianza del 95%. Una puntuación alta indica anomalía estadística consistente con patrones de corrupción — no constituye prueba."
   },
   "coefficients": {
     "title": "Coeficientes del Modelo Global v5.1",
@@ -122,6 +122,6 @@
     "perSectorModels": "Modelos por Sector",
     "validationMetrics": "Métricas de Validación",
     "knownLimitations": "Limitaciones Conocidas",
-    "disclaimer": "Las puntuaciones de riesgo son probabilidades calibradas, no conclusiones legales. Las puntuaciones altas indican patrones estadísticos consistentes con corrupción documentada — no constituyen prueba."
+    "disclaimer": "Las puntuaciones de riesgo son indicadores estadísticos de riesgo, no conclusiones legales. Las puntuaciones altas indican patrones estadísticos consistentes con corrupción documentada — no constituyen prueba."
   }
 }

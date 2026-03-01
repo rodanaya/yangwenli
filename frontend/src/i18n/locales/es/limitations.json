@@ -83,7 +83,7 @@
     "causal": {
       "title": "Correlación, No Causalidad",
       "summary": "Una puntuación de riesgo alta significa similitud estadística con contratos corruptos conocidos — no prueba de corrupción. Una puntuación baja no significa que un contrato esté limpio.",
-      "body1": "La puntuación de riesgo es una probabilidad calibrada: una puntuación de 0.85 significa que las características estadísticas del contrato se asemejan a las de contratos de casos documentados de corrupción. No significa que el contrato sea corrupto.",
+      "body1": "La puntuación de riesgo es un indicador estadístico de riesgo: una puntuación de 0.85 significa que las características estadísticas del contrato se asemejan a las de contratos de casos documentados de corrupción. No significa que el contrato sea corrupto.",
       "body2": "Una compra legítima de medicamentos al mayoreo del IMSS a un gran proveedor farmacéutico obtendrá una puntuación alta por las mismas razones que una fraudulenta — monto grande, proveedor concentrado, misma institución. El modelo no puede distinguir intención de estructura.",
       "body3": "De igual forma, un contrato con puntuación baja no está certificado como limpio. Nuevos patrones de corrupción — que el modelo nunca ha visto — obtendrán puntuaciones bajas hasta que se agregue un caso documentado a la verdad fundamental.",
       "workaround": "Trate las puntuaciones de riesgo como triaje de investigación, no como veredictos. Las puntuaciones altas indican dónde buscar; la investigación y la evidencia externa establecen lo que sucedió."
@@ -109,7 +109,7 @@
     "temporal": {
       "title": "Estacionariedad Temporal — El Modelo Puede Volverse Obsoleto",
       "summary": "El modelo fue entrenado con contratos hasta 2020. Los patrones de corrupción pueden evolucionar, y nuevos patrones en datos de 2021–2025 pueden no ser detectados.",
-      "body1": "El modelo v5.0 usa una división temporal entrenamiento/prueba: entrenado con contratos ≤2020, probado con ≥2021. El AUC de prueba de 0.960 (vs entrenamiento 0.967) confirma buena generalización al futuro cercano.",
+      "body1": "El modelo v5.1 usa una división temporal entrenamiento/prueba: entrenado con contratos ≤2020, probado con ≥2021. El AUC de prueba de 0.957 (vs entrenamiento 0.964) confirma buena generalización al futuro cercano.",
       "body2": "Sin embargo, el modelo asume que los patrones de corrupción son relativamente estables en el tiempo — que lo que era corrupto en 2018 tiene una estructura similar a lo corrupto en 2024. Si una nueva administración introduce mecanismos de fraude en contrataciones fundamentalmente diferentes, el modelo puede ser lento para detectarlos.",
       "body3": "La recalibración con nuevos casos de verdad fundamental debe ocurrir cuando se documenten nuevos casos importantes de corrupción.",
       "workaround": "Monitoree la página de Verdad Fundamental para casos recién agregados. Después de que se documenten escándalos importantes, el modelo debe reentrenarse para incorporar los nuevos patrones."

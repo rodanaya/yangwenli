@@ -61,7 +61,13 @@
     "amountRange": "{{low}} – {{high}} MXN",
     "amountLow": "~{{low}} MXN",
     "mlLinked": "Vinculado a ML",
-    "viewDetail": "Ver caso"
+    "mlTrainingData": "Datos de entrenamiento del modelo",
+    "viewDetail": "Ver caso",
+    "compranetFull": "COMPRANET completo",
+    "compranetPartial": "COMPRANET parcial",
+    "compranetInvisible": "Sin COMPRANET",
+    "yearSingle": "{{year}}",
+    "contracts": "{{count}} contratos"
   },
   "detail": {
     "backToLibrary": "← Biblioteca de Casos",

@@ -10,7 +10,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import ReactECharts from 'echarts-for-react'
-import { Network, Search, X, ExternalLink, Users, UserCircle, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react'
+import { Network, Search, X, ExternalLink, Users, UserCircle, RotateCcw, ChevronDown, ChevronUp, ZoomIn, ZoomOut } from 'lucide-react'
 import { RiskBadge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SectionDescription } from '@/components/SectionDescription'
@@ -874,6 +874,20 @@ export function NetworkGraph() {
     }
   }, [])
 
+  const handleZoomIn = useCallback(() => {
+    const instance = chartRef.current?.getEchartsInstance?.()
+    if (instance) {
+      instance.dispatchAction({ type: 'graphRoam', zoom: 1.3 })
+    }
+  }, [])
+
+  const handleZoomOut = useCallback(() => {
+    const instance = chartRef.current?.getEchartsInstance?.()
+    if (instance) {
+      instance.dispatchAction({ type: 'graphRoam', zoom: 1 / 1.3 })
+    }
+  }, [])
+
   // Click handler for ECharts nodes
   const handleGraphEvents = useMemo(
     () => ({
@@ -1066,7 +1080,7 @@ export function NetworkGraph() {
       )}
 
       {/* Main content: graph + side panel */}
-      <div className="flex border border-border rounded-md overflow-hidden" style={{ height: '620px' }}>
+      <div className="flex border border-border rounded-md overflow-hidden" style={{ height: 'calc(100vh - 220px)', minHeight: '500px' }}>
         {/* Graph area */}
         <div className="flex-1 relative min-w-0">
           {/* Search-to-start state — shown before any entity is selected */}
@@ -1133,6 +1147,36 @@ export function NetworkGraph() {
               onEvents={handleGraphEvents}
               opts={{ renderer: 'svg' }}
             />
+          )}
+
+          {/* Zoom controls — top-left overlay, shown when graph is loaded */}
+          {!isLoading && !isEmpty && graphData && (
+            <div className="absolute top-3 left-3 flex flex-col gap-1 pointer-events-auto z-10">
+              <button
+                onClick={handleZoomIn}
+                className="flex items-center justify-center h-7 w-7 rounded bg-background-card/90 border border-border/40 text-text-muted hover:text-accent hover:border-accent/40 transition-colors backdrop-blur-sm"
+                aria-label="Zoom in"
+                title="Zoom in"
+              >
+                <ZoomIn className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={handleZoomOut}
+                className="flex items-center justify-center h-7 w-7 rounded bg-background-card/90 border border-border/40 text-text-muted hover:text-accent hover:border-accent/40 transition-colors backdrop-blur-sm"
+                aria-label="Zoom out"
+                title="Zoom out"
+              >
+                <ZoomOut className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={handleResetView}
+                className="flex items-center justify-center h-7 w-7 rounded bg-background-card/90 border border-border/40 text-text-muted hover:text-accent hover:border-accent/40 transition-colors backdrop-blur-sm"
+                aria-label="Reset view"
+                title="Reset view"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+              </button>
+            </div>
           )}
 
           {/* Hint overlay — shown when graph is loaded */}
@@ -1204,15 +1248,10 @@ export function NetworkGraph() {
                 </div>
               </div>
 
-              {/* Reset view button */}
-              <button
-                onClick={handleResetView}
-                className="flex items-center gap-1.5 text-text-muted hover:text-accent transition-colors border-t border-border/30 pt-1.5 mt-0.5"
-                aria-label="Reset graph view"
-              >
-                <RotateCcw className="h-3 w-3 shrink-0" />
-                <span>Reset view</span>
-              </button>
+              {/* Scroll to zoom, drag to pan */}
+              <div className="border-t border-border/30 pt-1.5 text-text-muted/60">
+                Scroll to zoom · drag to pan
+              </div>
             </div>
           )}
         </div>
