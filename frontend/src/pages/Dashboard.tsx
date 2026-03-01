@@ -745,7 +745,7 @@ export function Dashboard() {
         <p className="text-sm text-text-muted mb-4">
           {t('systemicPatternsDesc')}
         </p>
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
           {/* Direct Awards */}
           <button
             onClick={() => navigate('/contracts?is_direct_award=true')}
@@ -1242,7 +1242,7 @@ export function Dashboard() {
       {/* ================================================================ */}
       {/* SECTORS + TRAJECTORY — 2-column grid */}
       {/* ================================================================ */}
-      <div className="grid gap-4 lg:grid-cols-5">
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-5">
         {/* Sector Intelligence — 3 columns */}
         <Card className="lg:col-span-3 border-border/40">
           <CardContent className="pt-5 pb-3">
@@ -1438,7 +1438,7 @@ export function Dashboard() {
         <p className="text-xs text-text-muted mb-3">
           {t('startInvestigatingDesc')}
         </p>
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
           <button
             onClick={() => navigate('/categories')}
             className="flex flex-col gap-3 p-5 rounded-lg border border-border/40 bg-surface-card/30 hover:border-accent/40 hover:bg-accent/5 transition-all text-left group"

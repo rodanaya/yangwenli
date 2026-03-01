@@ -189,6 +189,37 @@ class ContractService(BaseService):
         # Convert Row to dict using cursor description
         return dict(row)
 
+    def get_contracts_by_ids(
+        self,
+        conn: sqlite3.Connection,
+        contract_ids: list[int],
+    ) -> list[dict]:
+        """Batch-fetch multiple contracts in a single query (used by /compare)."""
+        if not contract_ids:
+            return []
+        placeholders = ",".join("?" * len(contract_ids))
+        cursor = conn.cursor()
+        cursor.execute(
+            f"""
+            SELECT
+                c.*,
+                s.name_es as sector_name,
+                v.name as vendor_name,
+                v.rfc as vendor_rfc,
+                i.name as institution_name,
+                i.institution_type as institution_type
+            FROM contracts c
+            LEFT JOIN sectors s ON c.sector_id = s.id
+            LEFT JOIN vendors v ON c.vendor_id = v.id
+            LEFT JOIN institutions i ON c.institution_id = i.id
+            WHERE c.id IN ({placeholders})
+            ORDER BY c.id
+            """,
+            contract_ids,
+        )
+        rows = cursor.fetchall()
+        return [dict(row) for row in rows]
+
     # Z-feature column names matching the v5.0 pipeline
     Z_COLS = [
         'z_single_bid', 'z_direct_award', 'z_price_ratio',

@@ -819,9 +819,10 @@ export function Contracts() {
             )
           ) : (
             <ExpandableProvider>
+            <div className="overflow-x-auto">
             <ScrollArea className="h-[600px]">
-              <div className="overflow-x-auto min-w-full">
-              <table className="w-full min-w-[700px]" role="table" aria-label="Contracts list">
+              <div className="min-w-[700px]">
+              <table className="w-full" role="table" aria-label="Contracts list">
                 <thead className="sticky top-0 z-10 bg-background-card/95 backdrop-blur-sm border-b-2 border-border">
                   <tr>
                     <th className="px-2 py-2.5 w-8" title={t('table.selectForCompare')}>
@@ -877,6 +878,7 @@ export function Contracts() {
               </table>
               </div>
             </ScrollArea>
+            </div>
             </ExpandableProvider>
           )}
         </CardContent>

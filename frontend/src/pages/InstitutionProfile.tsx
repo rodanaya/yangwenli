@@ -122,7 +122,7 @@ export function InstitutionProfile() {
     staleTime: 2 * 60 * 1000,
   })
 
-  const { data: highRiskContracts, isLoading: highRiskLoading } = useQuery({
+  const { data: highRiskContracts, isLoading: highRiskLoading, error: highRiskContractsError } = useQuery({
     queryKey: ['institution', institutionId, 'contracts', 'high-risk'],
     queryFn: () => institutionApi.getContracts(institutionId, {
       per_page: 10,
@@ -147,7 +147,7 @@ export function InstitutionProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
-  const { data: asfData, isLoading: asfLoading } = useQuery({
+  const { data: asfData, isLoading: asfLoading, error: asfDataError } = useQuery({
     queryKey: ['institution-asf-findings', institutionId],
     queryFn: () => institutionApi.getASFFindings(institutionId),
     staleTime: 24 * 60 * 60 * 1000, // 24 hours
@@ -155,7 +155,7 @@ export function InstitutionProfile() {
   })
 
   // Known scandals for this institution's sector
-  const { data: sectorCases } = useQuery({
+  const { data: sectorCases, error: sectorCasesError } = useQuery({
     queryKey: ['cases', 'by-sector', institution?.sector_id],
     queryFn: () => caseLibraryApi.getBySector(institution!.sector_id!),
     enabled: !!institution?.sector_id,
@@ -163,7 +163,7 @@ export function InstitutionProfile() {
   })
 
   // Ground truth status: does this institution have contracts from known-bad vendors?
-  const { data: groundTruthStatus } = useQuery({
+  const { data: groundTruthStatus, error: groundTruthStatusError } = useQuery({
     queryKey: ['institution', institutionId, 'ground-truth-status'],
     queryFn: () => institutionApi.getGroundTruthStatus(institutionId),
     enabled: !!institutionId,
@@ -171,7 +171,7 @@ export function InstitutionProfile() {
   })
 
   // Waterfall risk breakdown
-  const { data: waterfallData, isLoading: waterfallLoading } = useQuery({
+  const { data: waterfallData, isLoading: waterfallLoading, error: waterfallDataError } = useQuery({
     queryKey: ['institution-risk-waterfall', institutionId],
     queryFn: async () => {
       const res = await fetch(`/api/v1/institutions/${institutionId}/risk-waterfall`)
@@ -339,11 +339,13 @@ export function InstitutionProfile() {
                   {institution.institution_type.replace(/_/g, ' ')}
                 </Badge>
               )}
-              {groundTruthStatus?.is_ground_truth_related && (
+              {groundTruthStatusError ? (
+                <span className="text-xs text-rose-400/80">Failed to load ML status.</span>
+              ) : groundTruthStatus?.is_ground_truth_related ? (
                 <Badge variant="destructive" className="text-xs px-1.5 py-0 h-4">
                   ML-Linked: {groundTruthStatus.case_name}
                 </Badge>
-              )}
+              ) : null}
               {institution.geographic_scope && (
                 <span className="text-xs text-text-muted">{institution.geographic_scope}</span>
               )}
@@ -540,7 +542,7 @@ export function InstitutionProfile() {
           </Card>
 
           {/* Risk Factor Breakdown (Waterfall) */}
-          {(waterfallLoading || waterfallData?.features?.length > 0) && (
+          {(waterfallDataError || waterfallLoading || waterfallData?.features?.length > 0) && (
           <Card className="border-border/40">
             <CardHeader className="pb-2 pt-4">
               <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
@@ -549,7 +551,9 @@ export function InstitutionProfile() {
               </CardTitle>
             </CardHeader>
             <CardContent className="pb-4">
-              {waterfallLoading ? (
+              {waterfallDataError ? (
+                <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load risk breakdown.</p>
+              ) : waterfallLoading ? (
                 <Skeleton className="h-48" />
               ) : waterfallData?.features?.length > 0 ? (
                 <WaterfallRiskChart
@@ -846,7 +850,9 @@ export function InstitutionProfile() {
               </div>
             </CardHeader>
             <CardContent className="p-0 pb-1">
-              {highRiskLoading ? (
+              {highRiskContractsError ? (
+                <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load high-risk contracts.</p>
+              ) : highRiskLoading ? (
                 <div className="p-4 space-y-2">
                   {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10" />)}
                 </div>
@@ -917,7 +923,9 @@ export function InstitutionProfile() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {asfLoading ? (
+              {asfDataError ? (
+                <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load ASF findings.</p>
+              ) : asfLoading ? (
                 <div className="space-y-2">
                   <Skeleton className="h-12" />
                   <Skeleton className="h-12" />
@@ -973,28 +981,34 @@ export function InstitutionProfile() {
       </div>
 
       {/* Known Scandals in this sector */}
-      {sectorCases && sectorCases.length > 0 && (
+      {(sectorCasesError || (sectorCases && sectorCases.length > 0)) && (
         <Card>
           <CardContent className="pt-5 pb-4">
-            <div className="flex items-center gap-2 mb-3">
-              <AlertTriangle className="h-4 w-4 text-risk-high opacity-70" />
-              <h2 className="text-sm font-bold text-text-primary">Known Scandals in Sector</h2>
-              <span className="text-xs text-text-muted">({sectorCases.length})</span>
-            </div>
-            <div className="space-y-1.5">
-              {sectorCases.slice(0, 5).map((c) => (
-                <Link
-                  key={c.slug}
-                  to={`/cases/${c.slug}`}
-                  className="flex items-center justify-between p-2 rounded hover:bg-background-elevated/30 transition-colors group"
-                >
-                  <span className="text-xs font-medium text-text-secondary group-hover:text-accent transition-colors truncate">
-                    {c.name_en || c.name_es}
-                  </span>
-                  <ChevronRight className="h-3 w-3 text-text-muted flex-shrink-0" />
-                </Link>
-              ))}
-            </div>
+            {sectorCasesError ? (
+              <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load sector scandals.</p>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertTriangle className="h-4 w-4 text-risk-high opacity-70" />
+                  <h2 className="text-sm font-bold text-text-primary">Known Scandals in Sector</h2>
+                  <span className="text-xs text-text-muted">({sectorCases!.length})</span>
+                </div>
+                <div className="space-y-1.5">
+                  {sectorCases!.slice(0, 5).map((c) => (
+                    <Link
+                      key={c.slug}
+                      to={`/cases/${c.slug}`}
+                      className="flex items-center justify-between p-2 rounded hover:bg-background-elevated/30 transition-colors group"
+                    >
+                      <span className="text-xs font-medium text-text-secondary group-hover:text-accent transition-colors truncate">
+                        {c.name_en || c.name_es}
+                      </span>
+                      <ChevronRight className="h-3 w-3 text-text-muted flex-shrink-0" />
+                    </Link>
+                  ))}
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       )}

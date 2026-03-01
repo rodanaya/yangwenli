@@ -159,42 +159,42 @@ export function SectorProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
-  const { data: priceBaselines, isLoading: priceLoading } = useQuery({
+  const { data: priceBaselines, isLoading: priceLoading, error: priceBaselinesError } = useQuery({
     queryKey: ['price', 'baselines', sectorId],
     queryFn: () => priceApi.getBaselines(sectorId),
     enabled: !!sectorId,
     staleTime: 10 * 60 * 1000,
   })
 
-  const { data: topCases } = useQuery({
+  const { data: topCases, error: topCasesError } = useQuery({
     queryKey: ['investigation', 'top', 5, sectorId],
     queryFn: () => investigationApi.getTopCases(5, sectorId),
     enabled: !!sectorId,
     staleTime: 10 * 60 * 1000,
   })
 
-  const { data: moneyFlow, isLoading: moneyFlowLoading } = useQuery({
+  const { data: moneyFlow, isLoading: moneyFlowLoading, error: moneyFlowError } = useQuery({
     queryKey: ['analysis', 'money-flow', sectorId],
     queryFn: () => analysisApi.getMoneyFlow(undefined, sectorId),
     enabled: !!sectorId,
     staleTime: 10 * 60 * 1000,
   })
 
-  const { data: sectorCases } = useQuery({
+  const { data: sectorCases, error: sectorCasesError } = useQuery({
     queryKey: ['cases', 'by-sector', sectorId],
     queryFn: () => caseLibraryApi.getBySector(sectorId),
     enabled: !!sectorId,
     staleTime: 10 * 60 * 1000,
   })
 
-  const { data: priceAnomalies, isLoading: priceAnomaliesLoading } = useQuery({
+  const { data: priceAnomalies, isLoading: priceAnomaliesLoading, error: priceAnomaliesError } = useQuery({
     queryKey: ['price', 'hypotheses', sectorId],
     queryFn: () => priceApi.getHypotheses({ sector_id: sectorId, per_page: 6, sort_by: 'confidence', sort_order: 'desc' }),
     enabled: !!sectorId,
     staleTime: 10 * 60 * 1000,
   })
 
-  const { data: sectorInstitutions } = useQuery({
+  const { data: sectorInstitutions, error: sectorInstitutionsError } = useQuery({
     queryKey: ['institutions', 'by-sector', sectorId],
     queryFn: () => institutionApi.getAll({ sector_id: sectorId, per_page: INSTITUTION_LIST_PER_PAGE, sort_by: 'total_amount_mxn', sort_order: 'desc' }),
     enabled: !!sectorId,
@@ -334,7 +334,7 @@ export function SectorProfile() {
           </Card>
 
           {/* PRICE INTELLIGENCE */}
-          {(priceLoading || priceBaseline) && (
+          {(priceLoading || priceBaseline || priceBaselinesError) && (
             <Card className="border-border/40">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-sm">
@@ -343,7 +343,9 @@ export function SectorProfile() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {priceLoading ? (
+                {priceBaselinesError ? (
+                  <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load price data.</p>
+                ) : priceLoading ? (
                   <div className="space-y-2">{[...Array(4)].map((_,i) => <Skeleton key={i} className="h-6" />)}</div>
                 ) : priceBaseline ? (
                   <PriceDistribution baseline={priceBaseline} color={sectorColor} />
@@ -353,7 +355,7 @@ export function SectorProfile() {
           )}
 
           {/* DOCUMENTED CASES */}
-          {sectorCases && sectorCases.length > 0 && (
+          {(sectorCasesError || (sectorCases && sectorCases.length > 0)) && (
             <Card className="border-border/40">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-sm">
@@ -362,7 +364,9 @@ export function SectorProfile() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-1 pb-3">
-                {sectorCases.map((c) => (
+                {sectorCasesError ? (
+                  <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load documented cases.</p>
+                ) : sectorCases?.map((c) => (
                   <Link
                     key={c.slug}
                     to={`/cases/${c.slug}`}
@@ -523,7 +527,7 @@ export function SectorProfile() {
           </Card>
 
           {/* KNOWN CASES */}
-          {caseData.length > 0 && (
+          {(topCasesError || caseData.length > 0) && (
             <Card className="border-risk-high/30 bg-risk-critical/3 overflow-hidden">
               <div className="h-1 w-full bg-gradient-to-r from-risk-critical to-risk-high" />
               <CardHeader className="flex flex-row items-center justify-between pb-3">
@@ -538,7 +542,11 @@ export function SectorProfile() {
                 </Link>
               </CardHeader>
               <CardContent>
-                <InvestigationCases data={caseData} />
+                {topCasesError ? (
+                  <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load investigation cases.</p>
+                ) : (
+                  <InvestigationCases data={caseData} />
+                )}
               </CardContent>
             </Card>
           )}
@@ -553,7 +561,9 @@ export function SectorProfile() {
               <p className="text-xs text-text-muted">Which institutions drive this sector's procurement</p>
             </CardHeader>
             <CardContent>
-              {moneyFlowLoading ? (
+              {moneyFlowError ? (
+                <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load money flow data.</p>
+              ) : moneyFlowLoading ? (
                 <div className="space-y-2">{[...Array(5)].map((_,i) => <Skeleton key={i} className="h-8" />)}</div>
               ) : moneyFlow?.flows?.length ? (
                 <MoneyFlowList flows={moneyFlow.flows.slice(0, 7)} color={sectorColor} />
@@ -580,7 +590,9 @@ export function SectorProfile() {
               </div>
             </CardHeader>
             <CardContent>
-              {priceAnomaliesLoading ? (
+              {priceAnomaliesError ? (
+                <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load price anomalies.</p>
+              ) : priceAnomaliesLoading ? (
                 <div className="space-y-2">{[...Array(4)].map((_,i) => <Skeleton key={i} className="h-10" />)}</div>
               ) : priceAnomalies?.data?.length ? (
                 <PriceAnomalyList data={priceAnomalies.data} color={sectorColor} />
@@ -594,17 +606,20 @@ export function SectorProfile() {
           </Card>
 
           {/* INSTITUTIONS IN SECTOR */}
-          {sectorInstitutions && sectorInstitutions.data && sectorInstitutions.data.length > 0 && (
+          {(sectorInstitutionsError || (sectorInstitutions && sectorInstitutions.data && sectorInstitutions.data.length > 0)) && (
             <Card>
               <CardContent className="pt-5 pb-4">
+                {sectorInstitutionsError ? (
+                  <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load institutions.</p>
+                ) : (
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <Building2 className="h-4 w-4 text-text-muted" />
                     <h2 className="text-sm font-bold text-text-primary">Top Institutions</h2>
-                    <span className="text-xs text-text-muted">({sectorInstitutions.data.length})</span>
+                    <span className="text-xs text-text-muted">({sectorInstitutions!.data.length})</span>
                   </div>
                   <TableExportButton
-                    data={sectorInstitutions.data.map((inst: { id: number; name: string; total_amount_mxn?: number; contract_count?: number }) => ({
+                    data={sectorInstitutions!.data.map((inst: { id: number; name: string; total_amount_mxn?: number; contract_count?: number }) => ({
                       institution_id: inst.id,
                       institution_name: inst.name,
                       total_amount_mxn: inst.total_amount_mxn ?? '',
@@ -614,7 +629,7 @@ export function SectorProfile() {
                   />
                 </div>
                 <div className="space-y-1">
-                  {sectorInstitutions.data.slice(0, 10).map((inst: { id: number; name: string; total_amount_mxn?: number; contract_count?: number }) => (
+                  {sectorInstitutions!.data.slice(0, 10).map((inst: { id: number; name: string; total_amount_mxn?: number; contract_count?: number }) => (
                     <Link
                       key={inst.id}
                       to={`/institutions/${inst.id}`}
@@ -629,6 +644,7 @@ export function SectorProfile() {
                     </Link>
                   ))}
                 </div>
+                )}
               </CardContent>
             </Card>
           )}

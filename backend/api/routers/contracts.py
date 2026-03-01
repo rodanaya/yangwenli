@@ -184,20 +184,19 @@ def compare_contracts(
         raise HTTPException(status_code=400, detail="Maximum 10 contracts can be compared at once.")
 
     with get_db() as conn:
+        rows = contract_service.get_contracts_by_ids(conn, contract_ids)
         results = []
-        for cid in contract_ids:
-            detail = contract_service.get_contract_detail(conn, cid)
-            if detail:
-                detail["is_direct_award"] = bool(detail.get("is_direct_award"))
-                detail["is_single_bid"] = bool(detail.get("is_single_bid"))
-                detail["is_framework"] = bool(detail.get("is_framework"))
-                detail["is_consolidated"] = bool(detail.get("is_consolidated"))
-                detail["is_multiannual"] = bool(detail.get("is_multiannual"))
-                detail["is_high_value"] = bool(detail.get("is_high_value"))
-                detail["is_year_end"] = bool(detail.get("is_year_end"))
-                detail["amount_mxn"] = detail.get("amount_mxn") or 0
-                detail["risk_factors"] = parse_risk_factors(detail.get("risk_factors"))
-                results.append(ContractDetail(**detail))
+        for detail in rows:
+            detail["is_direct_award"] = bool(detail.get("is_direct_award"))
+            detail["is_single_bid"] = bool(detail.get("is_single_bid"))
+            detail["is_framework"] = bool(detail.get("is_framework"))
+            detail["is_consolidated"] = bool(detail.get("is_consolidated"))
+            detail["is_multiannual"] = bool(detail.get("is_multiannual"))
+            detail["is_high_value"] = bool(detail.get("is_high_value"))
+            detail["is_year_end"] = bool(detail.get("is_year_end"))
+            detail["amount_mxn"] = detail.get("amount_mxn") or 0
+            detail["risk_factors"] = parse_risk_factors(detail.get("risk_factors"))
+            results.append(ContractDetail(**detail))
 
         return {"data": results, "total": len(results), "requested": len(contract_ids)}
 

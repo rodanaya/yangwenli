@@ -238,12 +238,11 @@ export default function Landing() {
                 aria-hidden="true"
               >
                 <div
-                  className="relative flex flex-col items-center justify-center rounded-2xl p-10 sm:p-14"
+                  className="relative flex flex-col items-center justify-center rounded-2xl p-10 sm:p-14 w-full sm:w-auto"
                   style={{
                     backgroundColor: `${chapter.color}10`,
                     border: `1px solid ${chapter.color}20`,
-                    minWidth: 260,
-                    minHeight: 260,
+                    minHeight: 220,
                   }}
                 >
                   <Icon
