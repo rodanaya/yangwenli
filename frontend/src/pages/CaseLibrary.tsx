@@ -215,11 +215,30 @@ export default function CaseLibrary() {
     [filters, search]
   )
 
-  const { data, isLoading, error } = useQuery({
+  const { data: rawData, isLoading, error } = useQuery({
     queryKey: ['cases', 'list', queryParams],
     queryFn: () => caseLibraryApi.getAll(queryParams),
     staleTime: 5 * 60 * 1000,
   })
+
+  // Sort by impact: ML-linked cases first (they have known contract counts),
+  // then by severity descending, then by amount descending.
+  // This puts IMSS (9,366 contracts, severity 4, ML-linked) first.
+  const data = useMemo(() => {
+    if (!rawData) return rawData
+    return [...rawData].sort((a, b) => {
+      // ML-linked (ground truth) cases first
+      const aLinked = a.ground_truth_case_id != null ? 1 : 0
+      const bLinked = b.ground_truth_case_id != null ? 1 : 0
+      if (bLinked !== aLinked) return bLinked - aLinked
+      // Then by severity descending (4 = most severe)
+      if (b.severity !== a.severity) return b.severity - a.severity
+      // Then by amount descending
+      const aAmt = a.amount_mxn_low ?? 0
+      const bAmt = b.amount_mxn_low ?? 0
+      return bAmt - aAmt
+    })
+  }, [rawData])
 
   const hasFilters = Object.values(queryParams).some(Boolean)
 

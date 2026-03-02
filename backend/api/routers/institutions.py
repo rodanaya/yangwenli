@@ -1498,7 +1498,8 @@ def get_concentration_rankings(
 
         # Determine year to use
         if year is None:
-            year = conn.execute("SELECT MAX(contract_year) FROM contracts WHERE contract_year IS NOT NULL").fetchone()[0]
+            row = conn.execute("SELECT MAX(contract_year) FROM contracts WHERE contract_year IS NOT NULL").fetchone()
+            year = row[0] if row and row[0] is not None else 2024
 
         sector_filter = "AND i.sector_id = ?" if sector_id else ""
         params: List[Any] = [year, year, limit]

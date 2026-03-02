@@ -18,6 +18,9 @@ import {
   ArrowRight,
   ChevronRight,
   ChevronLeft,
+  Folder,
+  User,
+  Command,
 } from 'lucide-react'
 
 const STORAGE_KEY = 'rubli-welcome-dismissed'
@@ -53,6 +56,117 @@ const STEPS = [
   },
 ]
 
+// ── Step 2: Mini risk bar visualisation ──────────────────────────────────────
+function RiskBarDemo({ t }: { t: (key: string) => string }) {
+  const levels = [
+    { label: t('welcome.step2Critical'), pct: 68, color: '#f87171', active: true },
+    { label: t('welcome.step2High'),     pct: 45, color: '#fb923c', active: false },
+    { label: t('welcome.step2Medium'),   pct: 22, color: '#fbbf24', active: false },
+    { label: t('welcome.step2Low'),      pct: 6,  color: '#4ade80', active: false },
+  ]
+
+  return (
+    <div className="w-full max-w-xs mx-auto mt-3 space-y-2">
+      <p className="text-[11px] font-mono text-text-muted text-center mb-2">
+        {t('welcome.step2ScoreLabel')}
+      </p>
+      {levels.map(({ label, pct, color, active }) => (
+        <div key={label} className="flex items-center gap-2">
+          <span
+            className="text-[10px] w-28 text-right shrink-0 font-medium"
+            style={{ color: active ? color : undefined }}
+          >
+            {label}
+          </span>
+          <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all"
+              style={{
+                width: `${pct}%`,
+                backgroundColor: color,
+                opacity: active ? 1 : 0.35,
+              }}
+            />
+          </div>
+          {active && (
+            <span className="text-[10px] font-mono shrink-0" style={{ color }}>
+              0.68
+            </span>
+          )}
+        </div>
+      ))}
+      <p className="text-[11px] text-text-muted text-center mt-3 leading-snug italic">
+        {t('welcome.step2Caveat')}
+      </p>
+    </div>
+  )
+}
+
+// ── Step 3: Keyboard shortcut display ────────────────────────────────────────
+function SearchDemo({ t }: { t: (key: string) => string }) {
+  // Detect Mac vs non-Mac for the key label
+  const isMac =
+    typeof navigator !== 'undefined' &&
+    /Mac|iPhone|iPad|iPod/.test(navigator.platform)
+
+  return (
+    <div className="w-full max-w-xs mx-auto mt-4 space-y-4">
+      {/* Shortcut badge */}
+      <div className="flex items-center justify-center gap-2">
+        <kbd className="flex items-center gap-1 px-2 py-1 rounded border border-border bg-muted text-xs font-mono text-text-primary">
+          {isMac ? (
+            <Command className="h-3 w-3" />
+          ) : (
+            <span>Ctrl</span>
+          )}
+        </kbd>
+        <span className="text-text-muted text-xs">+</span>
+        <kbd className="px-2 py-1 rounded border border-border bg-muted text-xs font-mono text-text-primary">
+          K
+        </kbd>
+      </div>
+
+      {/* Mock search bar */}
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 bg-card/80">
+        <Search className="h-3.5 w-3.5 text-text-muted shrink-0" />
+        <span className="text-xs text-text-muted italic">
+          {t('welcome.step3SearchPlaceholder')}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+// ── Step 4: 3-step investigation flow ────────────────────────────────────────
+function WorkflowDemo({ t }: { t: (key: string) => string }) {
+  const steps = [
+    { icon: Search, label: t('welcome.step4Step1') },
+    { icon: User,   label: t('welcome.step4Step2') },
+    { icon: Folder, label: t('welcome.step4Step3') },
+  ]
+
+  return (
+    <div className="flex items-center justify-center gap-1 mt-4">
+      {steps.map(({ icon: Icon, label }, i) => (
+        <div key={label} className="flex items-center gap-1">
+          <div className="flex flex-col items-center gap-1.5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 border border-accent/20">
+              <Icon className="h-4.5 w-4.5 text-accent" />
+            </div>
+            <span className="text-[10px] text-text-muted text-center leading-tight max-w-[60px]">
+              {label}
+            </span>
+          </div>
+          {i < steps.length - 1 && (
+            <ArrowRight className="h-3.5 w-3.5 text-text-muted/50 mb-4 mx-0.5 shrink-0" />
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ── Main modal ────────────────────────────────────────────────────────────────
 export function WelcomeModal() {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState(0)
@@ -97,7 +211,7 @@ export function WelcomeModal() {
 
         <div className="py-4">
           {/* Step content */}
-          <div className="flex flex-col items-center text-center py-6">
+          <div className="flex flex-col items-center text-center py-4">
             <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${currentStep.bgColor} mb-4`}>
               <Icon className={`h-8 w-8 ${currentStep.color}`} />
             </div>
@@ -107,6 +221,11 @@ export function WelcomeModal() {
             <p className="text-sm text-text-muted leading-relaxed max-w-md">
               {t(currentStep.descKey)}
             </p>
+
+            {/* Step-specific visual extras */}
+            {step === 1 && <RiskBarDemo t={t} />}
+            {step === 2 && <SearchDemo t={t} />}
+            {step === 3 && <WorkflowDemo t={t} />}
           </div>
 
           {/* Step indicators */}

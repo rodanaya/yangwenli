@@ -209,10 +209,10 @@ def federated_search(
         f_contracts = executor.submit(_search_contracts, q, limit)
         f_cases = executor.submit(_search_cases, q, limit)
 
-        vendors = f_vendors.result()
-        institutions = f_institutions.result()
-        contracts = f_contracts.result()
-        cases = f_cases.result()
+        vendors = f_vendors.result(timeout=5.0)
+        institutions = f_institutions.result(timeout=5.0)
+        contracts = f_contracts.result(timeout=5.0)
+        cases = f_cases.result(timeout=5.0)
 
     total = len(vendors) + len(institutions) + len(contracts) + len(cases)
 

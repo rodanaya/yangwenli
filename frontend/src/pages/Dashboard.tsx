@@ -717,6 +717,16 @@ export function Dashboard() {
       <TopCriticalFlags navigate={navigate} execData={execData} execLoading={execLoading} />
 
       {/* ================================================================ */}
+      {/* TOP FINDINGS — 3 quick-access story cards for journalists       */}
+      {/* ================================================================ */}
+      <TopFindingsStrip
+        navigate={navigate}
+        sectorData={sectorData}
+        execData={execData}
+        execLoading={execLoading}
+      />
+
+      {/* ================================================================ */}
       {/* DATA QUALITY — Compact transparency strip                       */}
       {/* ================================================================ */}
       <div className="flex items-center gap-2 flex-wrap px-3 py-2 rounded border border-border/20 bg-background-elevated/10">
@@ -1767,6 +1777,136 @@ const RiskDistributionAnnotation = memo(function RiskDistributionAnnotation({
         <p className="text-text-muted/70">
           Combined <span className="text-text-secondary font-semibold">{combinedPct}%</span> of contracts are flagged high-or-critical — within the OECD benchmark of 2–15%. Risk scores measure similarity to known corruption patterns, not proof of wrongdoing.
         </p>
+      </div>
+    </div>
+  )
+})
+
+// ============================================================================
+// TOP FINDINGS STRIP — 3 journalist-facing quick-access story cards
+// ============================================================================
+
+interface TopFindingsStripProps {
+  navigate: ReturnType<typeof useNavigate>
+  sectorData: Array<{ name: string; code: string; id: number; riskPct: number; totalValue: number; avgRisk: number }>
+  execData: ExecutiveSummaryResponse | undefined
+  execLoading: boolean
+}
+
+const TopFindingsStrip = memo(function TopFindingsStrip({ navigate, sectorData, execData, execLoading }: TopFindingsStripProps) {
+  // Card 1: hardlink to the IMSS Ghost Company case (largest documented case)
+  const imssCase = useMemo(() => {
+    if (!execData?.ground_truth?.case_details) return null
+    return execData.ground_truth.case_details.find(
+      (c: ExecutiveCaseDetail) => c.slug === 'imss-ghost-company-network' || c.name?.toLowerCase().includes('imss')
+    ) ?? null
+  }, [execData])
+
+  // Card 2: highest risk vendor by avg_risk score
+  const topRiskVendor = useMemo(() => {
+    if (!execData?.top_vendors?.length) return null
+    return [...execData.top_vendors].sort((a, b) => b.avg_risk - a.avg_risk)[0]
+  }, [execData])
+
+  // Card 3: most concentrated sector by avg risk score
+  const mostRiskySector = useMemo(() => {
+    if (!sectorData.length) return null
+    return [...sectorData].sort((a, b) => b.avgRisk - a.avgRisk)[0]
+  }, [sectorData])
+
+  if (execLoading && sectorData.length === 0) {
+    return (
+      <div className="grid gap-2 grid-cols-1 sm:grid-cols-3">
+        {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-[80px]" />)}
+      </div>
+    )
+  }
+
+  const cardBase = 'flex flex-col justify-between p-3 rounded-lg border bg-background-card hover:bg-background-elevated/40 transition-all text-left group cursor-pointer h-[80px]'
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-2">
+        <FileSearch className="h-3.5 w-3.5 text-text-muted" />
+        <span className="text-[10px] font-bold tracking-wider uppercase text-text-muted font-mono">
+          Top Findings — Start here
+        </span>
+      </div>
+      <div className="grid gap-2 grid-cols-1 sm:grid-cols-3">
+        {/* Card 1: IMSS Ghost Company Network */}
+        <button
+          className={cn(cardBase, 'border-red-500/20 hover:border-red-500/40')}
+          onClick={() => navigate('/cases/imss-ghost-company-network')}
+          aria-label="Investigate IMSS Ghost Company Network case"
+        >
+          <div className="flex items-center gap-1.5 min-w-0">
+            <AlertTriangle className="h-3 w-3 text-risk-critical flex-shrink-0" />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-risk-critical font-mono truncate">
+              Largest Case
+            </span>
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-text-primary group-hover:text-accent transition-colors leading-tight truncate">
+              {imssCase?.name ?? 'IMSS Ghost Company Network'}
+            </p>
+            <p className="text-[10px] text-text-muted font-mono mt-0.5">
+              {imssCase ? `${formatNumber(imssCase.contract_count ?? 9366)} contracts detected` : '9,366 contracts · ghost companies'}
+            </p>
+          </div>
+        </button>
+
+        {/* Card 2: Highest risk vendor this session */}
+        {topRiskVendor ? (
+          <button
+            className={cn(cardBase, 'border-risk-high/20 hover:border-risk-high/40')}
+            onClick={() => navigate(`/vendors/${topRiskVendor.id}`)}
+            aria-label={`View highest risk vendor: ${topRiskVendor.name}`}
+          >
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Target className="h-3 w-3 text-risk-high flex-shrink-0" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-risk-high font-mono truncate">
+                Highest Risk Vendor
+              </span>
+            </div>
+            <div className="flex items-end justify-between gap-2">
+              <p className="text-xs font-semibold text-text-primary group-hover:text-accent transition-colors leading-tight truncate flex-1">
+                {toTitleCase(topRiskVendor.name)}
+              </p>
+              <span className="text-sm font-black tabular-nums font-mono text-risk-high flex-shrink-0">
+                {(topRiskVendor.avg_risk * 100).toFixed(0)}%
+              </span>
+            </div>
+          </button>
+        ) : (
+          <Skeleton className="h-[80px]" />
+        )}
+
+        {/* Card 3: Most risk-concentrated sector */}
+        {mostRiskySector ? (
+          <button
+            className={cn(cardBase, 'border-border/30 hover:border-border/60')}
+            onClick={() => navigate(`/sectors/${mostRiskySector.id}`)}
+            aria-label={`View most concentrated sector: ${mostRiskySector.name}`}
+            style={{ borderLeftWidth: '3px', borderLeftColor: SECTOR_COLORS[mostRiskySector.code] ?? '#64748b' }}
+          >
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Layers className="h-3 w-3 text-text-muted flex-shrink-0" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-mono truncate">
+                Highest Risk Sector
+              </span>
+            </div>
+            <div className="flex items-end justify-between gap-2">
+              <p className="text-xs font-semibold text-text-primary group-hover:text-accent transition-colors leading-tight truncate flex-1">
+                {mostRiskySector.name}
+              </p>
+              <span className="text-sm font-black tabular-nums font-mono flex-shrink-0" style={{ color: SECTOR_COLORS[mostRiskySector.code] ?? '#64748b' }}>
+                {mostRiskySector.riskPct.toFixed(1)}%
+              </span>
+            </div>
+          </button>
+        ) : (
+          <Skeleton className="h-[80px]" />
+        )}
       </div>
     </div>
   )

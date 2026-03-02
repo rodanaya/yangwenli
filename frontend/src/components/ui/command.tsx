@@ -25,7 +25,13 @@ function CommandDialog({
 }: React.ComponentProps<typeof Dialog>) {
   return (
     <Dialog {...props}>
-      <DialogContent className="overflow-hidden p-0 shadow-2xl max-w-lg">
+      {/*
+       * Mobile keyboard fix: pin the dialog near the top of the screen so the
+       * on-screen keyboard (which rises from the bottom) never overlaps the
+       * search results. The `align="top"` prop on DialogContent switches the
+       * overlay flex alignment to flex-start + adds top padding.
+       */}
+      <DialogContent align="top" className="overflow-hidden p-0 shadow-2xl max-w-lg">
         <Command className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-text-muted [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-4 [&_[cmdk-input-wrapper]_svg]:w-4 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-2.5 [&_[cmdk-item]_svg]:h-4 [&_[cmdk-item]_svg]:w-4">
           {children}
         </Command>
@@ -60,7 +66,13 @@ const CommandList = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.List
     ref={ref}
-    className={cn('max-h-[380px] overflow-y-auto overflow-x-hidden', className)}
+    className={cn(
+      // On mobile the on-screen keyboard can occupy 300-400px. Cap the list
+      // height conservatively so results remain visible above the keyboard.
+      // On sm+ screens restore the full 380px height.
+      'max-h-[220px] sm:max-h-[380px] overflow-y-auto overflow-x-hidden',
+      className
+    )}
     {...props}
   />
 ))

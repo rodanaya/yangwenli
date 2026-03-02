@@ -55,10 +55,18 @@ const DIALOG_SIZE_PX: Record<DialogSize, string> = {
 
 interface DialogContentProps extends React.HTMLAttributes<HTMLDivElement> {
   size?: DialogSize
+  /**
+   * Controls vertical alignment of the dialog panel within the overlay.
+   * - 'center' (default): dialog is vertically centred — standard behaviour.
+   * - 'top': dialog is pinned near the top of the screen. Use this for
+   *   palettes / search modals on mobile where the on-screen keyboard rises
+   *   from the bottom and would otherwise cover a centred dialog.
+   */
+  align?: 'center' | 'top'
 }
 
 const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
-  ({ className, children, size = 'md', ...props }, ref) => {
+  ({ className, children, size = 'md', align = 'center', ...props }, ref) => {
     const { open, onOpenChange } = React.useContext(DialogContext)
 
     if (!open) return null
@@ -70,9 +78,9 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
           inset: 0,
           zIndex: 9999,
           display: 'flex',
-          alignItems: 'center',
+          alignItems: align === 'top' ? 'flex-start' : 'center',
           justifyContent: 'center',
-          padding: '1rem',
+          padding: align === 'top' ? '1rem 1rem 0' : '1rem',
         }}
       >
         {/* Backdrop */}

@@ -859,6 +859,19 @@ export function Contracts() {
             )
           ) : (
             <ExpandableProvider>
+            {/* Scroll affordance: gradient fade + hint text, mobile only */}
+            <div className="relative lg:hidden pointer-events-none">
+              <div
+                className="absolute inset-y-0 right-0 w-12 z-20"
+                style={{
+                  background: 'linear-gradient(to right, transparent, var(--color-background-card, #0f172a))',
+                }}
+                aria-hidden="true"
+              />
+              <p className="absolute bottom-0 right-2 z-20 text-[10px] text-text-muted pb-1 select-none" aria-hidden="true">
+                scroll →
+              </p>
+            </div>
             <div className="overflow-x-auto">
             <ScrollArea className="h-[600px]">
               <div className="min-w-[700px]">

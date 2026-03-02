@@ -100,10 +100,15 @@ interface TabsProps {
   defaultTab: string
   tabs: Array<{ key: string; label: string; icon?: React.ElementType }>
   children: React.ReactNode
+  onTabChange?: (tab: string) => void
 }
 
-function SimpleTabs({ defaultTab, tabs, children }: TabsProps) {
+function SimpleTabs({ defaultTab, tabs, children, onTabChange }: TabsProps) {
   const [active, setActive] = useState(defaultTab)
+  const handleTabChange = (key: string) => {
+    setActive(key)
+    onTabChange?.(key)
+  }
   return (
     <div>
       <div className="flex gap-1 border-b border-border/50 mb-6 overflow-x-auto">
@@ -112,7 +117,7 @@ function SimpleTabs({ defaultTab, tabs, children }: TabsProps) {
           return (
             <button
               key={tab.key}
-              onClick={() => setActive(tab.key)}
+              onClick={() => handleTabChange(tab.key)}
               className={cn(
                 'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors',
                 active === tab.key
@@ -473,12 +478,19 @@ function RiskRadarChart({ waterfallData }: { waterfallData: VendorWaterfallContr
         Each axis shows how this vendor&apos;s z-score compares across 6 key risk dimensions.
         Values toward the edge = higher deviation from sector norms. Hover an axis label to learn what it measures.
       </p>
-      <ResponsiveContainer width="100%" height={280}>
+      {/*
+       * Responsive height wrapper for the radar chart.
+       * On small screens (< 640px) 250px gives enough room for the 6 axis
+       * labels without cramping. On larger viewports the full 300px is used.
+       * ResponsiveContainer fills its parent when height="100%".
+       */}
+      <div className="h-[250px] sm:h-[300px]">
+      <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={radarData} margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
           <PolarGrid stroke="#1e293b" />
           <PolarAngleAxis
             dataKey="factor"
-            tick={{ fontSize: 11, fill: '#94a3b8' }}
+            tick={{ fontSize: 10, fill: '#94a3b8' }}
           />
           <RechartsTooltip
             content={({ active, payload }) => {
@@ -515,6 +527,7 @@ function RiskRadarChart({ waterfallData }: { waterfallData: VendorWaterfallContr
           />
         </RadarChart>
       </ResponsiveContainer>
+      </div>
       {/* Axis legend */}
       <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
         {RADAR_FACTOR_KEYS.map(({ label, plainEnglish }) => (
@@ -625,6 +638,11 @@ export function VendorProfile() {
   const riskTimelineChartRef = useRef<HTMLDivElement>(null)
   const footprintChartRef = useRef<HTMLDivElement>(null)
 
+  // Lazy-load state: defer expensive queries until the user interacts
+  // with the relevant section, reducing initial page load from 13→9 requests.
+  const [activeTab, setActiveTab] = useState('overview')
+  const [showAiSummary, setShowAiSummary] = useState(false)
+
   // Fetch vendor details
   const { data: vendor, isLoading: vendorLoading, error: vendorError } = useQuery({
     queryKey: ['vendor', vendorId],
@@ -688,11 +706,11 @@ export function VendorProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
-  // Fetch AI pattern analysis summary
+  // Fetch AI pattern analysis summary — deferred until user expands the AI section
   const { data: aiSummary, isLoading: aiLoading, error: aiError } = useQuery({
     queryKey: ['vendor', vendorId, 'ai-summary'],
     queryFn: () => vendorApi.getAiSummary(vendorId),
-    enabled: !!vendorId,
+    enabled: !!vendorId && showAiSummary,
     staleTime: 30 * 60 * 1000,
   })
 
@@ -704,19 +722,19 @@ export function VendorProfile() {
     staleTime: 30 * 60 * 1000,
   })
 
-  // F1: Risk waterfall (z-score contributions)
+  // F1: Risk waterfall (z-score contributions) — deferred until user opens the Risk tab
   const { data: waterfallData, isLoading: waterfallLoading, error: waterfallError } = useQuery({
     queryKey: ['vendor', vendorId, 'risk-waterfall'],
     queryFn: () => vendorApi.getRiskWaterfall(vendorId),
-    enabled: !!vendorId,
+    enabled: !!vendorId && activeTab === 'risk',
     staleTime: 10 * 60 * 1000,
   })
 
-  // F7: Peer comparison
+  // F7: Peer comparison — deferred until user opens the Risk tab (percentile badges are decorative)
   const { data: peerComparison, error: peerComparisonError } = useQuery({
     queryKey: ['vendor', vendorId, 'peer-comparison'],
     queryFn: () => vendorApi.getPeerComparison(vendorId),
-    enabled: !!vendorId,
+    enabled: !!vendorId && activeTab === 'risk',
     staleTime: 10 * 60 * 1000,
   })
 
@@ -1253,6 +1271,7 @@ export function VendorProfile() {
       {/* Tabbed content */}
       <SimpleTabs
         defaultTab="overview"
+        onTabChange={setActiveTab}
         tabs={[
           { key: 'overview', label: t('tabs.overview'), icon: BarChart3 },
           { key: 'risk', label: t('tabs.risk'), icon: Shield },
@@ -1323,17 +1342,31 @@ export function VendorProfile() {
             {/* Right Column - Summary, Contracts, Institutions */}
             <ScrollReveal direction="up" delay={120} className="lg:col-span-2">
             <div className="space-y-6">
-              {/* AI Pattern Analysis */}
-              {(aiLoading || aiError || (aiSummary && aiSummary.insights.length > 0)) && (
-                <Card className="hover-lift">
-                  <CardHeader>
+              {/* AI Pattern Analysis — lazy loaded on demand */}
+              <Card className="hover-lift">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
                       <Brain className="h-4 w-4" />
                       {t('cards.aiPatternAnalysis')}
                     </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {aiError ? (
+                    {!showAiSummary && (
+                      <button
+                        onClick={() => setShowAiSummary(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-background-elevated border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
+                      >
+                        <Brain className="h-3 w-3" />
+                        Load analysis
+                      </button>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {!showAiSummary ? (
+                    <p className="text-xs text-text-muted">
+                      Click &ldquo;Load analysis&rdquo; to fetch AI-generated pattern insights for this vendor.
+                    </p>
+                  ) : aiError ? (
                       <div className="flex items-center gap-2 text-sm text-text-muted p-4">
                         <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0" />
                         <span>Could not load this section. Try refreshing.</span>
@@ -1344,24 +1377,25 @@ export function VendorProfile() {
                         <Skeleton className="h-4 w-3/4" />
                         <Skeleton className="h-4 w-5/6" />
                       </div>
-                    ) : (
+                    ) : aiSummary && aiSummary.insights.length > 0 ? (
                       <div className="space-y-2">
-                        {aiSummary!.insights.map((insight, i) => (
+                        {aiSummary.insights.map((insight, i) => (
                           <div key={i} className="flex items-start gap-2">
                             <span className="text-amber-500 mt-0.5 shrink-0">&#x25CF;</span>
                             <p className="text-sm text-text-secondary">{insight}</p>
                           </div>
                         ))}
-                        {aiSummary!.summary && (
+                        {aiSummary.summary && (
                           <p className="text-sm text-text-muted mt-3 pt-3 border-t border-border/30">
-                            {aiSummary!.summary}
+                            {aiSummary.summary}
                           </p>
                         )}
                       </div>
+                    ) : (
+                      <p className="text-xs text-text-muted">No pattern insights available for this vendor.</p>
                     )}
-                  </CardContent>
-                </Card>
-              )}
+                </CardContent>
+              </Card>
 
               {/* F4: Linked Scandals */}
               {(() => {
