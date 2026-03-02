@@ -231,6 +231,14 @@ class TestSpendingCategories:
 class TestWatchlistFolders:
     """Tests for CRUD on /api/v1/watchlist/folders.
 
+    Router endpoints:
+      GET  ""                  — list all folders
+      POST ""                  — create folder (201)
+      PUT  "/{folder_id}"      — update folder (200 + FolderResponse)
+      DELETE "/{folder_id}"    — delete folder (200 + {message, id})
+      GET  "/export/{folder_id}" — export folder (200 + FolderExportResponse)
+
+    NOTE: There is no GET /{folder_id} single-fetch endpoint.
     NOTE: These tests write to the database. They will fail with 503 if another
     process holds a WAL write lock (e.g., a scoring rollback job). Run after
     the DB is fully idle.
@@ -250,6 +258,10 @@ class TestWatchlistFolders:
     def _delete_folder(self, client, base_url, folder_id):
         client.delete(f"{base_url}/watchlist/folders/{folder_id}")
 
+    # ------------------------------------------------------------------
+    # CREATE
+    # ------------------------------------------------------------------
+
     def test_create_folder_returns_201(self, client, base_url):
         folder = self._create_folder(client, base_url, "Sprint Test Folder")
         assert "id" in folder
@@ -266,6 +278,15 @@ class TestWatchlistFolders:
         r = client.post(f"{base_url}/watchlist/folders", json={"name": ""})
         assert r.status_code == 422
 
+    def test_create_folder_custom_color(self, client, base_url):
+        folder = self._create_folder(client, base_url, "Color Folder", color="#dc2626")
+        assert folder["color"] == "#dc2626"
+        self._delete_folder(client, base_url, folder["id"])
+
+    # ------------------------------------------------------------------
+    # LIST
+    # ------------------------------------------------------------------
+
     def test_list_folders_returns_list(self, client, base_url):
         folder = self._create_folder(client, base_url, "List Test")
         r = client.get(f"{base_url}/watchlist/folders")
@@ -276,21 +297,27 @@ class TestWatchlistFolders:
         assert folder["id"] in ids
         self._delete_folder(client, base_url, folder["id"])
 
-    def test_get_folder_by_id(self, client, base_url):
-        folder = self._create_folder(client, base_url, "Get Test")
-        r = client.get(f"{base_url}/watchlist/folders/{folder['id']}")
+    def test_list_folders_items_have_required_fields(self, client, base_url):
+        folder = self._create_folder(client, base_url, "Fields Test")
+        r = client.get(f"{base_url}/watchlist/folders")
         assert r.status_code == 200
-        assert r.json()["id"] == folder["id"]
-        assert r.json()["name"] == "Get Test"
+        matching = [f for f in r.json() if f["id"] == folder["id"]]
+        assert len(matching) == 1
+        f = matching[0]
+        assert "id" in f
+        assert "name" in f
+        assert "color" in f
+        assert "item_count" in f
+        assert "created_at" in f
         self._delete_folder(client, base_url, folder["id"])
 
-    def test_get_nonexistent_folder_returns_404(self, client, base_url):
-        r = client.get(f"{base_url}/watchlist/folders/999999")
-        assert r.status_code == 404
+    # ------------------------------------------------------------------
+    # UPDATE (PUT)
+    # ------------------------------------------------------------------
 
-    def test_update_folder_name(self, client, base_url):
+    def test_update_folder_name_via_put(self, client, base_url):
         folder = self._create_folder(client, base_url, "Before Update")
-        r = client.patch(
+        r = client.put(
             f"{base_url}/watchlist/folders/{folder['id']}",
             json={"name": "After Update"},
         )
@@ -298,9 +325,9 @@ class TestWatchlistFolders:
         assert r.json()["name"] == "After Update"
         self._delete_folder(client, base_url, folder["id"])
 
-    def test_update_folder_color(self, client, base_url):
+    def test_update_folder_color_via_put(self, client, base_url):
         folder = self._create_folder(client, base_url, "Color Test")
-        r = client.patch(
+        r = client.put(
             f"{base_url}/watchlist/folders/{folder['id']}",
             json={"color": "#dc2626"},
         )
@@ -308,81 +335,46 @@ class TestWatchlistFolders:
         assert r.json()["color"] == "#dc2626"
         self._delete_folder(client, base_url, folder["id"])
 
-    def test_delete_folder_returns_204(self, client, base_url):
+    def test_update_nonexistent_folder_returns_404(self, client, base_url):
+        r = client.put(
+            f"{base_url}/watchlist/folders/999999",
+            json={"name": "Ghost"},
+        )
+        assert r.status_code == 404
+
+    # ------------------------------------------------------------------
+    # DELETE
+    # ------------------------------------------------------------------
+
+    def test_delete_folder_returns_200_with_message(self, client, base_url):
+        """DELETE returns 200 + {message, id} (not 204)."""
         folder = self._create_folder(client, base_url, "Delete Me")
         r = client.delete(f"{base_url}/watchlist/folders/{folder['id']}")
-        assert r.status_code == 204
-        r2 = client.get(f"{base_url}/watchlist/folders/{folder['id']}")
-        assert r2.status_code == 404
+        assert r.status_code == 200
+        body = r.json()
+        assert "message" in body
+        assert body["id"] == folder["id"]
+
+    def test_deleted_folder_not_in_list(self, client, base_url):
+        folder = self._create_folder(client, base_url, "Gone Folder")
+        fid = folder["id"]
+        client.delete(f"{base_url}/watchlist/folders/{fid}")
+        r = client.get(f"{base_url}/watchlist/folders")
+        ids = [f["id"] for f in r.json()]
+        assert fid not in ids
 
     def test_delete_nonexistent_folder_returns_404(self, client, base_url):
         r = client.delete(f"{base_url}/watchlist/folders/999999")
         assert r.status_code == 404
 
-    def test_add_item_to_folder(self, client, base_url):
-        folder = self._create_folder(client, base_url, "Items Test")
-        fid = folder["id"]
-        r = client.post(f"{base_url}/watchlist/folders/{fid}/items", json={
-            "item_type": "vendor",
-            "item_id": 1,
-            "item_name": "Test Vendor",
-            "reason": "suspicious activity",
-            "priority": "high",
-        })
-        assert r.status_code == 201, r.text
-        assert r.json()["item_type"] == "vendor"
-        assert r.json()["item_id"] == 1
-        self._delete_folder(client, base_url, fid)
+    # ------------------------------------------------------------------
+    # EXPORT
+    # ------------------------------------------------------------------
 
-    def test_list_folder_items(self, client, base_url):
-        folder = self._create_folder(client, base_url, "List Items")
-        fid = folder["id"]
-        client.post(f"{base_url}/watchlist/folders/{fid}/items", json={
-            "item_type": "vendor", "item_id": 2, "item_name": "V2"
-        })
-        client.post(f"{base_url}/watchlist/folders/{fid}/items", json={
-            "item_type": "institution", "item_id": 5, "item_name": "I5"
-        })
-        r = client.get(f"{base_url}/watchlist/folders/{fid}/items")
-        assert r.status_code == 200
-        items = r.json()
-        assert isinstance(items, list)
-        assert len(items) == 2
-        self._delete_folder(client, base_url, fid)
-
-    def test_remove_item_from_folder(self, client, base_url):
-        folder = self._create_folder(client, base_url, "Remove Item")
-        fid = folder["id"]
-        ri = client.post(f"{base_url}/watchlist/folders/{fid}/items", json={
-            "item_type": "vendor", "item_id": 3
-        })
-        assert ri.status_code == 201
-        item_id = ri.json()["id"]
-        rd = client.delete(f"{base_url}/watchlist/folders/{fid}/items/{item_id}")
-        assert rd.status_code == 204
-        rl = client.get(f"{base_url}/watchlist/folders/{fid}/items")
-        assert rl.json() == []
-        self._delete_folder(client, base_url, fid)
-
-    def test_folder_item_count_increments(self, client, base_url):
-        folder = self._create_folder(client, base_url, "Count Test")
-        fid = folder["id"]
-        assert folder["item_count"] == 0
-        client.post(f"{base_url}/watchlist/folders/{fid}/items", json={
-            "item_type": "vendor", "item_id": 10
-        })
-        r = client.get(f"{base_url}/watchlist/folders/{fid}")
-        assert r.status_code == 200
-        assert r.json()["item_count"] == 1
-        self._delete_folder(client, base_url, fid)
-
-    def test_export_folder(self, client, base_url):
+    def test_export_folder_returns_structure(self, client, base_url):
         folder = self._create_folder(client, base_url, "Export Test")
         fid = folder["id"]
-        client.post(f"{base_url}/watchlist/folders/{fid}/items", json={
-            "item_type": "vendor", "item_id": 1, "item_name": "PEMEX"
-        })
-        r = client.get(f"{base_url}/watchlist/folders/{fid}/export")
+        r = client.get(f"{base_url}/watchlist/folders/export/{fid}")
         assert r.status_code == 200
         data = r.json()
         assert "folder" in data
@@ -390,3 +382,7 @@ class TestWatchlistFolders:
         assert "exported_at" in data
         assert data["folder"]["id"] == fid
         self._delete_folder(client, base_url, fid)
+
+    def test_export_nonexistent_folder_returns_404(self, client, base_url):
+        r = client.get(f"{base_url}/watchlist/folders/export/999999")
+        assert r.status_code == 404
