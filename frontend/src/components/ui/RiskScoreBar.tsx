@@ -1,3 +1,10 @@
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+
 interface RiskScoreBarProps {
   score: number           // 0-1
   height?: number         // px, default 4
@@ -14,6 +21,16 @@ const getRiskColor = (score: number): string => {
   return '#4ade80'                      // low green
 }
 
+const getRiskTooltip = (score: number): string => {
+  if (score >= 0.5)
+    return `Critical risk (score: ${score.toFixed(3)}) — Strong match to documented fraud patterns. This is a statistical indicator, not proof of wrongdoing.`
+  if (score >= 0.3)
+    return `High risk (score: ${score.toFixed(3)}) — Elevated similarity to known corruption patterns.`
+  if (score >= 0.1)
+    return `Medium risk (score: ${score.toFixed(3)}) — Some procurement anomalies detected relative to sector baseline.`
+  return `Low risk (score: ${score.toFixed(3)}) — Few anomalies relative to sector baseline.`
+}
+
 export function RiskScoreBar({
   score,
   height = 4,
@@ -24,6 +41,7 @@ export function RiskScoreBar({
 }: RiskScoreBarProps) {
   const color = getRiskColor(score)
   const pct = Math.min(score * 100, 100)
+  const tooltipText = getRiskTooltip(score)
 
   return (
     <div className={className} style={{ width }}>
@@ -35,20 +53,29 @@ export function RiskScoreBar({
           </span>
         </div>
       )}
-      <div
-        className="rounded-full overflow-hidden bg-white/10"
-        style={{ height }}
-      >
-        <div
-          className={animated ? 'transition-all duration-1000 ease-out' : ''}
-          style={{
-            height: '100%',
-            width: `${pct}%`,
-            backgroundColor: color,
-            borderRadius: 'inherit',
-          }}
-        />
-      </div>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div
+              className="rounded-full overflow-hidden bg-white/10 cursor-default"
+              style={{ height }}
+            >
+              <div
+                className={animated ? 'transition-all duration-1000 ease-out' : ''}
+                style={{
+                  height: '100%',
+                  width: `${pct}%`,
+                  backgroundColor: color,
+                  borderRadius: 'inherit',
+                }}
+              />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs text-center">
+            {tooltipText}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   )
 }

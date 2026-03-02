@@ -124,12 +124,23 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
       {/* Right — Status indicators + actions */}
       <div className="flex items-center gap-1">
         {/* Search trigger — opens centered CommandPalette modal */}
+        {/* Desktop: pill-shaped fake input with hint text */}
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="hidden lg:flex items-center gap-2 h-7 px-2.5 rounded-md border border-border/50 bg-background-elevated/50 text-text-muted hover:border-border hover:bg-background-elevated transition-colors text-xs max-w-[200px] w-[200px] focus:outline-none focus:ring-1 focus:ring-ring"
+          aria-label="Open search (Ctrl+K)"
+        >
+          <Search className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+          <span className="flex-1 text-left truncate">Search vendors, cases...</span>
+          <kbd className="flex-shrink-0 text-[10px] px-1 py-0.5 rounded bg-background border border-border/60 leading-none">⌘K</kbd>
+        </button>
+        {/* Mobile: icon-only button */}
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
+              className="h-7 w-7 lg:hidden"
               onClick={() => setSearchOpen(true)}
               aria-label="Open search (Ctrl+K)"
             >

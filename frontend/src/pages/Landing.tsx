@@ -595,6 +595,82 @@ const HOW_IT_WORKS_CAVEATS: NarrativeParagraph[] = [
   },
 ]
 
+// ---------------------------------------------------------------------------
+// FeaturedCasesStrip — 3 hardcoded biggest cases linking to /cases/:slug
+// ---------------------------------------------------------------------------
+const FEATURED_CASES = [
+  {
+    name: 'IMSS Ghost Company Network',
+    contracts: 9366,
+    sector: 'Health',
+    sectorColor: '#dc2626',
+    fraudType: 'ghost_company',
+    slug: 'imss-ghost-company-network',
+    badgeClass: 'border-red-500/60 text-red-400 bg-red-500/10',
+    badgeLabel: 'Ghost Company',
+  },
+  {
+    name: 'Segalmex Food Distribution',
+    contracts: 6326,
+    sector: 'Agriculture',
+    sectorColor: '#22c55e',
+    fraudType: 'procurement_fraud',
+    slug: 'segalmex-food-distribution',
+    badgeClass: 'border-yellow-500/60 text-yellow-400 bg-yellow-500/10',
+    badgeLabel: 'Procurement Fraud',
+  },
+  {
+    name: 'COVID-19 Emergency Procurement',
+    contracts: 5371,
+    sector: 'Health',
+    sectorColor: '#dc2626',
+    fraudType: 'embezzlement',
+    slug: 'covid-19-emergency-procurement',
+    badgeClass: 'border-rose-500/60 text-rose-400 bg-rose-500/10',
+    badgeLabel: 'Embezzlement',
+  },
+]
+
+function FeaturedCasesStrip({ onNavigate }: { onNavigate: (path: string) => void }) {
+  return (
+    <div className="w-full mb-5">
+      <p className="text-xs font-semibold tracking-widest uppercase text-white/30 mb-3">
+        Biggest Cases
+      </p>
+      <div className="flex flex-col gap-2">
+        {FEATURED_CASES.map((cas) => (
+          <button
+            key={cas.slug}
+            onClick={() => onNavigate(`/cases/${cas.slug}`)}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] hover:border-white/20 transition-colors text-left focus:outline-none focus:ring-1 focus:ring-white/30 group"
+          >
+            {/* Sector color dot */}
+            <span
+              className="flex-shrink-0 w-2 h-2 rounded-full"
+              style={{ backgroundColor: cas.sectorColor }}
+              aria-hidden="true"
+            />
+            {/* Case name */}
+            <span className="flex-1 text-sm font-medium text-white/80 group-hover:text-white transition-colors truncate">
+              {cas.name}
+            </span>
+            {/* Contract count */}
+            <span className="flex-shrink-0 text-xs text-white/35 tabular-nums">
+              {cas.contracts.toLocaleString()} contracts
+            </span>
+            {/* Fraud type badge */}
+            <span
+              className={`flex-shrink-0 hidden sm:inline-block text-[10px] px-1.5 py-0.5 rounded border leading-none ${cas.badgeClass}`}
+            >
+              {cas.badgeLabel}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ===========================================================================
 // Main page
 // ===========================================================================
@@ -869,6 +945,9 @@ export default function Landing() {
                   )}
 
                   {/* CTA buttons on last chapter */}
+                  {isLast && (
+                    <FeaturedCasesStrip onNavigate={goToApp} />
+                  )}
                   {isLast && (
                     <div className="flex flex-wrap gap-3 mt-2">
                       <button
