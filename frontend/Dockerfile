@@ -13,8 +13,8 @@ RUN npm ci --legacy-peer-deps
 # Copy source code
 COPY . .
 
-# Build the app (skip tsc -b to avoid strict unused-var errors in dev code)
-RUN npx vite build
+# Type-check and build
+RUN npx tsc --noEmit && npx vite build
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine AS production

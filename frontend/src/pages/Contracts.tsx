@@ -20,6 +20,7 @@ import {
 } from '@/lib/utils'
 import { contractApi, exportApi } from '@/api/client'
 import { RiskFeedbackButton } from '@/components/RiskFeedbackButton'
+import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
 import { TableExportButton } from '@/components/TableExportButton'
 import { SECTORS, RISK_COLORS } from '@/lib/constants'
 import { useDebouncedSearch, useDebouncedValue } from '@/hooks/useDebouncedSearch'
@@ -312,7 +313,7 @@ export function Contracts() {
   })
 
   useEffect(() => {
-    if (error) toast.error('Failed to load contracts', (error as Error).message)
+    if (error) toast.error('Failed to load contracts', error instanceof Error ? error.message : String(error))
   }, [error, toast])
 
   // --- Handlers ---
@@ -1089,18 +1090,7 @@ function ContractRow({
         <div className="flex flex-col items-center gap-1">
           {/* Colored risk level pill */}
           {riskLevel ? (
-            <span
-              className={cn(
-                'px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap',
-                riskLevel === 'critical' && 'bg-red-500/20 text-red-400 border border-red-500/30',
-                riskLevel === 'high' && 'bg-orange-500/20 text-orange-400 border border-orange-500/30',
-                riskLevel === 'medium' && 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
-                riskLevel === 'low' && 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
-              )}
-              title={contract.risk_score != null ? `Score: ${contract.risk_score.toFixed(3)}` : undefined}
-            >
-              {riskLevel}
-            </span>
+            <RiskLevelPill level={riskLevel} score={contract.risk_score ?? undefined} size="sm" />
           ) : (
             <span className="text-xs text-text-muted/30">&middot;</span>
           )}

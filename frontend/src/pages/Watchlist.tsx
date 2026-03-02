@@ -279,14 +279,10 @@ export function Watchlist() {
   const { data: foldersData } = useQuery({
     queryKey: ['watchlist-folders'],
     queryFn: async () => {
-      try {
-        const { data } = await import('@/api/client').then(m => m.default ?? m).catch(() => null) as any
-        // Use axios instance via watchlistApi pattern — inline fetch as fallback
-        const res = await fetch(`/api/v1/watchlist/folders`)
-        if (!res.ok) return []
-        const json = await res.json()
-        return json.folders ?? json ?? []
-      } catch { return [] }
+      const res = await fetch('/api/v1/watchlist/folders')
+      if (!res.ok) throw new Error(`Failed to load folders: ${res.status}`)
+      const json = await res.json()
+      return json.folders ?? json ?? []
     },
     staleTime: 5 * 60 * 1000,
   })

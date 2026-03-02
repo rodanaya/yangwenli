@@ -372,8 +372,8 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         )}
       </CommandList>
 
-      {/* Footer hint */}
-      <div className="border-t border-border/40 px-3 py-2 flex items-center gap-3 text-[10px] text-text-muted">
+      {/* Footer hint — hidden on mobile to avoid overflow */}
+      <div className="hidden md:flex border-t border-border/40 px-3 py-2 items-center gap-3 text-[10px] text-text-muted">
         <span><kbd className="px-1 py-0.5 rounded bg-background-elevated border border-border/40 font-mono">↑↓</kbd> navigate</span>
         <span><kbd className="px-1 py-0.5 rounded bg-background-elevated border border-border/40 font-mono">↵</kbd> select</span>
         <span><kbd className="px-1 py-0.5 rounded bg-background-elevated border border-border/40 font-mono">Esc</kbd> close</span>
