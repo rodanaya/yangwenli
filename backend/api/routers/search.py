@@ -63,22 +63,21 @@ class FederatedSearchResponse(BaseModel):
 
 def _search_vendors(q: str, limit: int) -> list[VendorResult]:
     try:
-        conn = get_db()
-        cur = conn.execute(
-            """
-            SELECT v.id, v.name, v.rfc,
-                   COALESCE(vs.total_contracts, 0) AS contracts,
-                   vs.avg_risk_score
-            FROM vendors v
-            LEFT JOIN v_vendor_stats vs ON v.id = vs.vendor_id
-            WHERE v.name LIKE ? OR (v.rfc IS NOT NULL AND v.rfc LIKE ?)
-            ORDER BY contracts DESC
-            LIMIT ?
-            """,
-            (f"%{q}%", f"%{q}%", limit),
-        )
-        rows = cur.fetchall()
-        conn.close()
+        with get_db() as conn:
+            cur = conn.execute(
+                """
+                SELECT v.id, v.name, v.rfc,
+                       COALESCE(vs.total_contracts, 0) AS contracts,
+                       vs.avg_risk_score
+                FROM vendors v
+                LEFT JOIN vendor_stats vs ON v.id = vs.vendor_id
+                WHERE v.name LIKE ? OR (v.rfc IS NOT NULL AND v.rfc LIKE ?)
+                ORDER BY contracts DESC
+                LIMIT ?
+                """,
+                (f"%{q}%", f"%{q}%", limit),
+            )
+            rows = cur.fetchall()
         return [
             VendorResult(
                 id=r["id"],
@@ -96,20 +95,19 @@ def _search_vendors(q: str, limit: int) -> list[VendorResult]:
 
 def _search_institutions(q: str, limit: int) -> list[InstitutionResult]:
     try:
-        conn = get_db()
-        cur = conn.execute(
-            """
-            SELECT id, name, institution_type,
-                   (SELECT COUNT(*) FROM contracts WHERE institution_id = i.id) AS total_contracts
-            FROM institutions i
-            WHERE name LIKE ?
-            ORDER BY total_contracts DESC
-            LIMIT ?
-            """,
-            (f"%{q}%", limit),
-        )
-        rows = cur.fetchall()
-        conn.close()
+        with get_db() as conn:
+            cur = conn.execute(
+                """
+                SELECT id, name, institution_type,
+                       (SELECT COUNT(*) FROM contracts WHERE institution_id = i.id) AS total_contracts
+                FROM institutions i
+                WHERE name LIKE ?
+                ORDER BY total_contracts DESC
+                LIMIT ?
+                """,
+                (f"%{q}%", limit),
+            )
+            rows = cur.fetchall()
         return [
             InstitutionResult(
                 id=r["id"],
@@ -126,27 +124,26 @@ def _search_institutions(q: str, limit: int) -> list[InstitutionResult]:
 
 def _search_contracts(q: str, limit: int) -> list[ContractResult]:
     try:
-        conn = get_db()
-        cur = conn.execute(
-            """
-            SELECT id, title, amount_mxn, risk_level, contract_year
-            FROM contracts
-            WHERE title LIKE ?
-              AND amount_mxn IS NOT NULL
-              AND amount_mxn > 0
-              AND amount_mxn <= 100000000000
-            ORDER BY CASE risk_level
-              WHEN 'critical' THEN 0
-              WHEN 'high'     THEN 1
-              WHEN 'medium'   THEN 2
-              ELSE                 3
-            END, amount_mxn DESC
-            LIMIT ?
-            """,
-            (f"%{q}%", limit),
-        )
-        rows = cur.fetchall()
-        conn.close()
+        with get_db() as conn:
+            cur = conn.execute(
+                """
+                SELECT id, title, amount_mxn, risk_level, contract_year
+                FROM contracts
+                WHERE title LIKE ?
+                  AND amount_mxn IS NOT NULL
+                  AND amount_mxn > 0
+                  AND amount_mxn <= 100000000000
+                ORDER BY CASE risk_level
+                  WHEN 'critical' THEN 0
+                  WHEN 'high'     THEN 1
+                  WHEN 'medium'   THEN 2
+                  ELSE                 3
+                END, amount_mxn DESC
+                LIMIT ?
+                """,
+                (f"%{q}%", limit),
+            )
+            rows = cur.fetchall()
         return [
             ContractResult(
                 id=r["id"],
@@ -164,20 +161,19 @@ def _search_contracts(q: str, limit: int) -> list[ContractResult]:
 
 def _search_cases(q: str, limit: int) -> list[CaseResult]:
     try:
-        conn = get_db()
-        # cases table may not exist — graceful fallback
-        cur = conn.execute(
-            """
-            SELECT slug, title, year, sector
-            FROM cases
-            WHERE title LIKE ? OR description LIKE ?
-            ORDER BY year DESC
-            LIMIT ?
-            """,
-            (f"%{q}%", f"%{q}%", limit),
-        )
-        rows = cur.fetchall()
-        conn.close()
+        with get_db() as conn:
+            # cases table may not exist — graceful fallback
+            cur = conn.execute(
+                """
+                SELECT slug, title, year, sector
+                FROM cases
+                WHERE title LIKE ? OR description LIKE ?
+                ORDER BY year DESC
+                LIMIT ?
+                """,
+                (f"%{q}%", f"%{q}%", limit),
+            )
+            rows = cur.fetchall()
         return [
             CaseResult(slug=r["slug"], title=r["title"], year=r["year"], sector=r["sector"])
             for r in rows
@@ -203,16 +199,26 @@ def federated_search(
     """
     q = q.strip()
 
+    def _safe_result(future, label: str):
+        try:
+            return future.result(timeout=15.0)
+        except concurrent.futures.TimeoutError:
+            logger.warning("search timeout for %s", label)
+            return []
+        except Exception as e:
+            logger.warning("search error for %s: %s", label, e)
+            return []
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         f_vendors = executor.submit(_search_vendors, q, limit)
         f_institutions = executor.submit(_search_institutions, q, limit)
         f_contracts = executor.submit(_search_contracts, q, limit)
         f_cases = executor.submit(_search_cases, q, limit)
 
-        vendors = f_vendors.result(timeout=5.0)
-        institutions = f_institutions.result(timeout=5.0)
-        contracts = f_contracts.result(timeout=5.0)
-        cases = f_cases.result(timeout=5.0)
+        vendors = _safe_result(f_vendors, "vendors")
+        institutions = _safe_result(f_institutions, "institutions")
+        contracts = _safe_result(f_contracts, "contracts")
+        cases = _safe_result(f_cases, "cases")
 
     total = len(vendors) + len(institutions) + len(contracts) + len(cases)
 

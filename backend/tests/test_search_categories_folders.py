@@ -44,6 +44,9 @@ class TestFederatedSearch:
         assert isinstance(data["institutions"], list)
         assert isinstance(data["contracts"], list)
         assert isinstance(data["cases"], list)
+        # Search must actually return results for a known entity
+        assert data["total"] > 0, "PEMEX search returned empty results — DB connection broken"
+        assert len(data["vendors"]) > 0, "Expected PEMEX vendor results"
 
     def test_total_matches_sum_of_groups(self, client, base_url):
         r = client.get(f"{base_url}/search?q=PEMEX")
