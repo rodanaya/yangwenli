@@ -41,9 +41,16 @@ import {
   AlertTriangle,
   Brain,
   BarChart3,
+  ExternalLink,
 } from 'lucide-react'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
-import { getSectorNameEN } from '@/lib/constants'
+import { getSectorNameEN, SECTORS } from '@/lib/constants'
+
+// Helper: map sector code string to integer sector_id for API queries
+function getSectorId(code: string | null): number | null {
+  if (!code) return null
+  return SECTORS.find(s => s.code === code)?.id ?? null
+}
 
 // =============================================================================
 // Types
@@ -868,6 +875,14 @@ export default function SpendingCategories() {
                     {(cat.avg_risk * 100).toFixed(0)}%
                   </span>
                 </div>
+                <button
+                  onClick={() => { const sid = getSectorId(cat.sector_code); navigate(`/contracts${sid ? `?sector_id=${sid}` : ''}&sort_by=risk_score&sort_order=desc`) }}
+                  className="mt-2 w-full flex items-center justify-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors"
+                  aria-label={`See contracts in ${cat.name_en || cat.name_es}`}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  See contracts
+                </button>
               </div>
             ))}
           </div>
@@ -1045,6 +1060,7 @@ export default function SpendingCategories() {
                       <SortIndicator field="avg_risk" sortField={sortField} sortDir={sortDir} />
                     </th>
                     <th className="px-3 py-2.5 text-right font-medium whitespace-nowrap">High-Risk Contracts</th>
+                    <th className="px-3 py-2.5 text-right font-medium whitespace-nowrap">Investigate</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1085,6 +1101,19 @@ export default function SpendingCategories() {
                       </td>
                       <td className="px-3 py-2.5 text-right font-mono text-text-secondary tabular-nums">
                         {formatNumber(agg.high_risk_count)}
+                      </td>
+                      <td className="px-3 py-2.5 text-right">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            navigate(`/contracts?sector_id=${getSectorId(agg.sector_code) ?? ''}&risk_level=high&sort_by=risk_score&sort_order=desc`)
+                          }}
+                          className="inline-flex items-center gap-1 text-[11px] text-accent hover:text-accent/80 transition-colors"
+                          aria-label={`Investigate high-risk contracts in ${getSectorNameEN(agg.sector_code)}`}
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          High risk
+                        </button>
                       </td>
                     </tr>
                   ))}

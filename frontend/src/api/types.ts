@@ -1195,6 +1195,16 @@ export interface ScandalListItem {
   ground_truth_case_id?: number
 }
 
+export interface LinkedVendor {
+  vendor_id: number | null
+  vendor_name: string
+  role: string
+  evidence_strength: string
+  match_method: string
+  contract_count: number
+  avg_risk_score: number | null
+}
+
 export interface ScandalDetail extends ScandalListItem {
   amount_note?: string
   legal_status_note?: string
@@ -1203,6 +1213,7 @@ export interface ScandalDetail extends ScandalListItem {
   key_actors: KeyActor[]
   sources: ScandalSource[]
   investigation_case_ids: number[]
+  linked_vendors: LinkedVendor[]
 }
 
 export interface ScandalStats {

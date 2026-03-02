@@ -212,7 +212,7 @@
     "limitations": {
       "groundTruth": {
         "title": "Concentraci\u00f3n de Verdad Base",
-        "text": "Aunque la verdad de campo se ha diversificado a 15 casos en los 12 sectores, los tres casos m\u00e1s grandes (IMSS, Segalmex, COVID) a\u00fan contribuyen la mayor\u00eda de contratos de entrenamiento. El modelo sobresale detectando fraude basado en concentraci\u00f3n, pero puede subdetectar esquemas de corrupci\u00f3n novedosos.",
+        "text": "Aunque la verdad de campo se ha diversificado a 22 casos en los 12 sectores, los tres casos m\u00e1s grandes (IMSS, Segalmex, COVID) a\u00fan contribuyen la mayor\u00eda de contratos de entrenamiento. El modelo sobresale detectando fraude basado en concentraci\u00f3n, pero puede subdetectar esquemas de corrupci\u00f3n novedosos.",
         "mitigation": "Agregando 8+ casos en v6.0. Soluci\u00f3n temporal: los modelos por sector reducen este sesgo."
       },
       "dataQuality": {
@@ -227,7 +227,7 @@
       },
       "unknowns": {
         "title": "Inc\u00f3gnitas Desconocidas",
-        "text": "Los esquemas de corrupci\u00f3n novedosos que no se parezcan a los 15 casos documentados no ser\u00e1n se\u00f1alados por este modelo. El modelo detecta lo que fue entrenado a reconocer \u2014 patrones del pasado, no innovaci\u00f3n en el fraude.",
+        "text": "Los esquemas de corrupci\u00f3n novedosos que no se parezcan a los 22 casos documentados no ser\u00e1n se\u00f1alados por este modelo. El modelo detecta lo que fue entrenado a reconocer \u2014 patrones del pasado, no innovaci\u00f3n en el fraude.",
         "mitigation": "La integraci\u00f3n de datos de auditor\u00eda de la ASF est\u00e1 en la hoja de ruta de v6.0."
       }
     },

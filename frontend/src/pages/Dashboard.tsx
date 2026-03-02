@@ -9,7 +9,7 @@ import { cn, formatCompactMXN, formatCompactUSD, formatNumber, toTitleCase } fro
 import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
 import { analysisApi, investigationApi } from '@/api/client'
-import type { ExecutiveCaseDetail } from '@/api/types'
+import type { ExecutiveCaseDetail, ExecutiveSummaryResponse } from '@/api/types'
 import {
   ArrowRight,
   ArrowUpRight,
@@ -48,7 +48,6 @@ import {
 import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN, CURRENT_MODEL_VERSION } from '@/lib/constants'
 import { GlobalSearch } from '@/components/GlobalSearch'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
-import { ModelDetectionStory } from '@/components/ModelDetectionStory'
 
 // ============================================================================
 // Dashboard: Bold, data-dense intelligence overview
@@ -658,12 +657,26 @@ export function Dashboard() {
         </div>
         {/* Model Confidence Badge */}
         <div className="mt-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-            <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-xs font-mono text-emerald-400">
-              AUC {modelMeta?.auc_test != null ? modelMeta.auc_test.toFixed(3) : '0.957'} · {modelMeta?.version ?? CURRENT_MODEL_VERSION}
-            </span>
-          </div>
+          <InfoTooltip
+            content={
+              <div className="space-y-1.5 max-w-[260px]">
+                <p className="font-semibold text-xs text-text-primary">AUC (Area Under the Curve)</p>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  Measures how well the model separates corrupt from clean contracts. AUC 0.957 means: given a randomly chosen corrupt contract and a randomly chosen clean one, the model ranks the corrupt one higher 95.7% of the time.
+                </p>
+                <p className="text-xs text-text-muted leading-relaxed">
+                  1.0 = perfect · 0.5 = random chance · This model tested on contracts ≥2021 it had never seen during training (temporal split).
+                </p>
+              </div>
+            }
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 cursor-help">
+              <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs font-mono text-emerald-400">
+                AUC {modelMeta?.auc_test != null ? modelMeta.auc_test.toFixed(3) : '0.957'} · {modelMeta?.version ?? CURRENT_MODEL_VERSION}
+              </span>
+            </div>
+          </InfoTooltip>
         </div>
 
         {/* WHAT WE FOUND — three anchor claims before the user scrolls */}
@@ -697,6 +710,11 @@ export function Dashboard() {
         <GlobalSearch />
       </div>
       </div>
+
+      {/* ================================================================ */}
+      {/* TOP CRITICAL FLAGS — Immediate investigation leads for researchers */}
+      {/* ================================================================ */}
+      <TopCriticalFlags navigate={navigate} execData={execData} execLoading={execLoading} />
 
       {/* ================================================================ */}
       {/* DATA QUALITY — Compact transparency strip                       */}
@@ -1364,6 +1382,8 @@ export function Dashboard() {
               </div>
               {/* Stacked bar */}
               <RiskDistributionBar data={riskDist} />
+              {/* Plain-language annotation */}
+              <RiskDistributionAnnotation data={riskDist} />
             </div>
           )}
         </CardContent>
@@ -1402,10 +1422,6 @@ export function Dashboard() {
           ) : (
             <>
               <CaseDetectionChart cases={corruptionCases} />
-              {/* ML Detection Story — full per-case breakdown with sorting */}
-              <div className="mt-4">
-                <ModelDetectionStory collapsible defaultCollapsed={false} />
-              </div>
             </>
           )}
           {/* SMOKING GUN — one concrete high-risk investigation lead */}
@@ -1712,6 +1728,133 @@ const RiskDonutChart = memo(function RiskDonutChart({
             <span className="text-[10px] text-text-muted font-mono">{d.name} {d.value.toFixed(1)}%</span>
           </div>
         ))}
+      </div>
+    </div>
+  )
+})
+
+// ============================================================================
+// RISK DISTRIBUTION ANNOTATION — plain-language "what this means" block
+// ============================================================================
+
+const RiskDistributionAnnotation = memo(function RiskDistributionAnnotation({
+  data,
+}: {
+  data: Array<{ risk_level: string; count: number; percentage: number; total_value_mxn: number }>
+}) {
+  const critical = data.find(d => d.risk_level === 'critical')
+  const high = data.find(d => d.risk_level === 'high')
+  const critPct = critical?.percentage ?? 6.5
+  const highPct = high?.percentage ?? 4.1
+  const combinedPct = (critPct + highPct).toFixed(1)
+  const critCount = critical?.count ?? 201745
+  const highCount = high?.count ?? 126553
+
+  return (
+    <div className="rounded-md border border-border/30 bg-background-elevated/20 px-4 py-3">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-mono mb-2">
+        What this means
+      </p>
+      <div className="space-y-1.5 text-xs text-text-muted leading-relaxed">
+        <p>
+          <span className="font-semibold text-risk-critical">{critPct.toFixed(1)}% Critical</span>
+          {' '}({formatNumber(critCount)} contracts) — procurement characteristics closely match documented corruption cases. Immediate investigation warranted.
+        </p>
+        <p>
+          <span className="font-semibold text-risk-high">{highPct.toFixed(1)}% High</span>
+          {' '}({formatNumber(highCount)} contracts) — strong statistical anomalies relative to sector norms. Priority review recommended.
+        </p>
+        <p className="text-text-muted/70">
+          Combined <span className="text-text-secondary font-semibold">{combinedPct}%</span> of contracts are flagged high-or-critical — within the OECD benchmark of 2–15%. Risk scores measure similarity to known corruption patterns, not proof of wrongdoing.
+        </p>
+      </div>
+    </div>
+  )
+})
+
+// ============================================================================
+// TOP CRITICAL FLAGS — Immediate investigation leads strip
+// ============================================================================
+
+interface TopCriticalFlagsProps {
+  navigate: ReturnType<typeof useNavigate>
+  execData: ExecutiveSummaryResponse | undefined
+  execLoading: boolean
+}
+
+const TopCriticalFlags = memo(function TopCriticalFlags({ navigate, execData, execLoading }: TopCriticalFlagsProps) {
+  // Show the top 3 vendors by risk score (critical threshold >= 0.50)
+  const criticalVendors = useMemo(() => {
+    if (!execData?.top_vendors) return []
+    return [...execData.top_vendors]
+      .filter(v => v.avg_risk >= 0.30) // high or critical
+      .sort((a, b) => b.avg_risk - a.avg_risk)
+      .slice(0, 3)
+  }, [execData])
+
+  if (execLoading) {
+    return (
+      <div className="rounded-lg border border-risk-critical/20 bg-risk-critical/5 px-4 py-3">
+        <div className="flex items-center gap-2 mb-2">
+          <Zap className="h-3.5 w-3.5 text-risk-critical" />
+          <span className="text-[10px] font-bold tracking-wider uppercase text-risk-critical font-mono">Top Flagged Entities</span>
+        </div>
+        <div className="flex gap-2">
+          {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-14 flex-1" />)}
+        </div>
+      </div>
+    )
+  }
+
+  if (criticalVendors.length === 0) return null
+
+  return (
+    <div className="rounded-lg border border-risk-critical/20 bg-risk-critical/5 px-4 py-3">
+      <div className="flex items-center justify-between mb-2.5">
+        <div className="flex items-center gap-2">
+          <Zap className="h-3.5 w-3.5 text-risk-critical" />
+          <span className="text-[10px] font-bold tracking-wider uppercase text-risk-critical font-mono">
+            Top Flagged Vendors — Start Here
+          </span>
+        </div>
+        <button
+          onClick={() => navigate('/contracts?risk_level=critical')}
+          className="text-[10px] text-accent flex items-center gap-0.5 hover:underline font-mono"
+        >
+          See all critical <ArrowUpRight className="h-3 w-3" />
+        </button>
+      </div>
+      <div className="grid gap-2 grid-cols-1 sm:grid-cols-3">
+        {criticalVendors.map((vendor, i) => {
+          const riskPct = (vendor.avg_risk * 100).toFixed(0)
+          const riskColor = vendor.avg_risk >= 0.50 ? 'text-risk-critical' : 'text-risk-high'
+          const rankColors = ['#f87171', '#fb923c', '#fbbf24']
+          return (
+            <button
+              key={vendor.id}
+              onClick={() => navigate(`/contracts?risk_level=critical`)}
+              className="flex items-start gap-2.5 p-2.5 rounded-md border border-risk-critical/15 bg-background-card/60 hover:border-risk-critical/35 hover:bg-risk-critical/8 transition-all text-left group"
+            >
+              <span
+                className="text-xs font-black font-mono flex-shrink-0 mt-0.5 tabular-nums"
+                style={{ color: rankColors[i] ?? '#64748b' }}
+              >
+                #{i + 1}
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-text-primary truncate leading-tight group-hover:text-accent transition-colors">
+                  {toTitleCase(vendor.name)}
+                </p>
+                <p className="text-[10px] text-text-muted font-mono mt-0.5">
+                  {vendor.value_billions.toFixed(1)}B MXN · {formatNumber(vendor.contracts)} contracts
+                </p>
+              </div>
+              <span className={`text-sm font-black tabular-nums font-mono flex-shrink-0 ${riskColor}`}>
+                {riskPct}%
+              </span>
+            </button>
+          )
+        })}
       </div>
     </div>
   )

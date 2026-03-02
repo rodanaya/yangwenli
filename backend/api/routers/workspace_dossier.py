@@ -23,6 +23,8 @@ class DossierOut(BaseModel):
     item_count: int
     created_at: str
     updated_at: str
+    highest_risk_score: Optional[float] = None
+    highest_risk_name: Optional[str] = None
 
 class DossierItemIn(BaseModel):
     item_type: str  # vendor | institution | contract | note
@@ -56,7 +58,52 @@ def list_dossiers(status: Optional[str] = None):
             GROUP BY d.id
             ORDER BY d.updated_at DESC
         """, params).fetchall()
-        return [dict(r) for r in rows]
+
+        dossiers = [dict(r) for r in rows]
+        dossier_ids = [d["id"] for d in dossiers]
+
+        # Compute highest risk score per dossier from vendor/contract items
+        risk_map: dict = {}
+        if dossier_ids:
+            placeholders = ",".join("?" * len(dossier_ids))
+            # Vendors: use avg_risk_score from vendors table
+            vendor_rows = conn.execute(f"""
+                SELECT di.dossier_id, v.avg_risk_score, v.name
+                FROM dossier_items di
+                JOIN vendors v ON di.item_id = v.id
+                WHERE di.dossier_id IN ({placeholders})
+                    AND di.item_type = 'vendor'
+                    AND v.avg_risk_score IS NOT NULL
+            """, dossier_ids).fetchall()
+            for r in vendor_rows:
+                did = r["dossier_id"]
+                score = r["avg_risk_score"] or 0
+                if did not in risk_map or score > risk_map[did][0]:
+                    risk_map[did] = (score, r["name"])
+
+            # Contracts: use risk_score from contracts table
+            contract_rows = conn.execute(f"""
+                SELECT di.dossier_id, c.risk_score, c.title
+                FROM dossier_items di
+                JOIN contracts c ON di.item_id = c.id
+                WHERE di.dossier_id IN ({placeholders})
+                    AND di.item_type = 'contract'
+                    AND c.risk_score IS NOT NULL
+            """, dossier_ids).fetchall()
+            for r in contract_rows:
+                did = r["dossier_id"]
+                score = r["risk_score"] or 0
+                name = r["title"] or "Contract"
+                if did not in risk_map or score > risk_map[did][0]:
+                    risk_map[did] = (score, name)
+
+        for d in dossiers:
+            did = d["id"]
+            if did in risk_map:
+                d["highest_risk_score"] = round(risk_map[did][0], 4)
+                d["highest_risk_name"] = risk_map[did][1]
+
+        return dossiers
 
 @router.post("", response_model=DossierOut, status_code=201)
 def create_dossier(body: DossierIn):

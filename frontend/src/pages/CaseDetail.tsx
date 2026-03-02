@@ -6,10 +6,10 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
-import { AlertCircle, ArrowLeft, ExternalLink, CheckCircle } from 'lucide-react'
+import { AlertCircle, ArrowLeft, ExternalLink, CheckCircle, Activity, TrendingUp, Users, FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
-import type { FraudType } from '@/api/types'
+import { RISK_COLORS, getRiskLevelFromScore, SECTORS } from '@/lib/constants'
+import type { FraudType, LinkedVendor } from '@/api/types'
 
 // ── Severity colours ──────────────────────────────────────────────────────────
 const SEVERITY_COLORS: Record<number, string> = {
@@ -110,11 +110,18 @@ function formatMXN(n?: number | null): string {
   return `$${n.toLocaleString()} MXN`
 }
 
+function formatCompact(n: number): string {
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`
+  if (n >= 1e3) return `${(n / 1e3).toFixed(0)}K`
+  return String(n)
+}
+
 // ── Timeline helpers ──────────────────────────────────────────────────────────
 interface TimelineEvent {
   date: string
   label: string
-  type: 'start' | 'exposure' | 'resolution'
+  sublabel?: string
+  type: 'start' | 'exposure' | 'resolution' | 'milestone'
 }
 
 function buildTimeline(
@@ -122,23 +129,52 @@ function buildTimeline(
   yearEnd?: number,
   discoveryYear?: number,
   legalStatus?: string,
+  administration?: string,
 ): TimelineEvent[] {
   const events: TimelineEvent[] = []
 
   if (yearStart) {
     events.push({
-      date: String(yearStart),
-      label: yearEnd && yearEnd !== yearStart
-        ? `Contracts awarded (${yearStart}–${yearEnd})`
-        : `Contracts awarded (${yearStart})`,
+      date: yearEnd && yearEnd !== yearStart ? `${yearStart}–${yearEnd}` : String(yearStart),
+      label: 'Contracts awarded',
+      sublabel: yearEnd && yearEnd !== yearStart
+        ? `${yearEnd - yearStart + 1}-year procurement period`
+        : 'Single-year procurement activity',
       type: 'start',
     })
   }
 
+  // Administration milestone
+  if (administration && administration !== 'unknown') {
+    const adminLabels: Record<string, string> = {
+      fox: 'Fox administration (2000–2006)',
+      calderon: 'Calderón administration (2006–2012)',
+      epn: 'Peña Nieto administration (2012–2018)',
+      amlo: 'AMLO administration (2018–2024)',
+      sheinbaum: 'Sheinbaum administration (2024–)',
+    }
+    if (adminLabels[administration]) {
+      events.push({
+        date: administration === 'fox' ? '2000–2006'
+          : administration === 'calderon' ? '2006–2012'
+          : administration === 'epn' ? '2012–2018'
+          : administration === 'amlo' ? '2018–2024'
+          : '2024–',
+        label: adminLabels[administration],
+        sublabel: 'Political context',
+        type: 'milestone',
+      })
+    }
+  }
+
   if (discoveryYear) {
+    const yearsAfter = yearStart ? discoveryYear - yearStart : null
     events.push({
       date: String(discoveryYear),
       label: 'Case exposed / investigation opened',
+      sublabel: yearsAfter != null && yearsAfter > 0
+        ? `${yearsAfter} year${yearsAfter !== 1 ? 's' : ''} after contracts started`
+        : undefined,
       type: 'exposure',
     })
   }
@@ -180,6 +216,56 @@ function RiskGauge({ score }: { score: number }) {
   )
 }
 
+// ── Detection score label ─────────────────────────────────────────────────────
+function DetectionScoreLabel({ score }: { score: number }) {
+  const level = getRiskLevelFromScore(score)
+  const pct = Math.round(score * 100)
+  const labels: Record<string, string> = {
+    critical: 'Critical — strongly detected',
+    high: 'High — clearly detected',
+    medium: 'Medium — partially detected',
+    low: 'Low — weakly detected',
+  }
+  return (
+    <span className="text-[10px] text-text-muted">{pct}% — {labels[level]}</span>
+  )
+}
+
+// ── Similar case card ─────────────────────────────────────────────────────────
+function SimilarCaseCard({ cas, onClick }: { cas: { name_en: string; slug: string; fraud_type: FraudType; severity: number; amount_mxn_low?: number | null }; onClick: () => void }) {
+  const colors = FRAUD_TYPE_COLORS[cas.fraud_type] ?? FRAUD_TYPE_COLORS.other
+  const severityLabels: Record<number, string> = { 1: 'Low', 2: 'Medium', 3: 'High', 4: 'Critical' }
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'w-full text-left p-3 rounded-lg border transition-all hover:bg-card/80 group',
+        colors.border,
+        colors.bg,
+      )}
+    >
+      <div className="text-xs font-semibold text-text-primary group-hover:text-accent transition-colors leading-snug mb-1">
+        {cas.name_en}
+      </div>
+      <div className="flex items-center gap-2 text-[10px] text-text-muted">
+        <span className={cn('px-1.5 py-0.5 rounded font-bold',
+          cas.severity >= 4 ? 'bg-red-500/20 text-red-400'
+          : cas.severity >= 3 ? 'bg-orange-500/20 text-orange-400'
+          : 'bg-yellow-500/20 text-yellow-400'
+        )}>
+          {severityLabels[cas.severity] ?? 'Medium'}
+        </span>
+        <span className={cn('px-1.5 py-0.5 rounded border', colors.border, colors.text)}>
+          {cas.fraud_type.replace(/_/g, ' ')}
+        </span>
+        {cas.amount_mxn_low && (
+          <span className="ml-auto font-mono">{formatMXN(cas.amount_mxn_low)}</span>
+        )}
+      </div>
+    </button>
+  )
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 export default function CaseDetail() {
   const { slug } = useParams<{ slug: string }>()
@@ -191,6 +277,14 @@ export default function CaseDetail() {
     queryFn: () => caseLibraryApi.getBySlug(slug!),
     enabled: !!slug,
     staleTime: 10 * 60 * 1000,
+  })
+
+  // Load all cases so we can show "Similar Cases"
+  const { data: allCases } = useQuery({
+    queryKey: ['cases', 'list', {}],
+    queryFn: () => caseLibraryApi.getAll({}),
+    staleTime: 10 * 60 * 1000,
+    enabled: !!data,
   })
 
   if (isLoading) {
@@ -228,12 +322,32 @@ export default function CaseDetail() {
     data.contract_year_end,
     data.discovery_year,
     data.legal_status,
+    data.administration,
   )
 
-  // Derive a representative avg risk score from severity for vendor gauges
-  // (actual per-vendor scores are not in this endpoint; severity 1-4 maps to 0.05-0.65)
-  const severityToScore: Record<number, number> = { 1: 0.08, 2: 0.22, 3: 0.44, 4: 0.62 }
-  const representativeScore = severityToScore[data.severity] ?? 0.30
+  // Use actual linked_vendors from ground truth (when this case trained the model)
+  const linkedVendors: LinkedVendor[] = data.linked_vendors ?? []
+  const hasRealVendorScores = linkedVendors.length > 0
+
+  // Compute aggregate detection score from linked vendors (avg of avg_risk_score)
+  const vendorScores = linkedVendors.filter(v => v.avg_risk_score != null).map(v => v.avg_risk_score!)
+  const avgDetectionScore = vendorScores.length > 0
+    ? vendorScores.reduce((a, b) => a + b, 0) / vendorScores.length
+    : null
+  const totalContractsLinked = linkedVendors.reduce((s, v) => s + (v.contract_count ?? 0), 0)
+
+  // Derive sector names for sector_ids
+  const sectorLabels = (data.sector_ids ?? [])
+    .map(sid => SECTORS.find(s => s.id === sid)?.nameEN)
+    .filter(Boolean) as string[]
+
+  // Similar cases: same fraud_type, different slug, top 3 by severity
+  const similarCases = allCases
+    ? allCases
+        .filter(c => c.fraud_type === data.fraud_type && c.slug !== data.slug)
+        .sort((a, b) => b.severity - a.severity)
+        .slice(0, 3)
+    : []
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -300,6 +414,9 @@ export default function CaseDetail() {
           )}
           {data.discovery_year && <span>{t('card.discovered', { year: data.discovery_year })}</span>}
           <span>{t(`administrations.${data.administration}`)}</span>
+          {sectorLabels.length > 0 && (
+            <span>{sectorLabels.join(', ')}</span>
+          )}
         </div>
       </div>
 
@@ -309,12 +426,10 @@ export default function CaseDetail() {
       </div>
 
       {/* ── Impact Metrics Grid ─────────────────────────────────────────────── */}
-      {(data.amount_mxn_low || data.amount_mxn_high) && (
+      {(data.amount_mxn_low || data.amount_mxn_high || hasRealVendorScores) && (
         <section className="mb-6">
           <h2 className="text-sm font-bold font-mono text-text-primary mb-3">Impact Metrics</h2>
-          <div className={cn(
-            'grid grid-cols-2 sm:grid-cols-3 gap-3',
-          )}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {/* Total value */}
             {(data.amount_mxn_low || data.amount_mxn_high) && (
               <div className={cn(
@@ -331,6 +446,56 @@ export default function CaseDetail() {
                 {data.amount_mxn_high && data.amount_mxn_high !== data.amount_mxn_low && (
                   <div className="text-[11px] text-text-muted">
                     up to {formatMXN(data.amount_mxn_high)}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* RUBLI Detection Score — real data when GT-linked, severity-based otherwise */}
+            <div className={cn(
+              'rounded-lg border p-3 flex flex-col gap-1.5',
+              fraudColors.border,
+              fraudColors.bg,
+            )}>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted flex items-center gap-1">
+                <TrendingUp className="h-3 w-3" />
+                RUBLI Detection Score
+              </div>
+              {avgDetectionScore != null ? (
+                <>
+                  <RiskGauge score={avgDetectionScore} />
+                  <DetectionScoreLabel score={avgDetectionScore} />
+                  <div className="text-[10px] text-text-muted">
+                    Avg across {linkedVendors.length} linked vendor{linkedVendors.length !== 1 ? 's' : ''}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="text-lg font-mono font-bold text-text-primary leading-tight">
+                    {data.severity >= 4 ? 'Critical' : data.severity >= 3 ? 'High' : data.severity >= 2 ? 'Medium' : 'Low'}
+                  </div>
+                  <div className="text-[11px] text-text-muted">Based on case severity</div>
+                </>
+              )}
+            </div>
+
+            {/* Contracts affected */}
+            {(totalContractsLinked > 0 || data.amount_mxn_low) && (
+              <div className={cn(
+                'rounded-lg border p-3 flex flex-col gap-1',
+                fraudColors.border,
+                fraudColors.bg,
+              )}>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted flex items-center gap-1">
+                  <Users className="h-3 w-3" />
+                  Contracts Affected
+                </div>
+                <div className="text-lg font-mono font-bold text-text-primary leading-tight">
+                  {totalContractsLinked > 0 ? formatCompact(totalContractsLinked) : '—'}
+                </div>
+                {linkedVendors.length > 0 && (
+                  <div className="text-[11px] text-text-muted">
+                    {linkedVendors.length} vendor{linkedVendors.length !== 1 ? 's' : ''} matched in COMPRANET
                   </div>
                 )}
               </div>
@@ -405,26 +570,7 @@ export default function CaseDetail() {
               </div>
             )}
 
-            {/* Sectors affected */}
-            {data.sector_ids && data.sector_ids.length > 0 && (
-              <div className={cn(
-                'rounded-lg border p-3 flex flex-col gap-1',
-                fraudColors.border,
-                fraudColors.bg,
-              )}>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
-                  Sectors Affected
-                </div>
-                <div className="text-lg font-mono font-bold text-text-primary leading-tight">
-                  {data.sector_ids.length}
-                </div>
-                <div className="text-[11px] text-text-muted">
-                  {data.sector_ids.length === 1 ? 'Single sector' : 'Cross-sector fraud'}
-                </div>
-              </div>
-            )}
-
-            {/* Compranet visibility */}
+            {/* COMPRANET visibility */}
             <div className={cn(
               'rounded-lg border p-3 flex flex-col gap-1',
               fraudColors.border,
@@ -506,10 +652,15 @@ export default function CaseDetail() {
                       ? 'border-red-400 bg-red-400/20'
                       : event.type === 'exposure'
                         ? 'border-amber-400 bg-amber-400/20'
-                        : 'border-emerald-400 bg-emerald-400/20',
+                        : event.type === 'milestone'
+                          ? 'border-border bg-border/30'
+                          : 'border-emerald-400 bg-emerald-400/20',
                   )} />
-                  <div className="text-xs text-text-muted">{event.date}</div>
+                  <div className="text-xs text-text-muted font-mono">{event.date}</div>
                   <div className="text-sm font-medium text-text-primary">{event.label}</div>
+                  {event.sublabel && (
+                    <div className="text-[11px] text-text-muted mt-0.5">{event.sublabel}</div>
+                  )}
                 </div>
               ))}
             </div>
@@ -520,7 +671,15 @@ export default function CaseDetail() {
       {/* ── How We Detected This ────────────────────────────────────────────── */}
       <section className="mb-6">
         <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-4">
-          <h3 className="text-sm font-semibold text-cyan-400 mb-3">How the Model Detected This Case</h3>
+          <div className="flex items-center gap-2 mb-3">
+            <TrendingUp className="h-4 w-4 text-cyan-400" />
+            <h3 className="text-sm font-semibold text-cyan-400">How the Model Detected This Case</h3>
+            {avgDetectionScore != null && (
+              <span className="ml-auto text-xs font-mono font-bold" style={{ color: RISK_COLORS[getRiskLevelFromScore(avgDetectionScore)] }}>
+                {Math.round(avgDetectionScore * 100)}% avg detection score
+              </span>
+            )}
+          </div>
           <div className="space-y-2 text-sm text-text-muted">
             {signals.map((signal, i) => (
               <div key={i} className="flex items-start gap-2">
@@ -530,19 +689,96 @@ export default function CaseDetail() {
             ))}
           </div>
           {data.ground_truth_case_id != null && (
-            <div className="mt-3 pt-3 border-t border-cyan-500/15 text-[11px] text-text-muted">
-              This case is part of the model&apos;s ground truth training set. Contracts linked to it
-              were used to calibrate the v5.1 per-sector risk sub-models.{' '}
-              <Link to="/methodology" className="text-cyan-400 hover:underline">
-                View model validation
-              </Link>
+            <div className="mt-3 pt-3 border-t border-cyan-500/15">
+              <div className="flex items-start gap-2 text-[11px] text-text-muted">
+                <Activity className="h-3.5 w-3.5 text-cyan-400 flex-shrink-0 mt-0.5" />
+                <span>
+                  This case is part of the v5.1 model&apos;s ground truth training set.
+                  The {linkedVendors.length > 0 ? `${linkedVendors.length} matched vendor${linkedVendors.length !== 1 ? 's' : ''}` : 'contracts'} from
+                  this case provided labeled positive examples — procurement patterns known to be corrupt.
+                  The model learned to associate these patterns (vendor concentration, price volatility,
+                  win rates) with corruption risk, improving detection across all 3.1M contracts.{' '}
+                  <Link to="/methodology" className="text-cyan-400 hover:underline">
+                    View model validation
+                  </Link>
+                </span>
+              </div>
             </div>
           )}
         </div>
       </section>
 
-      {/* ── Connected Vendors ───────────────────────────────────────────────── */}
-      {data.key_actors.filter(a => a.role === 'vendor').length > 0 && (
+      {/* ── Connected Vendors (real data from ground truth) ─────────────────── */}
+      {hasRealVendorScores ? (
+        <section className="mb-6">
+          <h2 className="text-sm font-bold font-mono text-text-primary mb-3">
+            Linked Vendors
+            <span className="text-text-muted font-normal ml-2">({linkedVendors.length} matched in COMPRANET)</span>
+          </h2>
+          <div className="space-y-2">
+            {linkedVendors.map((vendor, i) => (
+              <div key={i} className="bg-card border border-border/40 rounded-lg p-3 flex flex-col gap-1.5">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      {vendor.vendor_id ? (
+                        <Link
+                          to={`/vendors/${vendor.vendor_id}`}
+                          className="text-xs font-semibold text-text-primary hover:text-accent transition-colors"
+                        >
+                          {vendor.vendor_name}
+                        </Link>
+                      ) : (
+                        <div className="text-xs font-semibold text-text-primary">{vendor.vendor_name}</div>
+                      )}
+                      {vendor.vendor_id && (
+                        <Link
+                          to={`/contracts?vendor_id=${vendor.vendor_id}&sort_by=risk_score&sort_order=desc`}
+                          className="text-text-muted hover:text-accent transition-colors"
+                          title="View contracts"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                        </Link>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <Badge variant="outline" className={cn(
+                        'text-[10px] px-1.5 py-0',
+                        fraudColors.border,
+                        fraudColors.text,
+                      )}>
+                        {vendor.role}
+                      </Badge>
+                      <span className="text-[10px] text-text-muted">
+                        {vendor.contract_count.toLocaleString()} contracts
+                      </span>
+                      {vendor.match_method && (
+                        <span className="text-[10px] text-text-muted">· matched by {vendor.match_method}</span>
+                      )}
+                    </div>
+                  </div>
+                  {vendor.avg_risk_score != null && (
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">RUBLI Score</div>
+                      <div
+                        className="text-base font-mono font-bold"
+                        style={{ color: RISK_COLORS[getRiskLevelFromScore(vendor.avg_risk_score)] }}
+                      >
+                        {Math.round(vendor.avg_risk_score * 100)}%
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {/* Risk score bar */}
+                {vendor.avg_risk_score != null && (
+                  <RiskGauge score={vendor.avg_risk_score} />
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : data.key_actors.filter(a => a.role === 'vendor').length > 0 ? (
+        /* Fallback: key actors vendors when no ground truth linked vendors */
         <section className="mb-6">
           <h2 className="text-sm font-bold font-mono text-text-primary mb-3">Connected Vendors</h2>
           <div className="space-y-2">
@@ -565,13 +801,6 @@ export default function CaseDetail() {
                       vendor
                     </Badge>
                   </div>
-                  {/* Risk score mini-bar — approximated from severity */}
-                  <div className="flex flex-col gap-1">
-                    <div className="text-[10px] text-text-muted uppercase tracking-wider">
-                      Estimated Risk Level
-                    </div>
-                    <RiskGauge score={representativeScore} />
-                  </div>
                   {actor.note && (
                     <div className="text-[11px] text-text-secondary">{actor.note}</div>
                   )}
@@ -579,7 +808,7 @@ export default function CaseDetail() {
               ))}
           </div>
         </section>
-      )}
+      ) : null}
 
       {/* ── Key Actors (non-vendor) ─────────────────────────────────────────── */}
       {data.key_actors.filter(a => a.role !== 'vendor').length > 0 && (
@@ -607,7 +836,7 @@ export default function CaseDetail() {
       )}
 
       {/* ── Sources ─────────────────────────────────────────────────────────── */}
-      <section>
+      <section className="mb-6">
         <h2 className="text-sm font-bold font-mono text-text-primary mb-3">{t('detail.sources')}</h2>
         {data.sources.length === 0 ? (
           <p className="text-xs text-text-muted">{t('detail.noSources')}</p>
@@ -642,6 +871,36 @@ export default function CaseDetail() {
           </div>
         )}
       </section>
+
+      {/* ── Similar Cases ────────────────────────────────────────────────────── */}
+      {similarCases.length > 0 && (
+        <section>
+          <h2 className="text-sm font-bold font-mono text-text-primary mb-3 flex items-center gap-2">
+            <FileText className="h-4 w-4 text-text-muted" />
+            Similar Cases
+            <span className="text-text-muted font-normal text-xs">
+              — other {t(`fraudTypes.${data.fraud_type}`)} cases
+            </span>
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {similarCases.map((cas) => (
+              <SimilarCaseCard
+                key={cas.slug}
+                cas={cas}
+                onClick={() => navigate(`/cases/${cas.slug}`)}
+              />
+            ))}
+          </div>
+          <div className="mt-3 text-center">
+            <button
+              onClick={() => navigate(`/cases?fraud_type=${data.fraud_type}`)}
+              className="text-xs text-text-muted hover:text-accent transition-colors"
+            >
+              View all {t(`fraudTypes.${data.fraud_type}`)} cases →
+            </button>
+          </div>
+        </section>
+      )}
     </div>
   )
 }

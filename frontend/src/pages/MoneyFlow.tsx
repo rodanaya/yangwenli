@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { analysisApi } from '@/api/client'
 import { SankeyDiagram, SankeyNodeSelected } from '@/components/SankeyDiagram'
 import { formatCompactMXN } from '@/lib/utils'
-import { GitBranch, ArrowRight, Building2, Users, TrendingUp, DollarSign, X } from 'lucide-react'
+import { GitBranch, ArrowRight, Building2, Users, TrendingUp, DollarSign, X, AlertTriangle, Info } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -205,6 +205,21 @@ export default function MoneyFlow() {
   )
   const highRiskPct = totalValue > 0 ? (highRiskValue / totalValue) * 100 : 0
 
+  // Top 5 suspicious flows by avg risk score, then by value
+  const topSuspiciousFlows = useMemo(
+    () =>
+      [...links]
+        .filter(l => l.avgRisk >= 0.3)
+        .sort((a, b) => b.avgRisk - a.avgRisk || b.value - a.value)
+        .slice(0, 5)
+        .map(l => {
+          const srcNode = nodes.find(n => n.id === l.source)
+          const tgtNode = nodes.find(n => n.id === l.target)
+          return { ...l, sourceName: srcNode?.name ?? l.source, targetName: tgtNode?.name ?? l.target }
+        }),
+    [links, nodes]
+  )
+
   const showDiagram = !isLoading && nodes.length > 0 && links.length > 0
   const showEmpty = !isLoading && (!!error || !data?.flows?.length)
   const showNoRiskMatch = !isLoading && nodes.length === 0 && !!data?.flows?.length
@@ -220,7 +235,7 @@ export default function MoneyFlow() {
 
       {/* Summary Stats Bar */}
       {showDiagram && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <div className="rounded-lg bg-white/5 border border-border/20 p-4">
             <div className="flex items-center gap-2 mb-1">
               <DollarSign className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
@@ -228,6 +243,19 @@ export default function MoneyFlow() {
             </div>
             <div className="text-xl font-bold font-mono text-text-primary">
               {formatCompactMXN(totalValue)}
+            </div>
+          </div>
+          {/* High-risk flow stat — always visible, not conditional on threshold */}
+          <div className="rounded-lg bg-red-500/8 border border-red-500/25 p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <AlertTriangle className="h-3.5 w-3.5 text-red-400" aria-hidden="true" />
+              <span className="text-xs text-red-400 uppercase tracking-wider">High-Risk Flow</span>
+            </div>
+            <div className="text-xl font-bold font-mono text-red-300">
+              {formatCompactMXN(highRiskValue)}
+            </div>
+            <div className="text-xs text-text-muted mt-0.5">
+              {highRiskPct.toFixed(0)}% of total · avg risk ≥ 30%
             </div>
           </div>
           <div className="rounded-lg bg-white/5 border border-border/20 p-4">
@@ -257,17 +285,6 @@ export default function MoneyFlow() {
               {uniqueVendors.toLocaleString()}
             </div>
           </div>
-        </div>
-      )}
-
-      {/* High-risk alert bar */}
-      {showDiagram && highRiskPct > 20 && (
-        <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-2.5 flex items-center gap-2 text-sm">
-          <span className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" aria-hidden="true" />
-          <span className="text-red-300 font-medium">
-            {highRiskPct.toFixed(0)}% of flow value passes through high-risk or critical contracts
-            ({formatCompactMXN(highRiskValue)})
-          </span>
         </div>
       )}
 
@@ -379,14 +396,36 @@ export default function MoneyFlow() {
                   {' '}contracts (in visible flows)
                 </span>
               </div>
-              <button
-                onClick={handleNodeDrillDown}
-                className="mt-3 flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition-colors underline underline-offset-2"
-                aria-label={`View all contracts for ${selectedNode.name}`}
-              >
-                View all contracts
-                <ArrowRight className="h-3 w-3" aria-hidden="true" />
-              </button>
+              <div className="mt-3 flex flex-wrap gap-3">
+                <button
+                  onClick={handleNodeDrillDown}
+                  className="flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition-colors underline underline-offset-2"
+                  aria-label={`View all contracts for ${selectedNode.name}`}
+                >
+                  View all contracts
+                  <ArrowRight className="h-3 w-3" aria-hidden="true" />
+                </button>
+                {selectedNode.type === 'vendor' && (
+                  <button
+                    onClick={() => navigate(`/vendors/${selectedNode.id.replace('vend-', '')}`)}
+                    className="flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 transition-colors underline underline-offset-2"
+                    aria-label={`Open vendor profile for ${selectedNode.name}`}
+                  >
+                    <Users className="h-3 w-3" aria-hidden="true" />
+                    Vendor profile
+                  </button>
+                )}
+                {selectedNode.type === 'institution' && (
+                  <button
+                    onClick={() => navigate(`/institutions/${selectedNode.id.replace('inst-', '')}`)}
+                    className="flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 transition-colors underline underline-offset-2"
+                    aria-label={`Open institution profile for ${selectedNode.name}`}
+                  >
+                    <Building2 className="h-3 w-3" aria-hidden="true" />
+                    Institution profile
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -448,6 +487,71 @@ export default function MoneyFlow() {
           <span>Click a node to see details</span>
           <span>Click a flow to open filtered contracts</span>
           <span>Hover for value tooltips</span>
+        </div>
+      )}
+
+      {/* Risk coloring explanation */}
+      {showDiagram && (
+        <div className="rounded-lg border border-amber-500/15 bg-amber-500/5 px-4 py-3 flex gap-3">
+          <Info className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+          <div className="text-xs text-text-muted space-y-1">
+            <p className="font-medium text-amber-300">How to read flow colors</p>
+            <p>
+              Flow and node colors represent the <strong className="text-text-secondary">average v5.1 corruption risk score</strong> for all contracts in that channel:
+              {' '}<span style={{ color: '#f87171' }}>red = critical (≥50%)</span>,
+              {' '}<span style={{ color: '#fb923c' }}>orange = high (≥30%)</span>,
+              {' '}<span style={{ color: '#fbbf24' }}>amber = medium (≥10%)</span>,
+              {' '}<span style={{ color: '#4ade80' }}>green = low (&lt;10%)</span>.
+              Thicker flows carry more contract value. Hover any flow for details. Click a flow to view its contracts.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Top 5 suspicious flows summary panel */}
+      {showDiagram && topSuspiciousFlows.length > 0 && (
+        <div className="rounded-lg border border-border/30 bg-background-elevated p-4">
+          <h2 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-red-400" aria-hidden="true" />
+            Top Suspicious Money Flows
+            <span className="text-xs font-normal text-text-muted ml-1">— highest avg risk score, click to investigate</span>
+          </h2>
+          <div className="space-y-2">
+            {topSuspiciousFlows.map((flow, i) => {
+              const riskColor = flow.avgRisk >= 0.5 ? '#f87171' : flow.avgRisk >= 0.3 ? '#fb923c' : '#fbbf24'
+              return (
+                <button
+                  key={i}
+                  onClick={() => handleFlowClick(flow.source, flow.target)}
+                  className="w-full flex items-center gap-3 rounded px-3 py-2 text-left hover:bg-white/5 transition-colors group"
+                  aria-label={`Investigate flow from ${flow.sourceName} to ${flow.targetName}`}
+                >
+                  <span className="text-xs font-mono font-bold text-text-muted w-4 flex-shrink-0">
+                    {i + 1}
+                  </span>
+                  <span
+                    className="w-2 h-2 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: riskColor }}
+                    aria-hidden="true"
+                  />
+                  <span className="flex-1 min-w-0">
+                    <span className="text-xs text-text-secondary truncate block">
+                      {flow.sourceName.length > 30 ? flow.sourceName.slice(0, 30) + '…' : flow.sourceName}
+                      {' → '}
+                      {flow.targetName.length > 30 ? flow.targetName.slice(0, 30) + '…' : flow.targetName}
+                    </span>
+                  </span>
+                  <span className="text-xs font-mono font-semibold flex-shrink-0" style={{ color: riskColor }}>
+                    {(flow.avgRisk * 100).toFixed(0)}% risk
+                  </span>
+                  <span className="text-xs text-text-muted flex-shrink-0">
+                    {formatCompactMXN(flow.value)}
+                  </span>
+                  <ArrowRight className="h-3 w-3 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" aria-hidden="true" />
+                </button>
+              )
+            })}
+          </div>
         </div>
       )}
 

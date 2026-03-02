@@ -203,6 +203,38 @@ const LIMITATIONS = [
     workaround: 'Cross-reference RUBLI findings with ASF Cuenta Pública reports (asf.gob.mx). The ASF audits execution phase and routinely documents cost overruns. Integration of ASF findings into RUBLI scores is a planned Phase 6 enhancement.',
   },
   {
+    id: 'scar-violation',
+    icon: BarChart3,
+    title: 'PU Learning Assumption — SCAR Violation',
+    severity: 'high',
+    summary: 'The Elkan & Noto correction assumes labeled positives are a random sample of all corrupt contracts (SCAR). They are not — known cases are high-profile scandals selected by media attention and prosecution, not a random draw.',
+    body: [
+      'The PU-learning correction c=0.8815 estimates P(labeled=1 | corrupt): how likely a truly corrupt contract is to appear in the labeled set. This requires the SCAR assumption — that labeled positives are a Selected Completely At Random sample of all corrupt contracts.',
+      'This assumption is structurally violated. The labeled positives are contracts from publicly documented, high-profile scandals (IMSS, Segalmex, COVID procurement) selected because they attracted regulatory and media attention. Selection probability is correlated with vendor size, sector prominence, and media visibility.',
+      'The correction factor c=0.8815 estimates how well the model detects cases similar to already-known scandals. True coverage of all corruption — including undiscovered, small-scale, or non-media-visible fraud — is likely far lower (estimated 0.10–0.30). Risk scores should be interpreted as similarity to documented scandal patterns, not as calibrated probabilities of corruption.',
+    ],
+    blind_spots: [
+      'Small-scale corruption that never reaches media or prosecutors',
+      'Corruption in low-visibility sectors with few documented scandals',
+      'New fraud mechanisms not present in any known case',
+      'Official collusion that is systematically covered up',
+    ],
+    workaround: 'Treat all scores as relative risk indicators within the same sector and time period. Do not interpret the score value as a literal probability of corruption. A score of 0.50 means strong similarity to known scandal patterns, not 50% corruption probability.',
+  },
+  {
+    id: 'temporal-leakage',
+    icon: TrendingUp,
+    title: 'Temporal Feature Leakage — Test AUC Is Optimistic',
+    severity: 'medium',
+    summary: 'Vendor-level features (concentration, win rate, price volatility) are computed using full-dataset history (2002–2025). A 2019 contract uses its vendor\'s 2020–2025 activity. This inflates the reported Test AUC of 0.9572.',
+    body: [
+      'Five features — vendor_concentration, win_rate, price_volatility, institution_diversity, sector_spread — are computed as vendor-level aggregates over all available data (2002–2025). When scoring a contract from 2019, these features include information from 2020–2025 that could not have been known at award time.',
+      'This constitutes indirect temporal leakage. The model\'s test set uses contracts from 2021+, but vendor features for those contracts include data from 2022–2025. The reported Test AUC of 0.9572 is therefore optimistic — the true prospective performance on genuinely unseen future vendors is unknown but expected to be lower.',
+      'v5.2 will fix this with point-in-time feature computation: features for a contract in year T will use only vendor history from years ≤ T−1. A new vendor_rolling_stats table is being built to support this.',
+    ],
+    workaround: 'For newly-created vendors with no historical COMPRANET activity, risk scores are less reliable because vendor-level features cannot be computed. Newly incorporated vendors should be flagged separately for manual review regardless of their risk score.',
+  },
+  {
     id: 'mexico-concentration',
     icon: BarChart3,
     title: 'Vendor Concentration Is Mexico-Specific — A Calibration Caveat',
@@ -254,6 +286,8 @@ const SUMMARY_ROWS = [
   { limitation: 'Temporal stationarity', impact: 'New fraud patterns may be undetected', fixable: 'yes', fix: 'Periodic retraining with new cases' },
   { limitation: 'Contract modifications invisible', impact: 'Infrastructure/energy execution-phase costs untracked', fixable: 'partial', fix: 'Requires ASF audit data integration (Phase 6)' },
   { limitation: 'Mexico-specific concentration model', impact: 'Bid-rotation collusion in competitive procedures underdetected', fixable: 'yes', fix: 'Add collusion-ring ground truth cases to training data' },
+  { limitation: 'PU learning SCAR assumption violated', impact: 'c=0.8815 only covers scandal-similar corruption; true coverage estimated 0.10–0.30', fixable: 'partial', fix: 'Better labeled data from prosecutors, SAT, ASF' },
+  { limitation: 'Temporal feature leakage in vendor aggregates', impact: 'Test AUC 0.9572 is optimistic; true prospective performance unknown', fixable: 'yes', fix: 'v5.2 point-in-time rolling features (vendor_rolling_stats table)' },
 ] as const
 
 // ============================================================================

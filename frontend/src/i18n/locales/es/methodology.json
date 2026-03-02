@@ -68,7 +68,7 @@
     "perSectorFormula": "P(corrupto|z) = σ(β₀ + βᵀz) / c, donde c = 0.887 (corrección PU)"
   },
   "modelComparison": {
-    "title": "Comparación de Modelos: v3.3 → v5.0",
+    "title": "Comparación de Modelos: v3.3 → v5.1",
     "metric": "Métrica",
     "v33": "v3.3",
     "v50": "v5.0",
@@ -112,7 +112,7 @@
     "factorLift": "Lift de Factores vs Verdad Fundamental",
     "factorLiftDesc": "Con qué frecuencia adicional aparece cada factor de riesgo en casos documentados de corrupción vs la población general de contratos. Lift > 1.0 = sobrerrepresentado en contratos conocidos como malos.",
     "noFactorLift": "No hay datos de lift de factores disponibles.",
-    "modelComparisonDesc": "Comparación de tasas de detección entre versiones de modelos (v3.3, v4.0, v5.0). Alto+ = puntuación >= 0.30, Crítico = puntuación >= 0.50.",
+    "modelComparisonDesc": "Comparación de tasas de detección entre versiones de modelos (v3.3, v4.0, v5.1). Alto+ = puntuación >= 0.30, Crítico = puntuación >= 0.50.",
     "noModelComparison": "No hay datos de comparación de modelos disponibles. Ejecute validate_risk_model.py para generar resultados."
   },
   "modelTransparency": {

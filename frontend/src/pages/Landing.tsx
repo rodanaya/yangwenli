@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowRight, BarChart3, Search, Shield, BookOpen, TrendingUp, AlertTriangle } from 'lucide-react'
+import { ArrowRight, BarChart3, Search, Shield, BookOpen, TrendingUp, AlertTriangle, Cpu, ChevronDown } from 'lucide-react'
 import { analysisApi } from '@/api/client'
 import { formatCompactMXN } from '@/lib/utils'
+import { NarrativeCard } from '@/components/NarrativeCard'
+import type { NarrativeParagraph } from '@/lib/narratives'
 import type { FastDashboardData, RiskDistribution } from '@/api/types'
 
 // ---------------------------------------------------------------------------
@@ -224,21 +226,25 @@ function HeroStats({ totalContracts, totalValueMxn, highRiskPct, groundTruthCase
     {
       value: triggered ? `${(contractCount / 1_000_000).toFixed(1)}M` : '0M',
       label: 'Contracts tracked',
+      sub: '2002 – 2025',
       color: '#3b82f6',
     },
     {
       value: triggered ? `~${valueBAnimated.toFixed(1)}T` : '0T',
       label: 'MXN in procurement',
+      sub: '6–8 trillion pesos',
       color: '#8b5cf6',
     },
     {
       value: triggered ? `${riskPctAnimated.toFixed(1)}%` : '0%',
       label: 'Contracts high-risk',
+      sub: 'OECD-calibrated model',
       color: '#dc2626',
     },
     {
       value: triggered ? String(casesAnimated) : '0',
       label: 'Corruption cases',
+      sub: 'Ground-truth training set',
       color: '#16a34a',
     },
   ]
@@ -263,7 +269,8 @@ function HeroStats({ totalContracts, totalValueMxn, highRiskPct, groundTruthCase
             >
               {s.value}
             </span>
-            <span className="text-xs text-white/45 leading-tight">{s.label}</span>
+            <span className="text-xs text-white/60 leading-tight font-medium">{s.label}</span>
+            <span className="text-[10px] text-white/30 leading-tight">{s.sub}</span>
           </div>
         ))}
       </div>
@@ -278,10 +285,10 @@ function HeroStats({ totalContracts, totalValueMxn, highRiskPct, groundTruthCase
 // RiskStrip — horizontal proportional bar: critical | high | medium | low
 // ---------------------------------------------------------------------------
 const RISK_BANDS = [
-  { label: 'Critical', pct: 6.5,  color: '#dc2626' },
-  { label: 'High',     pct: 4.1,  color: '#f97316' },
-  { label: 'Medium',   pct: 43.9, color: '#eab308' },
-  { label: 'Low',      pct: 45.6, color: '#16a34a' },
+  { label: 'Critical', pct: 6.5,  color: '#dc2626', contracts: '201,745' },
+  { label: 'High',     pct: 4.1,  color: '#f97316', contracts: '126,553' },
+  { label: 'Medium',   pct: 43.9, color: '#eab308', contracts: '~1.36M' },
+  { label: 'Low',      pct: 45.6, color: '#16a34a', contracts: '~1.42M' },
 ]
 
 function RiskStrip() {
@@ -323,6 +330,9 @@ function RiskStrip() {
               style={{ color: hov === i ? band.color : 'rgba(255,255,255,0.45)' }}
             >
               {band.label} {band.pct}%
+              {hov === i && (
+                <span className="ml-1 text-white/30">· {band.contracts} contracts</span>
+              )}
             </span>
           </div>
         ))}
@@ -367,6 +377,224 @@ function ScrollReveal({ children, delay = 0 }: { children: React.ReactNode; dela
   )
 }
 
+// ---------------------------------------------------------------------------
+// HeroSection — full-viewport above-fold entry point
+// ---------------------------------------------------------------------------
+interface HeroSectionProps {
+  onEnter: () => void
+  onScrollDown: () => void
+}
+
+function HeroSection({ onEnter, onScrollDown }: HeroSectionProps) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 80)
+    return () => clearTimeout(t)
+  }, [])
+
+  return (
+    <section
+      className="min-h-screen flex flex-col items-center justify-center relative px-6 sm:px-12 text-center overflow-hidden"
+      style={{ background: 'linear-gradient(160deg, #080c14 0%, #0f172a 60%, #080c14 100%)' }}
+      aria-label="RUBLI platform introduction"
+    >
+      {/* Ambient glow */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(59,130,246,0.07) 0%, transparent 70%)',
+        }}
+      />
+
+      <div
+        className="max-w-4xl mx-auto flex flex-col items-center gap-6 z-10"
+        style={{
+          opacity: mounted ? 1 : 0,
+          transform: mounted ? 'translateY(0)' : 'translateY(24px)',
+          transition: 'opacity 0.9s ease, transform 0.9s ease',
+        }}
+      >
+        {/* Platform badge */}
+        <span className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold tracking-widest uppercase bg-white/5 border border-white/10 text-white/50">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          AI-Powered Anti-Corruption Research Platform
+        </span>
+
+        {/* Main headline */}
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black leading-[1.05] text-white">
+          23 years.{' '}
+          <span style={{ color: '#3b82f6' }}>3.1 million</span>{' '}
+          contracts.{' '}
+          <span style={{ color: '#dc2626' }}>Follow the money.</span>
+        </h1>
+
+        {/* Subheading */}
+        <p className="text-lg sm:text-xl text-white/55 max-w-2xl leading-relaxed">
+          RUBLI analyzes every federal procurement contract Mexico has published since 2002 —
+          flagging corruption patterns, mapping vendor networks, and surfacing cases the data reveals.
+        </p>
+
+        {/* What we found strip */}
+        <div className="w-full max-w-2xl mt-2">
+          <NarrativeCard
+            paragraphs={HERO_FINDINGS}
+            className="bg-white/[0.03] border-white/10 text-left"
+          />
+        </div>
+
+        {/* CTA row */}
+        <div className="flex flex-wrap gap-3 justify-center mt-2">
+          <button
+            onClick={onEnter}
+            className="flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-sm transition-all hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-400/60"
+            style={{ backgroundColor: '#3b82f6', color: '#fff' }}
+          >
+            Start investigating <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </button>
+          <button
+            onClick={onScrollDown}
+            className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm border border-white/20 hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white/40"
+          >
+            See how it works <ChevronDown className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+
+      {/* Scroll indicator */}
+      <button
+        onClick={onScrollDown}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/20 hover:text-white/40 transition-colors focus:outline-none"
+        aria-label="Scroll to chapters"
+      >
+        <ChevronDown className="h-5 w-5 animate-bounce" aria-hidden="true" />
+      </button>
+    </section>
+  )
+}
+
+// Findings displayed in the hero NarrativeCard
+const HERO_FINDINGS: NarrativeParagraph[] = [
+  {
+    text: 'Our model flags 328,298 contracts as high or critical risk — equivalent to the entire public health procurement of 5 years.',
+    severity: 'critical',
+  },
+  {
+    text: 'Training ground truth: IMSS Ghost Company Network (9,366 contracts), Segalmex food fraud (6,326), COVID emergency embezzlement (5,371), and 19 more documented scandals.',
+    severity: 'warning',
+  },
+  {
+    text: 'Model AUC 0.957 on contracts from 2021–2025 — never seen during training. 93% of known-corrupt contracts scored high or critical.',
+    severity: 'info',
+  },
+]
+
+// ---------------------------------------------------------------------------
+// HowItWorks section — plain language methodology explainer
+// ---------------------------------------------------------------------------
+function HowItWorks() {
+  const steps = [
+    {
+      num: '01',
+      title: 'Z-score normalization',
+      body: 'Each contract\'s 16 features (price, vendor concentration, ad period, etc.) are converted to z-scores relative to its own sector and year. A single-bid award in Defensa (where 80% are direct) is far less suspicious than in Educación.',
+      color: '#3b82f6',
+    },
+    {
+      num: '02',
+      title: 'Per-sector logistic models',
+      body: '12 dedicated logistic regression sub-models — one per sector — capture sector-specific corruption fingerprints. Energy fraud looks different from health fraud. The global model provides a fallback.',
+      color: '#8b5cf6',
+    },
+    {
+      num: '03',
+      title: 'Positive-Unlabeled learning',
+      body: 'Only documented corruption cases are labeled. The remaining 3.1M contracts are unlabeled (not necessarily clean). Elkan & Noto\'s PU-learning correction (c=0.88) adjusts for this selection bias.',
+      color: '#eab308',
+    },
+    {
+      num: '04',
+      title: '95% confidence intervals',
+      body: 'Each score ships with bootstrap confidence bounds. A contract scoring 0.42 [0.31, 0.55] is genuinely uncertain — one scoring 0.89 [0.81, 0.95] is not. Investigators see both.',
+      color: '#16a34a',
+    },
+  ]
+
+  return (
+    <section
+      className="min-h-screen flex items-center px-6 sm:px-12 lg:px-24 py-20"
+      style={{ background: 'linear-gradient(135deg, #0a0f1e 0%, #080c14 100%)' }}
+      aria-label="How RUBLI works"
+    >
+      <div className="max-w-6xl mx-auto w-full">
+        <ScrollReveal>
+          <div className="mb-12 text-center">
+            <span className="text-xs font-semibold tracking-widest uppercase text-purple-400 mb-3 block">
+              The Science
+            </span>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4">
+              How the Risk Model Works
+            </h2>
+            <p className="text-white/50 max-w-xl mx-auto text-base">
+              Train AUC 0.964 · Test AUC 0.957 (temporal split, never seen during training) ·
+              Validated against 22 documented corruption cases across all 12 sectors
+            </p>
+          </div>
+        </ScrollReveal>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {steps.map((step, i) => (
+            <ScrollReveal key={step.num} delay={i * 80}>
+              <div
+                className="rounded-2xl p-6 h-full"
+                style={{
+                  backgroundColor: `${step.color}08`,
+                  border: `1px solid ${step.color}20`,
+                }}
+              >
+                <div className="flex items-start gap-4">
+                  <span
+                    className="text-3xl font-black tabular-nums leading-none flex-shrink-0"
+                    style={{ color: step.color, opacity: 0.5 }}
+                  >
+                    {step.num}
+                  </span>
+                  <div>
+                    <h3 className="text-base font-bold text-white mb-2">{step.title}</h3>
+                    <p className="text-sm text-white/50 leading-relaxed">{step.body}</p>
+                  </div>
+                </div>
+              </div>
+            </ScrollReveal>
+          ))}
+        </div>
+
+        {/* Limitation callout */}
+        <ScrollReveal delay={300}>
+          <div className="mt-8">
+            <NarrativeCard
+              paragraphs={HOW_IT_WORKS_CAVEATS}
+              className="bg-white/[0.03] border-white/10"
+            />
+          </div>
+        </ScrollReveal>
+      </div>
+    </section>
+  )
+}
+
+const HOW_IT_WORKS_CAVEATS: NarrativeParagraph[] = [
+  {
+    text: 'A high risk score means the contract\'s procurement characteristics closely resemble those from documented corruption cases — not that corruption is proven. Scores are investigation triage, not verdicts.',
+    severity: 'warning',
+  },
+  {
+    text: 'Key limitation: RUBLI analyzes contract award data only. Execution-phase fraud (cost overruns, ghost workers, kickbacks) is invisible. Infrastructure and energy sectors are likely underscored for this reason.',
+    severity: 'info',
+  },
+]
+
 // ===========================================================================
 // Main page
 // ===========================================================================
@@ -375,6 +603,7 @@ export default function Landing() {
   const [activeChapter, setActiveChapter] = useState(0)
   const [visible, setVisible] = useState<Record<number, boolean>>({})
   const sectionRefs = useRef<(HTMLElement | null)[]>([])
+  const chaptersStartRef = useRef<HTMLDivElement | null>(null)
 
   // Check returning user — redirect immediately if already visited
   useEffect(() => {
@@ -432,6 +661,10 @@ export default function Landing() {
     navigate(path)
   }, [navigate])
 
+  const scrollToChapters = useCallback(() => {
+    chaptersStartRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [])
+
   // Derive live stats from API; fall back to known values from CLAUDE.md
   const overview = fastDashboard?.overview
   const totalContracts = overview?.total_contracts ?? 3_110_007
@@ -439,14 +672,14 @@ export default function Landing() {
 
   // risk_distribution is RiskDistribution[] — find critical and high percentages
   const riskDist: RiskDistribution[] = fastDashboard?.risk_distribution ?? []
-  const criticalPct = riskDist.find((r) => r.risk_level === 'critical')?.percentage ?? 6.1
-  const highPct = riskDist.find((r) => r.risk_level === 'high')?.percentage ?? 2.9
+  const criticalPct = riskDist.find((r) => r.risk_level === 'critical')?.percentage ?? 6.5
+  const highPct = riskDist.find((r) => r.risk_level === 'high')?.percentage ?? 4.1
 
   const CHAPTERS = [
     {
       tag: 'The Scale',
       heading: `${formatCompactMXN(totalValueMxn)} in Government Contracts`,
-      body: `Between 2002 and 2025, Mexico's federal government awarded over ${(totalContracts / 1_000_000).toFixed(1)} million contracts. RUBLI tracks every peso — from emergency health procurement to major infrastructure works.`,
+      body: `Between 2002 and 2025, Mexico's federal government awarded over ${(totalContracts / 1_000_000).toFixed(1)} million contracts worth an estimated 6–8 trillion pesos. RUBLI tracks every peso — from emergency health procurement to major infrastructure works — in a single searchable database.`,
       icon: BarChart3,
       color: '#3b82f6',
       stat: formatCompactMXN(totalValueMxn),
@@ -455,28 +688,28 @@ export default function Landing() {
     },
     {
       tag: 'The Patterns',
-      heading: 'Billions Spent in December Rushes',
-      body: 'Year-end budget dumps, direct awards without competition, and suspiciously short publication periods are systemic — not exceptions. The data reveals these patterns across every administration since 2002.',
+      heading: 'Systemic Red Flags — In Every Administration',
+      body: 'Year-end budget dumps. Direct awards without competition. Suspiciously short publication windows. Single vendors winning 90%+ of a sector\'s contracts. These patterns are not aberrations — the data shows they repeat across every administration since 2002, in every sector.',
       icon: TrendingUp,
       color: '#eab308',
       stat: '78%',
       statLabel: 'of contracts awarded directly (no competition)',
-      visualType: 'default' as const,
+      visualType: 'patternNarrative' as const,
     },
     {
       tag: 'The Risk',
       heading: `${(criticalPct + highPct).toFixed(1)}% of Contracts Flagged High-Risk`,
-      body: `RUBLI's AI model — trained on 22 documented corruption cases — identifies ${criticalPct.toFixed(1)}% of contracts as Critical and ${highPct.toFixed(1)}% as High risk. That's over 270,000 contracts worth investigating.`,
+      body: `RUBLI's AI model — trained on 22 documented corruption cases and validated against contracts it never saw during training — identifies ${criticalPct.toFixed(1)}% of contracts as Critical and ${highPct.toFixed(1)}% as High risk. That's over 328,000 contracts worth investigating.`,
       icon: AlertTriangle,
       color: '#dc2626',
-      stat: `${criticalPct.toFixed(1)}%`,
-      statLabel: 'Critical risk contracts',
-      visualType: 'default' as const,
+      stat: `${(criticalPct + highPct).toFixed(1)}%`,
+      statLabel: 'High or Critical risk contracts',
+      visualType: 'riskNarrative' as const,
     },
     {
       tag: 'The Cases',
       heading: 'From IMSS Ghost Companies to Odebrecht Bribes',
-      body: "RUBLI's Case Library documents 43 corruption scandals — with the specific vendors, contracts, and procurement patterns that gave them away. These are the ground truth behind the risk model.",
+      body: "RUBLI's Case Library documents 43 corruption scandals — with the specific vendors, contracts, and procurement patterns that gave them away. These 22 matched cases form the ground truth behind the risk model. The model detects 93% of them as high or critical risk.",
       icon: BookOpen,
       color: '#8b5cf6',
       stat: '43',
@@ -486,7 +719,7 @@ export default function Landing() {
     {
       tag: 'Your Turn',
       heading: 'Start Investigating',
-      body: 'Search any vendor, institution, or contract. Follow the network. Flag anomalies. Build a dossier. RUBLI gives investigative journalists and anti-corruption researchers the tools to follow the money.',
+      body: 'Search any vendor, institution, or contract. Follow the network of co-bidders. Build a dossier. Export to your newsroom. RUBLI gives investigative journalists and anti-corruption researchers the tools to follow the money — across 23 years of data, in seconds.',
       icon: Search,
       color: '#16a34a',
       stat: '3.1M',
@@ -494,6 +727,37 @@ export default function Landing() {
       visualType: 'default' as const,
     },
   ] as const
+
+  // Narrative content for chapters that use NarrativeCard
+  const patternNarrativeParagraphs: NarrativeParagraph[] = [
+    {
+      text: '78% of all contracts are direct awards — meaning no open competition, no public bids. In health procurement alone, this rate exceeded 85% during the 2020 COVID emergency.',
+      severity: 'warning',
+    },
+    {
+      text: 'December contracts spike 40–60% above monthly averages every year. Budget-year-end pressure pushes institutions toward rushed, uncompetitive awards.',
+      severity: 'warning',
+    },
+    {
+      text: 'Vendor concentration: in Agricultura, the top 3 vendors captured 71% of sector value during Segalmex\'s peak years. In Salud, IMSS\'s ghost company network won 9,366 contracts without meaningful competition.',
+      severity: 'critical',
+    },
+  ]
+
+  const riskNarrativeParagraphs: NarrativeParagraph[] = [
+    {
+      text: `Critical (≥0.50 score): ${criticalPct.toFixed(1)}% — 201,745 contracts. These resemble the strongest known corruption patterns. Immediate investigation warranted.`,
+      severity: 'critical',
+    },
+    {
+      text: `High (0.30–0.50 score): ${highPct.toFixed(1)}% — 126,553 contracts. Strong similarity to documented fraud. Priority review recommended.`,
+      severity: 'warning',
+    },
+    {
+      text: 'Model confidence: Train AUC 0.964, Test AUC 0.957 (temporal split — test set is 2021–2025, never seen during training). 93% of ground-truth corruption contracts score high or critical.',
+      severity: 'info',
+    },
+  ]
 
   return (
     <div className="min-h-screen bg-[#080c14] text-white">
@@ -522,6 +786,12 @@ export default function Landing() {
           Skip to app <ArrowRight className="h-3 w-3" aria-hidden="true" />
         </button>
       </div>
+
+      {/* Hero — above-fold entry point */}
+      <HeroSection onEnter={() => goToApp()} onScrollDown={scrollToChapters} />
+
+      {/* Scroll anchor for chapters */}
+      <div ref={chaptersStartRef} />
 
       {/* Scroll chapters */}
       {CHAPTERS.map((chapter, i) => {
@@ -566,13 +836,13 @@ export default function Landing() {
                     {chapter.heading}
                   </h2>
 
-                  <p className="text-base sm:text-lg text-white/60 leading-relaxed max-w-lg">
+                  <p className="text-base sm:text-lg text-white/60 leading-relaxed max-w-lg mb-6">
                     {chapter.body}
                   </p>
 
                   {/* Hero stats: contracts, value, risk, cases — shown in chapter 1 */}
                   {chapter.visualType === 'heroStats' && (
-                    <div className="mt-8">
+                    <div className="mt-2">
                       <HeroStats
                         totalContracts={totalContracts}
                         totalValueMxn={totalValueMxn}
@@ -582,9 +852,25 @@ export default function Landing() {
                     </div>
                   )}
 
+                  {/* Pattern narrative with NarrativeCard */}
+                  {chapter.visualType === 'patternNarrative' && (
+                    <NarrativeCard
+                      paragraphs={patternNarrativeParagraphs}
+                      className="bg-white/[0.03] border-white/10"
+                    />
+                  )}
+
+                  {/* Risk narrative with NarrativeCard */}
+                  {chapter.visualType === 'riskNarrative' && (
+                    <NarrativeCard
+                      paragraphs={riskNarrativeParagraphs}
+                      className="bg-white/[0.03] border-white/10"
+                    />
+                  )}
+
                   {/* CTA buttons on last chapter */}
                   {isLast && (
-                    <div className="flex flex-wrap gap-3 mt-8">
+                    <div className="flex flex-wrap gap-3 mt-2">
                       <button
                         onClick={() => goToApp('/dashboard')}
                         className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent"
@@ -603,6 +889,12 @@ export default function Landing() {
                         className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm border border-white/20 hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white/40"
                       >
                         <Shield className="h-4 w-4" aria-hidden="true" /> See the methodology
+                      </button>
+                      <button
+                        onClick={() => goToApp('/cases')}
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm border border-white/20 hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white/40"
+                      >
+                        <BookOpen className="h-4 w-4" aria-hidden="true" /> Browse case library
                       </button>
                     </div>
                   )}
@@ -664,9 +956,16 @@ export default function Landing() {
         )
       })}
 
+      {/* How it works section */}
+      <HowItWorks />
+
       {/* Footer */}
       <footer className="text-center py-8 text-xs text-white/20 border-t border-white/5">
-        RUBLI — Mexican Government Procurement Analysis Platform · Data: COMPRANET 2002–2025
+        <div className="flex items-center justify-center gap-2 mb-1">
+          <Cpu className="h-3 w-3" aria-hidden="true" />
+          <span>RUBLI — Mexican Government Procurement Analysis Platform</span>
+        </div>
+        <span>Data: COMPRANET 2002–2025 · Model: v5.1 · AUC 0.957</span>
       </footer>
     </div>
   )

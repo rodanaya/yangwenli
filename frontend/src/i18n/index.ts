@@ -45,6 +45,12 @@ import esLimitations from './locales/es/limitations.json'
 import enLimitations from './locales/en/limitations.json'
 import esMethodology from './locales/es/methodology.json'
 import enMethodology from './locales/en/methodology.json'
+import esMoneyflow from './locales/es/moneyflow.json'
+import enMoneyflow from './locales/en/moneyflow.json'
+import esTemporal from './locales/es/temporal.json'
+import enTemporal from './locales/en/temporal.json'
+import esPatterns from './locales/es/patterns.json'
+import enPatterns from './locales/en/patterns.json'
 
 i18n
   .use(LanguageDetector)
@@ -60,6 +66,7 @@ i18n
         procurement: esProcurement, administrations: esAdministrations, price: esPrice,
         network: esNetwork, cases: esCases, vendors: esVendors, institutions: esInstitutions,
         limitations: esLimitations, methodology: esMethodology,
+        moneyflow: esMoneyflow, temporal: esTemporal, patterns: esPatterns,
       },
       en: {
         common: enCommon, sectors: enSectors, nav: enNav, dashboard: enDashboard,
@@ -70,6 +77,7 @@ i18n
         procurement: enProcurement, administrations: enAdministrations, price: enPrice,
         network: enNetwork, cases: enCases, vendors: enVendors, institutions: enInstitutions,
         limitations: enLimitations, methodology: enMethodology,
+        moneyflow: enMoneyflow, temporal: enTemporal, patterns: enPatterns,
       },
     },
     lng: localStorage.getItem('i18nextLng') || 'en', // Default to English when no saved preference

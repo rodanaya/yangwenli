@@ -12,6 +12,7 @@
     "fraudType": "Fraud type",
     "administration": "Administration",
     "legalStatus": "Legal status",
+    "sector": "Sector",
     "search": "Search cases...",
     "clearFilters": "Clear filters"
   },

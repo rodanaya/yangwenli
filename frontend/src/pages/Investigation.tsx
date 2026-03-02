@@ -46,6 +46,9 @@ import {
   LayoutGrid,
   List,
   Download,
+  Eye,
+  FolderOpen,
+  Plus,
 } from 'lucide-react'
 import {
   BarChart,
@@ -637,6 +640,32 @@ export function Investigation() {
 
       {/* INVESTIGATION INTAKE */}
       <InvestigationIntake />
+
+      {/* WORKSPACE QUICK LINKS */}
+      <div className="flex flex-wrap items-center gap-3 px-4 py-3 rounded-lg border border-border/40 bg-background-elevated/30">
+        <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">My Workspace</span>
+        <button
+          onClick={() => navigate('/workspace?tab=entities')}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border/50 text-xs text-text-secondary hover:border-accent/40 hover:text-accent transition-all"
+        >
+          <Eye className="h-3.5 w-3.5" />
+          Watchlist
+        </button>
+        <button
+          onClick={() => navigate('/workspace?tab=dossiers')}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border/50 text-xs text-text-secondary hover:border-accent/40 hover:text-accent transition-all"
+        >
+          <FolderOpen className="h-3.5 w-3.5" />
+          Dossiers
+        </button>
+        <button
+          onClick={() => navigate('/workspace?tab=dossiers&action=new')}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-accent/30 bg-accent/5 text-xs text-accent hover:bg-accent/10 transition-all ml-auto"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          New Investigation
+        </button>
+      </div>
 
       {/* VALIDATION FUNNEL */}
       <Card>

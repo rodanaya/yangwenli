@@ -335,14 +335,6 @@ class TestConfidenceIntervals:
             coverage = count / total if total > 0 else 0
             assert coverage > 0.5, f"CI coverage {coverage:.1%} is low"
 
-    @pytest.mark.skip(
-        reason=(
-            "CI columns still contain v5.2 bootstrap values from the rolled-back Feb 28 "
-            "calibration run. The risk_score column was restored to v5.1 but "
-            "risk_confidence_lower/upper were not. Re-enable after re-running "
-            "calibrate_risk_model_v5 + calculate_risk_scores_v5 for v5.1."
-        )
-    )
     def test_confidence_interval_ordering(self, db_conn):
         """Lower CI should be <= score <= upper CI."""
         cursor = db_conn.cursor()

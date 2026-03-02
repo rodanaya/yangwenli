@@ -301,29 +301,43 @@ function MiniSparkline({ points, color = '#06b6d4' }: { points: number[]; color?
 }
 
 // ============================================================================
-// RISK INTENSITY BAR — Horizontal fill bar from green→red
+// RISK STACK BAR — Stacked bar showing % contracts at each risk level
 // ============================================================================
 
-function RiskIntensityBar({ score, maxScore = 0.6 }: { score: number; maxScore?: number }) {
-  const pct = Math.min(1, score / maxScore) * 100
-  const r = Math.round(22 + (220 - 22) * (pct / 100))
-  const g = Math.round(197 - (197 - 38) * (pct / 100))
-  const b = Math.round(38 * (1 - pct / 100))
-  const barColor = `rgb(${r},${g},${b})`
+interface RiskStackBarProps {
+  criticalPct: number
+  highPct: number
+  mediumPct: number
+  lowPct: number
+}
+
+function RiskStackBar({ criticalPct, highPct, mediumPct, lowPct }: RiskStackBarProps) {
+  const segments = [
+    { key: 'critical', pct: criticalPct, color: '#ef4444', label: 'Critical' },
+    { key: 'high',     pct: highPct,     color: '#f97316', label: 'High' },
+    { key: 'medium',   pct: mediumPct,   color: '#eab308', label: 'Medium' },
+    { key: 'low',      pct: lowPct,      color: '#22c55e', label: 'Low' },
+  ]
+  const title = segments
+    .filter(s => s.pct > 0)
+    .map(s => `${s.label}: ${s.pct.toFixed(1)}%`)
+    .join(' · ')
   return (
     <div
-      className="relative h-1.5 w-full rounded-full overflow-hidden bg-white/5"
+      className="flex h-2 w-full rounded-full overflow-hidden gap-px"
       role="meter"
-      aria-valuenow={Math.round(pct)}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-label={`Risk intensity ${score.toFixed(3)}`}
-      title={`Risk intensity: ${(score * 100).toFixed(1)}%`}
+      aria-label={title}
+      title={title}
     >
-      <div
-        className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
-        style={{ width: `${pct}%`, backgroundColor: barColor }}
-      />
+      {segments.map(s =>
+        s.pct > 0.3 ? (
+          <div
+            key={s.key}
+            className="h-full transition-all duration-500"
+            style={{ width: `${s.pct}%`, backgroundColor: s.color }}
+          />
+        ) : null
+      )}
     </div>
   )
 }
@@ -559,12 +573,6 @@ export function Sectors() {
     }))
   }, [data])
 
-  // ---- Max avg_risk_score across all sectors (for intensity bar scaling) ----
-  const maxSectorRisk = useMemo(() => {
-    const scores = (data?.data ?? []).map((s) => s.avg_risk_score)
-    return Math.max(...scores, 0.01)
-  }, [data])
-
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -697,6 +705,37 @@ export function Sectors() {
                     <span className="text-xs font-bold tabular-nums font-mono text-text-primary">{value}</span>
                   </div>
                 ))}
+                {/* Risk level breakdown bar */}
+                <div className="pt-1">
+                  <p className="text-[10px] text-text-muted font-mono mb-1.5">Risk distribution</p>
+                  <RiskStackBar
+                    criticalPct={selectedSector.critical_risk_count / Math.max(selectedSector.total_contracts, 1) * 100}
+                    highPct={selectedSector.high_risk_count / Math.max(selectedSector.total_contracts, 1) * 100}
+                    mediumPct={selectedSector.medium_risk_count / Math.max(selectedSector.total_contracts, 1) * 100}
+                    lowPct={selectedSector.low_risk_count / Math.max(selectedSector.total_contracts, 1) * 100}
+                  />
+                  <div className="flex justify-between mt-1 text-[9px] font-mono text-text-muted">
+                    <span className="text-[#ef4444]">{(selectedSector.critical_risk_count / Math.max(selectedSector.total_contracts, 1) * 100).toFixed(1)}% crit</span>
+                    <span className="text-[#f97316]">{(selectedSector.high_risk_count / Math.max(selectedSector.total_contracts, 1) * 100).toFixed(1)}% high</span>
+                    <span className="text-[#eab308]">{(selectedSector.medium_risk_count / Math.max(selectedSector.total_contracts, 1) * 100).toFixed(1)}% med</span>
+                    <span className="text-[#22c55e]">{(selectedSector.low_risk_count / Math.max(selectedSector.total_contracts, 1) * 100).toFixed(1)}% low</span>
+                  </div>
+                </div>
+                {/* Quick CTAs */}
+                <div className="flex gap-2 pt-2">
+                  <Link
+                    to={`/contracts?sector_id=${selectedSector.sector_id}`}
+                    className="flex-1 text-center text-[10px] font-mono font-bold rounded border border-border/50 px-2 py-1.5 hover:border-accent/60 hover:bg-accent/5 transition-all text-text-muted hover:text-accent"
+                  >
+                    All Contracts →
+                  </Link>
+                  <Link
+                    to={`/contracts?sector_id=${selectedSector.sector_id}&risk_level=high`}
+                    className="flex-1 text-center text-[10px] font-mono font-bold rounded border border-risk-high/30 px-2 py-1.5 hover:border-risk-high/60 hover:bg-risk-high/5 transition-all text-risk-high"
+                  >
+                    High Risk →
+                  </Link>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -927,6 +966,10 @@ export function Sectors() {
                   data={treemapData}
                   dataKey="value"
                   aspectRatio={4 / 3}
+                  onClick={(node: Record<string, unknown>) => {
+                    const sectorName = node.name as string
+                    handleSectorClick(sectorName)
+                  }}
                   content={(props: Record<string, unknown>) => {
                     const { x, y, width, height, name, value, color, avg_risk_score } = props as TreemapContentProps
                     return (
@@ -1020,8 +1063,8 @@ export function Sectors() {
                       {t('table.directAwardPct')}
                       <SortIndicator field="direct_award_pct" sortField={sortField} sortDir={sortDir} />
                     </th>
-                    <th className="px-3 py-2.5 text-left font-medium whitespace-nowrap hidden xl:table-cell w-[80px]">
-                      Risk Intensity
+                    <th className="px-3 py-2.5 text-left font-medium whitespace-nowrap hidden xl:table-cell w-[100px]">
+                      Risk Levels
                     </th>
                     <th className="px-3 py-2.5 text-center font-medium whitespace-nowrap hidden xl:table-cell">
                       {t('table.riskTrend')}
@@ -1086,9 +1129,14 @@ export function Sectors() {
                         <td className="px-3 py-2.5 text-right font-mono text-text-secondary tabular-nums">
                           {formatPercentSafe(sector.direct_award_pct, false)}
                         </td>
-                        {/* Risk Intensity Bar */}
-                        <td className="px-3 py-2.5 hidden xl:table-cell w-[80px]">
-                          <RiskIntensityBar score={sector.avg_risk_score} maxScore={maxSectorRisk} />
+                        {/* Risk Stack Bar — % at each level */}
+                        <td className="px-3 py-2.5 hidden xl:table-cell w-[100px]">
+                          <RiskStackBar
+                            criticalPct={sector.critical_risk_count / Math.max(sector.total_contracts, 1) * 100}
+                            highPct={sector.high_risk_count / Math.max(sector.total_contracts, 1) * 100}
+                            mediumPct={sector.medium_risk_count / Math.max(sector.total_contracts, 1) * 100}
+                            lowPct={sector.low_risk_count / Math.max(sector.total_contracts, 1) * 100}
+                          />
                         </td>
                         {/* Sparkline */}
                         <td className="px-3 py-2.5 hidden xl:table-cell">

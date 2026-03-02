@@ -1128,13 +1128,24 @@ function ContractRow({
       {/* Vendor */}
       <td className="px-3 py-2 max-w-[180px]">
         {contract.vendor_id ? (
-          <button
-            className="text-xs font-medium text-text-primary hover:text-accent transition-colors block truncate text-left w-full"
-            title={toTitleCase(contract.vendor_name || 'Unknown')}
-            onClick={(e) => { e.stopPropagation(); onOpenVendorDrawer(contract.vendor_id!, 'vendor') }}
-          >
-            {toTitleCase(contract.vendor_name || 'Unknown')}
-          </button>
+          <div className="flex items-center gap-1 min-w-0">
+            <button
+              className="text-xs font-medium text-text-primary hover:text-accent transition-colors truncate text-left flex-1"
+              title={toTitleCase(contract.vendor_name || 'Unknown')}
+              onClick={(e) => { e.stopPropagation(); onOpenVendorDrawer(contract.vendor_id!, 'vendor') }}
+            >
+              {toTitleCase(contract.vendor_name || 'Unknown')}
+            </button>
+            <Link
+              to={`/vendors/${contract.vendor_id}`}
+              onClick={(e) => e.stopPropagation()}
+              className="text-text-muted hover:text-accent transition-colors flex-shrink-0"
+              title="Open vendor profile"
+              aria-label="Open vendor profile page"
+            >
+              <ExternalLink className="h-3 w-3" />
+            </Link>
+          </div>
         ) : (
           <span className="text-xs text-text-muted truncate block" title={contract.vendor_name || ''}>
             {contract.vendor_name ? toTitleCase(contract.vendor_name) : '\u2014'}

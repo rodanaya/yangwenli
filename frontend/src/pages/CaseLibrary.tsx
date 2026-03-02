@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { TableExportButton } from '@/components/TableExportButton'
 import { AlertCircle, Search, X, Eye, EyeOff, Activity } from 'lucide-react'
-import { RISK_COLORS } from '@/lib/constants'
+import { RISK_COLORS, SECTORS } from '@/lib/constants'
 
 // ── severity colour ──────────────────────────────────────────────────────────
 const SEVERITY_COLORS: Record<number, string> = {
@@ -291,6 +291,21 @@ export default function CaseLibrary() {
             <SelectItem value="all">{t('filters.all')}</SelectItem>
             {['investigation','prosecuted','convicted','acquitted','dismissed','impunity','unresolved'].map((ls) => (
               <SelectItem key={ls} value={ls}>{t(`legalStatuses.${ls}`)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={filters.sector_id != null ? String(filters.sector_id) : 'all'}
+          onValueChange={(v) => setFilters((f) => ({ ...f, sector_id: v === 'all' ? undefined : Number(v) }))}
+        >
+          <SelectTrigger className="w-[150px] h-8 text-xs bg-card">
+            <SelectValue placeholder={t('filters.sector')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('filters.all')}</SelectItem>
+            {SECTORS.map((s) => (
+              <SelectItem key={s.id} value={String(s.id)}>{s.nameEN}</SelectItem>
             ))}
           </SelectContent>
         </Select>

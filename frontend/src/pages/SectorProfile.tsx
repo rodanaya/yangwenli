@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
 import { cn, formatCompactMXN, formatCompactUSD, formatNumber, formatPercentSafe, toTitleCase } from '@/lib/utils'
 import { sectorApi, vendorApi, analysisApi, priceApi, investigationApi, caseLibraryApi, institutionApi } from '@/api/client'
-import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
+import { SECTOR_COLORS, RISK_COLORS, SECTORS } from '@/lib/constants'
 import { GenerateReportButton } from '@/components/GenerateReportButton'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { TableExportButton } from '@/components/TableExportButton'
@@ -116,7 +116,13 @@ const FACTOR_DESC: Record<string, string> = {
 export function SectorProfile() {
   const { id } = useParams<{ id: string }>()
   const sectorId = Number(id)
+  const navigate = useNavigate()
   const currentYear = useMemo(() => new Date().getFullYear() - 1, [])
+
+  // Prev/next sector navigation using the static SECTORS list
+  const sectorIndex = SECTORS.findIndex((s) => s.id === sectorId)
+  const prevSector = sectorIndex > 0 ? SECTORS[sectorIndex - 1] : null
+  const nextSector = sectorIndex < SECTORS.length - 1 ? SECTORS[sectorIndex + 1] : null
   const [selectedYear, setSelectedYear] = useState(currentYear)
 
   // refs for chart download
@@ -203,6 +209,14 @@ export function SectorProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
+  // Top vendor by risk score — the "worst" vendor
+  const { data: topRiskVendors } = useQuery({
+    queryKey: ['vendors', 'top', 'risk', { sector_id: sectorId, per_page: 1 }],
+    queryFn: () => vendorApi.getTop('risk', 1, { sector_id: sectorId }),
+    enabled: !!sectorId,
+    staleTime: 10 * 60 * 1000,
+  })
+
   if (sectorLoading) return <SectorProfileSkeleton />
 
   if (sectorError || !sector) {
@@ -266,7 +280,7 @@ export function SectorProfile() {
     if (topVendorValue && stats.total_value_mxn > 0) {
       const topShare = topVendorValue / stats.total_value_mxn
       if (topShare > 0.3) {
-        const vendorName = topVendors!.data[0]?.vendor_name ?? topVendors!.data[0]?.name ?? 'Top vendor'
+        const vendorName = topVendors!.data[0]?.vendor_name ?? 'Top vendor'
         result.push({
           type: 'warning',
           title: 'Vendor Concentration Risk',
@@ -289,6 +303,29 @@ export function SectorProfile() {
     return result
   }, [stats, topVendors])
 
+  // Top risk signal from factor_frequencies
+  const topRiskSignal = useMemo(() => {
+    const freqs = riskFactors?.factor_frequencies
+    if (!freqs?.length) return null
+    const top = freqs[0]
+    const label = top.factor in {
+      direct_award: 1, single_bid: 1, price_anomaly: 1, short_ad_period: 1,
+      year_end: 1, vendor_concentration: 1, threshold_splitting: 1, network_risk: 1,
+      industry_mismatch: 1
+    } ? ({
+      direct_award: 'Direct Award',
+      single_bid: 'Single Bid',
+      price_anomaly: 'Price Anomaly',
+      short_ad_period: 'Short Ad Period',
+      year_end: 'Year-End Rush',
+      vendor_concentration: 'Vendor Concentration',
+      threshold_splitting: 'Contract Splitting',
+      network_risk: 'Network Risk',
+      industry_mismatch: 'Industry Mismatch',
+    } as Record<string, string>)[top.factor] ?? top.factor : top.factor
+    return { factor: top.factor, label, percentage: top.percentage, avgRisk: top.avg_risk_score }
+  }, [riskFactors])
+
   return (
     <div className="space-y-6">
 
@@ -304,11 +341,34 @@ export function SectorProfile() {
         />
         <div className="relative flex items-start justify-between">
           <div className="flex items-center gap-4">
-            <Link to="/sectors">
-              <Button variant="ghost" size="sm" className="text-text-muted hover:text-text-primary">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            </Link>
+            <div className="flex flex-col gap-1">
+              <Link to="/sectors">
+                <Button variant="ghost" size="sm" className="text-text-muted hover:text-text-primary">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </Link>
+              {/* Prev/Next navigation */}
+              <div className="flex gap-1">
+                <button
+                  onClick={() => prevSector && navigate(`/sectors/${prevSector.id}`)}
+                  disabled={!prevSector}
+                  className="flex h-6 w-6 items-center justify-center rounded border border-border/40 text-text-muted hover:border-border hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  aria-label={prevSector ? `Previous: ${prevSector.nameEN}` : 'No previous sector'}
+                  title={prevSector ? prevSector.nameEN : undefined}
+                >
+                  <ArrowLeft className="h-3 w-3" />
+                </button>
+                <button
+                  onClick={() => nextSector && navigate(`/sectors/${nextSector.id}`)}
+                  disabled={!nextSector}
+                  className="flex h-6 w-6 items-center justify-center rounded border border-border/40 text-text-muted hover:border-border hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  aria-label={nextSector ? `Next: ${nextSector.nameEN}` : 'No next sector'}
+                  title={nextSector ? nextSector.nameEN : undefined}
+                >
+                  <ArrowRight className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
             <div
               className="flex h-14 w-14 items-center justify-center rounded-xl shadow-lg"
               style={{ backgroundColor: hex(sectorColor, 0.2), border: `1px solid ${hex(sectorColor, 0.4)}` }}
@@ -316,11 +376,23 @@ export function SectorProfile() {
               <BarChart3 className="h-7 w-7" style={{ color: sectorColor }} />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl font-black tracking-tight capitalize text-text-primary">{sector.name}</h1>
                 {stats && <RiskBadge score={stats.avg_risk_score} className="text-sm px-2.5 py-0.5" />}
               </div>
-              <p className="text-xs text-text-muted mt-0.5 font-mono uppercase tracking-widest">Sector · {sector.code}</p>
+              <div className="flex items-center gap-3 mt-0.5">
+                <p className="text-xs text-text-muted font-mono uppercase tracking-widest">Sector · {sector.code}</p>
+                {prevSector && (
+                  <Link to={`/sectors/${prevSector.id}`} className="text-[10px] text-text-muted hover:text-accent font-mono transition-colors">
+                    ← {prevSector.nameEN}
+                  </Link>
+                )}
+                {nextSector && (
+                  <Link to={`/sectors/${nextSector.id}`} className="text-[10px] text-text-muted hover:text-accent font-mono transition-colors">
+                    {nextSector.nameEN} →
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
           <div className="hidden md:flex items-center gap-4">
@@ -344,13 +416,29 @@ export function SectorProfile() {
       </div>
 
       {/* ── SECTOR INTELLIGENCE ─────────────────────────────────────────── */}
-      {insights.length > 0 && (
+      {(insights.length > 0 || topRiskSignal) && (
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Brain className="h-4 w-4 text-text-muted" />
             <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Sector Intelligence</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Top Risk Signal — always first */}
+            {topRiskSignal && (
+              <div className="rounded-lg border border-violet-500/30 bg-violet-500/5 p-4">
+                <div className="flex items-center gap-1.5 text-sm font-semibold mb-1 text-violet-400">
+                  <Zap className="h-3.5 w-3.5 flex-shrink-0" />
+                  Top Risk Signal
+                </div>
+                <div className="text-xs text-text-muted leading-relaxed">
+                  <span className="font-bold text-text-primary">{topRiskSignal.label}</span> is the #1 red flag —
+                  appears in {topRiskSignal.percentage.toFixed(1)}% of contracts with avg risk{' '}
+                  <span className="font-bold" style={{ color: topRiskSignal.avgRisk >= 0.5 ? '#ef4444' : topRiskSignal.avgRisk >= 0.3 ? '#f97316' : '#eab308' }}>
+                    {(topRiskSignal.avgRisk * 100).toFixed(0)}%
+                  </span>.
+                </div>
+              </div>
+            )}
             {insights.map((insight, i) => {
               const borderColor =
                 insight.type === 'critical' ? 'border-red-500/30 bg-red-500/5' :
@@ -429,6 +517,59 @@ export function SectorProfile() {
               )}
             </CardContent>
           </Card>
+
+          {/* HIGHEST-RISK VENDOR CALLOUT */}
+          {topRiskVendors?.data?.[0] && (() => {
+            const worstVendor = topRiskVendors.data[0]
+            const riskScore = worstVendor.avg_risk_score ?? 0
+            const riskColor =
+              riskScore >= 0.5 ? RISK_COLORS.critical :
+              riskScore >= 0.3 ? RISK_COLORS.high :
+              riskScore >= 0.1 ? RISK_COLORS.medium : RISK_COLORS.low
+            return (
+              <Card className="border-border/40" style={{ borderColor: `${riskColor}40` }}>
+                <div className="h-0.5 w-full" style={{ background: riskColor }} />
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <AlertTriangle className="h-4 w-4" style={{ color: riskColor }} />
+                    Highest-Risk Vendor
+                  </CardTitle>
+                  <p className="text-xs text-text-muted">Vendor with highest avg risk score in this sector</p>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <Link
+                    to={`/vendors/${worstVendor.vendor_id}`}
+                    className="group block rounded-lg border border-border/30 p-3 hover:border-accent/40 hover:bg-accent/3 transition-all"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-semibold text-text-primary group-hover:text-accent transition-colors truncate">
+                        {toTitleCase(worstVendor.vendor_name ?? 'Unknown')}
+                      </p>
+                      <span
+                        className="text-sm font-black tabular-nums font-mono rounded px-2 py-0.5 flex-shrink-0"
+                        style={{ color: riskColor, background: `${riskColor}20` }}
+                      >
+                        {(riskScore * 100).toFixed(0)}% risk
+                      </span>
+                    </div>
+                    <div className="mt-2 h-1.5 bg-background-elevated rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${Math.min(100, riskScore * 200)}%`, background: riskColor }}
+                      />
+                    </div>
+                    <p className="mt-1.5 text-xs text-text-muted">
+                      {worstVendor.total_contracts ? `${worstVendor.total_contracts.toLocaleString()} contracts` : ''}
+                      {worstVendor.total_value_mxn ? ` · ${formatCompactMXN(worstVendor.total_value_mxn)}` : ''}
+                    </p>
+                    <p className="text-[10px] text-accent mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      Investigate vendor →
+                    </p>
+                  </Link>
+                </CardContent>
+              </Card>
+            )
+          })()}
 
           {/* PROCUREMENT STATS */}
           <Card className="border-border/40">
@@ -765,21 +906,27 @@ export function SectorProfile() {
               <div className="rounded-lg border border-border/40 p-4 hover:border-accent/50 hover:bg-accent/5 transition-all cursor-pointer">
                 <FileText className="h-5 w-5 mb-2 text-text-muted group-hover:text-accent transition-colors" />
                 <p className="text-sm font-medium">All Contracts</p>
-                <p className="text-xs text-text-muted">Browse full list</p>
+                <p className="text-xs text-text-muted font-mono tabular-nums">
+                  {stats?.total_contracts ? formatNumber(stats.total_contracts) : 'Browse full list'}
+                </p>
               </div>
             </Link>
             <Link to={`/vendors?sector_id=${sectorId}`} className="group">
               <div className="rounded-lg border border-border/40 p-4 hover:border-accent/50 hover:bg-accent/5 transition-all cursor-pointer">
                 <Users className="h-5 w-5 mb-2 text-text-muted group-hover:text-accent transition-colors" />
                 <p className="text-sm font-medium">Vendors</p>
-                <p className="text-xs text-text-muted">All sector vendors</p>
+                <p className="text-xs text-text-muted font-mono tabular-nums">
+                  {stats?.total_vendors ? formatNumber(stats.total_vendors) : 'All sector vendors'}
+                </p>
               </div>
             </Link>
             <Link to={`/contracts?sector_id=${sectorId}&risk_level=high`} className="group">
               <div className="rounded-lg border border-risk-high/30 p-4 hover:border-risk-high/60 hover:bg-risk-high/5 transition-all cursor-pointer">
                 <AlertTriangle className="h-5 w-5 mb-2 text-risk-high" />
                 <p className="text-sm font-medium text-risk-high">High Risk Only</p>
-                <p className="text-xs text-text-muted">Flagged contracts</p>
+                <p className="text-xs text-text-muted font-mono tabular-nums">
+                  {stats ? formatNumber((stats.high_risk_count ?? 0) + (stats.critical_risk_count ?? 0)) + ' flagged' : 'Flagged contracts'}
+                </p>
               </div>
             </Link>
           </div>

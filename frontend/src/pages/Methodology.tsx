@@ -377,7 +377,7 @@ export function Methodology() {
                   P(corrupt | z) = sigma(beta_0 + beta^T z) / c
                 </Formula>
                 <p className="text-xs text-text-muted">
-                  Where z = z-score features, beta = learned coefficients, sigma = logistic sigmoid, c = PU correction (0.887)
+                  Where z = z-score features, beta = learned coefficients, sigma = logistic sigmoid, c = PU correction (0.8815)
                 </p>
               </div>
 
@@ -698,7 +698,10 @@ export function Methodology() {
                 <p className="text-xs text-text-muted mt-1">
                   Estimated c = 0.8815 using Elkan & Noto holdout method (20% held-out positives) — meaning
                   ~88% of truly corrupt contracts would be labeled if we had perfect coverage. This replaces
-                  v4.0's circular estimator (c=0.890) with an honest out-of-sample estimate.
+                  v4.0's circular estimator (c=0.890) with an honest out-of-sample estimate. IMPORTANT:
+                  The SCAR assumption (labeled positives are random sample of all corrupt contracts) is
+                  structurally violated — known cases are high-profile scandals, not a random sample.
+                  c=0.8815 estimates coverage of scandal-similar corruption only.
                 </p>
               </div>
 

@@ -7,9 +7,9 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
-  BarChart3, BookOpen, Building2, FileText, FlaskConical,
-  GitBranch, Globe, LayoutDashboard, Network, Scale,
-  Shield, Users, Zap,
+  AlertTriangle, BarChart3, BookOpen, Building2, FileText, Filter,
+  FlaskConical, GitBranch, Globe, LayoutDashboard, Network, Scale,
+  Shield, TrendingUp, Users, Zap,
 } from 'lucide-react'
 import {
   CommandDialog,
@@ -39,19 +39,68 @@ interface QuickAction {
 }
 
 const QUICK_ACTIONS: QuickAction[] = [
-  { id: 'dashboard',    label: 'Dashboard',              icon: LayoutDashboard, href: '/',                       shortcut: 'G D' },
-  { id: 'contracts',    label: 'Contracts',              description: 'Browse 3.1M contracts', icon: FileText,  href: '/contracts',      shortcut: 'G C' },
-  { id: 'vendors',      label: 'Explore Vendors',        icon: Users,           href: '/explore?tab=vendors' },
-  { id: 'institutions', label: 'Explore Institutions',   icon: Building2,       href: '/explore?tab=institutions' },
-  { id: 'sectors',      label: 'Sectors Overview',       icon: BarChart3,       href: '/sectors' },
-  { id: 'network',      label: 'Network Graph',          icon: Network,         href: '/network' },
-  { id: 'workspace',    label: 'Workspace / Watchlist',  icon: Shield,          href: '/workspace' },
-  { id: 'cases',        label: 'Case Library',           icon: BookOpen,        href: '/cases' },
-  { id: 'intelligence', label: 'Procurement Intelligence', icon: Zap,           href: '/procurement-intelligence' },
-  { id: 'temporal',     label: 'Temporal Patterns',      icon: GitBranch,       href: '/administrations' },
-  { id: 'methodology',  label: 'Risk Methodology',       icon: FlaskConical,    href: '/methodology' },
-  { id: 'model',        label: 'Model Transparency',     icon: Scale,           href: '/model' },
-  { id: 'ground-truth', label: 'Ground Truth Cases',     icon: Globe,           href: '/ground-truth' },
+  { id: 'dashboard',    label: 'Dashboard',                icon: LayoutDashboard, href: '/',                                  shortcut: 'G D' },
+  { id: 'contracts',    label: 'Contracts',                description: 'Browse 3.1M contracts', icon: FileText,              href: '/contracts',                         shortcut: 'G C' },
+  { id: 'vendors',      label: 'Explore Vendors',          icon: Users,           href: '/explore?tab=vendors',               shortcut: 'G V' },
+  { id: 'institutions', label: 'Explore Institutions',     icon: Building2,       href: '/explore?tab=institutions',          shortcut: 'G I' },
+  { id: 'sectors',      label: 'Sectors Overview',         icon: BarChart3,       href: '/sectors',                          shortcut: 'G S' },
+  { id: 'network',      label: 'Network Graph',            icon: Network,         href: '/network',                          shortcut: 'G N' },
+  { id: 'workspace',    label: 'Workspace / Watchlist',    icon: Shield,          href: '/workspace',                        shortcut: 'G W' },
+  { id: 'cases',        label: 'Case Library',             icon: BookOpen,        href: '/cases',                            shortcut: 'G L' },
+  { id: 'intelligence', label: 'Procurement Intelligence', icon: Zap,             href: '/procurement-intelligence' },
+  { id: 'temporal',     label: 'Temporal Patterns',        icon: GitBranch,       href: '/administrations' },
+  { id: 'methodology',  label: 'Risk Methodology',         icon: FlaskConical,    href: '/methodology' },
+  { id: 'model',        label: 'Model Transparency',       icon: Scale,           href: '/model' },
+  { id: 'ground-truth', label: 'Ground Truth Cases',       icon: Globe,           href: '/ground-truth' },
+]
+
+// Research actions — shown when palette opens with no query
+const RESEARCH_ACTIONS: QuickAction[] = [
+  {
+    id: 'critical-contracts',
+    label: 'Show critical risk contracts',
+    description: 'Contracts with risk score >= 0.50',
+    icon: AlertTriangle,
+    href: '/contracts?risk_level=critical',
+  },
+  {
+    id: 'single-bid-contracts',
+    label: 'Single bid contracts',
+    description: 'Competitive procedures with only 1 bidder',
+    icon: Filter,
+    href: '/contracts?is_single_bid=true',
+  },
+  {
+    id: 'compare-sectors',
+    label: 'Compare sectors',
+    description: 'Risk and spend side-by-side across all 12 sectors',
+    icon: BarChart3,
+    href: '/sectors',
+  },
+  {
+    id: 'top-risk-vendors',
+    label: 'Top risk vendors',
+    description: 'Vendors ranked by average risk score',
+    icon: TrendingUp,
+    href: '/explore?tab=vendors&sort_by=risk_score',
+  },
+  {
+    id: 'imss-vendors',
+    label: 'IMSS vendor investigation',
+    description: 'Vendors contracted by IMSS',
+    icon: Users,
+    href: '/explore?tab=vendors&search=IMSS',
+  },
+]
+
+// Suggested search terms shown in idle state
+const SUGGESTED_SEARCHES = [
+  { label: 'RFC: search by tax ID', query: '' },
+  { label: 'PEMEX', query: 'PEMEX' },
+  { label: 'Segalmex', query: 'Segalmex' },
+  { label: 'IMSS', query: 'IMSS' },
+  { label: 'single bid', query: 'single bid' },
+  { label: 'CFE', query: 'CFE' },
 ]
 
 // ---------------------------------------------------------------------------
@@ -68,6 +117,15 @@ function RiskPill({ level }: { level: string }) {
       {level}
     </span>
   )
+}
+
+// Derive risk level from numeric score (same thresholds as constants.ts)
+function riskLevelFromScore(score: number | null | undefined): string | null {
+  if (score == null) return null
+  if (score >= 0.5) return 'critical'
+  if (score >= 0.3) return 'high'
+  if (score >= 0.1) return 'medium'
+  return 'low'
 }
 
 // ---------------------------------------------------------------------------
@@ -106,6 +164,10 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     [navigate, onOpenChange]
   )
 
+  const applyQuery = useCallback((q: string) => {
+    setQuery(q)
+  }, [])
+
   // Filter quick actions by query (client-side)
   const filteredActions =
     query.length > 0
@@ -123,10 +185,12 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       results.contracts.length > 0 ||
       results.cases.length > 0)
 
+  const isIdle = query.length === 0
+
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput
-        placeholder="Search vendors, contracts, cases… or navigate"
+        placeholder="Search vendors, RFC, contracts, cases… or navigate"
         value={query}
         onValueChange={setQuery}
       />
@@ -143,28 +207,79 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           <CommandEmpty>No results for "{query}"</CommandEmpty>
         )}
 
-        {/* ── Entity results ── */}
+        {/* ── Idle state: suggested searches + research actions ── */}
+        {isIdle && (
+          <>
+            <CommandGroup heading="Suggested searches">
+              {SUGGESTED_SEARCHES.map((s) => (
+                <CommandItem
+                  key={s.label}
+                  value={`suggest-${s.label}`}
+                  onSelect={() => {
+                    if (s.query) {
+                      applyQuery(s.query)
+                    } else {
+                      // "RFC" chip — place cursor with hint text
+                      applyQuery('')
+                    }
+                  }}
+                  className="gap-2 text-text-muted"
+                >
+                  <span className="text-xs font-mono bg-background-elevated px-1.5 py-0.5 rounded border border-border/30 shrink-0">
+                    {s.query || 'RFC'}
+                  </span>
+                  <span className="text-sm">{s.label}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+
+            <CommandSeparator />
+
+            <CommandGroup heading="Research actions">
+              {RESEARCH_ACTIONS.map((action) => {
+                const Icon = action.icon
+                return (
+                  <CommandItem
+                    key={action.id}
+                    value={`research-${action.id}-${action.label}`}
+                    onSelect={() => go(action.href)}
+                    className="gap-2"
+                  >
+                    <Icon className="h-3.5 w-3.5 text-text-muted shrink-0" />
+                    <span>{action.label}</span>
+                    {action.description && (
+                      <span className="text-xs text-text-muted ml-1">{action.description}</span>
+                    )}
+                  </CommandItem>
+                )
+              })}
+            </CommandGroup>
+
+            <CommandSeparator />
+          </>
+        )}
+
+        {/* ── Entity results (ranked by risk level via backend ORDER BY) ── */}
         {hasResults && (
           <>
             {results!.vendors.length > 0 && (
               <CommandGroup heading="Vendors">
-                {results!.vendors.map((v) => (
-                  <CommandItem
-                    key={`v-${v.id}`}
-                    value={`vendor-${v.id}-${v.name}`}
-                    onSelect={() => go(`/vendors/${v.id}`)}
-                    className="gap-2"
-                  >
-                    <Users className="h-3.5 w-3.5 text-text-muted shrink-0" />
-                    <span className="truncate">{v.name}</span>
-                    {v.rfc && <span className="text-xs font-mono text-text-muted ml-1 shrink-0">{v.rfc}</span>}
-                    {v.risk_score != null && (
-                      <span className="ml-auto text-xs font-mono text-text-muted shrink-0">
-                        {v.risk_score.toFixed(2)}
-                      </span>
-                    )}
-                  </CommandItem>
-                ))}
+                {results!.vendors.map((v) => {
+                  const riskLevel = riskLevelFromScore(v.risk_score)
+                  return (
+                    <CommandItem
+                      key={`v-${v.id}`}
+                      value={`vendor-${v.id}-${v.name}`}
+                      onSelect={() => go(`/vendors/${v.id}`)}
+                      className="gap-2"
+                    >
+                      <Users className="h-3.5 w-3.5 text-text-muted shrink-0" />
+                      <span className="truncate">{v.name}</span>
+                      {v.rfc && <span className="text-xs font-mono text-text-muted ml-1 shrink-0">{v.rfc}</span>}
+                      {riskLevel && riskLevel !== 'low' && <RiskPill level={riskLevel} />}
+                    </CommandItem>
+                  )
+                })}
               </CommandGroup>
             )}
 
@@ -182,13 +297,18 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                     {inst.institution_type && (
                       <span className="text-xs text-text-muted ml-1 shrink-0">{inst.institution_type.replace(/_/g, ' ')}</span>
                     )}
+                    {inst.total_contracts != null && (
+                      <span className="ml-auto text-xs font-mono text-text-muted shrink-0">
+                        {inst.total_contracts.toLocaleString()} contracts
+                      </span>
+                    )}
                   </CommandItem>
                 ))}
               </CommandGroup>
             )}
 
             {results!.contracts.length > 0 && (
-              <CommandGroup heading="Contracts">
+              <CommandGroup heading="Contracts — highest risk first">
                 {results!.contracts.map((c) => (
                   <CommandItem
                     key={`c-${c.id}`}
@@ -198,6 +318,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                   >
                     <FileText className="h-3.5 w-3.5 text-text-muted shrink-0" />
                     <span className="truncate flex-1">{c.title}</span>
+                    {c.year && <span className="text-xs text-text-muted shrink-0">{c.year}</span>}
                     {c.risk_level && <RiskPill level={c.risk_level} />}
                   </CommandItem>
                 ))}
@@ -215,6 +336,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                   >
                     <BookOpen className="h-3.5 w-3.5 text-text-muted shrink-0" />
                     <span className="truncate flex-1">{cs.title}</span>
+                    {cs.sector && <span className="text-xs text-text-muted shrink-0">{cs.sector}</span>}
                     {cs.year && <span className="text-xs text-text-muted shrink-0">{cs.year}</span>}
                   </CommandItem>
                 ))}
@@ -255,6 +377,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         <span><kbd className="px-1 py-0.5 rounded bg-background-elevated border border-border/40 font-mono">↑↓</kbd> navigate</span>
         <span><kbd className="px-1 py-0.5 rounded bg-background-elevated border border-border/40 font-mono">↵</kbd> select</span>
         <span><kbd className="px-1 py-0.5 rounded bg-background-elevated border border-border/40 font-mono">Esc</kbd> close</span>
+        <span className="ml-auto">Tip: type an RFC (e.g. <kbd className="px-1 py-0.5 rounded bg-background-elevated border border-border/40 font-mono">ABC123456789</kbd>) to find a vendor</span>
       </div>
     </CommandDialog>
   )

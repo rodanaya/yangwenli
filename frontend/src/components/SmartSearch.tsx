@@ -64,7 +64,10 @@ function addRecentSearch(query: string) {
   localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(recent.slice(0, MAX_RECENT_SEARCHES)))
 }
 
-const POPULAR_SEARCHES = ['PEMEX', 'CFE', 'IMSS', 'Salud', 'Infraestructura']
+const POPULAR_SEARCHES = [
+  'PEMEX', 'CFE', 'IMSS', 'Segalmex',
+  'Salud', 'Infraestructura', 'single bid',
+]
 
 // ---------------------------------------------------------------------------
 // Risk badge helper
@@ -105,7 +108,7 @@ export const SmartSearch = memo(function SmartSearch({
   value,
   onChange,
   onSelect,
-  placeholder = 'Search vendors, institutions, contracts…',
+  placeholder = 'Search vendors, RFC, institutions, contracts…',
   className = '',
   autoFocus = false,
 }: SmartSearchProps) {
@@ -135,15 +138,22 @@ export const SmartSearch = memo(function SmartSearch({
   const suggestions: EntitySuggestion[] = []
 
   if (federated) {
-    federated.vendors.forEach((v) =>
+    federated.vendors.forEach((v) => {
+      let riskLevel: string | null = null
+      if (v.risk_score != null) {
+        if (v.risk_score >= 0.5) riskLevel = 'critical'
+        else if (v.risk_score >= 0.3) riskLevel = 'high'
+        else if (v.risk_score >= 0.1) riskLevel = 'medium'
+        else riskLevel = 'low'
+      }
       suggestions.push({
         type: 'vendor',
         id: v.id,
         label: v.name,
-        sublabel: v.rfc ?? `${v.contracts} contracts`,
-        riskLevel: null,
+        sublabel: v.rfc ? `RFC: ${v.rfc}` : `${v.contracts.toLocaleString()} contracts`,
+        riskLevel,
       })
-    )
+    })
     federated.institutions.forEach((i) =>
       suggestions.push({
         type: 'institution',
@@ -478,7 +488,7 @@ export const SmartSearch = memo(function SmartSearch({
             <div className="px-3 py-4 text-center">
               <p className="text-sm text-text-muted">No results for "{debouncedValue}"</p>
               <p className="text-xs text-text-muted mt-1">
-                Try a vendor name, RFC, institution, or case
+                Try a vendor name, RFC (e.g. ABC123456789), institution name, or corruption case
               </p>
             </div>
           )}

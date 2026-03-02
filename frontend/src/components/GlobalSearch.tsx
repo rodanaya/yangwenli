@@ -9,14 +9,24 @@ interface SearchResult {
   name: string
   type: 'vendor' | 'institution'
   sub?: string
+  riskLevel?: string
 }
 
 const QUICK_CHIPS = [
-  { label: 'IMSS', type: 'institution' as const },
-  { label: 'PEMEX', type: 'vendor' as const },
-  { label: 'Segalmex', type: 'vendor' as const },
-  { label: 'CFE', type: 'institution' as const },
+  { label: 'IMSS',      type: 'institution' as const },
+  { label: 'PEMEX',     type: 'vendor'      as const },
+  { label: 'Segalmex',  type: 'vendor'      as const },
+  { label: 'CFE',       type: 'institution' as const },
+  { label: 'Odebrecht', type: 'vendor'      as const },
+  { label: 'SAT',       type: 'institution' as const },
 ]
+
+const RISK_COLORS: Record<string, string> = {
+  critical: '#f87171',
+  high:     '#fb923c',
+  medium:   '#fbbf24',
+  low:      '#4ade80',
+}
 
 export function GlobalSearch({ className }: { className?: string }) {
   const navigate = useNavigate()
@@ -41,12 +51,23 @@ export function GlobalSearch({ className }: { className?: string }) {
         institutionApi.search(q, 5),
       ])
       const combined: SearchResult[] = [
-        ...(vRes.data || []).map(v => ({
-          id: v.vendor_id,
-          name: v.vendor_name,
-          type: 'vendor' as const,
-          sub: v.primary_sector_code || undefined,
-        })),
+        ...(vRes.data || []).map(v => {
+          const score = (v as Record<string, unknown>).avg_risk_score as number | undefined
+          let riskLevel: string | undefined
+          if (score != null) {
+            if (score >= 0.5) riskLevel = 'critical'
+            else if (score >= 0.3) riskLevel = 'high'
+            else if (score >= 0.1) riskLevel = 'medium'
+            else riskLevel = 'low'
+          }
+          return {
+            id: v.vendor_id,
+            name: v.vendor_name,
+            type: 'vendor' as const,
+            sub: v.primary_sector_code || undefined,
+            riskLevel,
+          }
+        }),
         ...(iRes.data || []).map(i => ({
           id: i.institution_id,
           name: i.institution_name,
@@ -123,9 +144,9 @@ export function GlobalSearch({ className }: { className?: string }) {
           onChange={e => { setQuery(e.target.value); setIsOpen(true) }}
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
-          placeholder="Search vendors, institutions…"
+          placeholder="Search vendors, RFC, institutions…"
           className="w-full h-9 pl-8 pr-8 rounded-lg border border-border/40 bg-background-elevated/60 text-sm text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-all"
-          aria-label="Search vendors and institutions"
+          aria-label="Search vendors, RFC, and institutions"
           aria-autocomplete="list"
           aria-expanded={showDropdown}
           aria-activedescendant={activeIndex >= 0 ? `search-result-${activeIndex}` : undefined}
@@ -190,9 +211,22 @@ export function GlobalSearch({ className }: { className?: string }) {
                 <Users className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
               )}
               <span className="truncate font-medium">{r.name}</span>
-              <span className="ml-auto text-[10px] text-text-muted font-mono uppercase">
-                {r.type === 'vendor' ? 'vendor' : 'institution'}
-              </span>
+              {r.riskLevel && r.riskLevel !== 'low' && (
+                <span
+                  className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0"
+                  style={{
+                    backgroundColor: `${RISK_COLORS[r.riskLevel]}20`,
+                    color: RISK_COLORS[r.riskLevel],
+                  }}
+                >
+                  {r.riskLevel}
+                </span>
+              )}
+              {(!r.riskLevel || r.riskLevel === 'low') && (
+                <span className="ml-auto text-[10px] text-text-muted font-mono uppercase">
+                  {r.type === 'vendor' ? 'vendor' : 'institution'}
+                </span>
+              )}
             </button>
           ))}
         </div>

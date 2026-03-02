@@ -45,25 +45,28 @@ const INSIGHT_STYLES: Record<string, { border: string; bg: string; icon: string;
 }
 
 // Suggestion chips per entity type
+// Each param maps to the useExplorerFilters URL params:
+//   sector → sector_id   risk → risk levels   q → search text
 const SUGGESTIONS: Record<'vendor' | 'institution', { label: string; params: Record<string, string> }[]> = {
   vendor: [
-    { label: 'High-risk',       params: { risk_level: 'critical,high' } },
-    { label: 'Top by risk',     params: { sort_by: 'avg_risk_score', sort_order: 'desc' } },
-    { label: 'Ghost company suspects', params: { risk_level: 'critical' } },
-    { label: 'Salud sector',    params: { sector_id: '1' } },
-    { label: 'Energia sector',  params: { sector_id: '4' } },
+    { label: 'Critical + High risk', params: { risk: 'critical,high' } },
+    { label: 'Critical only',        params: { risk: 'critical' } },
+    { label: 'Salud sector',         params: { sector: '1' } },
+    { label: 'Energia sector',       params: { sector: '4' } },
+    { label: 'Infraestructura',      params: { sector: '3' } },
   ],
   institution: [
-    { label: 'High direct-award', params: { sort_by: 'direct_award_rate', sort_order: 'desc' } },
-    { label: 'IMSS / ISSSTE',     params: { search: 'IMSS' } },
-    { label: 'Infraestructura',   params: { sector_id: '3' } },
-    { label: 'Federal agencies',  params: { type: 'federal' } },
+    { label: 'IMSS / ISSSTE',    params: { q: 'IMSS' } },
+    { label: 'Salud sector',     params: { sector: '1' } },
+    { label: 'Infraestructura',  params: { sector: '3' } },
+    { label: 'High risk only',   params: { risk: 'critical,high' } },
   ],
 }
 
 export function ExplorePage() {
   const [page, setPage] = useState(1)
   const navigate = useNavigate()
+  const [, setSearchParams] = useSearchParams()
   const filters = useExplorerFilters()
 
   // Reset page when filters change
@@ -118,10 +121,30 @@ export function ExplorePage() {
   const hasFilters = activeChips.length > 0 || filters.searchText
 
   const applySuggestion = useCallback((params: Record<string, string>) => {
-    if (params.search) { filters.setSearchText(params.search); setPage(1) }
-    if (params.sector_id) { filters.setSectorId(Number(params.sector_id)); setPage(1) }
-    if (params.risk_level) { filters.clearAll(); setPage(1) }
-  }, [filters])
+    // Apply suggestion atomically via direct URL update so all params land in one render
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      if (params.q !== undefined) {
+        if (params.q) next.set('q', params.q)
+        else next.delete('q')
+      }
+      if (params.sector !== undefined) {
+        next.set('sector', params.sector)
+      }
+      if (params.risk !== undefined) {
+        // risk param drives the risk filter: "critical,high" etc.
+        // All-4 = no param (shows all), subset = set param
+        const levels = params.risk.split(',').filter(Boolean)
+        if (levels.length < 4) {
+          next.set('risk', levels.join(','))
+        } else {
+          next.delete('risk')
+        }
+      }
+      return next
+    }, { replace: true })
+    setPage(1)
+  }, [setSearchParams])
 
   return (
     <div className="space-y-5">

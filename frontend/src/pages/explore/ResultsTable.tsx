@@ -1,12 +1,26 @@
-import React from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { vendorApi, institutionApi } from '@/api/client'
-import { formatCompactMXN, formatNumber, cn } from '@/lib/utils'
-import { RISK_COLORS } from '@/lib/constants'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { vendorApi, institutionApi, dossierApi } from '@/api/client'
+import { formatCompactMXN, formatNumber } from '@/lib/utils'
+import { RISK_COLORS, SECTORS } from '@/lib/constants'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react'
+import {
+  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
+  AlertCircle,
+  RefreshCw,
+  UserX,
+  Building,
+  FolderPlus,
+  Folder,
+  Plus,
+  Loader2,
+  CheckCircle,
+} from 'lucide-react'
 import type { ExplorerFilters } from '@/hooks/useExplorerFilters'
+import type { DossierSummary } from '@/components/AddToDossierButton'
 
 const PAGE_SIZE = 25
 
@@ -27,7 +41,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
       search: searchText || undefined,
       page,
       per_page: PAGE_SIZE,
-      sort_by: 'total_value_mxn',
+      sort_by: 'avg_risk_score',
       sort_order: 'desc',
     }),
     enabled: entityType === 'vendor',
@@ -41,6 +55,8 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
       search: searchText || undefined,
       page,
       per_page: PAGE_SIZE,
+      sort_by: 'avg_risk_score',
+      sort_order: 'desc',
     }),
     enabled: entityType === 'institution',
     staleTime: 2 * 60 * 1000,
@@ -60,20 +76,46 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
     )
   }
 
-  if (query.error || !query.data) {
+  if (query.error) {
     return (
-      <div className="text-center py-8 text-text-muted text-sm">
-        Failed to load results
+      <div className="py-10 text-center">
+        <AlertCircle className="h-8 w-8 text-risk-high mx-auto mb-2 opacity-60" />
+        <p className="text-sm text-text-primary mb-1">Failed to load results</p>
+        <p className="text-xs text-text-muted mb-3">
+          {(query.error as Error).message || 'An unexpected error occurred.'}
+        </p>
+        <button
+          onClick={() => query.refetch()}
+          className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline"
+        >
+          <RefreshCw className="h-3 w-3" />
+          Retry
+        </button>
       </div>
     )
   }
 
+  if (!query.data) return null
+
   const pagination = query.data.pagination
+  const hasFilters = sectorId != null || riskLevels.length < 4 || searchText || yearStart || yearEnd
+
+  if (!query.data.data?.length) {
+    return <EmptyState entityType={entityType} hasFilters={!!hasFilters} searchText={searchText} />
+  }
+
+  const rangeStart = (page - 1) * PAGE_SIZE + 1
+  const rangeEnd = Math.min(page * PAGE_SIZE, pagination.total)
 
   if (isVendor) {
     const vendors = (vendorQuery.data?.data || []) as any[]
     return (
       <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-xs text-text-muted tabular-nums">
+            Showing {rangeStart}–{rangeEnd} of {formatNumber(pagination.total)} vendors · sorted by risk score
+          </span>
+        </div>
         <table className="w-full text-sm" role="grid">
           <thead>
             <tr className="border-b border-border/30 text-[11px] text-text-muted uppercase tracking-wider">
@@ -82,52 +124,14 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
               <th className="text-right py-2 px-2 font-medium hidden md:table-cell">Total Value</th>
               <th className="text-right py-2 px-2 font-medium">Risk</th>
               <th className="text-right py-2 pl-2 font-medium hidden lg:table-cell">DA %</th>
-              <th className="w-6" />
+              <th className="w-16" />
             </tr>
           </thead>
           <tbody>
             {vendors.map((v: any) => {
               const riskColor = RISK_COLORS[v.risk_level as string] || RISK_COLORS.low
               return (
-                <tr
-                  key={v.vendor_id}
-                  className="border-b border-border/10 hover:bg-background-elevated/30 transition-colors group"
-                >
-                  <td className="py-2 pr-3">
-                    <Link
-                      to={`/vendors/${v.vendor_id}`}
-                      className="font-medium text-text-primary hover:text-accent transition-colors truncate block max-w-xs"
-                    >
-                      {v.vendor_name}
-                    </Link>
-                  </td>
-                  <td className="text-right py-2 px-2 font-mono text-text-secondary">
-                    {formatNumber(v.total_contracts)}
-                  </td>
-                  <td className="text-right py-2 px-2 font-mono text-text-secondary hidden md:table-cell">
-                    {formatCompactMXN(v.total_value_mxn || 0)}
-                  </td>
-                  <td className="text-right py-2 px-2">
-                    <span
-                      className="text-xs font-bold font-mono px-1.5 py-0.5 rounded"
-                      style={{ color: riskColor, backgroundColor: `${riskColor}15` }}
-                    >
-                      {((v.avg_risk_score || 0) * 100).toFixed(0)}%
-                    </span>
-                  </td>
-                  <td className="text-right py-2 pl-2 font-mono text-text-muted text-xs hidden lg:table-cell">
-                    {v.direct_award_pct != null ? `${v.direct_award_pct.toFixed(0)}%` : '–'}
-                  </td>
-                  <td className="pl-1">
-                    <Link
-                      to={`/vendors/${v.vendor_id}`}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                      aria-label={`View ${v.vendor_name}`}
-                    >
-                      <ExternalLink className="h-3.5 w-3.5 text-text-muted" />
-                    </Link>
-                  </td>
-                </tr>
+                <VendorRow key={v.vendor_id} vendor={v} riskColor={riskColor} />
               )
             })}
           </tbody>
@@ -141,6 +145,11 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
   const institutions = (institutionQuery.data?.data || []) as any[]
   return (
     <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-xs text-text-muted tabular-nums">
+          Showing {rangeStart}–{rangeEnd} of {formatNumber(pagination.total)} institutions · sorted by risk score
+        </span>
+      </div>
       <table className="w-full text-sm" role="grid">
         <thead>
           <tr className="border-b border-border/30 text-[11px] text-text-muted uppercase tracking-wider">
@@ -148,49 +157,14 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
             <th className="text-right py-2 px-2 font-medium">Contracts</th>
             <th className="text-right py-2 px-2 font-medium hidden md:table-cell">Total Value</th>
             <th className="text-right py-2 px-2 font-medium">Risk</th>
-            <th className="w-6" />
+            <th className="w-16" />
           </tr>
         </thead>
         <tbody>
           {institutions.map((inst: any) => {
             const riskColor = RISK_COLORS[inst.risk_level as string] || RISK_COLORS.low
             return (
-              <tr
-                key={inst.institution_id}
-                className="border-b border-border/10 hover:bg-background-elevated/30 transition-colors group"
-              >
-                <td className="py-2 pr-3">
-                  <Link
-                    to={`/institutions/${inst.institution_id}`}
-                    className="font-medium text-text-primary hover:text-accent transition-colors truncate block max-w-xs"
-                  >
-                    {inst.institution_name}
-                  </Link>
-                </td>
-                <td className="text-right py-2 px-2 font-mono text-text-secondary">
-                  {formatNumber(inst.total_contracts || 0)}
-                </td>
-                <td className="text-right py-2 px-2 font-mono text-text-secondary hidden md:table-cell">
-                  {formatCompactMXN(inst.total_value_mxn || 0)}
-                </td>
-                <td className="text-right py-2 px-2">
-                  <span
-                    className="text-xs font-bold font-mono px-1.5 py-0.5 rounded"
-                    style={{ color: riskColor, backgroundColor: `${riskColor}15` }}
-                  >
-                    {((inst.avg_risk_score || 0) * 100).toFixed(0)}%
-                  </span>
-                </td>
-                <td className="pl-1">
-                  <Link
-                    to={`/institutions/${inst.institution_id}`}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    aria-label={`View ${inst.institution_name}`}
-                  >
-                    <ExternalLink className="h-3.5 w-3.5 text-text-muted" />
-                  </Link>
-                </td>
-              </tr>
+              <InstitutionRow key={inst.institution_id} institution={inst} riskColor={riskColor} />
             )
           })}
         </tbody>
@@ -199,6 +173,307 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
     </div>
   )
 }
+
+// =============================================================================
+// Individual rows with inline dossier action
+// =============================================================================
+
+function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
+  const [dossierOpen, setDossierOpen] = useState(false)
+  const sector = vendor.primary_sector_id ? SECTORS.find(s => s.id === vendor.primary_sector_id) : null
+
+  return (
+    <tr
+      className="border-b border-border/10 hover:bg-background-elevated/30 transition-colors group"
+    >
+      <td className="py-2 pr-3">
+        <div className="flex items-center gap-1.5 min-w-0">
+          {sector && (
+            <span
+              className="w-1.5 h-1.5 rounded-full shrink-0"
+              style={{ backgroundColor: sector.color }}
+              title={sector.nameEN}
+            />
+          )}
+          <Link
+            to={`/vendors/${vendor.vendor_id}`}
+            className="font-medium text-text-primary hover:text-accent transition-colors truncate block max-w-xs"
+          >
+            {vendor.vendor_name}
+          </Link>
+        </div>
+        {sector && (
+          <div className="ml-3 text-[10px] mt-0.5" style={{ color: sector.color }}>
+            {sector.nameEN}
+          </div>
+        )}
+      </td>
+      <td className="text-right py-2 px-2 font-mono text-text-secondary text-xs">
+        {formatNumber(vendor.total_contracts)}
+      </td>
+      <td className="text-right py-2 px-2 font-mono text-text-secondary text-xs hidden md:table-cell">
+        {formatCompactMXN(vendor.total_value_mxn || 0)}
+      </td>
+      <td className="text-right py-2 px-2">
+        <span
+          className="text-xs font-bold font-mono px-1.5 py-0.5 rounded"
+          style={{ color: riskColor, backgroundColor: `${riskColor}15` }}
+        >
+          {((vendor.avg_risk_score || 0) * 100).toFixed(0)}%
+        </span>
+      </td>
+      <td className="text-right py-2 pl-2 font-mono text-text-muted text-xs hidden lg:table-cell">
+        {vendor.direct_award_pct != null ? `${vendor.direct_award_pct.toFixed(0)}%` : '–'}
+      </td>
+      <td className="pl-1 pr-2">
+        <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+          <Link
+            to={`/vendors/${vendor.vendor_id}`}
+            aria-label={`View ${vendor.vendor_name}`}
+          >
+            <ExternalLink className="h-3.5 w-3.5 text-text-muted hover:text-accent transition-colors" />
+          </Link>
+          <InlineDossierTrigger
+            entityType="vendor"
+            entityId={vendor.vendor_id}
+            entityName={vendor.vendor_name}
+          />
+        </div>
+      </td>
+    </tr>
+  )
+}
+
+function InstitutionRow({ institution, riskColor }: { institution: any; riskColor: string }) {
+  const sector = institution.sector_id ? SECTORS.find(s => s.id === institution.sector_id) : null
+
+  return (
+    <tr
+      className="border-b border-border/10 hover:bg-background-elevated/30 transition-colors group"
+    >
+      <td className="py-2 pr-3">
+        <div className="flex items-center gap-1.5 min-w-0">
+          {sector && (
+            <span
+              className="w-1.5 h-1.5 rounded-full shrink-0"
+              style={{ backgroundColor: sector.color }}
+              title={sector.nameEN}
+            />
+          )}
+          <Link
+            to={`/institutions/${institution.institution_id}`}
+            className="font-medium text-text-primary hover:text-accent transition-colors truncate block max-w-xs"
+          >
+            {institution.institution_name}
+          </Link>
+        </div>
+        {sector && (
+          <div className="ml-3 text-[10px] mt-0.5" style={{ color: sector.color }}>
+            {sector.nameEN}
+          </div>
+        )}
+      </td>
+      <td className="text-right py-2 px-2 font-mono text-text-secondary text-xs">
+        {formatNumber(institution.total_contracts || 0)}
+      </td>
+      <td className="text-right py-2 px-2 font-mono text-text-secondary text-xs hidden md:table-cell">
+        {formatCompactMXN(institution.total_value_mxn || 0)}
+      </td>
+      <td className="text-right py-2 px-2">
+        <span
+          className="text-xs font-bold font-mono px-1.5 py-0.5 rounded"
+          style={{ color: riskColor, backgroundColor: `${riskColor}15` }}
+        >
+          {((institution.avg_risk_score || 0) * 100).toFixed(0)}%
+        </span>
+      </td>
+      <td className="pl-1 pr-2">
+        <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+          <Link
+            to={`/institutions/${institution.institution_id}`}
+            aria-label={`View ${institution.institution_name}`}
+          >
+            <ExternalLink className="h-3.5 w-3.5 text-text-muted hover:text-accent transition-colors" />
+          </Link>
+          <InlineDossierTrigger
+            entityType="institution"
+            entityId={institution.institution_id}
+            entityName={institution.institution_name}
+          />
+        </div>
+      </td>
+    </tr>
+  )
+}
+
+// Compact inline dossier trigger — icon-only popover for table rows
+function InlineDossierTrigger({
+  entityType,
+  entityId,
+  entityName,
+}: {
+  entityType: 'vendor' | 'institution'
+  entityId: number
+  entityName: string
+}) {
+  const queryClient = useQueryClient()
+  const [open, setOpen] = useState(false)
+  const [success, setSuccess] = useState<number | null>(null)
+  const popoverRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+
+  const { data: dossiers, isLoading } = useQuery({
+    queryKey: ['dossiers', 'list'],
+    queryFn: () => dossierApi.list(),
+    enabled: open,
+    staleTime: 30 * 1000,
+  })
+
+  const addMutation = useMutation({
+    mutationFn: ({ dossierId }: { dossierId: number }) =>
+      dossierApi.addItem(dossierId, {
+        item_type: entityType,
+        item_id: entityId,
+        item_name: entityName,
+      }),
+    onSuccess: (_data, { dossierId }) => {
+      queryClient.invalidateQueries({ queryKey: ['dossiers'] })
+      setSuccess(dossierId)
+      setTimeout(() => { setSuccess(null); setOpen(false) }, 1200)
+    },
+  })
+
+  useEffect(() => {
+    if (!open) return
+    function handleClick(e: MouseEvent) {
+      if (
+        popoverRef.current && !popoverRef.current.contains(e.target as Node) &&
+        buttonRef.current && !buttonRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
+
+  const activeDossiers = (dossiers ?? []).filter((d: DossierSummary) => d.status === 'active')
+
+  return (
+    <div className="relative">
+      <button
+        ref={buttonRef}
+        onClick={() => setOpen(prev => !prev)}
+        title={`Add ${entityName} to dossier`}
+        aria-label={`Add ${entityName} to dossier`}
+        className="h-6 w-6 flex items-center justify-center rounded hover:bg-accent/10 text-text-muted hover:text-accent transition-colors"
+      >
+        <FolderPlus className="h-3.5 w-3.5" />
+      </button>
+
+      {open && (
+        <div
+          ref={popoverRef}
+          className="absolute right-0 top-full mt-1 z-50 min-w-[180px] rounded-lg border border-border/60 bg-background-card shadow-xl"
+          role="menu"
+        >
+          <div className="px-3 py-1.5 border-b border-border/40">
+            <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Add to dossier</p>
+          </div>
+          <div className="max-h-[160px] overflow-y-auto py-1">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-3">
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-text-muted" />
+              </div>
+            ) : activeDossiers.length === 0 ? (
+              <p className="text-xs text-text-muted px-3 py-2 text-center">No dossiers yet</p>
+            ) : (
+              activeDossiers.map((d: DossierSummary) => {
+                const isOk = success === d.id
+                const isPending = addMutation.isPending && addMutation.variables?.dossierId === d.id
+                return (
+                  <button
+                    key={d.id}
+                    role="menuitem"
+                    disabled={isPending || isOk}
+                    onClick={() => addMutation.mutate({ dossierId: d.id })}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-left text-xs hover:bg-background-elevated/60 transition-colors disabled:opacity-60"
+                  >
+                    {isOk ? (
+                      <CheckCircle className="h-3 w-3 text-risk-low shrink-0" />
+                    ) : isPending ? (
+                      <Loader2 className="h-3 w-3 animate-spin text-accent shrink-0" />
+                    ) : (
+                      <Folder className="h-3 w-3 shrink-0" style={{ color: d.color }} />
+                    )}
+                    <span className="truncate text-text-secondary">{d.name}</span>
+                  </button>
+                )
+              })
+            )}
+          </div>
+          <div className="border-t border-border/40 py-1">
+            <button
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-left text-xs text-accent hover:bg-accent/5 transition-colors"
+            >
+              <Plus className="h-3 w-3" />
+              New dossier
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// =============================================================================
+// Empty state with actionable guidance
+// =============================================================================
+
+function EmptyState({
+  entityType,
+  hasFilters,
+  searchText,
+}: {
+  entityType: 'vendor' | 'institution'
+  hasFilters: boolean
+  searchText: string
+}) {
+  const Icon = entityType === 'vendor' ? UserX : Building
+
+  if (hasFilters) {
+    return (
+      <div className="py-12 text-center space-y-3">
+        <Icon className="h-8 w-8 text-text-muted mx-auto opacity-40" />
+        <div>
+          <p className="text-sm text-text-primary font-medium">No {entityType}s match your current filters</p>
+          <p className="text-xs text-text-muted mt-1">Try broadening your search:</p>
+        </div>
+        <ul className="text-xs text-text-muted space-y-1 max-w-xs mx-auto text-left list-disc list-inside">
+          {searchText && (
+            <li>Remove the search term — try a shorter or different name</li>
+          )}
+          <li>Include more risk levels (click Critical / High in the strip above)</li>
+          <li>Click a different sector in the treemap, or clear the sector filter</li>
+          <li>Drag a wider year range in the time series chart</li>
+        </ul>
+      </div>
+    )
+  }
+
+  return (
+    <div className="py-12 text-center">
+      <Icon className="h-8 w-8 text-text-muted mx-auto mb-2 opacity-40" />
+      <p className="text-sm text-text-muted">No {entityType}s found</p>
+    </div>
+  )
+}
+
+// =============================================================================
+// Pagination
+// =============================================================================
 
 function Pagination({
   pagination,

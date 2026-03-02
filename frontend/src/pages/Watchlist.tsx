@@ -257,6 +257,8 @@ function RemoveButton({ onConfirm, disabled }: { onConfirm: () => void; disabled
 type StatusFilter = 'all' | 'watching' | 'investigating' | 'resolved'
 type TypeFilter = 'all' | 'vendor' | 'institution' | 'contract'
 type PriorityFilter = 'all' | 'high' | 'medium' | 'low'
+type SortField = 'added' | 'risk' | 'risk_delta' | 'name'
+type SortDir = 'asc' | 'desc'
 
 export function Watchlist() {
   const navigate = useNavigate()
@@ -270,6 +272,8 @@ export function Watchlist() {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all')
   const [activeFolderId, setActiveFolderId] = useState<number | null>(null)
+  const [sortField, setSortField] = useState<SortField>('risk')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
 
   // Folder queries
   const { data: foldersData } = useQuery({
@@ -373,7 +377,46 @@ export function Watchlist() {
   const isLoading = itemsLoading
   const isMutating = updateMutation.isPending || deleteMutation.isPending
 
-  const items = watchlistData?.data ?? []
+  const rawItems = watchlistData?.data ?? []
+
+  const items = useMemo(() => {
+    return [...rawItems].sort((a, b) => {
+      let aVal: number
+      let bVal: number
+      switch (sortField) {
+        case 'risk':
+          aVal = a.risk_score ?? -1
+          bVal = b.risk_score ?? -1
+          break
+        case 'risk_delta': {
+          const da = (a.risk_score ?? 0) - (a.risk_score_at_creation ?? 0)
+          const db = (b.risk_score ?? 0) - (b.risk_score_at_creation ?? 0)
+          aVal = da
+          bVal = db
+          break
+        }
+        case 'name':
+          return sortDir === 'asc'
+            ? a.item_name.localeCompare(b.item_name)
+            : b.item_name.localeCompare(a.item_name)
+        case 'added':
+        default:
+          aVal = new Date(a.created_at).getTime()
+          bVal = new Date(b.created_at).getTime()
+          break
+      }
+      return sortDir === 'desc' ? bVal - aVal : aVal - bVal
+    })
+  }, [rawItems, sortField, sortDir])
+
+  function toggleSort(field: SortField) {
+    if (sortField === field) {
+      setSortDir((d) => (d === 'desc' ? 'asc' : 'desc'))
+    } else {
+      setSortField(field)
+      setSortDir('desc')
+    }
+  }
 
   const stats = useMemo(() => ({
     watching: statsData?.watching ?? 0,
@@ -559,7 +602,29 @@ export function Watchlist() {
               <Eye className="h-4 w-4" />
               {t('table.trackedEntities')}
             </span>
-            <Badge variant="secondary">{items.length} {items.length !== 1 ? t('table.items') : t('table.item')}</Badge>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-text-muted font-normal">Sort:</span>
+              {([
+                { field: 'risk' as SortField, label: 'Risk' },
+                { field: 'risk_delta' as SortField, label: 'Change' },
+                { field: 'added' as SortField, label: 'Added' },
+                { field: 'name' as SortField, label: 'Name' },
+              ]).map(({ field, label }) => (
+                <button
+                  key={field}
+                  onClick={() => toggleSort(field)}
+                  className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
+                    sortField === field
+                      ? 'bg-accent/10 text-accent border-accent/30 font-medium'
+                      : 'text-text-muted border-border/40 hover:text-accent hover:border-accent/30'
+                  }`}
+                >
+                  {label}
+                  {sortField === field && (sortDir === 'desc' ? ' ↓' : ' ↑')}
+                </button>
+              ))}
+              <Badge variant="secondary">{items.length} {items.length !== 1 ? t('table.items') : t('table.item')}</Badge>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -608,15 +673,18 @@ export function Watchlist() {
               return (
                 <div className="p-12 text-center text-text-muted">
                   <EyeOff className="h-12 w-12 mx-auto mb-4 opacity-25" />
-                  <p className="text-sm font-medium mb-1">{t('emptyWorkspace')}</p>
-                  <p className="text-xs max-w-sm mx-auto mb-4">
-                    {t('emptyWorkspaceDescription')}
+                  <p className="text-sm font-medium mb-1 text-text-primary">Your investigation watchlist is empty</p>
+                  <p className="text-xs max-w-xs mx-auto mb-2 leading-relaxed">
+                    Add vendors and institutions to track their risk score changes over time. Get notified when a low-risk vendor becomes high-risk.
+                  </p>
+                  <p className="text-xs text-text-muted/70 max-w-xs mx-auto mb-5">
+                    Use the <Eye className="h-3 w-3 inline mx-0.5" /> icon on any vendor or institution profile to start tracking.
                   </p>
                   <div className="flex justify-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => window.location.assign('/explore?tab=vendors')}
+                      onClick={() => navigate('/explore?tab=vendors')}
                     >
                       <Search className="h-3.5 w-3.5 mr-1.5" />
                       {t('browseVendors')}
@@ -624,7 +692,7 @@ export function Watchlist() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => window.location.assign('/explore?tab=institutions')}
+                      onClick={() => navigate('/explore?tab=institutions')}
                     >
                       <Building2 className="h-3.5 w-3.5 mr-1.5" />
                       {t('browseInstitutions')}

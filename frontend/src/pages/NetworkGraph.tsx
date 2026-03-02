@@ -10,7 +10,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import ReactECharts from 'echarts-for-react'
-import { Network, Search, X, ExternalLink, Users, UserCircle, RotateCcw, ChevronDown, ChevronUp, ZoomIn, ZoomOut } from 'lucide-react'
+import { Network, Search, X, ExternalLink, Users, UserCircle, RotateCcw, ChevronDown, ChevronUp, ZoomIn, ZoomOut, AlertTriangle, Info, Eye } from 'lucide-react'
 import { RiskBadge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SectionDescription } from '@/components/SectionDescription'
@@ -70,6 +70,7 @@ interface GraphFilters {
   year: number | undefined
   minContracts: number
   depth: 1 | 2
+  riskFilter: 'all' | 'critical' | 'high' | 'high_and_above'
 }
 
 // ---------------------------------------------------------------------------
@@ -104,7 +105,8 @@ function FiltersBar({
     filters.sectorId !== undefined ||
     filters.year !== undefined ||
     filters.minContracts !== 10 ||
-    filters.depth !== 1
+    filters.depth !== 1 ||
+    filters.riskFilter !== 'all'
 
   return (
     <div className="flex flex-wrap items-center gap-3 text-xs">
@@ -181,6 +183,23 @@ function FiltersBar({
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Risk level filter */}
+      <div className="flex items-center gap-1.5">
+        <label className="text-text-muted shrink-0 flex items-center gap-1">
+          <AlertTriangle className="h-3 w-3" />
+          Risk
+        </label>
+        <select
+          value={filters.riskFilter}
+          onChange={(e) => onChange({ riskFilter: e.target.value as GraphFilters['riskFilter'] })}
+          className="h-7 pl-2 pr-6 rounded border border-border bg-background-card text-xs focus:outline-none focus:ring-1 focus:ring-accent"
+        >
+          <option value="all">All levels</option>
+          <option value="high_and_above">High + Critical</option>
+          <option value="critical">Critical only</option>
+        </select>
       </div>
 
       {/* Reset */}
@@ -477,6 +496,9 @@ function SidePanel({
 
             {coBidders && coBidders.length > 0 && (
               <div className="space-y-1.5">
+                <div className="text-[10px] text-text-muted/60 pb-0.5">
+                  % of shared tenders where one wins and the other doesn't compete
+                </div>
                 {coBidders.slice(0, 8).map((cb, ci) => (
                   <div
                     key={cb.vendor_id}
@@ -490,7 +512,15 @@ function SidePanel({
                       {toTitleCase(cb.vendor_name)}
                     </span>
                     <div className="shrink-0 flex items-center gap-1.5">
-                      <span className="tabular-nums text-text-muted">
+                      <span
+                        className="tabular-nums"
+                        title="Proportion of shared procedures where one wins and other submits cover bid"
+                        style={{
+                          color: cb.same_winner_ratio >= 0.8 ? '#f87171'
+                            : cb.same_winner_ratio >= 0.5 ? '#fb923c'
+                            : '#94a3b8',
+                        }}
+                      >
                         {(cb.same_winner_ratio * 100).toFixed(0)}%
                       </span>
                       <span
@@ -588,6 +618,65 @@ const DEFAULT_FILTERS: GraphFilters = {
   year: undefined,
   minContracts: 10,
   depth: 1,
+  riskFilter: 'all',
+}
+
+// ---------------------------------------------------------------------------
+// First-time user instruction overlay
+// ---------------------------------------------------------------------------
+
+function InstructionOverlay({ onDismiss }: { onDismiss: () => void }) {
+  return (
+    <div className="absolute inset-0 z-20 bg-background-card/95 backdrop-blur-sm flex items-center justify-center p-6">
+      <div className="max-w-md w-full space-y-5">
+        <div className="flex items-center gap-2">
+          <Network className="h-5 w-5 text-accent" />
+          <h3 className="text-sm font-bold text-text-primary">How to use the Network Explorer</h3>
+        </div>
+        <div className="space-y-3 text-xs text-text-secondary">
+          <div className="flex gap-3">
+            <span className="text-accent font-bold shrink-0 w-5 text-center">1</span>
+            <div>
+              <strong className="text-text-primary">Search for a vendor or institution</strong> using the search bar above. The graph will show all entities connected to your selection through procurement relationships.
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <span className="text-accent font-bold shrink-0 w-5 text-center">2</span>
+            <div>
+              <strong className="text-text-primary">Node colors indicate corruption risk.</strong> Red nodes are Critical risk, orange are High risk. Larger nodes represent more contract value. High-risk nodes glow — they are your primary investigation targets.
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <span className="text-accent font-bold shrink-0 w-5 text-center">3</span>
+            <div>
+              <strong className="text-text-primary">Click any node</strong> to open the details panel — see risk score, contract count, and co-bidding partners. Click "Open profile" to launch a full investigation view.
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <span className="text-accent font-bold shrink-0 w-5 text-center">4</span>
+            <div>
+              <strong className="text-text-primary">Switch to Community mode</strong> (top-right toggle) to color nodes by co-bidding cluster. Nodes of the same color bid together frequently — potential collusion rings.
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <span className="text-accent font-bold shrink-0 w-5 text-center">5</span>
+            <div>
+              <strong className="text-text-primary">Use the Risk filter</strong> to show only High + Critical nodes, instantly isolating the most suspicious vendors in the network.
+            </div>
+          </div>
+        </div>
+        <div className="rounded border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-400">
+          <strong>What makes a cluster suspicious?</strong> Vendors in the same cluster frequently appear together in competitive tenders. They may be submitting coordinated bids (one vendor wins, partners submit losing cover bids) to simulate competition while dividing contracts.
+        </div>
+        <button
+          onClick={onDismiss}
+          className="w-full py-2 rounded bg-accent text-white text-xs font-medium hover:bg-accent/80 transition-colors"
+        >
+          Got it — start exploring
+        </button>
+      </div>
+    </div>
+  )
 }
 
 // Center entity selected via search
@@ -606,6 +695,7 @@ export function NetworkGraph() {
   const [coBiddersLoading, setCoBiddersLoading] = useState(false)
   const [colorMode, setColorMode] = useState<'risk' | 'community'>('risk')
   const [showCommunities, setShowCommunities] = useState(false)
+  const [showInstructions, setShowInstructions] = useState(false)
 
   // Community explorer query — only fires when user opens the panel
   const { data: commData, isLoading: commLoading } = useQuery<CommunitiesResponse>({
@@ -662,16 +752,29 @@ export function NetworkGraph() {
         : `i-${centerEntity.id}`
       : null
 
+    // Determine which nodes to visually dim based on risk filter
+    const isNodeVisibleByRisk = (node: NetworkNode): boolean => {
+      if (filters.riskFilter === 'all') return true
+      if (node.type === 'institution') return true // always show institutions
+      if (node.risk_score == null) return filters.riskFilter === 'all'
+      const level = getRiskLevelFromScore(node.risk_score)
+      if (filters.riskFilter === 'critical') return level === 'critical'
+      if (filters.riskFilter === 'high_and_above') return level === 'critical' || level === 'high'
+      return true
+    }
+
     const nodes = graphData.nodes.map((node: NetworkNode) => {
       const isCenter = node.id === centerNodeId
       const symbolSize = isCenter ? 48 : nodeSymbolSize(node.value, node.type)
-      const itemColor =
+      const passesRiskFilter = isNodeVisibleByRisk(node)
+      const baseColor =
         node.type === 'institution'
           ? '#60a5fa'
           : colorMode === 'community' && node.community_id != null
             ? communityToColor(node.community_id)
             : riskToColor(node.risk_score)
-      const showLabel = isCenter || symbolSize > 18
+      const itemColor = passesRiskFilter ? baseColor : '#2d3748'
+      const showLabel = (isCenter || symbolSize > 18) && passesRiskFilter
 
       // Glow aura for critical and high risk vendor nodes
       const riskLevel = node.type === 'vendor' && node.risk_score != null
@@ -705,10 +808,11 @@ export function NetworkGraph() {
         symbolSize,
         itemStyle: {
           color: itemColor,
-          borderColor,
-          borderWidth,
-          shadowColor: isSanctioned ? '#dc2626' : hasShadow ? shadowColor : undefined,
-          shadowBlur: isSanctioned ? 15 : hasShadow ? 12 : undefined,
+          borderColor: passesRiskFilter ? borderColor : undefined,
+          borderWidth: passesRiskFilter ? borderWidth : 0,
+          shadowColor: passesRiskFilter ? (isSanctioned ? '#dc2626' : hasShadow ? shadowColor : undefined) : undefined,
+          shadowBlur: passesRiskFilter ? (isSanctioned ? 15 : hasShadow ? 12 : undefined) : undefined,
+          opacity: passesRiskFilter ? 1 : 0.15,
         },
         label: {
           show: showLabel,
@@ -786,7 +890,7 @@ export function NetworkGraph() {
         },
       ],
     }
-  }, [graphData, centerEntity, colorMode])
+  }, [graphData, centerEntity, colorMode, filters.riskFilter])
 
   // Computed graph stats for the Key Network Stats strip
   const graphStats = useMemo(() => {
@@ -973,17 +1077,27 @@ export function NetworkGraph() {
         }
       `}</style>
       {/* Page header */}
-      <div>
-        <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
-          <Network className="h-4.5 w-4.5 text-accent" />
-          {t('pageTitle')}
-        </h2>
-        {graphData && (
-          <p className="text-xs text-text-muted mt-0.5">
-            <GraphStatCount value={graphData.total_nodes} /> {t('statsNodes')} · <GraphStatCount value={graphData.total_links} /> {t('statsConnections')}
-            {centerEntity && ` · ${t('statsCenteredOn')} ${toTitleCase(centerEntity.name)}`}
-          </p>
-        )}
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+            <Network className="h-4.5 w-4.5 text-accent" />
+            {t('pageTitle')}
+          </h2>
+          {graphData && (
+            <p className="text-xs text-text-muted mt-0.5">
+              <GraphStatCount value={graphData.total_nodes} /> {t('statsNodes')} · <GraphStatCount value={graphData.total_links} /> {t('statsConnections')}
+              {centerEntity && ` · ${t('statsCenteredOn')} ${toTitleCase(centerEntity.name)}`}
+            </p>
+          )}
+        </div>
+        <button
+          onClick={() => setShowInstructions(true)}
+          className="shrink-0 flex items-center gap-1.5 text-xs text-text-muted hover:text-accent border border-border/40 hover:border-accent/40 rounded px-2.5 py-1.5 transition-colors"
+          title="How to use the Network Explorer"
+        >
+          <Info className="h-3.5 w-3.5" />
+          How to use
+        </button>
       </div>
 
       <SectionDescription>{t('pageDesc')}</SectionDescription>
@@ -1113,6 +1227,11 @@ export function NetworkGraph() {
       <div className="flex border border-border rounded-md overflow-hidden" style={{ height: 'calc(100vh - 220px)', minHeight: '500px' }}>
         {/* Graph area */}
         <div className="flex-1 relative min-w-0">
+          {/* Instruction overlay */}
+          {showInstructions && (
+            <InstructionOverlay onDismiss={() => setShowInstructions(false)} />
+          )}
+
           {/* Search-to-start state — shown before any entity is selected */}
           {!centerEntity && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-background-card z-10 px-8">
@@ -1126,6 +1245,13 @@ export function NetworkGraph() {
                     {t('emptyDesc')}
                   </p>
                 </div>
+                <button
+                  onClick={() => setShowInstructions(true)}
+                  className="flex items-center gap-1.5 text-xs text-accent/70 hover:text-accent transition-colors"
+                >
+                  <Info className="h-3.5 w-3.5" />
+                  How does this work?
+                </button>
               </div>
               <div className="w-full max-w-sm text-center">
                 <p className="text-xs text-text-muted mb-2 uppercase tracking-wider font-medium">{t('examplesLabel')}</p>
@@ -1282,6 +1408,19 @@ export function NetworkGraph() {
               <div className="border-t border-border/30 pt-1.5 text-text-muted/60">
                 Scroll to zoom · drag to pan
               </div>
+
+              {/* Active risk filter indicator */}
+              {filters.riskFilter !== 'all' && (
+                <div className="border-t border-border/30 pt-1.5">
+                  <div className="flex items-center gap-1 text-amber-400/80">
+                    <Eye className="h-3 w-3" />
+                    <span className="text-[10px]">
+                      {filters.riskFilter === 'critical' ? 'Critical only' : 'High+ visible'}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-text-muted/50 mt-0.5">other nodes dimmed</div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1342,21 +1481,34 @@ export function NetworkGraph() {
       {/* ── Network Analytics Panel ─────────────────────────────────────────── */}
       {graphStats && graphData && (
         <div className="rounded-lg border border-border/30 bg-background-elevated/20 px-4 py-3 space-y-3">
-          <div className="text-xs font-semibold text-text-muted uppercase tracking-wider">Network Analytics</div>
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-semibold text-text-muted uppercase tracking-wider">Network Analytics</div>
+            {graphStats.highRiskNodeCount > 0 && (
+              <div className="flex items-center gap-1.5 text-xs text-red-400">
+                <AlertTriangle className="h-3.5 w-3.5" />
+                <span>{graphStats.highRiskNodeCount} high-risk vendors in this network — use the Risk filter or click red nodes to investigate</span>
+              </div>
+            )}
+          </div>
 
           {/* Metric grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <div className="rounded-md bg-white/5 p-3">
               <div className="text-xs text-text-muted mb-0.5">Nodes</div>
               <div className="text-lg font-bold font-mono tabular-nums">{graphStats.totalNodes}</div>
+              <div className="text-[10px] text-text-muted/60 mt-0.5">vendors + institutions</div>
             </div>
             <div className="rounded-md bg-white/5 p-3">
               <div className="text-xs text-text-muted mb-0.5">Connections</div>
               <div className="text-lg font-bold font-mono tabular-nums">{graphStats.edgeCount}</div>
+              <div className="text-[10px] text-text-muted/60 mt-0.5">shared procurement links</div>
             </div>
             <div className="rounded-md bg-white/5 p-3">
               <div className="text-xs text-text-muted mb-0.5">Avg Degree</div>
               <div className="text-lg font-bold font-mono tabular-nums">{graphStats.avgDegree.toFixed(1)}</div>
+              <div className="text-[10px] text-text-muted/60 mt-0.5">
+                {graphStats.avgDegree > 5 ? 'high connectivity — inspect clusters' : 'connections per entity'}
+              </div>
             </div>
             <div className={`rounded-md p-3 ${graphStats.highRiskNodeCount > 0 ? 'bg-red-500/10 border border-red-500/20' : 'bg-white/5'}`}>
               <div className={`text-xs mb-0.5 ${graphStats.highRiskNodeCount > 0 ? 'text-red-400/70' : 'text-text-muted'}`}>
@@ -1365,21 +1517,32 @@ export function NetworkGraph() {
               <div className={`text-lg font-bold font-mono tabular-nums ${graphStats.highRiskNodeCount > 0 ? 'text-red-400' : 'text-text-primary'}`}>
                 {graphStats.highRiskNodeCount}
               </div>
+              <div className="text-[10px] text-text-muted/60 mt-0.5">
+                {graphStats.highRiskNodeCount > 0 ? 'red/orange glowing nodes' : 'no high-risk nodes'}
+              </div>
             </div>
           </div>
 
-          {/* Secondary metrics + top connected */}
+          {/* Secondary metrics with plain-language explanations */}
           <div className="flex flex-wrap gap-6 text-xs pt-1 border-t border-border/20">
             {/* Graph density */}
             <div>
               <span className="text-text-muted">Graph density: </span>
               <span className="font-mono text-text-primary">{(graphStats.density * 100).toFixed(2)}%</span>
+              <span className="text-text-muted/60 ml-1 text-[10px]">
+                {graphStats.density > 0.1
+                  ? '(densely connected — elevated collusion risk)'
+                  : graphStats.density > 0.03
+                  ? '(moderately connected)'
+                  : '(sparse — typical for large networks)'}
+              </span>
             </div>
             {/* High-risk connections */}
             {graphStats.highRiskConnections > 0 && (
               <div>
                 <span className="text-text-muted">High-risk links: </span>
                 <span className="font-mono text-red-400">{graphStats.highRiskConnections}</span>
+                <span className="text-text-muted/60 ml-1 text-[10px]">(both endpoints are high/critical risk)</span>
               </div>
             )}
             {/* Suspicious clusters from community data */}
@@ -1387,35 +1550,48 @@ export function NetworkGraph() {
               <div>
                 <span className="text-text-muted">Co-bid clusters: </span>
                 <span className="font-mono text-amber-400">{commData.total_communities.toLocaleString()}</span>
+                <span className="text-text-muted/60 ml-1 text-[10px]">(vendor groups that bid together frequently — see Community Explorer below)</span>
               </div>
             )}
           </div>
 
-          {/* Top 3 most connected */}
+          {/* Top 3 most connected — with interpretation */}
           {graphStats.top3Connected.length > 0 && (
             <div className="pt-1 border-t border-border/20">
-              <div className="text-xs text-text-muted mb-2">Most Connected</div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="text-xs text-text-muted">Most Connected — hub vendors concentrate procurement relationships</div>
+                <span className="text-[10px] text-text-muted/60">(high degree = appeared in many shared tenders)</span>
+              </div>
               <div className="space-y-1.5">
-                {graphStats.top3Connected.map((n, i) => (
-                  <div key={n.name + i} className="flex items-center gap-2">
-                    <span className="text-xs text-text-muted/60 w-4 font-mono">{i + 1}.</span>
-                    <span className="text-xs text-text-primary truncate flex-1">{n.name}</span>
-                    <span className="text-xs font-mono text-cyan-400 shrink-0">{n.degree} links</span>
-                    {n.riskScore != null && (
-                      <span
-                        className="text-[10px] font-mono shrink-0"
-                        style={{
-                          color: n.riskScore >= 0.5 ? '#f87171'
-                            : n.riskScore >= 0.3 ? '#fb923c'
-                            : n.riskScore >= 0.1 ? '#fbbf24'
-                            : '#4ade80',
-                        }}
-                      >
-                        {(n.riskScore * 100).toFixed(0)}%
-                      </span>
-                    )}
-                  </div>
-                ))}
+                {graphStats.top3Connected.map((n, i) => {
+                  const isHighRisk = n.riskScore != null && n.riskScore >= 0.3
+                  return (
+                    <div key={n.name + i} className={`flex items-center gap-2 rounded px-2 py-1 ${isHighRisk ? 'bg-red-500/5 border border-red-500/10' : ''}`}>
+                      <span className="text-xs text-text-muted/60 w-4 font-mono">{i + 1}.</span>
+                      <span className="text-xs text-text-primary truncate flex-1">{n.name}</span>
+                      <span className="text-xs font-mono text-cyan-400 shrink-0">{n.degree} links</span>
+                      {n.riskScore != null && (
+                        <span
+                          className="text-[10px] font-mono shrink-0 px-1.5 py-0.5 rounded"
+                          style={{
+                            color: n.riskScore >= 0.5 ? '#f87171'
+                              : n.riskScore >= 0.3 ? '#fb923c'
+                              : n.riskScore >= 0.1 ? '#fbbf24'
+                              : '#4ade80',
+                            backgroundColor: n.riskScore >= 0.5 ? '#f8717118'
+                              : n.riskScore >= 0.3 ? '#fb923c18'
+                              : 'transparent',
+                          }}
+                        >
+                          {(n.riskScore * 100).toFixed(0)}% risk
+                        </span>
+                      )}
+                      {isHighRisk && (
+                        <AlertTriangle className="h-3 w-3 text-red-400 shrink-0" />
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
@@ -1463,11 +1639,19 @@ export function NetworkGraph() {
                 )}
                 {commData.graph_ready && commData.communities.length > 0 && (
                   <>
-                    <p className="text-xs text-text-muted mb-3">
-                      {commData.total_communities.toLocaleString()} communities detected ·{' '}
-                      showing top {commData.communities.length} by size.
-                      Click a cluster to load its network.
-                    </p>
+                    <div className="mb-3 space-y-2">
+                      <p className="text-xs text-text-muted">
+                        {commData.total_communities.toLocaleString()} co-bidding clusters detected ·{' '}
+                        showing top {commData.communities.length} by size.
+                        Click a cluster to center the graph on it.
+                      </p>
+                      <div className="rounded border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-amber-400/80">
+                        <strong className="text-amber-400">What makes a cluster suspicious?</strong> Vendors in the same cluster
+                        bid together in competitive tenders far more often than chance would predict. This can indicate
+                        <em> cover bidding</em> (a partner bids high to let the winner win) or <em>bid rotation</em>
+                        (vendors take turns winning). Look for clusters with high avg risk and multiple sectors.
+                      </div>
+                    </div>
                     <div className="space-y-2">
                       {commData.communities.map((comm) => {
                         const commColor = COMMUNITY_PALETTE[comm.community_id % COMMUNITY_PALETTE.length]

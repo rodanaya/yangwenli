@@ -81,15 +81,16 @@ const MODEL_COEFFICIENTS: Coefficient[] = [
 ]
 
 const VALIDATION_METRICS = {
-  auc_roc: 0.957,
+  auc_train: 0.9642,
+  auc_roc: 0.9572,
   brier_score: 0.060,
   detection_rate_medium_plus: 0.998,
   detection_rate_high_plus: 0.930,
-  high_risk_rate: 0.090,
+  high_risk_rate: 0.106,
   pu_correction: 0.8815,
   ground_truth_cases: 22,
-  ground_truth_vendors: 65,
-  ground_truth_contracts: 26704,
+  ground_truth_vendors: 27,
+  ground_truth_contracts: 26582,
 } as const
 
 interface CaseDetection {
@@ -492,9 +493,9 @@ export default function ModelTransparency() {
       {/* ================================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricGauge
-          label="AUC-ROC"
-          value={VALIDATION_METRICS.auc_roc.toFixed(3)}
-          subtitle="Excellent discrimination"
+          label="Test AUC-ROC"
+          value={VALIDATION_METRICS.auc_roc.toFixed(4)}
+          subtitle={`Train AUC ${VALIDATION_METRICS.auc_train.toFixed(4)} · Temporal split`}
           icon={Target}
           color="#58a6ff"
         />
@@ -833,7 +834,7 @@ export default function ModelTransparency() {
               <div>
                 <CardTitle>Per-Case Detection Performance</CardTitle>
                 <CardDescription>
-                  How the model performs on each of the 15 documented corruption cases
+                  Detection performance on 22 documented corruption cases — 15 have matched vendor contracts, 7 pending or zero matches
                 </CardDescription>
               </div>
             </div>
@@ -901,7 +902,7 @@ export default function ModelTransparency() {
           <div className="flex flex-wrap items-center gap-4 mt-4 pt-3 border-t border-border/20 text-xs text-text-muted">
             <span className="flex items-center gap-1">
               <CheckCircle className="h-3 w-3 text-risk-low" aria-hidden="true" />
-              12 of 15 cases: {'>'}95% detection rate
+              12 of 15 matched cases: {'>'}95% detection rate
             </span>
             <span className="flex items-center gap-1">
               <TrendingUp className="h-3 w-3 text-blue-400" aria-hidden="true" />

@@ -151,13 +151,15 @@ export function SankeyDiagram({
                 animation: 'sankeyDash 1.2s linear infinite',
               }}
               onClick={() => onFlowClick?.(src.id, tgt.id)}
-              onMouseEnter={e =>
+              onMouseEnter={e => {
+                const avgRisk = (ld.avgRisk ?? 0) * 100
+                const riskLabel = avgRisk >= 50 ? 'Critical (≥50%)' : avgRisk >= 30 ? 'High (≥30%)' : avgRisk >= 10 ? 'Medium (≥10%)' : 'Low (<10%)'
                 setTooltip({
                   x: e.clientX,
                   y: e.clientY,
-                  content: `${src.name} → ${tgt.name}\n${formatMXN(link.value)}\n${ld.contractCount ?? ''} contracts · avg risk ${((ld.avgRisk ?? 0) * 100).toFixed(0)}%`,
+                  content: `${src.name} → ${tgt.name}\n${formatMXN(link.value)} · ${ld.contractCount ?? ''} contracts\nRisk: ${avgRisk.toFixed(0)}% — ${riskLabel}\nFlow color = avg corruption risk score`,
                 })
-              }
+              }}
               onMouseLeave={() => setTooltip(null)}
             />
           )
@@ -231,7 +233,7 @@ export function SankeyDiagram({
                 fontWeight={isSelected ? 600 : 400}
                 className="text-text-secondary pointer-events-none"
               >
-                {n.name.length > 24 ? n.name.slice(0, 24) + '…' : n.name}
+                {n.name.length > 34 ? n.name.slice(0, 34) + '…' : n.name}
               </text>
             </g>
           )

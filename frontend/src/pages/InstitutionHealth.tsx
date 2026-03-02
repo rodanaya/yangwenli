@@ -55,7 +55,7 @@ import {
 // Types
 // =============================================================================
 
-type SortField = 'total_contracts' | 'total_value' | 'avg_risk_score' | 'vendor_count' | 'hhi'
+type SortField = 'total_contracts' | 'total_value' | 'avg_risk_score' | 'vendor_count' | 'hhi' | 'direct_award_pct' | 'single_bid_pct'
 type SortDir = 'asc' | 'desc'
 
 // =============================================================================
@@ -905,6 +905,24 @@ export default function InstitutionHealth() {
                     <SortIndicator field="vendor_count" sortField={sortField} sortDir={sortDir} />
                   </th>
                   <th
+                    className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap hidden xl:table-cell"
+                    onClick={() => handleSort('direct_award_pct')}
+                    aria-sort={sortField === 'direct_award_pct' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
+                    title="Direct award rate — higher = less competitive procurement"
+                  >
+                    Direct Award
+                    <SortIndicator field="direct_award_pct" sortField={sortField} sortDir={sortDir} />
+                  </th>
+                  <th
+                    className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap hidden xl:table-cell"
+                    onClick={() => handleSort('single_bid_pct')}
+                    aria-sort={sortField === 'single_bid_pct' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
+                    title="Single bid rate — competitive procedures with only one vendor"
+                  >
+                    Single Bid
+                    <SortIndicator field="single_bid_pct" sortField={sortField} sortDir={sortDir} />
+                  </th>
+                  <th
                     className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap group"
                     onClick={() => handleSort('hhi')}
                     aria-sort={sortField === 'hhi' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
@@ -951,6 +969,18 @@ export default function InstitutionHealth() {
                     </td>
                     <td className="px-3 py-2 text-right font-mono text-text-secondary tabular-nums">
                       {formatNumber(item.vendor_count)}
+                    </td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums hidden xl:table-cell"
+                      style={{ color: item.direct_award_pct > 0.80 ? 'var(--color-risk-critical)' : item.direct_award_pct > 0.70 ? 'var(--color-risk-high)' : 'var(--color-text-secondary)' }}
+                      title={`${(item.direct_award_pct * 100).toFixed(1)}% — national avg ~74%`}
+                    >
+                      {(item.direct_award_pct * 100).toFixed(1)}%
+                    </td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums hidden xl:table-cell"
+                      style={{ color: item.single_bid_pct > 0.20 ? 'var(--color-risk-critical)' : item.single_bid_pct > 0.12 ? 'var(--color-risk-high)' : 'var(--color-text-secondary)' }}
+                      title={`${(item.single_bid_pct * 100).toFixed(1)}% — national avg ~12%`}
+                    >
+                      {(item.single_bid_pct * 100).toFixed(1)}%
                     </td>
                     <td className="px-3 py-2 text-right">
                       <span

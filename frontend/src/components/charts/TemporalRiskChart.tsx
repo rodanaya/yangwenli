@@ -279,9 +279,9 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
             wrapperStyle={{ fontSize: 10, fontFamily: 'var(--font-mono, monospace)', color: '#64748b', paddingTop: 8 }}
           />
 
-          {/* Scandal reference lines */}
+          {/* Scandal reference lines — alternate label position to avoid overlap */}
           {showScandals &&
-            SCANDAL_ANNOTATIONS.filter((s) => s.year >= minYear && s.year <= maxYear).map((scandal) => (
+            SCANDAL_ANNOTATIONS.filter((s) => s.year >= minYear && s.year <= maxYear).map((scandal, idx) => (
               <ReferenceLine
                 key={scandal.year}
                 yAxisId="left"
@@ -292,7 +292,7 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
                 opacity={0.7}
                 label={{
                   value: scandal.shortLabel,
-                  position: 'insideTopRight',
+                  position: idx % 2 === 0 ? 'insideTopRight' : 'insideTopLeft',
                   fontSize: 9,
                   fill: scandal.color,
                   fontFamily: 'var(--font-mono, monospace)',

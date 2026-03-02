@@ -1,6 +1,7 @@
 import { memo, useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import ReactECharts from 'echarts-for-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -23,6 +24,7 @@ import {
   Check,
   X,
   Brain,
+  ExternalLink,
 } from 'lucide-react'
 
 // ─── MacroStatCard ───────────────────────────────────────────────────────────
@@ -142,7 +144,7 @@ const SectorAnomalyBar = memo(function SectorAnomalyBar({
 
 // ─── TopAnomalyCard ──────────────────────────────────────────────────────────
 
-function TopAnomalyCard({ item }: { item: PriceHypothesisItem }) {
+function TopAnomalyCard({ item, onNavigate }: { item: PriceHypothesisItem; onNavigate: (contractId: number) => void }) {
   const sectorCode = item.sector_id
     ? SECTORS.find((s) => s.id === item.sector_id)?.code
     : undefined
@@ -153,7 +155,13 @@ function TopAnomalyCard({ item }: { item: PriceHypothesisItem }) {
   return (
     <div className={`rounded-lg border p-3 bg-surface-card/30 ${isExtreme ? 'border-risk-critical/25 bg-risk-critical/5' : 'border-risk-high/20'}`}>
       <div className="flex items-center justify-between mb-2">
-        <span className="font-mono text-[10px] text-text-muted">#{item.contract_id}</span>
+        <button
+          onClick={() => onNavigate(item.contract_id)}
+          className="font-mono text-[10px] text-accent hover:underline"
+          title="Jump to contract in explorer"
+        >
+          #{item.contract_id}
+        </button>
         <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
           isExtreme ? 'bg-red-500/15 text-red-400' : 'bg-amber-500/15 text-amber-400'
         }`}>
@@ -178,6 +186,14 @@ function TopAnomalyCard({ item }: { item: PriceHypothesisItem }) {
           <div className="h-full rounded-full" style={{ width: `${item.confidence * 100}%`, backgroundColor: confColor }} />
         </div>
       </div>
+      <button
+        onClick={() => onNavigate(item.contract_id)}
+        className="mt-2 w-full flex items-center justify-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors"
+        title="View contract in explorer"
+      >
+        <ExternalLink className="h-3 w-3" />
+        View contract
+      </button>
     </div>
   )
 }
@@ -196,6 +212,7 @@ function formatTypeName(type: string): string {
 
 export default function PriceIntelligence() {
   const { t } = useTranslation('price')
+  const navigate = useNavigate()
 
   // ── Filter state ────────────────────────────────────────────────────────
   const [hypothesisType, setHypothesisType] = useState<string>('all')
@@ -353,6 +370,10 @@ export default function PriceIntelligence() {
     })
   }
 
+  function navigateToContract(contractId: number) {
+    navigate(`/contracts?search=${contractId}`)
+  }
+
   // ── Derived macro stats ───────────────────────────────────────────────────
   const topAnomalySector = useMemo(() => {
     if (!priceSummary?.by_sector || priceSummary.by_sector.length === 0) return null
@@ -474,11 +495,90 @@ export default function PriceIntelligence() {
         ) : hypothesesData?.data && hypothesesData.data.length > 0 ? (
           <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
             {hypothesesData.data.slice(0, 5).map((item) => (
-              <TopAnomalyCard key={item.id} item={item} />
+              <TopAnomalyCard key={item.id} item={item} onNavigate={navigateToContract} />
             ))}
           </div>
         ) : null}
       </div>
+
+      {/* ── 4b. Most Overpriced Contracts ────────────────────────────────── */}
+      {!hypothesesLoading && hypothesesData?.data && hypothesesData.data.length > 0 && (() => {
+        const overpriced = [...hypothesesData.data]
+          .filter(h => h.amount_mxn != null)
+          .sort((a, b) => (b.amount_mxn ?? 0) - (a.amount_mxn ?? 0))
+          .slice(0, 5)
+        if (overpriced.length === 0) return null
+        return (
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
+                <AlertTriangle className="h-3.5 w-3.5 text-risk-critical" />
+                Most Overpriced Contracts
+              </h2>
+              <button
+                onClick={() => navigate('/contracts?risk_factor=price_hyp&sort_by=amount_mxn&sort_order=desc')}
+                className="text-[10px] text-accent hover:underline font-mono uppercase tracking-wider flex items-center gap-1"
+              >
+                See all <ExternalLink className="h-3 w-3" />
+              </button>
+            </div>
+            <div className="rounded-lg border border-border/40 overflow-hidden">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-background-elevated/30 border-b border-border/40">
+                    <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-text-muted">#</th>
+                    <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-text-muted">Contract</th>
+                    <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-text-muted hidden sm:table-cell">Sector</th>
+                    <th className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-wider text-text-muted">Amount</th>
+                    <th className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-wider text-text-muted">Type</th>
+                    <th className="px-3 py-2 w-8" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/20">
+                  {overpriced.map((item, idx) => {
+                    const sectorCode = item.sector_id ? SECTORS.find((s) => s.id === item.sector_id)?.code : undefined
+                    const sectorColor = sectorCode ? SECTOR_COLORS[sectorCode] : '#64748b'
+                    const isExtreme = item.hypothesis_type === 'extreme_overpricing'
+                    return (
+                      <tr key={item.id} className="hover:bg-background-elevated/30 transition-colors">
+                        <td className="px-3 py-2 text-text-muted font-mono">{idx + 1}</td>
+                        <td className="px-3 py-2 font-mono text-accent">#{item.contract_id}</td>
+                        <td className="px-3 py-2 hidden sm:table-cell">
+                          {sectorCode ? (
+                            <span className="flex items-center gap-1.5">
+                              <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: sectorColor }} />
+                              <span className="text-text-muted">{getSectorNameEN(sectorCode)}</span>
+                            </span>
+                          ) : <span className="text-text-muted">—</span>}
+                        </td>
+                        <td className="px-3 py-2 text-right font-bold tabular-nums text-text-primary">
+                          {item.amount_mxn != null ? formatCompactMXN(item.amount_mxn) : '—'}
+                        </td>
+                        <td className="px-3 py-2 text-right">
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                            isExtreme ? 'bg-red-500/15 text-red-400' : 'bg-amber-500/15 text-amber-400'
+                          }`}>
+                            {isExtreme ? 'Extreme' : 'Outlier'}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2">
+                          <button
+                            onClick={() => navigateToContract(item.contract_id)}
+                            className="text-text-muted hover:text-accent transition-colors"
+                            title="View contract"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ── 5. Anomaly Workbench ──────────────────────────────────────────── */}
       <Card>
@@ -638,6 +738,13 @@ export default function PriceIntelligence() {
                           <span className="font-mono text-risk-high tabular-nums">
                             {(item.anomaly_score * 100).toFixed(0)}% anomaly
                           </span>
+                          <button
+                            onClick={() => navigateToContract(item.contract_id)}
+                            className="text-text-muted hover:text-accent transition-colors"
+                            title="View contract in explorer"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </button>
                         </div>
                       </div>
                     ))}

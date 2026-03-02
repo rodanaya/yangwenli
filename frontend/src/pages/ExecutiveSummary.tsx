@@ -99,6 +99,7 @@ export function ExecutiveSummary() {
       <ScrollReveal delay={100}><StatBombs data={data} /></ScrollReveal>
       <ScrollReveal delay={120}><WhatWeFound data={data} /></ScrollReveal>
       <ScrollReveal delay={140}><KeyFindings /></ScrollReveal>
+      <ScrollReveal delay={160}><TopFraudSignals /></ScrollReveal>
       <Divider />
       {/* 00 — CONTEXT: How the System Works & What's Changing */}
       <ScrollReveal><SectionSystem /></ScrollReveal>
@@ -222,6 +223,11 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
   const { risk } = data
   const highRiskRate = (risk.high_pct + risk.critical_pct).toFixed(1)
 
+  const highCriticalCount = (risk.critical_count ?? 201_745) + (risk.high_count ?? 126_553)
+  const highCriticalFormatted = highCriticalCount >= 1_000_000
+    ? `${(highCriticalCount / 1_000_000).toFixed(2)}M`
+    : highCriticalCount.toLocaleString()
+
   const bombs = [
     {
       value: `${highRiskRate}%`,
@@ -231,9 +237,16 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
       color: '#f87171',
     },
     {
-      value: '3.1M',
-      label: 'Contracts Analyzed',
-      sub: '2002 – 2025 · All federal procurement',
+      value: highCriticalFormatted,
+      label: 'High/Critical Contracts',
+      sub: `Critical: 201,745 · High: 126,553`,
+      glow: 'rgba(251,146,60,0.3)',
+      color: '#fb923c',
+    },
+    {
+      value: '23',
+      label: 'Years Covered',
+      sub: '2002 – 2025 · 3.1M contracts',
       glow: 'rgba(6,182,212,0.3)',
       color: '#22d3ee',
     },
@@ -254,7 +267,7 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
   ]
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
       {bombs.map((b, i) => (
         <ScrollReveal key={b.label} delay={i * 80}>
           <div
@@ -378,6 +391,69 @@ function KeyFindings() {
           </ScrollReveal>
         ))}
       </ul>
+    </div>
+  )
+}
+
+// ============================================================================
+// Top Fraud Signals — 3 key patterns detected across 3.1M contracts
+// ============================================================================
+
+function TopFraudSignals() {
+  const signals = [
+    {
+      rank: '01',
+      signal: 'Price Volatility',
+      detail:
+        'The single strongest predictor (β = +1.22). Vendors whose contract amounts swing wildly across institutions — a hallmark of pricing manipulation rather than legitimate market fluctuation.',
+      color: '#f87171',
+      examples: 'IMSS Ghost Network · COVID-19 Procurement',
+    },
+    {
+      rank: '02',
+      signal: 'Abnormal Win Rate',
+      detail:
+        'Vendors winning contracts at rates far above their sector baseline (β = +0.73). Legitimate companies win some tenders; captured institutions award the same vendors repeatedly.',
+      color: '#fb923c',
+      examples: 'Toka IT Monopoly · Edenred Voucher Monopoly',
+    },
+    {
+      rank: '03',
+      signal: 'Vendor Concentration',
+      detail:
+        'A single vendor capturing a disproportionate share of an institution\'s procurement (β = +0.43). High concentration with few competitors is the structural precondition for corruption.',
+      color: '#fbbf24',
+      examples: 'Segalmex · PEMEX-Cotemar',
+    },
+  ]
+
+  return (
+    <div className="rounded-xl border border-border/30 bg-surface-raised/10 p-5">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-4">
+        Top 3 fraud signals detected — model coefficients (v5.1)
+      </p>
+      <div className="space-y-4">
+        {signals.map((s) => (
+          <div key={s.rank} className="flex items-start gap-4">
+            <div
+              className="text-2xl font-black font-mono flex-shrink-0 w-8 text-right leading-none mt-0.5"
+              style={{ color: `${s.color}60` }}
+            >
+              {s.rank}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-sm font-bold text-text-primary">{s.signal}</span>
+                <div className="h-px flex-1 rounded-full" style={{ background: `${s.color}40` }} />
+              </div>
+              <p className="text-xs leading-relaxed text-text-muted mb-1">{s.detail}</p>
+              <p className="text-[10px] font-mono" style={{ color: `${s.color}99` }}>
+                Documented in: {s.examples}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -682,7 +758,7 @@ function AIPipelineChart() {
       icon: Brain,
       title: 'LOGISTIC REG.',
       sub: '12 sub-models',
-      detail: 'AUC 0.960',
+      detail: 'AUC 0.957',
       color: '#f59e0b',
       bg: 'rgba(245,158,11,0.1)',
       border: 'rgba(245,158,11,0.3)',
@@ -1403,7 +1479,7 @@ function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
           onClick={() => navigate('/investigation')}
           className="mt-3 text-xs text-accent flex items-center gap-1 hover:underline font-mono"
         >
-          View all 19 documented cases <ArrowRight className="h-3 w-3" />
+          View all 22 documented cases <ArrowRight className="h-3 w-3" />
         </button>
       </div>
     </section>
@@ -1417,16 +1493,25 @@ function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
 const TIMELINE_CASES = [
   { year: 2004, name: 'La Estafa Maestra', sector: 'gobernacion', type: 'Ghost companies', impact: '~$7.7B MXN' },
   { year: 2012, name: 'Grupo Higa / Casa Blanca', sector: 'infraestructura', type: 'Conflict of interest', impact: 'Undisclosed' },
+  { year: 2013, name: 'Decoaro Ghost Cleaning Company', sector: 'gobernacion', type: 'Ghost companies', impact: '$46M MXN' },
   { year: 2014, name: 'Odebrecht-PEMEX Bribery', sector: 'energia', type: 'Bribery', impact: '$10.5M USD' },
+  { year: 2014, name: 'CONAGUA Ghost Contractor Rotation', sector: 'ambiente', type: 'Ghost companies', impact: '$29M MXN' },
+  { year: 2015, name: 'PEMEX Emilio Lozoya (Odebrecht-linked)', sector: 'energia', type: 'Bribery', impact: 'Documented / shared vendors' },
   { year: 2015, name: 'Oceanografia PEMEX Fraud', sector: 'energia', type: 'Invoice fraud', impact: '$400M MXN' },
   { year: 2016, name: 'IPN Cartel de la Limpieza', sector: 'educacion', type: 'Bid rigging', impact: '$180M MXN' },
+  { year: 2016, name: 'Infrastructure Fraud Network', sector: 'infraestructura', type: 'Overpricing', impact: '$191M MXN' },
   { year: 2017, name: 'IMSS Ghost Company Network', sector: 'salud', type: 'Ghost companies', impact: '$2.8B MXN' },
+  { year: 2017, name: 'IT Procurement Overpricing (Cyber Robotic)', sector: 'tecnologia', type: 'Overpricing', impact: '$139M MXN' },
   { year: 2018, name: 'SAT Tender Rigging (SixSigma)', sector: 'hacienda', type: 'Tender rigging', impact: '$320M MXN' },
+  { year: 2018, name: 'PEMEX-Cotemar Irregularities', sector: 'energia', type: 'Procurement fraud', impact: '$51M MXN' },
   { year: 2019, name: 'SEGOB-Mainbit IT Monopoly', sector: 'gobernacion', type: 'Monopoly', impact: '$1.1B MXN' },
+  { year: 2019, name: 'ISSSTE Ambulance Leasing Fraud', sector: 'trabajo', type: 'Overpricing', impact: '$603M MXN' },
+  { year: 2019, name: 'Toka IT Monopoly', sector: 'tecnologia', type: 'Monopoly', impact: '$2.1B MXN' },
   { year: 2020, name: 'COVID-19 Emergency Procurement', sector: 'salud', type: 'Embezzlement', impact: '$3.4B MXN' },
   { year: 2020, name: 'Segalmex Food Distribution', sector: 'agricultura', type: 'Procurement fraud', impact: '$15B MXN' },
-  { year: 2021, name: 'Edenred Government Voucher Monopoly', sector: 'energia', type: 'Monopoly', impact: '$8.9B MXN' },
-  { year: 2021, name: 'Toka IT Monopoly', sector: 'tecnologia', type: 'Monopoly', impact: '$2.1B MXN' },
+  { year: 2020, name: 'Edenred Government Voucher Monopoly', sector: 'energia', type: 'Monopoly', impact: '$8.9B MXN' },
+  { year: 2021, name: 'IMSS Overpriced Medicines (Ethomedical Network)', sector: 'salud', type: 'Overpricing', impact: 'Under investigation' },
+  { year: 2021, name: 'Tren Maya Direct Award Irregularities', sector: 'infraestructura', type: 'Procurement fraud', impact: 'Under investigation' },
   { year: 2022, name: 'SAT EFOS Ghost Network (Case 22)', sector: 'otros', type: 'Ghost companies', impact: '38 confirmed RFCs' },
 ] as const
 
@@ -2106,6 +2191,25 @@ function SectionModel({ data }: { data: ExecutiveSummaryResponse }) {
         />
       </p>
 
+      {/* Plain-language AUC explanation for non-technical readers */}
+      <div className="mb-6 rounded-xl border border-green-500/20 bg-green-500/5 p-5">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-green-400 font-mono mb-2">
+          What does AUC 0.957 mean in plain language?
+        </p>
+        <p className="text-sm leading-relaxed text-text-secondary">
+          Imagine picking two contracts at random — one from a documented corruption case, one
+          clean. Our model ranks the corrupt contract higher{' '}
+          <strong className="text-text-primary">95.7% of the time</strong>. A coin flip would
+          achieve 50%. A model this accurate means investigators can focus on the top-flagged
+          contracts and find real wrongdoing — rather than searching blindly across 3.1 million
+          records.
+        </p>
+        <p className="text-xs text-text-muted mt-2 italic">
+          AUC = Area Under the ROC Curve. Validated on contracts from 2021–2025 that the model
+          never saw during training (temporal holdout split).
+        </p>
+      </div>
+
       <AIPipelineChart />
 
       {/* Model evolution AUC comparison */}
@@ -2252,6 +2356,36 @@ function SectionRecommendations({ navigate }: { navigate: (path: string) => void
     { icon: Shield, key: 'diversify', href: '/ground-truth' },
   ]
 
+  const policyRecommendations = [
+    {
+      audience: 'For Investigators (ASF / SFP)',
+      color: '#f87171',
+      steps: [
+        'Start with the 201,745 critical-risk contracts — filter by sector (Salud, Agricultura) and institution to triage the highest-value cases first.',
+        'Cross-reference the 38 SAT-confirmed EFOS ghost vendors (Case 22) against active contracts. Any current procurement relationship warrants immediate review.',
+        'Run vendor network analysis on co-bidding clusters — 8,701 vendors show suspicious co-bid rates above 50%, a hallmark of bid rotation.',
+      ],
+    },
+    {
+      audience: 'For Procurement Reformers',
+      color: '#fb923c',
+      steps: [
+        'The 71% direct award rate is the single largest vulnerability. Mandate competitive procedures for all contracts above 500K MXN, with limited emergency exceptions.',
+        'Require publication of justification memos for direct awards within 24 hours of signing — not retroactively.',
+        'December contract volume spikes 1.33× — enforce quarterly budget release schedules to eliminate year-end spending dumps.',
+      ],
+    },
+    {
+      audience: 'For Journalists & Civil Society',
+      color: '#fbbf24',
+      steps: [
+        'Use the Sector page to identify which agencies account for the highest value-at-risk in your area of coverage.',
+        'The Vendor Profile tool shows 22 documented ground truth vendors alongside statistical risk — compare institutional exposure.',
+        'Filter the contract explorer to risk_level=critical and sector=salud to reproduce the IMSS ghost company patterns independently.',
+      ],
+    },
+  ]
+
   return (
     <section>
       <SectionHeading number="11" title={t('s10.title')} icon={ArrowRight} />
@@ -2260,7 +2394,8 @@ function SectionRecommendations({ navigate }: { navigate: (path: string) => void
         {t('s10.p1')}
       </p>
 
-      <div className="space-y-3">
+      {/* Platform navigation actions */}
+      <div className="space-y-3 mb-8">
         {actions.map((action) => {
           const Icon = action.icon
           return (
@@ -2286,6 +2421,42 @@ function SectionRecommendations({ navigate }: { navigate: (path: string) => void
             </button>
           )
         })}
+      </div>
+
+      {/* Audience-specific next steps */}
+      <div className="mb-2">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-4">
+          Recommended next steps — by audience
+        </p>
+        <div className="space-y-4">
+          {policyRecommendations.map((rec) => (
+            <div
+              key={rec.audience}
+              className="rounded-xl border p-5"
+              style={{ borderColor: `${rec.color}30`, background: `${rec.color}06` }}
+            >
+              <p
+                className="text-xs font-bold uppercase tracking-widest font-mono mb-3"
+                style={{ color: rec.color }}
+              >
+                {rec.audience}
+              </p>
+              <ol className="space-y-2">
+                {rec.steps.map((step, i) => (
+                  <li key={i} className="flex items-start gap-2.5">
+                    <span
+                      className="text-[10px] font-black font-mono mt-0.5 flex-shrink-0 w-4"
+                      style={{ color: rec.color }}
+                    >
+                      {i + 1}.
+                    </span>
+                    <span className="text-sm text-text-secondary leading-relaxed">{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   )

@@ -556,3 +556,147 @@ def get_communities(
 
     _network_cache.set(cache_key, result, ttl=3600)
     return result
+
+
+class CommunityDetailSectorBreakdown(BaseModel):
+    sector_id: int
+    sector_name: str
+    vendor_count: int
+    contract_count: int
+    total_value: float
+
+
+class CommunityDetailResponse(BaseModel):
+    community_id: int
+    size: int
+    avg_risk: float
+    sector_breakdown: List[CommunityDetailSectorBreakdown]
+    members: List[CommunityVendorItem]
+    total_contracts: int
+    total_value: float
+    graph_ready: bool
+
+
+@router.get("/communities/{community_id}", response_model=CommunityDetailResponse)
+def get_community_detail(
+    community_id: int = Path(..., description="Community ID from Louvain clustering"),
+):
+    """
+    Get detailed information for a specific co-bidding community.
+
+    Returns all members with vendor details, risk scores, pagerank,
+    and a sector breakdown of the community.
+    """
+    cache_key = f"community_detail:{community_id}"
+    cached = _network_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # Check table exists
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='vendor_graph_features'"
+        )
+        if not cursor.fetchone():
+            raise HTTPException(
+                status_code=503,
+                detail="Graph features not yet computed. Run build_vendor_graph.py first.",
+            )
+
+        # Verify community exists
+        cursor.execute(
+            "SELECT COUNT(*) FROM vendor_graph_features WHERE community_id = ?",
+            (community_id,),
+        )
+        count = cursor.fetchone()[0]
+        if count == 0:
+            raise HTTPException(status_code=404, detail=f"Community {community_id} not found")
+
+        # All members with vendor details
+        cursor.execute(
+            """
+            SELECT
+                v.id as vendor_id, v.name as vendor_name,
+                vgf.pagerank, vgf.degree,
+                COALESCE(AVG(c.risk_score), 0) as avg_risk,
+                COUNT(c.id) as contract_count,
+                COALESCE(SUM(c.amount_mxn), 0) as total_value
+            FROM vendor_graph_features vgf
+            JOIN vendors v ON vgf.vendor_id = v.id
+            LEFT JOIN contracts c ON vgf.vendor_id = c.vendor_id
+                AND COALESCE(c.amount_mxn, 0) <= ?
+            WHERE vgf.community_id = ?
+            GROUP BY vgf.vendor_id, v.id, v.name, vgf.pagerank, vgf.degree
+            ORDER BY vgf.pagerank DESC
+            """,
+            (MAX_CONTRACT_VALUE, community_id),
+        )
+        members = []
+        total_contracts = 0
+        total_value = 0.0
+        for r in cursor.fetchall():
+            members.append(CommunityVendorItem(
+                vendor_id=r["vendor_id"],
+                vendor_name=r["vendor_name"],
+                pagerank=round(r["pagerank"], 6),
+                degree=r["degree"],
+                avg_risk=round(r["avg_risk"], 4),
+                contracts=r["contract_count"],
+                total_value=r["total_value"],
+            ))
+            total_contracts += r["contract_count"]
+            total_value += r["total_value"]
+
+        # Sector breakdown
+        vendor_ids = [m.vendor_id for m in members]
+        if vendor_ids:
+            placeholders = ",".join("?" * len(vendor_ids))
+            cursor.execute(
+                f"""
+                SELECT
+                    s.id as sector_id, s.name_es as sector_name,
+                    COUNT(DISTINCT c.vendor_id) as vendor_count,
+                    COUNT(c.id) as contract_count,
+                    COALESCE(SUM(c.amount_mxn), 0) as total_value
+                FROM contracts c
+                JOIN sectors s ON c.sector_id = s.id
+                WHERE c.vendor_id IN ({placeholders})
+                    AND COALESCE(c.amount_mxn, 0) <= ?
+                GROUP BY s.id, s.name_es
+                ORDER BY contract_count DESC
+                """,
+                (*vendor_ids, MAX_CONTRACT_VALUE),
+            )
+            sector_breakdown = [
+                CommunityDetailSectorBreakdown(
+                    sector_id=r["sector_id"],
+                    sector_name=r["sector_name"],
+                    vendor_count=r["vendor_count"],
+                    contract_count=r["contract_count"],
+                    total_value=r["total_value"],
+                )
+                for r in cursor.fetchall()
+            ]
+        else:
+            sector_breakdown = []
+
+        avg_risk = (
+            sum(m.avg_risk * m.contracts for m in members)
+            / max(1, total_contracts)
+        ) if members else 0.0
+
+    result = CommunityDetailResponse(
+        community_id=community_id,
+        size=len(members),
+        avg_risk=round(avg_risk, 4),
+        sector_breakdown=sector_breakdown,
+        members=members,
+        total_contracts=total_contracts,
+        total_value=total_value,
+        graph_ready=True,
+    )
+
+    _network_cache.set(cache_key, result, ttl=3600)
+    return result

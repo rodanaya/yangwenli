@@ -3817,3 +3817,127 @@ def get_asf_institution_summary():
         }
 
     return result
+
+
+# =============================================================================
+# INSTITUTION RISK FACTOR BREAKDOWN
+# =============================================================================
+
+class InstitutionRiskFactorItem(BaseModel):
+    institution_id: int
+    institution_name: str
+    contract_count: int
+    avg_risk_score: float
+    dominant_factor: str
+    dominant_factor_avg_z: float
+    factor_breakdown: Dict[str, float]
+
+
+class InstitutionRiskFactorsResponse(BaseModel):
+    data: List[InstitutionRiskFactorItem]
+    total: int
+
+
+_inst_risk_factors_cache: dict = {}
+_inst_risk_factors_lock = __import__("threading").Lock()
+_INST_RISK_FACTORS_TTL = 3600
+
+
+@router.get("/institution-risk-factors", response_model=InstitutionRiskFactorsResponse)
+def get_institution_risk_factors(
+    limit: int = Query(20, ge=1, le=100, description="Number of institutions to return"),
+    sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector"),
+):
+    """
+    Get institutions ranked by risk with their dominant risk factor breakdown.
+
+    For each institution, computes the average z-score per feature across all
+    its contracts (from contract_z_features), identifies the dominant factor
+    (highest average absolute z-score), and returns a factor breakdown suitable
+    for heatmap visualization.
+    """
+    cache_key = f"inst_rf:{limit}:{sector_id}"
+    with _inst_risk_factors_lock:
+        entry = _inst_risk_factors_cache.get(cache_key)
+        if entry and datetime.now() < entry["expires_at"]:
+            return entry["value"]
+
+    z_features = [
+        "z_single_bid", "z_direct_award", "z_price_ratio",
+        "z_vendor_concentration", "z_ad_period_days", "z_year_end",
+        "z_same_day_count", "z_network_member_count", "z_co_bid_rate",
+        "z_price_hyp_confidence", "z_industry_mismatch", "z_institution_risk",
+        "z_price_volatility", "z_sector_spread", "z_win_rate",
+        "z_institution_diversity",
+    ]
+    avg_cols = ", ".join(f"AVG(zf.{f}) as {f}" for f in z_features)
+
+    sector_filter = ""
+    params: list = []
+    if sector_id is not None:
+        sector_filter = "AND c.sector_id = ?"
+        params.append(sector_id)
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # Check contract_z_features exists
+        if not table_exists(cursor, "contract_z_features"):
+            return InstitutionRiskFactorsResponse(data=[], total=0)
+
+        cursor.execute(
+            f"""
+            SELECT
+                i.id as institution_id,
+                i.name as institution_name,
+                COUNT(c.id) as contract_count,
+                COALESCE(AVG(c.risk_score), 0) as avg_risk_score,
+                {avg_cols}
+            FROM contracts c
+            JOIN institutions i ON c.institution_id = i.id
+            JOIN contract_z_features zf ON c.id = zf.contract_id
+            WHERE COALESCE(c.amount_mxn, 0) <= ?
+                {sector_filter}
+            GROUP BY i.id, i.name
+            HAVING contract_count >= 10
+            ORDER BY avg_risk_score DESC
+            LIMIT ?
+            """,
+            (MAX_CONTRACT_VALUE, *params, limit),
+        )
+        rows = cursor.fetchall()
+
+    items = []
+    for row in rows:
+        breakdown = {}
+        best_factor = ""
+        best_abs_z = 0.0
+        for f in z_features:
+            val = row[f]
+            if val is not None:
+                clean_name = f[2:]  # strip "z_" prefix
+                rounded = round(val, 4)
+                breakdown[clean_name] = rounded
+                if abs(rounded) > best_abs_z:
+                    best_abs_z = abs(rounded)
+                    best_factor = clean_name
+
+        items.append(InstitutionRiskFactorItem(
+            institution_id=row["institution_id"],
+            institution_name=row["institution_name"],
+            contract_count=row["contract_count"],
+            avg_risk_score=round(row["avg_risk_score"], 4),
+            dominant_factor=best_factor or "unknown",
+            dominant_factor_avg_z=round(best_abs_z, 4),
+            factor_breakdown=breakdown,
+        ))
+
+    result = InstitutionRiskFactorsResponse(data=items, total=len(items))
+
+    with _inst_risk_factors_lock:
+        _inst_risk_factors_cache[cache_key] = {
+            "value": result,
+            "expires_at": datetime.now() + timedelta(seconds=_INST_RISK_FACTORS_TTL),
+        }
+
+    return result

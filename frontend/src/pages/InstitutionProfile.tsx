@@ -399,6 +399,35 @@ export function InstitutionProfile() {
         centerName={toTitleCase(institution.name)}
       />
 
+      {/* ── GROUND TRUTH WARNING BANNER ─────────────────────────────────── */}
+      {groundTruthStatus?.is_ground_truth_related && (
+        <div
+          className="flex items-start gap-3 rounded-lg border border-risk-critical/40 bg-risk-critical/5 px-4 py-3"
+          role="alert"
+          aria-live="polite"
+        >
+          <AlertTriangle className="h-4 w-4 text-risk-critical flex-shrink-0 mt-0.5" aria-hidden="true" />
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-risk-critical uppercase tracking-wider font-mono mb-0.5">
+              Documented Corruption Case Linked
+            </p>
+            <p className="text-xs text-text-secondary leading-relaxed">
+              This institution has contracts from vendors identified in{' '}
+              <span className="font-semibold text-risk-critical">
+                {groundTruthStatus.case_name}
+              </span>
+              {groundTruthStatus.case_type && (
+                <> ({groundTruthStatus.case_type.replace(/_/g, ' ')})</>
+              )}
+              {groundTruthStatus.contract_count != null && groundTruthStatus.contract_count > 0 && (
+                <> — {formatNumber(groundTruthStatus.contract_count)} flagged contract{groundTruthStatus.contract_count !== 1 ? 's' : ''}</>
+              )}.
+              Risk scores for these contracts are based on documented ground truth from this case.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* ── KPI STRIP ──────────────────────────────────────────────────────── */}
       {(() => {
         // Build a map of metric -> percentile from peer comparison
@@ -407,8 +436,23 @@ export function InstitutionProfile() {
           peerPercentiles.set(m.metric, m.percentile)
         })
 
+        // Risk rank among peers: P90 = top 10% riskiest (worst), P10 = bottom 10% (best)
+        const riskPercentile = peerPercentiles.get('avg_risk_score')
+        const riskRankLabel = riskPercentile != null
+          ? riskPercentile >= 90 ? 'Top 10% riskiest'
+          : riskPercentile >= 75 ? 'Top 25% riskiest'
+          : riskPercentile >= 50 ? 'Above median risk'
+          : riskPercentile >= 25 ? 'Below median risk'
+          : 'Bottom 25% risk'
+          : null
+        const riskRankColor = riskPercentile != null
+          ? riskPercentile >= 75 ? 'text-risk-critical'
+          : riskPercentile >= 50 ? 'text-risk-high'
+          : 'text-risk-low'
+          : 'text-text-muted'
+
         return (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             <KpiChip
               label="Total Contracts"
               value={formatNumber(totalContracts)}
@@ -447,6 +491,15 @@ export function InstitutionProfile() {
               badge={peerPercentiles.has('avg_risk_score')
                 ? <PercentileBadge percentile={peerPercentiles.get('avg_risk_score')!} metric="Risk" />
                 : undefined}
+            />
+            {/* Risk rank among all institutions */}
+            <KpiChip
+              label="Risk Rank"
+              value={riskPercentile != null ? `P${riskPercentile}` : peerLoading ? '…' : '—'}
+              sub={riskRankLabel ?? undefined}
+              icon={TrendingUp}
+              iconColor={riskRankColor}
+              style={riskPercentile != null ? { color: `var(--color-${riskPercentile >= 75 ? 'risk-critical' : riskPercentile >= 50 ? 'risk-high' : 'risk-low'})` } : undefined}
             />
             <KpiChip
               label="Unique Vendors"
@@ -667,6 +720,106 @@ export function InstitutionProfile() {
           </Card>
           )}
 
+          {/* Direct Award Rate vs Benchmark */}
+          {(() => {
+            const directAwardPct = institution.direct_award_pct ?? institution.direct_award_rate
+            const singleBidPct = institution.single_bid_pct
+            if (directAwardPct == null && singleBidPct == null) return null
+            // National average benchmark ~74% for direct award (from COMPRANET data)
+            const NATIONAL_DA_BENCHMARK = 74
+            const NATIONAL_SB_BENCHMARK = 12
+            const daDiff = directAwardPct != null ? directAwardPct - NATIONAL_DA_BENCHMARK : null
+            const sbDiff = singleBidPct != null ? singleBidPct - NATIONAL_SB_BENCHMARK : null
+            return (
+              <Card className="border-border/40">
+                <CardHeader className="pb-2 pt-4">
+                  <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                    <AlertTriangle className="h-3.5 w-3.5 text-accent" />
+                    Procurement Method vs National Avg
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pb-4 space-y-3">
+                  {directAwardPct != null && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-text-secondary">Direct Award Rate</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold font-mono" style={{ color: daDiff != null && daDiff > 10 ? '#dc2626' : daDiff != null && daDiff > 0 ? '#ea580c' : '#16a34a' }}>
+                            {directAwardPct.toFixed(1)}%
+                          </span>
+                          {daDiff != null && (
+                            <span className={cn('text-[10px] font-mono', daDiff > 0 ? 'text-risk-high' : 'text-risk-low')}>
+                              {daDiff > 0 ? '+' : ''}{daDiff.toFixed(1)}pp vs avg
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="relative h-2 bg-background-elevated rounded-full overflow-hidden">
+                        <div
+                          className="absolute top-0 left-0 h-full rounded-full"
+                          style={{
+                            width: `${Math.min(100, directAwardPct)}%`,
+                            backgroundColor: daDiff != null && daDiff > 10 ? '#dc2626' : daDiff != null && daDiff > 0 ? '#ea580c' : '#16a34a',
+                          }}
+                        />
+                        {/* Benchmark marker */}
+                        <div
+                          className="absolute top-0 h-full w-0.5 bg-text-muted/60"
+                          style={{ left: `${NATIONAL_DA_BENCHMARK}%` }}
+                          title={`National avg: ${NATIONAL_DA_BENCHMARK}%`}
+                        />
+                      </div>
+                      <div className="flex justify-between mt-0.5 text-[10px] text-text-muted/60">
+                        <span>0%</span>
+                        <span>Avg {NATIONAL_DA_BENCHMARK}%</span>
+                        <span>100%</span>
+                      </div>
+                    </div>
+                  )}
+                  {singleBidPct != null && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-text-secondary">Single Bid Rate</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold font-mono" style={{ color: sbDiff != null && sbDiff > 5 ? '#dc2626' : sbDiff != null && sbDiff > 0 ? '#ea580c' : '#16a34a' }}>
+                            {singleBidPct.toFixed(1)}%
+                          </span>
+                          {sbDiff != null && (
+                            <span className={cn('text-[10px] font-mono', sbDiff > 0 ? 'text-risk-high' : 'text-risk-low')}>
+                              {sbDiff > 0 ? '+' : ''}{sbDiff.toFixed(1)}pp vs avg
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="relative h-2 bg-background-elevated rounded-full overflow-hidden">
+                        <div
+                          className="absolute top-0 left-0 h-full rounded-full"
+                          style={{
+                            width: `${Math.min(100, singleBidPct)}%`,
+                            backgroundColor: sbDiff != null && sbDiff > 5 ? '#dc2626' : sbDiff != null && sbDiff > 0 ? '#ea580c' : '#16a34a',
+                          }}
+                        />
+                        <div
+                          className="absolute top-0 h-full w-0.5 bg-text-muted/60"
+                          style={{ left: `${NATIONAL_SB_BENCHMARK}%` }}
+                          title={`National avg: ${NATIONAL_SB_BENCHMARK}%`}
+                        />
+                      </div>
+                      <div className="flex justify-between mt-0.5 text-[10px] text-text-muted/60">
+                        <span>0%</span>
+                        <span>Avg {NATIONAL_SB_BENCHMARK}%</span>
+                        <span>100%</span>
+                      </div>
+                    </div>
+                  )}
+                  <p className="text-[10px] text-text-muted/60 pt-1 border-t border-border/20">
+                    Vertical line = national average across all institutions. Higher than average direct awards or single bids increase corruption risk.
+                  </p>
+                </CardContent>
+              </Card>
+            )
+          })()}
+
         </div>
 
         {/* RIGHT COLUMN (2/3) */}
@@ -831,6 +984,61 @@ export function InstitutionProfile() {
             </CardContent>
           </Card>
           )}
+
+          {/* Most Suspicious Contract — spotlight card */}
+          {(() => {
+            const topContract = highRiskContracts?.data?.[0]
+            if (!topContract) return null
+            const contractRiskScore = topContract.risk_score ?? 0
+            const contractRiskLevel = getRiskLevelFromScore(contractRiskScore)
+            const contractColor = RISK_COLORS[contractRiskLevel] ?? '#64748b'
+            return (
+              <Card
+                className="border-l-4 cursor-pointer hover:bg-background-elevated/20 transition-colors"
+                style={{ borderLeftColor: contractColor }}
+                onClick={() => { setSelectedContractId(topContract.id); setIsDetailOpen(true) }}
+                role="button"
+                tabIndex={0}
+                aria-label={`Most suspicious contract: ${topContract.description ?? topContract.procedure_number}`}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setSelectedContractId(topContract.id); setIsDetailOpen(true) } }}
+              >
+                <CardHeader className="pb-2 pt-4">
+                  <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase font-mono" style={{ color: contractColor }}>
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    Most Suspicious Contract
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pb-4 space-y-2">
+                  <p className="text-sm font-semibold text-text-primary leading-tight line-clamp-2">
+                    {topContract.title ?? `Contract #${topContract.id}`}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
+                    <span className="font-bold" style={{ color: contractColor }}>
+                      Risk: {(contractRiskScore * 100).toFixed(1)}%
+                    </span>
+                    {topContract.amount_mxn != null && (
+                      <span className="text-text-secondary">{formatCompactMXN(topContract.amount_mxn)}</span>
+                    )}
+                    {topContract.vendor_name && (
+                      <span className="text-text-muted truncate max-w-[200px]" title={topContract.vendor_name}>
+                        {topContract.vendor_name}
+                      </span>
+                    )}
+                    {topContract.contract_year && (
+                      <span className="text-text-muted">{topContract.contract_year}</span>
+                    )}
+                    {topContract.is_direct_award && (
+                      <span className="text-risk-high">Direct Award</span>
+                    )}
+                    {topContract.is_single_bid && (
+                      <span className="text-risk-critical">Single Bid</span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-text-muted/60 italic">Click to view full contract details</p>
+                </CardContent>
+              </Card>
+            )
+          })()}
 
           {/* High-Risk Contracts */}
           <Card className="border-border/40">

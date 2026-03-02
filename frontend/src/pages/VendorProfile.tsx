@@ -404,12 +404,36 @@ function ActivityCalendar({
 
 // The 6 factors we want to surface on the radar, mapped from waterfall feature keys
 const RADAR_FACTOR_KEYS = [
-  { key: 'price_volatility',     label: 'Price Volatility' },
-  { key: 'vendor_concentration', label: 'Concentration' },
-  { key: 'win_rate',             label: 'Win Rate' },
-  { key: 'direct_award',        label: 'Direct Award' },
-  { key: 'industry_mismatch',   label: 'Sector Mismatch' },
-  { key: 'single_bid',          label: 'Single Bid' },
+  {
+    key: 'price_volatility',
+    label: 'Price Volatility',
+    plainEnglish: 'How wildly the vendor\'s contract amounts jump around. High volatility is the strongest predictor of corruption in the model.',
+  },
+  {
+    key: 'vendor_concentration',
+    label: 'Concentration',
+    plainEnglish: 'What share of the sector\'s total spending goes to this vendor. Dominant market share is a major red flag.',
+  },
+  {
+    key: 'win_rate',
+    label: 'Win Rate',
+    plainEnglish: 'How often this vendor wins when it bids, compared to the sector norm. Abnormally high win rates suggest unfair advantage.',
+  },
+  {
+    key: 'direct_award',
+    label: 'Direct Award',
+    plainEnglish: 'Fraction of contracts awarded without a competitive tender. Direct awards bypass normal competitive safeguards.',
+  },
+  {
+    key: 'industry_mismatch',
+    label: 'Sector Mismatch',
+    plainEnglish: 'Whether the vendor\'s business type matches the sector it contracts in. Out-of-sector vendors suggest industry mismatch fraud.',
+  },
+  {
+    key: 'single_bid',
+    label: 'Single Bid',
+    plainEnglish: 'Fraction of competitive procedures where this vendor was the only bidder. Single-bid wins can indicate deterred competition.',
+  },
 ]
 
 function RiskRadarChart({ waterfallData }: { waterfallData: VendorWaterfallContribution[] }) {
@@ -420,9 +444,9 @@ function RiskRadarChart({ waterfallData }: { waterfallData: VendorWaterfallContr
       lookup.set(item.feature, item)
     }
 
-    return RADAR_FACTOR_KEYS.map(({ key, label }) => {
+    return RADAR_FACTOR_KEYS.map(({ key, label, plainEnglish }) => {
       const item = lookup.get(key)
-      if (!item) return { factor: label, value: 0, rawZ: 0 }
+      if (!item) return { factor: label, plainEnglish, value: 0, rawZ: 0 }
 
       // Contribution is already coefficient × z_score. Normalise to [0,1] for the chart
       // by clamping to [-3, 3] z-score range and mapping to 0–1.
@@ -430,7 +454,7 @@ function RiskRadarChart({ waterfallData }: { waterfallData: VendorWaterfallContr
       // For negative-coefficient factors (like direct_award when negative), use absolute
       // z-score magnitude as the "presence" signal, but direction is shown via contribution
       const presence = (clampedZ + 3) / 6   // 0 = z=-3, 0.5 = z=0, 1 = z=+3
-      return { factor: label, value: Math.round(presence * 100) / 100, rawZ: item.z_score }
+      return { factor: label, plainEnglish, value: Math.round(presence * 100) / 100, rawZ: item.z_score }
     })
   }, [waterfallData])
 
@@ -445,11 +469,11 @@ function RiskRadarChart({ waterfallData }: { waterfallData: VendorWaterfallContr
 
   return (
     <div>
-      <p className="text-xs text-text-muted mb-3">
+      <p className="text-xs text-text-muted mb-2">
         Each axis shows how this vendor&apos;s z-score compares across 6 key risk dimensions.
-        Values toward the edge indicate higher deviation from sector norms.
+        Values toward the edge = higher deviation from sector norms. Hover an axis label to learn what it measures.
       </p>
-      <ResponsiveContainer width="100%" height={260}>
+      <ResponsiveContainer width="100%" height={280}>
         <RadarChart data={radarData} margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
           <PolarGrid stroke="#1e293b" />
           <PolarAngleAxis
@@ -459,15 +483,23 @@ function RiskRadarChart({ waterfallData }: { waterfallData: VendorWaterfallContr
           <RechartsTooltip
             content={({ active, payload }) => {
               if (active && payload?.[0]) {
-                const d = payload[0].payload as { factor: string; value: number; rawZ: number }
+                const d = payload[0].payload as { factor: string; plainEnglish: string; value: number; rawZ: number }
+                const zLabel = d.rawZ > 0
+                  ? `${d.rawZ.toFixed(2)} SDs above sector average`
+                  : d.rawZ < 0
+                  ? `${Math.abs(d.rawZ).toFixed(2)} SDs below sector average`
+                  : 'At sector average (z = 0)'
                 return (
-                  <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg">
+                  <div className="rounded border border-border bg-background-card px-3 py-2.5 text-xs shadow-lg max-w-[230px]">
                     <p className="font-semibold text-text-primary mb-1">{d.factor}</p>
-                    <p className="text-text-muted">
-                      z-score: <span className={d.rawZ > 1 ? 'text-risk-high' : d.rawZ < -1 ? 'text-risk-low' : 'text-text-secondary'}>
+                    <p className="text-text-muted mb-2 leading-relaxed">{d.plainEnglish}</p>
+                    <p className="font-mono">
+                      <span className="text-text-muted">z-score: </span>
+                      <span className={d.rawZ > 1 ? 'text-risk-high font-semibold' : d.rawZ < -1 ? 'text-risk-low' : 'text-text-secondary'}>
                         {d.rawZ.toFixed(2)}
                       </span>
                     </p>
+                    <p className="text-text-muted/70 mt-0.5 italic">{zLabel}</p>
                   </div>
                 )
               }
@@ -483,6 +515,18 @@ function RiskRadarChart({ waterfallData }: { waterfallData: VendorWaterfallContr
           />
         </RadarChart>
       </ResponsiveContainer>
+      {/* Axis legend */}
+      <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
+        {RADAR_FACTOR_KEYS.map(({ label, plainEnglish }) => (
+          <div key={label} className="flex items-start gap-1.5 group">
+            <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-cyan-500/60 flex-shrink-0" />
+            <div>
+              <span className="text-[10px] font-medium text-text-secondary">{label}: </span>
+              <span className="text-[10px] text-text-muted/70">{plainEnglish.split('.')[0]}.</span>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -490,6 +534,26 @@ function RiskRadarChart({ waterfallData }: { waterfallData: VendorWaterfallContr
 // ============================================================================
 // Top Risk Factor Bars (top 3 contributing factors)
 // ============================================================================
+
+// Plain-English explanations for each risk factor, shown in factor bars
+const FACTOR_EXPLANATIONS: Record<string, string> = {
+  price_volatility: 'This vendor\'s contract amounts vary wildly — a hallmark of fraudulent invoicing.',
+  vendor_concentration: 'This vendor holds an unusually large share of its sector\'s total contract value.',
+  win_rate: 'This vendor wins contracts at a rate far above what would be expected by chance.',
+  institution_diversity: 'This vendor serves fewer institutions than typical, suggesting dependence on a narrow set of buyers.',
+  sector_spread: 'This vendor operates in fewer sectors than its peers, reducing cross-checking opportunities.',
+  industry_mismatch: 'This vendor won contracts outside its core industry — a potential shell company indicator.',
+  same_day_count: 'Multiple contracts were awarded to this vendor on the same day, consistent with threshold-splitting fraud.',
+  direct_award: 'A high share of this vendor\'s contracts were awarded directly, bypassing competitive tendering.',
+  single_bid: 'This vendor frequently wins procedures where it was the only bidder, suggesting deterred competition.',
+  network_member_count: 'This vendor belongs to a network of related entities that bid together.',
+  year_end: 'A disproportionate share of contracts were signed in December, consistent with year-end budget dumps.',
+  price_ratio: 'Contract amounts are significantly above the sector median price for comparable goods/services.',
+  ad_period_days: 'Procurement advertisements were unusually brief, limiting time for competitors to prepare bids.',
+  price_hyp_confidence: 'Statistical analysis flags this vendor\'s prices as statistical outliers using IQR method.',
+  co_bid_rate: 'This vendor frequently bids in the same procedures as other vendors in a coordinated pattern.',
+  institution_risk: 'This vendor primarily contracts with institution types that have historically higher irregularity rates.',
+}
 
 function TopRiskFactorBars({ waterfallData }: { waterfallData: VendorWaterfallContribution[] }) {
   const topFactors = useMemo(() => {
@@ -501,6 +565,8 @@ function TopRiskFactorBars({ waterfallData }: { waterfallData: VendorWaterfallCo
         name: f.feature,
         label: f.label_en || f.feature.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
         score: f.contribution,
+        explanation: FACTOR_EXPLANATIONS[f.feature] ?? `This factor contributed ${(f.contribution * 100).toFixed(1)} points to the risk score.`,
+        zScore: f.z_score,
       }))
   }, [waterfallData])
 
@@ -511,21 +577,35 @@ function TopRiskFactorBars({ waterfallData }: { waterfallData: VendorWaterfallCo
   const maxScore = Math.max(...topFactors.map((f) => f.score), 0.01)
 
   return (
-    <div className="space-y-2">
-      {topFactors.map((f) => (
-        <div key={f.name}>
+    <div className="space-y-4">
+      {topFactors.map((f, i) => (
+        <div key={f.name} className="group">
           <div className="flex justify-between text-xs mb-1">
-            <span className="text-text-muted">{f.label}</span>
-            <span className="text-text-primary font-mono">{f.score.toFixed(3)}</span>
+            <span className="text-text-secondary font-medium">{f.label}</span>
+            <span className="text-text-muted font-mono tabular-nums" title="Risk contribution score">
+              z = {f.zScore?.toFixed(2) ?? '—'}
+              <span className="text-text-muted/50 ml-1 text-[9px]">SDs above avg</span>
+            </span>
           </div>
-          <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+          <div className="h-2 bg-white/5 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-amber-500 to-red-500 rounded-full transition-all duration-1000"
-              style={{ width: `${Math.min((f.score / maxScore) * 100, 100)}%` }}
+              className="h-full rounded-full transition-all duration-1000"
+              style={{
+                width: `${Math.min((f.score / maxScore) * 100, 100)}%`,
+                background: i === 0
+                  ? 'linear-gradient(90deg, #f87171, #dc2626)'
+                  : i === 1
+                  ? 'linear-gradient(90deg, #fb923c, #ea580c)'
+                  : 'linear-gradient(90deg, #fbbf24, #d97706)',
+              }}
             />
           </div>
+          <p className="text-[11px] text-text-muted/80 mt-1 leading-relaxed">{f.explanation}</p>
         </div>
       ))}
+      <p className="text-[10px] text-text-muted/50 border-t border-border/30 pt-2 mt-2">
+        z-score = standard deviations above the sector-year average. Values above +2 are statistically unusual.
+      </p>
     </div>
   )
 }
@@ -892,6 +972,85 @@ export function VendorProfile() {
         compact
       />
 
+      {/* "Why is this vendor risky?" — red flags summary card */}
+      {(() => {
+        const flags: Array<{ icon: string; text: string; severity: 'critical' | 'high' | 'medium' }> = []
+        // Ground truth
+        if (groundTruthStatus?.is_known_bad) {
+          flags.push({ icon: '⚠️', text: 'Documented in known corruption cases (model training ground truth)', severity: 'critical' })
+        }
+        // External sanctions
+        if (externalFlags?.sat_efos?.stage === 'definitivo') {
+          flags.push({ icon: '🔴', text: 'SAT confirmed ghost company (Art. 69-B EFOS Definitivo)', severity: 'critical' })
+        } else if (externalFlags?.sat_efos?.stage === 'presunto') {
+          flags.push({ icon: '🟡', text: 'SAT-listed as alleged ghost company (EFOS Presunto — under investigation)', severity: 'high' })
+        }
+        if (externalFlags?.sfp_sanctions && externalFlags.sfp_sanctions.length > 0) {
+          flags.push({ icon: '🔴', text: `${externalFlags.sfp_sanctions.length} SFP sanction record${externalFlags.sfp_sanctions.length > 1 ? 's' : ''} on file`, severity: 'critical' })
+        }
+        // Risk score
+        const score = vendor.avg_risk_score ?? 0
+        if (score >= 0.50) {
+          flags.push({ icon: '🔴', text: `Critical risk score (${(score * 100).toFixed(0)}/100) — strongest similarity to documented corruption patterns`, severity: 'critical' })
+        } else if (score >= 0.30) {
+          flags.push({ icon: '🟠', text: `High risk score (${(score * 100).toFixed(0)}/100) — strong similarity to documented corruption patterns`, severity: 'high' })
+        }
+        // Procurement patterns
+        if ((vendor.direct_award_pct ?? 0) > 70) {
+          flags.push({ icon: '🟠', text: `${vendor.direct_award_pct?.toFixed(0)}% of contracts were direct awards (bypassed competitive tendering)`, severity: 'high' })
+        }
+        if ((vendor.single_bid_pct ?? 0) > 40) {
+          flags.push({ icon: '🟡', text: `${vendor.single_bid_pct?.toFixed(0)}% of competitive procedures had only this vendor bidding`, severity: 'medium' })
+        }
+        // Co-bidding
+        if (hasCoBiddingRisk) {
+          flags.push({ icon: '🟡', text: 'Suspicious co-bidding patterns detected — may indicate coordinated bid-rigging', severity: 'medium' })
+        }
+        // Network clustering
+        if ((vendor.cobid_clustering_coeff ?? 0) > 0.6) {
+          flags.push({ icon: '🟠', text: `High network clustering (${((vendor.cobid_clustering_coeff ?? 0) * 100).toFixed(0)}%) — bidding partners form a tightly-knit group`, severity: 'high' })
+        }
+        // Waterfall top factor
+        if (waterfallData && waterfallData.length > 0) {
+          const topFactor = [...waterfallData].filter(f => f.contribution > 0).sort((a, b) => b.contribution - a.contribution)[0]
+          if (topFactor && topFactor.z_score > 2) {
+            const explanation = FACTOR_EXPLANATIONS[topFactor.feature]
+            if (explanation) {
+              flags.push({ icon: '🟡', text: `Primary driver: ${topFactor.label_en || topFactor.feature} (z=${topFactor.z_score.toFixed(1)} — ${topFactor.z_score.toFixed(1)} SDs above sector average)`, severity: 'medium' })
+            }
+          }
+        }
+
+        if (flags.length === 0) return null
+
+        return (
+          <div
+            className="rounded-lg border border-border/50 bg-background-card p-4"
+            style={{ animation: 'vpFadeUp 500ms cubic-bezier(0.16, 1, 0.3, 1) 100ms both' }}
+          >
+            <h3 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2">
+              <Shield className="h-4 w-4 text-risk-high" />
+              Why is this vendor flagged?
+            </h3>
+            <div className="space-y-2">
+              {flags.map((flag, i) => (
+                <div key={i} className={`flex items-start gap-2 text-sm ${
+                  flag.severity === 'critical' ? 'text-red-300' :
+                  flag.severity === 'high' ? 'text-amber-300' :
+                  'text-text-secondary'
+                }`}>
+                  <span className="flex-shrink-0 text-base leading-none mt-0.5">{flag.icon}</span>
+                  <span>{flag.text}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] text-text-muted/60 mt-3 border-t border-border/30 pt-2">
+              Flags are statistical risk indicators, not proof of wrongdoing. Use for investigation triage only.
+            </p>
+          </div>
+        )
+      })()}
+
       {/* KPI Row — scroll-triggered stagger + F7 Percentile Badges */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <ScrollReveal delay={0} direction="up">
@@ -1029,21 +1188,42 @@ export function VendorProfile() {
         </Card>
       )}
 
-      {/* F2: Ground truth known-bad banner */}
+      {/* F2: Ground truth known-bad banner — prominent alert above KPIs */}
       {groundTruthStatus?.is_known_bad && groundTruthStatus.cases.length > 0 && (
-        <div className="p-3 rounded-lg border border-red-500/40 bg-red-950/30 space-y-1">
-          {groundTruthStatus.cases.map((c) => (
-            <div key={c.case_id} className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-red-400 shrink-0" />
-              <p className="text-sm text-red-300">
-                Documented in{' '}
-                <Link to={`/cases/${c.scandal_slug}`} className="font-semibold underline hover:text-red-200">
-                  {c.case_name}
-                </Link>
-                {' '}&mdash; {c.fraud_type}
+        <div
+          className="rounded-lg border-2 border-red-500/60 bg-red-950/40 p-4"
+          style={{ animation: 'vpSlideIn 400ms cubic-bezier(0.16, 1, 0.3, 1) both' }}
+        >
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 flex h-9 w-9 items-center justify-center rounded-full bg-red-500/20 border border-red-500/40">
+              <AlertTriangle className="h-5 w-5 text-red-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-red-300 mb-1">
+                This vendor appears in {groundTruthStatus.cases.length} documented corruption case{groundTruthStatus.cases.length > 1 ? 's' : ''}
+              </p>
+              <div className="space-y-1.5">
+                {groundTruthStatus.cases.map((c) => (
+                  <div key={c.case_id} className="flex items-center gap-2 flex-wrap">
+                    <Link
+                      to={`/cases/${c.scandal_slug}`}
+                      className="text-sm font-semibold text-red-200 underline hover:text-white transition-colors"
+                    >
+                      {c.case_name}
+                    </Link>
+                    {c.fraud_type && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/25 text-red-300 border border-red-500/30 font-medium">
+                        {c.fraud_type}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-red-400/70 mt-2">
+                This vendor is part of RUBLI&apos;s ground truth training set — contracts matching documented corruption patterns.
               </p>
             </div>
-          ))}
+          </div>
         </div>
       )}
 
