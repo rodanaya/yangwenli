@@ -54,7 +54,7 @@ TEST_YEAR_MIN = 2021
 # Per-sector model: minimum ground truth contracts in train set
 SECTOR_MIN_TRAIN = 200
 
-MODEL_VERSION = 'v5.1'
+MODEL_VERSION = 'v5.0'  # API queries model_version='v5.0' — keep consistent across v5.x family
 
 
 def load_training_data(conn, random_sample_size=15000, temporal_split=True):
@@ -636,6 +636,7 @@ def save_calibration(conn, diagnostics, pu_correction, sector_models,
 
 
 def main():
+    global MODEL_VERSION  # must be declared before any use in this function
     parser = argparse.ArgumentParser(description='Risk Model v5.x Calibration')
     parser.add_argument('--n-bootstrap', type=int, default=1000)
     parser.add_argument('--random-sample', type=int, default=15000)
@@ -647,7 +648,6 @@ def main():
     args = parser.parse_args()
 
     # Allow CLI override of the module-level constant
-    global MODEL_VERSION
     MODEL_VERSION = args.model_version
 
     if not HAS_DEPS:
