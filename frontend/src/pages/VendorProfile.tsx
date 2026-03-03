@@ -671,7 +671,7 @@ export function VendorProfile() {
   // Fetch vendor's contracts
   const { data: contracts, isLoading: contractsLoading } = useQuery({
     queryKey: ['vendor', vendorId, 'contracts'],
-    queryFn: () => vendorApi.getContracts(vendorId, { per_page: 20 }),
+    queryFn: () => vendorApi.getContracts(vendorId, { per_page: 100 }),
     enabled: !!vendorId,
     staleTime: 2 * 60 * 1000,
   })
@@ -853,7 +853,7 @@ export function VendorProfile() {
     a.href = url
     a.download = `vendor-${vendorId}-contracts.csv`
     a.click()
-    URL.revokeObjectURL(url)
+    setTimeout(() => URL.revokeObjectURL(url), 100)
   }
 
   if (vendorLoading) {
@@ -2206,7 +2206,11 @@ export function VendorProfile() {
 
               {/* Donut charts row */}
               <VendorContractBreakdown
-                contracts={(contracts?.data ?? []) as any}
+                contracts={filteredContracts.map((c) => ({
+                  procedure_type: c.procedure_type ?? null,
+                  risk_level: c.risk_level ?? null,
+                  amount_mxn: c.amount_mxn ?? 0,
+                }))}
                 loading={contractsLoading}
               />
 

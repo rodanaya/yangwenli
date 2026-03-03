@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect, vi } from 'vitest'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Sidebar } from '../components/layout/Sidebar'
@@ -11,21 +12,26 @@ beforeAll(async () => {
 })
 
 function renderSidebar(props: { collapsed?: boolean; onToggle?: () => void } = {}) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
   const defaultProps = { collapsed: false, onToggle: vi.fn(), ...props }
   return render(
-    <MemoryRouter>
-      <TooltipProvider>
-        <Sidebar {...defaultProps} />
-      </TooltipProvider>
-    </MemoryRouter>
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <TooltipProvider>
+          <Sidebar {...defaultProps} />
+        </TooltipProvider>
+      </MemoryRouter>
+    </QueryClientProvider>
   )
 }
 
 describe('Sidebar', () => {
-  it('renders story navigation items when expanded', () => {
+  it('renders overview navigation items when expanded', () => {
     renderSidebar({ collapsed: false })
-    expect(screen.getByText('Executive Summary')).toBeInTheDocument()
-    expect(screen.getByText('The Brief')).toBeInTheDocument()
+    expect(screen.getByText('Dashboard')).toBeInTheDocument()
+    expect(screen.getByText('Explore')).toBeInTheDocument()
   })
 
   it('renders brand text when expanded', () => {
@@ -36,30 +42,29 @@ describe('Sidebar', () => {
 
   it('renders section headers when expanded', () => {
     renderSidebar({ collapsed: false })
-    expect(screen.getByText('THE STORY')).toBeInTheDocument()
-    expect(screen.getByText('THE MONEY')).toBeInTheDocument()
-    expect(screen.getByText('WHO & HOW')).toBeInTheDocument()
+    expect(screen.getByText('OVERVIEW')).toBeInTheDocument()
     expect(screen.getByText('INVESTIGATE')).toBeInTheDocument()
-    expect(screen.getByText('UNDERSTAND')).toBeInTheDocument()
+    expect(screen.getByText('MY WORKSPACE')).toBeInTheDocument()
   })
 
-  it('renders money nav items', () => {
+  it('renders overview nav items', () => {
     renderSidebar({ collapsed: false })
-    expect(screen.getByText('Spending Categories')).toBeInTheDocument()
+    expect(screen.getByText('Dashboard')).toBeInTheDocument()
+    expect(screen.getByText('Explore')).toBeInTheDocument()
     expect(screen.getByText('Sectors')).toBeInTheDocument()
-    expect(screen.getByText('Procurement Intelligence')).toBeInTheDocument()
-    expect(screen.getByText('All Contracts')).toBeInTheDocument()
+    expect(screen.getByText('By Administration')).toBeInTheDocument()
   })
 
   it('renders investigate nav items', () => {
     renderSidebar({ collapsed: false })
-    expect(screen.getByText('Institution Health')).toBeInTheDocument()
-    expect(screen.getByText('Vendor Network')).toBeInTheDocument()
-    expect(screen.getByText('My Watchlist')).toBeInTheDocument()
-    expect(screen.getByText('Case Manager')).toBeInTheDocument()
+    expect(screen.getByText('Procurement Intelligence')).toBeInTheDocument()
+    expect(screen.getByText('Investigation')).toBeInTheDocument()
+    expect(screen.getByText('Network')).toBeInTheDocument()
+    expect(screen.getByText('Contracts')).toBeInTheDocument()
+    expect(screen.getByText('Cases')).toBeInTheDocument()
   })
 
-  it('renders understand nav items', () => {
+  it('renders bottom nav items', () => {
     renderSidebar({ collapsed: false })
     expect(screen.getByText('Methodology')).toBeInTheDocument()
     expect(screen.getByText('Settings')).toBeInTheDocument()
@@ -81,11 +86,9 @@ describe('Sidebar', () => {
 
   it('hides section headers when collapsed', () => {
     renderSidebar({ collapsed: true })
-    expect(screen.queryByText('THE STORY')).not.toBeInTheDocument()
-    expect(screen.queryByText('THE MONEY')).not.toBeInTheDocument()
-    expect(screen.queryByText('WHO & HOW')).not.toBeInTheDocument()
+    expect(screen.queryByText('OVERVIEW')).not.toBeInTheDocument()
     expect(screen.queryByText('INVESTIGATE')).not.toBeInTheDocument()
-    expect(screen.queryByText('UNDERSTAND')).not.toBeInTheDocument()
+    expect(screen.queryByText('MY WORKSPACE')).not.toBeInTheDocument()
   })
 
   it('shows expand sidebar label when collapsed', () => {

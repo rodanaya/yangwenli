@@ -15,7 +15,7 @@
  */
 
 import { memo, useState, useCallback, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQueries, useQuery } from '@tanstack/react-query'
 import {
   LineChart,
   Line,
@@ -258,15 +258,14 @@ function CustomTooltip({ active, payload, label, visibleSectors }: CustomTooltip
  */
 function useSectorTrendData() {
   // Fetch all sectors in parallel
-  const sectorQueries = SECTORS.map((sector) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useQuery({
+  const sectorQueries = useQueries({
+    queries: SECTORS.map((sector) => ({
       queryKey: ['sectors', sector.id, 'trends'],
       queryFn: () => sectorApi.getTrends(sector.id),
       staleTime: 10 * 60 * 1000,
       retry: 1,
-    })
-  )
+    })),
+  })
 
   // Fallback: global year-over-year
   const globalQuery = useQuery({

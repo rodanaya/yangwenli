@@ -102,7 +102,7 @@ describe('Dashboard', () => {
   it('renders new dashboard section headings', () => {
     renderDashboard()
     expect(screen.getByText('Value Concentration')).toBeInTheDocument()
-    expect(screen.getByText('The Competition Illusion')).toBeInTheDocument()
+    expect(screen.getByText('Single Bidder')).toBeInTheDocument()
     expect(screen.getByText('23 Years, 5 Governments')).toBeInTheDocument()
     expect(screen.getByText('Top Vendors by Contract Value')).toBeInTheDocument()
   })
