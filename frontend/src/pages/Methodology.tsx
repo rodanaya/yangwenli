@@ -374,10 +374,13 @@ export function Methodology() {
                   SCORE FORMULA
                 </p>
                 <Formula>
-                  P(corrupt | z) = sigma(beta_0 + beta^T z) / c
+                  S(z) = sigma(beta_0 + beta^T z) / c
                 </Formula>
                 <p className="text-xs text-text-muted">
-                  Where z = z-score features, beta = learned coefficients, sigma = logistic sigmoid, c = PU correction (0.8815)
+                  Where z = z-score features, beta = learned coefficients, sigma = logistic sigmoid, c = PU correction (0.882).
+                  S(z) is a <strong>risk similarity score</strong> — it measures how closely a contract&apos;s
+                  procurement characteristics resemble those from documented corruption cases. It is not a
+                  literal probability of corruption.
                 </p>
               </div>
 
@@ -431,8 +434,9 @@ export function Methodology() {
               </div>
 
               <p className="text-xs text-text-muted">
-                High-risk rate: <strong className="text-text-secondary">10.6%</strong> (critical + high), within OECD benchmark of 2-15%.
-                v5.1 is the active model, replacing v5.0 on February 27, 2026.
+                High-risk rate: <strong className="text-text-secondary">10.6%</strong> (critical + high).
+                Thresholds were calibrated using 22 documented corruption cases to yield a rate consistent with
+                international procurement risk ranges. v5.1 is the active model, replacing v5.0 on February 27, 2026.
               </p>
             </div>
           </CollapsibleSection>
@@ -498,7 +502,7 @@ export function Methodology() {
                 </p>
                 <p className="text-xs text-text-muted mt-1 leading-relaxed">
                   Vendors with wildly varying contract sizes are the strongest corruption signal.
-                  This is followed by institution diversity (-0.85, protective factor) and win rate (+0.73).
+                  This is followed by institution diversity (-0.85, associated with lower risk) and win rate (+0.73).
                   Vendor concentration (+0.43) remains important but is no longer the dominant predictor,
                   as the 4 new behavioral features absorb much of the variance it previously captured alone.
                 </p>
@@ -624,7 +628,7 @@ export function Methodology() {
                   { label: 'Test AUC-ROC', value: '0.9572' },
                   { label: 'Brier Score', value: '0.060' },
                   { label: 'Lift', value: '4.04x' },
-                  { label: 'Detection Rate', value: '99.8%' },
+                  { label: 'Ground Truth Coverage (medium+)', value: '99.8%' },
                 ].map((m) => (
                   <div key={m.label} className="p-2.5 rounded-md bg-background-elevated/50">
                     <p className="text-lg font-bold tabular-nums text-text-primary font-mono">

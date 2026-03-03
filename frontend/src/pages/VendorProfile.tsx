@@ -76,25 +76,28 @@ import { cn } from '@/lib/utils'
 import { RiskWhisker } from '@/components/ui/risk-whisker'
 
 // ============================================================================
-// Model coefficients for the waterfall chart (v5.1 global model, from DB 2026-02-28)
+// Model coefficients for the waterfall chart (v5.1 global model, calibrated 2026-02-27)
+// Source: RISK_METHODOLOGY_v5.md — cross-validated ElasticNet (C=10.0, l1_ratio=0.25)
+// Negative coefficients (institution_diversity, sector_spread, ad_period_days, price_ratio)
+// mean that HIGHER values of those features REDUCE risk.
 // ============================================================================
 const MODEL_COEFFICIENTS: Record<string, number> = {
-  price_volatility: 1.332,
-  vendor_concentration: 0.760,
-  institution_diversity: -0.324,
-  sector_spread: 0.290,
-  price_hyp_confidence: 0.185,
-  ad_period_days: -0.150,
-  institution_risk: 0.108,
-  network_member_count: 0.103,
-  industry_mismatch: 0.099,
-  same_day_count: 0.076,
-  price_ratio: 0.045,
-  direct_award: 0.039,
-  single_bid: -0.026,
-  win_rate: 0.025,
-  year_end: 0.004,
-  co_bid_rate: 0.000,
+  price_volatility:     1.219,
+  institution_diversity: -0.848,
+  win_rate:             0.727,
+  vendor_concentration: 0.428,
+  sector_spread:        -0.374,
+  industry_mismatch:    0.305,
+  same_day_count:       0.222,
+  direct_award:         0.182,
+  ad_period_days:       -0.104,
+  network_member_count: 0.064,
+  year_end:             0.059,
+  institution_risk:     0.057,
+  price_ratio:          -0.015,
+  single_bid:           0.013,
+  price_hyp_confidence: 0.001,
+  co_bid_rate:          0.000,
 }
 
 // ============================================================================
@@ -557,8 +560,8 @@ const FACTOR_EXPLANATIONS: Record<string, string> = {
   price_volatility: 'This vendor\'s contract amounts vary wildly — a hallmark of fraudulent invoicing.',
   vendor_concentration: 'This vendor holds an unusually large share of its sector\'s total contract value.',
   win_rate: 'This vendor wins contracts at a rate far above what would be expected by chance.',
-  institution_diversity: 'This vendor serves fewer institutions than typical, suggesting dependence on a narrow set of buyers.',
-  sector_spread: 'This vendor operates in fewer sectors than its peers, reducing cross-checking opportunities.',
+  institution_diversity: 'This vendor serves fewer institutions than average (negative z-score). The model treats narrow buyer dependence as a risk signal — vendors with broad institutional reach are associated with lower risk.',
+  sector_spread: 'This vendor operates across fewer sectors than its peers (negative z-score). Vendors with more diversified sector activity are associated with lower risk in the v5.1 model.',
   industry_mismatch: 'This vendor won contracts outside its core industry — a potential shell company indicator.',
   same_day_count: 'Multiple contracts were awarded to this vendor on the same day, consistent with threshold-splitting fraud.',
   direct_award: 'A high share of this vendor\'s contracts were awarded directly, bypassing competitive tendering.',

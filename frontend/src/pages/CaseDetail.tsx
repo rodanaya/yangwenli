@@ -221,10 +221,10 @@ function DetectionScoreLabel({ score }: { score: number }) {
   const level = getRiskLevelFromScore(score)
   const pct = Math.round(score * 100)
   const labels: Record<string, string> = {
-    critical: 'Critical — strongly detected',
-    high: 'High — clearly detected',
-    medium: 'Medium — partially detected',
-    low: 'Low — weakly detected',
+    critical: 'Critical — strong pattern match',
+    high: 'High — clear pattern match',
+    medium: 'Medium — partial pattern match',
+    low: 'Low — weak pattern match',
   }
   return (
     <span className="text-[10px] text-text-muted">{pct}% — {labels[level]}</span>
@@ -673,13 +673,21 @@ export default function CaseDetail() {
         <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-4">
           <div className="flex items-center gap-2 mb-3">
             <TrendingUp className="h-4 w-4 text-cyan-400" />
-            <h3 className="text-sm font-semibold text-cyan-400">How the Model Detected This Case</h3>
+            <h3 className="text-sm font-semibold text-cyan-400">Risk Signals Identified by the Model</h3>
             {avgDetectionScore != null && (
               <span className="ml-auto text-xs font-mono font-bold" style={{ color: RISK_COLORS[getRiskLevelFromScore(avgDetectionScore)] }}>
                 {Math.round(avgDetectionScore * 100)}% avg detection score
               </span>
             )}
           </div>
+          {avgDetectionScore != null && avgDetectionScore < 0.30 && (
+            <div className="mb-3 p-2 rounded border border-amber-500/30 bg-amber-500/5 text-[11px] text-amber-300/80">
+              ⚠ Low average score ({Math.round(avgDetectionScore * 100)}%): the v5.1 model&apos;s pattern
+              matching is weak for this case. This may reflect a corruption pattern (e.g. small-scale
+              invoice fraud, single-contract bribery) that differs substantially from the large-vendor
+              concentration cases that dominate the training set.
+            </div>
+          )}
           <div className="space-y-2 text-sm text-text-muted">
             {signals.map((signal, i) => (
               <div key={i} className="flex items-start gap-2">
@@ -695,9 +703,10 @@ export default function CaseDetail() {
                 <span>
                   This case is part of the v5.1 model&apos;s ground truth training set.
                   The {linkedVendors.length > 0 ? `${linkedVendors.length} matched vendor${linkedVendors.length !== 1 ? 's' : ''}` : 'contracts'} from
-                  this case provided labeled positive examples — procurement patterns known to be corrupt.
+                  this case provided labeled examples — procurement patterns from documented corruption cases
+                  used to train the similarity model.
                   The model learned to associate these patterns (vendor concentration, price volatility,
-                  win rates) with corruption risk, improving detection across all 3.1M contracts.{' '}
+                  win rates) with corruption risk indicators across all 3.1M contracts.{' '}
                   <Link to="/methodology" className="text-cyan-400 hover:underline">
                     View model validation
                   </Link>

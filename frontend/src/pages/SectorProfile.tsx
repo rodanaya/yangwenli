@@ -74,7 +74,7 @@ const FACTOR_LABELS: Record<string, string> = {
   'short_ad_<15d': 'Short Ad (<15 days)',
   'short_ad_<30d': 'Brief Ad (<30 days)',
   year_end: 'Year-End Rush',
-  vendor_concentration: 'Vendor Monopoly',
+  vendor_concentration: 'Vendor Concentration',
   threshold_splitting: 'Contract Splitting',
   network_risk: 'Network Connection',
   industry_mismatch: 'Industry Mismatch',
@@ -224,22 +224,25 @@ export function SectorProfile() {
     const stats = sector?.statistics
     if (!stats) return result
 
-    // High-risk rate vs OECD benchmark (critical + high / total)
+    // High-risk rate — compare against platform-wide 10.6% baseline (v5.1)
+    // Note: OECD 2-15% is a single-bid rate benchmark, not an ML output benchmark.
+    // We use deviation from the platform-wide rate as the reference.
     const highRiskRate = stats.total_contracts > 0
       ? (stats.high_risk_count + stats.critical_risk_count) / stats.total_contracts
       : 0
-    if (highRiskRate > 0.15) {
+    const platformBaseline = 0.106 // v5.1 platform-wide high-risk rate
+    if (highRiskRate > platformBaseline * 1.5) {
       result.push({
         type: 'critical',
-        title: 'Above OECD Benchmark',
-        body: `${(highRiskRate * 100).toFixed(1)}% high-risk rate exceeds the 15% OECD maximum benchmark.`,
+        title: 'Elevated High-Risk Rate',
+        body: `${(highRiskRate * 100).toFixed(1)}% high-risk rate is significantly above the platform average of 10.6%.`,
         icon: 'AlertTriangle',
       })
     } else if (highRiskRate < 0.02 && stats.total_contracts > 1000) {
       result.push({
         type: 'positive',
-        title: 'Below OECD Minimum',
-        body: `${(highRiskRate * 100).toFixed(1)}% high-risk rate is unusually low — may indicate data quality gaps.`,
+        title: 'Low Model Risk Signal',
+        body: `${(highRiskRate * 100).toFixed(1)}% high-risk rate is unusually low — may reflect data quality gaps or structural sector characteristics.`,
         icon: 'Info',
       })
     }
@@ -255,15 +258,21 @@ export function SectorProfile() {
     }
 
     // Top vendor share derived from topVendors list vs sector total
+    // Note: Energía and Defensa have structural reasons for concentration (regulation,
+    // clearance requirements, regulated monopolies). Treat this signal with more caution in those sectors.
     const topVendorValue = topVendors?.data?.[0]?.total_value_mxn
     if (topVendorValue && stats.total_value_mxn > 0) {
       const topShare = topVendorValue / stats.total_value_mxn
+      const sectorCode = sector?.code ?? ''
+      const hasStructuralConcentration = ['energia', 'defensa'].includes(sectorCode)
       if (topShare > 0.3) {
         const vendorName = topVendors?.data[0]?.vendor_name ?? 'Top vendor'
         result.push({
-          type: 'warning',
-          title: 'Vendor Concentration Risk',
-          body: `${vendorName} holds ${(topShare * 100).toFixed(1)}% of sector contract value — a key corruption risk indicator.`,
+          type: hasStructuralConcentration ? 'info' : 'warning',
+          title: 'Vendor Concentration',
+          body: hasStructuralConcentration
+            ? `${vendorName} holds ${(topShare * 100).toFixed(1)}% of sector value. Note: this sector may have structural concentration due to regulatory requirements or certified supplier limits.`
+            : `${vendorName} holds ${(topShare * 100).toFixed(1)}% of sector contract value — a key risk indicator in the v5.1 model.`,
           icon: 'TrendingUp',
         })
       }

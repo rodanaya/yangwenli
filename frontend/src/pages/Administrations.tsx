@@ -68,7 +68,11 @@ const PARTY_COLORS: Record<string, string> = {
   MORENA: '#8B0000',
 }
 
-// Admin × Sector risk matrix (hardcoded approximation based on known cases)
+// Admin × Sector risk matrix — HANDCRAFTED APPROXIMATION, NOT DATA-DERIVED.
+// These values are illustrative estimates based on known documented cases and qualitative
+// knowledge of each era. They are NOT computed from the database. The comparison table
+// above uses actual aggregated data from the DB. This matrix is used for visual context only
+// and must be presented with an appropriate disclaimer to users.
 // Rows: 5 administrations | Cols: 12 sectors
 // Values: estimated avg risk score (0–1)
 const ADMIN_SECTOR_MATRIX: Record<string, Record<string, number>> = {
@@ -119,9 +123,9 @@ type AdminName = typeof ADMINISTRATIONS[number]['name']
 
 const ADMIN_NARRATIVES: Record<AdminName, string> = {
   Fox: "Vicente Fox's term (2000–2006) marked the PAN's first presidential win after 71 years of PRI rule and the transition to COMPRANET digital procurement records. Data quality improves significantly from 2003 onward. Technology sector procurement expanded notably as e-government initiatives launched.",
-  Calderon: "The Calderón administration (2006–2012) saw significant infrastructure and security procurement driven by the drug war. Single-bid rates remained elevated across defense-adjacent sectors, and PEMEX contracts from this era later became subjects of major corruption investigations including the Odebrecht bribery network.",
+  Calderon: "The Calderón administration (2006–2012) saw significant infrastructure and security procurement driven by the drug war. Single-bid rates remained elevated across defense-adjacent sectors. PEMEX expanded its contractor base during this period; several of these contractor relationships continued into the Peña Nieto era, where major corruption investigations (including Odebrecht bribery payments to PEMEX officials) were later documented.",
   'Pena Nieto': "Enrique Peña Nieto's administration (2012–2018) is the best-documented period for corruption cases in this dataset. IMSS ghost company networks, La Estafa Maestra, and the Casa Blanca conflict of interest all originate here. The PRI's return to power coincided with record-high vendor concentration in health and agriculture.",
-  AMLO: "Under López Obrador (2018–2024), direct award contracts reached historic highs as austerity policies consolidated procurement through fewer channels. Health and energy sectors showed elevated risk patterns, particularly in COVID-19 emergency spending (Segalmex, COVID procurement fraud) despite the administration's anti-corruption rhetoric.",
+  AMLO: "Under López Obrador (2018–2024), direct award contracts reached historic highs as austerity policies consolidated procurement through fewer channels. Health and energy sectors showed elevated risk patterns, particularly in COVID-19 emergency spending and agricultural distribution (Segalmex fraud). Note: improved COMPRANET data quality in this era (higher RFC coverage) may also contribute to more complete risk detection compared to earlier periods.",
   Sheinbaum: "Claudia Sheinbaum took office in October 2024. COMPRANET data for this administration is currently limited to a partial year. Risk patterns are preliminary and should not be compared to full six-year terms. Trends will become meaningful as the dataset expands through 2025–2030.",
 }
 
@@ -1402,9 +1406,14 @@ function AdminSectorMatrix({
             })}
           </tbody>
         </table>
-        {isLive && (
+        {isLive ? (
           <p className="mt-2 text-[10px] text-text-muted/50 italic">
             Source: COMPRANET contracts weighted by volume · {METRIC_LABELS[metric]}
+          </p>
+        ) : (
+          <p className="mt-2 text-[10px] text-amber-400/60 italic">
+            ⚠ Fallback display: values shown are illustrative approximations, not computed from the database.
+            Live data unavailable — reload to retry.
           </p>
         )}
       </CardContent>
@@ -1513,7 +1522,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
               {allTimeAvg.hr.toFixed(1)}%
             </div>
             <div className="mt-1 text-xs text-text-muted leading-relaxed">
-              Contracts scored critical or high risk by the AI model. OECD benchmark: 2–15%.
+              Contracts scored critical or high risk by the v5.1 risk model. Thresholds calibrated using 22 documented corruption cases.
             </div>
             <div className="mt-2 text-xs text-text-muted">
               Avg risk score: {(allTimeAvg.risk * 100).toFixed(1)}% across 3.1M contracts

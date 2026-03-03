@@ -1543,7 +1543,7 @@ const RiskDistributionAnnotation = memo(function RiskDistributionAnnotation({
           {' '}({formatNumber(highCount)} contracts) — strong statistical anomalies relative to sector norms. Priority review recommended.
         </p>
         <p className="text-text-muted/70">
-          Combined <span className="text-text-secondary font-semibold">{combinedPct}%</span> of contracts are flagged high-or-critical — within the OECD benchmark of 2–15%. Risk scores measure similarity to known corruption patterns, not proof of wrongdoing.
+          Combined <span className="text-text-secondary font-semibold">{combinedPct}%</span> of contracts are flagged high-or-critical. Risk scores measure statistical similarity to known corruption patterns — not proof of wrongdoing.
         </p>
       </div>
     </div>

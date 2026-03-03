@@ -898,64 +898,36 @@ function PatternWebDiagram() {
     if (!el) return
     const obs = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } },
-      { threshold: 0.2 }
+      { threshold: 0.15 }
     )
     obs.observe(el)
     return () => obs.disconnect()
   }, [])
 
-  const cx = 200
-  const cy = 130
-  // Triangle vertices
+  // Center of diagram
+  const cx = 260
+  const cy = 170
+
+  // Outer nodes — bigger triangle, more spacing
   const nodes = [
-    {
-      x: 200,
-      y: 30,
-      label: 'DIRECT AWARD',
-      sub: '71% of contracts',
-      color: '#fb923c',
-      id: 'da',
-    },
-    {
-      x: 70,
-      y: 210,
-      label: 'DECEMBER RUSH',
-      sub: '1.33× spike',
-      color: '#fbbf24',
-      id: 'dr',
-    },
-    {
-      x: 330,
-      y: 210,
-      label: 'CONCENTRATION',
-      sub: '10.6% at risk',
-      color: '#f87171',
-      id: 'vc',
-    },
+    { x: 260, y: 48,  lines: ['DIRECT', 'AWARD'],        sub: '71% of contracts', color: '#fb923c', id: 'da' },
+    { x: 72,  y: 280, lines: ['DECEMBER', 'RUSH'],        sub: '1.33× spending spike', color: '#fbbf24', id: 'dr' },
+    { x: 448, y: 280, lines: ['VENDOR', 'CONCENTRATION'], sub: '10.6% high-risk rate', color: '#f87171', id: 'vc' },
   ]
-  // Edges with labels
+
+  // Edge connection labels
   const edges = [
-    { from: 0, to: 1, label: 'no audit trail', labelPos: { x: 108, y: 128 } },
-    {
-      from: 1,
-      to: 2,
-      label: 'rushed spend → capture',
-      labelPos: { x: 200, y: 235 },
-    },
-    {
-      from: 2,
-      to: 0,
-      label: 'dominant vendors win direct',
-      labelPos: { x: 298, y: 128 },
-    },
+    { from: 0, to: 1, lines: ['no audit', 'trail'],            lx: 142, ly: 158 },
+    { from: 1, to: 2, lines: ['rushed spend', '→ capture'],    lx: 260, ly: 308 },
+    { from: 2, to: 0, lines: ['dominant vendors', 'win direct'], lx: 380, ly: 158 },
   ]
 
   return (
     <div className="flex justify-center my-6">
       <svg
         ref={ref}
-        viewBox="0 0 400 260"
-        className="w-full max-w-md"
+        viewBox="0 0 520 345"
+        className="w-full max-w-xl"
         style={{ overflow: 'visible' }}
         aria-label="Pattern web diagram showing how direct award, December rush, and vendor concentration reinforce each other"
       >
@@ -966,136 +938,79 @@ function PatternWebDiagram() {
           return (
             <g key={i}>
               <line
-                x1={from.x}
-                y1={from.y}
-                x2={to.x}
-                y2={to.y}
-                stroke="rgba(255,255,255,0.12)"
+                x1={from.x} y1={from.y}
+                x2={to.x}   y2={to.y}
+                stroke="rgba(255,255,255,0.13)"
                 strokeWidth="1.5"
-                strokeDasharray="4 3"
+                strokeDasharray="5 4"
                 style={{
                   opacity: visible ? 1 : 0,
                   transition: `opacity 600ms ${i * 150 + 300}ms ease`,
-                  animation: visible ? 'dashFlow 2s linear infinite' : 'none',
                 }}
               />
-              {/* Edge label */}
+              {/* Edge label — two lines in a subtle box */}
+              <rect
+                x={edge.lx - 44} y={edge.ly - 13}
+                width={88} height={24}
+                rx={4}
+                fill="rgba(15,23,42,0.7)"
+                style={{ opacity: visible ? 1 : 0, transition: `opacity 400ms ${i * 150 + 650}ms ease` }}
+              />
               <text
-                x={edge.labelPos.x}
-                y={edge.labelPos.y}
                 textAnchor="middle"
-                fontSize="7"
-                fill="rgba(148,163,184,0.7)"
                 fontFamily="monospace"
-                style={{
-                  opacity: visible ? 1 : 0,
-                  transition: `opacity 400ms ${i * 150 + 600}ms ease`,
-                }}
+                fill="rgba(148,163,184,0.9)"
+                style={{ opacity: visible ? 1 : 0, transition: `opacity 400ms ${i * 150 + 700}ms ease` }}
               >
-                {edge.label}
+                <tspan x={edge.lx} y={edge.ly - 2} fontSize="8.5">{edge.lines[0]}</tspan>
+                <tspan x={edge.lx} dy="11"         fontSize="8.5">{edge.lines[1]}</tspan>
               </text>
             </g>
           )
         })}
 
-        {/* Center node */}
-        <g>
-          <circle
-            cx={cx}
-            cy={cy}
-            r={visible ? 28 : 0}
-            fill="rgba(248,113,113,0.08)"
-            stroke="rgba(248,113,113,0.3)"
-            strokeWidth="1"
-            style={{ transition: 'r 500ms 800ms cubic-bezier(0.16,1,0.3,1)' }}
-          />
-          <text
-            x={cx}
-            y={cy - 6}
-            textAnchor="middle"
-            fontSize="9"
-            fill="#f87171"
-            fontFamily="monospace"
-            fontWeight="bold"
-            style={{
-              opacity: visible ? 1 : 0,
-              transition: 'opacity 400ms 900ms ease',
-            }}
-          >
-            RISK
-          </text>
-          <text
-            x={cx}
-            y={cy + 7}
-            textAnchor="middle"
-            fontSize="9"
-            fill="#f87171"
-            fontFamily="monospace"
-            fontWeight="bold"
-            style={{
-              opacity: visible ? 1 : 0,
-              transition: 'opacity 400ms 950ms ease',
-            }}
-          >
-            AMPLIFIED
-          </text>
-        </g>
+        {/* Center node — RISK AMPLIFIED */}
+        <circle
+          cx={cx} cy={cy}
+          r={visible ? 44 : 0}
+          fill="rgba(248,113,113,0.07)"
+          stroke="rgba(248,113,113,0.35)"
+          strokeWidth="1.5"
+          style={{ transition: 'r 500ms 800ms cubic-bezier(0.16,1,0.3,1)' }}
+        />
+        <text textAnchor="middle" fontFamily="monospace" fontWeight="bold" fill="#f87171"
+          style={{ opacity: visible ? 1 : 0, transition: 'opacity 400ms 900ms ease' }}>
+          <tspan x={cx} y={cy - 7} fontSize="12">RISK</tspan>
+          <tspan x={cx} dy="17"    fontSize="12">AMPLIFIED</tspan>
+        </text>
 
         {/* Outer nodes */}
         {nodes.map((node, i) => (
           <g key={node.id}>
             {/* Pulse ring */}
-            <circle
-              cx={node.x}
-              cy={node.y}
-              r={visible ? 34 : 0}
-              fill="none"
-              stroke={node.color}
-              strokeWidth="0.5"
-              opacity={0.2}
-              style={{
-                transition: `r 600ms ${i * 100 + 200}ms cubic-bezier(0.16,1,0.3,1)`,
-              }}
+            <circle cx={node.x} cy={node.y}
+              r={visible ? 58 : 0}
+              fill="none" stroke={node.color} strokeWidth="0.5" opacity={0.15}
+              style={{ transition: `r 600ms ${i * 100 + 200}ms cubic-bezier(0.16,1,0.3,1)` }}
             />
             {/* Main circle */}
-            <circle
-              cx={node.x}
-              cy={node.y}
-              r={visible ? 26 : 0}
-              fill={`${node.color}15`}
+            <circle cx={node.x} cy={node.y}
+              r={visible ? 46 : 0}
+              fill={`${node.color}18`}
               stroke={node.color}
               strokeWidth="1.5"
-              style={{
-                transition: `r 500ms ${i * 100 + 200}ms cubic-bezier(0.16,1,0.3,1)`,
-              }}
+              style={{ transition: `r 500ms ${i * 100 + 200}ms cubic-bezier(0.16,1,0.3,1)` }}
             />
-            {/* Label */}
-            <text
-              x={node.x}
-              y={node.y - 4}
-              textAnchor="middle"
-              fontSize="7.5"
-              fill={node.color}
-              fontFamily="monospace"
-              fontWeight="bold"
-              style={{
-                opacity: visible ? 1 : 0,
-                transition: `opacity 400ms ${i * 100 + 500}ms ease`,
-              }}
-            >
-              {node.label}
+            {/* Two-line label */}
+            <text textAnchor="middle" fontFamily="monospace" fontWeight="bold" fill={node.color}
+              style={{ opacity: visible ? 1 : 0, transition: `opacity 400ms ${i * 100 + 500}ms ease` }}>
+              <tspan x={node.x} y={node.y - 9} fontSize="11">{node.lines[0]}</tspan>
+              <tspan x={node.x} dy="15"         fontSize="11">{node.lines[1]}</tspan>
             </text>
-            <text
-              x={node.x}
-              y={node.y + 8}
-              textAnchor="middle"
-              fontSize="7"
-              fill="rgba(255,255,255,0.7)"
-              fontFamily="monospace"
-              style={{
-                opacity: visible ? 1 : 0,
-                transition: `opacity 400ms ${i * 100 + 600}ms ease`,
-              }}
+            {/* Sub-stat */}
+            <text x={node.x} y={node.y + 30}
+              textAnchor="middle" fontSize="9.5" fill="rgba(255,255,255,0.75)" fontFamily="monospace"
+              style={{ opacity: visible ? 1 : 0, transition: `opacity 400ms ${i * 100 + 620}ms ease` }}
             >
               {node.sub}
             </text>
