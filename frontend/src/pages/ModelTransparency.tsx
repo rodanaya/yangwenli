@@ -509,7 +509,7 @@ export default function ModelTransparency() {
         <MetricGauge
           label="High-Risk Rate"
           value={`${(VALIDATION_METRICS.high_risk_rate * 100).toFixed(1)}%`}
-          subtitle="Within OECD 2-15% benchmark"
+          subtitle="Calibrated on 22 documented corruption cases"
           icon={Activity}
           color="#fbbf24"
         />

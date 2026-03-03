@@ -1113,7 +1113,7 @@ export function VendorProfile() {
         }
         // Co-bidding
         if (hasCoBiddingRisk) {
-          flags.push({ icon: '🟡', text: 'Suspicious co-bidding patterns detected — may indicate coordinated bid-rigging', severity: 'medium' })
+          flags.push({ icon: '🟡', text: 'Suspicious co-bidding patterns detected (heuristic analysis — not included in the v5.1 ML risk score, which assigns co_bid_rate a coefficient of 0.000)', severity: 'medium' })
         }
         // Network clustering
         if ((vendor.cobid_clustering_coeff ?? 0) > 0.6) {
@@ -1230,6 +1230,9 @@ export function VendorProfile() {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="mb-3 p-2 rounded border border-amber-500/30 bg-amber-500/5 text-[11px] text-amber-300/80">
+              ⚠ This is a <strong>separate heuristic analysis</strong>. The v5.1 ML risk score assigns <code>co_bid_rate</code> a coefficient of <strong>0.000</strong> — co-bidding patterns did not discriminate corrupt from clean vendors in the training data and do not contribute to the displayed risk score.
+            </div>
             <p className="text-sm text-text-muted mb-4">
               {t('coBidding.description')}
               {coBidders?.suspicious_patterns?.length ? (
