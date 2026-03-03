@@ -46,6 +46,7 @@ const CaseDetail = lazy(() => import('@/pages/CaseDetail'))
 const MoneyFlow = lazy(() => import('@/pages/MoneyFlow'))
 // Workspace is the new name for Watchlist
 const Workspace = lazy(() => import('@/pages/Watchlist'))
+const StateExpenditure = lazy(() => import('@/pages/StateExpenditure'))
 
 // First-visit routing: redirect "/" to Landing for new users, Dashboard for returning users
 function FirstVisitRedirect() {
@@ -231,6 +232,22 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <GroundTruth />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="state-expenditure"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <StateExpenditure />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="state-expenditure/:code"
+                element={
+                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
+                    <StateExpenditure />
                   </SuspenseBoundary>
                 }
               />

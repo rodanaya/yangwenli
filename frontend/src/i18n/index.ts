@@ -53,6 +53,8 @@ import esPatterns from './locales/es/patterns.json'
 import enPatterns from './locales/en/patterns.json'
 import esWorkspace from './locales/es/workspace.json'
 import enWorkspace from './locales/en/workspace.json'
+import esSubnational from './locales/es/subnational.json'
+import enSubnational from './locales/en/subnational.json'
 
 i18n
   .use(LanguageDetector)
@@ -70,6 +72,7 @@ i18n
         limitations: esLimitations, methodology: esMethodology,
         moneyflow: esMoneyflow, temporal: esTemporal, patterns: esPatterns,
         workspace: esWorkspace,
+        subnational: esSubnational,
       },
       en: {
         common: enCommon, sectors: enSectors, nav: enNav, dashboard: enDashboard,
@@ -82,6 +85,7 @@ i18n
         limitations: enLimitations, methodology: enMethodology,
         moneyflow: enMoneyflow, temporal: enTemporal, patterns: enPatterns,
         workspace: enWorkspace,
+        subnational: enSubnational,
       },
     },
     lng: localStorage.getItem('i18nextLng') || 'en', // Default to English when no saved preference

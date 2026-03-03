@@ -1771,6 +1771,24 @@ export const dossierApi = {
   },
 }
 
+export const subnationalApi = {
+  async getStates(): Promise<import('./types').SubnationalStatesResponse> {
+    const { data } = await api.get<import('./types').SubnationalStatesResponse>('/subnational/states')
+    return data
+  },
+  async getStateDetail(code: string): Promise<import('./types').SubnationalStateDetail> {
+    const { data } = await api.get<import('./types').SubnationalStateDetail>(`/subnational/states/${code}`)
+    return data
+  },
+  async getStateVendors(code: string, localOnly?: boolean): Promise<import('./types').SubnationalVendorsResponse> {
+    const { data } = await api.get<import('./types').SubnationalVendorsResponse>(
+      `/subnational/states/${code}/vendors`,
+      { params: localOnly ? { local_only: true } : {} }
+    )
+    return data
+  },
+}
+
 // Default export with all API modules
 export default {
   sector: sectorApi,

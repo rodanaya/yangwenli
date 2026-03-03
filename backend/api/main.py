@@ -70,6 +70,7 @@ from .routers.cases import router as cases_router
 from .routers.search import router as search_router
 from .routers.feedback import router as feedback_router
 from .routers.workspace_dossier import router as dossier_router
+from .routers.subnational import router as subnational_router
 
 logger = structlog.get_logger("rubli.api")
 
@@ -271,6 +272,7 @@ app.include_router(cases_router, prefix="/api/v1")
 app.include_router(search_router, prefix="/api/v1")
 app.include_router(feedback_router, prefix="/api/v1")
 app.include_router(dossier_router)
+app.include_router(subnational_router, prefix="/api/v1")
 
 
 def _get_latest_backup_info() -> dict | None:

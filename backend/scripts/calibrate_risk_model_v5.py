@@ -67,12 +67,15 @@ def load_training_data(conn, random_sample_size=15000, temporal_split=True):
     z_select = ', '.join(f'zf.{c}' for c in Z_COLS)
 
     # Load known-bad vendor contracts with year and sector
+    # Exclude cases 16, 19, 20, 21: added after v5.1 calibration and known to degrade AUC
+    # (caused v5.0.2 regression). Active training set: cases 1-15 + 22.
     cursor.execute(f"""
         SELECT zf.contract_id, {z_select}, c.contract_year, c.sector_id
         FROM contract_z_features zf
         JOIN contracts c ON zf.contract_id = c.id
         JOIN ground_truth_vendors gtv ON c.vendor_id = gtv.vendor_id
         WHERE gtv.vendor_id IS NOT NULL
+          AND gtv.case_id NOT IN (16, 19, 20, 21)
     """)
     positive_rows = cursor.fetchall()
     print(f"  Known-bad contracts (positives): {len(positive_rows)}")

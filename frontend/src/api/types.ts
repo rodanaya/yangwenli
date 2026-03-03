@@ -1915,3 +1915,82 @@ export interface InstitutionRiskFactorResponse {
   sector_median: number
   percentile: number
 }
+
+// ── Subnational / State Expenditure ───────────────────────────────────────────
+export interface SubnationalStateSummary {
+  state_code: string
+  state_name: string
+  contract_count: number
+  total_value_mxn: number
+  avg_risk_score: number
+  institution_count: number
+  vendor_count: number
+  direct_award_rate: number
+  single_bid_rate: number
+  top_institution: string | null
+}
+
+export interface SubnationalStatesResponse {
+  data: SubnationalStateSummary[]
+  coverage_note: string
+  total_contracts: number
+  total_value_mxn: number
+  total_vendors: number
+}
+
+export interface SubnationalYearTrend {
+  year: number
+  contract_count: number
+  total_value_mxn: number
+  avg_risk_score: number
+}
+
+export interface SubnationalTopInstitution {
+  institution_id: number
+  institution_name: string
+  contract_count: number
+  total_value_mxn: number
+  avg_risk_score: number
+  direct_award_rate: number
+}
+
+export interface SubnationalRiskDistribution {
+  critical: number
+  high: number
+  medium: number
+  low: number
+}
+
+export interface SubnationalStateDetail {
+  state_code: string
+  state_name: string
+  contract_count: number
+  total_value_mxn: number
+  avg_risk_score: number
+  institution_count: number
+  vendor_count: number
+  direct_award_rate: number
+  single_bid_rate: number
+  risk_distribution: SubnationalRiskDistribution
+  year_trend: SubnationalYearTrend[]
+  top_institutions: SubnationalTopInstitution[]
+  coverage_note: string
+}
+
+export interface SubnationalVendor {
+  vendor_id: number
+  vendor_name: string
+  contract_count: number
+  total_value_mxn: number
+  avg_risk_score: number
+  state_share_pct: number
+  state_concentration_pct: number
+  is_local_dominant: boolean
+}
+
+export interface SubnationalVendorsResponse {
+  state_code: string
+  state_name: string
+  data: SubnationalVendor[]
+  coverage_note: string
+}
