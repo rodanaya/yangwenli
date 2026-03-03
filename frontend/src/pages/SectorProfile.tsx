@@ -211,24 +211,8 @@ export function SectorProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
-  if (sectorLoading) return <SectorProfileSkeleton />
-
-  if (sectorError || !sector) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <h2 className="text-lg font-semibold mb-2">Sector Not Found</h2>
-        <p className="text-text-muted mb-4">The requested sector could not be found.</p>
-        <Link to="/sectors"><Button variant="outline"><ArrowLeft className="mr-2 h-4 w-4" />Back to Sectors</Button></Link>
-      </div>
-    )
-  }
-
-  const sectorColor = SECTOR_COLORS[sector.code] || sector.color || '#64748b'
-  const stats = sector.statistics
-  const priceBaseline = priceBaselines?.[0]
-  const caseData = topCases?.data ?? []
-
   // ── SECTOR INTELLIGENCE insights ─────────────────────────────────────────
+  // Must be declared before early returns (Rules of Hooks)
   const insights = useMemo(() => {
     const result: Array<{
       type: 'warning' | 'info' | 'critical' | 'positive'
@@ -237,6 +221,7 @@ export function SectorProfile() {
       icon: 'AlertTriangle' | 'Info' | 'ShieldAlert' | 'TrendingUp' | 'Users'
     }> = []
 
+    const stats = sector?.statistics
     if (!stats) return result
 
     // High-risk rate vs OECD benchmark (critical + high / total)
@@ -274,7 +259,7 @@ export function SectorProfile() {
     if (topVendorValue && stats.total_value_mxn > 0) {
       const topShare = topVendorValue / stats.total_value_mxn
       if (topShare > 0.3) {
-        const vendorName = topVendors!.data[0]?.vendor_name ?? 'Top vendor'
+        const vendorName = topVendors?.data[0]?.vendor_name ?? 'Top vendor'
         result.push({
           type: 'warning',
           title: 'Vendor Concentration Risk',
@@ -295,9 +280,9 @@ export function SectorProfile() {
     }
 
     return result
-  }, [stats, topVendors])
+  }, [sector?.statistics, topVendors])
 
-  // Top risk signal from factor_frequencies
+  // Top risk signal from factor_frequencies — must be before early returns
   const topRiskSignal = useMemo(() => {
     const freqs = riskFactors?.factor_frequencies
     if (!freqs?.length) return null
@@ -319,6 +304,23 @@ export function SectorProfile() {
     } as Record<string, string>)[top.factor] ?? top.factor : top.factor
     return { factor: top.factor, label, percentage: top.percentage, avgRisk: top.avg_risk_score }
   }, [riskFactors])
+
+  if (sectorLoading) return <SectorProfileSkeleton />
+
+  if (sectorError || !sector) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <h2 className="text-lg font-semibold mb-2">Sector Not Found</h2>
+        <p className="text-text-muted mb-4">The requested sector could not be found.</p>
+        <Link to="/sectors"><Button variant="outline"><ArrowLeft className="mr-2 h-4 w-4" />Back to Sectors</Button></Link>
+      </div>
+    )
+  }
+
+  const sectorColor = SECTOR_COLORS[sector.code] || sector.color || '#64748b'
+  const stats = sector.statistics
+  const priceBaseline = priceBaselines?.[0]
+  const caseData = topCases?.data ?? []
 
   return (
     <div className="space-y-6">
