@@ -195,10 +195,10 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
             />
           )}
           <Link
-            to={`/vendors/${vendor.vendor_id}`}
+            to={`/vendors/${vendor.id}`}
             className="font-medium text-text-primary hover:text-accent transition-colors truncate block max-w-xs"
           >
-            {vendor.vendor_name}
+            {vendor.name}
           </Link>
         </div>
         {sector && (
@@ -227,15 +227,15 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
       <td className="pl-1 pr-2">
         <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
           <Link
-            to={`/vendors/${vendor.vendor_id}`}
-            aria-label={`View ${vendor.vendor_name}`}
+            to={`/vendors/${vendor.id}`}
+            aria-label={`View ${vendor.name}`}
           >
             <ExternalLink className="h-3.5 w-3.5 text-text-muted hover:text-accent transition-colors" />
           </Link>
           <InlineDossierTrigger
             entityType="vendor"
-            entityId={vendor.vendor_id}
-            entityName={vendor.vendor_name}
+            entityId={vendor.id}
+            entityName={vendor.name}
           />
         </div>
       </td>

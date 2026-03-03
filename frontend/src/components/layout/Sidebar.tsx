@@ -52,6 +52,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
   {
     sectionKey: 'sections.overview',
     items: [
+      { i18nKey: 'executive', href: '/executive-summary', icon: FileText },
       { i18nKey: 'dashboard', href: '/', icon: LayoutDashboard },
       { i18nKey: 'explore', href: '/explore', icon: Layers },
       { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },

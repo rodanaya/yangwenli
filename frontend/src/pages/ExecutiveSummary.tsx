@@ -17,6 +17,7 @@ import { analysisApi } from '@/api/client'
 import type { ExecutiveSummaryResponse } from '@/api/types'
 import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
 import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
+import { ModelDetectionStory } from '@/components/ModelDetectionStory'
 import { ScrollReveal, useCountUp, AnimatedFill, AnimatedSegment } from '@/hooks/useAnimations'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import {
@@ -1653,6 +1654,9 @@ function SectionProof({ data }: { data: ExecutiveSummaryResponse }) {
           </div>
         ))}
       </div>
+
+      {/* Full detection story — all 14 ground truth cases, sortable */}
+      <ModelDetectionStory collapsible={false} />
 
       {/* Corruption Cases Timeline */}
       <CorruptionTimeline />

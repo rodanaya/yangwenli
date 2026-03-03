@@ -1252,7 +1252,7 @@ export function Dashboard() {
               </p>
             </div>
             <button
-              onClick={() => navigate('/ground-truth')}
+              onClick={() => navigate('/executive-summary')}
               className="text-xs text-accent hover:text-accent flex items-center gap-1 transition-colors"
             >
               {t('fullAnalysis')} <ArrowUpRight className="h-3 w-3" />
