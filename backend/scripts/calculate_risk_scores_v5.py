@@ -84,6 +84,38 @@ def load_v5_calibrations(conn):
         return None, None
 
     global_cal = parse_cal(row)
+
+    # Sanity check: intercept should be negative and pu_correction in expected range
+    if not (-5.0 < global_cal['intercept'] < -0.5):
+        raise ValueError(
+            f"Loaded calibration has suspicious intercept={global_cal['intercept']:.4f}. "
+            f"Expected between -5.0 and -0.5. "
+            f"Run calibrate_risk_model_v5.py to regenerate calibration before scoring."
+        )
+    if not (0.70 < global_cal['pu_correction'] < 0.99):
+        raise ValueError(
+            f"Loaded calibration has suspicious pu_correction_factor={global_cal['pu_correction']:.4f}. "
+            f"Expected between 0.70 and 0.99."
+        )
+
+    # Log loaded calibration so operators can verify parameters at a glance
+    cursor.execute("""
+        SELECT run_id, created_at, auc_roc, test_auc
+        FROM model_calibration
+        WHERE model_version = 'v5.0' AND sector_id IS NULL
+        ORDER BY created_at DESC
+        LIMIT 1
+    """)
+    meta = cursor.fetchone()
+    run_id = meta[0] if meta else 'unknown'
+    created_at = meta[1] if meta else 'unknown'
+    auc_val = (meta[3] or meta[2]) if meta else 'N/A'
+    print(f"[calibration] Loaded: intercept={global_cal['intercept']:.4f}, "
+          f"pu_c={global_cal['pu_correction']:.4f}, "
+          f"auc={auc_val}, "
+          f"run_id={run_id}, "
+          f"created_at={created_at}")
+
     print(f"  Global model: intercept={global_cal['intercept']:.4f}, "
           f"PU_c={global_cal['pu_correction']:.4f}, "
           f"Platt A={global_cal['platt_a']:.4f}, B={global_cal['platt_b']:.4f}")

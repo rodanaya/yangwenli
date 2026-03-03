@@ -54,6 +54,8 @@ TEST_YEAR_MIN = 2021
 # Per-sector model: minimum ground truth contracts in train set
 SECTOR_MIN_TRAIN = 200
 
+MODEL_VERSION = 'v5.1'
+
 
 def load_training_data(conn, random_sample_size=15000, temporal_split=True):
     """Load z-features with temporal information.
@@ -534,10 +536,9 @@ def save_calibration(conn, diagnostics, pu_correction, sector_models,
     """Save v5.0 calibration results."""
     cursor = conn.cursor()
 
-    # Create table if needed (extends v4.0 table)
-    cursor.execute("DROP TABLE IF EXISTS model_calibration")
+    # Create table if needed (extends v4.0 table); never DROP — preserves history across versions
     cursor.execute("""
-        CREATE TABLE model_calibration (
+        CREATE TABLE IF NOT EXISTS model_calibration (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             model_version VARCHAR(10) NOT NULL,
             run_id VARCHAR(50) NOT NULL,
@@ -566,6 +567,9 @@ def save_calibration(conn, diagnostics, pu_correction, sector_models,
 
     run_id = f"CAL-v5-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
+    # Delete only rows from THIS run_id so re-runs are idempotent but old runs are preserved
+    cursor.execute("DELETE FROM model_calibration WHERE run_id = ?", (run_id,))
+
     # Save global model (sector_id = NULL)
     hyper = json.dumps({'C': diagnostics['C'], 'l1_ratio': diagnostics['l1_ratio']})
     temporal = json.dumps({
@@ -585,7 +589,7 @@ def save_calibration(conn, diagnostics, pu_correction, sector_models,
              hyperparameters, temporal_metrics)
         VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        'v5.0', run_id,
+        MODEL_VERSION, run_id,
         diagnostics['intercept'],
         json.dumps(diagnostics['coefficients']),
         json.dumps(diagnostics.get('likelihood_ratios', {})),
@@ -613,7 +617,7 @@ def save_calibration(conn, diagnostics, pu_correction, sector_models,
                  hyperparameters, temporal_metrics)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
-            'v5.0', run_id, sector_id,
+            MODEL_VERSION, run_id, sector_id,
             sm['intercept'], json.dumps(sm['coefficients']),
             pu_correction,
             sm.get('test_auc') or sm['train_auc'],
@@ -632,13 +636,19 @@ def save_calibration(conn, diagnostics, pu_correction, sector_models,
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Risk Model v5.0 Calibration')
+    parser = argparse.ArgumentParser(description='Risk Model v5.x Calibration')
     parser.add_argument('--n-bootstrap', type=int, default=1000)
     parser.add_argument('--random-sample', type=int, default=15000)
     parser.add_argument('--no-temporal-split', action='store_true',
                         help='Disable temporal split (use all data for train+test)')
     parser.add_argument('--skip-sector-models', action='store_true')
+    parser.add_argument('--model-version', type=str, default=MODEL_VERSION,
+                        help=f'Model version tag written to model_calibration (default: {MODEL_VERSION})')
     args = parser.parse_args()
+
+    # Allow CLI override of the module-level constant
+    global MODEL_VERSION
+    MODEL_VERSION = args.model_version
 
     if not HAS_DEPS:
         print("ERROR: scikit-learn required. pip install scikit-learn")
