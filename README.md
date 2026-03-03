@@ -12,14 +12,14 @@
 
 ## What Is This?
 
-RUBLI is an intelligence platform that analyzes **3.1 million Mexican federal procurement contracts** (2002-2025) worth over **6 trillion pesos**. Using a 16-feature per-sector calibrated risk model validated against 15 documented corruption cases, it identifies patterns consistent with fraud, collusion, and abuse of public funds.
+RUBLI is an intelligence platform that analyzes **3.1 million Mexican federal procurement contracts** (2002-2025) worth over **6 trillion pesos**. Using a 16-feature per-sector calibrated risk model validated against 22 documented corruption cases, it identifies patterns consistent with fraud, collusion, and abuse of public funds.
 
 This is not a simple dashboard. It is a full analytical engine with:
 
-- **Calibrated risk scores** — every score is P(corrupt|features), a real probability with 95% confidence intervals
+- **Statistical risk indicators** — every score measures similarity to documented corruption patterns with 95% bootstrap confidence intervals
 - **Per-sector sub-models** — 12 dedicated logistic regressions capture sector-specific corruption patterns
 - **Multivariate anomaly detection** via Mahalanobis distance across 16 feature dimensions
-- **Ground truth validation** against 15 documented cases including Odebrecht, Estafa Maestra, IMSS Ghost Companies, Segalmex, Toka IT Monopoly, and more
+- **Ground truth validation** against 22 documented cases including Odebrecht, Estafa Maestra, IMSS Ghost Companies, Segalmex, Toka IT Monopoly, SAT EFOS ghost networks, and more
 - **Network analysis** for vendor collusion and bid-rigging detection
 - **Bilingual interface** (Spanish/English) with 22+ interactive pages
 
@@ -31,13 +31,13 @@ This is not a simple dashboard. It is a full analytical engine with:
 | Validated procurement value | ~6T MXN |
 | Vendors | 320,429 |
 | Institutions | 4,456 |
-| Risk model | **v5.0** (per-sector calibrated) |
-| Train AUC-ROC | **0.967** |
-| Test AUC-ROC | **0.960** (temporal split) |
-| Detection rate (known cases) | **93.0%** high+ |
+| Risk model | **v5.1** (per-sector calibrated) |
+| Train AUC-ROC | **0.964** |
+| Test AUC-ROC | **0.957** (temporal split, 2021+ holdout) |
+| Detection rate (known cases) | **99.8%** medium+ |
 | False negative rate | **0.2%** |
-| Ground truth cases | 15 (27 vendors, 26,582 contracts) |
-| High-risk rate | 7.9% (OECD benchmark: 2-15%) |
+| Ground truth cases | 22 (27 vendors, 26,582 contracts) |
+| High-risk rate | **10.6%** (OECD benchmark: 2-15%) |
 
 ---
 
@@ -105,16 +105,19 @@ rubli/
 | Page | Route | Description |
 |------|-------|-------------|
 | Sectors | `/sectors` | 12-sector taxonomy with drill-down profiles |
-| Ground Truth | `/ground-truth` | 15 validated corruption cases and detection performance |
-| Model Transparency | `/model` | v5.0 model coefficients, feature importance, explainability |
+| Ground Truth | `/ground-truth` | 22 validated corruption cases and detection performance |
+| Model Transparency | `/model` | v5.1 model coefficients, feature importance, explainability |
 | Methodology | `/methodology` | Full risk scoring methodology documentation |
+| Limitations | `/limitations` | Known model blind spots and workarounds |
 | Settings | `/settings` | Theme, language, data quality metrics |
 
 ---
 
-## Risk Model v5.0
+## Risk Model v5.1
 
-The platform uses a **per-sector calibrated probability framework** — every risk score is P(corrupt|features), not an arbitrary index. Trained on contracts through 2020, tested on 2021+ for honest generalization.
+The platform uses a **per-sector statistical risk framework** — every score measures similarity to documented corruption patterns, normalized by sector and year baselines. Trained on contracts through 2020, tested on 2021+ for honest generalization.
+
+> **Score Interpretation**: Risk scores are statistical risk indicators measuring similarity to documented corruption patterns, not calibrated probabilities of corruption. A score of 0.50 does not mean 50% probability of corruption — it means the contract closely resembles those from known cases. Use scores for investigation triage, not as verdicts.
 
 ### Pipeline
 
@@ -155,29 +158,34 @@ Z-score normalized by sector and year:
 | **win_rate** | +0.73 | Abnormally high win rates increase risk |
 | vendor_concentration | +0.43 | Market share concentration |
 | industry_mismatch | +0.31 | Vendor operating outside primary sector |
-| direct_award | +0.18 | Now correctly positive (was negative in v4.0) |
+| direct_award | +0.18 | Correctly positive (was wrongly negative in v4.0) |
 
 ### Risk Levels
 
 | Level | Threshold | Count | % |
 |-------|-----------|-------|---|
-| **Critical** | >= 0.50 | 178,938 | 5.8% |
-| **High** | >= 0.30 | 67,190 | 2.2% |
-| **Medium** | >= 0.10 | 294,468 | 9.5% |
-| **Low** | < 0.10 | 2,569,411 | 82.6% |
+| **Critical** | >= 0.50 | 201,745 | 6.5% |
+| **High** | >= 0.30 | 126,553 | 4.1% |
+| **Medium** | >= 0.10 | ~1,365,000 | ~43.9% |
+| **Low** | < 0.10 | ~1,417,000 | ~45.6% |
 
-### Validation Against 15 Documented Cases
+**High-risk rate: 10.6%** — within OECD benchmark of 2-15%.
+
+### Validation Against 22 Documented Cases
 
 | Case | Type | Contracts | High+ Detection | Avg Score |
-|------|------|-----------|:---------:|-----------|
+|------|------|-----------|:---:|-----------|
 | IMSS Ghost Companies | Ghost companies | 9,366 | 99.0% | 0.977 |
 | Segalmex | Procurement fraud | 6,326 | 89.3% | 0.664 |
 | COVID-19 Procurement | Embezzlement | 5,371 | 84.9% | 0.821 |
 | Edenred Voucher Monopoly | Monopoly | 2,939 | 96.7% | 0.884 |
 | Toka IT Monopoly | Monopoly | 1,954 | 100% | 0.964 |
+| SEGOB-Mainbit IT Monopoly | Monopoly | 604 | — | — |
+| ISSSTE Ambulance Leasing | Overpricing | 603 | — | — |
 | Infrastructure Network | Overpricing | 191 | 99.5% | 0.962 |
 | SixSigma Tender Rigging | Tender rigging | 147 | 87.8% | 0.756 |
 | Cyber Robotic IT | Overpricing | 139 | 14.4% | 0.249 |
+| SAT EFOS Ghost Network | Ghost companies | 122 | 27.9% | 0.283 |
 | PEMEX-Cotemar | Procurement fraud | 51 | 100% | 1.000 |
 | IPN Cartel de la Limpieza | Bid rigging | 48 | 64.6% | 0.551 |
 | Odebrecht-PEMEX | Bribery | 35 | 97.1% | 0.915 |
@@ -185,13 +193,16 @@ Z-score normalized by sector and year:
 | Grupo Higa | Conflict of interest | 3 | 33.3% | 0.359 |
 | Oceanografia | Invoice fraud | 2 | 0% | 0.152 |
 
+**Note on SAT EFOS:** 38 RFC-confirmed ghost companies from the SAT EFOS definitivo list. Detection improved from 2.8% (v5.0) to 27.9% (v5.1) after inclusion in training, but remains partial — EFOS vendors are small shells (avg 3 contracts each), structurally different from the concentrated vendors that dominate training data.
+
 ### Model Evolution
 
-| Version | AUC | Cases | Features | Key Innovation |
-|---------|-----|-------|----------|---------------|
-| v3.3 | 0.584 | — | 8 weighted | IMF-aligned checklist |
-| v4.0 | 0.942 | 9 | 12 z-score | Statistical calibration, Mahalanobis |
-| **v5.0** | **0.960** | **15** | **16 z-score** | Per-sector models, temporal validation, PU-learning |
+| Version | Train AUC | Test AUC | Cases | Key Innovation |
+|---------|-----------|----------|-------|---------------|
+| v3.3 | 0.584 | — | — | IMF-aligned weighted checklist |
+| v4.0 | 0.951 | — (in-sample) | 9 | Statistical calibration, Mahalanobis distance |
+| v5.0 | 0.967 | 0.960 | 15 | Per-sector models, temporal validation, PU-learning |
+| **v5.1** | **0.964** | **0.957** | **22** | **Ground truth expansion, SAT EFOS integration** |
 
 ---
 
@@ -205,6 +216,12 @@ All data comes from **COMPRANET**, Mexico's federal electronic procurement syste
 | B | 2010-2017 | 15.7% | Better |
 | C | 2018-2022 | 30.3% | Good |
 | D | 2023-2025 | 47.4% | Best |
+
+### External Data Sources
+
+In addition to COMPRANET:
+- **SAT EFOS Definitivo** — 13,960 RFC-confirmed ghost companies; 38 matched to RUBLI vendors (Case 22)
+- **SFP Sanctions** — 1,954 sanction records; 22 matched by RFC (Jaccard token match >= 0.80)
 
 ### Data Validation
 
@@ -220,7 +237,7 @@ All data comes from **COMPRANET**, Mexico's federal electronic procurement syste
 
 - Python 3.11+
 - Node.js 18+
-- The SQLite database file (`RUBLI_NORMALIZED.db`)
+- The SQLite database file (`RUBLI_NORMALIZED.db`, ~5.6 GB — not included in repo)
 
 ### Development
 
@@ -238,6 +255,8 @@ npm run dev -- --port 3009
 
 Open http://localhost:3009
 
+**Note:** On first startup, the backend runs `_startup_checks()` which scans 3.1M rows — expect 30-60s cold start. This is expected behavior.
+
 ### Docker
 
 ```bash
@@ -251,7 +270,7 @@ docker compose up --build
 
 ## API
 
-The backend exposes **60+ REST endpoints** across 10+ router modules. Full interactive documentation at `/docs` when running.
+The backend exposes **60+ REST endpoints** across 10+ router modules. Full interactive documentation at `http://localhost:8001/docs` when running.
 
 ### Key Endpoints
 
@@ -267,38 +286,39 @@ The backend exposes **60+ REST endpoints** across 10+ router modules. Full inter
 | `GET /api/v1/analysis/money-flow` | Sankey flow data |
 | `GET /api/v1/network/co-bidders/{id}` | Co-bidding collusion analysis |
 | `GET /api/v1/investigation/top/{n}` | Top anomalous vendors for investigation |
+| `GET /api/v1/search` | Federated search across contracts, vendors, institutions |
 
 ---
 
 ## Testing
 
 ```bash
-# Backend (238 tests)
-python -m pytest backend/tests/ -q --tb=short
+# Backend (358 tests, 1 skipped)
+python -m pytest backend/tests/ -q --tb=short -p no:cacheprovider
 
-# Frontend (45 tests)
-cd frontend && npx vitest run
-
-# TypeScript compilation
+# TypeScript compilation check
 cd frontend && npx tsc --noEmit
 ```
 
 ---
 
-## Limitations
+## Known Limitations
 
-1. **Ground truth bias** — Despite diversification to 15 cases, 3 cases still contribute most training contracts. The model may underperform on novel corruption types.
-2. **Data quality degrades with age** — 2002-2010 has 0.1% RFC coverage; risk scores may be underestimated for this period.
-3. **Correlation, not causation** — A high score indicates statistical anomaly consistent with corruption patterns, not proof of wrongdoing.
-4. **PU-learning assumption** — The Elkan & Noto correction assumes labeled positives are representative of all corrupt contracts.
-5. **Small-case weakness** — Cases with few contracts (La Estafa Maestra: 10, Grupo Higa: 3) have lower detection rates.
+1. **Ground truth bias** — IMSS, Segalmex, and COVID-19 cases account for ~79% of training contracts. The model may underdetect novel patterns not resembling these large concentrated-vendor cases.
+2. **Ghost company blind spot** — Small shell companies (few contracts, low concentration) are structurally different from training data. SAT EFOS vendors avg score 0.283 vs 0.853 for main training cases.
+3. **Execution-phase fraud invisible** — RUBLI analyzes award data only. Cost overruns, kickbacks, and ghost workers during contract execution are not detectable from procurement records.
+4. **Data quality degrades with age** — 2002-2010 has 0.1% RFC coverage; risk scores may be underestimated for this period.
+5. **Co-bidding signal = zero** — The `co_bid_rate` coefficient was regularized to 0.0; bid rotation is not captured in the risk score (separate collusion detection tab available).
+6. **Correlation, not causation** — A high score indicates statistical similarity to corruption patterns, not proof of wrongdoing.
+
+See the `/limitations` page in the platform for the full interactive version with context and workarounds.
 
 ---
 
 ## Methodology
 
 Full documentation:
-- [`docs/RISK_METHODOLOGY_v5.md`](docs/RISK_METHODOLOGY_v5.md) — v5.0 per-sector calibrated model (active)
+- [`docs/RISK_METHODOLOGY_v5.md`](docs/RISK_METHODOLOGY_v5.md) — v5.1 per-sector calibrated model (active)
 - [`docs/RISK_METHODOLOGY_v4.md`](docs/RISK_METHODOLOGY_v4.md) — v4.0 statistical framework (preserved)
 - [`docs/RISK_METHODOLOGY.md`](docs/RISK_METHODOLOGY.md) — v3.3 weighted checklist (preserved)
 - [`docs/MODEL_COMPARISON_REPORT.md`](docs/MODEL_COMPARISON_REPORT.md) — v3.3 vs v4.0 comparison
@@ -308,6 +328,8 @@ Full documentation:
 ## Acknowledgments
 
 - **COMPRANET** — Mexico's federal procurement transparency platform
+- **SAT** — EFOS definitivo ghost company registry
+- **SFP** — Sanction and debarment records
 - **IMF / World Bank / OECD** — Risk methodology frameworks
 - **Open Contracting Partnership** — Red flags library
 - **Elkan & Noto (2008)** — PU-learning methodology
@@ -317,4 +339,3 @@ Full documentation:
 ## License
 
 All Rights Reserved. Unauthorized copying, distribution, or modification is prohibited without explicit permission.
-
