@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useState } from 'react'
+import { memo, useMemo, useState } from 'react'
 import { HelpCircle, ChevronDown, ChevronUp, ArrowUpDown } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn, formatNumber } from '@/lib/utils'

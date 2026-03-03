@@ -17,7 +17,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { FolderSidebar } from '@/components/FolderSidebar'
 import { DossierCard } from '@/components/DossierCard'
 import { DossierCreateDialog } from '@/components/DossierCreateDialog'
-import { watchlistApi, vendorApi, dossierApi, type WatchlistItem, type WatchlistItemUpdate } from '@/api/client'
+import WorkspaceJournalistGuide from '@/components/WorkspaceJournalistGuide'
+import { watchlistApi, vendorApi, dossierApi, type WatchlistItem, type WatchlistItemUpdate, type DossierItem } from '@/api/client'
 import {
   Eye,
   EyeOff,
@@ -39,6 +40,7 @@ import {
   ChevronUp,
   Download,
   FolderOpen,
+  Folder,
   Plus,
 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
@@ -251,6 +253,110 @@ function RemoveButton({ onConfirm, disabled }: { onConfirm: () => void; disabled
 }
 
 // ============================================================================
+// Dossier empty state
+// ============================================================================
+
+export function DossierEmptyState({ onCreateClick }: { onCreateClick: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+      <div className="rounded-full bg-accent/10 p-4 mb-5">
+        <Folder className="h-10 w-10 text-accent opacity-70" />
+      </div>
+      <h3 className="text-base font-semibold text-text-primary mb-2">
+        Start Your Investigation
+      </h3>
+      <p className="text-sm text-text-muted max-w-sm leading-relaxed mb-5">
+        Create a dossier to organize vendors, institutions and contracts under a single investigation.
+      </p>
+      <div className="text-xs text-text-muted/70 space-y-1 mb-6">
+        <p>1. Create a dossier &rarr; 2. Add vendors you're investigating &rarr; 3. Analyze their contracts &amp; export</p>
+      </div>
+      <Button size="sm" onClick={onCreateClick}>
+        <Plus className="h-4 w-4 mr-1.5" />
+        Create First Dossier
+      </Button>
+    </div>
+  )
+}
+
+// ============================================================================
+// Dossier loading skeletons
+// ============================================================================
+
+function DossierSkeletons() {
+  return (
+    <div className="space-y-3">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="rounded-lg border border-border p-4 space-y-2">
+          <Skeleton className="h-4 w-2/5" />
+          <Skeleton className="h-3 w-3/4" />
+          <Skeleton className="h-3 w-1/4" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ============================================================================
+// Active dossier stats bar
+// ============================================================================
+
+interface DossierStatsBarProps {
+  dossierId: number
+  dossierName: string
+}
+
+function DossierStatsBar({ dossierId, dossierName }: DossierStatsBarProps) {
+  const { data: items, isLoading } = useQuery<DossierItem[]>({
+    queryKey: ['dossier-items', dossierId],
+    queryFn: () => dossierApi.listItems(dossierId),
+    staleTime: 60 * 1000,
+  })
+
+  const totalItems = items?.length ?? 0
+
+  // Find highest-risk item by annotation that contains a risk score, or just show total
+  // DossierItem doesn't carry a risk_score field — we surface name only
+  const vendorItems = items?.filter((i) => i.item_type === 'vendor') ?? []
+  const firstVendor = vendorItems[0]
+
+  return (
+    <div className="flex items-center gap-4 px-4 py-2.5 rounded-lg border border-border/60 bg-background-elevated/40 text-xs">
+      {isLoading ? (
+        <>
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-3 w-32" />
+        </>
+      ) : (
+        <>
+          <span className="text-text-muted">
+            <span className="font-semibold text-text-primary">{totalItems}</span> item{totalItems !== 1 ? 's' : ''} in dossier
+          </span>
+          {firstVendor && (
+            <>
+              <span className="text-border/60">·</span>
+              <span className="text-text-muted">
+                Focus vendor: <span className="font-medium text-text-secondary truncate max-w-[180px] inline-block align-bottom">{firstVendor.item_name}</span>
+              </span>
+            </>
+          )}
+          <span className="text-border/60">·</span>
+          <a
+            href={`/api/v1/workspace/dossiers/${dossierId}/export`}
+            download={`${dossierName.replace(/\s+/g, '-')}-report.json`}
+            className="flex items-center gap-1 text-accent hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Download className="h-3 w-3" />
+            Download Dossier Report
+          </a>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ============================================================================
 // Main component
 // ============================================================================
 
@@ -268,6 +374,7 @@ export function Watchlist() {
 
   const [activeTab, setActiveTab] = useState<'entities' | 'dossiers'>('entities')
   const [dossierDialogOpen, setDossierDialogOpen] = useState(false)
+  const [activeDossierId, setActiveDossierId] = useState<number | null>(null)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all')
@@ -299,6 +406,7 @@ export function Watchlist() {
       return res.json()
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['watchlist-folders'] }),
+    onError: (err) => console.error('[Watchlist] Failed to create folder:', err),
   })
 
   const deleteFolderMutation = useMutation({
@@ -311,6 +419,7 @@ export function Watchlist() {
       setActiveFolderId(null)
       queryClient.invalidateQueries({ queryKey: ['watchlist-folders'] })
     },
+    onError: (err) => console.error('[Watchlist] Failed to delete folder:', err),
   })
 
   // Stats query (separate so header cards always show totals)
@@ -341,6 +450,7 @@ export function Watchlist() {
       queryClient.invalidateQueries({ queryKey: ['watchlist'] })
       queryClient.invalidateQueries({ queryKey: ['watchlist-stats'] })
     },
+    onError: (err) => console.error('[Watchlist] Failed to update item:', err),
   })
 
   const deleteMutation = useMutation({
@@ -349,6 +459,7 @@ export function Watchlist() {
       queryClient.invalidateQueries({ queryKey: ['watchlist'] })
       queryClient.invalidateQueries({ queryKey: ['watchlist-stats'] })
     },
+    onError: (err) => console.error('[Watchlist] Failed to delete item:', err),
   })
 
   // Dossier queries and mutations
@@ -363,11 +474,16 @@ export function Watchlist() {
     mutationFn: (data: { name: string; description: string; color: string }) =>
       dossierApi.create(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['dossiers'] }),
+    onError: (err) => console.error('[Watchlist] Failed to create dossier:', err),
   })
 
   const deleteDossier = useMutation({
     mutationFn: (id: number) => dossierApi.remove(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['dossiers'] }),
+    onSuccess: (_, id) => {
+      if (activeDossierId === id) setActiveDossierId(null)
+      queryClient.invalidateQueries({ queryKey: ['dossiers'] })
+    },
+    onError: (err) => console.error('[Watchlist] Failed to delete dossier:', err),
   })
 
   const isLoading = itemsLoading
@@ -446,6 +562,12 @@ export function Watchlist() {
     deleteMutation.mutate(id)
   }, [deleteMutation])
 
+  // Dossier for the active stats bar
+  const activeDossier = useMemo(
+    () => (dossiers ?? []).find((d) => d.id === activeDossierId),
+    [dossiers, activeDossierId]
+  )
+
   // ---- error state ----
   if (error) {
     return (
@@ -497,243 +619,314 @@ export function Watchlist() {
 
       {/* Main content */}
       <div className="flex-1 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
-            <Eye className="h-4.5 w-4.5 text-accent" />
-            {t('title')}
-          </h2>
-          <p className="text-xs text-text-muted mt-0.5">
-            {t('subtitleFull')}
-          </p>
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+              <Eye className="h-4.5 w-4.5 text-accent" />
+              {t('title')}
+            </h2>
+            <p className="text-xs text-text-muted mt-0.5">
+              {t('subtitleFull')}
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            {t('refresh')}
+          </Button>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-          {t('refresh')}
-        </Button>
-      </div>
 
-      {/* Stat cards — 4 cards */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        <StatCard
-          label={t('statCards.watching')}
-          value={stats.watching}
-          color="text-accent"
-          icon={Eye}
-          onClick={() => setStatusFilter('watching')}
-          loading={statsLoading}
-        />
-        <StatCard
-          label={t('statCards.investigating')}
-          value={stats.investigating}
-          color="text-risk-high"
-          icon={AlertTriangle}
-          onClick={() => setStatusFilter('investigating')}
-          loading={statsLoading}
-        />
-        <StatCard
-          label={t('statCards.highPriority')}
-          value={stats.highPriority}
-          color="text-risk-critical"
-          icon={AlertTriangle}
-          loading={statsLoading}
-        />
-        <StatCard
-          label={t('statCards.resolved')}
-          value={stats.resolved}
-          color="text-risk-low"
-          icon={CheckCircle}
-          onClick={() => setStatusFilter('resolved')}
-          loading={statsLoading}
-        />
-      </div>
+        {/* Stat cards — 4 cards */}
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+          <StatCard
+            label={t('statCards.watching')}
+            value={stats.watching}
+            color="text-accent"
+            icon={Eye}
+            onClick={() => setStatusFilter('watching')}
+            loading={statsLoading}
+          />
+          <StatCard
+            label={t('statCards.investigating')}
+            value={stats.investigating}
+            color="text-risk-high"
+            icon={AlertTriangle}
+            onClick={() => setStatusFilter('investigating')}
+            loading={statsLoading}
+          />
+          <StatCard
+            label={t('statCards.highPriority')}
+            value={stats.highPriority}
+            color="text-risk-critical"
+            icon={AlertTriangle}
+            loading={statsLoading}
+          />
+          <StatCard
+            label={t('statCards.resolved')}
+            value={stats.resolved}
+            color="text-risk-low"
+            icon={CheckCircle}
+            onClick={() => setStatusFilter('resolved')}
+            loading={statsLoading}
+          />
+        </div>
 
-      {/* Filter bar */}
-      <div className="flex flex-wrap gap-3">
-        {/* Status chips */}
-        <div className="flex items-center gap-1.5">
-          <Filter className="h-3.5 w-3.5 text-text-muted" />
-          {(['all', 'watching', 'investigating', 'resolved'] as StatusFilter[]).map((s) => (
-            <FilterChip
-              key={s}
-              value={s}
-              active={statusFilter === s}
-              onClick={() => setStatusFilter(s)}
-              label={s === 'all' ? t('status.all') : t(`status.${s}`)}
-            />
-          ))}
-        </div>
-        {/* Type chips */}
-        <div className="flex items-center gap-1.5">
-          {(['all', 'vendor', 'institution', 'contract'] as TypeFilter[]).map((tp) => (
-            <FilterChip
-              key={tp}
-              value={tp}
-              active={typeFilter === tp}
-              onClick={() => setTypeFilter(tp)}
-              label={tp === 'all' ? t('filters.allTypes') : t(`types.${tp}s`)}
-            />
-          ))}
-        </div>
-        {/* Priority chips */}
-        <div className="flex items-center gap-1.5">
-          {(['all', 'high', 'medium', 'low'] as PriorityFilter[]).map((p) => (
-            <FilterChip
-              key={p}
-              value={p}
-              active={priorityFilter === p}
-              onClick={() => setPriorityFilter(p)}
-              label={p === 'all' ? t('priority.all') : t(`priority.${p}`)}
-            />
-          ))}
-        </div>
-      </div>
+        {/* Tabs: Tracked Entities | Dossiers */}
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'entities' | 'dossiers')}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="entities" className="flex items-center gap-1.5">
+              <Eye className="h-3.5 w-3.5" />
+              Tracked Entities
+            </TabsTrigger>
+            <TabsTrigger value="dossiers" className="flex items-center gap-1.5">
+              <FolderOpen className="h-3.5 w-3.5" />
+              Dossiers
+              {(dossiers?.length ?? 0) > 0 && (
+                <span className="ml-1 text-[10px] bg-accent/15 text-accent rounded-full px-1.5 py-px font-medium">
+                  {dossiers?.length}
+                </span>
+              )}
+            </TabsTrigger>
+          </TabsList>
 
-      {/* Table */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center justify-between text-sm">
-            <span className="flex items-center gap-2">
-              <Eye className="h-4 w-4" />
-              {t('table.trackedEntities')}
-            </span>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] text-text-muted font-normal">Sort:</span>
-              {([
-                { field: 'risk' as SortField, label: 'Risk' },
-                { field: 'risk_delta' as SortField, label: 'Change' },
-                { field: 'added' as SortField, label: 'Added' },
-                { field: 'name' as SortField, label: 'Name' },
-              ]).map(({ field, label }) => (
-                <button
-                  key={field}
-                  onClick={() => toggleSort(field)}
-                  className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
-                    sortField === field
-                      ? 'bg-accent/10 text-accent border-accent/30 font-medium'
-                      : 'text-text-muted border-border/40 hover:text-accent hover:border-accent/30'
-                  }`}
-                >
-                  {label}
-                  {sortField === field && (sortDir === 'desc' ? ' ↓' : ' ↑')}
-                </button>
-              ))}
-              <Badge variant="secondary">{items.length} {items.length !== 1 ? t('table.items') : t('table.item')}</Badge>
+          {/* ---- ENTITIES TAB ---- */}
+          <TabsContent value="entities" className="space-y-4">
+            {/* Filter bar */}
+            <div className="flex flex-wrap gap-3">
+              {/* Status chips */}
+              <div className="flex items-center gap-1.5">
+                <Filter className="h-3.5 w-3.5 text-text-muted" />
+                {(['all', 'watching', 'investigating', 'resolved'] as StatusFilter[]).map((s) => (
+                  <FilterChip
+                    key={s}
+                    value={s}
+                    active={statusFilter === s}
+                    onClick={() => setStatusFilter(s)}
+                    label={s === 'all' ? t('status.all') : t(`status.${s}`)}
+                  />
+                ))}
+              </div>
+              {/* Type chips */}
+              <div className="flex items-center gap-1.5">
+                {(['all', 'vendor', 'institution', 'contract'] as TypeFilter[]).map((tp) => (
+                  <FilterChip
+                    key={tp}
+                    value={tp}
+                    active={typeFilter === tp}
+                    onClick={() => setTypeFilter(tp)}
+                    label={tp === 'all' ? t('filters.allTypes') : t(`types.${tp}s`)}
+                  />
+                ))}
+              </div>
+              {/* Priority chips */}
+              <div className="flex items-center gap-1.5">
+                {(['all', 'high', 'medium', 'low'] as PriorityFilter[]).map((p) => (
+                  <FilterChip
+                    key={p}
+                    value={p}
+                    active={priorityFilter === p}
+                    onClick={() => setPriorityFilter(p)}
+                    label={p === 'all' ? t('priority.all') : t(`priority.${p}`)}
+                  />
+                ))}
+              </div>
             </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {/* Loading skeleton */}
-          {isLoading ? (
-            <div className="p-4 space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <Skeleton className="h-5 w-5/12" />
-                  <Skeleton className="h-5 w-1/12" />
-                  <Skeleton className="h-5 w-1/12" />
-                  <Skeleton className="h-5 w-1/12" />
-                  <Skeleton className="h-5 w-1/12" />
-                  <Skeleton className="h-5 w-1/12" />
-                  <Skeleton className="h-5 w-2/12" />
-                </div>
-              ))}
-            </div>
-          ) : items.length === 0 ? (
-            /* Empty state */
-            (() => {
-              const hasFilters =
-                statusFilter !== 'all' || typeFilter !== 'all' || priorityFilter !== 'all'
-              if (hasFilters) {
-                return (
-                  <div className="p-12 text-center text-text-muted">
-                    <Filter className="h-12 w-12 mx-auto mb-4 opacity-25" />
-                    <p className="text-sm font-medium mb-1">{t('noItemsMatch')}</p>
-                    <p className="text-xs max-w-sm mx-auto mb-4">
-                      {t('noItemsMatchDescription')}
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setStatusFilter('all')
-                        setTypeFilter('all')
-                        setPriorityFilter('all')
-                      }}
-                    >
-                      {t('clearFilters')}
-                    </Button>
+
+            {/* Table */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-2">
+                    <Eye className="h-4 w-4" />
+                    {t('table.trackedEntities')}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-text-muted font-normal">Sort:</span>
+                    {([
+                      { field: 'risk' as SortField, label: 'Risk' },
+                      { field: 'risk_delta' as SortField, label: 'Change' },
+                      { field: 'added' as SortField, label: 'Added' },
+                      { field: 'name' as SortField, label: 'Name' },
+                    ]).map(({ field, label }) => (
+                      <button
+                        key={field}
+                        onClick={() => toggleSort(field)}
+                        className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
+                          sortField === field
+                            ? 'bg-accent/10 text-accent border-accent/30 font-medium'
+                            : 'text-text-muted border-border/40 hover:text-accent hover:border-accent/30'
+                        }`}
+                      >
+                        {label}
+                        {sortField === field && (sortDir === 'desc' ? ' ↓' : ' ↑')}
+                      </button>
+                    ))}
+                    <Badge variant="secondary">{items.length} {items.length !== 1 ? t('table.items') : t('table.item')}</Badge>
                   </div>
-                )
-              }
-              return (
-                <div className="p-12 text-center text-text-muted">
-                  <EyeOff className="h-12 w-12 mx-auto mb-4 opacity-25" />
-                  <p className="text-sm font-medium mb-1 text-text-primary">Your investigation watchlist is empty</p>
-                  <p className="text-xs max-w-xs mx-auto mb-2 leading-relaxed">
-                    Add vendors and institutions to track their risk score changes over time. Get notified when a low-risk vendor becomes high-risk.
-                  </p>
-                  <p className="text-xs text-text-muted/70 max-w-xs mx-auto mb-5">
-                    Use the <Eye className="h-3 w-3 inline mx-0.5" /> icon on any vendor or institution profile to start tracking.
-                  </p>
-                  <div className="flex justify-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate('/explore?tab=vendors')}
-                    >
-                      <Search className="h-3.5 w-3.5 mr-1.5" />
-                      {t('browseVendors')}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate('/explore?tab=institutions')}
-                    >
-                      <Building2 className="h-3.5 w-3.5 mr-1.5" />
-                      {t('browseInstitutions')}
-                    </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {/* Loading skeleton */}
+                {isLoading ? (
+                  <div className="p-4 space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="flex items-center gap-4">
+                        <Skeleton className="h-5 w-5/12" />
+                        <Skeleton className="h-5 w-1/12" />
+                        <Skeleton className="h-5 w-1/12" />
+                        <Skeleton className="h-5 w-1/12" />
+                        <Skeleton className="h-5 w-1/12" />
+                        <Skeleton className="h-5 w-1/12" />
+                        <Skeleton className="h-5 w-2/12" />
+                      </div>
+                    ))}
                   </div>
-                </div>
-              )
-            })()
-          ) : (
-            /* Table */
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-xs text-text-muted">
-                    <th className="text-left px-4 py-3 font-medium">{t('columns.entity')}</th>
-                    <th className="text-left px-3 py-3 font-medium">{t('columns.type')}</th>
-                    <th className="text-left px-3 py-3 font-medium">{t('columns.priority')}</th>
-                    <th className="text-left px-3 py-3 font-medium">{t('columns.status')}</th>
-                    <th className="text-right px-3 py-3 font-medium">{t('columns.riskAtAdd')}</th>
-                    <th className="text-right px-3 py-3 font-medium">{t('columns.currentRisk')}</th>
-                    <th className="text-right px-3 py-3 font-medium">{t('columns.change')}</th>
-                    <th className="text-left px-3 py-3 font-medium">{t('columns.added')}</th>
-                    <th className="text-right px-4 py-3 font-medium">{t('columns.actions')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {items.map((item) => (
-                    <WatchlistRow
-                      key={item.id}
-                      item={item}
-                      isMutating={isMutating}
-                      onEntityNav={handleEntityNav}
-                      onInvestigate={handleInvestigate}
-                      onStatusTransition={handleStatusTransition}
-                      onRemove={handleRemove}
-                      onOpenDrawer={(id, type) => openEntityDrawer(id, type)}
-                    />
-                  ))}
-                </tbody>
-              </table>
+                ) : items.length === 0 ? (
+                  /* Empty state */
+                  (() => {
+                    const hasFilters =
+                      statusFilter !== 'all' || typeFilter !== 'all' || priorityFilter !== 'all'
+                    if (hasFilters) {
+                      return (
+                        <div className="p-12 text-center text-text-muted">
+                          <Filter className="h-12 w-12 mx-auto mb-4 opacity-25" />
+                          <p className="text-sm font-medium mb-1">{t('noItemsMatch')}</p>
+                          <p className="text-xs max-w-sm mx-auto mb-4">
+                            {t('noItemsMatchDescription')}
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setStatusFilter('all')
+                              setTypeFilter('all')
+                              setPriorityFilter('all')
+                            }}
+                          >
+                            {t('clearFilters')}
+                          </Button>
+                        </div>
+                      )
+                    }
+                    return (
+                      <div className="p-12 text-center text-text-muted">
+                        <EyeOff className="h-12 w-12 mx-auto mb-4 opacity-25" />
+                        <p className="text-sm font-medium mb-1 text-text-primary">Your investigation watchlist is empty</p>
+                        <p className="text-xs max-w-xs mx-auto mb-2 leading-relaxed">
+                          Add vendors and institutions to track their risk score changes over time. Get notified when a low-risk vendor becomes high-risk.
+                        </p>
+                        <p className="text-xs text-text-muted/70 max-w-xs mx-auto mb-5">
+                          Use the <Eye className="h-3 w-3 inline mx-0.5" /> icon on any vendor or institution profile to start tracking.
+                        </p>
+                        <div className="flex justify-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate('/explore?tab=vendors')}
+                          >
+                            <Search className="h-3.5 w-3.5 mr-1.5" />
+                            {t('browseVendors')}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate('/explore?tab=institutions')}
+                          >
+                            <Building2 className="h-3.5 w-3.5 mr-1.5" />
+                            {t('browseInstitutions')}
+                          </Button>
+                        </div>
+                      </div>
+                    )
+                  })()
+                ) : (
+                  /* Table */
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border text-xs text-text-muted">
+                          <th className="text-left px-4 py-3 font-medium">{t('columns.entity')}</th>
+                          <th className="text-left px-3 py-3 font-medium">{t('columns.type')}</th>
+                          <th className="text-left px-3 py-3 font-medium">{t('columns.priority')}</th>
+                          <th className="text-left px-3 py-3 font-medium">{t('columns.status')}</th>
+                          <th className="text-right px-3 py-3 font-medium">{t('columns.riskAtAdd')}</th>
+                          <th className="text-right px-3 py-3 font-medium">{t('columns.currentRisk')}</th>
+                          <th className="text-right px-3 py-3 font-medium">{t('columns.change')}</th>
+                          <th className="text-left px-3 py-3 font-medium">{t('columns.added')}</th>
+                          <th className="text-right px-4 py-3 font-medium">{t('columns.actions')}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {items.map((item) => (
+                          <WatchlistRow
+                            key={item.id}
+                            item={item}
+                            isMutating={isMutating}
+                            onEntityNav={handleEntityNav}
+                            onInvestigate={handleInvestigate}
+                            onStatusTransition={handleStatusTransition}
+                            onRemove={handleRemove}
+                            onOpenDrawer={(id, type) => openEntityDrawer(id, type)}
+                          />
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ---- DOSSIERS TAB ---- */}
+          <TabsContent value="dossiers" className="space-y-4">
+            {/* Dossier tab header row */}
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-text-muted">
+                Organize your investigations into case folders. Each dossier holds vendors, institutions, and contracts.
+              </p>
+              <Button size="sm" onClick={() => setDossierDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-1.5" />
+                New Dossier
+              </Button>
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+
+            {/* Active dossier stats bar */}
+            {activeDossierId !== null && activeDossier && (
+              <DossierStatsBar dossierId={activeDossierId} dossierName={activeDossier.name} />
+            )}
+
+            {/* Dossier list */}
+            {dossiersLoading ? (
+              <DossierSkeletons />
+            ) : (dossiers ?? []).length === 0 ? (
+              <WorkspaceJournalistGuide onCreateDossier={() => setDossierDialogOpen(true)} />
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {(dossiers ?? []).map((dossier) => (
+                  <DossierCard
+                    key={dossier.id}
+                    dossier={dossier}
+                    onOpen={(id) => setActiveDossierId((prev) => (prev === id ? null : id))}
+                    onDelete={(id) => deleteDossier.mutate(id)}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Create dossier dialog */}
+      <DossierCreateDialog
+        open={dossierDialogOpen}
+        onOpenChange={setDossierDialogOpen}
+        loading={createDossier.isPending}
+        onSubmit={(data) => {
+          createDossier.mutate(data, {
+            onSuccess: () => setDossierDialogOpen(false),
+          })
+        }}
+      />
     </div>
   )
 }

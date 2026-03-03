@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { vendorApi, institutionApi, dossierApi } from '@/api/client'
@@ -129,7 +129,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
           </thead>
           <tbody>
             {vendors.map((v: any) => {
-              const riskColor = RISK_COLORS[v.risk_level as string] || RISK_COLORS.low
+              const riskColor = RISK_COLORS[v.risk_level as keyof typeof RISK_COLORS] || RISK_COLORS.low
               return (
                 <VendorRow key={v.vendor_id} vendor={v} riskColor={riskColor} />
               )
@@ -162,7 +162,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
         </thead>
         <tbody>
           {institutions.map((inst: any) => {
-            const riskColor = RISK_COLORS[inst.risk_level as string] || RISK_COLORS.low
+            const riskColor = RISK_COLORS[inst.risk_level as keyof typeof RISK_COLORS] || RISK_COLORS.low
             return (
               <InstitutionRow key={inst.institution_id} institution={inst} riskColor={riskColor} />
             )
@@ -179,7 +179,6 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
 // =============================================================================
 
 function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
-  const [dossierOpen, setDossierOpen] = useState(false)
   const sector = vendor.primary_sector_id ? SECTORS.find(s => s.id === vendor.primary_sector_id) : null
 
   return (

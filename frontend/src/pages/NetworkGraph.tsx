@@ -754,9 +754,9 @@ export function NetworkGraph() {
 
     // Determine which nodes to visually dim based on risk filter
     const isNodeVisibleByRisk = (node: NetworkNode): boolean => {
-      if (filters.riskFilter === 'all') return true
+      if ((filters.riskFilter as string) === 'all') return true
       if (node.type === 'institution') return true // always show institutions
-      if (node.risk_score == null) return filters.riskFilter === 'all'
+      if (node.risk_score == null) return (filters.riskFilter as string) === 'all'
       const level = getRiskLevelFromScore(node.risk_score)
       if (filters.riskFilter === 'critical') return level === 'critical'
       if (filters.riskFilter === 'high_and_above') return level === 'critical' || level === 'high'

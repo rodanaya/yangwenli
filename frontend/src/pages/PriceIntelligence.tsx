@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { SECTOR_COLORS, SECTORS, getSectorNameEN } from '@/lib/constants'
-import { priceApi, analysisApi } from '@/api/client'
+import { priceApi } from '@/api/client'
 import type { PriceHypothesisItem, SectorPriceBaseline, PriceHypothesesFilterParams, MlAnomaliesResponse } from '@/api/client'
 import {
   TrendingUp,
@@ -200,12 +200,6 @@ function TopAnomalyCard({ item, onNavigate }: { item: PriceHypothesisItem; onNav
 
 // ─── Small helpers ──────────────────────────────────────────────────────────
 
-function formatTypeName(type: string): string {
-  return type
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-}
-
 // ============================================================================
 // Main Page Component
 // ============================================================================
@@ -310,7 +304,6 @@ export default function PriceIntelligence() {
 
   // ── Derived summary stats ─────────────────────────────────────────────────
   const totalHypotheses = priceSummary?.overall?.total_hypotheses ?? 0
-  const pendingCount = priceSummary?.overall?.pending_review ?? 0
   const totalFlaggedValue = priceSummary?.overall?.total_flagged_value ?? 0
   const avgConfidence = priceSummary?.overall?.avg_confidence ?? 0
 

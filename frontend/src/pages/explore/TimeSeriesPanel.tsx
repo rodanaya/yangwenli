@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { analysisApi } from '@/api/client'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -19,12 +19,18 @@ interface TimeSeriesPanelProps {
   onYearRangeChange: (start: number | undefined, end: number | undefined) => void
 }
 
+// Recharts fires mouse events with a CategoricalChartState-like payload.
+// We only care about `activeLabel`, which is the x-axis value under the cursor.
+interface ChartMouseEvent {
+  activeLabel?: string | number
+}
+
 export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeSeriesPanelProps) {
   const [brushStart, setBrushStart] = useState<number | null>(null)
   const [brushEnd, setBrushEnd] = useState<number | null>(null)
   const [isBrushing, setIsBrushing] = useState(false)
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['dashboard', 'fast'],
     queryFn: () => analysisApi.getFastDashboard(),
     staleTime: 5 * 60 * 1000,
@@ -33,11 +39,11 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
   const chartData = useMemo(() => {
     if (!data?.yearly_trends) return []
     return data.yearly_trends
-      .filter(d => d.year >= 2002)
-      .map(d => ({
+      .filter((d) => d.year >= 2002)
+      .map((d) => ({
         year: d.year,
         contracts: d.contracts || 0,
-        avgRisk: ((d.avg_risk || 0) * 100),
+        avgRisk: (d.avg_risk || 0) * 100,
         value: d.total_value || d.value_mxn || 0,
       }))
   }, [data])
@@ -45,21 +51,36 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
   if (isLoading) {
     return (
       <div>
-        <div className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Contracts Over Time</div>
+        <div className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">
+          Contracts Over Time
+        </div>
         <Skeleton className="h-24 w-full" />
       </div>
     )
   }
 
-  function handleMouseDown(e: any) {
-    if (e?.activeLabel) {
+  if (isError || chartData.length === 0) {
+    return (
+      <div>
+        <div className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">
+          Contracts Over Time
+        </div>
+        <div className="h-24 w-full flex items-center justify-center text-[11px] text-text-muted/60 border border-border/20 rounded bg-background-elevated/10">
+          No trend data available
+        </div>
+      </div>
+    )
+  }
+
+  function handleMouseDown(e: ChartMouseEvent) {
+    if (e?.activeLabel != null) {
       setBrushStart(Number(e.activeLabel))
       setIsBrushing(true)
     }
   }
 
-  function handleMouseMove(e: any) {
-    if (isBrushing && e?.activeLabel) {
+  function handleMouseMove(e: ChartMouseEvent) {
+    if (isBrushing && e?.activeLabel != null) {
       setBrushEnd(Number(e.activeLabel))
     }
   }
@@ -77,8 +98,10 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
     setIsBrushing(false)
   }
 
-  const selStart = brushStart != null && brushEnd != null ? Math.min(brushStart, brushEnd) : yearStart
-  const selEnd = brushStart != null && brushEnd != null ? Math.max(brushStart, brushEnd) : yearEnd
+  const selStart =
+    brushStart != null && brushEnd != null ? Math.min(brushStart, brushEnd) : yearStart
+  const selEnd =
+    brushStart != null && brushEnd != null ? Math.max(brushStart, brushEnd) : yearEnd
   const hasSelection = selStart != null && selEnd != null
 
   return (
@@ -103,7 +126,9 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
       </div>
       <div
         style={{ height: 80, cursor: 'crosshair', userSelect: 'none' }}
-        onMouseLeave={() => { if (isBrushing) handleMouseUp() }}
+        onMouseLeave={() => {
+          if (isBrushing) handleMouseUp()
+        }}
       >
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
@@ -136,7 +161,7 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
                 fontSize: 11,
                 color: 'rgb(226 232 240)',
               }}
-              formatter={(value: number) => [value.toLocaleString(), 'Contracts']}
+              formatter={(value: any) => [Number(value).toLocaleString(), 'Contracts']}
               labelStyle={{ color: 'rgb(148 163 184)', fontSize: 10 }}
             />
             {hasSelection && (

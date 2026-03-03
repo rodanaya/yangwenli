@@ -9,8 +9,8 @@
  * - Falls back to FALLBACK_DATA if the API is unavailable
  */
 
-import { memo, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { memo, useCallback, useMemo } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ComposedChart,
   Area,
@@ -74,10 +74,16 @@ const SCANDAL_ANNOTATIONS: ScandalAnnotation[] = [
     color: '#fb923c',
   },
   {
+    year: 2018,
+    label: 'Toka IT Monopoly',
+    shortLabel: 'Toka',
+    color: '#8b5cf6',
+  },
+  {
     year: 2020,
-    label: 'COVID emergency procurement',
+    label: 'COVID Emergency Procurement',
     shortLabel: 'COVID',
-    color: '#fbbf24',
+    color: '#dc2626',
   },
   {
     year: 2021,
@@ -102,6 +108,47 @@ interface TemporalDataPoint {
   highRiskRate: number
   avgScore: number
   criticalCount: number
+}
+
+// ============================================================================
+// CSV EXPORT UTILITY
+// ============================================================================
+
+function exportCSV(data: TemporalDataPoint[], filename: string): void {
+  const headers = ['Year', 'High Risk Rate (%)', 'Avg Risk Score', 'Critical Count']
+  const rows = data.map((d) => [
+    d.year,
+    d.highRiskRate?.toFixed(2),
+    d.avgScore?.toFixed(4),
+    d.criticalCount ?? 0,
+  ])
+  const csv = [headers, ...rows].map((r) => r.join(',')).join('\n')
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+// ============================================================================
+// DOWNLOAD ICON (inline SVG — no extra dependency)
+// ============================================================================
+
+function DownloadIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M8 12l-4-4h2.5V3h3v5H12L8 12z" />
+      <rect x="2" y="13" width="12" height="1.5" rx="0.75" />
+    </svg>
+  )
 }
 
 // ============================================================================
@@ -166,9 +213,10 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
   className,
 }: TemporalRiskChartProps) {
   const gradId = 'temporalRiskGrad'
+  const queryClient = useQueryClient()
 
   // Try to fetch live data from /analysis/year-over-year
-  const { data: apiData, isError } = useQuery({
+  const { data: apiData, isLoading, isError } = useQuery({
     queryKey: ['analysis', 'year-over-year', 'temporal-chart'],
     queryFn: () => analysisApi.getYearOverYear(),
     staleTime: 10 * 60 * 1000,
@@ -197,6 +245,52 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
   const minYear = chartData[0]?.year ?? 2010
   const maxYear = chartData[chartData.length - 1]?.year ?? 2024
 
+  const handleDownload = useCallback(() => {
+    const filename = `rubli-risk-trends-${minYear}-${maxYear}.csv`
+    exportCSV(chartData, filename)
+  }, [chartData, minYear, maxYear])
+
+  const handleRetry = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['analysis', 'year-over-year', 'temporal-chart'] })
+  }, [queryClient])
+
+  // ---- Loading state ----
+  if (isLoading) {
+    return (
+      <div className={cn('w-full', className)}>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="text-base font-bold text-text-primary">{title}</p>
+            <p className="text-xs text-text-muted font-mono mt-0.5">
+              High-risk rate (left axis) · Avg risk score (right axis) · 2010–2025
+            </p>
+          </div>
+        </div>
+        <div className="animate-pulse bg-surface-muted rounded h-64 w-full" />
+      </div>
+    )
+  }
+
+  // ---- Error state with no fallback possible (should rarely occur — fallback is always present) ----
+  if (isError && !liveData && FALLBACK_DATA.length === 0) {
+    return (
+      <div className={cn('w-full', className)}>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-base font-bold text-text-primary">{title}</p>
+        </div>
+        <div className="flex flex-col items-center justify-center h-64 gap-3 text-center text-sm text-text-muted border border-border/30 rounded-lg bg-background-elevated/20">
+          <span>Failed to load risk trend data.</span>
+          <button
+            onClick={handleRetry}
+            className="text-xs px-3 py-1.5 rounded border border-border/60 hover:border-accent/60 hover:text-accent transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={cn('w-full', className)}>
       {/* Header */}
@@ -207,16 +301,40 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
             High-risk rate (left axis) · Avg risk score (right axis) · 2010–2025
           </p>
         </div>
-        {!isError && liveData && (
-          <span className="text-[10px] font-mono text-risk-low border border-risk-low/30 bg-risk-low/5 px-2 py-0.5 rounded">
-            Live data
-          </span>
-        )}
-        {(isError || !liveData) && (
-          <span className="text-[10px] font-mono text-text-muted border border-border/30 bg-background-elevated/20 px-2 py-0.5 rounded">
-            Estimated
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Data source badge */}
+          {!isError && liveData ? (
+            <span className="text-[10px] font-mono text-risk-low border border-risk-low/30 bg-risk-low/5 px-2 py-0.5 rounded">
+              Live data
+            </span>
+          ) : (
+            <span className="text-[10px] font-mono text-text-muted border border-border/30 bg-background-elevated/20 px-2 py-0.5 rounded">
+              Estimated
+            </span>
+          )}
+
+          {/* Download button */}
+          <button
+            onClick={handleDownload}
+            title={`Download CSV (${minYear}–${maxYear})`}
+            aria-label="Download chart data as CSV"
+            className="p-1 rounded text-text-muted hover:text-text-primary hover:bg-surface-muted/60 transition-colors"
+          >
+            <DownloadIcon className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Retry button when API failed but fallback is shown */}
+          {isError && (
+            <button
+              onClick={handleRetry}
+              title="Retry live data"
+              aria-label="Retry loading live data"
+              className="text-[10px] font-mono text-text-muted border border-border/30 px-2 py-0.5 rounded hover:text-accent hover:border-accent/40 transition-colors"
+            >
+              Retry
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Chart */}

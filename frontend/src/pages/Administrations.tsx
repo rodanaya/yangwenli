@@ -19,7 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatNumber, formatCompactMXN } from '@/lib/utils'
 import { SECTORS, RISK_COLORS } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
-import type { YearOverYearChange, SexenioYearBreakdown, ComparePeriodResponse, PoliticalCycleResponse } from '@/api/types'
+import type { YearOverYearChange, ComparePeriodResponse, PoliticalCycleResponse } from '@/api/types'
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -258,7 +258,6 @@ export default function Administrations() {
   const [selectedAdmin, setSelectedAdmin] = useState<AdminName>('AMLO')
   const [activeTab, setActiveTab] = useState<'overview' | 'patterns' | 'political' | 'compare'>('overview')
   const [matrixMetric, setMatrixMetric] = useState<MatrixMetric>('risk')
-  const systemicChartRef = useRef<HTMLDivElement>(null)
 
   // Data queries
   const { data: yoyResp, isLoading: yoyLoading } = useQuery({
@@ -1110,6 +1109,7 @@ function StatCard({
   color: string
   invertDelta?: boolean
 }) {
+  const { t } = useTranslation('administrations')
   // Extract numeric portion for count-up animation
   const numericMatch = value.replace(/[,%]/g, '').match(/^[\d.]+/)
   const numericValue = numericMatch ? parseFloat(numericMatch[0]) : 0
@@ -1423,6 +1423,7 @@ interface PatternsViewProps {
 }
 
 function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
+  const systemicChartRef = useRef<HTMLDivElement>(null)
   const { data: breaksData } = useQuery({
     queryKey: ['analysis', 'structural-breaks'],
     queryFn: () => analysisApi.getStructuralBreaks(),
@@ -1877,9 +1878,9 @@ function PoliticalCycleView() {
                       fontFamily: 'var(--font-family-mono)',
                     }}
                     formatter={(value: unknown, name?: string) => [
-                      typeof value === 'number' ? `${value.toFixed(2)}%` : value,
-                      name,
-                    ]}
+                      typeof value === 'number' ? `${value.toFixed(2)}%` : String(value ?? ''),
+                      name ?? '',
+                    ] as [string, string]}
                   />
                   <Legend wrapperStyle={{ fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
                   <Bar

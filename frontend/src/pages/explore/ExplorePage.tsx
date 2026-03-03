@@ -19,7 +19,7 @@ import { SectorTreemapPanel } from './SectorTreemapPanel'
 import { TimeSeriesPanel } from './TimeSeriesPanel'
 import { RiskDistributionStrip } from './RiskDistributionStrip'
 import { ResultsTable } from './ResultsTable'
-import { SECTORS, RISK_COLORS } from '@/lib/constants'
+import { SECTORS } from '@/lib/constants'
 
 const RISK_LABELS: Record<string, string> = {
   critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low',

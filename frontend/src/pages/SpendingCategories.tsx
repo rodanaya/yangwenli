@@ -365,7 +365,7 @@ function MiniSparkline({ values, color = '#58a6ff', width = 56, height = 20 }: M
       height={height}
       aria-hidden="true"
       className="flex-shrink-0"
-      title={`5-year trend: ${values.map(v => formatCompactMXN(v)).join(', ')}`}
+      aria-label={`5-year trend: ${values.map(v => formatCompactMXN(v)).join(', ')}`}
     >
       <polyline
         points={pts}
@@ -1162,9 +1162,9 @@ export default function SpendingCategories() {
                       data={treemapData}
                       dataKey="value"
                       nameKey="name"
-                      onClick={(data: { category_id?: number }) => {
+                      onClick={(data: any) => {
                         if (data.category_id != null) {
-                          setSelectedCategoryId(prev => prev === data.category_id ? null : data.category_id!)
+                          setSelectedCategoryId((prev: number | null) => prev === data.category_id ? null : data.category_id!)
                         }
                       }}
                       style={{ cursor: 'pointer' }}

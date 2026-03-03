@@ -204,15 +204,15 @@ export function InstitutionProfile() {
 
   // Risk distribution from profile
   const riskDistribution = useMemo(() => {
-    const byLevel = riskProfile?.contracts_by_risk_level ?? {}
-    const total = Object.values(byLevel).reduce((s, n) => s + n, 0)
+    const byLevel = (riskProfile?.contracts_by_risk_level ?? {}) as Record<string, number>
+    const total = Object.values(byLevel).reduce((s: number, n: number) => s + n, 0)
     if (total === 0) return []
     return (['critical', 'high', 'medium', 'low'] as const)
       .filter((lvl) => (byLevel[lvl] ?? 0) > 0)
       .map((lvl) => ({
         level: lvl,
         count: byLevel[lvl] ?? 0,
-        pct: ((byLevel[lvl] ?? 0) / total) * 100,
+        pct: ((byLevel[lvl] ?? 0) / (total as number)) * 100,
         color: LEVEL_COLORS[lvl],
         label: LEVEL_LABELS[lvl],
       }))
@@ -342,7 +342,7 @@ export function InstitutionProfile() {
               {groundTruthStatusError ? (
                 <span className="text-xs text-rose-400/80">Failed to load ML status.</span>
               ) : groundTruthStatus?.is_ground_truth_related ? (
-                <Badge variant="destructive" className="text-xs px-1.5 py-0 h-4">
+                <Badge variant="critical" className="text-xs px-1.5 py-0 h-4">
                   ML-Linked: {groundTruthStatus.case_name}
                 </Badge>
               ) : null}
@@ -999,7 +999,7 @@ export function InstitutionProfile() {
                 onClick={() => { setSelectedContractId(topContract.id); setIsDetailOpen(true) }}
                 role="button"
                 tabIndex={0}
-                aria-label={`Most suspicious contract: ${topContract.description ?? topContract.procedure_number}`}
+                aria-label={`Most suspicious contract: ${(topContract as any).description ?? (topContract as any).procedure_number ?? topContract.title}`}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setSelectedContractId(topContract.id); setIsDetailOpen(true) } }}
               >
                 <CardHeader className="pb-2 pt-4">
@@ -1170,7 +1170,7 @@ export function InstitutionProfile() {
                       <YAxis yAxisId="left" tickFormatter={(v: number) => `${(v / 1e9).toFixed(1)}B`} tick={{ fontSize: 10 }} />
                       <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
                       <RechartsTooltip
-                        formatter={(value: unknown, name: string) => {
+                        formatter={(value: any, name: any) => {
                           const num = value as number
                           if (name === 'amount_mxn') return [formatCompactMXN(num), 'Amount']
                           return [num, name === 'observations_total' ? 'Observations' : 'Solved']

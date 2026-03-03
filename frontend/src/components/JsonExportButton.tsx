@@ -1,43 +1,25 @@
 import { useState } from 'react'
-import { Download, Loader2, Check } from 'lucide-react'
+import { Code2, Loader2, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
-interface TableExportButtonProps {
+interface JsonExportButtonProps {
   data: Record<string, unknown>[]
   filename?: string
-  columns?: string[]
   label?: string
   className?: string
   disabled?: boolean
 }
 
-function toCSV(data: Record<string, unknown>[], columns?: string[]): string {
-  if (!data.length) return ''
-  const headers = columns ?? Object.keys(data[0])
-  const rows = data.map(row =>
-    headers.map(h => {
-      const val = row[h]
-      if (val === null || val === undefined) return ''
-      const str = String(val)
-      return str.includes(',') || str.includes('"') || str.includes('\n')
-        ? `"${str.replace(/"/g, '""')}"`
-        : str
-    }).join(',')
-  )
-  return [headers.join(','), ...rows].join('\n')
-}
-
 type ExportState = 'idle' | 'loading' | 'done'
 
-export function TableExportButton({
+export function JsonExportButton({
   data,
   filename = 'export',
-  columns,
   label,
   className,
   disabled,
-}: TableExportButtonProps) {
+}: JsonExportButtonProps) {
   const [state, setState] = useState<ExportState>('idle')
 
   const isEmpty = !data.length
@@ -47,14 +29,14 @@ export function TableExportButton({
     if (isDisabled) return
     setState('loading')
 
-    // Yield to the render cycle so the spinner appears before the synchronous CSV work
+    // Yield to the render cycle so the spinner appears before the synchronous JSON work
     await new Promise<void>(resolve => setTimeout(resolve, 0))
 
-    const csv = toCSV(data, columns)
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+    const json = JSON.stringify(data, null, 2)
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
-    link.download = `${filename}.csv`
+    link.download = `${filename}.json`
     link.href = url
     link.click()
     URL.revokeObjectURL(url)
@@ -69,7 +51,7 @@ export function TableExportButton({
     ) : state === 'done' ? (
       <Check className="h-3.5 w-3.5 text-emerald-400" />
     ) : (
-      <Download className="h-3.5 w-3.5" />
+      <Code2 className="h-3.5 w-3.5" />
     )
 
   const buttonContent = (
@@ -92,7 +74,7 @@ export function TableExportButton({
           className={`${label ? 'h-7 px-2' : 'h-7 w-7'} ${className ?? ''}`}
           onClick={handleDownload}
           disabled={isDisabled}
-          aria-label="Export table as CSV"
+          aria-label="Export as JSON"
         >
           {buttonContent}
         </Button>
@@ -103,7 +85,7 @@ export function TableExportButton({
             ? 'No data to export'
             : state === 'done'
             ? '✓ Downloaded'
-            : 'Download as CSV'}
+            : 'Download as JSON'}
         </p>
       </TooltipContent>
     </Tooltip>

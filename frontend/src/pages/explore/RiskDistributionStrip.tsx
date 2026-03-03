@@ -1,4 +1,3 @@
-import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { analysisApi } from '@/api/client'
 import { RISK_COLORS } from '@/lib/constants'
@@ -42,7 +41,7 @@ export function RiskDistributionStrip({ activeRiskLevels, onToggleRisk }: RiskDi
           const pct = stat?.percentage ?? 0
           const count = stat?.count ?? 0
           const isActive = activeRiskLevels.includes(r.key)
-          const color = RISK_COLORS[r.key]
+          const color = RISK_COLORS[r.key as keyof typeof RISK_COLORS]
           return (
             <button
               key={r.key}

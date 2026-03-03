@@ -43,14 +43,8 @@ import {
   Cell,
   AreaChart,
   Area,
-  RadarChart,
-  Radar,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
   PieChart,
   Pie,
-  Legend,
   ReferenceLine,
 } from '@/components/charts'
 
@@ -846,7 +840,7 @@ export function SectorProfile() {
               ) : priceAnomaliesLoading ? (
                 <div className="space-y-2">{[...Array(4)].map((_,i) => <Skeleton key={i} className="h-10" />)}</div>
               ) : priceAnomalies?.data?.length ? (
-                <PriceAnomalyList data={priceAnomalies.data} color={sectorColor} />
+                <PriceAnomalyList data={priceAnomalies.data as any} color={sectorColor} />
               ) : (
                 <div className="flex flex-col items-center py-6 gap-2">
                   <Brain className="h-8 w-8 text-text-muted opacity-40" />
@@ -863,6 +857,7 @@ export function SectorProfile() {
                 {sectorInstitutionsError ? (
                   <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load institutions.</p>
                 ) : (
+                <>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <Building2 className="h-4 w-4 text-text-muted" />
@@ -895,6 +890,7 @@ export function SectorProfile() {
                     </Link>
                   ))}
                 </div>
+                </>
                 )}
               </CardContent>
             </Card>
@@ -940,7 +936,7 @@ export function SectorProfile() {
 
 function RiskDonut({
   data,
-  color,
+  color: _color,
 }: {
   data: Array<{ risk_level: string; count: number; percentage: number }>
   color: string

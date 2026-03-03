@@ -52,7 +52,7 @@ export function GlobalSearch({ className }: { className?: string }) {
       ])
       const combined: SearchResult[] = [
         ...(vRes.data || []).map(v => {
-          const score = (v as Record<string, unknown>).avg_risk_score as number | undefined
+          const score = (v as any).avg_risk_score as number | undefined
           let riskLevel: string | undefined
           if (score != null) {
             if (score >= 0.5) riskLevel = 'critical'
@@ -61,16 +61,16 @@ export function GlobalSearch({ className }: { className?: string }) {
             else riskLevel = 'low'
           }
           return {
-            id: v.vendor_id,
-            name: v.vendor_name,
+            id: v.id,
+            name: v.name,
             type: 'vendor' as const,
-            sub: v.primary_sector_code || undefined,
+            sub: v.primary_sector_id ? String(v.primary_sector_id) : undefined,
             riskLevel,
           }
         }),
         ...(iRes.data || []).map(i => ({
-          id: i.institution_id,
-          name: i.institution_name,
+          id: i.id,
+          name: i.name,
           type: 'institution' as const,
         })),
       ]

@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { analysisApi } from '@/api/client'
-import { SankeyDiagram, SankeyNodeSelected } from '@/components/SankeyDiagram'
+import { SankeyDiagram } from '@/components/SankeyDiagram'
+import type { SankeyNodeSelected } from '@/components/SankeyDiagram'
 import { formatCompactMXN } from '@/lib/utils'
 import { GitBranch, ArrowRight, Building2, Users, TrendingUp, DollarSign, X, AlertTriangle, Info } from 'lucide-react'
 import {

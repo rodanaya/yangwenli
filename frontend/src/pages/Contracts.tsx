@@ -458,7 +458,7 @@ export function Contracts() {
       amount_mxn: c.amount_mxn,
       risk_level: c.risk_level ?? '',
       risk_score: c.risk_score != null ? Number(c.risk_score.toFixed(4)) : '',
-      year: c.year ?? '',
+      year: c.contract_year ?? '',
       procedure_type: c.procedure_type ?? '',
       sector_name: c.sector_name ?? '',
     }))
@@ -1060,7 +1060,6 @@ function ContractRow({
   const { t } = useTranslation('contracts')
   const anomalyInfo = getAnomalyInfo(contract.mahalanobis_distance)
   const riskLevel = contract.risk_score != null ? getRiskLevel(contract.risk_score) : (contract.risk_level ?? null)
-  const riskColor = riskLevel ? RISK_COLORS[riskLevel] : undefined
   const sector = contract.sector_id ? SECTORS.find((s) => s.id === contract.sector_id) : null
 
   const rowBorder =
@@ -1090,7 +1089,7 @@ function ContractRow({
         <div className="flex flex-col items-center gap-1">
           {/* Colored risk level pill */}
           {riskLevel ? (
-            <RiskLevelPill level={riskLevel} score={contract.risk_score ?? undefined} size="sm" />
+            <RiskLevelPill level={riskLevel as 'critical' | 'high' | 'medium' | 'low'} score={contract.risk_score ?? undefined} size="sm" />
           ) : (
             <span className="text-xs text-text-muted/30">&middot;</span>
           )}

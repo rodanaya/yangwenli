@@ -184,14 +184,14 @@ export function ContractCompareModal({
               {/* Risk Score */}
               <CompareRow
                 label="Risk Score"
-                values={contracts.map((c) => <RiskBar key={c.id} score={c.risk_score} />)}
+                values={contracts.map((c) => <RiskBar key={c.id} score={c.risk_score ?? undefined} />)}
                 highlightIndexes={[maxRiskIdx]}
               />
 
               {/* Risk Level */}
               <CompareRow
                 label="Risk Level"
-                values={contracts.map((c) => <RiskBadge key={c.id} level={c.risk_level} />)}
+                values={contracts.map((c) => <RiskBadge key={c.id} level={c.risk_level ?? undefined} />)}
               />
 
               {/* Amount */}

@@ -6,7 +6,6 @@ import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatCompactUSD, formatNumber, toTitleCase } from '@/lib/utils'
-import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
 import { analysisApi, investigationApi } from '@/api/client'
 import type { ExecutiveCaseDetail, ExecutiveSummaryResponse } from '@/api/types'
@@ -414,7 +413,7 @@ export function Dashboard() {
   })
 
   // API call 4: Pattern counts
-  const { data: patternData } = useQuery({
+  useQuery({
     queryKey: ['analysis', 'patterns', 'counts'],
     queryFn: () => analysisApi.getPatternCounts(),
     staleTime: 5 * 60 * 1000,
@@ -647,36 +646,20 @@ export function Dashboard() {
           <span className="text-text-muted/30">·</span>
           <span>AUC {modelMeta?.auc_test != null ? modelMeta.auc_test.toFixed(3) : '0.957'}</span>
           <span className="text-text-muted/30">·</span>
-          <InfoTooltip content="Label Coverage (c): proportion of corrupt contracts the model reliably detects among all known cases. Elkan & Noto (2008) PU-learning correction.">
-            <span className="cursor-help border-b border-dotted border-text-muted/30">
-              c={modelMeta?.pu_correction != null ? modelMeta.pu_correction.toFixed(3) : '0.882'}
-            </span>
-          </InfoTooltip>
+          <span className="cursor-help border-b border-dotted border-text-muted/30" title="Label Coverage (c): proportion of corrupt contracts the model reliably detects among all known cases. Elkan & Noto (2008) PU-learning correction.">
+            c={modelMeta?.pu_correction != null ? modelMeta.pu_correction.toFixed(3) : '0.882'}
+          </span>
           <span className="text-text-muted/30">·</span>
           <span>{(overview?.total_contracts || 0) > 0 ? formatNumber(overview?.total_contracts || 0) : '3,110,007'} contracts · 2002–2025</span>
         </div>
         {/* Model Confidence Badge */}
         <div className="mt-2">
-          <InfoTooltip
-            content={
-              <div className="space-y-1.5 max-w-[260px]">
-                <p className="font-semibold text-xs text-text-primary">AUC (Area Under the Curve)</p>
-                <p className="text-xs text-text-secondary leading-relaxed">
-                  Measures how well the model separates corrupt from clean contracts. AUC 0.957 means: given a randomly chosen corrupt contract and a randomly chosen clean one, the model ranks the corrupt one higher 95.7% of the time.
-                </p>
-                <p className="text-xs text-text-muted leading-relaxed">
-                  1.0 = perfect · 0.5 = random chance · This model tested on contracts ≥2021 it had never seen during training (temporal split).
-                </p>
-              </div>
-            }
-          >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 cursor-help">
-              <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs font-mono text-emerald-400">
-                AUC {modelMeta?.auc_test != null ? modelMeta.auc_test.toFixed(3) : '0.957'} · {modelMeta?.version ?? CURRENT_MODEL_VERSION}
-              </span>
-            </div>
-          </InfoTooltip>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 cursor-help" title="AUC measures how well the model separates corrupt from clean contracts. 0.957 = ranks corrupt contracts higher 95.7% of the time. Temporal split: trained ≤2020, tested ≥2021.">
+            <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-xs font-mono text-emerald-400">
+              AUC {modelMeta?.auc_test != null ? modelMeta.auc_test.toFixed(3) : '0.957'} · {modelMeta?.version ?? CURRENT_MODEL_VERSION}
+            </span>
+          </div>
         </div>
 
         {/* WHAT WE FOUND — three anchor claims before the user scrolls */}
@@ -1146,7 +1129,7 @@ export function Dashboard() {
                       </g>
                     )
                   }}
-                  onClick={(node: { id?: number }) => {
+                  onClick={(node: any) => {
                     if (node?.id) navigate(`/sectors/${node.id}`)
                   }}
                   style={{ cursor: 'pointer' }}
@@ -1568,7 +1551,7 @@ interface StatCardProps {
   onClick?: () => void
 }
 
-const StatCard = memo(function StatCard({ loading, label, value, detail, color, borderColor, sublabel, onClick }: StatCardProps) {
+export const _StatCard = memo(function _StatCard({ loading, label, value, detail, color, borderColor, sublabel, onClick }: StatCardProps) {
   return (
     <Card
       className={cn(
@@ -1798,7 +1781,7 @@ const TopFindingsStrip = memo(function TopFindingsStrip({ navigate, sectorData, 
   const imssCase = useMemo(() => {
     if (!execData?.ground_truth?.case_details) return null
     return execData.ground_truth.case_details.find(
-      (c: ExecutiveCaseDetail) => c.slug === 'imss-ghost-company-network' || c.name?.toLowerCase().includes('imss')
+      (c: ExecutiveCaseDetail) => c.name?.toLowerCase().includes('imss')
     ) ?? null
   }, [execData])
 
@@ -1850,7 +1833,7 @@ const TopFindingsStrip = memo(function TopFindingsStrip({ navigate, sectorData, 
               {imssCase?.name ?? 'IMSS Ghost Company Network'}
             </p>
             <p className="text-[10px] text-text-muted font-mono mt-0.5">
-              {imssCase ? `${formatNumber(imssCase.contract_count ?? 9366)} contracts detected` : '9,366 contracts · ghost companies'}
+              {imssCase ? `${formatNumber(imssCase.contracts ?? 9366)} contracts detected` : '9,366 contracts · ghost companies'}
             </p>
           </div>
         </button>
@@ -2004,7 +1987,7 @@ const TopCriticalFlags = memo(function TopCriticalFlags({ navigate, execData, ex
 // RISK BADGE — Colored percentage badge
 // ============================================================================
 
-function RiskBadge({ value }: { value: number }) {
+export function _RiskBadge({ value }: { value: number }) {
   const pct = (value * 100).toFixed(0)
   const color =
     value >= 0.50 ? 'bg-risk-critical/20 text-risk-critical border-risk-critical/30' :
@@ -2126,7 +2109,7 @@ const CaseDetectionChart = memo(function CaseDetectionChart({
 
   return (
     <div className="mt-3 space-y-0">
-      {filteredCases.map((c, idx) => {
+      {filteredCases.map((c) => {
         const detected = c.high_plus_pct
         const sectorColor = SECTOR_COLORS[c.sector] || '#64748b'
         const trackColor =

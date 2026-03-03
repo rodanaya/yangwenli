@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { analysisApi } from '@/api/client'
 import { SECTORS, SECTOR_COLORS } from '@/lib/constants'

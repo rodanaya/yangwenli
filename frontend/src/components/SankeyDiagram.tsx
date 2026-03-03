@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { sankey as d3Sankey, sankeyLinkHorizontal } from 'd3-sankey'
 
 interface SankeyNodeInput {
@@ -82,7 +82,7 @@ export function SankeyDiagram({
 
     try {
       const layout = d3Sankey()
-        .nodeId((_d: unknown, i: number) => i)
+        .nodeId(((_d: any, i: number) => i) as any)
         .nodeWidth(14)
         .nodePadding(10)
         .extent([[1, 1], [width - 1, height - 5]])

@@ -24,6 +24,9 @@ import { TableExportButton } from '@/components/TableExportButton'
 import { NarrativeCard } from '@/components/NarrativeCard'
 import { RiskFeedbackButton } from '@/components/RiskFeedbackButton'
 import { ContractDetailModal } from '@/components/ContractDetailModal'
+import VendorContractTimeline from '@/components/VendorContractTimeline'
+import VendorContractRiskMatrix from '@/components/VendorContractRiskMatrix'
+import VendorContractBreakdown from '@/components/VendorContractBreakdown'
 import { buildVendorNarrative } from '@/lib/narratives'
 import type { ContractListItem, VendorExternalFlags, VendorWaterfallContribution } from '@/api/types'
 import {
@@ -65,6 +68,7 @@ import {
   Network,
   ShieldCheck,
   Brain,
+  Download,
 } from 'lucide-react'
 import { NetworkGraphModal } from '@/components/NetworkGraphModal'
 import { ScrollReveal, useCountUp, AnimatedFill } from '@/hooks/useAnimations'
@@ -133,7 +137,7 @@ function SimpleTabs({ defaultTab, tabs, children, onTabChange }: TabsProps) {
       </div>
       {/* Render only the active tab panel */}
       {Array.isArray(children)
-        ? (children as React.ReactElement[]).find((c) => c?.props?.tabKey === active)
+        ? (children as React.ReactElement[]).find((c) => (c?.props as any)?.tabKey === active)
         : children}
     </div>
   )
@@ -161,6 +165,7 @@ function RiskWaterfallChart({
   riskFactors: Array<{ factor: string; count: number; percentage: number }>
   riskScore: number
 }) {
+  const { t } = useTranslation('vendors')
   // Build waterfall data from top risk factors combined with model coefficients
   // We use percentage as a proxy for z-score contribution
   const data: WaterfallEntry[] = useMemo(() => {
@@ -203,7 +208,6 @@ function RiskWaterfallChart({
     return entry.contribution > 0.15 ? '#f87171' : '#fb923c'
   }
 
-  const { t } = useTranslation('vendors')
   return (
     <div>
       <p className="text-xs text-text-muted mb-3">
@@ -643,6 +647,11 @@ export function VendorProfile() {
   const [activeTab, setActiveTab] = useState('overview')
   const [showAiSummary, setShowAiSummary] = useState(false)
 
+  // Contracts tab filter/sort state
+  const [contractYearFilter, setContractYearFilter] = useState<string>('all')
+  const [contractRiskFilter, setContractRiskFilter] = useState<string>('all')
+  const [contractSort, setContractSort] = useState<'date_desc' | 'amount_desc' | 'risk_desc'>('date_desc')
+
   // Fetch vendor details
   const { data: vendor, isLoading: vendorLoading, error: vendorError } = useQuery({
     queryKey: ['vendor', vendorId],
@@ -767,6 +776,85 @@ export function VendorProfile() {
       .map(([year, { sum, count }]) => ({ year, avg: sum / count }))
       .sort((a, b) => a.year - b.year)
   }, [contracts])
+
+  // Unique years from contracts data for the year filter dropdown
+  const contractYears = useMemo<number[]>(() => {
+    if (!contracts?.data?.length) return []
+    const years = Array.from(
+      new Set(contracts.data.map((c) => c.contract_year).filter((y): y is number => y != null))
+    )
+    return years.sort((a, b) => b - a)
+  }, [contracts])
+
+  // Risk level counts for the risk filter tabs
+  const riskLevelCounts = useMemo(() => {
+    const all = contracts?.data ?? []
+    return {
+      all: all.length,
+      critical: all.filter((c) => c.risk_level === 'critical').length,
+      high: all.filter((c) => c.risk_level === 'high').length,
+      medium: all.filter((c) => c.risk_level === 'medium').length,
+      low: all.filter((c) => c.risk_level === 'low').length,
+    }
+  }, [contracts])
+
+  // Filtered and sorted contracts list
+  const filteredContracts = useMemo<ContractListItem[]>(() => {
+    let list: ContractListItem[] = contracts?.data ?? []
+
+    if (contractYearFilter !== 'all') {
+      const yr = Number(contractYearFilter)
+      list = list.filter((c) => c.contract_year === yr)
+    }
+
+    if (contractRiskFilter !== 'all') {
+      list = list.filter((c) => c.risk_level === contractRiskFilter)
+    }
+
+    const sorted: ContractListItem[] = [...list]
+    if (contractSort === 'amount_desc') {
+      sorted.sort((a, b) => (b.amount_mxn ?? 0) - (a.amount_mxn ?? 0))
+    } else if (contractSort === 'risk_desc') {
+      sorted.sort((a, b) => (b.risk_score ?? 0) - (a.risk_score ?? 0))
+    } else {
+      // date_desc: newest first
+      sorted.sort((a, b) => {
+        const da = a.contract_date ?? String(a.contract_year ?? 0)
+        const db = b.contract_date ?? String(b.contract_year ?? 0)
+        return db.localeCompare(da)
+      })
+    }
+    return sorted
+  }, [contracts, contractYearFilter, contractRiskFilter, contractSort])
+
+  // Total value of the currently-filtered contracts
+  const filteredTotalValue = useMemo(
+    () => filteredContracts.reduce((sum, c) => sum + (c.amount_mxn ?? 0), 0),
+    [filteredContracts]
+  )
+
+  // CSV export helper for filtered contracts
+  const exportContractsCSV = () => {
+    const headers = ['contract_id', 'title', 'amount_mxn', 'procedure_type', 'institution_name', 'contract_date', 'risk_score', 'risk_level']
+    const rows = filteredContracts.map((c) => [
+      c.id,
+      `"${(c.title ?? '').replace(/"/g, '""')}"`,
+      c.amount_mxn ?? '',
+      `"${(c.procedure_type ?? '').replace(/"/g, '""')}"`,
+      `"${(c.institution_name ?? '').replace(/"/g, '""')}"`,
+      c.contract_date ?? c.contract_year ?? '',
+      c.risk_score ?? '',
+      c.risk_level ?? '',
+    ])
+    const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `vendor-${vendorId}-contracts.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   if (vendorLoading) {
     return <VendorProfileSkeleton />
@@ -2112,7 +2200,49 @@ export function VendorProfile() {
               </CardContent>
             </Card>
 
-            {/* Full Contracts Table */}
+            {/* Contract Analysis — new visualization section */}
+            <div className="space-y-4 mb-6">
+              <h3 className="text-sm font-medium text-text-secondary uppercase tracking-wide">Contract Analysis</h3>
+
+              {/* Donut charts row */}
+              <VendorContractBreakdown
+                contracts={(contracts?.data ?? []) as any}
+                loading={contractsLoading}
+              />
+
+              {/* Timeline + Risk Matrix side by side */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <VendorContractTimeline
+                  contracts={(filteredContracts).map((c) => ({
+                    id: c.id,
+                    title: c.title ?? '',
+                    amount_mxn: c.amount_mxn ?? 0,
+                    contract_date: c.contract_date ?? '',
+                    year: c.contract_year ?? (c.contract_date ? new Date(c.contract_date).getFullYear() : 0),
+                    procedure_type: c.procedure_type ?? '',
+                    institution_name: c.institution_name ?? '',
+                    risk_score: c.risk_score ?? null,
+                    risk_level: c.risk_level ?? null,
+                  }))}
+                  vendorName={vendor?.name ?? ''}
+                />
+                <VendorContractRiskMatrix
+                  contracts={(filteredContracts).map((c) => ({
+                    id: c.id,
+                    title: c.title ?? '',
+                    amount_mxn: c.amount_mxn ?? 0,
+                    risk_score: c.risk_score ?? null,
+                    risk_level: c.risk_level ?? null,
+                    procedure_type: c.procedure_type ?? '',
+                    institution_name: c.institution_name ?? '',
+                    contract_date: c.contract_date ?? '',
+                  }))}
+                  vendorName={vendor?.name ?? ''}
+                />
+              </div>
+            </div>
+
+            {/* Full Contracts Table with filter bar */}
             <Card className="hover-lift">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
@@ -2126,6 +2256,100 @@ export function VendorProfile() {
                   </Button>
                 </Link>
               </CardHeader>
+
+              {/* Filter bar */}
+              {!contractsLoading && (contracts?.data?.length ?? 0) > 0 && (
+                <div className="px-4 pb-3 space-y-3 border-b border-border/50">
+                  {/* Row 1: Year filter + Sort */}
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <label htmlFor="contract-year-filter" className="text-xs text-text-muted whitespace-nowrap">
+                        Year
+                      </label>
+                      <select
+                        id="contract-year-filter"
+                        value={contractYearFilter}
+                        onChange={(e) => setContractYearFilter(e.target.value)}
+                        className="text-xs rounded border border-border/60 bg-background-elevated text-text-secondary px-2 py-1 focus:outline-none focus:border-accent/60"
+                      >
+                        <option value="all">All Years</option>
+                        {contractYears.map((yr) => (
+                          <option key={yr} value={String(yr)}>{yr}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <label htmlFor="contract-sort" className="text-xs text-text-muted whitespace-nowrap">
+                        Sort
+                      </label>
+                      <select
+                        id="contract-sort"
+                        value={contractSort}
+                        onChange={(e) => setContractSort(e.target.value as typeof contractSort)}
+                        className="text-xs rounded border border-border/60 bg-background-elevated text-text-secondary px-2 py-1 focus:outline-none focus:border-accent/60"
+                      >
+                        <option value="date_desc">Date (newest)</option>
+                        <option value="amount_desc">Amount (highest)</option>
+                        <option value="risk_desc">Risk Score (highest)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Row 2: Risk level tabs */}
+                  <div className="flex flex-wrap gap-1" role="group" aria-label="Filter by risk level">
+                    {([
+                      { key: 'all', label: 'All' },
+                      { key: 'critical', label: 'Critical' },
+                      { key: 'high', label: 'High' },
+                      { key: 'medium', label: 'Medium' },
+                      { key: 'low', label: 'Low' },
+                    ] as const).map(({ key, label }) => {
+                      const count = riskLevelCounts[key]
+                      const isActive = contractRiskFilter === key
+                      const riskColor = key !== 'all' ? RISK_COLORS[key] : undefined
+                      return (
+                        <button
+                          key={key}
+                          onClick={() => setContractRiskFilter(key)}
+                          aria-pressed={isActive}
+                          className={cn(
+                            'flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors border',
+                            isActive
+                              ? 'border-accent/60 bg-accent/10 text-accent'
+                              : 'border-border/40 bg-transparent text-text-muted hover:text-text-secondary hover:border-border'
+                          )}
+                          style={isActive && riskColor ? { borderColor: `${riskColor}60`, backgroundColor: `${riskColor}15`, color: riskColor } : undefined}
+                        >
+                          {label}
+                          <span className="opacity-60">{count}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {/* Results summary + export */}
+                  <div className="flex items-center justify-between text-xs text-text-muted">
+                    <span>
+                      Showing{' '}
+                      <span className="font-medium text-text-secondary">{filteredContracts.length}</span>
+                      {' '}of{' '}
+                      <span className="font-medium text-text-secondary">{contracts?.data?.length ?? 0}</span>
+                      {' '}contracts — Total:{' '}
+                      <span className="font-medium text-text-secondary tabular-nums">{formatCompactMXN(filteredTotalValue)}</span>
+                    </span>
+                    <button
+                      onClick={exportContractsCSV}
+                      aria-label="Export filtered contracts as CSV"
+                      className="flex items-center gap-1 px-2 py-1 rounded border border-border/40 bg-transparent hover:bg-background-elevated hover:border-accent/40 hover:text-accent transition-colors"
+                    >
+                      <Download className="h-3 w-3" />
+                      Export CSV
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <CardContent className="p-0">
                 {contractsLoading ? (
                   <div className="p-4 space-y-2">
@@ -2133,14 +2357,18 @@ export function VendorProfile() {
                       <Skeleton key={i} className="h-12" />
                     ))}
                   </div>
-                ) : contracts?.data.length ? (
+                ) : filteredContracts.length > 0 ? (
                   <ScrollArea className="h-[400px]">
                     <div className="divide-y divide-border">
-                      {contracts.data.map((contract) => (
+                      {filteredContracts.map((contract) => (
                         <ContractRow key={contract.id} contract={contract} onView={(cid) => { setSelectedContractId(cid); setIsDetailOpen(true) }} />
                       ))}
                     </div>
                   </ScrollArea>
+                ) : (contracts?.data?.length ?? 0) > 0 ? (
+                  <div className="p-8 text-center text-text-muted text-sm">
+                    No contracts match the current filters.
+                  </div>
                 ) : (
                   <div className="p-8 text-center text-text-muted">{t('cards.noContractsFound')}</div>
                 )}

@@ -1,21 +1,13 @@
-import { Folder, FolderOpen, Trash2, AlertTriangle } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Folder, FolderOpen, Trash2, AlertTriangle, ExternalLink } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/utils'
+import { type DossierSummary } from '@/api/client'
 
-export interface DossierSummary {
-  id: number
-  name: string
-  description?: string | null
-  status: 'active' | 'archived' | 'closed'
-  color: string
-  item_count: number
-  highest_risk_score?: number | null
-  highest_risk_name?: string | null
-  created_at: string
-  updated_at: string
-}
+// Re-export so callers who import DossierSummary from this file still work
+export type { DossierSummary }
 
 interface DossierCardProps {
   dossier: DossierSummary
@@ -30,7 +22,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 function getRiskColor(score: number | null | undefined): string {
-  if (!score && score !== 0) return 'text-text-muted'
+  if (score == null) return 'text-text-muted'
   if (score >= 0.5) return 'text-risk-critical'
   if (score >= 0.3) return 'text-risk-high'
   if (score >= 0.1) return 'text-risk-medium'
@@ -38,7 +30,7 @@ function getRiskColor(score: number | null | undefined): string {
 }
 
 function getRiskLabel(score: number | null | undefined): string {
-  if (!score && score !== 0) return ''
+  if (score == null) return ''
   if (score >= 0.5) return 'CRITICAL'
   if (score >= 0.3) return 'HIGH'
   if (score >= 0.1) return 'MEDIUM'
@@ -110,5 +102,65 @@ export function DossierCard({ dossier, onOpen, onDelete }: DossierCardProps) {
         </div>
       </CardContent>
     </Card>
+  )
+}
+
+// ============================================================================
+// DossierItemCard — used inside an open dossier to show individual items
+// ============================================================================
+
+interface DossierItemCardProps {
+  item: {
+    id: number
+    item_type: 'vendor' | 'institution' | 'contract' | 'note'
+    item_id?: number | null
+    item_name: string
+    annotation?: string | null
+    created_at: string
+  }
+  onRemove: (itemId: number) => void
+}
+
+export function DossierItemCard({ item, onRemove }: DossierItemCardProps) {
+  const navigate = useNavigate()
+
+  return (
+    <div className="flex items-center gap-3 px-3 py-2 rounded-md border border-border/40 bg-background-elevated/30 group hover:border-border/70 transition-colors">
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate">{item.item_name}</p>
+        {item.annotation && (
+          <p className="text-xs text-text-muted truncate mt-0.5">{item.annotation}</p>
+        )}
+        <p className="text-[10px] text-text-muted/70 mt-0.5 capitalize">{item.item_type}</p>
+      </div>
+
+      <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* "View Contracts" action — vendor items only */}
+        {item.item_type === 'vendor' && item.item_id != null && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 text-[10px] px-2 text-accent hover:bg-accent/10"
+            onClick={(e) => {
+              e.stopPropagation()
+              navigate(`/vendors/${item.item_id}?tab=contracts`)
+            }}
+            aria-label={`View contracts for ${item.item_name}`}
+          >
+            <ExternalLink className="h-3 w-3 mr-1" />
+            Contracts
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 text-text-muted hover:text-risk-critical"
+          onClick={(e) => { e.stopPropagation(); onRemove(item.id) }}
+          aria-label={`Remove ${item.item_name} from dossier`}
+        >
+          <Trash2 className="h-3 w-3" />
+        </Button>
+      </div>
+    </div>
   )
 }

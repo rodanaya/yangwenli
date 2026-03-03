@@ -1648,7 +1648,7 @@ function SectionProof({ data }: { data: ExecutiveSummaryResponse }) {
               </span>
             </div>
             <span className="text-xs text-text-muted w-20 text-right font-mono">
-              {t('s2.nContracts', { count: formatNumber(c.contracts) })}
+              {t('s2.nContracts', { count: c.contracts })}
             </span>
           </div>
         ))}

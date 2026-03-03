@@ -1,0 +1,28 @@
+{
+  "workspace": {
+    "startInvestigation": "Inicia Tu Investigación",
+    "startInvestigationDesc": "Crea un dossier para organizar proveedores, instituciones y contratos bajo una sola investigación.",
+    "step1": "Busca un proveedor o institución",
+    "step2": "Agrégalos a un dossier",
+    "step3": "Analiza sus contratos y exporta hallazgos",
+    "createFirstDossier": "Crear Primer Dossier",
+    "activeDossier": "Investigación Activa",
+    "dossierItems": "elementos",
+    "highestRisk": "Mayor Riesgo",
+    "viewContracts": "Ver Contratos",
+    "analyzingVendor": "Analizando contratos del proveedor"
+  },
+  "export": {
+    "exportAs": "Exportar Como",
+    "csvFormat": "Hoja CSV",
+    "jsonFormat": "Datos JSON",
+    "pngFormat": "Imagen de Gráfica (PNG)",
+    "printFormat": "Imprimir / PDF",
+    "downloadData": "Descargar Datos",
+    "exportFiltered": "Exportar Filtrado",
+    "exporting": "Exportando...",
+    "exportSuccess": "Exportación completa",
+    "selectFormat": "Seleccionar formato",
+    "includesNRecords": "Incluye {{count}} registros"
+  }
+}

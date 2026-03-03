@@ -14,9 +14,12 @@ import type {
   ThresholdGamingResponse,
   ConcentrationRankingsResponse,
   ContractListResponse,
+  ContractListItem,
   ContractDetail,
   ContractFilterParams,
   ContractStatistics,
+  ContractExportFilters,
+  TrendDataPoint,
   VendorListResponse,
   VendorDetailResponse,
   VendorRiskProfile,
@@ -54,7 +57,6 @@ import type {
   InvestigationFilterParams,
   ExternalEvidence,
   ExecutiveSummaryResponse,
-  FastDashboardData,
   RiskExplanation,
   ASFInstitutionResponse,
   SectorASFResponse,
@@ -139,6 +141,9 @@ export type {
   CommunityDetailResponse,
   ComparePeriodResponse,
   InstitutionRiskFactorResponse,
+  ContractExportFilters,
+  TrendDataPoint,
+  ContractListItem,
 } from './types'
 
 // API Base URL - proxied through Vite in development
@@ -280,6 +285,21 @@ export const contractApi = {
   async getByInstitution(institutionId: number, page = 1): Promise<Record<string, unknown>> {
     const { data } = await api.get(`/contracts/by-institution/${institutionId}?page=${page}`)
     return data
+  },
+
+  /**
+   * Fetch a large batch of contracts for client-side export (up to 5000 rows).
+   * Uses the standard /contracts endpoint with a high per_page limit.
+   */
+  async getForExport(filters: ContractExportFilters = {}): Promise<ContractListItem[]> {
+    const params: Record<string, unknown> = {
+      ...filters,
+      per_page: filters.limit ?? 5000,
+    }
+    delete params.limit
+    const queryParams = buildQueryParams(params)
+    const { data } = await api.get<ContractListResponse>(`/contracts?${queryParams}`)
+    return data.data
   },
 }
 
@@ -728,6 +748,19 @@ export const analysisApi = {
   async getYearOverYear(): Promise<{ data: YearOverYearChange[] }> {
     const { data } = await api.get('/analysis/year-over-year')
     return data
+  },
+
+  /**
+   * Get trend data for export/charting — wraps the year-over-year endpoint
+   * with optional sector/year range filtering.
+   */
+  async getTrendData(params: { sector_id?: number; year_start?: number; year_end?: number } = {}): Promise<TrendDataPoint[]> {
+    const queryParams = buildQueryParams(params as Record<string, unknown>)
+    const paramStr = queryParams.toString()
+    const { data } = await api.get<{ data: TrendDataPoint[] }>(
+      `/analysis/year-over-year${paramStr ? `?${paramStr}` : ''}`
+    )
+    return data.data
   },
 
   /**
@@ -1681,6 +1714,8 @@ export interface DossierSummary {
   status: 'active' | 'archived' | 'closed'
   color: string
   item_count: number
+  highest_risk_score?: number | null
+  highest_risk_name?: string | null
   created_at: string
   updated_at: string
 }
@@ -1694,6 +1729,17 @@ export interface DossierItem {
   annotation?: string | null
   color: string
   created_at: string
+  // Alias fields for consistency with entity_* naming convention
+  /** Alias for item_type */
+  entity_type?: 'vendor' | 'institution' | 'contract'
+  /** Alias for item_id */
+  entity_id?: number | null
+  /** Alias for item_name */
+  entity_name?: string
+  /** Alias for created_at */
+  added_at?: string
+  /** Alias for annotation */
+  notes?: string | null
 }
 
 export const dossierApi = {

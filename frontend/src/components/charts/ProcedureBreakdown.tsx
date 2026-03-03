@@ -59,7 +59,7 @@ export const ProcedureBreakdown = memo(function ProcedureBreakdown({
   return (
     <div style={{ height: `${height}px` }}>
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData} layout="vertical" onClick={(data) => {
+        <BarChart data={chartData} layout="vertical" onClick={(data: any) => {
           if (onSectorClick && data?.activePayload?.[0]?.payload?.code) {
             onSectorClick(data.activePayload[0].payload.code)
           }

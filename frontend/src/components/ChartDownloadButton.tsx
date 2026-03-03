@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface ChartDownloadButtonProps {
-  targetRef: React.RefObject<HTMLDivElement>
+  targetRef: React.RefObject<HTMLDivElement | null>
   filename?: string
   className?: string
 }

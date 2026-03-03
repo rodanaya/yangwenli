@@ -8,8 +8,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { reportApi } from '@/api/client'
-import { cn } from '@/lib/utils'
-import { formatCompactMXN, formatRiskScorePercent } from '@/lib/utils'
+import { formatRiskScorePercent } from '@/lib/utils'
 import type { VendorReport, InstitutionReport, SectorReport } from '@/api/types'
 
 interface ReportModalProps {
@@ -21,9 +20,9 @@ interface ReportModalProps {
 }
 
 function useReport(type: ReportModalProps['reportType'], id: number, enabled: boolean) {
-  return useQuery({
+  return useQuery<VendorReport | InstitutionReport | SectorReport>({
     queryKey: ['report', type, id],
-    queryFn: () => {
+    queryFn: async () => {
       switch (type) {
         case 'vendor':
           return reportApi.getVendorReport(id)
@@ -40,8 +39,8 @@ function useReport(type: ReportModalProps['reportType'], id: number, enabled: bo
 
 function isVendorReport(
   type: string,
-  data: VendorReport | InstitutionReport | SectorReport
-): data is VendorReport {
+  _data: VendorReport | InstitutionReport | SectorReport
+): _data is VendorReport {
   return type === 'vendor'
 }
 

@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next'
 import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn, formatCompactMXN, formatNumber, getRiskLevel, toTitleCase } from '@/lib/utils'
+import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { RISK_COLORS, SECTOR_COLORS } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
 import type { MoneyFlowItem, RiskFactorFrequency, FactorCooccurrence, ThresholdGamingResponse } from '@/api/types'
@@ -27,8 +27,6 @@ import {
   Tooltip as RechartsTooltip,
   CartesianGrid,
   ComposedChart,
-  Legend,
-  Line,
 } from '@/components/charts'
 import {
   TrendingUp,
@@ -983,7 +981,7 @@ export default function ProcurementIntelligence() {
                     data={factors}
                     layout="vertical"
                     margin={{ left: 4, right: 12, top: 0, bottom: 0 }}
-                    onClick={(payload) => {
+                    onClick={(payload: any) => {
                       const factor = payload?.activePayload?.[0]?.payload?.factor
                       if (factor) setSelectedFactor(prev => prev === factor ? null : factor)
                     }}
@@ -994,7 +992,7 @@ export default function ProcurementIntelligence() {
                     <YAxis type="category" dataKey="label" tick={{ fontSize: 10, fill: '#94a3b8' }} width={90} />
                     <RechartsTooltip
                       contentStyle={{ background: '#1a1f2e', border: '1px solid #2a2f3e', borderRadius: 6, fontSize: 11 }}
-                      formatter={(v: number, _: string, p: { payload?: { avg_risk_score?: number } }) => [
+                      formatter={(v: any, _: any, p: any) => [
                         `${formatNumber(v)} contracts · avg risk ${((p.payload?.avg_risk_score ?? 0) * 100).toFixed(0)}%`,
                         'Frequency',
                       ]}
@@ -1140,7 +1138,7 @@ export default function ProcurementIntelligence() {
               <ComposedChart
                 data={spikeChartData}
                 margin={{ left: 0, right: 16, top: 4, bottom: 0 }}
-                onClick={(payload) => {
+                onClick={(payload: any) => {
                   const year = payload?.activePayload?.[0]?.payload?.year
                   if (year) navigate(`/contracts?year=${year}&month=12`)
                 }}
@@ -1154,7 +1152,7 @@ export default function ProcurementIntelligence() {
                 />
                 <RechartsTooltip
                   contentStyle={{ background: '#1a1f2e', border: '1px solid #2a2f3e', borderRadius: 6, fontSize: 11 }}
-                  formatter={(v: number, name: string) => [
+                  formatter={(v: any, name: any) => [
                     `${v}×`, name === 'spike_ratio' ? 'December vs. avg month' : name,
                   ]}
                   labelFormatter={(label) => `${label} — click to view contracts`}

@@ -38,8 +38,6 @@ import {
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
-  LineChart,
-  Line,
   ComposedChart,
   ScatterChart,
   Scatter,
@@ -449,6 +447,12 @@ export function Sectors() {
     staleTime: 60 * 60 * 1000,
   })
 
+  // Derived: sector object for the selected code — must be before queries that depend on it
+  const selectedSector = useMemo(() => {
+    if (!selectedSectorCode || !data?.data) return null
+    return data.data.find((s) => s.sector_code === selectedSectorCode) ?? null
+  }, [selectedSectorCode, data])
+
   const { data: concentrationData } = useQuery({
     queryKey: ['institutions', 'concentration-rankings', selectedSector?.sector_id],
     queryFn: () => institutionApi.getConcentrationRankings({ sector_id: selectedSector?.sector_id, limit: 10 }),
@@ -531,12 +535,6 @@ export function Sectors() {
 
     return { data: heatmapData, rows: sectorNames, columns: metrics }
   }, [data])
-
-  // Derived: sector object for the selected code (for radar)
-  const selectedSector = useMemo(() => {
-    if (!selectedSectorCode || !data?.data) return null
-    return data.data.find((s) => s.sector_code === selectedSectorCode) ?? null
-  }, [selectedSectorCode, data])
 
   const compareSector = useMemo(() => {
     if (!compareSectorCode || !data?.data) return null
@@ -772,18 +770,18 @@ export function Sectors() {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
                 <XAxis dataKey="year" tick={{ fontSize: 10 }} />
                 <YAxis tickFormatter={(v: number) => `${(v / 1e9).toFixed(0)}B`} tick={{ fontSize: 10 }} />
-                <RechartsTooltip formatter={(value: unknown) => [formatCompactMXN(value as number), 'Questioned']} />
+                <RechartsTooltip formatter={(value: any) => [formatCompactMXN(value as number), 'Questioned']} />
                 <Bar dataKey="total_amount_mxn" fill="#ef4444" opacity={0.5} />
                 <Bar
                   dataKey="total_amount_mxn"
                   fill="#22c55e"
                   opacity={0.6}
-                  data={sectorASF.findings.map(f => ({
+                  {...{ data: sectorASF.findings.map(f => ({
                     ...f,
                     total_amount_mxn: f.observations_solved > 0
                       ? (f.total_amount_mxn * f.observations_solved / Math.max(f.total_observations, 1))
                       : 0
-                  }))}
+                  })) } as any}
                 />
               </ComposedChart>
             </ResponsiveContainer>
@@ -1301,7 +1299,7 @@ export function Sectors() {
                     data={criScatterData.data}
                     fill="#64748b"
                     fillOpacity={0.7}
-                    shape={(props: Record<string, unknown>) => {
+                    shape={(props: any) => {
                       const { cx, cy, r } = props as { cx: number; cy: number; r: number; payload: Record<string, unknown> }
                       const payload = props.payload as { sector_code: string }
                       const color = SECTOR_COLORS[payload.sector_code] || '#64748b'

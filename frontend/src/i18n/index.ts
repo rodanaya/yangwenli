@@ -51,6 +51,8 @@ import esTemporal from './locales/es/temporal.json'
 import enTemporal from './locales/en/temporal.json'
 import esPatterns from './locales/es/patterns.json'
 import enPatterns from './locales/en/patterns.json'
+import esWorkspace from './locales/es/workspace.json'
+import enWorkspace from './locales/en/workspace.json'
 
 i18n
   .use(LanguageDetector)
@@ -67,6 +69,7 @@ i18n
         network: esNetwork, cases: esCases, vendors: esVendors, institutions: esInstitutions,
         limitations: esLimitations, methodology: esMethodology,
         moneyflow: esMoneyflow, temporal: esTemporal, patterns: esPatterns,
+        workspace: esWorkspace,
       },
       en: {
         common: enCommon, sectors: enSectors, nav: enNav, dashboard: enDashboard,
@@ -78,6 +81,7 @@ i18n
         network: enNetwork, cases: enCases, vendors: enVendors, institutions: enInstitutions,
         limitations: enLimitations, methodology: enMethodology,
         moneyflow: enMoneyflow, temporal: enTemporal, patterns: enPatterns,
+        workspace: enWorkspace,
       },
     },
     lng: localStorage.getItem('i18nextLng') || 'en', // Default to English when no saved preference

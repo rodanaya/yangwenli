@@ -87,8 +87,8 @@ export interface ContractBase {
   contract_year?: number
   sector_id?: number
   sector_name?: string
-  risk_score?: number
-  risk_level?: RiskLevel
+  risk_score?: number | null
+  risk_level?: RiskLevel | string | null
   is_direct_award: boolean
   is_single_bid: boolean
 }
@@ -98,8 +98,8 @@ export interface ContractListItem extends ContractBase {
   vendor_name?: string
   vendor_rfc?: string
   institution_id?: number
-  institution_name?: string
-  procedure_type?: string
+  institution_name?: string | null
+  procedure_type?: string | null
   mahalanobis_distance?: number
   risk_factors?: string[]
 }
@@ -196,6 +196,30 @@ export interface ContractStatistics {
   single_bid_pct: number
   min_year: number
   max_year: number
+}
+
+// ============================================================================
+// Export / Trend Types
+// ============================================================================
+
+export interface ContractExportFilters {
+  vendor_id?: number
+  institution_id?: number
+  sector_id?: number
+  year?: number
+  risk_level?: string
+  limit?: number
+}
+
+export interface TrendDataPoint {
+  year: number
+  sector_id?: number
+  sector_name?: string
+  total_contracts: number
+  high_risk_count: number
+  high_risk_pct: number
+  avg_risk_score: number
+  total_value_mxn: number
 }
 
 export interface RiskFeatureContribution {
@@ -324,6 +348,8 @@ export interface VendorRiskProfile {
   }>
   risk_vs_sector_avg?: number
   risk_percentile?: number
+  risk_confidence_lower?: number
+  risk_confidence_upper?: number
 }
 
 export interface VendorInstitutionItem {
@@ -1507,9 +1533,18 @@ export interface WatchlistItem {
   alert_threshold: number | null
   alerts_enabled: boolean
   risk_score: number | null
+  /** Alias for risk_score — current live score at query time */
+  current_risk_score?: number | null
   risk_score_at_creation: number | null
   created_at: string
   updated_at: string
+  // Alias fields matching the entity_* naming convention used elsewhere
+  /** Alias for item_type */
+  entity_type?: 'vendor' | 'institution' | 'contract'
+  /** Alias for item_id */
+  entity_id?: number
+  /** Alias for item_name */
+  entity_name?: string
 }
 
 export interface WatchlistChanges {

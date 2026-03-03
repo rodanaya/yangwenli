@@ -281,7 +281,6 @@ function ASFCrossReferenceSection({
   }
 
   // How many matched rows have a risk score AND finding count > 0
-  const convergentCount = asfData.filter(r => r.matched_risk_score !== null && r.matched_risk_score >= 0.30).length
   const highRiskWithASF = asfData.filter(r => r.matched_risk_score !== null && r.matched_risk_score >= 0.30 && r.finding_count > 0).length
 
   const SortIndicatorASF = ({ field }: { field: ASFSortField }) => {
@@ -588,7 +587,7 @@ export default function InstitutionHealth() {
           loading={isLoading}
           label={t('institutionsTracked')}
           value={data ? formatNumber(data.total_institutions) : '—'}
-          detail={t('withMinContracts', { count: formatNumber(minContracts) })}
+          detail={t('withMinContracts', { count: minContracts })}
           color="text-accent"
           borderColor="border-accent/30"
         />

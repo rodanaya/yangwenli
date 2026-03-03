@@ -90,10 +90,10 @@ function scoreColor(score: number): string {
   return RISK_COLORS[level]
 }
 
-function detectionBadgeVariant(rate: number): 'default' | 'secondary' | 'destructive' | 'outline' {
+function detectionBadgeVariant(rate: number): 'default' | 'secondary' | 'critical' | 'outline' {
   if (rate >= 0.9) return 'default'
   if (rate >= 0.5) return 'secondary'
-  return 'destructive'
+  return 'critical'
 }
 
 // ============================================================================
@@ -701,7 +701,7 @@ export default function GroundTruth() {
                     <LabelList
                       dataKey="lift"
                       position="right"
-                      formatter={(v: number) => `${v}×`}
+                      formatter={(v: any) => `${v}×`}
                       style={{ fill: 'var(--color-text-muted)', fontSize: 9, fontFamily: 'monospace' }}
                     />
                   </Bar>

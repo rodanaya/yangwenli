@@ -60,6 +60,9 @@ export function AddToDossierButton({
         setOpen(false)
       }, 1500)
     },
+    onError: (err) => {
+      console.error('[AddToDossierButton] Failed to add item to dossier:', err)
+    },
   })
 
   // Close popover when clicking outside
@@ -180,6 +183,8 @@ export function AddToDossierButton({
             // Immediately add the entity to the freshly created dossier
             addMutation.mutate({ dossierId: newDossier.id })
             setCreateDialogOpen(false)
+          } catch (err) {
+            console.error('[AddToDossierButton] Failed to create dossier:', err)
           } finally {
             setCreateLoading(false)
           }
