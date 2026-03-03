@@ -233,7 +233,7 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
     {
       value: `${highRiskRate}%`,
       label: 'High-Risk Rate',
-      sub: 'Within OECD 2-15% benchmark',
+      sub: 'OECD-calibrated threshold · v5.1',
       glow: 'rgba(248,113,113,0.3)',
       color: '#f87171',
     },
@@ -339,8 +339,8 @@ function WhatWeFound({ data }: { data: ExecutiveSummaryResponse }) {
     },
     {
       icon: Zap,
-      value: '99.9%',
-      desc: 'of IMSS ghost company contracts detected at high or critical risk',
+      value: '99.0%',
+      desc: 'of IMSS ghost company contracts flagged as high risk or above',
       borderColor: 'border-cyan-500/20',
       bgColor: 'bg-cyan-500/5',
       iconColor: 'text-cyan-400',
@@ -431,7 +431,7 @@ function TopFraudSignals() {
   return (
     <div className="rounded-xl border border-border/30 bg-surface-raised/10 p-5">
       <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-4">
-        Top 3 fraud signals detected — model coefficients (v5.1)
+        Top 3 risk indicators — model coefficients (v5.1)
       </p>
       <div className="space-y-4">
         {signals.map((s) => (
@@ -584,6 +584,7 @@ function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
   }, [])
 
   const { risk } = data
+  const mediumPlusPct = ((risk.medium_pct ?? 0) + risk.high_pct + risk.critical_pct) || 54.5
   const layers = [
     {
       label: 'All Federal Contracts',
@@ -597,7 +598,7 @@ function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
     {
       label: 'Medium+ Risk',
       sub: 'Statistical anomaly detected',
-      value: '17.5%',
+      value: `${mediumPlusPct.toFixed(1)}%`,
       pct: 72,
       color: 'rgba(251,191,36,0.15)',
       border: 'rgba(251,191,36,0.5)',
@@ -768,7 +769,7 @@ function AIPipelineChart() {
       icon: AlertTriangle,
       title: 'RISK SCORE',
       sub: '0 → 1.0',
-      detail: 'P(corrupt|x)',
+      detail: 'similarity score',
       color: '#f87171',
       bg: 'rgba(248,113,113,0.12)',
       border: 'rgba(248,113,113,0.5)',
@@ -869,7 +870,7 @@ function AIPipelineChart() {
         className="mt-3 flex items-center gap-2 px-3 py-2 rounded border border-border/20 bg-background-elevated/20"
       >
         <span className="text-[10px] font-mono text-text-muted">
-          PU-learning correction c=0.887 (Elkan &amp; Noto 2008) · Bootstrap 95% CI per
+          PU-learning correction c=0.882 (Elkan &amp; Noto 2008) · Bootstrap 95% CI per
           contract · Temporal split train≤2020 / test≥2021
         </span>
       </div>
@@ -2309,6 +2310,9 @@ function SectionLimitations() {
     { icon: Search, key: 'dataQuality' },
     { icon: Scale, key: 'correlation' },
     { icon: HelpCircle, key: 'unknowns' },
+    { icon: EyeOff, key: 'executionPhase' },
+    { icon: AlertTriangle, key: 'scarViolation' },
+    { icon: Calendar, key: 'temporalLeakage' },
   ]
 
   return (
@@ -2384,7 +2388,7 @@ function SectionRecommendations({ navigate }: { navigate: (path: string) => void
       color: '#fbbf24',
       steps: [
         'Use the Sector page to identify which agencies account for the highest value-at-risk in your area of coverage.',
-        'The Vendor Profile tool shows 22 documented ground truth vendors alongside statistical risk — compare institutional exposure.',
+        'The Vendor Profile tool shows 27 documented ground truth vendors alongside statistical risk — compare institutional exposure.',
         'Filter the contract explorer to risk_level=critical and sector=salud to reproduce the IMSS ghost company patterns independently.',
       ],
     },

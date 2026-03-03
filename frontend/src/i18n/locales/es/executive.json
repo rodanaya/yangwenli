@@ -17,7 +17,7 @@
       "El 71% de los contratos federales omiten la licitación abierta — una característica estructural, no una excepción",
       "Cada diciembre durante 23 años, el gasto aumenta 1.33× — vaciado presupuestal repetido en cada administración",
       "El 10.6% del valor total de contratación está clasificado como riesgo alto o crítico, concentrado en pocos proveedores dominantes",
-      "Nuestro modelo de IA validado con 95.7% de precisión habría detectado el fraude del IMSS 8 años antes del escándalo"
+      "Nuestro modelo de IA alcanza un AUC-ROC de 0.957 — clasifica correctamente un contrato corrupto sobre uno limpio el 95.7% de las veces — y habría detectado el fraude del IMSS 8 años antes del escándalo"
     ]
   },
 
@@ -46,7 +46,7 @@
     "oversightTitle": "La Arquitectura de Supervisión",
     "oversightText": "Tres instituciones fueron diseñadas para hacer cumplir la transparencia. COMPRANET (1996–2025) era el portal federal obligatorio de contrataciones — toda compra por encima del umbral debía publicarse allí. El INAI era el organismo independiente de transparencia — ciudadanos y periodistas podían apelar a él cuando las dependencias negaban información. La ASF (Auditoría Superior de la Federación) es el tribunal de auditoría federal con poderes independientes de revisión sobre la ejecución de contratos. De estas tres, solo la ASF mantiene plena independencia operacional.",
     "crisisTitle": "2024–2025: La Infraestructura Está Siendo Desmantelada",
-    "crisisText": "En agosto de 2024 — antes de cualquier cambio legal — 1.9 millones de contratos de 2012–2023 (4.7 billones de MXN) fueron eliminados silenciosamente de la interfaz pública de COMPRANET. En diciembre de 2024, el INAI fue abolido constitucionalmente y reemplazado por 'Transparencia para el Pueblo', un organismo bajo la misma rama ejecutiva que debía supervisar, con aproximadamente el 2% del presupuesto anterior del INAI. En abril de 2025, el Congreso votó 68–23 para abolir formalmente COMPRANET y reemplazarlo con ComprasMX — una plataforma que comparte su arquitectura con el Tianguis Digital, el sistema de compras usado durante el gobierno de Sheinbaum en la Ciudad de México, que no divulgó contratos en ese período. La nueva ley incluye una cláusula de retención de datos de 5 años que analistas estiman eliminaría registros de 2.6 millones de contratos por valor de 9.9 billones de MXN del acceso público oficial.",
+    "crisisText": "En agosto de 2024 — antes de cualquier cambio legal — 1.9 millones de contratos de 2012–2023 (4.7 billones de MXN) fueron eliminados sin anuncio público de la interfaz de COMPRANET. En diciembre de 2024, el INAI fue abolido constitucionalmente y reemplazado por 'Transparencia para el Pueblo', un organismo bajo la misma rama ejecutiva que debía supervisar, con aproximadamente el 2% del presupuesto anterior del INAI. En abril de 2025, el Congreso votó 68–23 para abolir formalmente COMPRANET y reemplazarlo con ComprasMX — una plataforma que comparte su arquitectura con el Tianguis Digital, el sistema de compras usado durante el gobierno de Sheinbaum en la Ciudad de México, que no divulgó contratos en ese período. La nueva ley incluye una cláusula de retención de datos de 5 años que analistas estiman eliminaría registros de 2.6 millones de contratos por valor de 9.9 billones de MXN del acceso público oficial.",
     "crisisNote": "Los 3.1 millones de contratos en esta base de datos fueron capturados antes de estos cambios. Representan un registro histórico que es progresivamente más difícil de acceder a través de canales oficiales. El archivo independiente es la única salvaguarda.",
     "sources": "Fuentes: Mexicanos Contra la Corrupción y la Impunidad (MCCI) · Fundar Centro de Análisis e Investigación · IMCO · Proceso · Diario Oficial de la Federación (16 de abril de 2025)"
   },
@@ -72,7 +72,7 @@
 
   "sPatterns": {
     "title": "Tres Patrones Sistémicos",
-    "intro": "Antes de preguntar qué contratos son sospechosos, los datos revelan algo más fundamental: tres patrones estructurales que permean la contratación pública federal mexicana en todas las administraciones, sectores y décadas. No son anomalías — son el sistema.",
+    "intro": "Antes de preguntar qué contratos son sospechosos, los datos revelan algo más fundamental: tres patrones estructurales que permean la contratación pública federal mexicana en todas las administraciones, sectores y décadas. No son excepciones aisladas — son características estructurales recurrentes del sistema.",
     "p1DirectAward": {
       "label": "Patrón 01",
       "name": "La Economía de Adjudicación Directa",
@@ -118,7 +118,7 @@
     "detectionLabel": "TASA DE DETECCI\u00d3N ALTO+ POR CASO",
     "nContracts": "{{count}} contratos",
     "earlyWarning": "<accent>Valor de alerta temprana:</accent> El modelo habr\u00eda activado alarmas sobre los contratos de empresas fantasma del IMSS desde 2008 \u2014 <italic>ocho a\u00f1os</italic> antes de que el esc\u00e1ndalo se hiciera p\u00fablico en 2016. Para Segalmex, los primeros contratos se\u00f1alados preceden la investigaci\u00f3n de 2020 por varios a\u00f1os.",
-    "p3": "Las detecciones m\u00e1s fuertes ocurren en casos que involucran <bold>proveedores concentrados en salud y agricultura</bold> \u2014 IMSS (99.0%), Segalmex (94.3%), contrataci\u00f3n COVID-19 (91.8%). Estos casos comparten un patr\u00f3n com\u00fan: un n\u00famero reducido de proveedores capturando una cuota de mercado desproporcionada. La detecci\u00f3n es m\u00e1s d\u00e9bil en casos de <bold>soborno y conflicto de inter\u00e9s</bold> \u2014 Grupo Higa (33.3%), Cyber Robotic (43.2%) \u2014 donde la corrupci\u00f3n opera a trav\u00e9s de relaciones m\u00e1s que de patrones estad\u00edsticos en los datos de contrataci\u00f3n."
+    "p3": "Las detecciones m\u00e1s fuertes ocurren en casos que involucran <bold>proveedores concentrados en salud y agricultura</bold> \u2014 IMSS (99.0% alto+), Segalmex (89.3%), contrataci\u00f3n COVID-19 (84.9%). Estos casos comparten un patr\u00f3n com\u00fan: un n\u00famero reducido de proveedores capturando una cuota de mercado desproporcionada. La detecci\u00f3n es m\u00e1s d\u00e9bil en casos de <bold>soborno y conflicto de inter\u00e9s</bold> \u2014 Grupo Higa (33.3%), Cyber Robotic (43.2%) \u2014 donde la corrupci\u00f3n opera a trav\u00e9s de relaciones m\u00e1s que de patrones estad\u00edsticos en los datos de contrataci\u00f3n."
   },
 
   "s3": {
@@ -189,7 +189,7 @@
       "Fox": "Per\u00edodo de datos m\u00e1s temprano (Estructura A) con la menor calidad \u2014 0.1% de cobertura RFC. Las puntuaciones de riesgo pueden estar subestimadas. Datos de adjudicaci\u00f3n directa no disponibles para este per\u00edodo.",
       "Calderon": "El volumen de contratos se duplic\u00f3 con la modernizaci\u00f3n de COMPRANET. La red de empresas fantasma del IMSS comenz\u00f3 operaciones durante este per\u00edodo, con los primeros contratos fechados en 2008.",
       "Pena Nieto": "Mayor volumen de contrataci\u00f3n de cualquier administraci\u00f3n. 73.4% adjudicaciones directas. Per\u00edodo del esc\u00e1ndalo de sobornos de Odebrecht, La Estafa Maestra y el caso de conflicto de inter\u00e9s de Grupo Higa.",
-      "AMLO": "Mayor tasa de riesgo observada y mayor porcentaje de adjudicaci\u00f3n directa con 79.5%. Los esc\u00e1ndalos de Segalmex y contrataciones COVID-19 ocurrieron durante esta administraci\u00f3n.",
+      "AMLO": "Mayor tasa de riesgo observada y mayor porcentaje de adjudicaci\u00f3n directa con 79.5%. Los esc\u00e1ndalos de Segalmex y contrataciones COVID-19 ocurrieron durante esta administraci\u00f3n. Nota: este período utiliza datos de Estructura C/D (30–47% de cobertura RFC), la mayor calidad de datos del conjunto. Una mayor calidad permite mejor identificación de proveedores y detección de redes, lo que puede explicar en parte la mayor tasa de riesgo observada respecto a períodos anteriores.",
       "Sheinbaum": "Solo datos iniciales (2025). La tasa de adjudicación directa es del 66% — una ligera disminución respecto al 79.5% de López Obrador. Pero las decisiones más significativas de la administración en materia de contrataciones no han estado en los contratos mismos. En abril de 2025, COMPRANET fue abolida por el Congreso. En diciembre de 2024, el INAI fue eliminado constitucionalmente. La nueva ley amplía los supuestos para adjudicaciones directas cuando la información es clasificada, y la cláusula de retención de 5 años amenaza el registro público a largo plazo. Si esto representa modernización u opacidad estructural será medible conforme los datos de ComprasMX estén disponibles."
     }
   },
@@ -229,6 +229,21 @@
         "title": "Inc\u00f3gnitas Desconocidas",
         "text": "Los esquemas de corrupci\u00f3n novedosos que no se parezcan a los 22 casos documentados no ser\u00e1n se\u00f1alados por este modelo. El modelo detecta lo que fue entrenado a reconocer \u2014 patrones del pasado, no innovaci\u00f3n en el fraude.",
         "mitigation": "La integraci\u00f3n de datos de auditor\u00eda de la ASF est\u00e1 en la hoja de ruta de v6.0."
+      },
+      "executionPhase": {
+        "title": "El Fraude en Ejecuci\u00f3n es Invisible",
+        "text": "RUBLI analiza solo datos de adjudicaci\u00f3n de contratos. El fraude posterior a la adjudicaci\u00f3n — sobreprecios en ejecuci\u00f3n, trabajadores fantasma, sustituci\u00f3n de materiales, facturas infladas — es completamente invisible para este modelo. Por eso grandes sectores de infraestructura pueden parecer de bajo riesgo a pesar de sobrecostos documentados.",
+        "mitigation": "Cruzar con informes de auditor\u00eda de la ASF, que cubren irregularidades en la fase de ejecuci\u00f3n."
+      },
+      "scarViolation": {
+        "title": "Los Casos Etiquetados No Son Muestra Aleatoria",
+        "text": "La correci\u00f3n de aprendizaje PU (c=0.882) asume que los casos de corrupci\u00f3n etiquetados son una muestra aleatoria de todos los contratos corruptos. No lo son: son esc\u00e1ndalos de alto perfil seleccionados por visibilidad medi\u00e1tica y atenci\u00f3n regulatoria. El factor de correcci\u00f3n solo estima qu\u00e9 tan bien el modelo detecta casos similares a esc\u00e1ndalos ya conocidos.",
+        "mitigation": "Tratar las puntuaciones de riesgo como priorizaci\u00f3n de investigaci\u00f3n para patrones similares a esc\u00e1ndalos, no como estimaciones de prevalencia de toda la corrupci\u00f3n."
+      },
+      "temporalLeakage": {
+        "title": "Las Variables de Proveedores Usan Datos Futuros",
+        "text": "Las variables a nivel de proveedor (concentraci\u00f3n, tasa de adjudicaci\u00f3n, volatilidad de precios) se calculan actualmente usando el historial completo 2002–2025. La concentraci\u00f3n de un contrato de 2019 incluye actividad de 2020–2025. Esto infla el AUC de prueba reportado de 0.957; el rendimiento prospectivo real sobre proveedores genuinamente no vistos es menor.",
+        "mitigation": "v5.2 corregir\u00e1 esto con agregados rodantes en tiempo real. Hasta entonces, interpretar el AUC como cota superior."
       }
     },
     "calibrationNote": "Esta tasa refleja umbrales calibrados con la referencia internacional de la OCDE (2\u201315%). Con umbrales alternativos, la tasa var\u00eda del 2% al 23%. Estas son se\u00f1ales estad\u00edsticas para priorizaci\u00f3n \u2014 no estimaciones de la prevalencia real de corrupci\u00f3n."

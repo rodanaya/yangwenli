@@ -17,7 +17,7 @@
       "71% of federal contracts skip open competition — a structural feature of Mexican procurement, not an exception",
       "Every December for 23 years, spending spikes 1.33× — budget dumping repeated across every administration",
       "10.6% of total procurement value is flagged as high or critical risk, concentrated in a handful of dominant vendors",
-      "Our AI model validated at 96% accuracy: it would have flagged IMSS fraud 8 years before the scandal broke"
+      "Our AI model achieves AUC-ROC 0.957 — correctly ranking a corrupt contract above a clean one 95.7% of the time — and would have flagged IMSS fraud 8 years before the scandal broke"
     ]
   },
 
@@ -46,7 +46,7 @@
     "oversightTitle": "The Oversight Architecture",
     "oversightText": "Three institutions were designed to enforce transparency. COMPRANET (1996–2025) was the mandatory federal procurement portal — every purchase above threshold was required to be published there. INAI was the independent transparency watchdog — citizens and journalists could appeal to it when agencies refused information requests. The ASF (Auditoría Superior de la Federación) is the federal audit court with independent review powers over contract execution. Of these three, only ASF retains full operational independence.",
     "crisisTitle": "2024–2025: The Infrastructure Is Being Dismantled",
-    "crisisText": "In August 2024 — before any law changed — 1.9 million contracts from 2012–2023 (4.7 trillion MXN) were silently removed from COMPRANET's public interface. In December 2024, INAI was constitutionally abolished and replaced by 'Transparencia para el Pueblo,' an agency housed within the executive branch it was created to oversee, operating on roughly 2% of INAI's former budget. In April 2025, Congress voted 68–23 to formally abolish COMPRANET and replace it with ComprasMX — a platform that shares its architecture with Tianguis Digital, the procurement system used during Sheinbaum's time as Mexico City head of government, which disclosed no contracts in that period. The new law includes a 5-year data retention clause that analysts estimate would eventually remove records of 2.6 million contracts worth 9.9 trillion MXN from official public access.",
+    "crisisText": "In August 2024 — before any law changed — 1.9 million contracts from 2012–2023 (4.7 trillion MXN) were removed without public announcement from COMPRANET's public interface. In December 2024, INAI was constitutionally abolished and replaced by 'Transparencia para el Pueblo,' an agency housed within the executive branch it was created to oversee, operating on roughly 2% of INAI's former budget. In April 2025, Congress voted 68–23 to formally abolish COMPRANET and replace it with ComprasMX — a platform that shares its architecture with Tianguis Digital, the procurement system used during Sheinbaum's time as Mexico City head of government, which disclosed no contracts in that period. The new law includes a 5-year data retention clause that analysts estimate would eventually remove records of 2.6 million contracts worth 9.9 trillion MXN from official public access.",
     "crisisNote": "The 3.1 million contracts in this database were captured before these changes. They represent a historical record that is becoming progressively harder to access through official channels. Independent archiving is the only safeguard.",
     "sources": "Sources: Mexicanos Contra la Corrupción y la Impunidad (MCCI) · Fundar Centro de Análisis e Investigación · IMCO · Proceso · Diario Oficial de la Federación (April 16, 2025)"
   },
@@ -72,7 +72,7 @@
 
   "sPatterns": {
     "title": "Three Systemic Patterns",
-    "intro": "Before asking which contracts are suspicious, the data reveals something more fundamental: three structural patterns that pervade Mexican federal procurement across all administrations, sectors, and decades. These are not anomalies — they are the system.",
+    "intro": "Before asking which contracts are suspicious, the data reveals something more fundamental: three structural patterns that pervade Mexican federal procurement across all administrations, sectors, and decades. These are not isolated exceptions — they are recurring structural features of the system.",
     "p1DirectAward": {
       "label": "Pattern 01",
       "name": "The Direct-Award Economy",
@@ -118,7 +118,7 @@
     "detectionLabel": "HIGH+ DETECTION RATE BY CASE",
     "nContracts": "{{count}} contracts",
     "earlyWarning": "<accent>Early warning value:</accent> The model would have raised alarms on IMSS ghost company contracts as early as 2008 — <italic>eight years</italic> before the scandal became public in 2016. For Segalmex, the earliest flagged contracts predate the 2020 investigation by several years.",
-    "p3": "The strongest detections occur in cases involving <bold>concentrated vendors in health and agriculture</bold> — IMSS (99.0%), Segalmex (94.3%), COVID-19 procurement (91.8%). These cases share a common pattern: a small number of vendors capturing outsized market share. Detection is weakest for cases involving <bold>bribery and conflict of interest</bold> — Grupo Higa (33.3%), Cyber Robotic (43.2%) — where corruption operates through relationships rather than statistical patterns in the procurement data itself."
+    "p3": "The strongest detections occur in cases involving <bold>concentrated vendors in health and agriculture</bold> — IMSS (99.0% high+), Segalmex (89.3%), COVID-19 procurement (84.9%). These cases share a common pattern: a small number of vendors capturing outsized market share. Detection is weakest for cases involving <bold>bribery and conflict of interest</bold> — Grupo Higa (33.3%), Cyber Robotic (43.2%) — where corruption operates through relationships rather than statistical patterns in the procurement data itself."
   },
 
   "s3": {
@@ -189,7 +189,7 @@
       "Fox": "Earliest data period (Structure A) with lowest quality — 0.1% RFC coverage. Risk scores may be underestimated. Direct award data unavailable for this period.",
       "Calderon": "Contract volume doubled as COMPRANET modernized. The IMSS ghost company network began operations during this period, with earliest contracts dating to 2008.",
       "Pena Nieto": "Largest procurement volume of any administration. 73.4% direct awards. Period of the Odebrecht bribery scandal, La Estafa Maestra, and the Grupo Higa conflict of interest case.",
-      "AMLO": "Highest observed risk rate and highest direct award percentage at 79.5%. The Segalmex and COVID-19 procurement scandals occurred during this administration.",
+      "AMLO": "Highest observed risk rate and highest direct award percentage at 79.5%. The Segalmex and COVID-19 procurement scandals occurred during this administration. Note: this period uses Structure C/D data (30–47% RFC coverage), the highest data quality in the dataset. Higher data quality enables better vendor identification and network detection, which may partly explain the higher observed risk rate compared to earlier periods.",
       "Sheinbaum": "Early data only (2025). The direct award rate stands at 66% — a slight decrease from López Obrador's 79.5%. But the administration's most consequential procurement decisions have not been in the contracts themselves. In April 2025, COMPRANET — the platform this entire analysis is built on — was abolished by Congress and replaced by ComprasMX. In December 2024, INAI was constitutionally eliminated. The new procurement law expands grounds for direct awards when information is classified, and the 5-year data retention clause threatens the long-term public record. Whether this represents modernization or structural opacity will be measurable as ComprasMX data becomes available for analysis."
     }
   },
@@ -229,6 +229,21 @@
         "title": "Unknown Unknowns",
         "text": "Novel corruption schemes that do not resemble the 22 documented cases will not be flagged by this model. The model detects what it has been trained to recognize — patterns from the past, not innovation in fraud.",
         "mitigation": "ASF audit data integration is in the v6.0 roadmap."
+      },
+      "executionPhase": {
+        "title": "Execution-Phase Fraud Is Invisible",
+        "text": "RUBLI analyzes contract award data only. Fraud that occurs after award — cost overruns, ghost workers, material substitution, inflated invoicing — is completely invisible to this model. This is why large infrastructure sectors can appear low-risk despite documented overruns.",
+        "mitigation": "Cross-reference with ASF (Auditoría Superior de la Federación) audit reports, which cover execution-phase irregularities."
+      },
+      "scarViolation": {
+        "title": "Labeled Cases Are Not a Random Sample",
+        "text": "The PU-learning correction (c=0.882) assumes labeled corruption cases are randomly selected from all corrupt contracts. They are not — they are high-profile scandals selected by media visibility and regulatory attention. The correction factor only estimates how well the model detects cases similar to already-known scandals; true coverage of undiscovered or small-scale corruption is unknown.",
+        "mitigation": "Treat risk scores as investigation triage for scandal-similar patterns, not as prevalence estimates of all corruption."
+      },
+      "temporalLeakage": {
+        "title": "Vendor Features Use Future Data",
+        "text": "Vendor-level features (concentration, win rate, price volatility) are currently computed using full 2002–2025 history. A 2019 contract's vendor concentration score includes 2020–2025 activity. This inflates the reported Test AUC of 0.957; true prospective performance on genuinely unseen vendors is lower.",
+        "mitigation": "v5.2 will fix this with point-in-time rolling aggregates. Until then, interpret AUC as an upper bound."
       }
     },
     "calibrationNote": "This rate reflects thresholds calibrated to the OECD 2\u201315% international benchmark. Under alternative thresholds, the rate ranges from 2% to 23%. These are statistical signals for triage \u2014 not prevalence estimates of actual corruption."
