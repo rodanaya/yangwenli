@@ -65,7 +65,7 @@
     "mahalanobisFormula": "D²(z) = zᵀ Σ⁻¹ z",
     "perSector": "Per-Sector Logistic Regression",
     "perSectorDesc": "v5.1 trains 12 dedicated models (one per sector) plus a global fallback. Corruption patterns differ by sector — Energía is driven by industry mismatch, while Agricultura is driven by vendor concentration (+1.82).",
-    "perSectorFormula": "S(z) = σ(β₀ + βᵀz) / c, where c = 0.887 (PU correction)"
+    "perSectorFormula": "S(z) = σ(β₀ + βᵀz) / c, where c = 0.882 (PU correction)"
   },
   "modelComparison": {
     "title": "Model Comparison: v3.3 → v5.1",

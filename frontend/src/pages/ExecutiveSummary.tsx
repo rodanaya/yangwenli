@@ -926,7 +926,7 @@ function PatternWebDiagram() {
       x: 330,
       y: 210,
       label: 'CONCENTRATION',
-      sub: '7.9% at risk',
+      sub: '10.6% at risk',
       color: '#f87171',
       id: 'vc',
     },
@@ -1388,7 +1388,7 @@ function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
     {
       label: t('sPatterns.p3Concentration.label'),
       name: t('sPatterns.p3Concentration.name'),
-      stat: '7.9%',
+      stat: '10.6%',
       statColor: 'var(--color-risk-critical)',
       borderColor: 'border-risk-critical/20',
       bgColor: 'bg-risk-critical/5',

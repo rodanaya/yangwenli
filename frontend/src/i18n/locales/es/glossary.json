@@ -81,7 +81,7 @@
   },
   "groundTruth": {
     "title": "Verdad Base",
-    "description": "Casos documentados y verificados de corrupción usados para entrenar y validar el modelo. Usamos 15 casos con 27 proveedores y 26,582 contratos en los 12 sectores, incluyendo IMSS, Segalmex, Odebrecht, y más."
+    "description": "Casos documentados y verificados de corrupción usados para entrenar y validar el modelo. Usamos 22 casos con 27 proveedores y 26,582 contratos en los 12 sectores, incluyendo IMSS, Segalmex, Odebrecht, y más."
   },
   "adPeriod": {
     "title": "Período de Publicación",
@@ -134,7 +134,7 @@
     "price_volatility": {
       "label": "Volatilidad de Precio",
       "coefficient": "+1.219",
-      "validation_strength": "Fuerte (predictor principal v5.0)",
+      "validation_strength": "Fuerte (predictor principal v5.1)",
       "key_citation": "Porter & Zona (1993): La manipulación de precios es detectable",
       "mexico_note": "Nuevo en v5.0. Proveedores con montos de contrato muy variables respecto a la norma del sector."
     },

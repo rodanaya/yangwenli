@@ -192,168 +192,6 @@ function EraTimelineStrip() {
 // RISK GAUGE — SVG half-ring showing critical+high percentage
 // ============================================================================
 
-function RiskGauge({ criticalPct, highPct }: { criticalPct: number; highPct: number }) {
-  const total = criticalPct + highPct
-  const r = 76
-  const cx = 100
-  const cy = 90
-  const strokeWidth = 14
-  // semicircle: from 180° to 0° (left to right along top)
-  // path for a semicircle going left to right
-  const arcLength = Math.PI * r  // circumference of a half-circle
-
-  // Convert percentage to arc offset
-  const criticalLen = (criticalPct / 100) * arcLength
-  const highLen = (highPct / 100) * arcLength
-  const totalLen = criticalLen + highLen
-
-  // SVG arc path for a semicircle (left to right, top half)
-  // Center at (cx, cy), radius r
-  const arcPath = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`
-
-  // Needle angle: 0% = leftmost (180°), 100% = rightmost (0°)
-  // angle in degrees from left (180°) rotating clockwise to right (0°)
-  const needleAngleDeg = 180 - (total / 100) * 180
-  const needleRad = (needleAngleDeg * Math.PI) / 180
-  const needleLen = r - strokeWidth / 2 - 4
-  const needleX = cx + needleLen * Math.cos(needleRad)
-  const needleY = cy - needleLen * Math.sin(needleRad)
-
-  const riskLabel =
-    total >= 15 ? 'ELEVATED' :
-    total >= 8 ? 'MODERATE' : 'LOW'
-  const riskLabelColor =
-    total >= 15 ? '#f87171' :
-    total >= 8 ? '#fbbf24' : '#4ade80'
-
-  const gaugeId = 'dashboardRiskGauge'
-  const gradId = `${gaugeId}-grad`
-
-  return (
-    <div className="flex flex-col items-center">
-      <svg width="200" height="110" viewBox="0 0 200 110" className="overflow-visible" aria-label={`Risk gauge: ${total.toFixed(1)}% at risk`}>
-        <defs>
-          <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#4ade80" />
-            <stop offset="40%" stopColor="#fbbf24" />
-            <stop offset="100%" stopColor="#f87171" />
-          </linearGradient>
-          <style>{`
-            @keyframes gaugeReveal {
-              from { stroke-dashoffset: ${arcLength}px; }
-            }
-            .gauge-track-${gaugeId} { stroke-dasharray: ${arcLength}px; animation: gaugeReveal 1.2s ease-out forwards; }
-            .gauge-high-${gaugeId} { stroke-dasharray: ${arcLength}px; animation: gaugeReveal 1.0s 0.1s ease-out forwards; }
-            .gauge-crit-${gaugeId} { stroke-dasharray: ${arcLength}px; animation: gaugeReveal 0.9s 0.2s ease-out forwards; }
-          `}</style>
-        </defs>
-
-        {/* Background track */}
-        <path
-          d={arcPath}
-          fill="none"
-          stroke="rgba(255,255,255,0.06)"
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-        />
-
-        {/* Gradient track (full) */}
-        <path
-          d={arcPath}
-          fill="none"
-          stroke={`url(#${gradId})`}
-          strokeWidth={strokeWidth}
-          strokeLinecap="butt"
-          strokeDasharray={`${arcLength}`}
-          strokeDashoffset={0}
-          opacity={0.18}
-        />
-
-        {/* High risk arc (orange) — starts at left, covers criticalPct+highPct */}
-        <path
-          d={arcPath}
-          fill="none"
-          stroke="#fb923c"
-          strokeWidth={strokeWidth}
-          strokeLinecap="butt"
-          className={`gauge-high-${gaugeId}`}
-          style={{
-            strokeDashoffset: `${arcLength - totalLen}px`,
-          }}
-          opacity={0.85}
-        />
-
-        {/* Critical arc (red) — starts at left, covers only criticalPct */}
-        <path
-          d={arcPath}
-          fill="none"
-          stroke="#f87171"
-          strokeWidth={strokeWidth}
-          strokeLinecap="butt"
-          className={`gauge-crit-${gaugeId}`}
-          style={{
-            strokeDashoffset: `${arcLength - criticalLen}px`,
-          }}
-          opacity={0.9}
-        />
-
-        {/* Needle */}
-        <line
-          x1={cx}
-          y1={cy}
-          x2={needleX}
-          y2={needleY}
-          stroke="#e6edf3"
-          strokeWidth={2}
-          strokeLinecap="round"
-          opacity={0.9}
-        />
-        <circle cx={cx} cy={cy} r={4} fill="#e6edf3" opacity={0.9} />
-
-        {/* Center text */}
-        <text
-          x={cx}
-          y={cy - 10}
-          textAnchor="middle"
-          fill="#e6edf3"
-          fontSize={18}
-          fontWeight="900"
-          fontFamily="var(--font-mono, monospace)"
-        >
-          {total.toFixed(1)}%
-        </text>
-        <text
-          x={cx}
-          y={cy + 6}
-          textAnchor="middle"
-          fill={riskLabelColor}
-          fontSize={8}
-          fontWeight="700"
-          fontFamily="var(--font-mono, monospace)"
-          letterSpacing="0.1em"
-        >
-          {riskLabel}
-        </text>
-
-        {/* Left label: 0% */}
-        <text x={cx - r - 2} y={cy + 14} textAnchor="end" fill="rgba(139,148,158,0.6)" fontSize={8} fontFamily="var(--font-mono, monospace)">0%</text>
-        {/* Right label: 100% */}
-        <text x={cx + r + 2} y={cy + 14} textAnchor="start" fill="rgba(139,148,158,0.6)" fontSize={8} fontFamily="var(--font-mono, monospace)">100%</text>
-      </svg>
-      {/* Legend */}
-      <div className="flex items-center gap-3 mt-1">
-        <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#f87171' }} />
-          <span className="text-[10px] text-text-muted font-mono">Critical {criticalPct.toFixed(1)}%</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#fb923c' }} />
-          <span className="text-[10px] text-text-muted font-mono">High {highPct.toFixed(1)}%</span>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 // ============================================================================
 // MINI SPARKLINE — 120×24px area chart for KPI trend embedding
@@ -949,7 +787,7 @@ export function Dashboard() {
       </Card>
 
       {/* ================================================================ */}
-      {/* VALUE CONCENTRATION — The 7.9% that holds the money           */}
+      {/* VALUE CONCENTRATION — The 10.6% that holds the money          */}
       {/* ================================================================ */}
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         {/* Concentration paradox */}
@@ -1364,17 +1202,29 @@ export function Dashboard() {
               <Skeleton className="h-10 w-full" />
             </div>
           ) : (
-            <div ref={riskDistRef} className="space-y-4">
-              {/* Gauge + Donut row */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                <RiskGauge
-                  criticalPct={riskDist.find(d => d.risk_level === 'critical')?.percentage ?? 0}
-                  highPct={riskDist.find(d => d.risk_level === 'high')?.percentage ?? 0}
-                />
+            <div ref={riskDistRef} className="space-y-3">
+              {/* Donut + 4 stat cards */}
+              <div className="flex flex-col sm:flex-row items-center gap-6">
                 <RiskDonutChart data={riskDist} />
+                <div className="flex-1 grid grid-cols-2 gap-2 w-full">
+                  {(['critical', 'high', 'medium', 'low'] as const).map((level) => {
+                    const d = riskDist.find((r) => r.risk_level === level)
+                    const color = DONUT_COLORS[level] ?? '#64748b'
+                    return (
+                      <div key={level} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-border/30 bg-background-elevated/20">
+                        <div className="w-2.5 h-8 rounded-sm flex-shrink-0" style={{ backgroundColor: color, opacity: 0.75 }} />
+                        <div className="min-w-0">
+                          <p className="text-[10px] text-text-muted capitalize font-mono uppercase tracking-wide">{level}</p>
+                          <p className="text-lg font-black tabular-nums font-mono leading-tight" style={{ color }}>
+                            {(d?.percentage ?? 0).toFixed(1)}%
+                          </p>
+                          <p className="text-[10px] text-text-muted font-mono tabular-nums">{formatNumber(d?.count ?? 0)}</p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
-              {/* Stacked bar */}
-              <RiskDistributionBar data={riskDist} />
               {/* Plain-language annotation */}
               <RiskDistributionAnnotation data={riskDist} />
             </div>
@@ -1585,71 +1435,6 @@ export const _StatCard = memo(function _StatCard({ loading, label, value, detail
 // RISK DISTRIBUTION BAR — Full-width stacked bar with labels
 // ============================================================================
 
-const RiskDistributionBar = memo(function RiskDistributionBar({
-  data,
-}: {
-  data: Array<{ risk_level: string; count: number; percentage: number; total_value_mxn: number }>
-}) {
-  const { t } = useTranslation('dashboard')
-  const total = data.reduce((sum, d) => sum + d.count, 0)
-
-  const segments = [
-    { key: 'critical', color: RISK_COLORS.critical, label: t('critical'), darkText: false },
-    { key: 'high', color: RISK_COLORS.high, label: t('high'), darkText: false },
-    { key: 'medium', color: RISK_COLORS.medium, label: t('medium'), darkText: true },
-    { key: 'low', color: RISK_COLORS.low, label: t('low'), darkText: true },
-  ]
-
-  return (
-    <div>
-      {/* Stacked bar */}
-      <div className="flex h-8 rounded-md overflow-hidden gap-[1px]">
-        {segments.map((seg) => {
-          const item = data.find((d) => d.risk_level === seg.key)
-          if (!item || item.count === 0) return null
-          const widthPct = (item.count / total) * 100
-          return (
-            <div
-              key={seg.key}
-              className="relative flex items-center justify-center transition-all duration-500"
-              style={{ width: `${widthPct}%`, backgroundColor: seg.color, opacity: 0.85 }}
-              title={`${seg.label}: ${formatNumber(item.count)} (${item.percentage.toFixed(1)}%)`}
-            >
-              {widthPct > 6 && (
-                <span
-                  className="text-xs font-bold font-mono tabular-nums"
-                  style={{
-                    color: seg.darkText ? 'rgba(0,0,0,0.75)' : '#fff',
-                    textShadow: seg.darkText ? 'none' : '0 1px 1px rgba(0,0,0,0.5)',
-                  }}
-                >
-                  {item.percentage.toFixed(1)}%
-                </span>
-              )}
-            </div>
-          )
-        })}
-      </div>
-      {/* Legend */}
-      <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
-        {segments.map((seg) => {
-          const item = data.find((d) => d.risk_level === seg.key)
-          if (!item) return null
-          return (
-            <div key={seg.key} className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: seg.color, opacity: 0.85 }} />
-              <span className="text-xs text-text-muted font-medium">{seg.label}</span>
-              <span className="text-xs text-text-secondary font-bold tabular-nums font-mono">
-                {formatNumber(item.count)}
-              </span>
-              <span className="text-xs text-text-secondary">({item.percentage.toFixed(1)}%)</span>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-})
 
 // ============================================================================
 // RISK DONUT CHART — Small PieChart showing 4 risk levels

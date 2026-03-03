@@ -321,7 +321,7 @@ function GeneralTab() {
             irregular procurement patterns across federal sectors.
           </p>
           <div className="text-xs text-text-muted space-y-1">
-            <p>Risk Model: v5.0 Per-Sector Calibrated Framework (Test AUC: 0.960)</p>
+            <p>Risk Model: v5.1 Per-Sector Calibrated Framework (Test AUC: 0.957)</p>
             <p>Sectors: 12-sector taxonomy</p>
             <p>Backend: FastAPI + SQLite</p>
             <p>Frontend: React + TypeScript + TailwindCSS</p>

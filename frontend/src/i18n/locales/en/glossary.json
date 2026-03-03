@@ -81,7 +81,7 @@
   },
   "groundTruth": {
     "title": "Ground Truth",
-    "description": "Documented, verified corruption cases used to train and validate the model. We use 15 cases with 27 vendors and 26,582 contracts across all 12 sectors, including IMSS, Segalmex, Odebrecht, and more."
+    "description": "Documented, verified corruption cases used to train and validate the model. We use 22 cases with 27 vendors and 26,582 contracts across all 12 sectors, including IMSS, Segalmex, Odebrecht, and more."
   },
   "adPeriod": {
     "title": "Ad Period",

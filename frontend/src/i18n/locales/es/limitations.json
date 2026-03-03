@@ -33,8 +33,8 @@
     },
     "trainingBias": {
       "title": "Sesgo en Datos de Entrenamiento — Tres Casos Dominan",
-      "summary": "El modelo de riesgo fue entrenado con 15 casos documentados de corrupción, pero el 79% de los contratos de entrenamiento provienen de solo tres mega-casos en salud y agricultura.",
-      "body1": "El modelo v5.0 mejoró significativamente respecto al v4.0 al diversificar de 9 a 15 casos de verdad fundamental en los 12 sectores. Sin embargo, la señal de entrenamiento sigue concentrada:",
+      "summary": "El modelo de riesgo fue entrenado con 22 casos documentados de corrupción, pero el 79% de los contratos de entrenamiento provienen de solo tres mega-casos en salud y agricultura.",
+      "body1": "El modelo v5.1 mejoró significativamente respecto al v4.0 al diversificar de 9 a 22 casos de verdad fundamental en los 12 sectores. Sin embargo, la señal de entrenamiento sigue concentrada:",
       "body2": "Empresas fantasma del IMSS (9,366 contratos) + Segalmex (6,326) + Contrataciones COVID-19 (5,371) = ~21,000 de ~27,000 contratos etiquetados. Estos tres casos involucran proveedores grandes y concentrados en los sectores de salud/agricultura. El modelo ha aprendido efectivamente: proveedor grande + alta concentración + misma institución = riesgo.",
       "body3": "La corrupción que no coincide con este patrón es sistemáticamente subdetectada. Un funcionario local adjudicando contratos a la empresa fantasma de un familiar — pocos contratos, montos pequeños, no concentrado — puede obtener una puntuación baja porque no se parece a IMSS Pisa.",
       "workaround": "Al investigar instituciones u oficiales específicos, no confíe solo en las puntuaciones de riesgo. Use el filtro de Contratos para encontrar adjudicaciones directas y licitaciones con un solo participante independientemente de la puntuación."

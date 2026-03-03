@@ -4,7 +4,7 @@
     "dateline": "Febrero 2026  |  Plataforma de Inteligencia RUBLI",
     "title": "9.6 Billones de Pesos Bajo el Microscopio",
     "subtitle": "Un An\u00e1lisis Integral de la Contrataci\u00f3n P\u00fablica Federal de M\u00e9xico, 2002-2025",
-    "lead": "Entre 2002 y 2025, el gobierno federal mexicano adjudic\u00f3 {{totalContracts}} contratos de contrataci\u00f3n p\u00fablica por un valor combinado de {{totalValue}} \u2014 aproximadamente {{totalValueUSD}}. Este informe presenta los hallazgos de un an\u00e1lisis sistem\u00e1tico impulsado por inteligencia artificial de cada uno de esos contratos. Utilizando un modelo calibrado por sector con 16 variables, validado contra quince casos documentados de corrupci\u00f3n, identificamos patrones consistentes con fraude, colusi\u00f3n y abuso en contratos por un valor estimado de {{valueAtRisk}} \u2014 {{pct}}% del valor total de contrataci\u00f3n. Estos hallazgos no constituyen prueba de irregularidades. Son se\u00f1ales estad\u00edsticas que ameritan investigaci\u00f3n.",
+    "lead": "Entre 2002 y 2025, el gobierno federal mexicano adjudic\u00f3 {{totalContracts}} contratos de contrataci\u00f3n p\u00fablica por un valor combinado de {{totalValue}} \u2014 aproximadamente {{totalValueUSD}}. Este informe presenta los hallazgos de un an\u00e1lisis sistem\u00e1tico impulsado por inteligencia artificial de cada uno de esos contratos. Utilizando un modelo calibrado por sector con 16 variables, validado contra veintid\u00f3s casos documentados de corrupci\u00f3n, identificamos patrones consistentes con fraude, colusi\u00f3n y abuso en contratos por un valor estimado de {{valueAtRisk}} \u2014 {{pct}}% del valor total de contrataci\u00f3n. Estos hallazgos no constituyen prueba de irregularidades. Son se\u00f1ales estad\u00edsticas que ameritan investigaci\u00f3n.",
     "contracts": "Contratos",
     "totalValue": "Valor Total",
     "vendors": "Proveedores",
@@ -16,8 +16,8 @@
     "items": [
       "El 71% de los contratos federales omiten la licitación abierta — una característica estructural, no una excepción",
       "Cada diciembre durante 23 años, el gasto aumenta 1.33× — vaciado presupuestal repetido en cada administración",
-      "El 7.9% del valor total de contratación está clasificado como riesgo alto o crítico, concentrado en pocos proveedores dominantes",
-      "Nuestro modelo de IA validado con 96% de precisión habría detectado el fraude del IMSS 8 años antes del escándalo"
+      "El 10.6% del valor total de contratación está clasificado como riesgo alto o crítico, concentrado en pocos proveedores dominantes",
+      "Nuestro modelo de IA validado con 95.7% de precisión habría detectado el fraude del IMSS 8 años antes del escándalo"
     ]
   },
 
@@ -88,7 +88,7 @@
     "p3Concentration": {
       "label": "Patrón 03",
       "name": "La Paradoja de la Concentración de Valor",
-      "desc": "El 7.9% del valor total de contratación se encuentra en contratos clasificados como riesgo alto o crítico — y ese riesgo se concentra en un número muy reducido de proveedores dominantes. Los proveedores que capturan más valor son también los más estadísticamente anómalos. La concentración no es solo un síntoma de la corrupción; es su predictor estadístico más fuerte.",
+      "desc": "El 10.6% del valor total de contratación se encuentra en contratos clasificados como riesgo alto o crítico — y ese riesgo se concentra en un número muy reducido de proveedores dominantes. Los proveedores que capturan más valor son también los más estadísticamente anómalos. La concentración no es solo un síntoma de la corrupción; es su predictor estadístico más fuerte.",
       "note": "La volatilidad de precios — proveedores con montos de contratos que varían enormemente — es la señal #1 de corrupción. La corrupción está en quién sigue ganando, no en qué tipo de procedimiento se usó."
     }
   },

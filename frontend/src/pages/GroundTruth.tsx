@@ -724,7 +724,7 @@ export default function GroundTruth() {
                 {t('groundTruth.modelComparison')}
               </CardTitle>
               <CardDescription>
-                Detection rate comparison across model versions (v3.3, v4.0, v5.0).
+                Detection rate comparison across model versions (v3.3, v4.0, v5.1).
                 High+ = score ≥ 0.30, Critical = score ≥ 0.50.
               </CardDescription>
             </div>

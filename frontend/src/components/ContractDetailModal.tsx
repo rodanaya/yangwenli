@@ -186,7 +186,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                   )}
                 </div>
 
-                {/* v5.0 Risk Explanation */}
+                {/* v5.1 Risk Explanation */}
                 <RiskExplanationPanel contractId={contract.id} compact />
               </div>
             </section>

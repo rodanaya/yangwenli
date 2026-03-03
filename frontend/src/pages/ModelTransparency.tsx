@@ -438,7 +438,7 @@ export default function ModelTransparency() {
   const comparisonData = useMemo(() => {
     if (modelComparison && modelComparison.length >= 2) {
       const v33 = modelComparison.find((m) => m.model === 'v3.3')
-      const v50 = modelComparison.find((m) => m.model === 'v5.0')
+      const v50 = modelComparison.find((m) => m.model === 'v5.1') ?? modelComparison.find((m) => m.model === 'v5.0')
       if (v33 && v50) {
         return [
           { metric: 'AUC-ROC', v33: v33.auc, v50: v50.auc },

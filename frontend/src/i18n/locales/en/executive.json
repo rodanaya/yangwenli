@@ -4,7 +4,7 @@
     "dateline": "February 2026  |  RUBLI Intelligence Platform",
     "title": "9.6 Trillion Pesos Under the Microscope",
     "subtitle": "A Comprehensive Analysis of Mexican Federal Procurement, 2002-2025",
-    "lead": "Between 2002 and 2025, the Mexican federal government awarded {{totalContracts}} public procurement contracts worth a combined {{totalValue}} — roughly {{totalValueUSD}}. This report presents the findings of a systematic, AI-driven analysis of every one of those contracts. Using a 16-feature per-sector risk model validated against fifteen documented corruption cases, we identified patterns consistent with fraud, collusion, and abuse in contracts worth an estimated {{valueAtRisk}} — {{pct}}% of all procurement value. These findings do not constitute proof of wrongdoing. They are statistical signals that warrant investigation.",
+    "lead": "Between 2002 and 2025, the Mexican federal government awarded {{totalContracts}} public procurement contracts worth a combined {{totalValue}} — roughly {{totalValueUSD}}. This report presents the findings of a systematic, AI-driven analysis of every one of those contracts. Using a 16-feature per-sector risk model validated against twenty-two documented corruption cases, we identified patterns consistent with fraud, collusion, and abuse in contracts worth an estimated {{valueAtRisk}} — {{pct}}% of all procurement value. These findings do not constitute proof of wrongdoing. They are statistical signals that warrant investigation.",
     "contracts": "Contracts",
     "totalValue": "Total Value",
     "vendors": "Vendors",
@@ -16,7 +16,7 @@
     "items": [
       "71% of federal contracts skip open competition — a structural feature of Mexican procurement, not an exception",
       "Every December for 23 years, spending spikes 1.33× — budget dumping repeated across every administration",
-      "7.9% of total procurement value is flagged as high or critical risk, concentrated in a handful of dominant vendors",
+      "10.6% of total procurement value is flagged as high or critical risk, concentrated in a handful of dominant vendors",
       "Our AI model validated at 96% accuracy: it would have flagged IMSS fraud 8 years before the scandal broke"
     ]
   },
@@ -88,7 +88,7 @@
     "p3Concentration": {
       "label": "Pattern 03",
       "name": "The Value Concentration Paradox",
-      "desc": "7.9% of total procurement value sits in contracts flagged as high or critical risk — and that risk concentrates in a vanishingly small number of dominant vendors. The vendors who capture the most value are also the most statistically anomalous. Concentration is not just a symptom of corruption; it is its strongest statistical predictor.",
+      "desc": "10.6% of total procurement value sits in contracts flagged as high or critical risk — and that risk concentrates in a vanishingly small number of dominant vendors. The vendors who capture the most value are also the most statistically anomalous. Concentration is not just a symptom of corruption; it is its strongest statistical predictor.",
       "note": "Price volatility — vendors with wildly varying contract sizes — is the #1 corruption signal. The corruption is in who keeps winning, not in which procedure type was used."
     }
   },
@@ -212,7 +212,7 @@
     "limitations": {
       "groundTruth": {
         "title": "Ground Truth Concentration",
-        "text": "While ground truth has been diversified to 15 cases across all 12 sectors, the three largest cases (IMSS, Segalmex, COVID) still contribute the majority of training contracts. The model excels at detecting concentration-based fraud but may underdetect novel corruption schemes.",
+        "text": "While ground truth has been diversified to 22 cases across all 12 sectors, the three largest cases (IMSS, Segalmex, COVID) still contribute the majority of training contracts. The model excels at detecting concentration-based fraud but may underdetect novel corruption schemes.",
         "mitigation": "Adding 8+ cases in v6.0. Workaround: per-sector models reduce this bias."
       },
       "dataQuality": {
@@ -227,7 +227,7 @@
       },
       "unknowns": {
         "title": "Unknown Unknowns",
-        "text": "Novel corruption schemes that do not resemble the 15 documented cases will not be flagged by this model. The model detects what it has been trained to recognize — patterns from the past, not innovation in fraud.",
+        "text": "Novel corruption schemes that do not resemble the 22 documented cases will not be flagged by this model. The model detects what it has been trained to recognize — patterns from the past, not innovation in fraud.",
         "mitigation": "ASF audit data integration is in the v6.0 roadmap."
       }
     },
