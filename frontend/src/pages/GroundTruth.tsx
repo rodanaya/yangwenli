@@ -206,7 +206,7 @@ function ModelComparisonTooltip({
 // ============================================================================
 
 export default function GroundTruth() {
-  const { t } = useTranslation('common')
+  const { t } = useTranslation('methodology')
 
   // Sort state for cases table
   const [sortKey, setSortKey] = useState<SortKey>('total_contracts')
@@ -335,21 +335,18 @@ export default function GroundTruth() {
       {/* ================================================================== */}
       <div>
         <h1 className="text-2xl font-bold text-text-primary tracking-tight flex items-center gap-2">
-          Ground Truth War Room
+          {t('groundTruth.pageTitle')}
           <Badge variant="outline" className="text-xs font-normal ml-1">
             {t('groundTruth.liveData')}
           </Badge>
         </h1>
         <p className="text-sm text-text-secondary mt-1">
-          Documented corruption cases validate the risk detection model
+          {t('groundTruth.pageSubtitle')}
         </p>
       </div>
 
       <SectionDescription variant="callout">
-        This page measures RUBLI's detection capability against real, documented Mexican
-        procurement corruption cases. Each case was independently investigated by journalists,
-        auditors, or prosecutors. Our model never saw these labels during training — the
-        detection rates shown here represent genuine out-of-sample predictive performance.
+        {t('groundTruth.callout')}
       </SectionDescription>
 
       {/* ================================================================== */}
@@ -364,27 +361,27 @@ export default function GroundTruth() {
       ) : isError ? (
         <div className="flex items-center gap-2 text-sm text-destructive p-4 rounded-md border border-destructive/20 bg-destructive/5">
           <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
-          <span>Failed to load summary data. Please try refreshing.</span>
+          <span>{t('groundTruth.failedSummary')}</span>
         </div>
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           <StatCard
             icon={Shield}
-            label="Ground Truth Cases"
+            label={t('groundTruth.groundTruthCases')}
             value={totalCases || '—'}
-            sub="Documented corruption cases"
+            sub={t('groundTruth.documentedCases')}
           />
           <StatCard
             icon={Crosshair}
-            label="Vendors Matched"
+            label={t('groundTruth.vendorsMatched')}
             value={vendorsMatched || '—'}
-            sub="In COMPRANET records"
+            sub={t('groundTruth.inCompranet')}
           />
           <StatCard
             icon={FileText}
-            label="Total Value at Risk"
+            label={t('groundTruth.totalValueAtRisk')}
             value={totalFraud > 0 ? formatCompactMXN(totalFraud) : '—'}
-            sub="Estimated fraud across all cases"
+            sub={t('groundTruth.estimatedFraud')}
           />
         </div>
       )}
@@ -398,10 +395,10 @@ export default function GroundTruth() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Target className="h-4 w-4 text-accent" aria-hidden="true" />
-                {t('groundTruth.caseName')} — Per-Case Detection
+                {t('groundTruth.caseName')} — {t('groundTruth.perCaseDetection')}
               </CardTitle>
               <CardDescription>
-                Live detection rates computed from current risk scores. Click a row to expand.
+                {t('groundTruth.liveDetectionRates')}
               </CardDescription>
             </div>
             <TableExportButton
@@ -425,11 +422,11 @@ export default function GroundTruth() {
           ) : perCaseError ? (
             <div className="flex items-center gap-2 text-sm text-destructive">
               <AlertTriangle className="h-4 w-4" aria-hidden="true" />
-              <span>Failed to load case data.</span>
+              <span>{t('groundTruth.failedToLoad')}</span>
             </div>
           ) : cases.length === 0 ? (
             <p className="text-sm text-text-secondary text-center py-8">
-              No ground truth cases found in the database.
+              {t('groundTruth.noCasesFound')}
             </p>
           ) : (
             <div className="overflow-x-auto" role="region" aria-label="Per-case detection table">
@@ -582,21 +579,21 @@ export default function GroundTruth() {
                             <td colSpan={8} className="px-8 py-3 text-xs text-text-secondary">
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-1">
                                 <div>
-                                  <span className="font-medium text-text-primary">Critical Rate: </span>
+                                  <span className="font-medium text-text-primary">{t('groundTruth.criticalRate')}: </span>
                                   <span style={{ color: RISK_COLORS.critical }}>
                                     {(c.critical_rate * 100).toFixed(1)}%
                                   </span>
                                 </div>
                                 <div>
-                                  <span className="font-medium text-text-primary">Confidence: </span>
+                                  <span className="font-medium text-text-primary">{t('groundTruth.confidence')}: </span>
                                   <span className="capitalize">{c.confidence_level ?? '—'}</span>
                                 </div>
                                 <div className="col-span-2 md:col-span-2">
-                                  Matched via vendor RFC/name in{' '}
+                                  {t('groundTruth.matchedVia')}{' '}
                                   <code className="text-xs bg-background-card px-1 rounded">
                                     ground_truth_vendors
                                   </code>{' '}
-                                  table. Contracts join on{' '}
+                                  {t('groundTruth.contractsJoin')}{' '}
                                   <code className="text-xs bg-background-card px-1 rounded">
                                     vendor_id
                                   </code>
@@ -625,11 +622,10 @@ export default function GroundTruth() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Crosshair className="h-4 w-4 text-accent" aria-hidden="true" />
-                Factor Lift vs Ground Truth
+                {t('groundTruth.factorLift')}
               </CardTitle>
               <CardDescription>
-                How much more often each risk factor appears in documented corruption cases vs the general contract
-                population. Lift &gt; 1.0 = over-represented in known-bad contracts.
+                {t('groundTruth.factorLiftDesc')}
               </CardDescription>
             </div>
             <ChartDownloadButton targetRef={factorLiftChartRef} filename="rubli-factor-lift" />
@@ -639,7 +635,7 @@ export default function GroundTruth() {
           {factorLiftLoading ? (
             <Skeleton className="h-64 w-full" />
           ) : !factorLiftData?.factors.length ? (
-            <p className="text-sm text-text-secondary text-center py-8">No factor lift data available.</p>
+            <p className="text-sm text-text-secondary text-center py-8">{t('groundTruth.noFactorLift')}</p>
           ) : (
             <div ref={factorLiftChartRef} className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -678,13 +674,13 @@ export default function GroundTruth() {
                         <div className="rounded-lg border border-border bg-background-card p-3 shadow-lg text-xs space-y-1">
                           <p className="font-semibold text-text-primary capitalize">{d.factor}</p>
                           <p className="text-text-secondary">
-                            Lift: <span className="font-mono text-accent">{d.lift}×</span>
+                            {t('groundTruth.tooltipLift')}: <span className="font-mono text-accent">{d.lift}×</span>
                           </p>
                           <p className="text-text-secondary">
-                            GT rate: <span className="font-mono">{d.gt_rate}%</span>
+                            {t('groundTruth.tooltipGtRate')}: <span className="font-mono">{d.gt_rate}%</span>
                           </p>
                           <p className="text-text-secondary">
-                            Base rate: <span className="font-mono">{d.base_rate}%</span>
+                            {t('groundTruth.tooltipBaseRate')}: <span className="font-mono">{d.base_rate}%</span>
                           </p>
                         </div>
                       )
@@ -724,8 +720,7 @@ export default function GroundTruth() {
                 {t('groundTruth.modelComparison')}
               </CardTitle>
               <CardDescription>
-                Detection rate comparison across model versions (v3.3, v4.0, v5.1).
-                High+ = score ≥ 0.30, Critical = score ≥ 0.50.
+                {t('groundTruth.modelComparisonDesc')}
               </CardDescription>
             </div>
             <ChartDownloadButton targetRef={modelComparisonChartRef} filename="rubli-model-comparison" />
@@ -736,7 +731,7 @@ export default function GroundTruth() {
             <Skeleton className="h-48 w-full" />
           ) : modelComparisonData.length === 0 ? (
             <p className="text-sm text-text-secondary text-center py-8">
-              No model comparison data available. Run validate_risk_model.py to generate results.
+              {t('groundTruth.noModelComparison')}
             </p>
           ) : (
             <div ref={modelComparisonChartRef} className="h-[260px]">

@@ -93,6 +93,7 @@
   "groundTruth": {
     "pageTitle": "Sala de Guerra de Verdad Fundamental",
     "pageSubtitle": "Los casos documentados de corrupción validan el modelo de detección de riesgo",
+    "liveData": "Datos en Vivo",
     "callout": "Esta página mide la capacidad de detección de RUBLI contra casos reales y documentados de corrupción en contrataciones mexicanas. Cada caso fue investigado independientemente por periodistas, auditores o fiscales. Nuestro modelo nunca vio estas etiquetas durante el entrenamiento — las tasas de detección mostradas aquí representan un rendimiento predictivo genuino fuera de muestra.",
     "groundTruthCases": "Casos de Verdad Fundamental",
     "documentedCases": "Casos documentados de corrupción",
@@ -105,6 +106,13 @@
     "noCasesFound": "No se encontraron casos de verdad fundamental en la base de datos.",
     "failedToLoad": "No se pudieron cargar los datos del caso.",
     "failedSummary": "No se pudieron cargar los datos de resumen. Intente actualizar la página.",
+    "caseName": "Nombre del Caso",
+    "caseType": "Tipo",
+    "sector": "Sector",
+    "contracts": "Contratos",
+    "detectionRate": "Tasa de Detección",
+    "avgScore": "Puntaje Promedio",
+    "modelComparison": "Comparación de Modelos",
     "criticalRate": "Tasa Crítica",
     "confidence": "Confianza",
     "matchedVia": "Coincidencia por RFC/nombre de proveedor en",
@@ -113,7 +121,10 @@
     "factorLiftDesc": "Con qué frecuencia adicional aparece cada factor de riesgo en casos documentados de corrupción vs la población general de contratos. Lift > 1.0 = sobrerrepresentado en contratos conocidos como malos.",
     "noFactorLift": "No hay datos de lift de factores disponibles.",
     "modelComparisonDesc": "Comparación de tasas de detección entre versiones de modelos (v3.3, v4.0, v5.1). Alto+ = puntuación >= 0.30, Crítico = puntuación >= 0.50.",
-    "noModelComparison": "No hay datos de comparación de modelos disponibles. Ejecute validate_risk_model.py para generar resultados."
+    "noModelComparison": "No hay datos de comparación de modelos disponibles. Ejecute validate_risk_model.py para generar resultados.",
+    "tooltipLift": "Lift",
+    "tooltipGtRate": "Tasa VF",
+    "tooltipBaseRate": "Tasa base"
   },
   "modelTransparency": {
     "pageTitle": "Transparencia del Modelo",
@@ -122,6 +133,97 @@
     "perSectorModels": "Modelos por Sector",
     "validationMetrics": "Métricas de Validación",
     "knownLimitations": "Limitaciones Conocidas",
-    "disclaimer": "Las puntuaciones de riesgo son indicadores estadísticos de riesgo, no conclusiones legales. Las puntuaciones altas indican patrones estadísticos consistentes con corrupción documentada — no constituyen prueba."
+    "disclaimer": "Las puntuaciones de riesgo son indicadores estadísticos de riesgo, no conclusiones legales. Las puntuaciones altas indican patrones estadísticos consistentes con corrupción documentada — no constituyen prueba.",
+    "badgeLiveApi": "Modelo {{version}} · Entrenado {{date}} · {{contracts}} contratos · AUC {{auc}}",
+    "badgeStatic": "{{version}} | AUC {{auc}}",
+    "subtitleLive": "Comprensión del modelo de puntuación de riesgo {{version}} — coeficientes, validación y limitaciones",
+    "bannerLive": "El gráfico de coeficientes y la comparación de modelos se cargan desde la <strong>API en vivo</strong>. Use el selector de sector para ver los pesos del modelo por sector.",
+    "bannerFallback": "Recurriendo a datos de <strong>documentación estática</strong>. Los endpoints en vivo se usarán cuando estén disponibles.",
+    "metrics": {
+      "testAuc": "AUC-ROC de Prueba",
+      "trainAucDetail": "AUC Entrenamiento {{value}} · División temporal",
+      "detectionRate": "Tasa de Detección",
+      "detectionDetail": "Medio+ en contratos conocidos como malos",
+      "highRiskRate": "Tasa de Alto Riesgo",
+      "highRiskDetail": "Calibrado en 22 casos documentados de corrupción",
+      "groundTruth": "Verdad Fundamental",
+      "groundTruthFormat": "casos, {{vendors}} proveedores",
+      "groundTruthDetail": "{{contracts}} contratos de entrenamiento"
+    },
+    "coeffChart": {
+      "title": "¿Qué Impulsa las Puntuaciones de Riesgo?",
+      "description": "Coeficientes de regresión logística — barras más grandes significan mayor influencia en la puntuación de riesgo",
+      "callout": "Cada coeficiente representa el cambio en log-odds de corrupción por cada aumento de 1 desviación estándar en la característica z-normalizada. Los valores positivos aumentan el riesgo; los negativos lo disminuyen.",
+      "calloutCI": " Las barras de error muestran intervalos de confianza del 95% por bootstrap (1,000 remuestreos).",
+      "sectorLabel": "Seleccionar sector para coeficientes",
+      "sectorGlobal": "Global (todos los sectores)",
+      "legendIncrease": "Aumenta el riesgo",
+      "legendDecrease": "Disminuye el riesgo",
+      "legendNeutral": "Señal negligible / nula",
+      "tooltipCoefficient": "Coeficiente",
+      "tooltipRawCoefficient": "Coeficiente sin procesar",
+      "tooltipCI": "IC 95%"
+    },
+    "perSector": {
+      "title": "Modelos por Sector",
+      "description": "Los 3 principales factores para cada uno de los 12 submodelos de regresión logística por sector",
+      "tableRank": "Rango",
+      "tableFactor": "Factor",
+      "tableCoefficient": "Coeficiente",
+      "fallbackNote": "Los modelos por sector se aplican cuando el sector del contrato tiene 30+ contratos en los datos de entrenamiento. El modelo global se usa como respaldo."
+    },
+    "comparison": {
+      "title": "Comparación de Modelos: v3.3 vs v5.1",
+      "description": "El marco por sector (v5.1) supera significativamente a la lista de verificación ponderada (v3.3) en todas las métricas",
+      "legendChecklist": "v3.3 Lista Ponderada",
+      "legendPerSector": "v5.1 Marco Por Sector",
+      "tableMetric": "Métrica",
+      "tableV33": "v3.3",
+      "tableV51": "v5.1",
+      "tableDelta": "Delta",
+      "rowAuc": "AUC-ROC",
+      "rowDetection": "Tasa de Detección (med+)",
+      "rowHighPlus": "Detección Alto+",
+      "rowBrier": "Puntuación de Brier",
+      "rowLift": "Lift vs Línea Base"
+    },
+    "perCase": {
+      "title": "Rendimiento de Detección por Caso",
+      "description": "Rendimiento de detección en 22 casos documentados de corrupción — 15 tienen contratos de proveedores coincidentes, 7 pendientes o sin coincidencias",
+      "callout": "La Detección % mide la proporción de contratos de cada caso que el modelo marca con riesgo medio o superior (puntuación >= {{medium}}). El Alto+ % mide la proporción marcada en niveles alto o crítico (puntuación >= {{high}}). Los casos con más contratos ofrecen mayor señal de validación.",
+      "colCase": "Caso",
+      "colContracts": "Contratos",
+      "colDetection": "Detección %",
+      "colHighPlus": "Alto+ %",
+      "colAvgScore": "Puntaje Promedio",
+      "footerHigh": "12 de 15 casos coincidentes: >95% tasa de detección",
+      "footerLarge": "3 casos más grandes (21K contratos): >84% alto+",
+      "footerWeak": "Más débil: Oceanografía (50% detección, 2 contratos)"
+    },
+    "limitations": {
+      "sectionTitle": "Limitaciones Conocidas",
+      "warning": "Ningún modelo es perfecto. Estas limitaciones se divulgan por transparencia. Una puntuación de riesgo alta indica una anomalía estadística consistente con patrones de corrupción — no constituye prueba de irregularidad.",
+      "groundTruthConc": "Concentración de Verdad Fundamental",
+      "groundTruthConcDesc": "v5.1 incluye 22 casos documentados en los 12 sectores (incluidas las empresas fantasma del SAT EFOS). Sin embargo, tres casos (IMSS, Segalmex, COVID-19) siguen representando la mayoría de los contratos de entrenamiento. La concentración de proveedores sigue siendo dominante en la mayoría de los submodelos por sector.",
+      "smallCase": "Detección de Casos Pequeños",
+      "smallCaseDesc": "Los casos con pocos contratos tienen tasas de detección más bajas: La Estafa Maestra (10 contratos, 0% alto+), Oceanografía (2 contratos, 50% detección). El modelo requiere suficiente volumen de contratos para detectar patrones de forma confiable.",
+      "noCausal": "Sin Afirmaciones Causales",
+      "noCausalDesc": "Un P(corrupto|z) alto indica una anomalía estadística consistente con patrones de corrupción observados en 22 casos documentados. No prueba corrupción. Algunos sectores (defensa, energía) tienen razones estructurales para una alta concentración de proveedores que son legítimas.",
+      "dataQuality": "Variación en la Calidad de Datos",
+      "dataQualityDesc": "Los datos de la Estructura A (2002-2010) tienen solo 0.1% de cobertura RFC, lo que hace poco confiable la identificación de proveedores en ese período. Los z-scores y las puntuaciones de riesgo para contratos anteriores pueden ser menos precisos. El análisis de redes es más confiable para datos de 2010+ donde la cobertura RFC supera el 15%."
+    },
+    "pipeline": {
+      "title": "Cómo se Calcula la Puntuación",
+      "description": "Flujo completo desde los datos brutos del contrato hasta la puntuación de riesgo",
+      "step1Title": "Normalización Z-Score",
+      "step1Desc": "Cada una de las 16 características se normaliza respecto a su línea base de sector y año, produciendo z-scores que miden qué tan inusual es un contrato comparado con sus pares.",
+      "step2Title": "Distancia de Mahalanobis",
+      "step2Desc": "El vector z-score se evalúa contra la matriz de covarianza del sector (reducción de Ledoit-Wolf) para detectar anomalías multivariadas — combinaciones inusuales de factores.",
+      "step3Title": "Regresión Logística por Sector",
+      "step3Desc": "ElasticNet con validación cruzada (C=10.0, l1_ratio=0.25) con 12 submodelos por sector entrenados en contratos conocidos como malos de 22 casos de corrupción convierte z-scores en puntuaciones de riesgo.",
+      "step4Title": "Corrección PU + IC",
+      "step4Desc": "La corrección PU holdout de Elkan & Noto (2008) (c=0.8815) ajusta por contratos corruptos no etiquetados. Bootstrap (500 remuestreos) proporciona intervalos de confianza del 95%.",
+      "thresholds": "Umbrales de Nivel de Riesgo"
+    }
   }
 }

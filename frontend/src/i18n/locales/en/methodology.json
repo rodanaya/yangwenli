@@ -93,6 +93,7 @@
   "groundTruth": {
     "pageTitle": "Ground Truth War Room",
     "pageSubtitle": "Documented corruption cases validate the risk detection model",
+    "liveData": "Live Data",
     "callout": "This page measures RUBLI's detection capability against real, documented Mexican procurement corruption cases. Each case was independently investigated by journalists, auditors, or prosecutors. Our model never saw these labels during training — the detection rates shown here represent genuine out-of-sample predictive performance.",
     "groundTruthCases": "Ground Truth Cases",
     "documentedCases": "Documented corruption cases",
@@ -105,6 +106,13 @@
     "noCasesFound": "No ground truth cases found in the database.",
     "failedToLoad": "Failed to load case data.",
     "failedSummary": "Failed to load summary data. Please try refreshing.",
+    "caseName": "Case Name",
+    "caseType": "Type",
+    "sector": "Sector",
+    "contracts": "Contracts",
+    "detectionRate": "Detection Rate",
+    "avgScore": "Avg Score",
+    "modelComparison": "Model Comparison",
     "criticalRate": "Critical Rate",
     "confidence": "Confidence",
     "matchedVia": "Matched via vendor RFC/name in",
@@ -113,7 +121,10 @@
     "factorLiftDesc": "How much more often each risk factor appears in documented corruption cases vs the general contract population. Lift > 1.0 = over-represented in known-bad contracts.",
     "noFactorLift": "No factor lift data available.",
     "modelComparisonDesc": "Detection rate comparison across model versions (v3.3, v4.0, v5.1). High+ = score >= 0.30, Critical = score >= 0.50.",
-    "noModelComparison": "No model comparison data available. Run validate_risk_model.py to generate results."
+    "noModelComparison": "No model comparison data available. Run validate_risk_model.py to generate results.",
+    "tooltipLift": "Lift",
+    "tooltipGtRate": "GT rate",
+    "tooltipBaseRate": "Base rate"
   },
   "modelTransparency": {
     "pageTitle": "Model Transparency",
@@ -122,6 +133,97 @@
     "perSectorModels": "Per-Sector Models",
     "validationMetrics": "Validation Metrics",
     "knownLimitations": "Known Limitations",
-    "disclaimer": "Risk scores are statistical indicators, not legal conclusions. High scores indicate similarity to documented corruption patterns — they do not constitute proof."
+    "disclaimer": "Risk scores are statistical indicators, not legal conclusions. High scores indicate similarity to documented corruption patterns — they do not constitute proof.",
+    "badgeLiveApi": "Model {{version}} · Trained {{date}} · {{contracts}} contracts · AUC {{auc}}",
+    "badgeStatic": "{{version}} | AUC {{auc}}",
+    "subtitleLive": "Understanding how the {{version}} risk scoring model works — coefficients, validation, and limitations",
+    "bannerLive": "Coefficient chart and model comparison are loaded from the <strong>live API</strong>. Use the sector selector to view per-sector model weights.",
+    "bannerFallback": "Falling back to <strong>static documentation</strong> data. Live endpoints will be used when available.",
+    "metrics": {
+      "testAuc": "Test AUC-ROC",
+      "trainAucDetail": "Train AUC {{value}} · Temporal split",
+      "detectionRate": "Detection Rate",
+      "detectionDetail": "Medium+ on known-bad contracts",
+      "highRiskRate": "High-Risk Rate",
+      "highRiskDetail": "Calibrated on 22 documented corruption cases",
+      "groundTruth": "Ground Truth",
+      "groundTruthFormat": "cases, {{vendors}} vendors",
+      "groundTruthDetail": "{{contracts}} training contracts"
+    },
+    "coeffChart": {
+      "title": "What Drives Risk Scores?",
+      "description": "Logistic regression coefficients — larger bars mean stronger influence on the risk score",
+      "callout": "Each coefficient represents the change in log-odds of corruption per 1 standard deviation increase in the z-scored feature. Positive values increase risk; negative values decrease it.",
+      "calloutCI": " Error bars show 95% bootstrap confidence intervals (1,000 resamples).",
+      "sectorLabel": "Select sector for coefficients",
+      "sectorGlobal": "Global (all sectors)",
+      "legendIncrease": "Increases risk",
+      "legendDecrease": "Decreases risk",
+      "legendNeutral": "Negligible / zero signal",
+      "tooltipCoefficient": "Coefficient",
+      "tooltipRawCoefficient": "Raw coefficient",
+      "tooltipCI": "95% CI"
+    },
+    "perSector": {
+      "title": "Per-Sector Models",
+      "description": "Top 3 factors for each of the 12 per-sector logistic regression sub-models",
+      "tableRank": "Rank",
+      "tableFactor": "Factor",
+      "tableCoefficient": "Coefficient",
+      "fallbackNote": "Sector models are applied when the contract's sector has 30+ contracts in the training data. Global model is used as fallback."
+    },
+    "comparison": {
+      "title": "Model Comparison: v3.3 vs v5.1",
+      "description": "Per-sector framework (v5.1) dramatically outperforms the weighted checklist (v3.3) on every metric",
+      "legendChecklist": "v3.3 Weighted Checklist",
+      "legendPerSector": "v5.1 Per-Sector Framework",
+      "tableMetric": "Metric",
+      "tableV33": "v3.3",
+      "tableV51": "v5.1",
+      "tableDelta": "Delta",
+      "rowAuc": "AUC-ROC",
+      "rowDetection": "Detection Rate (med+)",
+      "rowHighPlus": "High+ Detection",
+      "rowBrier": "Brier Score",
+      "rowLift": "Lift vs Baseline"
+    },
+    "perCase": {
+      "title": "Per-Case Detection Performance",
+      "description": "Detection performance on 22 documented corruption cases — 15 have matched vendor contracts, 7 pending or zero matches",
+      "callout": "Detection % measures the share of contracts from each case that the model flags at medium risk or above (score >= {{medium}}). High+ % measures the share flagged at high or critical levels (score >= {{high}}). Cases with more contracts provide stronger validation signal.",
+      "colCase": "Case",
+      "colContracts": "Contracts",
+      "colDetection": "Detection %",
+      "colHighPlus": "High+ %",
+      "colAvgScore": "Avg Score",
+      "footerHigh": "12 of 15 matched cases: >95% detection rate",
+      "footerLarge": "3 largest cases (21K contracts): >84% high+",
+      "footerWeak": "Weakest: Oceanografia (50% detection, 2 contracts)"
+    },
+    "limitations": {
+      "sectionTitle": "Known Limitations",
+      "warning": "No model is perfect. These limitations are disclosed for transparency. A high risk score indicates statistical anomaly consistent with corruption patterns — it does not constitute proof of wrongdoing.",
+      "groundTruthConc": "Ground Truth Concentration",
+      "groundTruthConcDesc": "v5.1 includes 22 documented cases across all 12 sectors (including SAT EFOS ghost companies). However, three cases (IMSS, Segalmex, COVID-19) still account for the majority of training contracts. Vendor concentration remains dominant across most per-sector sub-models.",
+      "smallCase": "Small-Case Detection",
+      "smallCaseDesc": "Cases with few contracts have lower detection rates: La Estafa Maestra (10 contracts, 0% high+), Oceanografia (2 contracts, 50% detection). The model requires sufficient contract volume to detect patterns reliably.",
+      "noCausal": "No Causal Claims",
+      "noCausalDesc": "A high P(corrupt|z) indicates a statistical anomaly consistent with corruption patterns observed in 22 documented cases. It does not prove corruption. Some sectors (defense, energy) have structural reasons for high vendor concentration that are legitimate.",
+      "dataQuality": "Data Quality Variation",
+      "dataQualityDesc": "Structure A data (2002-2010) has only 0.1% RFC coverage, making vendor identification unreliable for that period. Z-scores and risk scores for earlier contracts may be less accurate. Network analysis is most reliable for 2010+ data where RFC coverage exceeds 15%."
+    },
+    "pipeline": {
+      "title": "How the Score is Computed",
+      "description": "End-to-end pipeline from raw contract data to risk score",
+      "step1Title": "Z-Score Normalization",
+      "step1Desc": "Each of the 16 features is normalized relative to its sector and year baseline, producing z-scores that measure how unusual a contract is compared to peers.",
+      "step2Title": "Mahalanobis Distance",
+      "step2Desc": "The z-score vector is evaluated against the sector covariance matrix (Ledoit-Wolf shrinkage) to detect multivariate anomalies — unusual combinations of factors.",
+      "step3Title": "Per-Sector Logistic Regression",
+      "step3Desc": "Cross-validated ElasticNet (C=10.0, l1_ratio=0.25) with 12 per-sector sub-models trained on known-bad contracts from 22 corruption cases converts z-scores into risk scores.",
+      "step4Title": "PU Correction + CI",
+      "step4Desc": "Elkan & Noto (2008) holdout PU-learning correction (c=0.8815) adjusts for unlabeled corrupt contracts. Bootstrap (500 resamples) provides 95% confidence intervals.",
+      "thresholds": "Risk Level Thresholds"
+    }
   }
 }

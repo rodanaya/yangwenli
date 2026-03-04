@@ -7,6 +7,7 @@
  */
 
 import { useMemo, useRef, useState } from 'react'
+import { useTranslation, Trans } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -354,6 +355,7 @@ function LimitationCard({
 // ============================================================================
 
 export default function ModelTransparency() {
+  const { t } = useTranslation('methodology')
   const [selectedSector, setSelectedSector] = useState(0)
   const [coeffSectorId, setCoeffSectorId] = useState<number | undefined>(undefined)
 
@@ -464,17 +466,25 @@ export default function ModelTransparency() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-4">
-            <h1 className="text-xl font-bold text-text-primary">Model Transparency</h1>
+            <h1 className="text-xl font-bold text-text-primary">{t('modelTransparency.pageTitle')}</h1>
             <Badge variant="outline" className="text-xs tabular-nums gap-1 border-risk-low/30">
               <Brain className="h-3 w-3 text-risk-low" aria-hidden="true" />
               {modelMeta
-                ? `Model ${modelMeta.version} · Trained ${modelMeta.trained_at} · ${formatNumber(modelMeta.n_contracts)} contracts · AUC ${modelMeta.auc_test.toFixed(3)}`
-                : `${CURRENT_MODEL_VERSION} | AUC ${VALIDATION_METRICS.auc_roc.toFixed(3)}`
+                ? t('modelTransparency.badgeLiveApi', {
+                    version: modelMeta.version,
+                    date: modelMeta.trained_at,
+                    contracts: formatNumber(modelMeta.n_contracts),
+                    auc: modelMeta.auc_test.toFixed(3),
+                  })
+                : t('modelTransparency.badgeStatic', {
+                    version: CURRENT_MODEL_VERSION,
+                    auc: VALIDATION_METRICS.auc_roc.toFixed(3),
+                  })
               }
             </Badge>
           </div>
           <p className="text-xs text-text-secondary mt-1">
-            Understanding how the {modelMeta?.version ?? CURRENT_MODEL_VERSION} risk scoring model works — coefficients, validation, and limitations
+            {t('modelTransparency.subtitleLive', { version: modelMeta?.version ?? CURRENT_MODEL_VERSION })}
           </p>
         </div>
       </div>
@@ -482,8 +492,8 @@ export default function ModelTransparency() {
         <Info className="h-3.5 w-3.5 text-blue-400 shrink-0 mt-0.5" aria-hidden="true" />
         <span>
           {featureImportance
-            ? <>Coefficient chart and model comparison are loaded from the <strong className="text-text-primary">live API</strong>. Use the sector selector to view per-sector model weights.</>
-            : <>Falling back to <strong className="text-text-primary">static documentation</strong> data. Live endpoints will be used when available.</>
+            ? <Trans i18nKey="modelTransparency.bannerLive" ns="methodology" components={{ strong: <strong className="text-text-primary" /> }} />
+            : <Trans i18nKey="modelTransparency.bannerFallback" ns="methodology" components={{ strong: <strong className="text-text-primary" /> }} />
           }
         </span>
       </div>
@@ -493,31 +503,31 @@ export default function ModelTransparency() {
       {/* ================================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricGauge
-          label="Test AUC-ROC"
+          label={t('modelTransparency.metrics.testAuc')}
           value={VALIDATION_METRICS.auc_roc.toFixed(4)}
-          subtitle={`Train AUC ${VALIDATION_METRICS.auc_train.toFixed(4)} · Temporal split`}
+          subtitle={t('modelTransparency.metrics.trainAucDetail', { value: VALIDATION_METRICS.auc_train.toFixed(4) })}
           icon={Target}
           color="#58a6ff"
         />
         <MetricGauge
-          label="Detection Rate"
+          label={t('modelTransparency.metrics.detectionRate')}
           value={`${(VALIDATION_METRICS.detection_rate_medium_plus * 100).toFixed(1)}%`}
-          subtitle="Medium+ on known-bad contracts"
+          subtitle={t('modelTransparency.metrics.detectionDetail')}
           icon={Eye}
           color="#4ade80"
         />
         <MetricGauge
-          label="High-Risk Rate"
+          label={t('modelTransparency.metrics.highRiskRate')}
           value={`${(VALIDATION_METRICS.high_risk_rate * 100).toFixed(1)}%`}
-          subtitle="Calibrated on 22 documented corruption cases"
+          subtitle={t('modelTransparency.metrics.highRiskDetail')}
           icon={Activity}
           color="#fbbf24"
         />
         <MetricGauge
-          label="Ground Truth"
+          label={t('modelTransparency.metrics.groundTruth')}
           value={`${VALIDATION_METRICS.ground_truth_cases}`}
-          format={`cases, ${VALIDATION_METRICS.ground_truth_vendors} vendors`}
-          subtitle={`${formatNumber(VALIDATION_METRICS.ground_truth_contracts)} training contracts`}
+          format={t('modelTransparency.metrics.groundTruthFormat', { vendors: VALIDATION_METRICS.ground_truth_vendors })}
+          subtitle={t('modelTransparency.metrics.groundTruthDetail', { contracts: formatNumber(VALIDATION_METRICS.ground_truth_contracts) })}
           icon={Users}
           color="#f87171"
         />
@@ -532,9 +542,9 @@ export default function ModelTransparency() {
             <div className="flex items-center gap-2">
               <Scale className="h-4 w-4 text-text-muted" aria-hidden="true" />
               <div>
-                <CardTitle>What Drives Risk Scores?</CardTitle>
+                <CardTitle>{t('modelTransparency.coeffChart.title')}</CardTitle>
                 <CardDescription>
-                  Logistic regression coefficients — larger bars mean stronger influence on the risk score
+                  {t('modelTransparency.coeffChart.description')}
                 </CardDescription>
               </div>
             </div>
@@ -544,17 +554,16 @@ export default function ModelTransparency() {
         <CardContent>
           <div className="flex items-center gap-3 mb-4">
             <SectionDescription variant="callout" className="flex-1">
-              Each coefficient represents the change in log-odds of corruption per 1 standard deviation increase
-              in the z-scored feature. Positive values increase risk; negative values decrease it.
-              {!featureImportance && ' Error bars show 95% bootstrap confidence intervals (1,000 resamples).'}
+              {t('modelTransparency.coeffChart.callout')}
+              {!featureImportance && t('modelTransparency.coeffChart.calloutCI')}
             </SectionDescription>
             <select
               value={coeffSectorId ?? ''}
               onChange={(e) => setCoeffSectorId(e.target.value ? Number(e.target.value) : undefined)}
               className="rounded border border-border bg-background-elevated px-2 py-1 text-xs text-text-primary shrink-0"
-              aria-label="Select sector for coefficients"
+              aria-label={t('modelTransparency.coeffChart.sectorLabel')}
             >
-              <option value="">Global (all sectors)</option>
+              <option value="">{t('modelTransparency.coeffChart.sectorGlobal')}</option>
               <option value="1">Salud</option>
               <option value="2">Educacion</option>
               <option value="3">Infraestructura</option>
@@ -626,15 +635,15 @@ export default function ModelTransparency() {
           <div className="flex flex-wrap gap-4 mt-3 text-xs text-text-muted">
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: DIRECTION_COLORS.positive }} />
-              Increases risk
+              {t('modelTransparency.coeffChart.legendIncrease')}
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: DIRECTION_COLORS.negative }} />
-              Decreases risk
+              {t('modelTransparency.coeffChart.legendDecrease')}
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: DIRECTION_COLORS.neutral }} />
-              Negligible / zero signal
+              {t('modelTransparency.coeffChart.legendNeutral')}
             </span>
           </div>
 
@@ -661,9 +670,9 @@ export default function ModelTransparency() {
           <div className="flex items-center gap-2">
             <Activity className="h-4 w-4 text-text-muted" aria-hidden="true" />
             <div>
-              <CardTitle>Per-Sector Models</CardTitle>
+              <CardTitle>{t('modelTransparency.perSector.title')}</CardTitle>
               <CardDescription>
-                Top 3 factors for each of the 12 per-sector logistic regression sub-models
+                {t('modelTransparency.perSector.description')}
               </CardDescription>
             </div>
           </div>
@@ -690,9 +699,9 @@ export default function ModelTransparency() {
             <table className="w-full text-xs" role="table" aria-label="Per-sector model factors">
               <thead>
                 <tr className="border-b border-border/30">
-                  <th className="text-left py-2 pr-4 text-text-muted font-medium">Rank</th>
-                  <th className="text-left py-2 px-3 text-text-muted font-medium">Factor</th>
-                  <th className="text-right py-2 pl-3 text-text-muted font-medium">Coefficient</th>
+                  <th className="text-left py-2 pr-4 text-text-muted font-medium">{t('modelTransparency.perSector.tableRank')}</th>
+                  <th className="text-left py-2 px-3 text-text-muted font-medium">{t('modelTransparency.perSector.tableFactor')}</th>
+                  <th className="text-right py-2 pl-3 text-text-muted font-medium">{t('modelTransparency.perSector.tableCoefficient')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -708,7 +717,7 @@ export default function ModelTransparency() {
           </div>
 
           <p className="text-xs text-text-muted mt-3">
-            Sector models are applied when the contract's sector has 30+ contracts in the training data. Global model is used as fallback.
+            {t('modelTransparency.perSector.fallbackNote')}
           </p>
         </CardContent>
       </Card>
@@ -722,9 +731,9 @@ export default function ModelTransparency() {
             <div className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-text-muted" aria-hidden="true" />
               <div>
-                <CardTitle>Model Comparison: v3.3 vs v5.1</CardTitle>
+                <CardTitle>{t('modelTransparency.comparison.title')}</CardTitle>
                 <CardDescription>
-                  Per-sector framework (v5.1) dramatically outperforms the weighted checklist (v3.3) on every metric
+                  {t('modelTransparency.comparison.description')}
                 </CardDescription>
               </div>
             </div>
@@ -763,11 +772,11 @@ export default function ModelTransparency() {
           <div className="flex items-center justify-center gap-6 mt-2 text-xs text-text-muted">
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm bg-[#64748b]" />
-              v3.3 Weighted Checklist
+              {t('modelTransparency.comparison.legendChecklist')}
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm bg-[#58a6ff]" />
-              v5.1 Per-Sector Framework
+              {t('modelTransparency.comparison.legendPerSector')}
             </span>
           </div>
 
@@ -776,33 +785,33 @@ export default function ModelTransparency() {
             <table className="w-full text-xs" role="table" aria-label="Model comparison metrics">
               <thead>
                 <tr className="border-b border-border/30">
-                  <th className="text-left py-2 pr-4 text-text-muted font-medium">Metric</th>
-                  <th className="text-right py-2 px-3 text-text-muted font-medium">v3.3</th>
-                  <th className="text-right py-2 px-3 text-text-muted font-medium">v5.1</th>
-                  <th className="text-right py-2 pl-3 text-text-muted font-medium">Delta</th>
+                  <th className="text-left py-2 pr-4 text-text-muted font-medium">{t('modelTransparency.comparison.tableMetric')}</th>
+                  <th className="text-right py-2 px-3 text-text-muted font-medium">{t('modelTransparency.comparison.tableV33')}</th>
+                  <th className="text-right py-2 px-3 text-text-muted font-medium">{t('modelTransparency.comparison.tableV51')}</th>
+                  <th className="text-right py-2 pl-3 text-text-muted font-medium">{t('modelTransparency.comparison.tableDelta')}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr className="border-b border-border/10">
-                  <td className="py-2 pr-4 text-text-secondary">AUC-ROC</td>
+                  <td className="py-2 pr-4 text-text-secondary">{t('modelTransparency.comparison.rowAuc')}</td>
                   <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{MODEL_COMPARISON.v33.auc.toFixed(3)}</td>
                   <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v50.auc.toFixed(3)}</td>
                   <td className="py-2 pl-3 text-right"><DeltaLabel v33={MODEL_COMPARISON.v33.auc} v50={MODEL_COMPARISON.v50.auc} /></td>
                 </tr>
                 <tr className="border-b border-border/10">
-                  <td className="py-2 pr-4 text-text-secondary">Detection Rate (med+)</td>
+                  <td className="py-2 pr-4 text-text-secondary">{t('modelTransparency.comparison.rowDetection')}</td>
                   <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{MODEL_COMPARISON.v33.detection}%</td>
                   <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v50.detection}%</td>
                   <td className="py-2 pl-3 text-right"><DeltaLabel v33={MODEL_COMPARISON.v33.detection} v50={MODEL_COMPARISON.v50.detection} suffix="pp" /></td>
                 </tr>
                 <tr className="border-b border-border/10">
-                  <td className="py-2 pr-4 text-text-secondary">High+ Detection</td>
+                  <td className="py-2 pr-4 text-text-secondary">{t('modelTransparency.comparison.rowHighPlus')}</td>
                   <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{MODEL_COMPARISON.v33.high_plus}%</td>
                   <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v50.high_plus}%</td>
                   <td className="py-2 pl-3 text-right"><DeltaLabel v33={MODEL_COMPARISON.v33.high_plus} v50={MODEL_COMPARISON.v50.high_plus} suffix="pp" /></td>
                 </tr>
                 <tr className="border-b border-border/10">
-                  <td className="py-2 pr-4 text-text-secondary">Brier Score</td>
+                  <td className="py-2 pr-4 text-text-secondary">{t('modelTransparency.comparison.rowBrier')}</td>
                   <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{MODEL_COMPARISON.v33.brier.toFixed(3)}</td>
                   <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v50.brier.toFixed(3)}</td>
                   <td className="py-2 pl-3 text-right">
@@ -812,7 +821,7 @@ export default function ModelTransparency() {
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-2 pr-4 text-text-secondary">Lift vs Baseline</td>
+                  <td className="py-2 pr-4 text-text-secondary">{t('modelTransparency.comparison.rowLift')}</td>
                   <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{MODEL_COMPARISON.v33.lift}x</td>
                   <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v50.lift}x</td>
                   <td className="py-2 pl-3 text-right"><DeltaLabel v33={MODEL_COMPARISON.v33.lift} v50={MODEL_COMPARISON.v50.lift} suffix="x" /></td>
@@ -832,9 +841,9 @@ export default function ModelTransparency() {
             <div className="flex items-center gap-2">
               <Shield className="h-4 w-4 text-text-muted" aria-hidden="true" />
               <div>
-                <CardTitle>Per-Case Detection Performance</CardTitle>
+                <CardTitle>{t('modelTransparency.perCase.title')}</CardTitle>
                 <CardDescription>
-                  Detection performance on 22 documented corruption cases — 15 have matched vendor contracts, 7 pending or zero matches
+                  {t('modelTransparency.perCase.description')}
                 </CardDescription>
               </div>
             </div>
@@ -852,20 +861,21 @@ export default function ModelTransparency() {
         </CardHeader>
         <CardContent>
           <SectionDescription className="mb-4">
-            Detection % measures the share of contracts from each case that the model flags at medium risk or above
-            (score {'>'}= {RISK_THRESHOLDS.medium}). High+ % measures the share flagged at high or critical levels
-            (score {'>'}= {RISK_THRESHOLDS.high}). Cases with more contracts provide stronger validation signal.
+            {t('modelTransparency.perCase.callout', {
+              medium: RISK_THRESHOLDS.medium,
+              high: RISK_THRESHOLDS.high,
+            })}
           </SectionDescription>
 
           <div className="overflow-x-auto">
             <table className="w-full text-xs" role="table" aria-label="Per-case detection performance">
               <thead>
                 <tr className="border-b border-border/30">
-                  <th className="text-left py-2.5 pr-4 text-text-muted font-medium">Case</th>
-                  <th className="text-right py-2.5 px-3 text-text-muted font-medium">Contracts</th>
-                  <th className="text-left py-2.5 px-3 text-text-muted font-medium min-w-[160px]">Detection %</th>
-                  <th className="text-left py-2.5 px-3 text-text-muted font-medium min-w-[160px]">High+ %</th>
-                  <th className="text-right py-2.5 pl-3 text-text-muted font-medium">Avg Score</th>
+                  <th className="text-left py-2.5 pr-4 text-text-muted font-medium">{t('modelTransparency.perCase.colCase')}</th>
+                  <th className="text-right py-2.5 px-3 text-text-muted font-medium">{t('modelTransparency.perCase.colContracts')}</th>
+                  <th className="text-left py-2.5 px-3 text-text-muted font-medium min-w-[160px]">{t('modelTransparency.perCase.colDetection')}</th>
+                  <th className="text-left py-2.5 px-3 text-text-muted font-medium min-w-[160px]">{t('modelTransparency.perCase.colHighPlus')}</th>
+                  <th className="text-right py-2.5 pl-3 text-text-muted font-medium">{t('modelTransparency.perCase.colAvgScore')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -902,15 +912,15 @@ export default function ModelTransparency() {
           <div className="flex flex-wrap items-center gap-4 mt-4 pt-3 border-t border-border/20 text-xs text-text-muted">
             <span className="flex items-center gap-1">
               <CheckCircle className="h-3 w-3 text-risk-low" aria-hidden="true" />
-              12 of 15 matched cases: {'>'}95% detection rate
+              {t('modelTransparency.perCase.footerHigh')}
             </span>
             <span className="flex items-center gap-1">
               <TrendingUp className="h-3 w-3 text-blue-400" aria-hidden="true" />
-              3 largest cases (21K contracts): {'>'}84% high+
+              {t('modelTransparency.perCase.footerLarge')}
             </span>
             <span className="flex items-center gap-1">
               <AlertTriangle className="h-3 w-3 text-risk-medium" aria-hidden="true" />
-              Weakest: Oceanografia (50% detection, 2 contracts)
+              {t('modelTransparency.perCase.footerWeak')}
             </span>
           </div>
         </CardContent>
@@ -922,37 +932,36 @@ export default function ModelTransparency() {
       <div>
         <div className="flex items-center gap-2 mb-3">
           <AlertTriangle className="h-4 w-4 text-text-muted" aria-hidden="true" />
-          <h2 className="text-sm font-semibold text-text-primary">Known Limitations</h2>
+          <h2 className="text-sm font-semibold text-text-primary">{t('modelTransparency.limitations.sectionTitle')}</h2>
         </div>
         <SectionDescription variant="warning" className="mb-4">
-          No model is perfect. These limitations are disclosed for transparency. A high risk score indicates
-          statistical anomaly consistent with corruption patterns — it does not constitute proof of wrongdoing.
+          {t('modelTransparency.limitations.warning')}
         </SectionDescription>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <LimitationCard
             icon={Users}
-            title="Ground Truth Concentration"
+            title={t('modelTransparency.limitations.groundTruthConc')}
             color="#f87171"
-            description="v5.1 includes 22 documented cases across all 12 sectors (including SAT EFOS ghost companies). However, three cases (IMSS, Segalmex, COVID-19) still account for the majority of training contracts. Vendor concentration remains dominant across most per-sector sub-models."
+            description={t('modelTransparency.limitations.groundTruthConcDesc')}
           />
           <LimitationCard
             icon={TrendingDown}
-            title="Small-Case Detection"
+            title={t('modelTransparency.limitations.smallCase')}
             color="#fb923c"
-            description="Cases with few contracts have lower detection rates: La Estafa Maestra (10 contracts, 0% high+), Oceanografia (2 contracts, 50% detection). The model requires sufficient contract volume to detect patterns reliably."
+            description={t('modelTransparency.limitations.smallCaseDesc')}
           />
           <LimitationCard
             icon={Lock}
-            title="No Causal Claims"
+            title={t('modelTransparency.limitations.noCausal')}
             color="#58a6ff"
-            description="A high P(corrupt|z) indicates a statistical anomaly consistent with corruption patterns observed in 22 documented cases. It does not prove corruption. Some sectors (defense, energy) have structural reasons for high vendor concentration that are legitimate."
+            description={t('modelTransparency.limitations.noCausalDesc')}
           />
           <LimitationCard
             icon={Database}
-            title="Data Quality Variation"
+            title={t('modelTransparency.limitations.dataQuality')}
             color="#64748b"
-            description="Structure A data (2002-2010) has only 0.1% RFC coverage, making vendor identification unreliable for that period. Z-scores and risk scores for earlier contracts may be less accurate. Network analysis is most reliable for 2010+ data where RFC coverage exceeds 15%."
+            description={t('modelTransparency.limitations.dataQualityDesc')}
           />
         </div>
       </div>
@@ -965,9 +974,9 @@ export default function ModelTransparency() {
           <div className="flex items-center gap-2">
             <Brain className="h-4 w-4 text-text-muted" aria-hidden="true" />
             <div>
-              <CardTitle>How the Score is Computed</CardTitle>
+              <CardTitle>{t('modelTransparency.pipeline.title')}</CardTitle>
               <CardDescription>
-                End-to-end pipeline from raw contract data to risk score
+                {t('modelTransparency.pipeline.description')}
               </CardDescription>
             </div>
           </div>
@@ -977,26 +986,26 @@ export default function ModelTransparency() {
             {[
               {
                 step: 1,
-                title: 'Z-Score Normalization',
-                description: 'Each of the 16 features is normalized relative to its sector and year baseline, producing z-scores that measure how unusual a contract is compared to peers.',
+                title: t('modelTransparency.pipeline.step1Title'),
+                description: t('modelTransparency.pipeline.step1Desc'),
                 icon: Activity,
               },
               {
                 step: 2,
-                title: 'Mahalanobis Distance',
-                description: 'The z-score vector is evaluated against the sector covariance matrix (Ledoit-Wolf shrinkage) to detect multivariate anomalies — unusual combinations of factors.',
+                title: t('modelTransparency.pipeline.step2Title'),
+                description: t('modelTransparency.pipeline.step2Desc'),
                 icon: Target,
               },
               {
                 step: 3,
-                title: 'Per-Sector Logistic Regression',
-                description: 'Cross-validated ElasticNet (C=10.0, l1_ratio=0.25) with 12 per-sector sub-models trained on known-bad contracts from 22 corruption cases converts z-scores into risk scores.',
+                title: t('modelTransparency.pipeline.step3Title'),
+                description: t('modelTransparency.pipeline.step3Desc'),
                 icon: TrendingUp,
               },
               {
                 step: 4,
-                title: 'PU Correction + CI',
-                description: 'Elkan & Noto (2008) holdout PU-learning correction (c=0.8815) adjusts for unlabeled corrupt contracts. Bootstrap (500 resamples) provides 95% confidence intervals.',
+                title: t('modelTransparency.pipeline.step4Title'),
+                description: t('modelTransparency.pipeline.step4Desc'),
                 icon: Shield,
               },
             ].map((item) => (
@@ -1023,7 +1032,7 @@ export default function ModelTransparency() {
 
           {/* Risk thresholds reference */}
           <div className="mt-4 pt-3 border-t border-border/20">
-            <p className="text-xs text-text-muted mb-2 font-medium">Risk Level Thresholds</p>
+            <p className="text-xs text-text-muted mb-2 font-medium">{t('modelTransparency.pipeline.thresholds')}</p>
             <div className="flex flex-wrap gap-4">
               {(Object.entries(RISK_THRESHOLDS) as Array<[keyof typeof RISK_THRESHOLDS, number]>)
                 .filter(([level]) => level !== 'low')
