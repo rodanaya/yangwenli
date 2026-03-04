@@ -1523,23 +1523,26 @@ def get_validation_summary():
             r = cursor.fetchone()
             total_institutions, institutions_matched = r[0], r[1] or 0
 
-            # Get last validation run
+            # Get last validation run (gracefully skip if schema doesn't match)
             last_run = None
             if table_exists(cursor, "validation_results"):
-                cursor.execute("""
-                    SELECT run_id, model_version, run_date, detection_rate, lift
-                    FROM validation_results
-                    ORDER BY run_date DESC LIMIT 1
-                """)
-                r = cursor.fetchone()
-                if r:
-                    last_run = {
-                        "run_id": r[0],
-                        "model_version": r[1],
-                        "run_date": r[2],
-                        "detection_rate": r[3],
-                        "lift": r[4]
-                    }
+                try:
+                    cursor.execute("""
+                        SELECT run_id, model_version, run_date, detection_rate, lift
+                        FROM validation_results
+                        ORDER BY run_date DESC LIMIT 1
+                    """)
+                    r = cursor.fetchone()
+                    if r:
+                        last_run = {
+                            "run_id": r[0],
+                            "model_version": r[1],
+                            "run_date": r[2],
+                            "detection_rate": r[3],
+                            "lift": r[4]
+                        }
+                except sqlite3.OperationalError:
+                    pass  # validation_results schema mismatch — not fatal
 
             return ValidationSummaryResponse(
                 total_cases=total_cases,
@@ -1586,7 +1589,11 @@ def get_detection_rate(model_version: Optional[str] = Query(None)):
                 params.append(model_version)
 
             query += " ORDER BY run_date DESC LIMIT 10"
-            cursor.execute(query, params)
+            try:
+                cursor.execute(query, params)
+            except sqlite3.OperationalError:
+                # validation_results schema mismatch (table exists but wrong columns)
+                return {"results": [], "interpretation": {"status": "no_data"}}
 
             results = []
             for r in cursor.fetchall():

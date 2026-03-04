@@ -52,13 +52,18 @@ export default defineConfig({
     target: 'esnext', // Modern browsers for smaller bundle
     sourcemap: false, // Disable sourcemaps in production
     minify: 'esbuild', // Fast minification
+    chunkSizeWarningLimit: 1200, // echarts is ~1.1MB min — known large dep, loaded lazily
     rollupOptions: {
       output: {
         manualChunks: {
           // Core React + routing
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          // Heavy charting library - loaded only when needed
-          'vendor-charts': ['recharts'],
+          // Recharts — used across many chart components
+          'vendor-recharts': ['recharts'],
+          // ECharts — heavy canvas charting library (only loaded for NetworkGraph/PriceIntelligence)
+          'vendor-echarts': ['echarts', 'echarts-for-react'],
+          // D3 / Sankey — used in MoneyFlow
+          'vendor-d3': ['d3-sankey'],
           // TanStack family - used across many pages
           'vendor-tanstack': [
             '@tanstack/react-query',
@@ -67,14 +72,32 @@ export default defineConfig({
           ],
           // UI library components
           'vendor-radix': [
+            '@radix-ui/react-checkbox',
             '@radix-ui/react-dialog',
+            '@radix-ui/react-progress',
             '@radix-ui/react-scroll-area',
             '@radix-ui/react-select',
             '@radix-ui/react-slot',
+            '@radix-ui/react-switch',
+            '@radix-ui/react-tabs',
             '@radix-ui/react-tooltip',
           ],
+          // i18n
+          'vendor-i18n': ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
+          // Command palette
+          'vendor-cmdk': ['cmdk'],
+          // URL state
+          'vendor-nuqs': ['nuqs'],
           // Utilities
-          'vendor-utils': ['axios', 'clsx', 'tailwind-merge', 'class-variance-authority', 'zustand'],
+          'vendor-utils': [
+            'axios',
+            'clsx',
+            'tailwind-merge',
+            'class-variance-authority',
+            'zustand',
+            'scrollama',
+            'html-to-image',
+          ],
           // Icons - often large
           'vendor-icons': ['lucide-react'],
         },

@@ -10,14 +10,14 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import ReactECharts from 'echarts-for-react'
-import { Network, Search, X, ExternalLink, Users, UserCircle, RotateCcw, ChevronDown, ChevronUp, ZoomIn, ZoomOut, AlertTriangle, Info, Eye } from 'lucide-react'
+import { Network, Search, X, ExternalLink, Users, UserCircle, RotateCcw, ChevronDown, ChevronUp, ZoomIn, ZoomOut, AlertTriangle, Info, Eye, Layers } from 'lucide-react'
 import { RiskBadge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SectionDescription } from '@/components/SectionDescription'
 import { formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { RISK_COLORS, getRiskLevelFromScore, SECTORS } from '@/lib/constants'
 import { networkApi, vendorApi, institutionApi } from '@/api/client'
-import type { NetworkNode, NetworkLink, CoBidderItem, CommunitiesResponse } from '@/api/client'
+import type { NetworkNode, NetworkLink, CoBidderItem, CommunitiesResponse, CommunityDetailResponse } from '@/api/client'
 import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
 
 // ---------------------------------------------------------------------------
@@ -601,6 +601,229 @@ function ExampleChip({
 }
 
 // ---------------------------------------------------------------------------
+// CommunitySidePanel — slide-out left panel listing Louvain communities
+// ---------------------------------------------------------------------------
+
+function CommunitySidePanel({
+  commData,
+  commLoading,
+  selectedCommunityId,
+  onSelectCommunity,
+  onCenterVendor,
+}: {
+  commData: CommunitiesResponse | undefined
+  commLoading: boolean
+  selectedCommunityId: number | null
+  onSelectCommunity: (id: number | null) => void
+  onCenterVendor: (vendorId: number, vendorName: string) => void
+}) {
+  const { t } = useTranslation('network')
+
+  // Detail query — fires only when a community is selected
+  const { data: detailData, isLoading: detailLoading } = useQuery<CommunityDetailResponse>({
+    queryKey: ['community-detail', selectedCommunityId],
+    queryFn: () => networkApi.getCommunityDetail(selectedCommunityId!),
+    staleTime: 10 * 60 * 1000,
+    enabled: selectedCommunityId !== null,
+  })
+
+  return (
+    <div
+      className="w-72 shrink-0 border-r border-border bg-background-card flex flex-col overflow-hidden"
+      role="complementary"
+      aria-label="Community Explorer panel"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between gap-2 px-3 py-2.5 border-b border-border bg-background-elevated/20">
+        <div className="flex items-center gap-2">
+          <Layers className="h-3.5 w-3.5 text-accent" />
+          <span className="text-xs font-semibold text-text-primary">Community Explorer</span>
+        </div>
+        {selectedCommunityId !== null && (
+          <button
+            onClick={() => onSelectCommunity(null)}
+            className="text-text-muted hover:text-text-primary text-[10px] flex items-center gap-0.5"
+            aria-label="Back to community list"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        )}
+      </div>
+
+      <div className="flex-1 overflow-y-auto">
+        {commLoading && (
+          <div className="p-3 space-y-2">
+            {[...Array(6)].map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        )}
+
+        {commData && !commLoading && !commData.graph_ready && (
+          <div className="p-3 text-xs text-text-muted">
+            <p className="bg-background-elevated/40 rounded p-2">
+              Community graph not built. Run{' '}
+              <code className="font-mono text-accent">python -m scripts.build_vendor_graph</code>.
+            </p>
+          </div>
+        )}
+
+        {commData && commData.graph_ready && !selectedCommunityId && (
+          <>
+            <div className="px-3 py-2 text-[10px] text-text-muted border-b border-border/20">
+              {commData.total_communities.toLocaleString()} clusters ·{' '}
+              {commData.communities.length} shown · sorted by size
+            </div>
+            <div className="divide-y divide-border/10">
+              {commData.communities.map((comm) => {
+                const commColor = COMMUNITY_PALETTE[comm.community_id % COMMUNITY_PALETTE.length]
+                const riskLevel = getRiskLevelFromScore(comm.avg_risk)
+                return (
+                  <button
+                    key={comm.community_id}
+                    onClick={() => onSelectCommunity(comm.community_id)}
+                    className="w-full text-left flex items-start gap-2.5 px-3 py-2.5 hover:bg-background-elevated/30 transition-colors group"
+                    aria-label={`Community ${comm.community_id}, ${comm.size} vendors, avg risk ${(comm.avg_risk * 100).toFixed(1)}%`}
+                  >
+                    <span
+                      className="mt-0.5 w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: commColor }}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-1 mb-0.5">
+                        <span className="text-xs font-mono font-medium text-text-primary">
+                          #{comm.community_id}
+                        </span>
+                        <span
+                          className="text-[10px] font-mono px-1 py-0.5 rounded shrink-0"
+                          style={{
+                            color: RISK_COLORS[riskLevel],
+                            backgroundColor: `${RISK_COLORS[riskLevel]}18`,
+                          }}
+                        >
+                          {(comm.avg_risk * 100).toFixed(1)}%
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] text-text-muted mb-0.5">
+                        <span>{formatNumber(comm.size)} vendors</span>
+                        <span>·</span>
+                        <span>{comm.sector_count} sector{comm.sector_count !== 1 ? 's' : ''}</span>
+                      </div>
+                      {comm.top_vendors?.slice(0, 2).map(v => (
+                        <div key={v.vendor_id} className="text-[10px] text-text-muted/70 truncate">
+                          {toTitleCase(v.vendor_name)}
+                        </div>
+                      ))}
+                    </div>
+                    <ExternalLink className="h-3 w-3 text-text-muted/30 group-hover:text-accent shrink-0 mt-0.5 transition-colors" />
+                  </button>
+                )
+              })}
+            </div>
+          </>
+        )}
+
+        {/* Community detail view */}
+        {selectedCommunityId !== null && (
+          <div className="flex flex-col h-full">
+            {detailLoading && (
+              <div className="p-3 space-y-2">
+                <Skeleton className="h-5 w-32" />
+                {[...Array(8)].map((_, i) => (
+                  <Skeleton key={i} className="h-8 w-full" />
+                ))}
+              </div>
+            )}
+
+            {detailData && !detailLoading && (
+              <>
+                {/* Detail header */}
+                <div className="px-3 py-2 border-b border-border/20 bg-background-elevated/10">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span
+                      className="w-2 h-2 rounded-full shrink-0"
+                      style={{ backgroundColor: COMMUNITY_PALETTE[detailData.community_id % COMMUNITY_PALETTE.length] }}
+                    />
+                    <span className="text-xs font-semibold text-text-primary">
+                      Cluster #{detailData.community_id}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-text-muted">
+                    {formatNumber(detailData.size)} vendors ·{' '}
+                    avg risk{' '}
+                    <span
+                      className="font-mono"
+                      style={{ color: RISK_COLORS[getRiskLevelFromScore(detailData.avg_risk_score)] }}
+                    >
+                      {(detailData.avg_risk_score * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (detailData.members[0]) {
+                        onCenterVendor(detailData.members[0].vendor_id, detailData.members[0].vendor_name)
+                      }
+                    }}
+                    className="mt-1.5 w-full text-[10px] text-accent hover:underline flex items-center gap-1"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    Center graph on this cluster
+                  </button>
+                </div>
+
+                {/* Members list */}
+                <div className="flex-1 overflow-y-auto divide-y divide-border/10">
+                  {detailData.members
+                    .slice()
+                    .sort((a, b) => b.risk_score - a.risk_score)
+                    .map((member, i) => {
+                      const level = getRiskLevelFromScore(member.risk_score)
+                      return (
+                        <div
+                          key={member.vendor_id}
+                          className="flex items-center gap-2 px-3 py-2 hover:bg-background-elevated/20 transition-colors"
+                          style={{
+                            opacity: 0,
+                            animation: `fadeInUp 300ms ease ${i * 30}ms both`,
+                          }}
+                        >
+                          <span className="text-[10px] text-text-muted/60 font-mono w-4 shrink-0 tabular-nums">
+                            {i + 1}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <Link
+                              to={`/vendors/${member.vendor_id}`}
+                              className="text-xs text-accent hover:underline truncate block"
+                              title={member.vendor_name}
+                            >
+                              {toTitleCase(member.vendor_name)}
+                            </Link>
+                          </div>
+                          <span
+                            className="text-[10px] font-mono tabular-nums shrink-0"
+                            style={{ color: RISK_COLORS[level] }}
+                          >
+                            {(member.risk_score * 100).toFixed(0)}%
+                          </span>
+                        </div>
+                      )
+                    })}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Footer note */}
+      <div className="px-3 py-2 border-t border-border/20 text-[10px] text-text-muted/60">
+        {t('communityNote', { defaultValue: 'Same-color vendors bid together frequently.' })}
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // GraphStatCount — count-up span for graph stats
 // ---------------------------------------------------------------------------
 
@@ -695,14 +918,16 @@ export function NetworkGraph() {
   const [coBiddersLoading, setCoBiddersLoading] = useState(false)
   const [colorMode, setColorMode] = useState<'risk' | 'community'>('risk')
   const [showCommunities, setShowCommunities] = useState(false)
+  const [showCommSidebar, setShowCommSidebar] = useState(false)
+  const [selectedCommunityId, setSelectedCommunityId] = useState<number | null>(null)
   const [showInstructions, setShowInstructions] = useState(false)
 
-  // Community explorer query — only fires when user opens the panel
+  // Community explorer query — fires when either panel (accordion or sidebar) is open
   const { data: commData, isLoading: commLoading } = useQuery<CommunitiesResponse>({
     queryKey: ['communities', 'explorer'],
-    queryFn: () => networkApi.getCommunities({ limit: 20, min_size: 3 }),
+    queryFn: () => networkApi.getCommunities({ limit: 50, min_size: 3 }),
     staleTime: 30 * 60 * 1000,
-    enabled: showCommunities,
+    enabled: showCommunities || showCommSidebar,
   })
 
   // Pre-load IMSS as default center entity on first mount
@@ -1159,6 +1384,24 @@ export function NetworkGraph() {
             Community
           </button>
         </div>
+
+        {/* Communities sidebar toggle */}
+        <button
+          onClick={() => {
+            setShowCommSidebar((v) => !v)
+            setSelectedCommunityId(null)
+          }}
+          className={`flex items-center gap-1.5 text-xs border rounded px-2.5 py-1.5 transition-colors shrink-0 ${
+            showCommSidebar
+              ? 'bg-accent/10 border-accent/40 text-accent'
+              : 'border-border text-text-muted hover:text-text-primary hover:border-border/60'
+          }`}
+          aria-pressed={showCommSidebar}
+          title="Toggle Community Explorer panel"
+        >
+          <Layers className="h-3.5 w-3.5" />
+          Communities
+        </button>
       </div>
       </ScrollReveal>
 
@@ -1223,8 +1466,37 @@ export function NetworkGraph() {
         </div>
       )}
 
-      {/* Main content: graph + side panel */}
+      {/* Main content: communities panel (left) + graph + side panel (right) */}
       <div className="flex border border-border rounded-md overflow-hidden" style={{ height: 'calc(100vh - 220px)', minHeight: '500px' }}>
+
+        {/* Left: Communities sidebar — slides in from left */}
+        <div
+          style={{
+            width: showCommSidebar ? '288px' : '0',
+            minWidth: showCommSidebar ? '288px' : '0',
+            opacity: showCommSidebar ? 1 : 0,
+            overflow: 'hidden',
+            transition: 'width 300ms cubic-bezier(0.16, 1, 0.3, 1), min-width 300ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms ease',
+            pointerEvents: showCommSidebar ? 'auto' : 'none',
+            flexShrink: 0,
+          }}
+        >
+          {showCommSidebar && (
+            <CommunitySidePanel
+              commData={commData}
+              commLoading={commLoading}
+              selectedCommunityId={selectedCommunityId}
+              onSelectCommunity={setSelectedCommunityId}
+              onCenterVendor={(vendorId, vendorName) => {
+                setCenterEntity({ id: vendorId, entityType: 'vendor', name: vendorName })
+                setColorMode('community')
+                setShowCommSidebar(false)
+                setSelectedCommunityId(null)
+              }}
+            />
+          )}
+        </div>
+
         {/* Graph area */}
         <div className="flex-1 relative min-w-0">
           {/* Instruction overlay */}

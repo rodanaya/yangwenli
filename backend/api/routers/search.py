@@ -98,10 +98,11 @@ def _search_institutions(q: str, limit: int) -> list[InstitutionResult]:
         with get_db() as conn:
             cur = conn.execute(
                 """
-                SELECT id, name, institution_type,
-                       (SELECT COUNT(*) FROM contracts WHERE institution_id = i.id) AS total_contracts
+                SELECT i.id, i.name, i.institution_type,
+                       COALESCE(ist.total_contracts, 0) AS total_contracts
                 FROM institutions i
-                WHERE name LIKE ?
+                LEFT JOIN institution_stats ist ON i.id = ist.institution_id
+                WHERE i.name LIKE ?
                 ORDER BY total_contracts DESC
                 LIMIT ?
                 """,
@@ -162,16 +163,17 @@ def _search_contracts(q: str, limit: int) -> list[ContractResult]:
 def _search_cases(q: str, limit: int) -> list[CaseResult]:
     try:
         with get_db() as conn:
-            # cases table may not exist — graceful fallback
             cur = conn.execute(
                 """
-                SELECT slug, title, year, sector
-                FROM cases
-                WHERE title LIKE ? OR description LIKE ?
-                ORDER BY year DESC
+                SELECT slug, name_en AS title,
+                       contract_year_start AS year,
+                       CAST(sector_id AS TEXT) AS sector
+                FROM procurement_scandals
+                WHERE name_en LIKE ? OR name_es LIKE ? OR slug LIKE ?
+                ORDER BY contract_year_start DESC
                 LIMIT ?
                 """,
-                (f"%{q}%", f"%{q}%", limit),
+                (f"%{q}%", f"%{q}%", f"%{q}%", limit),
             )
             rows = cur.fetchall()
         return [
@@ -179,8 +181,7 @@ def _search_cases(q: str, limit: int) -> list[CaseResult]:
             for r in rows
         ]
     except Exception as e:
-        # cases table may not have all columns — not fatal
-        logger.debug("case search error (non-fatal): %s", e)
+        logger.warning("case search error: %s", e)
         return []
 
 

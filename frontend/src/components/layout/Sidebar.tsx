@@ -23,6 +23,7 @@ import {
   Info,
   FlaskConical,
   MapPin,
+  ArrowLeftRight,
 } from 'lucide-react'
 import { RubliLogoMark } from '@/components/ui/RubliLogoMark'
 import { LanguageToggle } from '@/components/LanguageToggle'
@@ -67,6 +68,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { i18nKey: 'procurementIntelligence', href: '/procurement-intelligence', icon: Zap },
       { i18nKey: 'investigation', href: '/investigation', icon: Crosshair },
       { i18nKey: 'network', href: '/network', icon: Network },
+      { i18nKey: 'moneyFlow', href: '/money-flow', icon: ArrowLeftRight },
       { i18nKey: 'contracts', href: '/contracts', icon: FileText },
       { i18nKey: 'caseLibrary', href: '/cases', icon: Library },
     ],

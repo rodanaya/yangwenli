@@ -861,51 +861,130 @@ export function SectorProfile() {
             </CardContent>
           </Card>
 
-          {/* INSTITUTIONS IN SECTOR */}
-          {(sectorInstitutionsError || (sectorInstitutions && sectorInstitutions.data && sectorInstitutions.data.length > 0)) && (
-            <Card>
-              <CardContent className="pt-5 pb-4">
-                {sectorInstitutionsError ? (
-                  <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load institutions.</p>
-                ) : (
-                <>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-text-muted" />
-                    <h2 className="text-sm font-bold text-text-primary">Top Institutions</h2>
-                    <span className="text-xs text-text-muted">({sectorInstitutions!.data.length})</span>
-                  </div>
+          {/* INSTITUTIONS IN SECTOR — drill-down table */}
+          <Card>
+            <CardContent className="pt-5 pb-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-text-muted" />
+                  <h2 className="text-sm font-bold text-text-primary">Institutions in This Sector</h2>
+                  {sectorInstitutions && (
+                    <span className="text-xs text-text-muted">({sectorInstitutions.data.length})</span>
+                  )}
+                </div>
+                {sectorInstitutions && sectorInstitutions.data.length > 0 && (
                   <TableExportButton
-                    data={sectorInstitutions!.data.map((inst: { id: number; name: string; total_amount_mxn?: number; contract_count?: number }) => ({
+                    data={sectorInstitutions.data.map((inst) => ({
                       institution_id: inst.id,
                       institution_name: inst.name,
-                      total_amount_mxn: inst.total_amount_mxn ?? '',
-                      contract_count: inst.contract_count ?? '',
+                      institution_type: inst.institution_type ?? '',
+                      contract_count: inst.total_contracts ?? '',
+                      total_value_mxn: inst.total_amount_mxn ?? '',
+                      avg_risk_score: inst.avg_risk_score != null ? (inst.avg_risk_score * 100).toFixed(2) + '%' : '',
+                      direct_award_pct: inst.direct_award_pct != null ? (inst.direct_award_pct * 100).toFixed(1) + '%' : '',
                     }))}
                     filename={`rubli-sector-${sector.code}-institutions`}
                   />
-                </div>
-                <div className="space-y-1">
-                  {sectorInstitutions!.data.slice(0, 10).map((inst: { id: number; name: string; total_amount_mxn?: number; contract_count?: number }) => (
-                    <Link
-                      key={inst.id}
-                      to={`/institutions/${inst.id}`}
-                      className="flex items-center justify-between p-2 rounded hover:bg-background-elevated/30 transition-colors group"
-                    >
-                      <span className="text-xs font-medium text-text-secondary group-hover:text-accent transition-colors truncate flex-1 mr-3">
-                        {toTitleCase(inst.name)}
-                      </span>
-                      <span className="text-xs text-text-muted tabular-nums whitespace-nowrap">
-                        {inst.total_amount_mxn ? formatCompactMXN(inst.total_amount_mxn) : `${formatNumber(inst.contract_count ?? 0)} contracts`}
-                      </span>
-                    </Link>
+                )}
+              </div>
+
+              {sectorInstitutionsError ? (
+                <p className="text-xs text-rose-400/80 py-6 text-center">Failed to load institutions data.</p>
+              ) : !sectorInstitutions ? (
+                /* Loading skeleton */
+                <div className="space-y-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton key={i} className="h-9 w-full" />
                   ))}
                 </div>
-                </>
-                )}
-              </CardContent>
-            </Card>
-          )}
+              ) : sectorInstitutions.data.length === 0 ? (
+                <div className="flex flex-col items-center py-8 gap-2">
+                  <Building2 className="h-8 w-8 text-text-muted opacity-30" />
+                  <p className="text-xs text-text-muted">No institutions data available for this sector.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs" role="table" aria-label="Institutions in sector">
+                    <thead>
+                      <tr className="border-b border-border/30">
+                        <th className="text-left py-2 pr-3 font-medium text-text-muted uppercase tracking-wider">Institution</th>
+                        <th className="text-left py-2 px-3 font-medium text-text-muted uppercase tracking-wider hidden sm:table-cell">Type</th>
+                        <th className="text-right py-2 px-3 font-medium text-text-muted uppercase tracking-wider">Contracts</th>
+                        <th className="text-right py-2 px-3 font-medium text-text-muted uppercase tracking-wider hidden md:table-cell">Total Value</th>
+                        <th className="text-center py-2 px-3 font-medium text-text-muted uppercase tracking-wider">Avg Risk</th>
+                        <th className="text-right py-2 pl-3 font-medium text-text-muted uppercase tracking-wider hidden lg:table-cell">Direct Award %</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sectorInstitutions.data.map((inst) => {
+                        const riskScore = inst.avg_risk_score ?? 0
+                        const riskColor =
+                          riskScore >= 0.50 ? 'text-risk-critical' :
+                          riskScore >= 0.30 ? 'text-risk-high' :
+                          riskScore >= 0.10 ? 'text-risk-medium' :
+                          'text-risk-low'
+                        const daRate = inst.direct_award_pct ?? 0
+                        const daHigh = daRate > 0.7
+
+                        return (
+                          <tr
+                            key={inst.id}
+                            className="border-b border-border/20 hover:bg-background-elevated/20 transition-colors"
+                          >
+                            <td className="py-2.5 pr-3">
+                              <Link
+                                to={`/institutions/${inst.id}`}
+                                className="font-medium text-text-secondary hover:text-accent transition-colors truncate block max-w-[200px]"
+                                title={inst.name}
+                              >
+                                {toTitleCase(inst.name)}
+                              </Link>
+                            </td>
+                            <td className="py-2.5 px-3 text-text-muted hidden sm:table-cell">
+                              {inst.institution_type
+                                ? <span className="px-1.5 py-0.5 rounded bg-background-elevated/50 border border-border/30 font-mono text-[10px]">{inst.institution_type}</span>
+                                : <span className="text-text-muted/40">—</span>
+                              }
+                            </td>
+                            <td className="py-2.5 px-3 text-right font-mono tabular-nums text-text-primary">
+                              {formatNumber(inst.total_contracts ?? 0)}
+                            </td>
+                            <td className="py-2.5 px-3 text-right font-mono tabular-nums text-text-primary hidden md:table-cell">
+                              {inst.total_amount_mxn != null ? formatCompactMXN(inst.total_amount_mxn) : '—'}
+                            </td>
+                            <td className="py-2.5 px-3 text-center">
+                              {inst.avg_risk_score != null ? (
+                                <span className={cn('font-mono tabular-nums font-semibold', riskColor)}>
+                                  {(inst.avg_risk_score * 100).toFixed(1)}%
+                                </span>
+                              ) : (
+                                <span className="text-text-muted/40">—</span>
+                              )}
+                            </td>
+                            <td className="py-2.5 pl-3 text-right font-mono tabular-nums hidden lg:table-cell">
+                              {inst.direct_award_pct != null ? (
+                                <span className={cn(daHigh ? 'text-amber-400/90' : 'text-text-muted')}>
+                                  {formatPercentSafe(inst.direct_award_pct)}
+                                </span>
+                              ) : (
+                                <span className="text-text-muted/40">—</span>
+                              )}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                  {sectorInstitutions.pagination && sectorInstitutions.pagination.total > sectorInstitutions.data.length && (
+                    <p className="text-[11px] text-text-muted mt-3 text-center">
+                      Showing {sectorInstitutions.data.length} of {formatNumber(sectorInstitutions.pagination.total)} institutions.{' '}
+                      <Link to={`/institutions?sector_id=${sectorId}`} className="text-accent hover:underline">View all</Link>
+                    </p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* QUICK ACTIONS */}
           <div className="grid gap-3 md:grid-cols-3">

@@ -20,7 +20,7 @@ import { RISK_COLORS } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
 import { StatCard as SharedStatCard } from '@/components/DashboardWidgets'
 import { RiskFeedbackButton } from '@/components/RiskFeedbackButton'
-import type { InstitutionHealthItem, PublicationDelayResponse, ASFInstitutionSummaryItem } from '@/api/types'
+import type { InstitutionHealthItem, PublicationDelayResponse, ASFInstitutionSummaryItem, InstitutionRiskFactorResponse } from '@/api/types'
 import {
   Building2,
   AlertTriangle,
@@ -248,6 +248,170 @@ function InstitutionHeatmap({ items }: { items: InstitutionHealthItem[] }) {
 }
 
 // =============================================================================
+// Institution Risk Fingerprints — diverging bar per risk factor vs sector median
+// =============================================================================
+
+const FACTOR_LABELS: Record<string, string> = {
+  single_bid_rate:         'Single Bid Rate',
+  direct_award_rate:       'Direct Award Rate',
+  price_anomaly_rate:      'Price Anomaly Rate',
+  vendor_concentration:    'Vendor Concentration',
+  year_end_rate:           'Year-End Timing Rate',
+  threshold_split_rate:    'Threshold Splitting Rate',
+  avg_risk_score:          'Avg Risk Score',
+  high_risk_pct:           'High-Risk %',
+}
+
+function getFactorLabel(factor: string): string {
+  return FACTOR_LABELS[factor] ?? factor.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+}
+
+function InstitutionRiskFingerprints({ factors }: { factors: InstitutionRiskFactorResponse[] }) {
+  if (!factors.length) return null
+
+  // Sort by deviation from sector median (highest deviation first)
+  const sorted = [...factors].sort((a, b) => {
+    const devA = Math.abs(a.value - a.sector_median) / (a.sector_median || 1)
+    const devB = Math.abs(b.value - b.sector_median) / (b.sector_median || 1)
+    return devB - devA
+  })
+
+  const maxDeviation = sorted.reduce((max, f) => {
+    const dev = Math.abs(f.value - f.sector_median) / (f.sector_median || 0.001)
+    return Math.max(max, dev)
+  }, 0.001)
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex items-center gap-2">
+          <LayoutGrid className="h-4 w-4 text-accent" />
+          <CardTitle className="text-sm font-mono">Institution Risk Fingerprints</CardTitle>
+        </div>
+        <CardDescription className="text-xs">
+          Top risk factors vs sector median. Red bars extend right (above median); blue bars extend left (below median).
+          Values are institution-level aggregates from the top institutions by total contracts.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2" role="table" aria-label="Risk factor comparison table">
+          {/* Header */}
+          <div
+            className="grid text-[10px] font-medium text-text-muted uppercase tracking-wider pb-1 border-b border-border/30"
+            style={{ gridTemplateColumns: '160px 1fr 80px 80px' }}
+            role="row"
+          >
+            <span role="columnheader">Factor</span>
+            <span className="text-center" role="columnheader">vs Sector Median</span>
+            <span className="text-right" role="columnheader">Value</span>
+            <span className="text-right" role="columnheader">Percentile</span>
+          </div>
+
+          {sorted.map((f) => {
+            const deviation = (f.value - f.sector_median) / (f.sector_median || 0.001)
+            const absDev = Math.abs(deviation)
+            const barWidth = Math.min((absDev / maxDeviation) * 48, 48) // max 48% each side
+            const isAbove = deviation > 0
+            const isHighRisk = isAbove && f.percentile >= 75
+
+            return (
+              <div
+                key={f.factor}
+                className="grid items-center gap-1 py-1"
+                style={{ gridTemplateColumns: '160px 1fr 80px 80px' }}
+                role="row"
+              >
+                <span
+                  className="text-xs text-text-secondary truncate"
+                  title={getFactorLabel(f.factor)}
+                  role="cell"
+                >
+                  {getFactorLabel(f.factor)}
+                </span>
+
+                {/* Diverging bar */}
+                <div
+                  className="relative flex items-center h-5"
+                  role="cell"
+                  aria-label={`${deviation > 0 ? '+' : ''}${(deviation * 100).toFixed(1)}% vs median`}
+                  title={`${deviation > 0 ? '+' : ''}${(deviation * 100).toFixed(1)}% vs sector median (median: ${(f.sector_median * 100).toFixed(1)}%)`}
+                >
+                  {/* Center axis */}
+                  <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border/60" />
+
+                  {/* Bar */}
+                  {isAbove ? (
+                    <div
+                      className="absolute h-3.5 rounded-r"
+                      style={{
+                        left: '50%',
+                        width: `${barWidth}%`,
+                        backgroundColor: isHighRisk ? '#f87171' : '#fb923c',
+                        opacity: 0.8,
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className="absolute h-3.5 rounded-l"
+                      style={{
+                        right: '50%',
+                        width: `${barWidth}%`,
+                        backgroundColor: '#60a5fa',
+                        opacity: 0.75,
+                      }}
+                    />
+                  )}
+
+                  {/* Deviation label */}
+                  <span
+                    className="absolute text-[10px] font-mono tabular-nums"
+                    style={{
+                      left: isAbove ? `calc(50% + ${barWidth}% + 2px)` : undefined,
+                      right: !isAbove ? `calc(50% + ${barWidth}% + 2px)` : undefined,
+                      color: isAbove
+                        ? (isHighRisk ? '#f87171' : '#fb923c')
+                        : '#60a5fa',
+                    }}
+                  >
+                    {deviation > 0 ? '+' : ''}{(deviation * 100).toFixed(0)}%
+                  </span>
+                </div>
+
+                {/* Raw value */}
+                <span
+                  className="text-right text-xs font-mono tabular-nums text-text-secondary"
+                  role="cell"
+                  style={{ color: isHighRisk ? '#f87171' : undefined }}
+                >
+                  {(f.value * 100).toFixed(1)}%
+                </span>
+
+                {/* Percentile */}
+                <span
+                  className="text-right text-xs font-mono tabular-nums"
+                  role="cell"
+                  style={{
+                    color: f.percentile >= 90 ? '#f87171'
+                      : f.percentile >= 75 ? '#fb923c'
+                      : f.percentile >= 50 ? '#fbbf24'
+                      : '#4ade80',
+                  }}
+                >
+                  P{f.percentile.toFixed(0)}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+        <p className="mt-3 text-[10px] text-text-muted">
+          Percentile: P90 = top 10% most extreme institutions. Red = above sector median (higher risk). Blue = below sector median (lower risk).
+        </p>
+      </CardContent>
+    </Card>
+  )
+}
+
+// =============================================================================
 // ASF Cross-Reference Section
 // =============================================================================
 
@@ -432,6 +596,13 @@ export default function InstitutionHealth() {
   const { data: delayData } = useQuery<PublicationDelayResponse>({
     queryKey: ['publication-delays'],
     queryFn: () => analysisApi.getPublicationDelays(),
+    staleTime: 60 * 60 * 1000,
+  })
+
+  // Institution risk fingerprints — per-factor comparison vs sector median
+  const { data: riskFactorData } = useQuery<InstitutionRiskFactorResponse[]>({
+    queryKey: ['institution-risk-factors'],
+    queryFn: () => analysisApi.getInstitutionRiskFactors(15),
     staleTime: 60 * 60 * 1000,
   })
 
@@ -705,6 +876,13 @@ export default function InstitutionHealth() {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* ============================================================ */}
+      {/* INSTITUTION RISK FINGERPRINTS                             */}
+      {/* ============================================================ */}
+      {riskFactorData && riskFactorData.length > 0 && (
+        <InstitutionRiskFingerprints factors={riskFactorData} />
       )}
 
       {/* ============================================================ */}

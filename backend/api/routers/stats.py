@@ -434,21 +434,31 @@ def get_data_quality(response: Response):
             ('procedure_type', 'Procedure Type'),
             ('risk_score', 'Risk Score'),
         ]
+        # Single pass over contracts instead of one query per field
+        cursor.execute("""
+            SELECT
+                COUNT(*) as total,
+                SUM(CASE WHEN vendor_id IS NOT NULL THEN 1 ELSE 0 END) as vendor_id_filled,
+                SUM(CASE WHEN institution_id IS NOT NULL THEN 1 ELSE 0 END) as institution_id_filled,
+                SUM(CASE WHEN amount_mxn IS NOT NULL THEN 1 ELSE 0 END) as amount_mxn_filled,
+                SUM(CASE WHEN contract_date IS NOT NULL THEN 1 ELSE 0 END) as contract_date_filled,
+                SUM(CASE WHEN contract_year IS NOT NULL THEN 1 ELSE 0 END) as contract_year_filled,
+                SUM(CASE WHEN sector_id IS NOT NULL THEN 1 ELSE 0 END) as sector_id_filled,
+                SUM(CASE WHEN procedure_type IS NOT NULL THEN 1 ELSE 0 END) as procedure_type_filled,
+                SUM(CASE WHEN risk_score IS NOT NULL THEN 1 ELSE 0 END) as risk_score_filled
+            FROM contracts
+        """)
+        completeness_row = cursor.fetchone()
+        total_contracts_cq = completeness_row["total"]
         field_completeness = []
         for db_field, display_name in key_fields:
-            cursor.execute(f"""
-                SELECT
-                    COUNT(*) as total,
-                    SUM(CASE WHEN {db_field} IS NOT NULL THEN 1 ELSE 0 END) as filled
-                FROM contracts
-            """)
-            row = cursor.fetchone()
-            fill_rate = (row["filled"] / row["total"] * 100) if row["total"] > 0 else 0
+            filled = completeness_row[f"{db_field}_filled"] or 0
+            fill_rate = (filled / total_contracts_cq * 100) if total_contracts_cq > 0 else 0
             field_completeness.append(FieldCompleteness(
                 field_name=display_name,
                 fill_rate=round(fill_rate, 1),
-                null_count=row["total"] - row["filled"],
-                total_count=row["total"]
+                null_count=total_contracts_cq - filled,
+                total_count=total_contracts_cq
             ))
 
         # Key issues

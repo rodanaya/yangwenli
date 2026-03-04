@@ -246,7 +246,9 @@ def get_contract_risk(
 
             query = """
                 SELECT
-                    id, risk_score, risk_level, risk_confidence, risk_factors,
+                    id, risk_score, risk_level,
+                    risk_confidence_lower AS risk_confidence,
+                    risk_factors,
                     is_direct_award, is_single_bid, is_year_end, amount_mxn
                 FROM contracts
                 WHERE id = ?

@@ -1935,6 +1935,60 @@ function PoliticalCycleView() {
 // F9: Period Comparison View
 // =============================================================================
 
+// Presidential administration presets for quick comparison
+const ADMIN_PRESETS = [
+  { label: 'Zedillo', start: '1994', end: '2000' },
+  { label: 'Fox',     start: '2001', end: '2006' },
+  { label: 'Calderón', start: '2006', end: '2012' },
+  { label: 'Peña Nieto', start: '2012', end: '2018' },
+  { label: 'AMLO',    start: '2018', end: '2024' },
+  { label: 'Sheinbaum', start: '2024', end: '2030' },
+] as const
+
+interface CompareRow {
+  metric: string
+  p1: string
+  p2: string
+  delta: number        // raw numeric delta (P2 − P1)
+  deltaFmt: string     // formatted delta string
+  signal: 'worse' | 'better' | 'neutral'
+  unit: string
+}
+
+function buildCompareRows(data: ComparePeriodResponse): CompareRow[] {
+  const riskDelta = data.delta_risk
+  const valueDelta = data.delta_value
+
+  return [
+    {
+      metric: 'Avg Risk Score',
+      p1: (data.period1.avg_risk * 100).toFixed(3) + '%',
+      p2: (data.period2.avg_risk * 100).toFixed(3) + '%',
+      delta: riskDelta,
+      deltaFmt: (riskDelta > 0 ? '+' : '') + (riskDelta * 100).toFixed(3) + 'pp',
+      signal: Math.abs(riskDelta) < 0.0005 ? 'neutral' : riskDelta > 0 ? 'worse' : 'better',
+      unit: 'pp',
+    },
+    {
+      metric: 'Total Spending',
+      p1: formatCompactMXN(data.period1.total_value),
+      p2: formatCompactMXN(data.period2.total_value),
+      delta: valueDelta,
+      deltaFmt: (valueDelta > 0 ? '+' : '') + formatCompactMXN(valueDelta),
+      signal: 'neutral',
+      unit: 'MXN',
+    },
+  ]
+}
+
+function SignalBadge({ signal }: { signal: 'worse' | 'better' | 'neutral' }) {
+  if (signal === 'worse')
+    return <span className="inline-flex items-center gap-1 text-xs font-medium text-risk-critical"><TrendingUp className="h-3 w-3" />Worse</span>
+  if (signal === 'better')
+    return <span className="inline-flex items-center gap-1 text-xs font-medium text-risk-low"><TrendingDown className="h-3 w-3" />Better</span>
+  return <span className="text-xs text-text-muted"><Minus className="h-3 w-3 inline" /> —</span>
+}
+
 function ComparePeriodView() {
   const [p1Start, setP1Start] = useState('2012')
   const [p1End, setP1End] = useState('2018')
@@ -1952,22 +2006,56 @@ function ComparePeriodView() {
   const inputCls =
     'w-20 h-8 px-2 rounded border border-border/40 bg-background-elevated/60 text-sm font-mono focus:outline-none focus:border-accent/50 transition-colors text-text-primary'
 
+  const rows = useMemo(() => (data ? buildCompareRows(data) : []), [data])
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-mono flex items-center gap-2">
             <ArrowRight className="h-4 w-4 text-accent" />
-            Period Comparison
+            Compare Periods
           </CardTitle>
           <p className="text-xs text-text-muted">
-            Compare procurement risk and total spending between any two time windows
+            Compare procurement risk and total spending between any two time windows. Click an administration preset to fill Period A.
           </p>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-5">
+        <CardContent className="space-y-5">
+
+          {/* Administration presets */}
+          <div>
+            <div className="text-xs text-text-muted font-medium mb-2 uppercase tracking-wider">Quick Presets → Period A</div>
+            <div className="flex flex-wrap gap-1.5">
+              {ADMIN_PRESETS.map((preset) => (
+                <button
+                  key={preset.label}
+                  onClick={() => {
+                    setP1Start(preset.start)
+                    setP1End(preset.end)
+                    setEnabled(false)
+                  }}
+                  className={cn(
+                    'px-2.5 py-1 rounded text-xs font-medium border transition-colors',
+                    p1Start === preset.start && p1End === preset.end
+                      ? 'bg-accent/20 text-accent border-accent/40'
+                      : 'border-border/40 text-text-muted hover:text-text-primary hover:border-border',
+                  )}
+                >
+                  {preset.label} {preset.start}–{preset.end}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Year selectors */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             <div>
-              <div className="text-xs text-text-muted font-medium mb-2 uppercase tracking-wider">Period 1</div>
+              <div className="text-xs text-text-muted font-medium mb-2 uppercase tracking-wider">
+                Period A
+                {p1Start === p2Start && p1End === p2End ? (
+                  <span className="ml-2 text-amber-500/80">Periods are identical</span>
+                ) : null}
+              </div>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -1976,6 +2064,7 @@ function ComparePeriodView() {
                   value={p1Start}
                   onChange={(e) => { setP1Start(e.target.value); setEnabled(false) }}
                   className={inputCls}
+                  aria-label="Period A start year"
                 />
                 <span className="text-text-muted text-xs">–</span>
                 <input
@@ -1985,11 +2074,12 @@ function ComparePeriodView() {
                   value={p1End}
                   onChange={(e) => { setP1End(e.target.value); setEnabled(false) }}
                   className={inputCls}
+                  aria-label="Period A end year"
                 />
               </div>
             </div>
             <div>
-              <div className="text-xs text-text-muted font-medium mb-2 uppercase tracking-wider">Period 2</div>
+              <div className="text-xs text-text-muted font-medium mb-2 uppercase tracking-wider">Period B</div>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -1998,6 +2088,7 @@ function ComparePeriodView() {
                   value={p2Start}
                   onChange={(e) => { setP2Start(e.target.value); setEnabled(false) }}
                   className={inputCls}
+                  aria-label="Period B start year"
                 />
                 <span className="text-text-muted text-xs">–</span>
                 <input
@@ -2007,10 +2098,12 @@ function ComparePeriodView() {
                   value={p2End}
                   onChange={(e) => { setP2End(e.target.value); setEnabled(false) }}
                   className={inputCls}
+                  aria-label="Period B end year"
                 />
               </div>
             </div>
           </div>
+
           <button
             onClick={() => setEnabled(true)}
             disabled={isFetching}
@@ -2021,101 +2114,75 @@ function ComparePeriodView() {
         </CardContent>
       </Card>
 
+      {/* Loading skeleton */}
       {isLoading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <Skeleton className="h-36" />
-          <Skeleton className="h-36" />
-          <Skeleton className="h-28" />
-          <Skeleton className="h-28" />
-        </div>
+        <Card>
+          <CardContent className="pt-5 space-y-3">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </CardContent>
+        </Card>
       )}
 
+      {/* Results table */}
       {data && !isLoading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {/* Period 1 card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xs font-mono text-text-muted">
-                Period 1 · {data.period1.start} – {data.period1.end}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <div className="text-[11px] text-text-muted">Total Value</div>
-                <div className="text-2xl font-bold font-mono">{formatCompactMXN(data.period1.total_value)}</div>
-              </div>
-              <div>
-                <div className="text-[11px] text-text-muted">Avg Risk Score</div>
-                <div className="text-2xl font-bold font-mono" style={{ color: RISK_COLORS.high }}>
-                  {(data.period1.avg_risk * 100).toFixed(3)}%
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xs font-mono text-text-muted">
+              Results: Period A ({data.period1.start}–{data.period1.end}) vs Period B ({data.period2.start}–{data.period2.end})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm" role="table" aria-label="Period comparison results">
+                <thead>
+                  <tr className="border-b border-border/30">
+                    <th className="text-left py-2 pr-4 text-xs font-medium text-text-muted uppercase tracking-wider w-1/4">Metric</th>
+                    <th className="text-right py-2 px-4 text-xs font-medium text-text-muted uppercase tracking-wider">Period A</th>
+                    <th className="text-right py-2 px-4 text-xs font-medium text-text-muted uppercase tracking-wider">Period B</th>
+                    <th className="text-right py-2 px-4 text-xs font-medium text-text-muted uppercase tracking-wider">Δ (B − A)</th>
+                    <th className="text-center py-2 pl-4 text-xs font-medium text-text-muted uppercase tracking-wider">Signal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr
+                      key={row.metric}
+                      className={cn(
+                        'border-b border-border/20 transition-colors',
+                        row.signal === 'worse' && 'bg-risk-critical/5',
+                        row.signal === 'better' && 'bg-risk-low/5',
+                      )}
+                    >
+                      <td className="py-3 pr-4 text-xs font-medium text-text-secondary">{row.metric}</td>
+                      <td className="py-3 px-4 text-right text-xs font-mono tabular-nums text-text-primary">{row.p1}</td>
+                      <td className="py-3 px-4 text-right text-xs font-mono tabular-nums text-text-primary">{row.p2}</td>
+                      <td
+                        className={cn(
+                          'py-3 px-4 text-right text-xs font-mono tabular-nums font-semibold',
+                          row.signal === 'worse' ? 'text-risk-critical' :
+                          row.signal === 'better' ? 'text-risk-low' :
+                          'text-text-muted',
+                        )}
+                      >
+                        {row.deltaFmt}
+                      </td>
+                      <td className="py-3 pl-4 text-center">
+                        <SignalBadge signal={row.signal} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-          {/* Period 2 card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xs font-mono text-text-muted">
-                Period 2 · {data.period2.start} – {data.period2.end}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <div className="text-[11px] text-text-muted">Total Value</div>
-                <div className="text-2xl font-bold font-mono">{formatCompactMXN(data.period2.total_value)}</div>
-              </div>
-              <div>
-                <div className="text-[11px] text-text-muted">Avg Risk Score</div>
-                <div className="text-2xl font-bold font-mono" style={{ color: RISK_COLORS.high }}>
-                  {(data.period2.avg_risk * 100).toFixed(3)}%
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Risk delta */}
-          <Card className="border-border/40">
-            <CardContent className="pt-5">
-              <div className="text-[11px] text-text-muted mb-1 uppercase tracking-wider">Risk Delta (P2 − P1)</div>
-              <div
-                className={cn(
-                  'text-3xl font-bold font-mono',
-                  data.delta_risk > 0 ? 'text-risk-high' : data.delta_risk < 0 ? 'text-risk-low' : 'text-text-secondary',
-                )}
-              >
-                {data.delta_risk > 0 ? '+' : ''}{(data.delta_risk * 100).toFixed(3)}pp
-              </div>
-              <div className="text-xs text-text-muted mt-1">
-                {data.delta_risk > 0
-                  ? 'Risk increased in Period 2'
-                  : data.delta_risk < 0
-                  ? 'Risk decreased in Period 2'
-                  : 'No change in risk'}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Value delta */}
-          <Card className="border-border/40">
-            <CardContent className="pt-5">
-              <div className="text-[11px] text-text-muted mb-1 uppercase tracking-wider">Spending Delta (P2 − P1)</div>
-              <div
-                className={cn(
-                  'text-3xl font-bold font-mono',
-                  data.delta_value > 0 ? 'text-accent' : 'text-risk-high',
-                )}
-              >
-                {data.delta_value > 0 ? '+' : ''}{formatCompactMXN(data.delta_value)}
-              </div>
-              <div className="text-xs text-text-muted mt-1">
-                {data.delta_value > 0
-                  ? 'Higher spending in Period 2'
-                  : 'Lower spending in Period 2'}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            {/* Summary footnote */}
+            <p className="text-[11px] text-text-muted mt-4 leading-relaxed">
+              Signal: "Worse" = risk increased between periods. "Better" = risk decreased. Spending change is reported as neutral — higher spending may reflect legitimate growth or procurement expansion.
+            </p>
+          </CardContent>
+        </Card>
       )}
     </div>
   )
