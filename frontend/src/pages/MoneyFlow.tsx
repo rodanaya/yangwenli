@@ -75,6 +75,7 @@ export default function MoneyFlow() {
   const [riskFilter, setRiskFilter] = useState<string[]>(['critical', 'high', 'medium', 'low'])
   const [selectedNode, setSelectedNode] = useState<SankeyNodeSelected | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('diagram')
+  const [flowLimit, setFlowLimit] = useState<number>(20)
   const [sortKey, setSortKey] = useState<SortKey>('value')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const containerRef = useRef<HTMLDivElement>(null)
@@ -190,10 +191,14 @@ export default function MoneyFlow() {
         avgRisk: f.avg_risk ?? 0,
       }))
       .sort((a, b) => b.value - a.value)
-      .slice(0, 80)
+      .slice(0, flowLimit)
 
-    return { nodes: allNodes, links: sankeyLinks }
-  }, [data, riskFilter])
+    // Rebuild nodes from the filtered links only — removes orphan nodes
+    const usedIds = new Set(sankeyLinks.flatMap(l => [l.source, l.target]))
+    const filteredNodes = allNodes.filter(n => usedIds.has(n.id))
+
+    return { nodes: filteredNodes, links: sankeyLinks }
+  }, [data, riskFilter, flowLimit])
 
   const totalValue = useMemo(() => links.reduce((s, l) => s + l.value, 0), [links])
   const totalContracts = useMemo(() => links.reduce((s, l) => s + l.contractCount, 0), [links])
@@ -348,6 +353,21 @@ export default function MoneyFlow() {
               {YEARS.map(y => (
                 <SelectItem key={y} value={String(y)}>{y}</SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={String(flowLimit)}
+            onValueChange={v => { setFlowLimit(Number(v)); setSelectedNode(null) }}
+          >
+            <SelectTrigger className="w-36 h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">Top 10 flows</SelectItem>
+              <SelectItem value="20">Top 20 flows</SelectItem>
+              <SelectItem value="50">Top 50 flows</SelectItem>
+              <SelectItem value="100">Top 100 flows</SelectItem>
             </SelectContent>
           </Select>
 
@@ -532,7 +552,7 @@ export default function MoneyFlow() {
               nodes={nodes}
               links={links}
               width={diagramWidth}
-              height={Math.min(900, Math.max(500, nodes.length * 16))}
+              height={Math.max(400, nodes.length * 32)}
               onFlowClick={handleFlowClick}
               onNodeClick={handleNodeSelect}
               selectedNodeId={selectedNode?.id}

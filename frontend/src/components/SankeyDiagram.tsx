@@ -105,7 +105,7 @@ export function SankeyDiagram({
       const layout = d3Sankey()
         .nodeId(((_d: any, i: number) => i) as any)
         .nodeWidth(16)
-        .nodePadding(8)
+        .nodePadding(12)
         .extent([[LABEL_MARGIN, 4], [width - LABEL_MARGIN, height - 4]])
 
       return layout({ nodes: graphNodes as any, links: graphLinks as any })
@@ -200,10 +200,10 @@ export function SankeyDiagram({
           const contractCount = nodeLinks.reduce((s: number, l: any) => s + (l.contractCount ?? 0), 0)
 
           // ── Label sizing
-          // Font scales between 9px (tiny nodes) and 13px (large nodes)
-          const fontSize = Math.min(13, Math.max(9, Math.round(nodeH * 0.55 + 7)))
+          // Font scales between 10px (small nodes) and 13px (large nodes)
+          const fontSize = Math.min(13, Math.max(10, Math.round(nodeH * 0.4 + 9)))
           // Only render label if node is tall enough to be useful
-          const showLabel = nodeH >= 5
+          const showLabel = nodeH >= 8
 
           // How many chars can we fit in the available margin (220px reserved)?
           const LABEL_MARGIN = 215
