@@ -3938,3 +3938,589 @@ def get_institution_risk_factors(
         }
 
     return result
+
+
+# =============================================================================
+# VALUE CONCENTRATION ENDPOINT
+# =============================================================================
+
+class ValueConcentrationItem(BaseModel):
+    """A vendor-institution pair with disproportionate value concentration."""
+    vendor_id: int
+    vendor_name: str
+    institution_id: int
+    institution_name: str
+    vendor_value: float
+    institution_total_value: float
+    value_share_pct: float
+    contract_count: int
+    avg_risk_score: float
+
+
+class ValueConcentrationResponse(BaseModel):
+    data: List[ValueConcentrationItem]
+    total: int
+    min_pct: float
+
+
+@router.get("/value-concentration", response_model=ValueConcentrationResponse)
+def get_value_concentration(
+    min_pct: float = Query(10.0, ge=1.0, le=100.0, description="Minimum share percentage (1-100)"),
+    limit: int = Query(20, ge=1, le=200, description="Maximum records to return"),
+):
+    """
+    Return vendor-institution pairs where a vendor's contracts represent
+    at least min_pct% of that institution's total procurement value.
+
+    Identifies market concentration and potential lock-in situations.
+    """
+    try:
+        min_share = min_pct / 100.0
+        with get_db() as conn:
+            cursor = conn.cursor()
+            rows = cursor.execute(
+                """
+                WITH institution_totals AS (
+                    SELECT institution_id, SUM(amount_mxn) AS institution_total
+                    FROM contracts
+                    WHERE amount_mxn > 0 AND amount_mxn <= ?
+                    GROUP BY institution_id
+                ),
+                vendor_institution AS (
+                    SELECT
+                        c.vendor_id,
+                        c.institution_id,
+                        SUM(c.amount_mxn)     AS vendor_value,
+                        COUNT(*)              AS contract_count,
+                        AVG(c.risk_score)     AS avg_risk_score
+                    FROM contracts c
+                    WHERE c.amount_mxn > 0 AND c.amount_mxn <= ?
+                    GROUP BY c.vendor_id, c.institution_id
+                )
+                SELECT
+                    vi.vendor_id,
+                    COALESCE(v.vendor_name, CAST(vi.vendor_id AS TEXT)) AS vendor_name,
+                    vi.institution_id,
+                    COALESCE(i.institution_name, CAST(vi.institution_id AS TEXT)) AS institution_name,
+                    vi.vendor_value,
+                    it.institution_total                                 AS institution_total_value,
+                    ROUND(vi.vendor_value * 100.0 / it.institution_total, 2) AS value_share_pct,
+                    vi.contract_count,
+                    ROUND(COALESCE(vi.avg_risk_score, 0.0), 4)          AS avg_risk_score
+                FROM vendor_institution vi
+                JOIN institution_totals it ON it.institution_id = vi.institution_id
+                LEFT JOIN vendors      v  ON v.id              = vi.vendor_id
+                LEFT JOIN institutions i  ON i.id              = vi.institution_id
+                WHERE vi.vendor_value * 1.0 / it.institution_total >= ?
+                ORDER BY value_share_pct DESC
+                LIMIT ?
+                """,
+                (MAX_CONTRACT_VALUE, MAX_CONTRACT_VALUE, min_share, limit),
+            ).fetchall()
+
+        items = [
+            ValueConcentrationItem(
+                vendor_id=row["vendor_id"],
+                vendor_name=row["vendor_name"],
+                institution_id=row["institution_id"],
+                institution_name=row["institution_name"],
+                vendor_value=row["vendor_value"],
+                institution_total_value=row["institution_total_value"],
+                value_share_pct=row["value_share_pct"],
+                contract_count=row["contract_count"],
+                avg_risk_score=row["avg_risk_score"],
+            )
+            for row in rows
+        ]
+        return ValueConcentrationResponse(data=items, total=len(items), min_pct=min_pct)
+
+    except sqlite3.OperationalError as e:
+        logger.error(f"DB error in get_value_concentration: {e}")
+        raise HTTPException(status_code=503, detail="Database temporarily unavailable")
+    except Exception as e:
+        logger.error(f"Unexpected error in get_value_concentration: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+# =============================================================================
+# FLASH VENDORS ENDPOINT
+# =============================================================================
+
+class FlashVendorItem(BaseModel):
+    """A vendor that operated briefly but at significant scale."""
+    vendor_id: int
+    vendor_name: str
+    total_value: float
+    contract_count: int
+    min_year: int
+    max_year: int
+    active_years: int
+    avg_risk_score: float
+    primary_institution: Optional[str]
+    is_currently_active: bool
+
+
+class FlashVendorsResponse(BaseModel):
+    data: List[FlashVendorItem]
+    total: int
+    max_active_years: int
+    min_value: float
+
+
+@router.get("/flash-vendors", response_model=FlashVendorsResponse)
+def get_flash_vendors(
+    max_active_years: int = Query(3, ge=1, le=10, description="Maximum window between first and last contract year"),
+    min_value: float = Query(500_000_000.0, ge=0.0, description="Minimum total contract value (MXN)"),
+    limit: int = Query(50, ge=1, le=200, description="Maximum records to return"),
+):
+    """
+    Return vendors that appeared briefly (within max_active_years) yet won
+    contracts totalling at least min_value MXN — a common ghost-company pattern.
+
+    is_currently_active = True when the vendor's last contract year >= 2024.
+    primary_institution is the institution that awarded the most contracts to that vendor.
+    Results are sorted by avg_risk_score DESC.
+    """
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            rows = cursor.execute(
+                """
+                WITH vendor_agg AS (
+                    SELECT
+                        c.vendor_id,
+                        MIN(c.contract_year)           AS min_year,
+                        MAX(c.contract_year)           AS max_year,
+                        SUM(c.amount_mxn)              AS total_value,
+                        COUNT(*)                       AS contract_count,
+                        AVG(c.risk_score)              AS avg_risk_score
+                    FROM contracts c
+                    WHERE c.amount_mxn > 0 AND c.amount_mxn <= ?
+                    GROUP BY c.vendor_id
+                    HAVING (MAX(c.contract_year) - MIN(c.contract_year)) <= ?
+                       AND SUM(c.amount_mxn) >= ?
+                ),
+                primary_inst AS (
+                    SELECT
+                        c.vendor_id,
+                        COALESCE(i.institution_name, CAST(c.institution_id AS TEXT)) AS institution_name,
+                        COUNT(*) AS cnt,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY c.vendor_id
+                            ORDER BY COUNT(*) DESC
+                        ) AS rn
+                    FROM contracts c
+                    LEFT JOIN institutions i ON i.id = c.institution_id
+                    WHERE c.amount_mxn > 0 AND c.amount_mxn <= ?
+                    GROUP BY c.vendor_id, c.institution_id
+                )
+                SELECT
+                    va.vendor_id,
+                    COALESCE(v.vendor_name, CAST(va.vendor_id AS TEXT)) AS vendor_name,
+                    va.total_value,
+                    va.contract_count,
+                    va.min_year,
+                    va.max_year,
+                    (va.max_year - va.min_year)  AS active_years,
+                    ROUND(COALESCE(va.avg_risk_score, 0.0), 4) AS avg_risk_score,
+                    pi.institution_name          AS primary_institution,
+                    CASE WHEN va.max_year >= 2024 THEN 1 ELSE 0 END AS is_currently_active
+                FROM vendor_agg va
+                LEFT JOIN vendors      v  ON v.id         = va.vendor_id
+                LEFT JOIN primary_inst pi ON pi.vendor_id = va.vendor_id AND pi.rn = 1
+                ORDER BY avg_risk_score DESC
+                LIMIT ?
+                """,
+                (MAX_CONTRACT_VALUE, max_active_years, min_value, MAX_CONTRACT_VALUE, limit),
+            ).fetchall()
+
+        items = [
+            FlashVendorItem(
+                vendor_id=row["vendor_id"],
+                vendor_name=row["vendor_name"],
+                total_value=row["total_value"],
+                contract_count=row["contract_count"],
+                min_year=row["min_year"],
+                max_year=row["max_year"],
+                active_years=row["active_years"],
+                avg_risk_score=row["avg_risk_score"],
+                primary_institution=row["primary_institution"],
+                is_currently_active=bool(row["is_currently_active"]),
+            )
+            for row in rows
+        ]
+        return FlashVendorsResponse(
+            data=items,
+            total=len(items),
+            max_active_years=max_active_years,
+            min_value=min_value,
+        )
+
+    except sqlite3.OperationalError as e:
+        logger.error(f"DB error in get_flash_vendors: {e}")
+        raise HTTPException(status_code=503, detail="Database temporarily unavailable")
+    except Exception as e:
+        logger.error(f"Unexpected error in get_flash_vendors: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+# =============================================================================
+# INDUSTRY RISK CLUSTERS
+# =============================================================================
+
+class IndustryRiskClusterItem(BaseModel):
+    """Risk cluster statistics for a single sector group of vendors."""
+    sector_id: int
+    sector_name: str
+    vendor_count: int
+    total_value: float
+    avg_risk_score: float
+    high_risk_vendor_count: int
+    top_vendor_name: Optional[str] = None
+    top_vendor_value: Optional[float] = None
+    top_vendor_risk: Optional[float] = None
+
+
+class IndustryRiskClustersResponse(BaseModel):
+    """Response for /analysis/industry-risk-clusters."""
+    data: List[IndustryRiskClusterItem]
+    total: int
+    min_contracts: int
+
+
+_industry_clusters_cache: Dict[str, Any] = {}
+_industry_clusters_lock = __import__("threading").Lock()
+_INDUSTRY_CLUSTERS_TTL = 3600  # 1 hour
+
+
+@router.get("/industry-risk-clusters", response_model=IndustryRiskClustersResponse)
+def get_industry_risk_clusters(
+    sector_id: Optional[int] = Query(None, description="Filter to a single sector"),
+    min_contracts: int = Query(100, ge=1, description="Minimum contracts per vendor to include"),
+):
+    """
+    Group vendors by primary sector and compute aggregate risk statistics.
+
+    Returns one row per sector with: vendor count, total value, average risk score,
+    high-risk vendor count (avg_risk_score >= 0.30), and the top vendor by value.
+    Sorted by avg_risk_score descending.
+    """
+    cache_key = f"{sector_id}:{min_contracts}"
+    with _industry_clusters_lock:
+        cached = _industry_clusters_cache.get(cache_key)
+        if cached and datetime.now() < cached["expires_at"]:
+            return cached["value"]
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # vendor_stats.primary_sector_id is not populated in this DB.
+            # Derive each vendor's primary sector as the sector_id with the most
+            # contracts in the contracts table, then aggregate at sector level.
+            #
+            # Two-step approach avoids a slow correlated subquery per vendor:
+            #  1. vendor_sector_counts: count contracts per (vendor_id, sector_id).
+            #  2. vendor_primary: keep the top sector_id per vendor.
+            #  3. Join to vendor_stats for aggregate stats; filter by min_contracts.
+
+            sector_filter = ""
+            params: list = [min_contracts]
+            if sector_id is not None:
+                sector_filter = "AND vp.primary_sector = ?"
+                params.append(sector_id)
+
+            cursor.execute(f"""
+                WITH vendor_sector_counts AS (
+                    SELECT
+                        c.vendor_id,
+                        c.sector_id,
+                        COUNT(*) AS n
+                    FROM contracts c
+                    WHERE c.vendor_id IS NOT NULL
+                      AND c.sector_id IS NOT NULL
+                    GROUP BY c.vendor_id, c.sector_id
+                ),
+                vendor_primary AS (
+                    SELECT
+                        vendor_id,
+                        sector_id AS primary_sector
+                    FROM vendor_sector_counts vsc1
+                    WHERE n = (
+                        SELECT MAX(n) FROM vendor_sector_counts vsc2
+                        WHERE vsc2.vendor_id = vsc1.vendor_id
+                    )
+                    GROUP BY vendor_id   -- break ties: pick lowest sector_id
+                )
+                SELECT
+                    vp.primary_sector                               AS sector_id,
+                    s.name_es                                       AS sector_name,
+                    COUNT(*)                                        AS vendor_count,
+                    COALESCE(SUM(vs.total_value_mxn), 0)           AS total_value,
+                    COALESCE(AVG(vs.avg_risk_score), 0)            AS avg_risk_score,
+                    SUM(CASE WHEN vs.avg_risk_score >= 0.30 THEN 1 ELSE 0 END)
+                                                                    AS high_risk_vendor_count
+                FROM vendor_primary vp
+                JOIN vendor_stats vs ON vp.vendor_id = vs.vendor_id
+                JOIN sectors s ON vp.primary_sector = s.id
+                WHERE vs.total_contracts >= ?
+                  {sector_filter}
+                GROUP BY vp.primary_sector, s.name_es
+                ORDER BY avg_risk_score DESC
+            """, params)
+
+            sector_rows = cursor.fetchall()
+
+            # For each sector, find the top vendor by total_value
+            items: List[IndustryRiskClusterItem] = []
+            for row in sector_rows:
+                sid = row["sector_id"]
+
+                cursor.execute("""
+                    WITH vendor_sector_counts AS (
+                        SELECT vendor_id, sector_id, COUNT(*) AS n
+                        FROM contracts
+                        WHERE vendor_id IS NOT NULL AND sector_id IS NOT NULL
+                        GROUP BY vendor_id, sector_id
+                    ),
+                    vendor_primary AS (
+                        SELECT vendor_id, sector_id AS primary_sector
+                        FROM vendor_sector_counts vsc1
+                        WHERE n = (
+                            SELECT MAX(n) FROM vendor_sector_counts vsc2
+                            WHERE vsc2.vendor_id = vsc1.vendor_id
+                        )
+                        GROUP BY vendor_id
+                    )
+                    SELECT vnd.name, vs.total_value_mxn, vs.avg_risk_score
+                    FROM vendor_primary vp
+                    JOIN vendor_stats vs ON vp.vendor_id = vs.vendor_id
+                    JOIN vendors vnd ON vp.vendor_id = vnd.id
+                    WHERE vp.primary_sector = ?
+                      AND vs.total_contracts >= ?
+                    ORDER BY vs.total_value_mxn DESC
+                    LIMIT 1
+                """, [sid, min_contracts])
+
+                top = cursor.fetchone()
+
+                items.append(IndustryRiskClusterItem(
+                    sector_id=sid,
+                    sector_name=row["sector_name"],
+                    vendor_count=row["vendor_count"],
+                    total_value=round(row["total_value"], 2),
+                    avg_risk_score=round(row["avg_risk_score"], 4),
+                    high_risk_vendor_count=row["high_risk_vendor_count"],
+                    top_vendor_name=top["name"] if top else None,
+                    top_vendor_value=round(top["total_value_mxn"], 2) if top else None,
+                    top_vendor_risk=round(top["avg_risk_score"], 4) if top else None,
+                ))
+
+            result = IndustryRiskClustersResponse(
+                data=items,
+                total=len(items),
+                min_contracts=min_contracts,
+            )
+
+            with _industry_clusters_lock:
+                _industry_clusters_cache[cache_key] = {
+                    "value": result,
+                    "expires_at": datetime.now() + timedelta(seconds=_INDUSTRY_CLUSTERS_TTL),
+                }
+
+            return result
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error in get_industry_risk_clusters: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
+# =============================================================================
+# SEASONAL RISK ENDPOINT
+# =============================================================================
+
+class SeasonalRiskItem(BaseModel):
+    sector_id: int
+    sector_name: str
+    month_risk: float = Field(..., description="Avg risk score for contracts in the given month")
+    other_risk: float = Field(..., description="Avg risk score for contracts in all other months")
+    risk_premium_pct: float = Field(..., description="((month_risk - other_risk) / other_risk) * 100")
+    month_value: float = Field(..., description="Total contract value in given month")
+    month_count: int
+    other_count: int
+
+
+class SeasonalRiskResponse(BaseModel):
+    month: int
+    data: List[SeasonalRiskItem]
+
+
+_seasonal_risk_cache: Dict[str, Any] = {}
+_SEASONAL_RISK_TTL = 3600  # 1 hour
+
+
+@router.get("/seasonal-risk", response_model=SeasonalRiskResponse)
+def get_seasonal_risk(
+    month: int = Query(..., ge=1, le=12, description="Month number (1-12)"),
+    sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter to a single sector"),
+):
+    """
+    Compare average risk score for contracts awarded in a given month vs all other months,
+    grouped by sector.  Sorted by risk_premium_pct DESC.
+    """
+    cache_key = "seasonal:{}:{}".format(month, sector_id)
+    cached = _seasonal_risk_cache.get(cache_key)
+    if cached and (_time.time() - cached["ts"]) < _SEASONAL_RISK_TTL:
+        return cached["data"]
+
+    month_str = "{:02d}".format(month)
+    sector_filter = "AND c.sector_id = ?" if sector_id else ""
+
+    month_cond = "strftime('%m', c.contract_date)"
+    sql = (
+        "SELECT c.sector_id, s.name_es AS sector_name,"
+        " AVG(CASE WHEN {mc} = ? THEN c.risk_score END) AS month_risk,"
+        " AVG(CASE WHEN {mc} != ? THEN c.risk_score END) AS other_risk,"
+        " COALESCE(SUM(CASE WHEN {mc} = ? THEN c.amount_mxn ELSE 0 END), 0) AS month_value,"
+        " COUNT(CASE WHEN {mc} = ? THEN 1 END) AS month_count,"
+        " COUNT(CASE WHEN {mc} != ? THEN 1 END) AS other_count"
+        " FROM contracts c"
+        " LEFT JOIN sectors s ON c.sector_id = s.id"
+        " WHERE c.risk_score IS NOT NULL"
+        "   AND COALESCE(c.amount_mxn, 0) <= ?"
+        "   AND c.contract_date IS NOT NULL"
+        "   {sf}"
+        " GROUP BY c.sector_id, s.name_es"
+        " HAVING month_count > 0 AND other_count > 0"
+    ).format(mc=month_cond, sf=sector_filter)
+
+    query_params = [month_str, month_str, month_str, month_str, month_str, 100_000_000_000]
+    if sector_id:
+        query_params.append(sector_id)
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute(sql, query_params)
+            rows = cursor.fetchall()
+
+        items: List[SeasonalRiskItem] = []
+        for row in rows:
+            mr = row["month_risk"] or 0.0
+            orisk = row["other_risk"] or 0.0
+            premium = ((mr - orisk) / orisk * 100) if orisk else 0.0
+            items.append(SeasonalRiskItem(
+                sector_id=row["sector_id"] or 12,
+                sector_name=row["sector_name"] or "otros",
+                month_risk=round(mr, 4),
+                other_risk=round(orisk, 4),
+                risk_premium_pct=round(premium, 2),
+                month_value=round(row["month_value"] or 0.0, 2),
+                month_count=row["month_count"] or 0,
+                other_count=row["other_count"] or 0,
+            ))
+        items.sort(key=lambda x: x.risk_premium_pct, reverse=True)
+
+        result = SeasonalRiskResponse(month=month, data=items)
+        _seasonal_risk_cache[cache_key] = {"ts": _time.time(), "data": result}
+        return result
+
+    except sqlite3.OperationalError as e:
+        logger.error("DB error in get_seasonal_risk: %s", e)
+        raise HTTPException(status_code=503, detail="Database temporarily unavailable")
+    except Exception as e:
+        logger.error("Error in get_seasonal_risk: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+# =============================================================================
+# PROCEDURE RISK COMPARISON ENDPOINT
+# =============================================================================
+
+class ProcedureRiskItem(BaseModel):
+    sector_id: int
+    sector_name: str
+    year: int
+    direct_award_risk: Optional[float] = Field(None, description="Avg risk for direct-award contracts")
+    competitive_risk: Optional[float] = Field(None, description="Avg risk for competitive contracts")
+    ratio: Optional[float] = Field(None, description="direct_award_risk / competitive_risk")
+
+
+class ProcedureRiskResponse(BaseModel):
+    data: List[ProcedureRiskItem]
+    total: int
+
+
+_proc_risk_cache: Dict[str, Any] = {}
+_PROC_RISK_TTL = 3600  # 1 hour
+
+
+@router.get("/procedure-risk-comparison", response_model=ProcedureRiskResponse)
+def get_procedure_risk_comparison(
+    sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter to a single sector"),
+    year: Optional[int] = Query(None, ge=2002, le=2026, description="Filter to a specific year"),
+):
+    """
+    Compare average risk score between direct-award and competitive procedures,
+    grouped by sector and year.  Returns ratio = direct_award_risk / competitive_risk.
+    """
+    cache_key = "proc:{}:{}".format(sector_id, year)
+    cached = _proc_risk_cache.get(cache_key)
+    if cached and (_time.time() - cached["ts"]) < _PROC_RISK_TTL:
+        return cached["data"]
+
+    conditions = ["c.risk_score IS NOT NULL", "COALESCE(c.amount_mxn, 0) <= ?"]
+    params = [100_000_000_000]
+    if sector_id:
+        conditions.append("c.sector_id = ?")
+        params.append(sector_id)
+    if year:
+        conditions.append("c.contract_year = ?")
+        params.append(year)
+
+    where_clause = " AND ".join(conditions)
+
+    sql = (
+        "SELECT c.sector_id, s.name_es AS sector_name, c.contract_year AS year,"
+        " AVG(CASE WHEN c.is_direct_award = 1 THEN c.risk_score END) AS direct_award_risk,"
+        " AVG(CASE WHEN c.is_direct_award = 0 THEN c.risk_score END) AS competitive_risk"
+        " FROM contracts c"
+        " LEFT JOIN sectors s ON c.sector_id = s.id"
+        " WHERE " + where_clause +
+        " GROUP BY c.sector_id, s.name_es, c.contract_year"
+        " HAVING direct_award_risk IS NOT NULL OR competitive_risk IS NOT NULL"
+        " ORDER BY c.sector_id, c.contract_year"
+    )
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
+
+        items: List[ProcedureRiskItem] = []
+        for row in rows:
+            da = row["direct_award_risk"]
+            comp = row["competitive_risk"]
+            ratio: Optional[float] = None
+            if da is not None and comp is not None and comp > 0:
+                ratio = round(da / comp, 4)
+            items.append(ProcedureRiskItem(
+                sector_id=row["sector_id"] or 12,
+                sector_name=row["sector_name"] or "otros",
+                year=row["year"] or 0,
+                direct_award_risk=round(da, 4) if da is not None else None,
+                competitive_risk=round(comp, 4) if comp is not None else None,
+                ratio=ratio,
+            ))
+
+        result = ProcedureRiskResponse(data=items, total=len(items))
+        _proc_risk_cache[cache_key] = {"ts": _time.time(), "data": result}
+        return result
+
+    except sqlite3.OperationalError as e:
+        logger.error("DB error in get_procedure_risk_comparison: %s", e)
+        raise HTTPException(status_code=503, detail="Database temporarily unavailable")
+    except Exception as e:
+        logger.error("Error in get_procedure_risk_comparison: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")

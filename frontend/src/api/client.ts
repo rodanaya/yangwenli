@@ -1013,6 +1013,71 @@ export const analysisApi = {
     const { data } = await api.get<ModelComparisonItem[]>('/investigation/model-comparison')
     return data
   },
+
+  /**
+   * Get flash vendors — short-lived but high-value vendors
+   */
+  async getFlashVendors(params: {
+    max_active_years?: number
+    min_value?: number
+    limit?: number
+  } = {}): Promise<FlashVendorsResponse> {
+    const queryParams = buildQueryParams(params as QueryParams)
+    const { data } = await api.get<FlashVendorsResponse>(
+      `/analysis/flash-vendors${queryParams.toString() ? `?${queryParams}` : ''}`
+    )
+    return data
+  },
+
+  /**
+   * Get value concentration alerts — vendors dominating a single institution's spending
+   */
+  async getValueConcentration(params: {
+    min_pct?: number
+    limit?: number
+  } = {}): Promise<ValueConcentrationResponse> {
+    const queryParams = buildQueryParams(params as QueryParams)
+    const { data } = await api.get<ValueConcentrationResponse>(
+      `/analysis/value-concentration${queryParams.toString() ? `?${queryParams}` : ''}`
+    )
+    return data
+  },
+
+  /**
+   * Get seasonal risk by month — compares target month risk premium vs. rest of year
+   */
+  async getSeasonalRisk(month = 12): Promise<SeasonalRiskResponse> {
+    const { data } = await api.get<SeasonalRiskResponse>(
+      `/analysis/seasonal-risk?month=${month}`
+    )
+    return data
+  },
+
+  /**
+   * Get procedure risk comparison — direct award vs. competitive risk by sector/year
+   */
+  async getProcedureRiskComparison(params: {
+    sector_id?: number
+    year?: number
+  } = {}): Promise<ProcedureRiskComparisonResponse> {
+    const queryParams = buildQueryParams(params as QueryParams)
+    const { data } = await api.get<ProcedureRiskComparisonResponse>(
+      `/analysis/procedure-risk-comparison${queryParams.toString() ? `?${queryParams}` : ''}`
+    )
+    return data
+  },
+
+  /**
+   * Get industry risk clusters — vendor count, total value, avg risk by sector.
+   * First call takes ~100s (no cache), subsequent calls are fast.
+   */
+  async getIndustryClusters(minContracts = 100): Promise<IndustryClusterResponse> {
+    const { data } = await api.get<IndustryClusterResponse>(
+      `/analysis/industry-risk-clusters?min_contracts=${minContracts}`,
+      { timeout: 180000 }
+    )
+    return data
+  },
 }
 
 // ============================================================================
@@ -1636,6 +1701,97 @@ export interface FederatedContractResult {
   amount?: number | null
   risk_level?: string | null
   year?: number | null
+}
+
+// Flash Vendors
+export interface FlashVendorItem {
+  vendor_id: number
+  vendor_name: string
+  total_value: number
+  contract_count: number
+  min_year: number
+  max_year: number
+  active_years: number
+  avg_risk_score: number
+  primary_institution: string | null
+  is_currently_active: boolean
+}
+
+export interface FlashVendorsResponse {
+  data: FlashVendorItem[]
+  total: number
+  max_active_years: number
+  min_value: number
+}
+
+// Value Concentration
+export interface ValueConcentrationItem {
+  vendor_id: number
+  vendor_name: string
+  institution_id: number
+  institution_name: string
+  vendor_value: number
+  institution_total_value: number
+  value_share_pct: number
+  contract_count: number
+  avg_risk_score: number
+}
+
+export interface ValueConcentrationResponse {
+  data: ValueConcentrationItem[]
+  total: number
+  min_pct: number
+}
+
+// Seasonal Risk
+export interface SeasonalRiskItem {
+  sector_id: number
+  sector_name: string
+  month_risk: number
+  other_risk: number
+  risk_premium_pct: number
+  month_value: number
+  month_count: number
+  other_count: number
+}
+
+export interface SeasonalRiskResponse {
+  month: number
+  data: SeasonalRiskItem[]
+}
+
+// Procedure Risk Comparison
+export interface ProcedureRiskItem {
+  sector_id: number
+  sector_name: string
+  year: number
+  direct_award_risk: number
+  competitive_risk: number
+  ratio: number
+}
+
+export interface ProcedureRiskComparisonResponse {
+  data: ProcedureRiskItem[]
+  total: number
+}
+
+// Industry Risk Clusters
+export interface IndustryClusterItem {
+  sector_id: number
+  sector_name: string
+  vendor_count: number
+  total_value: number
+  avg_risk_score: number
+  high_risk_vendor_count: number
+  top_vendor_name: string | null
+  top_vendor_value: number | null
+  top_vendor_risk: number | null
+}
+
+export interface IndustryClusterResponse {
+  data: IndustryClusterItem[]
+  total: number
+  min_contracts: number
 }
 
 export interface FederatedCaseResult {
