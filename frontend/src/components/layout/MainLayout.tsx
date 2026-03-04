@@ -53,7 +53,7 @@ export function MainLayout() {
         <Header onMenuClick={() => setMobileSidebarOpen(true)} />
 
         {/* Page content */}
-        <main id="main-content" className="flex-1 px-5 py-5" tabIndex={-1}>
+        <main id="main-content" className="flex-1 px-3 sm:px-5 py-5" tabIndex={-1}>
           <div className="animate-fade-in">
             <Outlet />
           </div>

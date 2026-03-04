@@ -491,13 +491,18 @@ export function Dashboard() {
           <span>{(overview?.total_contracts || 0) > 0 ? formatNumber(overview?.total_contracts || 0) : '3,110,007'} contracts · 2002–2025</span>
         </div>
         {/* Model Confidence Badge */}
-        <div className="mt-2">
+        <div className="mt-2 flex items-center gap-3 flex-wrap">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 cursor-help" title="AUC measures how well the model separates corrupt from clean contracts. 0.957 = ranks corrupt contracts higher 95.7% of the time. Temporal split: trained ≤2020, tested ≥2021.">
             <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-xs font-mono text-emerald-400">
               AUC {modelMeta?.auc_test != null ? modelMeta.auc_test.toFixed(3) : '0.957'} · {modelMeta?.version ?? CURRENT_MODEL_VERSION}
             </span>
           </div>
+          <p className="text-xs text-white/40">
+            Data as of {lastUpdated
+              ? lastUpdated
+              : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          </p>
         </div>
 
         {/* WHAT WE FOUND — three anchor claims before the user scrolls */}

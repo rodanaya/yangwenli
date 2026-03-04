@@ -116,6 +116,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
             Showing {rangeStart}–{rangeEnd} of {formatNumber(pagination.total)} vendors · sorted by risk score
           </span>
         </div>
+        <div className="overflow-x-auto -mx-4 sm:mx-0">
         <table className="w-full text-sm" role="grid">
           <thead>
             <tr className="border-b border-border/30 text-[11px] text-text-muted uppercase tracking-wider">
@@ -136,6 +137,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
             })}
           </tbody>
         </table>
+        </div>
         <Pagination pagination={pagination} page={page} onPageChange={onPageChange} />
       </div>
     )
@@ -150,6 +152,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
           Showing {rangeStart}–{rangeEnd} of {formatNumber(pagination.total)} institutions · sorted by risk score
         </span>
       </div>
+      <div className="overflow-x-auto -mx-4 sm:mx-0">
       <table className="w-full text-sm" role="grid">
         <thead>
           <tr className="border-b border-border/30 text-[11px] text-text-muted uppercase tracking-wider">
@@ -169,6 +172,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
           })}
         </tbody>
       </table>
+      </div>
       <Pagination pagination={pagination} page={page} onPageChange={onPageChange} />
     </div>
   )

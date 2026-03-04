@@ -41,7 +41,11 @@ import {
   Globe2,
   DollarSign,
   Zap,
+  Printer,
 } from 'lucide-react'
+
+// Exchange rate constant — update here when the rate changes significantly
+const MXN_TO_USD = 0.052  // ~19.2 MXN per USD (approx current rate)
 
 // ============================================================================
 // Data Hook
@@ -95,7 +99,7 @@ export function ExecutiveSummary() {
   }
 
   return (
-    <article className="max-w-4xl mx-auto pb-20 space-y-16">
+    <article className="max-w-4xl mx-auto pb-20 space-y-16 print:text-black print:bg-white">
       <ScrollReveal delay={80}><ReportHeader data={data} /></ScrollReveal>
       <ScrollReveal delay={100}><StatBombs data={data} /></ScrollReveal>
       <ScrollReveal delay={120}><WhatWeFound data={data} /></ScrollReveal>
@@ -152,18 +156,28 @@ export default ExecutiveSummary
 function ReportHeader({ data }: { data: ExecutiveSummaryResponse }) {
   const { t } = useTranslation('executive')
   const { headline } = data
-  const totalValueUSD = headline.total_value / 17.5
+  const totalValueUSD = headline.total_value * MXN_TO_USD
 
   return (
     <header className="pt-4 relative overflow-hidden">
       <div className="relative z-10">
-      {/* Small caps label */}
-      <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full border border-accent/30 bg-accent/5">
-        <Shield className="h-3.5 w-3.5 text-accent" />
-        <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
-          {t('header.badge')}
-        </span>
-        <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+      {/* Small caps label + print button row */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/30 bg-accent/5">
+          <Shield className="h-3.5 w-3.5 text-accent" />
+          <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
+            {t('header.badge')}
+          </span>
+          <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+        </div>
+        <button
+          onClick={() => window.print()}
+          className="print:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white/80 transition-colors"
+          title="Print or save as PDF"
+        >
+          <Printer className="w-3.5 h-3.5" />
+          Print / PDF
+        </button>
       </div>
 
       {/* Date line */}

@@ -1,4 +1,5 @@
 import { memo, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { HelpCircle, ChevronDown, ChevronUp, ArrowUpDown } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn, formatNumber } from '@/lib/utils'
@@ -223,6 +224,7 @@ export const ModelDetectionStory = memo(function ModelDetectionStory({
   collapsible = false,
   defaultCollapsed = false,
 }: ModelDetectionStoryProps) {
+  const navigate = useNavigate()
   const [sortKey, setSortKey] = useState<SortKey>('contracts')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [collapsed, setCollapsed] = useState(defaultCollapsed)
@@ -262,7 +264,7 @@ export const ModelDetectionStory = memo(function ModelDetectionStory({
       {/* Table header */}
       <div
         className="grid items-center gap-x-3 px-2 pt-1"
-        style={{ gridTemplateColumns: '1fr 140px 56px 42px' }}
+        style={{ gridTemplateColumns: '1fr 140px 56px 42px 40px' }}
       >
         <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
           Case / Type
@@ -294,6 +296,8 @@ export const ModelDetectionStory = memo(function ModelDetectionStory({
             onClick={handleSort}
           />
         </div>
+        {/* View column — no header label */}
+        <div />
       </div>
 
       {/* Rows */}
@@ -304,7 +308,7 @@ export const ModelDetectionStory = memo(function ModelDetectionStory({
             <div
               key={c.name}
               className="grid items-center gap-x-3 py-2 px-2 rounded hover:bg-background-elevated/30 transition-colors"
-              style={{ gridTemplateColumns: '1fr 140px 56px 42px' }}
+              style={{ gridTemplateColumns: '1fr 140px 56px 42px 40px' }}
             >
               {/* Case name + sector dot + type */}
               <div className="min-w-0">
@@ -340,6 +344,18 @@ export const ModelDetectionStory = memo(function ModelDetectionStory({
               {/* Avg score pill */}
               <div className="flex justify-end">
                 <ScorePill score={c.avgScore} />
+              </div>
+
+              {/* View contracts link */}
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/contracts?search=${encodeURIComponent(c.name)}`)}
+                  className="text-[10px] text-blue-400/70 hover:text-blue-400 underline-offset-2 hover:underline flex-shrink-0 font-mono"
+                  aria-label={`View contracts for ${c.name}`}
+                >
+                  View →
+                </button>
               </div>
             </div>
           )

@@ -195,9 +195,10 @@ interface HeroStatsProps {
   totalValueMxn: number
   highRiskPct: number
   groundTruthCases: number
+  riskDistribution?: RiskDistribution[]
 }
 
-function HeroStats({ totalContracts, totalValueMxn, highRiskPct, groundTruthCases }: HeroStatsProps) {
+function HeroStats({ totalContracts, totalValueMxn, highRiskPct, groundTruthCases, riskDistribution }: HeroStatsProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [triggered, setTriggered] = useState(false)
 
@@ -276,29 +277,67 @@ function HeroStats({ totalContracts, totalValueMxn, highRiskPct, groundTruthCase
       </div>
 
       {/* Risk distribution strip */}
-      <RiskStrip />
+      <RiskStrip riskDistribution={riskDistribution} />
     </div>
   )
 }
 
 // ---------------------------------------------------------------------------
 // RiskStrip — horizontal proportional bar: critical | high | medium | low
+// Accepts live counts from the API; falls back to known static values.
 // ---------------------------------------------------------------------------
-const RISK_BANDS = [
+const RISK_BANDS_FALLBACK = [
   { label: 'Critical', pct: 6.5,  color: '#dc2626', contracts: '201,745' },
   { label: 'High',     pct: 4.1,  color: '#f97316', contracts: '126,553' },
   { label: 'Medium',   pct: 43.9, color: '#eab308', contracts: '~1.36M' },
   { label: 'Low',      pct: 45.6, color: '#16a34a', contracts: '~1.42M' },
 ]
 
-function RiskStrip() {
+interface RiskBand {
+  label: string
+  pct: number
+  color: string
+  contracts: string
+}
+
+interface RiskStripProps {
+  riskDistribution?: RiskDistribution[]
+}
+
+function RiskStrip({ riskDistribution }: RiskStripProps) {
   const [hov, setHov] = useState<number | null>(null)
+
+  // Build bands from live API data when available
+  const bands: RiskBand[] = (() => {
+    if (!riskDistribution || riskDistribution.length === 0) {
+      return RISK_BANDS_FALLBACK
+    }
+    const total = riskDistribution.reduce((s, r) => s + r.count, 0)
+    const colorMap: Record<string, string> = {
+      critical: '#dc2626',
+      high: '#f97316',
+      medium: '#eab308',
+      low: '#16a34a',
+    }
+    const order = ['critical', 'high', 'medium', 'low']
+    return order.map((level) => {
+      const row = riskDistribution.find((r) => r.risk_level === level)
+      const count = row?.count ?? 0
+      const pct = total > 0 ? (count / total) * 100 : 0
+      const label = level.charAt(0).toUpperCase() + level.slice(1)
+      const contracts =
+        count >= 1_000_000
+          ? `~${(count / 1_000_000).toFixed(1)}M`
+          : count.toLocaleString()
+      return { label, pct, color: colorMap[level] ?? '#64748b', contracts }
+    })
+  })()
 
   return (
     <div className="w-full" aria-label="Risk level distribution">
       {/* Bar */}
       <div className="flex h-3 rounded-full overflow-hidden gap-px mb-2">
-        {RISK_BANDS.map((band, i) => (
+        {bands.map((band, i) => (
           <div
             key={band.label}
             style={{
@@ -314,7 +353,7 @@ function RiskStrip() {
       </div>
       {/* Labels */}
       <div className="flex gap-4 flex-wrap">
-        {RISK_BANDS.map((band, i) => (
+        {bands.map((band, i) => (
           <div
             key={band.label}
             className="flex items-center gap-1.5 cursor-default"
@@ -329,7 +368,7 @@ function RiskStrip() {
               className="text-[11px] leading-none"
               style={{ color: hov === i ? band.color : 'rgba(255,255,255,0.45)' }}
             >
-              {band.label} {band.pct}%
+              {band.label} {band.pct.toFixed(1)}%
               {hov === i && (
                 <span className="ml-1 text-white/30">· {band.contracts} contracts</span>
               )}
@@ -448,7 +487,7 @@ function HeroSection({ onEnter, onScrollDown }: HeroSectionProps) {
         <div className="flex flex-wrap gap-3 justify-center mt-2">
           <button
             onClick={onEnter}
-            className="flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-sm transition-all hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-400/60"
+            className="flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-sm transition-all duration-200 hover:opacity-90 hover:scale-[1.02] shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-400/60"
             style={{ backgroundColor: '#3b82f6', color: '#fff' }}
           >
             Start investigating <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -637,33 +676,42 @@ function FeaturedCasesStrip({ onNavigate }: { onNavigate: (path: string) => void
       <p className="text-xs font-semibold tracking-widest uppercase text-white/30 mb-3">
         Biggest Cases
       </p>
-      <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {FEATURED_CASES.map((cas) => (
           <button
             key={cas.slug}
             onClick={() => onNavigate(`/cases/${cas.slug}`)}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] hover:border-white/20 transition-colors text-left focus:outline-none focus:ring-1 focus:ring-white/30 group"
+            className="group flex flex-col gap-2.5 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-200 text-left focus:outline-none focus:ring-1 focus:ring-white/30"
           >
-            {/* Sector color dot */}
-            <span
-              className="flex-shrink-0 w-2 h-2 rounded-full"
-              style={{ backgroundColor: cas.sectorColor }}
-              aria-hidden="true"
-            />
+            {/* Top row: fraud type badge + sector dot */}
+            <div className="flex items-center justify-between gap-2">
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold leading-none ${cas.badgeClass}`}
+              >
+                {cas.badgeLabel}
+              </span>
+              <span
+                className="flex-shrink-0 w-2 h-2 rounded-full"
+                style={{ backgroundColor: cas.sectorColor }}
+                aria-hidden="true"
+              />
+            </div>
+
             {/* Case name */}
-            <span className="flex-1 text-sm font-medium text-white/80 group-hover:text-white transition-colors truncate">
+            <span className="text-sm font-bold text-white/85 group-hover:text-white transition-colors leading-snug">
               {cas.name}
             </span>
-            {/* Contract count */}
-            <span className="flex-shrink-0 text-xs text-white/35 tabular-nums">
-              {cas.contracts.toLocaleString()} contracts
-            </span>
-            {/* Fraud type badge */}
-            <span
-              className={`flex-shrink-0 hidden sm:inline-block text-[10px] px-1.5 py-0.5 rounded border leading-none ${cas.badgeClass}`}
-            >
-              {cas.badgeLabel}
-            </span>
+
+            {/* Bottom row: contract count + arrow */}
+            <div className="flex items-center justify-between mt-auto pt-1">
+              <span className="text-[11px] text-white/35 tabular-nums">
+                {cas.contracts.toLocaleString()} contracts
+              </span>
+              <ArrowRight
+                className="h-3.5 w-3.5 text-white/20 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all duration-200"
+                aria-hidden="true"
+              />
+            </div>
           </button>
         ))}
       </div>
@@ -924,6 +972,7 @@ export default function Landing() {
                         totalValueMxn={totalValueMxn}
                         highRiskPct={criticalPct + highPct}
                         groundTruthCases={22}
+                        riskDistribution={riskDist.length > 0 ? riskDist : undefined}
                       />
                     </div>
                   )}
