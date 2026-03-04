@@ -2,6 +2,8 @@
 
 **AI-Powered Corruption Detection Platform for Mexican Government Procurement**
 
+[![Backend Tests](https://github.com/rodanaya/yangwenli/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/rodanaya/yangwenli/actions/workflows/backend-tests.yml)
+[![Frontend Tests](https://github.com/rodanaya/yangwenli/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/rodanaya/yangwenli/actions/workflows/frontend-tests.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
@@ -37,7 +39,7 @@ This is not a simple dashboard. It is a full analytical engine with:
 | Detection rate (known cases) | **99.8%** medium+ |
 | False negative rate | **0.2%** |
 | Ground truth cases | 22 (27 vendors, 26,582 contracts) |
-| High-risk rate | **10.6%** (OECD benchmark: 2-15%) |
+| High-risk rate | **9.0%** (OECD benchmark: 2-15%) |
 
 ---
 
@@ -169,7 +171,7 @@ Z-score normalized by sector and year:
 | **Medium** | >= 0.10 | ~1,365,000 | ~43.9% |
 | **Low** | < 0.10 | ~1,417,000 | ~45.6% |
 
-**High-risk rate: 10.6%** — within OECD benchmark of 2-15%.
+**High-risk rate: 9.0%** — within OECD benchmark of 2-15%.
 
 ### Validation Against 22 Documented Cases
 
@@ -293,7 +295,7 @@ The backend exposes **60+ REST endpoints** across 10+ router modules. Full inter
 ## Testing
 
 ```bash
-# Backend (358 tests, 1 skipped)
+# Backend (359 tests)
 python -m pytest backend/tests/ -q --tb=short -p no:cacheprovider
 
 # TypeScript compilation check

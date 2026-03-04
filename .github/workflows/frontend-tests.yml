@@ -35,20 +35,15 @@ jobs:
           cd frontend
           npm run lint
 
-      - name: Run type checking
-        run: |
-          cd frontend
-          npm run typecheck || npx tsc --noEmit
-
-      - name: Run tests
-        run: |
-          cd frontend
-          npm test -- --coverage --watchAll=false
-
-      - name: Build
+      - name: Type check (strict — uses tsconfig.app.json via build)
         run: |
           cd frontend
           npm run build
+
+      - name: Run tests with coverage
+        run: |
+          cd frontend
+          npm run test:coverage
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -57,7 +52,7 @@ jobs:
           flags: frontend
           fail_ci_if_error: false
 
-  accessibility:
+  security:
     runs-on: ubuntu-latest
 
     steps:
@@ -75,15 +70,7 @@ jobs:
           cd frontend
           npm ci
 
-      - name: Build for accessibility testing
+      - name: Run npm audit
         run: |
           cd frontend
-          npm run build
-
-      - name: Run accessibility audit (optional)
-        continue-on-error: true
-        run: |
-          cd frontend
-          npx serve -s dist &
-          sleep 5
-          npx pa11y http://localhost:3000 || true
+          npm audit --audit-level=high
