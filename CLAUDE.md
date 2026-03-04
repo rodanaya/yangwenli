@@ -16,12 +16,12 @@
 ### Architecture
 - **Backend entry point**: `uvicorn api.main:app --port 8001` from `backend/` directory (NOT `main:app`)
 - **DB startup**: `_startup_checks()` in `api/main.py` scans 3.1M rows on startup — takes 30-60s cold. Expected behavior.
-- **Test command**: `python -m pytest backend/tests/ -q --tb=short -p no:cacheprovider` (251+ tests)
+- **Test command**: `python -m pytest backend/tests/ -q --tb=short -p no:cacheprovider` (359 tests)
 
 ### Language & Compatibility
 - **Python 3.11**: No backslashes inside f-string expressions. Use intermediate variables: `val = x\ny = f"{val}"` not `f"{x\n}"`.
-- **TypeScript**: Run `npx tsc --noEmit` from `frontend/` after changes. Fix all type errors before committing.
-- **Target**: All 251+ backend tests passing. `npx tsc --noEmit` = 0 errors.
+- **TypeScript**: Run `npx tsc --noEmit` AND `npm run build` from `frontend/` after changes. Fix all type errors before committing. (`tsconfig.json` is lenient; `tsconfig.app.json` used by build enforces `noUnusedLocals/noUnusedParameters`.)
+- **Target**: All 359 backend tests passing. Both `npx tsc --noEmit` and `npm run build` = 0 errors.
 
 ### Multi-Agent Coordination
 - Before starting DB or scoring pipeline work, ask if another process is already running on that task.
@@ -99,14 +99,14 @@ For detailed validation rules, see @.claude/rules/data-validation.md
 
 ## Risk Scoring Model
 
-**Model versions** — v3.3 (weighted checklist), v4.0 (statistical), v5.1 (calibrated), v5.2 (in DB, calibration in progress):
+**Model versions** — v3.3 (weighted checklist), v4.0 (statistical), v5.1 (active):
 
-> **DB STATE (2026-02-28)**: All 3.1M contracts scored with `risk_model_version='v5.2'` by another session.
-> v5.2 high-risk rate is currently **46.2%** (calibration issue — target is ~9%). Constants.py still says v5.1.
-> Frontend/API serve v5.1 metadata. DB scores are v5.2 but not yet properly calibrated.
-> To fix: rerun `calibrate_risk_model_v5` + `calculate_risk_scores_v5` with correct v5.2 parameters.
+> **DB STATE (2026-03-03)**: All 3.1M contracts scored with v5.1 (`risk_model_version='v5.0'` tag in model_calibration).
+> v5.1 high-risk rate: **9.0%** (328,298 contracts). Rolled back from failed v5.2 attempt on Mar 3 via `rollback_to_v51.py`.
+> v5.2 attempt failed due to cold-start z-score explosion (first-year vendors) + C=0.01 calibration artifact → 46.2% HR.
+> **DO NOT run `calculate_risk_scores_v5`** without verifying calibration sanity (intercept < -0.5, PU c > 0.70).
 
-### v5.1: Per-Sector Calibrated Model (metadata active, scores replaced by v5.2 in DB)
+### v5.1: Per-Sector Calibrated Model (ACTIVE)
 
 Per-sector calibrated probabilities P(corrupt|z) with confidence intervals. **Train AUC: 0.964, Test AUC: 0.957** (temporal split), high-risk rate: 9.0%.
 
