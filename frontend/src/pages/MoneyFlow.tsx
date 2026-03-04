@@ -7,7 +7,7 @@ import { SankeyDiagram } from '@/components/SankeyDiagram'
 import type { SankeyNodeSelected } from '@/components/SankeyDiagram'
 import { formatCompactMXN } from '@/lib/utils'
 import { SECTORS } from '@/lib/constants'
-import { GitBranch, ArrowRight, Building2, Users, TrendingUp, DollarSign, X, AlertTriangle, Info } from 'lucide-react'
+import { GitBranch, ArrowRight, Building2, Users, TrendingUp, DollarSign, X, AlertTriangle, Info, List, BarChart2, ChevronUp, ChevronDown } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -17,6 +17,10 @@ import {
 } from '@/components/ui/select'
 
 const YEARS = Array.from({ length: 24 }, (_, i) => 2025 - i)
+
+type ViewMode = 'diagram' | 'table'
+type SortKey = 'value' | 'contracts' | 'avgRisk'
+type SortDir = 'desc' | 'asc'
 
 const RISK_LEVELS = [
   { key: 'critical', color: '#f87171' },
@@ -70,6 +74,9 @@ export default function MoneyFlow() {
   const [year, setYear] = useState<number | undefined>(2024)
   const [riskFilter, setRiskFilter] = useState<string[]>(['critical', 'high', 'medium', 'low'])
   const [selectedNode, setSelectedNode] = useState<SankeyNodeSelected | null>(null)
+  const [viewMode, setViewMode] = useState<ViewMode>('diagram')
+  const [sortKey, setSortKey] = useState<SortKey>('value')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
   const containerRef = useRef<HTMLDivElement>(null)
   const [diagramWidth, setDiagramWidth] = useState(860)
 
@@ -122,6 +129,14 @@ export default function MoneyFlow() {
 
   const handleNodeSelect = useCallback((node: SankeyNodeSelected) => {
     setSelectedNode(prev => prev?.id === node.id ? null : node)
+  }, [])
+
+  const handleSort = useCallback((key: SortKey) => {
+    setSortKey(prev => {
+      if (prev === key) setSortDir(d => d === 'desc' ? 'asc' : 'desc')
+      else setSortDir('desc')
+      return key
+    })
   }, [])
 
   const { nodes, links } = useMemo(() => {
@@ -190,6 +205,28 @@ export default function MoneyFlow() {
     () => new Set(links.map(l => l.target)).size,
     [links]
   )
+
+  // Table view rows: enrich links with node names, then sort
+  const tableRows = useMemo(() => {
+    const rows = links.map(l => {
+      const srcNode = nodes.find(n => n.id === l.source)
+      const tgtNode = nodes.find(n => n.id === l.target)
+      return {
+        ...l,
+        sourceName: srcNode?.name ?? l.source,
+        targetName: tgtNode?.name ?? l.target,
+        sourceRisk: srcNode?.riskLevel ?? 'unknown',
+        targetRisk: tgtNode?.riskLevel ?? 'unknown',
+      }
+    })
+    rows.sort((a, b) => {
+      const dir = sortDir === 'desc' ? -1 : 1
+      if (sortKey === 'value')    return dir * (a.value - b.value)
+      if (sortKey === 'contracts') return dir * (a.contractCount - b.contractCount)
+      return dir * (a.avgRisk - b.avgRisk)
+    })
+    return rows
+  }, [links, nodes, sortKey, sortDir])
 
   // Compute high-risk flow percentage
   const highRiskValue = useMemo(
@@ -332,6 +369,34 @@ export default function MoneyFlow() {
               </button>
             ))}
           </div>
+
+          {/* View mode toggle */}
+          <div className="ml-auto flex items-center gap-1 rounded-md border border-border/30 p-0.5 bg-background/40">
+            <button
+              onClick={() => setViewMode('diagram')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-all ${
+                viewMode === 'diagram'
+                  ? 'bg-accent/20 text-accent'
+                  : 'text-text-muted hover:text-text-secondary'
+              }`}
+              aria-pressed={viewMode === 'diagram'}
+            >
+              <BarChart2 className="h-3.5 w-3.5" aria-hidden="true" />
+              Diagram
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-all ${
+                viewMode === 'table'
+                  ? 'bg-accent/20 text-accent'
+                  : 'text-text-muted hover:text-text-secondary'
+              }`}
+              aria-pressed={viewMode === 'table'}
+            >
+              <List className="h-3.5 w-3.5" aria-hidden="true" />
+              Table
+            </button>
+          </div>
         </div>
 
         {totalValue > 0 && (
@@ -425,57 +490,165 @@ export default function MoneyFlow() {
       )}
 
       {/* Diagram */}
-      <div ref={containerRef} className="bg-background-elevated border border-border/30 rounded-lg p-6">
-        {isLoading && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-center gap-2 text-text-muted text-sm pb-2">
+      {viewMode === 'diagram' && (
+        <div ref={containerRef} className="bg-background-elevated border border-border/30 rounded-lg p-6">
+          {isLoading && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-center gap-2 text-text-muted text-sm pb-2">
+                <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" aria-hidden="true" />
+                {t('loading')}
+              </div>
+              <SankeySkeleton />
+            </div>
+          )}
+
+          {showEmpty && (
+            <div className="flex flex-col items-center justify-center gap-3 text-center px-6 py-8">
+              <div className="relative">
+                <SankeySkeleton />
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                  <GitBranch className="h-10 w-10 text-text-muted/60" aria-hidden="true" />
+                  <p className="text-sm font-medium text-text-secondary">{t('emptyMessage')}</p>
+                  <p className="text-xs text-text-muted max-w-xs">
+                    {t('emptyHint')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showNoRiskMatch && (
+            <div className="flex flex-col items-center justify-center h-64 gap-3 text-center px-6">
+              <GitBranch className="h-10 w-10 text-text-muted/40" aria-hidden="true" />
+              <p className="text-sm font-medium text-text-secondary">{t('noRiskMatch')}</p>
+              <p className="text-xs text-text-muted max-w-xs">
+                {t('noRiskMatchHint')}
+              </p>
+            </div>
+          )}
+
+          {showDiagram && (
+            <SankeyDiagram
+              nodes={nodes}
+              links={links}
+              width={diagramWidth}
+              height={Math.min(900, Math.max(500, nodes.length * 16))}
+              onFlowClick={handleFlowClick}
+              onNodeClick={handleNodeSelect}
+              selectedNodeId={selectedNode?.id}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Table view */}
+      {viewMode === 'table' && (
+        <div className="bg-background-elevated border border-border/30 rounded-lg overflow-hidden">
+          {isLoading ? (
+            <div className="flex items-center justify-center gap-2 text-text-muted text-sm p-12">
               <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" aria-hidden="true" />
               {t('loading')}
             </div>
-            <SankeySkeleton />
-          </div>
-        )}
-
-        {showEmpty && (
-          <div className="flex flex-col items-center justify-center gap-3 text-center px-6 py-8">
-            <div className="relative">
-              <SankeySkeleton />
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                <GitBranch className="h-10 w-10 text-text-muted/60" aria-hidden="true" />
-                <p className="text-sm font-medium text-text-secondary">{t('emptyMessage')}</p>
-                <p className="text-xs text-text-muted max-w-xs">
-                  {t('emptyHint')}
-                </p>
-              </div>
+          ) : tableRows.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-48 gap-3 text-center px-6">
+              <GitBranch className="h-8 w-8 text-text-muted/40" aria-hidden="true" />
+              <p className="text-sm text-text-muted">{t('emptyMessage')}</p>
             </div>
-          </div>
-        )}
-
-        {showNoRiskMatch && (
-          <div className="flex flex-col items-center justify-center h-64 gap-3 text-center px-6">
-            <GitBranch className="h-10 w-10 text-text-muted/40" aria-hidden="true" />
-            <p className="text-sm font-medium text-text-secondary">{t('noRiskMatch')}</p>
-            <p className="text-xs text-text-muted max-w-xs">
-              {t('noRiskMatchHint')}
-            </p>
-          </div>
-        )}
-
-        {showDiagram && (
-          <SankeyDiagram
-            nodes={nodes}
-            links={links}
-            width={diagramWidth}
-            height={Math.min(900, Math.max(500, nodes.length * 16))}
-            onFlowClick={handleFlowClick}
-            onNodeClick={handleNodeSelect}
-            selectedNodeId={selectedNode?.id}
-          />
-        )}
-      </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-border/30 bg-background/60">
+                    <th className="text-left px-4 py-2.5 font-medium text-text-muted w-6">#</th>
+                    <th className="text-left px-3 py-2.5 font-medium text-text-muted">Institution</th>
+                    <th className="text-left px-3 py-2.5 font-medium text-text-muted">Vendor</th>
+                    {(['value', 'contracts', 'avgRisk'] as SortKey[]).map(key => (
+                      <th key={key} className="text-right px-3 py-2.5 font-medium text-text-muted">
+                        <button
+                          onClick={() => handleSort(key)}
+                          className="flex items-center gap-1 ml-auto hover:text-text-primary transition-colors"
+                        >
+                          {key === 'value' ? 'Amount' : key === 'contracts' ? 'Contracts' : 'Avg Risk'}
+                          {sortKey === key
+                            ? sortDir === 'desc'
+                              ? <ChevronDown className="h-3 w-3" />
+                              : <ChevronUp className="h-3 w-3" />
+                            : <span className="h-3 w-3" />}
+                        </button>
+                      </th>
+                    ))}
+                    <th className="w-8" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {tableRows.map((row, i) => {
+                    const riskColor =
+                      row.avgRisk >= 0.5 ? '#f87171' :
+                      row.avgRisk >= 0.3 ? '#fb923c' :
+                      row.avgRisk >= 0.1 ? '#fbbf24' :
+                      '#4ade80'
+                    const isHighRisk = row.avgRisk >= 0.3
+                    return (
+                      <tr
+                        key={i}
+                        className={`border-b border-border/10 hover:bg-white/4 transition-colors cursor-pointer group ${
+                          isHighRisk ? 'bg-red-500/3' : ''
+                        }`}
+                        onClick={() => handleFlowClick(row.source, row.target)}
+                        title={`Click to view contracts: ${row.sourceName} → ${row.targetName}`}
+                      >
+                        <td className="px-4 py-2.5 text-text-muted font-mono">{i + 1}</td>
+                        <td className="px-3 py-2.5 max-w-[240px]">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span
+                              className="w-2 h-2 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: RISK_LEVELS.find(r => r.key === row.sourceRisk)?.color ?? '#64748b' }}
+                              aria-hidden="true"
+                            />
+                            <span className="text-text-secondary truncate" title={row.sourceName}>
+                              {row.sourceName}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-3 py-2.5 max-w-[240px]">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span
+                              className="w-2 h-2 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: RISK_LEVELS.find(r => r.key === row.targetRisk)?.color ?? '#64748b' }}
+                              aria-hidden="true"
+                            />
+                            <span className="text-text-secondary truncate" title={row.targetName}>
+                              {row.targetName}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono text-text-secondary whitespace-nowrap">
+                          {formatCompactMXN(row.value)}
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono text-text-secondary">
+                          {row.contractCount.toLocaleString()}
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono font-semibold whitespace-nowrap" style={{ color: riskColor }}>
+                          {(row.avgRisk * 100).toFixed(0)}%
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <ArrowRight className="h-3 w-3 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+              <p className="text-xs text-text-muted px-4 py-2 border-t border-border/20">
+                {tableRows.length} flows shown · click any row to open contracts
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Interaction hints */}
-      {showDiagram && (
+      {showDiagram && viewMode === 'diagram' && (
         <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-text-muted/70 px-1">
           <span>Click a node to see details</span>
           <span>Click a flow to open filtered contracts</span>
@@ -484,7 +657,7 @@ export default function MoneyFlow() {
       )}
 
       {/* Risk coloring explanation */}
-      {showDiagram && (
+      {showDiagram && viewMode === 'diagram' && (
         <div className="rounded-lg border border-amber-500/15 bg-amber-500/5 px-4 py-3 flex gap-3">
           <Info className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
           <div className="text-xs text-text-muted space-y-1">
@@ -502,7 +675,7 @@ export default function MoneyFlow() {
       )}
 
       {/* Top 5 suspicious flows summary panel */}
-      {showDiagram && topSuspiciousFlows.length > 0 && (
+      {showDiagram && viewMode === 'diagram' && topSuspiciousFlows.length > 0 && (
         <div className="rounded-lg border border-border/30 bg-background-elevated p-4">
           <h2 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-red-400" aria-hidden="true" />
