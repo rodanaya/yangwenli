@@ -1,13 +1,13 @@
 {
   "title": "Inteligencia de Riesgo en Compras",
   "trackingLabel": "INTELIGENCIA DE RIESGO",
-  "subtitle": "Anomalías detectadas por IA, patrones estructurales de corrupción y señales de investigación",
-  "anomalies": {
-    "title": "Anomalías Detectadas por IA",
+  "subtitle": "Añomalías detectadas por IA, patrones estructurales de corrupción y señales de investigación",
+  "añomalies": {
+    "title": "Añomalías Detectadas por IA",
     "subtitle": "Valores atípicos estadísticos e irregularidades estructurales marcadas por el modelo de riesgo",
     "affectedContracts": "contratos afectados",
     "affectedValue": "valor en riesgo",
-    "empty": "No se detectaron anomalías"
+    "empty": "No se detectaron añomalías"
   },
   "riskFactors": {
     "title": "Análisis Profundo de Factores de Riesgo",
@@ -17,7 +17,7 @@
     "effectivenessTitle": "Lift de Factores vs. Verdad de Campo",
     "effectivenessSubtitle": "Qué tan más probable es cada factor en contratos corruptos conocidos vs. línea base. Lift > 1 = señal diagnóstica.",
     "heatmapTitle": "Co-ocurrencia de Factores",
-    "heatmapSubtitle": "Con qué frecuencia aparecen dos factores juntos (lift > 1 = correlacionados). Mayor lift = asociación más fuerte.",
+    "heatmapSubtitle": "Con qué frecuencia aparecen dos factores juntos (lift > 1 = correlaciónados). Mayor lift = asociación más fuerte.",
     "showHeatmap": "Mostrar Mapa de Co-ocurrencia",
     "hideHeatmap": "Ocultar Mapa",
     "lift": "Lift",
@@ -27,7 +27,7 @@
   },
   "decemberRush": {
     "title": "Inteligencia del Alza de Diciembre",
-    "subtitle": "Análisis del pico de gasto de fin de año — volcados de presupuesto y anomalías de tiempo",
+    "subtitle": "Análisis del pico de gasto de fin de año — volcados de presupuesto y añomalías de tiempo",
     "spikeRatio": "Ratio de Pico",
     "avgMonthly": "Prom. Mensual",
     "decemberValue": "Valor Dic.",
@@ -63,7 +63,7 @@
   },
   "leads": {
     "title": "Pistas de Investigación",
-    "subtitle": "Prioridades de investigación clasificadas por IA según la fuerza del patrón de anomalía",
+    "subtitle": "Prioridades de investigación clasificadas por IA según la fuerza del patrón de añomalía",
     "allTypes": "Todas las Pistas",
     "highPriority": "Alta Prioridad",
     "steps": "Pasos de Verificación",

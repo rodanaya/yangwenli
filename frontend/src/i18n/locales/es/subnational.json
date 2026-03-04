@@ -41,7 +41,7 @@
     "stateShare": "Participación Estatal",
     "stateConcentration": "Concentración del Proveedor",
     "localDominant": "Dominante Local",
-    "localDominantTooltip": "El proveedor obtiene ≥70% de sus contratos nacionales totales en este único estado — señal potencial de monopolio local",
+    "localDominantTooltip": "El proveedor obtiene ≥70% de sus contratos naciónales totales en este único estado — señal potencial de monopolio local",
     "riskScore": "Riesgo",
     "filterLocal": "Solo dominantes locales"
   },

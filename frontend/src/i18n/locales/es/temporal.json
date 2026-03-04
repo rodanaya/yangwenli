@@ -6,7 +6,7 @@
   "yearLabel": "Año:",
   "investigate": "Investigar →",
   "investigateYear": "Investigar {{year}} →",
-  "anomalous": "anomalo",
+  "añomalous": "añomalo",
   "stats": {
     "totalContracts": "TOTAL DE CONTRATOS",
     "totalContractsDetail": "En {{year}}",
@@ -25,11 +25,11 @@
     "Sheinbaum": "Sheinbaum"
   },
   "monthlyRhythm": {
-    "title": "Ritmo Mensual de Contratacion ({{year}})",
-    "description": "Volumen de contratos por mes con superposicion de riesgo. Las barras de diciembre se resaltan cuando superan el promedio anual. Haga clic en cualquier barra para investigar contratos de ese periodo."
+    "title": "Ritmo Mensual de Contratación ({{year}})",
+    "description": "Volumen de contratos por mes con superposicion de riesgo. Las barras de diciembre se resaltan cuando superan el promedio anual. Haga clic en cualquier barra para investigar contratos de ese período."
   },
   "decemberAnalysis": {
-    "title": "Analisis de Pico de Diciembre (2018-2024)",
+    "title": "Análisis de Pico de Diciembre (2018-2024)",
     "description": "Recuento de contratos de diciembre vs promedio de otros meses. Se resaltan los años donde diciembre supera 1.5x. El comportamiento de liquidación presupuestal genera picos predecibles a fin de año."
   },
   "yoyTrend": {
@@ -54,7 +54,7 @@
     "avgRisk": "Riesgo Prom.",
     "directAwards": "Adj. Directas",
     "singleBids": "Licitaciones Unicas",
-    "yearEndPeriod": "Periodo de fin de ano",
+    "yearEndPeriod": "Período de fin de año",
     "clickToInvestigate": "Clic para investigar",
     "december": "Diciembre",
     "avgOther": "Prom. Otros",
@@ -77,7 +77,7 @@
   "empty": {
     "noDataForYear": "Sin datos disponibles para {{year}}",
     "noMultiYearData": "Sin datos multianuales disponibles",
-    "noYoyData": "Sin datos ano a ano disponibles"
+    "noYoyData": "Sin datos año a año disponibles"
   },
   "loading": "Cargando..."
 }

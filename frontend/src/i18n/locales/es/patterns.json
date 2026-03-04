@@ -8,7 +8,7 @@
       "decemberRush": "Compras de Fin de Año (Diciembre)",
       "splitContracts": "Contratos Fraccionados",
       "coBidding": "Co-licitación Sospechosa",
-      "priceOutliers": "Anomalías de Precio",
+      "priceOutliers": "Añomalías de Precio",
       "singleBid": "Licitación con Oferente Único",
       "vendorConcentration": "Concentración de Proveedores"
     },
@@ -93,7 +93,7 @@
     "level6": {
       "label": "Nivel 6",
       "title": "Cola de Investigación",
-      "description": "{{count}} anomalías detectadas — análisis más profundo"
+      "description": "{{count}} añomalías detectadas — análisis más profundo"
     },
     "metrics": {
       "da": "Adjud. Directas",
@@ -103,13 +103,13 @@
     },
     "groups": {
       "competition": { "title": "Amenazas a la Competencia", "description": "Patrones que socavan la licitación competitiva" },
-      "financial": { "title": "Señales Financieras de Alerta", "description": "Anomalías en precios y gasto" },
-      "institutional": { "title": "Preocupaciones Institucionales", "description": "Debilidades institucionales sistémicas" }
+      "financial": { "title": "Señales Financieras de Alerta", "description": "Añomalías en precios y gasto" },
+      "institutional": { "title": "Preocupaciones Instituciónales", "description": "Debilidades instituciónales sistémicas" }
     },
     "patterns": {
       "ghost": { "title": "Proveedores Fantasma", "subtitle": "Ganan >50% mediante licitaciones con un solo postor" },
       "cobid": { "title": "Anillos de Co-licitación", "subtitle": "Tasas de co-licitación sospechosamente altas" },
-      "price": { "title": "Anomalías de Precio", "subtitle": "Sobreprecios extremos identificados por IQR" },
+      "price": { "title": "Añomalías de Precio", "subtitle": "Sobreprecios extremos identificados por IQR" },
       "split": { "title": "Contratos Fraccionados", "subtitle": "Mismo proveedor + institución + día" },
       "december": { "title": "Gasto de Diciembre", "subtitle": "Contratos de descarga presupuestal de fin de año" }
     },
@@ -133,7 +133,7 @@
     "insights": {
       "concentration": "<strong>Concentración de proveedores</strong>: el indicador más predictivo de corrupción.",
       "directAward": "<strong>Las adjudicaciones directas</strong> son en realidad <em>menos</em> comunes en casos de corrupción conocidos.",
-      "adPeriod": "<strong>Los períodos cortos de publicación</strong> muestran señal invertida — los proveedores corruptos usan plazos normales.",
+      "adPeriod": "<strong>Los períodos cortos de públicación</strong> muestran señal invertida — los proveedores corruptos usan plazos normales.",
       "mismatch": "<strong>Incompatibilidad industrial</strong> — trabajo fuera del sector es una señal de alerta importante.",
       "cobidding": "<strong>La co-licitación</strong> no proporciona señal en los datos de verdad conocida actuales.",
       "network": "<strong>Membresía en redes</strong> — los proveedores corruptos conocidos operan como entidades independientes."

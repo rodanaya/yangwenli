@@ -12,23 +12,23 @@
   },
   "trackingLabel": "ANALISIS DE FLUJO DE FONDOS",
   "title": "Sigue el Dinero",
-  "subtitle": "Rastreando el flujo de fondos de contratacion publica de instituciones a proveedores",
+  "subtitle": "Rastreando el flujo de fondos de contratación pública de instituciones a proveedores",
   "heroSubtitle": "{{count}} contratos rastreados",
   "heroSubtitleYear": "{{count}} contratos rastreados en {{year}}",
-  "heroDetail": "Seleccione un ano y sector para rastrear como fluye el gasto gubernamental de instituciones a traves de sectores hacia proveedores, resaltando canales de alto riesgo.",
+  "heroDetail": "Seleccióne un año y sector para rastrear como fluye el gasto gubernamental de instituciones a traves de sectores hacia proveedores, resaltando canales de alto riesgo.",
   "errorTitle": "Sigue el Dinero",
-  "errorSubtitle": "Rastreando el flujo de fondos de contratacion publica de instituciones a proveedores",
+  "errorSubtitle": "Rastreando el flujo de fondos de contratación pública de instituciones a proveedores",
   "errorMessage": "Error al cargar datos de flujo de fondos",
-  "errorHint": "Verifique que el servidor este en funcionamiento e intente de nuevo.",
+  "errorHint": "Verifique que el servidor este en funciónamiento e intente de nuevo.",
   "emptyHeadline": "Sin Datos",
   "emptySubtitle": "Ajuste los filtros para cargar datos de flujo de fondos",
-  "emptyDetail": "Seleccione un ano y sector para rastrear como fluye el gasto gubernamental de instituciones a traves de sectores hacia proveedores.",
-  "emptyMessage": "Sin datos de flujo de fondos para esta combinacion",
-  "emptyHint": "Intente seleccionar un ano o sector especifico. El analisis de flujo de fondos agrega relaciones institucion-proveedor y requiere datos de contratos con registros de instituciones y proveedores.",
+  "emptyDetail": "Seleccióne un año y sector para rastrear como fluye el gasto gubernamental de instituciones a traves de sectores hacia proveedores.",
+  "emptyMessage": "Sin datos de flujo de fondos para esta combinación",
+  "emptyHint": "Intente selecciónar un año o sector especifico. El análisis de flujo de fondos agrega relaciones institución-proveedor y requiere datos de contratos con registros de instituciones y proveedores.",
   "filters": {
-    "allYears": "Todos los Anos",
+    "allYears": "Todos los Años",
     "allSectors": "Todos los Sectores",
-    "byYear": "Filtrar por ano",
+    "byYear": "Filtrar por año",
     "bySector": "Filtrar por sector"
   },
   "stats": {
@@ -41,13 +41,13 @@
   },
   "sections": {
     "institutionFlows": "Instituciones con Mayor Gasto",
-    "institutionFlowsDesc": "Top 15 instituciones por valor total de contratacion",
+    "institutionFlowsDesc": "Top 15 instituciones por valor total de contratación",
     "vendorFlows": "Principales Proveedores Receptores",
-    "vendorFlowsDesc": "Top 15 proveedores que reciben mas fondos de contratacion",
-    "sectorDistribution": "Distribucion por Sector",
-    "sectorDistributionDesc": "Como se distribuyen los fondos de contratacion en los 12 sectores. El tamano representa el valor total.",
+    "vendorFlowsDesc": "Top 15 proveedores que reciben mas fondos de contratación",
+    "sectorDistribution": "Distribución por Sector",
+    "sectorDistributionDesc": "Como se distribuyen los fondos de contratación en los 12 sectores. El tamaño representa el valor total.",
     "highRiskFlows": "Flujos de Fondos de Mayor Riesgo",
-    "highRiskFlowsDesc": "Top 20 flujos clasificados por puntuacion de riesgo promedio. Estas relaciones institucion-proveedor merecen mayor escrutinio. Haga clic en cualquier fila para investigar los contratos de esa relacion."
+    "highRiskFlowsDesc": "Top 20 flujos clasificados por puntuacion de riesgo promedio. Estas relaciones institución-proveedor merecen mayor escrutinio. Haga clic en cualquier fila para investigar los contratos de esa relación."
   },
   "table": {
     "source": "Origen",
@@ -58,9 +58,9 @@
     "actions": "Acciones"
   },
   "emptyStates": {
-    "noInstitutionData": "Sin datos de flujo institucional disponibles",
+    "noInstitutionData": "Sin datos de flujo instituciónal disponibles",
     "noVendorData": "Sin datos de flujo de proveedores disponibles",
-    "noSectorData": "Sin datos de distribucion por sector disponibles",
+    "noSectorData": "Sin datos de distribución por sector disponibles",
     "noHighRiskFlows": "Sin flujos de alto riesgo para los filtros actuales"
   },
   "tooltip": {
@@ -69,7 +69,7 @@
     "avgRisk": "Riesgo Prom."
   },
   "methodology": {
-    "title": "Metodologia",
-    "content": "Los flujos de fondos se agregan de 3.1M contratos de contratacion publica (2002-2025). Los colores de las barras reflejan la puntuacion de riesgo promedio v5.1 para cada flujo: verde (<10%), ambar (10-30%), naranja (30-50%) y rojo (>=50%). El valor de flujo de alto riesgo suma todos los flujos donde el riesgo promedio supera el 30%. Use los filtros de ano y sector para acotar el analisis."
+    "title": "Metodología",
+    "content": "Los flujos de fondos se agregan de 3.1M contratos de contratación pública (2002-2025). Los colores de las barras reflejan la puntuacion de riesgo promedio v5.1 para cada flujo: verde (<10%), ambar (10-30%), naranja (30-50%) y rojo (>=50%). El valor de flujo de alto riesgo suma todos los flujos donde el riesgo promedio supera el 30%. Use los filtros de año y sector para acotar el análisis."
   }
 }

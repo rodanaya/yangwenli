@@ -79,7 +79,7 @@
     "amountNote": "Monto",
     "roles": {
       "vendor": "Proveedor",
-      "official": "Funcionario",
+      "official": "Funciónario",
       "institution": "Institución",
       "journalist": "Periodista"
     },

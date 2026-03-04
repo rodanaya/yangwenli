@@ -32,7 +32,7 @@ This is not a simple dashboard. It is a full analytical engine with:
 | Metric | Value |
 |--------|-------|
 | Contracts analyzed | 3,110,007 |
-| Validated procurement value | ~6T MXN |
+| Validated procurement value | ~9.5T MXN |
 | Vendors | 320,429 |
 | Institutions | 4,456 |
 | Risk model | **v5.1** (per-sector calibrated) |

@@ -235,7 +235,7 @@ function HeroStats({ totalContracts, totalValueMxn, highRiskPct, groundTruthCase
     {
       value: triggered ? `~${valueBAnimated.toFixed(1)}T` : '0T',
       label: 'MXN in procurement',
-      sub: '6–8 trillion pesos',
+      sub: '~9.5 trillion pesos',
       color: '#8b5cf6',
     },
     {
@@ -806,7 +806,7 @@ export default function Landing() {
   // Derive live stats from API; fall back to known values from CLAUDE.md
   const overview = fastDashboard?.overview
   const totalContracts = overview?.total_contracts ?? 3_110_007
-  const totalValueMxn = overview?.total_value_mxn ?? 6_800_000_000_000
+  const totalValueMxn = overview?.total_value_mxn ?? 9_560_000_000_000
 
   // risk_distribution is RiskDistribution[] — find critical and high percentages
   const riskDist: RiskDistribution[] = fastDashboard?.risk_distribution ?? []
@@ -817,7 +817,7 @@ export default function Landing() {
     {
       tag: 'The Scale',
       heading: `${formatCompactMXN(totalValueMxn)} in Government Contracts`,
-      body: `Between 2002 and 2025, Mexico's federal government awarded over ${(totalContracts / 1_000_000).toFixed(1)} million contracts worth an estimated 6–8 trillion pesos. RUBLI tracks every peso — from emergency health procurement to major infrastructure works — in a single searchable database.`,
+      body: `Between 2002 and 2025, Mexico's federal government awarded over ${(totalContracts / 1_000_000).toFixed(1)} million contracts worth an estimated ~9.5 trillion pesos. RUBLI tracks every peso — from emergency health procurement to major infrastructure works — in a single searchable database.`,
       icon: BarChart3,
       color: '#3b82f6',
       stat: formatCompactMXN(totalValueMxn),

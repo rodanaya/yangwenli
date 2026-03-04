@@ -14,7 +14,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation, Trans } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatCompactMXN, formatNumber } from '@/lib/utils'
+import { formatCompactMXN, formatCompactUSD, formatNumber } from '@/lib/utils'
 import { analysisApi } from '@/api/client'
 import type { ExecutiveSummaryResponse } from '@/api/types'
 import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
@@ -45,9 +45,6 @@ import {
   Zap,
   Printer,
 } from 'lucide-react'
-
-// Exchange rate constant — update here when the rate changes significantly
-const MXN_TO_USD = 0.052  // ~19.2 MXN per USD (approx current rate)
 
 // ============================================================================
 // Data Hook
@@ -158,7 +155,7 @@ export default ExecutiveSummary
 function ReportHeader({ data }: { data: ExecutiveSummaryResponse }) {
   const { t } = useTranslation('executive')
   const { headline } = data
-  const totalValueUSD = headline.total_value * MXN_TO_USD
+  const totalValueUSD = formatCompactUSD(headline.total_value)
 
   return (
     <header className="pt-4 relative overflow-hidden">
@@ -212,7 +209,7 @@ function ReportHeader({ data }: { data: ExecutiveSummaryResponse }) {
             values={{
               totalContracts: formatNumber(headline.total_contracts),
               totalValue: formatCompactMXN(headline.total_value),
-              totalValueUSD: formatCompactMXN(totalValueUSD).replace('MXN', 'USD'),
+              totalValueUSD: totalValueUSD,
               valueAtRisk: formatCompactMXN(data.risk.value_at_risk),
               pct: data.risk.value_at_risk_pct,
             }}
