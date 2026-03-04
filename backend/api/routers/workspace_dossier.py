@@ -4,7 +4,7 @@ from typing import Optional, List
 
 from ..dependencies import get_db
 
-router = APIRouter(prefix="/api/v1/workspace/dossiers", tags=["dossiers"])
+router = APIRouter(prefix="/workspace/dossiers", tags=["dossiers"])
 
 # ── Models ──────────────────────────────────────────────────────────────────
 

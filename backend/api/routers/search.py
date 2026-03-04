@@ -89,7 +89,7 @@ def _search_vendors(q: str, limit: int) -> list[VendorResult]:
             for r in rows
         ]
     except Exception as e:
-        logger.warning("vendor search error: %s", e)
+        logger.error("vendor search error: %s", e)
         return []
 
 
@@ -119,7 +119,7 @@ def _search_institutions(q: str, limit: int) -> list[InstitutionResult]:
             for r in rows
         ]
     except Exception as e:
-        logger.warning("institution search error: %s", e)
+        logger.error("institution search error: %s", e)
         return []
 
 
@@ -156,7 +156,7 @@ def _search_contracts(q: str, limit: int) -> list[ContractResult]:
             for r in rows
         ]
     except Exception as e:
-        logger.warning("contract search error: %s", e)
+        logger.error("contract search error: %s", e)
         return []
 
 
@@ -181,7 +181,7 @@ def _search_cases(q: str, limit: int) -> list[CaseResult]:
             for r in rows
         ]
     except Exception as e:
-        logger.warning("case search error: %s", e)
+        logger.error("case search error: %s", e)
         return []
 
 

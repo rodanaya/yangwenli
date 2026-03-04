@@ -37,3 +37,11 @@ build/
 
 # Original data files (large)
 original_data/
+
+# Database files — exclude from build context (2.4GB+, mounted as volumes)
+*.db
+*.db-shm
+*.db-wal
+*.db.backup*
+*.db.corrupt*
+*.old_corrupt
