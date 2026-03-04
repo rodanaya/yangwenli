@@ -329,7 +329,7 @@ export function SectorProfile() {
   const sectorColor = SECTOR_COLORS[sector.code] || sector.color || '#64748b'
   const stats = sector.statistics
   const priceBaseline = priceBaselines?.[0]
-  const caseData = topCases?.data ?? []
+  const caseData = (topCases?.data ?? []) as Record<string, unknown>[]
 
   return (
     <div className="space-y-6">

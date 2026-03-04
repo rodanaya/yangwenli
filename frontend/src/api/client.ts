@@ -146,6 +146,9 @@ export type {
   ContractListItem,
 } from './types'
 
+/** Generic query parameter map — used internally by buildQueryParams */
+type QueryParams = Record<string, unknown>
+
 // API Base URL - proxied through Vite in development
 const API_BASE_URL = '/api/v1'
 
@@ -228,7 +231,7 @@ export const contractApi = {
    * Get paginated list of contracts with filters
    */
   async getAll(params: ContractFilterParams = {}): Promise<ContractListResponse> {
-    const queryParams = buildQueryParams(params as Record<string, unknown>)
+    const queryParams = buildQueryParams(params as QueryParams)
     const { data } = await api.get<ContractListResponse>(`/contracts?${queryParams}`)
     return data
   },
@@ -245,7 +248,7 @@ export const contractApi = {
    * Get contract statistics with optional filters
    */
   async getStatistics(params: Partial<ContractFilterParams> = {}): Promise<ContractStatistics> {
-    const queryParams = buildQueryParams(params as Record<string, unknown>)
+    const queryParams = buildQueryParams(params as QueryParams)
     const { data } = await api.get<ContractStatistics>(`/contracts/statistics?${queryParams}`)
     return data
   },
@@ -254,7 +257,7 @@ export const contractApi = {
    * Search contracts by text
    */
   async search(query: string, params: ContractFilterParams = {}): Promise<ContractListResponse> {
-    const queryParams = buildQueryParams({ ...params, search: query } as Record<string, unknown>)
+    const queryParams = buildQueryParams({ ...params, search: query } as QueryParams)
     const { data } = await api.get<ContractListResponse>(`/contracts?${queryParams}`)
     return data
   },
@@ -267,23 +270,23 @@ export const contractApi = {
     return data
   },
 
-  async getRiskBreakdown(contractId: number): Promise<Record<string, unknown>> {
+  async getRiskBreakdown(contractId: number): Promise<unknown> {
     const { data } = await api.get(`/contracts/${contractId}/risk`)
     return data
   },
 
-  async getPriceAnalysis(contractId: number): Promise<Record<string, unknown>> {
+  async getPriceAnalysis(contractId: number): Promise<unknown> {
     const { data } = await api.get(`/analysis/contracts/${contractId}/price-analysis`)
     return data
   },
 
-  async getByVendor(vendorId: number, page = 1): Promise<Record<string, unknown>> {
-    const { data } = await api.get(`/contracts/by-vendor/${vendorId}?page=${page}`)
+  async getByVendor(vendorId: number, page = 1): Promise<ContractListResponse> {
+    const { data } = await api.get<ContractListResponse>(`/contracts/by-vendor/${vendorId}?page=${page}`)
     return data
   },
 
-  async getByInstitution(institutionId: number, page = 1): Promise<Record<string, unknown>> {
-    const { data } = await api.get(`/contracts/by-institution/${institutionId}?page=${page}`)
+  async getByInstitution(institutionId: number, page = 1): Promise<ContractListResponse> {
+    const { data } = await api.get<ContractListResponse>(`/contracts/by-institution/${institutionId}?page=${page}`)
     return data
   },
 
@@ -313,7 +316,7 @@ export const vendorApi = {
    * @param year - Filter to vendors with contracts in this year
    */
   async getAll(params: VendorFilterParams & { year?: number } = {}): Promise<VendorListResponse> {
-    const queryParams = buildQueryParams(params as Record<string, unknown>)
+    const queryParams = buildQueryParams(params as QueryParams)
     const { data } = await api.get<VendorListResponse>(`/vendors?${queryParams}`)
     return data
   },
@@ -338,7 +341,7 @@ export const vendorApi = {
    * Get vendor's contracts
    */
   async getContracts(vendorId: number, params: ContractFilterParams = {}): Promise<ContractListResponse> {
-    const queryParams = buildQueryParams(params as Record<string, unknown>)
+    const queryParams = buildQueryParams(params as QueryParams)
     const { data } = await api.get<ContractListResponse>(`/vendors/${vendorId}/contracts?${queryParams}`)
     return data
   },
@@ -351,7 +354,7 @@ export const vendorApi = {
     limit = 20,
     params: Partial<VendorFilterParams> = {}
   ): Promise<VendorTopListResponse> {
-    const queryParams = buildQueryParams({ ...params, by: metric, limit } as Record<string, unknown>)
+    const queryParams = buildQueryParams({ ...params, by: metric, limit } as QueryParams)
     const { data } = await api.get<VendorTopListResponse>(`/vendors/top?${queryParams}`)
     return data
   },
@@ -427,35 +430,35 @@ export const vendorApi = {
     return data
   },
 
-  async getPeerComparison(vendorId: number): Promise<Record<string, unknown>> {
+  async getPeerComparison(vendorId: number): Promise<unknown> {
     const { data } = await api.get(`/vendors/${vendorId}/peer-comparison`)
     return data
   },
 
-  async getLinkedScandals(vendorId: number): Promise<Record<string, unknown>> {
+  async getLinkedScandals(vendorId: number): Promise<unknown> {
     const { data } = await api.get(`/vendors/${vendorId}/linked-scandals`)
     return data
   },
 
-  async getAsfCases(vendorId: number): Promise<Record<string, unknown>> {
+  async getAsfCases(vendorId: number): Promise<unknown> {
     const { data } = await api.get(`/vendors/${vendorId}/asf-cases`)
     return data
   },
 
   /** @deprecated - defined but not yet wired to any UI */
-  async compare(ids: number[]): Promise<Record<string, unknown>> {
+  async compare(ids: number[]): Promise<unknown> {
     const { data } = await api.get(`/vendors/compare?ids=${ids.join(',')}`)
     return data
   },
 
   /** @deprecated - defined but not yet wired to any UI */
-  async getVerified(): Promise<Record<string, unknown>> {
+  async getVerified(): Promise<unknown> {
     const { data } = await api.get('/vendors/verified')
     return data
   },
 
   /** @deprecated - defined but not yet wired to any UI */
-  async getClassification(vendorId: number): Promise<Record<string, unknown>> {
+  async getClassification(vendorId: number): Promise<unknown> {
     const { data } = await api.get(`/vendors/${vendorId}/classification`)
     return data
   },
@@ -492,7 +495,7 @@ export const institutionApi = {
    * @param year - Filter to institutions with contracts in this year
    */
   async getAll(params: InstitutionFilterParams & { year?: number } = {}): Promise<InstitutionListResponse> {
-    const queryParams = buildQueryParams(params as Record<string, unknown>)
+    const queryParams = buildQueryParams(params as QueryParams)
     const { data } = await api.get<InstitutionListResponse>(`/institutions?${queryParams}`)
     return data
   },
@@ -517,7 +520,7 @@ export const institutionApi = {
    * Get institution's contracts
    */
   async getContracts(institutionId: number, params: ContractFilterParams = {}): Promise<ContractListResponse> {
-    const queryParams = buildQueryParams(params as Record<string, unknown>)
+    const queryParams = buildQueryParams(params as QueryParams)
     const { data } = await api.get<ContractListResponse>(`/institutions/${institutionId}/contracts?${queryParams}`)
     return data
   },
@@ -655,31 +658,31 @@ export const institutionApi = {
   },
 
   /** @deprecated - defined but not yet wired to any UI */
-  async compare(ids: number[]): Promise<Record<string, unknown>> {
+  async compare(ids: number[]): Promise<unknown> {
     const { data } = await api.get(`/institutions/compare?ids=${ids.join(',')}`)
     return data
   },
 
   /** @deprecated - defined but not yet wired to any UI */
-  async getHierarchy(): Promise<Record<string, unknown>> {
+  async getHierarchy(): Promise<unknown> {
     const { data } = await api.get('/institutions/hierarchy')
     return data
   },
 
   /** @deprecated - defined but not yet wired to any UI */
-  async getTypes(): Promise<Record<string, unknown>> {
+  async getTypes(): Promise<unknown> {
     const { data } = await api.get('/institutions/types')
     return data
   },
 
   /** @deprecated - defined but not yet wired to any UI */
-  async getSizeTiers(): Promise<Record<string, unknown>> {
+  async getSizeTiers(): Promise<unknown> {
     const { data } = await api.get('/institutions/size-tiers')
     return data
   },
 
   /** @deprecated - defined but not yet wired to any UI */
-  async getOfficials(institutionId: number): Promise<Record<string, unknown>> {
+  async getOfficials(institutionId: number): Promise<unknown> {
     const { data } = await api.get(`/institutions/${institutionId}/officials`)
     return data
   },
@@ -702,9 +705,9 @@ export const analysisApi = {
    * Get combined risk overview (overview + risk distribution + trends in one call)
    */
   async getRiskOverview(): Promise<{
-    overview: Record<string, unknown>
-    risk_distribution: Array<Record<string, unknown>>
-    yearly_trends: Array<Record<string, unknown>>
+    overview: unknown
+    risk_distribution: unknown[]
+    yearly_trends: unknown[]
   }> {
     const { data } = await api.get('/analysis/risk-overview')
     return data
@@ -755,7 +758,7 @@ export const analysisApi = {
    * with optional sector/year range filtering.
    */
   async getTrendData(params: { sector_id?: number; year_start?: number; year_end?: number } = {}): Promise<TrendDataPoint[]> {
-    const queryParams = buildQueryParams(params as Record<string, unknown>)
+    const queryParams = buildQueryParams(params as QueryParams)
     const paramStr = queryParams.toString()
     const { data } = await api.get<{ data: TrendDataPoint[] }>(
       `/analysis/year-over-year${paramStr ? `?${paramStr}` : ''}`
@@ -776,7 +779,7 @@ export const analysisApi = {
    * Get temporal events affecting procurement
    */
   async getTemporalEvents(year?: number, eventType?: string): Promise<TemporalEventsResponse> {
-    const queryParams = buildQueryParams({ year, event_type: eventType } as Record<string, unknown>)
+    const queryParams = buildQueryParams({ year, event_type: eventType } as QueryParams)
     const paramStr = queryParams.toString()
     const { data } = await api.get<TemporalEventsResponse>(`/analysis/temporal-events${paramStr ? `?${paramStr}` : ''}`)
     return data
@@ -811,7 +814,7 @@ export const analysisApi = {
    * Get money flow data for Sankey visualization
    */
   async getMoneyFlow(year?: number, sectorId?: number): Promise<MoneyFlowResponse> {
-    const params = buildQueryParams({ year, sector_id: sectorId } as Record<string, unknown>)
+    const params = buildQueryParams({ year, sector_id: sectorId } as QueryParams)
     const paramStr = params.toString()
     const { data } = await api.get<MoneyFlowResponse>(`/analysis/money-flow${paramStr ? `?${paramStr}` : ''}`)
     return data
@@ -821,7 +824,7 @@ export const analysisApi = {
    * Get risk factor frequency and co-occurrence analysis
    */
   async getRiskFactorAnalysis(sectorId?: number, year?: number): Promise<RiskFactorAnalysisResponse> {
-    const params = buildQueryParams({ sector_id: sectorId, year } as Record<string, unknown>)
+    const params = buildQueryParams({ sector_id: sectorId, year } as QueryParams)
     const paramStr = params.toString()
     const { data } = await api.get<RiskFactorAnalysisResponse>(`/analysis/risk-factor-analysis${paramStr ? `?${paramStr}` : ''}`)
     return data
@@ -840,7 +843,7 @@ export const analysisApi = {
   /**
    * Get per-case detection statistics from live contract data
    */
-  async getPerCaseDetection(): Promise<Record<string, unknown>> {
+  async getPerCaseDetection(): Promise<unknown> {
     const { data } = await api.get('/analysis/validation/per-case-detection')
     return data
   },
@@ -848,7 +851,7 @@ export const analysisApi = {
   /**
    * Get ground truth validation summary
    */
-  async getValidationSummary(): Promise<Record<string, unknown>> {
+  async getValidationSummary(): Promise<unknown> {
     const { data } = await api.get('/analysis/validation/summary')
     return data
   },
@@ -856,7 +859,7 @@ export const analysisApi = {
   /**
    * Get detection rate metrics
    */
-  async getDetectionRate(modelVersion?: string): Promise<Record<string, unknown>> {
+  async getDetectionRate(modelVersion?: string): Promise<unknown> {
     const params = modelVersion ? `?model_version=${modelVersion}` : ''
     const { data } = await api.get(`/analysis/validation/detection-rate${params}`)
     return data
@@ -865,7 +868,7 @@ export const analysisApi = {
   /**
    * Get false negatives from ground truth
    */
-  async getFalseNegatives(limit = 50): Promise<Record<string, unknown>> {
+  async getFalseNegatives(limit = 50): Promise<unknown> {
     const { data } = await api.get(`/analysis/validation/false-negatives?limit=${limit}`)
     return data
   },
@@ -1021,7 +1024,7 @@ export const exportApi = {
    * Export contracts to CSV
    */
   async exportContracts(params: ContractFilterParams = {}): Promise<Blob> {
-    const queryParams = buildQueryParams(params as Record<string, unknown>)
+    const queryParams = buildQueryParams(params as QueryParams)
     const { data } = await api.get(`/export/contracts/csv?${queryParams}`, {
       responseType: 'blob',
     })
@@ -1032,7 +1035,7 @@ export const exportApi = {
    * Export vendors to CSV
    */
   async exportVendors(params: VendorFilterParams = {}): Promise<Blob> {
-    const queryParams = buildQueryParams(params as Record<string, unknown>)
+    const queryParams = buildQueryParams(params as QueryParams)
     const { data } = await api.get(`/export/vendors/csv?${queryParams}`, {
       responseType: 'blob',
     })
@@ -1070,7 +1073,7 @@ export const watchlistApi = {
    * Get all watchlist items with optional filters
    */
   async getAll(params?: { status?: string; item_type?: string; priority?: string }): Promise<WatchlistResponse> {
-    const queryParams = params ? buildQueryParams(params as Record<string, unknown>) : ''
+    const queryParams = params ? buildQueryParams(params as QueryParams) : ''
     const { data } = await api.get<WatchlistResponse>(`/watchlist?${queryParams}`)
     return data
   },
@@ -1142,7 +1145,7 @@ export const networkApi = {
    * Get network graph data for visualization
    */
   async getGraph(params: NetworkGraphParams = {}): Promise<NetworkGraphResponse> {
-    const queryParams = buildQueryParams(params as Record<string, unknown>)
+    const queryParams = buildQueryParams(params as QueryParams)
     const { data } = await api.get<NetworkGraphResponse>(`/network/graph?${queryParams}`)
     return data
   },
@@ -1180,7 +1183,7 @@ export const networkApi = {
     total_value: number
     concentration_index: number
   }> {
-    const queryParams = params ? buildQueryParams(params as Record<string, unknown>) : ''
+    const queryParams = params ? buildQueryParams(params as QueryParams) : ''
     const { data } = await api.get(`/network/institution-vendors/${institutionId}?${queryParams}`)
     return data
   },
@@ -1220,7 +1223,7 @@ export const networkApi = {
     sector_id?: number
     limit?: number
   }): Promise<CommunitiesResponse> {
-    const queryParams = params ? buildQueryParams(params as Record<string, unknown>) : ''
+    const queryParams = params ? buildQueryParams(params as QueryParams) : ''
     const { data } = await api.get<CommunitiesResponse>(`/network/communities?${queryParams}`)
     return data
   },
@@ -1333,7 +1336,7 @@ export const priceApi = {
    * Get paginated list of price hypotheses
    */
   async getHypotheses(params: PriceHypothesesFilterParams = {}): Promise<PriceHypothesesResponse> {
-    const queryParams = buildQueryParams(params as Record<string, unknown>)
+    const queryParams = buildQueryParams(params as QueryParams)
     const { data } = await api.get<PriceHypothesesResponse>(`/analysis/price-hypotheses?${queryParams}`)
     return data
   },
@@ -1392,7 +1395,7 @@ export const priceApi = {
     only_new?: boolean
     model?: string
   } = {}): Promise<MlAnomaliesResponse> {
-    const queryParams = buildQueryParams(params as Record<string, unknown>)
+    const queryParams = buildQueryParams(params as QueryParams)
     const { data } = await api.get<MlAnomaliesResponse>(`/analysis/prices/ml-anomalies?${queryParams}`)
     return data
   },
@@ -1407,7 +1410,7 @@ export const investigationApi = {
    * Get paginated list of investigation cases
    */
   async getCases(params: InvestigationFilterParams = {}): Promise<InvestigationCaseListResponse> {
-    const queryParams = buildQueryParams(params as Record<string, unknown>)
+    const queryParams = buildQueryParams(params as QueryParams)
     const { data } = await api.get<InvestigationCaseListResponse>(`/investigation/cases?${queryParams}`)
     return data
   },
@@ -1431,7 +1434,7 @@ export const investigationApi = {
   /**
    * Get top N most suspicious cases
    */
-  async getTopCases(n: number, sectorId?: number): Promise<{ data: Array<Record<string, unknown>>; count: number }> {
+  async getTopCases(n: number, sectorId?: number): Promise<{ data: unknown[]; count: number }> {
     const params = sectorId ? `?sector_id=${sectorId}` : ''
     const { data } = await api.get(`/investigation/top/${n}${params}`)
     return data
@@ -1482,27 +1485,27 @@ export const investigationApi = {
   /**
    * Get SHAP-based vendor explanation
    */
-  async getVendorExplanation(vendorId: number, sectorId?: number): Promise<Record<string, unknown>> {
+  async getVendorExplanation(vendorId: number, sectorId?: number): Promise<unknown> {
     const { data } = await api.get(`/investigation/vendors/${vendorId}/explanation${sectorId ? `?sector_id=${sectorId}` : ''}`)
     return data
   },
 
-  async getTopAnomalousVendors(limit = 20, sectorId?: number): Promise<Record<string, unknown>> {
+  async getTopAnomalousVendors(limit = 20, sectorId?: number): Promise<unknown> {
     const { data } = await api.get(`/investigation/top-anomalous-vendors?limit=${limit}${sectorId ? `&sector_id=${sectorId}` : ''}`)
     return data
   },
 
-  async runPipeline(): Promise<Record<string, unknown>> {
+  async runPipeline(): Promise<unknown> {
     const { data } = await api.post('/investigation/run', {})
     return data
   },
 
-  async getCaseExport(caseId: number): Promise<Record<string, unknown>> {
+  async getCaseExport(caseId: number): Promise<unknown> {
     const { data } = await api.get(`/investigation/cases/${caseId}/export`)
     return data
   },
 
-  async getCaseAsfMatches(caseId: number): Promise<Record<string, unknown>> {
+  async getCaseAsfMatches(caseId: number): Promise<unknown> {
     const { data } = await api.get(`/investigation/cases/${caseId}/asf-matches`)
     return data
   },
@@ -1544,7 +1547,7 @@ export const reportApi = {
 // ============================================================================
 
 export const statsApi = {
-  async getDatabase(): Promise<Record<string, unknown>> {
+  async getDatabase(): Promise<unknown> {
     const { data } = await api.get('/stats/database')
     return data
   },
@@ -1555,7 +1558,7 @@ export const statsApi = {
 // ============================================================================
 
 export const industriesApi = {
-  async getAll(): Promise<Record<string, unknown>> {
+  async getAll(): Promise<unknown> {
     const { data } = await api.get('/industries')
     return data
   },

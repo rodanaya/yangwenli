@@ -1268,7 +1268,7 @@ export function Dashboard() {
             </>
           )}
           {/* SMOKING GUN — one concrete high-risk investigation lead */}
-          {topCaseData?.data?.[0] && (() => {
+          {!!topCaseData?.data?.[0] && (() => {
             const lead = topCaseData.data[0] as Record<string, unknown>
             const riskPct = ((Number(lead.avg_risk_score) || Number(lead.suspicion_score) || 0) * 100).toFixed(0)
             return (
