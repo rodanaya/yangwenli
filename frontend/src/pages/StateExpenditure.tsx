@@ -337,7 +337,7 @@ function StateDetail({ code }: { code: string }) {
                     width={60}
                   />
                   <Tooltip
-                    formatter={(v: number | string) => [formatCompactMXN(Number(v)), 'Value']}
+                    formatter={(v: number | string | undefined) => [formatCompactMXN(Number(v ?? 0)), 'Value']}
                     labelFormatter={(l) => `Year: ${l}`}
                   />
                   <Line
