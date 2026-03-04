@@ -155,7 +155,9 @@ export default ExecutiveSummary
 function ReportHeader({ data }: { data: ExecutiveSummaryResponse }) {
   const { t } = useTranslation('executive')
   const { headline } = data
-  const totalValueUSD = formatCompactUSD(headline.total_value)
+  const totalValueUSD = headline.total_value_usd
+    ? `$${(headline.total_value_usd / 1e9).toFixed(1)}B USD`
+    : formatCompactUSD(headline.total_value)
 
   return (
     <header className="pt-4 relative overflow-hidden">
@@ -2017,7 +2019,138 @@ function SectionAdministrations({ data }: { data: ExecutiveSummaryResponse }) {
           </div>
         ))}
       </div>
+
+      {/* Key moments excerpt */}
+      <KeyMomentsPanel />
     </section>
+  )
+}
+
+// ============================================================================
+// Key Moments Panel — curated excerpt for Executive Summary
+// ============================================================================
+
+const KEY_MOMENTS = [
+  {
+    year: 2012,
+    title: 'Ley de Adquisiciones Reform',
+    desc: 'Modernized public procurement law, mandating electronic bidding on CompraNet for all federal agencies above threshold.',
+    type: 'reform',
+    admin: 'fox',
+    color: '#3b82f6',
+  },
+  {
+    year: 2014,
+    title: 'Casa Blanca Scandal',
+    desc: 'President Peña Nieto\'s family home built by Grupo Higa, a key government contractor — conflict of interest documented by journalists.',
+    type: 'scandal',
+    admin: 'pena',
+    color: '#dc2626',
+  },
+  {
+    year: 2017,
+    title: 'La Estafa Maestra',
+    desc: 'ASF audit uncovered $7.7B MXN funneled through public universities to shell companies. Emblematic of ghost-contractor networks.',
+    type: 'scandal',
+    admin: 'pena',
+    color: '#dc2626',
+  },
+  {
+    year: 2020,
+    title: 'COVID Emergency Procurement',
+    desc: '$45B MXN in emergency health contracts bypassed competitive bidding. RUBLI flags 81% of these as critical risk.',
+    type: 'crisis',
+    admin: 'amlo',
+    color: '#ea580c',
+  },
+  {
+    year: 2021,
+    title: 'Segalmex Scandal',
+    desc: '$9.4B MXN embezzled from the food security agency via overpriced contracts and ghost distributors — 100% detected by the model.',
+    type: 'scandal',
+    admin: 'amlo',
+    color: '#dc2626',
+  },
+  {
+    year: 2024,
+    title: 'CompraNet 5.0 Launch',
+    desc: 'New procurement platform with enhanced transparency features; 47.4% RFC coverage in 2023–2025 data vs. 0.1% in 2002–2010.',
+    type: 'reform',
+    admin: 'sheinbaum',
+    color: '#16a34a',
+  },
+] as const
+
+type MomentType = 'reform' | 'scandal' | 'crisis'
+
+const TYPE_LABELS: Record<MomentType, string> = {
+  reform: 'Reforma',
+  scandal: 'Escándalo',
+  crisis: 'Crisis',
+}
+
+const TYPE_BG: Record<MomentType, string> = {
+  reform: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  scandal: 'bg-red-500/10 text-red-400 border-red-500/20',
+  crisis: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+}
+
+function KeyMomentsPanel() {
+  const navigate = useNavigate()
+
+  return (
+    <div className="mt-8 border border-border/20 rounded-xl bg-surface-raised/20 overflow-hidden">
+      {/* Panel header */}
+      <div className="flex items-center justify-between px-5 py-3 border-b border-border/20 bg-surface-raised/30">
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-accent" />
+          <span className="text-xs font-bold uppercase tracking-widest text-text-muted font-mono">
+            Momentos Clave · 2002–2024
+          </span>
+        </div>
+        <button
+          onClick={() => navigate('/administrations')}
+          className="flex items-center gap-1 text-xs text-accent hover:text-accent/80 transition-colors font-medium"
+        >
+          Ver análisis completo <ArrowRight className="h-3 w-3" />
+        </button>
+      </div>
+
+      {/* Timeline */}
+      <div className="divide-y divide-border/10">
+        {KEY_MOMENTS.map((evt) => (
+          <div key={`${evt.year}-${evt.title}`} className="flex gap-4 px-5 py-3 hover:bg-surface-raised/20 transition-colors">
+            {/* Year + color bar */}
+            <div className="flex-shrink-0 flex flex-col items-center gap-1 pt-0.5">
+              <span className="text-xs font-black font-mono text-text-primary w-10 text-right">
+                {evt.year}
+              </span>
+              <div className="w-0.5 flex-1 rounded" style={{ backgroundColor: evt.color }} />
+            </div>
+
+            {/* Content */}
+            <div className="min-w-0 flex-1 pb-1">
+              <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                <span className="text-xs font-semibold text-text-primary">{evt.title}</span>
+                <span
+                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wide ${TYPE_BG[evt.type as MomentType]}`}
+                >
+                  {TYPE_LABELS[evt.type as MomentType]}
+                </span>
+              </div>
+              <p className="text-xs text-text-muted leading-relaxed">{evt.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Footer note */}
+      <div className="px-5 py-2.5 bg-surface-raised/10 border-t border-border/10">
+        <p className="text-[10px] text-text-muted font-mono">
+          Fuentes: ASF, IMCO, Contralínea, Aristegui Noticias · Escándalos incluidos en ground truth del modelo v5.1
+        </p>
+      </div>
+    </div>
   )
 }
 
