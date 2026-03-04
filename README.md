@@ -4,6 +4,8 @@
 
 [![Backend Tests](https://github.com/rodanaya/yangwenli/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/rodanaya/yangwenli/actions/workflows/backend-tests.yml)
 [![Frontend Tests](https://github.com/rodanaya/yangwenli/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/rodanaya/yangwenli/actions/workflows/frontend-tests.yml)
+[![CodeQL](https://github.com/rodanaya/yangwenli/actions/workflows/codeql.yml/badge.svg)](https://github.com/rodanaya/yangwenli/actions/workflows/codeql.yml)
+[![Deploy](https://github.com/rodanaya/yangwenli/actions/workflows/deploy.yml/badge.svg)](https://github.com/rodanaya/yangwenli/actions/workflows/deploy.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
@@ -267,6 +269,17 @@ docker compose up --build
 
 # Frontend available at http://localhost:3009
 ```
+
+### Auto-Deploy (GitHub Actions → Hetzner)
+
+Push to `main` automatically deploys via SSH. Add these secrets to your GitHub repo (`Settings → Secrets → Actions`):
+
+| Secret | Value |
+|--------|-------|
+| `HETZNER_IP` | Server IP address |
+| `SSH_PRIVATE_KEY` | Private key for `root@<ip>` (paste full PEM) |
+
+The workflow syncs code only — the database stays on the server permanently.
 
 ---
 
