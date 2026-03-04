@@ -916,13 +916,20 @@ export function Investigation() {
       )}
 
       {/* SECTOR BREAKDOWN */}
-      {sectorBreakdown.length > 0 && (
-        <Card>
-          <CardContent className="pt-5 pb-4">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-bold text-text-primary">{t('sections.bySector')}</h2>
+      <Card>
+        <CardContent className="pt-5 pb-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-bold text-text-primary">{t('sections.bySector')}</h2>
+            {sectorBreakdown.length > 0 && (
               <ChartDownloadButton targetRef={sectorChartRef} filename="rubli-investigation-by-sector" />
+            )}
+          </div>
+          {sectorBreakdown.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-[120px] gap-2 text-text-muted">
+              <Eye className="h-6 w-6 opacity-30" />
+              <p className="text-xs">{t('noData', 'No sector data available')}</p>
             </div>
+          ) : (
             <div ref={sectorChartRef} className="h-[200px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={sectorBreakdown} layout="vertical" margin={{ left: 80, right: 20 }}>
@@ -955,9 +962,9 @@ export function Investigation() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

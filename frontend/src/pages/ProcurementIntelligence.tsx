@@ -67,6 +67,15 @@ function riskScoreToColor(score: number): string {
   return lerpColor(RISK_COLORS.low, RISK_COLORS.medium, score / 0.1)
 }
 
+/** Maps a risk score to a categorical RISK_COLORS entry (no lerp blending).
+ *  Use this for bar/cell fills so each bar gets a distinct, readable color. */
+function riskScoreToCategoricalColor(score: number): string {
+  if (score >= 0.50) return RISK_COLORS.critical
+  if (score >= 0.30) return RISK_COLORS.high
+  if (score >= 0.10) return RISK_COLORS.medium
+  return RISK_COLORS.low
+}
+
 function riskBadgeClass(risk: number | null): string {
   if (risk == null) return 'text-text-muted'
   if (risk >= 0.5) return 'text-risk-critical font-bold'
@@ -270,13 +279,16 @@ function SankeyFlowViz({ flows, totalValue }: { flows: FlowRow[]; totalValue: nu
 
           return (
             <div key={i} className="flex items-center gap-2 group">
-              {/* Left node — institution with sector color */}
+              {/* Left node — institution: dark text always, sector color as dot indicator */}
               <div
-                className="w-[130px] shrink-0 text-right text-[10px] font-bold truncate"
-                style={{ color: sectorColor }}
+                className="w-[130px] shrink-0 text-right text-[10px] font-bold truncate text-text-primary flex items-center justify-end gap-1"
                 title={flow.sourceName}
               >
-                {flow.sourceName}
+                <span className="truncate">{flow.sourceName}</span>
+                <span
+                  className="w-2 h-2 rounded-full shrink-0 inline-block"
+                  style={{ backgroundColor: sectorColor }}
+                />
               </div>
 
               {/* Flow bar */}
@@ -415,7 +427,7 @@ function RiskFactorBreakdown({ factors }: { factors: FactorRow[] }) {
       <div className="space-y-2">
         {top.map((f, i) => {
           const barPct = Math.max(2, Math.round((f.count / maxCount) * 100))
-          const color = riskScoreToColor(f.avg_risk_score)
+          const color = riskScoreToCategoricalColor(f.avg_risk_score)
           const label = FACTOR_DISPLAY_LABELS[f.factor] ?? f.label.toUpperCase()
 
           return (
@@ -1001,7 +1013,7 @@ export default function ProcurementIntelligence() {
                       {factors.map((entry, i) => (
                         <Cell
                           key={i}
-                          fill={riskScoreToColor(entry.avg_risk_score)}
+                          fill={riskScoreToCategoricalColor(entry.avg_risk_score)}
                           opacity={selectedFactor && selectedFactor !== entry.factor ? 0.35 : 1}
                         />
                       ))}
@@ -1033,7 +1045,7 @@ export default function ProcurementIntelligence() {
                       <span className="text-text-muted">Avg risk score</span>
                       <span
                         className="font-bold tabular-nums font-mono"
-                        style={{ color: riskScoreToColor(selectedFactorData.avg_risk_score) }}
+                        style={{ color: riskScoreToCategoricalColor(selectedFactorData.avg_risk_score) }}
                       >
                         {(selectedFactorData.avg_risk_score * 100).toFixed(0)}%
                       </span>
@@ -1069,9 +1081,9 @@ export default function ProcurementIntelligence() {
                           selectedFactor === f.factor ? 'bg-accent/10' : 'hover:bg-background-elevated/30'
                         )}
                       >
-                        <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: riskScoreToColor(f.avg_risk_score) }} />
+                        <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: riskScoreToCategoricalColor(f.avg_risk_score) }} />
                         <span className="flex-1 truncate text-text-secondary">{f.label}</span>
-                        <span className="font-mono tabular-nums shrink-0" style={{ color: riskScoreToColor(f.avg_risk_score) }}>
+                        <span className="font-mono tabular-nums shrink-0" style={{ color: riskScoreToCategoricalColor(f.avg_risk_score) }}>
                           {(f.avg_risk_score * 100).toFixed(0)}%
                         </span>
                       </button>
@@ -1256,24 +1268,47 @@ export default function ProcurementIntelligence() {
           <p className="text-xs text-text-muted mb-4">{t('collusion.subtitle')}</p>
 
           {!loadCollusion ? (
-            <div className="flex flex-col items-center gap-3 py-6">
-              <Network className="h-8 w-8 text-text-muted/30" />
-              <p className="text-xs text-text-muted text-center max-w-xs">
-                Co-bidding analysis scans 3M+ contract records. Run on demand to avoid slowing page load.
-              </p>
-              <button
-                onClick={() => setLoadCollusion(true)}
-                className="px-4 py-2 text-xs font-semibold bg-risk-critical/10 text-risk-critical border border-risk-critical/20 rounded hover:bg-risk-critical/20 transition-colors"
-              >
-                Run Collusion Analysis
-              </button>
+            <div className="rounded-lg border border-border/40 bg-background-elevated/10 p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-risk-critical/10 border border-risk-critical/20 flex items-center justify-center">
+                  <Network className="h-6 w-6 text-risk-critical" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-text-primary mb-1">
+                    Detect Co-Bidding &amp; Collusion Patterns
+                  </p>
+                  <p className="text-xs text-text-muted leading-relaxed">
+                    Scans 3M+ contract records to find vendor pairs that bid together suspiciously often,
+                    and market concentration alerts where a single vendor dominates an institution.
+                    This query is expensive — run it on demand.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setLoadCollusion(true)}
+                  className="shrink-0 px-5 py-2.5 text-sm font-bold bg-risk-critical/15 text-risk-critical border border-risk-critical/30 rounded-lg hover:bg-risk-critical/25 transition-colors flex items-center gap-2"
+                >
+                  <Network className="h-4 w-4" />
+                  Run Collusion Analysis
+                </button>
+              </div>
             </div>
           ) : coBidLoading || concentrationLoading ? (
-            <div className="space-y-2">
+            <div className="space-y-2 py-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-4 w-4 border-2 border-risk-critical border-t-transparent rounded-full animate-spin shrink-0" />
+                <span className="text-xs text-text-muted">Scanning 3M+ contract records for collusion patterns…</span>
+              </div>
               {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-8" />)}
             </div>
           ) : !hasCoBid && !hasConcentration ? (
-            <p className="text-xs text-text-muted text-center py-4">{t('collusion.empty')}</p>
+            <div className="flex flex-col items-center gap-2 py-8 text-center">
+              <Network className="h-8 w-8 text-text-muted/30" />
+              <p className="text-sm font-semibold text-text-secondary">No significant collusion patterns detected</p>
+              <p className="text-xs text-text-muted max-w-sm">
+                No vendor pairs met the co-bidding threshold and no concentration alerts were triggered
+                with the current dataset and filters.
+              </p>
+            </div>
           ) : (
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -1368,7 +1403,7 @@ export default function ProcurementIntelligence() {
                           {alert.avg_risk_score != null && (
                             <span
                               className="text-xs font-mono tabular-nums"
-                              style={{ color: riskScoreToColor(alert.avg_risk_score) }}
+                              style={{ color: riskScoreToCategoricalColor(alert.avg_risk_score) }}
                             >
                               {(alert.avg_risk_score * 100).toFixed(0)}%
                             </span>
@@ -1442,7 +1477,7 @@ export default function ProcurementIntelligence() {
                         <span><span className="font-bold text-text-primary">{formatCompactMXN(lead.amount_mxn)}</span></span>
                       )}
                       {lead.risk_score != null && (
-                        <span className="font-bold font-mono" style={{ color: riskScoreToColor(lead.risk_score) }}>
+                        <span className="font-bold font-mono" style={{ color: riskScoreToCategoricalColor(lead.risk_score) }}>
                           {(lead.risk_score * 100).toFixed(0)}%
                         </span>
                       )}

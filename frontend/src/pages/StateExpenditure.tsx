@@ -59,15 +59,16 @@ function CoverageBanner({ note }: { note: string }) {
 
 // ── Risk pill ────────────────────────────────────────────────────────────────
 function RiskBadge({ score }: { score: number }) {
+  const safeScore = score ?? 0
   const level =
-    score >= 0.5 ? 'critical' : score >= 0.3 ? 'high' : score >= 0.1 ? 'medium' : 'low'
+    safeScore >= 0.5 ? 'critical' : safeScore >= 0.3 ? 'high' : safeScore >= 0.1 ? 'medium' : 'low'
   const color = RISK_COLORS[level]
   return (
     <span
       className="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-semibold text-white"
       style={{ backgroundColor: color }}
     >
-      {score.toFixed(3)}
+      {safeScore.toFixed(3)}
     </span>
   )
 }
@@ -109,9 +110,9 @@ function StatesList() {
       {/* Summary strip */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: t('stats.totalContracts'), value: data.total_contracts.toLocaleString(), icon: FileText },
-          { label: t('stats.totalValue'), value: formatCompactMXN(data.total_value_mxn), icon: DollarSign },
-          { label: t('stats.vendors'), value: data.total_vendors.toLocaleString(), icon: Users },
+          { label: t('stats.totalContracts'), value: (data.total_contracts ?? 0).toLocaleString(), icon: FileText },
+          { label: t('stats.totalValue'), value: formatCompactMXN(data.total_value_mxn ?? 0), icon: DollarSign },
+          { label: t('stats.vendors'), value: (data.total_vendors ?? 0).toLocaleString(), icon: Users },
           { label: t('stateCount', { count: states.length }), value: `${states.length}`, icon: MapPin },
         ].map(({ label, value, icon: Icon }) => (
           <Card key={label} className="border-border/60">
@@ -126,7 +127,7 @@ function StatesList() {
         ))}
       </div>
 
-      <CoverageBanner note={data.coverage_note} />
+      {data.coverage_note && <CoverageBanner note={data.coverage_note} />}
 
       {/* States table */}
       <div className="overflow-x-auto rounded-lg border border-border">
@@ -178,22 +179,22 @@ function StateRow({
         </div>
       </td>
       <td className="px-4 py-3 text-right tabular-nums">
-        {state.contract_count.toLocaleString()}
+        {(state.contract_count ?? 0).toLocaleString()}
       </td>
       <td className="px-4 py-3 text-right tabular-nums">
-        {formatCompactMXN(state.total_value_mxn)}
+        {formatCompactMXN(state.total_value_mxn ?? 0)}
       </td>
       <td className="px-4 py-3 text-right">
-        <RiskBadge score={state.avg_risk_score} />
+        <RiskBadge score={state.avg_risk_score ?? 0} />
       </td>
       <td className="px-4 py-3 text-right tabular-nums hidden sm:table-cell">
-        {state.institution_count}
+        {state.institution_count ?? 0}
       </td>
       <td className="px-4 py-3 text-right tabular-nums hidden md:table-cell">
-        {(state.direct_award_rate * 100).toFixed(1)}%
+        {((state.direct_award_rate ?? 0) * 100).toFixed(1)}%
       </td>
       <td className="px-4 py-3 text-right tabular-nums hidden md:table-cell">
-        {(state.single_bid_rate * 100).toFixed(1)}%
+        {((state.single_bid_rate ?? 0) * 100).toFixed(1)}%
       </td>
     </tr>
   )
@@ -239,8 +240,8 @@ function StateDetail({ code }: { code: string }) {
   }
 
   const d = detailQuery.data
-  const riskDist = d.risk_distribution
-  const riskTotal = riskDist.critical + riskDist.high + riskDist.medium + riskDist.low
+  const riskDist = d.risk_distribution ?? { critical: 0, high: 0, medium: 0, low: 0 }
+  const riskTotal = (riskDist.critical ?? 0) + (riskDist.high ?? 0) + (riskDist.medium ?? 0) + (riskDist.low ?? 0)
 
   return (
     <div className="space-y-6">
@@ -262,10 +263,10 @@ function StateDetail({ code }: { code: string }) {
       {/* KPI strip */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: t('stats.totalContracts'), value: d.contract_count.toLocaleString(), icon: FileText },
-          { label: t('stats.totalValue'), value: formatCompactMXN(d.total_value_mxn), icon: DollarSign },
-          { label: t('stats.institutions'), value: d.institution_count.toLocaleString(), icon: Building2 },
-          { label: t('stats.vendors'), value: d.vendor_count.toLocaleString(), icon: Users },
+          { label: t('stats.totalContracts'), value: (d.contract_count ?? 0).toLocaleString(), icon: FileText },
+          { label: t('stats.totalValue'), value: formatCompactMXN(d.total_value_mxn ?? 0), icon: DollarSign },
+          { label: t('stats.institutions'), value: (d.institution_count ?? 0).toLocaleString(), icon: Building2 },
+          { label: t('stats.vendors'), value: (d.vendor_count ?? 0).toLocaleString(), icon: Users },
         ].map(({ label, value, icon: Icon }) => (
           <Card key={label} className="border-border/60">
             <CardContent className="p-4">
@@ -279,7 +280,7 @@ function StateDetail({ code }: { code: string }) {
         ))}
       </div>
 
-      <CoverageBanner note={d.coverage_note} />
+      {d.coverage_note && <CoverageBanner note={d.coverage_note} />}
 
       {/* Charts row */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -378,13 +379,13 @@ function StateDetail({ code }: { code: string }) {
                   <td className="px-4 py-2 max-w-xs">
                     <span className="line-clamp-1 text-xs">{inst.institution_name}</span>
                   </td>
-                  <td className="px-4 py-2 text-right tabular-nums text-xs">{inst.contract_count.toLocaleString()}</td>
-                  <td className="px-4 py-2 text-right tabular-nums text-xs">{formatCompactMXN(inst.total_value_mxn)}</td>
+                  <td className="px-4 py-2 text-right tabular-nums text-xs">{(inst.contract_count ?? 0).toLocaleString()}</td>
+                  <td className="px-4 py-2 text-right tabular-nums text-xs">{formatCompactMXN(inst.total_value_mxn ?? 0)}</td>
                   <td className="px-4 py-2 text-right">
-                    <RiskBadge score={inst.avg_risk_score} />
+                    <RiskBadge score={inst.avg_risk_score ?? 0} />
                   </td>
                   <td className="px-4 py-2 text-right tabular-nums text-xs hidden sm:table-cell">
-                    {(inst.direct_award_rate * 100).toFixed(1)}%
+                    {((inst.direct_award_rate ?? 0) * 100).toFixed(1)}%
                   </td>
                 </tr>
               ))}
@@ -455,15 +456,15 @@ function VendorsTable({ vendors }: { vendors: SubnationalVendor[] }) {
             <td className="px-4 py-2 max-w-xs">
               <span className="line-clamp-1 text-xs font-medium">{v.vendor_name}</span>
             </td>
-            <td className="px-4 py-2 text-right tabular-nums text-xs">{v.contract_count.toLocaleString()}</td>
+            <td className="px-4 py-2 text-right tabular-nums text-xs">{(v.contract_count ?? 0).toLocaleString()}</td>
             <td className="px-4 py-2 text-right tabular-nums text-xs hidden sm:table-cell">
-              {v.state_share_pct.toFixed(1)}%
+              {(v.state_share_pct ?? 0).toFixed(1)}%
             </td>
             <td className="px-4 py-2 text-right tabular-nums text-xs hidden md:table-cell">
-              {v.state_concentration_pct.toFixed(1)}%
+              {(v.state_concentration_pct ?? 0).toFixed(1)}%
             </td>
             <td className="px-4 py-2 text-right">
-              <RiskBadge score={v.avg_risk_score} />
+              <RiskBadge score={v.avg_risk_score ?? 0} />
             </td>
             <td className="px-4 py-2 text-center hidden sm:table-cell">
               {v.is_local_dominant && (

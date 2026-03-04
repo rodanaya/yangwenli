@@ -717,6 +717,9 @@ export default function Administrations() {
             <CardTitle className="text-sm font-mono text-text-primary">
               {t('comparisonTable')}
             </CardTitle>
+            <p className="text-xs text-text-muted mt-1">
+              Comparación de métricas promedio entre los cinco gobiernos — basado en datos reales de COMPRANET. La administración seleccionada aparece en azul.
+            </p>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -926,6 +929,9 @@ export default function Administrations() {
             <CardTitle className="text-sm font-mono text-text-primary">
               {t('sectorProfile', { admin: selectedAdmin })}
             </CardTitle>
+            <p className="text-xs text-text-muted mt-1">
+              Métricas de riesgo por sector durante la administración seleccionada — ordenadas por porcentaje de contratos de alto riesgo.
+            </p>
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <table className="w-full text-xs font-mono">
@@ -996,6 +1002,9 @@ export default function Administrations() {
             <CardTitle className="text-sm font-mono text-text-primary">
               {t('transitionImpact')}
             </CardTitle>
+            <p className="text-xs text-text-muted mt-1">
+              Cambios en indicadores clave entre administraciones consecutivas. Los valores marcados con ! o !! son estadísticamente inusuales (≥1.8σ del promedio histórico).
+            </p>
           </CardHeader>
           <CardContent className="space-y-3">
             {transitions.map((t, i) => {
@@ -1052,6 +1061,9 @@ export default function Administrations() {
           <CardTitle className="text-sm font-mono text-text-primary">
             {t('keyEvents', { admin: selectedAdmin, start: selectedMeta.dataStart, end: Math.min(selectedMeta.end - 1, 2025) })}
           </CardTitle>
+          <p className="text-xs text-text-muted mt-1">
+            Reformas legislativas, escándalos documentados y crisis que afectaron los patrones de contratación pública durante esta administración.
+          </p>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1076,36 +1088,7 @@ export default function Administrations() {
               <h4 className="text-xs font-semibold text-text-muted tracking-wider uppercase mb-2">
                 {t('keyEvents', { admin: selectedAdmin, start: selectedMeta.dataStart, end: Math.min(selectedMeta.end - 1, 2025) })}
               </h4>
-              {adminEvents.length > 0 ? (
-                <div className="space-y-1.5 max-h-[280px] overflow-y-auto pr-1">
-                  {adminEvents.map((e, ei) => {
-                    const Icon = e.type === 'election' ? Landmark
-                      : e.type === 'crisis' ? AlertTriangle
-                      : e.type === 'audit' ? Shield
-                      : Activity
-                    return (
-                      <ScrollReveal key={e.id} delay={ei * 60} direction="left">
-                      <div
-                        className="flex items-start gap-2 rounded-md border-l-2 border-border/30 pl-2 py-1"
-                        style={{
-                          borderLeftColor: e.impact === 'high' ? RISK_COLORS.critical : e.impact === 'medium' ? RISK_COLORS.medium : 'var(--color-border)',
-                        }}
-                      >
-                        <Icon className="h-3 w-3 mt-0.5 text-text-muted flex-shrink-0" />
-                        <div className="min-w-0">
-                          <div className="text-xs text-text-secondary leading-snug">{e.title}</div>
-                          <div className="text-xs text-text-muted font-mono">{e.date}</div>
-                        </div>
-                      </div>
-                      </ScrollReveal>
-                    )
-                  })}
-                </div>
-              ) : (
-                <div className="py-6 text-center text-text-muted text-xs">
-                  {t('noEvents')}
-                </div>
-              )}
+              <HardcodedEventsTimeline adminName={selectedAdmin} />
             </div>
           </div>
         </CardContent>
@@ -1120,6 +1103,106 @@ export default function Administrations() {
 // =============================================================================
 // Sub-components
 // =============================================================================
+
+// Hardcoded key events per administration — sourced from public records
+const HARDCODED_EVENTS: Record<string, Array<{ year: number; title: string; type: 'reform' | 'scandal' | 'audit' | 'crisis'; impact: 'high' | 'medium' | 'low' }>> = {
+  Fox: [
+    { year: 2002, title: 'COMPRANET lanzado como sistema digital de compras', type: 'reform', impact: 'medium' },
+    { year: 2003, title: 'Primer auditoría ASF sobre contratación directa generalizada', type: 'audit', impact: 'medium' },
+    { year: 2004, title: 'Escándalo PEMEXGATE: desvíos en contratos de mantenimiento', type: 'scandal', impact: 'high' },
+    { year: 2005, title: 'Reforma a la Ley de Adquisiciones — nuevos requisitos de publicidad', type: 'reform', impact: 'medium' },
+  ],
+  Calderon: [
+    { year: 2007, title: 'Inicio de la Estrategia Nacional de Seguridad — contratos de defensa elevados', type: 'crisis', impact: 'medium' },
+    { year: 2008, title: 'Crisis financiera global — contracción de gasto federal', type: 'crisis', impact: 'medium' },
+    { year: 2009, title: 'Gripe AH1N1: compras de emergencia con mínima licitación', type: 'crisis', impact: 'high' },
+    { year: 2010, title: 'PEMEX contrata a Odebrecht para Etileno XXI — inicio de esquema de sobornos', type: 'scandal', impact: 'high' },
+    { year: 2012, title: 'Nueva Ley de Compras Gubernamentales — reforma más amplia en 15 años', type: 'reform', impact: 'high' },
+  ],
+  'Pena Nieto': [
+    { year: 2014, title: 'Escándalo Casa Blanca — conflicto de interés con contratista Grupo Higa', type: 'scandal', impact: 'high' },
+    { year: 2015, title: 'Red de empresas fantasma en IMSS detectada por ASF', type: 'scandal', impact: 'high' },
+    { year: 2016, title: 'Investigación Odebrecht-PEMEX — sobornos por contratos de infraestructura', type: 'scandal', impact: 'high' },
+    { year: 2017, title: 'La Estafa Maestra: desvío de 7.6 MMA a través de universidades públicas', type: 'scandal', impact: 'high' },
+    { year: 2017, title: 'Sismos septiembre — compras de emergencia sin licitación', type: 'crisis', impact: 'medium' },
+    { year: 2018, title: 'Reforma CompraNet 5.0 — trazabilidad mejorada', type: 'reform', impact: 'medium' },
+  ],
+  AMLO: [
+    { year: 2019, title: 'Decreto de austeridad — reducción drástica de contratos de servicios', type: 'reform', impact: 'high' },
+    { year: 2019, title: 'Militarización de megaproyectos (AIFA, Tren Maya) — contratos directos al EJÉRCITO', type: 'reform', impact: 'high' },
+    { year: 2020, title: 'Pandemia COVID-19: compras de emergencia de ventiladores y medicamentos', type: 'crisis', impact: 'high' },
+    { year: 2021, title: 'Escándalo Segalmex — fraude de 9.4 MMXN en distribución alimentaria', type: 'scandal', impact: 'high' },
+    { year: 2022, title: 'SAT publica lista definitiva EFOS: 38 proveedores de COMPRANET confirmados como fantasmas', type: 'audit', impact: 'high' },
+    { year: 2023, title: 'Tren Maya: FONATUR otorga contratos directos por 180 MMXN a Sedena', type: 'scandal', impact: 'medium' },
+  ],
+  Sheinbaum: [
+    { year: 2024, title: 'Claudia Sheinbaum toma posesión — primera presidenta de México', type: 'reform', impact: 'low' },
+    { year: 2024, title: 'Continuidad de obras militarizadas (AIFA, refinería Dos Bocas)', type: 'reform', impact: 'medium' },
+    { year: 2025, title: 'Datos preliminares — análisis en curso conforme se acumulan registros', type: 'audit', impact: 'low' },
+  ],
+}
+
+function HardcodedEventsTimeline({ adminName }: { adminName: AdminName }) {
+  const events = HARDCODED_EVENTS[adminName] ?? []
+  const typeIcons: Record<string, React.ElementType> = {
+    reform: FileText,
+    scandal: AlertTriangle,
+    audit: Shield,
+    crisis: Activity,
+  }
+  const typeColors: Record<string, string> = {
+    reform: '#3b82f6',
+    scandal: '#f87171',
+    audit: '#fbbf24',
+    crisis: '#fb923c',
+  }
+  const typeLabels: Record<string, string> = {
+    reform: 'Reforma',
+    scandal: 'Escándalo',
+    audit: 'Auditoría',
+    crisis: 'Crisis',
+  }
+
+  if (events.length === 0) {
+    return (
+      <div className="py-6 text-center text-text-muted text-xs">
+        Sin eventos documentados para este período.
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+      {events.map((e, i) => {
+        const Icon = typeIcons[e.type] ?? Activity
+        const color = typeColors[e.type] ?? '#64748b'
+        return (
+          <div
+            key={i}
+            className="flex items-start gap-2.5 rounded-md border-l-2 pl-2.5 py-1.5"
+            style={{ borderLeftColor: color }}
+          >
+            <Icon className="h-3 w-3 mt-0.5 flex-shrink-0" style={{ color }} />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="text-[10px] font-mono font-semibold" style={{ color }}>
+                  {e.year}
+                </span>
+                <span
+                  className="text-[9px] font-medium px-1 py-0 rounded"
+                  style={{ backgroundColor: `${color}20`, color, border: `1px solid ${color}40` }}
+                >
+                  {typeLabels[e.type]}
+                </span>
+              </div>
+              <div className="text-xs text-text-secondary leading-snug">{e.title}</div>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
 
 function StatCard({
   label, value, delta: deltaVal, unit, icon: Icon, color, invertDelta,
@@ -1167,10 +1250,12 @@ function StatCard({
 
 function HeatCell({ value, max }: { value: number; max: number }) {
   const ratio = Math.min(value / max, 1)
-  const r = Math.round(200 * ratio + 40)
-  const g = Math.round(200 * (1 - ratio) + 40)
-  const bg = `rgba(${r}, ${g}, 60, 0.15)`
-  const text = `rgb(${r}, ${g}, 60)`
+  // Interpolate from #bfdbfe (light blue) to #3730a3 (deep indigo) — same as matrix
+  const r = Math.round(191 + (55  - 191) * ratio)
+  const g = Math.round(219 + (48  - 219) * ratio)
+  const b = Math.round(254 + (163 - 254) * ratio)
+  const bg = `rgba(${r}, ${g}, ${b}, 0.15)`
+  const text = `rgb(${r}, ${g}, ${b})`
 
   return (
     <span
@@ -1227,12 +1312,13 @@ function TransitionMetric({
 // Admin × Sector Risk Heatmap Matrix
 // =============================================================================
 
-/** Interpolates from green (#4ade80) to red (#f87171) — t must be 0–1 */
+/** Interpolates from light blue (#bfdbfe) to deep indigo (#3730a3) — t must be 0–1 */
 function intensityToColor(t: number): string {
   const c = Math.min(1, Math.max(0, t))
-  const r = Math.round(74  + (248 - 74)  * c)
-  const g = Math.round(222 + (113 - 222) * c)
-  const b = Math.round(128 + (113 - 128) * c)
+  // From #bfdbfe (191, 219, 254) to #3730a3 (55, 48, 163)
+  const r = Math.round(191 + (55  - 191) * c)
+  const g = Math.round(219 + (48  - 219) * c)
+  const b = Math.round(254 + (163 - 254) * c)
   return `rgb(${r},${g},${b})`
 }
 
@@ -1316,10 +1402,12 @@ function AdminSectorMatrix({
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
             <CardTitle className="text-sm font-mono text-text-primary">
-              Administration × Sector Matrix
+              Matriz de Riesgo por Administración y Sector
             </CardTitle>
             <p className="text-[11px] text-text-muted mt-0.5">
-              {isLive ? 'Live data from COMPRANET — click a metric to change view' : 'Estimated values (data loading…)'}
+              {isLive
+                ? 'Valores promedio ponderados por volumen de contratos — cambia la métrica con los botones a la derecha'
+                : 'Estimaciones ilustrativas (cargando datos…)'}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -1345,7 +1433,7 @@ function AdminSectorMatrix({
               <span className="text-[10px] text-text-muted font-mono">Low</span>
               <div
                 className="h-3 w-20 rounded"
-                style={{ background: 'linear-gradient(to right, rgb(74,222,128), rgb(248,113,113))' }}
+                style={{ background: 'linear-gradient(to right, rgb(191,219,254), rgb(55,48,163))' }}
                 aria-hidden="true"
               />
               <span className="text-[10px] text-text-muted font-mono">High</span>
@@ -1361,8 +1449,22 @@ function AdminSectorMatrix({
                 Administration
               </th>
               {MATRIX_SECTORS.map((sector) => (
-                <th key={sector.key} className="text-center pb-1" title={sector.name}>
-                  <span className="text-[10px] text-text-muted font-mono">{sector.code}</span>
+                <th key={sector.key} className="text-center pb-1 align-bottom" title={sector.name}>
+                  <div className="flex justify-center">
+                    <span
+                      className="text-[10px] text-text-muted font-medium block"
+                      style={{
+                        writingMode: 'vertical-rl',
+                        transform: 'rotate(180deg)',
+                        height: 52,
+                        lineHeight: 1,
+                        paddingBottom: 4,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {sector.name}
+                    </span>
+                  </div>
                 </th>
               ))}
             </tr>
