@@ -15,18 +15,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { cn, formatCompactMXN } from '@/lib/utils'
+import { formatCompactMXN } from '@/lib/utils'
 import { RISK_COLORS } from '@/lib/constants'
 import { subnationalApi } from '@/api/client'
 import type {
   SubnationalStateSummary,
-  SubnationalStateDetail,
   SubnationalVendor,
 } from '@/api/types'
 import {
   ResponsiveContainer,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -39,7 +36,6 @@ import {
   ArrowLeft,
   AlertTriangle,
   Info,
-  TrendingUp,
   Building2,
   Users,
   FileText,
@@ -341,7 +337,7 @@ function StateDetail({ code }: { code: string }) {
                     width={60}
                   />
                   <Tooltip
-                    formatter={(v: number) => [formatCompactMXN(v), 'Value']}
+                    formatter={(v: number | string) => [formatCompactMXN(Number(v)), 'Value']}
                     labelFormatter={(l) => `Year: ${l}`}
                   />
                   <Line
@@ -471,7 +467,7 @@ function VendorsTable({ vendors }: { vendors: SubnationalVendor[] }) {
             </td>
             <td className="px-4 py-2 text-center hidden sm:table-cell">
               {v.is_local_dominant && (
-                <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                <Badge variant="critical" className="text-[10px] px-1.5 py-0">
                   {t('vendors.localDominant')}
                 </Badge>
               )}
