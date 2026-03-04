@@ -1931,97 +1931,87 @@ def get_co_bidding_patterns(
 
     Returns vendor pairs that frequently appear in the same procedures.
     High co-bid rates (>80%) suggest coordinated bidding or related entities.
+    Reads from precomputed co_bidding_stats table (run scripts/precompute_cobidding.py to refresh).
     """
     try:
         with get_db() as conn:
             cursor = conn.cursor()
 
-            # Get vendor procedure counts
+            # Check if precomputed table exists
+            cursor.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='co_bidding_stats'"
+            )
+            if not cursor.fetchone():
+                logger.warning("co_bidding_stats table not found. Run: python -m scripts.precompute_cobidding")
+                return CoBiddingResponse(
+                    total_pairs_analyzed=0,
+                    high_confidence_pairs=0,
+                    potential_collusion_pairs=0,
+                    pairs=[]
+                )
+
+            # Read from precomputed table with filters
             cursor.execute("""
-                SELECT vendor_id, COUNT(DISTINCT procedure_number) as proc_count
-                FROM contracts
-                WHERE procedure_number IS NOT NULL AND procedure_number != ''
-                GROUP BY vendor_id
-                HAVING proc_count >= 5
-            """)
-            vendor_procs = {row['vendor_id']: row['proc_count'] for row in cursor.fetchall()}
+                SELECT vendor_id_a, vendor_id_b, shared_procedures,
+                       co_bid_rate, is_potential_collusion
+                FROM co_bidding_stats
+                WHERE shared_procedures >= ? AND co_bid_rate >= ?
+                ORDER BY shared_procedures DESC
+                LIMIT ?
+            """, (min_co_bids, min_rate, limit))
 
-            # Find co-bidding pairs
-            cursor.execute("""
-                SELECT
-                    c1.vendor_id as v1,
-                    c2.vendor_id as v2,
-                    COUNT(DISTINCT c1.procedure_number) as co_bids
-                FROM contracts c1
-                JOIN contracts c2 ON c1.procedure_number = c2.procedure_number
-                JOIN vendors vn1 ON c1.vendor_id = vn1.id
-                JOIN vendors vn2 ON c2.vendor_id = vn2.id
-                WHERE c1.vendor_id < c2.vendor_id
-                  AND c1.procedure_number IS NOT NULL
-                  AND c1.procedure_number != ''
-                  AND vn1.is_individual = 0
-                  AND vn2.is_individual = 0
-                GROUP BY c1.vendor_id, c2.vendor_id
-                HAVING co_bids >= ?
-                ORDER BY co_bids DESC
-                LIMIT 5000
-            """, (min_co_bids,))
+            rows = cursor.fetchall()
 
-            pairs_raw = cursor.fetchall()
+            # Count totals for response metadata
+            cursor.execute(
+                "SELECT COUNT(*) FROM co_bidding_stats WHERE shared_procedures >= ?",
+                (min_co_bids,)
+            )
+            total_analyzed = cursor.fetchone()[0]
 
-            # Calculate rates and filter
-            high_confidence = []
-            potential_collusion = 0
+            cursor.execute(
+                "SELECT COUNT(*) FROM co_bidding_stats WHERE shared_procedures >= ? AND co_bid_rate >= ?",
+                (min_co_bids, min_rate)
+            )
+            high_confidence_count = cursor.fetchone()[0]
 
-            for row in pairs_raw:
-                v1, v2 = row['v1'], row['v2']
-                co_bids = row['co_bids']
+            cursor.execute(
+                "SELECT COUNT(*) FROM co_bidding_stats WHERE shared_procedures >= ? AND is_potential_collusion = 1",
+                (min_co_bids,)
+            )
+            potential_collusion = cursor.fetchone()[0]
 
-                v1_procs = vendor_procs.get(v1, 0)
-                v2_procs = vendor_procs.get(v2, 0)
-
-                if v1_procs == 0 or v2_procs == 0:
-                    continue
-
-                rate = min(co_bids / v1_procs, co_bids / v2_procs) * 100
-
-                if rate >= min_rate:
-                    high_confidence.append({
-                        'v1': v1, 'v2': v2,
-                        'co_bids': co_bids,
-                        'rate': rate
-                    })
-                    if rate >= 80:
-                        potential_collusion += 1
-
-            # Get vendor names
+            # Get vendor names in batch
             vendor_ids = set()
-            for p in high_confidence[:limit]:
-                vendor_ids.add(p['v1'])
-                vendor_ids.add(p['v2'])
+            for row in rows:
+                vendor_ids.add(row['vendor_id_a'])
+                vendor_ids.add(row['vendor_id_b'])
 
             vendor_names = {}
             if vendor_ids:
                 placeholders = ','.join(['?' for _ in vendor_ids])
                 # Safe: placeholders are '?' joined, vendor_ids are ints from prior DB query
-                cursor.execute(f"SELECT id, name FROM vendors WHERE id IN ({placeholders})", list(vendor_ids))
+                cursor.execute(
+                    f"SELECT id, name FROM vendors WHERE id IN ({placeholders})",
+                    list(vendor_ids)
+                )
                 vendor_names = {row['id']: row['name'] for row in cursor.fetchall()}
 
             pairs = []
-            for p in high_confidence[:limit]:
+            for row in rows:
                 pairs.append(CoBiddingPair(
-                    vendor_1_id=p['v1'],
-                    vendor_1_name=vendor_names.get(p['v1'], f"ID:{p['v1']}"),
-                    vendor_2_id=p['v2'],
-                    vendor_2_name=vendor_names.get(p['v2'], f"ID:{p['v2']}"),
-                    co_bid_count=p['co_bids'],
-                    co_bid_rate=round(p['rate'], 1),
-                    is_potential_collusion=p['rate'] >= 80
+                    vendor_1_id=row['vendor_id_a'],
+                    vendor_1_name=vendor_names.get(row['vendor_id_a'], f"ID:{row['vendor_id_a']}"),
+                    vendor_2_id=row['vendor_id_b'],
+                    vendor_2_name=vendor_names.get(row['vendor_id_b'], f"ID:{row['vendor_id_b']}"),
+                    co_bid_count=row['shared_procedures'],
+                    co_bid_rate=round(row['co_bid_rate'], 1),
+                    is_potential_collusion=bool(row['is_potential_collusion'])
                 ))
 
             return CoBiddingResponse(
-                total_pairs_analyzed=len(pairs_raw),
-                high_confidence_pairs=len(high_confidence),
+                total_pairs_analyzed=total_analyzed,
+                high_confidence_pairs=high_confidence_count,
                 potential_collusion_pairs=potential_collusion,
                 pairs=pairs
             )
