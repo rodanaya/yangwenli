@@ -810,8 +810,8 @@ def list_price_hypotheses(
     sector_id: Optional[int] = Query(None, ge=1, le=12),
     is_reviewed: Optional[bool] = Query(None),
     is_valid: Optional[bool] = Query(None),
-    sort_by: str = Query("confidence"),
-    sort_order: str = Query("desc"),
+    sort_by: str = Query("confidence", pattern="^(confidence|amount|created_at|hypothesis_type)$"),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=100),
 ):
@@ -2056,7 +2056,7 @@ def get_concentration_patterns(
                     FROM contracts
                     WHERE institution_id IS NOT NULL
                       AND amount_mxn > 0
-                      AND amount_mxn < 100000000000
+                      AND amount_mxn < MAX_CONTRACT_VALUE
                     GROUP BY institution_id
                     HAVING total_contracts >= ?
                 ),
@@ -2156,7 +2156,7 @@ def get_year_end_patterns(
             conditions = [
                 "contract_year >= ?", "contract_year <= ?",
                 "contract_month IS NOT NULL",
-                "amount_mxn > 0", "amount_mxn < 100000000000"
+                "amount_mxn > 0", "amount_mxn < MAX_CONTRACT_VALUE"
             ]
             params: List[Any] = [start_year, end_year]
 
@@ -2259,7 +2259,7 @@ def get_investigation_leads(
                 conditions = [
                     "c.risk_score IS NOT NULL",
                     "c.amount_mxn > 1000000",
-                    "c.amount_mxn < 100000000000"
+                    "c.amount_mxn < MAX_CONTRACT_VALUE"
                 ]
                 params: List[Any] = []
 
@@ -2311,7 +2311,7 @@ def get_investigation_leads(
                     "c.is_year_end = 1",
                     "c.risk_score >= 0.3",
                     "c.amount_mxn > 10000000",
-                    "c.amount_mxn < 100000000000"
+                    "c.amount_mxn < MAX_CONTRACT_VALUE"
                 ]
                 params = []
 
@@ -2409,7 +2409,7 @@ def get_institution_period_comparison(
                     FROM contracts
                     WHERE institution_id = ?
                       AND contract_year >= ? AND contract_year <= ?
-                      AND amount_mxn > 0 AND amount_mxn < 100000000000
+                      AND amount_mxn > 0 AND amount_mxn < MAX_CONTRACT_VALUE
                 """, (institution_id, start, end))
                 row = cursor.fetchone()
                 return {
@@ -3769,7 +3769,7 @@ def get_asf_institution_summary():
                 TRIM(LOWER(a.entity_name))                                      AS entity_key,
                 MIN(a.entity_name)                                              AS entity_name,
                 COUNT(*)                                                        AS finding_count,
-                SUM(CASE WHEN a.amount_mxn < 100000000000 THEN a.amount_mxn
+                SUM(CASE WHEN a.amount_mxn < MAX_CONTRACT_VALUE THEN a.amount_mxn
                          ELSE 0 END)                                           AS total_amount_mxn,
                 MIN(a.report_year)                                              AS earliest_year,
                 MAX(a.report_year)                                              AS latest_year,
