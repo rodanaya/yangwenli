@@ -46,6 +46,8 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { NetworkGraphModal } from '@/components/NetworkGraphModal'
+import { motion } from 'framer-motion'
+import { slideUp, staggerContainer, staggerItem } from '@/lib/animations'
 import {
   ResponsiveContainer,
   AreaChart,
@@ -312,9 +314,12 @@ export function InstitutionProfile() {
   return (
     <div className="space-y-5">
       {/* ── HEADER ─────────────────────────────────────────────────────────── */}
-      <div
+      <motion.div
         className="flex items-start justify-between gap-4 rounded-lg border border-border/40 bg-background-card p-4"
         style={{ borderLeftWidth: '4px', borderLeftColor: riskColor }}
+        variants={slideUp}
+        initial="initial"
+        animate="animate"
       >
         <div className="flex items-center gap-3 min-w-0">
           <Link to="/institutions/health">
@@ -389,7 +394,7 @@ export function InstitutionProfile() {
             entityId={institutionId}
           />
         </div>
-      </div>
+      </motion.div>
 
       <NetworkGraphModal
         open={networkOpen}
@@ -452,65 +457,83 @@ export function InstitutionProfile() {
           : 'text-text-muted'
 
         return (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            <KpiChip
-              label="Total Contracts"
-              value={formatNumber(totalContracts)}
-              icon={FileText}
-              iconColor="text-accent"
-              badge={peerPercentiles.has('contract_count')
-                ? <PercentileBadge percentile={peerPercentiles.get('contract_count')!} metric="Contracts" />
-                : undefined}
-            />
-            <KpiChip
-              label="Total Spending"
-              value={formatCompactMXN(totalValue)}
-              sub={formatCompactUSD(totalValue)}
-              icon={DollarSign}
-              iconColor="text-accent"
-              badge={peerPercentiles.has('total_value')
-                ? <PercentileBadge percentile={peerPercentiles.get('total_value')!} metric="Spending" />
-                : undefined}
-            />
-            <KpiChip
-              label="High-Risk %"
-              value={highRiskPct != null ? formatPercentSafe(highRiskPct, false) : '—'}
-              icon={AlertTriangle}
-              iconColor={(highRiskPct ?? 0) > 20 ? 'text-risk-critical' : (highRiskPct ?? 0) > 10 ? 'text-risk-high' : 'text-text-muted'}
-              highlight={(highRiskPct ?? 0) > 20}
-              badge={peerPercentiles.has('high_risk_pct')
-                ? <PercentileBadge percentile={peerPercentiles.get('high_risk_pct')!} metric="High-Risk %" />
-                : undefined}
-            />
-            <KpiChip
-              label="Risk Baseline"
-              value={formatPercentSafe(riskScore, true)}
-              icon={Shield}
-              iconColor={riskColor}
-              style={{ color: riskColor }}
-              badge={peerPercentiles.has('avg_risk_score')
-                ? <PercentileBadge percentile={peerPercentiles.get('avg_risk_score')!} metric="Risk" />
-                : undefined}
-            />
+          <motion.div
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+          >
+            <motion.div variants={staggerItem}>
+              <KpiChip
+                label="Total Contracts"
+                value={formatNumber(totalContracts)}
+                icon={FileText}
+                iconColor="text-accent"
+                badge={peerPercentiles.has('contract_count')
+                  ? <PercentileBadge percentile={peerPercentiles.get('contract_count')!} metric="Contracts" />
+                  : undefined}
+              />
+            </motion.div>
+            <motion.div variants={staggerItem}>
+              <KpiChip
+                label="Total Spending"
+                value={formatCompactMXN(totalValue)}
+                sub={formatCompactUSD(totalValue)}
+                icon={DollarSign}
+                iconColor="text-accent"
+                badge={peerPercentiles.has('total_value')
+                  ? <PercentileBadge percentile={peerPercentiles.get('total_value')!} metric="Spending" />
+                  : undefined}
+              />
+            </motion.div>
+            <motion.div variants={staggerItem}>
+              <KpiChip
+                label="High-Risk %"
+                value={highRiskPct != null ? formatPercentSafe(highRiskPct, false) : '—'}
+                icon={AlertTriangle}
+                iconColor={(highRiskPct ?? 0) > 20 ? 'text-risk-critical' : (highRiskPct ?? 0) > 10 ? 'text-risk-high' : 'text-text-muted'}
+                highlight={(highRiskPct ?? 0) > 20}
+                badge={peerPercentiles.has('high_risk_pct')
+                  ? <PercentileBadge percentile={peerPercentiles.get('high_risk_pct')!} metric="High-Risk %" />
+                  : undefined}
+              />
+            </motion.div>
+            <motion.div variants={staggerItem}>
+              <KpiChip
+                label="Risk Baseline"
+                value={formatPercentSafe(riskScore, true)}
+                icon={Shield}
+                iconColor={riskColor}
+                style={{ color: riskColor }}
+                badge={peerPercentiles.has('avg_risk_score')
+                  ? <PercentileBadge percentile={peerPercentiles.get('avg_risk_score')!} metric="Risk" />
+                  : undefined}
+              />
+            </motion.div>
             {/* Risk rank among all institutions */}
-            <KpiChip
-              label="Risk Rank"
-              value={riskPercentile != null ? `P${riskPercentile}` : peerLoading ? '…' : '—'}
-              sub={riskRankLabel ?? undefined}
-              icon={TrendingUp}
-              iconColor={riskRankColor}
-              style={riskPercentile != null ? { color: `var(--color-${riskPercentile >= 75 ? 'risk-critical' : riskPercentile >= 50 ? 'risk-high' : 'risk-low'})` } : undefined}
-            />
-            <KpiChip
-              label="Unique Vendors"
-              value={formatNumber(vendorCount)}
-              icon={Users}
-              iconColor="text-text-muted"
-              badge={peerPercentiles.has('vendor_count')
-                ? <PercentileBadge percentile={peerPercentiles.get('vendor_count')!} metric="Vendors" />
-                : undefined}
-            />
-          </div>
+            <motion.div variants={staggerItem}>
+              <KpiChip
+                label="Risk Rank"
+                value={riskPercentile != null ? `P${riskPercentile}` : peerLoading ? '…' : '—'}
+                sub={riskRankLabel ?? undefined}
+                icon={TrendingUp}
+                iconColor={riskRankColor}
+                style={riskPercentile != null ? { color: `var(--color-${riskPercentile >= 75 ? 'risk-critical' : riskPercentile >= 50 ? 'risk-high' : 'risk-low'})` } : undefined}
+              />
+            </motion.div>
+            <motion.div variants={staggerItem}>
+              <KpiChip
+                label="Unique Vendors"
+                value={formatNumber(vendorCount)}
+                icon={Users}
+                iconColor="text-text-muted"
+                badge={peerPercentiles.has('vendor_count')
+                  ? <PercentileBadge percentile={peerPercentiles.get('vendor_count')!} metric="Vendors" />
+                  : undefined}
+              />
+            </motion.div>
+          </motion.div>
         )
       })()}
 

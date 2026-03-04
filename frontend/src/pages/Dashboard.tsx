@@ -301,6 +301,12 @@ export function Dashboard() {
     staleTime: 6 * 60 * 60 * 1000,
   })
 
+  const { data: seasonalRiskData, isLoading: seasonalLoading } = useQuery({
+    queryKey: ['analysis', 'seasonal-risk', 12],
+    queryFn: () => analysisApi.getSeasonalRisk(12),
+    staleTime: 30 * 60 * 1000,
+  })
+
   const overview = fastDashboard?.overview
   const sectors = fastDashboard?.sectors
   const riskDist = fastDashboard?.risk_distribution
@@ -1255,6 +1261,29 @@ export function Dashboard() {
       </Card>
 
       {/* ================================================================ */}
+      {/* YEAR-END RISK SPIKE — Seasonal risk premium by sector          */}
+      {/* ================================================================ */}
+      <Card className="border-border/40">
+        <CardContent className="py-4 px-5">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="text-base font-bold text-text-primary">Year-End Risk Spike</h2>
+              <p className="text-xs text-text-muted mt-0.5">December vs. rest of year, by sector</p>
+            </div>
+          </div>
+          {seasonalLoading ? (
+            <div className="space-y-2">
+              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-6 w-full" />)}
+            </div>
+          ) : !seasonalRiskData || seasonalRiskData.data.filter(d => d.risk_premium_pct > 0).length === 0 ? (
+            <p className="text-xs text-text-muted py-4 text-center">No seasonal risk data available</p>
+          ) : (
+            <YearEndRiskSpikeChart data={seasonalRiskData.data} />
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ================================================================ */}
       {/* GROUND TRUTH — Validated against real corruption */}
       {/* ================================================================ */}
       <Card className="border-border/40">
@@ -1457,6 +1486,91 @@ export const _StatCard = memo(function _StatCard({ loading, label, value, detail
 // RISK DISTRIBUTION BAR — Full-width stacked bar with labels
 // ============================================================================
 
+
+// ============================================================================
+// YEAR-END RISK SPIKE CHART — Horizontal bar chart showing December risk premium
+// ============================================================================
+
+interface SeasonalRiskItemDash {
+  sector_id: number
+  sector_name: string
+  month_risk: number
+  other_risk: number
+  risk_premium_pct: number
+  month_value: number
+  month_count: number
+  other_count: number
+}
+
+const YearEndRiskSpikeChart = memo(function YearEndRiskSpikeChart({
+  data,
+}: {
+  data: SeasonalRiskItemDash[]
+}) {
+  const chartData = data
+    .filter((d) => d.risk_premium_pct > 0)
+    .sort((a, b) => b.risk_premium_pct - a.risk_premium_pct)
+    .slice(0, 8)
+    .map((d) => ({
+      ...d,
+      fill: (SECTOR_COLORS as Record<string, string>)[d.sector_name] ?? '#64748b',
+    }))
+
+  return (
+    <ResponsiveContainer width="100%" height={chartData.length * 36 + 20}>
+      <BarChart
+        data={chartData}
+        layout="vertical"
+        margin={{ top: 0, right: 48, bottom: 0, left: 90 }}
+      >
+        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#1e293b" />
+        <XAxis
+          type="number"
+          tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }}
+          axisLine={false}
+          tickLine={false}
+          tickFormatter={(v: number) => `+${v.toFixed(0)}%`}
+        />
+        <YAxis
+          type="category"
+          dataKey="sector_name"
+          tick={{ fontSize: 11, fill: 'var(--color-text-secondary)' }}
+          axisLine={false}
+          tickLine={false}
+          width={88}
+        />
+        <RechartsTooltip
+          cursor={{ fill: '#ffffff05' }}
+          content={({ active, payload }) => {
+            if (!active || !payload?.[0]) return null
+            const d = payload[0].payload as SeasonalRiskItemDash & { fill: string }
+            return (
+              <div className="rounded-lg border border-border bg-background-card p-3 shadow-lg text-xs space-y-1">
+                <p className="font-semibold text-text-primary capitalize">{d.sector_name}</p>
+                <p className="text-text-muted">
+                  December risk is{' '}
+                  <span className="text-risk-high font-semibold">+{d.risk_premium_pct.toFixed(1)}%</span>{' '}
+                  higher than rest of year
+                </p>
+                <div className="grid grid-cols-2 gap-x-3 text-text-muted mt-1">
+                  <span>Dec avg risk</span>
+                  <span className="text-text-primary tabular-nums">{(d.month_risk * 100).toFixed(1)}%</span>
+                  <span>Other months</span>
+                  <span className="text-text-primary tabular-nums">{(d.other_risk * 100).toFixed(1)}%</span>
+                </div>
+              </div>
+            )
+          }}
+        />
+        <Bar dataKey="risk_premium_pct" radius={[0, 4, 4, 0]} maxBarSize={22}>
+          {chartData.map((entry, index) => (
+            <Cell key={index} fill={entry.fill} fillOpacity={0.8} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  )
+})
 
 // ============================================================================
 // RISK DONUT CHART — Small PieChart showing 4 risk levels

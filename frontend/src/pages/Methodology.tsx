@@ -1,4 +1,6 @@
 import { useState, memo } from 'react'
+import { motion } from 'framer-motion'
+import { staggerContainer, staggerItem } from '@/lib/animations'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -338,29 +340,43 @@ export function Methodology() {
       </div>
 
       {/* Hero KPI badges */}
-      <div className="flex flex-wrap gap-2">
+      <motion.div
+        className="flex flex-wrap gap-2"
+        variants={staggerContainer}
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true, margin: '-50px' }}
+      >
         {[
           { label: '3.1M Contracts', variant: 'default' as const },
           { label: 'AUC 0.9572', variant: 'default' as const },
           { label: '22 Cases Validated', variant: 'default' as const },
           { label: '12 Sectors', variant: 'default' as const },
         ].map((kpi) => (
-          <Badge
-            key={kpi.label}
-            variant={kpi.variant}
-            className="text-xs px-3 py-1 bg-accent/10 text-accent border-accent/20"
-          >
-            {kpi.label}
-          </Badge>
+          <motion.div key={kpi.label} variants={staggerItem}>
+            <Badge
+              variant={kpi.variant}
+              className="text-xs px-3 py-1 bg-accent/10 text-accent border-accent/20"
+            >
+              {kpi.label}
+            </Badge>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Layout: TOC sidebar + content */}
       <div className="grid gap-5 lg:grid-cols-[1fr_200px]">
         {/* Main Content */}
-        <div className="space-y-4">
+        <motion.div
+          className="space-y-4"
+          variants={staggerContainer}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, margin: '-50px' }}
+        >
 
           {/* Section 2: Model Overview */}
+          <motion.div variants={staggerItem}>
           <CollapsibleSection id="overview" title="Model Overview (v5.1)" icon={Shield}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
@@ -440,8 +456,10 @@ export function Methodology() {
               </p>
             </div>
           </CollapsibleSection>
+          </motion.div>
 
           {/* Section 3: The 12 Features */}
+          <motion.div variants={staggerItem}>
           <CollapsibleSection id="features" title="The 16 Features" icon={BarChart3}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
@@ -475,8 +493,10 @@ export function Methodology() {
               </p>
             </div>
           </CollapsibleSection>
+          </motion.div>
 
           {/* Section 3b: Risk Factor Evidence Base */}
+          <motion.div variants={staggerItem}>
           <CollapsibleSection id="risk-evidence" title="Risk Factor Evidence Base" icon={FlaskConical} defaultOpen={false}>
             <div className="space-y-3">
               <p className="text-xs text-text-secondary leading-relaxed">
@@ -487,8 +507,10 @@ export function Methodology() {
               <RiskFactorTable />
             </div>
           </CollapsibleSection>
+          </motion.div>
 
           {/* Section 4: Key Findings */}
+          <motion.div variants={staggerItem}>
           <CollapsibleSection id="findings" title="Key Findings" icon={Brain}>
             <div className="space-y-4">
 
@@ -568,8 +590,10 @@ export function Methodology() {
               </div>
             </div>
           </CollapsibleSection>
+          </motion.div>
 
           {/* Section 5: Ground Truth Validation */}
+          <motion.div variants={staggerItem}>
           <CollapsibleSection id="validation" title="Ground Truth Validation" icon={Target}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
@@ -640,8 +664,10 @@ export function Methodology() {
               </div>
             </div>
           </CollapsibleSection>
+          </motion.div>
 
           {/* Section 6: Statistical Methods */}
+          <motion.div variants={staggerItem}>
           <CollapsibleSection id="methods" title="Statistical Methods" icon={Beaker}>
             <div className="space-y-4">
 
@@ -720,8 +746,10 @@ export function Methodology() {
               </div>
             </div>
           </CollapsibleSection>
+          </motion.div>
 
           {/* Section 7: Limitations */}
+          <motion.div variants={staggerItem}>
           <CollapsibleSection id="limitations" title="Limitations" icon={AlertTriangle}>
             <div className="space-y-3">
               {[
@@ -760,8 +788,10 @@ export function Methodology() {
               ))}
             </div>
           </CollapsibleSection>
+          </motion.div>
 
           {/* Section 8: Previous Model (v3.3) */}
+          <motion.div variants={staggerItem}>
           <CollapsibleSection id="v33" title="Previous Model (v3.3)" icon={History} defaultOpen={false}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
@@ -814,8 +844,10 @@ export function Methodology() {
               </div>
             </div>
           </CollapsibleSection>
+          </motion.div>
 
           {/* Section 9: Data Sources */}
+          <motion.div variants={staggerItem}>
           <CollapsibleSection id="data-sources" title="Data Sources" icon={Database}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
@@ -889,8 +921,10 @@ export function Methodology() {
               </div>
             </div>
           </CollapsibleSection>
+          </motion.div>
 
           {/* Section 10: References */}
+          <motion.div variants={staggerItem}>
           <CollapsibleSection id="references" title="References" icon={FileText} defaultOpen={false}>
             <div className="space-y-2">
               {REFERENCES.map((ref, i) => (
@@ -913,8 +947,9 @@ export function Methodology() {
               </p>
             </div>
           </CollapsibleSection>
+          </motion.div>
 
-        </div>
+        </motion.div>
 
         {/* Sidebar: Table of Contents */}
         <TableOfContents />

@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -10,6 +11,7 @@ import { AlertCircle, ArrowLeft, ExternalLink, CheckCircle, Activity, TrendingUp
 import { cn } from '@/lib/utils'
 import { RISK_COLORS, getRiskLevelFromScore, SECTORS } from '@/lib/constants'
 import type { FraudType, LinkedVendor } from '@/api/types'
+import { slideUp, staggerContainer, staggerItem } from '@/lib/animations'
 
 // ── Severity colours ──────────────────────────────────────────────────────────
 const SEVERITY_COLORS: Record<number, string> = {
@@ -361,7 +363,7 @@ export default function CaseDetail() {
       </button>
 
       {/* ── Title block ─────────────────────────────────────────────────────── */}
-      <div className="mb-6">
+      <motion.div className="mb-6" variants={slideUp} initial="initial" animate="animate">
         <div className="flex items-center gap-2 flex-wrap mb-2">
           {/* Severity */}
           <span className={cn('text-xs font-bold px-2.5 py-1 rounded', SEVERITY_COLORS[data.severity] ?? SEVERITY_COLORS[2])}>
@@ -418,7 +420,7 @@ export default function CaseDetail() {
             <span>{sectorLabels.join(', ')}</span>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* ── Summary ─────────────────────────────────────────────────────────── */}
       <div className="bg-card border border-border/60 rounded-lg p-4 mb-5">
@@ -429,14 +431,22 @@ export default function CaseDetail() {
       {(data.amount_mxn_low || data.amount_mxn_high || hasRealVendorScores) && (
         <section className="mb-6">
           <h2 className="text-sm font-bold font-mono text-text-primary mb-3">Impact Metrics</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <motion.div
+            className="grid grid-cols-2 sm:grid-cols-3 gap-3"
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+          >
             {/* Total value */}
             {(data.amount_mxn_low || data.amount_mxn_high) && (
-              <div className={cn(
-                'rounded-lg border p-3 flex flex-col gap-1',
-                fraudColors.border,
-                fraudColors.bg,
-              )}>
+              <motion.div
+                variants={staggerItem}
+                className={cn(
+                  'rounded-lg border p-3 flex flex-col gap-1',
+                  fraudColors.border,
+                  fraudColors.bg,
+                )}
+              >
                 <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
                   Estimated Value
                 </div>
@@ -448,15 +458,18 @@ export default function CaseDetail() {
                     up to {formatMXN(data.amount_mxn_high)}
                   </div>
                 )}
-              </div>
+              </motion.div>
             )}
 
             {/* RUBLI Detection Score — real data when GT-linked, severity-based otherwise */}
-            <div className={cn(
-              'rounded-lg border p-3 flex flex-col gap-1.5',
-              fraudColors.border,
-              fraudColors.bg,
-            )}>
+            <motion.div
+              variants={staggerItem}
+              className={cn(
+                'rounded-lg border p-3 flex flex-col gap-1.5',
+                fraudColors.border,
+                fraudColors.bg,
+              )}
+            >
               <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted flex items-center gap-1">
                 <TrendingUp className="h-3 w-3" />
                 RUBLI Detection Score
@@ -477,15 +490,18 @@ export default function CaseDetail() {
                   <div className="text-[11px] text-text-muted">Based on case severity</div>
                 </>
               )}
-            </div>
+            </motion.div>
 
             {/* Contracts affected */}
             {(totalContractsLinked > 0 || data.amount_mxn_low) && (
-              <div className={cn(
-                'rounded-lg border p-3 flex flex-col gap-1',
-                fraudColors.border,
-                fraudColors.bg,
-              )}>
+              <motion.div
+                variants={staggerItem}
+                className={cn(
+                  'rounded-lg border p-3 flex flex-col gap-1',
+                  fraudColors.border,
+                  fraudColors.bg,
+                )}
+              >
                 <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted flex items-center gap-1">
                   <Users className="h-3 w-3" />
                   Contracts Affected
@@ -498,15 +514,18 @@ export default function CaseDetail() {
                     {linkedVendors.length} vendor{linkedVendors.length !== 1 ? 's' : ''} matched in COMPRANET
                   </div>
                 )}
-              </div>
+              </motion.div>
             )}
 
             {/* Severity level as visual KPI */}
-            <div className={cn(
-              'rounded-lg border p-3 flex flex-col gap-1',
-              fraudColors.border,
-              fraudColors.bg,
-            )}>
+            <motion.div
+              variants={staggerItem}
+              className={cn(
+                'rounded-lg border p-3 flex flex-col gap-1',
+                fraudColors.border,
+                fraudColors.bg,
+              )}
+            >
               <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
                 Severity Level
               </div>
@@ -526,14 +545,17 @@ export default function CaseDetail() {
                   />
                 ))}
               </div>
-            </div>
+            </motion.div>
 
             {/* Legal status KPI */}
-            <div className={cn(
-              'rounded-lg border p-3 flex flex-col gap-1',
-              fraudColors.border,
-              fraudColors.bg,
-            )}>
+            <motion.div
+              variants={staggerItem}
+              className={cn(
+                'rounded-lg border p-3 flex flex-col gap-1',
+                fraudColors.border,
+                fraudColors.bg,
+              )}
+            >
               <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
                 Legal Outcome
               </div>
@@ -547,15 +569,18 @@ export default function CaseDetail() {
                  data.legal_status === 'investigation' ? 'Under investigation' :
                  'Status unresolved'}
               </div>
-            </div>
+            </motion.div>
 
             {/* Discovery year KPI */}
             {data.discovery_year && (
-              <div className={cn(
-                'rounded-lg border p-3 flex flex-col gap-1',
-                fraudColors.border,
-                fraudColors.bg,
-              )}>
+              <motion.div
+                variants={staggerItem}
+                className={cn(
+                  'rounded-lg border p-3 flex flex-col gap-1',
+                  fraudColors.border,
+                  fraudColors.bg,
+                )}
+              >
                 <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
                   Discovered
                 </div>
@@ -567,15 +592,18 @@ export default function CaseDetail() {
                     {data.discovery_year - data.contract_year_start}yr after contracts started
                   </div>
                 )}
-              </div>
+              </motion.div>
             )}
 
             {/* COMPRANET visibility */}
-            <div className={cn(
-              'rounded-lg border p-3 flex flex-col gap-1',
-              fraudColors.border,
-              fraudColors.bg,
-            )}>
+            <motion.div
+              variants={staggerItem}
+              className={cn(
+                'rounded-lg border p-3 flex flex-col gap-1',
+                fraudColors.border,
+                fraudColors.bg,
+              )}
+            >
               <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
                 COMPRANET Visibility
               </div>
@@ -592,8 +620,8 @@ export default function CaseDetail() {
                  data.compranet_visibility === 'partial' ? 'Partially visible' :
                  'Not visible in procurement records'}
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </section>
       )}
 

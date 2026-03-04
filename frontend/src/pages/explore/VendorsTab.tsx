@@ -5,7 +5,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { useSearchParams, Link } from 'react-router-dom'
+import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
@@ -17,7 +17,8 @@ import {
   getRiskLevel,
 } from '@/lib/utils'
 import { RISK_COLORS, SECTORS } from '@/lib/constants'
-import { vendorApi } from '@/api/client'
+import { vendorApi, analysisApi } from '@/api/client'
+import type { FlashVendorItem } from '@/api/client'
 import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 import { usePrefetchOnHover } from '@/hooks/usePrefetchOnHover'
 import type { VendorFilterParams, VendorListItem } from '@/api/types'
@@ -39,9 +40,20 @@ import {
   Zap,
   Target,
   X,
+  Radar,
 } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 import { StatPill, MiniBar } from './shared'
+import {
+  ScatterChart,
+  Scatter,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  Cell,
+} from 'recharts'
 
 // =============================================================================
 // Column and Preset Configuration
@@ -543,6 +555,243 @@ export default function VendorsTab() {
               <ChevronRight className="h-3.5 w-3.5" />
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* Flash Vendor Radar — collapsible section at bottom */}
+      <FlashVendorRadar />
+    </div>
+  )
+}
+
+// =============================================================================
+// Flash Vendor Radar
+// =============================================================================
+
+function FlashVendorRadar() {
+  const navigate = useNavigate()
+  const [showAll, setShowAll] = useState(false)
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['flash-vendors'],
+    queryFn: () => analysisApi.getFlashVendors({ max_active_years: 3, min_value: 500_000_000, limit: 50 }),
+    staleTime: 15 * 60 * 1000,
+  })
+
+  const [isOpen, setIsOpen] = useState(false)
+
+  const allDots = data?.data ?? []
+  const visibleDots = showAll ? allDots : allDots.slice(0, 30)
+
+  // Dot radius: proportional to contract_count, clamped 4-12
+  function dotRadius(count: number): number {
+    if (!allDots.length) return 6
+    const max = Math.max(...allDots.map((d) => d.contract_count))
+    const ratio = max > 0 ? count / max : 0.5
+    return Math.round(4 + ratio * 8)
+  }
+
+  const CustomDot = (props: {
+    cx?: number
+    cy?: number
+    payload?: FlashVendorItem
+  }) => {
+    const { cx = 0, cy = 0, payload } = props
+    if (!payload) return null
+    const level = getRiskLevel(payload.avg_risk_score)
+    const color = RISK_COLORS[level]
+    const r = dotRadius(payload.contract_count)
+    return (
+      <circle
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill={color}
+        fillOpacity={0.75}
+        stroke={color}
+        strokeWidth={1}
+        style={{ cursor: 'pointer' }}
+        onClick={() => navigate(`/vendors/${payload.vendor_id}`)}
+      />
+    )
+  }
+
+  const CustomTooltipContent = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: FlashVendorItem }> }) => {
+    if (!active || !payload?.length) return null
+    const d = payload[0].payload
+    const level = getRiskLevel(d.avg_risk_score)
+    const color = RISK_COLORS[level]
+    return (
+      <div className="bg-background-card border border-border rounded-lg p-3 shadow-lg text-xs max-w-[220px]">
+        <p className="font-semibold text-text-primary truncate mb-1">{toTitleCase(d.vendor_name)}</p>
+        <div className="space-y-0.5 text-text-muted">
+          <p>Active years: <span className="text-text-primary">{d.active_years}</span></p>
+          <p>Value: <span className="text-text-primary">{formatCompactMXN(d.total_value)}</span></p>
+          <p>Contracts: <span className="text-text-primary">{formatNumber(d.contract_count)}</span></p>
+          <p>
+            Avg risk:{' '}
+            <span style={{ color }}>{(d.avg_risk_score * 100).toFixed(0)}%</span>
+          </p>
+          {d.primary_institution && (
+            <p className="truncate">Institution: <span className="text-text-primary">{d.primary_institution}</span></p>
+          )}
+          {d.is_currently_active && (
+            <p className="text-red-400 font-medium">Still active</p>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-6 border border-border rounded-lg overflow-hidden">
+      {/* Collapsible header */}
+      <button
+        className="w-full flex items-center justify-between px-4 py-3 bg-background-elevated/40 hover:bg-background-elevated/60 transition-colors text-left"
+        onClick={() => setIsOpen((v) => !v)}
+        aria-expanded={isOpen}
+        aria-controls="flash-vendor-radar-content"
+      >
+        <div className="flex items-center gap-2">
+          <Radar className="h-4 w-4 text-accent" aria-hidden="true" />
+          <span className="text-sm font-semibold text-text-primary">Flash Vendors — Short-Lived, High-Value</span>
+          {data?.total != null && (
+            <span className="text-xs text-text-muted">({data.total} vendors)</span>
+          )}
+        </div>
+        {isOpen
+          ? <ChevronUp className="h-4 w-4 text-text-muted" />
+          : <ChevronDown className="h-4 w-4 text-text-muted" />}
+      </button>
+
+      {isOpen && (
+        <div id="flash-vendor-radar-content" className="p-4 space-y-3">
+          <p className="text-xs text-text-muted">
+            Vendors active for 3 years or fewer with total contract value over 500M MXN.
+            Dot size = contract count. Click any dot to view vendor profile.
+          </p>
+
+          {isLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-[280px] w-full" />
+            </div>
+          ) : error ? (
+            <div className="py-8 text-center">
+              <AlertCircle className="h-8 w-8 text-risk-high mx-auto mb-2" />
+              <p className="text-xs text-text-muted">Failed to load flash vendor data</p>
+            </div>
+          ) : !allDots.length ? (
+            <div className="py-8 text-center">
+              <Radar className="h-8 w-8 text-text-muted mx-auto mb-2 opacity-40" aria-hidden="true" />
+              <p className="text-xs text-text-muted">No flash vendors found with current thresholds</p>
+            </div>
+          ) : (
+            <>
+              {/* Legend */}
+              <div className="flex items-center gap-4">
+                {(['critical', 'high', 'medium', 'low'] as const).map((level) => (
+                  <div key={level} className="flex items-center gap-1.5">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: RISK_COLORS[level] }}
+                      aria-hidden="true"
+                    />
+                    <span className="text-xs text-text-muted capitalize">{level}</span>
+                  </div>
+                ))}
+              </div>
+
+              <ResponsiveContainer width="100%" height={280}>
+                <ScatterChart margin={{ top: 10, right: 20, bottom: 20, left: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, #334155)" strokeOpacity={0.4} />
+                  <XAxis
+                    type="number"
+                    dataKey="active_years"
+                    name="Active Years"
+                    domain={[0, 'dataMax']}
+                    label={{ value: 'Active Years', position: 'insideBottom', offset: -10, fontSize: 11, fill: 'var(--color-text-muted)' }}
+                    tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }}
+                    tickCount={4}
+                    aria-label="Active years axis"
+                  />
+                  <YAxis
+                    type="number"
+                    dataKey="total_value"
+                    name="Total Value"
+                    tickFormatter={(v: number) => `${(v / 1_000_000_000).toFixed(0)}B`}
+                    label={{ value: 'Value (MXN B)', angle: -90, position: 'insideLeft', offset: 15, fontSize: 11, fill: 'var(--color-text-muted)' }}
+                    tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }}
+                    aria-label="Total value axis in billions MXN"
+                  />
+                  <RechartsTooltip content={<CustomTooltipContent />} />
+                  <Scatter data={visibleDots} shape={<CustomDot />}>
+                    {visibleDots.map((entry) => (
+                      <Cell
+                        key={entry.vendor_id}
+                        fill={RISK_COLORS[getRiskLevel(entry.avg_risk_score)]}
+                      />
+                    ))}
+                  </Scatter>
+                </ScatterChart>
+              </ResponsiveContainer>
+
+              {/* Active badge legend */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium">
+                  Active
+                </span>
+                <span className="text-xs text-text-muted">= vendor still active today</span>
+                <span className="text-xs text-text-muted ml-2">({allDots.filter((d) => d.is_currently_active).length} active)</span>
+              </div>
+
+              {/* Active vendors list (below scatter) */}
+              {allDots.filter((d) => d.is_currently_active).length > 0 && (
+                <div className="rounded-md border border-red-500/20 bg-red-500/5 p-3">
+                  <p className="text-xs font-semibold text-red-400 mb-2">Currently Active Flash Vendors</p>
+                  <div className="space-y-1">
+                    {allDots
+                      .filter((d) => d.is_currently_active)
+                      .slice(0, 5)
+                      .map((d) => {
+                        const level = getRiskLevel(d.avg_risk_score)
+                        return (
+                          <div key={d.vendor_id} className="flex items-center justify-between gap-2">
+                            <Link
+                              to={`/vendors/${d.vendor_id}`}
+                              className="text-xs text-text-primary hover:text-accent truncate max-w-[260px]"
+                            >
+                              {toTitleCase(d.vendor_name)}
+                            </Link>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-xs tabular-nums text-text-muted">{formatCompactMXN(d.total_value)}</span>
+                              <span
+                                className="text-xs font-semibold"
+                                style={{ color: RISK_COLORS[level] }}
+                              >
+                                {(d.avg_risk_score * 100).toFixed(0)}%
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                  </div>
+                </div>
+              )}
+
+              {/* Show more */}
+              {allDots.length > 30 && (
+                <div className="text-center">
+                  <button
+                    onClick={() => setShowAll((v) => !v)}
+                    className="text-xs text-accent hover:underline"
+                  >
+                    {showAll ? 'Show fewer' : `Show all ${allDots.length} vendors`}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
     </div>

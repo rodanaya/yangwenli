@@ -1,5 +1,6 @@
 import { type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { motion } from 'framer-motion'
 
 interface StatCardProps {
   title: string
@@ -23,13 +24,15 @@ export function StatCard({
   onClick,
 }: StatCardProps) {
   return (
-    <div
+    <motion.div
       className={cn(
         'rounded-xl border border-border/30 bg-card p-4 transition-all duration-200',
         onClick && 'cursor-pointer hover:border-border/60 hover:bg-white/[0.02]',
         className
       )}
       onClick={onClick}
+      whileHover={{ y: -2, transition: { duration: 0.15 } }}
+      whileTap={{ scale: 0.98 }}
     >
       <div className="flex items-start justify-between mb-3">
         <span className="text-xs text-text-muted uppercase tracking-wider">
@@ -57,6 +60,6 @@ export function StatCard({
           {trend.label}
         </div>
       )}
-    </div>
+    </motion.div>
   )
 }

@@ -1,4 +1,6 @@
 import { memo } from 'react'
+import { motion } from 'framer-motion'
+import { staggerContainer, staggerItem, fadeIn } from '@/lib/animations'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -437,7 +439,12 @@ export default function Limitations() {
   return (
     <div className="space-y-6 max-w-4xl">
       {/* Header */}
-      <div>
+      <motion.div
+        variants={fadeIn}
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true, margin: '-50px' }}
+      >
         <div className="flex items-center gap-2 mb-1">
           <AlertTriangle className="h-4.5 w-4.5 text-risk-high" />
           <h2 className="text-lg font-bold tracking-tight">{t('pageTitle')}</h2>
@@ -445,7 +452,7 @@ export default function Limitations() {
         <p className="text-xs text-text-muted">
           {t('pageDescription')}
         </p>
-      </div>
+      </motion.div>
 
       {/* Quick-nav chips */}
       <div className="flex items-center gap-1.5 flex-wrap">
@@ -509,11 +516,23 @@ export default function Limitations() {
       </Card>
 
       {/* Limitation cards */}
-      <div className="space-y-4">
+      <motion.div
+        className="space-y-4"
+        variants={staggerContainer}
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true, margin: '-50px' }}
+      >
         {LIMITATIONS.map((lim) => (
-          <LimitationCard key={lim.id} lim={lim} />
+          <motion.div
+            key={lim.id}
+            variants={staggerItem}
+            whileHover={{ x: 4 }}
+          >
+            <LimitationCard lim={lim} />
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Footer disclaimer */}
       <div className="p-4 rounded-lg border border-border/50 bg-background-card/50">

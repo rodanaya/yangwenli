@@ -7,10 +7,13 @@
  */
 
 import { useMemo, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
+import { staggerContainer, staggerItem, slideUp, fadeIn } from '@/lib/animations'
 import { useTranslation, Trans } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { SectionDescription } from '@/components/SectionDescription'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { TableExportButton } from '@/components/TableExportButton'
@@ -46,6 +49,9 @@ import {
   Cell,
   ReferenceLine,
   ErrorBar,
+  LineChart,
+  Line,
+  Legend,
 } from '@/components/charts'
 
 // ============================================================================
@@ -396,6 +402,34 @@ export default function ModelTransparency() {
   })
 
   // ------------------------------------------------------------------
+  // Procedure Risk Paradox
+  // ------------------------------------------------------------------
+  const SECTOR_OPTIONS = [
+    { id: undefined, label: 'All Sectors' },
+    { id: 1, label: 'Salud' },
+    { id: 2, label: 'Educacion' },
+    { id: 3, label: 'Infraestructura' },
+    { id: 4, label: 'Energia' },
+    { id: 5, label: 'Defensa' },
+    { id: 6, label: 'Tecnologia' },
+    { id: 7, label: 'Hacienda' },
+    { id: 8, label: 'Gobernacion' },
+    { id: 9, label: 'Agricultura' },
+    { id: 10, label: 'Ambiente' },
+    { id: 11, label: 'Trabajo' },
+    { id: 12, label: 'Otros' },
+  ] as const
+
+  const [procedureSectorId, setProcedureSectorId] = useState<number | undefined>(5) // default: Defensa
+  const procedureChartRef = useRef<HTMLDivElement>(null)
+
+  const { data: procedureRiskData, isLoading: procedureLoading, isError: procedureError } = useQuery({
+    queryKey: ['analysis', 'procedure-risk-comparison', procedureSectorId],
+    queryFn: () => analysisApi.getProcedureRiskComparison({ sector_id: procedureSectorId }),
+    staleTime: 30 * 60 * 1000,
+  })
+
+  // ------------------------------------------------------------------
   // L2: Prepare coefficient chart data (sorted by beta descending)
   // Prefer live API data; fallback to hardcoded
   // ------------------------------------------------------------------
@@ -501,37 +535,51 @@ export default function ModelTransparency() {
       {/* ================================================================ */}
       {/* L1: Key Metrics (4 gauge-style cards)                            */}
       {/* ================================================================ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricGauge
-          label={t('modelTransparency.metrics.testAuc')}
-          value={VALIDATION_METRICS.auc_roc.toFixed(4)}
-          subtitle={t('modelTransparency.metrics.trainAucDetail', { value: VALIDATION_METRICS.auc_train.toFixed(4) })}
-          icon={Target}
-          color="#58a6ff"
-        />
-        <MetricGauge
-          label={t('modelTransparency.metrics.detectionRate')}
-          value={`${(VALIDATION_METRICS.detection_rate_medium_plus * 100).toFixed(1)}%`}
-          subtitle={t('modelTransparency.metrics.detectionDetail')}
-          icon={Eye}
-          color="#4ade80"
-        />
-        <MetricGauge
-          label={t('modelTransparency.metrics.highRiskRate')}
-          value={`${(VALIDATION_METRICS.high_risk_rate * 100).toFixed(1)}%`}
-          subtitle={t('modelTransparency.metrics.highRiskDetail')}
-          icon={Activity}
-          color="#fbbf24"
-        />
-        <MetricGauge
-          label={t('modelTransparency.metrics.groundTruth')}
-          value={`${VALIDATION_METRICS.ground_truth_cases}`}
-          format={t('modelTransparency.metrics.groundTruthFormat', { vendors: VALIDATION_METRICS.ground_truth_vendors })}
-          subtitle={t('modelTransparency.metrics.groundTruthDetail', { contracts: formatNumber(VALIDATION_METRICS.ground_truth_contracts) })}
-          icon={Users}
-          color="#f87171"
-        />
-      </div>
+      <motion.div
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+        variants={staggerContainer}
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true, margin: '-50px' }}
+      >
+        <motion.div variants={staggerItem}>
+          <MetricGauge
+            label={t('modelTransparency.metrics.testAuc')}
+            value={VALIDATION_METRICS.auc_roc.toFixed(4)}
+            subtitle={t('modelTransparency.metrics.trainAucDetail', { value: VALIDATION_METRICS.auc_train.toFixed(4) })}
+            icon={Target}
+            color="#58a6ff"
+          />
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <MetricGauge
+            label={t('modelTransparency.metrics.detectionRate')}
+            value={`${(VALIDATION_METRICS.detection_rate_medium_plus * 100).toFixed(1)}%`}
+            subtitle={t('modelTransparency.metrics.detectionDetail')}
+            icon={Eye}
+            color="#4ade80"
+          />
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <MetricGauge
+            label={t('modelTransparency.metrics.highRiskRate')}
+            value={`${(VALIDATION_METRICS.high_risk_rate * 100).toFixed(1)}%`}
+            subtitle={t('modelTransparency.metrics.highRiskDetail')}
+            icon={Activity}
+            color="#fbbf24"
+          />
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <MetricGauge
+            label={t('modelTransparency.metrics.groundTruth')}
+            value={`${VALIDATION_METRICS.ground_truth_cases}`}
+            format={t('modelTransparency.metrics.groundTruthFormat', { vendors: VALIDATION_METRICS.ground_truth_vendors })}
+            subtitle={t('modelTransparency.metrics.groundTruthDetail', { contracts: formatNumber(VALIDATION_METRICS.ground_truth_contracts) })}
+            icon={Users}
+            color="#f87171"
+          />
+        </motion.div>
+      </motion.div>
 
       {/* ================================================================ */}
       {/* L2: Coefficient Chart                                            */}
@@ -725,6 +773,12 @@ export default function ModelTransparency() {
       {/* ================================================================ */}
       {/* L3: Model Comparison — v3.3 vs v5.1                              */}
       {/* ================================================================ */}
+      <motion.div
+        variants={slideUp}
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true, margin: '-50px' }}
+      >
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between gap-2">
@@ -831,10 +885,17 @@ export default function ModelTransparency() {
           </div>
         </CardContent>
       </Card>
+      </motion.div>
 
       {/* ================================================================ */}
       {/* L4: Per-Case Detection Table                                     */}
       {/* ================================================================ */}
+      <motion.div
+        variants={fadeIn}
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true, margin: '-50px' }}
+      >
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between gap-2">
@@ -923,6 +984,159 @@ export default function ModelTransparency() {
               {t('modelTransparency.perCase.footerWeak')}
             </span>
           </div>
+        </CardContent>
+      </Card>
+      </motion.div>
+
+      {/* ================================================================ */}
+      {/* PROCEDURE RISK PARADOX                                           */}
+      {/* ================================================================ */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Scale className="h-4 w-4 text-text-muted" aria-hidden="true" />
+              <div>
+                <CardTitle>The Procedure Risk Paradox</CardTitle>
+                <CardDescription>
+                  Direct award vs. competitive procedure risk scores over time
+                </CardDescription>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                value={procedureSectorId ?? ''}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setProcedureSectorId(val === '' ? undefined : Number(val))
+                }}
+                className="text-xs rounded border border-border bg-background-elevated text-text-primary px-2 py-1 focus:outline-none focus:ring-1 focus:ring-accent"
+                aria-label="Select sector for procedure risk comparison"
+              >
+                {SECTOR_OPTIONS.map((opt) => (
+                  <option key={opt.label} value={opt.id ?? ''}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <ChartDownloadButton targetRef={procedureChartRef} filename="rubli-procedure-risk-paradox" />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {procedureLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-[260px] w-full" />
+            </div>
+          ) : procedureError || !procedureRiskData ? (
+            <div className="flex items-center gap-2 py-6 text-xs text-text-muted justify-center">
+              <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+              <span>Failed to load procedure risk comparison data</span>
+            </div>
+          ) : (
+            <>
+              <div ref={procedureChartRef} className="h-[260px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={procedureRiskData.data}
+                    margin={{ top: 10, right: 20, bottom: 5, left: 10 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                    <XAxis
+                      dataKey="year"
+                      tick={{ fontSize: 11, fill: 'var(--color-text-secondary)' }}
+                      axisLine={{ stroke: '#30363d' }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }}
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
+                      domain={[0, 'auto']}
+                    />
+                    <RechartsTooltip
+                      cursor={{ stroke: '#ffffff10' }}
+                      content={({ active, payload, label }) => {
+                        if (!active || !payload?.length) return null
+                        const competitive = payload.find((p) => p.dataKey === 'competitive_risk')
+                        const directAward = payload.find((p) => p.dataKey === 'direct_award_risk')
+                        const ratio = payload[0]?.payload?.ratio as number | undefined
+                        return (
+                          <div className="rounded-lg border border-border bg-background-card p-3 shadow-lg text-xs space-y-1.5">
+                            <p className="font-semibold text-text-primary">{label}</p>
+                            {competitive && (
+                              <div className="flex items-center gap-2">
+                                <span className="w-3 inline-block rounded" style={{ height: 2, backgroundColor: '#58a6ff' }} />
+                                <span className="text-text-muted">Competitive:</span>
+                                <span className="text-text-primary tabular-nums font-medium">
+                                  {((competitive.value as number) * 100).toFixed(1)}%
+                                </span>
+                              </div>
+                            )}
+                            {directAward && (
+                              <div className="flex items-center gap-2">
+                                <span className="w-3 inline-block rounded" style={{ height: 2, borderTop: '2px dashed #fb923c' }} />
+                                <span className="text-text-muted">Direct award:</span>
+                                <span className="text-text-primary tabular-nums font-medium">
+                                  {((directAward.value as number) * 100).toFixed(1)}%
+                                </span>
+                              </div>
+                            )}
+                            {ratio != null && (
+                              <p className="text-text-muted pt-1 border-t border-border/30">
+                                Ratio: <span className="text-text-primary font-medium">{ratio.toFixed(2)}×</span>
+                              </p>
+                            )}
+                          </div>
+                        )
+                      }}
+                    />
+                    <Legend
+                      formatter={(value: string) =>
+                        value === 'competitive_risk' ? 'Competitive (solid)' : 'Direct Award (dashed)'
+                      }
+                      wrapperStyle={{ fontSize: 11 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="competitive_risk"
+                      stroke="#58a6ff"
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{ r: 4, stroke: '#58a6ff', strokeWidth: 2, fill: 'var(--color-background-base)' }}
+                      connectNulls
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="direct_award_risk"
+                      stroke="#fb923c"
+                      strokeWidth={2}
+                      strokeDasharray="5 3"
+                      dot={false}
+                      activeDot={{ r: 4, stroke: '#fb923c', strokeWidth: 2, fill: 'var(--color-background-base)' }}
+                      connectNulls
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Callout box */}
+              <div
+                className="mt-4 rounded-lg border p-4 text-xs text-text-secondary leading-relaxed"
+                style={{ borderColor: '#d97706', backgroundColor: 'rgba(217,119,6,0.06)' }}
+                role="note"
+                aria-label="Procedure risk paradox finding"
+              >
+                <p className="font-semibold text-[#f59e0b] mb-1">Counterintuitive Finding</p>
+                In Defensa and Salud, competitive procedures score{' '}
+                <span className="font-semibold text-text-primary">1.7–2.3× higher risk</span> than
+                direct awards — challenging OECD assumptions that direct awards are inherently riskier.
+                Large, concentrated vendors win competitive procedures at above-baseline rates,
+                driving elevated scores on vendor_concentration and win_rate.
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 

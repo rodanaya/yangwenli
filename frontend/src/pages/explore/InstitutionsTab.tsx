@@ -16,7 +16,7 @@ import {
   getRiskLevel,
 } from '@/lib/utils'
 import { RISK_COLORS, SECTORS } from '@/lib/constants'
-import { institutionApi } from '@/api/client'
+import { institutionApi, analysisApi } from '@/api/client'
 import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 import { usePrefetchOnHover } from '@/hooks/usePrefetchOnHover'
 import type { InstitutionFilterParams, InstitutionResponse } from '@/api/types'
@@ -47,6 +47,7 @@ import {
   Scale,
   Shield,
   Factory,
+  ShieldAlert,
 } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 import { StatPill, MiniBar } from './shared'
@@ -564,6 +565,167 @@ export default function InstitutionsTab() {
               <ChevronRight className="h-3.5 w-3.5" />
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* Value Concentration Alerts — collapsible section at bottom */}
+      <ValueConcentrationAlerts />
+    </div>
+  )
+}
+
+// =============================================================================
+// Value Concentration Alerts
+// =============================================================================
+
+function ValueConcentrationAlerts() {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['value-concentration'],
+    queryFn: () => analysisApi.getValueConcentration({ min_pct: 10, limit: 20 }),
+    staleTime: 15 * 60 * 1000,
+  })
+
+  const [isOpen, setIsOpen] = useState(false)
+
+  const rows = data?.data ?? []
+
+  return (
+    <div className="mt-6 border border-border rounded-lg overflow-hidden">
+      {/* Collapsible header */}
+      <button
+        className="w-full flex items-center justify-between px-4 py-3 bg-background-elevated/40 hover:bg-background-elevated/60 transition-colors text-left"
+        onClick={() => setIsOpen((v) => !v)}
+        aria-expanded={isOpen}
+        aria-controls="value-concentration-content"
+      >
+        <div className="flex items-center gap-2">
+          <ShieldAlert className="h-4 w-4 text-amber-400" aria-hidden="true" />
+          <span className="text-sm font-semibold text-text-primary">Value Concentration Alerts</span>
+          {data?.total != null && (
+            <span className="text-xs text-text-muted">({data.total} alerts)</span>
+          )}
+        </div>
+        {isOpen
+          ? <ChevronUp className="h-4 w-4 text-text-muted" />
+          : <ChevronDown className="h-4 w-4 text-text-muted" />}
+      </button>
+
+      {isOpen && (
+        <div id="value-concentration-content" className="p-4 space-y-3">
+          <p className="text-xs text-text-muted">
+            Vendors holding a disproportionate share of a single institution's total spending.
+            Amber = 50%+ share. Red = 75%+ share.
+          </p>
+
+          {isLoading ? (
+            <div className="space-y-1">
+              {[...Array(6)].map((_, i) => (
+                <Skeleton key={i} className="h-9" />
+              ))}
+            </div>
+          ) : error ? (
+            <div className="py-8 text-center">
+              <AlertCircle className="h-8 w-8 text-risk-high mx-auto mb-2" />
+              <p className="text-xs text-text-muted">Failed to load concentration data</p>
+            </div>
+          ) : !rows.length ? (
+            <div className="py-8 text-center">
+              <ShieldAlert className="h-8 w-8 text-text-muted mx-auto mb-2 opacity-40" aria-hidden="true" />
+              <p className="text-xs text-text-muted">No concentration alerts found</p>
+            </div>
+          ) : (
+            <div className="rounded-lg border border-border overflow-hidden">
+              <table className="w-full text-xs" role="table" aria-label="Value concentration alerts">
+                <thead>
+                  <tr className="bg-background-elevated/50">
+                    <th className="px-3 py-2 text-left font-semibold text-text-muted whitespace-nowrap">Institution</th>
+                    <th className="px-3 py-2 text-left font-semibold text-text-muted whitespace-nowrap">Vendor</th>
+                    <th className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap">Share %</th>
+                    <th className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap hidden sm:table-cell">Total Value</th>
+                    <th className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap hidden md:table-cell">Risk Score</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {rows.map((row) => {
+                    const level = getRiskLevel(row.avg_risk_score)
+                    const riskColor = RISK_COLORS[level]
+
+                    // Row highlight based on share severity
+                    const rowBg =
+                      row.value_share_pct >= 75
+                        ? 'bg-red-500/8 hover:bg-red-500/12'
+                        : row.value_share_pct >= 50
+                          ? 'bg-amber-500/8 hover:bg-amber-500/12'
+                          : 'hover:bg-accent/[0.04]'
+
+                    // Share color
+                    const shareColor =
+                      row.value_share_pct >= 75
+                        ? 'text-red-400 font-bold'
+                        : row.value_share_pct >= 50
+                          ? 'text-amber-400 font-semibold'
+                          : 'text-text-primary'
+
+                    return (
+                      <tr
+                        key={`${row.institution_id}-${row.vendor_id}`}
+                        className={cn('transition-colors', rowBg)}
+                      >
+                        {/* Institution */}
+                        <td className="px-3 py-2">
+                          <Link
+                            to={`/institutions/${row.institution_id}`}
+                            className="text-xs text-text-primary hover:text-accent transition-colors truncate block max-w-[180px] lg:max-w-[250px]"
+                          >
+                            {toTitleCase(row.institution_name)}
+                          </Link>
+                        </td>
+
+                        {/* Vendor */}
+                        <td className="px-3 py-2">
+                          <Link
+                            to={`/vendors/${row.vendor_id}`}
+                            className="text-xs text-text-primary hover:text-accent transition-colors truncate block max-w-[180px] lg:max-w-[250px]"
+                          >
+                            {toTitleCase(row.vendor_name)}
+                          </Link>
+                        </td>
+
+                        {/* Share % */}
+                        <td className="px-3 py-2 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {row.value_share_pct >= 75 && (
+                              <AlertTriangle className="h-3 w-3 text-red-400 shrink-0" aria-label="Critical concentration" />
+                            )}
+                            {row.value_share_pct >= 50 && row.value_share_pct < 75 && (
+                              <AlertTriangle className="h-3 w-3 text-amber-400 shrink-0" aria-label="High concentration" />
+                            )}
+                            <span className={cn('tabular-nums', shareColor)}>
+                              {row.value_share_pct.toFixed(1)}%
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Total value */}
+                        <td className="px-3 py-2 text-right hidden sm:table-cell">
+                          <span className="tabular-nums text-text-primary">
+                            {formatCompactMXN(row.vendor_value)}
+                          </span>
+                        </td>
+
+                        {/* Risk score */}
+                        <td className="px-3 py-2 text-right hidden md:table-cell">
+                          <span className="tabular-nums font-semibold" style={{ color: riskColor }}>
+                            {(row.avg_risk_score * 100).toFixed(0)}%
+                          </span>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>

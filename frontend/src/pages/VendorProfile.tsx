@@ -73,6 +73,8 @@ import {
 import { NetworkGraphModal } from '@/components/NetworkGraphModal'
 import { ScrollReveal, useCountUp, AnimatedFill } from '@/hooks/useAnimations'
 import { cn } from '@/lib/utils'
+import { motion } from 'framer-motion'
+import { slideUp, staggerContainer, staggerItem } from '@/lib/animations'
 import { RiskWhisker } from '@/components/ui/risk-whisker'
 
 // ============================================================================
@@ -900,13 +902,16 @@ export function VendorProfile() {
         }
       `}</style>
       {/* Header — risk-colored left border */}
-      <div
+      <motion.div
         className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 rounded-lg border bg-background-card p-4"
         style={{
           borderLeftWidth: '4px',
           borderLeftColor: riskColor,
           animation: 'vpSlideIn 600ms cubic-bezier(0.16, 1, 0.3, 1) both',
         }}
+        variants={slideUp}
+        initial="initial"
+        animate="animate"
       >
         <div className="flex items-center gap-4">
           <Link to="/explore?tab=vendors">
@@ -1066,7 +1071,7 @@ export function VendorProfile() {
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
       <NetworkGraphModal
         open={networkOpen}
         onOpenChange={setNetworkOpen}
@@ -1161,57 +1166,71 @@ export function VendorProfile() {
       })()}
 
       {/* KPI Row — scroll-triggered stagger + F7 Percentile Badges */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <ScrollReveal delay={0} direction="up">
-          <KPICard
-            title={t('kpi.totalContracts')}
-            value={vendor.total_contracts}
-            icon={FileText}
-            subtitle={`${vendor.first_contract_year || '-'} – ${vendor.last_contract_year || '-'}`}
-            percentileBadge={(() => {
-              const pc = peerComparison as any
-              const item = Array.isArray(pc) ? pc.find((p: any) => p.metric === 'contract_count') : null
-              return item ? <PercentileBadge percentile={item.percentile} metric="contracts" sector={vendor.primary_sector_name || undefined} /> : undefined
-            })()}
-          />
-        </ScrollReveal>
-        <ScrollReveal delay={80} direction="up">
-          <KPICard
-            title={t('kpi.totalValue')}
-            value={vendor.total_value_mxn}
-            icon={DollarSign}
-            format="currency"
-            subtitle={formatCompactUSD(vendor.total_value_mxn)}
-            percentileBadge={(() => {
-              const pc = peerComparison as any
-              const item = Array.isArray(pc) ? pc.find((p: any) => p.metric === 'total_value') : null
-              return item ? <PercentileBadge percentile={item.percentile} metric="total value" sector={vendor.primary_sector_name || undefined} /> : undefined
-            })()}
-          />
-        </ScrollReveal>
-        <ScrollReveal delay={160} direction="up">
-          <KPICard
-            title={t('kpi.institutions')}
-            value={vendor.total_institutions}
-            icon={Building2}
-            subtitle={t('kpi.uniqueAgencies')}
-          />
-        </ScrollReveal>
-        <ScrollReveal delay={240} direction="up">
-          <KPICard
-            title={t('kpi.highRisk')}
-            value={vendor.high_risk_pct}
-            icon={AlertTriangle}
-            format="percent_100"
-            variant={vendor.high_risk_pct > 20 ? 'critical' : vendor.high_risk_pct > 10 ? 'warning' : 'default'}
-            percentileBadge={(() => {
-              const pc = peerComparison as any
-              const item = Array.isArray(pc) ? pc.find((p: any) => p.metric === 'risk_score') : null
-              return item ? <PercentileBadge percentile={item.percentile} metric="risk score" sector={vendor.primary_sector_name || undefined} /> : undefined
-            })()}
-          />
-        </ScrollReveal>
-      </div>
+      <motion.div
+        className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+        variants={staggerContainer}
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true }}
+      >
+        <motion.div variants={staggerItem}>
+          <ScrollReveal delay={0} direction="up">
+            <KPICard
+              title={t('kpi.totalContracts')}
+              value={vendor.total_contracts}
+              icon={FileText}
+              subtitle={`${vendor.first_contract_year || '-'} – ${vendor.last_contract_year || '-'}`}
+              percentileBadge={(() => {
+                const pc = peerComparison as any
+                const item = Array.isArray(pc) ? pc.find((p: any) => p.metric === 'contract_count') : null
+                return item ? <PercentileBadge percentile={item.percentile} metric="contracts" sector={vendor.primary_sector_name || undefined} /> : undefined
+              })()}
+            />
+          </ScrollReveal>
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <ScrollReveal delay={80} direction="up">
+            <KPICard
+              title={t('kpi.totalValue')}
+              value={vendor.total_value_mxn}
+              icon={DollarSign}
+              format="currency"
+              subtitle={formatCompactUSD(vendor.total_value_mxn)}
+              percentileBadge={(() => {
+                const pc = peerComparison as any
+                const item = Array.isArray(pc) ? pc.find((p: any) => p.metric === 'total_value') : null
+                return item ? <PercentileBadge percentile={item.percentile} metric="total value" sector={vendor.primary_sector_name || undefined} /> : undefined
+              })()}
+            />
+          </ScrollReveal>
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <ScrollReveal delay={160} direction="up">
+            <KPICard
+              title={t('kpi.institutions')}
+              value={vendor.total_institutions}
+              icon={Building2}
+              subtitle={t('kpi.uniqueAgencies')}
+            />
+          </ScrollReveal>
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <ScrollReveal delay={240} direction="up">
+            <KPICard
+              title={t('kpi.highRisk')}
+              value={vendor.high_risk_pct}
+              icon={AlertTriangle}
+              format="percent_100"
+              variant={vendor.high_risk_pct > 20 ? 'critical' : vendor.high_risk_pct > 10 ? 'warning' : 'default'}
+              percentileBadge={(() => {
+                const pc = peerComparison as any
+                const item = Array.isArray(pc) ? pc.find((p: any) => p.metric === 'risk_score') : null
+                return item ? <PercentileBadge percentile={item.percentile} metric="risk score" sector={vendor.primary_sector_name || undefined} /> : undefined
+              })()}
+            />
+          </ScrollReveal>
+        </motion.div>
+      </motion.div>
 
       {peerComparisonError && (
         <div className="flex items-center gap-2 text-sm text-text-muted px-1">

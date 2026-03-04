@@ -5,6 +5,8 @@
  */
 
 import { useState, useCallback, useMemo } from 'react'
+import { motion } from 'framer-motion'
+import { staggerContainer, staggerItem, slideUp } from '@/lib/animations'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -636,40 +638,53 @@ export function Watchlist() {
           </Button>
         </div>
 
-        {/* Stat cards — 4 cards */}
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-          <StatCard
-            label={t('statCards.watching')}
-            value={stats.watching}
-            color="text-accent"
-            icon={Eye}
-            onClick={() => setStatusFilter('watching')}
-            loading={statsLoading}
-          />
-          <StatCard
-            label={t('statCards.investigating')}
-            value={stats.investigating}
-            color="text-risk-high"
-            icon={AlertTriangle}
-            onClick={() => setStatusFilter('investigating')}
-            loading={statsLoading}
-          />
-          <StatCard
-            label={t('statCards.highPriority')}
-            value={stats.highPriority}
-            color="text-risk-critical"
-            icon={AlertTriangle}
-            loading={statsLoading}
-          />
-          <StatCard
-            label={t('statCards.resolved')}
-            value={stats.resolved}
-            color="text-risk-low"
-            icon={CheckCircle}
-            onClick={() => setStatusFilter('resolved')}
-            loading={statsLoading}
-          />
-        </div>
+        {/* Stat cards — 4 cards with stagger animation */}
+        <motion.div
+          className="grid gap-4 grid-cols-2 md:grid-cols-4"
+          variants={staggerContainer}
+          initial="initial"
+          animate="animate"
+        >
+          <motion.div variants={slideUp}>
+            <StatCard
+              label={t('statCards.watching')}
+              value={stats.watching}
+              color="text-accent"
+              icon={Eye}
+              onClick={() => setStatusFilter('watching')}
+              loading={statsLoading}
+            />
+          </motion.div>
+          <motion.div variants={slideUp}>
+            <StatCard
+              label={t('statCards.investigating')}
+              value={stats.investigating}
+              color="text-risk-high"
+              icon={AlertTriangle}
+              onClick={() => setStatusFilter('investigating')}
+              loading={statsLoading}
+            />
+          </motion.div>
+          <motion.div variants={slideUp}>
+            <StatCard
+              label={t('statCards.highPriority')}
+              value={stats.highPriority}
+              color="text-risk-critical"
+              icon={AlertTriangle}
+              loading={statsLoading}
+            />
+          </motion.div>
+          <motion.div variants={slideUp}>
+            <StatCard
+              label={t('statCards.resolved')}
+              value={stats.resolved}
+              color="text-risk-low"
+              icon={CheckCircle}
+              onClick={() => setStatusFilter('resolved')}
+              loading={statsLoading}
+            />
+          </motion.div>
+        </motion.div>
 
         {/* Tabs: Tracked Entities | Dossiers */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'entities' | 'dossiers')}>
@@ -901,16 +916,22 @@ export function Watchlist() {
             ) : (dossiers ?? []).length === 0 ? (
               <WorkspaceJournalistGuide onCreateDossier={() => setDossierDialogOpen(true)} />
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
+              <motion.div
+                className="grid gap-3 sm:grid-cols-2"
+                variants={staggerContainer}
+                initial="initial"
+                animate="animate"
+              >
                 {(dossiers ?? []).map((dossier) => (
-                  <DossierCard
-                    key={dossier.id}
-                    dossier={dossier}
-                    onOpen={(id) => setActiveDossierId((prev) => (prev === id ? null : id))}
-                    onDelete={(id) => deleteDossier.mutate(id)}
-                  />
+                  <motion.div key={dossier.id} variants={staggerItem}>
+                    <DossierCard
+                      dossier={dossier}
+                      onOpen={(id) => setActiveDossierId((prev) => (prev === id ? null : id))}
+                      onDelete={(id) => deleteDossier.mutate(id)}
+                    />
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             )}
           </TabsContent>
         </Tabs>

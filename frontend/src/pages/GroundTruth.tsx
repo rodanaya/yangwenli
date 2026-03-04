@@ -8,6 +8,8 @@
 import { useState, useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { motion } from 'framer-motion'
+import { staggerContainer, staggerItem, slideUp, fadeIn } from '@/lib/animations'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -333,7 +335,7 @@ export default function GroundTruth() {
       {/* ================================================================== */}
       {/* Header                                                             */}
       {/* ================================================================== */}
-      <div>
+      <motion.div variants={fadeIn} initial="initial" animate="animate">
         <h1 className="text-2xl font-bold text-text-primary tracking-tight flex items-center gap-2">
           {t('groundTruth.pageTitle')}
           <Badge variant="outline" className="text-xs font-normal ml-1">
@@ -343,7 +345,7 @@ export default function GroundTruth() {
         <p className="text-sm text-text-secondary mt-1">
           {t('groundTruth.pageSubtitle')}
         </p>
-      </div>
+      </motion.div>
 
       <SectionDescription variant="callout">
         {t('groundTruth.callout')}
@@ -364,31 +366,48 @@ export default function GroundTruth() {
           <span>{t('groundTruth.failedSummary')}</span>
         </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-          <StatCard
-            icon={Shield}
-            label={t('groundTruth.groundTruthCases')}
-            value={totalCases || '—'}
-            sub={t('groundTruth.documentedCases')}
-          />
-          <StatCard
-            icon={Crosshair}
-            label={t('groundTruth.vendorsMatched')}
-            value={vendorsMatched || '—'}
-            sub={t('groundTruth.inCompranet')}
-          />
-          <StatCard
-            icon={FileText}
-            label={t('groundTruth.totalValueAtRisk')}
-            value={totalFraud > 0 ? formatCompactMXN(totalFraud) : '—'}
-            sub={t('groundTruth.estimatedFraud')}
-          />
-        </div>
+        <motion.div
+          className="grid grid-cols-2 lg:grid-cols-3 gap-4"
+          variants={staggerContainer}
+          initial="initial"
+          animate="animate"
+        >
+          <motion.div variants={staggerItem}>
+            <StatCard
+              icon={Shield}
+              label={t('groundTruth.groundTruthCases')}
+              value={totalCases || '—'}
+              sub={t('groundTruth.documentedCases')}
+            />
+          </motion.div>
+          <motion.div variants={staggerItem}>
+            <StatCard
+              icon={Crosshair}
+              label={t('groundTruth.vendorsMatched')}
+              value={vendorsMatched || '—'}
+              sub={t('groundTruth.inCompranet')}
+            />
+          </motion.div>
+          <motion.div variants={staggerItem}>
+            <StatCard
+              icon={FileText}
+              label={t('groundTruth.totalValueAtRisk')}
+              value={totalFraud > 0 ? formatCompactMXN(totalFraud) : '—'}
+              sub={t('groundTruth.estimatedFraud')}
+            />
+          </motion.div>
+        </motion.div>
       )}
 
       {/* ================================================================== */}
       {/* Section B — Sortable Cases Table                                  */}
       {/* ================================================================== */}
+      <motion.div
+        variants={slideUp}
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true, margin: '-50px' }}
+      >
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -612,6 +631,7 @@ export default function GroundTruth() {
           )}
         </CardContent>
       </Card>
+      </motion.div>
 
       {/* ================================================================== */}
       {/* Section C — Factor Lift vs Ground Truth                          */}

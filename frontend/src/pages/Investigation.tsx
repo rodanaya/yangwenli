@@ -8,6 +8,8 @@
  */
 
 import { useState, useMemo, useRef } from 'react'
+import { motion } from 'framer-motion'
+import { staggerContainer, staggerItem, fadeIn } from '@/lib/animations'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -225,7 +227,7 @@ function CaseCard({
   const rankNum = String(index + 1).padStart(2, '0')
 
   return (
-    <div
+    <motion.div
       onClick={onClick}
       className={cn(
         'relative group cursor-pointer rounded-lg border border-border/50 p-4 transition-all',
@@ -233,6 +235,7 @@ function CaseCard({
         getRiskBgClass(caseItem.suspicion_score)
       )}
       style={getRiskBorderStyle(caseItem.suspicion_score)}
+      whileHover={{ x: 4, transition: { duration: 0.15 } }}
     >
       {/* Rank number — large faint background decoration */}
       <span className="absolute top-0 left-0 text-6xl font-black text-text-muted/10 font-mono leading-none select-none pointer-events-none">
@@ -305,7 +308,7 @@ function CaseCard({
         {/* Chevron hint */}
         <ChevronRight className="absolute bottom-0 right-0 h-3.5 w-3.5 text-text-muted/40 group-hover:text-accent transition-colors" />
       </div>
-    </div>
+    </motion.div>
   )
 }
 
@@ -622,21 +625,23 @@ export function Investigation() {
   return (
     <div className="space-y-6">
       {/* HERO HEADER */}
-      <PageHero
-        trackingLabel={t('hero.trackingLabel')}
-        icon={<Crosshair className="h-4 w-4 text-accent" />}
-        headline={summaryLoading ? '—' : t('hero.casesCount', { count: summary?.total_cases || 0 })}
-        subtitle={t('hero.subtitle')}
-        detail={
-          summaryLoading
-            ? undefined
-            : `${summary?.corroborated_cases || 0} ${t('hero.confirmedDetail')} · ${formatCompactMXN(summary?.total_value_at_risk || 0)} ${t('hero.valueAtRisk')}`
-        }
-        loading={summaryLoading}
-      />
-      <p className="text-xs text-text-secondary max-w-3xl leading-relaxed -mt-4">
-        {t('description')}
-      </p>
+      <motion.div variants={fadeIn} initial="initial" animate="animate">
+        <PageHero
+          trackingLabel={t('hero.trackingLabel')}
+          icon={<Crosshair className="h-4 w-4 text-accent" />}
+          headline={summaryLoading ? '—' : t('hero.casesCount', { count: summary?.total_cases || 0 })}
+          subtitle={t('hero.subtitle')}
+          detail={
+            summaryLoading
+              ? undefined
+              : `${summary?.corroborated_cases || 0} ${t('hero.confirmedDetail')} · ${formatCompactMXN(summary?.total_value_at_risk || 0)} ${t('hero.valueAtRisk')}`
+          }
+          loading={summaryLoading}
+        />
+        <p className="text-xs text-text-secondary max-w-3xl leading-relaxed mt-2">
+          {t('description')}
+        </p>
+      </motion.div>
 
       {/* INVESTIGATION INTAKE */}
       <InvestigationIntake />
@@ -687,11 +692,18 @@ export function Investigation() {
             <h2 className="text-sm font-bold text-text-primary">{t('sections.confirmed')}</h2>
             <span className="text-xs text-text-muted ml-1">{t('sections.confirmedSubtitle')}</span>
           </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <motion.div
+            className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+          >
             {summary!.top_corroborated.map((item) => (
-              <BigFishCard key={item.case_id} item={item} />
+              <motion.div key={item.case_id} variants={staggerItem}>
+                <BigFishCard item={item} />
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       )}
 
@@ -817,16 +829,22 @@ export function Investigation() {
         />
       ) : viewMode === 'cards' ? (
         <>
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <motion.div
+            className="grid gap-3 md:grid-cols-2 xl:grid-cols-3"
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+          >
             {cases.map((c, i) => (
-              <CaseCard
-                key={c.case_id}
-                caseItem={c}
-                index={i}
-                onClick={() => navigate(`/investigation/${c.case_id}`)}
-              />
+              <motion.div key={c.case_id} variants={staggerItem}>
+                <CaseCard
+                  caseItem={c}
+                  index={i}
+                  onClick={() => navigate(`/investigation/${c.case_id}`)}
+                />
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
           <p className="text-xs text-text-muted text-right">
             {cases.length} {cases.length === 1 ? 'case' : 'cases'}
           </p>

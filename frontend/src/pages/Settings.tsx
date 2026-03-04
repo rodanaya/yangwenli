@@ -1,4 +1,6 @@
 import { useState, useCallback } from 'react'
+import { motion } from 'framer-motion'
+import { staggerContainer, staggerItem, fadeIn } from '@/lib/animations'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -113,13 +115,18 @@ export function Settings() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
+      <motion.div
+        variants={fadeIn}
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true, margin: '-50px' }}
+      >
         <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
           <SettingsIcon className="h-4.5 w-4.5 text-accent" />
           Settings
         </h2>
         <p className="text-xs text-text-muted mt-0.5">Configure preferences, export data, and review data quality</p>
-      </div>
+      </motion.div>
 
       {/* Tab Bar */}
       <div className="flex gap-1 border-b border-border pb-0">
@@ -177,8 +184,15 @@ function GeneralTab() {
   })
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <motion.div
+      className="space-y-6 max-w-2xl"
+      variants={staggerContainer}
+      initial="initial"
+      whileInView="animate"
+      viewport={{ once: true, margin: '-50px' }}
+    >
       {/* Theme settings */}
+      <motion.div variants={staggerItem}>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -209,8 +223,10 @@ function GeneralTab() {
           </div>
         </CardContent>
       </Card>
+      </motion.div>
 
       {/* Data info */}
+      <motion.div variants={staggerItem}>
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -305,8 +321,10 @@ function GeneralTab() {
           )}
         </CardContent>
       </Card>
+      </motion.div>
 
       {/* About */}
+      <motion.div variants={staggerItem}>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -328,7 +346,8 @@ function GeneralTab() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }
 

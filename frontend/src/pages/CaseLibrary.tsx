@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useUrlSearch } from '@/hooks'
@@ -14,6 +15,7 @@ import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { TableExportButton } from '@/components/TableExportButton'
 import { AlertCircle, Search, X, Eye, EyeOff, Activity } from 'lucide-react'
 import { RISK_COLORS, SECTORS } from '@/lib/constants'
+import { staggerContainer, staggerItem, slideUp } from '@/lib/animations'
 
 // ── severity colour ──────────────────────────────────────────────────────────
 const SEVERITY_COLORS: Record<number, string> = {
@@ -86,7 +88,11 @@ function CaseCard({ cas, onClick }: { cas: ScandalListItem; onClick: () => void 
     : 'border-border/60 hover:border-accent/50'
 
   return (
-    <div className={`bg-card border ${cardBorder} rounded-lg hover:bg-card/80 transition-all group flex flex-col overflow-hidden`}>
+    <motion.div
+      variants={staggerItem}
+      whileHover={{ y: -3, transition: { duration: 0.15 } }}
+      className={`bg-card border ${cardBorder} rounded-lg hover:bg-card/80 transition-all group flex flex-col overflow-hidden`}
+    >
       {/* ML training data banner */}
       {isMLLinked && (
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-accent/10 border-b border-accent/20">
@@ -170,7 +176,7 @@ function CaseCard({ cas, onClick }: { cas: ScandalListItem; onClick: () => void 
           className="h-7 text-xs"
         />
       </div>
-    </div>
+    </motion.div>
   )
 }
 
@@ -186,19 +192,24 @@ function StatsBar() {
   const totalBn = data ? (data.total_amount_mxn_low / 1e9).toFixed(0) : '–'
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+    <motion.div
+      className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6"
+      variants={staggerContainer}
+      initial="initial"
+      animate="animate"
+    >
       {[
         { label: t('statsBar.totalCases'), value: data?.total_cases ?? '–' },
         { label: t('statsBar.totalAmount'), value: data ? `$${totalBn}B+` : '–' },
         { label: t('statsBar.gtLinked'), value: data?.gt_linked_count ?? '–' },
         { label: t('statsBar.compranetVisible'), value: data?.compranet_visible_count ?? '–' },
       ].map(({ label, value }) => (
-        <div key={label} className="bg-card border border-border/50 rounded-lg px-4 py-3">
+        <motion.div key={label} variants={slideUp} className="bg-card border border-border/50 rounded-lg px-4 py-3">
           <div className="text-xl font-bold font-mono text-accent">{value}</div>
           <div className="text-[11px] text-text-muted mt-0.5">{label}</div>
-        </div>
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   )
 }
 
@@ -390,7 +401,12 @@ export default function CaseLibrary() {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+              variants={staggerContainer}
+              initial="initial"
+              animate="animate"
+            >
               {data.map((cas) => (
                 <CaseCard
                   key={cas.id}
@@ -398,7 +414,7 @@ export default function CaseLibrary() {
                   onClick={() => navigate(`/cases/${cas.slug}`)}
                 />
               ))}
-            </div>
+            </motion.div>
           )}
         </>
       )}

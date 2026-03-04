@@ -12,6 +12,8 @@ import React, { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { motion } from 'framer-motion'
+import { staggerContainer, staggerItem, slideUp, fadeIn } from '@/lib/animations'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
@@ -724,7 +726,7 @@ export default function InstitutionHealth() {
   return (
     <div className="space-y-6 min-w-0">
       {/* Header */}
-      <div>
+      <motion.div variants={fadeIn} initial="initial" animate="animate">
         <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
           <Building2 className="h-4 w-4 text-accent" />
           {t('title')}
@@ -732,7 +734,7 @@ export default function InstitutionHealth() {
         <p className="text-xs text-text-muted mt-0.5">
           {t('subtitle')}
         </p>
-      </div>
+      </motion.div>
 
       {/* Filter bar */}
       <div className="flex items-center gap-3 flex-wrap">
@@ -753,32 +755,44 @@ export default function InstitutionHealth() {
       </div>
 
       {/* Section 1: Stat Cards */}
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
-        <SharedStatCard
-          loading={isLoading}
-          label={t('institutionsTracked')}
-          value={data ? formatNumber(data.total_institutions) : '—'}
-          detail={t('withMinContracts', { count: minContracts })}
-          color="text-accent"
-          borderColor="border-accent/30"
-        />
-        <SharedStatCard
-          loading={isLoading}
-          label={t('avgVendorConcentration')}
-          value={summary ? summary.avgConcentration.toFixed(3) : '—'}
-          detail={summary ? t('marketOverall', { label: getConcentrationLabel(summary.avgConcentration) }) : '—'}
-          color="text-risk-medium"
-          borderColor="border-risk-medium/30"
-        />
-        <SharedStatCard
-          loading={isLoading}
-          label={t('highRiskInstitutions')}
-          value={summary ? String(summary.highRiskCount) : '—'}
-          detail={t('avgRiskAbove30')}
-          color="text-risk-high"
-          borderColor="border-risk-high/30"
-        />
-      </div>
+      <motion.div
+        className="grid gap-4 grid-cols-1 md:grid-cols-3"
+        variants={staggerContainer}
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true, margin: '-50px' }}
+      >
+        <motion.div variants={staggerItem}>
+          <SharedStatCard
+            loading={isLoading}
+            label={t('institutionsTracked')}
+            value={data ? formatNumber(data.total_institutions) : '—'}
+            detail={t('withMinContracts', { count: minContracts })}
+            color="text-accent"
+            borderColor="border-accent/30"
+          />
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <SharedStatCard
+            loading={isLoading}
+            label={t('avgVendorConcentration')}
+            value={summary ? summary.avgConcentration.toFixed(3) : '—'}
+            detail={summary ? t('marketOverall', { label: getConcentrationLabel(summary.avgConcentration) }) : '—'}
+            color="text-risk-medium"
+            borderColor="border-risk-medium/30"
+          />
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <SharedStatCard
+            loading={isLoading}
+            label={t('highRiskInstitutions')}
+            value={summary ? String(summary.highRiskCount) : '—'}
+            detail={t('avgRiskAbove30')}
+            color="text-risk-high"
+            borderColor="border-risk-high/30"
+          />
+        </motion.div>
+      </motion.div>
 
       {/* ============================================================ */}
       {/* PUBLICATION DELAY TRANSPARENCY                             */}
@@ -889,6 +903,12 @@ export default function InstitutionHealth() {
       {/* DANGER RANKINGS — Two ranked lists above the full table    */}
       {/* ============================================================ */}
       {(topByVolume.length > 0 || topByRate.length > 0) && (
+        <motion.div
+          variants={slideUp}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, margin: '-50px' }}
+        >
         <div className="space-y-3">
           {/* Editorial header */}
           <div>
@@ -1029,6 +1049,7 @@ export default function InstitutionHealth() {
             </Card>
           </div>
         </div>
+        </motion.div>
       )}
 
       {/* Section 2: Sortable Rankings Table */}

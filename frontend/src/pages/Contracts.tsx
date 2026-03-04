@@ -1,6 +1,8 @@
 import React, { useCallback, useMemo, useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams, Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { fadeIn, slideUp } from '@/lib/animations'
 import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
@@ -496,7 +498,7 @@ export function Contracts() {
   return (
     <div className="space-y-3">
       {/* Page Hero */}
-      <div className="pb-1">
+      <motion.div className="pb-1" variants={fadeIn} initial="initial" animate="animate">
         <div className="flex items-center gap-2 mb-1">
           <FileText className="h-4 w-4 text-accent" />
           <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
@@ -507,7 +509,7 @@ export function Contracts() {
         <p className="text-sm text-text-muted mt-1">
           Every government contract from 2002\u20132025, searchable by vendor, institution, sector, or risk level.
         </p>
-      </div>
+      </motion.div>
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -783,7 +785,13 @@ export function Contracts() {
       )}
 
       {/* Summary stats + Active filters */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
+      <motion.div
+        className="flex items-center justify-between flex-wrap gap-2"
+        variants={slideUp}
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true, margin: '-50px' }}
+      >
         {pageStats && (
           <div className="flex items-center gap-3 flex-wrap">
             <StatPill label={t('stats.pageTotal')} value={formatCompactMXN(pageStats.totalValue)} />
@@ -817,7 +825,7 @@ export function Contracts() {
             ))}
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Contracts table */}
       <Card>

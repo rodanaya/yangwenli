@@ -7,6 +7,8 @@ import type { LucideIcon } from 'lucide-react'
 import { AlertCircle, RefreshCw, FileX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { motion } from 'framer-motion'
+import { fadeIn } from '@/lib/animations'
 
 // SVG Illustrations for different states
 const NoDataIllustration = () => (
@@ -141,34 +143,40 @@ export function EmptyState({
   return (
     <Card className={`${config.containerClass} ${className}`}>
       <CardContent className="py-12 px-8 text-center">
-        {useIllustration ? (
-          <Illustration />
-        ) : (
-          <Icon
-            className={`h-16 w-16 mx-auto mb-4 ${config.iconClass}`}
-            aria-hidden="true"
-          />
-        )}
-        <h3 className="text-lg font-semibold text-text-primary mb-2">{title}</h3>
-        {description && (
-          <p className="text-sm text-text-muted mb-6 max-w-sm mx-auto leading-relaxed">
-            {description}
-          </p>
-        )}
-        {actionLabel && onAction && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onAction}
-            disabled={loading}
-            className="mt-2"
-          >
-            {loading && (
-              <RefreshCw className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-            )}
-            {actionLabel}
-          </Button>
-        )}
+        <motion.div
+          variants={fadeIn}
+          initial="initial"
+          animate="animate"
+        >
+          {useIllustration ? (
+            <Illustration />
+          ) : (
+            <Icon
+              className={`h-16 w-16 mx-auto mb-4 ${config.iconClass}`}
+              aria-hidden="true"
+            />
+          )}
+          <h3 className="text-lg font-semibold text-text-primary mb-2">{title}</h3>
+          {description && (
+            <p className="text-sm text-text-muted mb-6 max-w-sm mx-auto leading-relaxed">
+              {description}
+            </p>
+          )}
+          {actionLabel && onAction && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onAction}
+              disabled={loading}
+              className="mt-2"
+            >
+              {loading && (
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+              )}
+              {actionLabel}
+            </Button>
+          )}
+        </motion.div>
       </CardContent>
     </Card>
   )

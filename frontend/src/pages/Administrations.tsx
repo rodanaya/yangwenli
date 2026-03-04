@@ -13,6 +13,8 @@
 import { useMemo, useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
+import { motion } from 'framer-motion'
+import { staggerContainer, slideUp, fadeIn } from '@/lib/animations'
 import { ScrollReveal, useCountUp } from '@/hooks/useAnimations'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -565,7 +567,12 @@ export default function Administrations() {
       <>
 
       {/* L0: Admin Selector */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <motion.div
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"
+        variants={staggerContainer}
+        initial="initial"
+        animate="animate"
+      >
         {ADMINISTRATIONS.map((admin, idx) => {
           const agg = adminAggs.find((a) => a.name === admin.name)
           const isSelected = selectedAdmin === admin.name
@@ -638,10 +645,16 @@ export default function Administrations() {
             </ScrollReveal>
           )
         })}
-      </div>
+      </motion.div>
 
       {/* Editorial Narrative */}
-      <div className="flex items-start gap-3 rounded-lg border border-border/40 bg-card px-4 py-3">
+      <motion.div
+        className="flex items-start gap-3 rounded-lg border border-border/40 bg-card px-4 py-3"
+        variants={fadeIn}
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true, margin: '-50px' }}
+      >
         <Info className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
         <div>
           <span className="text-xs font-semibold text-accent uppercase tracking-wider mr-2">{t('narrative')}</span>
@@ -649,7 +662,7 @@ export default function Administrations() {
             {ADMIN_NARRATIVES[selectedAdmin]}
           </span>
         </div>
-      </div>
+      </motion.div>
 
       {/* Incomplete data warning for Sheinbaum */}
       {selectedAdmin === 'Sheinbaum' && (
@@ -666,7 +679,13 @@ export default function Administrations() {
 
       {/* L1: Selected Admin Overview */}
       {selectedAgg && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <motion.div
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4"
+          variants={slideUp}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, margin: '-50px' }}
+        >
           {[
             { label: t('statCards.contracts'), value: formatNumber(selectedAgg.contracts), delta: null, icon: FileText },
             { label: t('statCards.totalValue'), value: formatCompactMXN(selectedAgg.totalValue), delta: null, icon: Banknote },
@@ -687,7 +706,7 @@ export default function Administrations() {
               />
             </ScrollReveal>
           ))}
-        </div>
+        </motion.div>
       )}
 
       {/* L2 + L3 side by side */}

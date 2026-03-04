@@ -11,6 +11,8 @@ import { SECTOR_COLORS, RISK_COLORS, SECTORS } from '@/lib/constants'
 import { GenerateReportButton } from '@/components/GenerateReportButton'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { TableExportButton } from '@/components/TableExportButton'
+import { motion } from 'framer-motion'
+import { slideUp, staggerContainer, staggerItem } from '@/lib/animations'
 import {
   BarChart3,
   Building2,
@@ -335,9 +337,12 @@ export function SectorProfile() {
     <div className="space-y-6">
 
       {/* ── HERO HEADER ─────────────────────────────────────────────────── */}
-      <div
+      <motion.div
         className="relative rounded-xl border border-border/30 overflow-hidden p-6"
         style={{ background: `linear-gradient(135deg, ${hex(sectorColor, 0.12)} 0%, transparent 60%)` }}
+        variants={slideUp}
+        initial="initial"
+        animate="animate"
       >
         {/* decorative glow */}
         <div
@@ -410,15 +415,29 @@ export function SectorProfile() {
             <GenerateReportButton reportType="sector" entityId={sectorId} entityName={sector.name} variant="outline" />
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* ── KPI STRIP ───────────────────────────────────────────────────── */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <KPICard title="Contracts" value={stats?.total_contracts} icon={FileText} color={sectorColor} />
-        <KPICard title="Total Value" value={stats?.total_value_mxn} icon={DollarSign} format="currency" color={sectorColor} />
-        <KPICard title="Vendors" value={stats?.total_vendors} icon={Users} color={sectorColor} />
-        <KPICard title="High + Critical" value={(stats?.high_risk_count ?? 0) + (stats?.critical_risk_count ?? 0)} icon={AlertTriangle} color="#ef4444" />
-      </div>
+      <motion.div
+        className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+        variants={staggerContainer}
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true }}
+      >
+        <motion.div variants={staggerItem}>
+          <KPICard title="Contracts" value={stats?.total_contracts} icon={FileText} color={sectorColor} />
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <KPICard title="Total Value" value={stats?.total_value_mxn} icon={DollarSign} format="currency" color={sectorColor} />
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <KPICard title="Vendors" value={stats?.total_vendors} icon={Users} color={sectorColor} />
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <KPICard title="High + Critical" value={(stats?.high_risk_count ?? 0) + (stats?.critical_risk_count ?? 0)} icon={AlertTriangle} color="#ef4444" />
+        </motion.div>
+      </motion.div>
 
       {/* ── SECTOR INTELLIGENCE ─────────────────────────────────────────── */}
       {(insights.length > 0 || topRiskSignal) && (

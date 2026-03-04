@@ -7,6 +7,8 @@
  */
 
 import { memo, useMemo, useState, useRef } from 'react'
+import { motion } from 'framer-motion'
+import { staggerContainer, staggerItem, slideUp, fadeIn } from '@/lib/animations'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -16,7 +18,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
 import { cn, formatCompactMXN, formatNumber, formatPercentSafe } from '@/lib/utils'
 import { sectorApi, analysisApi, institutionApi } from '@/api/client'
-import { SECTOR_COLORS, SECTORS, getSectorNameEN } from '@/lib/constants'
+import type { IndustryClusterItem } from '@/api/client'
+import { SECTOR_COLORS, SECTORS, RISK_COLORS, getRiskLevelFromScore, getSectorNameEN } from '@/lib/constants'
 import { Heatmap } from '@/components/charts/Heatmap'
 import type { SectorStatistics } from '@/api/types'
 import { AlertTriangle, BarChart3, Layers, X } from 'lucide-react'
@@ -108,10 +111,14 @@ const SectorRankingStrip = memo(function SectorRankingStrip({
   const maxRisk = Math.max(...sorted.map((s) => s.avg_risk_score), 0.01)
 
   return (
-    <div
+    <motion.div
       className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin"
       role="listbox"
       aria-label="Sector risk ranking"
+      variants={staggerContainer}
+      initial="initial"
+      whileInView="animate"
+      viewport={{ once: true, margin: '-50px' }}
     >
       {sorted.map((sector, i) => {
         const color = SECTOR_COLORS[sector.sector_code] || '#64748b'
@@ -126,7 +133,7 @@ const SectorRankingStrip = memo(function SectorRankingStrip({
           'border-border/30'
 
         return (
-          <button
+          <motion.button
             key={sector.sector_id}
             role="option"
             aria-selected={isSelected}
@@ -138,6 +145,8 @@ const SectorRankingStrip = memo(function SectorRankingStrip({
                 : cn('hover:bg-background-elevated/40 hover:border-border/60', riskBorderColor, 'bg-background-elevated/10')
             )}
             aria-label={`${getSectorNameEN(sector.sector_code)}: ${riskPct.toFixed(1)}% avg risk, rank ${i + 1}`}
+            variants={staggerItem}
+            whileHover={{ scale: 1.02, transition: { duration: 0.15 } }}
           >
             {/* Rank badge */}
             <span className="text-[9px] font-bold text-text-muted font-mono">#{i + 1}</span>
@@ -176,10 +185,10 @@ const SectorRankingStrip = memo(function SectorRankingStrip({
             >
               {riskPct.toFixed(1)}%
             </span>
-          </button>
+          </motion.button>
         )
       })}
-    </div>
+    </motion.div>
   )
 })
 
@@ -410,6 +419,170 @@ function SectorTreemapContent(props: TreemapContentProps) {
 }
 
 // ============================================================================
+// INDUSTRY RISK HEATMAP — Treemap: cell size = total value, color = avg risk
+// ============================================================================
+
+interface IndustryHeatmapContentProps {
+  x?: number
+  y?: number
+  width?: number
+  height?: number
+  name?: string
+  vendor_count?: number
+  avg_risk_score?: number
+}
+
+function IndustryHeatmapContent(props: IndustryHeatmapContentProps) {
+  const { x = 0, y = 0, width = 0, height = 0, name = '', vendor_count = 0, avg_risk_score = 0 } = props
+  if (width < 20 || height < 20) return null
+  const showLabel = width > 55 && height > 32
+  const showVendors = width > 80 && height > 52
+  const riskLevel = getRiskLevelFromScore(avg_risk_score)
+  const fillColor = RISK_COLORS[riskLevel]
+  const riskPct = (avg_risk_score * 100).toFixed(1)
+
+  return (
+    <g>
+      <rect
+        x={x + 1}
+        y={y + 1}
+        width={width - 2}
+        height={height - 2}
+        style={{ fill: fillColor, fillOpacity: 0.7, stroke: 'rgba(0,0,0,0.3)', strokeWidth: 1 }}
+        rx={3}
+        ry={3}
+      />
+      {showLabel && (
+        <text
+          x={x + width / 2}
+          y={y + height / 2 - (showVendors ? 8 : 0)}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          style={{
+            fill: 'rgba(255,255,255,0.92)',
+            fontSize: Math.min(12, Math.max(9, width / 9)),
+            fontWeight: 700,
+            fontFamily: 'var(--font-mono, monospace)',
+            pointerEvents: 'none',
+          }}
+        >
+          {name}
+        </text>
+      )}
+      {showVendors && (
+        <text
+          x={x + width / 2}
+          y={y + height / 2 + 10}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          style={{
+            fill: 'rgba(255,255,255,0.72)',
+            fontSize: Math.min(10, Math.max(8, width / 11)),
+            fontFamily: 'var(--font-mono, monospace)',
+            pointerEvents: 'none',
+          }}
+        >
+          {vendor_count} vendors · {riskPct}%
+        </text>
+      )}
+    </g>
+  )
+}
+
+interface IndustryHeatmapWidgetProps {
+  items: IndustryClusterItem[]
+}
+
+const IndustryRiskHeatmap = memo(function IndustryRiskHeatmap({ items }: IndustryHeatmapWidgetProps) {
+  const treemapData = useMemo(
+    () =>
+      items.map((item) => ({
+        name: item.sector_name,
+        size: item.total_value,
+        vendor_count: item.vendor_count,
+        avg_risk_score: item.avg_risk_score,
+        high_risk_vendor_count: item.high_risk_vendor_count,
+        top_vendor_name: item.top_vendor_name,
+        top_vendor_value: item.top_vendor_value,
+        top_vendor_risk: item.top_vendor_risk,
+      })),
+    [items]
+  )
+
+  return (
+    <ResponsiveContainer width="100%" height={380}>
+      <Treemap
+        data={treemapData}
+        dataKey="size"
+        aspectRatio={4 / 3}
+        content={(props: Record<string, unknown>) => {
+          const { x, y, width, height, name, vendor_count, avg_risk_score } = props as IndustryHeatmapContentProps
+          return (
+            <IndustryHeatmapContent
+              x={x}
+              y={y}
+              width={width}
+              height={height}
+              name={name}
+              vendor_count={vendor_count}
+              avg_risk_score={avg_risk_score}
+            />
+          )
+        }}
+      >
+        <RechartsTooltip
+          content={({ active, payload }) => {
+            if (!active || !payload?.length) return null
+            const d = payload[0]?.payload as {
+              name: string
+              size: number
+              vendor_count: number
+              avg_risk_score: number
+              high_risk_vendor_count: number
+              top_vendor_name: string | null
+              top_vendor_value: number | null
+              top_vendor_risk: number | null
+            }
+            if (!d) return null
+            const riskLevel = getRiskLevelFromScore(d.avg_risk_score)
+            return (
+              <div className="rounded-lg border border-border bg-background-card p-3 shadow-lg max-w-[240px]">
+                <p className="font-semibold text-text-primary text-sm mb-1">{d.name}</p>
+                <div className="space-y-0.5 text-xs text-text-muted font-mono">
+                  <p>Vendors: {d.vendor_count.toLocaleString()}</p>
+                  <p>Total value: {formatCompactMXN(d.size)}</p>
+                  <p className="flex items-center gap-1">
+                    Avg risk:
+                    <span
+                      className="font-bold"
+                      style={{ color: RISK_COLORS[riskLevel] }}
+                    >
+                      {(d.avg_risk_score * 100).toFixed(2)}% ({riskLevel})
+                    </span>
+                  </p>
+                  <p>High-risk vendors: {d.high_risk_vendor_count.toLocaleString()}</p>
+                  {d.top_vendor_name && (
+                    <p className="pt-1 border-t border-border/30 mt-1">
+                      Top vendor: {d.top_vendor_name}
+                      {d.top_vendor_value != null && (
+                        <span className="block text-[10px]">
+                          {formatCompactMXN(d.top_vendor_value)}
+                          {d.top_vendor_risk != null && ` · risk ${(d.top_vendor_risk * 100).toFixed(1)}%`}
+                        </span>
+                      )}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )
+          }}
+        />
+      </Treemap>
+    </ResponsiveContainer>
+  )
+})
+
+// ============================================================================
 // Main Component
 // ============================================================================
 
@@ -464,6 +637,12 @@ export function Sectors() {
     queryFn: () => analysisApi.getSectorASFFindings(selectedSector!.sector_id),
     staleTime: 24 * 60 * 60 * 1000,
     enabled: !!selectedSector?.sector_id,
+  })
+
+  const { data: industryClusters, isLoading: industryClustersLoading } = useQuery({
+    queryKey: ['analysis', 'industry-risk-clusters'],
+    queryFn: () => analysisApi.getIndustryClusters(100),
+    staleTime: 60 * 60 * 1000,
   })
 
   // ---- Sparkline data: per-sector avg_risk by year ----
@@ -598,6 +777,12 @@ export function Sectors() {
   return (
     <div className="space-y-5">
       {/* Header */}
+      <motion.div
+        variants={slideUp}
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true, margin: '-50px' }}
+      >
       <ScrollReveal direction="fade">
       <div>
         <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
@@ -609,6 +794,7 @@ export function Sectors() {
         </p>
       </div>
       </ScrollReveal>
+      </motion.div>
 
       {/* ================================================================ */}
       {/* SECTOR RANKING STRIP — All 12 sectors by avg risk, clickable  */}
@@ -910,6 +1096,12 @@ export function Sectors() {
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
+      <motion.div
+        variants={fadeIn}
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true, margin: '-50px' }}
+      >
       <Card className="overflow-hidden">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between gap-3">
@@ -1152,6 +1344,7 @@ export function Sectors() {
           )}
         </CardContent>
       </Card>
+      </motion.div>
 
       {/* Section 3: Contract Value by Sector */}
       <ScrollReveal direction="fade">
@@ -1380,6 +1573,43 @@ export function Sectors() {
           </Card>
         </ScrollReveal>
       )}
+
+      {/* ================================================================ */}
+      {/* INDUSTRY RISK CONCENTRATION — Treemap by total value             */}
+      {/* ================================================================ */}
+      <ScrollReveal direction="fade">
+        <Card className="bg-card border-border/40">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-mono text-text-primary flex items-center gap-2">
+              <Layers className="h-3.5 w-3.5 text-accent" />
+              Industry Risk Concentration
+            </CardTitle>
+            <CardDescription className="text-xs text-text-muted">
+              Cell size = total contract value · Color = avg risk score (
+              <span className="text-risk-critical font-semibold">critical</span> ≥50% ·{' '}
+              <span className="text-risk-high font-semibold">high</span> ≥30% ·{' '}
+              <span className="text-risk-medium font-semibold">medium</span> ≥10% ·{' '}
+              <span className="text-risk-low font-semibold">low</span> &lt;10%
+              ) · Min 100 vendors per sector
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {industryClustersLoading ? (
+              <div className="flex flex-col items-center justify-center gap-3 h-[380px]">
+                <div className="h-6 w-6 rounded-full border-2 border-accent border-t-transparent animate-spin" aria-hidden="true" />
+                <p className="text-xs text-text-muted font-mono">Computing industry clusters...</p>
+                <p className="text-[10px] text-text-muted/60 font-mono">First load may take up to 100 seconds</p>
+              </div>
+            ) : industryClusters && industryClusters.data.length > 0 ? (
+              <IndustryRiskHeatmap items={industryClusters.data} />
+            ) : (
+              <div className="flex items-center justify-center h-[380px]">
+                <p className="text-xs text-text-muted font-mono">No cluster data available</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </ScrollReveal>
     </div>
   )
 }
