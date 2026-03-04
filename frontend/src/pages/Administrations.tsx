@@ -1525,6 +1525,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
               Contracts scored critical or high risk by the v5.1 risk model. Thresholds calibrated using 22 documented corruption cases.
             </div>
             <div className="mt-2 text-xs text-text-muted">
+              {/* HARDCODED: "3.1M contracts" — update if total_contracts from API endpoint is available */}
               Avg risk score: {(allTimeAvg.risk * 100).toFixed(1)}% across 3.1M contracts
             </div>
           </CardContent>

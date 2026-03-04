@@ -509,7 +509,7 @@ export default function SpendingCategories() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
   const trendChartRef = useRef<HTMLDivElement>(null)
 
-  const { data: summaryData, isLoading: summaryLoading } = useQuery({
+  const { data: summaryData, isLoading: summaryLoading, error: summaryError } = useQuery({
     queryKey: ['categories', 'summary'],
     queryFn: () => categoriesApi.getSummary(),
     staleTime: 5 * 60 * 1000,
@@ -659,6 +659,35 @@ export default function SpendingCategories() {
     return { totalValue, totalContracts, avgRisk, topCategory }
   }, [allCategories])
 
+  // Loading skeleton for initial load
+  if (summaryLoading && !summaryData) {
+    return (
+      <div className="space-y-6">
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 rounded-lg" />
+          ))}
+        </div>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-16 w-full" />
+        ))}
+      </div>
+    )
+  }
+
+  // Error state if summary fetch failed
+  if (summaryError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+        <AlertTriangle className="h-10 w-10 text-destructive" aria-hidden="true" />
+        <div>
+          <p className="text-sm font-medium text-text-primary">Failed to load spending categories</p>
+          <p className="text-xs text-text-muted mt-1">Check your connection and try refreshing.</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Page Hero */}
@@ -682,6 +711,7 @@ export default function SpendingCategories() {
           Spending Categories
         </h2>
         <p className="text-xs text-text-muted mt-0.5">
+          {/* HARDCODED: "3.1M contracts" — replace with macroStats.totalContracts when reliably loaded */}
           What Mexico buys — {allCategories.length} categories covering all 3.1M contracts
         </p>
       </div>

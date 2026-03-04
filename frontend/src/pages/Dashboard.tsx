@@ -1530,8 +1530,8 @@ const RiskDistributionAnnotation = memo(function RiskDistributionAnnotation({
   const critPct = critical?.percentage ?? 6.5
   const highPct = high?.percentage ?? 4.1
   const combinedPct = (critPct + highPct).toFixed(1)
-  const critCount = critical?.count ?? 201745
-  const highCount = high?.count ?? 126553
+  const critCount = critical?.count
+  const highCount = high?.count
 
   return (
     <div className="rounded-md border border-border/30 bg-background-elevated/20 px-4 py-3">
@@ -1541,11 +1541,11 @@ const RiskDistributionAnnotation = memo(function RiskDistributionAnnotation({
       <div className="space-y-1.5 text-xs text-text-muted leading-relaxed">
         <p>
           <span className="font-semibold text-risk-critical">{critPct.toFixed(1)}% Critical</span>
-          {' '}({formatNumber(critCount)} contracts) — procurement characteristics closely match documented corruption cases. Immediate investigation warranted.
+          {critCount != null ? ` (${formatNumber(critCount)} contracts)` : ''}{' '}— procurement characteristics closely match documented corruption cases. Immediate investigation warranted.
         </p>
         <p>
           <span className="font-semibold text-risk-high">{highPct.toFixed(1)}% High</span>
-          {' '}({formatNumber(highCount)} contracts) — strong statistical anomalies relative to sector norms. Priority review recommended.
+          {highCount != null ? ` (${formatNumber(highCount)} contracts)` : ''}{' '}— strong statistical anomalies relative to sector norms. Priority review recommended.
         </p>
         <p className="text-text-muted/70">
           Combined <span className="text-text-secondary font-semibold">{combinedPct}%</span> of contracts are flagged high-or-critical. Risk scores measure statistical similarity to known corruption patterns — not proof of wrongdoing.

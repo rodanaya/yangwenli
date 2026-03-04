@@ -6,6 +6,7 @@ import { analysisApi } from '@/api/client'
 import { SankeyDiagram } from '@/components/SankeyDiagram'
 import type { SankeyNodeSelected } from '@/components/SankeyDiagram'
 import { formatCompactMXN } from '@/lib/utils'
+import { SECTORS } from '@/lib/constants'
 import { GitBranch, ArrowRight, Building2, Users, TrendingUp, DollarSign, X, AlertTriangle, Info } from 'lucide-react'
 import {
   Select,
@@ -14,15 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-
-const SECTORS = [
-  { id: 1, name: 'Salud' }, { id: 2, name: 'Educación' },
-  { id: 3, name: 'Infraestructura' }, { id: 4, name: 'Energía' },
-  { id: 5, name: 'Defensa' }, { id: 6, name: 'Tecnología' },
-  { id: 7, name: 'Hacienda' }, { id: 8, name: 'Gobernación' },
-  { id: 9, name: 'Agricultura' }, { id: 10, name: 'Ambiente' },
-  { id: 11, name: 'Trabajo' }, { id: 12, name: 'Otros' },
-]
 
 const YEARS = Array.from({ length: 24 }, (_, i) => 2025 - i)
 
