@@ -10,7 +10,6 @@ def test_create_dossier():
     data = r.json()
     assert data["name"] == "Test Dossier"
     assert data["item_count"] == 0
-    return data["id"]
 
 def test_list_dossiers():
     r = client.get("/api/v1/workspace/dossiers")
