@@ -8,6 +8,8 @@
  */
 
 import React, { useMemo, useRef, useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
+import { staggerContainer, staggerItem } from '@/lib/animations'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation, Trans } from 'react-i18next'
@@ -219,12 +221,26 @@ function ReportHeader({ data }: { data: ExecutiveSummaryResponse }) {
       </div>
 
       {/* Headline stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <HeadlineStat value={formatNumber(headline.total_contracts)} label={t('header.contracts')} rawNumber={headline.total_contracts} />
-        <HeadlineStat value={formatCompactMXN(headline.total_value)} label={t('header.totalValue')} />
-        <HeadlineStat value={formatNumber(headline.total_vendors)} label={t('header.vendors')} rawNumber={headline.total_vendors} />
-        <HeadlineStat value={formatNumber(headline.total_institutions)} label={t('header.institutions')} rawNumber={headline.total_institutions} />
-      </div>
+      <motion.div
+        className="grid grid-cols-2 sm:grid-cols-4 gap-4"
+        variants={staggerContainer}
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true, margin: '-40px' }}
+      >
+        <motion.div variants={staggerItem}>
+          <HeadlineStat value={formatNumber(headline.total_contracts)} label={t('header.contracts')} rawNumber={headline.total_contracts} />
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <HeadlineStat value={formatCompactMXN(headline.total_value)} label={t('header.totalValue')} />
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <HeadlineStat value={formatNumber(headline.total_vendors)} label={t('header.vendors')} rawNumber={headline.total_vendors} />
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <HeadlineStat value={formatNumber(headline.total_institutions)} label={t('header.institutions')} rawNumber={headline.total_institutions} />
+        </motion.div>
+      </motion.div>
       </div>
     </header>
   )

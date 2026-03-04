@@ -1,4 +1,6 @@
 import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
+import { staggerContainer, staggerItem } from '@/lib/animations'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
@@ -621,9 +623,16 @@ export function Dashboard() {
         <p className="text-sm text-text-muted mb-4">
           {t('systemicPatternsDesc')}
         </p>
-        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+        <motion.div
+          className="grid gap-3 sm:grid-cols-2 md:grid-cols-3"
+          variants={staggerContainer}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, margin: '-40px' }}
+        >
           {/* Direct Awards */}
-          <button
+          <motion.button
+            variants={staggerItem}
             onClick={() => navigate('/contracts?is_direct_award=true')}
             className="flex flex-col gap-3 p-4 rounded-lg border border-risk-high/20 bg-risk-high/5 hover:border-risk-high/40 hover:bg-risk-high/10 transition-all text-left group"
           >
@@ -641,10 +650,11 @@ export function Dashboard() {
               <p className="text-xs text-text-muted mt-1 font-mono">{t('oecdDirectAward')}</p>
             </div>
             <ArrowRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" />
-          </button>
+          </motion.button>
 
           {/* Single Bidder */}
-          <button
+          <motion.button
+            variants={staggerItem}
             onClick={() => navigate('/contracts?is_single_bid=true')}
             className="flex flex-col gap-3 p-4 rounded-lg border border-risk-critical/20 bg-risk-critical/5 hover:border-risk-critical/40 hover:bg-risk-critical/10 transition-all text-left group"
           >
@@ -662,10 +672,11 @@ export function Dashboard() {
               <p className="text-xs text-text-muted mt-1 font-mono">{t('singleBidEffective')}</p>
             </div>
             <ArrowRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" />
-          </button>
+          </motion.button>
 
           {/* December Rush */}
-          <button
+          <motion.button
+            variants={staggerItem}
             onClick={() => navigate('/administrations')}
             className="flex flex-col gap-3 p-4 rounded-lg border border-risk-medium/20 bg-risk-medium/5 hover:border-risk-medium/40 hover:bg-risk-medium/10 transition-all text-left group"
           >
@@ -709,8 +720,8 @@ export function Dashboard() {
               )}
             </div>
             <ArrowRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" />
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       </div>
 
       {/* ================================================================ */}
@@ -771,9 +782,15 @@ export function Dashboard() {
               {t('fullMethodologyLink')} <ArrowUpRight className="h-3 w-3" />
             </button>
           </div>
-          <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
+          <motion.div
+            className="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-4"
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true, margin: '-40px' }}
+          >
             {AI_SIGNALS.map((signal) => (
-              <div key={signal.label} className={cn('rounded-lg border p-3', signal.border, signal.bg)}>
+              <motion.div key={signal.label} variants={staggerItem} className={cn('rounded-lg border p-3', signal.border, signal.bg)}>
                 <div className="flex items-center gap-2 mb-2">
                   <signal.icon className={cn('h-3.5 w-3.5', signal.color)} />
                   <span className={cn('text-lg font-black tabular-nums font-mono leading-none', signal.color)}>
@@ -782,9 +799,9 @@ export function Dashboard() {
                 </div>
                 <p className="text-sm font-bold text-text-primary leading-tight">{signal.label}</p>
                 <p className="text-xs text-text-muted mt-0.5 leading-relaxed">{signal.description}</p>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
           <p className="text-[10px] text-text-muted mt-3 font-mono">
             Coefficient = log-odds contribution to risk score. v5.1 · Train AUC 0.964 · Test AUC 0.957
           </p>

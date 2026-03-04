@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { motion } from 'framer-motion'
 import { ArrowRight, BarChart3, Search, Shield, BookOpen, TrendingUp, AlertTriangle, Cpu, ChevronDown } from 'lucide-react'
 import { analysisApi } from '@/api/client'
 import { formatCompactMXN } from '@/lib/utils'
 import { NarrativeCard } from '@/components/NarrativeCard'
 import type { NarrativeParagraph } from '@/lib/narratives'
 import type { FastDashboardData, RiskDistribution } from '@/api/types'
+import { staggerContainer, staggerItem, slideUp } from '@/lib/animations'
 
 // ---------------------------------------------------------------------------
 // useCountUp — animates a number from 0 to `target` over `duration` ms.
@@ -261,9 +263,14 @@ function HeroStats({ totalContracts, totalValueMxn, highRiskPct, groundTruthCase
       </div>
 
       {/* Stat grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+      <motion.div
+        className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6"
+        variants={staggerContainer}
+        initial="initial"
+        animate={triggered ? 'animate' : 'initial'}
+      >
         {stats.map((s) => (
-          <div key={s.label} className="flex flex-col gap-1">
+          <motion.div key={s.label} variants={staggerItem} className="flex flex-col gap-1">
             <span
               className="text-3xl sm:text-4xl font-black tabular-nums leading-none"
               style={{ color: s.color }}
@@ -272,9 +279,9 @@ function HeroStats({ totalContracts, totalValueMxn, highRiskPct, groundTruthCase
             </span>
             <span className="text-xs text-white/60 leading-tight font-medium">{s.label}</span>
             <span className="text-[10px] text-white/30 leading-tight">{s.sub}</span>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Risk distribution strip */}
       <RiskStrip riskDistribution={riskDistribution} />
@@ -447,44 +454,51 @@ function HeroSection({ onEnter, onScrollDown }: HeroSectionProps) {
         }}
       />
 
-      <div
+      <motion.div
         className="max-w-4xl mx-auto flex flex-col items-center gap-6 z-10"
-        style={{
-          opacity: mounted ? 1 : 0,
-          transform: mounted ? 'translateY(0)' : 'translateY(24px)',
-          transition: 'opacity 0.9s ease, transform 0.9s ease',
-        }}
+        variants={staggerContainer}
+        initial="initial"
+        animate={mounted ? 'animate' : 'initial'}
       >
         {/* Platform badge */}
-        <span className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold tracking-widest uppercase bg-white/5 border border-white/10 text-white/50">
+        <motion.span
+          variants={slideUp}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold tracking-widest uppercase bg-white/5 border border-white/10 text-white/50"
+        >
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           AI-Powered Anti-Corruption Research Platform
-        </span>
+        </motion.span>
 
         {/* Main headline */}
-        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black leading-[1.05] text-white">
+        <motion.h1
+          variants={slideUp}
+          className="text-4xl sm:text-6xl lg:text-7xl font-black leading-[1.05] text-white"
+        >
           23 years.{' '}
           <span style={{ color: '#3b82f6' }}>3.1 million</span>{' '}
           contracts.{' '}
           <span style={{ color: '#dc2626' }}>Follow the money.</span>
-        </h1>
+        </motion.h1>
 
         {/* Subheading */}
-        <p className="text-lg sm:text-xl text-white/55 max-w-2xl leading-relaxed">
+        <motion.p
+          variants={slideUp}
+          className="text-lg sm:text-xl text-white/55 max-w-2xl leading-relaxed"
+        >
           RUBLI analyzes every federal procurement contract Mexico has published since 2002 —
           flagging corruption patterns, mapping vendor networks, and surfacing cases the data reveals.
-        </p>
+        </motion.p>
 
         {/* What we found strip */}
-        <div className="w-full max-w-2xl mt-2">
+        <motion.div variants={slideUp} className="w-full max-w-2xl mt-2">
           <NarrativeCard
             paragraphs={HERO_FINDINGS}
             className="bg-white/[0.03] border-white/10 text-left"
           />
-        </div>
+        </motion.div>
 
         {/* CTA row */}
-        <div className="flex flex-wrap gap-3 justify-center mt-2">
+        <motion.div variants={slideUp} className="flex flex-wrap gap-3 justify-center mt-2">
           <button
             onClick={onEnter}
             className="flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-sm transition-all duration-200 hover:opacity-90 hover:scale-[1.02] shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-400/60"
@@ -498,8 +512,8 @@ function HeroSection({ onEnter, onScrollDown }: HeroSectionProps) {
           >
             See how it works <ChevronDown className="h-4 w-4" aria-hidden="true" />
           </button>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Scroll indicator */}
       <button

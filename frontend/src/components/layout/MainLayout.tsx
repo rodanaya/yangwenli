@@ -1,13 +1,16 @@
 import { useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 import { WelcomeModal } from '@/components/WelcomeModal'
+import { pageVariants } from '@/lib/animations'
 
 export function MainLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const location = useLocation()
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -54,9 +57,18 @@ export function MainLayout() {
 
         {/* Page content */}
         <main id="main-content" className="flex-1 px-3 sm:px-5 py-5" tabIndex={-1}>
-          <div className="animate-fade-in">
-            <Outlet />
-          </div>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={location.pathname}
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="h-full"
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </main>
 
         {/* Footer — minimal status bar */}
