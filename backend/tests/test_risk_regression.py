@@ -7,12 +7,14 @@ the scoring pipeline produces expected results.
 
 Ground truth: 9 documented corruption cases with 17 matched vendors.
 """
+import os
 import pytest
 import sqlite3
 from pathlib import Path
 
 
-DB_PATH = Path(__file__).parent.parent / "RUBLI_NORMALIZED.db"
+_default_db = Path(__file__).parent.parent / "RUBLI_NORMALIZED.db"
+DB_PATH = Path(os.environ.get("DATABASE_PATH", str(_default_db)))
 
 # Known corruption cases with their expected vendors
 # From docs/RISK_METHODOLOGY_v4.md

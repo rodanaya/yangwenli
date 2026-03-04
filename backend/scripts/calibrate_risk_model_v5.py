@@ -648,6 +648,10 @@ def main():
     parser.add_argument('--skip-sector-models', action='store_true')
     parser.add_argument('--model-version', type=str, default=MODEL_VERSION,
                         help=f'Model version tag written to model_calibration (default: {MODEL_VERSION})')
+    parser.add_argument('--force-C', type=float, default=None,
+                        help='Force C value (skip CV). Use 10.0 to match original v5.1.')
+    parser.add_argument('--force-l1-ratio', type=float, default=None,
+                        help='Force l1_ratio (skip CV). Use 0.25 to match original v5.1.')
     args = parser.parse_args()
 
     # Allow CLI override of the module-level constant
@@ -709,8 +713,13 @@ def main():
         print("\n" + "=" * 60)
         print("STEP 3: Hyperparameter cross-validation")
         print("=" * 60)
-        best_C, best_l1 = cross_validate_hyperparams(X_train, y_train, n_folds=5)
-        print(f"\n  Best: C={best_C}, l1_ratio={best_l1}")
+        if args.force_C is not None:
+            best_C = args.force_C
+            best_l1 = args.force_l1_ratio if args.force_l1_ratio is not None else 0.25
+            print(f"\n  Forcing hyperparameters: C={best_C}, l1_ratio={best_l1} (CV skipped)")
+        else:
+            best_C, best_l1 = cross_validate_hyperparams(X_train, y_train, n_folds=5)
+            print(f"\n  Best: C={best_C}, l1_ratio={best_l1}")
 
         # ================================================================
         # STEP 4: Elkan & Noto PU correction (using CV-selected hyperparams)
