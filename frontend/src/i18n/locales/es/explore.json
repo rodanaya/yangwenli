@@ -63,14 +63,45 @@
     "allSectors": "Todos los sectores",
     "riskLevel": "Nivel de Riesgo",
     "allRiskLevels": "Todos los niveles",
-    "minContracts": "Mín. Contratos",
-    "minValue": "Mín. Valor",
+    "minContracts": "Mín. contratos",
+    "minValue": "Valor mínimo",
     "hasRfc": "Con RFC",
+    "noRfc": "Sin RFC",
+    "rfcStatus": "Estado RFC",
     "sortBy": "Ordenar por",
     "sortOrder": "Orden",
     "ascending": "Ascendente",
     "descending": "Descendente",
     "reset": "Limpiar filtros",
     "apply": "Aplicar"
+  },
+  "search": {
+    "nameOrRfc": "Buscar nombre o RFC...",
+    "nameOrAcronym": "Buscar nombre o sigla...",
+    "searching": "Buscando\u2026",
+    "noResultsFor": "Sin resultados para \u00ab{{query}}\u00bb",
+    "placeholder": "Buscar proveedores, RFC, instituciones\u2026"
+  },
+  "stats": {
+    "pageValue": "Gasto en página",
+    "pageContracts": "Contratos en página",
+    "avgRisk": "Riesgo promedio",
+    "highPlus": "Alto+",
+    "critical": "Crítico",
+    "pageSpending": "Gasto en página",
+    "highPlusRisk": "Alto+ riesgo",
+    "totalVendors": "Proveedores totales"
+  },
+  "empty": {
+    "noVendorsMatch": "Ningún proveedor coincide con los filtros",
+    "failedToLoadVendors": "Error al cargar proveedores",
+    "noFlashVendors": "Sin proveedores destacados con estos umbrales",
+    "failedToLoad": "Error al cargar resultados",
+    "stillActive": "Activo"
+  },
+  "dossier": {
+    "addToDossier": "Agregar al expediente",
+    "noDossiersYet": "Sin expedientes aún",
+    "whyTrack": "¿Por qué seguir a {{name}}?"
   }
 }

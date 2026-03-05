@@ -150,47 +150,87 @@ class AnalysisService(BaseService):
         sector_id: int | None = None,
         year: int | None = None,
         limit: int = 50,
+        direct_award_only: bool = False,
     ) -> dict:
         """
-        Top institution->vendor flows using the precomputed institution_top_vendors table.
+        Top institution->vendor flows.
 
-        Previously used raw GROUP BY on 3.1M contracts (30+ seconds). Now uses the
-        precomputed table for sub-second response. Returns institution->vendor flows
-        only (not two-layer institution->sector + sector->vendor).
+        Fast path (no filters): uses precomputed institution_top_vendors table.
+        Filtered path (year or direct_award_only): queries contracts directly with
+        proper indexes (idx_contracts_institution_year, idx_contracts_year).
         """
         cursor = conn.cursor()
         flows: list[dict] = []
         total_value = 0.0
         total_contracts = 0
 
-        where_parts = ["itv.total_value_mxn > 0"]
-        params: list[Any] = []
-        if sector_id is not None:
-            where_parts.append("i.sector_id = ?")
-            params.append(sector_id)
-        # Note: institution_top_vendors is aggregate over all years, so year filter
-        # is not supported here — filtered at contract level would require the slow path.
+        if year is not None or direct_award_only:
+            # ── Filtered path: query contracts directly ─────────────────────
+            where_parts = [
+                "c.amount_mxn > 0",
+                "c.amount_mxn < 100000000000",
+                "c.institution_id IS NOT NULL",
+                "c.vendor_id IS NOT NULL",
+            ]
+            params: list[Any] = []
+            if year is not None:
+                where_parts.append("c.contract_year = ?")
+                params.append(year)
+            if sector_id is not None:
+                where_parts.append("c.sector_id = ?")
+                params.append(sector_id)
+            if direct_award_only:
+                where_parts.append("c.is_direct_award = 1")
+            where_clause = " AND ".join(where_parts)
 
-        where_clause = " AND ".join(where_parts)
+            cursor.execute(
+                f"""
+                SELECT
+                    c.institution_id,
+                    i.name AS institution_name,
+                    c.vendor_id,
+                    v.name AS vendor_name,
+                    SUM(c.amount_mxn) AS total_value,
+                    COUNT(*) AS contract_count,
+                    AVG(c.risk_score) AS avg_risk
+                FROM contracts c
+                JOIN institutions i ON c.institution_id = i.id
+                JOIN vendors v ON c.vendor_id = v.id
+                WHERE {where_clause}
+                GROUP BY c.institution_id, c.vendor_id
+                HAVING total_value > 0
+                ORDER BY total_value DESC
+                LIMIT ?
+                """,
+                params + [limit],
+            )
+        else:
+            # ── Fast path: precomputed table ────────────────────────────────
+            where_parts2 = ["itv.total_value_mxn > 0"]
+            params2: list[Any] = []
+            if sector_id is not None:
+                where_parts2.append("i.sector_id = ?")
+                params2.append(sector_id)
+            where_clause2 = " AND ".join(where_parts2)
 
-        cursor.execute(
-            f"""
-            SELECT
-                itv.institution_id,
-                i.name AS institution_name,
-                itv.vendor_id,
-                itv.vendor_name,
-                itv.total_value_mxn AS total_value,
-                itv.contract_count,
-                itv.avg_risk_score AS avg_risk
-            FROM institution_top_vendors itv
-            JOIN institutions i ON itv.institution_id = i.id
-            WHERE {where_clause}
-            ORDER BY itv.total_value_mxn DESC
-            LIMIT ?
-            """,
-            params + [limit],
-        )
+            cursor.execute(
+                f"""
+                SELECT
+                    itv.institution_id,
+                    i.name AS institution_name,
+                    itv.vendor_id,
+                    itv.vendor_name,
+                    itv.total_value_mxn AS total_value,
+                    itv.contract_count,
+                    itv.avg_risk_score AS avg_risk
+                FROM institution_top_vendors itv
+                JOIN institutions i ON itv.institution_id = i.id
+                WHERE {where_clause2}
+                ORDER BY itv.total_value_mxn DESC
+                LIMIT ?
+                """,
+                params2 + [limit],
+            )
 
         for row in cursor.fetchall():
             avg_risk = row["avg_risk"]

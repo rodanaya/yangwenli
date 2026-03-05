@@ -43,7 +43,6 @@ const RISK_COLORS: Record<string, string> = {
   unknown:  '#64748b',
 }
 
-// Dark background so labels always readable regardless of flow color beneath them
 const LABEL_BG = '#0f1629'
 
 function formatMXN(v: number) {
@@ -52,15 +51,21 @@ function formatMXN(v: number) {
   return `${(v / 1e3).toFixed(0)}K MXN`
 }
 
-/** Truncate with ellipsis, trying to keep the most meaningful part of the name */
 function truncate(name: string, maxChars: number): string {
   if (name.length <= maxChars) return name
   return name.slice(0, maxChars - 1) + '…'
 }
 
-/** Estimate SVG text width: roughly 0.57× fontSize per character for sans-serif */
 function estWidth(text: string, fontSize: number): number {
   return text.length * fontSize * 0.57
+}
+
+/** Pick risk color from avgRisk score (0-1) */
+function riskColorFromScore(avgRisk: number): string {
+  if (avgRisk >= 0.5) return RISK_COLORS.critical
+  if (avgRisk >= 0.3) return RISK_COLORS.high
+  if (avgRisk >= 0.1) return RISK_COLORS.medium
+  return RISK_COLORS.low
 }
 
 export function SankeyDiagram({
@@ -100,15 +105,14 @@ export function SankeyDiagram({
     if (!graphLinks.length) return null
 
     try {
-      // Reserve margin on both sides for labels: 220px left, 220px right
       const LABEL_MARGIN = 220
       const layout = d3Sankey()
-        .nodeId(((_d: any, i: number) => i) as any)
+        .nodeId(((_d: unknown, i: number) => i) as never)
         .nodeWidth(16)
         .nodePadding(12)
         .extent([[LABEL_MARGIN, 4], [width - LABEL_MARGIN, height - 4]])
 
-      return layout({ nodes: graphNodes as any, links: graphLinks as any })
+      return layout({ nodes: graphNodes as never, links: graphLinks as never })
     } catch {
       return null
     }
@@ -122,68 +126,126 @@ export function SankeyDiagram({
     <div className="relative select-none overflow-x-auto">
       <svg width={width} height={height} className="overflow-visible">
         <defs>
+          {/* Gradient fills for each flow (risk-colored) */}
           {sLinks.map((link, i) => {
-            const src = link.source as any
-            const tgt = link.target as any
-            const ld  = link as any
+            const src = link.source as never as { riskLevel: string }
+            const tgt = link.target as never as { riskLevel: string }
+            const ld  = link as never as { avgRisk?: number }
             const avgRisk: number = ld.avgRisk ?? 0
-            let flowColor: string
-            if      (avgRisk >= 0.5) flowColor = RISK_COLORS.critical
-            else if (avgRisk >= 0.3) flowColor = RISK_COLORS.high
-            else if (avgRisk >= 0.1) flowColor = RISK_COLORS.medium
-            else                     flowColor = RISK_COLORS.low
+            const flowColor = riskColorFromScore(avgRisk)
             const sc = avgRisk > 0 ? flowColor : (RISK_COLORS[src.riskLevel] ?? RISK_COLORS.unknown)
             const tc = avgRisk > 0 ? flowColor : (RISK_COLORS[tgt.riskLevel] ?? RISK_COLORS.unknown)
             return (
               <linearGradient key={i} id={`lg-${i}`} x1="0%" x2="100%">
-                <stop offset="0%"   stopColor={sc} stopOpacity={0.50} />
-                <stop offset="100%" stopColor={tc} stopOpacity={0.40} />
+                <stop offset="0%"   stopColor={sc} stopOpacity={0.45} />
+                <stop offset="100%" stopColor={tc} stopOpacity={0.35} />
               </linearGradient>
             )
           })}
-          <style>{`
-            @keyframes sankeyDash { to { stroke-dashoffset: -20; } }
-          `}</style>
+
+          {/* Glow filter for electricity particles */}
+          <filter id="particle-glow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="2.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Subtle node glow */}
+          <filter id="node-glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="1.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
-        {/* ── Links ─────────────────────────────────────────────── */}
+        {/* ── Flows (circuit traces) ─────────────────────────────────── */}
         {sLinks.map((link, i) => {
-          const pathD = sankeyLinkHorizontal()(link as any)
-          const src   = link.source as any
-          const tgt   = link.target as any
-          const ld    = link as any
-          const strokeW = Math.max(1.5, (link as any).width ?? 1.5)
+          const pathD   = sankeyLinkHorizontal()(link as never)
+          const src     = link.source as never as { id: string; riskLevel: string }
+          const tgt     = link.target as never as { id: string; riskLevel: string }
+          const ld      = link as never as { avgRisk?: number; contractCount?: number }
+          const strokeW = Math.max(1.5, (link as never as { width?: number }).width ?? 1.5)
           const isRelated = selectedNodeId && (src.id === selectedNodeId || tgt.id === selectedNodeId)
-          const avgRisk   = (ld.avgRisk ?? 0) * 100
-          const riskLabel = avgRisk >= 50 ? 'Critical' : avgRisk >= 30 ? 'High' : avgRisk >= 10 ? 'Medium' : 'Low'
-          const riskColor = avgRisk >= 50 ? RISK_COLORS.critical : avgRisk >= 30 ? RISK_COLORS.high : avgRisk >= 10 ? RISK_COLORS.medium : RISK_COLORS.low
+          const avgRisk   = (ld.avgRisk ?? 0)
+          const avgRiskPct = avgRisk * 100
+          const riskLabel = avgRiskPct >= 50 ? 'Critical' : avgRiskPct >= 30 ? 'High' : avgRiskPct >= 10 ? 'Medium' : 'Low'
+          const riskColor = riskColorFromScore(avgRisk)
+
+          // Number of electricity particles scales with flow thickness
+          const numParticles = strokeW >= 10 ? 3 : strokeW >= 4 ? 2 : 1
+          // Animation duration: faster for smaller flows, ~2s base
+          const dur = Math.max(1.2, Math.min(2.8, 2.0 - (strokeW - 1.5) * 0.05))
 
           return (
-            <path
-              key={i}
-              d={pathD || ''}
-              fill="none"
-              stroke={`url(#lg-${i})`}
-              strokeWidth={strokeW}
-              strokeDasharray={`${strokeW * 2} ${strokeW}`}
-              className="cursor-pointer transition-opacity"
-              opacity={selectedNodeId && !isRelated ? 0.15 : 0.9}
-              style={{ animation: 'sankeyDash 1.4s linear infinite' }}
-              onClick={() => onFlowClick?.(src.id, tgt.id)}
-              onMouseMove={e => handleMouseMove(e, [
-                `${src.name}`,
-                `→ ${tgt.name}`,
-                `${formatMXN(link.value)}  ·  ${(ld.contractCount ?? 0).toLocaleString()} contracts`,
-                `Avg risk: ${avgRisk.toFixed(0)}% — ${riskLabel}`,
-              ], riskColor)}
-              onMouseLeave={() => setTooltip(null)}
-            />
+            <g key={i}>
+              {/* Circuit trace path — solid, no animation */}
+              <path
+                d={pathD || ''}
+                fill="none"
+                stroke={`url(#lg-${i})`}
+                strokeWidth={strokeW}
+                className="cursor-pointer transition-opacity"
+                opacity={selectedNodeId && !isRelated ? 0.12 : 0.85}
+                onClick={() => onFlowClick?.(src.id, tgt.id)}
+                onMouseMove={e => handleMouseMove(e, [
+                  `${src.id.replace('inst-', '')} → flow`,
+                  `${formatMXN(link.value)}  ·  ${(ld.contractCount ?? 0).toLocaleString()} contracts`,
+                  `Avg risk: ${avgRiskPct.toFixed(0)}% — ${riskLabel}`,
+                ], riskColor)}
+                onMouseLeave={() => setTooltip(null)}
+              />
+
+              {/* Electricity particles traveling along the trace */}
+              {pathD && !selectedNodeId && Array.from({ length: numParticles }, (_, j) => (
+                <circle
+                  key={j}
+                  r={Math.min(3.5, Math.max(2, strokeW * 0.35))}
+                  fill={riskColor}
+                  opacity={0.92}
+                  filter="url(#particle-glow)"
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <animateMotion
+                    dur={`${dur}s`}
+                    begin={`${-(j / numParticles) * dur}s`}
+                    repeatCount="indefinite"
+                    path={pathD}
+                    calcMode="linear"
+                  />
+                </circle>
+              ))}
+
+              {/* Selected-node mode: show single slower pulse on related flows */}
+              {pathD && selectedNodeId && isRelated && (
+                <circle
+                  r={Math.min(4, Math.max(2.5, strokeW * 0.4))}
+                  fill={riskColor}
+                  opacity={0.95}
+                  filter="url(#particle-glow)"
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <animateMotion
+                    dur={`${dur * 1.5}s`}
+                    repeatCount="indefinite"
+                    path={pathD}
+                    calcMode="linear"
+                  />
+                </circle>
+              )}
+            </g>
           )
         })}
 
         {/* ── Nodes + Labels ────────────────────────────────────── */}
         {sNodes.map((node, i) => {
-          const n         = node as any
+          const n         = node as never as {
+            id: string; name: string; type: string; riskLevel: string;
+            x0?: number; x1?: number; y0?: number; y1?: number; value?: number
+          }
           const color     = RISK_COLORS[n.riskLevel] ?? RISK_COLORS.unknown
           const x0        = n.x0 ?? 0
           const x1        = n.x1 ?? 0
@@ -193,19 +255,18 @@ export function SankeyDiagram({
           const isLeft    = x0 < width / 2
           const isSelected = selectedNodeId === n.id
 
-          // Contract count summed across connected links
-          const nodeLinks = (sLinks as any[]).filter(
-            l => (l.source as any).id === n.id || (l.target as any).id === n.id
+          const nodeLinks = (sLinks as never[]).filter(
+            (l: never) => (l as never as { source: { id: string } }).source.id === n.id ||
+                          (l as never as { target: { id: string } }).target.id === n.id
           )
-          const contractCount = nodeLinks.reduce((s: number, l: any) => s + (l.contractCount ?? 0), 0)
+          const contractCount = (nodeLinks as never[]).reduce(
+            (s: number, l: never) => s + ((l as never as { contractCount?: number }).contractCount ?? 0),
+            0
+          )
 
-          // ── Label sizing
-          // Font scales between 10px (small nodes) and 13px (large nodes)
           const fontSize = Math.min(13, Math.max(10, Math.round(nodeH * 0.4 + 9)))
-          // Only render label if node is tall enough to be useful
           const showLabel = nodeH >= 8
 
-          // How many chars can we fit in the available margin (220px reserved)?
           const LABEL_MARGIN = 215
           const maxChars = Math.max(10, Math.floor(LABEL_MARGIN / (fontSize * 0.57)))
           const labelText = truncate(n.name, maxChars)
@@ -213,8 +274,6 @@ export function SankeyDiagram({
           const labelH    = fontSize + 5
           const labelY    = (y0 + y1) / 2
 
-          // For left nodes: label appears to the right of the node
-          // For right nodes: label appears to the left of the node
           const GAP = 8
           const textX = isLeft ? x1 + GAP : x0 - GAP
           const bgX   = isLeft ? x1 + GAP - 3 : x0 - GAP - labelW - 3
@@ -226,7 +285,7 @@ export function SankeyDiagram({
               onClick={() => onNodeClick?.({
                 id: n.id,
                 name: n.name,
-                type: n.type,
+                type: n.type as 'institution' | 'vendor',
                 riskLevel: n.riskLevel,
                 totalValue: n.value ?? 0,
                 contractCount,
@@ -242,17 +301,19 @@ export function SankeyDiagram({
                   stroke="#06b6d4"
                   strokeWidth={2}
                   rx={4}
+                  filter="url(#node-glow)"
                 />
               )}
 
-              {/* Node bar */}
+              {/* Node bar (circuit component) */}
               <rect
                 x={x0} y={y0}
                 width={Math.max(1, x1 - x0)}
                 height={nodeH}
                 fill={color}
-                opacity={selectedNodeId && !isSelected ? 0.35 : 0.92}
+                opacity={selectedNodeId && !isSelected ? 0.3 : 0.9}
                 rx={2}
+                filter={isSelected ? 'url(#node-glow)' : undefined}
                 onMouseMove={e => handleMouseMove(e, [
                   n.name,
                   formatMXN(n.value ?? 0),
@@ -262,21 +323,19 @@ export function SankeyDiagram({
                 onMouseLeave={() => setTooltip(null)}
               />
 
-              {/* Label with opaque background for legibility */}
+              {/* Label with opaque background */}
               {showLabel && (
                 <>
-                  {/* Background pill */}
                   <rect
                     x={bgX}
                     y={labelY - labelH / 2}
                     width={labelW + 6}
                     height={labelH}
                     fill={LABEL_BG}
-                    fillOpacity={0.82}
+                    fillOpacity={0.88}
                     rx={3}
                     className="pointer-events-none"
                   />
-                  {/* Label text */}
                   <text
                     x={textX}
                     y={labelY}

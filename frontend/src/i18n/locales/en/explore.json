@@ -66,11 +66,42 @@
     "minContracts": "Min Contracts",
     "minValue": "Min Value",
     "hasRfc": "Has RFC",
+    "noRfc": "No RFC",
+    "rfcStatus": "RFC status",
     "sortBy": "Sort by",
     "sortOrder": "Order",
     "ascending": "Ascending",
     "descending": "Descending",
     "reset": "Clear filters",
     "apply": "Apply"
+  },
+  "search": {
+    "nameOrRfc": "Search name or RFC...",
+    "nameOrAcronym": "Search name or acronym...",
+    "searching": "Searching\u2026",
+    "noResultsFor": "No results for \u201c{{query}}\u201d",
+    "placeholder": "Search vendors, RFC, institutions\u2026"
+  },
+  "stats": {
+    "pageValue": "Page value",
+    "pageContracts": "Page contracts",
+    "avgRisk": "Avg risk",
+    "highPlus": "High+",
+    "critical": "Critical",
+    "pageSpending": "Page spending",
+    "highPlusRisk": "High+ risk",
+    "totalVendors": "Total vendors"
+  },
+  "empty": {
+    "noVendorsMatch": "No vendors match your filters",
+    "failedToLoadVendors": "Failed to load vendors",
+    "noFlashVendors": "No flash vendors found with current thresholds",
+    "failedToLoad": "Failed to load results",
+    "stillActive": "Still active"
+  },
+  "dossier": {
+    "addToDossier": "Add to dossier",
+    "noDossiersYet": "No dossiers yet",
+    "whyTrack": "Why track {{name}}?"
   }
 }

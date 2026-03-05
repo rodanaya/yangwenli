@@ -2637,17 +2637,17 @@ def get_money_flow(
     sector_id: Optional[int] = Query(None, ge=1, le=12),
     year: Optional[int] = Query(None, ge=2002, le=2026),
     limit: int = Query(50, ge=10, le=200),
+    direct_award_only: bool = Query(False),
 ):
     """
-    Top institution->vendor flows grouped by sector.
-    Uses pre-computed tables (institution_top_vendors, vendor_stats, institution_stats)
-    for fast response. Returns two layers: institution->sector and sector->vendor,
-    suitable for Sankey/flow visualizations.
+    Top institution->vendor flows.
+    Fast path (no year/direct_award): uses precomputed institution_top_vendors table.
+    Filtered path (year or direct_award_only): queries contracts directly.
     """
     import time as _time
     global _money_flow_cache, _money_flow_cache_ts
 
-    cache_key = f"flow:{sector_id}:{year}:{limit}"
+    cache_key = f"flow:{sector_id}:{year}:{limit}:{direct_award_only}"
     now = _time.time()
     if _money_flow_cache and (now - _money_flow_cache_ts) < _MONEY_FLOW_CACHE_TTL:
         cached = _money_flow_cache.get(cache_key)
@@ -2660,6 +2660,7 @@ def get_money_flow(
             sector_id=sector_id,
             year=year,
             limit=limit,
+            direct_award_only=direct_award_only,
         )
         _money_flow_cache[cache_key] = result
         _money_flow_cache_ts = _time.time()

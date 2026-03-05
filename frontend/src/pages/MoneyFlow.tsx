@@ -18,6 +18,98 @@ import {
 
 const YEARS = Array.from({ length: 24 }, (_, i) => 2025 - i)
 
+// ── Institution acronym lookup ─────────────────────────────────────────────
+// Substring-based matching: checks if the institution name CONTAINS any of these keys
+const ACRONYM_MAP: [string, string][] = [
+  ['INSTITUTO MEXICANO DEL SEGURO SOCIAL', 'IMSS'],
+  ['IMSS-BIENESTAR', 'IMSS-B'],
+  ['INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIALES', 'ISSSTE'],
+  ['PETROLEOS MEXICANOS', 'PEMEX'],
+  ['PETRÓLEOS MEXICANOS', 'PEMEX'],
+  ['PEMEX EXPLORACION', 'PEMEX E&P'],
+  ['PEMEX EXPLORACIÓN', 'PEMEX E&P'],
+  ['PEMEX TRANSFORMACION', 'PEMEX TRI'],
+  ['PEMEX LOGISTICA', 'PEMEX LOG'],
+  ['PEMEX LOGÍSTICA', 'PEMEX LOG'],
+  ['COMISION FEDERAL DE ELECTRICIDAD', 'CFE'],
+  ['COMISIÓN FEDERAL DE ELECTRICIDAD', 'CFE'],
+  ['SECRETARIA DE EDUCACION PUBLICA', 'SEP'],
+  ['SECRETARÍA DE EDUCACIÓN PÚBLICA', 'SEP'],
+  ['SECRETARIA DE HACIENDA Y CREDITO', 'SHCP'],
+  ['SECRETARÍA DE HACIENDA Y CRÉDITO', 'SHCP'],
+  ['SECRETARIA DE LA DEFENSA NACIONAL', 'SEDENA'],
+  ['SECRETARÍA DE LA DEFENSA NACIONAL', 'SEDENA'],
+  ['SECRETARIA DE MARINA', 'SEMAR'],
+  ['SECRETARÍA DE MARINA', 'SEMAR'],
+  ['SECRETARIA DE SALUD', 'SSA'],
+  ['SECRETARÍA DE SALUD', 'SSA'],
+  ['SECRETARIA DE COMUNICACIONES Y TRANSPORTES', 'SCT'],
+  ['SECRETARÍA DE COMUNICACIONES Y TRANSPORTES', 'SCT'],
+  ['SECRETARIA DE COMUNICACIONES', 'SCT'],
+  ['SECRETARÍA DE COMUNICACIONES', 'SCT'],
+  ['SECRETARIA DE GOBERNACION', 'SEGOB'],
+  ['SECRETARÍA DE GOBERNACIÓN', 'SEGOB'],
+  ['SECRETARIA DE ENERGIA', 'SENER'],
+  ['SECRETARÍA DE ENERGÍA', 'SENER'],
+  ['SECRETARIA DEL TRABAJO', 'STPS'],
+  ['SECRETARÍA DEL TRABAJO', 'STPS'],
+  ['SECRETARIA DE RELACIONES EXTERIORES', 'SRE'],
+  ['SECRETARÍA DE RELACIONES EXTERIORES', 'SRE'],
+  ['SECRETARIA DE MEDIO AMBIENTE', 'SEMARNAT'],
+  ['SECRETARÍA DE MEDIO AMBIENTE', 'SEMARNAT'],
+  ['COMISION NACIONAL DEL AGUA', 'CONAGUA'],
+  ['COMISIÓN NACIONAL DEL AGUA', 'CONAGUA'],
+  ['INSTITUTO POLITECNICO NACIONAL', 'IPN'],
+  ['INSTITUTO POLITÉCNICO NACIONAL', 'IPN'],
+  ['UNIVERSIDAD NACIONAL AUTONOMA', 'UNAM'],
+  ['UNIVERSIDAD NACIONAL AUTÓNOMA', 'UNAM'],
+  ['SERVICIO DE ADMINISTRACION TRIBUTARIA', 'SAT'],
+  ['SERVICIO DE ADMINISTRACIÓN TRIBUTARIA', 'SAT'],
+  ['SECRETARIA DE LA FUNCION PUBLICA', 'SFP'],
+  ['SECRETARÍA DE LA FUNCIÓN PÚBLICA', 'SFP'],
+  ['GUARDIA NACIONAL', 'GN'],
+  ['FISCALIA GENERAL', 'FGR'],
+  ['FISCALÍA GENERAL', 'FGR'],
+  ['PROCURADURIA GENERAL', 'PGR'],
+  ['PROCURADURÍA GENERAL', 'PGR'],
+  ['INSTITUTO NACIONAL DE ESTADISTICA', 'INEGI'],
+  ['INSTITUTO NACIONAL DE ESTADÍSTICA', 'INEGI'],
+  ['CONSEJO NACIONAL DE CIENCIA', 'CONAHCYT'],
+  ['FONDO NACIONAL DE FOMENTO', 'FONATUR'],
+  ['BANCO NACIONAL DE OBRAS', 'BANOBRAS'],
+  ['NACIONAL FINANCIERA', 'NAFINSA'],
+  ['CAMARA DE DIPUTADOS', 'Cámara Dip.'],
+  ['CÁMARA DE DIPUTADOS', 'Cámara Dip.'],
+  ['CAMARA DE SENADORES', 'Senado'],
+  ['CÁMARA DE SENADORES', 'Senado'],
+  ['INSTITUTO NACIONAL ELECTORAL', 'INE'],
+  ['INSTITUTO FEDERAL ELECTORAL', 'IFE'],
+  ['SECRETARIA DE AGRICULTURA', 'SADER'],
+  ['SECRETARÍA DE AGRICULTURA', 'SADER'],
+  ['SECRETARIA DE BIENESTAR', 'Bienestar'],
+  ['SECRETARÍA DE BIENESTAR', 'Bienestar'],
+  ['SECRETARIA DE SEGURIDAD', 'SSPC'],
+  ['SECRETARÍA DE SEGURIDAD', 'SSPC'],
+  ['SECRETARIA DE INFRAESTRUCTURA', 'SICT'],
+  ['SECRETARÍA DE INFRAESTRUCTURA', 'SICT'],
+  ['INSTITUTO NACIONAL DE SALUD', 'INSABI'],
+  ['COMISION NACIONAL', 'CN'],
+  ['COMISIÓN NACIONAL', 'CN'],
+]
+
+function getShortName(name: string): string {
+  const upper = name.toUpperCase()
+  for (const [key, acronym] of ACRONYM_MAP) {
+    if (upper.includes(key.toUpperCase())) return acronym
+  }
+  // If name is already short (≤12 chars) or looks like an acronym, return as-is
+  if (name.length <= 14) return name
+  // Fallback: first word if it's uppercase and looks like an acronym
+  const first = name.split(' ')[0]
+  if (first === first.toUpperCase() && first.length >= 2 && first.length <= 8) return first
+  return name
+}
+
 type ViewMode = 'diagram' | 'table'
 type SortKey = 'value' | 'contracts' | 'avgRisk'
 type SortDir = 'desc' | 'asc'
@@ -78,6 +170,7 @@ export default function MoneyFlow() {
   const [flowLimit, setFlowLimit] = useState<number>(20)
   const [sortKey, setSortKey] = useState<SortKey>('value')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [directAwardOnly, setDirectAwardOnly] = useState<boolean>(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const [diagramWidth, setDiagramWidth] = useState(860)
 
@@ -92,8 +185,8 @@ export default function MoneyFlow() {
   }, [])
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['money-flow', sectorId, year],
-    queryFn: () => analysisApi.getMoneyFlow(year, sectorId),
+    queryKey: ['money-flow', sectorId, year, directAwardOnly],
+    queryFn: () => analysisApi.getMoneyFlow(year, sectorId, directAwardOnly),
     staleTime: 10 * 60 * 1000,
   })
 
@@ -128,10 +221,6 @@ export default function MoneyFlow() {
     navigate(`/contracts?${params.toString()}`)
   }, [selectedNode, navigate, year])
 
-  const handleNodeSelect = useCallback((node: SankeyNodeSelected) => {
-    setSelectedNode(prev => prev?.id === node.id ? null : node)
-  }, [])
-
   const handleSort = useCallback((key: SortKey) => {
     setSortKey(prev => {
       if (prev === key) setSortDir(d => d === 'desc' ? 'asc' : 'desc')
@@ -140,22 +229,21 @@ export default function MoneyFlow() {
     })
   }, [])
 
-  const { nodes, links } = useMemo(() => {
-    if (!data?.flows?.length) return { nodes: [], links: [] }
+  const { nodes, links, fullNames } = useMemo(() => {
+    if (!data?.flows?.length) return { nodes: [], links: [], fullNames: new Map<string, string>() }
 
-    const instMap = new Map<string, { name: string; riskLevel: string; total: number; contracts: number }>()
-    const vendMap = new Map<string, { name: string; riskLevel: string; total: number; contracts: number }>()
+    const instMap = new Map<string, { name: string; fullName: string; riskLevel: string; total: number; contracts: number }>()
+    const vendMap = new Map<string, { name: string; fullName: string; riskLevel: string; total: number; contracts: number }>()
 
     for (const f of data.flows) {
       const iKey = `inst-${f.source_id}`
       const vKey = `vend-${f.target_id}`
-
-      // Determine risk level from avg_risk
       const riskLevel = f.avg_risk != null ? getRiskLabel(f.avg_risk) : 'medium'
 
       const prev = instMap.get(iKey)
       instMap.set(iKey, {
-        name: f.source_name,
+        name: getShortName(f.source_name),   // acronym/short for Sankey label
+        fullName: f.source_name,             // full name for panels/table
         riskLevel: prev ? (prev.riskLevel === 'critical' ? 'critical' : riskLevel) : riskLevel,
         total: (prev?.total ?? 0) + f.value,
         contracts: (prev?.contracts ?? 0) + f.contracts,
@@ -164,11 +252,17 @@ export default function MoneyFlow() {
       const vprev = vendMap.get(vKey)
       vendMap.set(vKey, {
         name: f.target_name,
+        fullName: f.target_name,
         riskLevel: vprev ? (vprev.riskLevel === 'critical' ? 'critical' : riskLevel) : riskLevel,
         total: (vprev?.total ?? 0) + f.value,
         contracts: (vprev?.contracts ?? 0) + f.contracts,
       })
     }
+
+    // Build full-name lookup (used for selected-node panel and table)
+    const fullNames = new Map<string, string>()
+    instMap.forEach((d, id) => fullNames.set(id, d.fullName))
+    vendMap.forEach((d, id) => fullNames.set(id, d.fullName))
 
     const allNodes = [
       ...[...instMap.entries()].map(([id, d]) => ({
@@ -193,12 +287,17 @@ export default function MoneyFlow() {
       .sort((a, b) => b.value - a.value)
       .slice(0, flowLimit)
 
-    // Rebuild nodes from the filtered links only — removes orphan nodes
     const usedIds = new Set(sankeyLinks.flatMap(l => [l.source, l.target]))
     const filteredNodes = allNodes.filter(n => usedIds.has(n.id))
 
-    return { nodes: filteredNodes, links: sankeyLinks }
+    return { nodes: filteredNodes, links: sankeyLinks, fullNames }
   }, [data, riskFilter, flowLimit])
+
+  const handleNodeSelect = useCallback((node: SankeyNodeSelected) => {
+    const full = fullNames.get(node.id)
+    const enriched = full ? { ...node, name: full } : node
+    setSelectedNode(prev => prev?.id === node.id ? null : enriched)
+  }, [fullNames])
 
   const totalValue = useMemo(() => links.reduce((s, l) => s + l.value, 0), [links])
   const totalContracts = useMemo(() => links.reduce((s, l) => s + l.contractCount, 0), [links])
@@ -211,15 +310,15 @@ export default function MoneyFlow() {
     [links]
   )
 
-  // Table view rows: enrich links with node names, then sort
+  // Table view rows: enrich links with full names, then sort
   const tableRows = useMemo(() => {
     const rows = links.map(l => {
       const srcNode = nodes.find(n => n.id === l.source)
       const tgtNode = nodes.find(n => n.id === l.target)
       return {
         ...l,
-        sourceName: srcNode?.name ?? l.source,
-        targetName: tgtNode?.name ?? l.target,
+        sourceName: fullNames.get(l.source) ?? srcNode?.name ?? l.source,
+        targetName: fullNames.get(l.target) ?? tgtNode?.name ?? l.target,
         sourceRisk: srcNode?.riskLevel ?? 'unknown',
         targetRisk: tgtNode?.riskLevel ?? 'unknown',
       }
@@ -240,7 +339,7 @@ export default function MoneyFlow() {
   )
   const highRiskPct = totalValue > 0 ? (highRiskValue / totalValue) * 100 : 0
 
-  // Top 5 suspicious flows by avg risk score, then by value
+  // Top 5 suspicious flows by avg risk score, then by value (use full names)
   const topSuspiciousFlows = useMemo(
     () =>
       [...links]
@@ -250,9 +349,13 @@ export default function MoneyFlow() {
         .map(l => {
           const srcNode = nodes.find(n => n.id === l.source)
           const tgtNode = nodes.find(n => n.id === l.target)
-          return { ...l, sourceName: srcNode?.name ?? l.source, targetName: tgtNode?.name ?? l.target }
+          return {
+            ...l,
+            sourceName: fullNames.get(l.source) ?? srcNode?.name ?? l.source,
+            targetName: fullNames.get(l.target) ?? tgtNode?.name ?? l.target,
+          }
         }),
-    [links, nodes]
+    [links, nodes, fullNames]
   )
 
   const showDiagram = !isLoading && nodes.length > 0 && links.length > 0
@@ -370,6 +473,20 @@ export default function MoneyFlow() {
               <SelectItem value="100">Top 100 flows</SelectItem>
             </SelectContent>
           </Select>
+
+          {/* Direct Awards toggle */}
+          <button
+            onClick={() => { setDirectAwardOnly(v => !v); setSelectedNode(null) }}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium border transition-all ${
+              directAwardOnly
+                ? 'bg-amber-500/20 border-amber-500/60 text-amber-300'
+                : 'border-border/30 text-text-muted hover:text-text-secondary'
+            }`}
+            aria-pressed={directAwardOnly}
+            title="Show only direct award contracts (adjudicación directa)"
+          >
+            Direct Awards Only
+          </button>
 
           <div className="flex gap-1.5 items-center flex-wrap">
             <span className="text-xs text-text-muted">{t('riskLabel')}</span>

@@ -813,8 +813,8 @@ export const analysisApi = {
   /**
    * Get money flow data for Sankey visualization
    */
-  async getMoneyFlow(year?: number, sectorId?: number): Promise<MoneyFlowResponse> {
-    const params = buildQueryParams({ year, sector_id: sectorId } as QueryParams)
+  async getMoneyFlow(year?: number, sectorId?: number, directAwardOnly?: boolean): Promise<MoneyFlowResponse> {
+    const params = buildQueryParams({ year, sector_id: sectorId, direct_award_only: directAwardOnly || undefined } as QueryParams)
     const paramStr = params.toString()
     const { data } = await api.get<MoneyFlowResponse>(`/analysis/money-flow${paramStr ? `?${paramStr}` : ''}`)
     return data
