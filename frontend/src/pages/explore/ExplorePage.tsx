@@ -114,7 +114,7 @@ export function ExplorePage() {
   if (filters.riskLevels.length < 4) {
     activeChips.push({
       label: `Risk: ${filters.riskLevels.map(l => RISK_LABELS[l]).join(', ')}`,
-      onRemove: () => { filters.riskLevels.forEach(() => {}); filters.clearAll(); setPage(1) },
+      onRemove: () => { filters.clearRiskFilter(); setPage(1) },
     })
   }
 

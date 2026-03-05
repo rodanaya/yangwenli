@@ -14,6 +14,7 @@ export interface ExplorerFilterSetters {
   setSectorId: (id: number | undefined) => void
   setYearRange: (start: number | undefined, end: number | undefined) => void
   toggleRiskLevel: (level: string) => void
+  clearRiskFilter: () => void
   setSearchText: (text: string) => void
   setEntityType: (type: 'vendor' | 'institution') => void
   clearAll: () => void
@@ -74,6 +75,10 @@ export function useExplorerFilters(): ExplorerFilters & ExplorerFilterSetters {
     update({ risk: allSelected ? null : next.join(',') })
   }, [filters.riskLevels, update])
 
+  const clearRiskFilter = useCallback(() => {
+    update({ risk: null })
+  }, [update])
+
   const setSearchText = useCallback((text: string) => {
     update({ q: text || null })
   }, [update])
@@ -91,6 +96,7 @@ export function useExplorerFilters(): ExplorerFilters & ExplorerFilterSetters {
     setSectorId,
     setYearRange,
     toggleRiskLevel,
+    clearRiskFilter,
     setSearchText,
     setEntityType,
     clearAll,
