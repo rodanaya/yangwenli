@@ -1031,6 +1031,7 @@ export interface ExecutiveSummaryHeadline {
   total_contracts: number
   total_value: number
   total_value_usd?: number
+  total_value_real_mxn?: number
   total_vendors: number
   total_institutions: number
   min_year: number
@@ -1086,6 +1087,7 @@ export interface ExecutiveAdministration {
   party: string
   contracts: number
   value: number
+  real_value?: number
   avg_risk: number
   high_risk_pct: number
   direct_award_pct: number
@@ -1095,6 +1097,7 @@ export interface ExecutiveYearlyTrend {
   year: number
   contracts: number
   value_billions: number
+  real_value_billions?: number
   avg_risk: number
 }
 

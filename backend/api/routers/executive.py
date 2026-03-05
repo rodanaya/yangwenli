@@ -110,7 +110,7 @@ def _build_summary(conn) -> dict:
     risk_dist_raw = precomputed.get("risk_distribution", [])
     yearly_raw = precomputed.get("yearly_trends", [])
 
-    # 2. Headline (with year-adjusted USD total from live contracts table)
+    # 2. Headline (with year-adjusted USD total + real 2024 MXN via INPC deflators)
     MXN_USD_RATES = {
         2002: 9.66, 2003: 10.79, 2004: 11.29, 2005: 10.90, 2006: 10.90,
         2007: 10.93, 2008: 11.13, 2009: 13.51, 2010: 12.64, 2011: 12.43,
@@ -120,27 +120,48 @@ def _build_summary(conn) -> dict:
     }
     DEFAULT_RATE = 17.20
 
-    case_clauses = "\n".join(
+    # INPC deflators — Banco de México, base year 2024 = 1.000
+    # real_2024 = nominal_year_x / INPC_DEFLATORS[year_x]
+    INPC_DEFLATORS = {
+        2002: 0.382, 2003: 0.404, 2004: 0.420, 2005: 0.442,
+        2006: 0.456, 2007: 0.475, 2008: 0.493, 2009: 0.525,
+        2010: 0.544, 2011: 0.567, 2012: 0.586, 2013: 0.607,
+        2014: 0.632, 2015: 0.658, 2016: 0.671, 2017: 0.694,
+        2018: 0.741, 2019: 0.777, 2020: 0.799, 2021: 0.824,
+        2022: 0.885, 2023: 0.955, 2024: 1.000, 2025: 1.000,
+    }
+    DEFAULT_DEFLATOR = 0.700
+
+    usd_clauses = "\n".join(
         f"            WHEN contract_year = {yr} THEN amount_mxn / {rate}"
         for yr, rate in MXN_USD_RATES.items()
     )
-    usd_sql = f"""
-        SELECT SUM(
-            CASE
-{case_clauses}
-            ELSE amount_mxn / {DEFAULT_RATE}
-            END
-        ) AS total_value_usd
+    real_clauses = "\n".join(
+        f"            WHEN contract_year = {yr} THEN amount_mxn / {d}"
+        for yr, d in INPC_DEFLATORS.items()
+    )
+    combined_sql = f"""
+        SELECT
+            SUM(CASE
+{usd_clauses}
+                ELSE amount_mxn / {DEFAULT_RATE}
+            END) AS total_value_usd,
+            SUM(CASE
+{real_clauses}
+                ELSE amount_mxn / {DEFAULT_DEFLATOR}
+            END) AS total_value_real_mxn
         FROM contracts
         WHERE amount_mxn > 0 AND amount_mxn < 100000000000
     """
-    usd_row = cur.execute(usd_sql).fetchone()
-    total_value_usd = usd_row["total_value_usd"] if usd_row and usd_row["total_value_usd"] else 0.0
+    combined_row = cur.execute(combined_sql).fetchone()
+    total_value_usd = (combined_row["total_value_usd"] or 0.0) if combined_row else 0.0
+    total_value_real_mxn = (combined_row["total_value_real_mxn"] or 0.0) if combined_row else 0.0
 
     headline = {
         "total_contracts": overview.get("total_contracts", 0),
         "total_value": overview.get("total_value_mxn", 0),
         "total_value_usd": round(total_value_usd, 0),
+        "total_value_real_mxn": round(total_value_real_mxn, 0),
         "total_vendors": overview.get("total_vendors", 0),
         "total_institutions": overview.get("total_institutions", 0),
         "min_year": 2002,
@@ -223,17 +244,37 @@ def _build_summary(conn) -> dict:
     # 8. Administration breakdown (from precomputed_stats — was 90s live query)
     administrations = precomputed.get("administrations", [])
 
-    # 9. Yearly trends (filtered to meaningful years)
+    # 9. Yearly trends (filtered to meaningful years) — with real 2024 MXN
     yearly_trends = [
         {
             "year": y["year"],
             "contracts": y["contracts"],
             "value_billions": round(y.get("value_mxn", 0) / 1e9, 1),
+            "real_value_billions": round(
+                (y.get("value_mxn", 0) / INPC_DEFLATORS.get(y["year"], DEFAULT_DEFLATOR)) / 1e9, 1
+            ),
             "avg_risk": y.get("avg_risk", 0),
         }
         for y in yearly_raw
         if 2002 <= y.get("year", 0) <= 2025 and y.get("contracts", 0) > 100
     ]
+
+    # 9b. Enrich administration data with real 2024 MXN using midpoint-year deflators
+    # Each administration's nominal value is deflated by the midpoint year of their term.
+    ADMIN_MIDPOINT_DEFLATORS = {
+        "fox":      0.421,  # midpoint ~2003–2004
+        "calderon": 0.521,  # midpoint ~2009
+        "pena":     0.656,  # midpoint ~2015
+        "amlo":     0.854,  # midpoint ~2021
+        "sheinbaum": 1.000, # current
+    }
+    administrations_enriched = []
+    for admin in administrations:
+        deflator = ADMIN_MIDPOINT_DEFLATORS.get(admin.get("name", ""), DEFAULT_DEFLATOR)
+        nominal = admin.get("value", 0) or 0
+        enriched = dict(admin)
+        enriched["real_value"] = round(nominal / deflator, 0)
+        administrations_enriched.append(enriched)
 
     # 10. Ground truth validation (hardcoded — stable between retraining)
     # Updated to v5.1: 22 cases in DB (27+ vendors matched, ~26,704 contracts)
@@ -341,7 +382,7 @@ def _build_summary(conn) -> dict:
         "sectors": sectors,
         "top_institutions": top_institutions,
         "top_vendors": top_vendors,
-        "administrations": administrations,
+        "administrations": administrations_enriched,
         "yearly_trends": yearly_trends,
         "ground_truth": ground_truth,
         "model": model,

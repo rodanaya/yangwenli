@@ -231,7 +231,13 @@ function ReportHeader({ data }: { data: ExecutiveSummaryResponse }) {
           <HeadlineStat value={formatNumber(headline.total_contracts)} label={t('header.contracts')} rawNumber={headline.total_contracts} />
         </motion.div>
         <motion.div variants={staggerItem}>
-          <HeadlineStat value={formatCompactMXN(headline.total_value)} label={t('header.totalValue')} />
+          <HeadlineStat
+            value={formatCompactMXN(headline.total_value)}
+            label={t('header.totalValue')}
+            sublabel={headline.total_value_real_mxn
+              ? `${formatCompactMXN(headline.total_value_real_mxn)} pesos 2024`
+              : undefined}
+          />
         </motion.div>
         <motion.div variants={staggerItem}>
           <HeadlineStat value={formatNumber(headline.total_vendors)} label={t('header.vendors')} rawNumber={headline.total_vendors} />
@@ -1999,7 +2005,13 @@ function SectionAdministrations({ data }: { data: ExecutiveSummaryResponse }) {
             {/* Stats row */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-3">
               <MiniStat label={t('s7.labels.contracts')} value={formatNumber(admin.contracts)} />
-              <MiniStat label={t('s7.labels.value')} value={formatCompactMXN(admin.value)} />
+              <MiniStat
+                label={t('s7.labels.value')}
+                value={formatCompactMXN(admin.value)}
+                sublabel={admin.real_value
+                  ? `${formatCompactMXN(admin.real_value)} pesos 2024`
+                  : undefined}
+              />
               <MiniStat
                 label={t('s7.labels.highRisk')}
                 value={`${admin.high_risk_pct}%`}
@@ -2614,7 +2626,7 @@ function SectionHeading({
   )
 }
 
-function HeadlineStat({ value, label, rawNumber }: { value: string; label: string; rawNumber?: number }) {
+function HeadlineStat({ value, label, rawNumber, sublabel }: { value: string; label: string; rawNumber?: number; sublabel?: string }) {
   const { ref, value: animated } = useCountUp(rawNumber ?? 0, 1600)
   const displayValue = rawNumber !== undefined
     ? (animated >= 1_000_000_000
@@ -2632,6 +2644,9 @@ function HeadlineStat({ value, label, rawNumber }: { value: string; label: strin
         </div>
       </span>
       <div className="text-xs text-text-muted uppercase tracking-wider font-mono mt-1">{label}</div>
+      {sublabel && (
+        <div className="text-[10px] text-text-muted/60 font-mono mt-0.5 italic">{sublabel}</div>
+      )}
     </div>
   )
 }
@@ -2653,7 +2668,7 @@ function StatCallout({ value, label, color, pulse }: { value: string; label: str
   )
 }
 
-function MiniStat({ label, value, color }: { label: string; value: string; color?: string }) {
+function MiniStat({ label, value, color, sublabel }: { label: string; value: string; color?: string; sublabel?: string }) {
   return (
     <div>
       <div className="text-xs text-text-muted uppercase tracking-wider font-mono">
@@ -2665,6 +2680,9 @@ function MiniStat({ label, value, color }: { label: string; value: string; color
       >
         {value}
       </div>
+      {sublabel && (
+        <div className="text-[10px] text-text-muted/60 font-mono italic leading-tight">{sublabel}</div>
+      )}
     </div>
   )
 }
