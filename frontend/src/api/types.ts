@@ -1998,3 +1998,18 @@ export interface SubnationalVendorsResponse {
   data: SubnationalVendor[]
   coverage_note: string
 }
+
+export interface SubnationalTopVendorByYear {
+  rank: number
+  vendor_id: number
+  vendor_name: string
+  total_value_mxn: number
+  contract_count: number
+  avg_risk_score: number
+}
+
+export interface SubnationalTopVendorsByYearResponse {
+  state_code: string
+  year: number
+  vendors: SubnationalTopVendorByYear[]
+}

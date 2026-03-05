@@ -594,6 +594,7 @@ export function Sectors() {
   const [selectedSectorCode, setSelectedSectorCode] = useState<string | null>(null)
   const [compareSectorCode, setCompareSectorCode] = useState<string | null>(null)
   const [tableViewMode, setTableViewMode] = useState<'list' | 'treemap'>('list')
+  const [criSectorFilter, setCriSectorFilter] = useState<string>('')
   const sectorValueChartRef = useRef<HTMLDivElement>(null)
 
   const { data, isLoading, error } = useQuery({
@@ -1075,7 +1076,7 @@ export function Sectors() {
                 rows={sectorHeatmapData.rows}
                 columns={sectorHeatmapData.columns}
                 height={450}
-                colorRange={['#16a34a', '#f5f5f5', '#dc2626']}
+                colorRange={['#166534', '#334155', '#991b1b']}
                 valueFormatter={(v, row, col) => {
                   const cell = sectorHeatmapData.data.find((d) => d.row === row && d.col === col)
                   const rawValue = (cell as { rawValue?: number })?.rawValue ?? v
@@ -1428,12 +1429,28 @@ export function Sectors() {
         <ScrollReveal direction="fade">
           <Card className="bg-card border-border/40">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-mono text-text-primary">
-                Institution Risk Landscape — Direct Award vs Risk Score
-              </CardTitle>
-              <CardDescription className="text-xs text-text-muted">
-                Each bubble = one institution. X: direct award rate. Y: avg risk score. Size: contract volume. Top-right quadrant = highest concern.
-              </CardDescription>
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                  <CardTitle className="text-sm font-mono text-text-primary">
+                    Institution Risk Landscape — Direct Award vs Risk Score
+                  </CardTitle>
+                  <CardDescription className="text-xs text-text-muted mt-0.5">
+                    Each bubble = one institution. X: direct award rate. Y: avg risk score. Size: contract volume. Top-right = highest concern.
+                  </CardDescription>
+                </div>
+                {/* Sector filter */}
+                <select
+                  value={criSectorFilter}
+                  onChange={e => setCriSectorFilter(e.target.value)}
+                  className="text-xs bg-background-elevated border border-border/50 rounded px-2 py-1 text-text-primary font-mono h-7 self-start"
+                  aria-label="Filter by sector"
+                >
+                  <option value="">All sectors</option>
+                  {Object.entries(SECTOR_COLORS).map(([code]) => (
+                    <option key={code} value={code}>{getSectorNameEN(code)}</option>
+                  ))}
+                </select>
+              </div>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={360}>
@@ -1489,7 +1506,9 @@ export function Sectors() {
                     }}
                   />
                   <Scatter
-                    data={criScatterData.data}
+                    data={criSectorFilter
+                      ? criScatterData.data.filter((d: { sector_code: string }) => d.sector_code === criSectorFilter)
+                      : criScatterData.data}
                     fill="#64748b"
                     fillOpacity={0.7}
                     shape={(props: any) => {

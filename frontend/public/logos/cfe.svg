@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40">
+  <rect width="120" height="40" rx="4" fill="#00843D"/>
+  <text x="8" y="27" font-family="Arial,sans-serif" font-weight="700" font-size="20" fill="#ffffff" letter-spacing="1">CFE</text>
+  <polygon points="75,8 85,20 79,20 83,32 73,20 79,20" fill="#F5D000"/>
+</svg>

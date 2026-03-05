@@ -1,0 +1,55 @@
+{
+  "title": "Año en Revisión",
+  "subtitle": "Resumen anual de contrataciones — contratos, gasto y patrones de riesgo",
+  "yearSelector": "Seleccionar año",
+  "heroStats": {
+    "totalContracts": "Total de Contratos",
+    "totalSpending": "Gasto Total",
+    "highRiskRate": "Tasa de Alto Riesgo",
+    "yoyChange": "Cambio Anual en Gasto"
+  },
+  "topVendors": {
+    "title": "Top 5 Proveedores por Valor",
+    "subtitle": "Proveedores con mayor valor contratado en el año seleccionado",
+    "rank": "Posición",
+    "vendor": "Proveedor",
+    "value": "Valor Total",
+    "contracts": "Contratos",
+    "risk": "Riesgo"
+  },
+  "topInstitutions": {
+    "title": "Top 5 Instituciones por Gasto",
+    "subtitle": "Instituciones con mayor gasto en el año seleccionado",
+    "rank": "Posición",
+    "institution": "Institución",
+    "value": "Gasto Total",
+    "contracts": "Contratos",
+    "risk": "Riesgo"
+  },
+  "sectorGrowth": {
+    "title": "Crecimiento por Sector",
+    "subtitle": "Cambio interanual en valor de contratos por sector",
+    "noComparison": "No hay datos del año anterior para comparar",
+    "growth": "Crecimiento"
+  },
+  "riskBreakdown": {
+    "title": "Distribución de Nivel de Riesgo",
+    "subtitle": "Distribución de contratos por nivel de riesgo en el año seleccionado",
+    "critical": "Crítico",
+    "high": "Alto",
+    "medium": "Medio",
+    "low": "Bajo",
+    "noData": "Sin datos de riesgo disponibles para este año"
+  },
+  "administrationBanner": {
+    "title": "Administración Presidencial",
+    "Fox": "Vicente Fox (PAN) · 2000–2006",
+    "Calderon": "Felipe Calderón (PAN) · 2006–2012",
+    "PenaNieto": "Enrique Peña Nieto (PRI) · 2012–2018",
+    "AMLO": "Andrés Manuel López Obrador (MORENA) · 2018–2024",
+    "Sheinbaum": "Claudia Sheinbaum (MORENA) · 2024–presente"
+  },
+  "noData": "Sin datos disponibles para este año",
+  "loading": "Cargando datos del año…",
+  "vsLastYear": "vs año anterior"
+}

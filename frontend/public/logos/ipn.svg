@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40">
+  <rect width="120" height="40" rx="4" fill="#8B0000"/>
+  <text x="8" y="27" font-family="Arial,sans-serif" font-weight="700" font-size="20" fill="#ffffff" letter-spacing="1">IPN</text>
+  <polygon points="80,32 95,10 110,32" fill="none" stroke="#F0A500" stroke-width="2.5"/>
+  <circle cx="95" cy="20" r="4" fill="#F0A500"/>
+</svg>

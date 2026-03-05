@@ -151,6 +151,7 @@ class AnalysisService(BaseService):
         year: int | None = None,
         limit: int = 50,
         direct_award_only: bool = False,
+        sort_by: str = "value",
     ) -> dict:
         """
         Top institution->vendor flows.
@@ -199,7 +200,7 @@ class AnalysisService(BaseService):
                 WHERE {where_clause}
                 GROUP BY c.institution_id, c.vendor_id
                 HAVING total_value > 0
-                ORDER BY total_value DESC
+                ORDER BY {"avg_risk DESC" if sort_by == "risk" else "total_value DESC"}
                 LIMIT ?
                 """,
                 params + [limit],
@@ -213,6 +214,7 @@ class AnalysisService(BaseService):
                 params2.append(sector_id)
             where_clause2 = " AND ".join(where_parts2)
 
+            order_col = "itv.avg_risk_score DESC" if sort_by == "risk" else "itv.total_value_mxn DESC"
             cursor.execute(
                 f"""
                 SELECT
@@ -226,7 +228,7 @@ class AnalysisService(BaseService):
                 FROM institution_top_vendors itv
                 JOIN institutions i ON itv.institution_id = i.id
                 WHERE {where_clause2}
-                ORDER BY itv.total_value_mxn DESC
+                ORDER BY {order_col}
                 LIMIT ?
                 """,
                 params2 + [limit],

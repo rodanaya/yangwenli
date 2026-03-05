@@ -1,13 +1,18 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { analysisApi } from '@/api/client'
 import { SankeyDiagram } from '@/components/SankeyDiagram'
 import type { SankeyNodeSelected } from '@/components/SankeyDiagram'
 import { formatCompactMXN } from '@/lib/utils'
 import { SECTORS } from '@/lib/constants'
-import { GitBranch, ArrowRight, Building2, Users, TrendingUp, DollarSign, X, AlertTriangle, Info, List, BarChart2, ChevronUp, ChevronDown } from 'lucide-react'
+import { getInstitutionGroup } from '@/lib/institution-groups'
+import {
+  GitBranch, ArrowRight, Building2, Users, TrendingUp, DollarSign,
+  X, AlertTriangle, Info, List, BarChart2, ChevronUp, ChevronDown,
+  ShieldAlert, Download,
+} from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -18,8 +23,22 @@ import {
 
 const YEARS = Array.from({ length: 24 }, (_, i) => 2025 - i)
 
+// ── Data quality by year ────────────────────────────────────────────────────
+function getYearQualityLabel(y: number): { icon: string; rfcPct: string } {
+  if (y >= 2023) return { icon: '✓', rfcPct: '47% RFC coverage — best quality' }
+  if (y >= 2018) return { icon: '◉', rfcPct: '30% RFC coverage — good quality' }
+  if (y >= 2010) return { icon: '◐', rfcPct: '16% RFC coverage — partial quality' }
+  return { icon: '⚠', rfcPct: '0.1% RFC coverage — lowest quality' }
+}
+
+function getYearWarning(y: number | undefined): string | null {
+  if (!y) return null
+  if (y < 2010) return `Data quality for ${y} is lowest (Structure A, 0.1% RFC coverage). Vendor identity matching is unreliable — the same company may appear as multiple separate nodes. Risk scores may be underestimated. Treat all findings as directional only.`
+  if (y < 2018) return `Note: ${y} data has ~16% RFC coverage (Structure B). Some vendors appear under multiple name variants, so true vendor concentration may be higher than shown.`
+  return null
+}
+
 // ── Institution acronym lookup ─────────────────────────────────────────────
-// Substring-based matching: checks if the institution name CONTAINS any of these keys
 const ACRONYM_MAP: [string, string][] = [
   ['INSTITUTO MEXICANO DEL SEGURO SOCIAL', 'IMSS'],
   ['IMSS-BIENESTAR', 'IMSS-B'],
@@ -102,23 +121,21 @@ function getShortName(name: string): string {
   for (const [key, acronym] of ACRONYM_MAP) {
     if (upper.includes(key.toUpperCase())) return acronym
   }
-  // If name is already short (≤12 chars) or looks like an acronym, return as-is
   if (name.length <= 14) return name
-  // Fallback: first word if it's uppercase and looks like an acronym
   const first = name.split(' ')[0]
   if (first === first.toUpperCase() && first.length >= 2 && first.length <= 8) return first
   return name
 }
 
 type ViewMode = 'diagram' | 'table'
-type SortKey = 'value' | 'contracts' | 'avgRisk'
+type SortKey = 'value' | 'contracts' | 'avgRisk' | 'concentration'
 type SortDir = 'desc' | 'asc'
 
 const RISK_LEVELS = [
-  { key: 'critical', color: '#f87171' },
-  { key: 'high', color: '#fb923c' },
-  { key: 'medium', color: '#fbbf24' },
-  { key: 'low', color: '#4ade80' },
+  { key: 'critical', color: '#f87171', badge: 'CRIT' },
+  { key: 'high',     color: '#fb923c', badge: 'HIGH' },
+  { key: 'medium',   color: '#fbbf24', badge: 'MED'  },
+  { key: 'low',      color: '#4ade80', badge: 'LOW'  },
 ]
 
 const RISK_LABELS: Record<string, string> = {
@@ -135,19 +152,23 @@ function getRiskLabel(avgRisk: number): string {
   return 'low'
 }
 
+function getRiskBadge(avgRisk: number): { color: string; badge: string } {
+  if (avgRisk >= 0.5) return { color: '#f87171', badge: 'CRIT' }
+  if (avgRisk >= 0.3) return { color: '#fb923c', badge: 'HIGH' }
+  if (avgRisk >= 0.1) return { color: '#fbbf24', badge: 'MED'  }
+  return { color: '#4ade80', badge: 'LOW' }
+}
+
 // Skeleton placeholder that mimics Sankey shape
 function SankeySkeleton() {
   return (
     <svg width="100%" height="320" className="opacity-10" aria-hidden="true">
-      {/* Left column nodes */}
       {[40, 100, 170, 230, 280].map((y, i) => (
         <rect key={`l${i}`} x={20} y={y} width={14} height={40 + i * 6} rx={2} fill="#64748b" />
       ))}
-      {/* Right column nodes */}
       {[20, 80, 140, 200, 260, 300].map((y, i) => (
         <rect key={`r${i}`} x={560} y={y} width={14} height={30 + i * 4} rx={2} fill="#64748b" />
       ))}
-      {/* Curved paths */}
       <path d="M34,60 C290,60 290,40 560,40" stroke="#64748b" strokeWidth={8} fill="none" />
       <path d="M34,120 C290,120 290,100 560,100" stroke="#64748b" strokeWidth={12} fill="none" />
       <path d="M34,190 C290,190 290,160 560,160" stroke="#64748b" strokeWidth={6} fill="none" />
@@ -162,17 +183,38 @@ export default function MoneyFlow() {
   const { t } = useTranslation('moneyflow')
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
-  const [sectorId, setSectorId] = useState<number | undefined>(undefined)
-  const [year, setYear] = useState<number | undefined>(2024)
-  const [riskFilter, setRiskFilter] = useState<string[]>(['critical', 'high', 'medium', 'low'])
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // ── URL-persistent filter state ────────────────────────────────────────────
+  const sectorId = searchParams.get('sector') ? Number(searchParams.get('sector')) : undefined
+  const year = searchParams.get('year') ? Number(searchParams.get('year')) : 2024
+  const directAwardOnly = searchParams.get('da') === '1'
+  const flowLimit = searchParams.get('limit') ? Number(searchParams.get('limit')) : 20
+  const apiSortBy = searchParams.get('api_sort') ?? 'value'
+  const riskFilter = searchParams.get('risk')
+    ? searchParams.get('risk')!.split(',').filter(Boolean)
+    : ['critical', 'high', 'medium', 'low']
+
+  function setParam(key: string, value: string | undefined) {
+    const next = new URLSearchParams(searchParams)
+    if (value === undefined || value === '') next.delete(key)
+    else next.set(key, value)
+    setSearchParams(next, { replace: true })
+  }
+
+  // ── Local UI state (not URL-persistent) ───────────────────────────────────
   const [selectedNode, setSelectedNode] = useState<SankeyNodeSelected | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('diagram')
-  const [flowLimit, setFlowLimit] = useState<number>(20)
   const [sortKey, setSortKey] = useState<SortKey>('value')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
-  const [directAwardOnly, setDirectAwardOnly] = useState<boolean>(false)
+  const [groupByInstitution, setGroupByInstitution] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const [diagramWidth, setDiagramWidth] = useState(860)
+
+  // Auto-switch to table on narrow screens
+  useEffect(() => {
+    if (diagramWidth < 640) setViewMode('table')
+  }, [diagramWidth])
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -185,20 +227,19 @@ export default function MoneyFlow() {
   }, [])
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['money-flow', sectorId, year, directAwardOnly],
-    queryFn: () => analysisApi.getMoneyFlow(year, sectorId, directAwardOnly),
+    queryKey: ['money-flow', sectorId, year, directAwardOnly, apiSortBy],
+    queryFn: () => analysisApi.getMoneyFlow(year, sectorId, directAwardOnly, apiSortBy),
     staleTime: 10 * 60 * 1000,
   })
 
   const handleRiskToggle = (level: string) => {
-    setRiskFilter(prev =>
-      prev.includes(level) ? prev.filter(l => l !== level) : [...prev, level]
-    )
+    const next = riskFilter.includes(level)
+      ? riskFilter.filter(l => l !== level)
+      : [...riskFilter, level]
+    setParam('risk', next.length === 4 ? undefined : next.join(','))
   }
 
-  // Navigate to contracts filtered by the clicked flow (institution -> vendor)
   const handleFlowClick = useCallback((sourceId: string, targetId: string) => {
-    // sourceId is like "inst-123", targetId is like "vend-456"
     const instId = sourceId.replace('inst-', '')
     const vendId = targetId.replace('vend-', '')
     const params = new URLSearchParams()
@@ -208,7 +249,6 @@ export default function MoneyFlow() {
     navigate(`/contracts?${params.toString()}`)
   }, [navigate, year])
 
-  // Navigate to contracts filtered by selected node
   const handleNodeDrillDown = useCallback(() => {
     if (!selectedNode) return
     const params = new URLSearchParams()
@@ -242,8 +282,8 @@ export default function MoneyFlow() {
 
       const prev = instMap.get(iKey)
       instMap.set(iKey, {
-        name: getShortName(f.source_name),   // acronym/short for Sankey label
-        fullName: f.source_name,             // full name for panels/table
+        name: getShortName(f.source_name),
+        fullName: f.source_name,
         riskLevel: prev ? (prev.riskLevel === 'critical' ? 'critical' : riskLevel) : riskLevel,
         total: (prev?.total ?? 0) + f.value,
         contracts: (prev?.contracts ?? 0) + f.contracts,
@@ -259,23 +299,22 @@ export default function MoneyFlow() {
       })
     }
 
-    // Build full-name lookup (used for selected-node panel and table)
     const fullNames = new Map<string, string>()
     instMap.forEach((d, id) => fullNames.set(id, d.fullName))
     vendMap.forEach((d, id) => fullNames.set(id, d.fullName))
 
-    const allNodes = [
+    let allNodes = [
       ...[...instMap.entries()].map(([id, d]) => ({
-        id, type: 'institution' as const, name: d.name, riskLevel: d.riskLevel, value: d.total,
+        id, type: 'institution' as const, name: d.name, riskLevel: d.riskLevel, value: d.total, contracts: d.contracts,
       })),
       ...[...vendMap.entries()].map(([id, d]) => ({
-        id, type: 'vendor' as const, name: d.name, riskLevel: d.riskLevel, value: d.total,
+        id, type: 'vendor' as const, name: d.name, riskLevel: d.riskLevel, value: d.total, contracts: d.contracts,
       })),
     ].filter(n => riskFilter.includes(n.riskLevel))
 
-    const nodeIds = new Set(allNodes.map(n => n.id))
+    let nodeIds = new Set(allNodes.map(n => n.id))
 
-    const sankeyLinks = data.flows
+    let sankeyLinks = data.flows
       .filter(f => nodeIds.has(`inst-${f.source_id}`) && nodeIds.has(`vend-${f.target_id}`))
       .map(f => ({
         source: `inst-${f.source_id}`,
@@ -287,11 +326,80 @@ export default function MoneyFlow() {
       .sort((a, b) => b.value - a.value)
       .slice(0, flowLimit)
 
+    // Group institution nodes by parent organization when enabled
+    if (groupByInstitution) {
+      // Build reverse lookup: original inst node id → group key
+      const instNodeToGroup = new Map<string, string>()
+      const groupAgg = new Map<string, { name: string; riskLevel: string; value: number; contracts: number }>()
+
+      allNodes.forEach((node) => {
+        if (node.type !== 'institution') return
+        const fullName = fullNames.get(node.id) ?? node.name
+        const grp = getInstitutionGroup(fullName)
+        if (!grp) return
+        const key = `grp-${grp.id}`
+        instNodeToGroup.set(node.id, key)
+        const prev = groupAgg.get(key)
+        const riskPriority = (r: string) => r === 'critical' ? 3 : r === 'high' ? 2 : r === 'medium' ? 1 : 0
+        const merged = {
+          name: grp.shortName,
+          riskLevel: prev
+            ? (riskPriority(prev.riskLevel) >= riskPriority(node.riskLevel) ? prev.riskLevel : node.riskLevel)
+            : node.riskLevel,
+          value: (prev?.value ?? 0) + node.value,
+          contracts: (prev?.contracts ?? 0) + node.contracts,
+        }
+        groupAgg.set(key, merged)
+        fullNames.set(key, grp.name)
+      })
+
+      // Rebuild nodes: replace grouped institutions with merged node
+      const seenGroups = new Set<string>()
+      const mergedNodes: typeof allNodes = []
+      allNodes.forEach((node) => {
+        if (node.type !== 'institution') { mergedNodes.push(node); return }
+        const key = instNodeToGroup.get(node.id)
+        if (key) {
+          if (!seenGroups.has(key)) {
+            seenGroups.add(key)
+            const meta = groupAgg.get(key)!
+            mergedNodes.push({ id: key, type: 'institution', name: meta.name, riskLevel: meta.riskLevel, value: meta.value, contracts: meta.contracts })
+          }
+        } else {
+          mergedNodes.push(node)
+        }
+      })
+
+      // Remap links
+      const linkMap = new Map<string, typeof sankeyLinks[number]>()
+      sankeyLinks.forEach((link) => {
+        const src = instNodeToGroup.get(link.source) ?? link.source
+        const mapKey = `${src}|${link.target}`
+        const prev = linkMap.get(mapKey)
+        if (prev) {
+          const totalContracts = prev.contractCount + link.contractCount
+          linkMap.set(mapKey, {
+            ...prev,
+            source: src,
+            value: prev.value + link.value,
+            contractCount: totalContracts,
+            avgRisk: (prev.avgRisk * prev.contractCount + link.avgRisk * link.contractCount) / totalContracts,
+          })
+        } else {
+          linkMap.set(mapKey, { ...link, source: src })
+        }
+      })
+
+      allNodes = mergedNodes
+      sankeyLinks = [...linkMap.values()]
+      nodeIds = new Set(allNodes.map(n => n.id))
+    }
+
     const usedIds = new Set(sankeyLinks.flatMap(l => [l.source, l.target]))
     const filteredNodes = allNodes.filter(n => usedIds.has(n.id))
 
     return { nodes: filteredNodes, links: sankeyLinks, fullNames }
-  }, [data, riskFilter, flowLimit])
+  }, [data, riskFilter, flowLimit, groupByInstitution])
 
   const handleNodeSelect = useCallback((node: SankeyNodeSelected) => {
     const full = fullNames.get(node.id)
@@ -301,45 +409,53 @@ export default function MoneyFlow() {
 
   const totalValue = useMemo(() => links.reduce((s, l) => s + l.value, 0), [links])
   const totalContracts = useMemo(() => links.reduce((s, l) => s + l.contractCount, 0), [links])
-  const uniqueInstitutions = useMemo(
-    () => new Set(links.map(l => l.source)).size,
-    [links]
-  )
-  const uniqueVendors = useMemo(
-    () => new Set(links.map(l => l.target)).size,
-    [links]
-  )
+  const uniqueInstitutions = useMemo(() => new Set(links.map(l => l.source)).size, [links])
+  const uniqueVendors = useMemo(() => new Set(links.map(l => l.target)).size, [links])
 
-  // Table view rows: enrich links with full names, then sort
-  const tableRows = useMemo(() => {
-    const rows = links.map(l => {
-      const srcNode = nodes.find(n => n.id === l.source)
-      const tgtNode = nodes.find(n => n.id === l.target)
-      return {
-        ...l,
-        sourceName: fullNames.get(l.source) ?? srcNode?.name ?? l.source,
-        targetName: fullNames.get(l.target) ?? tgtNode?.name ?? l.target,
-        sourceRisk: srcNode?.riskLevel ?? 'unknown',
-        targetRisk: tgtNode?.riskLevel ?? 'unknown',
-      }
-    })
-    rows.sort((a, b) => {
-      const dir = sortDir === 'desc' ? -1 : 1
-      if (sortKey === 'value')    return dir * (a.value - b.value)
-      if (sortKey === 'contracts') return dir * (a.contractCount - b.contractCount)
-      return dir * (a.avgRisk - b.avgRisk)
-    })
-    return rows
-  }, [links, nodes, sortKey, sortDir])
-
-  // Compute high-risk flow percentage
   const highRiskValue = useMemo(
     () => links.filter(l => l.avgRisk >= 0.3).reduce((s, l) => s + l.value, 0),
     [links]
   )
   const highRiskPct = totalValue > 0 ? (highRiskValue / totalValue) * 100 : 0
 
-  // Top 5 suspicious flows by avg risk score, then by value (use full names)
+  // Top-3 vendor concentration
+  const top3VendorPct = useMemo(() => {
+    if (!totalValue) return 0
+    const vendorTotals = new Map<string, number>()
+    links.forEach(l => vendorTotals.set(l.target, (vendorTotals.get(l.target) ?? 0) + l.value))
+    const sorted = [...vendorTotals.values()].sort((a, b) => b - a)
+    const top3 = sorted.slice(0, 3).reduce((s, v) => s + v, 0)
+    return (top3 / totalValue) * 100
+  }, [links, totalValue])
+
+  // Table rows enriched with full names + concentration
+  const tableRows = useMemo(() => {
+    const instTotals = new Map<string, number>()
+    links.forEach(l => instTotals.set(l.source, (instTotals.get(l.source) ?? 0) + l.value))
+
+    const rows = links.map(l => {
+      const srcNode = nodes.find(n => n.id === l.source)
+      const tgtNode = nodes.find(n => n.id === l.target)
+      const instTotal = instTotals.get(l.source) ?? 1
+      return {
+        ...l,
+        sourceName: fullNames.get(l.source) ?? srcNode?.name ?? l.source,
+        targetName: fullNames.get(l.target) ?? tgtNode?.name ?? l.target,
+        sourceRisk: srcNode?.riskLevel ?? 'unknown',
+        targetRisk: tgtNode?.riskLevel ?? 'unknown',
+        concentration: l.value / instTotal,
+      }
+    })
+    rows.sort((a, b) => {
+      const dir = sortDir === 'desc' ? -1 : 1
+      if (sortKey === 'value')         return dir * (a.value - b.value)
+      if (sortKey === 'contracts')     return dir * (a.contractCount - b.contractCount)
+      if (sortKey === 'concentration') return dir * (a.concentration - b.concentration)
+      return dir * (a.avgRisk - b.avgRisk)
+    })
+    return rows
+  }, [links, nodes, sortKey, sortDir, fullNames])
+
   const topSuspiciousFlows = useMemo(
     () =>
       [...links]
@@ -358,17 +474,40 @@ export default function MoneyFlow() {
     [links, nodes, fullNames]
   )
 
+  const exportCSV = useCallback(() => {
+    const header = 'Institution,Vendor,Amount (MXN),Contracts,Avg Risk %,Risk Level,Concentration %'
+    const rows = tableRows.map(r => {
+      const { badge } = getRiskBadge(r.avgRisk)
+      return [
+        `"${r.sourceName.replace(/"/g, '""')}"`,
+        `"${r.targetName.replace(/"/g, '""')}"`,
+        r.value.toFixed(2),
+        r.contractCount,
+        (r.avgRisk * 100).toFixed(1),
+        badge,
+        (r.concentration * 100).toFixed(1),
+      ].join(',')
+    })
+    const csv = '\uFEFF' + header + '\n' + rows.join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `rubli-money-flow-${year ?? 'all'}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [tableRows, year])
+
   const showDiagram = !isLoading && nodes.length > 0 && links.length > 0
   const showEmpty = !isLoading && (!!error || !data?.flows?.length)
   const showNoRiskMatch = !isLoading && nodes.length === 0 && !!data?.flows?.length
+  const yearWarning = getYearWarning(year)
 
   return (
     <div className="space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-bold text-text-primary font-mono tracking-tight">{t('pageTitle')}</h1>
-        <p className="text-sm text-text-muted mt-1">
-          {t('pageSubtitle')}
-        </p>
+        <p className="text-sm text-text-muted mt-1">{t('pageSubtitle')}</p>
       </div>
 
       {/* Summary Stats Bar */}
@@ -383,7 +522,6 @@ export default function MoneyFlow() {
               {formatCompactMXN(totalValue)}
             </div>
           </div>
-          {/* High-risk flow stat — always visible, not conditional on threshold */}
           <div className="rounded-lg bg-red-500/8 border border-red-500/25 p-4">
             <div className="flex items-center gap-2 mb-1">
               <AlertTriangle className="h-3.5 w-3.5 text-red-400" aria-hidden="true" />
@@ -393,7 +531,7 @@ export default function MoneyFlow() {
               {formatCompactMXN(highRiskValue)}
             </div>
             <div className="text-xs text-text-muted mt-0.5">
-              {highRiskPct.toFixed(0)}% of total · avg risk ≥ 30%
+              {highRiskPct.toFixed(0)}% of total · similarity ≥ 30%
             </div>
           </div>
           <div className="rounded-lg bg-white/5 border border-border/20 p-4">
@@ -426,12 +564,41 @@ export default function MoneyFlow() {
         </div>
       )}
 
+      {/* Data quality warning */}
+      {yearWarning && (
+        <div className="rounded-lg border border-amber-500/25 bg-amber-500/8 px-4 py-2.5 flex gap-2 text-xs">
+          <AlertTriangle className="h-3.5 w-3.5 text-amber-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+          <span className="text-amber-300/90">{yearWarning}</span>
+        </div>
+      )}
+
+      {/* Narrative context strip */}
+      {showDiagram && (
+        <div className="text-xs text-text-muted px-1 flex flex-wrap gap-x-4 gap-y-1">
+          <span>
+            <span className="text-amber-300 font-medium">{highRiskPct.toFixed(0)}%</span>
+            {' '}of flow value has high- or critical-risk similarity
+          </span>
+          <span>·</span>
+          <span>
+            Top 3 vendors hold{' '}
+            <span className="text-text-secondary font-medium">{top3VendorPct.toFixed(0)}%</span>{' '}
+            of total visible value
+          </span>
+          <span>·</span>
+          <span>
+            {links.length} flows ranked by {apiSortBy === 'risk' ? 'avg risk similarity' : 'value'}
+          </span>
+        </div>
+      )}
+
       {/* Controls */}
       <div className="bg-background-elevated border border-border/30 rounded-lg p-4 space-y-3">
         <div className="flex flex-wrap items-center gap-3">
+          {/* Sector */}
           <Select
             value={sectorId ? String(sectorId) : 'all'}
-            onValueChange={v => { setSectorId(v === 'all' ? undefined : Number(v)); setSelectedNode(null) }}
+            onValueChange={v => { setParam('sector', v === 'all' ? undefined : v); setSelectedNode(null) }}
           >
             <SelectTrigger className="w-44 h-8 text-xs">
               <SelectValue placeholder={t('filters.allSectors')} />
@@ -444,24 +611,34 @@ export default function MoneyFlow() {
             </SelectContent>
           </Select>
 
+          {/* Year with data quality badge */}
           <Select
             value={year ? String(year) : 'all'}
-            onValueChange={v => { setYear(v === 'all' ? undefined : Number(v)); setSelectedNode(null) }}
+            onValueChange={v => { setParam('year', v === 'all' ? undefined : v); setSelectedNode(null) }}
           >
-            <SelectTrigger className="w-28 h-8 text-xs">
+            <SelectTrigger className="w-36 h-8 text-xs">
               <SelectValue placeholder={t('filters.allYears')} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t('filters.allYears')}</SelectItem>
-              {YEARS.map(y => (
-                <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-              ))}
+              {YEARS.map(y => {
+                const q = getYearQualityLabel(y)
+                return (
+                  <SelectItem key={y} value={String(y)}>
+                    <span className="flex items-center gap-1.5">
+                      {y}
+                      <span className="text-[10px] text-text-muted" title={q.rfcPct}>{q.icon}</span>
+                    </span>
+                  </SelectItem>
+                )
+              })}
             </SelectContent>
           </Select>
 
+          {/* Flow limit */}
           <Select
             value={String(flowLimit)}
-            onValueChange={v => { setFlowLimit(Number(v)); setSelectedNode(null) }}
+            onValueChange={v => { setParam('limit', v === '20' ? undefined : v); setSelectedNode(null) }}
           >
             <SelectTrigger className="w-36 h-8 text-xs">
               <SelectValue />
@@ -474,22 +651,57 @@ export default function MoneyFlow() {
             </SelectContent>
           </Select>
 
+          {/* Backend rank order */}
+          <Select
+            value={apiSortBy}
+            onValueChange={v => { setParam('api_sort', v === 'value' ? undefined : v); setSelectedNode(null) }}
+          >
+            <SelectTrigger className="w-36 h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="value">Rank by value</SelectItem>
+              <SelectItem value="risk">Rank by risk</SelectItem>
+            </SelectContent>
+          </Select>
+
           {/* Direct Awards toggle */}
           <button
-            onClick={() => { setDirectAwardOnly(v => !v); setSelectedNode(null) }}
+            onClick={() => { setParam('da', directAwardOnly ? undefined : '1'); setSelectedNode(null) }}
             className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium border transition-all ${
               directAwardOnly
                 ? 'bg-amber-500/20 border-amber-500/60 text-amber-300'
                 : 'border-border/30 text-text-muted hover:text-text-secondary'
             }`}
             aria-pressed={directAwardOnly}
-            title="Show only direct award contracts (adjudicación directa)"
+            title="Direct awards (adjudicación directa) skip competitive bidding — the institution selects the vendor without a public tender. Filtering to direct awards isolates a key procurement risk channel."
           >
             Direct Awards Only
           </button>
 
+          {/* Group institutions toggle */}
+          <button
+            onClick={() => { setGroupByInstitution(!groupByInstitution); setSelectedNode(null) }}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium border transition-all ${
+              groupByInstitution
+                ? 'bg-accent/20 border-accent/60 text-accent'
+                : 'border-border/30 text-text-muted hover:text-text-secondary'
+            }`}
+            aria-pressed={groupByInstitution}
+            title="Merge institution nodes that share the same parent organization (e.g. all PEMEX subsidiaries into one node)"
+          >
+            Group institutions
+          </button>
+
+          {/* Risk filter */}
           <div className="flex gap-1.5 items-center flex-wrap">
-            <span className="text-xs text-text-muted">{t('riskLabel')}</span>
+            <span
+              className="text-xs text-text-muted cursor-help"
+              title="Risk similarity score measures how closely procurement patterns resemble documented corruption cases (v5.1 model). This is not a probability of guilt — use for investigation triage only."
+            >
+              {t('riskLabel')}{' '}
+              <span className="text-text-muted/60 text-[10px]">ℹ</span>
+            </span>
             {RISK_LEVELS.map(r => (
               <button
                 key={r.key}
@@ -507,32 +719,44 @@ export default function MoneyFlow() {
             ))}
           </div>
 
-          {/* View mode toggle */}
-          <div className="ml-auto flex items-center gap-1 rounded-md border border-border/30 p-0.5 bg-background/40">
-            <button
-              onClick={() => setViewMode('diagram')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-all ${
-                viewMode === 'diagram'
-                  ? 'bg-accent/20 text-accent'
-                  : 'text-text-muted hover:text-text-secondary'
-              }`}
-              aria-pressed={viewMode === 'diagram'}
-            >
-              <BarChart2 className="h-3.5 w-3.5" aria-hidden="true" />
-              Diagram
-            </button>
-            <button
-              onClick={() => setViewMode('table')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-all ${
-                viewMode === 'table'
-                  ? 'bg-accent/20 text-accent'
-                  : 'text-text-muted hover:text-text-secondary'
-              }`}
-              aria-pressed={viewMode === 'table'}
-            >
-              <List className="h-3.5 w-3.5" aria-hidden="true" />
-              Table
-            </button>
+          {/* Export + View toggle */}
+          <div className="ml-auto flex items-center gap-2">
+            {links.length > 0 && (
+              <button
+                onClick={exportCSV}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs text-text-muted hover:text-text-secondary border border-border/30 transition-colors"
+                title="Export visible flows to CSV"
+              >
+                <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                CSV
+              </button>
+            )}
+            <div className="flex items-center gap-1 rounded-md border border-border/30 p-0.5 bg-background/40">
+              <button
+                onClick={() => setViewMode('diagram')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-all ${
+                  viewMode === 'diagram'
+                    ? 'bg-accent/20 text-accent'
+                    : 'text-text-muted hover:text-text-secondary'
+                }`}
+                aria-pressed={viewMode === 'diagram'}
+              >
+                <BarChart2 className="h-3.5 w-3.5" aria-hidden="true" />
+                Diagram
+              </button>
+              <button
+                onClick={() => setViewMode('table')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-all ${
+                  viewMode === 'table'
+                    ? 'bg-accent/20 text-accent'
+                    : 'text-text-muted hover:text-text-secondary'
+                }`}
+                aria-pressed={viewMode === 'table'}
+              >
+                <List className="h-3.5 w-3.5" aria-hidden="true" />
+                Table
+              </button>
+            </div>
           </div>
         </div>
 
@@ -564,16 +788,29 @@ export default function MoneyFlow() {
               : <Users className="h-5 w-5 text-cyan-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
             }
             <div className="flex-1 min-w-0">
+              {selectedNode.type === 'institution' && (() => {
+                const grp = getInstitutionGroup(fullNames.get(selectedNode.id) ?? selectedNode.name)
+                if (!grp?.logo) return null
+                return (
+                  <img
+                    src={grp.logo}
+                    alt={grp.shortName}
+                    height={24}
+                    className="h-6 w-auto object-contain mb-1"
+                    aria-hidden="true"
+                  />
+                )
+              })()}
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-semibold text-text-primary">{selectedNode.name}</h3>
                 <span
                   className="text-xs px-1.5 py-0.5 rounded font-medium"
                   style={{
-                    backgroundColor: RISK_LEVELS.find(r => r.key === selectedNode.riskLevel)?.color + '33',
-                    color: RISK_LEVELS.find(r => r.key === selectedNode.riskLevel)?.color,
+                    backgroundColor: (RISK_LEVELS.find(r => r.key === selectedNode.riskLevel)?.color ?? '#64748b') + '33',
+                    color: RISK_LEVELS.find(r => r.key === selectedNode.riskLevel)?.color ?? '#64748b',
                   }}
                 >
-                  {RISK_LABELS[selectedNode.riskLevel] ?? selectedNode.riskLevel} risk
+                  {RISK_LABELS[selectedNode.riskLevel] ?? selectedNode.riskLevel} similarity
                 </span>
                 <span className="text-xs text-text-muted capitalize">{selectedNode.type}</span>
               </div>
@@ -646,9 +883,7 @@ export default function MoneyFlow() {
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
                   <GitBranch className="h-10 w-10 text-text-muted/60" aria-hidden="true" />
                   <p className="text-sm font-medium text-text-secondary">{t('emptyMessage')}</p>
-                  <p className="text-xs text-text-muted max-w-xs">
-                    {t('emptyHint')}
-                  </p>
+                  <p className="text-xs text-text-muted max-w-xs">{t('emptyHint')}</p>
                 </div>
               </div>
             </div>
@@ -658,22 +893,25 @@ export default function MoneyFlow() {
             <div className="flex flex-col items-center justify-center h-64 gap-3 text-center px-6">
               <GitBranch className="h-10 w-10 text-text-muted/40" aria-hidden="true" />
               <p className="text-sm font-medium text-text-secondary">{t('noRiskMatch')}</p>
-              <p className="text-xs text-text-muted max-w-xs">
-                {t('noRiskMatchHint')}
-              </p>
+              <p className="text-xs text-text-muted max-w-xs">{t('noRiskMatchHint')}</p>
             </div>
           )}
 
           {showDiagram && (
-            <SankeyDiagram
-              nodes={nodes}
-              links={links}
-              width={diagramWidth}
-              height={Math.max(400, nodes.length * 32)}
-              onFlowClick={handleFlowClick}
-              onNodeClick={handleNodeSelect}
-              selectedNodeId={selectedNode?.id}
-            />
+            <>
+              <p className="text-xs text-text-muted mb-3 text-center opacity-70">
+                Left nodes = institutions (buyers) · Right nodes = vendors (suppliers) · Flow width = contract value · Color = risk similarity
+              </p>
+              <SankeyDiagram
+                nodes={nodes}
+                links={links}
+                width={diagramWidth}
+                height={Math.max(400, nodes.length * 32)}
+                onFlowClick={handleFlowClick}
+                onNodeClick={handleNodeSelect}
+                selectedNodeId={selectedNode?.id}
+              />
+            </>
           )}
         </div>
       )}
@@ -699,18 +937,24 @@ export default function MoneyFlow() {
                     <th className="text-left px-4 py-2.5 font-medium text-text-muted w-6">#</th>
                     <th className="text-left px-3 py-2.5 font-medium text-text-muted">Institution</th>
                     <th className="text-left px-3 py-2.5 font-medium text-text-muted">Vendor</th>
-                    {(['value', 'contracts', 'avgRisk'] as SortKey[]).map(key => (
+                    {(['value', 'contracts', 'avgRisk', 'concentration'] as SortKey[]).map(key => (
                       <th key={key} className="text-right px-3 py-2.5 font-medium text-text-muted">
                         <button
                           onClick={() => handleSort(key)}
                           className="flex items-center gap-1 ml-auto hover:text-text-primary transition-colors"
+                          title={key === 'concentration'
+                            ? "Vendor's share of this institution's total visible flow — high concentration means one vendor dominates"
+                            : undefined}
                         >
-                          {key === 'value' ? 'Amount' : key === 'contracts' ? 'Contracts' : 'Avg Risk'}
+                          {key === 'value' ? 'Amount'
+                            : key === 'contracts' ? 'Contracts'
+                            : key === 'concentration' ? 'Conc.'
+                            : 'Risk Sim.'}
                           {sortKey === key
                             ? sortDir === 'desc'
                               ? <ChevronDown className="h-3 w-3" />
                               : <ChevronUp className="h-3 w-3" />
-                            : <span className="h-3 w-3" />}
+                            : <span className="h-3 w-3 inline-block" />}
                         </button>
                       </th>
                     ))}
@@ -719,11 +963,7 @@ export default function MoneyFlow() {
                 </thead>
                 <tbody>
                   {tableRows.map((row, i) => {
-                    const riskColor =
-                      row.avgRisk >= 0.5 ? '#f87171' :
-                      row.avgRisk >= 0.3 ? '#fb923c' :
-                      row.avgRisk >= 0.1 ? '#fbbf24' :
-                      '#4ade80'
+                    const { color, badge } = getRiskBadge(row.avgRisk)
                     const isHighRisk = row.avgRisk >= 0.3
                     return (
                       <tr
@@ -735,7 +975,7 @@ export default function MoneyFlow() {
                         title={`Click to view contracts: ${row.sourceName} → ${row.targetName}`}
                       >
                         <td className="px-4 py-2.5 text-text-muted font-mono">{i + 1}</td>
-                        <td className="px-3 py-2.5 max-w-[240px]">
+                        <td className="px-3 py-2.5 max-w-[200px]">
                           <div className="flex items-center gap-2 min-w-0">
                             <span
                               className="w-2 h-2 rounded-full flex-shrink-0"
@@ -747,7 +987,7 @@ export default function MoneyFlow() {
                             </span>
                           </div>
                         </td>
-                        <td className="px-3 py-2.5 max-w-[240px]">
+                        <td className="px-3 py-2.5 max-w-[200px]">
                           <div className="flex items-center gap-2 min-w-0">
                             <span
                               className="w-2 h-2 rounded-full flex-shrink-0"
@@ -765,8 +1005,19 @@ export default function MoneyFlow() {
                         <td className="px-3 py-2.5 text-right font-mono text-text-secondary">
                           {row.contractCount.toLocaleString()}
                         </td>
-                        <td className="px-3 py-2.5 text-right font-mono font-semibold whitespace-nowrap" style={{ color: riskColor }}>
-                          {(row.avgRisk * 100).toFixed(0)}%
+                        <td className="px-3 py-2.5 text-right font-mono font-semibold whitespace-nowrap">
+                          <span className="flex items-center justify-end gap-1" style={{ color }}>
+                            <span
+                              className="text-[9px] font-bold px-1 rounded"
+                              style={{ backgroundColor: color + '22', color }}
+                            >
+                              {badge}
+                            </span>
+                            {(row.avgRisk * 100).toFixed(0)}%
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono text-text-muted">
+                          {(row.concentration * 100).toFixed(0)}%
                         </td>
                         <td className="px-3 py-2.5">
                           <ArrowRight className="h-3 w-3 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
@@ -777,7 +1028,7 @@ export default function MoneyFlow() {
                 </tbody>
               </table>
               <p className="text-xs text-text-muted px-4 py-2 border-t border-border/20">
-                {tableRows.length} flows shown · click any row to open contracts
+                {tableRows.length} flows shown · Conc. = vendor's share of institution total · click any row to open contracts
               </p>
             </div>
           )}
@@ -793,35 +1044,43 @@ export default function MoneyFlow() {
         </div>
       )}
 
-      {/* Risk coloring explanation */}
+      {/* How to read flow colors */}
       {showDiagram && viewMode === 'diagram' && (
         <div className="rounded-lg border border-amber-500/15 bg-amber-500/5 px-4 py-3 flex gap-3">
           <Info className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
           <div className="text-xs text-text-muted space-y-1">
             <p className="font-medium text-amber-300">How to read flow colors</p>
             <p>
-              Flow and node colors represent the <strong className="text-text-secondary">average v5.1 corruption risk score</strong> for all contracts in that channel:
+              Colors show <strong className="text-text-secondary">statistical similarity to documented corruption patterns</strong> (v5.1 model) — not probability of guilt:
               {' '}<span style={{ color: '#f87171' }}>red = critical (≥50%)</span>,
               {' '}<span style={{ color: '#fb923c' }}>orange = high (≥30%)</span>,
               {' '}<span style={{ color: '#fbbf24' }}>amber = medium (≥10%)</span>,
               {' '}<span style={{ color: '#4ade80' }}>green = low (&lt;10%)</span>.
-              Thicker flows carry more contract value. Hover any flow for details. Click a flow to view its contracts.
+              Thicker flows carry more contract value. Hover any flow for details. Click to view contracts.
             </p>
           </div>
         </div>
       )}
 
-      {/* Top 5 suspicious flows summary panel */}
+      {/* Causal inference disclaimer + Top suspicious flows */}
       {showDiagram && viewMode === 'diagram' && topSuspiciousFlows.length > 0 && (
         <div className="rounded-lg border border-border/30 bg-background-elevated p-4">
+          <div className="flex items-start gap-2 mb-3 pb-3 border-b border-border/20">
+            <ShieldAlert className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+            <p className="text-xs text-text-muted">
+              <span className="font-medium text-amber-300">Statistical similarity indicator — not evidence of wrongdoing.</span>
+              {' '}High scores mean procurement characteristics resemble documented corruption cases.
+              Use for investigation triage only.
+            </p>
+          </div>
           <h2 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-red-400" aria-hidden="true" />
             Top Suspicious Money Flows
-            <span className="text-xs font-normal text-text-muted ml-1">— highest avg risk score, click to investigate</span>
+            <span className="text-xs font-normal text-text-muted ml-1">— highest similarity score · click to investigate</span>
           </h2>
           <div className="space-y-2">
             {topSuspiciousFlows.map((flow, i) => {
-              const riskColor = flow.avgRisk >= 0.5 ? '#f87171' : flow.avgRisk >= 0.3 ? '#fb923c' : '#fbbf24'
+              const { color, badge } = getRiskBadge(flow.avgRisk)
               return (
                 <button
                   key={i}
@@ -834,7 +1093,7 @@ export default function MoneyFlow() {
                   </span>
                   <span
                     className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: riskColor }}
+                    style={{ backgroundColor: color }}
                     aria-hidden="true"
                   />
                   <span className="flex-1 min-w-0">
@@ -844,8 +1103,16 @@ export default function MoneyFlow() {
                       {flow.targetName.length > 30 ? flow.targetName.slice(0, 30) + '…' : flow.targetName}
                     </span>
                   </span>
-                  <span className="text-xs font-mono font-semibold flex-shrink-0" style={{ color: riskColor }}>
-                    {(flow.avgRisk * 100).toFixed(0)}% risk
+                  <span className="flex items-center gap-1 flex-shrink-0" style={{ color }}>
+                    <span
+                      className="text-[9px] font-bold px-1 rounded"
+                      style={{ backgroundColor: color + '22', color }}
+                    >
+                      {badge}
+                    </span>
+                    <span className="text-xs font-mono font-semibold">
+                      {(flow.avgRisk * 100).toFixed(0)}%
+                    </span>
                   </span>
                   <span className="text-xs text-text-muted flex-shrink-0">
                     {formatCompactMXN(flow.value)}
@@ -863,12 +1130,39 @@ export default function MoneyFlow() {
         <span className="font-medium">{t('legend.nodeColor')}</span>
         {RISK_LEVELS.map(r => (
           <span key={r.key} className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: r.color }} />
+            <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: r.color }} aria-hidden="true" />
+            <span className="text-[9px] font-bold" style={{ color: r.color }}>{r.badge}</span>
             {tc(r.key)}
           </span>
         ))}
         <span className="ml-auto opacity-60">{t('legend.leftRight')}</span>
       </div>
+
+      {/* Known model limitations */}
+      <details className="rounded-lg border border-border/20 bg-background/40 text-xs">
+        <summary className="px-4 py-2.5 cursor-pointer text-text-muted hover:text-text-secondary transition-colors select-none font-medium list-none flex items-center gap-2">
+          <Info className="h-3.5 w-3.5" aria-hidden="true" />
+          Known model limitations for this view
+        </summary>
+        <ul className="px-5 pb-3 pt-1 space-y-1.5 text-text-muted list-disc">
+          <li>
+            <strong className="text-text-secondary">Ghost company blind spot:</strong>{' '}
+            Small shell companies (few contracts per RFC) score low — SAT-confirmed EFOS definitivo vendors average 28% similarity vs 85% for large-vendor training cases.
+          </li>
+          <li>
+            <strong className="text-text-secondary">Execution-phase fraud is invisible:</strong>{' '}
+            RUBLI only analyzes contract award data. Cost overruns, ghost workers, material substitution, and post-award kickbacks cannot be detected.
+          </li>
+          <li>
+            <strong className="text-text-secondary">Pre-2010 vendor identity:</strong>{' '}
+            0.1% RFC coverage means the same company may appear as multiple separate nodes. True vendor concentration may be substantially higher than shown.
+          </li>
+          <li>
+            <strong className="text-text-secondary">Structural concentration:</strong>{' '}
+            Energy (PEMEX/CFE) and Defence sectors have legitimate quasi-monopolies due to regulation and clearance requirements. High concentration scores in these sectors do not necessarily indicate corruption.
+          </li>
+        </ul>
+      </details>
     </div>
   )
 }

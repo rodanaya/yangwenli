@@ -2638,16 +2638,18 @@ def get_money_flow(
     year: Optional[int] = Query(None, ge=2002, le=2026),
     limit: int = Query(50, ge=10, le=200),
     direct_award_only: bool = Query(False),
+    sort_by: str = Query("value", pattern="^(value|risk)$"),
 ):
     """
     Top institution->vendor flows.
     Fast path (no year/direct_award): uses precomputed institution_top_vendors table.
     Filtered path (year or direct_award_only): queries contracts directly.
+    sort_by: 'value' (default, by total_value DESC) or 'risk' (by avg_risk DESC).
     """
     import time as _time
     global _money_flow_cache, _money_flow_cache_ts
 
-    cache_key = f"flow:{sector_id}:{year}:{limit}:{direct_award_only}"
+    cache_key = f"flow:{sector_id}:{year}:{limit}:{direct_award_only}:{sort_by}"
     now = _time.time()
     if _money_flow_cache and (now - _money_flow_cache_ts) < _MONEY_FLOW_CACHE_TTL:
         cached = _money_flow_cache.get(cache_key)
@@ -2661,6 +2663,7 @@ def get_money_flow(
             year=year,
             limit=limit,
             direct_award_only=direct_award_only,
+            sort_by=sort_by,
         )
         _money_flow_cache[cache_key] = result
         _money_flow_cache_ts = _time.time()
@@ -4524,4 +4527,378 @@ def get_procedure_risk_comparison(
         raise HTTPException(status_code=503, detail="Database temporarily unavailable")
     except Exception as e:
         logger.error("Error in get_procedure_risk_comparison: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+# =============================================================================
+# TOP BY PERIOD ENDPOINT
+# =============================================================================
+
+_top_period_cache: Dict[str, Any] = {}
+_TOP_PERIOD_TTL = 86400  # 24 hours
+
+
+@router.get("/top-by-period")
+def get_top_by_period(
+    start_year: int = Query(..., ge=2002, le=2025),
+    end_year: int = Query(..., ge=2002, le=2025),
+    entity: str = Query("vendor", pattern="^(vendor|institution)$"),
+    by: str = Query("value", pattern="^(value|count)$"),
+    limit: int = Query(20, ge=5, le=100),
+):
+    """
+    Return top vendors or institutions for a given year range, ranked by
+    total contract value or count.  Results are cached for 24 hours.
+    """
+    if start_year > end_year:
+        raise HTTPException(
+            status_code=422,
+            detail="start_year must be less than or equal to end_year",
+        )
+
+    cache_key = f"top_period_{start_year}_{end_year}_{entity}_{by}_{limit}"
+    cached = _top_period_cache.get(cache_key)
+    if cached and (_time.time() - cached["ts"]) < _TOP_PERIOD_TTL:
+        return cached["data"]
+
+    order_col = "total_value_mxn" if by == "value" else "total_contracts"
+
+    if entity == "vendor":
+        sql = f"""
+            SELECT
+                COALESCE(v.name, c.vendor_id) AS name,
+                COALESCE(SUM(CASE WHEN COALESCE(c.amount_mxn, 0) <= 100000000000
+                              THEN c.amount_mxn ELSE 0 END), 0) AS total_value_mxn,
+                COUNT(*) AS total_contracts,
+                COALESCE(AVG(c.risk_score), 0) AS avg_risk_score
+            FROM contracts c
+            LEFT JOIN vendors v ON c.vendor_id = v.id
+            WHERE c.contract_year BETWEEN ? AND ?
+              AND c.vendor_id IS NOT NULL
+            GROUP BY c.vendor_id
+            ORDER BY {order_col} DESC
+            LIMIT ?
+        """
+        params_q = [start_year, end_year, limit]
+    else:
+        sql = f"""
+            SELECT
+                COALESCE(i.name, CAST(c.institution_id AS TEXT)) AS name,
+                COALESCE(SUM(CASE WHEN COALESCE(c.amount_mxn, 0) <= 100000000000
+                              THEN c.amount_mxn ELSE 0 END), 0) AS total_value_mxn,
+                COUNT(*) AS total_contracts,
+                COALESCE(AVG(c.risk_score), 0) AS avg_risk_score
+            FROM contracts c
+            LEFT JOIN institutions i ON c.institution_id = i.id
+            WHERE c.contract_year BETWEEN ? AND ?
+              AND c.institution_id IS NOT NULL
+            GROUP BY c.institution_id
+            ORDER BY {order_col} DESC
+            LIMIT ?
+        """
+        params_q = [start_year, end_year, limit]
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute(sql, params_q)
+            rows = cursor.fetchall()
+
+        data = [
+            {
+                "name": row["name"],
+                "total_value_mxn": round(row["total_value_mxn"], 2),
+                "total_contracts": row["total_contracts"],
+                "avg_risk_score": round(row["avg_risk_score"], 4),
+            }
+            for row in rows
+        ]
+
+        result = {
+            "entity": entity,
+            "start_year": start_year,
+            "end_year": end_year,
+            "by": by,
+            "data": data,
+        }
+        _top_period_cache[cache_key] = {"ts": _time.time(), "data": result}
+        return result
+
+    except sqlite3.OperationalError as e:
+        logger.error("DB error in get_top_by_period: %s", e)
+        raise HTTPException(status_code=503, detail="Database temporarily unavailable")
+    except Exception as e:
+        logger.error("Error in get_top_by_period: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+# =============================================================================
+# SECTOR GROWTH ENDPOINT
+# =============================================================================
+
+_sector_growth_cache: Dict[str, Any] = {}
+_SECTOR_GROWTH_TTL = 86400  # 24 hours
+
+
+@router.get("/sector-growth")
+def get_sector_growth(year: int = Query(..., ge=2003, le=2025)):
+    """
+    Return year-over-year growth for each sector comparing the requested year
+    against the prior year.  Results are cached for 24 hours.
+    """
+    cache_key = f"sector_growth_{year}"
+    cached = _sector_growth_cache.get(cache_key)
+    if cached and (_time.time() - cached["ts"]) < _SECTOR_GROWTH_TTL:
+        return cached["data"]
+
+    sql = """
+        WITH current_year AS (
+            SELECT
+                c.sector_id,
+                COALESCE(SUM(CASE WHEN COALESCE(c.amount_mxn, 0) <= 100000000000
+                              THEN c.amount_mxn ELSE 0 END), 0) AS total_value_mxn,
+                COUNT(*) AS total_contracts
+            FROM contracts c
+            WHERE c.contract_year = ?
+            GROUP BY c.sector_id
+        ),
+        prior_year AS (
+            SELECT
+                c.sector_id,
+                COALESCE(SUM(CASE WHEN COALESCE(c.amount_mxn, 0) <= 100000000000
+                              THEN c.amount_mxn ELSE 0 END), 0) AS prior_year_value,
+                COUNT(*) AS prior_year_contracts
+            FROM contracts c
+            WHERE c.contract_year = ?
+            GROUP BY c.sector_id
+        )
+        SELECT
+            s.id AS sector_id,
+            s.code AS sector_code,
+            s.name_es,
+            s.name_en,
+            COALESCE(cy.total_value_mxn, 0) AS total_value_mxn,
+            COALESCE(py.prior_year_value, 0) AS prior_year_value,
+            COALESCE(cy.total_contracts, 0) AS total_contracts,
+            COALESCE(py.prior_year_contracts, 0) AS prior_year_contracts
+        FROM sectors s
+        LEFT JOIN current_year cy ON s.id = cy.sector_id
+        LEFT JOIN prior_year py ON s.id = py.sector_id
+        WHERE s.is_active = 1
+        ORDER BY total_value_mxn DESC
+    """
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute(sql, [year, year - 1])
+            rows = cursor.fetchall()
+
+        data = []
+        for row in rows:
+            cur_val = row["total_value_mxn"] or 0
+            prior_val = row["prior_year_value"] or 0
+            cur_cnt = row["total_contracts"] or 0
+            prior_cnt = row["prior_year_contracts"] or 0
+
+            value_growth_pct = (
+                round((cur_val - prior_val) / prior_val * 100, 2)
+                if prior_val > 0 else None
+            )
+            contracts_growth_pct = (
+                round((cur_cnt - prior_cnt) / prior_cnt * 100, 2)
+                if prior_cnt > 0 else None
+            )
+
+            data.append({
+                "sector_id": row["sector_id"],
+                "sector_code": row["sector_code"],
+                "name_es": row["name_es"],
+                "name_en": row["name_en"],
+                "total_value_mxn": round(cur_val, 2),
+                "prior_year_value": round(prior_val, 2),
+                "value_growth_pct": value_growth_pct,
+                "total_contracts": cur_cnt,
+                "prior_year_contracts": prior_cnt,
+                "contracts_growth_pct": contracts_growth_pct,
+            })
+
+        result = {"year": year, "prior_year": year - 1, "data": data}
+        _sector_growth_cache[cache_key] = {"ts": _time.time(), "data": result}
+        return result
+
+    except sqlite3.OperationalError as e:
+        logger.error("DB error in get_sector_growth: %s", e)
+        raise HTTPException(status_code=503, detail="Database temporarily unavailable")
+    except Exception as e:
+        logger.error("Error in get_sector_growth: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+# =============================================================================
+# YEAR SUMMARY ENDPOINT
+# =============================================================================
+
+_year_summary_cache: Dict[str, Any] = {}
+_YEAR_SUMMARY_TTL = 86400  # 24 hours
+
+
+@router.get("/year-summary/{year}")
+def get_year_summary(year: int = Path(..., ge=2002, le=2026)):
+    """
+    Return a comprehensive summary for a given year: totals, risk breakdown,
+    top vendors, top institutions, and year-over-year deltas.
+    Cached for 24 hours.
+    """
+    cache_key = f"year_summary_{year}"
+    cached = _year_summary_cache.get(cache_key)
+    if cached and (_time.time() - cached["ts"]) < _YEAR_SUMMARY_TTL:
+        return cached["data"]
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # -- Main year aggregates ------------------------------------------
+            cursor.execute(
+                """
+                SELECT
+                    COUNT(*) AS total_contracts,
+                    COALESCE(SUM(CASE WHEN COALESCE(amount_mxn, 0) <= 100000000000
+                                  THEN amount_mxn ELSE 0 END), 0) AS total_value_mxn,
+                    SUM(CASE WHEN risk_level IN ('high', 'critical') THEN 1 ELSE 0 END)
+                        AS high_risk_contracts,
+                    COALESCE(AVG(risk_score), 0) AS avg_risk_score,
+                    SUM(CASE WHEN risk_level = 'critical' THEN 1 ELSE 0 END) AS cnt_critical,
+                    SUM(CASE WHEN risk_level = 'high' THEN 1 ELSE 0 END) AS cnt_high,
+                    SUM(CASE WHEN risk_level = 'medium' THEN 1 ELSE 0 END) AS cnt_medium,
+                    SUM(CASE WHEN risk_level = 'low' THEN 1 ELSE 0 END) AS cnt_low
+                FROM contracts
+                WHERE contract_year = ?
+                """,
+                [year],
+            )
+            row = cursor.fetchone()
+            total_contracts = row["total_contracts"] or 0
+            total_value_mxn = round(row["total_value_mxn"] or 0, 2)
+            high_risk_contracts = row["high_risk_contracts"] or 0
+            avg_risk_score = round(row["avg_risk_score"] or 0, 4)
+            high_risk_pct = (
+                round(high_risk_contracts / total_contracts * 100, 2)
+                if total_contracts > 0 else 0.0
+            )
+            risk_level_counts = {
+                "critical": row["cnt_critical"] or 0,
+                "high": row["cnt_high"] or 0,
+                "medium": row["cnt_medium"] or 0,
+                "low": row["cnt_low"] or 0,
+            }
+
+            # -- Prior year for deltas -----------------------------------------
+            vs_prior_year = None
+            if year > 2002:
+                cursor.execute(
+                    """
+                    SELECT
+                        COUNT(*) AS total_contracts,
+                        COALESCE(SUM(CASE WHEN COALESCE(amount_mxn, 0) <= 100000000000
+                                      THEN amount_mxn ELSE 0 END), 0) AS total_value_mxn
+                    FROM contracts
+                    WHERE contract_year = ?
+                    """,
+                    [year - 1],
+                )
+                prior = cursor.fetchone()
+                prior_contracts = prior["total_contracts"] or 0
+                prior_value = prior["total_value_mxn"] or 0
+
+                value_change_pct = (
+                    round((total_value_mxn - prior_value) / prior_value * 100, 2)
+                    if prior_value > 0 else None
+                )
+                contracts_change_pct = (
+                    round((total_contracts - prior_contracts) / prior_contracts * 100, 2)
+                    if prior_contracts > 0 else None
+                )
+                vs_prior_year = {
+                    "value_change_pct": value_change_pct,
+                    "contracts_change_pct": contracts_change_pct,
+                }
+
+            # -- Top 5 vendors ------------------------------------------------
+            cursor.execute(
+                """
+                SELECT
+                    COALESCE(v.name, CAST(c.vendor_id AS TEXT)) AS name,
+                    COUNT(*) AS total_contracts,
+                    COALESCE(SUM(CASE WHEN COALESCE(c.amount_mxn, 0) <= 100000000000
+                                  THEN c.amount_mxn ELSE 0 END), 0) AS total_value_mxn,
+                    COALESCE(AVG(c.risk_score), 0) AS avg_risk_score
+                FROM contracts c
+                LEFT JOIN vendors v ON c.vendor_id = v.id
+                WHERE c.contract_year = ? AND c.vendor_id IS NOT NULL
+                GROUP BY c.vendor_id
+                ORDER BY total_value_mxn DESC
+                LIMIT 5
+                """,
+                [year],
+            )
+            top_vendors = [
+                {
+                    "name": r["name"],
+                    "total_contracts": r["total_contracts"],
+                    "total_value_mxn": round(r["total_value_mxn"], 2),
+                    "avg_risk_score": round(r["avg_risk_score"], 4),
+                }
+                for r in cursor.fetchall()
+            ]
+
+            # -- Top 5 institutions -------------------------------------------
+            cursor.execute(
+                """
+                SELECT
+                    COALESCE(i.name, CAST(c.institution_id AS TEXT)) AS name,
+                    COUNT(*) AS total_contracts,
+                    COALESCE(SUM(CASE WHEN COALESCE(c.amount_mxn, 0) <= 100000000000
+                                  THEN c.amount_mxn ELSE 0 END), 0) AS total_value_mxn,
+                    COALESCE(AVG(c.risk_score), 0) AS avg_risk_score
+                FROM contracts c
+                LEFT JOIN institutions i ON c.institution_id = i.id
+                WHERE c.contract_year = ? AND c.institution_id IS NOT NULL
+                GROUP BY c.institution_id
+                ORDER BY total_value_mxn DESC
+                LIMIT 5
+                """,
+                [year],
+            )
+            top_institutions = [
+                {
+                    "name": r["name"],
+                    "total_contracts": r["total_contracts"],
+                    "total_value_mxn": round(r["total_value_mxn"], 2),
+                    "avg_risk_score": round(r["avg_risk_score"], 4),
+                }
+                for r in cursor.fetchall()
+            ]
+
+        result = {
+            "year": year,
+            "total_contracts": total_contracts,
+            "total_value_mxn": total_value_mxn,
+            "high_risk_contracts": high_risk_contracts,
+            "high_risk_pct": high_risk_pct,
+            "avg_risk_score": avg_risk_score,
+            "vs_prior_year": vs_prior_year,
+            "top_vendors": top_vendors,
+            "top_institutions": top_institutions,
+            "risk_level_counts": risk_level_counts,
+        }
+        _year_summary_cache[cache_key] = {"ts": _time.time(), "data": result}
+        return result
+
+    except sqlite3.OperationalError as e:
+        logger.error("DB error in get_year_summary: %s", e)
+        raise HTTPException(status_code=503, detail="Database temporarily unavailable")
+    except Exception as e:
+        logger.error("Error in get_year_summary: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error")

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40">
+  <rect width="120" height="40" rx="4" fill="#004A97"/>
+  <text x="6" y="27" font-family="Arial,sans-serif" font-weight="700" font-size="16" fill="#ffffff" letter-spacing="0.5">ISSSTE</text>
+  <circle cx="105" cy="20" r="10" fill="none" stroke="#00AEEF" stroke-width="2"/>
+  <text x="100" y="25" font-family="Arial,sans-serif" font-weight="900" font-size="13" fill="#00AEEF">+</text>
+</svg>

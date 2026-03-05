@@ -22,6 +22,7 @@ import { RISK_COLORS } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
 import { StatCard as SharedStatCard } from '@/components/DashboardWidgets'
 import { RiskFeedbackButton } from '@/components/RiskFeedbackButton'
+import { InstitutionBadge } from '@/components/InstitutionBadge'
 import type { InstitutionHealthItem, PublicationDelayResponse, ASFInstitutionSummaryItem, InstitutionRiskFactorResponse } from '@/api/types'
 import {
   Building2,
@@ -1147,14 +1148,17 @@ export default function InstitutionHealth() {
                   >
                     <td className="px-3 py-2 font-mono text-text-muted">{idx + 1}</td>
                     <td className="px-3 py-2">
-                      <Link
-                        to={`/institutions/${item.institution_id}`}
-                        className="text-accent hover:underline truncate block max-w-[280px]"
-                        title={item.institution_name}
-                        onClick={e => e.stopPropagation()}
-                      >
-                        {toTitleCase(item.institution_name)}
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <InstitutionBadge name={item.institution_name} size={28} />
+                        <Link
+                          to={`/institutions/${item.institution_id}`}
+                          className="text-accent hover:underline truncate block max-w-[280px]"
+                          title={item.institution_name}
+                          onClick={e => e.stopPropagation()}
+                        >
+                          {toTitleCase(item.institution_name)}
+                        </Link>
+                      </div>
                     </td>
                     <td className="px-3 py-2 text-right font-mono text-text-secondary tabular-nums">
                       {formatNumber(item.total_contracts)}

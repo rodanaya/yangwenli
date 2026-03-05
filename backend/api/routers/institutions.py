@@ -726,13 +726,14 @@ def get_top_institutions(
     limit: int = Query(20, ge=1, le=100, description="Number of results"),
     institution_type: Optional[str] = Query(None, description="Filter by institution type"),
     sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector"),
+    year: Optional[int] = Query(None, ge=2002, le=2025, description="Filter by contract year"),
 ):
     """
     Get top institutions by spending, contract count, or risk score.
 
     Returns institutions ranked by the specified metric with aggregate statistics.
     """
-    cache_key = f"top:{by}:{limit}:{institution_type}:{sector_id}"
+    cache_key = f"top:{by}:{limit}:{institution_type}:{sector_id}:{year}"
     cached = _get_top_cache(cache_key)
     if cached is not None:
         return cached
@@ -751,6 +752,10 @@ def get_top_institutions(
         if sector_id is not None:
             conditions.append("c.sector_id = ?")
             params.append(sector_id)
+
+        if year is not None:
+            conditions.append("c.contract_year = ?")
+            params.append(year)
 
         where_clause = " AND ".join(conditions)
 
@@ -864,6 +869,88 @@ def get_institution_hierarchy():
         )
         _set_top_cache("hierarchy", response)
         return response
+
+
+@router.get("/{institution_id:int}/top-categories")
+def get_institution_top_categories(
+    institution_id: int,
+    year: Optional[int] = Query(None, ge=2002, le=2025),
+    limit: int = Query(10, ge=5, le=50),
+):
+    """
+    Get top spending categories for an institution based on partida_codes.
+
+    Returns categories ranked by total contract value with risk and direct-award stats.
+    """
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # Verify institution exists and get name
+        cursor.execute("SELECT name FROM institutions WHERE id = ?", (institution_id,))
+        institution = cursor.fetchone()
+        if not institution:
+            raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
+
+        institution_name = institution["name"]
+
+        conditions = ["c.institution_name = ?"]
+        params: List[Any] = [institution_name]
+
+        if year is not None:
+            conditions.append("c.contract_year = ?")
+            params.append(year)
+
+        where_clause = " AND ".join(conditions)
+
+        query = f"""
+            SELECT
+                pc.id as category_id,
+                pc.name_es,
+                pc.name_en,
+                pc.code,
+                COUNT(*) as contract_count,
+                SUM(c.amount_mxn) as total_value_mxn,
+                AVG(COALESCE(c.risk_score, 0)) as avg_risk_score,
+                ROUND(100.0 * SUM(CASE WHEN c.is_direct_award = 1 THEN 1 ELSE 0 END) / COUNT(*), 1) as direct_award_pct
+            FROM contracts c
+            LEFT JOIN partida_codes pc ON c.partida_code = pc.code
+            WHERE {where_clause}
+            GROUP BY pc.id, pc.name_es, pc.name_en, pc.code
+            HAVING COUNT(*) > 0
+            ORDER BY total_value_mxn DESC
+            LIMIT ?
+        """
+        params.append(limit)
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+
+        if not rows:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No contracts found for institution {institution_id}"
+                + (f" in year {year}" if year is not None else ""),
+            )
+
+        data_note = f"Filtered to year {year}" if year is not None else "All years"
+
+        return {
+            "institution_id": institution_id,
+            "institution_name": institution_name,
+            "data_note": data_note,
+            "data": [
+                {
+                    "category_id": row["category_id"],
+                    "name_es": row["name_es"],
+                    "name_en": row["name_en"],
+                    "code": row["code"],
+                    "contract_count": row["contract_count"],
+                    "total_value_mxn": row["total_value_mxn"],
+                    "avg_risk_score": round(row["avg_risk_score"], 4) if row["avg_risk_score"] is not None else None,
+                    "direct_award_pct": row["direct_award_pct"],
+                }
+                for row in rows
+            ],
+        }
 
 
 @router.get("/{institution_id:int}/contracts", response_model=ContractListResponse)

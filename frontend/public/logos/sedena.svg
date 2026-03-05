@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40">
+  <rect width="120" height="40" rx="4" fill="#1B2A4A"/>
+  <text x="6" y="27" font-family="Arial,sans-serif" font-weight="700" font-size="15" fill="#ffffff" letter-spacing="0.5">SEDENA</text>
+  <polygon points="100,10 108,20 100,30 92,20" fill="none" stroke="#C9A84C" stroke-width="2"/>
+  <polygon points="100,14 105,20 100,26 95,20" fill="#C9A84C"/>
+</svg>

@@ -86,9 +86,18 @@ class VendorService(BaseService):
                 "medium": ("s.avg_risk_score >= ? AND s.avg_risk_score < ?", [THRESHOLDS['medium'], THRESHOLDS['high']]),
                 "low": ("s.avg_risk_score < ?", [THRESHOLDS['medium']]),
             }
-            if risk_level in risk_ranges:
-                cond, vals = risk_ranges[risk_level]
+            # Support comma-separated levels: "critical,high" selects both ranges
+            levels = [l.strip() for l in risk_level.split(",") if l.strip() in risk_ranges]
+            if len(levels) == 1:
+                cond, vals = risk_ranges[levels[0]]
                 qb.where(cond, *vals)
+            elif len(levels) > 1:
+                parts, params_flat = [], []
+                for lvl in levels:
+                    cond, vals = risk_ranges[lvl]
+                    parts.append(f"({cond})")
+                    params_flat.extend(vals)
+                qb.where(f"({' OR '.join(parts)})", *params_flat)
         if min_contracts is not None:
             qb.where("s.total_contracts >= ?", min_contracts)
         if min_value is not None:

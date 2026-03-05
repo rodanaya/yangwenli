@@ -172,6 +172,63 @@ def get_category_contracts(
     }
 
 
+@router.get("/{category_id}/vendor-institution")
+def get_category_vendor_institution(
+    category_id: int,
+    limit: int = Query(25, ge=1, le=50),
+):
+    """Return top vendor-institution pairs for a category by total value."""
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT id, name_es FROM categories WHERE id = ?", (category_id,))
+        cat = cur.fetchone()
+        if not cat:
+            raise HTTPException(status_code=404, detail=f"Category {category_id} not found")
+
+        cur.execute("""
+            SELECT
+                v.id   AS vendor_id,
+                v.name AS vendor_name,
+                i.id   AS institution_id,
+                i.name AS institution_name,
+                COUNT(*)                                         AS contract_count,
+                SUM(c.amount_mxn)                               AS total_value,
+                AVG(c.risk_score)                               AS avg_risk,
+                MAX(c.risk_score)                               AS max_risk,
+                SUM(c.is_direct_award) * 100.0 / COUNT(*)       AS direct_award_pct,
+                SUM(c.is_single_bid)   * 100.0 / COUNT(*)       AS single_bid_pct
+            FROM contracts c
+            JOIN vendors      v ON v.id = c.vendor_id
+            JOIN institutions i ON i.id = c.institution_id
+            WHERE c.category_id = ?
+            GROUP BY c.vendor_id, c.institution_id
+            ORDER BY total_value DESC
+            LIMIT ?
+        """, (category_id, limit))
+        rows = cur.fetchall()
+
+    return {
+        "category_id": category_id,
+        "category_name": cat["name_es"],
+        "data": [
+            {
+                "vendor_id": r["vendor_id"],
+                "vendor_name": r["vendor_name"],
+                "institution_id": r["institution_id"],
+                "institution_name": r["institution_name"],
+                "contract_count": r["contract_count"],
+                "total_value": r["total_value"],
+                "avg_risk": round(r["avg_risk"] or 0, 4),
+                "max_risk": round(r["max_risk"] or 0, 4),
+                "direct_award_pct": round(r["direct_award_pct"] or 0, 1),
+                "single_bid_pct": round(r["single_bid_pct"] or 0, 1),
+            }
+            for r in rows
+        ],
+        "total": len(rows),
+    }
+
+
 @router.get("/trends")
 def get_category_trends(
     year_from: int = Query(2010, ge=2002, le=2025),

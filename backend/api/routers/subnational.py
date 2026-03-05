@@ -151,6 +151,23 @@ class StateVendorResponse(BaseModel):
     state_name: str
     vendors: list[VendorConcentration]
     local_dominant_count: int    # vendors whose work is 70%+ in this state
+    year: Optional[int]
+    coverage_note: str
+
+
+class StateInstitutionItem(BaseModel):
+    institution_name: str
+    total_contracts: int
+    total_value_mxn: float
+    avg_risk_score: float
+    direct_award_pct: float
+
+
+class StateInstitutionsResponse(BaseModel):
+    state_code: str
+    state_name: str
+    year: Optional[int]
+    institutions: list[StateInstitutionItem]
     coverage_note: str
 
 
@@ -373,26 +390,33 @@ async def get_state_detail(code: str):
 @router.get("/states/{code}/vendors", response_model=StateVendorResponse)
 async def get_state_vendors(
     code: str,
+    year: Optional[int] = Query(None, ge=2002, le=2025),
     limit: int = Query(30, ge=5, le=100),
 ):
     """
     Top vendors in a state with local-concentration signal.
     is_local_dominant = vendor has >70% of their total contracts in this state.
     state_share_pct = vendor's share of THIS state's total contracts.
+    Optional year filter applies to state queries but NOT to national totals
+    (national totals remain unfiltered to preserve concentration context).
     """
     code = _validate_state(code)
 
+    year_clause = "AND c.contract_year = ?" if year is not None else ""
+    year_params_single = (year,) if year is not None else ()
+
     with get_db() as conn:
         # Total contracts in state (denominator for state_share_pct)
-        state_total = conn.execute('''
+        state_total = conn.execute(f'''
             SELECT COUNT(c.id) AS n
             FROM contracts c
             JOIN institutions i ON c.institution_id = i.id
             WHERE i.state_code = ? AND i.gobierno_nivel IN ('GE','GM','GEM')
-        ''', (code,)).fetchone()['n'] or 1
+              {year_clause}
+        ''', (code,) + year_params_single).fetchone()['n'] or 1
 
         # Top vendors in this state
-        vendor_rows = conn.execute('''
+        vendor_rows = conn.execute(f'''
             SELECT
                 c.vendor_id,
                 v.name                                        AS vendor_name,
@@ -405,12 +429,13 @@ async def get_state_vendors(
             JOIN vendors v ON c.vendor_id = v.id
             WHERE i.state_code = ? AND i.gobierno_nivel IN ('GE','GM','GEM')
               AND c.vendor_id IS NOT NULL
+              {year_clause}
             GROUP BY c.vendor_id
             ORDER BY state_contracts DESC
             LIMIT ?
-        ''', (code, limit)).fetchall()
+        ''', (code,) + year_params_single + (limit,)).fetchall()
 
-        # Total contracts nationwide for these vendors
+        # Total contracts nationwide for these vendors (unfiltered — national context)
         vendor_ids = [r['vendor_id'] for r in vendor_rows]
         if not vendor_ids:
             return StateVendorResponse(
@@ -418,6 +443,7 @@ async def get_state_vendors(
                 state_name=STATE_NAMES[code],
                 vendors=[],
                 local_dominant_count=0,
+                year=year,
                 coverage_note=COVERAGE_NOTE,
             )
 
@@ -456,5 +482,67 @@ async def get_state_vendors(
         state_name=STATE_NAMES[code],
         vendors=vendors,
         local_dominant_count=local_dominant,
+        year=year,
+        coverage_note=COVERAGE_NOTE,
+    )
+
+
+@router.get("/states/{code}/institutions", response_model=StateInstitutionsResponse)
+async def get_state_institutions(
+    code: str,
+    year: Optional[int] = Query(None, ge=2002, le=2025),
+    limit: int = Query(20, ge=5, le=100),
+):
+    """
+    Top institutions (by contract value) operating in a state.
+    Uses contracts.state_code directly (not the institutions join) for a
+    lighter path, and supports optional year filtering.
+    """
+    code = _validate_state(code)
+
+    year_clause = "AND c.contract_year = ?" if year is not None else ""
+    params: tuple = (code,) + ((year,) if year is not None else ()) + (limit,)
+
+    with get_db() as conn:
+        rows = conn.execute(f'''
+            SELECT
+                c.institution_name,
+                COUNT(*)                                     AS total_contracts,
+                COALESCE(SUM(c.amount_mxn), 0)              AS total_value_mxn,
+                AVG(COALESCE(c.risk_score, 0))              AS avg_risk_score,
+                ROUND(
+                    100.0 * SUM(CASE WHEN c.is_direct_award = 1 THEN 1 ELSE 0 END)
+                    / COUNT(*),
+                    1
+                )                                            AS direct_award_pct
+            FROM contracts c
+            WHERE c.state_code = ?
+              {year_clause}
+            GROUP BY c.institution_name
+            ORDER BY total_value_mxn DESC
+            LIMIT ?
+        ''', params).fetchall()
+
+    if not rows:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No subnational institution data for state '{code}'"
+            + (f" in year {year}" if year else ""),
+        )
+
+    return StateInstitutionsResponse(
+        state_code=code,
+        state_name=STATE_NAMES[code],
+        year=year,
+        institutions=[
+            StateInstitutionItem(
+                institution_name=r['institution_name'] or '',
+                total_contracts=r['total_contracts'],
+                total_value_mxn=r['total_value_mxn'],
+                avg_risk_score=round(r['avg_risk_score'], 4),
+                direct_award_pct=r['direct_award_pct'] or 0.0,
+            )
+            for r in rows
+        ],
         coverage_note=COVERAGE_NOTE,
     )

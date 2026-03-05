@@ -604,6 +604,11 @@ export const institutionApi = {
     return data
   },
 
+  async getTopCategories(institutionId: number, options?: { year?: number; limit?: number }) {
+    const { data } = await api.get(`/institutions/${institutionId}/top-categories`, { params: options })
+    return data
+  },
+
   async getCriScatter(params: { sector_id?: number; min_contracts?: number; limit?: number } = {}): Promise<{
     data: Array<{
       id: number
@@ -813,8 +818,13 @@ export const analysisApi = {
   /**
    * Get money flow data for Sankey visualization
    */
-  async getMoneyFlow(year?: number, sectorId?: number, directAwardOnly?: boolean): Promise<MoneyFlowResponse> {
-    const params = buildQueryParams({ year, sector_id: sectorId, direct_award_only: directAwardOnly || undefined } as QueryParams)
+  async getMoneyFlow(year?: number, sectorId?: number, directAwardOnly?: boolean, sortBy?: string): Promise<MoneyFlowResponse> {
+    const params = buildQueryParams({
+      year,
+      sector_id: sectorId,
+      direct_award_only: directAwardOnly || undefined,
+      sort_by: sortBy && sortBy !== 'value' ? sortBy : undefined,
+    } as QueryParams)
     const paramStr = params.toString()
     const { data } = await api.get<MoneyFlowResponse>(`/analysis/money-flow${paramStr ? `?${paramStr}` : ''}`)
     return data
@@ -1075,6 +1085,51 @@ export const analysisApi = {
     const { data } = await api.get<IndustryClusterResponse>(
       `/analysis/industry-risk-clusters?min_contracts=${minContracts}`,
       { timeout: 180000 }
+    )
+    return data
+  },
+
+  /**
+   * Get the top vendors or institutions for a given year range.
+   * entity: 'vendor' | 'institution'
+   * by: 'value' | 'count'
+   */
+  async getTopByPeriod(
+    startYear: number,
+    endYear: number,
+    entity: 'vendor' | 'institution',
+    by: 'value' | 'count' = 'value',
+    limit = 20,
+  ): Promise<TopByPeriodResponse> {
+    const queryParams = buildQueryParams({
+      start_year: startYear,
+      end_year: endYear,
+      entity,
+      by,
+      limit,
+    } as QueryParams)
+    const { data } = await api.get<TopByPeriodResponse>(
+      `/analysis/top-by-period?${queryParams}`,
+    )
+    return data
+  },
+
+  /**
+   * Get sector-level value and contract count growth for year vs. year-1.
+   */
+  async getSectorGrowth(year: number): Promise<SectorGrowthResponse> {
+    const { data } = await api.get<SectorGrowthResponse>(
+      `/analysis/sector-growth?year=${year}`,
+    )
+    return data
+  },
+
+  /**
+   * Get a comprehensive summary for a single procurement year.
+   */
+  async getYearSummary(year: number): Promise<YearSummaryResponse> {
+    const { data } = await api.get<YearSummaryResponse>(
+      `/analysis/year-summary/${year}`,
     )
     return data
   },
@@ -1648,6 +1703,27 @@ export const categoriesApi = {
     const { data } = await api.get('/categories/trends', { params: { year_from: yearFrom, year_to: yearTo } })
     return data
   },
+
+  getVendorInstitution: async (categoryId: number, limit = 25) => {
+    const { data } = await api.get(`/categories/${categoryId}/vendor-institution`, { params: { limit } })
+    return data as {
+      category_id: number
+      category_name: string
+      total: number
+      data: {
+        vendor_id: number
+        vendor_name: string
+        institution_id: number
+        institution_name: string
+        contract_count: number
+        total_value: number
+        avg_risk: number
+        max_risk: number
+        direct_award_pct: number
+        single_bid_pct: number
+      }[]
+    }
+  },
 }
 
 // ============================================================================
@@ -1792,6 +1868,84 @@ export interface IndustryClusterResponse {
   data: IndustryClusterItem[]
   total: number
   min_contracts: number
+}
+
+// Top By Period
+export interface TopPeriodEntityItem {
+  id: number
+  name: string
+  rfc?: string | null
+  total_contracts: number
+  total_value_mxn: number
+  avg_risk_score: number | null
+  direct_award_pct: number | null
+}
+
+export interface TopByPeriodResponse {
+  entity: 'vendor' | 'institution'
+  by: 'value' | 'count'
+  start_year: number
+  end_year: number
+  limit: number
+  data: TopPeriodEntityItem[]
+}
+
+// Sector Growth
+export interface SectorGrowthItem {
+  sector_id: number
+  name_es: string | null
+  name_en: string | null
+  color: string | null
+  current_value: number
+  prior_value: number | null
+  value_growth_pct: number | null
+  current_contracts: number
+  prior_contracts: number | null
+  contracts_growth_pct: number | null
+  avg_risk: number | null
+}
+
+export interface SectorGrowthResponse {
+  year: number
+  prior_year: number
+  data: SectorGrowthItem[]
+}
+
+// Year Summary
+export interface YearSummaryOverview {
+  total_contracts: number
+  total_value_mxn: number
+  avg_risk_score: number | null
+  high_risk_count: number
+  high_risk_pct: number | null
+}
+
+export interface YearSummaryVsPrior {
+  contracts_change_pct: number | null
+  value_change_pct: number | null
+  risk_change_pct: number | null
+}
+
+export interface YearSummaryTopGrowingSector {
+  sector_id: number
+  name_es: string | null
+  name_en: string | null
+  color: string | null
+  current_value: number
+  prior_value: number
+  value_growth_pct: number | null
+}
+
+export interface YearSummaryResponse {
+  year: number
+  overview: YearSummaryOverview
+  vs_prior_year: YearSummaryVsPrior | null
+  top_vendors_by_value: TopPeriodEntityItem[]
+  top_institutions_by_spend: TopPeriodEntityItem[]
+  top_growing_sector: YearSummaryTopGrowingSector | null
+  risk_level_counts: { critical: number; high: number; medium: number; low: number }
+  direct_award_pct: number | null
+  single_bid_pct: number | null
 }
 
 export interface FederatedCaseResult {
@@ -1943,6 +2097,23 @@ export const subnationalApi = {
     const { data } = await api.get<import('./types').SubnationalVendorsResponse>(
       `/subnational/states/${code}/vendors`,
       { params: localOnly ? { local_only: true } : {} }
+    )
+    return data
+  },
+  async getStateVendorsByYear(
+    code: string,
+    year: number,
+  ): Promise<import('./types').SubnationalTopVendorsByYearResponse> {
+    const { data } = await api.get<import('./types').SubnationalTopVendorsByYearResponse>(
+      `/subnational/states/${code}/vendors`,
+      { params: { year, limit: 10 } },
+    )
+    return data
+  },
+  async getStateInstitutions(code: string, options?: { year?: number; limit?: number }) {
+    const { data } = await api.get(
+      `/subnational/states/${code}/institutions`,
+      { params: options },
     )
     return data
   },

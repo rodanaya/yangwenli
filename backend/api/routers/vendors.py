@@ -121,13 +121,15 @@ def list_vendors(
     Returns vendors with aggregate statistics from their contracts.
     Supports filtering by search term, sector, contract count, and RFC presence.
     """
-    # Validate risk_level before database operations
+    # Validate risk_level before database operations (supports comma-separated: "critical,high")
     VALID_RISK_LEVELS = {"low", "medium", "high", "critical"}
     if risk_level is not None:
-        if risk_level.lower() not in VALID_RISK_LEVELS:
+        requested = {l.strip().lower() for l in risk_level.split(",") if l.strip()}
+        invalid = requested - VALID_RISK_LEVELS
+        if invalid:
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid risk_level '{risk_level}'. Must be one of: {', '.join(sorted(VALID_RISK_LEVELS))}"
+                detail=f"Invalid risk_level(s) {invalid}. Must be one of: {', '.join(sorted(VALID_RISK_LEVELS))}"
             )
 
     with get_db() as conn:

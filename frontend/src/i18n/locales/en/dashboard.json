@@ -5,7 +5,7 @@
   "synced": "SYNCED",
   "underSurveillance": "under surveillance",
   "inPublicProcurement": "in public procurement",
-  "contractsAnalyzed": "{{contracts}} contracts · {{vendors}} vendors · {{years}} years · 12 sectors",
+  "contractsAnalyzed": "{{contracts}} contracts · {{vendors}} vendors · 2002–2025 · 12 sectors",
   "valueFlagged": "VALUE AT RISK",
   "valueFlaggedDetail": "{{pct}}% of all procurement value",
   "contractsShowingRisk": "HIGH-RISK RATE",

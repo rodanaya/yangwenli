@@ -19,6 +19,7 @@ import { RISK_COLORS, getRiskLevelFromScore, SECTORS } from '@/lib/constants'
 import { networkApi, vendorApi, institutionApi } from '@/api/client'
 import type { NetworkNode, NetworkLink, CoBidderItem, CommunitiesResponse, CommunityDetailResponse } from '@/api/client'
 import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
+import { getInstitutionGroup, getShortName as getInstShortName, getInstitutionColor } from '@/lib/institution-groups'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -47,6 +48,16 @@ function linkWidth(contracts: number): number {
 
 function truncate(name: string, max = 18): string {
   return name.length > max ? name.slice(0, max) + '…' : name
+}
+
+function institutionSymbol(name: string): string {
+  const group = getInstitutionGroup(name)
+  return group?.logo ? `image://${group.logo}` : 'circle'
+}
+
+function institutionLabel(name: string): string {
+  const group = getInstitutionGroup(name)
+  return group ? group.shortName : getInstShortName(name)
 }
 
 // Community color palette — 12 distinct, perceptually spread colors
@@ -921,6 +932,7 @@ export function NetworkGraph() {
   const [showCommSidebar, setShowCommSidebar] = useState(false)
   const [selectedCommunityId, setSelectedCommunityId] = useState<number | null>(null)
   const [showInstructions, setShowInstructions] = useState(false)
+  const [groupInstitutions, setGroupInstitutions] = useState(false)
 
   // Community explorer query — fires when either panel (accordion or sidebar) is open
   const { data: commData, isLoading: commLoading } = useQuery<CommunitiesResponse>({
@@ -988,13 +1000,85 @@ export function NetworkGraph() {
       return true
     }
 
-    const nodes = graphData.nodes.map((node: NetworkNode) => {
+    // When groupInstitutions is true, merge institution nodes that share the same group
+    let rawNodes = graphData.nodes as NetworkNode[]
+    let rawLinks = graphData.links as NetworkLink[]
+
+    if (groupInstitutions) {
+      // Build group mapping: original node id → group key
+      const nodeGroupKey = new Map<string, string>()
+      const groupMeta = new Map<string, { name: string; value: number; contracts: number; representative: NetworkNode }>()
+
+      rawNodes.forEach((node) => {
+        if (node.type !== 'institution') return
+        const grp = getInstitutionGroup(node.name)
+        if (!grp) return
+        const key = `grp-${grp.id}`
+        nodeGroupKey.set(node.id, key)
+        const prev = groupMeta.get(key)
+        groupMeta.set(key, {
+          name: grp.shortName,
+          value: (prev?.value ?? 0) + node.value,
+          contracts: (prev?.contracts ?? 0) + node.contracts,
+          representative: prev?.representative ?? node,
+        })
+      })
+
+      // Rebuild nodes: keep non-grouped as-is, replace grouped with one merged node per group
+      const seenGroups = new Set<string>()
+      const mergedNodes: NetworkNode[] = []
+      rawNodes.forEach((node) => {
+        const key = nodeGroupKey.get(node.id)
+        if (key) {
+          if (!seenGroups.has(key)) {
+            seenGroups.add(key)
+            const meta = groupMeta.get(key)!
+            mergedNodes.push({
+              ...meta.representative,
+              id: key,
+              name: meta.name,
+              value: meta.value,
+              contracts: meta.contracts,
+            })
+          }
+        } else {
+          mergedNodes.push(node)
+        }
+      })
+
+      // Remap links: replace grouped institution ids with group key; deduplicate
+      const linkMap = new Map<string, NetworkLink>()
+      rawLinks.forEach((link) => {
+        const src = nodeGroupKey.get(link.source) ?? link.source
+        const tgt = nodeGroupKey.get(link.target) ?? link.target
+        const mapKey = `${src}|${tgt}`
+        const prev = linkMap.get(mapKey)
+        if (prev) {
+          linkMap.set(mapKey, {
+            ...prev,
+            value: prev.value + link.value,
+            contracts: prev.contracts + link.contracts,
+            avg_risk: ((prev.avg_risk ?? 0) * prev.contracts + (link.avg_risk ?? 0) * link.contracts) / (prev.contracts + link.contracts),
+          })
+        } else {
+          linkMap.set(mapKey, { ...link, source: src, target: tgt })
+        }
+      })
+
+      rawNodes = mergedNodes
+      rawLinks = [...linkMap.values()]
+    }
+
+    const nodes = rawNodes.map((node: NetworkNode) => {
       const isCenter = node.id === centerNodeId
       const symbolSize = isCenter ? 48 : nodeSymbolSize(node.value, node.type)
       const passesRiskFilter = isNodeVisibleByRisk(node)
+
+      const isInstitution = node.type === 'institution'
+      const instColor = isInstitution ? getInstitutionColor(node.name, '#60a5fa') : null
       const baseColor =
-        node.type === 'institution'
-          ? '#60a5fa'
+        isInstitution
+          ? (instColor ?? '#60a5fa')
           : colorMode === 'community' && node.community_id != null
             ? communityToColor(node.community_id)
             : riskToColor(node.risk_score)
@@ -1020,6 +1104,9 @@ export function NetworkGraph() {
         : hasShadow ? 1.5
         : 0
 
+      const nodeSymbol = isInstitution ? institutionSymbol(node.name) : 'circle'
+      const labelFormatter = isInstitution ? institutionLabel(node.name) : truncate(node.name)
+
       return {
         id: node.id,
         name: isSanctioned ? `${node.name}` : node.name,
@@ -1030,6 +1117,7 @@ export function NetworkGraph() {
         is_sanctioned: isSanctioned,
         // Store the full raw node for the side panel
         extra: node,
+        symbol: nodeSymbol,
         symbolSize,
         itemStyle: {
           color: itemColor,
@@ -1041,7 +1129,7 @@ export function NetworkGraph() {
         },
         label: {
           show: showLabel,
-          formatter: truncate(node.name),
+          formatter: labelFormatter,
           fontSize: 10,
           position: 'bottom' as const,
           color: 'var(--color-text-muted)',
@@ -1049,7 +1137,7 @@ export function NetworkGraph() {
       }
     })
 
-    const links = graphData.links.map((link: NetworkLink) => ({
+    const links = rawLinks.map((link: NetworkLink) => ({
       source: link.source,
       target: link.target,
       value: link.value,
@@ -1115,7 +1203,7 @@ export function NetworkGraph() {
         },
       ],
     }
-  }, [graphData, centerEntity, colorMode, filters.riskFilter])
+  }, [graphData, centerEntity, colorMode, filters.riskFilter, groupInstitutions])
 
   // Computed graph stats for the Key Network Stats strip
   const graphStats = useMemo(() => {
@@ -1401,6 +1489,21 @@ export function NetworkGraph() {
         >
           <Layers className="h-3.5 w-3.5" />
           Communities
+        </button>
+
+        {/* Group institutions toggle */}
+        <button
+          onClick={() => setGroupInstitutions((v) => !v)}
+          className={`flex items-center gap-1.5 text-xs border rounded px-2.5 py-1.5 transition-colors shrink-0 ${
+            groupInstitutions
+              ? 'bg-accent/10 border-accent/40 text-accent'
+              : 'border-border text-text-muted hover:text-text-primary hover:border-border/60'
+          }`}
+          aria-pressed={groupInstitutions}
+          title="Merge institution nodes that belong to the same parent organization (e.g. all PEMEX subsidiaries into one node)"
+        >
+          <Users className="h-3.5 w-3.5" />
+          Group institutions
         </button>
       </div>
       </ScrollReveal>

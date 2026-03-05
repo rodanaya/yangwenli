@@ -70,41 +70,6 @@ const PARTY_COLORS: Record<string, string> = {
   MORENA: '#8B0000',
 }
 
-// Admin × Sector risk matrix — HANDCRAFTED APPROXIMATION, NOT DATA-DERIVED.
-// These values are illustrative estimates based on known documented cases and qualitative
-// knowledge of each era. They are NOT computed from the database. The comparison table
-// above uses actual aggregated data from the DB. This matrix is used for visual context only
-// and must be presented with an appropriate disclaimer to users.
-// Rows: 5 administrations | Cols: 12 sectors
-// Values: estimated avg risk score (0–1)
-const ADMIN_SECTOR_MATRIX: Record<string, Record<string, number>> = {
-  Fox: {
-    salud: 0.12, educacion: 0.09, infraestructura: 0.18, energia: 0.11,
-    defensa: 0.07, tecnologia: 0.08, hacienda: 0.10, gobernacion: 0.13,
-    agricultura: 0.09, ambiente: 0.08, trabajo: 0.07, otros: 0.10,
-  },
-  Calderon: {
-    salud: 0.18, educacion: 0.14, infraestructura: 0.22, energia: 0.19,
-    defensa: 0.15, tecnologia: 0.12, hacienda: 0.16, gobernacion: 0.20,
-    agricultura: 0.17, ambiente: 0.11, trabajo: 0.13, otros: 0.14,
-  },
-  'Pena Nieto': {
-    salud: 0.38, educacion: 0.25, infraestructura: 0.41, energia: 0.29,
-    defensa: 0.18, tecnologia: 0.31, hacienda: 0.22, gobernacion: 0.35,
-    agricultura: 0.44, ambiente: 0.20, trabajo: 0.19, otros: 0.27,
-  },
-  AMLO: {
-    salud: 0.52, educacion: 0.31, infraestructura: 0.28, energia: 0.37,
-    defensa: 0.14, tecnologia: 0.25, hacienda: 0.29, gobernacion: 0.33,
-    agricultura: 0.61, ambiente: 0.22, trabajo: 0.20, otros: 0.24,
-  },
-  Sheinbaum: {
-    salud: 0.21, educacion: 0.16, infraestructura: 0.19, energia: 0.23,
-    defensa: 0.10, tecnologia: 0.18, hacienda: 0.17, gobernacion: 0.22,
-    agricultura: 0.24, ambiente: 0.14, trabajo: 0.13, otros: 0.16,
-  },
-}
-
 // Sector list for the matrix grid
 const MATRIX_SECTORS = [
   { key: 'salud',          code: 'S',  name: 'Salud' },
@@ -596,14 +561,27 @@ export default function Administrations() {
               {isSelected && (
                 <span className="absolute top-[3px] left-3 right-3 h-[2px] rounded-b" style={{ backgroundColor: admin.color }} />
               )}
+              {/* President avatar + name row */}
               <div className="flex items-center gap-2 mb-1.5 mt-1">
-                <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: admin.color }} />
-                <span className={cn(
-                  'text-sm font-semibold truncate',
-                  isSelected ? 'text-text-primary' : 'text-text-secondary'
-                )}>
-                  {admin.name}
-                </span>
+                {/* Initials avatar */}
+                <div
+                  className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black font-mono border"
+                  style={{
+                    backgroundColor: `${admin.color}22`,
+                    borderColor: `${admin.color}60`,
+                    color: admin.color,
+                  }}
+                >
+                  {admin.fullName.split(' ').map(w => w[0]).slice(0, 2).join('')}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className={cn(
+                    'text-sm font-semibold block truncate leading-tight',
+                    isSelected ? 'text-text-primary' : 'text-text-secondary'
+                  )}>
+                    {admin.fullName}
+                  </span>
+                </div>
                 <span
                   className="text-[10px] font-mono ml-auto px-1.5 py-0.5 rounded flex-shrink-0"
                   style={{
@@ -930,7 +908,7 @@ export default function Administrations() {
               {t('sectorProfile', { admin: selectedAdmin })}
             </CardTitle>
             <p className="text-xs text-text-muted mt-1">
-              Métricas de riesgo por sector durante la administración seleccionada — ordenadas por porcentaje de contratos de alto riesgo.
+              {t('heatmapSubtitle')}
             </p>
           </CardHeader>
           <CardContent className="overflow-x-auto">
@@ -1003,7 +981,7 @@ export default function Administrations() {
               {t('transitionImpact')}
             </CardTitle>
             <p className="text-xs text-text-muted mt-1">
-              Cambios en indicadores clave entre administraciones consecutivas. Los valores marcados con ! o !! son estadísticamente inusuales (≥1.8σ del promedio histórico).
+              {t('transitionSubtitle')}
             </p>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -1062,7 +1040,7 @@ export default function Administrations() {
             {t('keyEvents', { admin: selectedAdmin, start: selectedMeta.dataStart, end: Math.min(selectedMeta.end - 1, 2025) })}
           </CardTitle>
           <p className="text-xs text-text-muted mt-1">
-            Reformas legislativas, escándalos documentados y crisis que afectaron los patrones de contratación pública durante esta administración.
+            {t('keyEventsSubtitle')}
           </p>
         </CardHeader>
         <CardContent>
@@ -1472,7 +1450,6 @@ function AdminSectorMatrix({
           <tbody>
             {ADMINISTRATIONS.map((admin) => {
               const liveRow = liveMatrix?.[admin.name]
-              const fallbackRow = ADMIN_SECTOR_MATRIX[admin.name]
               const isSelected = admin.name === selectedAdmin
               const partyColor = PARTY_COLORS[admin.party] || '#64748b'
               return (
@@ -1499,18 +1476,9 @@ function AdminSectorMatrix({
                     </div>
                   </td>
                   {MATRIX_SECTORS.map((sector) => {
-                    let intensity: number
-                    let displayText: string
-                    if (liveRow) {
-                      const cell = liveRow[sector.key] ?? { risk: 0, da: 0, hr: 0, sb: 0 }
-                      intensity = getCellIntensity(metric, cell)
-                      displayText = getCellDisplay(metric, cell)
-                    } else {
-                      // Fallback: use hardcoded risk approximations
-                      const score = fallbackRow?.[sector.key] ?? 0
-                      intensity = Math.min(1, score / 0.5)
-                      displayText = (score * 100).toFixed(0) + '%'
-                    }
+                    const cell = liveRow?.[sector.key] ?? { risk: 0, da: 0, hr: 0, sb: 0 }
+                    const intensity = liveRow ? getCellIntensity(metric, cell) : 0
+                    const displayText = liveRow ? getCellDisplay(metric, cell) : '—'
                     return (
                       <MatrixCell
                         key={sector.key}
@@ -1532,9 +1500,8 @@ function AdminSectorMatrix({
             Source: COMPRANET contracts weighted by volume · {METRIC_LABELS[metric]}
           </p>
         ) : (
-          <p className="mt-2 text-[10px] text-amber-400/60 italic">
-            ⚠ Fallback display: values shown are illustrative approximations, not computed from the database.
-            Live data unavailable — reload to retry.
+          <p className="mt-2 text-[10px] text-text-muted/50 italic">
+            Loading sector data…
           </p>
         )}
       </CardContent>

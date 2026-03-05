@@ -75,6 +75,8 @@ nul
 
 # Database backups (keep in separate location)
 *.db.backup_*
+*.db.currency_backup_*
+*.db.corrupt_*
 *.backup_*
 backend/*.backup_*
 

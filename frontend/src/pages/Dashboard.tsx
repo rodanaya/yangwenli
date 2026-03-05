@@ -26,6 +26,7 @@ import {
   FileSearch,
   AlertTriangle,
   Layers,
+  Calendar,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -301,12 +302,6 @@ export function Dashboard() {
     staleTime: 6 * 60 * 60 * 1000,
   })
 
-  const { data: seasonalRiskData, isLoading: seasonalLoading } = useQuery({
-    queryKey: ['analysis', 'seasonal-risk', 12],
-    queryFn: () => analysisApi.getSeasonalRisk(12),
-    staleTime: 30 * 60 * 1000,
-  })
-
   const overview = fastDashboard?.overview
   const sectors = fastDashboard?.sectors
   const riskDist = fastDashboard?.risk_distribution
@@ -482,7 +477,6 @@ export function Dashboard() {
           ) : (
             t('contractsAnalyzed', {
               contracts: formatNumber(overview?.total_contracts || 0),
-              years: overview?.years_covered || 24,
               vendors: formatNumber(overview?.total_vendors || 0),
             })
           )}
@@ -964,33 +958,57 @@ export function Dashboard() {
                     const h = height ?? 0
                     if (w < 30 || h < 20) return <g />
                     const fill = SECTOR_COLORS[code ?? ''] ?? '#64748b'
+                    const cx = (x ?? 0) + w / 2
+                    const cy = (y ?? 0) + h / 2
+                    const showLabel = w > 60 && h > 30
+                    const showRisk  = w > 60 && h > 48
+                    const labelSize = Math.min(12, Math.max(9, w / 7))
+                    const labelY    = showRisk ? cy - 9 : cy
                     return (
                       <g>
                         <rect
                           x={x} y={y} width={w} height={h}
                           style={{ fill, fillOpacity: 0.85, stroke: 'var(--color-background)', strokeWidth: 2 }}
                         />
-                        {w > 60 && h > 30 && (
-                          <text
-                            x={(x ?? 0) + w / 2}
-                            y={(y ?? 0) + h / 2 - (h > 44 ? 8 : 0)}
-                            textAnchor="middle"
-                            dominantBaseline="middle"
-                            style={{ fill: '#fff', fontSize: Math.min(11, w / 6), fontWeight: 700, fontFamily: 'var(--font-mono)' }}
-                          >
-                            {name}
-                          </text>
+                        {showLabel && (
+                          <>
+                            <rect
+                              x={cx - Math.min(labelSize * (name?.length ?? 0) * 0.32, w / 2 - 4)}
+                              y={labelY - labelSize / 2 - 2}
+                              width={Math.min(labelSize * (name?.length ?? 0) * 0.64, w - 8)}
+                              height={labelSize + 4}
+                              rx={2}
+                              style={{ fill: 'rgba(0,0,0,0.45)' }}
+                            />
+                            <text
+                              x={cx}
+                              y={labelY}
+                              textAnchor="middle"
+                              dominantBaseline="middle"
+                              style={{ fill: '#fff', fontSize: labelSize, fontWeight: 700, fontFamily: 'var(--font-mono)' }}
+                            >
+                              {name}
+                            </text>
+                          </>
                         )}
-                        {w > 60 && h > 44 && (
-                          <text
-                            x={(x ?? 0) + w / 2}
-                            y={(y ?? 0) + h / 2 + 10}
-                            textAnchor="middle"
-                            dominantBaseline="middle"
-                            style={{ fill: 'rgba(255,255,255,0.75)', fontSize: 9, fontFamily: 'var(--font-mono)' }}
-                          >
-                            {(riskPct ?? 0).toFixed(1)}% high-risk
-                          </text>
+                        {showRisk && (
+                          <>
+                            <rect
+                              x={cx - 30} y={cy + 2}
+                              width={60} height={13}
+                              rx={2}
+                              style={{ fill: 'rgba(0,0,0,0.40)' }}
+                            />
+                            <text
+                              x={cx}
+                              y={cy + 9}
+                              textAnchor="middle"
+                              dominantBaseline="middle"
+                              style={{ fill: 'rgba(255,255,255,0.90)', fontSize: 9, fontFamily: 'var(--font-mono)' }}
+                            >
+                              {(riskPct ?? 0).toFixed(1)}% high-risk
+                            </text>
+                          </>
                         )}
                       </g>
                     )
@@ -1261,27 +1279,27 @@ export function Dashboard() {
       </Card>
 
       {/* ================================================================ */}
-      {/* YEAR-END RISK SPIKE — Seasonal risk premium by sector          */}
+      {/* YEAR-END RISK SURGE CALLOUT — compact audit-insight card       */}
       {/* ================================================================ */}
-      <Card className="border-border/40">
-        <CardContent className="py-4 px-5">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h2 className="text-base font-bold text-text-primary">Year-End Risk Spike</h2>
-              <p className="text-xs text-text-muted mt-0.5">December vs. rest of year, by sector</p>
-            </div>
+      <div className="flex items-start gap-4 px-5 py-4 rounded-xl border border-orange-500/25 bg-orange-500/5">
+        <div className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-lg bg-orange-500/15 mt-0.5">
+          <Calendar className="h-4 w-4 text-orange-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-orange-400 font-mono mb-0.5">
+            Seasonal Risk Pattern · Audit Finding
+          </p>
+          <div className="flex items-baseline gap-2 flex-wrap mb-1">
+            <span className="text-2xl font-black font-mono text-orange-400 tabular-nums">46%</span>
+            <span className="text-sm font-semibold text-text-primary">higher risk score in December</span>
           </div>
-          {seasonalLoading ? (
-            <div className="space-y-2">
-              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-6 w-full" />)}
-            </div>
-          ) : !seasonalRiskData || seasonalRiskData.data.filter(d => d.risk_premium_pct > 0).length === 0 ? (
-            <p className="text-xs text-text-muted py-4 text-center">No seasonal risk data available</p>
-          ) : (
-            <YearEndRiskSpikeChart data={seasonalRiskData.data} />
-          )}
-        </CardContent>
-      </Card>
+          <p className="text-xs text-text-muted leading-relaxed">
+            Year-End Risk Surge — December and January are consistently the highest-risk months for procurement fraud.
+            December contracts average a risk score of 0.148 vs. 0.101 for the rest of the year.
+          </p>
+        </div>
+      </div>
+
 
       {/* ================================================================ */}
       {/* GROUND TRUTH — Validated against real corruption */}
@@ -1488,90 +1506,6 @@ export const _StatCard = memo(function _StatCard({ loading, label, value, detail
 
 
 // ============================================================================
-// YEAR-END RISK SPIKE CHART — Horizontal bar chart showing December risk premium
-// ============================================================================
-
-interface SeasonalRiskItemDash {
-  sector_id: number
-  sector_name: string
-  month_risk: number
-  other_risk: number
-  risk_premium_pct: number
-  month_value: number
-  month_count: number
-  other_count: number
-}
-
-const YearEndRiskSpikeChart = memo(function YearEndRiskSpikeChart({
-  data,
-}: {
-  data: SeasonalRiskItemDash[]
-}) {
-  const chartData = data
-    .filter((d) => d.risk_premium_pct > 0)
-    .sort((a, b) => b.risk_premium_pct - a.risk_premium_pct)
-    .slice(0, 8)
-    .map((d) => ({
-      ...d,
-      fill: (SECTOR_COLORS as Record<string, string>)[d.sector_name] ?? '#64748b',
-    }))
-
-  return (
-    <ResponsiveContainer width="100%" height={chartData.length * 36 + 20}>
-      <BarChart
-        data={chartData}
-        layout="vertical"
-        margin={{ top: 0, right: 48, bottom: 0, left: 90 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#1e293b" />
-        <XAxis
-          type="number"
-          tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }}
-          axisLine={false}
-          tickLine={false}
-          tickFormatter={(v: number) => `+${v.toFixed(0)}%`}
-        />
-        <YAxis
-          type="category"
-          dataKey="sector_name"
-          tick={{ fontSize: 11, fill: 'var(--color-text-secondary)' }}
-          axisLine={false}
-          tickLine={false}
-          width={88}
-        />
-        <RechartsTooltip
-          cursor={{ fill: '#ffffff05' }}
-          content={({ active, payload }) => {
-            if (!active || !payload?.[0]) return null
-            const d = payload[0].payload as SeasonalRiskItemDash & { fill: string }
-            return (
-              <div className="rounded-lg border border-border bg-background-card p-3 shadow-lg text-xs space-y-1">
-                <p className="font-semibold text-text-primary capitalize">{d.sector_name}</p>
-                <p className="text-text-muted">
-                  December risk is{' '}
-                  <span className="text-risk-high font-semibold">+{d.risk_premium_pct.toFixed(1)}%</span>{' '}
-                  higher than rest of year
-                </p>
-                <div className="grid grid-cols-2 gap-x-3 text-text-muted mt-1">
-                  <span>Dec avg risk</span>
-                  <span className="text-text-primary tabular-nums">{(d.month_risk * 100).toFixed(1)}%</span>
-                  <span>Other months</span>
-                  <span className="text-text-primary tabular-nums">{(d.other_risk * 100).toFixed(1)}%</span>
-                </div>
-              </div>
-            )
-          }}
-        />
-        <Bar dataKey="risk_premium_pct" radius={[0, 4, 4, 0]} maxBarSize={22}>
-          {chartData.map((entry, index) => (
-            <Cell key={index} fill={entry.fill} fillOpacity={0.8} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
-  )
-})
-
 // ============================================================================
 // RISK DONUT CHART — Small PieChart showing 4 risk levels
 // ============================================================================

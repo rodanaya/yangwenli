@@ -1,0 +1,55 @@
+{
+  "title": "Year in Review",
+  "subtitle": "Annual procurement summary — contracts, spending, and risk patterns",
+  "yearSelector": "Select Year",
+  "heroStats": {
+    "totalContracts": "Total Contracts",
+    "totalSpending": "Total Spending",
+    "highRiskRate": "High-Risk Rate",
+    "yoyChange": "YoY Spending Change"
+  },
+  "topVendors": {
+    "title": "Top 5 Vendors by Value",
+    "subtitle": "Highest-value vendors in selected year",
+    "rank": "Rank",
+    "vendor": "Vendor",
+    "value": "Total Value",
+    "contracts": "Contracts",
+    "risk": "Risk"
+  },
+  "topInstitutions": {
+    "title": "Top 5 Institutions by Spend",
+    "subtitle": "Highest-spending institutions in selected year",
+    "rank": "Rank",
+    "institution": "Institution",
+    "value": "Total Spend",
+    "contracts": "Contracts",
+    "risk": "Risk"
+  },
+  "sectorGrowth": {
+    "title": "Sector Growth Ranking",
+    "subtitle": "Year-over-year change in contract value by sector",
+    "noComparison": "No prior-year data available for comparison",
+    "growth": "Growth"
+  },
+  "riskBreakdown": {
+    "title": "Risk Level Breakdown",
+    "subtitle": "Distribution of contracts by risk level for selected year",
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "noData": "No risk data available for this year"
+  },
+  "administrationBanner": {
+    "title": "Presidential Administration",
+    "Fox": "Vicente Fox (PAN) · 2000–2006",
+    "Calderon": "Felipe Calderón (PAN) · 2006–2012",
+    "PenaNieto": "Enrique Peña Nieto (PRI) · 2012–2018",
+    "AMLO": "Andrés Manuel López Obrador (MORENA) · 2018–2024",
+    "Sheinbaum": "Claudia Sheinbaum (MORENA) · 2024–present"
+  },
+  "noData": "No data available for this year",
+  "loading": "Loading year data…",
+  "vsLastYear": "vs prior year"
+}

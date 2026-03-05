@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40">
+  <rect width="120" height="40" rx="4" fill="#D4700A"/>
+  <text x="8" y="27" font-family="Arial,sans-serif" font-weight="700" font-size="20" fill="#ffffff" letter-spacing="1">SICT</text>
+  <path d="M80 32 L100 32 M80 28 L95 20 M100 28 L105 20" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="105" cy="18" r="4" fill="#ffffff"/>
+</svg>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40">
+  <rect width="120" height="40" rx="4" fill="#1B5E20"/>
+  <text x="8" y="27" font-family="Arial,sans-serif" font-weight="700" font-size="19" fill="#ffffff" letter-spacing="0.5">SHCP</text>
+  <circle cx="103" cy="20" r="10" fill="#FFD700" opacity="0.9"/>
+  <text x="97" y="25" font-family="Arial,sans-serif" font-weight="900" font-size="13" fill="#1B5E20">$</text>
+</svg>

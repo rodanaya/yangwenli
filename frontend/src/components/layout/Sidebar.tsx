@@ -24,6 +24,8 @@ import {
   FlaskConical,
   MapPin,
   ArrowLeftRight,
+  Calendar,
+  ShoppingCart,
 } from 'lucide-react'
 import { RubliLogoMark } from '@/components/ui/RubliLogoMark'
 import { LanguageToggle } from '@/components/LanguageToggle'
@@ -66,7 +68,9 @@ const NAV_SECTIONS: NavSectionDef[] = [
     sectionKey: 'sections.investigate',
     items: [
       { i18nKey: 'procurementIntelligence', href: '/procurement-intelligence', icon: Zap },
+      { i18nKey: 'yearInReview', href: '/year-in-review', icon: Calendar },
       { i18nKey: 'investigation', href: '/investigation', icon: Crosshair },
+      { i18nKey: 'categories', href: '/categories', icon: ShoppingCart },
       { i18nKey: 'network', href: '/network', icon: Network },
       { i18nKey: 'moneyFlow', href: '/money-flow', icon: ArrowLeftRight },
       { i18nKey: 'contracts', href: '/contracts', icon: FileText },

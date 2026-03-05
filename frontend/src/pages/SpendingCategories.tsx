@@ -42,6 +42,9 @@ import {
   Brain,
   BarChart3,
   ExternalLink,
+  X,
+  Building2,
+  User,
 } from 'lucide-react'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { getSectorNameEN, SECTORS } from '@/lib/constants'
@@ -493,6 +496,158 @@ function aggregateBySector(categories: CategoryStat[]): SectorAggregate[] {
 }
 
 // =============================================================================
+// Vendor × Institution Panel
+// =============================================================================
+
+interface VendorInstPair {
+  vendor_id: number
+  vendor_name: string
+  institution_id: number
+  institution_name: string
+  contract_count: number
+  total_value: number
+  avg_risk: number
+  max_risk: number
+  direct_award_pct: number
+  single_bid_pct: number
+}
+
+function CategoryDetailPanel({
+  categoryId,
+  categoryName,
+  pairs,
+  loading,
+  onClose,
+  onNavigate,
+}: {
+  categoryId: number
+  categoryName: string
+  pairs: VendorInstPair[]
+  loading: boolean
+  onClose: () => void
+  onNavigate: (path: string) => void
+}) {
+  const maxValue = pairs[0]?.total_value ?? 1
+
+  return (
+    <Card className="border-accent/20 bg-accent/[0.02] overflow-hidden">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <CardTitle className="text-sm font-bold text-text-primary truncate">{categoryName}</CardTitle>
+            <CardDescription className="text-xs mt-0.5">
+              Top vendor × institution relationships by contract value
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => onNavigate(`/contracts?category_id=${categoryId}`)}
+              className="flex items-center gap-1 text-xs text-accent hover:text-accent/80 transition-colors border border-accent/30 px-2 py-1 rounded"
+            >
+              <ExternalLink className="h-3 w-3" />
+              All contracts
+            </button>
+            <button
+              onClick={onClose}
+              className="text-text-muted hover:text-text-primary transition-colors"
+              aria-label="Close panel"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        {loading ? (
+          <div className="space-y-2 p-4">
+            {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+          </div>
+        ) : pairs.length === 0 ? (
+          <p className="text-xs text-text-muted text-center py-8 px-4">
+            No vendor-institution data available for this category.
+          </p>
+        ) : (
+          <>
+            {/* Column headers */}
+            <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-wider text-text-muted/60">
+              <span className="w-4 flex-shrink-0">#</span>
+              <div className="flex-1 min-w-0 flex items-center gap-2">
+                <User className="h-3 w-3 flex-shrink-0" />
+                <span>Vendor</span>
+                <span className="text-text-muted/30">→</span>
+                <Building2 className="h-3 w-3 flex-shrink-0" />
+                <span>Institution</span>
+              </div>
+              <span className="w-20 text-right flex-shrink-0">Value</span>
+              <span className="w-14 text-right flex-shrink-0 hidden md:block">Contracts</span>
+              <span className="w-12 text-right flex-shrink-0 hidden lg:block">Risk</span>
+              <span className="w-12 text-right flex-shrink-0 hidden xl:block">DA%</span>
+            </div>
+
+            <div className="divide-y divide-border/10">
+              {pairs.map((pair, idx) => (
+                <div
+                  key={`${pair.vendor_id}-${pair.institution_id}`}
+                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-background-elevated/40 transition-colors group"
+                >
+                  <span className="text-[11px] text-text-muted/40 font-mono w-4 flex-shrink-0 tabular-nums">
+                    {idx + 1}
+                  </span>
+
+                  <div className="flex-1 min-w-0">
+                    {/* Names row */}
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <button
+                        onClick={() => onNavigate(`/vendors/${pair.vendor_id}`)}
+                        className="text-xs font-semibold text-text-primary hover:text-accent truncate max-w-[180px] transition-colors"
+                      >
+                        {truncate(pair.vendor_name, 30)}
+                      </button>
+                      <span className="text-text-muted/30 text-xs flex-shrink-0">→</span>
+                      <span className="text-xs text-text-secondary truncate max-w-[160px]">
+                        {truncate(pair.institution_name, 28)}
+                      </span>
+                    </div>
+                    {/* Value bar */}
+                    <div className="h-0.5 bg-border/20 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${Math.min((pair.total_value / maxValue) * 100, 100)}%`,
+                          backgroundColor: getRiskColor(pair.avg_risk),
+                          opacity: 0.7,
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <span className="w-20 text-right text-xs font-black font-mono text-text-primary tabular-nums flex-shrink-0">
+                    {formatCompactMXN(pair.total_value)}
+                  </span>
+                  <span className="w-14 text-right text-xs font-mono text-text-muted tabular-nums flex-shrink-0 hidden md:block">
+                    {formatNumber(pair.contract_count)}
+                  </span>
+                  <span
+                    className="w-12 text-right text-xs font-mono tabular-nums flex-shrink-0 hidden lg:block"
+                    style={{ color: getRiskColor(pair.avg_risk) }}
+                  >
+                    {(pair.avg_risk * 100).toFixed(0)}%
+                  </span>
+                  <span className="w-12 text-right text-xs font-mono text-text-muted tabular-nums flex-shrink-0 hidden xl:block">
+                    {pair.direct_award_pct.toFixed(0)}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -518,6 +673,13 @@ export default function SpendingCategories() {
   const { data: trendsData, isLoading: trendsLoading } = useQuery({
     queryKey: ['categories', 'trends', yearFrom, yearTo],
     queryFn: () => categoriesApi.getTrends(yearFrom, yearTo),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const { data: vendorInstData, isLoading: vendorInstLoading } = useQuery({
+    queryKey: ['categories', 'vendor-institution', selectedCategoryId],
+    queryFn: () => categoriesApi.getVendorInstitution(selectedCategoryId!, 15),
+    enabled: selectedCategoryId !== null,
     staleTime: 5 * 60 * 1000,
   })
 
@@ -991,7 +1153,11 @@ export default function SpendingCategories() {
                   {sortedCategories.slice(0, 50).map((cat, idx) => (
                     <tr
                       key={cat.category_id}
-                      className="border-b border-border/10 hover:bg-background-elevated/50 transition-colors"
+                      className={cn(
+                        'border-b border-border/10 hover:bg-background-elevated/50 transition-colors cursor-pointer',
+                        selectedCategoryId === cat.category_id && 'bg-accent/5 border-l-2 border-l-accent',
+                      )}
+                      onClick={() => setSelectedCategoryId(prev => prev === cat.category_id ? null : cat.category_id)}
                     >
                       <td className="px-3 py-2 text-text-muted tabular-nums">{idx + 1}</td>
                       <td className="px-3 py-2">
@@ -1153,6 +1319,18 @@ export default function SpendingCategories() {
           )}
         </CardContent>
       </Card>
+
+      {/* Vendor × Institution Drill-Down Panel */}
+      {selectedCategoryId !== null && (
+        <CategoryDetailPanel
+          categoryId={selectedCategoryId}
+          categoryName={selectedCategoryName ?? ''}
+          pairs={vendorInstData?.data ?? []}
+          loading={vendorInstLoading}
+          onClose={() => setSelectedCategoryId(null)}
+          onNavigate={navigate}
+        />
+      )}
 
       {/* Section 3: Charts */}
       <div className="space-y-5">

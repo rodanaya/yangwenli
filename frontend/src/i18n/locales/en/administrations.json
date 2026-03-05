@@ -50,6 +50,9 @@
   "sectorCorrelationsNote": "Sector pairs with correlated risk trajectories (|r| ≥ 0.70) during this administration",
   "correlation": "correlation",
   "transitionFrom": "→",
+  "heatmapSubtitle": "Risk metrics by sector for the selected administration — sorted by high-risk contract percentage.",
+  "transitionSubtitle": "Changes in key indicators between consecutive administrations. Values marked ! or !! are statistically unusual (≥1.8σ from historical average).",
+  "keyEventsSubtitle": "Legislative reforms, documented scandals, and crises that affected public procurement patterns during this administration.",
   "heatmap": {
     "sector": "Sector",
     "directAward": "Direct Award",

@@ -19,6 +19,7 @@ import { RiskBadge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
 import { vendorApi, institutionApi } from '@/api/client'
+import { InstitutionBadge } from '@/components/InstitutionBadge'
 import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 
@@ -390,7 +391,10 @@ function InstitutionDrawerContent({ institutionId }: { institutionId: number }) 
       ) : institution ? (
         <div className="space-y-1">
           <p className="text-xs text-text-muted uppercase tracking-wider">Institution</p>
-          <h3 className="text-sm font-bold text-text-primary leading-snug">{instName}</h3>
+          <div className="flex items-center gap-3">
+            <InstitutionBadge name={institution.name} size={40} />
+            <h3 className="text-sm font-bold text-text-primary leading-snug">{instName}</h3>
+          </div>
           {institution.siglas && (
             <p className="text-xs text-text-muted">{institution.siglas}</p>
           )}

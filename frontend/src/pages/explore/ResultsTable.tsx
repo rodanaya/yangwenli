@@ -33,11 +33,14 @@ interface ResultsTableProps {
 export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps) {
   const { sectorId, yearStart, yearEnd, riskLevels, searchText, entityType } = filters
 
+  // Build effective risk_level param: omit only when ALL 4 levels selected (no filter needed)
+  const riskLevelParam = riskLevels.length === 4 ? undefined : (riskLevels.join(',') as any)
+
   const vendorQuery = useQuery({
     queryKey: ['explore', 'vendors', sectorId, yearStart, yearEnd, riskLevels, searchText, page],
     queryFn: () => vendorApi.getAll({
       sector_id: sectorId,
-      risk_level: riskLevels.length === 1 ? (riskLevels[0] as any) : undefined,
+      risk_level: riskLevelParam,
       search: searchText || undefined,
       page,
       per_page: PAGE_SIZE,
@@ -225,8 +228,16 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
           {((vendor.avg_risk_score || 0) * 100).toFixed(0)}%
         </span>
       </td>
-      <td className="text-right py-2 pl-2 font-mono text-text-muted text-xs hidden lg:table-cell">
-        {vendor.direct_award_pct != null ? `${vendor.direct_award_pct.toFixed(0)}%` : '–'}
+      <td className="text-right py-2 pl-2 font-mono text-xs hidden lg:table-cell">
+        {vendor.direct_award_pct != null ? (
+          <span style={{
+            color: vendor.direct_award_pct >= 90 ? '#f87171'
+                 : vendor.direct_award_pct >= 70 ? '#fb923c'
+                 : 'var(--color-text-muted)'
+          }}>
+            {vendor.direct_award_pct.toFixed(0)}%
+          </span>
+        ) : '–'}
       </td>
       <td className="pl-1 pr-2">
         <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">

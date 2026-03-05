@@ -24,6 +24,8 @@ import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { RiskFeedbackButton } from '@/components/RiskFeedbackButton'
 import { buildInstitutionNarrative } from '@/lib/narratives'
+import { InstitutionLogoBanner } from '@/components/InstitutionBadge'
+import { getInstitutionGroup } from '@/lib/institution-groups'
 import { WaterfallRiskChart } from '@/components/WaterfallRiskChart'
 import { RedThreadPanel } from '@/components/RedThreadPanel'
 import { PercentileBadge } from '@/components/PercentileBadge'
@@ -334,7 +336,17 @@ export function InstitutionProfile() {
             <Building2 className="h-5 w-5" />
           </div>
           <div className="min-w-0">
+            <InstitutionLogoBanner name={institution.name} height={32} className="mb-2" />
             <h1 className="text-lg font-bold leading-tight truncate">{toTitleCase(institution.name)}</h1>
+            {(() => {
+              const _group = getInstitutionGroup(institution.name)
+              return _group ? (
+                <p className="text-xs text-text-muted mt-0.5">
+                  Part of{' '}
+                  <span className="font-medium" style={{ color: _group.color }}>{_group.name}</span>
+                </p>
+              ) : null
+            })()}
             <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
               {institution.siglas && (
                 <span className="text-xs font-mono font-bold text-accent">{institution.siglas}</span>

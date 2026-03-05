@@ -101,6 +101,7 @@ export function ExecutiveSummary() {
     <article className="max-w-4xl mx-auto pb-20 space-y-16 print:text-black print:bg-white">
       <ScrollReveal delay={80}><ReportHeader data={data} /></ScrollReveal>
       <ScrollReveal delay={100}><StatBombs data={data} /></ScrollReveal>
+      <ScrollReveal delay={110}><CurrencyNoteBanner /></ScrollReveal>
       <ScrollReveal delay={120}><WhatWeFound data={data} /></ScrollReveal>
       <ScrollReveal delay={140}><KeyFindings /></ScrollReveal>
       <ScrollReveal delay={160}><TopFraudSignals /></ScrollReveal>
@@ -122,6 +123,7 @@ export function ExecutiveSummary() {
       <Divider />
       {/* 05 — EVERY GOVT: Five Administrations */}
       <ScrollReveal><SectionAdministrations data={data} /></ScrollReveal>
+      <ScrollReveal><CompetitionDeclineCard /></ScrollReveal>
       <Divider />
       {/* 06 — WHO BENEFITS: Top Vendors */}
       <ScrollReveal><SectionVendors data={data} navigate={navigate} /></ScrollReveal>
@@ -260,22 +262,23 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
   const highRiskRate = (risk.high_pct + risk.critical_pct).toFixed(1)
 
   const highCriticalCount = (risk.critical_count ?? 201_745) + (risk.high_count ?? 126_553)
+  // Always display as compact number to prevent card overflow
   const highCriticalFormatted = highCriticalCount >= 1_000_000
-    ? `${(highCriticalCount / 1_000_000).toFixed(2)}M`
-    : highCriticalCount.toLocaleString()
+    ? `${(highCriticalCount / 1_000_000).toFixed(1)}M`
+    : `${Math.round(highCriticalCount / 1_000)}K`
 
   const bombs = [
     {
       value: `${highRiskRate}%`,
       label: 'High-Risk Rate',
-      sub: 'OECD-calibrated threshold · v5.1',
+      sub: 'OECD-calibrated · v5.1',
       glow: 'rgba(248,113,113,0.3)',
       color: '#f87171',
     },
     {
       value: highCriticalFormatted,
       label: 'High/Critical Contracts',
-      sub: `Critical: 201,745 · High: 126,553`,
+      sub: `Critical + High risk · 9% of 3.1M`,
       glow: 'rgba(251,146,60,0.3)',
       color: '#fb923c',
     },
@@ -318,15 +321,19 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
               style={{ background: `radial-gradient(ellipse at 50% 50%, ${b.color}, transparent 70%)` }}
             />
             <div
-              className="text-4xl sm:text-5xl font-black font-mono text-white tracking-tight relative z-10"
+              className={`font-black font-mono text-white tracking-tight relative z-10 leading-none ${
+                b.value.length > 6 ? 'text-2xl sm:text-3xl' :
+                b.value.length > 4 ? 'text-3xl sm:text-4xl' :
+                'text-4xl sm:text-5xl'
+              }`}
               style={{ textShadow: `0 0 40px ${b.glow}` }}
             >
               {b.value}
             </div>
-            <div className="text-xs text-text-muted uppercase tracking-widest mt-1.5 font-mono relative z-10">
+            <div className="text-[10px] text-text-muted uppercase tracking-widest mt-1.5 font-mono relative z-10 leading-tight">
               {b.label}
             </div>
-            <div className="text-[10px] mt-0.5 font-mono relative z-10" style={{ color: `${b.color}99` }}>
+            <div className="text-[10px] mt-0.5 font-mono relative z-10 leading-tight" style={{ color: `${b.color}99` }}>
               {b.sub}
             </div>
           </div>
@@ -341,6 +348,7 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
 // ============================================================================
 
 function WhatWeFound({ data }: { data: ExecutiveSummaryResponse }) {
+  const { t } = useTranslation('executive')
   const { risk } = data
   const highRiskValue = (risk.high_value ?? 0) + (risk.critical_value ?? 0)
 
@@ -348,7 +356,7 @@ function WhatWeFound({ data }: { data: ExecutiveSummaryResponse }) {
     {
       icon: AlertTriangle,
       value: formatCompactMXN(highRiskValue),
-      desc: 'in contracts flagged as high or critical risk',
+      desc: t('whatWeFound.highRisk'),
       borderColor: 'border-red-500/20',
       bgColor: 'bg-red-500/5',
       iconColor: 'text-red-400',
@@ -357,7 +365,7 @@ function WhatWeFound({ data }: { data: ExecutiveSummaryResponse }) {
     {
       icon: TrendingUp,
       value: '71%',
-      desc: 'of contracts awarded without open competition (direct award)',
+      desc: t('whatWeFound.directAward'),
       borderColor: 'border-orange-500/20',
       bgColor: 'bg-orange-500/5',
       iconColor: 'text-orange-400',
@@ -366,7 +374,7 @@ function WhatWeFound({ data }: { data: ExecutiveSummaryResponse }) {
     {
       icon: DollarSign,
       value: '1.33×',
-      desc: 'more contracts signed in December vs other months — the budget-dump pattern',
+      desc: t('whatWeFound.december'),
       borderColor: 'border-amber-500/20',
       bgColor: 'bg-amber-500/5',
       iconColor: 'text-amber-400',
@@ -375,7 +383,7 @@ function WhatWeFound({ data }: { data: ExecutiveSummaryResponse }) {
     {
       icon: Zap,
       value: '99.0%',
-      desc: 'of IMSS ghost company contracts flagged as high risk or above',
+      desc: t('whatWeFound.imss'),
       borderColor: 'border-cyan-500/20',
       bgColor: 'bg-cyan-500/5',
       iconColor: 'text-cyan-400',
@@ -583,11 +591,14 @@ function SectionSystem() {
         <p className="text-sm text-text-secondary leading-relaxed">{t('sSystem.oversightText')}</p>
       </div>
 
-      {/* Crisis Box */}
-      <div className="border border-border/50 rounded-lg p-5 bg-background-card/50">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-2">
-          {t('sSystem.crisisTitle')}
-        </p>
+      {/* Crisis Box — high visual prominence: infrastructure being dismantled */}
+      <div className="border-2 border-risk-critical/50 rounded-lg p-5 bg-risk-critical/8 shadow-[0_0_24px_rgba(248,113,113,0.12)]">
+        <div className="flex items-center gap-2 mb-2">
+          <AlertTriangle className="h-4 w-4 text-risk-critical flex-shrink-0" />
+          <p className="text-xs font-bold uppercase tracking-widest text-risk-critical font-mono">
+            {t('sSystem.crisisTitle')}
+          </p>
+        </div>
         <p className="text-sm text-text-secondary leading-relaxed mb-4">
           {t('sSystem.crisisText')}
         </p>
@@ -961,7 +972,7 @@ function PatternWebDiagram() {
     <div className="flex justify-center my-6">
       <svg
         ref={ref}
-        viewBox="0 0 520 345"
+        viewBox="0 0 520 380"
         className="w-full max-w-xl"
         style={{ overflow: 'visible' }}
         aria-label="Pattern web diagram showing how direct award, December rush, and vendor concentration reinforce each other"
@@ -1024,27 +1035,43 @@ function PatternWebDiagram() {
           <g key={node.id}>
             {/* Pulse ring */}
             <circle cx={node.x} cy={node.y}
-              r={visible ? 58 : 0}
+              r={visible ? 64 : 0}
               fill="none" stroke={node.color} strokeWidth="0.5" opacity={0.15}
               style={{ transition: `r 600ms ${i * 100 + 200}ms cubic-bezier(0.16,1,0.3,1)` }}
             />
             {/* Main circle */}
             <circle cx={node.x} cy={node.y}
-              r={visible ? 46 : 0}
-              fill={`${node.color}18`}
+              r={visible ? 52 : 0}
+              fill={`${node.color}22`}
               stroke={node.color}
               strokeWidth="1.5"
               style={{ transition: `r 500ms ${i * 100 + 200}ms cubic-bezier(0.16,1,0.3,1)` }}
             />
+            {/* Dark background rect behind text for readability */}
+            <rect
+              x={node.x - 46} y={node.y - 22}
+              width={92} height={34}
+              rx={4}
+              fill="rgba(10,15,30,0.75)"
+              style={{ opacity: visible ? 1 : 0, transition: `opacity 300ms ${i * 100 + 480}ms ease` }}
+            />
             {/* Two-line label */}
             <text textAnchor="middle" fontFamily="monospace" fontWeight="bold" fill={node.color}
               style={{ opacity: visible ? 1 : 0, transition: `opacity 400ms ${i * 100 + 500}ms ease` }}>
-              <tspan x={node.x} y={node.y - 9} fontSize="11">{node.lines[0]}</tspan>
-              <tspan x={node.x} dy="15"         fontSize="11">{node.lines[1]}</tspan>
+              <tspan x={node.x} y={node.y - 8} fontSize="12">{node.lines[0]}</tspan>
+              <tspan x={node.x} dy="16"         fontSize="12">{node.lines[1]}</tspan>
             </text>
+            {/* Sub-stat background */}
+            <rect
+              x={node.x - 46} y={node.y + 24}
+              width={92} height={16}
+              rx={3}
+              fill="rgba(10,15,30,0.70)"
+              style={{ opacity: visible ? 1 : 0, transition: `opacity 300ms ${i * 100 + 600}ms ease` }}
+            />
             {/* Sub-stat */}
-            <text x={node.x} y={node.y + 30}
-              textAnchor="middle" fontSize="9.5" fill="rgba(255,255,255,0.75)" fontFamily="monospace"
+            <text x={node.x} y={node.y + 35}
+              textAnchor="middle" fontSize="9.5" fill="rgba(255,255,255,0.90)" fontFamily="monospace"
               style={{ opacity: visible ? 1 : 0, transition: `opacity 400ms ${i * 100 + 620}ms ease` }}
             >
               {node.sub}
@@ -1910,6 +1937,22 @@ function SectionNetwork({ patternCounts }: {
 // S6: The Data — COMPRANET Data Quality
 // ============================================================================
 
+// ============================================================================
+// Currency Note Banner — data quality notice for headline KPI row
+// ============================================================================
+
+function CurrencyNoteBanner() {
+  const { t } = useTranslation('executive')
+  return (
+    <div className="flex items-start gap-2.5 px-4 py-2.5 rounded-lg border border-blue-500/20 bg-blue-500/5">
+      <HelpCircle className="h-3.5 w-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
+      <p className="text-xs text-blue-300/80 leading-relaxed">
+        {t('currencyNote.text')}
+      </p>
+    </div>
+  )
+}
+
 function SectionData() {
   const { t } = useTranslation('executive')
 
@@ -1963,6 +2006,37 @@ function DataStructureRow({ period, years, quality, rfcCoverage, note }: { perio
           <span className="text-xs text-text-muted font-mono">{t('s6.rfc')}: {rfcCoverage}</span>
         </div>
         <p className="text-xs text-text-muted leading-relaxed">{note}</p>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// Competition Decline Callout — audit-insight panel for SectionAdministrations
+// ============================================================================
+
+function CompetitionDeclineCard() {
+  const { t } = useTranslation('executive')
+  return (
+    <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-5 flex flex-col sm:flex-row gap-5 items-start">
+      <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg bg-amber-500/15">
+        <TrendingUp className="h-5 w-5 text-amber-400" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-amber-400 font-mono mb-1">
+          {t('competitionDecline.statLabel')}
+        </p>
+        <div className="flex items-baseline gap-3 mb-1 flex-wrap">
+          <span className="text-3xl font-black font-mono text-amber-400 tracking-tight">
+            {t('competitionDecline.stat')}
+          </span>
+          <span className="text-sm font-bold text-text-primary">
+            {t('competitionDecline.title')}
+          </span>
+        </div>
+        <p className="text-xs text-text-muted leading-relaxed">
+          {t('competitionDecline.subtitle')}
+        </p>
       </div>
     </div>
   )

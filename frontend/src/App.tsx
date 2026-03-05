@@ -47,6 +47,7 @@ const MoneyFlow = lazy(() => import('@/pages/MoneyFlow'))
 // Workspace is the new name for Watchlist
 const Workspace = lazy(() => import('@/pages/Watchlist'))
 const StateExpenditure = lazy(() => import('@/pages/StateExpenditure'))
+const YearInReview = lazy(() => import('@/pages/YearInReview'))
 
 // First-visit routing: redirect "/" to Landing for new users, Dashboard for returning users
 function FirstVisitRedirect() {
@@ -248,6 +249,22 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<DetailPageSkeleton />}>
                     <StateExpenditure />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="year-in-review"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <YearInReview />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="year-in-review/:year"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <YearInReview />
                   </SuspenseBoundary>
                 }
               />

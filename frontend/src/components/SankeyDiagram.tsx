@@ -1,5 +1,6 @@
 import { useMemo, useState, useCallback } from 'react'
 import { sankey as d3Sankey, sankeyLinkHorizontal } from 'd3-sankey'
+import { getInstitutionGroup, getInstitutionColor } from '@/lib/institution-groups'
 
 interface SankeyNodeInput {
   id: string
@@ -77,6 +78,11 @@ export function SankeyDiagram({
   onNodeClick,
   selectedNodeId,
 }: SankeyDiagramProps) {
+  // Respect user's OS-level "reduce motion" preference (accessibility + battery)
+  const prefersReducedMotion =
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
   const [tooltip, setTooltip] = useState<{
     x: number
     y: number
@@ -177,8 +183,8 @@ export function SankeyDiagram({
 
           // Number of electricity particles scales with flow thickness
           const numParticles = strokeW >= 10 ? 3 : strokeW >= 4 ? 2 : 1
-          // Animation duration: faster for smaller flows, ~2s base
-          const dur = Math.max(1.2, Math.min(2.8, 2.0 - (strokeW - 1.5) * 0.05))
+          // Animation duration: slow and calm — heavier flows travel at the same pace
+          const dur = Math.max(6.0, Math.min(12.0, 9.0 + (strokeW - 1.5) * 0.15))
 
           return (
             <g key={i}>
@@ -200,7 +206,7 @@ export function SankeyDiagram({
               />
 
               {/* Electricity particles traveling along the trace */}
-              {pathD && !selectedNodeId && Array.from({ length: numParticles }, (_, j) => (
+              {pathD && !selectedNodeId && !prefersReducedMotion && Array.from({ length: numParticles }, (_, j) => (
                 <circle
                   key={j}
                   r={Math.min(3.5, Math.max(2, strokeW * 0.35))}
@@ -220,7 +226,7 @@ export function SankeyDiagram({
               ))}
 
               {/* Selected-node mode: show single slower pulse on related flows */}
-              {pathD && selectedNodeId && isRelated && (
+              {pathD && selectedNodeId && isRelated && !prefersReducedMotion && (
                 <circle
                   r={Math.min(4, Math.max(2.5, strokeW * 0.4))}
                   fill={riskColor}
@@ -246,7 +252,9 @@ export function SankeyDiagram({
             id: string; name: string; type: string; riskLevel: string;
             x0?: number; x1?: number; y0?: number; y1?: number; value?: number
           }
-          const color     = RISK_COLORS[n.riskLevel] ?? RISK_COLORS.unknown
+          const color     = n.type === 'institution'
+            ? getInstitutionColor(n.name, RISK_COLORS[n.riskLevel] ?? RISK_COLORS.unknown)
+            : (RISK_COLORS[n.riskLevel] ?? RISK_COLORS.unknown)
           const x0        = n.x0 ?? 0
           const x1        = n.x1 ?? 0
           const y0        = n.y0 ?? 0
@@ -322,6 +330,26 @@ export function SankeyDiagram({
                 ])}
                 onMouseLeave={() => setTooltip(null)}
               />
+
+              {/* Institution logo — rendered inside the node bar when available */}
+              {n.type === 'institution' && nodeH >= 16 && (() => {
+                const grp = getInstitutionGroup(n.name)
+                if (!grp?.logo) return null
+                const logoSize = Math.min(nodeH - 4, Math.max(1, x1 - x0) - 2, 24)
+                const logoX = x0 + (Math.max(1, x1 - x0) - logoSize) / 2
+                const logoY = y0 + (nodeH - logoSize) / 2
+                return (
+                  <image
+                    href={grp.logo}
+                    x={logoX}
+                    y={logoY}
+                    width={logoSize}
+                    height={logoSize}
+                    opacity={selectedNodeId && !isSelected ? 0.3 : 1}
+                    style={{ pointerEvents: 'none' }}
+                  />
+                )
+              })()}
 
               {/* Label with opaque background */}
               {showLabel && (

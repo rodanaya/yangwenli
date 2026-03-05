@@ -271,6 +271,24 @@
     }
   },
 
+  "whatWeFound": {
+    "highRisk": "en contratos clasificados como riesgo alto o crítico",
+    "directAward": "de contratos adjudicados sin competencia abierta (adjudicación directa)",
+    "december": "más contratos firmados en diciembre vs otros meses — el patrón de vaciado presupuestal",
+    "imss": "de contratos de la red de empresas fantasma del IMSS clasificados como riesgo alto o superior"
+  },
+
+  "competitionDecline": {
+    "title": "La Competencia Declina",
+    "stat": "63% → 81.7%",
+    "statLabel": "Adjudicación directa: 2010 a 2023",
+    "subtitle": "La proporción de contratos adjudicados sin competencia ha crecido cada año durante 13 años. Las licitaciones abiertas — el respaldo de transparencia — son ahora la excepción, no la regla."
+  },
+
+  "currencyNote": {
+    "text": "26,872 contratos (0.9%) fueron registrados originalmente en divisas extranjeras (USD, EUR). Los montos han sido convertidos a MXN usando tipos de cambio históricos."
+  },
+
   "footer": {
     "platform": "Plataforma de Inteligencia RUBLI",
     "compranet": "COMPRANET 2002-2025",

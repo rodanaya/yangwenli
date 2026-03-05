@@ -51,6 +51,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 import { StatPill, MiniBar } from './shared'
+import { InstitutionBadge } from '@/components/InstitutionBadge'
 
 // =============================================================================
 // Column and Preset Configuration
@@ -778,6 +779,7 @@ function InstitutionRow({ institution, rank }: { institution: InstitutionRespons
       {/* Institution name + type icon + sector */}
       <td className="px-3 py-2">
         <div className="flex items-center gap-2 min-w-0">
+          <InstitutionBadge name={institution.name} size={32} className="flex-shrink-0" />
           {/* Type icon with sector-colored background */}
           {(() => {
             const TypeIcon = institution.institution_type ? (INST_TYPE_ICON[institution.institution_type] || Building) : Building

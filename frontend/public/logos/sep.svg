@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40">
+  <rect width="120" height="40" rx="4" fill="#003087"/>
+  <text x="8" y="27" font-family="Arial,sans-serif" font-weight="700" font-size="20" fill="#ffffff" letter-spacing="1">SEP</text>
+  <rect x="75" y="10" width="14" height="3" rx="1" fill="#ffffff"/>
+  <rect x="75" y="16" width="20" height="3" rx="1" fill="#ffffff"/>
+  <rect x="75" y="22" width="17" height="3" rx="1" fill="#ffffff"/>
+  <rect x="75" y="28" width="20" height="3" rx="1" fill="#ffffff"/>
+</svg>

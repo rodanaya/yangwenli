@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40">
+  <rect width="120" height="40" rx="4" fill="#0077B6"/>
+  <text x="6" y="27" font-family="Arial,sans-serif" font-weight="700" font-size="14" fill="#ffffff" letter-spacing="0.5">CONAGUA</text>
+  <path d="M96 28 Q100 18 104 28 Q108 36 112 28" stroke="#ADE8F4" stroke-width="2.5" fill="none"/>
+</svg>

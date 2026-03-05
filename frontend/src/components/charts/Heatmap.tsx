@@ -122,10 +122,9 @@ export const Heatmap = memo(function Heatmap({
           data: chartData,
           label: {
             show: true,
-            // Dark text for contrast on colored cells (green/yellow/red backgrounds)
-            color: '#18181b',
+            color: '#e2e8f0',
             fontSize: 10,
-            fontWeight: 500,
+            fontWeight: 600,
             formatter: (params: { data: [number, number, number] }) => {
               const [colIdx, rowIdx, value] = params.data
               return valueFormatter(value, rows[rowIdx], columns[colIdx])

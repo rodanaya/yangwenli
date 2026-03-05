@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40">
+  <rect width="120" height="40" rx="4" fill="#0D3B6E"/>
+  <text x="8" y="27" font-family="Arial,sans-serif" font-weight="700" font-size="16" fill="#ffffff" letter-spacing="0.5">SEMAR</text>
+  <path d="M88 28 Q96 16 104 28" stroke="#7FB3D3" stroke-width="2.5" fill="none"/>
+  <path d="M92 24 L96 14 L100 24" stroke="#7FB3D3" stroke-width="2" fill="none"/>
+</svg>

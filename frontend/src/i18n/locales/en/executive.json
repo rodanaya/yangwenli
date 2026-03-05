@@ -271,6 +271,24 @@
     }
   },
 
+  "whatWeFound": {
+    "highRisk": "in contracts flagged as high or critical risk",
+    "directAward": "of contracts awarded without open competition (direct award)",
+    "december": "more contracts signed in December vs other months — the budget-dump pattern",
+    "imss": "of IMSS ghost company contracts flagged as high risk or above"
+  },
+
+  "competitionDecline": {
+    "title": "Competition in Decline",
+    "stat": "63% → 81.7%",
+    "statLabel": "Direct award rate: 2010 to 2023",
+    "subtitle": "Share of contracts awarded without competition has grown every year for 13 years. Open tenders — the transparency backstop — are now the exception, not the rule."
+  },
+
+  "currencyNote": {
+    "text": "26,872 contracts (0.9%) were originally recorded in foreign currencies (USD, EUR). Amounts have been converted to MXN using historical exchange rates."
+  },
+
   "footer": {
     "platform": "RUBLI Intelligence Platform",
     "compranet": "COMPRANET 2002-2025",
