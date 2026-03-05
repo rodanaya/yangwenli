@@ -9,7 +9,7 @@
     "yoyChange": "YoY Spending Change"
   },
   "topVendors": {
-    "title": "Top 5 Vendors by Value",
+    "title": "Top 10 Vendors by Value",
     "subtitle": "Highest-value vendors in selected year",
     "rank": "Rank",
     "vendor": "Vendor",
@@ -18,7 +18,7 @@
     "risk": "Risk"
   },
   "topInstitutions": {
-    "title": "Top 5 Institutions by Spend",
+    "title": "Top 10 Institutions by Spend",
     "subtitle": "Highest-spending institutions in selected year",
     "rank": "Rank",
     "institution": "Institution",
@@ -51,5 +51,9 @@
   },
   "noData": "No data available for this year",
   "loading": "Loading year data…",
-  "vsLastYear": "vs prior year"
+  "vsLastYear": "vs prior year",
+  "topRiskVendors": {
+    "title": "Top Risk Vendors",
+    "subtitle": "Vendors with highest average risk score that year (min 5 contracts)"
+  }
 }

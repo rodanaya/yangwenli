@@ -105,16 +105,23 @@ export default function YearInReview() {
     staleTime: 5 * 60 * 1000,
   })
 
-  // Top vendors and institutions — global top (year filter not exposed by /vendors/top API)
+  // Top vendors and institutions — filtered by selected year
   const { data: vendorsResp, isLoading: vendorsLoading } = useQuery({
-    queryKey: ['vendors', 'top', 'value', 5],
-    queryFn: () => vendorApi.getTop('value', 5),
+    queryKey: ['vendors', 'top', 'value', 10, validYear],
+    queryFn: () => vendorApi.getTop('value', 10, { year: validYear }),
     staleTime: 5 * 60 * 1000,
   })
 
   const { data: institutionsResp, isLoading: instsLoading } = useQuery({
-    queryKey: ['institutions', 'top', 'spending', 5],
-    queryFn: () => institutionApi.getTop('spending', 5),
+    queryKey: ['institutions', 'top', 'spending', 10, validYear],
+    queryFn: () => institutionApi.getTop('spending', 10, validYear),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  // Top vendors by risk for selected year
+  const { data: riskVendorsResp } = useQuery({
+    queryKey: ['vendors', 'top', 'risk', 10, validYear],
+    queryFn: () => vendorApi.getTop('risk', 10, { year: validYear }),
     staleTime: 5 * 60 * 1000,
   })
 
@@ -327,7 +334,7 @@ export default function YearInReview() {
             <CardTitle className="text-sm font-mono text-text-primary">
               {t('topVendors.title')}
             </CardTitle>
-            <p className="text-xs text-text-muted mt-0.5">{t('topVendors.subtitle')} (all-time)</p>
+            <p className="text-xs text-text-muted mt-0.5">{t('topVendors.subtitle')} · {validYear}</p>
           </CardHeader>
           <CardContent>
             {vendorsLoading ? (
@@ -348,9 +355,9 @@ export default function YearInReview() {
                 </thead>
                 <tbody>
                   {(vendorsResp?.data ?? []).map((v) => (
-                    <tr key={v.vendor_id} className="border-b border-border/10 hover:bg-card-hover/30">
+                    <tr key={v.vendor_id} className="border-b border-border/10 hover:bg-card-hover/30 cursor-pointer" onClick={() => navigate(`/vendors/${v.vendor_id}`)}>
                       <td className="py-2 pr-2 text-xs font-mono text-text-muted">{v.rank}</td>
-                      <td className="py-2 text-xs text-text-secondary truncate max-w-[180px]">
+                      <td className="py-2 text-xs text-text-secondary truncate max-w-[180px] hover:text-accent transition-colors">
                         {v.vendor_name}
                       </td>
                       <td className="py-2 px-2 text-right text-xs font-mono text-text-primary">
@@ -373,7 +380,7 @@ export default function YearInReview() {
             <CardTitle className="text-sm font-mono text-text-primary">
               {t('topInstitutions.title')}
             </CardTitle>
-            <p className="text-xs text-text-muted mt-0.5">{t('topInstitutions.subtitle')} (all-time)</p>
+            <p className="text-xs text-text-muted mt-0.5">{t('topInstitutions.subtitle')} · {validYear}</p>
           </CardHeader>
           <CardContent>
             {instsLoading ? (
@@ -393,10 +400,10 @@ export default function YearInReview() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(institutionsResp?.data ?? []).slice(0, 5).map((inst) => (
-                    <tr key={inst.institution_id} className="border-b border-border/10 hover:bg-card-hover/30">
+                  {(institutionsResp?.data ?? []).slice(0, 10).map((inst) => (
+                    <tr key={inst.institution_id} className="border-b border-border/10 hover:bg-card-hover/30 cursor-pointer" onClick={() => navigate(`/institutions/${inst.institution_id}`)}>
                       <td className="py-2 pr-2 text-xs font-mono text-text-muted">{inst.rank}</td>
-                      <td className="py-2 text-xs text-text-secondary truncate max-w-[180px]">
+                      <td className="py-2 text-xs text-text-secondary truncate max-w-[180px] hover:text-accent transition-colors">
                         {inst.institution_name}
                       </td>
                       <td className="py-2 px-2 text-right text-xs font-mono text-text-primary">
@@ -413,6 +420,66 @@ export default function YearInReview() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Top risk vendors for the year */}
+      {(riskVendorsResp?.data ?? []).length > 0 && (
+        <Card className="bg-card border-border/40">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-mono text-text-primary flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-[#f87171]" aria-hidden="true" />
+              {t('topRiskVendors.title')} · {validYear}
+            </CardTitle>
+            <p className="text-xs text-text-muted mt-0.5">{t('topRiskVendors.subtitle')}</p>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[500px]">
+                <thead>
+                  <tr className="border-b border-border/30">
+                    <th className="text-left py-1.5 pr-2 text-xs text-text-muted font-normal w-8">#</th>
+                    <th className="text-left py-1.5 text-xs text-text-muted font-normal">Vendor</th>
+                    <th className="text-right py-1.5 px-2 text-xs text-text-muted font-normal">Avg Risk</th>
+                    <th className="text-right py-1.5 px-2 text-xs text-text-muted font-normal">Value</th>
+                    <th className="text-right py-1.5 text-xs text-text-muted font-normal">Contracts</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(riskVendorsResp?.data ?? []).map((v, i) => {
+                    const score = v.avg_risk_score ?? 0
+                    const riskColor = score >= 0.5 ? '#f87171' : score >= 0.3 ? '#fb923c' : '#fbbf24'
+                    return (
+                      <tr
+                        key={v.vendor_id}
+                        className="border-b border-border/10 hover:bg-card-hover/30 cursor-pointer"
+                        onClick={() => navigate(`/vendors/${v.vendor_id}`)}
+                      >
+                        <td className="py-2 pr-2 text-xs font-mono text-text-muted">{i + 1}</td>
+                        <td className="py-2 text-xs text-text-secondary truncate max-w-[200px] hover:text-accent transition-colors">
+                          {v.vendor_name}
+                        </td>
+                        <td className="py-2 px-2 text-right">
+                          <span
+                            className="inline-block text-[10px] font-bold font-mono px-1.5 py-0.5 rounded"
+                            style={{ backgroundColor: `${riskColor}20`, color: riskColor }}
+                          >
+                            {score.toFixed(3)}
+                          </span>
+                        </td>
+                        <td className="py-2 px-2 text-right text-xs font-mono text-text-primary">
+                          {formatCompactMXN(v.metric_value)}
+                        </td>
+                        <td className="py-2 text-right text-xs font-mono text-text-muted">
+                          {formatNumber(v.total_contracts)}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Sector growth + Risk breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

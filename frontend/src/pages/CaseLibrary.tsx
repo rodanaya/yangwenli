@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { TableExportButton } from '@/components/TableExportButton'
-import { AlertCircle, Search, X, Eye, EyeOff, Activity } from 'lucide-react'
+import { AlertCircle, Search, X, Eye, EyeOff, Activity, BarChart3 } from 'lucide-react'
 import { RISK_COLORS, SECTORS } from '@/lib/constants'
 import { staggerContainer, staggerItem, slideUp } from '@/lib/animations'
 
@@ -66,7 +66,7 @@ function formatMXN(n?: number | null): string {
 }
 
 // ── Case Card ────────────────────────────────────────────────────────────────
-function CaseCard({ cas, onClick }: { cas: ScandalListItem; onClick: () => void }) {
+function CaseCard({ cas, onClick, onNavigate }: { cas: ScandalListItem; onClick: () => void; onNavigate: (path: string) => void }) {
   const { t, i18n } = useTranslation('cases')
   const name = i18n.language === 'es' ? cas.name_es : cas.name_en
 
@@ -167,8 +167,42 @@ function CaseCard({ cas, onClick }: { cas: ScandalListItem; onClick: () => void 
         </div>
       </button>
 
-      {/* Footer: dossier action */}
-      <div className="flex justify-end px-4 py-2 border-t border-border/30">
+      {/* Footer: quick-link actions */}
+      <div className="flex items-center justify-between px-4 py-2 border-t border-border/30 gap-2">
+        <div className="flex items-center gap-1.5">
+          {/* View contracts filtered to this case's sector + year */}
+          {(cas.sector_ids?.length > 0 || cas.contract_year_start) && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                const params = new URLSearchParams()
+                if (cas.sector_ids?.[0]) params.set('sector_id', String(cas.sector_ids[0]))
+                if (cas.contract_year_start) params.set('year', String(cas.contract_year_start))
+                params.set('risk_level', 'high')
+                onNavigate(`/contracts?${params}`)
+              }}
+              className="flex items-center gap-1 text-[10px] text-text-muted hover:text-accent border border-border/40 hover:border-accent/50 rounded px-2 py-1 transition-colors"
+              title="View high-risk contracts in this sector/year"
+            >
+              <Search className="h-3 w-3" />
+              Contracts
+            </button>
+          )}
+          {/* View spending categories for this sector */}
+          {cas.sector_ids?.[0] && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onNavigate(`/categories?sector_id=${cas.sector_ids[0]}`)
+              }}
+              className="flex items-center gap-1 text-[10px] text-text-muted hover:text-accent border border-border/40 hover:border-accent/50 rounded px-2 py-1 transition-colors"
+              title="View spending categories for this sector"
+            >
+              <BarChart3 className="h-3 w-3" />
+              Categories
+            </button>
+          )}
+        </div>
         <AddToDossierButton
           entityType="note"
           entityId={cas.id}
@@ -412,6 +446,7 @@ export default function CaseLibrary() {
                   key={cas.id}
                   cas={cas}
                   onClick={() => navigate(`/cases/${cas.slug}`)}
+                  onNavigate={navigate}
                 />
               ))}
             </motion.div>

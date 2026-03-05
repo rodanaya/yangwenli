@@ -9,7 +9,7 @@
     "yoyChange": "Cambio Anual en Gasto"
   },
   "topVendors": {
-    "title": "Top 5 Proveedores por Valor",
+    "title": "Top 10 Vendedores por Valor",
     "subtitle": "Proveedores con mayor valor contratado en el año seleccionado",
     "rank": "Posición",
     "vendor": "Proveedor",
@@ -18,7 +18,7 @@
     "risk": "Riesgo"
   },
   "topInstitutions": {
-    "title": "Top 5 Instituciones por Gasto",
+    "title": "Top 10 Instituciones por Gasto",
     "subtitle": "Instituciones con mayor gasto en el año seleccionado",
     "rank": "Posición",
     "institution": "Institución",
@@ -51,5 +51,9 @@
   },
   "noData": "Sin datos disponibles para este año",
   "loading": "Cargando datos del año…",
-  "vsLastYear": "vs año anterior"
+  "vsLastYear": "vs año anterior",
+  "topRiskVendors": {
+    "title": "Vendedores de Mayor Riesgo",
+    "subtitle": "Vendedores con mayor puntuación de riesgo promedio ese año (mínimo 5 contratos)"
+  }
 }

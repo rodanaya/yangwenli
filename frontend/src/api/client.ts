@@ -352,7 +352,7 @@ export const vendorApi = {
   async getTop(
     metric: 'value' | 'count' | 'risk' = 'value',
     limit = 20,
-    params: Partial<VendorFilterParams> = {}
+    params: Partial<VendorFilterParams> & { year?: number } = {}
   ): Promise<VendorTopListResponse> {
     const queryParams = buildQueryParams({ ...params, by: metric, limit } as QueryParams)
     const { data } = await api.get<VendorTopListResponse>(`/vendors/top?${queryParams}`)
@@ -530,9 +530,11 @@ export const institutionApi = {
    */
   async getTop(
     metric: 'spending' | 'contracts' | 'risk' = 'spending',
-    limit = 20
+    limit = 20,
+    year?: number
   ): Promise<InstitutionTopListResponse> {
-    const { data } = await api.get<InstitutionTopListResponse>(`/institutions/top?by=${metric}&limit=${limit}`)
+    const qs = year ? `&year=${year}` : ''
+    const { data } = await api.get<InstitutionTopListResponse>(`/institutions/top?by=${metric}&limit=${limit}${qs}`)
     return data
   },
 

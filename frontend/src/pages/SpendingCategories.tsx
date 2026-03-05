@@ -515,6 +515,7 @@ interface VendorInstPair {
 function CategoryDetailPanel({
   categoryId,
   categoryName,
+  sectorId,
   pairs,
   loading,
   onClose,
@@ -522,6 +523,7 @@ function CategoryDetailPanel({
 }: {
   categoryId: number
   categoryName: string
+  sectorId: number | null
   pairs: VendorInstPair[]
   loading: boolean
   onClose: () => void
@@ -547,6 +549,16 @@ function CategoryDetailPanel({
               <ExternalLink className="h-3 w-3" />
               All contracts
             </button>
+            {sectorId && (
+              <button
+                onClick={() => onNavigate(`/investigation?sector_id=${sectorId}`)}
+                className="flex items-center gap-1 text-xs text-[#f87171] hover:text-[#fca5a5] transition-colors border border-[#f87171]/30 px-2 py-1 rounded"
+                title="View investigation cases in this sector"
+              >
+                <ExternalLink className="h-3 w-3" />
+                Cases
+              </button>
+            )}
             <button
               onClick={onClose}
               className="text-text-muted hover:text-text-primary transition-colors"
@@ -762,6 +774,12 @@ export default function SpendingCategories() {
     if (!selectedCategoryId) return null
     const cat = filteredCategories.find(c => c.category_id === selectedCategoryId)
     return cat ? (cat.name_en || cat.name_es) : null
+  }, [selectedCategoryId, filteredCategories])
+
+  const selectedCategorySectorId = useMemo(() => {
+    if (!selectedCategoryId) return null
+    const cat = filteredCategories.find(c => c.category_id === selectedCategoryId)
+    return cat ? getSectorId(cat.sector_code) : null
   }, [selectedCategoryId, filteredCategories])
 
   // Trend chart — filtered by selected treemap cell, or top N by value
@@ -1325,6 +1343,7 @@ export default function SpendingCategories() {
         <CategoryDetailPanel
           categoryId={selectedCategoryId}
           categoryName={selectedCategoryName ?? ''}
+          sectorId={selectedCategorySectorId}
           pairs={vendorInstData?.data ?? []}
           loading={vendorInstLoading}
           onClose={() => setSelectedCategoryId(null)}

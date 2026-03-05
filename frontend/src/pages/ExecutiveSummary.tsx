@@ -828,8 +828,9 @@ function AIPipelineChart() {
         Detection Pipeline — v5.1 Model Architecture
       </p>
 
-      {/* Pipeline nodes — horizontal scroll on mobile */}
-      <div className="flex items-stretch gap-0 overflow-x-auto pb-2">
+      {/* Pipeline nodes — centered on desktop, horizontal scroll on mobile */}
+      <div className="flex justify-center overflow-x-auto pb-2">
+      <div className="flex items-stretch gap-0 flex-shrink-0">
         {nodes.map((node, i) => (
           <div key={node.title} className="flex items-center flex-shrink-0">
             {/* Node box */}
@@ -904,6 +905,7 @@ function AIPipelineChart() {
             )}
           </div>
         ))}
+      </div>
       </div>
 
       {/* PU learning note */}

@@ -1186,6 +1186,7 @@ export function NetworkGraph() {
           layout: 'force',
           roam: true,
           draggable: true,
+          clip: false,
           data: nodes,
           links,
           force: {

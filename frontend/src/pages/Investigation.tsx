@@ -269,7 +269,7 @@ function CaseCard({
 // INTEL SIDEBAR — signal radar + sector presence
 // ============================================================================
 
-function IntelSidebar({ cases }: { cases: InvestigationCaseListItem[] }) {
+function IntelSidebar({ cases, onNavigate }: { cases: InvestigationCaseListItem[]; onNavigate: (path: string) => void }) {
   const signalCounts = useMemo(() => {
     const counts: Record<string, number> = {}
     for (const c of cases) {
@@ -335,26 +335,65 @@ function IntelSidebar({ cases }: { cases: InvestigationCaseListItem[] }) {
         </div>
       </div>
 
-      {/* Sector Presence */}
+      {/* Sector Presence — clickable → SpendingCategories */}
       <div>
         <div className="text-[9px] font-bold tracking-widest uppercase text-text-muted/50 font-mono mb-3">
           Sectors
         </div>
         <div className="space-y-1.5">
-          {sectorCounts.map(([sector, count]) => (
-            <div key={sector} className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <div
-                  className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: SECTOR_COLORS[sector] || '#64748b' }}
-                />
-                <span className="text-[11px] text-text-secondary truncate capitalize">
-                  {getSectorNameEN(sector)}
-                </span>
-              </div>
-              <span className="text-[11px] font-mono text-text-muted tabular-nums ml-2 flex-shrink-0">{count}</span>
-            </div>
-          ))}
+          {sectorCounts.map(([sector, count]) => {
+            // Find the sector_id from the cases
+            const sId = cases.find(c => c.sector_name === sector)?.sector_id
+            return (
+              <button
+                key={sector}
+                onClick={() => sId && onNavigate(`/categories?sector_id=${sId}`)}
+                className="w-full flex items-center justify-between hover:bg-background-elevated/40 rounded px-1 py-0.5 transition-colors group"
+                title={sId ? `View spending categories for ${getSectorNameEN(sector)}` : undefined}
+              >
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <div
+                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: SECTOR_COLORS[sector] || '#64748b' }}
+                  />
+                  <span className="text-[11px] text-text-secondary truncate capitalize group-hover:text-accent transition-colors">
+                    {getSectorNameEN(sector)}
+                  </span>
+                </div>
+                <span className="text-[11px] font-mono text-text-muted tabular-nums ml-2 flex-shrink-0">{count}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Quick links */}
+      <div>
+        <div className="text-[9px] font-bold tracking-widest uppercase text-text-muted/50 font-mono mb-2">
+          Quick Links
+        </div>
+        <div className="space-y-1">
+          <button
+            onClick={() => onNavigate('/categories')}
+            className="w-full text-left text-[11px] text-text-muted hover:text-accent border border-border/30 hover:border-accent/40 rounded px-2.5 py-1.5 transition-colors flex items-center gap-2"
+          >
+            <span className="text-[10px]">▣</span>
+            Spending Categories
+          </button>
+          <button
+            onClick={() => onNavigate('/contracts?risk_level=critical')}
+            className="w-full text-left text-[11px] text-text-muted hover:text-accent border border-border/30 hover:border-accent/40 rounded px-2.5 py-1.5 transition-colors flex items-center gap-2"
+          >
+            <span className="text-[10px]">⚡</span>
+            Critical Risk Contracts
+          </button>
+          <button
+            onClick={() => onNavigate('/cases')}
+            className="w-full text-left text-[11px] text-text-muted hover:text-accent border border-border/30 hover:border-accent/40 rounded px-2.5 py-1.5 transition-colors flex items-center gap-2"
+          >
+            <span className="text-[10px]">📋</span>
+            Case Library
+          </button>
         </div>
       </div>
     </div>
@@ -621,7 +660,7 @@ export function Investigation() {
         {/* LEFT: Intel sidebar — hidden on small screens */}
         {allCases.length > 0 && (
           <div className="hidden lg:block w-48 xl:w-52 flex-shrink-0 sticky top-4">
-            <IntelSidebar cases={allCases} />
+            <IntelSidebar cases={allCases} onNavigate={navigate} />
           </div>
         )}
 
