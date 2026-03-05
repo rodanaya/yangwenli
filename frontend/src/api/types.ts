@@ -1030,6 +1030,7 @@ export interface InvestigationDashboardSummary {
 export interface ExecutiveSummaryHeadline {
   total_contracts: number
   total_value: number
+  total_value_usd?: number
   total_vendors: number
   total_institutions: number
   min_year: number

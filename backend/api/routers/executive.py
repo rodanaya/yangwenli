@@ -110,10 +110,37 @@ def _build_summary(conn) -> dict:
     risk_dist_raw = precomputed.get("risk_distribution", [])
     yearly_raw = precomputed.get("yearly_trends", [])
 
-    # 2. Headline
+    # 2. Headline (with year-adjusted USD total from live contracts table)
+    MXN_USD_RATES = {
+        2002: 9.66, 2003: 10.79, 2004: 11.29, 2005: 10.90, 2006: 10.90,
+        2007: 10.93, 2008: 11.13, 2009: 13.51, 2010: 12.64, 2011: 12.43,
+        2012: 13.17, 2013: 12.77, 2014: 13.29, 2015: 15.87, 2016: 18.66,
+        2017: 18.93, 2018: 19.24, 2019: 19.26, 2020: 21.49, 2021: 20.28,
+        2022: 20.13, 2023: 17.74, 2024: 17.16,
+    }
+    DEFAULT_RATE = 17.20
+
+    case_clauses = "\n".join(
+        f"            WHEN contract_year = {yr} THEN amount_mxn / {rate}"
+        for yr, rate in MXN_USD_RATES.items()
+    )
+    usd_sql = f"""
+        SELECT SUM(
+            CASE
+{case_clauses}
+            ELSE amount_mxn / {DEFAULT_RATE}
+            END
+        ) AS total_value_usd
+        FROM contracts
+        WHERE amount_mxn > 0 AND amount_mxn < 100000000000
+    """
+    usd_row = cur.execute(usd_sql).fetchone()
+    total_value_usd = usd_row["total_value_usd"] if usd_row and usd_row["total_value_usd"] else 0.0
+
     headline = {
         "total_contracts": overview.get("total_contracts", 0),
         "total_value": overview.get("total_value_mxn", 0),
+        "total_value_usd": round(total_value_usd, 0),
         "total_vendors": overview.get("total_vendors", 0),
         "total_institutions": overview.get("total_institutions", 0),
         "min_year": 2002,
