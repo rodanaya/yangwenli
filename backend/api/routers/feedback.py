@@ -20,9 +20,16 @@ router = APIRouter(prefix="/feedback", tags=["feedback"])
 VALID_ENTITY_TYPES = {"vendor", "institution", "contract"}
 VALID_FEEDBACK_TYPES = {"not_suspicious", "confirmed_suspicious", "needs_review"}
 
+# Module-level flag so DDL only runs once per process, avoiding write-lock
+# contention on every request when the table already exists.
+_table_ready = False
+
 
 def _ensure_table(conn: sqlite3.Connection) -> None:
     """Create risk_feedback table if it does not yet exist."""
+    global _table_ready
+    if _table_ready:
+        return
     conn.execute("""
         CREATE TABLE IF NOT EXISTS risk_feedback (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,6 +45,7 @@ def _ensure_table(conn: sqlite3.Connection) -> None:
         "CREATE INDEX IF NOT EXISTS idx_feedback_entity ON risk_feedback(entity_type, entity_id)"
     )
     conn.commit()
+    _table_ready = True
 
 
 # ---------------------------------------------------------------------------

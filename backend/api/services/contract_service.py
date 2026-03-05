@@ -59,6 +59,7 @@ class ContractService(BaseService):
         is_direct_award: bool | None = None,
         is_single_bid: bool | None = None,
         risk_factor: str | None = None,
+        category_id: int | None = None,
         min_amount: float | None = None,
         max_amount: float | None = None,
         search: str | None = None,
@@ -89,6 +90,8 @@ class ContractService(BaseService):
         qb.filter_boolean(is_single_bid, column="c.is_single_bid")
         qb.filter_amount_range(min_amount, max_amount, column="c.amount_mxn")
 
+        if category_id is not None:
+            qb.where("c.category_id = ?", category_id)
         if search:
             qb.filter_search(search, ["c.title", "c.description"])
         if risk_factor:

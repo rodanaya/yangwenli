@@ -224,6 +224,7 @@ export function Contracts() {
     year: searchParams.get('year') ? Number(searchParams.get('year')) : undefined,
     vendor_id: searchParams.get('vendor_id') ? Number(searchParams.get('vendor_id')) : undefined,
     institution_id: searchParams.get('institution_id') ? Number(searchParams.get('institution_id')) : undefined,
+    category_id: searchParams.get('category_id') ? Number(searchParams.get('category_id')) : undefined,
     risk_level: searchParams.get('risk_level') as ContractFilterParams['risk_level'],
     risk_factor: searchParams.get('risk_factor') || undefined,
     is_direct_award: searchParams.get('is_direct_award') === 'true' ? true : undefined,
@@ -483,6 +484,7 @@ export function Contracts() {
     if (filters.is_single_bid) tags.push({ key: 'is_single_bid', label: 'Single Bidders' })
     if (filters.min_amount) tags.push({ key: 'min_amount', label: `\u2265 ${formatCompactMXN(filters.min_amount)}` })
     if (filters.max_amount) tags.push({ key: 'max_amount', label: `\u2264 ${formatCompactMXN(filters.max_amount)}` })
+    if (filters.category_id) tags.push({ key: 'category_id', label: `Category #${filters.category_id}` })
     return tags
   }, [filters])
 

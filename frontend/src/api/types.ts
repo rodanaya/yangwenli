@@ -151,6 +151,7 @@ export interface ContractListResponse extends PaginatedResponse<ContractListItem
 
 export interface ContractFilterParams {
   sector_id?: number
+  category_id?: number
   year?: number
   vendor_id?: number
   institution_id?: number

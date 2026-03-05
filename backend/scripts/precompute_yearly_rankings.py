@@ -204,13 +204,17 @@ def process_institutions(conn: sqlite3.Connection, year: int) -> int:
 
 def main() -> None:
     log.info("Connecting to %s", DB_PATH)
-    conn = sqlite3.connect(str(DB_PATH))
+    conn = sqlite3.connect(str(DB_PATH), timeout=60)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA synchronous=NORMAL")
 
     log.info("Creating tables / indexes …")
-    conn.executescript(DDL)
+    # Use individual execute calls (WAL-compatible, no exclusive lock)
+    for stmt in DDL.strip().split(';'):
+        stmt = stmt.strip()
+        if stmt:
+            conn.execute(stmt)
     conn.commit()
 
     tqdm = _try_tqdm()
