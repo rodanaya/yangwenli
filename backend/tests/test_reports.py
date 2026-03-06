@@ -55,7 +55,8 @@ class TestThematicReport:
     """Tests for GET /api/v1/reports/thematic/{theme}."""
 
     def test_thematic_report_valid_themes(self, client, base_url):
-        valid_themes = ["single-bid", "direct-award", "year-end"]
+        # Valid ThemeType enum values: covid, election, year_end, threshold_splitting
+        valid_themes = ["year_end", "threshold_splitting"]
         for theme in valid_themes:
             response = client.get(f"{base_url}/reports/thematic/{theme}")
             assert response.status_code == 200, f"Theme '{theme}' failed"
@@ -63,7 +64,7 @@ class TestThematicReport:
             assert "report_type" in data
 
     def test_thematic_report_invalid_theme(self, client, base_url):
-        response = client.get(f"{base_url}/reports/thematic/nonexistent-theme")
+        response = client.get(f"{base_url}/reports/thematic/nonexistent_theme")
         assert response.status_code in [404, 422]
 
 
@@ -86,7 +87,7 @@ class TestListReportTypes:
         assert response.status_code == 200
         for item in response.json():
             assert "report_type" in item
-            assert "label" in item
+            assert "description" in item
 
 
 class TestErrorSanitization:

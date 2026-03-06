@@ -938,7 +938,7 @@ export function VendorProfile() {
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl font-semibold">{toTitleCase(vendor.name)}</h1>
                 {/* F2: Ground truth badge */}
-                {groundTruthStatus?.is_known_bad && groundTruthStatus.cases.map((c) => (
+                {groundTruthStatus?.is_known_bad && groundTruthStatus.cases?.map((c) => (
                   <Link
                     key={c.case_id}
                     to={`/cases/${c.scandal_slug}`}
@@ -1197,8 +1197,8 @@ export function VendorProfile() {
               icon={FileText}
               subtitle={`${vendor.first_contract_year || '-'} – ${vendor.last_contract_year || '-'}`}
               percentileBadge={(() => {
-                const pc = peerComparison as any
-                const item = Array.isArray(pc) ? pc.find((p: any) => p.metric === 'contract_count') : null
+                const pc = peerComparison as { metrics?: Array<{ metric: string; percentile: number }> } | undefined
+                const item = pc?.metrics?.find((p) => p.metric === 'contract_count')
                 return item ? <PercentileBadge percentile={item.percentile} metric="contracts" sector={vendor.primary_sector_name || undefined} /> : undefined
               })()}
             />
@@ -1213,8 +1213,8 @@ export function VendorProfile() {
               format="currency"
               subtitle={formatCompactUSD(vendor.total_value_mxn)}
               percentileBadge={(() => {
-                const pc = peerComparison as any
-                const item = Array.isArray(pc) ? pc.find((p: any) => p.metric === 'total_value') : null
+                const pc = peerComparison as { metrics?: Array<{ metric: string; percentile: number }> } | undefined
+                const item = pc?.metrics?.find((p) => p.metric === 'total_value')
                 return item ? <PercentileBadge percentile={item.percentile} metric="total value" sector={vendor.primary_sector_name || undefined} /> : undefined
               })()}
             />
@@ -1239,8 +1239,8 @@ export function VendorProfile() {
               format="percent_100"
               variant={vendor.high_risk_pct > 20 ? 'critical' : vendor.high_risk_pct > 10 ? 'warning' : 'default'}
               percentileBadge={(() => {
-                const pc = peerComparison as any
-                const item = Array.isArray(pc) ? pc.find((p: any) => p.metric === 'risk_score') : null
+                const pc = peerComparison as { metrics?: Array<{ metric: string; percentile: number }> } | undefined
+                const item = pc?.metrics?.find((p) => p.metric === 'risk_score')
                 return item ? <PercentileBadge percentile={item.percentile} metric="risk score" sector={vendor.primary_sector_name || undefined} /> : undefined
               })()}
             />
@@ -1336,7 +1336,7 @@ export function VendorProfile() {
       )}
 
       {/* F2: Ground truth known-bad banner — prominent alert above KPIs */}
-      {groundTruthStatus?.is_known_bad && groundTruthStatus.cases.length > 0 && (
+      {groundTruthStatus?.is_known_bad && (groundTruthStatus.cases?.length ?? 0) > 0 && (
         <div
           className="rounded-lg border-2 border-red-500/60 bg-red-950/40 p-4"
           style={{ animation: 'vpSlideIn 400ms cubic-bezier(0.16, 1, 0.3, 1) both' }}
@@ -1347,10 +1347,10 @@ export function VendorProfile() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-red-300 mb-1">
-                This vendor appears in {groundTruthStatus.cases.length} documented corruption case{groundTruthStatus.cases.length > 1 ? 's' : ''}
+                This vendor appears in {groundTruthStatus.cases?.length ?? 0} documented corruption case{(groundTruthStatus.cases?.length ?? 0) > 1 ? 's' : ''}
               </p>
               <div className="space-y-1.5">
-                {groundTruthStatus.cases.map((c) => (
+                {groundTruthStatus.cases?.map((c) => (
                   <div key={c.case_id} className="flex items-center gap-2 flex-wrap">
                     <Link
                       to={`/cases/${c.scandal_slug}`}
@@ -1575,7 +1575,7 @@ export function VendorProfile() {
 
                 // Ground truth
                 if (groundTruthStatus?.is_known_bad) {
-                  for (const c of groundTruthStatus.cases) {
+                  for (const c of groundTruthStatus.cases ?? []) {
                     items.push({
                       type: 'scandal',
                       label: `Known corruption case: ${c.case_name}`,

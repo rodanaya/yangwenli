@@ -4,7 +4,7 @@
  * Used by CaseLibrary.tsx and GroundTruth.tsx.
  */
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Send, Plus, Loader2, Check, AlertTriangle } from 'lucide-react'
 import {
@@ -95,10 +95,18 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
   const [submitState, setSubmitState] = useState<SubmitState>('idle')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [toastMsg, setToastMsg] = useState<string | null>(null)
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    }
+  }, [])
 
   const showToast = (msg: string) => {
     setToastMsg(msg)
-    setTimeout(() => setToastMsg(null), 4000)
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    toastTimerRef.current = setTimeout(() => setToastMsg(null), 4000)
   }
 
   const handleChange = useCallback(
@@ -153,7 +161,7 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
     try {
       await feedbackApi.submit({
         entity_type: 'contract',
-        entity_id: 0,
+        entity_id: Date.now() % 2147483647,
         feedback_type: 'needs_review',
         reason,
       })

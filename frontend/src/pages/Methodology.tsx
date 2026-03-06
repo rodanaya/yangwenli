@@ -162,18 +162,26 @@ function CollapsibleSection({
   return (
     <section id={id} className="scroll-mt-20">
       <Card>
-        <CardHeader className="pb-2 cursor-pointer select-none" onClick={() => setIsOpen(!isOpen)}>
-          <CardTitle className="flex items-center gap-2 text-sm">
-            <Icon className="h-4 w-4 text-accent" aria-hidden="true" />
-            <span className="flex-1">{title}</span>
-            {isOpen ? (
-              <ChevronDown className="h-4 w-4 text-text-muted" aria-hidden="true" />
-            ) : (
-              <ChevronRight className="h-4 w-4 text-text-muted" aria-hidden="true" />
-            )}
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">
+            <button
+              type="button"
+              className="w-full flex items-center gap-2 cursor-pointer select-none text-left"
+              onClick={() => setIsOpen(!isOpen)}
+              aria-expanded={isOpen}
+              aria-controls={`section-content-${id}`}
+            >
+              <Icon className="h-4 w-4 text-accent" aria-hidden="true" />
+              <span className="flex-1">{title}</span>
+              {isOpen ? (
+                <ChevronDown className="h-4 w-4 text-text-muted" aria-hidden="true" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-text-muted" aria-hidden="true" />
+              )}
+            </button>
           </CardTitle>
         </CardHeader>
-        {isOpen && <CardContent>{children}</CardContent>}
+        {isOpen && <CardContent id={`section-content-${id}`}>{children}</CardContent>}
       </Card>
     </section>
   )

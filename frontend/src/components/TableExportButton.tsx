@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Download, Loader2, Check, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -73,6 +73,17 @@ export function TableExportButton({
   const [state, setState] = useState<ExportState>('idle')
   const [xlsxMenuOpen, setXlsxMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!xlsxMenuOpen) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setXlsxMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [xlsxMenuOpen])
 
   const isEmpty = !data.length
   const isDisabled = disabled || isEmpty || state === 'loading'
@@ -189,7 +200,6 @@ export function TableExportButton({
         <div
           role="menu"
           className="absolute right-0 top-8 z-50 min-w-[160px] rounded-md border border-border bg-background-card shadow-lg py-1"
-          onBlur={() => setXlsxMenuOpen(false)}
         >
           <button
             type="button"

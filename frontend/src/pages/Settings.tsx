@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTheme } from '@/hooks/useTheme'
 import { formatNumber, formatCompactMXN } from '@/lib/utils'
-import { analysisApi, exportApi, contractApi, sectorApi } from '@/api/client'
+import { analysisApi, exportApi, contractApi, sectorApi, statsApi } from '@/api/client'
 import type { GradeDistribution, StructureQuality, FieldCompleteness, KeyIssue } from '@/api/client'
 import {
   Moon,
@@ -176,11 +176,7 @@ function GeneralTab() {
 
   const { data: stats, isLoading, error, refetch } = useQuery<DatabaseStats>({
     queryKey: ['stats', 'database'],
-    queryFn: async () => {
-      const response = await fetch('/api/v1/stats/database')
-      if (!response.ok) throw new Error('Failed to fetch stats')
-      return response.json()
-    },
+    queryFn: () => statsApi.getDatabase(),
     staleTime: 5 * 60 * 1000,
   })
 
