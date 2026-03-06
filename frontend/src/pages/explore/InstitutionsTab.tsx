@@ -333,8 +333,8 @@ export default function InstitutionsTab() {
         <div className="flex items-center gap-2">
           <p className="text-xs text-text-muted tabular-nums" aria-live="polite">
             {data
-              ? t('institutions.count', { count: data.pagination.total, replace: { count: formatNumber(data.pagination.total) } })
-              : t('institutions.count', { count: formatNumber(data?.pagination?.total ?? 0) })}
+              ? t('institutions.count', { n: formatNumber(data.pagination.total) })
+              : t('common:loading')}
             {isFetching && !isLoading && <Loader2 className="inline h-3 w-3 ml-1 animate-spin" />}
           </p>
           {activeFilterTags.length > 0 && (
@@ -387,9 +387,9 @@ export default function InstitutionsTab() {
             onChange={(e) => { updateFilter('sector_id', e.target.value ? Number(e.target.value) : undefined); setActivePreset(null) }}
             aria-label="Filter by sector"
           >
-            <option value="">All Sectors</option>
+            <option value="">{t('filters.allSectors')}</option>
             {SECTORS.map((s) => (
-              <option key={s.id} value={s.id}>{s.nameEN}</option>
+              <option key={s.id} value={s.id}>{ts(s.code)}</option>
             ))}
           </select>
 
