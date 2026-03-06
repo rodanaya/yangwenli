@@ -107,7 +107,7 @@ def _warmup_caches():
     for ep in endpoints:
         try:
             # executive/summary and publication-delays need extended timeout
-            timeout = 30 if ("executive" in ep or "publication" in ep) else (12 if "statistics" in ep or "overview" in ep else 3)
+            timeout = 30 if ("executive" in ep or "publication" in ep) else (20 if "data-quality" in ep else (12 if "statistics" in ep or "overview" in ep else 3))
             urllib.request.urlopen(f"{base}{ep}", timeout=timeout)
         except Exception as e:
             logger.debug(f"Cache warmup skipped for {ep}: {e}")

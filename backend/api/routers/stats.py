@@ -351,19 +351,29 @@ def get_data_quality(response: Response):
     with get_db() as conn:
         cursor = conn.cursor()
 
-        # Overall quality score
+        # Single mega-pass: overall stats + field completeness + key issue counts (1 full scan)
         cursor.execute("""
             SELECT
+                COUNT(*) as total,
                 AVG(data_quality_score) as avg_score,
-                COUNT(*) as total
+                SUM(CASE WHEN vendor_id IS NOT NULL THEN 1 ELSE 0 END) as vendor_id_filled,
+                SUM(CASE WHEN institution_id IS NOT NULL THEN 1 ELSE 0 END) as institution_id_filled,
+                SUM(CASE WHEN amount_mxn IS NOT NULL THEN 1 ELSE 0 END) as amount_mxn_filled,
+                SUM(CASE WHEN contract_date IS NOT NULL THEN 1 ELSE 0 END) as contract_date_filled,
+                SUM(CASE WHEN contract_year IS NOT NULL THEN 1 ELSE 0 END) as contract_year_filled,
+                SUM(CASE WHEN sector_id IS NOT NULL THEN 1 ELSE 0 END) as sector_id_filled,
+                SUM(CASE WHEN procedure_type IS NOT NULL THEN 1 ELSE 0 END) as procedure_type_filled,
+                SUM(CASE WHEN risk_score IS NOT NULL THEN 1 ELSE 0 END) as risk_score_filled,
+                SUM(CASE WHEN contract_date IS NULL THEN 1 ELSE 0 END) as no_date_count,
+                SUM(CASE WHEN amount_mxn IS NULL OR amount_mxn <= 0 THEN 1 ELSE 0 END) as invalid_amount_count,
+                SUM(CASE WHEN data_quality_grade IN ('D', 'F') THEN 1 ELSE 0 END) as low_grade_count
             FROM contracts
-            WHERE data_quality_score IS NOT NULL
         """)
-        row = cursor.fetchone()
-        overall_score = row["avg_score"] or 0
-        total_contracts = row["total"]
+        mega = cursor.fetchone()
+        total_contracts = mega["total"]
+        overall_score = mega["avg_score"] or 0
 
-        # Grade distribution
+        # Grade distribution (1 GROUP BY scan)
         cursor.execute("""
             SELECT
                 data_quality_grade as grade,
@@ -383,7 +393,7 @@ def get_data_quality(response: Response):
                 percentage=round(pct, 2)
             ))
 
-        # Quality by data structure period
+        # Quality by data structure period (1 GROUP BY scan)
         cursor.execute("""
             SELECT
                 CASE
@@ -423,7 +433,7 @@ def get_data_quality(response: Response):
                 quality_description=desc
             ))
 
-        # Field completeness - check key fields
+        # Field completeness — from mega-pass results
         key_fields = [
             ('vendor_id', 'Vendor'),
             ('institution_id', 'Institution'),
@@ -434,43 +444,20 @@ def get_data_quality(response: Response):
             ('procedure_type', 'Procedure Type'),
             ('risk_score', 'Risk Score'),
         ]
-        # Single pass over contracts instead of one query per field
-        cursor.execute("""
-            SELECT
-                COUNT(*) as total,
-                SUM(CASE WHEN vendor_id IS NOT NULL THEN 1 ELSE 0 END) as vendor_id_filled,
-                SUM(CASE WHEN institution_id IS NOT NULL THEN 1 ELSE 0 END) as institution_id_filled,
-                SUM(CASE WHEN amount_mxn IS NOT NULL THEN 1 ELSE 0 END) as amount_mxn_filled,
-                SUM(CASE WHEN contract_date IS NOT NULL THEN 1 ELSE 0 END) as contract_date_filled,
-                SUM(CASE WHEN contract_year IS NOT NULL THEN 1 ELSE 0 END) as contract_year_filled,
-                SUM(CASE WHEN sector_id IS NOT NULL THEN 1 ELSE 0 END) as sector_id_filled,
-                SUM(CASE WHEN procedure_type IS NOT NULL THEN 1 ELSE 0 END) as procedure_type_filled,
-                SUM(CASE WHEN risk_score IS NOT NULL THEN 1 ELSE 0 END) as risk_score_filled
-            FROM contracts
-        """)
-        completeness_row = cursor.fetchone()
-        total_contracts_cq = completeness_row["total"]
         field_completeness = []
         for db_field, display_name in key_fields:
-            filled = completeness_row[f"{db_field}_filled"] or 0
-            fill_rate = (filled / total_contracts_cq * 100) if total_contracts_cq > 0 else 0
+            filled = mega[f"{db_field}_filled"] or 0
+            fill_rate = (filled / total_contracts * 100) if total_contracts > 0 else 0
             field_completeness.append(FieldCompleteness(
                 field_name=display_name,
                 fill_rate=round(fill_rate, 1),
-                null_count=total_contracts_cq - filled,
-                total_count=total_contracts_cq
+                null_count=total_contracts - filled,
+                total_count=total_contracts
             ))
 
-        # Key issues
+        # Key issues — from mega-pass counts
         key_issues = []
-
-        # Check for contracts without dates
-        cursor.execute("""
-            SELECT COUNT(*) as count
-            FROM contracts
-            WHERE contract_date IS NULL
-        """)
-        no_date_count = cursor.fetchone()["count"]
+        no_date_count = mega["no_date_count"] or 0
         if no_date_count > 0:
             severity = "critical" if no_date_count > 1000000 else "high" if no_date_count > 100000 else "medium"
             key_issues.append(KeyIssue(
@@ -480,14 +467,7 @@ def get_data_quality(response: Response):
                 description=f"{no_date_count:,} contracts are missing contract date",
                 affected_count=no_date_count
             ))
-
-        # Check for contracts with potentially invalid amounts
-        cursor.execute("""
-            SELECT COUNT(*) as count
-            FROM contracts
-            WHERE amount_mxn <= 0 OR amount_mxn IS NULL
-        """)
-        invalid_amount_count = cursor.fetchone()["count"]
+        invalid_amount_count = mega["invalid_amount_count"] or 0
         if invalid_amount_count > 0:
             key_issues.append(KeyIssue(
                 field="amount_mxn",
@@ -496,14 +476,7 @@ def get_data_quality(response: Response):
                 description=f"{invalid_amount_count:,} contracts have zero, negative, or missing amounts",
                 affected_count=invalid_amount_count
             ))
-
-        # Check for low quality grade contracts
-        cursor.execute("""
-            SELECT COUNT(*) as count
-            FROM contracts
-            WHERE data_quality_grade IN ('D', 'F')
-        """)
-        low_grade_count = cursor.fetchone()["count"]
+        low_grade_count = mega["low_grade_count"] or 0
         if low_grade_count > 0:
             key_issues.append(KeyIssue(
                 field="data_quality_grade",
