@@ -97,6 +97,7 @@ export interface ContractListItem extends ContractBase {
   vendor_id?: number
   vendor_name?: string
   vendor_rfc?: string
+  vendor_is_individual?: boolean | null
   institution_id?: number
   institution_name?: string | null
   procedure_type?: string | null

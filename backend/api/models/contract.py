@@ -32,6 +32,8 @@ class ContractListItem(ContractBase):
     """Contract item for list responses."""
     vendor_id: Optional[int] = None
     vendor_name: Optional[str] = None
+    vendor_rfc: Optional[str] = None
+    vendor_is_individual: Optional[bool] = None
     institution_id: Optional[int] = None
     institution_name: Optional[str] = None
     procedure_type: Optional[str] = None
