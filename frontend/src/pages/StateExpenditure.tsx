@@ -8,7 +8,7 @@
  *     top vendors by year, sector breakdown, local vendors)
  */
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -35,6 +35,8 @@ import {
   ComposedChart,
   Line,
 } from '@/components/charts'
+import ReactECharts from 'echarts-for-react'
+import * as echarts from 'echarts'
 import {
   MapPin,
   ArrowLeft,
@@ -79,59 +81,16 @@ function RiskBadge({ score }: { score: number }) {
   )
 }
 
-// ── Mexico schematic tile map ─────────────────────────────────────────────────
-type StateTile = { code: string; col: number; row: number }
-
-const STATE_TILES: StateTile[] = [
-  // Row 1 — northern border
-  { code: 'BC',    col: 1, row: 1 },
-  { code: 'SON',   col: 4, row: 1 },
-  { code: 'CHIH',  col: 5, row: 1 },
-  { code: 'COAH',  col: 6, row: 1 },
-  { code: 'NL',    col: 7, row: 1 },
-  { code: 'TAMPS', col: 8, row: 1 },
-  // Row 2 — Baja + upper Pacific
-  { code: 'BCS',   col: 1, row: 2 },
-  { code: 'SIN',   col: 3, row: 2 },
-  { code: 'DGO',   col: 4, row: 2 },
-  { code: 'ZAC',   col: 5, row: 2 },
-  { code: 'SLP',   col: 6, row: 2 },
-  // Row 3 — mid-Pacific to Gulf
-  { code: 'NAY',   col: 2, row: 3 },
-  { code: 'JAL',   col: 3, row: 3 },
-  { code: 'AGS',   col: 4, row: 3 },
-  { code: 'GTO',   col: 5, row: 3 },
-  { code: 'QRO',   col: 6, row: 3 },
-  { code: 'HGO',   col: 7, row: 3 },
-  { code: 'VER',   col: 8, row: 3 },
-  // Row 4 — central
-  { code: 'COL',   col: 2, row: 4 },
-  { code: 'MICH',  col: 3, row: 4 },
-  { code: 'MEX',   col: 4, row: 4 },
-  { code: 'CDMX',  col: 5, row: 4 },
-  { code: 'TLAX',  col: 6, row: 4 },
-  { code: 'PUE',   col: 7, row: 4 },
-  // Row 5 — south
-  { code: 'GRO',   col: 3, row: 5 },
-  { code: 'MOR',   col: 4, row: 5 },
-  { code: 'OAX',   col: 5, row: 5 },
-  // Row 6 — southeast peninsula
-  { code: 'CHIS',  col: 4, row: 6 },
-  { code: 'TAB',   col: 5, row: 6 },
-  { code: 'CAMP',  col: 6, row: 6 },
-  { code: 'YUC',   col: 7, row: 6 },
-  { code: 'QROO',  col: 8, row: 6 },
-]
-
-function riskToColor(score: number | null | undefined): string {
-  if (score === null || score === undefined) return 'hsl(var(--muted))'
+// ── Mexico choropleth map (ECharts + real GeoJSON) ───────────────────────────
+function riskToAreaColor(score: number | null | undefined): string {
+  if (score === null || score === undefined) return '#334155'
   if (score >= 0.5) return RISK_COLORS.critical
   if (score >= 0.3) return RISK_COLORS.high
   if (score >= 0.1) return RISK_COLORS.medium
   return RISK_COLORS.low
 }
 
-function MexicoTileMap({
+function MexicoChoropleth({
   states,
   onStateClick,
 }: {
@@ -139,7 +98,17 @@ function MexicoTileMap({
   onStateClick: (code: string) => void
 }) {
   const { t } = useTranslation('subnational')
-  const [hovered, setHovered] = useState<string | null>(null)
+  const [geoReady, setGeoReady] = useState(false)
+
+  useEffect(() => {
+    fetch('/mexico-states.geojson')
+      .then((r) => r.json())
+      .then((geo: Parameters<typeof echarts.registerMap>[1]) => {
+        echarts.registerMap('mexico-states', geo)
+        setGeoReady(true)
+      })
+      .catch(() => { /* static file missing — show loading placeholder */ })
+  }, [])
 
   const dataMap = useMemo(() => {
     const m = new Map<string, SubnationalStateSummary>()
@@ -147,7 +116,66 @@ function MexicoTileMap({
     return m
   }, [states])
 
-  const hoveredData = hovered ? dataMap.get(hovered) : undefined
+  const option = useMemo(() => {
+    if (!geoReady) return {}
+
+    const seriesData = states.map((s) => ({
+      name: s.state_code,
+      value: s.avg_risk_score ?? 0,
+      itemStyle: { areaColor: riskToAreaColor(s.avg_risk_score) },
+    }))
+
+    return {
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'item' as const,
+        backgroundColor: 'rgba(15,23,42,0.92)',
+        borderColor: '#334155',
+        borderWidth: 1,
+        textStyle: { color: '#e2e8f0', fontSize: 12, fontFamily: 'monospace' },
+        formatter: (params: { name: string; value: number }) => {
+          const d = dataMap.get(params.name)
+          if (!d) return params.name
+          const riskColor = riskToAreaColor(d.avg_risk_score)
+          return [
+            `<strong style="font-size:13px">${d.state_name}</strong>`,
+            `<span style="color:${riskColor};font-weight:700">Risk: ${(d.avg_risk_score ?? 0).toFixed(3)}</span>`,
+            `Contracts: ${(d.contract_count ?? 0).toLocaleString()}`,
+            `Value: ${formatCompactMXN(d.total_value_mxn ?? 0)}`,
+            `<span style="color:#94a3b8;font-size:10px">Click to drill down →</span>`,
+          ].join('<br/>')
+        },
+      },
+      series: [
+        {
+          type: 'map' as const,
+          map: 'mexico-states',
+          roam: false,
+          data: seriesData,
+          label: { show: false },
+          emphasis: {
+            label: { show: false },
+            itemStyle: { areaColor: '#93c5fd', borderColor: '#3b82f6', borderWidth: 1.5 },
+          },
+          select: { disabled: true },
+          itemStyle: {
+            borderColor: '#1e293b',
+            borderWidth: 0.8,
+          },
+        },
+      ],
+    }
+  }, [geoReady, states, dataMap])
+
+  const onEvents = useMemo(
+    () => ({
+      click: (params: unknown) => {
+        const p = params as { name: string }
+        if (p?.name) onStateClick(p.name)
+      },
+    }),
+    [onStateClick],
+  )
 
   return (
     <Card>
@@ -160,97 +188,17 @@ function MexicoTileMap({
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {/* Schematic tile map — 9 cols × 6 rows */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(9, 1fr)',
-            gridTemplateRows: 'repeat(6, 1fr)',
-            gap: '3px',
-            aspectRatio: '9 / 6',
-          }}
-        >
-          {STATE_TILES.map((tile) => {
-            const data = dataMap.get(tile.code)
-            const score = data?.avg_risk_score ?? null
-            const bg = riskToColor(score)
-            const isHov = hovered === tile.code
-
-            return (
-              <div
-                key={tile.code}
-                role={data ? 'button' : undefined}
-                tabIndex={data ? 0 : -1}
-                aria-label={
-                  data
-                    ? `${data.state_name}, risk score ${score?.toFixed(3)}`
-                    : tile.code
-                }
-                style={{
-                  gridColumn: tile.col,
-                  gridRow: tile.row,
-                  backgroundColor: bg,
-                  borderRadius: '3px',
-                  cursor: data ? 'pointer' : 'default',
-                  opacity: isHov ? 0.8 : 1,
-                  outline: isHov ? '2px solid hsl(var(--foreground))' : 'none',
-                  outlineOffset: '-1px',
-                  transition: 'opacity 0.1s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  overflow: 'hidden',
-                }}
-                onClick={() => data && onStateClick(tile.code)}
-                onMouseEnter={() => setHovered(tile.code)}
-                onMouseLeave={() => setHovered(null)}
-                onKeyDown={(e) => {
-                  if ((e.key === 'Enter' || e.key === ' ') && data) {
-                    onStateClick(tile.code)
-                  }
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 'clamp(5px, 1.1vw, 9px)',
-                    fontWeight: 700,
-                    color: 'white',
-                    textShadow: '0 1px 2px rgba(0,0,0,0.7)',
-                    letterSpacing: '-0.03em',
-                    lineHeight: 1,
-                    pointerEvents: 'none',
-                    userSelect: 'none',
-                  }}
-                >
-                  {tile.code}
-                </span>
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Hover info strip */}
-        <div className="min-h-[28px] flex items-center">
-          {hoveredData ? (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-              <span className="font-semibold">{hoveredData.state_name}</span>
-              <span className="text-muted-foreground flex items-center gap-1">
-                Risk: <RiskBadge score={hoveredData.avg_risk_score ?? 0} />
-              </span>
-              <span className="text-muted-foreground">
-                {(hoveredData.contract_count ?? 0).toLocaleString()} contracts
-              </span>
-              <span className="text-muted-foreground">
-                {formatCompactMXN(hoveredData.total_value_mxn ?? 0)}
-              </span>
-              <span className="text-[10px] text-muted-foreground">↩ click to drill down</span>
-            </div>
-          ) : (
-            <span className="text-xs text-muted-foreground italic">
-              {t('mapHint', 'Hover a state to preview · click to drill down')}
-            </span>
-          )}
-        </div>
+        {geoReady ? (
+          <ReactECharts
+            option={option}
+            style={{ height: '380px', width: '100%' }}
+            onEvents={onEvents}
+          />
+        ) : (
+          <div className="flex h-[380px] items-center justify-center text-xs text-muted-foreground">
+            Loading map…
+          </div>
+        )}
 
         {/* Risk legend */}
         <div className="flex items-center gap-3 flex-wrap">
@@ -267,7 +215,7 @@ function MexicoTileMap({
             </div>
           ))}
           <div className="flex items-center gap-1">
-            <div className="h-3 w-3 rounded-sm border border-border bg-muted" />
+            <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: '#334155' }} />
             <span className="text-[10px] text-muted-foreground">{t('noData', 'No data')}</span>
           </div>
         </div>
@@ -360,8 +308,8 @@ function StatesList() {
 
       {data.coverage_note && <CoverageBanner />}
 
-      {/* Mexico schematic tile map — risk-colored per state */}
-      <MexicoTileMap
+      {/* Mexico choropleth map — real geographic shapes, risk-colored */}
+      <MexicoChoropleth
         states={rawStates}
         onStateClick={(code) => navigate(`/state-expenditure/${code}`)}
       />
