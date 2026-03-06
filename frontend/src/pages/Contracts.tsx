@@ -1168,6 +1168,7 @@ function ContractRow({
   onOpenVendorDrawer: (id: number, type: 'vendor' | 'institution') => void
 }) {
   const { t } = useTranslation('contracts')
+  const { t: ts } = useTranslation('sectors')
   const anomalyInfo = getAnomalyInfo(contract.mahalanobis_distance)
   const riskLevel = contract.risk_score != null ? getRiskLevel(contract.risk_score) : (contract.risk_level ?? null)
   const sector = contract.sector_id ? SECTORS.find((s) => s.id === contract.sector_id) : null
@@ -1301,7 +1302,7 @@ function ContractRow({
       <td className="px-3 py-2">
         {sector ? (
           <span className="text-xs font-medium whitespace-nowrap" style={{ color: sector.color }}>
-            {sector.nameEN}
+            {ts(sector.code)}
           </span>
         ) : (
           <span className="text-xs text-text-muted">\u2014</span>

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { vendorApi, institutionApi, dossierApi } from '@/api/client'
@@ -210,6 +211,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
 // =============================================================================
 
 function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
+  const { t: ts } = useTranslation('sectors')
   const sector = vendor.primary_sector_id ? SECTORS.find(s => s.id === vendor.primary_sector_id) : null
 
   return (
@@ -222,7 +224,7 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
             <span
               className="w-1.5 h-1.5 rounded-full shrink-0"
               style={{ backgroundColor: sector.color }}
-              title={sector.nameEN}
+              title={ts(sector.code)}
             />
           )}
           <Link
@@ -234,7 +236,7 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
         </div>
         {sector && (
           <div className="ml-3 text-[10px] mt-0.5" style={{ color: sector.color }}>
-            {sector.nameEN}
+            {ts(sector.code)}
           </div>
         )}
       </td>
@@ -283,6 +285,7 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
 }
 
 function InstitutionRow({ institution, riskColor }: { institution: any; riskColor: string }) {
+  const { t: ts } = useTranslation('sectors')
   const sector = institution.sector_id ? SECTORS.find(s => s.id === institution.sector_id) : null
   // InstitutionResponse uses `id` and `name` (not institution_id / institution_name)
   const instId = institution.id ?? institution.institution_id
@@ -298,7 +301,7 @@ function InstitutionRow({ institution, riskColor }: { institution: any; riskColo
             <span
               className="w-1.5 h-1.5 rounded-full shrink-0"
               style={{ backgroundColor: sector.color }}
-              title={sector.nameEN}
+              title={ts(sector.code)}
             />
           )}
           <Link
@@ -310,7 +313,7 @@ function InstitutionRow({ institution, riskColor }: { institution: any; riskColo
         </div>
         {sector && (
           <div className="ml-3 text-[10px] mt-0.5" style={{ color: sector.color }}>
-            {sector.nameEN}
+            {ts(sector.code)}
           </div>
         )}
       </td>
