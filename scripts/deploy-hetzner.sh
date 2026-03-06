@@ -70,15 +70,17 @@ ssh "$REMOTE" "
   fi
 "
 
-echo "[3/6] Opening firewall port 80..."
+echo "[3/6] Opening firewall ports 80 and 443..."
 ssh "$REMOTE" "
   # UFW (Ubuntu default)
   if command -v ufw &>/dev/null; then
     sudo ufw allow 80/tcp 2>/dev/null || true
+    sudo ufw allow 443/tcp 2>/dev/null || true
   fi
-  # Oracle Cloud iptables (blocks port 80 even after security list change)
+  # Oracle Cloud iptables (blocks ports even after security list change)
   if sudo iptables -L INPUT -n 2>/dev/null | grep -q 'REJECT\|DROP'; then
     sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT 2>/dev/null || true
+    sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 443 -j ACCEPT 2>/dev/null || true
     sudo sh -c 'iptables-save > /etc/iptables/rules.v4' 2>/dev/null || true
   fi
 "
@@ -99,7 +101,7 @@ tar czf /tmp/rubli-deploy.tar.gz \
   --exclude='.git' \
   --exclude='*.pyc' \
   --exclude='__pycache__' \
-  .
+  . || true  # ignore exit code 1 (file-changed warnings)
 scp -C /tmp/rubli-deploy.tar.gz "${REMOTE}:/tmp/rubli-deploy.tar.gz"
 ssh "$REMOTE" "tar xzf /tmp/rubli-deploy.tar.gz -C ${REMOTE_DIR}/ && rm /tmp/rubli-deploy.tar.gz"
 rm /tmp/rubli-deploy.tar.gz
@@ -117,8 +119,9 @@ ssh "$REMOTE" "
 
 echo ""
 echo "=== Deployment complete ==="
-echo "   App: http://${SERVER_IP}"
-echo "   API: http://${SERVER_IP}/api/v1/health"
+echo "   App: https://rubli.site  (once DNS propagates)"
+echo "   API: https://rubli.site/api/v1/health"
+echo "   IP:  http://${SERVER_IP}  (redirects to HTTPS after cert issued)"
 echo ""
 echo "To check logs:"
 echo "   ssh ${REMOTE} 'docker compose -f ${REMOTE_DIR}/docker-compose.prod.yml logs -f'"

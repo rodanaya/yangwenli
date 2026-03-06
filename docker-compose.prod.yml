@@ -5,8 +5,9 @@
 #   docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 #
 # Prerequisites:
-#   1. Copy .env.prod.example → .env.prod and set CORS_ORIGINS to your server IP/domain
+#   1. Copy .env.prod.example → .env.prod and set CORS_ORIGINS + ACME_EMAIL
 #   2. Ensure backend/RUBLI_DEPLOY.db exists (run: python backend/scripts/create_deploy_db.py)
+#   3. Point rubli.site DNS A record → server IP before starting (Caddy needs domain reachable)
 
 services:
   backend:
@@ -19,7 +20,7 @@ services:
     environment:
       - PYTHONPATH=/app
       - DATABASE_PATH=/app/RUBLI_DEPLOY.db
-      # Set CORS_ORIGINS in .env.prod (e.g. http://1.2.3.4 or https://rubli.example.com)
+      # Set CORS_ORIGINS in .env.prod (e.g. https://rubli.site)
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost}
     healthcheck:
       test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8001/health', timeout=5)"]
@@ -36,14 +37,35 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: rubli-frontend
-    ports:
-      - "80:80"
+    # No host port binding — Caddy proxies to this container internally
     depends_on:
       backend:
         condition: service_healthy
     restart: unless-stopped
     networks:
       - rubli-network
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: rubli-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data        # Persists TLS certificates across restarts
+      - caddy_config:/config
+    environment:
+      - ACME_EMAIL=${ACME_EMAIL:-admin@rubli.site}
+    depends_on:
+      - frontend
+    restart: unless-stopped
+    networks:
+      - rubli-network
+
+volumes:
+  caddy_data:
+  caddy_config:
 
 networks:
   rubli-network:
