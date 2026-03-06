@@ -28,7 +28,7 @@
       "label": "Contratos Fraccionados",
       "description": "Fraccionamiento de umbrales — múltiples contratos el mismo día para evadir límites de supervisión"
     },
-    "mostAñomalous": {
+    "mostAnomalous": {
       "label": "Más Anómalos",
       "description": "Contratos más alejados de las normas estadísticas — mayor distancia de Mahalañobis en todas las dimensiones de riesgo"
     },
@@ -57,7 +57,7 @@
     "procedure": "Procedimiento",
     "isDirectAward": "Adj. Directa",
     "isSingleBid": "Licitación Única",
-    "añomalyScore": "Añomalía D²"
+    "anomalyScore": "Añomalía D²"
   },
   "detail": {
     "title": "Detalle del Contrato",
@@ -71,7 +71,7 @@
     "riskBreakdown": "Desglose de Riesgo",
     "riskFactors": "Factores de Riesgo",
     "confidenceInterval": "Intervalo de Confianza",
-    "mahalañobisDistance": "Distancia de Mahalañobis",
+    "mahalanobisDistance": "Distancia de Mahalañobis",
     "noFactors": "Sin factores de riesgo identificados",
     "overview": "Resumen",
     "riskAssessment": "Evaluación de Riesgo",
@@ -107,7 +107,7 @@
     "singleBidRate": "Tasa de Licitación Única"
   },
   "table": {
-    "añomalyTooltip": "Distancia de Mahalañobis — qué tan estadísticamente inusual es este contrato en todas las dimensiones de riesgo. Mayor = más inusual.",
+    "anomalyTooltip": "Distancia de Mahalañobis — qué tan estadísticamente inusual es este contrato en todas las dimensiones de riesgo. Mayor = más inusual.",
     "selectForCompare": "Selecciónar para comparar",
     "clearSelection": "Limpiar selección",
     "viewFullDetails": "Ver detalles completos",

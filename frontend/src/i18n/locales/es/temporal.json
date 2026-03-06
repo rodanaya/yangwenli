@@ -6,7 +6,7 @@
   "yearLabel": "Año:",
   "investigate": "Investigar →",
   "investigateYear": "Investigar {{year}} →",
-  "añomalous": "añomalo",
+  "anomalous": "anómalo",
   "stats": {
     "totalContracts": "TOTAL DE CONTRATOS",
     "totalContractsDetail": "En {{year}}",
@@ -79,6 +79,5 @@
     "noMultiYearData": "Sin datos multianuales disponibles",
     "noYoyData": "Sin datos año a año disponibles"
   },
-  "loading": "Cargando...",
-  "anomalous": "anómalo"
+  "loading": "Cargando..."
 }

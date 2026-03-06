@@ -151,11 +151,11 @@ export type {
 /** Generic query parameter map — used internally by buildQueryParams */
 type QueryParams = Record<string, unknown>
 
-// API Base URL - proxied through Vite in development
-const API_BASE_URL = '/api/v1'
+// API Base URL - proxied through Vite in development; override with VITE_API_BASE_URL in production
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
 
 // Create axios instance with defaults
-const api: AxiosInstance = axios.create({
+export const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30000,
   headers: {

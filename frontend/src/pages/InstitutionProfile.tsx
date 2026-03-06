@@ -15,7 +15,7 @@ import {
   toTitleCase,
   cn,
 } from '@/lib/utils'
-import { institutionApi, caseLibraryApi } from '@/api/client'
+import { institutionApi, caseLibraryApi, api } from '@/api/client'
 import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { NarrativeCard } from '@/components/NarrativeCard'
 import { ContractDetailModal } from '@/components/ContractDetailModal'
@@ -178,10 +178,17 @@ export function InstitutionProfile() {
   const { data: waterfallData, isLoading: waterfallLoading, error: waterfallDataError } = useQuery({
     queryKey: ['institution-risk-waterfall', institutionId],
     queryFn: async () => {
-      const res = await fetch(`/api/v1/institutions/${institutionId}/risk-waterfall`)
-      if (!res.ok) return null
-      return res.json()
+      const { data } = await api.get(`/institutions/${institutionId}/risk-waterfall`)
+      return data
     },
+    enabled: !!institutionId,
+    staleTime: 30 * 60 * 1000,
+  })
+
+  // Top procurement categories (partida codes)
+  const { data: topCategories, isLoading: categoriesLoading } = useQuery({
+    queryKey: ['institution', institutionId, 'top-categories'],
+    queryFn: () => institutionApi.getTopCategories(institutionId, { limit: 8 }),
     enabled: !!institutionId,
     staleTime: 30 * 60 * 1000,
   })
@@ -934,6 +941,44 @@ export function InstitutionProfile() {
               )}
             </CardContent>
           </Card>
+
+          {/* Top Procurement Categories */}
+          {(categoriesLoading || (topCategories?.data?.length ?? 0) > 0) && (
+          <Card className="border-border/40">
+            <CardHeader className="pb-2 pt-4">
+              <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                <FileText className="h-3.5 w-3.5 text-accent" />
+                Top Procurement Categories
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pb-4">
+              {categoriesLoading ? (
+                <div className="space-y-2">
+                  {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-7" />)}
+                </div>
+              ) : (topCategories?.data ?? []).length === 0 ? (
+                <p className="text-sm text-text-muted">No category data available</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {(topCategories?.data ?? []).map((cat: { category_id: number; name_en: string; name_es: string; code: string; contract_count: number; total_value_mxn: number; avg_risk_score: number; direct_award_pct: number }) => {
+                    const level = getRiskLevelFromScore(cat.avg_risk_score)
+                    const riskCol = RISK_COLORS[level] ?? '#64748b'
+                    return (
+                      <div key={cat.category_id} className="flex items-center gap-2 text-xs py-1 border-b border-border/10 last:border-0">
+                        <span className="font-mono text-text-muted w-10 shrink-0">{cat.code}</span>
+                        <span className="flex-1 text-text-primary truncate" title={cat.name_en}>{cat.name_en}</span>
+                        <span className="text-text-secondary shrink-0">{formatCompactMXN(cat.total_value_mxn)}</span>
+                        <span className="w-12 text-right shrink-0" style={{ color: riskCol }}>
+                          {(cat.avg_risk_score * 100).toFixed(0)}%
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          )}
 
           {/* Vendor Loyalty Heatmap */}
           {(loyaltyLoading || (vendorLoyalty?.vendors?.length ?? 0) > 0) && (

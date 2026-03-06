@@ -60,9 +60,9 @@
     "zScore": "Normalización Z-Score",
     "zScoreDesc": "Cada característica se estandariza respecto a su línea base de sector y año. Una adjudicación directa en Defensa (80% son directas) es menos sospechosa que en Educación (50% son directas). Los z-scores capturan este contexto.",
     "zScoreFormula": "z = (x - μ(sector, año)) / máx(σ(sector, año), 0.001)",
-    "mahalañobis": "Distancia de Mahalañobis",
-    "mahalañobisDesc": "Mide qué tan inusual es el vector de características de un contrato en el espacio multidimensional. Reemplaza los 5 pares de interacción codificados del v3.3 con una matriz de covarianza completa que captura todas las relaciones por pares.",
-    "mahalañobisFormula": "D²(z) = zᵀ Σ⁻¹ z",
+    "mahalanobis": "Distancia de Mahalañobis",
+    "mahalanobisDesc": "Mide qué tan inusual es el vector de características de un contrato en el espacio multidimensional. Reemplaza los 5 pares de interacción codificados del v3.3 con una matriz de covarianza completa que captura todas las relaciones por pares.",
+    "mahalanobisFormula": "D²(z) = zᵀ Σ⁻¹ z",
     "perSector": "Regresión Logística por Sector",
     "perSectorDesc": "v5.1 entrena 12 modelos dedicados (uno por sector) más un respaldo global. Los patrones de corrupción difieren por sector — Energía es impulsado por desajuste industrial, mientras que Agricultura es impulsado por concentración de proveedores (+1.82).",
     "perSectorFormula": "P(corrupto|z) = σ(β₀ + βᵀz) / c, donde c = 0.887 (corrección PU)"

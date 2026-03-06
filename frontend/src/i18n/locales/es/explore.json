@@ -18,7 +18,7 @@
       "singleBidPct": "% Licitación Única",
       "sector": "Sector Principal",
       "years": "Años Activo",
-      "añomalyPct": "% Añomalías"
+      "anomalyPct": "% Añomalías"
     },
     "presets": {
       "topValue": "Mayor Valor",
@@ -78,9 +78,9 @@
   "search": {
     "nameOrRfc": "Buscar nombre o RFC...",
     "nameOrAcronym": "Buscar nombre o sigla...",
-    "searching": "Buscando\u2026",
-    "noResultsFor": "Sin resultados para \u00ab{{query}}\u00bb",
-    "placeholder": "Buscar proveedores, RFC, instituciones\u2026"
+    "searching": "Buscando…",
+    "noResultsFor": "Sin resultados para «{{query}}»",
+    "placeholder": "Buscar proveedores, RFC, instituciones…"
   },
   "stats": {
     "pageValue": "Gasto en página",

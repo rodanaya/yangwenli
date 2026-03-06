@@ -176,7 +176,7 @@ function GeneralTab() {
 
   const { data: stats, isLoading, error, refetch } = useQuery<DatabaseStats>({
     queryKey: ['stats', 'database'],
-    queryFn: () => statsApi.getDatabase(),
+    queryFn: () => statsApi.getDatabase() as Promise<DatabaseStats>,
     staleTime: 5 * 60 * 1000,
   })
 

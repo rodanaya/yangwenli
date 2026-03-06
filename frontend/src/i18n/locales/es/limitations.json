@@ -122,7 +122,7 @@
       "body3": "Esto significa que las puntuaciones de riesgo de RUBLI para grandes proyectos de infraestructura reflejan solo la fase de contratación. Un contrato que obtuvo puntuación limpia en la adjudicación puede representar un resultado significativo de corrupción una vez que se aplican las modificaciones. El Tren Maya, la construcción de refinerías de Pemex y los grandes proyectos hospitalarios en México han mostrado sobrecostos del 100%+ en informes de auditoría de la ASF — mientras que sus contratos originales de contratación aparecen normales.",
       "workaround": "Cruce los hallazgos de RUBLI con los informes de Cuenta Pública de la ASF (asf.gob.mx). La ASF audita la fase de ejecución y documenta rutinariamente los sobrecostos. La integración de hallazgos de la ASF en las puntuaciones de RUBLI es una mejora planificada para la Fase 6."
     },
-    "méxicoConcentration": {
+    "mexicoConcentration": {
       "title": "La Concentración de Proveedores Es Específica de México — Una Advertencia de Calibración",
       "summary": "El predictor más fuerte de RUBLI (concentración de proveedores) difiere del predictor globalmente dominante (licitante único). Esto refleja la preferencia estructural de México por adjudicaciones directas en lugar de procedimientos competitivos.",
       "body1": "En la literatura global sobre corrupción en contrataciones, la licitación con un solo participante — un procedimiento competitivo con un solo proveedor — es el indicador de alerta más universalmente validado (Fazekas y Tóth 2016; Charron et al. 2017). En conjuntos de datos europeos, este patrón tiene el poder predictivo más fuerte.",
@@ -134,16 +134,60 @@
     }
   },
   "summaryRows": {
-    "executionPhase": { "limitation": "Fraude en fase de ejecución invisible", "impact": "Construcción/infraestructura subvalorados", "fix": "Requiere integración de datos de auditoría ASF" },
-    "trainingBias": { "limitation": "Sesgo de entrenamiento (3 casos dominantes)", "impact": "Corrupción de pequeños proveedores y multi-sector subdetectada", "fix": "Agregar más casos de verdad fundamental etiquetados" },
-    "vendorDedup": { "limitation": "Deduplicación de proveedores sin resolver", "impact": "Concentración real subestimada pre-2018", "fix": "Bloqueo por RFC + dirección (corrección parcial)" },
-    "cobidding": { "limitation": "Señal de co-licitación = cero", "impact": "Rotación de ofertas y cobertura no en puntuación de riesgo", "fix": "Necesita verdad fundamental específica de colusión" },
-    "dataPipeline": { "limitation": "CompraNet abolido, flujo de datos interrumpido", "impact": "Datos futuros no disponibles; 1.9M contratos históricos ya eliminados", "fix": "Depende de decisiones de plataforma gubernamental" },
-    "dataQuality": { "limitation": "Calidad de datos pre-2010", "impact": "25% de registros menos confiables", "fix": "Limitación estructural de COMPRANET" },
-    "causal": { "limitation": "Correlación ≠ causalidad", "impact": "Puntuaciones requieren seguimiento investigativo", "fix": "Por diseño — el modelo informa, no concluye" },
-    "structuralConcentration": { "limitation": "Concentración estructural", "impact": "Algunos sectores sobre-señalizados", "fix": "Priors específicos por sector o listas de exclusión" },
-    "temporal": { "limitation": "Estacionariedad temporal", "impact": "Nuevos patrones de fraude pueden no ser detectados", "fix": "Reentrenamiento periódico con nuevos casos" },
-    "contractModifications": { "limitation": "Modificaciones de contratos invisibles", "impact": "Costos de ejecución en infraestructura/energía no rastreados", "fix": "Requiere integración de datos de auditoría ASF (Fase 6)" },
-    "méxicoConcentration": { "limitation": "Modelo de concentración específico de México", "impact": "Colusión por rotación de ofertas en procedimientos competitivos subdetectada", "fix": "Agregar casos de verdad fundamental de anillos de colusión" }
+    "executionPhase": {
+      "limitation": "Fraude en fase de ejecución invisible",
+      "impact": "Construcción/infraestructura subvalorados",
+      "fix": "Requiere integración de datos de auditoría ASF"
+    },
+    "trainingBias": {
+      "limitation": "Sesgo de entrenamiento (3 casos dominantes)",
+      "impact": "Corrupción de pequeños proveedores y multi-sector subdetectada",
+      "fix": "Agregar más casos de verdad fundamental etiquetados"
+    },
+    "vendorDedup": {
+      "limitation": "Deduplicación de proveedores sin resolver",
+      "impact": "Concentración real subestimada pre-2018",
+      "fix": "Bloqueo por RFC + dirección (corrección parcial)"
+    },
+    "cobidding": {
+      "limitation": "Señal de co-licitación = cero",
+      "impact": "Rotación de ofertas y cobertura no en puntuación de riesgo",
+      "fix": "Necesita verdad fundamental específica de colusión"
+    },
+    "dataPipeline": {
+      "limitation": "CompraNet abolido, flujo de datos interrumpido",
+      "impact": "Datos futuros no disponibles; 1.9M contratos históricos ya eliminados",
+      "fix": "Depende de decisiones de plataforma gubernamental"
+    },
+    "dataQuality": {
+      "limitation": "Calidad de datos pre-2010",
+      "impact": "25% de registros menos confiables",
+      "fix": "Limitación estructural de COMPRANET"
+    },
+    "causal": {
+      "limitation": "Correlación ≠ causalidad",
+      "impact": "Puntuaciones requieren seguimiento investigativo",
+      "fix": "Por diseño — el modelo informa, no concluye"
+    },
+    "structuralConcentration": {
+      "limitation": "Concentración estructural",
+      "impact": "Algunos sectores sobre-señalizados",
+      "fix": "Priors específicos por sector o listas de exclusión"
+    },
+    "temporal": {
+      "limitation": "Estacionariedad temporal",
+      "impact": "Nuevos patrones de fraude pueden no ser detectados",
+      "fix": "Reentrenamiento periódico con nuevos casos"
+    },
+    "contractModifications": {
+      "limitation": "Modificaciones de contratos invisibles",
+      "impact": "Costos de ejecución en infraestructura/energía no rastreados",
+      "fix": "Requiere integración de datos de auditoría ASF (Fase 6)"
+    },
+    "mexicoConcentration": {
+      "limitation": "Modelo de concentración específico de México",
+      "impact": "Colusión por rotación de ofertas en procedimientos competitivos subdetectada",
+      "fix": "Agregar casos de verdad fundamental de anillos de colusión"
+    }
   }
 }

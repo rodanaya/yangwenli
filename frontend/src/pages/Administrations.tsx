@@ -799,8 +799,8 @@ export default function Administrations() {
                     radius={[3, 3, 0, 0]}
                     maxBarSize={40}
                   >
-                    {selectedAgg.years.map((_, i) => (
-                      <Cell key={i} fill={selectedMeta.color} fillOpacity={0.6} />
+                    {selectedAgg.years.map((yr) => (
+                      <Cell key={yr.year} fill={selectedMeta.color} fillOpacity={0.6} />
                     ))}
                   </Bar>
                   <Line

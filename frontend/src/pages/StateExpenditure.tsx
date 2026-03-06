@@ -399,6 +399,7 @@ function TopVendorsByYear({ code, stateName }: { code: string; stateName: string
         ) : error || vendors.length === 0 ? (
           <p className="px-4 py-6 text-sm text-muted-foreground text-center">{t('noData')}</p>
         ) : (
+          <div className="overflow-x-auto">
           <table
             className="w-full text-sm"
             aria-label={`Top vendors in ${stateName} for ${selectedYear}`}
@@ -454,6 +455,7 @@ function TopVendorsByYear({ code, stateName }: { code: string; stateName: string
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </CardContent>
     </Card>
@@ -757,6 +759,7 @@ function StateDetail({ code }: { code: string }) {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
@@ -799,6 +802,7 @@ function StateDetail({ code }: { code: string }) {
               ))}
             </tbody>
           </table>
+          </div>
         </CardContent>
       </Card>
 

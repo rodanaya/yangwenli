@@ -366,9 +366,9 @@ function MiniSparkline({ values, color = '#58a6ff', width = 56, height = 20 }: M
     <svg
       width={width}
       height={height}
-      aria-hidden="true"
       className="flex-shrink-0"
       aria-label={`5-year trend: ${values.map(v => formatCompactMXN(v)).join(', ')}`}
+      role="img"
     >
       <polyline
         points={pts}

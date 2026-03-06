@@ -6,7 +6,7 @@
   "defensa": "Defensa",
   "tecnologia": "Tecnología",
   "hacienda": "Hacienda",
-  "gobernación": "Gobernación",
+  "gobernacion": "Gobernación",
   "agricultura": "Agricultura",
   "ambiente": "Ambiente",
   "trabajo": "Trabajo",
@@ -73,6 +73,5 @@
     "totalQuestioned": "Total Cuestionado",
     "yearsAudited": "Años Auditados",
     "institutions": "Instituciones"
-  },
-  "gobernacion": "Gobernación"
+  }
 }

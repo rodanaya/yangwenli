@@ -2,12 +2,12 @@
   "title": "Inteligencia de Riesgo en Compras",
   "trackingLabel": "INTELIGENCIA DE RIESGO",
   "subtitle": "Añomalías detectadas por IA, patrones estructurales de corrupción y señales de investigación",
-  "añomalies": {
-    "title": "Añomalías Detectadas por IA",
+  "anomalies": {
+    "title": "Anomalías detectadas por IA",
     "subtitle": "Valores atípicos estadísticos e irregularidades estructurales marcadas por el modelo de riesgo",
     "affectedContracts": "contratos afectados",
     "affectedValue": "valor en riesgo",
-    "empty": "No se detectaron añomalías"
+    "empty": "No se detectaron anomalías"
   },
   "riskFactors": {
     "title": "Análisis Profundo de Factores de Riesgo",
@@ -77,12 +77,5 @@
     "high": "Alto",
     "medium": "Medio",
     "low": "Bajo"
-  },
-  "anomalies": {
-    "title": "Anomalías detectadas por IA",
-    "subtitle": "Valores atípicos estadísticos e irregularidades estructurales marcadas por el modelo de riesgo",
-    "affectedContracts": "contratos afectados",
-    "affectedValue": "valor en riesgo",
-    "empty": "No se detectaron anomalías"
   }
 }

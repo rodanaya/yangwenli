@@ -274,14 +274,14 @@ function SankeyFlowViz({ flows, totalValue }: { flows: FlowRow[]; totalValue: nu
         Money Flow — Institution to Vendor (top {top.length} by value)
       </p>
       <div className="space-y-1.5">
-        {top.map((flow, i) => {
+        {top.map((flow) => {
           const barWidth = Math.max(4, Math.round((flow.value / maxVal) * 100))
           const sectorColor = inferSectorColor(flow.sourceName)
           const riskColor = riskScoreToColor(flow.avgRisk)
           const valuePct = totalValue > 0 ? (flow.value / totalValue) * 100 : 0
 
           return (
-            <div key={i} className="flex items-center gap-2 group">
+            <div key={`${flow.sourceId}-${flow.targetId}`} className="flex items-center gap-2 group">
               {/* Left node — institution: dark text always, sector color as dot indicator */}
               <div
                 className="w-[130px] shrink-0 text-right text-[10px] font-bold truncate text-text-primary flex items-center justify-end gap-1"
@@ -428,13 +428,13 @@ function RiskFactorBreakdown({ factors }: { factors: FactorRow[] }) {
         Risk Signal Frequency — Top Contributing Factors
       </p>
       <div className="space-y-2">
-        {top.map((f, i) => {
+        {top.map((f) => {
           const barPct = Math.max(2, Math.round((f.count / maxCount) * 100))
           const color = riskScoreToCategoricalColor(f.avg_risk_score)
           const label = FACTOR_DISPLAY_LABELS[f.factor] ?? f.label.toUpperCase()
 
           return (
-            <div key={i} className="flex items-center gap-3">
+            <div key={f.factor} className="flex items-center gap-3">
               {/* Factor label */}
               <div className="w-[150px] shrink-0 text-right">
                 <span className="text-[10px] font-mono font-bold text-text-secondary tracking-wide">
@@ -555,14 +555,14 @@ export default function ProcurementIntelligence() {
   const [sortKey, setSortKey] = useState<SortKey>('value')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [showMore, setShowMore] = useState(false)
-  const [expandedRow, setExpandedRow] = useState<number | null>(null)
+  const [expandedRow, setExpandedRow] = useState<string | null>(null)
 
   // ── Risk factor state ────────────────────────────────────────────────────
   const [selectedFactor, setSelectedFactor] = useState<string | null>(null)
   const [showHeatmap, setShowHeatmap] = useState(false)
 
   // ── Collusion state ──────────────────────────────────────────────────────
-  const [expandedLead, setExpandedLead] = useState<number | null>(null)
+  const [expandedLead, setExpandedLead] = useState<string | null>(null)
   // Collusion queries are expensive (self-join on 3M rows) — only run on demand
   const [loadCollusion, setLoadCollusion] = useState(false)
 
@@ -933,9 +933,10 @@ export default function ProcurementIntelligence() {
 
               <div className="space-y-0.5">
                 {filteredFlows.map((flow, i) => {
-                  const isExpanded = expandedRow === i
+                  const flowKey = `${flow.sourceId}-${flow.targetId}`
+                  const isExpanded = expandedRow === flowKey
                   return (
-                    <div key={i}>
+                    <div key={flowKey}>
                       <div
                         className={cn(
                           'grid grid-cols-[20px_1fr_12px_1fr_90px_56px_48px_52px_32px] gap-x-2 items-center px-2 py-1.5 rounded text-xs transition-colors',
@@ -1000,7 +1001,7 @@ export default function ProcurementIntelligence() {
 
                         {/* Expand toggle */}
                         <button
-                          onClick={() => setExpandedRow(isExpanded ? null : i)}
+                          onClick={() => setExpandedRow(isExpanded ? null : flowKey)}
                           className="flex items-center justify-center text-text-muted hover:text-accent transition-colors"
                           aria-label={isExpanded ? 'Collapse' : 'Expand'}
                         >
@@ -1172,9 +1173,9 @@ export default function ProcurementIntelligence() {
                 <div className="text-xs">
                   <p className="text-text-muted mb-1.5 font-semibold">Top by avg risk score:</p>
                   <div className="space-y-1">
-                    {[...factors].sort((a, b) => b.avg_risk_score - a.avg_risk_score).slice(0, 5).map((f, i) => (
+                    {[...factors].sort((a, b) => b.avg_risk_score - a.avg_risk_score).slice(0, 5).map((f) => (
                       <button
-                        key={i}
+                        key={f.factor}
                         onClick={() => setSelectedFactor(prev => prev === f.factor ? null : f.factor)}
                         className={cn(
                           'w-full flex items-center gap-2 py-1 px-1.5 rounded transition-colors text-left',
@@ -1546,7 +1547,7 @@ export default function ProcurementIntelligence() {
                   <div className="space-y-1">
                     {coBidData!.pairs.slice(0, 7).map((pair, i) => (
                       <div
-                        key={i}
+                        key={`${pair.vendor_1_id}-${pair.vendor_2_id}`}
                         className={cn(
                           'flex items-center justify-between gap-2 py-1.5 px-2 rounded text-xs transition-colors',
                           pair.is_potential_collusion
@@ -1600,7 +1601,7 @@ export default function ProcurementIntelligence() {
                   <div className="space-y-1">
                     {concentrationData!.alerts.slice(0, 7).map((alert, i) => (
                       <div
-                        key={i}
+                        key={alert.vendor_id}
                         className="flex items-center justify-between gap-2 py-1.5 px-2 rounded text-xs hover:bg-background-elevated/30 transition-colors"
                       >
                         <div className="flex items-center gap-1.5 min-w-0">
@@ -1662,9 +1663,10 @@ export default function ProcurementIntelligence() {
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {leadsData!.leads.map((lead, i) => {
-                const isExpanded = expandedLead === i
+                const leadKey = `${lead.vendor_id ?? i}-${lead.lead_type}`
+                const isExpanded = expandedLead === leadKey
                 return (
-                  <div key={i} className="rounded-lg border border-border/40 bg-background-elevated/20 p-3 flex flex-col gap-2">
+                  <div key={leadKey} className="rounded-lg border border-border/40 bg-background-elevated/20 p-3 flex flex-col gap-2">
                     <div className="flex items-start justify-between gap-2">
                       <span className="text-xs font-bold text-text-primary capitalize">
                         {lead.lead_type.replace(/_/g, ' ')}
@@ -1722,7 +1724,7 @@ export default function ProcurementIntelligence() {
                     {lead.verification_steps?.length > 0 && (
                       <div>
                         <button
-                          onClick={() => setExpandedLead(isExpanded ? null : i)}
+                          onClick={() => setExpandedLead(isExpanded ? null : leadKey)}
                           className="flex items-center gap-1 text-xs text-accent hover:text-accent/80 transition-colors"
                         >
                           {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
