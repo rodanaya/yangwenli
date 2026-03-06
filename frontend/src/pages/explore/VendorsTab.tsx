@@ -260,7 +260,7 @@ export default function VendorsTab() {
     if (filters.risk_level) tags.push({ key: 'risk_level', label: `Risk: ${filters.risk_level}` })
     if (filters.sector_id) {
       const sec = SECTORS.find((s) => s.id === filters.sector_id)
-      tags.push({ key: 'sector_id', label: sec ? sec.nameEN : `Sector ${filters.sector_id}` })
+      tags.push({ key: 'sector_id', label: sec ? ts(sec.code) : `Sector ${filters.sector_id}` })
     }
     if (filters.min_contracts) tags.push({ key: 'min_contracts', label: `${filters.min_contracts}+ contracts` })
     if (filters.min_value) tags.push({ key: 'min_value', label: `${formatCompactMXN(filters.min_value)}+` })
@@ -438,14 +438,14 @@ export default function VendorsTab() {
       {/* Summary stats strip */}
       {pageStats && !isLoading && (
         <div className="flex items-center gap-4 px-3 py-2 rounded-md bg-background-elevated/30 border border-border/30">
-          <StatPill label="Page value" value={formatCompactMXN(pageStats.totalValue)} />
-          <StatPill label="Page contracts" value={formatNumber(pageStats.totalContracts)} />
-          <StatPill label="Avg risk" value={`${(pageStats.avgRisk * 100).toFixed(1)}%`} color={pageStats.avgRisk >= 0.3 ? 'var(--risk-high)' : pageStats.avgRisk >= 0.1 ? 'var(--risk-medium)' : undefined} />
+          <StatPill label={t('stats.pageValue')} value={formatCompactMXN(pageStats.totalValue)} />
+          <StatPill label={t('stats.pageContracts')} value={formatNumber(pageStats.totalContracts)} />
+          <StatPill label={t('stats.avgRisk')} value={`${(pageStats.avgRisk * 100).toFixed(1)}%`} color={pageStats.avgRisk >= 0.3 ? 'var(--risk-high)' : pageStats.avgRisk >= 0.1 ? 'var(--risk-medium)' : undefined} />
           {pageStats.highRiskCount > 0 && (
-            <StatPill label="High+" value={String(pageStats.highRiskCount)} color="var(--risk-high)" />
+            <StatPill label={t('stats.highPlus')} value={String(pageStats.highRiskCount)} color="var(--risk-high)" />
           )}
           {pageStats.criticalCount > 0 && (
-            <StatPill label="Critical" value={String(pageStats.criticalCount)} color="var(--risk-critical)" />
+            <StatPill label={t('stats.critical')} value={String(pageStats.criticalCount)} color="var(--risk-critical)" />
           )}
         </div>
       )}
@@ -805,6 +805,7 @@ function FlashVendorRadar() {
 // =============================================================================
 
 function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
+  const { t: ts } = useTranslation('sectors')
   const prefetch = usePrefetchOnHover({
     queryKey: ['vendor', vendor.id],
     queryFn: () => vendorApi.getById(vendor.id),
@@ -862,7 +863,7 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
           <span
             className="w-2 h-2 rounded-full shrink-0"
             style={{ backgroundColor: sector?.color || riskColor || 'var(--color-border)' }}
-            title={sector?.nameEN || 'Unknown sector'}
+            title={sector ? ts(sector.code) : 'Unknown sector'}
             aria-hidden="true"
           />
           <div className="min-w-0">
@@ -880,7 +881,7 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
             <div className="flex items-center gap-2 mt-0.5">
               {sector && (
                 <span className="text-xs font-medium" style={{ color: sector.color }}>
-                  {sector.nameEN}
+                  {ts(sector.code)}
                 </span>
               )}
               {vendor.first_contract_year && vendor.last_contract_year && (

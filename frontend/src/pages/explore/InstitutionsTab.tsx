@@ -141,6 +141,7 @@ const INST_TYPE_ICON: Record<string, typeof Building2> = {
 export default function InstitutionsTab() {
   const { t } = useTranslation('explore')
   const { t: ts } = useTranslation('sectors')
+  const { t: tc } = useTranslation('common')
   const [searchParams, setSearchParams] = useSearchParams()
   const [activePreset, setActivePreset] = useState<string | null>(null)
 
@@ -334,7 +335,7 @@ export default function InstitutionsTab() {
           <p className="text-xs text-text-muted tabular-nums" aria-live="polite">
             {data
               ? t('institutions.count', { n: formatNumber(data.pagination.total) })
-              : t('common:loading')}
+              : tc('loading')}
             {isFetching && !isLoading && <Loader2 className="inline h-3 w-3 ml-1 animate-spin" />}
           </p>
           {activeFilterTags.length > 0 && (
@@ -481,7 +482,7 @@ export default function InstitutionsTab() {
             </p>
             <Button variant="outline" size="sm" onClick={() => refetch()}>
               <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-              {t('common:retry')}
+              {tc('retry')}
             </Button>
           </CardContent>
         </Card>
@@ -646,7 +647,7 @@ function ValueConcentrationAlerts() {
                     <th className="px-3 py-2 text-left font-semibold text-text-muted whitespace-nowrap">{t('concentration.vendor')}</th>
                     <th className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap">{t('concentration.share')}</th>
                     <th className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap hidden sm:table-cell">{t('concentration.totalValue')}</th>
-                    <th className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap hidden md:table-cell">{t('common:riskScore')}</th>
+                    <th className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap hidden md:table-cell">{t('institutions.col.avg_risk_score')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">
