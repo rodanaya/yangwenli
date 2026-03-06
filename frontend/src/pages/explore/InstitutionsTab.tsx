@@ -791,7 +791,7 @@ function InstitutionRow({ institution, rank }: { institution: InstitutionRespons
               <div
                 className="w-6 h-6 rounded-md shrink-0 flex items-center justify-center"
                 style={{ backgroundColor: sector?.color ? `${sector.color}20` : 'var(--color-border-subtle, rgba(255,255,255,0.06))' }}
-                title={`${institution.institution_type?.replace(/_/g, ' ') || 'Unknown type'} — ${sector?.nameEN || 'Unknown sector'}`}
+                title={`${institution.institution_type?.replace(/_/g, ' ') || 'Unknown type'} — ${sector ? ts(sector.code) : 'Unknown sector'}`}
               >
                 <TypeIcon className="h-3 w-3" style={{ color: sector?.color || 'var(--color-text-muted)' }} />
               </div>
@@ -817,7 +817,7 @@ function InstitutionRow({ institution, rank }: { institution: InstitutionRespons
               )}
               {sector && (
                 <span className="text-xs font-medium" style={{ color: sector.color }}>
-                  {sector.nameEN}
+                  {ts(sector.code)}
                 </span>
               )}
             </div>
