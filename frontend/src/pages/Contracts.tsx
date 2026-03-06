@@ -403,15 +403,6 @@ export function Contracts() {
   const savedFiltersRef = useRef<HTMLDivElement>(null)
   const [filterSavedAnim, setFilterSavedAnim] = useState(false)
 
-  const handleSaveFilter = useCallback(() => {
-    const params = searchParams.toString()
-    if (!params) return
-    const label = activeFilterTags.map((t) => t.label).join(', ') || 'Filter'
-    saveFilter(label, params)
-    setFilterSavedAnim(true)
-    setTimeout(() => setFilterSavedAnim(false), 2000)
-  }, [searchParams, activeFilterTags, saveFilter])
-
   const handleApplySavedFilter = useCallback((params: string) => {
     setSavedFiltersOpen(false)
     setSearchInput('')
@@ -522,6 +513,16 @@ export function Contracts() {
     if (key === 'max_amount') { setMaxAmountInput(''); return }
     updateFilter(key, undefined)
   }, [updateFilter])
+
+  // Save current filter to localStorage (defined after activeFilterTags is available)
+  const handleSaveFilter = useCallback(() => {
+    const params = searchParams.toString()
+    if (!params) return
+    const label = activeFilterTags.map((tag) => tag.label).join(', ') || 'Filter'
+    saveFilter(label, params)
+    setFilterSavedAnim(true)
+    setTimeout(() => setFilterSavedAnim(false), 2000)
+  }, [searchParams, activeFilterTags, saveFilter])
 
   // --- Render ---
 

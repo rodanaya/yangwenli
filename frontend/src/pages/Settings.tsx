@@ -796,15 +796,24 @@ function BulkExportSection({ onSuccess, onError }: BulkExportSectionProps) {
         return
       }
       const headers = ['id', 'vendor_name', 'institution_name', 'amount_mxn', 'risk_score', 'risk_level', 'contract_date', 'sector_id']
+      function escapeCSV(val: unknown): string {
+        if (val === null || val === undefined) return ''
+        const str = String(val)
+        return str.includes(',') || str.includes('"') ? `"${str.replace(/"/g, '""')}"` : str
+      }
       const csvLines = [
         headers.join(','),
-        ...rowsArray.map((r: Record<string, unknown>) =>
-          headers.map(h => {
-            const val = r[h]
-            if (val === null || val === undefined) return ''
-            const str = String(val)
-            return str.includes(',') || str.includes('"') ? `"${str.replace(/"/g, '""')}"` : str
-          }).join(',')
+        ...rowsArray.map((r) =>
+          [
+            escapeCSV(r.id),
+            escapeCSV(r.vendor_name),
+            escapeCSV(r.institution_name),
+            escapeCSV(r.amount_mxn),
+            escapeCSV(r.risk_score),
+            escapeCSV(r.risk_level),
+            escapeCSV(r.contract_date),
+            escapeCSV(r.sector_id),
+          ].join(',')
         ),
       ].join('\n')
       const blob = new Blob(['\uFEFF' + csvLines], { type: 'text/csv;charset=utf-8;' })

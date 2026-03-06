@@ -534,7 +534,7 @@ export default function PriceIntelligence() {
                 x: Math.log10(h.amount_mxn ?? 1),
                 y: h.confidence,
                 id: h.contract_id,
-                riskLevel: h.risk_level ?? 'low',
+                isExtreme: h.hypothesis_type === 'extreme_overpricing',
                 amount: h.amount_mxn ?? 0,
                 type: h.hypothesis_type,
                 sector: h.sector_id,
@@ -564,26 +564,29 @@ export default function PriceIntelligence() {
                     />
                     <RechartsTooltip
                       contentStyle={{ background: '#1a1f2e', border: '1px solid #2a2f3e', borderRadius: 6, fontSize: 11 }}
-                      formatter={(_v: unknown, name: string, props: { payload?: { id: number; amount: number; y: number } }) => {
-                        if (name === 'Confidence') return [`${((props.payload?.y ?? 0) * 100).toFixed(0)}%`, 'Confidence']
-                        return [formatCompactMXN(props.payload?.amount ?? 0), 'Amount']
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      formatter={(_v: any, _name: any, props: any) => {
+                        const p = props?.payload as { amount?: number; y?: number } | undefined
+                        return [formatCompactMXN(p?.amount ?? 0), `Confidence: ${((p?.y ?? 0) * 100).toFixed(0)}%`]
                       }}
-                      labelFormatter={(_l: unknown, payload: Array<{ payload?: { id: number } }>) =>
-                        payload?.[0]?.payload?.id ? `Contract #${payload[0].payload.id}` : ''
-                      }
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      labelFormatter={(_l: any, payload: ReadonlyArray<any>) => {
+                        const id = (payload?.[0]?.payload as { id?: number } | undefined)?.id
+                        return id != null ? `Contract #${id}` : ''
+                      }}
                     />
                     <Scatter
                       data={scatterData}
-                      onClick={(d: { id: number }) => d?.id && navigateToContract(d.id)}
+                      onClick={(d: { id?: number }) => d?.id && navigateToContract(d.id)}
                       style={{ cursor: 'pointer' }}
                     >
                       {scatterData.map((entry, i) => (
                         <Cell
                           key={i}
                           fill={
-                            entry.riskLevel === 'critical' ? RISK_COLORS.critical :
-                            entry.riskLevel === 'high' ? RISK_COLORS.high :
-                            entry.riskLevel === 'medium' ? RISK_COLORS.medium :
+                            entry.y >= 0.8 ? RISK_COLORS.critical :
+                            entry.y >= 0.6 ? RISK_COLORS.high :
+                            entry.y >= 0.4 ? RISK_COLORS.medium :
                             RISK_COLORS.low
                           }
                           opacity={0.8}
@@ -593,12 +596,22 @@ export default function PriceIntelligence() {
                   </ScatterChart>
                 </ResponsiveContainer>
                 <div className="flex gap-3 mt-1 text-[9px] text-text-muted flex-wrap">
-                  {(['critical', 'high', 'medium', 'low'] as const).map(level => (
-                    <span key={level} className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: RISK_COLORS[level] }} />
-                      {level.charAt(0).toUpperCase() + level.slice(1)}
-                    </span>
-                  ))}
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: RISK_COLORS.critical }} />
+                    Confidence ≥80%
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: RISK_COLORS.high }} />
+                    60–80%
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: RISK_COLORS.medium }} />
+                    40–60%
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: RISK_COLORS.low }} />
+                    &lt;40%
+                  </span>
                 </div>
               </div>
             )
