@@ -64,6 +64,42 @@ const SECTOR_ARCS = [
   { name: 'Otros',           nameEn: 'Other',           pct:  1, color: '#64748b' },
 ]
 
+// ---------------------------------------------------------------------------
+// LangToggle — EN / ES pill toggle, calls i18n.changeLanguage
+// ---------------------------------------------------------------------------
+function LangToggle() {
+  const { i18n } = useTranslation()
+  const isEn = i18n.language.startsWith('en')
+  return (
+    <div className="flex items-center gap-0.5 bg-white/10 border border-white/20 rounded-full p-0.5 backdrop-blur-sm">
+      <button
+        onClick={() => i18n.changeLanguage('en')}
+        className="px-2.5 py-1 rounded-full text-xs font-bold transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-white/40"
+        style={{
+          backgroundColor: isEn ? 'rgba(255,255,255,0.15)' : 'transparent',
+          color: isEn ? '#fff' : 'rgba(255,255,255,0.4)',
+        }}
+        aria-pressed={isEn}
+        aria-label="Switch to English"
+      >
+        EN
+      </button>
+      <button
+        onClick={() => i18n.changeLanguage('es')}
+        className="px-2.5 py-1 rounded-full text-xs font-bold transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-white/40"
+        style={{
+          backgroundColor: !isEn ? 'rgba(255,255,255,0.15)' : 'transparent',
+          color: !isEn ? '#fff' : 'rgba(255,255,255,0.4)',
+        }}
+        aria-pressed={!isEn}
+        aria-label="Cambiar a Español"
+      >
+        ES
+      </button>
+    </div>
+  )
+}
+
 function SectorRing() {
   const { i18n } = useTranslation()
   const isEn = i18n.language.startsWith('en')
@@ -438,10 +474,11 @@ interface HeroSectionProps {
 
 function HeroSection({ onEnter, onScrollDown }: HeroSectionProps) {
   const [mounted, setMounted] = useState(false)
+  const { t } = useTranslation('landing')
 
   useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 80)
-    return () => clearTimeout(t)
+    const timer = setTimeout(() => setMounted(true), 80)
+    return () => clearTimeout(timer)
   }, [])
 
   return (
@@ -471,7 +508,7 @@ function HeroSection({ onEnter, onScrollDown }: HeroSectionProps) {
           className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold tracking-widest uppercase bg-white/5 border border-white/10 text-white/50"
         >
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          AI-Powered Anti-Corruption Research Platform
+          {t('hero.badge')}
         </motion.span>
 
         {/* Main headline */}
@@ -480,9 +517,9 @@ function HeroSection({ onEnter, onScrollDown }: HeroSectionProps) {
           className="text-4xl sm:text-6xl lg:text-7xl font-black leading-[1.05] text-white"
         >
           23 years.{' '}
-          <span style={{ color: '#3b82f6' }}>3.1 million</span>{' '}
+          <span style={{ color: '#3b82f6' }}>{t('hero.headline_part2')}</span>{' '}
           contracts.{' '}
-          <span style={{ color: '#dc2626' }}>Follow the money.</span>
+          <span style={{ color: '#dc2626' }}>{t('hero.headline_part4')}</span>
         </motion.h1>
 
         {/* Subheading */}
@@ -490,8 +527,7 @@ function HeroSection({ onEnter, onScrollDown }: HeroSectionProps) {
           variants={slideUp}
           className="text-lg sm:text-xl text-white/55 max-w-2xl leading-relaxed"
         >
-          RUBLI analyzes every federal procurement contract Mexico has published since 2002 —
-          flagging corruption patterns, mapping vendor networks, and surfacing cases the data reveals.
+          {t('hero.subheading')}
         </motion.p>
 
         {/* What we found strip */}
@@ -509,13 +545,13 @@ function HeroSection({ onEnter, onScrollDown }: HeroSectionProps) {
             className="flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-sm transition-all duration-200 hover:opacity-90 hover:scale-[1.02] shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-400/60"
             style={{ backgroundColor: '#3b82f6', color: '#fff' }}
           >
-            Start investigating <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            {t('hero.cta_enter')} <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </button>
           <button
             onClick={onScrollDown}
             className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm border border-white/20 hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white/40"
           >
-            See how it works <ChevronDown className="h-4 w-4" aria-hidden="true" />
+            {t('hero.cta_scroll')} <ChevronDown className="h-4 w-4" aria-hidden="true" />
           </button>
         </motion.div>
       </motion.div>
