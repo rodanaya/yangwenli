@@ -32,9 +32,9 @@
   --color-text-primary: #e6edf3;
   --color-text-secondary: #8b949e;
   --color-text-muted: #6e7681;
-  --color-accent: #58a6ff;
-  --color-accent-hover: #388bfd;
-  --color-accent-glow: #58a6ff33;
+  --color-accent: #7aa2c8;
+  --color-accent-hover: #5e8cb5;
+  --color-accent-glow: #7aa2c833;
 
   /* Sidebar */
   --color-sidebar: #010409;
@@ -42,7 +42,7 @@
   --color-sidebar-active: #161b22;
 
   /* Signal colors for live indicators */
-  --color-signal-pulse: #58a6ff;
+  --color-signal-pulse: #7aa2c8;
   --color-signal-live: #3fb950;
   --color-signal-warn: #d29922;
 
@@ -94,13 +94,13 @@
     --color-text-primary: #1f2328;
     --color-text-secondary: #656d76;
     --color-text-muted: #8b949e;
-    --color-accent: #0969da;
-    --color-accent-hover: #0550ae;
-    --color-accent-glow: #0969da22;
+    --color-accent: #3d7ab5;
+    --color-accent-hover: #2d6097;
+    --color-accent-glow: #3d7ab522;
     --color-sidebar: #ffffff;
     --color-sidebar-hover: #f6f8fa;
     --color-sidebar-active: #eaeef2;
-    --color-signal-pulse: #0969da;
+    --color-signal-pulse: #3d7ab5;
     --color-signal-live: #1a7f37;
     --color-signal-warn: #9a6700;
   }
