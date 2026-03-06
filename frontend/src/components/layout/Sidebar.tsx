@@ -33,7 +33,7 @@ import { RubliLogoMark } from '@/components/ui/RubliLogoMark'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { watchlistApi } from '@/api/client'
+import { watchlistApi, caseLibraryApi } from '@/api/client'
 
 export interface SidebarProps {
   collapsed: boolean
@@ -144,6 +144,16 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   })
   const alertCount = alerts?.length ?? 0
 
+  // Case Library — fetch total case count for nav badge (1h cache, silent fail)
+  const { data: caseStats } = useQuery({
+    queryKey: ['case-library-count'],
+    queryFn: () => caseLibraryApi.getStats(),
+    staleTime: 60 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 0,
+  })
+  const caseCount = caseStats?.total_cases ?? 0
+
   return (
     <aside
       className={cn(
@@ -210,6 +220,8 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
                     : location.pathname === itemDef.href || location.pathname.startsWith(itemDef.href + '/')
                 // Show alert badge on the Workspace nav item (4.3C Alert System)
                 const badge = itemDef.href === '/workspace' && alertCount > 0 ? alertCount : 0
+                // Show case count badge on Case Library nav item
+                const countBadge = itemDef.href === '/cases' && caseCount > 0 ? caseCount : 0
                 return (
                   <SidebarNavItem
                     key={item.href}
@@ -217,6 +229,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
                     collapsed={isCollapsed}
                     isActive={isActive}
                     badge={badge}
+                    countBadge={countBadge}
                   />
                 )
               })}
@@ -274,11 +287,13 @@ function SidebarNavItem({
   collapsed,
   isActive,
   badge = 0,
+  countBadge = 0,
 }: {
   item: NavItem
   collapsed: boolean
   isActive: boolean
   badge?: number
+  countBadge?: number
 }) {
   const Icon = item.icon
 
@@ -319,6 +334,15 @@ function SidebarNavItem({
           aria-label={`${badge} alert${badge !== 1 ? 's' : ''}`}
         >
           {badge > 9 ? '9+' : badge}
+        </span>
+      )}
+      {/* Count badge — subdued, shows total items (e.g. case count) */}
+      {countBadge > 0 && !collapsed && badge === 0 && (
+        <span
+          className="ml-auto flex h-4 min-w-[1.25rem] items-center justify-center rounded bg-surface-alt/60 text-[10px] font-mono text-text-muted px-1 border border-border/30"
+          aria-label={`${countBadge} items`}
+        >
+          {countBadge}
         </span>
       )}
     </NavLink>
