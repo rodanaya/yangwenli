@@ -219,7 +219,7 @@ export const sectorApi = {
    * Get risk distribution for a sector
    */
   async getRiskDistribution(sectorId: number): Promise<{ data: RiskDistribution[] }> {
-    const { data } = await api.get(`/sectors/${sectorId}/risk-distribution`)
+    const { data } = await api.get(`/analysis/risk-distribution?sector_id=${sectorId}`)
     return data
   },
 }
@@ -812,7 +812,7 @@ export const analysisApi = {
    * Get classification statistics
    */
   async getClassificationStats(): Promise<ClassificationStatsResponse> {
-    const { data } = await api.get<ClassificationStatsResponse>('/vendors/classification/stats')
+    const { data } = await api.get<ClassificationStatsResponse>('/stats/classifications')
     return data
   },
 
