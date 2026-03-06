@@ -14,9 +14,9 @@ import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
-import { RISK_COLORS, SECTOR_COLORS } from '@/lib/constants'
+import { RISK_COLORS, SECTOR_COLORS, SECTORS } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
-import type { MoneyFlowItem, RiskFactorFrequency, FactorCooccurrence, ThresholdGamingResponse } from '@/api/types'
+import type { MoneyFlowItem, RiskFactorFrequency, FactorCooccurrence, ThresholdGamingResponse, SectorYearItem, YearOverYearChange } from '@/api/types'
 import {
   BarChart,
   Bar,
@@ -30,6 +30,7 @@ import {
 } from '@/components/charts'
 import {
   TrendingUp,
+  TrendingDown,
   Calendar,
   DollarSign,
   ChevronDown,
@@ -42,6 +43,8 @@ import {
   Filter,
   X,
   Target,
+  Activity,
+  Minus,
 } from 'lucide-react'
 
 // =============================================================================
@@ -610,6 +613,20 @@ export default function ProcurementIntelligence() {
     queryFn: () => analysisApi.getInvestigationLeads(20),
     staleTime: 10 * 60 * 1000,
     enabled: !!flowData,
+  })
+
+  // Sector × year breakdown for pattern heatmap
+  const { data: sectorYearResp } = useQuery({
+    queryKey: ['analysis', 'sector-year-breakdown', 'procurement'],
+    queryFn: () => analysisApi.getSectorYearBreakdown(),
+    staleTime: 30 * 60 * 1000,
+  })
+
+  // Year-over-year for alert ticker
+  const { data: yoyResp } = useQuery({
+    queryKey: ['analysis', 'year-over-year', 'procurement'],
+    queryFn: () => analysisApi.getYearOverYear(),
+    staleTime: 30 * 60 * 1000,
   })
 
   // ── Derived: institution flows ────────────────────────────────────────────
