@@ -29,6 +29,7 @@ import {
   BarChart2,
   Code2,
   MessageSquarePlus,
+  StickyNote,
 } from 'lucide-react'
 import { RubliLogoMark } from '@/components/ui/RubliLogoMark'
 import { LanguageToggle } from '@/components/LanguageToggle'
@@ -80,12 +81,14 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { i18nKey: 'moneyFlow', href: '/money-flow', icon: ArrowLeftRight },
       { i18nKey: 'contracts', href: '/contracts', icon: FileText },
       { i18nKey: 'heatmap', href: '/heatmap', icon: BarChart2 },
+      { i18nKey: 'mexicoMap', href: '/map', icon: MapPin },
     ],
   },
   {
     sectionKey: 'sections.myWorkspace',
     items: [
       { i18nKey: 'workspace', href: '/workspace', icon: Briefcase },
+      { i18nKey: 'annotations', href: '/annotations', icon: StickyNote },
     ],
   },
 ]

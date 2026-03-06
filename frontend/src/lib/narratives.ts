@@ -58,7 +58,7 @@ export function buildVendorNarrative(
   // Risk assessment
   if (vendor.avg_risk_score != null) {
     const riskPct = formatRiskScorePercent(vendor.avg_risk_score)
-    const highPct = (vendor.high_risk_pct * 100).toFixed(0)
+    const highPct = vendor.high_risk_pct.toFixed(0)
     let riskText = `Average risk score of ${riskPct} with ${highPct}% of contracts flagged as high or critical risk.`
 
     if (riskProfile?.risk_trend) {
@@ -94,11 +94,11 @@ export function buildVendorNarrative(
 
   // Procurement patterns
   const patterns: string[] = []
-  if (vendor.direct_award_pct > 0.5) {
-    patterns.push(`${(vendor.direct_award_pct * 100).toFixed(0)}% direct awards`)
+  if (vendor.direct_award_pct > 50) {
+    patterns.push(`${vendor.direct_award_pct.toFixed(0)}% direct awards`)
   }
-  if (vendor.single_bid_pct > 0.15) {
-    patterns.push(`${(vendor.single_bid_pct * 100).toFixed(0)}% single-bid wins`)
+  if (vendor.single_bid_pct > 15) {
+    patterns.push(`${vendor.single_bid_pct.toFixed(0)}% single-bid wins`)
   }
   if (vendor.total_institutions > 10) {
     patterns.push(`works with ${vendor.total_institutions} institutions`)
@@ -277,11 +277,11 @@ export function buildSectorNarrative(
   paragraphs.push({ text: sizeText })
 
   // Risk context
-  const highRiskPct = sector.high_risk_pct * 100
+  const highRiskPct = sector.high_risk_pct
   let riskText = `${highRiskPct.toFixed(1)}% high or critical risk.`
 
   if (allSectors && allSectors.length > 1) {
-    const avgHighRisk = allSectors.reduce((s, sec) => s + sec.high_risk_pct, 0) / allSectors.length * 100
+    const avgHighRisk = allSectors.reduce((s, sec) => s + sec.high_risk_pct, 0) / allSectors.length
     const diff = highRiskPct - avgHighRisk
     if (Math.abs(diff) > 2) {
       riskText += ` ${diff > 0 ? 'Above' : 'Below'} the ${avgHighRisk.toFixed(1)}% cross-sector average by ${Math.abs(diff).toFixed(1)}pp.`
@@ -296,13 +296,13 @@ export function buildSectorNarrative(
     }
   }
 
-  const daRate = (sector.direct_award_pct * 100).toFixed(0)
-  const sbRate = (sector.single_bid_pct * 100).toFixed(0)
+  const daRate = sector.direct_award_pct.toFixed(0)
+  const sbRate = sector.single_bid_pct.toFixed(0)
   riskText += ` Direct awards: ${daRate}%. Single bids: ${sbRate}%.`
 
   if (allSectors && allSectors.length > 1) {
-    const avgDA = allSectors.reduce((s, sec) => s + sec.direct_award_pct, 0) / allSectors.length * 100
-    if (sector.direct_award_pct * 100 > avgDA + 10) {
+    const avgDA = allSectors.reduce((s, sec) => s + sec.direct_award_pct, 0) / allSectors.length
+    if (sector.direct_award_pct > avgDA + 10) {
       riskText += ` Direct award rate is notably above average, suggesting systemic avoidance of competitive bidding.`
     }
   }

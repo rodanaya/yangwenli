@@ -293,7 +293,7 @@ function useSectorTrendData() {
           .filter((d: YearOverYearChange) => d.year >= 2010)
           .forEach((d: YearOverYearChange) => {
             byYear.set(d.year, {
-              highRiskPct: (d.high_risk_pct ?? 0) * 100,
+              highRiskPct: d.high_risk_pct ?? 0,
               avgRisk: d.avg_risk ?? 0,
             })
           })
@@ -333,7 +333,7 @@ function useSectorTrendData() {
         .filter((d: YearOverYearChange) => d.year >= 2010)
         .forEach((d: YearOverYearChange) => {
           byYear.set(d.year, {
-            highRiskPct: (d.high_risk_pct ?? 0) * 100,
+            highRiskPct: d.high_risk_pct ?? 0,
             avgRisk: d.avg_risk ?? 0,
           })
         })

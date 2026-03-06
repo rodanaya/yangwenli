@@ -12,7 +12,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import ReactECharts from 'echarts-for-react'
 import * as echarts from 'echarts'
-import { Map, AlertTriangle, DollarSign, Shield, FileText } from 'lucide-react'
+import { Map as MapIcon, AlertTriangle, DollarSign, Shield, FileText } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
@@ -293,7 +293,7 @@ export default function MexicoMap() {
       <PageHeader
         title="Mexico Procurement Map"
         subtitle="Federal spending by state — click any state to drill down"
-        icon={Map}
+        icon={MapIcon}
       />
 
       {/* Metric selector */}
@@ -318,7 +318,7 @@ export default function MexicoMap() {
       <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
-            <Map className="h-4 w-4 text-muted-foreground" />
+            <MapIcon className="h-4 w-4 text-muted-foreground" />
             <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               {cfg.label} by State
             </CardTitle>

@@ -51,6 +51,9 @@ const YearInReview = lazy(() => import('@/pages/YearInReview'))
 const VendorCompare = lazy(() => import('@/pages/VendorCompare'))
 const ApiExplorer = lazy(() => import('@/pages/ApiExplorer'))
 const InstitutionHeatmap = lazy(() => import('@/pages/InstitutionHeatmap'))
+const InstitutionCompare = lazy(() => import('@/pages/InstitutionCompare'))
+const MexicoMap = lazy(() => import('@/pages/MexicoMap'))
+const Annotations = lazy(() => import('@/pages/Annotations'))
 
 // First-visit routing: redirect "/" to Landing for new users, Dashboard for returning users
 function FirstVisitRedirect() {
@@ -356,6 +359,31 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<DashboardSkeleton />}>
                     <InstitutionHeatmap />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="map"
+                element={
+                  <SuspenseBoundary fallback={<DashboardSkeleton />}>
+                    <MexicoMap />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="annotations"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <Annotations />
+                  </SuspenseBoundary>
+                }
+              />
+
+              <Route
+                path="institutions/compare"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <InstitutionCompare />
                   </SuspenseBoundary>
                 }
               />

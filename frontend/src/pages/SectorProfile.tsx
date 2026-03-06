@@ -251,12 +251,12 @@ export function SectorProfile() {
       })
     }
 
-    // Direct award rate (field is a fraction 0–1)
-    if (stats.direct_award_pct > 0.7) {
+    // Direct award rate (field is 0–100)
+    if (stats.direct_award_pct > 70) {
       result.push({
         type: 'warning',
         title: 'High Direct Award Rate',
-        body: `${(stats.direct_award_pct * 100).toFixed(0)}% of contracts are direct awards, limiting competitive transparency.`,
+        body: `${stats.direct_award_pct.toFixed(0)}% of contracts are direct awards, limiting competitive transparency.`,
         icon: 'ShieldAlert',
       })
     }
@@ -283,11 +283,11 @@ export function SectorProfile() {
     }
 
     // Single bid rate
-    if (stats.single_bid_pct > 0.25) {
+    if (stats.single_bid_pct > 25) {
       result.push({
         type: 'warning',
         title: 'Single-Bid Procedures',
-        body: `${(stats.single_bid_pct * 100).toFixed(0)}% of competitive procedures had only one bidder.`,
+        body: `${stats.single_bid_pct.toFixed(0)}% of competitive procedures had only one bidder.`,
         icon: 'Users',
       })
     }
@@ -902,7 +902,7 @@ export function SectorProfile() {
                       contract_count: inst.total_contracts ?? '',
                       total_value_mxn: inst.total_amount_mxn ?? '',
                       avg_risk_score: inst.avg_risk_score != null ? (inst.avg_risk_score * 100).toFixed(2) + '%' : '',
-                      direct_award_pct: inst.direct_award_pct != null ? (inst.direct_award_pct * 100).toFixed(1) + '%' : '',
+                      direct_award_pct: inst.direct_award_pct != null ? inst.direct_award_pct.toFixed(1) + '%' : '',
                     }))}
                     filename={`rubli-sector-${sector.code}-institutions`}
                   />

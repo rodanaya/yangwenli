@@ -53,6 +53,7 @@ import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { StatRing } from '@/components/ui/StatRing'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { LayoutDashboard } from 'lucide-react'
+import { ProcurementCalendar } from '@/components/ProcurementCalendar'
 
 // ============================================================================
 // Dashboard: Bold, data-dense intelligence overview
@@ -1458,6 +1459,22 @@ export function Dashboard() {
             </div>
           </button>
         </div>
+      </div>
+
+      {/* ================================================================ */}
+      {/* PROCUREMENT SEASONALITY — December Dump visualization          */}
+      {/* ================================================================ */}
+      <div className="rounded-xl bg-slate-900/50 border border-white/5 p-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Calendar className="h-4 w-4 text-amber-400" />
+          <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">
+            Procurement Seasonality
+          </h3>
+        </div>
+        <p className="text-xs text-white/50 mb-4">
+          December absorbs ~22% of annual contracts as agencies rush to spend year-end budgets
+        </p>
+        <ProcurementCalendar />
       </div>
     </div>
   )

@@ -46,6 +46,7 @@ import {
   Shield,
   Brain,
   ChevronRight,
+  GitCompare,
 } from 'lucide-react'
 import { NetworkGraphModal } from '@/components/NetworkGraphModal'
 import { motion } from 'framer-motion'
@@ -390,6 +391,12 @@ export function InstitutionProfile() {
             <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-border/40 bg-background-elevated text-text-secondary hover:text-text-primary transition-colors">
               <FileText className="h-3.5 w-3.5" />
               All Contracts
+            </button>
+          </Link>
+          <Link to={`/institutions/compare?a=${institutionId}`}>
+            <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-border/40 bg-background-elevated text-text-secondary hover:text-text-primary transition-colors">
+              <GitCompare className="h-3.5 w-3.5" />
+              Compare
             </button>
           </Link>
           <GenerateReportButton

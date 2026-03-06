@@ -230,8 +230,7 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
       .filter((d) => d.year >= 2010)
       .map((d) => ({
         year: d.year,
-        // high_risk_pct is already a fraction (0–1) in YearOverYearChange; multiply for display
-        highRiskRate: (d.high_risk_pct ?? 0) * 100,
+        highRiskRate: d.high_risk_pct ?? 0,
         avgScore: d.avg_risk ?? 0,
         criticalCount: 0, // not provided by year-over-year endpoint
       }))

@@ -150,11 +150,11 @@ function BarTooltip({ active, payload }: { active?: boolean; payload?: Array<{ p
 
 const HEATMAP_COLS: { key: keyof InstitutionHealthItem; label: string; fmt: (v: number) => string }[] = [
   { key: 'avg_risk_score',   label: 'Avg Risk',       fmt: v => `${(v * 100).toFixed(1)}%` },
-  { key: 'high_risk_pct',    label: 'High-Risk %',    fmt: v => `${(v * 100).toFixed(1)}%` },
-  { key: 'direct_award_pct', label: 'Direct Award',   fmt: v => `${(v * 100).toFixed(1)}%` },
-  { key: 'single_bid_pct',   label: 'Single Bid',     fmt: v => `${(v * 100).toFixed(1)}%` },
+  { key: 'high_risk_pct',    label: 'High-Risk %',    fmt: v => `${v.toFixed(1)}%` },
+  { key: 'direct_award_pct', label: 'Direct Award',   fmt: v => `${v.toFixed(1)}%` },
+  { key: 'single_bid_pct',   label: 'Single Bid',     fmt: v => `${v.toFixed(1)}%` },
   { key: 'hhi',              label: 'Concentration',  fmt: v => v.toFixed(3) },
-  { key: 'top_vendor_share', label: 'Top Vendor',     fmt: v => `${(v * 100).toFixed(1)}%` },
+  { key: 'top_vendor_share', label: 'Top Vendor',     fmt: v => `${v.toFixed(1)}%` },
 ]
 
 function InstitutionHeatmap({ items }: { items: InstitutionHealthItem[] }) {
@@ -1173,16 +1173,16 @@ export default function InstitutionHealth() {
                       {formatNumber(item.vendor_count)}
                     </td>
                     <td className="px-3 py-2 text-right font-mono tabular-nums hidden xl:table-cell"
-                      style={{ color: item.direct_award_pct > 0.80 ? 'var(--color-risk-critical)' : item.direct_award_pct > 0.70 ? 'var(--color-risk-high)' : 'var(--color-text-secondary)' }}
-                      title={`${(item.direct_award_pct * 100).toFixed(1)}% — national avg ~74%`}
+                      style={{ color: item.direct_award_pct > 80 ? 'var(--color-risk-critical)' : item.direct_award_pct > 70 ? 'var(--color-risk-high)' : 'var(--color-text-secondary)' }}
+                      title={`${item.direct_award_pct.toFixed(1)}% — national avg ~74%`}
                     >
-                      {(item.direct_award_pct * 100).toFixed(1)}%
+                      {item.direct_award_pct.toFixed(1)}%
                     </td>
                     <td className="px-3 py-2 text-right font-mono tabular-nums hidden xl:table-cell"
-                      style={{ color: item.single_bid_pct > 0.20 ? 'var(--color-risk-critical)' : item.single_bid_pct > 0.12 ? 'var(--color-risk-high)' : 'var(--color-text-secondary)' }}
-                      title={`${(item.single_bid_pct * 100).toFixed(1)}% — national avg ~12%`}
+                      style={{ color: item.single_bid_pct > 20 ? 'var(--color-risk-critical)' : item.single_bid_pct > 12 ? 'var(--color-risk-high)' : 'var(--color-text-secondary)' }}
+                      title={`${item.single_bid_pct.toFixed(1)}% — national avg ~12%`}
                     >
-                      {(item.single_bid_pct * 100).toFixed(1)}%
+                      {item.single_bid_pct.toFixed(1)}%
                     </td>
                     <td className="px-3 py-2 text-right">
                       <span
