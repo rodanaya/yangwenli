@@ -517,6 +517,37 @@ def get_year_over_year(
         return cached["data"]
 
     with get_db() as conn:
+        # Fast path for unfiltered case: use precomputed yearly_trends
+        if sector_id is None and start_year is None and end_year is None:
+            row = conn.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'yearly_trends'"
+            ).fetchone()
+            if row:
+                raw = json.loads(row[0])
+                data = [
+                    {
+                        "year": r["year"],
+                        "contracts": r["contracts"],
+                        "total_value": r.get("value_mxn", 0),
+                        "avg_risk": r.get("avg_risk", 0),
+                        "direct_award_pct": r.get("direct_award_pct", 0),
+                        "single_bid_pct": r.get("single_bid_pct", 0),
+                        "high_risk_pct": r.get("high_risk_pct", 0),
+                        "vendor_count": r.get("vendor_count", 0),
+                        "institution_count": r.get("institution_count", 0),
+                    }
+                    for r in raw
+                ]
+                years = [d["year"] for d in data]
+                result = {
+                    "data": data,
+                    "total_years": len(data),
+                    "min_year": min(years) if years else 2002,
+                    "max_year": max(years) if years else 2025,
+                }
+                _yoy_cache[cache_key] = {"ts": _time.time(), "data": result}
+                return result
+
         result = analysis_service.get_year_over_year(
             conn,
             sector_id=sector_id,

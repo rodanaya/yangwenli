@@ -513,15 +513,8 @@ def get_data_quality(response: Response):
                 affected_count=low_grade_count
             ))
 
-        # Check last calculation time from contract_quality table
+        # contract_quality table does not have calculated_at column (WAL recovery)
         last_calculated = None
-        cursor.execute("""
-            SELECT MAX(calculated_at) as last_calc
-            FROM contract_quality
-        """)
-        row = cursor.fetchone()
-        if row and row["last_calc"]:
-            last_calculated = str(row["last_calc"])
 
         result = DataQualityResponse(
             overall_score=round(overall_score, 1),

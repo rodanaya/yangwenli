@@ -4,6 +4,7 @@ Sector and Analysis API endpoints.
 Provides sector statistics, trends, and cross-cutting analysis.
 """
 import sqlite3
+import json
 import logging
 from typing import Optional, List, Any, Dict
 from datetime import datetime, timedelta
@@ -452,7 +453,43 @@ def get_analysis_overview():
         with get_db() as conn:
             cursor = conn.cursor()
 
-            # Main statistics
+            # Fast path: use precomputed stats (avoids 3 × full 3.1M-row table scans)
+            ov_row = cursor.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'overview'"
+            ).fetchone()
+            sec_row = cursor.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sectors'"
+            ).fetchone()
+
+            if ov_row and sec_row:
+                ov = json.loads(ov_row[0])
+                sectors_data = json.loads(sec_row[0])
+                total = ov.get("total_contracts", 0)
+                high_risk = ov.get("high_risk_contracts", 0)
+                top_by_value = max(sectors_data, key=lambda s: s.get("total_value_mxn", 0))
+                top_by_risk = max(sectors_data, key=lambda s: s.get("avg_risk_score", 0))
+                response = AnalysisOverview(
+                    total_contracts=total,
+                    total_value_mxn=ov.get("total_value_mxn", 0),
+                    total_vendors=ov.get("total_vendors", 0),
+                    total_institutions=ov.get("total_institutions", 0),
+                    avg_risk_score=ov.get("avg_risk_score", 0),
+                    high_risk_contracts=high_risk,
+                    high_risk_value_mxn=ov.get("high_risk_value_mxn", 0),
+                    high_risk_pct=round(high_risk / total * 100, 2) if total > 0 else 0,
+                    direct_award_pct=ov.get("direct_award_pct", 0),
+                    single_bid_pct=ov.get("single_bid_pct", 0),
+                    min_year=ov.get("min_year", 2002),
+                    max_year=ov.get("max_year", 2025),
+                    years_covered=(ov.get("max_year", 2025) - ov.get("min_year", 2002) + 1),
+                    sectors_count=12,
+                    top_sector_by_value=top_by_value.get("name") or top_by_value.get("code", "Unknown"),
+                    top_sector_by_risk=top_by_risk.get("name") or top_by_risk.get("code", "Unknown"),
+                )
+                _cache.set(cache_key, response, ANALYSIS_CACHE_TTL)
+                return response
+
+            # Fallback: live queries (used only if precomputed_stats is empty)
             cursor.execute("""
                 SELECT
                     COUNT(*) as total_contracts,
@@ -470,7 +507,6 @@ def get_analysis_overview():
             """)
             main_row = cursor.fetchone()
 
-            # Top sector by value
             cursor.execute("""
                 SELECT s.name_es
                 FROM contracts c
@@ -481,7 +517,6 @@ def get_analysis_overview():
             """)
             top_value_row = cursor.fetchone()
 
-            # Top sector by risk
             cursor.execute("""
                 SELECT s.name_es
                 FROM contracts c
@@ -513,8 +548,6 @@ def get_analysis_overview():
                 top_sector_by_value=top_value_row[0] if top_value_row else "Unknown",
                 top_sector_by_risk=top_risk_row[0] if top_risk_row else "Unknown",
             )
-
-            # Cache the response for 1 hour
             _cache.set(cache_key, response, ANALYSIS_CACHE_TTL)
             return response
 

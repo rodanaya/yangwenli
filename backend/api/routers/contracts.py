@@ -157,6 +157,40 @@ def get_contract_statistics(
         return cached
 
     with get_db() as conn:
+        # Fast path for unfiltered case: use precomputed stats
+        if sector_id is None and year is None:
+            import json as _json
+            ov_row = conn.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'overview'"
+            ).fetchone()
+            rd_row = conn.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'risk_distribution'"
+            ).fetchone()
+            if ov_row and rd_row:
+                ov = _json.loads(ov_row[0])
+                rd = {r["risk_level"]: r["count"] for r in _json.loads(rd_row[0])}
+                total = ov.get("total_contracts", 0)
+                total_val = ov.get("total_value_mxn", 0)
+                da_pct = ov.get("direct_award_pct", 0)
+                sb_pct = ov.get("single_bid_pct", 0)
+                result = ContractStatistics(
+                    total_contracts=total,
+                    total_value_mxn=total_val,
+                    avg_contract_value=round(total_val / total, 2) if total > 0 else 0,
+                    low_risk_count=rd.get("low", 0),
+                    medium_risk_count=rd.get("medium", 0),
+                    high_risk_count=rd.get("high", 0),
+                    critical_risk_count=rd.get("critical", 0),
+                    direct_award_count=round(da_pct * total / 100),
+                    direct_award_pct=da_pct,
+                    single_bid_count=round(sb_pct * total / 100),
+                    single_bid_pct=sb_pct,
+                    min_year=ov.get("min_year", 2002),
+                    max_year=ov.get("max_year", 2025),
+                )
+                app_cache.set(_stats_cache_name, cache_key, result, maxsize=64, ttl=600)
+                return result
+
         stats = contract_service.get_contract_statistics(
             conn, sector_id=sector_id, year=year,
         )
