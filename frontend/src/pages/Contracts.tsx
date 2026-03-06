@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useEffect, useState } from 'react'
+import React, { useCallback, useMemo, useEffect, useState, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -26,6 +26,7 @@ import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
 import { TableExportButton } from '@/components/TableExportButton'
 import { SECTORS, RISK_COLORS } from '@/lib/constants'
 import { useDebouncedSearch, useDebouncedValue } from '@/hooks/useDebouncedSearch'
+import { useSavedSearches } from '@/hooks/useSavedSearches'
 import type { ContractFilterParams, ContractListItem } from '@/api/types'
 import { RISK_FACTORS } from '@/api/types'
 import {
@@ -54,6 +55,8 @@ import {
   Users,
   X,
   GitCompareArrows,
+  Bookmark,
+  BookmarkCheck,
 } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 import { ContractDetailModal } from '@/components/ContractDetailModal'
@@ -392,6 +395,31 @@ export function Contracts() {
       setIsExporting(false)
     }
   }
+
+  // Saved contract filters (localStorage)
+  const CONTRACT_FILTERS_KEY = 'rubli_contract_filters'
+  const { items: savedFilters, save: saveFilter, remove: removeSavedFilter } = useSavedSearches(CONTRACT_FILTERS_KEY)
+  const [savedFiltersOpen, setSavedFiltersOpen] = useState(false)
+  const savedFiltersRef = useRef<HTMLDivElement>(null)
+  const [filterSavedAnim, setFilterSavedAnim] = useState(false)
+
+  const handleSaveFilter = useCallback(() => {
+    const params = searchParams.toString()
+    if (!params) return
+    const label = activeFilterTags.map((t) => t.label).join(', ') || 'Filter'
+    saveFilter(label, params)
+    setFilterSavedAnim(true)
+    setTimeout(() => setFilterSavedAnim(false), 2000)
+  }, [searchParams, activeFilterTags, saveFilter])
+
+  const handleApplySavedFilter = useCallback((params: string) => {
+    setSavedFiltersOpen(false)
+    setSearchInput('')
+    setMinAmountInput('')
+    setMaxAmountInput('')
+    setSearchParams(new URLSearchParams(params))
+    setActivePreset(null)
+  }, [setSearchParams, setSearchInput])
 
   const [linkCopied, setLinkCopied] = useState(false)
   const handleCopyLink = async () => {
@@ -763,6 +791,75 @@ export function Contracts() {
             <X className="h-3 w-3 mr-1" />
             {t('filters.clearAll')}
           </Button>
+        )}
+
+        {/* Save current filter */}
+        {hasActiveFilters && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 text-xs px-2 text-text-muted hover:text-accent transition-colors"
+            onClick={handleSaveFilter}
+            title="Save current filters"
+            aria-label="Save current filter configuration"
+          >
+            {filterSavedAnim ? (
+              <BookmarkCheck className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
+            ) : (
+              <Bookmark className="h-3.5 w-3.5" aria-hidden="true" />
+            )}
+            <span className="ml-1">{filterSavedAnim ? 'Saved' : 'Save filter'}</span>
+          </Button>
+        )}
+
+        {/* Saved filters dropdown */}
+        {savedFilters.length > 0 && (
+          <div className="relative" ref={savedFiltersRef}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-xs px-2 text-text-muted hover:text-accent transition-colors"
+              onClick={() => setSavedFiltersOpen((o) => !o)}
+              aria-label="Show saved filters"
+              aria-expanded={savedFiltersOpen}
+              aria-haspopup="menu"
+            >
+              <BookmarkCheck className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+              Saved ({savedFilters.length})
+            </Button>
+            {savedFiltersOpen && (
+              <div
+                role="menu"
+                className="absolute left-0 top-9 z-50 min-w-[220px] rounded-md border border-border bg-background-card shadow-lg py-1"
+              >
+                {savedFilters.map((sf, i) => (
+                  <div key={`${sf.value}-${i}`} className="flex items-center gap-1 px-3 py-1.5 hover:bg-accent/5 group">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="flex-1 text-xs text-left truncate hover:text-accent transition-colors"
+                      onClick={() => handleApplySavedFilter(sf.value)}
+                      title={sf.label}
+                    >
+                      {sf.label}
+                    </button>
+                    <button
+                      type="button"
+                      className="shrink-0 opacity-0 group-hover:opacity-100 text-text-muted hover:text-risk-critical transition-all"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        removeSavedFilter(i)
+                        if (savedFilters.length <= 1) setSavedFiltersOpen(false)
+                      }}
+                      aria-label={`Remove saved filter: ${sf.label}`}
+                    >
+                      <X className="h-3 w-3" aria-hidden="true" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
       </div>
 
