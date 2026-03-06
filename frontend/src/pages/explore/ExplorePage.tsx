@@ -12,7 +12,8 @@
 import React, { useState, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
-import { Compass, X, Building2, Users, TrendingUp, AlertTriangle, Activity, Network, Clock, DollarSign, ChevronRight } from 'lucide-react'
+import { Compass, X, Building2, Users, TrendingUp, AlertTriangle, Activity, Network, Clock, DollarSign, ChevronRight, Layers } from 'lucide-react'
+import { PageHeader } from '@/components/layout/PageHeader'
 import { cn } from '@/lib/utils'
 import { useExplorerFilters } from '@/hooks/useExplorerFilters'
 import { SectorTreemapPanel } from './SectorTreemapPanel'
@@ -148,6 +149,11 @@ export function ExplorePage() {
 
   return (
     <div className="space-y-5">
+      <PageHeader
+        title="Explore Contracts"
+        subtitle="Cross-filter 3.1M procurement records"
+        icon={Layers}
+      />
 
       {/* Intelligence Insights strip */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">

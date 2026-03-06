@@ -9,7 +9,7 @@
 
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { staggerContainer, staggerItem, fadeIn } from '@/lib/animations'
+import { staggerContainer, staggerItem } from '@/lib/animations'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -17,7 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { investigationApi } from '@/api/client'
 import { SECTOR_COLORS, getSectorNameEN } from '@/lib/constants'
-import { PageHero } from '@/components/DashboardWidgets'
+import { PageHeader } from '@/components/layout/PageHeader'
 import { TableExportButton } from '@/components/TableExportButton'
 import { EmptyState } from '@/components/EmptyState'
 import type {
@@ -460,11 +460,7 @@ export function Investigation() {
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards')
 
   // Data queries
-  const { data: summary, isLoading: summaryLoading } = useQuery({
-    queryKey: ['investigation', 'dashboard-summary'],
-    queryFn: () => investigationApi.getDashboardSummary(),
-    staleTime: 5 * 60 * 1000,
-  })
+
 
   const filterParams: InvestigationFilterParams = useMemo(() => ({
     validation_status: statusFilter === 'all' ? undefined : statusFilter,
@@ -537,16 +533,11 @@ export function Investigation() {
 
   return (
     <div className="space-y-5">
-      {/* HERO */}
-      <motion.div variants={fadeIn} initial="initial" animate="animate">
-        <PageHero
-          trackingLabel={t('hero.trackingLabel')}
-          icon={<Crosshair className="h-4 w-4 text-accent" />}
-          headline={summaryLoading ? '—' : t('hero.casesCount', { count: summary?.total_cases || 0 })}
-          subtitle={t('hero.subtitle')}
-          loading={summaryLoading}
-        />
-      </motion.div>
+      <PageHeader
+        title="Investigation"
+        subtitle="Deep-dive vendor and contract analysis"
+        icon={Crosshair}
+      />
 
       {/* KPI STRIP */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

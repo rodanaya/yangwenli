@@ -3,7 +3,7 @@
   "subtitle": "Análisis profundo de patrones de contratación en administraciones presidenciales mexicanas (2002–2025)",
   "comparisonTable": "Comparación de Administraciones",
   "narrative": "Contexto",
-  "groundTruthNote": "Los casos de corrupcion documentados en este período se registran en la sección de Casos Verificados, incluyendo coincidencias de proveedores, conteos de contratos y tasas de deteccion por caso.",
+  "groundTruthNote": "Los casos de corrupción documentados en este período se registran en la sección de Casos Verificados, incluyendo coincidencias de proveedores, conteos de contratos y tasas de detección por caso.",
   "yearlyTrends": "Tendencias Anuales — {{admin}} ({{start}}–{{end}})",
   "sectorProfile": "Perfil de Riesgo Sectorial — {{admin}}",
   "transitionImpact": "Impacto de Transicion",
@@ -12,18 +12,18 @@
   "documentedCasesNote": "Verificados manualmente desde registros públicos e investigaciones de la ASF — no detectados por ML",
   "noData": "Sin datos anuales disponibles para esta administración",
   "noEvents": "Sin eventos registrados para este período",
-  "insufficientData": "Datos insuficientes para el análisis de transicion",
+  "insufficientData": "Datos insuficientes para el análisis de transición",
   "metrics": {
     "contractsPerYear": "Contratos / Año",
     "avgAnnualSpend": "Gasto Anual Promedio",
     "avgRiskScore": "Riesgo Promedio",
     "directAwardPct": "Adj. Directa %",
     "highRiskPct": "Alto Riesgo %",
-    "singleBidPct": "Licitación Unica %"
+    "singleBidPct": "Licitación Única %"
   },
   "table": {
-    "metric": "Metrica",
-    "selected": "Selecciónada"
+    "metric": "Métrica",
+    "selected": "Seleccionada"
   },
   "statCards": {
     "contracts": "Contratos",
@@ -36,18 +36,18 @@
   },
   "tabs": {
     "overview": "Resumen de Administración",
-    "patterns": "Patrones Sistemicos",
-    "political": "Ciclo Politico",
+    "patterns": "Patrones Sistémicos",
+    "political": "Ciclo Político",
     "compare": "Comparación de Períodos"
   },
-  "selected": "Selecciónada",
+  "selected": "Seleccionada",
   "contracts": "contratos",
   "incompleteDataset": "Conjunto de Datos Incompleto",
   "incompleteDatasetDescription": "La administración de Sheinbaum inicio en octubre de 2024. Estos datos cubren ~4 meses vs. terminos completos de 6 años para otros presidentes. Las comparaciones directas pueden ser engañosas.",
-  "aiDetectedAnomalies": "Anomalias Detectadas por IA",
+  "aiDetectedAnomalies": "Anomalías Detectadas por IA",
   "anomaliesNote": "años que se desvian >1.8σ de la linea base de 23 años",
   "sectorCorrelations": "Correlaciones de Riesgo Sectorial",
-  "sectorCorrelationsNote": "Pares de sectores con trayectorias de riesgo correlaciónadas (|r| ≥ 0.70) durante esta administración",
+  "sectorCorrelationsNote": "Pares de sectores con trayectorias de riesgo correlacionadas (|r| ≥ 0.70) durante esta administración",
   "correlation": "correlación",
   "transitionFrom": "→",
   "heatmapSubtitle": "Métricas de riesgo por sector durante la administración seleccionada — ordenadas por porcentaje de contratos de alto riesgo.",

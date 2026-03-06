@@ -1,8 +1,8 @@
 {
-  "trackingLabel": "ANATOMIA DE ALERTAS",
-  "heroSubtitle": "Contratos con factores de riesgo -- como se distribuyen las senales de corrupcion",
+  "trackingLabel": "ANATOMÍA DE ALERTAS",
+  "heroSubtitle": "Contratos con factores de riesgo -- como se distribuyen las señales de corrupción",
   "errorMessage": "Error al cargar el análisis de factores de riesgo.",
-  "errorHint": "Verifique que el servidor este en funciónamiento en el puerto 8001.",
+  "errorHint": "Verifique que el servidor esté en funcionamiento en el puerto 8001.",
   "filters": {
     "sector": "Sector",
     "allSectors": "Todos los Sectores",
@@ -11,41 +11,41 @@
     "clearFilters": "Limpiar filtros"
   },
   "dangerZone": {
-    "title": "Combinaciones Mas Peligrosas",
-    "description": "Estos pares de factores co-ocurren mucho mas de lo esperado por azar. Cada uno es una posible firma de corrupcion.",
-    "label": "#{{rank}} COMBINACION PELIGROSA",
-    "liftLabel": "{{value}}x elevacion",
+    "title": "Combinaciones Más Peligrosas",
+    "description": "Estos pares de factores co-ocurren mucho más de lo esperado por azar. Cada uno es una posible firma de corrupcion.",
+    "label": "#{{rank}} COMBINACIÓN PELIGROSA",
+    "liftLabel": "{{value}}x elevación",
     "contractsLabel": "{{count}} contratos",
     "investigate": "Clic para investigar"
   },
   "factorFrequency": {
     "title": "Frecuencia de Factores",
-    "description": "Con que frecuencia aparece cada factor de riesgo en los contratos. Las barras coloreadas por puntuacion de riesgo promedio de los contratos con ese factor. Haga clic en cualquier barra para ver los contratos con ese factor de riesgo.",
-    "empty": "Sin datos de factores de riesgo para los filtros selecciónados.",
+    "description": "Con qué frecuencia aparece cada factor de riesgo en los contratos. Las barras coloreadas por puntuación de riesgo promedio de los contratos con ese factor. Haga clic en cualquier barra para ver los contratos con ese factor de riesgo.",
+    "empty": "Sin datos de factores de riesgo para los filtros seleccionados.",
     "showAll": "Mostrar todos los {{count}} factores",
     "showTop": "Mostrar top 15",
     "legendLabel": "Color de barra = riesgo prom.:",
     "low": "Bajo",
     "medium": "Medio",
     "high": "Alto",
-    "critical": "Critico"
+    "critical": "Crítico"
   },
   "worstCombinations": {
     "title": "Peores Combinaciones de Factores",
-    "description": "Top 10 pares de factores clasificados por elevacion -- combinaciones que aparecen juntas con mucha mas frecuencia de lo esperado por azar. Elevacion > 1 = mas que azar; elevacion > 2 = asociacion fuerte. Haga clic en cualquier combinación para investigar los contratos que activaron ambas alertas.",
+    "description": "Top 10 pares de factores clasificados por elevación -- combinaciones que aparecen juntas con mucha más frecuencia de lo esperado por azar. Elevación > 1 = más que azar; elevación > 2 = asociación fuerte. Haga clic en cualquier combinación para investigar los contratos que activaron ambas alertas.",
     "empty": "Sin datos de co-ocurrencia disponibles.",
-    "contractsLift": "{{count}} contratos -- {{lift}}x mas probable de co-ocurrir que por azar",
+    "contractsLift": "{{count}} contratos -- {{lift}}x más probable de co-ocurrir que por azar",
     "showHeatmap": "Mostrar mapa de calor de co-ocurrencia",
     "hideHeatmap": "Ocultar mapa de calor",
-    "heatmapEmpty": "Sin datos de co-ocurrencia para los filtros selecciónados.",
-    "liftLegend": "Elevacion:"
+    "heatmapEmpty": "Sin datos de co-ocurrencia para los filtros seleccionados.",
+    "liftLegend": "Elevación:"
   },
   "factorRiskScatter": {
     "title": "Correlación Factor-Riesgo",
-    "description": "Cada burbuja es un factor de riesgo. Eje X = frecuencia (que tan comun); Eje Y = riesgo promedio. Superior derecha = comun Y de alto riesgo (investigación prioritaria). Superior izquierda = raro pero peligroso. Tamaño de burbuja = numero de contratos. Haga clic en cualquier burbuja para investigar.",
-    "empty": "Sin datos disponibles para los filtros selecciónados.",
+    "description": "Cada burbuja es un factor de riesgo. Eje X = frecuencia (qué tan común); Eje Y = riesgo promedio. Superior derecha = comun Y de alto riesgo (investigación prioritaria). Superior izquierda = raro pero peligroso. Tamaño de burbuja = numero de contratos. Haga clic en cualquier burbuja para investigar.",
+    "empty": "Sin datos disponibles para los filtros seleccionados.",
     "xAxisLabel": "Frecuencia (%)",
-    "yAxisLabel": "Puntuacion de Riesgo Prom.",
+    "yAxisLabel": "Puntuación de Riesgo Prom.",
     "riskThreshold": "Umbral de riesgo 25%"
   },
   "tooltip": {
@@ -55,7 +55,7 @@
   },
   "methodology": {
     "title": "Metodología",
-    "content": "Los factores de riesgo se extraen de la columna risk_factors de cada contrato. La elevacion de co-ocurrencia se calcula como P(A y B) / (P(A) * P(B)), donde una elevacion de 1.0 significa que los factores co-ocurren exactamente con la frecuencia esperada por azar. Valores superiores a 2.0 indican una asociacion no aleatoria fuerte que puede sugerir irregularidades coordinadas en contratación."
+    "content": "Los factores de riesgo se extraen de la columna risk_factors de cada contrato. La elevación de co-ocurrencia se calcula como P(A y B) / (P(A) * P(B)), donde una elevación de 1.0 significa que los factores co-ocurren exactamente con la frecuencia esperada por azar. Valores superiores a 2.0 indican una asociación no aleatoria fuerte que puede sugerir irregularidades coordinadas en contratación."
   },
   "factors": {
     "single_bid": "Licitación Unica",
@@ -63,7 +63,7 @@
     "direct_award": "Adj. Directa",
     "restricted_procedure": "Proc. Restringido",
     "restricted_proc": "Proc. Restringido",
-    "price_anomaly": "Añomalia de Precio",
+    "price_anomaly": "Anomalía de Precio",
     "vendor_conc": "Conc. Proveedor",
     "short_ad": "Aviso Corto",
     "year_end": "Gasto Diciembre",
@@ -87,7 +87,7 @@
     "price_hyp": "Precio Atipico",
     "inst_risk": "Inst. Alto Riesgo",
     "industry_mismatch": "Giro Distinto",
-    "interaction": "Multiples Alertas",
+    "interaction": "Múltiples Alertas",
     "data_flag": "Calidad de Datos"
   },
   "liftTooltip": "El 'lift' mide con qué frecuencia aparece este factor de riesgo en contratos de alto riesgo comparado con la línea base. 2.0× = el doble de frecuente en contratos marcados.",
@@ -95,11 +95,11 @@
     "title": "Manual de Investigación",
     "singleBidShortAd": {
       "combo": "Licitación Única + Período de Publicación Corto",
-      "action": "Solicita las bases de la licitación en la Plataforma Naciónal de Transparencia (PNT). Busca especificaciones técnicas pre-diseñadas para favorecer a un proveedor."
+      "action": "Solicita las bases de la licitación en la Plataforma Nacional de Transparencia (PNT). Busca especificaciones técnicas pre-diseñadas para favorecer a un proveedor."
     },
     "priceConcentration": {
-      "combo": "Añomalía de Precio + Concentración de Proveedor",
-      "action": "Compara con el precio mediaño del sector. Verifica si el mismo proveedor gana en múltiples instituciones de este sector."
+      "combo": "Anomalía de Precio + Concentración de Proveedor",
+      "action": "Compara con el precio mediano del sector. Verifica si el mismo proveedor gana en múltiples instituciones de este sector."
     },
     "yearEndDirect": {
       "combo": "Fin de Año + Adjudicación Directa",
@@ -109,5 +109,4 @@
       "combo": "Sector Inadecuado + Adjudicación Directa",
       "action": "Indicador central de empresa fantasma. Verifica RFC en SAT (sat.gob.mx). Compara la fecha de registro de la empresa con la fecha del primer contrato."
     }
-  }
-}
+  }

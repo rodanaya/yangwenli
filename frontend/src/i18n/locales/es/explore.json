@@ -18,7 +18,7 @@
       "singleBidPct": "% Licitación Única",
       "sector": "Sector Principal",
       "years": "Años Activo",
-      "anomalyPct": "% Añomalías"
+      "anomalyPct": "% Anomalías"
     },
     "presets": {
       "topValue": "Mayor Valor",
@@ -28,7 +28,7 @@
       "outliers": "Valores Atípicos",
       "bigPlayers": "Grandes Actores (1K+)"
     },
-    "empty": "No se encontraron proveedores con los filtros selecciónados.",
+    "empty": "No se encontraron proveedores con los filtros seleccionados.",
     "emptyAction": "Ajustar filtros"
   },
   "institutions": {
@@ -43,7 +43,7 @@
       "vendorCount": "Proveedores",
       "directAwardPct": "% Adj. Directa"
     },
-    "empty": "No se encontraron instituciones con los filtros selecciónados.",
+    "empty": "No se encontraron instituciones con los filtros seleccionados.",
     "emptyAction": "Ajustar filtros"
   },
   "trends": {

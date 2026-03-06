@@ -33,7 +33,7 @@
   "chips": {
     "criticalRisk": "Riesgo Crítico",
     "decemberRush": "Prisa de Diciembre",
-    "coBiddingFlags": "Alertas de Coofertamiento",
+    "coBiddingFlags": "Alertas de Co-licitación",
     "priceOutliers": "Valores Atípicos de Precio"
   },
   "heatmap": {

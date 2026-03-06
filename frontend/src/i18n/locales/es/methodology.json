@@ -28,7 +28,7 @@
     "meaning": "Significado",
     "distribution": "Distribución",
     "count": "Cantidad",
-    "disclaimer": "Las puntuaciones de riesgo son indicadores estadísticos de riesgo con intervalos de confianza del 95%. Una puntuación alta indica añomalía estadística consistente con patrones de corrupción — no constituye prueba."
+    "disclaimer": "Las puntuaciones de riesgo son indicadores estadísticos de riesgo con intervalos de confianza del 95%. Una puntuación alta indica anomalía estadística consistente con patrones de corrupción — no constituye prueba."
   },
   "coefficients": {
     "title": "Coeficientes del Modelo Global v5.1",
@@ -37,11 +37,11 @@
   "keyFindings": {
     "title": "Lo Que Aprendió el Modelo",
     "concentration": "La concentración es la señal dominante",
-    "concentrationDetail": "La concentración de proveedores, la volatilidad de precios y la tasa de victorias son los 3 principales predictores. Estos reflejan el patrón documentado de corrupción en México: grandes proveedores capturando monopolios instituciónales.",
+    "concentrationDetail": "La concentración de proveedores, la volatilidad de precios y la tasa de victorias son los 3 principales predictores. Estos reflejan el patrón documentado de corrupción en México: grandes proveedores capturando monopolios institucionales.",
     "directAward": "Las adjudicaciones directas ahora aumentan el riesgo",
     "directAwardDetail": "En v4.0, el coeficiente de adjudicación directa era -0.197 (contraintuitivo). Con verdad fundamental diversificada y nuevas características en v5.1, se corrigió a +0.182.",
     "singleBidWeak": "Licitante único es una señal débil",
-    "singleBidDetail": "A pesar de ser el indicador #1 en conjuntos de datos europeos, la licitación con un solo participante tiene un coeficiente cercaño a cero en México. Esto refleja la tasa de adjudicación directa del 70% — los procedimientos competitivos son raros, por lo que las licitaciones únicas aportan menos información.",
+    "singleBidDetail": "A pesar de ser el indicador #1 en conjuntos de datos europeos, la licitación con un solo participante tiene un coeficiente cercano a cero en México. Esto refleja la tasa de adjudicación directa del 70% — los procedimientos competitivos son raros, por lo que las licitaciones únicas aportan menos información.",
     "coBiddingZero": "La co-licitación no provee señal",
     "coBiddingZeroDetail": "Regularizada a exactamente 0.000 en todos los modelos. Los casos de entrenamiento involucran concentración, no anillos de colusión."
   },
@@ -60,7 +60,7 @@
     "zScore": "Normalización Z-Score",
     "zScoreDesc": "Cada característica se estandariza respecto a su línea base de sector y año. Una adjudicación directa en Defensa (80% son directas) es menos sospechosa que en Educación (50% son directas). Los z-scores capturan este contexto.",
     "zScoreFormula": "z = (x - μ(sector, año)) / máx(σ(sector, año), 0.001)",
-    "mahalanobis": "Distancia de Mahalañobis",
+    "mahalanobis": "Distancia de Mahalanobis",
     "mahalanobisDesc": "Mide qué tan inusual es el vector de características de un contrato en el espacio multidimensional. Reemplaza los 5 pares de interacción codificados del v3.3 con una matriz de covarianza completa que captura todas las relaciones por pares.",
     "mahalanobisFormula": "D²(z) = zᵀ Σ⁻¹ z",
     "perSector": "Regresión Logística por Sector",
@@ -128,7 +128,7 @@
   },
   "modelTransparency": {
     "pageTitle": "Transparencia del Modelo",
-    "howItWorks": "Cómo Funcióna el Modelo de Riesgo",
+    "howItWorks": "Cómo Funciona el Modelo de Riesgo",
     "coefficientExplorer": "Explorador de Coeficientes",
     "perSectorModels": "Modelos por Sector",
     "validationMetrics": "Métricas de Validación",
@@ -155,7 +155,7 @@
       "description": "Coeficientes de regresión logística — barras más grandes significan mayor influencia en la puntuación de riesgo",
       "callout": "Cada coeficiente representa el cambio en log-odds de corrupción por cada aumento de 1 desviación estándar en la característica z-normalizada. Los valores positivos aumentan el riesgo; los negativos lo disminuyen.",
       "calloutCI": " Las barras de error muestran intervalos de confianza del 95% por bootstrap (1,000 remuestreos).",
-      "sectorLabel": "Selecciónar sector para coeficientes",
+      "sectorLabel": "Seleccionar sector para coeficientes",
       "sectorGlobal": "Global (todos los sectores)",
       "legendIncrease": "Aumenta el riesgo",
       "legendDecrease": "Disminuye el riesgo",
@@ -198,17 +198,17 @@
       "colAvgScore": "Puntaje Promedio",
       "footerHigh": "12 de 15 casos coincidentes: >95% tasa de detección",
       "footerLarge": "3 casos más grandes (21K contratos): >84% alto+",
-      "footerWeak": "Más débil: Oceañografía (50% detección, 2 contratos)"
+      "footerWeak": "Más débil: Oceanografía (50% detección, 2 contratos)"
     },
     "limitations": {
       "sectionTitle": "Limitaciones Conocidas",
-      "warning": "Ningún modelo es perfecto. Estas limitaciones se divulgan por transparencia. Una puntuación de riesgo alta indica una añomalía estadística consistente con patrones de corrupción — no constituye prueba de irregularidad.",
+      "warning": "Ningún modelo es perfecto. Estas limitaciones se divulgan por transparencia. Una puntuación de riesgo alta indica una anomalía estadística consistente con patrones de corrupción — no constituye prueba de irregularidad.",
       "groundTruthConc": "Concentración de Verdad Fundamental",
       "groundTruthConcDesc": "v5.1 incluye 22 casos documentados en los 12 sectores (incluidas las empresas fantasma del SAT EFOS). Sin embargo, tres casos (IMSS, Segalmex, COVID-19) siguen representando la mayoría de los contratos de entrenamiento. La concentración de proveedores sigue siendo dominante en la mayoría de los submodelos por sector.",
       "smallCase": "Detección de Casos Pequeños",
-      "smallCaseDesc": "Los casos con pocos contratos tienen tasas de detección más bajas: La Estafa Maestra (10 contratos, 0% alto+), Oceañografía (2 contratos, 50% detección). El modelo requiere suficiente volumen de contratos para detectar patrones de forma confiable.",
+      "smallCaseDesc": "Los casos con pocos contratos tienen tasas de detección más bajas: La Estafa Maestra (10 contratos, 0% alto+), Oceanografía (2 contratos, 50% detección). El modelo requiere suficiente volumen de contratos para detectar patrones de forma confiable.",
       "noCausal": "Sin Afirmaciones Causales",
-      "noCausalDesc": "Un P(corrupto|z) alto indica una añomalía estadística consistente con patrones de corrupción observados en 22 casos documentados. No prueba corrupción. Algunos sectores (defensa, energía) tienen razones estructurales para una alta concentración de proveedores que son legítimas.",
+      "noCausalDesc": "Un P(corrupto|z) alto indica una anomalía estadística consistente con patrones de corrupción observados en 22 casos documentados. No prueba corrupción. Algunos sectores (defensa, energía) tienen razones estructurales para una alta concentración de proveedores que son legítimas.",
       "dataQuality": "Variación en la Calidad de Datos",
       "dataQualityDesc": "Los datos de la Estructura A (2002-2010) tienen solo 0.1% de cobertura RFC, lo que hace poco confiable la identificación de proveedores en ese período. Los z-scores y las puntuaciones de riesgo para contratos anteriores pueden ser menos precisos. El análisis de redes es más confiable para datos de 2010+ donde la cobertura RFC supera el 15%."
     },
@@ -217,8 +217,8 @@
       "description": "Flujo completo desde los datos brutos del contrato hasta la puntuación de riesgo",
       "step1Title": "Normalización Z-Score",
       "step1Desc": "Cada una de las 16 características se normaliza respecto a su línea base de sector y año, produciendo z-scores que miden qué tan inusual es un contrato comparado con sus pares.",
-      "step2Title": "Distancia de Mahalañobis",
-      "step2Desc": "El vector z-score se evalúa contra la matriz de covarianza del sector (reducción de Ledoit-Wolf) para detectar añomalías multivariadas — combinaciones inusuales de factores.",
+      "step2Title": "Distancia de Mahalanobis",
+      "step2Desc": "El vector z-score se evalúa contra la matriz de covarianza del sector (reducción de Ledoit-Wolf) para detectar anomalías multivariadas — combinaciones inusuales de factores.",
       "step3Title": "Regresión Logística por Sector",
       "step3Desc": "ElasticNet con validación cruzada (C=10.0, l1_ratio=0.25) con 12 submodelos por sector entrenados en contratos conocidos como malos de 22 casos de corrupción convierte z-scores en puntuaciones de riesgo.",
       "step4Title": "Corrección PU + IC",

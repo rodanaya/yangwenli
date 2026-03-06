@@ -20,7 +20,7 @@
     "description": "Qué proporción del valor total de contrataciones de un sector va a un solo proveedor. Alta concentración significa que un proveedor domina — un predictor principal de riesgo de corrupción en nuestro modelo (coeficiente +0.43)."
   },
   "mahalanobisDistance": {
-    "title": "Distancia de Mahalañobis",
+    "title": "Distancia de Mahalanobis",
     "description": "Una medida estadística de qué tan inusual es un contrato en TODAS las 16 dimensiones de riesgo simultáneamente. Como preguntar: '¿Qué tan lejos está este contrato de lo normal?' Valores más altos = más anómalo."
   },
   "zScore": {
@@ -44,7 +44,7 @@
     "description": "Cuando un proveedor gana contratos en un sector que no coincide con su negocio principal. Por ejemplo, una constructora ganando contratos de salud. Sugiere empresa fantasma o favoritismo."
   },
   "priceAnomaly": {
-    "title": "Añomalía de Precio",
+    "title": "Anomalía de Precio",
     "description": "Monto de contrato estadísticamente inusual comparado con contratos similares del mismo sector y año. Detectado usando el método IQR de Tukey — valores más allá de 1.5x el rango intercuartil son señalados."
   },
   "cobidding": {
@@ -53,7 +53,7 @@
   },
   "clusteringCoefficient": {
     "title": "Coeficiente de Agrupamiento",
-    "description": "Coeficiente de agrupamiento Wachs-Fazekas (2021): mide qué tan interconectados están entre sí los socios de co-licitación de este proveedor. Un valor cercaño a 1.0 significa que todos los co-licitantes también licitan entre sí — una característica de los anillos estructurados de manipulación de ofertas."
+    "description": "Coeficiente de agrupamiento Wachs-Fazekas (2021): mide qué tan interconectados están entre sí los socios de co-licitación de este proveedor. Un valor cercano a 1.0 significa que todos los co-licitantes también licitan entre sí — una característica de los anillos estructurados de manipulación de ofertas."
   },
   "yearEnd": {
     "title": "Cierre de Año Fiscal",
@@ -85,7 +85,7 @@
   },
   "adPeriod": {
     "title": "Período de Publicación",
-    "description": "Días entre la públicación de una oportunidad de contratación y la adjudicación del contrato. Períodos muy cortos (<15 días) pueden indicar que el proceso fue apresurado para favorecer a un proveedor predeterminado."
+    "description": "Días entre la publicación de una oportunidad de contratación y la adjudicación del contrato. Períodos muy cortos (<15 días) pueden indicar que el proceso fue apresurado para favorecer a un proveedor predeterminado."
   },
   "rfc": {
     "title": "RFC (Identificación Fiscal)",
@@ -97,15 +97,15 @@
   },
   "licitacionPublica": {
     "title": "Licitación Pública",
-    "description": "El procedimiento de contratación más transparente bajo la ley mexicana. Obligatorio para contratos por encima de los umbrales de valor legal. Incluye período de públicación pública (mínimo 20 días), licitantes ilimitados y públicación obligatoria en COMPRANET. En la práctica, solo el 29% de los contratos federales usa este procedimiento — el otro 71% omite la competencia abierta."
+    "description": "El procedimiento de contratación más transparente bajo la ley mexicana. Obligatorio para contratos por encima de los umbrales de valor legal. Incluye período de publicación pública (mínimo 20 días), licitantes ilimitados y publicación obligatoria en COMPRANET. En la práctica, solo el 29% de los contratos federales usa este procedimiento — el otro 71% omite la competencia abierta."
   },
   "laassp": {
     "title": "LAASSP",
-    "description": "Ley de Adquisiciones, Arrendamientos y Servicios del Sector Público — ley federal de contrataciones de México, promulgada el 4 de enero de 2000. Define cuándo las dependencias deben usar licitación abierta versus adjudicación directa, establece umbrales de valor y requisitos de públicación. La ley original fue abrogada y reemplazada en abril de 2025."
+    "description": "Ley de Adquisiciones, Arrendamientos y Servicios del Sector Público — ley federal de contrataciones de México, promulgada el 4 de enero de 2000. Define cuándo las dependencias deben usar licitación abierta versus adjudicación directa, establece umbrales de valor y requisitos de publicación. La ley original fue abrogada y reemplazada en abril de 2025."
   },
   "inai": {
     "title": "INAI",
-    "description": "Instituto Naciónal de Transparencia, Acceso a la Información y Protección de Datos Personales — organismo independiente de transparencia de México, establecido en 2002. Ciudadaños y periodistas podían apelar al INAI cuando las dependencias negaban solicitudes de información. Abolido constitucionalmente el 20 de diciembre de 2024. Reemplazado por 'Transparencia para el Pueblo', organismo bajo la rama ejecutiva, con aproximadamente el 2% del presupuesto anterior del INAI."
+    "description": "Instituto Nacional de Transparencia, Acceso a la Información y Protección de Datos Personales — organismo independiente de transparencia de México, establecido en 2002. Ciudadaños y periodistas podían apelar al INAI cuando las dependencias negaban solicitudes de información. Abolido constitucionalmente el 20 de diciembre de 2024. Reemplazado por 'Transparencia para el Pueblo', organismo bajo la rama ejecutiva, con aproximadamente el 2% del presupuesto anterior del INAI."
   },
   "comprasmx": {
     "title": "ComprasMX",
@@ -139,7 +139,7 @@
       "mexico_note": "Nuevo en v5.0. Proveedores con montos de contrato muy variables respecto a la norma del sector."
     },
     "institution_diversity": {
-      "label": "Diversidad Instituciónal",
+      "label": "Diversidad Institucional",
       "coefficient": "-0.848",
       "validation_strength": "Negativo — factor protector",
       "key_citation": "Coviello & Mariniello (2014)",
@@ -185,7 +185,7 @@
       "coefficient": "+0.064",
       "validation_strength": "Moderado",
       "key_citation": "Fazekas, Skuhrovec & Wachs (2020)",
-      "mexico_note": "El proveedor pertenece a un grupo de entidades relaciónadas. Corregido a positivo en v5.0."
+      "mexico_note": "El proveedor pertenece a un grupo de entidades relacionadas. Corregido a positivo en v5.0."
     },
     "year_end": {
       "label": "Contrato de Fin de Año",
@@ -195,7 +195,7 @@
       "mexico_note": "Contrato adjudicado en diciembre, consistente con el comportamiento de gasto de presupuesto residual."
     },
     "institution_risk": {
-      "label": "Riesgo Instituciónal",
+      "label": "Riesgo Institucional",
       "coefficient": "+0.057",
       "validation_strength": "Débil",
       "key_citation": "Metodología CRI del FMI",

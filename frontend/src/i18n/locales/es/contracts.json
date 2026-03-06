@@ -1,7 +1,7 @@
 {
   "title": "Contratos",
   "searchPlaceholder": "Buscar por título o número de contrato...",
-  "guidance": "Seleccióne un preset para comenzar a investigar, o use filtros para encontrar contratos específicos. Haga clic en cualquier fila para expandir los factores de riesgo. Use la herramienta de comparación para analizar contratos lado a lado.",
+  "guidance": "Seleccione un preset para comenzar a investigar, o use filtros para encontrar contratos específicos. Haga clic en cualquier fila para expandir los factores de riesgo. Use la herramienta de comparación para analizar contratos lado a lado.",
   "presets": {
     "sectionLabel": "Presets de Investigación",
     "suspiciousMonopolies": {
@@ -30,7 +30,7 @@
     },
     "mostAnomalous": {
       "label": "Más Anómalos",
-      "description": "Contratos más alejados de las normas estadísticas — mayor distancia de Mahalañobis en todas las dimensiones de riesgo"
+      "description": "Contratos más alejados de las normas estadísticas — mayor distancia de Mahalanobis en todas las dimensiones de riesgo"
     },
     "recentCritical": {
       "label": "Recientes y Críticos",
@@ -57,7 +57,7 @@
     "procedure": "Procedimiento",
     "isDirectAward": "Adj. Directa",
     "isSingleBid": "Licitación Única",
-    "anomalyScore": "Añomalía D²"
+    "anomalyScore": "Anomalía D²"
   },
   "detail": {
     "title": "Detalle del Contrato",
@@ -71,7 +71,7 @@
     "riskBreakdown": "Desglose de Riesgo",
     "riskFactors": "Factores de Riesgo",
     "confidenceInterval": "Intervalo de Confianza",
-    "mahalanobisDistance": "Distancia de Mahalañobis",
+    "mahalanobisDistance": "Distancia de Mahalanobis",
     "noFactors": "Sin factores de riesgo identificados",
     "overview": "Resumen",
     "riskAssessment": "Evaluación de Riesgo",
@@ -107,13 +107,13 @@
     "singleBidRate": "Tasa de Licitación Única"
   },
   "table": {
-    "anomalyTooltip": "Distancia de Mahalañobis — qué tan estadísticamente inusual es este contrato en todas las dimensiones de riesgo. Mayor = más inusual.",
-    "selectForCompare": "Selecciónar para comparar",
+    "anomalyTooltip": "Distancia de Mahalanobis — qué tan estadísticamente inusual es este contrato en todas las dimensiones de riesgo. Mayor = más inusual.",
+    "selectForCompare": "Seleccionar para comparar",
     "clearSelection": "Limpiar selección",
     "viewFullDetails": "Ver detalles completos",
     "fullDetails": "Detalles completos"
   },
-  "empty": "No se encontraron contratos con los filtros selecciónados.",
+  "empty": "No se encontraron contratos con los filtros seleccionados.",
   "emptyInitial": "3.1 Millones de Contratos · 2002–2025",
   "emptyInitialDesc": "Busque cualquier contrato, institución o nombre de proveedor para comenzar. O use los filtros de arriba para explorar por sector, año o nivel de riesgo.",
   "emptyFiltered": "Ningún contrato coincide con sus filtros",

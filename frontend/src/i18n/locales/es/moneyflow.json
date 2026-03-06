@@ -10,21 +10,21 @@
     "nodeColor": "Color del nodo = nivel de riesgo:",
     "leftRight": "Izquierda = instituciones · Derecha = proveedores"
   },
-  "trackingLabel": "ANALISIS DE FLUJO DE FONDOS",
+  "trackingLabel": "ANÁLISIS DE FLUJO DE FONDOS",
   "title": "Sigue el Dinero",
   "subtitle": "Rastreando el flujo de fondos de contratación pública de instituciones a proveedores",
   "heroSubtitle": "{{count}} contratos rastreados",
   "heroSubtitleYear": "{{count}} contratos rastreados en {{year}}",
-  "heroDetail": "Seleccióne un año y sector para rastrear como fluye el gasto gubernamental de instituciones a traves de sectores hacia proveedores, resaltando canales de alto riesgo.",
+  "heroDetail": "Seleccione un año y sector para rastrear cómo fluye el gasto gubernamental de instituciones a través de sectores hacia proveedores, resaltando canales de alto riesgo.",
   "errorTitle": "Sigue el Dinero",
   "errorSubtitle": "Rastreando el flujo de fondos de contratación pública de instituciones a proveedores",
   "errorMessage": "Error al cargar datos de flujo de fondos",
-  "errorHint": "Verifique que el servidor este en funciónamiento e intente de nuevo.",
+  "errorHint": "Verifique que el servidor esté en funcionamiento e intente de nuevo.",
   "emptyHeadline": "Sin Datos",
   "emptySubtitle": "Ajuste los filtros para cargar datos de flujo de fondos",
-  "emptyDetail": "Seleccióne un año y sector para rastrear como fluye el gasto gubernamental de instituciones a traves de sectores hacia proveedores.",
+  "emptyDetail": "Seleccione un año y sector para rastrear cómo fluye el gasto gubernamental de instituciones a través de sectores hacia proveedores.",
   "emptyMessage": "Sin datos de flujo de fondos para esta combinación",
-  "emptyHint": "Intente selecciónar un año o sector especifico. El análisis de flujo de fondos agrega relaciones institución-proveedor y requiere datos de contratos con registros de instituciones y proveedores.",
+  "emptyHint": "Intente selecciónar un año o sector específico. El análisis de flujo de fondos agrega relaciones institución-proveedor y requiere datos de contratos con registros de instituciones y proveedores.",
   "filters": {
     "allYears": "Todos los Años",
     "allSectors": "Todos los Sectores",
@@ -58,7 +58,7 @@
     "actions": "Acciones"
   },
   "emptyStates": {
-    "noInstitutionData": "Sin datos de flujo instituciónal disponibles",
+    "noInstitutionData": "Sin datos de flujo institucional disponibles",
     "noVendorData": "Sin datos de flujo de proveedores disponibles",
     "noSectorData": "Sin datos de distribución por sector disponibles",
     "noHighRiskFlows": "Sin flujos de alto riesgo para los filtros actuales"

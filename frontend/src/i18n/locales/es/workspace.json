@@ -22,7 +22,7 @@
     "exportFiltered": "Exportar Filtrado",
     "exporting": "Exportando...",
     "exportSuccess": "Exportación completa",
-    "selectFormat": "Selecciónar formato",
+    "selectFormat": "Seleccionar formato",
     "includesNRecords": "Incluye {{count}} registros"
   }
 }

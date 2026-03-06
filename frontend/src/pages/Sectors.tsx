@@ -8,7 +8,7 @@
 
 import { memo, useMemo, useState, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { staggerContainer, staggerItem, slideUp, fadeIn } from '@/lib/animations'
+import { staggerContainer, staggerItem, fadeIn } from '@/lib/animations'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -23,6 +23,7 @@ import { SECTOR_COLORS, SECTORS, RISK_COLORS, getRiskLevelFromScore, getSectorNa
 import { Heatmap } from '@/components/charts/Heatmap'
 import type { SectorStatistics } from '@/api/types'
 import { AlertTriangle, BarChart3, Layers, X } from 'lucide-react'
+import { PageHeader } from '@/components/layout/PageHeader'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { ScrollReveal } from '@/hooks/useAnimations'
 import { StatCard as SharedStatCard } from '@/components/DashboardWidgets'
@@ -777,25 +778,11 @@ export function Sectors() {
 
   return (
     <div className="space-y-5">
-      {/* Header */}
-      <motion.div
-        variants={slideUp}
-        initial="initial"
-        whileInView="animate"
-        viewport={{ once: true, margin: '-50px' }}
-      >
-      <ScrollReveal direction="fade">
-      <div>
-        <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
-          <BarChart3 className="h-4 w-4 text-accent" />
-          {t('page.title')}
-        </h2>
-        <p className="text-xs text-text-muted mt-0.5">
-          {t('page.subtitle')}
-        </p>
-      </div>
-      </ScrollReveal>
-      </motion.div>
+      <PageHeader
+        title="Sector Analysis"
+        subtitle="12-sector taxonomy with risk breakdown"
+        icon={BarChart3}
+      />
 
       {/* ================================================================ */}
       {/* SECTOR RANKING STRIP — All 12 sectors by avg risk, clickable  */}

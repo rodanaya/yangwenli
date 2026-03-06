@@ -9,7 +9,7 @@
     "yoyChange": "Cambio Anual en Gasto"
   },
   "topVendors": {
-    "title": "Top 10 Vendedores por Valor",
+    "title": "Top 10 Proveedores por Valor",
     "subtitle": "Proveedores con mayor valor contratado en el año seleccionado",
     "rank": "Posición",
     "vendor": "Proveedor",
@@ -53,7 +53,7 @@
   "loading": "Cargando datos del año…",
   "vsLastYear": "vs año anterior",
   "topRiskVendors": {
-    "title": "Vendedores de Mayor Riesgo",
-    "subtitle": "Vendedores con mayor puntuación de riesgo promedio ese año (mínimo 5 contratos)"
+    "title": "Proveedores de Mayor Riesgo",
+    "subtitle": "Proveedores con mayor puntuación de riesgo promedio ese año (mínimo 5 contratos)"
   }
 }

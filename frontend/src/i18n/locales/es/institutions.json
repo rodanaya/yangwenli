@@ -39,7 +39,7 @@
   "publicationDelay": {
     "title": "Transparencia de Demora en Publicación",
     "contractsWithTimingData": "{{count}} contratos con datos de tiempo",
-    "description": "Días entre la públicación del procedimiento y la adjudicación del contrato. Ventanas más cortas comprimen el tiempo de preparación de proveedores y favorecen a proveedores preselecciónados.",
+    "description": "Días entre la publicación del procedimiento y la adjudicación del contrato. Ventanas más cortas comprimen el tiempo de preparación de proveedores y favorecen a proveedores preseleccionados.",
     "avgDelay": "Demora Promedio",
     "days": "días",
     "timely": "Oportuno (<15 días)",

@@ -14,7 +14,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { TableExportButton } from '@/components/TableExportButton'
 import { CaseLeadButton } from '@/components/CaseLeadDialog'
-import { AlertCircle, Search, X, Eye, EyeOff, Activity, BarChart3 } from 'lucide-react'
+import { AlertCircle, Search, X, Eye, EyeOff, Activity, BarChart3, Library } from 'lucide-react'
+import { PageHeader } from '@/components/layout/PageHeader'
 import { RISK_COLORS, SECTORS } from '@/lib/constants'
 import { staggerContainer, staggerItem, slideUp } from '@/lib/animations'
 
@@ -290,14 +291,12 @@ export default function CaseLibrary() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold font-mono text-text-primary">{t('title')}</h1>
-          <p className="text-sm text-text-muted mt-1">{t('subtitle')}</p>
-        </div>
-        <CaseLeadButton className="shrink-0" />
-      </div>
+      <PageHeader
+        title="Case Library"
+        subtitle="43 documented corruption cases"
+        icon={Library}
+        actions={<CaseLeadButton className="shrink-0" />}
+      />
 
       <StatsBar />
 

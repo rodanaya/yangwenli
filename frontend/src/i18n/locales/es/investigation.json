@@ -2,12 +2,12 @@
   "title": "Investigación",
   "hero": {
     "trackingLabel": "CASOS DE INVESTIGACIÓN",
-    "subtitle": "Pistas de investigación generadas por IA a partir de la detección de añomalías",
+    "subtitle": "Pistas de investigación generadas por IA a partir de la detección de anomalías",
     "casesCount": "{{count}} Casos",
     "confirmedDetail": "confirmados externamente",
     "valueAtRisk": "valor en riesgo"
   },
-  "description": "Cada caso representa un clúster de contratos sospechosos identificados mediante detección de añomalías estadísticas. Revisa, corrobora y valida con fuentes externas.",
+  "description": "Cada caso representa un clúster de contratos sospechosos identificados mediante detección de anomalías estadísticas. Revisa, corrobora y valida con fuentes externas.",
   "status": {
     "pending": "Pendiente",
     "corroborated": "Corroborado",

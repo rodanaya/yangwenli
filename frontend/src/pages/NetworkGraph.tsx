@@ -5,12 +5,13 @@
  */
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
-import { ScrollReveal, useCountUp } from '@/hooks/useAnimations'
+import { ScrollReveal } from '@/hooks/useAnimations'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import ReactECharts from 'echarts-for-react'
 import { Network, Search, X, ExternalLink, Users, UserCircle, RotateCcw, ChevronDown, ChevronUp, ZoomIn, ZoomOut, AlertTriangle, Info, Eye, Layers, FileText } from 'lucide-react'
+import { PageHeader } from '@/components/layout/PageHeader'
 import { RiskBadge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SectionDescription } from '@/components/SectionDescription'
@@ -842,15 +843,6 @@ function CommunitySidePanel({
 }
 
 // ---------------------------------------------------------------------------
-// GraphStatCount — count-up span for graph stats
-// ---------------------------------------------------------------------------
-
-function GraphStatCount({ value }: { value: number }) {
-  const { ref, value: animated } = useCountUp(value, 800)
-  return <span ref={ref}>{Math.round(animated)}</span>
-}
-
-// ---------------------------------------------------------------------------
 // Main page component
 // ---------------------------------------------------------------------------
 
@@ -1395,29 +1387,21 @@ export function NetworkGraph() {
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-      {/* Page header */}
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
-            <Network className="h-4.5 w-4.5 text-accent" />
-            {t('pageTitle')}
-          </h2>
-          {graphData && (
-            <p className="text-xs text-text-muted mt-0.5">
-              <GraphStatCount value={graphData.total_nodes} /> {t('statsNodes')} · <GraphStatCount value={graphData.total_links} /> {t('statsConnections')}
-              {centerEntity && ` · ${t('statsCenteredOn')} ${toTitleCase(centerEntity.name)}`}
-            </p>
-          )}
-        </div>
-        <button
-          onClick={() => setShowInstructions(true)}
-          className="shrink-0 flex items-center gap-1.5 text-xs text-text-muted hover:text-accent border border-border/40 hover:border-accent/40 rounded px-2.5 py-1.5 transition-colors"
-          title="How to use the Network Explorer"
-        >
-          <Info className="h-3.5 w-3.5" />
-          How to use
-        </button>
-      </div>
+      <PageHeader
+        title="Vendor Network"
+        subtitle="Relationship graph across procurement data"
+        icon={Network}
+        actions={
+          <button
+            onClick={() => setShowInstructions(true)}
+            className="shrink-0 flex items-center gap-1.5 text-xs text-text-muted hover:text-accent border border-border/40 hover:border-accent/40 rounded px-2.5 py-1.5 transition-colors"
+            title="How to use the Network Explorer"
+          >
+            <Info className="h-3.5 w-3.5" />
+            How to use
+          </button>
+        }
+      />
 
       <SectionDescription>{t('pageDesc')}</SectionDescription>
       {/* Graph stats are shown inline in the header above */}
