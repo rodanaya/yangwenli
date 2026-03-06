@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
@@ -28,12 +28,14 @@ import {
   ShoppingCart,
   BarChart2,
   Code2,
+  MessageSquarePlus,
 } from 'lucide-react'
 import { RubliLogoMark } from '@/components/ui/RubliLogoMark'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { watchlistApi, caseLibraryApi } from '@/api/client'
+import { ReportIssueDialog } from '@/components/ReportIssueDialog'
 
 export interface SidebarProps {
   collapsed: boolean
@@ -154,6 +156,8 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   })
   const caseCount = caseStats?.total_cases ?? 0
 
+  const [reportOpen, setReportOpen] = useState(false)
+
   return (
     <aside
       className={cn(
@@ -258,6 +262,34 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         </div>
       </div>
 
+      {/* Report an issue button */}
+      <div className="px-2 pb-1">
+        {isCollapsed ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setReportOpen(true)}
+                className="w-full flex justify-center items-center rounded-md py-1.5 text-text-muted hover:text-text-primary hover:bg-sidebar-hover transition-colors"
+                aria-label="Report an issue"
+              >
+                <MessageSquarePlus className="h-4 w-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={8}>
+              <p className="text-xs">Report an issue</p>
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <button
+            onClick={() => setReportOpen(true)}
+            className="w-full flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-text-muted hover:text-text-primary hover:bg-sidebar-hover transition-colors"
+          >
+            <MessageSquarePlus className="h-4 w-4 flex-shrink-0" />
+            <span className="truncate">Report an issue</span>
+          </button>
+        )}
+      </div>
+
       {/* Bottom bar — language toggle + collapse button */}
       <div className="border-t border-border/30 p-2">
         <div className="flex items-center justify-end">
@@ -278,6 +310,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           </div>
         </div>
       </div>
+      <ReportIssueDialog open={reportOpen} onOpenChange={setReportOpen} />
     </aside>
   )
 }

@@ -1752,6 +1752,23 @@ export const categoriesApi = {
 }
 
 // ============================================================================
+// Issue Reporting Endpoints
+// ============================================================================
+
+export const issueApi = {
+  async submit(data: {
+    category: string
+    subject: string
+    description: string
+    page_url: string
+    email?: string
+  }): Promise<{ id: number; status: string; created_at: string }> {
+    const { data: res } = await api.post('/issues', data)
+    return res
+  },
+}
+
+// ============================================================================
 // Case Library Endpoints
 // ============================================================================
 
@@ -2174,4 +2191,5 @@ export default {
   search: searchApi,
   feedback: feedbackApi,
   dossiers: dossierApi,
+  issues: issueApi,
 }
