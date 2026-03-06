@@ -105,6 +105,13 @@
     "moderateClustering": "Agrupación moderada",
     "lowClustering": "Baja agrupación"
   },
+  "flags": {
+    "highDirectAward": "{{pct}}% de contratos fueron adjudicaciones directas (sin licitación competitiva)",
+    "highSingleBid": "{{pct}}% de los procedimientos competitivos tuvieron solo este proveedor licitando",
+    "suspiciousCoBidding": "Patrones sospechosos de co-licitación detectados (análisis heurístico — no incluido en el puntaje ML v5.1, que asigna co_bid_rate un coeficiente de 0.000)",
+    "highClustering": "Alta concentración de red ({{pct}}%) — los socios licitadores forman un grupo muy unido",
+    "primaryDriver": "Factor principal: {{factor}} (z={{z}} — {{z}} desviaciones estándar sobre el promedio sectorial)"
+  },
   "waterfall": {
     "description": "Las barras positivas aumentan el riesgo (rojo/naranja). Las barras negativas reducen el riesgo (verde). La altura de la barra refleja la contribución de cada factor a la puntuación total.",
     "totalScore": "Puntuación Total",

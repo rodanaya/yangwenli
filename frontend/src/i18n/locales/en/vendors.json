@@ -105,6 +105,13 @@
     "moderateClustering": "Moderate clustering",
     "lowClustering": "Low clustering"
   },
+  "flags": {
+    "highDirectAward": "{{pct}}% of contracts were direct awards (bypassed competitive tendering)",
+    "highSingleBid": "{{pct}}% of competitive procedures had only this vendor bidding",
+    "suspiciousCoBidding": "Suspicious co-bidding patterns detected (heuristic analysis — not included in the v5.1 ML risk score, which assigns co_bid_rate a coefficient of 0.000)",
+    "highClustering": "High network clustering ({{pct}}%) — bidding partners form a tightly-knit group",
+    "primaryDriver": "Primary driver: {{factor}} (z={{z}} — {{z}} SDs above sector average)"
+  },
   "waterfall": {
     "description": "Positive bars increase risk (red/orange). Negative bars reduce risk (green). Bar height reflects each factor's contribution to the overall score.",
     "totalScore": "Total Score",

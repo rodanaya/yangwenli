@@ -28,7 +28,7 @@ import VendorContractTimeline from '@/components/VendorContractTimeline'
 import VendorContractRiskMatrix from '@/components/VendorContractRiskMatrix'
 import VendorContractBreakdown from '@/components/VendorContractBreakdown'
 import { buildVendorNarrative } from '@/lib/narratives'
-import type { ContractListItem, VendorExternalFlags, VendorWaterfallContribution } from '@/api/types'
+import type { ContractListItem, VendorExternalFlags, VendorWaterfallContribution, VendorQQWResponse } from '@/api/types'
 import {
   AreaChart,
   Area,
@@ -704,6 +704,14 @@ export function VendorProfile() {
     enabled: !!vendorId,
   })
 
+  // Fetch QQW cross-reference data
+  const { data: qqwData } = useQuery<VendorQQWResponse>({
+    queryKey: ['vendor-qqw', vendorId],
+    queryFn: () => vendorApi.getQQW(Number(vendorId)),
+    enabled: !!vendorId,
+    staleTime: 60 * 60 * 1000, // 1 hour — QQW data changes infrequently
+  })
+
   // Fetch year-by-year lifecycle (contract count + risk per year)
   const { data: lifecycleData, error: lifecycleError } = useQuery({
     queryKey: ['vendor', vendorId, 'risk-timeline'],
@@ -1048,6 +1056,14 @@ export function VendorProfile() {
               {t('findSimilar')}
             </button>
           )}
+          <button
+            onClick={() => navigate(`/vendors/compare?a=${vendorId}`)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-background-elevated border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
+            aria-label="Compare this vendor with another"
+          >
+            <BarChart3 className="h-3.5 w-3.5" />
+            Compare
+          </button>
           <GenerateReportButton
             reportType="vendor"
             entityId={vendorId}
@@ -1111,18 +1127,18 @@ export function VendorProfile() {
         }
         // Procurement patterns
         if ((vendor.direct_award_pct ?? 0) > 70) {
-          flags.push({ icon: '🟠', text: `${vendor.direct_award_pct?.toFixed(0)}% of contracts were direct awards (bypassed competitive tendering)`, severity: 'high' })
+          flags.push({ icon: '🟠', text: t('flags.highDirectAward', { pct: vendor.direct_award_pct?.toFixed(0) }), severity: 'high' })
         }
         if ((vendor.single_bid_pct ?? 0) > 40) {
-          flags.push({ icon: '🟡', text: `${vendor.single_bid_pct?.toFixed(0)}% of competitive procedures had only this vendor bidding`, severity: 'medium' })
+          flags.push({ icon: '🟡', text: t('flags.highSingleBid', { pct: vendor.single_bid_pct?.toFixed(0) }), severity: 'medium' })
         }
         // Co-bidding
         if (hasCoBiddingRisk) {
-          flags.push({ icon: '🟡', text: 'Suspicious co-bidding patterns detected (heuristic analysis — not included in the v5.1 ML risk score, which assigns co_bid_rate a coefficient of 0.000)', severity: 'medium' })
+          flags.push({ icon: '🟡', text: t('flags.suspiciousCoBidding'), severity: 'medium' })
         }
         // Network clustering
         if ((vendor.cobid_clustering_coeff ?? 0) > 0.6) {
-          flags.push({ icon: '🟠', text: `High network clustering (${((vendor.cobid_clustering_coeff ?? 0) * 100).toFixed(0)}%) — bidding partners form a tightly-knit group`, severity: 'high' })
+          flags.push({ icon: '🟠', text: t('flags.highClustering', { pct: ((vendor.cobid_clustering_coeff ?? 0) * 100).toFixed(0) }), severity: 'high' })
         }
         // Waterfall top factor
         if (waterfallData && waterfallData.length > 0) {
@@ -1130,7 +1146,7 @@ export function VendorProfile() {
           if (topFactor && topFactor.z_score > 2) {
             const explanation = FACTOR_EXPLANATIONS[topFactor.feature]
             if (explanation) {
-              flags.push({ icon: '🟡', text: `Primary driver: ${topFactor.label_en || topFactor.feature} (z=${topFactor.z_score.toFixed(1)} — ${topFactor.z_score.toFixed(1)} SDs above sector average)`, severity: 'medium' })
+              flags.push({ icon: '🟡', text: t('flags.primaryDriver', { factor: topFactor.label_en || topFactor.feature, z: topFactor.z_score.toFixed(1) }), severity: 'medium' })
             }
           }
         }
@@ -2622,7 +2638,7 @@ export function VendorProfile() {
 
         {/* TAB 5: External Records */}
         <TabPanel tabKey="external">
-          <ExternalFlagsPanel flags={externalFlags} />
+          <ExternalFlagsPanel flags={externalFlags} qqw={qqwData} />
         </TabPanel>
       </SimpleTabs>
 
@@ -2984,7 +3000,7 @@ function VendorProfileSkeleton() {
 // External Flags Panel (SFP Sanctions + RUPC + ASF)
 // ============================================================================
 
-function ExternalFlagsPanel({ flags }: { flags: VendorExternalFlags | undefined }) {
+function ExternalFlagsPanel({ flags, qqw }: { flags: VendorExternalFlags | undefined; qqw?: VendorQQWResponse }) {
   if (!flags) return <div className="text-text-muted text-sm py-8 text-center">Loading external records...</div>
 
   const hasSanctions = flags.sfp_sanctions.length > 0
@@ -3175,11 +3191,100 @@ function ExternalFlagsPanel({ flags }: { flags: VendorExternalFlags | undefined 
         )}
       </div>
 
+      {/* QQW Cross-Reference */}
+      <div>
+        <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wide mb-3 flex items-center gap-2">
+          <ExternalLink className="h-3.5 w-3.5" />
+          QuiénesQuién.wiki Cross-Reference
+        </h3>
+        {!qqw ? (
+          <p className="text-sm text-text-muted italic">Loading QQW data...</p>
+        ) : !qqw.has_data ? (
+          <div className="p-3 rounded border border-border/40 bg-surface-2">
+            <p className="text-sm text-text-muted italic">{qqw.note}</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Procurement officials */}
+            {qqw.procurement_officials.length > 0 && (
+              <div>
+                <p className="text-xs text-text-muted mb-2">
+                  Procurement officials who signed contracts with this vendor (from QQW dataset):
+                </p>
+                <div className="space-y-1.5">
+                  {qqw.procurement_officials.slice(0, 8).map((official) => (
+                    <div
+                      key={official.contact_person_id}
+                      className="flex items-start justify-between gap-3 p-2.5 rounded border border-border/40 bg-surface-2 text-sm"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-medium text-text-primary truncate capitalize">
+                          {official.contact_person_name.replace(/-/g, ' ')}
+                        </p>
+                        {official.buyer_institutions.length > 0 && (
+                          <p className="text-xs text-text-muted truncate mt-0.5">
+                            {official.buyer_institutions.slice(0, 2).join(' · ')}
+                          </p>
+                        )}
+                      </div>
+                      <span className="text-xs text-text-muted whitespace-nowrap shrink-0">
+                        {official.contract_count} contract{official.contract_count !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recent contracts from QQW */}
+            <div>
+              <p className="text-xs text-text-muted mb-2">
+                Recent contracts in QQW dataset ({qqw.qqw_contract_count} total):
+              </p>
+              <div className="space-y-1.5">
+                {qqw.contracts.slice(0, 6).map((c, i) => (
+                  <div
+                    key={c.qqw_ocid ?? i}
+                    className="flex items-start justify-between gap-3 p-2.5 rounded border border-border/40 bg-surface-2 text-sm"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-xs text-text-muted truncate">
+                        {c.buyer_name || c.buyer_institution || '—'}
+                      </p>
+                      {c.contact_person_name && (
+                        <p className="text-xs text-accent truncate capitalize">
+                          {c.contact_person_name.replace(/-/g, ' ')}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      {c.contract_value != null && (
+                        <p className="text-xs font-mono text-text-primary">
+                          {c.contract_currency === 'MXN'
+                            ? formatCompactMXN(c.contract_value)
+                            : `${c.contract_currency} ${c.contract_value.toLocaleString()}`}
+                        </p>
+                      )}
+                      {c.contract_date && (
+                        <p className="text-xs text-text-muted">{c.contract_date.slice(0, 10)}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <p className="text-xs text-text-muted">{qqw.note}</p>
+          </div>
+        )}
+      </div>
+
       {/* Data source notice */}
       <p className="text-xs text-text-muted border-t border-border/30 pt-4">
         External data is loaded from public registries and may be incomplete. SFP sanctions and RUPC data
         must be refreshed manually via backend scripts. ASF coverage depends on web scraping availability.
         SAT Art. 69-B list updated monthly via <code className="font-mono">scripts/load_sat_efos.py</code>.
+        QQW data fetched via <code className="font-mono">scripts/fetch_qqw_data.py</code> (top 200 high-risk vendors).
       </p>
     </div>
   )

@@ -810,8 +810,8 @@ export default function Landing() {
 
   // risk_distribution is RiskDistribution[] — find critical and high percentages
   const riskDist: RiskDistribution[] = fastDashboard?.risk_distribution ?? []
-  const criticalPct = riskDist.find((r) => r.risk_level === 'critical')?.percentage ?? 6.5
-  const highPct = riskDist.find((r) => r.risk_level === 'high')?.percentage ?? 4.1
+  const criticalPct = riskDist.find((r) => r.risk_level === 'critical')?.percentage ?? 6.1
+  const highPct = riskDist.find((r) => r.risk_level === 'high')?.percentage ?? 2.9
 
   const CHAPTERS = [
     {
