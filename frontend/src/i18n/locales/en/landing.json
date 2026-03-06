@@ -33,7 +33,7 @@
     "scale": {
       "tag": "The Scale",
       "heading": "{{value}} in Government Contracts",
-      "body": "Between 2002 and 2025, Mexico's federal government awarded over {{count}} million contracts worth an estimated ~9.5 trillion pesos. RUBLI tracks every peso — from emergency health procurement to major infrastructure works — in a single searchable database.",
+      "body": "Between 2002 and 2025, Mexico's federal government awarded over {{total}} million contracts worth an estimated ~9.5 trillion pesos. RUBLI tracks every peso — from emergency health procurement to major infrastructure works — in a single searchable database.",
       "stat_label": "Total procurement value (2002–2025)"
     },
     "patterns": {
@@ -69,7 +69,7 @@
   },
   "featured_cases": {
     "label": "Biggest Cases",
-    "contracts": "{{count}} contracts"
+    "contracts": "{{num}} contracts"
   },
   "cta": {
     "open_dashboard": "Open Dashboard",

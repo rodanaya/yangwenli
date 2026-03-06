@@ -33,7 +33,7 @@
     "scale": {
       "tag": "La Escala",
       "heading": "{{value}} en Contratos Gubernamentales",
-      "body": "Entre 2002 y 2025, el gobierno federal de México adjudicó más de {{count}} millones de contratos por un valor estimado de ~9.5 billones de pesos. RUBLI rastrea cada peso — desde compras de emergencia en salud hasta grandes obras de infraestructura — en una sola base de datos con búsqueda.",
+      "body": "Entre 2002 y 2025, el gobierno federal de México adjudicó más de {{total}} millones de contratos por un valor estimado de ~9.5 billones de pesos. RUBLI rastrea cada peso — desde compras de emergencia en salud hasta grandes obras de infraestructura — en una sola base de datos con búsqueda.",
       "stat_label": "Valor total de adquisiciones (2002–2025)"
     },
     "patterns": {
@@ -69,7 +69,7 @@
   },
   "featured_cases": {
     "label": "Casos Más Importantes",
-    "contracts": "{{count}} contratos"
+    "contracts": "{{num}} contratos"
   },
   "cta": {
     "open_dashboard": "Abrir Panel",

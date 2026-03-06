@@ -475,6 +475,7 @@ interface HeroSectionProps {
 function HeroSection({ onEnter, onScrollDown }: HeroSectionProps) {
   const [mounted, setMounted] = useState(false)
   const { t } = useTranslation('landing')
+  const heroFindings = useHeroFindings()
 
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 80)
@@ -533,7 +534,7 @@ function HeroSection({ onEnter, onScrollDown }: HeroSectionProps) {
         {/* What we found strip */}
         <motion.div variants={slideUp} className="w-full max-w-2xl mt-2">
           <NarrativeCard
-            paragraphs={HERO_FINDINGS}
+            paragraphs={heroFindings}
             className="bg-white/[0.03] border-white/10 text-left"
           />
         </motion.div>
@@ -568,51 +569,27 @@ function HeroSection({ onEnter, onScrollDown }: HeroSectionProps) {
   )
 }
 
-// Findings displayed in the hero NarrativeCard
-const HERO_FINDINGS: NarrativeParagraph[] = [
-  {
-    text: 'Our model flags 328,298 contracts as high or critical risk — equivalent to the entire public health procurement of 5 years.',
-    severity: 'critical',
-  },
-  {
-    text: 'Training ground truth: IMSS Ghost Company Network (9,366 contracts), Segalmex food fraud (6,326), COVID emergency embezzlement (5,371), and 19 more documented scandals.',
-    severity: 'warning',
-  },
-  {
-    text: 'Model AUC 0.957 on contracts from 2021–2025 — never seen during training. 93% of known-corrupt contracts scored high or critical.',
-    severity: 'info',
-  },
-]
+// Findings displayed in the hero NarrativeCard — built at render time so they react to language changes
+function useHeroFindings(): NarrativeParagraph[] {
+  const { t } = useTranslation('landing')
+  return [
+    { text: t('hero_findings.f1'), severity: 'critical' },
+    { text: t('hero_findings.f2'), severity: 'warning' },
+    { text: t('hero_findings.f3'), severity: 'info' },
+  ]
+}
 
 // ---------------------------------------------------------------------------
 // HowItWorks section — plain language methodology explainer
 // ---------------------------------------------------------------------------
 function HowItWorks() {
+  const { t } = useTranslation('landing')
+  const howItWorksCaveats = useHowItWorksCaveats()
   const steps = [
-    {
-      num: '01',
-      title: 'Z-score normalization',
-      body: 'Each contract\'s 16 features (price, vendor concentration, ad period, etc.) are converted to z-scores relative to its own sector and year. A single-bid award in Defensa (where 80% are direct) is far less suspicious than in Educación.',
-      color: '#3b82f6',
-    },
-    {
-      num: '02',
-      title: 'Per-sector logistic models',
-      body: '12 dedicated logistic regression sub-models — one per sector — capture sector-specific corruption fingerprints. Energy fraud looks different from health fraud. The global model provides a fallback.',
-      color: '#8b5cf6',
-    },
-    {
-      num: '03',
-      title: 'Positive-Unlabeled learning',
-      body: 'Only documented corruption cases are labeled. The remaining 3.1M contracts are unlabeled (not necessarily clean). Elkan & Noto\'s PU-learning correction (c=0.88) adjusts for this selection bias.',
-      color: '#eab308',
-    },
-    {
-      num: '04',
-      title: '95% confidence intervals',
-      body: 'Each score ships with bootstrap confidence bounds. A contract scoring 0.42 [0.31, 0.55] is genuinely uncertain — one scoring 0.89 [0.81, 0.95] is not. Investigators see both.',
-      color: '#16a34a',
-    },
+    { num: '01', title: t('how_it_works.step1_title'), body: t('how_it_works.step1_body'), color: '#3b82f6' },
+    { num: '02', title: t('how_it_works.step2_title'), body: t('how_it_works.step2_body'), color: '#8b5cf6' },
+    { num: '03', title: t('how_it_works.step3_title'), body: t('how_it_works.step3_body'), color: '#eab308' },
+    { num: '04', title: t('how_it_works.step4_title'), body: t('how_it_works.step4_body'), color: '#16a34a' },
   ]
 
   return (
@@ -625,14 +602,13 @@ function HowItWorks() {
         <ScrollReveal>
           <div className="mb-12 text-center">
             <span className="text-xs font-semibold tracking-widest uppercase text-purple-400 mb-3 block">
-              The Science
+              {t('how_it_works.section_label')}
             </span>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4">
-              How the Risk Model Works
+              {t('how_it_works.title')}
             </h2>
             <p className="text-white/50 max-w-xl mx-auto text-base">
-              Train AUC 0.964 · Test AUC 0.957 (temporal split, never seen during training) ·
-              Validated against 22 documented corruption cases across all 12 sectors
+              {t('how_it_works.subtitle')}
             </p>
           </div>
         </ScrollReveal>
@@ -668,7 +644,7 @@ function HowItWorks() {
         <ScrollReveal delay={300}>
           <div className="mt-8">
             <NarrativeCard
-              paragraphs={HOW_IT_WORKS_CAVEATS}
+              paragraphs={howItWorksCaveats}
               className="bg-white/[0.03] border-white/10"
             />
           </div>
@@ -678,16 +654,13 @@ function HowItWorks() {
   )
 }
 
-const HOW_IT_WORKS_CAVEATS: NarrativeParagraph[] = [
-  {
-    text: 'A high risk score means the contract\'s procurement characteristics closely resemble those from documented corruption cases — not that corruption is proven. Scores are investigation triage, not verdicts.',
-    severity: 'warning',
-  },
-  {
-    text: 'Key limitation: RUBLI analyzes contract award data only. Execution-phase fraud (cost overruns, ghost workers, kickbacks) is invisible. Infrastructure and energy sectors are likely underscored for this reason.',
-    severity: 'info',
-  },
-]
+function useHowItWorksCaveats(): NarrativeParagraph[] {
+  const { t } = useTranslation('landing')
+  return [
+    { text: t('how_it_works.caveat1'), severity: 'warning' },
+    { text: t('how_it_works.caveat2'), severity: 'info' },
+  ]
+}
 
 // ---------------------------------------------------------------------------
 // FeaturedCasesStrip — 3 hardcoded biggest cases linking to /cases/:slug
@@ -726,10 +699,11 @@ const FEATURED_CASES = [
 ]
 
 function FeaturedCasesStrip({ onNavigate }: { onNavigate: (path: string) => void }) {
+  const { t } = useTranslation('landing')
   return (
     <div className="w-full mb-5">
       <p className="text-xs font-semibold tracking-widest uppercase text-white/30 mb-3">
-        Biggest Cases
+        {t('featured_cases.label')}
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {FEATURED_CASES.map((cas) => (
@@ -760,7 +734,7 @@ function FeaturedCasesStrip({ onNavigate }: { onNavigate: (path: string) => void
             {/* Bottom row: contract count + arrow */}
             <div className="flex items-center justify-between mt-auto pt-1">
               <span className="text-[11px] text-white/35 tabular-nums">
-                {cas.contracts.toLocaleString()} contracts
+                {t('featured_cases.contracts', { num: cas.contracts.toLocaleString() })}
               </span>
               <ArrowRight
                 className="h-3.5 w-3.5 text-white/20 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all duration-200"
@@ -779,6 +753,7 @@ function FeaturedCasesStrip({ onNavigate }: { onNavigate: (path: string) => void
 // ===========================================================================
 export default function Landing() {
   const navigate = useNavigate()
+  const { t } = useTranslation('landing')
   const [activeChapter, setActiveChapter] = useState(0)
   const [visible, setVisible] = useState<Record<number, boolean>>({})
   const sectionRefs = useRef<(HTMLElement | null)[]>([])
@@ -856,92 +831,75 @@ export default function Landing() {
 
   const CHAPTERS = [
     {
-      tag: 'The Scale',
-      heading: `${formatCompactMXN(totalValueMxn)} in Government Contracts`,
-      body: `Between 2002 and 2025, Mexico's federal government awarded over ${(totalContracts / 1_000_000).toFixed(1)} million contracts worth an estimated ~9.5 trillion pesos. RUBLI tracks every peso — from emergency health procurement to major infrastructure works — in a single searchable database.`,
+      tag: t('chapters.scale.tag'),
+      heading: t('chapters.scale.heading', { value: formatCompactMXN(totalValueMxn) }),
+      body: t('chapters.scale.body', { total: (totalContracts / 1_000_000).toFixed(1) }),
       icon: BarChart3,
       color: '#3b82f6',
       stat: formatCompactMXN(totalValueMxn),
-      statLabel: 'Total procurement value (2002–2025)',
+      statLabel: t('chapters.scale.stat_label'),
       visualType: 'heroStats' as const,
     },
     {
-      tag: 'The Patterns',
-      heading: 'Systemic Red Flags — In Every Administration',
-      body: 'Year-end budget dumps. Direct awards without competition. Suspiciously short publication windows. Single vendors winning 90%+ of a sector\'s contracts. These patterns are not aberrations — the data shows they repeat across every administration since 2002, in every sector.',
+      tag: t('chapters.patterns.tag'),
+      heading: t('chapters.patterns.heading'),
+      body: t('chapters.patterns.body'),
       icon: TrendingUp,
       color: '#eab308',
       stat: '78%',
-      statLabel: 'of contracts awarded directly (no competition)',
+      statLabel: t('chapters.patterns.stat_label'),
       visualType: 'patternNarrative' as const,
     },
     {
-      tag: 'The Risk',
-      heading: `${(criticalPct + highPct).toFixed(1)}% of Contracts Flagged High-Risk`,
-      body: `RUBLI's AI model — trained on 22 documented corruption cases and validated against contracts it never saw during training — identifies ${criticalPct.toFixed(1)}% of contracts as Critical and ${highPct.toFixed(1)}% as High risk. That's over 328,000 contracts worth investigating.`,
+      tag: t('chapters.risk.tag'),
+      heading: t('chapters.risk.heading', { pct: (criticalPct + highPct).toFixed(1) }),
+      body: t('chapters.risk.body', { critical: criticalPct.toFixed(1), high: highPct.toFixed(1) }),
       icon: AlertTriangle,
       color: '#dc2626',
       stat: `${(criticalPct + highPct).toFixed(1)}%`,
-      statLabel: 'High or Critical risk contracts',
+      statLabel: t('chapters.risk.stat_label'),
       visualType: 'riskNarrative' as const,
     },
     {
-      tag: 'The Cases',
-      heading: 'From IMSS Ghost Companies to Odebrecht Bribes',
-      body: "RUBLI's Case Library documents 43 corruption scandals — with the specific vendors, contracts, and procurement patterns that gave them away. These 22 matched cases form the ground truth behind the risk model. The model detects 93% of them as high or critical risk.",
+      tag: t('chapters.cases.tag'),
+      heading: t('chapters.cases.heading'),
+      body: t('chapters.cases.body'),
       icon: BookOpen,
       color: '#8b5cf6',
       stat: '43',
-      statLabel: 'Documented corruption cases',
+      statLabel: t('chapters.cases.stat_label'),
       visualType: 'sectorRing' as const,
     },
     {
-      tag: 'Your Turn',
-      heading: 'Start Investigating',
-      body: 'Search any vendor, institution, or contract. Follow the network of co-bidders. Build a dossier. Export to your newsroom. RUBLI gives investigative journalists and anti-corruption researchers the tools to follow the money — across 23 years of data, in seconds.',
+      tag: t('chapters.yourturn.tag'),
+      heading: t('chapters.yourturn.heading'),
+      body: t('chapters.yourturn.body'),
       icon: Search,
       color: '#16a34a',
       stat: '3.1M',
-      statLabel: 'Contracts searchable in seconds',
+      statLabel: t('chapters.yourturn.stat_label'),
       visualType: 'default' as const,
-    },
-  ] as const
-
-  // Narrative content for chapters that use NarrativeCard
-  const patternNarrativeParagraphs: NarrativeParagraph[] = [
-    {
-      text: '78% of all contracts are direct awards — meaning no open competition, no public bids. In health procurement alone, this rate exceeded 85% during the 2020 COVID emergency.',
-      severity: 'warning',
-    },
-    {
-      text: 'December contracts spike 40–60% above monthly averages every year. Budget-year-end pressure pushes institutions toward rushed, uncompetitive awards.',
-      severity: 'warning',
-    },
-    {
-      text: 'Vendor concentration: in Agricultura, the top 3 vendors captured 71% of sector value during Segalmex\'s peak years. In Salud, IMSS\'s ghost company network won 9,366 contracts without meaningful competition.',
-      severity: 'critical',
     },
   ]
 
+  // Narrative content for chapters that use NarrativeCard
+  const patternNarrativeParagraphs: NarrativeParagraph[] = [
+    { text: t('chapters.patterns.n1'), severity: 'warning' },
+    { text: t('chapters.patterns.n2'), severity: 'warning' },
+    { text: t('chapters.patterns.n3'), severity: 'critical' },
+  ]
+
   const riskNarrativeParagraphs: NarrativeParagraph[] = [
-    {
-      text: `Critical (≥0.50 score): ${criticalPct.toFixed(1)}% — 201,745 contracts. These resemble the strongest known corruption patterns. Immediate investigation warranted.`,
-      severity: 'critical',
-    },
-    {
-      text: `High (0.30–0.50 score): ${highPct.toFixed(1)}% — 126,553 contracts. Strong similarity to documented fraud. Priority review recommended.`,
-      severity: 'warning',
-    },
-    {
-      text: 'Model confidence: Train AUC 0.964, Test AUC 0.957 (temporal split — test set is 2021–2025, never seen during training). 93% of ground-truth corruption contracts score high or critical.',
-      severity: 'info',
-    },
+    { text: t('chapters.risk.n1', { pct: criticalPct.toFixed(1) }), severity: 'critical' },
+    { text: t('chapters.risk.n2', { pct: highPct.toFixed(1) }), severity: 'warning' },
+    { text: t('chapters.risk.n3'), severity: 'info' },
   ]
 
   return (
     <div className="min-h-screen bg-[#080c14] text-white">
-      {/* Fixed top-right controls: chapter dots + skip link */}
+      {/* Fixed top-right controls: lang toggle + chapter dots + skip link */}
       <div className="fixed top-4 right-4 z-50 flex items-center gap-3">
+        <LangToggle />
         {/* Chapter progress dots — desktop only */}
         <div className="hidden sm:flex flex-col gap-1.5" aria-label="Chapter navigation">
           {CHAPTERS.map((chapter, i) => (
@@ -962,7 +920,7 @@ export default function Landing() {
           onClick={() => goToApp()}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-white/10 hover:bg-white/20 border border-white/20 transition-colors backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/40"
         >
-          Skip to app <ArrowRight className="h-3 w-3" aria-hidden="true" />
+          {t('skip_to_app')} <ArrowRight className="h-3 w-3" aria-hidden="true" />
         </button>
       </div>
 
@@ -1008,7 +966,7 @@ export default function Landing() {
                     className="text-xs font-semibold tracking-widest uppercase mb-3 block"
                     style={{ color: chapter.color }}
                   >
-                    Chapter {i + 1} — {chapter.tag}
+                    {t('chapter_label', { num: i + 1, tag: chapter.tag })}
                   </span>
 
                   <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight mb-6 text-white">
@@ -1059,25 +1017,25 @@ export default function Landing() {
                         className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent"
                         style={{ backgroundColor: chapter.color, color: '#fff' }}
                       >
-                        Open Dashboard <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                        {t('cta.open_dashboard')} <ArrowRight className="h-4 w-4" aria-hidden="true" />
                       </button>
                       <button
                         onClick={() => goToApp('/explore?tab=vendors')}
                         className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm border border-white/20 hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white/40"
                       >
-                        <Search className="h-4 w-4" aria-hidden="true" /> Search a vendor
+                        <Search className="h-4 w-4" aria-hidden="true" /> {t('cta.search_vendor')}
                       </button>
                       <button
                         onClick={() => goToApp('/methodology')}
                         className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm border border-white/20 hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white/40"
                       >
-                        <Shield className="h-4 w-4" aria-hidden="true" /> See the methodology
+                        <Shield className="h-4 w-4" aria-hidden="true" /> {t('cta.see_methodology')}
                       </button>
                       <button
                         onClick={() => goToApp('/cases')}
                         className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm border border-white/20 hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white/40"
                       >
-                        <BookOpen className="h-4 w-4" aria-hidden="true" /> Browse case library
+                        <BookOpen className="h-4 w-4" aria-hidden="true" /> {t('cta.browse_cases')}
                       </button>
                     </div>
                   )}
@@ -1146,9 +1104,9 @@ export default function Landing() {
       <footer className="text-center py-8 text-xs text-white/20 border-t border-white/5">
         <div className="flex items-center justify-center gap-2 mb-1">
           <Cpu className="h-3 w-3" aria-hidden="true" />
-          <span>RUBLI — Mexican Government Procurement Analysis Platform</span>
+          <span>{t('footer.platform')}</span>
         </div>
-        <span>Data: COMPRANET 2002–2025 · Model: v5.1 · AUC 0.957</span>
+        <span>{t('footer.data')}</span>
       </footer>
     </div>
   )
