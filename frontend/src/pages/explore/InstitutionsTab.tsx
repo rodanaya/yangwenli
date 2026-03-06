@@ -3,6 +3,7 @@
  */
 
 import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams, Link } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
@@ -138,6 +139,8 @@ const INST_TYPE_ICON: Record<string, typeof Building2> = {
 // =============================================================================
 
 export default function InstitutionsTab() {
+  const { t } = useTranslation('explore')
+  const { t: ts } = useTranslation('sectors')
   const [searchParams, setSearchParams] = useSearchParams()
   const [activePreset, setActivePreset] = useState<string | null>(null)
 
@@ -289,7 +292,7 @@ export default function InstitutionsTab() {
     }
     if (filters.sector_id) {
       const sec = SECTORS.find((s) => s.id === filters.sector_id)
-      tags.push({ key: 'sector_id', label: sec ? sec.nameEN : `Sector ${filters.sector_id}` })
+      tags.push({ key: 'sector_id', label: sec ? ts(sec.code) : `Sector ${filters.sector_id}` })
     }
     if (filters.min_contracts) tags.push({ key: 'min_contracts', label: `${filters.min_contracts}+ contracts` })
     if (filters.size_tier) {

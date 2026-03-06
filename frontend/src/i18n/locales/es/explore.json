@@ -34,6 +34,7 @@
   "institutions": {
     "title": "Instituciones",
     "searchPlaceholder": "Buscar por nombre o siglas...",
+    "count": "{{count}} instituciones",
     "columns": {
       "name": "Nombre",
       "type": "Tipo",
@@ -42,6 +43,62 @@
       "avgRisk": "Riesgo Promedio",
       "vendorCount": "Proveedores",
       "directAwardPct": "% Adj. Directa"
+    },
+    "col": {
+      "name": "Institución",
+      "total_contracts": "Contratos",
+      "total_amount_mxn": "Gasto",
+      "avg_risk_score": "Puntuación de Riesgo",
+      "direct_award_pct": "% Adj. Directa",
+      "single_bid_pct": "% Licitación Única",
+      "high_risk_pct": "% Señalados",
+      "vendor_count": "Proveedores",
+      "nameShort": "Inst.",
+      "total_contractsShort": "#",
+      "total_amount_mxnShort": "Valor",
+      "avg_risk_scoreShort": "Riesgo",
+      "direct_award_pctShort": "AD%",
+      "single_bid_pctShort": "LU%",
+      "high_risk_pctShort": "Señal%",
+      "vendor_countShort": "Prov."
+    },
+    "presets": {
+      "top-spending": "Mayor Gasto",
+      "highest-risk": "Mayor Riesgo",
+      "most-direct": "Más Adj. Directas",
+      "most-flagged": "Más Señalados",
+      "many-vendors": "Más Proveedores",
+      "biggest": "Más Contratos",
+      "mega-large": "Grandes+",
+      "concentrated": "Pocos Proveedores"
+    },
+    "types": {
+      "federal_secretariat": "Secretaría Federal",
+      "federal_agency": "Organismo Federal",
+      "state_agency": "Organismo Estatal",
+      "state_government": "Gobierno Estatal",
+      "municipal": "Municipal",
+      "health_institution": "Institución de Salud",
+      "educational": "Educativa",
+      "research_education": "Investigación y Educación",
+      "state_enterprise_infra": "Empresa Estatal (Infra)",
+      "state_enterprise_energy": "Empresa Estatal (Energía)",
+      "state_enterprise_finance": "Empresa Estatal (Finanzas)",
+      "judicial": "Judicial",
+      "social_program": "Programa Social",
+      "social_security": "Seguridad Social",
+      "regulatory_agency": "Organismo Regulador",
+      "autonomous_constitutional": "Autónomo Constitucional",
+      "legislative": "Legislativo",
+      "military": "Militar",
+      "other": "Otro"
+    },
+    "sizes": {
+      "mega": "Mega (top 4)",
+      "large": "Grande",
+      "medium": "Mediano",
+      "small": "Pequeño",
+      "micro": "Micro"
     },
     "empty": "No se encontraron instituciones con los filtros seleccionados.",
     "emptyAction": "Ajustar filtros"

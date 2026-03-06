@@ -34,6 +34,7 @@
   "institutions": {
     "title": "Institutions",
     "searchPlaceholder": "Search by name or acronym...",
+    "count": "{{count}} institutions",
     "columns": {
       "name": "Name",
       "type": "Type",
@@ -42,6 +43,62 @@
       "avgRisk": "Avg Risk",
       "vendorCount": "Vendors",
       "directAwardPct": "% Direct Award"
+    },
+    "col": {
+      "name": "Institution",
+      "total_contracts": "Contracts",
+      "total_amount_mxn": "Spending",
+      "avg_risk_score": "Risk Score",
+      "direct_award_pct": "Direct %",
+      "single_bid_pct": "Single Bid %",
+      "high_risk_pct": "Flagged %",
+      "vendor_count": "Vendors",
+      "nameShort": "Inst.",
+      "total_contractsShort": "#",
+      "total_amount_mxnShort": "Value",
+      "avg_risk_scoreShort": "Risk",
+      "direct_award_pctShort": "DA%",
+      "single_bid_pctShort": "SB%",
+      "high_risk_pctShort": "Flag%",
+      "vendor_countShort": "Vndr"
+    },
+    "presets": {
+      "top-spending": "Top by Spending",
+      "highest-risk": "Highest Risk",
+      "most-direct": "Most Direct Awards",
+      "most-flagged": "Most Flagged",
+      "many-vendors": "Most Vendors",
+      "biggest": "Most Contracts",
+      "mega-large": "Large+",
+      "concentrated": "Few Vendors"
+    },
+    "types": {
+      "federal_secretariat": "Federal Secretariat",
+      "federal_agency": "Federal Agency",
+      "state_agency": "State Agency",
+      "state_government": "State Government",
+      "municipal": "Municipal",
+      "health_institution": "Health Institution",
+      "educational": "Educational",
+      "research_education": "Research & Education",
+      "state_enterprise_infra": "State Enterprise (Infra)",
+      "state_enterprise_energy": "State Enterprise (Energy)",
+      "state_enterprise_finance": "State Enterprise (Finance)",
+      "judicial": "Judicial",
+      "social_program": "Social Program",
+      "social_security": "Social Security",
+      "regulatory_agency": "Regulatory Agency",
+      "autonomous_constitutional": "Autonomous Constitutional",
+      "legislative": "Legislative",
+      "military": "Military",
+      "other": "Other"
+    },
+    "sizes": {
+      "mega": "Mega (top 4)",
+      "large": "Large",
+      "medium": "Medium",
+      "small": "Small",
+      "micro": "Micro"
     },
     "empty": "No institutions found matching your filters.",
     "emptyAction": "Adjust filters"
