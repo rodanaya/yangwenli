@@ -322,26 +322,47 @@ def _build_summary(conn) -> dict:
     }
 
     # 11. Model info — live from model_calibration table
-    cal_row = cur.execute(
-        "SELECT model_version, test_auc, brier_score, pu_correction_factor, "
-        "created_at, temporal_metrics "
-        "FROM model_calibration WHERE sector_id IS NULL "
-        "ORDER BY created_at DESC LIMIT 1"
-    ).fetchone()
+    # Defensive: older deploy DBs may lack test_auc / temporal_metrics columns
+    try:
+        cal_row = cur.execute(
+            "SELECT model_version, test_auc, brier_score, pu_correction_factor, "
+            "created_at, temporal_metrics "
+            "FROM model_calibration WHERE sector_id IS NULL "
+            "ORDER BY created_at DESC LIMIT 1"
+        ).fetchone()
+    except Exception:
+        try:
+            cal_row = cur.execute(
+                "SELECT model_version, brier_score, pu_correction_factor, created_at "
+                "FROM model_calibration WHERE sector_id IS NULL "
+                "ORDER BY created_at DESC LIMIT 1"
+            ).fetchone()
+        except Exception:
+            cal_row = None
 
     if cal_row:
         train_auc = None
-        if cal_row["temporal_metrics"]:
+        temporal_metrics_raw = None
+        try:
+            temporal_metrics_raw = cal_row["temporal_metrics"]
+        except (IndexError, KeyError):
+            pass
+        if temporal_metrics_raw:
             try:
-                tm = json.loads(cal_row["temporal_metrics"])
+                tm = json.loads(temporal_metrics_raw)
                 train_auc = tm.get("train_auc")
             except (json.JSONDecodeError, TypeError):
                 pass
+        test_auc_val = None
+        try:
+            test_auc_val = cal_row["test_auc"]
+        except (IndexError, KeyError):
+            pass
         model = {
             "version": cal_row["model_version"],
             "features": 16,
             "sub_models": 13,
-            "auc": round(cal_row["test_auc"], 3) if cal_row["test_auc"] else None,
+            "auc": round(test_auc_val, 3) if test_auc_val else None,
             "train_auc": round(train_auc, 3) if train_auc else None,
             "brier": round(cal_row["brier_score"], 3) if cal_row["brier_score"] else None,
             "pu_correction": round(cal_row["pu_correction_factor"], 3) if cal_row["pu_correction_factor"] else None,
