@@ -844,5 +844,98 @@ def get_single_bid_rate():
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
+# =============================================================================
+# SECTOR CONCENTRATION HISTORY
+# =============================================================================
+
+def _gini(values: list) -> float:
+    """Compute Gini coefficient for a list of non-negative values."""
+    n = len(values)
+    if n == 0:
+        return 0.0
+    values = sorted(values)
+    cum = 0
+    for i, v in enumerate(values):
+        cum += (2 * (i + 1) - n - 1) * v
+    total = sum(values)
+    return cum / (n * total) if total > 0 else 0.0
+
+
+@router.get("/sectors/{sector_id}/concentration-history")
+def get_sector_concentration_history(
+    sector_id: int = Path(..., ge=1, le=12, description="Sector ID (1-12)"),
+):
+    """
+    Get per-year Gini coefficient of contract value concentration among vendors
+    for a sector.
+
+    Gini = 0 means perfectly equal distribution; Gini = 1 means one vendor
+    holds all contract value. Also returns top_vendor_share (share of the
+    single largest vendor), total value, and vendor count per year.
+
+    Response is cached for 2 hours.
+    """
+    cache_key = f"concentration_history:{sector_id}"
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # Verify sector exists
+            cursor.execute("SELECT name_es FROM sectors WHERE id = ?", (sector_id,))
+            sector_row = cursor.fetchone()
+            if not sector_row:
+                raise HTTPException(status_code=404, detail=f"Sector {sector_id} not found")
+            sector_name = sector_row[0]
+
+            # Per year: sum of amount_mxn per vendor
+            cursor.execute("""
+                SELECT contract_year, vendor_id, SUM(amount_mxn) as vendor_value
+                FROM contracts
+                WHERE sector_id = ?
+                  AND contract_year BETWEEN 2005 AND 2025
+                  AND amount_mxn IS NOT NULL
+                  AND amount_mxn > 0
+                GROUP BY contract_year, vendor_id
+                ORDER BY contract_year, vendor_id
+            """, (sector_id,))
+            rows = cursor.fetchall()
+
+            # Group by year
+            from collections import defaultdict
+            year_vendors: dict = defaultdict(list)
+            for row in rows:
+                year_vendors[row[0]].append(row[2])
+
+            history = []
+            for year in sorted(year_vendors.keys()):
+                vendor_values = year_vendors[year]
+                gini = _gini(vendor_values)
+                total_value = sum(vendor_values)
+                top_share = max(vendor_values) / total_value if total_value > 0 else 0.0
+                history.append({
+                    "year": year,
+                    "gini": round(gini, 4),
+                    "top_vendor_share": round(top_share, 4),
+                    "total_value": round(total_value, 2),
+                    "vendor_count": len(vendor_values),
+                })
+
+            result = {
+                "sector_id": sector_id,
+                "sector_name": sector_name,
+                "history": history,
+            }
+            _cache.set(cache_key, result, CONCENTRATION_CACHE_TTL)
+            return result
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error in get_sector_concentration_history: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
 # NOTE: /analysis/anomalies endpoint removed from sectors router to avoid
 # duplicate route conflict with analysis.py router (which has cached version)

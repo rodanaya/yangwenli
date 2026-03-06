@@ -133,6 +133,66 @@ function riskLevelFromScore(score: number | null | undefined): string | null {
 }
 
 // ---------------------------------------------------------------------------
+// Natural language query parser
+// ---------------------------------------------------------------------------
+
+function parseNaturalLanguageQuery(query: string): { params: Record<string, string>; description: string } | null {
+  const q = query.toLowerCase().trim()
+  const params: Record<string, string> = {}
+  const parts: string[] = []
+
+  // Amount patterns
+  const amountMatch = q.match(/(?:over|more than|above|mayor a|mas de|más de)\s*(\d+(?:\.\d+)?)\s*(m|million|millones|b|billion|miles de millones)?/i)
+  if (amountMatch) {
+    const num = parseFloat(amountMatch[1])
+    const unit = amountMatch[2]?.toLowerCase() || ''
+    let amount = num
+    if (unit.startsWith('b') || unit.includes('billion') || unit.includes('miles')) amount = num * 1_000_000_000
+    else if (unit.startsWith('m') || unit.includes('million') || unit.includes('millon')) amount = num * 1_000_000
+    params['min_amount'] = String(amount)
+    parts.push(`> ${amount >= 1e9 ? `${amount / 1e9}B` : amount >= 1e6 ? `${amount / 1e6}M` : amount} MXN`)
+  }
+
+  // Sector patterns
+  const sectorMap: Record<string, [string, string]> = {
+    'salud|health|medical|hospital': ['1', 'Salud'],
+    'educacion|education|school': ['2', 'Educacion'],
+    'infraestructura|infrastructure|road|highway': ['3', 'Infraestructura'],
+    'energia|energy|pemex|cfe': ['4', 'Energia'],
+    'defensa|defense|military': ['5', 'Defensa'],
+    'tecnologia|technology|tech|software|\\bIT\\b': ['6', 'Tecnologia'],
+    'hacienda|finance|treasury': ['7', 'Hacienda'],
+    'gobernacion|government|interior': ['8', 'Gobernacion'],
+    'agricultura|agriculture|farm': ['9', 'Agricultura'],
+    'ambiente|environment': ['10', 'Ambiente'],
+    'trabajo|labor|work': ['11', 'Trabajo'],
+  }
+  for (const [pattern, [sectorId, label]] of Object.entries(sectorMap)) {
+    if (new RegExp(pattern, 'i').test(q)) {
+      params['sector_id'] = sectorId
+      parts.push(label)
+      break
+    }
+  }
+
+  // Risk level
+  if (/critical|critico|crítico/.test(q)) { params['risk_level'] = 'critical'; parts.push('critical risk') }
+  else if (/high.?risk|alto.?riesgo/.test(q)) { params['risk_level'] = 'high'; parts.push('high risk') }
+
+  // Procedure type
+  if (/direct.?award|adjudicacion.?directa|directa/i.test(q)) { params['is_direct_award'] = 'true'; parts.push('direct award') }
+  if (/single.?bid|un.?solo.?postor/i.test(q)) { params['is_single_bid'] = 'true'; parts.push('single bid') }
+
+  // Year
+  const yearMatch = q.match(/\b(20\d\d)\b/)
+  if (yearMatch) { params['year'] = yearMatch[1]; parts.push(yearMatch[1]) }
+
+  return Object.keys(params).length > 0
+    ? { params, description: parts.join(', ') }
+    : null
+}
+
+// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 

@@ -118,6 +118,10 @@ class VendorDetailResponse(BaseModel):
     cobid_clustering_coeff: Optional[float] = Field(None, description="Co-bidding clustering coefficient")
     cobid_triangle_count: Optional[int] = Field(None, description="Number of co-bidding triangles")
 
+    # External watchlist flags
+    is_efos_ghost: Optional[bool] = Field(False, description="True if vendor RFC matches SAT EFOS ghost company list (Case 22)")
+    is_sfp_sanctioned: Optional[bool] = Field(False, description="True if vendor RFC matches SFP sanctions registry")
+
     model_config = ConfigDict(from_attributes=True)
 
 

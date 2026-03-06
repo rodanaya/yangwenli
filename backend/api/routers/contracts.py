@@ -237,6 +237,98 @@ def compare_contracts(
         return {"data": results, "total": len(results), "requested": len(contract_ids)}
 
 
+_FEATURE_LABELS = {
+    "z_single_bid": "Single Bid (only one vendor)",
+    "z_direct_award": "Direct Award procedure",
+    "z_price_ratio": "Price vs sector median",
+    "z_vendor_concentration": "Vendor market concentration",
+    "z_ad_period_days": "Advertisement period length",
+    "z_year_end": "Year-end contract timing",
+    "z_same_day_count": "Same-day contract cluster",
+    "z_network_member_count": "Vendor network size",
+    "z_co_bid_rate": "Co-bidding rate",
+    "z_price_hyp_confidence": "Price outlier confidence",
+    "z_industry_mismatch": "Industry mismatch",
+    "z_institution_risk": "Institution risk baseline",
+    "z_price_volatility": "Vendor price volatility",
+    "z_institution_diversity": "Institution diversity",
+    "z_win_rate": "Win rate vs sector",
+    "z_sector_spread": "Cross-sector spread",
+}
+
+_Z_FEATURE_COLS = list(_FEATURE_LABELS.keys())
+
+
+@router.get("/{contract_id}/features", response_model=RiskExplanationResponse)
+def get_contract_features(
+    contract_id: int = Path(..., description="Contract ID"),
+):
+    """
+    Get z-score features for a contract with human-readable labels.
+
+    Returns each of the 16 z-score features used by the v5.1 risk model,
+    sorted by absolute z-score (most anomalous first). Includes a rough
+    percentile estimate and direction indicator (high_risk/low_risk).
+
+    If the contract_z_features table is empty or has no row for this contract,
+    returns explanation_available=False with an empty features list.
+    """
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # Get contract risk info
+        cursor.execute("""
+            SELECT id, risk_score, risk_level, risk_model_version,
+                   risk_confidence_lower, risk_confidence_upper
+            FROM contracts WHERE id = ?
+        """, (contract_id,))
+        contract_row = cursor.fetchone()
+        if contract_row is None:
+            raise HTTPException(status_code=404, detail=f"Contract {contract_id} not found")
+
+        # Try to get z-score features
+        col_list = ", ".join(_Z_FEATURE_COLS)
+        cursor.execute(
+            f"SELECT {col_list} FROM contract_z_features WHERE contract_id = ?",
+            (contract_id,),
+        )
+        feat_row = cursor.fetchone()
+
+        explanation_available = feat_row is not None
+        features = []
+
+        if explanation_available:
+            for col in _Z_FEATURE_COLS:
+                z = feat_row[col]
+                if z is None:
+                    continue
+                # Rough percentile from z-score (normal dist approximation)
+                percentile = int(min(99, max(1, 50 + z * 15.87)))
+                direction = "high_risk" if z > 0 else "low_risk"
+                features.append({
+                    "feature": col,
+                    "label": _FEATURE_LABELS[col],
+                    "z_score": round(z, 4),
+                    "direction": direction,
+                    "percentile": percentile,
+                })
+            # Sort by abs(z_score) descending
+            features.sort(key=lambda f: abs(f["z_score"]), reverse=True)
+
+        return RiskExplanationResponse(
+            contract_id=contract_row["id"],
+            risk_score=contract_row["risk_score"] or 0.0,
+            risk_level=contract_row["risk_level"] or "unknown",
+            model_version=contract_row["risk_model_version"],
+            confidence_interval={
+                "lower": contract_row["risk_confidence_lower"],
+                "upper": contract_row["risk_confidence_upper"],
+            },
+            explanation_available=explanation_available,
+            features=features,
+        )
+
+
 @router.get("/{contract_id}", response_model=ContractDetail)
 def get_contract(
     contract_id: int = Path(..., description="Contract ID"),

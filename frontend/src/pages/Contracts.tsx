@@ -24,6 +24,8 @@ import { contractApi, exportApi } from '@/api/client'
 import { RiskFeedbackButton } from '@/components/RiskFeedbackButton'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
+import { RiskExplainTooltip } from '@/components/RiskExplainTooltip'
+import { AnnotationPin } from '@/components/AnnotationPin'
 import { TableExportButton } from '@/components/TableExportButton'
 import { SECTORS, RISK_COLORS } from '@/lib/constants'
 import { useDebouncedSearch, useDebouncedValue } from '@/hooks/useDebouncedSearch'
@@ -1200,7 +1202,11 @@ function ContractRow({
         <div className="flex flex-col items-center gap-1">
           {/* Colored risk level pill */}
           {riskLevel ? (
-            <RiskLevelPill level={riskLevel as 'critical' | 'high' | 'medium' | 'low'} score={contract.risk_score ?? undefined} size="sm" />
+            <RiskExplainTooltip contractId={contract.id} riskScore={contract.risk_score ?? 0} riskLevel={riskLevel}>
+              <span>
+                <RiskLevelPill level={riskLevel as 'critical' | 'high' | 'medium' | 'low'} score={contract.risk_score ?? undefined} size="sm" />
+              </span>
+            </RiskExplainTooltip>
           ) : (
             <span className="text-xs text-text-muted/30">&middot;</span>
           )}

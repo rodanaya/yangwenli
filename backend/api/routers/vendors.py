@@ -527,6 +527,31 @@ def get_vendor(
             for r in tenure_rows
         ]
 
+        # Check EFOS ghost company and SFP sanctions flags via RFC match
+        vendor_rfc = detail.get("rfc")
+        is_efos_ghost = False
+        is_sfp_sanctioned = False
+        if vendor_rfc:
+            try:
+                efos_row = cursor.execute("""
+                    SELECT 1 FROM ground_truth_vendors gtv
+                    JOIN ground_truth_cases gtc ON gtv.case_id = gtc.id
+                    WHERE gtv.rfc_source = ?
+                      AND (gtc.case_name LIKE '%EFOS%' OR gtc.id = 22)
+                    LIMIT 1
+                """, (vendor_rfc,)).fetchone()
+                is_efos_ghost = efos_row is not None
+            except Exception:
+                is_efos_ghost = False
+            try:
+                sfp_row = cursor.execute(
+                    "SELECT 1 FROM sfp_sanctions WHERE rfc = ? LIMIT 1",
+                    (vendor_rfc,),
+                ).fetchone()
+                is_sfp_sanctioned = sfp_row is not None
+            except Exception:
+                is_sfp_sanctioned = False
+
         return VendorDetailResponse(
             id=detail["id"],
             name=detail["name"],
@@ -564,6 +589,86 @@ def get_vendor(
             top_institutions=top_institutions,
             cobid_clustering_coeff=round(extra["cobid_clustering_coeff"], 6) if extra and extra["cobid_clustering_coeff"] else None,
             cobid_triangle_count=extra["cobid_triangle_count"] if extra else None,
+            is_efos_ghost=is_efos_ghost,
+            is_sfp_sanctioned=is_sfp_sanctioned,
+        )
+
+
+class VendorPercentileResponse(BaseModel):
+    vendor_id: int
+    sector_id: Optional[int]
+    sector_name: Optional[str]
+    avg_risk_score: Optional[float]
+    percentile: int
+    total_vendors_in_sector: int
+    vendors_above: int
+
+
+@router.get("/{vendor_id:int}/percentile", response_model=VendorPercentileResponse)
+def get_vendor_percentile(
+    vendor_id: int = Path(..., description="Vendor ID"),
+):
+    """
+    Get this vendor's risk score percentile within its primary sector.
+
+    Returns where this vendor's average risk score ranks among all vendors
+    in the same sector. Percentile 87 means the vendor scores higher than
+    87% of vendors in the sector.
+    """
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # Get vendor's avg_risk_score and primary sector
+        cursor.execute("""
+            SELECT v.avg_risk_score, vs.primary_sector_id, s.name_es as sector_name
+            FROM vendors v
+            LEFT JOIN vendor_stats vs ON v.id = vs.vendor_id
+            LEFT JOIN sectors s ON vs.primary_sector_id = s.id
+            WHERE v.id = ?
+        """, (vendor_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
+
+        avg_risk_score = row["avg_risk_score"]
+        sector_id = row["primary_sector_id"]
+        sector_name = row["sector_name"]
+
+        if sector_id is None or avg_risk_score is None:
+            return VendorPercentileResponse(
+                vendor_id=vendor_id,
+                sector_id=sector_id,
+                sector_name=sector_name,
+                avg_risk_score=avg_risk_score,
+                percentile=0,
+                total_vendors_in_sector=0,
+                vendors_above=0,
+            )
+
+        # Count vendors in sector with lower avg_risk_score (vendors this one beats)
+        cursor.execute("""
+            SELECT
+                COUNT(*) as total_vendors,
+                SUM(CASE WHEN v2.avg_risk_score < ? THEN 1 ELSE 0 END) as vendors_below
+            FROM vendors v2
+            JOIN vendor_stats vs2 ON v2.id = vs2.vendor_id
+            WHERE vs2.primary_sector_id = ? AND v2.avg_risk_score IS NOT NULL
+        """, (avg_risk_score, sector_id))
+        stats = cursor.fetchone()
+        total = stats["total_vendors"] or 0
+        vendors_below = stats["vendors_below"] or 0
+        vendors_above = total - vendors_below - 1  # exclude self
+        vendors_above = max(0, vendors_above)
+        percentile = int(vendors_below / total * 100) if total > 0 else 0
+
+        return VendorPercentileResponse(
+            vendor_id=vendor_id,
+            sector_id=sector_id,
+            sector_name=sector_name,
+            avg_risk_score=round(avg_risk_score, 4),
+            percentile=percentile,
+            total_vendors_in_sector=total,
+            vendors_above=vendors_above,
         )
 
 

@@ -8,6 +8,7 @@ import { toTitleCase, formatCompactMXN, formatCompactUSD, formatDate } from '@/l
 import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
 import { Link } from 'react-router-dom'
 import { RiskExplanationPanel } from '@/components/RiskExplanation'
+import { ContractExplainPanel } from '@/components/ContractExplainPanel'
 import {
   Building2,
   Calendar,
@@ -188,6 +189,11 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
 
                 {/* v5.1 Risk Explanation */}
                 <RiskExplanationPanel contractId={contract.id} compact />
+
+                {/* AI-powered plain-language explanation */}
+                {contract.risk_level && (
+                  <ContractExplainPanel contractId={contract.id} riskLevel={contract.risk_level} />
+                )}
               </div>
             </section>
 
