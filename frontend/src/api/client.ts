@@ -1263,6 +1263,21 @@ export const watchlistApi = {
     const { data } = await api.get<WatchlistAlertItem[]>('/watchlist/alerts/check')
     return data
   },
+
+  async getFolders(): Promise<Array<{ id: number; name: string; color: string }>> {
+    const { data } = await api.get<{ folders?: Array<{ id: number; name: string; color: string }> } | Array<{ id: number; name: string; color: string }>>('/watchlist/folders')
+    if (Array.isArray(data)) return data
+    return (data as { folders?: Array<{ id: number; name: string; color: string }> }).folders ?? []
+  },
+
+  async createFolder(name: string, color: string): Promise<{ id: number; name: string; color: string }> {
+    const { data } = await api.post<{ id: number; name: string; color: string }>('/watchlist/folders', { name, color })
+    return data
+  },
+
+  async deleteFolder(folderId: number): Promise<void> {
+    await api.delete(`/watchlist/folders/${folderId}`)
+  },
 }
 
 // ============================================================================

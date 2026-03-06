@@ -84,24 +84,25 @@ ssh "$REMOTE" "
 "
 
 echo "[4/6] Uploading deploy database (~2.4GB, this will take a while)..."
-rsync -avz --progress \
-  backend/RUBLI_DEPLOY.db \
-  "${REMOTE}:${REMOTE_DIR}/backend/RUBLI_DEPLOY.db"
+scp -C backend/RUBLI_DEPLOY.db "${REMOTE}:${REMOTE_DIR}/backend/RUBLI_DEPLOY.db"
 
 echo "[5/6] Uploading project files..."
-rsync -avz --progress \
+# Create a temp tarball excluding large/unwanted files, then upload and extract
+tar czf /tmp/rubli-deploy.tar.gz \
   --exclude='backend/RUBLI_NORMALIZED.db*' \
   --exclude='backend/RUBLI_DEPLOY.db' \
   --exclude='backend/*.db.backup*' \
   --exclude='backend/*.db.currency_backup*' \
-  --exclude='backend/original_data/' \
-  --exclude='frontend/node_modules/' \
-  --exclude='frontend/dist/' \
-  --exclude='.git/' \
+  --exclude='backend/original_data' \
+  --exclude='frontend/node_modules' \
+  --exclude='frontend/dist' \
+  --exclude='.git' \
   --exclude='*.pyc' \
-  --exclude='__pycache__/' \
-  . \
-  "${REMOTE}:${REMOTE_DIR}/"
+  --exclude='__pycache__' \
+  .
+scp -C /tmp/rubli-deploy.tar.gz "${REMOTE}:/tmp/rubli-deploy.tar.gz"
+ssh "$REMOTE" "tar xzf /tmp/rubli-deploy.tar.gz -C ${REMOTE_DIR}/ && rm /tmp/rubli-deploy.tar.gz"
+rm /tmp/rubli-deploy.tar.gz
 
 scp .env.prod "${REMOTE}:${REMOTE_DIR}/.env.prod"
 

@@ -387,36 +387,20 @@ export function Watchlist() {
   // Folder queries
   const { data: foldersData } = useQuery({
     queryKey: ['watchlist-folders'],
-    queryFn: async () => {
-      const res = await fetch('/api/v1/watchlist/folders')
-      if (!res.ok) throw new Error(`Failed to load folders: ${res.status}`)
-      const json = await res.json()
-      return json.folders ?? json ?? []
-    },
+    queryFn: () => watchlistApi.getFolders(),
     staleTime: 5 * 60 * 1000,
   })
   const folders = foldersData ?? []
 
   const createFolderMutation = useMutation({
-    mutationFn: async ({ name, color }: { name: string; color: string }) => {
-      const res = await fetch(`/api/v1/watchlist/folders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, color }),
-      })
-      if (!res.ok) throw new Error('Failed to create folder')
-      return res.json()
-    },
+    mutationFn: ({ name, color }: { name: string; color: string }) =>
+      watchlistApi.createFolder(name, color),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['watchlist-folders'] }),
     onError: (err) => console.error('[Watchlist] Failed to create folder:', err),
   })
 
   const deleteFolderMutation = useMutation({
-    mutationFn: async (folderId: number) => {
-      const res = await fetch(`/api/v1/watchlist/folders/${folderId}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Failed to delete folder')
-      return res.json()
-    },
+    mutationFn: (folderId: number) => watchlistApi.deleteFolder(folderId),
     onSuccess: () => {
       setActiveFolderId(null)
       queryClient.invalidateQueries({ queryKey: ['watchlist-folders'] })

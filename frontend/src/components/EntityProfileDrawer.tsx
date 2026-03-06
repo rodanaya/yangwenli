@@ -130,15 +130,15 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
     staleTime: 5 * 60 * 1000,
   })
 
-  // Risk timeline — direct fetch, endpoint may return 404; we swallow errors gracefully
+  // Risk timeline — endpoint may return 404; we swallow errors gracefully
   const { data: timelineData } = useQuery({
     queryKey: ['entity-drawer-vendor-timeline', vendorId],
     queryFn: async (): Promise<RiskTimelinePoint[]> => {
-      const res = await fetch(`/api/v1/vendors/${vendorId}/risk-timeline`)
-      if (!res.ok) return []
-      const json = (await res.json()) as { data?: RiskTimelinePoint[] } | RiskTimelinePoint[]
-      if (Array.isArray(json)) return json
-      return json.data ?? []
+      try {
+        const resp = await vendorApi.getRiskTimeline(vendorId)
+        const timeline = resp.timeline ?? []
+        return timeline.map((t) => ({ year: t.year, avg_risk_score: t.avg_risk_score ?? 0 }))
+      } catch { return [] }
     },
     staleTime: 10 * 60 * 1000,
     retry: false,
@@ -148,9 +148,8 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
   const { data: aiData } = useQuery({
     queryKey: ['entity-drawer-vendor-ai', vendorId],
     queryFn: async (): Promise<AiSummaryResponse> => {
-      const res = await fetch(`/api/v1/vendors/${vendorId}/ai-summary`)
-      if (!res.ok) return {}
-      return (await res.json()) as AiSummaryResponse
+      try { return await vendorApi.getAiSummary(vendorId) as AiSummaryResponse }
+      catch { return {} }
     },
     staleTime: 30 * 60 * 1000,
     retry: false,
@@ -160,11 +159,11 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
   const { data: asfData } = useQuery({
     queryKey: ['entity-drawer-vendor-asf', vendorId],
     queryFn: async (): Promise<AsfCase[]> => {
-      const res = await fetch(`/api/v1/vendors/${vendorId}/asf-cases`)
-      if (!res.ok) return []
-      const json = (await res.json()) as { data?: AsfCase[] } | AsfCase[]
-      if (Array.isArray(json)) return json
-      return json.data ?? []
+      try {
+        const resp = await vendorApi.getAsfCases(vendorId) as { data?: AsfCase[] } | AsfCase[]
+        if (Array.isArray(resp)) return resp
+        return (resp as { data?: AsfCase[] }).data ?? []
+      } catch { return [] }
     },
     staleTime: 30 * 60 * 1000,
     retry: false,
@@ -355,11 +354,11 @@ function InstitutionDrawerContent({ institutionId }: { institutionId: number }) 
   const { data: timelineData } = useQuery({
     queryKey: ['entity-drawer-institution-timeline', institutionId],
     queryFn: async (): Promise<RiskTimelinePoint[]> => {
-      const res = await fetch(`/api/v1/institutions/${institutionId}/risk-timeline`)
-      if (!res.ok) return []
-      const json = (await res.json()) as { data?: RiskTimelinePoint[] } | RiskTimelinePoint[]
-      if (Array.isArray(json)) return json
-      return json.data ?? []
+      try {
+        const resp = await institutionApi.getRiskTimeline(institutionId)
+        const timeline = resp.timeline ?? []
+        return timeline.map((t) => ({ year: t.year, avg_risk_score: t.avg_risk_score ?? 0 }))
+      } catch { return [] }
     },
     staleTime: 10 * 60 * 1000,
     retry: false,

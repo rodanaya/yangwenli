@@ -374,11 +374,7 @@ export default function ModelTransparency() {
   // ------------------------------------------------------------------
   const { data: modelMeta } = useQuery({
     queryKey: ['model', 'metadata'],
-    queryFn: async () => {
-      const resp = await fetch('/api/v1/analysis/model/metadata')
-      if (!resp.ok) throw new Error('Failed to fetch model metadata')
-      return resp.json() as Promise<{ version: string; trained_at: string; n_contracts: number; auc_test: number }>
-    },
+    queryFn: () => analysisApi.getModelMetadata(),
     staleTime: 30 * 60 * 1000,
     retry: 1,
   })
