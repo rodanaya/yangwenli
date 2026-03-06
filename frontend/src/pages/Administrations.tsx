@@ -10,7 +10,8 @@
  * L6: Events Timeline
  */
 
-import { useMemo, useState, useRef } from 'react'
+import { useMemo, useState, useRef, memo } from 'react'
+import { useWikipediaImage } from '@/hooks/useWikipediaImage'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
@@ -57,11 +58,11 @@ import AdministrationFingerprints from '@/components/charts/AdministrationFinger
 // =============================================================================
 
 const ADMINISTRATIONS = [
-  { name: 'Fox', fullName: 'Vicente Fox', start: 2001, end: 2006, dataStart: 2002, color: '#3b82f6', party: 'PAN' },
-  { name: 'Calderon', fullName: 'Felipe Calderon', start: 2006, end: 2012, dataStart: 2006, color: '#fb923c', party: 'PAN' },
-  { name: 'Pena Nieto', fullName: 'Enrique Pena Nieto', start: 2012, end: 2018, dataStart: 2012, color: '#f87171', party: 'PRI' },
-  { name: 'AMLO', fullName: 'Andres Manuel Lopez Obrador', start: 2018, end: 2024, dataStart: 2018, color: '#4ade80', party: 'MORENA' },
-  { name: 'Sheinbaum', fullName: 'Claudia Sheinbaum', start: 2024, end: 2030, dataStart: 2024, color: '#60a5fa', party: 'MORENA' },
+  { name: 'Fox',       fullName: 'Vicente Fox',                   start: 2001, end: 2006, dataStart: 2002, color: '#3b82f6', party: 'PAN',    wikiArticle: 'Vicente_Fox_Quesada' },
+  { name: 'Calderon',  fullName: 'Felipe Calderon',               start: 2006, end: 2012, dataStart: 2006, color: '#fb923c', party: 'PAN',    wikiArticle: 'Felipe_Calderón_Hinojosa' },
+  { name: 'Pena Nieto',fullName: 'Enrique Pena Nieto',            start: 2012, end: 2018, dataStart: 2012, color: '#f87171', party: 'PRI',    wikiArticle: 'Enrique_Peña_Nieto' },
+  { name: 'AMLO',      fullName: 'Andres Manuel Lopez Obrador',   start: 2018, end: 2024, dataStart: 2018, color: '#4ade80', party: 'MORENA', wikiArticle: 'Andrés_Manuel_López_Obrador' },
+  { name: 'Sheinbaum', fullName: 'Claudia Sheinbaum',             start: 2024, end: 2030, dataStart: 2024, color: '#60a5fa', party: 'MORENA', wikiArticle: 'Claudia_Sheinbaum' },
 ] as const
 
 // Party color mapping for badge/stripe
@@ -224,6 +225,51 @@ function DeltaBadge({ val, unit, invertColor }: { val: number; unit: string; inv
 // =============================================================================
 
 type MatrixMetric = 'risk' | 'da' | 'hr' | 'sb'
+
+// ─── President photo avatar ────────────────────────────────────────────────
+// Fetches official portrait from Wikipedia. Falls back to styled initials.
+const PresidentAvatar = memo(function PresidentAvatar({
+  wikiArticle,
+  fullName,
+  color,
+  size = 32,
+}: {
+  wikiArticle: string
+  fullName: string
+  color: string
+  size?: number
+}) {
+  const { src, isLoading } = useWikipediaImage(wikiArticle)
+  const initials = fullName.split(' ').map(w => w[0]).slice(0, 2).join('')
+
+  return (
+    <div
+      className="flex-shrink-0 rounded-full overflow-hidden border-2"
+      style={{
+        width: size,
+        height: size,
+        borderColor: `${color}60`,
+        backgroundColor: `${color}22`,
+      }}
+    >
+      {src && !isLoading ? (
+        <img
+          src={src}
+          alt={fullName}
+          className="w-full h-full object-cover object-top"
+          onError={(e) => { e.currentTarget.style.display = 'none' }}
+        />
+      ) : (
+        <span
+          className="w-full h-full flex items-center justify-center font-black font-mono"
+          style={{ fontSize: size * 0.31, color }}
+        >
+          {initials}
+        </span>
+      )}
+    </div>
+  )
+})
 
 export default function Administrations() {
   const { t } = useTranslation('administrations')
@@ -564,17 +610,12 @@ export default function Administrations() {
               )}
               {/* President avatar + name row */}
               <div className="flex items-center gap-2 mb-1.5 mt-1">
-                {/* Initials avatar */}
-                <div
-                  className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black font-mono border"
-                  style={{
-                    backgroundColor: `${admin.color}22`,
-                    borderColor: `${admin.color}60`,
-                    color: admin.color,
-                  }}
-                >
-                  {admin.fullName.split(' ').map(w => w[0]).slice(0, 2).join('')}
-                </div>
+                <PresidentAvatar
+                  wikiArticle={admin.wikiArticle}
+                  fullName={admin.fullName}
+                  color={admin.color}
+                  size={32}
+                />
                 <div className="flex-1 min-w-0">
                   <span className={cn(
                     'text-sm font-semibold block truncate leading-tight',

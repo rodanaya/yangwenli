@@ -343,7 +343,7 @@ export function InstitutionProfile() {
             <Building2 className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <InstitutionLogoBanner name={institution.name} height={32} className="mb-2" />
+            <InstitutionLogoBanner name={institution.name} height={32} className="mb-2" enableWiki />
             <h1 className="text-lg font-bold leading-tight truncate">{toTitleCase(institution.name)}</h1>
             {(() => {
               const _group = getInstitutionGroup(institution.name)
