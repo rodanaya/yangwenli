@@ -10,7 +10,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import ReactECharts from 'echarts-for-react'
-import { Network, Search, X, ExternalLink, Users, UserCircle, RotateCcw, ChevronDown, ChevronUp, ZoomIn, ZoomOut, AlertTriangle, Info, Eye, Layers } from 'lucide-react'
+import { Network, Search, X, ExternalLink, Users, UserCircle, RotateCcw, ChevronDown, ChevronUp, ZoomIn, ZoomOut, AlertTriangle, Info, Eye, Layers, FileText } from 'lucide-react'
 import { RiskBadge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SectionDescription } from '@/components/SectionDescription'
@@ -464,6 +464,13 @@ function SidePanel({
           >
             <ExternalLink className="h-3 w-3 shrink-0" />
             {t('panelViewPage')}
+          </Link>
+          <Link
+            to={isVendor ? `/contracts?vendor_id=${numericId}` : `/contracts?institution_id=${numericId}`}
+            className="flex items-center gap-1.5 text-xs text-text-muted hover:text-text-primary hover:underline"
+          >
+            <FileText className="h-3 w-3 shrink-0" />
+            View {formatNumber(node.contracts)} contracts
           </Link>
         </div>
 

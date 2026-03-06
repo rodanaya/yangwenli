@@ -700,7 +700,7 @@ export function Dashboard() {
                           {monthlyData.months.map((entry: { month: number }) => (
                             <Cell
                               key={entry.month}
-                              fill={entry.month === 12 ? RISK_COLORS.medium : 'rgba(255,255,255,0.28)'}
+                              fill={entry.month === 12 ? RISK_COLORS.medium : 'rgba(148,163,184,0.40)'}
                             />
                           ))}
                         </Bar>
