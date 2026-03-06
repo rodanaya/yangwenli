@@ -299,9 +299,20 @@ def get_model_metadata():
     try:
         with get_db() as conn:
             cursor = conn.cursor()
+            # Probe schema: test_auc column was added after initial deploy and may be absent
+            pragma_cols = {r[1] for r in cursor.execute(
+                "PRAGMA table_info(model_calibration)"
+            ).fetchall()}
+            has_test_auc = "test_auc" in pragma_cols
+            select_cols = (
+                "model_version, created_at, auc_roc, test_auc, "
+                "pu_correction_factor, temporal_metrics"
+            ) if has_test_auc else (
+                "model_version, created_at, auc_roc, "
+                "pu_correction_factor, temporal_metrics"
+            )
             row = cursor.execute(
-                "SELECT model_version, created_at, auc_roc, test_auc, "
-                "pu_correction_factor, temporal_metrics "
+                f"SELECT {select_cols} "
                 "FROM model_calibration WHERE sector_id IS NULL "
                 "ORDER BY created_at DESC LIMIT 1"
             ).fetchone()
@@ -313,16 +324,22 @@ def get_model_metadata():
                     "updated_at": "2026-02-27",
                 }
             train_auc = None
+            test_auc_val = None
             if row["temporal_metrics"]:
                 try:
                     tm = json.loads(row["temporal_metrics"])
                     train_auc = tm.get("train_auc")
+                    # temporal_metrics may also carry test_auc for older schemas
+                    if not has_test_auc:
+                        test_auc_val = tm.get("test_auc")
                 except (json.JSONDecodeError, TypeError):
                     pass
+            if has_test_auc:
+                test_auc_val = row["test_auc"]
             return {
                 "version": row["model_version"],
                 "trained_at": row["created_at"],
-                "auc_test": row["test_auc"] or row["auc_roc"],
+                "auc_test": test_auc_val or row["auc_roc"],
                 "auc_train": round(train_auc, 3) if train_auc else None,
                 "pu_correction": row["pu_correction_factor"],
                 "updated_at": row["created_at"],
@@ -597,13 +614,12 @@ def get_sector_year_breakdown():
         with get_db() as conn:
             cursor = conn.cursor()
 
-            # Fast path: use precomputed administrations stat
+            # Fast path: use precomputed sector_year_breakdown stat
             pc_row = cursor.execute(
-                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'administrations'"
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sector_year_breakdown'"
             ).fetchone()
             if pc_row:
                 raw = json.loads(pc_row[0])
-                # administrations is a list of {year, sector_id, ...} objects
                 if isinstance(raw, list) and raw and "sector_id" in raw[0]:
                     data = [SectorYearItem(
                         year=r["year"],
@@ -3554,18 +3570,33 @@ def get_publication_delays():
     with get_db() as conn:
         conn.row_factory = sqlite3.Row
 
+        # Support schemas with or without a pre-computed publication_delay_days column.
+        # When the column is absent, derive delay on-the-fly from publication_date - contract_date.
+        pragma_cols = {r[1] for r in conn.execute("PRAGMA table_info(contracts)").fetchall()}
+        if "publication_delay_days" in pragma_cols:
+            delay_expr = "publication_delay_days"
+            delay_filter = "publication_delay_days IS NOT NULL AND publication_delay_days > 0"
+        else:
+            # Compute from dates; julianday difference gives fractional days, CAST to integer
+            delay_expr = "CAST(julianday(publication_date) - julianday(contract_date) AS INTEGER)"
+            delay_filter = (
+                "publication_date IS NOT NULL AND contract_date IS NOT NULL "
+                "AND publication_date > contract_date "
+                "AND CAST(julianday(publication_date) - julianday(contract_date) AS INTEGER) > 0"
+            )
+
         # Bucket distribution
-        row = conn.execute("""
+        row = conn.execute(f"""
             SELECT
-                SUM(CASE WHEN publication_delay_days BETWEEN 1 AND 7 THEN 1 ELSE 0 END) as bucket_0_7,
-                SUM(CASE WHEN publication_delay_days BETWEEN 8 AND 30 THEN 1 ELSE 0 END) as bucket_8_30,
-                SUM(CASE WHEN publication_delay_days BETWEEN 31 AND 90 THEN 1 ELSE 0 END) as bucket_31_90,
-                SUM(CASE WHEN publication_delay_days > 90 THEN 1 ELSE 0 END) as bucket_over_90,
+                SUM(CASE WHEN ({delay_expr}) BETWEEN 1 AND 7 THEN 1 ELSE 0 END) as bucket_0_7,
+                SUM(CASE WHEN ({delay_expr}) BETWEEN 8 AND 30 THEN 1 ELSE 0 END) as bucket_8_30,
+                SUM(CASE WHEN ({delay_expr}) BETWEEN 31 AND 90 THEN 1 ELSE 0 END) as bucket_31_90,
+                SUM(CASE WHEN ({delay_expr}) > 90 THEN 1 ELSE 0 END) as bucket_over_90,
                 COUNT(*) as total,
-                ROUND(AVG(publication_delay_days), 1) as avg_delay,
-                ROUND(AVG(CASE WHEN publication_delay_days <= 7 THEN 1.0 ELSE 0 END) * 100, 2) as timely_pct
+                ROUND(AVG({delay_expr}), 1) as avg_delay,
+                ROUND(AVG(CASE WHEN ({delay_expr}) <= 7 THEN 1.0 ELSE 0 END) * 100, 2) as timely_pct
             FROM contracts
-            WHERE publication_delay_days IS NOT NULL AND publication_delay_days > 0
+            WHERE {delay_filter}
         """).fetchone()
 
         buckets = [
@@ -3579,14 +3610,14 @@ def get_publication_delays():
             b["pct"] = round(b["count"] / total * 100, 2) if total else 0.0
 
         # By year trend
-        year_rows = conn.execute("""
+        year_rows = conn.execute(f"""
             SELECT
                 contract_year,
                 COUNT(*) as contracts_with_delay,
-                ROUND(AVG(publication_delay_days), 1) as avg_delay,
-                ROUND(100.0 * SUM(CASE WHEN publication_delay_days <= 7 THEN 1 ELSE 0 END) / COUNT(*), 2) as timely_pct
+                ROUND(AVG({delay_expr}), 1) as avg_delay,
+                ROUND(100.0 * SUM(CASE WHEN ({delay_expr}) <= 7 THEN 1 ELSE 0 END) / COUNT(*), 2) as timely_pct
             FROM contracts
-            WHERE publication_delay_days IS NOT NULL AND publication_delay_days > 0
+            WHERE {delay_filter}
               AND contract_year IS NOT NULL
             GROUP BY contract_year
             ORDER BY contract_year
