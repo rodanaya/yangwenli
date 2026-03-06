@@ -57,6 +57,8 @@ import esSubnational from './locales/es/subnational.json'
 import enSubnational from './locales/en/subnational.json'
 import esYearinreview from './locales/es/yearinreview.json'
 import enYearinreview from './locales/en/yearinreview.json'
+import esLanding from './locales/es/landing.json'
+import enLanding from './locales/en/landing.json'
 
 i18n
   .use(LanguageDetector)
@@ -76,6 +78,7 @@ i18n
         workspace: esWorkspace,
         subnational: esSubnational,
         yearinreview: esYearinreview,
+        landing: esLanding,
       },
       en: {
         common: enCommon, sectors: enSectors, nav: enNav, dashboard: enDashboard,
@@ -90,6 +93,7 @@ i18n
         workspace: enWorkspace,
         subnational: enSubnational,
         yearinreview: enYearinreview,
+        landing: enLanding,
       },
     },
     lng: localStorage.getItem('i18nextLng') || 'en', // Default to English when no saved preference

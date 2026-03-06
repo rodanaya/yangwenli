@@ -1,0 +1,84 @@
+{
+  "skip_to_app": "Ir a la app",
+  "chapter_label": "Capítulo {{num}} — {{tag}}",
+  "hero": {
+    "badge": "Plataforma de Investigación Anticorrupción con IA",
+    "headline_part2": "3.1 millones",
+    "headline_part4": "Sigue el dinero.",
+    "subheading": "RUBLI analiza cada contrato de adquisición federal publicado por México desde 2002 — detectando patrones de corrupción, mapeando redes de proveedores y revelando los casos que los datos muestran.",
+    "cta_enter": "Comenzar investigación",
+    "cta_scroll": "Ver cómo funciona"
+  },
+  "hero_findings": {
+    "f1": "Nuestro modelo marca 328,298 contratos como de riesgo alto o crítico — equivalente a toda la contratación de salud pública de 5 años.",
+    "f2": "Verdad fundamental: Red de empresas fantasma del IMSS (9,366 contratos), fraude alimentario de Segalmex (6,326), peculado en emergencia COVID (5,371), y 19 escándalos documentados más.",
+    "f3": "AUC del modelo 0.957 en contratos de 2021–2025 — nunca vistos durante el entrenamiento. El 93% de los contratos corruptos conocidos obtuvieron puntuación alta o crítica."
+  },
+  "how_it_works": {
+    "section_label": "La Ciencia",
+    "title": "Cómo Funciona el Modelo de Riesgo",
+    "subtitle": "AUC de entrenamiento 0.964 · AUC de prueba 0.957 (división temporal) · Validado contra 22 casos documentados de corrupción en los 12 sectores",
+    "step1_title": "Normalización por puntuación Z",
+    "step1_body": "Los 16 atributos de cada contrato (precio, concentración de proveedores, período de publicación, etc.) se convierten en puntuaciones Z relativas a su propio sector y año. Una licitación con un solo postor en Defensa (donde el 80% son adjudicaciones directas) es mucho menos sospechosa que en Educación.",
+    "step2_title": "Modelos logísticos por sector",
+    "step2_body": "12 submodelos de regresión logística dedicados — uno por sector — capturan las huellas de corrupción específicas de cada sector. El fraude energético se ve diferente al fraude en salud. El modelo global sirve como respaldo.",
+    "step3_title": "Aprendizaje Positivo-No Etiquetado",
+    "step3_body": "Solo los casos de corrupción documentados están etiquetados. Los 3.1M de contratos restantes no están etiquetados (no necesariamente limpios). La corrección PU de Elkan & Noto (c=0.88) ajusta por este sesgo de selección.",
+    "step4_title": "Intervalos de confianza del 95%",
+    "step4_body": "Cada puntuación incluye límites de confianza bootstrap. Un contrato con puntuación 0.42 [0.31, 0.55] es genuinamente incierto — uno con 0.89 [0.81, 0.95] no lo es. Los investigadores ven ambos.",
+    "caveat1": "Una puntuación de alto riesgo significa que las características de contratación del contrato se asemejan a las de casos de corrupción documentados — no que la corrupción esté probada. Las puntuaciones son herramientas de investigación, no veredictos.",
+    "caveat2": "Limitación clave: RUBLI analiza solo datos de adjudicación de contratos. El fraude en la fase de ejecución (sobrecostos, trabajadores fantasma, sobornos) es invisible. Los sectores de infraestructura y energía probablemente tienen puntuaciones bajas por esta razón."
+  },
+  "chapters": {
+    "scale": {
+      "tag": "La Escala",
+      "heading": "{{value}} en Contratos Gubernamentales",
+      "body": "Entre 2002 y 2025, el gobierno federal mexicano adjudicó más de {{count}} millones de contratos por un valor estimado de ~9.5 billones de pesos. RUBLI rastrea cada peso — desde compras de salud de emergencia hasta grandes obras de infraestructura — en una sola base de datos buscable.",
+      "stat_label": "Valor total de contrataciones (2002–2025)"
+    },
+    "patterns": {
+      "tag": "Los Patrones",
+      "heading": "Señales de Alerta Sistémicas — En Cada Administración",
+      "body": "Derrame presupuestario de fin de año. Adjudicaciones directas sin competencia. Ventanas de publicación sospechosamente cortas. Proveedores únicos ganando más del 90% de los contratos de un sector. Estos patrones no son aberraciones — los datos muestran que se repiten en cada administración desde 2002, en todos los sectores.",
+      "stat_label": "de contratos adjudicados directamente (sin competencia)",
+      "n1": "El 78% de todos los contratos son adjudicaciones directas — sin competencia abierta, sin licitaciones públicas. Solo en salud, esta tasa superó el 85% durante la emergencia COVID de 2020.",
+      "n2": "Los contratos de diciembre se disparan un 40–60% por encima de los promedios mensuales cada año. La presión de fin de año fiscal empuja a las instituciones hacia adjudicaciones apresuradas y sin competencia.",
+      "n3": "Concentración de proveedores: en Agricultura, los 3 principales proveedores capturaron el 71% del valor del sector durante los años pico de Segalmex. En Salud, la red de empresas fantasma del IMSS ganó 9,366 contratos sin competencia significativa."
+    },
+    "risk": {
+      "tag": "El Riesgo",
+      "heading": "{{pct}}% de Contratos Marcados como Alto Riesgo",
+      "body": "El modelo de IA de RUBLI — entrenado en 22 casos de corrupción documentados y validado con contratos que nunca vio durante el entrenamiento — identifica el {{critical}}% de contratos como Críticos y el {{high}}% como Alto riesgo. Son más de 328,000 contratos que merecen investigación.",
+      "stat_label": "Contratos de riesgo alto o crítico",
+      "n1": "Crítico (puntuación ≥0.50): {{pct}}% — 201,745 contratos. Estos se asemejan a los patrones de corrupción conocidos más fuertes. Se requiere investigación inmediata.",
+      "n2": "Alto (puntuación 0.30–0.50): {{pct}}% — 126,553 contratos. Alta similitud con fraudes documentados. Se recomienda revisión prioritaria.",
+      "n3": "Confianza del modelo: AUC de entrenamiento 0.964, AUC de prueba 0.957 (división temporal — conjunto de prueba 2021–2025). El 93% de los contratos de referencia obtienen puntuación alta o crítica."
+    },
+    "cases": {
+      "tag": "Los Casos",
+      "heading": "De Empresas Fantasma del IMSS a Sobornos de Odebrecht",
+      "body": "La Biblioteca de Casos de RUBLI documenta 43 escándalos de corrupción — con los proveedores, contratos y patrones de contratación específicos que los delataron. Estos 22 casos coincidentes forman la verdad fundamental detrás del modelo de riesgo. El modelo detecta el 93% de ellos como de riesgo alto o crítico.",
+      "stat_label": "Casos de corrupción documentados"
+    },
+    "yourturn": {
+      "tag": "Tu Turno",
+      "heading": "Comienza a Investigar",
+      "body": "Busca cualquier proveedor, institución o contrato. Sigue la red de co-licitantes. Crea un expediente. Exporta a tu redacción. RUBLI da a periodistas de investigación e investigadores anticorrupción las herramientas para seguir el dinero — a través de 23 años de datos, en segundos.",
+      "stat_label": "Contratos buscables en segundos"
+    }
+  },
+  "featured_cases": {
+    "label": "Casos Destacados",
+    "contracts": "{{count}} contratos"
+  },
+  "cta": {
+    "open_dashboard": "Abrir Dashboard",
+    "search_vendor": "Buscar un proveedor",
+    "see_methodology": "Ver la metodología",
+    "browse_cases": "Explorar la biblioteca"
+  },
+  "footer": {
+    "platform": "RUBLI — Plataforma de Análisis de Contrataciones Gubernamentales de México",
+    "data": "Datos: COMPRANET 2002–2025 · Modelo: v5.1 · AUC 0.957"
+  }
+}
