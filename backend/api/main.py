@@ -100,11 +100,13 @@ def _warmup_caches():
         "/api/v1/contracts/statistics",                # Explore page (3.8s cold)
         "/api/v1/analysis/overview",                   # Patterns page (8.8s cold)
         "/api/v1/analysis/sector-year-breakdown",      # ProcurementIntelligence heatmap (slow cold)
+        "/api/v1/executive/summary",                   # Dashboard Executive section (19s cold, 15ms warm)
+        "/api/v1/analysis/money-flow",                 # Dashboard money flow panel
     ]
     for ep in endpoints:
         try:
-            # Slow endpoints (contracts/statistics, overview) need longer timeout
-            timeout = 12 if "statistics" in ep or "overview" in ep else 3
+            # executive/summary needs extended timeout (up to 25s cold)
+            timeout = 30 if "executive" in ep else (12 if "statistics" in ep or "overview" in ep else 3)
             urllib.request.urlopen(f"{base}{ep}", timeout=timeout)
         except Exception as e:
             logger.debug(f"Cache warmup skipped for {ep}: {e}")
