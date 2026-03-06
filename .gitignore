@@ -49,6 +49,7 @@ logs/
 # Environment
 .env
 .env.local
+.env.prod
 
 # Node
 node_modules/

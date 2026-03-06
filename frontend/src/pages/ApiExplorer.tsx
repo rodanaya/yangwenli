@@ -79,9 +79,9 @@ const API_GROUPS: EndpointGroup[] = [
       },
       {
         method: 'GET',
-        path: '/api/v1/vendors/search',
-        description: 'Quick vendor search by name (returns up to 10 results).',
-        params: ['q', 'limit'],
+        path: '/api/v1/vendors',
+        description: 'Vendor list with search — pass ?search=q for quick name lookup (up to 10 results with per_page=10).',
+        params: ['search', 'per_page', 'page', 'sector_id', 'year'],
       },
       {
         method: 'GET',
@@ -168,7 +168,7 @@ const API_GROUPS: EndpointGroup[] = [
       },
       {
         method: 'GET',
-        path: '/api/v1/institutions/health',
+        path: '/api/v1/analysis/institution-rankings',
         description: 'Institution health overview with risk grades and procurement quality scores.',
         params: ['sector_id', 'limit'],
       },
@@ -274,7 +274,7 @@ const API_GROUPS: EndpointGroup[] = [
       },
       {
         method: 'GET',
-        path: '/api/v1/stats/year/{year}',
+        path: '/api/v1/analysis/year-summary/{year}',
         description: 'Pre-computed statistics for a specific year (2002–2025).',
       },
     ],
