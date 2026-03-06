@@ -724,6 +724,50 @@ export default function ProcurementIntelligence() {
       }))
   }, [spikeData])
 
+  // ── Alert ticker: high-risk contracts in the most recent year ────────────
+  const alertTicker = useMemo(() => {
+    const yoyData: YearOverYearChange[] = yoyResp?.data ?? []
+    if (!yoyData.length) return null
+    const sorted = [...yoyData].sort((a, b) => b.year - a.year)
+    const latest = sorted[0]
+    const prior = sorted[1]
+    if (!latest) return null
+    const highRiskCount = Math.round((latest.high_risk_pct / 100) * latest.contracts)
+    const priorHighRiskCount = prior ? Math.round(((prior.high_risk_pct ?? 0) / 100) * (prior.contracts ?? 0)) : null
+    const delta = priorHighRiskCount != null ? highRiskCount - priorHighRiskCount : null
+    return { year: latest.year, count: highRiskCount, pct: latest.high_risk_pct, delta }
+  }, [yoyResp])
+
+  // ── Sector × year heatmap data (2020–2025 window) ─────────────────────────
+  const heatmapYears = [2020, 2021, 2022, 2023, 2024, 2025]
+  const heatmapData = useMemo(() => {
+    const rows: SectorYearItem[] = sectorYearResp?.data ?? []
+    if (!rows.length) return null
+    return SECTORS.map(sector => ({
+      sector,
+      cells: heatmapYears.map(year => {
+        const row = rows.find(r => r.sector_id === sector.id && r.year === year)
+        return { year, pct: row?.high_risk_pct ?? null }
+      }),
+    }))
+  }, [sectorYearResp])
+
+  // ── Top red flags with trend arrows ──────────────────────────────────────
+  const topRedFlags = useMemo(() => {
+    if (!rfData?.factor_frequencies) return []
+    const TOP_FACTORS = ['direct_award', 'single_bid', 'price_ratio', 'same_day_count', 'year_end']
+    return TOP_FACTORS.map(factor => {
+      const found = rfData.factor_frequencies.find((f: RiskFactorFrequency) => f.factor === factor)
+      return {
+        factor,
+        label: FACTOR_DISPLAY_LABELS[factor] ?? factor.replace(/_/g, ' ').toUpperCase(),
+        count: found?.count ?? 0,
+        pct: found?.percentage ?? 0,
+        avgRisk: found?.avg_risk_score ?? 0,
+      }
+    }).filter(f => f.count > 0).sort((a, b) => b.count - a.count)
+  }, [rfData])
+
   // ── Sort handler ─────────────────────────────────────────────────────────
   function handleSort(key: SortKey) {
     if (key === sortKey) setSortDir(d => d === 'desc' ? 'asc' : 'desc')
@@ -750,6 +794,45 @@ export default function ProcurementIntelligence() {
         <h1 className="text-2xl font-black text-text-primary mb-1">{t('title')}</h1>
         <p className="text-sm text-text-muted">{t('subtitle')}</p>
       </div>
+
+      {/* ─── ALERT TICKER ─────────────────────────────────────────────────── */}
+      {alertTicker && (
+        <div
+          className="flex items-center gap-3 px-4 py-3 rounded-lg border"
+          style={{ background: `${RISK_COLORS.high}12`, borderColor: `${RISK_COLORS.high}40` }}
+          role="status"
+          aria-live="polite"
+        >
+          <Activity className="h-4 w-4 shrink-0" style={{ color: RISK_COLORS.high }} aria-hidden="true" />
+          <div className="flex-1 min-w-0">
+            <span className="text-xs font-bold uppercase tracking-wide font-mono" style={{ color: RISK_COLORS.high }}>
+              Live Risk Alert
+            </span>
+            <span className="text-xs text-text-secondary ml-2">
+              <span className="font-bold text-text-primary">{formatNumber(alertTicker.count)}</span> high-risk contracts in{' '}
+              <button
+                onClick={() => navigate(`/year-in-review/${alertTicker.year}`)}
+                className="text-accent hover:underline font-semibold"
+              >
+                {alertTicker.year}
+              </button>
+              {' '}({alertTicker.pct.toFixed(1)}% of all contracts)
+            </span>
+            {alertTicker.delta != null && (
+              <span className={cn(
+                'ml-3 text-xs font-mono font-bold inline-flex items-center gap-0.5',
+                alertTicker.delta > 0 ? 'text-risk-critical' : alertTicker.delta < 0 ? 'text-risk-low' : 'text-text-muted'
+              )}>
+                {alertTicker.delta > 0 ? <TrendingUp className="h-3 w-3" /> : alertTicker.delta < 0 ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
+                {alertTicker.delta > 0 ? '+' : ''}{formatNumber(alertTicker.delta)} vs prior year
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] text-text-muted font-mono shrink-0">
+            Updated: {new Date().toLocaleDateString('en-MX')}
+          </span>
+        </div>
+      )}
 
       {/* ─── SECTION 1: MONEY FLOW EXPLORER ──────────────────────────────── */}
       <Card className="border-border/40">
