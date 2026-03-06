@@ -1016,7 +1016,7 @@ export const analysisApi = {
     return data
   },
 
-  async getModelMetadata(): Promise<{ version: string; trained_at: string; auc_test: number; pu_correction?: number }> {
+  async getModelMetadata(): Promise<{ version: string; trained_at: string; auc_test: number; pu_correction?: number; n_contracts?: number }> {
     const { data } = await api.get('/analysis/model/metadata')
     return data
   },

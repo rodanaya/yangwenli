@@ -503,7 +503,7 @@ export default function ModelTransparency() {
                 ? t('modelTransparency.badgeLiveApi', {
                     version: modelMeta.version,
                     date: modelMeta.trained_at,
-                    contracts: formatNumber(modelMeta.n_contracts),
+                    contracts: formatNumber(modelMeta.n_contracts ?? 0),
                     auc: modelMeta.auc_test.toFixed(3),
                   })
                 : t('modelTransparency.badgeStatic', {

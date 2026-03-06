@@ -137,7 +137,7 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
       try {
         const resp = await vendorApi.getRiskTimeline(vendorId)
         const timeline = resp.timeline ?? []
-        return timeline.map((t) => ({ year: t.year, avg_risk_score: t.avg_risk_score ?? 0 }))
+        return timeline.map((t) => ({ year: t.year, avg_risk: t.avg_risk_score ?? 0 }))
       } catch { return [] }
     },
     staleTime: 10 * 60 * 1000,
@@ -357,7 +357,7 @@ function InstitutionDrawerContent({ institutionId }: { institutionId: number }) 
       try {
         const resp = await institutionApi.getRiskTimeline(institutionId)
         const timeline = resp.timeline ?? []
-        return timeline.map((t) => ({ year: t.year, avg_risk_score: t.avg_risk_score ?? 0 }))
+        return timeline.map((t) => ({ year: t.year, avg_risk: t.avg_risk_score ?? 0 }))
       } catch { return [] }
     },
     staleTime: 10 * 60 * 1000,

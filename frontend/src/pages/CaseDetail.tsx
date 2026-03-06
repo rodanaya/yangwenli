@@ -509,9 +509,17 @@ export default function CaseDetail() {
                 <div className="text-lg font-mono font-bold text-text-primary leading-tight">
                   {totalContractsLinked > 0 ? formatCompact(totalContractsLinked) : '—'}
                 </div>
-                {linkedVendors.length > 0 && (
+                {linkedVendors.length > 0 ? (
                   <div className="text-[11px] text-text-muted">
                     {linkedVendors.length} vendor{linkedVendors.length !== 1 ? 's' : ''} matched in COMPRANET
+                  </div>
+                ) : (
+                  <div className="text-[11px] text-text-muted">
+                    {data.compranet_visibility === 'low'
+                      ? 'Subcontracts outside COMPRANET scope'
+                      : data.compranet_visibility === 'partial'
+                      ? 'Partial COMPRANET coverage'
+                      : 'No COMPRANET match found'}
                   </div>
                 )}
               </motion.div>
