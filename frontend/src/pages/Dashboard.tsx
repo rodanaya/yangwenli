@@ -1249,55 +1249,56 @@ export function Dashboard() {
       {/* ================================================================ */}
       {/* RISK DISTRIBUTION — Gauge + Full-width stacked bar             */}
       {/* ================================================================ */}
-      <Card className="border-border/40">
-        <CardContent className="py-4 px-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-1.5">
-              <h2 className="text-base font-bold text-text-primary">{t('riskDistribution')}</h2>
+      <div className="rounded-xl bg-slate-900/50 border border-white/5 p-4">
+        <div className="flex items-center justify-between mb-1">
+          <div>
+            <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+              {t('riskDistribution')}
               <RiskScoreDisclaimer />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-text-muted">
-                {t('riskDistLabel', { total: formatNumber(overview?.total_contracts || 0) })}
-              </span>
-              <ChartDownloadButton targetRef={riskDistRef} filename="rubli-risk-distribution" />
-            </div>
+            </h3>
+            <p className="text-xs text-white/50">
+              {t('riskDistLabel', { total: formatNumber(overview?.total_contracts || 0) })}
+            </p>
           </div>
-          {dashLoading || !riskDist ? (
-            <div className="space-y-3">
-              <div className="flex justify-center"><Skeleton className="h-28 w-48" /></div>
-              <Skeleton className="h-10 w-full" />
-            </div>
-          ) : (
-            <div ref={riskDistRef} className="space-y-3">
-              {/* Donut + 4 stat cards */}
-              <div className="flex flex-col sm:flex-row items-center gap-6">
-                <RiskDonutChart data={riskDist} />
-                <div className="flex-1 grid grid-cols-2 gap-2 w-full">
-                  {(['critical', 'high', 'medium', 'low'] as const).map((level) => {
-                    const d = riskDist.find((r) => r.risk_level === level)
-                    const color = DONUT_COLORS[level] ?? '#64748b'
-                    return (
-                      <div key={level} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-border/30 bg-background-elevated/20">
-                        <div className="w-2.5 h-8 rounded-sm flex-shrink-0" style={{ backgroundColor: color, opacity: 0.75 }} />
-                        <div className="min-w-0">
-                          <p className="text-[10px] text-text-muted capitalize font-mono uppercase tracking-wide">{level}</p>
-                          <p className="text-lg font-black tabular-nums font-mono leading-tight" style={{ color }}>
-                            {(d?.percentage ?? 0).toFixed(1)}%
-                          </p>
-                          <p className="text-[10px] text-text-muted font-mono tabular-nums">{formatNumber(d?.count ?? 0)}</p>
-                        </div>
+          <ChartDownloadButton targetRef={riskDistRef} filename="rubli-risk-distribution" />
+        </div>
+        {dashLoading || !riskDist ? (
+          <div className="space-y-3 mt-3">
+            <div className="flex justify-center"><Skeleton className="h-28 w-48" /></div>
+            <Skeleton className="h-10 w-full" />
+          </div>
+        ) : (
+          <div ref={riskDistRef} className="space-y-3 mt-3">
+            {/* Donut + 4 stat cards */}
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <RiskDonutChart data={riskDist} />
+              <div className="flex-1 grid grid-cols-2 gap-2 w-full">
+                {(['critical', 'high', 'medium', 'low'] as const).map((level) => {
+                  const d = riskDist.find((r) => r.risk_level === level)
+                  const color = DONUT_COLORS[level] ?? '#64748b'
+                  return (
+                    <div key={level} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-white/5 bg-white/5">
+                      <div className="w-2.5 h-8 rounded-sm flex-shrink-0" style={{ backgroundColor: color, opacity: 0.75 }} />
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-white/50 capitalize font-mono uppercase tracking-wide">{level}</p>
+                        <p className="text-lg font-black tabular-nums font-mono leading-tight" style={{ color }}>
+                          {(d?.percentage ?? 0).toFixed(1)}%
+                        </p>
+                        <p className="text-[10px] text-white/40 font-mono tabular-nums">{formatNumber(d?.count ?? 0)}</p>
                       </div>
-                    )
-                  })}
-                </div>
+                    </div>
+                  )
+                })}
               </div>
-              {/* Plain-language annotation */}
-              <RiskDistributionAnnotation data={riskDist} />
             </div>
-          )}
-        </CardContent>
-      </Card>
+            {/* Plain-language annotation */}
+            <RiskDistributionAnnotation data={riskDist} />
+          </div>
+        )}
+        <p className="text-xs text-white/50 italic mt-2 px-1">
+          Critical and high contracts share statistical patterns with documented corruption cases — concentrated vendors, abnormal win rates, and sector mismatches drive the score.
+        </p>
+      </div>
 
       {/* ================================================================ */}
       {/* YEAR-END RISK SURGE CALLOUT — compact audit-insight card       */}
@@ -1553,44 +1554,64 @@ const RiskDonutChart = memo(function RiskDonutChart({
     }
   }).filter((d) => d.value > 0)
 
+  const highCriticalCount = data
+    .filter((d) => d.risk_level === 'critical' || d.risk_level === 'high')
+    .reduce((s, d) => s + d.count, 0)
+
   return (
     <div className="flex flex-col items-center">
-      <PieChart width={170} height={170} aria-label="Risk level distribution donut chart">
-        <Pie
-          data={chartData}
-          cx={85}
-          cy={85}
-          innerRadius={60}
-          outerRadius={80}
-          paddingAngle={2}
-          dataKey="value"
-          isAnimationActive
+      <div className="relative" style={{ width: 170, height: 170 }}>
+        <PieChart width={170} height={170} aria-label="Risk level distribution donut chart">
+          <Pie
+            data={chartData}
+            cx={85}
+            cy={85}
+            innerRadius={60}
+            outerRadius={80}
+            paddingAngle={2}
+            dataKey="value"
+            isAnimationActive
+          >
+            {chartData.map((entry) => (
+              <Cell
+                key={entry.name}
+                fill={DONUT_COLORS[entry.name.toLowerCase()] ?? '#64748b'}
+                opacity={0.88}
+              />
+            ))}
+          </Pie>
+          <RechartsTooltip
+            content={({ active, payload }) => {
+              if (active && payload && payload.length) {
+                const d = payload[0].payload as { name: string; value: number; count: number }
+                return (
+                  <div className="chart-tooltip text-xs">
+                    <p className="font-bold text-text-primary">{d.name}</p>
+                    <p className="text-text-muted tabular-nums font-mono">
+                      {d.value.toFixed(1)}% · {formatNumber(d.count)}
+                    </p>
+                  </div>
+                )
+              }
+              return null
+            }}
+          />
+        </PieChart>
+        {/* Center label: total high+critical contracts */}
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
+          aria-label={`${formatNumber(highCriticalCount)} high-risk contracts`}
         >
-          {chartData.map((entry) => (
-            <Cell
-              key={entry.name}
-              fill={DONUT_COLORS[entry.name.toLowerCase()] ?? '#64748b'}
-              opacity={0.88}
-            />
-          ))}
-        </Pie>
-        <RechartsTooltip
-          content={({ active, payload }) => {
-            if (active && payload && payload.length) {
-              const d = payload[0].payload as { name: string; value: number; count: number }
-              return (
-                <div className="chart-tooltip text-xs">
-                  <p className="font-bold text-text-primary">{d.name}</p>
-                  <p className="text-text-muted tabular-nums font-mono">
-                    {d.value.toFixed(1)}% · {formatNumber(d.count)}
-                  </p>
-                </div>
-              )
-            }
-            return null
-          }}
-        />
-      </PieChart>
+          <span className="text-lg font-black tabular-nums font-mono leading-none text-white">
+            {highCriticalCount >= 1000
+              ? `${(highCriticalCount / 1000).toFixed(0)}k`
+              : formatNumber(highCriticalCount)}
+          </span>
+          <span className="text-[9px] text-white/50 font-mono uppercase tracking-wider mt-0.5 text-center leading-tight">
+            High-Risk<br />Contracts
+          </span>
+        </div>
+      </div>
       <div className="flex items-center gap-2 flex-wrap justify-center mt-0.5">
         {chartData.map((d) => (
           <div key={d.name} className="flex items-center gap-1">

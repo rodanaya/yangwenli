@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
+import { InstitutionBadge } from '@/components/InstitutionBadge'
 import { AlertCircle, ArrowLeft, ExternalLink, CheckCircle, Activity, TrendingUp, Users, FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { RISK_COLORS, getRiskLevelFromScore, SECTORS } from '@/lib/constants'
@@ -869,10 +870,15 @@ export default function CaseDetail() {
                       {t(`detail.roles.${actor.role}`)}
                     </Badge>
                   </div>
-                  <div>
-                    <div className="text-xs font-semibold text-text-primary">{actor.name}</div>
-                    {actor.title && <div className="text-[11px] text-text-muted">{actor.title}</div>}
-                    {actor.note && <div className="text-[11px] text-text-secondary mt-0.5">{actor.note}</div>}
+                  <div className="flex items-start gap-2 min-w-0">
+                    {actor.role === 'institution' && (
+                      <InstitutionBadge name={actor.name} size={28} showTooltip={false} />
+                    )}
+                    <div>
+                      <div className="text-xs font-semibold text-text-primary">{actor.name}</div>
+                      {actor.title && <div className="text-[11px] text-text-muted">{actor.title}</div>}
+                      {actor.note && <div className="text-[11px] text-text-secondary mt-0.5">{actor.note}</div>}
+                    </div>
                   </div>
                 </div>
               ))}

@@ -233,7 +233,7 @@ export default function InstitutionHeatmap() {
               onCellClick={handleCellClick}
             />
             <p className="text-[10px] text-text-muted text-center mt-2">
-              Values show average risk score (0–100%). Click any cell to view filtered contracts.
+              {t('heatmapPage.footnote')}
             </p>
           </CardContent>
         </Card>
@@ -244,7 +244,7 @@ export default function InstitutionHeatmap() {
         <Card>
           <CardContent className="py-16 text-center">
             <Grid3X3 className="h-10 w-10 mx-auto text-text-muted/30 mb-4" aria-hidden="true" />
-            <p className="text-sm text-text-muted">No institution data available.</p>
+            <p className="text-sm text-text-muted">{t('heatmapPage.empty')}</p>
           </CardContent>
         </Card>
       )}
@@ -253,7 +253,7 @@ export default function InstitutionHeatmap() {
       {!isLoading && rows.length > 0 && rankingsData?.data && (
         <div className="mt-6">
           <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-3">
-            Institutions shown (ranked by contract count)
+            {t('heatmapPage.legendTitle')}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
             {rankingsData.data.slice(0, 20).map((inst, i) => (
