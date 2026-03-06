@@ -950,7 +950,7 @@ def normalize_row(
         'contract_month': contract_month,
 
         'is_direct_award': 1 if is_direct else 0,
-        'is_single_bid': 0,  # TODO: compute
+        'is_single_bid': 0,  # Set to 0 on insert; recomputed in batch via Step 5b UPDATE after all rows are loaded
         'is_framework': 1 if is_bool_true(get_value(row, df_columns, mapping.get('framework_contract', []))) else 0,
         'is_consolidated': 1 if is_bool_true(get_value(row, df_columns, mapping.get('consolidated_purchase', []))) else 0,
         'is_multiannual': 1 if is_bool_true(get_value(row, df_columns, mapping.get('multiannual', []))) else 0,

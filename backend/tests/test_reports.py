@@ -51,6 +51,44 @@ class TestSectorReport:
         assert data["report_type"] == "sector_summary"
 
 
+class TestThematicReport:
+    """Tests for GET /api/v1/reports/thematic/{theme}."""
+
+    def test_thematic_report_valid_themes(self, client, base_url):
+        valid_themes = ["single-bid", "direct-award", "year-end"]
+        for theme in valid_themes:
+            response = client.get(f"{base_url}/reports/thematic/{theme}")
+            assert response.status_code == 200, f"Theme '{theme}' failed"
+            data = response.json()
+            assert "report_type" in data
+
+    def test_thematic_report_invalid_theme(self, client, base_url):
+        response = client.get(f"{base_url}/reports/thematic/nonexistent-theme")
+        assert response.status_code in [404, 422]
+
+
+class TestListReportTypes:
+    """Tests for GET /api/v1/reports/."""
+
+    def test_list_report_types_returns_200(self, client, base_url):
+        response = client.get(f"{base_url}/reports/")
+        assert response.status_code == 200
+
+    def test_list_report_types_returns_list(self, client, base_url):
+        response = client.get(f"{base_url}/reports/")
+        assert response.status_code == 200
+        data = response.json()
+        assert isinstance(data, list)
+        assert len(data) > 0
+
+    def test_list_report_types_items_have_required_fields(self, client, base_url):
+        response = client.get(f"{base_url}/reports/")
+        assert response.status_code == 200
+        for item in response.json():
+            assert "report_type" in item
+            assert "label" in item
+
+
 class TestErrorSanitization:
     """Verify that error responses don't leak internal details."""
 

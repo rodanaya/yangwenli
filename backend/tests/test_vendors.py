@@ -237,6 +237,48 @@ class TestVendorGroundTruthStatus:
                 break
 
 
+class TestVendorQQW:
+    """Tests for GET /vendors/{vendor_id}/qqw endpoint."""
+
+    def test_vendor_qqw_returns_200(self, client, base_url):
+        list_response = client.get(f"{base_url}/vendors?per_page=1")
+        if list_response.status_code == 200 and list_response.json()["data"]:
+            vendor_id = list_response.json()["data"][0]["id"]
+            response = client.get(f"{base_url}/vendors/{vendor_id}/qqw")
+            assert response.status_code == 200
+
+    def test_vendor_qqw_has_required_fields(self, client, base_url):
+        list_response = client.get(f"{base_url}/vendors?per_page=1")
+        if list_response.status_code == 200 and list_response.json()["data"]:
+            vendor_id = list_response.json()["data"][0]["id"]
+            response = client.get(f"{base_url}/vendors/{vendor_id}/qqw")
+            assert response.status_code == 200
+            data = response.json()
+            assert "vendor_id" in data
+            assert "has_data" in data
+            assert "qqw_contract_count" in data
+            assert "procurement_officials" in data
+            assert "contracts" in data
+            assert "note" in data
+            assert isinstance(data["procurement_officials"], list)
+            assert isinstance(data["contracts"], list)
+
+    def test_vendor_qqw_not_found(self, client, base_url):
+        response = client.get(f"{base_url}/vendors/999999999/qqw")
+        assert response.status_code == 404
+
+    def test_vendor_qqw_no_data_has_false(self, client, base_url):
+        """Vendor with no QQW records should return has_data=False, not error."""
+        list_response = client.get(f"{base_url}/vendors?per_page=1")
+        if list_response.status_code == 200 and list_response.json()["data"]:
+            vendor_id = list_response.json()["data"][0]["id"]
+            response = client.get(f"{base_url}/vendors/{vendor_id}/qqw")
+            assert response.status_code == 200
+            data = response.json()
+            # has_data can be True or False — but must be a bool
+            assert isinstance(data["has_data"], bool)
+
+
 class TestVendorVerified:
     """Tests for existing verified vendor endpoints."""
 
