@@ -290,6 +290,246 @@ export const INSTITUTION_GROUPS: InstitutionGroup[] = [
       'Secretaría de Marina',
     ],
   },
+
+  // ── AGRICULTURA / CAMPO ──────────────────────────────────────────────────────
+  {
+    id: 'sader',
+    name: 'Secretaría de Agricultura y Desarrollo Rural',
+    shortName: 'SADER',
+    logo: null,
+    color: '#22c55e',
+    sectorId: 9,
+    website: 'https://www.gob.mx/agricultura',
+    wikiArticle: 'Secretaría_de_Agricultura_y_Desarrollo_Rural',
+    members: [
+      'SECRETARÍA DE AGRICULTURA Y DESARROLLO RURAL',
+      'SECRETARÍA DE AGRICULTURA, GANADERÍA, DESARROLLO RURAL, PESCA Y ALIMENTACIÓN',
+      'SERVICIO NACIONAL DE SANIDAD, INOCUIDAD Y CALIDAD AGROALIMENTARIA',
+      'COMISIÓN NACIONAL DE ACUACULTURA Y PESCA',
+      'APOYOS Y SERVICIOS A LA COMERCIALIZACIÓN AGROPECUARIA',
+      'FINANCIERA NACIONAL DE DESARROLLO AGROPECUARIO, RURAL, FORESTAL Y PESQUERO',
+    ],
+  },
+
+  // ── TRABAJO ──────────────────────────────────────────────────────────────────
+  {
+    id: 'stps',
+    name: 'Secretaría del Trabajo y Previsión Social',
+    shortName: 'STPS',
+    logo: null,
+    color: '#f97316',
+    sectorId: 11,
+    website: 'https://www.gob.mx/stps',
+    wikiArticle: 'Secretaría_del_Trabajo_y_Previsión_Social_(México)',
+    members: [
+      'SECRETARÍA DEL TRABAJO Y PREVISIÓN SOCIAL',
+      'PROCURADURÍA FEDERAL DE LA DEFENSA DEL TRABAJO',
+    ],
+  },
+  {
+    id: 'infonavit',
+    name: 'Instituto del Fondo Nacional de la Vivienda para los Trabajadores',
+    shortName: 'INFONAVIT',
+    logo: null,
+    color: '#f97316',
+    sectorId: 11,
+    website: 'https://www.infonavit.org.mx',
+    wikiArticle: 'Infonavit',
+    members: [
+      'INSTITUTO DEL FONDO NACIONAL DE LA VIVIENDA PARA LOS TRABAJADORES',
+    ],
+  },
+
+  // ── TECNOLOGÍA / COMUNICACIONES ───────────────────────────────────────────────
+  {
+    id: 'sct-telecom',
+    name: 'Agencia Digital de Innovación Pública',
+    shortName: 'ADIP',
+    logo: null,
+    color: '#8b5cf6',
+    sectorId: 6,
+    website: 'https://adip.cdmx.gob.mx',
+    wikiArticle: null,
+    members: [
+      'COORDINACIÓN DE ESTRATEGIA DIGITAL NACIONAL',
+      'AGENCIA DIGITAL DE INNOVACIÓN PÚBLICA',
+    ],
+  },
+
+  // ── MEDIO AMBIENTE ────────────────────────────────────────────────────────────
+  {
+    id: 'semarnat',
+    name: 'Secretaría de Medio Ambiente y Recursos Naturales',
+    shortName: 'SEMARNAT',
+    logo: null,
+    color: '#10b981',
+    sectorId: 10,
+    website: 'https://www.gob.mx/semarnat',
+    wikiArticle: 'Secretaría_de_Medio_Ambiente_y_Recursos_Naturales',
+    members: [
+      'SECRETARÍA DE MEDIO AMBIENTE Y RECURSOS NATURALES',
+      'PROCURADURÍA FEDERAL DE PROTECCIÓN AL AMBIENTE',
+      'COMISIÓN DE RECURSOS NATURALES',
+    ],
+  },
+
+  // ── RELACIONES EXTERIORES ─────────────────────────────────────────────────────
+  {
+    id: 'sre',
+    name: 'Secretaría de Relaciones Exteriores',
+    shortName: 'SRE',
+    logo: null,
+    color: '#be123c',
+    sectorId: 8,
+    website: 'https://www.gob.mx/sre',
+    wikiArticle: 'Secretaría_de_Relaciones_Exteriores_(México)',
+    members: [
+      'SECRETARÍA DE RELACIONES EXTERIORES',
+      'INSTITUTO DE LOS MEXICANOS EN EL EXTERIOR',
+      'INSTITUTO MATÍAS ROMERO',
+    ],
+  },
+
+  // ── ECONOMÍA ─────────────────────────────────────────────────────────────────
+  {
+    id: 'economia',
+    name: 'Secretaría de Economía',
+    shortName: 'SE',
+    logo: null,
+    color: '#16a34a',
+    sectorId: 7,
+    website: 'https://www.gob.mx/se',
+    wikiArticle: 'Secretaría_de_Economía_(México)',
+    members: [
+      'SECRETARÍA DE ECONOMÍA',
+      'COMISIÓN FEDERAL DE COMPETENCIA ECONÓMICA',
+      'PROCURADURÍA FEDERAL DEL CONSUMIDOR',
+      'INSTITUTO MEXICANO DE LA PROPIEDAD INDUSTRIAL',
+    ],
+  },
+
+  // ── TURISMO ───────────────────────────────────────────────────────────────────
+  {
+    id: 'sectur',
+    name: 'Secretaría de Turismo',
+    shortName: 'SECTUR',
+    logo: null,
+    color: '#0ea5e9',
+    sectorId: 12,
+    website: 'https://www.gob.mx/sectur',
+    wikiArticle: 'Secretaría_de_Turismo_(México)',
+    members: [
+      'SECRETARÍA DE TURISMO',
+      'CONSEJO DE PROMOCIÓN TURÍSTICA DE MÉXICO',
+      'FONATUR',
+      'FONDO NACIONAL DE FOMENTO AL TURISMO',
+    ],
+  },
+
+  // ── CULTURA ───────────────────────────────────────────────────────────────────
+  {
+    id: 'cultura',
+    name: 'Secretaría de Cultura',
+    shortName: 'Cultura',
+    logo: null,
+    color: '#ec4899',
+    sectorId: 12,
+    website: 'https://www.gob.mx/cultura',
+    wikiArticle: 'Secretaría_de_Cultura_(México)',
+    members: [
+      'SECRETARÍA DE CULTURA',
+      'CONSEJO NACIONAL PARA LA CULTURA Y LAS ARTES',
+      'INSTITUTO NACIONAL DE BELLAS ARTES Y LITERATURA',
+      'INSTITUTO NACIONAL DE ANTROPOLOGÍA E HISTORIA',
+      'CANAL ONCE',
+    ],
+  },
+
+  // ── BIENESTAR ─────────────────────────────────────────────────────────────────
+  {
+    id: 'bienestar',
+    name: 'Secretaría de Bienestar',
+    shortName: 'Bienestar',
+    logo: null,
+    color: '#22c55e',
+    sectorId: 9,
+    website: 'https://www.gob.mx/bienestar',
+    wikiArticle: 'Secretaría_de_Bienestar_(México)',
+    members: [
+      'SECRETARÍA DE BIENESTAR',
+      'SECRETARÍA DE DESARROLLO SOCIAL',
+      'INSTITUTO NACIONAL DE DESARROLLO SOCIAL',
+      'COORDINACIÓN NACIONAL DE BECAS PARA EL BIENESTAR BENITO JUÁREZ',
+    ],
+  },
+
+  // ── CIENCIA / INVESTIGACIÓN ───────────────────────────────────────────────────
+  {
+    id: 'conahcyt',
+    name: 'Consejo Nacional de Humanidades, Ciencias y Tecnologías',
+    shortName: 'CONAHCYT',
+    logo: null,
+    color: '#8b5cf6',
+    sectorId: 6,
+    website: 'https://conahcyt.mx',
+    wikiArticle: 'Consejo_Nacional_de_Humanidades,_Ciencias_y_Tecnologías',
+    members: [
+      'CONSEJO NACIONAL DE CIENCIA Y TECNOLOGÍA',
+      'CONSEJO NACIONAL DE HUMANIDADES, CIENCIAS Y TECNOLOGÍAS',
+      'CONAHCYT',
+    ],
+  },
+
+  // ── JUSTICIA ─────────────────────────────────────────────────────────────────
+  {
+    id: 'fgr',
+    name: 'Fiscalía General de la República',
+    shortName: 'FGR',
+    logo: null,
+    color: '#be123c',
+    sectorId: 8,
+    website: 'https://www.gob.mx/fgr',
+    wikiArticle: 'Fiscalía_General_de_la_República_(México)',
+    members: [
+      'FISCALÍA GENERAL DE LA REPÚBLICA',
+      'PROCURADURÍA GENERAL DE LA REPÚBLICA',
+    ],
+  },
+  {
+    id: 'poder-judicial',
+    name: 'Poder Judicial de la Federación',
+    shortName: 'PJF',
+    logo: null,
+    color: '#6b7280',
+    sectorId: 12,
+    website: 'https://www.scjn.gob.mx',
+    wikiArticle: 'Suprema_Corte_de_Justicia_de_la_Nación',
+    members: [
+      'SUPREMA CORTE DE JUSTICIA DE LA NACIÓN',
+      'CONSEJO DE LA JUDICATURA FEDERAL',
+      'TRIBUNAL ELECTORAL DEL PODER JUDICIAL DE LA FEDERACIÓN',
+    ],
+  },
+
+  // ── SEGURIDAD ─────────────────────────────────────────────────────────────────
+  {
+    id: 'sspc',
+    name: 'Secretaría de Seguridad y Protección Ciudadana',
+    shortName: 'SSPC',
+    logo: null,
+    color: '#1e3a5f',
+    sectorId: 5,
+    website: 'https://www.gob.mx/sspc',
+    wikiArticle: 'Secretaría_de_Seguridad_y_Protección_Ciudadana_(México)',
+    members: [
+      'SECRETARÍA DE SEGURIDAD Y PROTECCIÓN CIUDADANA',
+      'SECRETARÍA DE SEGURIDAD PÚBLICA',
+      'COMISIÓN NACIONAL DE SEGURIDAD',
+      'POLICÍA FEDERAL',
+      'GUARDIA NACIONAL',
+      'CENTRO NACIONAL DE INTELIGENCIA',
+    ],
+  },
 ]
 
 /** Build a reverse lookup: DB institution name → group */

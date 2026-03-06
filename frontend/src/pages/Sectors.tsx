@@ -231,10 +231,10 @@ const SectorRadar = memo(function SectorRadar({ sector, allSectors, compareSecto
   return (
     <div className="flex flex-col items-center">
       <RadarChart cx={140} cy={130} outerRadius={95} width={280} height={260} data={radarData}>
-        <PolarGrid stroke="rgba(255,255,255,0.08)" />
+        <PolarGrid stroke="rgba(255,255,255,0.1)" />
         <PolarAngleAxis
           dataKey="subject"
-          tick={{ fill: '#8b949e', fontSize: 10, fontFamily: 'var(--font-mono, monospace)' }}
+          tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 11, fontFamily: 'var(--font-mono, monospace)' }}
         />
         <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
         <Radar
@@ -257,10 +257,15 @@ const SectorRadar = memo(function SectorRadar({ sector, allSectors, compareSecto
           />
         )}
       </RadarChart>
-      <p className="text-[10px] text-text-muted font-mono text-center -mt-2">
+      <p className="text-[10px] text-white/50 font-mono text-center -mt-2">
         {compareSector
           ? `${getSectorNameEN(sector.sector_code)} vs ${getSectorNameEN(compareSector.sector_code)} · all axes 0–100`
           : `Risk dimensions for ${getSectorNameEN(sector.sector_code)} · all axes 0–100`}
+      </p>
+      <p className="text-xs text-white/50 italic mt-2 text-center">
+        {compareSector
+          ? 'Solid fill = primary sector · Dashed = comparison sector'
+          : 'Each axis shows relative position 0–100 vs all sectors'}
       </p>
     </div>
   )
@@ -1338,13 +1343,12 @@ export function Sectors() {
       <ScrollReveal direction="fade">
         <div>
           {/* Contract Value by Sector */}
-          <Card>
+          <Card className="bg-slate-900/50 border border-white/5 rounded-xl">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <BarChart3 className="h-3.5 w-3.5 text-accent" />
+                <p className="text-sm font-semibold text-white/80 uppercase tracking-wider">
                   {t('valueChart.title')}
-                </CardTitle>
+                </p>
                 <ChartDownloadButton targetRef={sectorValueChartRef} filename="sectors-contract-value" />
               </div>
               {topSector && (
@@ -1357,16 +1361,16 @@ export function Sectors() {
               <div className="h-[340px]" ref={sectorValueChartRef}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartSectors} layout="vertical" margin={{ right: 80 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} horizontal={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" opacity={0.3} horizontal={false} />
                     <XAxis
                       type="number"
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                      tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }}
                       tickFormatter={(v) => `${(v / 1_000_000_000_000).toFixed(1)}T`}
                     />
                     <YAxis
                       type="category"
                       dataKey="sector_code"
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                      tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 11 }}
                       tickFormatter={(code) => getSectorNameEN(code)}
                       width={100}
                     />
@@ -1397,12 +1401,17 @@ export function Sectors() {
                         dataKey="total_value_mxn"
                         position="right"
                         formatter={(v: unknown) => formatCompactMXN(Number(v))}
-                        style={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
+                        style={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
                       />
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+              {topSector && (
+                <p className="text-xs text-white/50 italic mt-2">
+                  {getSectorNameEN(topSector.sector_code)} accounts for {((topSector.total_value_mxn / (data?.total_value_mxn || 1)) * 100).toFixed(0)}% of total procurement value — concentration in a single sector warrants close monitoring.
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -1414,13 +1423,11 @@ export function Sectors() {
       {/* ================================================================ */}
       {criScatterData && criScatterData.data.length > 0 && (
         <ScrollReveal direction="fade">
-          <Card className="bg-card border-border/40">
+          <Card className="bg-slate-900/50 border border-white/5 rounded-xl">
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div>
-                  <CardTitle className="text-sm font-mono text-text-primary">
-                    Institution Risk Landscape — Direct Award vs Risk Score
-                  </CardTitle>
+                  <p className="text-sm font-semibold text-white/80 uppercase tracking-wider">Institution Risk Landscape</p>
                   <CardDescription className="text-xs text-text-muted mt-0.5">
                     Each bubble = one institution. X: direct award rate. Y: avg risk score. Size: contract volume. Top-right = highest concern.
                   </CardDescription>
@@ -1463,6 +1470,7 @@ export function Sectors() {
                     width={40}
                   />
                   <ZAxis type="number" dataKey="total_contracts" range={[20, 600]} name="Contracts" />
+                  <ReferenceLine x={50} stroke="rgba(255,255,255,0.15)" strokeDasharray="4 2" label={{ value: '50% avg', fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} />
                   <ReferenceLine x={70} stroke="#f59e0b" strokeDasharray="3 3" strokeOpacity={0.5} />
                   <ReferenceLine y={0.30} stroke="#ef4444" strokeDasharray="3 3" strokeOpacity={0.5} />
                   <RechartsTooltip
@@ -1509,6 +1517,9 @@ export function Sectors() {
               </ResponsiveContainer>
               <p className="mt-2 text-[10px] text-text-muted font-mono">
                 Dashed amber line = 70% direct award threshold · Dashed red line = 30% high-risk threshold · Bubble color = sector · Size = contract volume
+              </p>
+              <p className="text-xs text-white/50 italic mt-2">
+                Institutions in the top-right quadrant (high direct award + high risk) warrant priority investigation.
               </p>
             </CardContent>
           </Card>
@@ -1584,12 +1595,12 @@ export function Sectors() {
       {/* INDUSTRY RISK CONCENTRATION — Treemap by total value             */}
       {/* ================================================================ */}
       <ScrollReveal direction="fade">
-        <Card className="bg-card border-border/40">
+        <Card className="bg-slate-900/50 border border-white/5 rounded-xl">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-mono text-text-primary flex items-center gap-2">
+            <p className="text-sm font-semibold text-white/80 uppercase tracking-wider flex items-center gap-2">
               <Layers className="h-3.5 w-3.5 text-accent" />
               Industry Risk Concentration
-            </CardTitle>
+            </p>
             <CardDescription className="text-xs text-text-muted">
               Cell size = total contract value · Color = avg risk score (
               <span className="text-risk-critical font-semibold">critical</span> ≥50% ·{' '}
@@ -1613,6 +1624,9 @@ export function Sectors() {
                 <p className="text-xs text-text-muted font-mono">No cluster data available</p>
               </div>
             )}
+            <p className="text-xs text-white/50 italic mt-2">
+              Red cells indicate industries where vendors similar to known corruption cases concentrate — these warrant cross-referencing with network analysis.
+            </p>
           </CardContent>
         </Card>
       </ScrollReveal>

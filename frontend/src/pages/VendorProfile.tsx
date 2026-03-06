@@ -34,6 +34,7 @@ import {
   Area,
   BarChart,
   Bar,
+  LabelList,
   ComposedChart,
   Line,
   XAxis,
@@ -255,7 +256,7 @@ function RiskWaterfallChart({
               }}
             />
             <ReferenceLine y={0} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />
-            <Bar dataKey="contribution" radius={[3, 3, 0, 0]}>
+            <Bar dataKey="contribution" radius={[0, 4, 4, 0]} barSize={10}>
               {data.map((entry, i) => (
                 <Cell
                   key={i}
@@ -263,6 +264,12 @@ function RiskWaterfallChart({
                   fillOpacity={entry.factorKey === '__total__' ? 1 : 0.85}
                 />
               ))}
+              <LabelList
+                dataKey="contribution"
+                position="right"
+                style={{ fontSize: 9, fill: 'rgba(148,163,184,0.8)' }}
+                formatter={(v: number) => v !== 0 ? (v >= 0 ? `+${v.toFixed(2)}` : v.toFixed(2)) : ''}
+              />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
@@ -496,10 +503,10 @@ function RiskRadarChart({ waterfallData }: { waterfallData: VendorWaterfallContr
       <div className="h-[250px] sm:h-[300px]">
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={radarData} margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
-          <PolarGrid stroke="#1e293b" />
+          <PolarGrid stroke="rgba(255,255,255,0.1)" />
           <PolarAngleAxis
             dataKey="factor"
-            tick={{ fontSize: 10, fill: '#94a3b8' }}
+            tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.65)' }}
           />
           <RechartsTooltip
             content={({ active, payload }) => {
@@ -531,7 +538,7 @@ function RiskRadarChart({ waterfallData }: { waterfallData: VendorWaterfallContr
             dataKey="value"
             stroke="#06b6d4"
             fill="#06b6d4"
-            fillOpacity={0.15}
+            fillOpacity={0.2}
             strokeWidth={2}
           />
         </RadarChart>
@@ -1941,6 +1948,18 @@ export function VendorProfile() {
                                 fillOpacity={0.08}
                               />
                             )}
+                          <ReferenceLine
+                            x={2020}
+                            stroke="#ef4444"
+                            strokeDasharray="3 2"
+                            label={{ value: 'COVID', position: 'top', fill: '#ef4444aa', fontSize: 10 }}
+                          />
+                          <ReferenceLine
+                            x={2018}
+                            stroke="#f59e0b"
+                            strokeDasharray="3 2"
+                            label={{ value: 'Admin Change', position: 'top', fill: '#f59e0baa', fontSize: 10 }}
+                          />
                           <Area
                             type="monotone"
                             dataKey="avg"
@@ -2165,32 +2184,26 @@ export function VendorProfile() {
 
               {/* Risk Radar Chart — 6-axis z-score spider */}
               {waterfallData && waterfallData.length >= 3 && (
-                <Card className="hover-lift">
-                  <CardHeader>
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <Activity className="h-4 w-4" />
-                      Risk Factor Radar
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <RiskRadarChart waterfallData={waterfallData} />
-                  </CardContent>
-                </Card>
+                <div className="bg-slate-900/50 border border-white/5 rounded-xl p-4">
+                  <p className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-1">Risk Factor Radar</p>
+                  <p className="text-xs text-white/40 mb-3">6-axis z-score profile vs. sector-year average</p>
+                  <RiskRadarChart waterfallData={waterfallData} />
+                  <p className="text-xs text-white/50 italic mt-3">
+                    Axes toward the outer edge = higher deviation from sector norms. Wider shape = more risk dimensions active simultaneously.
+                  </p>
+                </div>
               )}
 
               {/* Top 3 Contributing Factors — bar summary */}
               {waterfallData && waterfallData.length >= 1 && (
-                <Card className="hover-lift">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4" />
-                      Top Contributing Factors
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <TopRiskFactorBars waterfallData={waterfallData} />
-                  </CardContent>
-                </Card>
+                <div className="bg-slate-900/50 border border-white/5 rounded-xl p-4">
+                  <p className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-1">Top Contributing Factors</p>
+                  <p className="text-xs text-white/40 mb-3">The 3 features driving the highest model contribution to this vendor&apos;s risk score</p>
+                  <TopRiskFactorBars waterfallData={waterfallData} />
+                  <p className="text-xs text-white/50 italic mt-3">
+                    z-score = standard deviations above sector-year average. Values above +2 are statistically unusual for this sector.
+                  </p>
+                </div>
               )}
 
               {/* Risk Factor List */}

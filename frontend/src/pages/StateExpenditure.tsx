@@ -34,7 +34,12 @@ import {
   Legend,
   ComposedChart,
   Line,
+  ReferenceArea,
+  ReferenceLine,
+  Bar,
+  Cell,
 } from '@/components/charts'
+import { SECTOR_COLORS } from '@/lib/colors'
 import ReactECharts from 'echarts-for-react'
 import * as echarts from 'echarts'
 import {
@@ -705,7 +710,12 @@ function StateDetail({ code }: { code: string }) {
           {t('detail.backToList')}
         </Button>
         <span className="text-muted-foreground">/</span>
-        <span className="font-semibold">{d.state_name}</span>
+        <span className="inline-flex items-center gap-2">
+          <span className="inline-flex h-6 w-9 items-center justify-center rounded bg-primary/10 text-[11px] font-mono font-semibold text-primary">
+            {code}
+          </span>
+          <span className="font-semibold">{d.state_name}</span>
+        </span>
       </div>
 
       {/* KPI strip */}
@@ -798,11 +808,16 @@ function StateDetail({ code }: { code: string }) {
             {d.year_trend.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t('noData')}</p>
             ) : (
-              <ResponsiveContainer width="100%" height={200}>
+              <ResponsiveContainer width="100%" height={220}>
                 <ComposedChart
                   data={d.year_trend}
-                  margin={{ top: 4, right: 48, left: 0, bottom: 4 }}
+                  margin={{ top: 16, right: 48, left: 0, bottom: 4 }}
                 >
+                  {/* Administration background bands */}
+                  <ReferenceArea x1={2007} x2={2012} fill="#3b82f6" fillOpacity={0.04} label={{ value: 'Calderón', fill: 'rgba(255,255,255,0.2)', fontSize: 9 }} />
+                  <ReferenceArea x1={2013} x2={2018} fill="#10b981" fillOpacity={0.04} label={{ value: 'EPN', fill: 'rgba(255,255,255,0.2)', fontSize: 9 }} />
+                  <ReferenceArea x1={2019} x2={2024} fill="#f59e0b" fillOpacity={0.04} label={{ value: 'AMLO', fill: 'rgba(255,255,255,0.2)', fontSize: 9 }} />
+                  <ReferenceLine x={2020} stroke="#ef4444aa" strokeDasharray="3 2" label={{ value: 'COVID', fill: '#ef4444aa', fontSize: 9 }} />
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="year" tick={{ fontSize: 10 }} />
                   {/* Left Y axis — spending value */}
@@ -860,6 +875,9 @@ function StateDetail({ code }: { code: string }) {
                   />
                 </ComposedChart>
               </ResponsiveContainer>
+              <p className="text-xs text-white/50 italic mt-2">
+                Shaded bands show administration periods. COVID reference line marks the 2020 emergency procurement surge.
+              </p>
             )}
           </CardContent>
         </Card>

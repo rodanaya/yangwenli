@@ -9,6 +9,7 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Heatmap } from '@/components/charts/Heatmap'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,16 +18,6 @@ import type { InstitutionHealthItem } from '@/api/types'
 import { SECTORS } from '@/lib/constants'
 import { toTitleCase, formatNumber, cn } from '@/lib/utils'
 import { AlertCircle, Grid3X3, Info } from 'lucide-react'
-
-// ============================================================================
-// Sector columns — 12 sectors, short display names
-// ============================================================================
-const SECTOR_COLS = SECTORS.map((s) => s.nameEN)
-
-// Map sector nameEN → sector id for navigation
-const SECTOR_NAME_TO_ID: Record<string, number> = Object.fromEntries(
-  SECTORS.map((s) => [s.nameEN, s.id])
-)
 
 // ============================================================================
 // Helper: truncate institution name for display
@@ -59,9 +50,10 @@ interface ScatterRow {
 
 function buildMatrix(
   institutions: InstitutionHealthItem[],
-  scatterRows: ScatterRow[]
+  scatterRows: ScatterRow[],
+  sectorCols: string[]
 ): { rows: string[]; data: Array<{ row: string; col: string; value: number }> } {
-  // Build lookup: institution_id → sectorNameEN → avg_risk
+  // Build lookup: institution_id → sector.code → avg_risk
   const lookup = new Map<number, Map<string, number>>()
   for (const row of scatterRows) {
     if (!lookup.has(row.id)) {
@@ -69,7 +61,7 @@ function buildMatrix(
     }
     const sector = SECTORS.find((s) => s.id === row.sector_id || s.code === row.sector_code)
     if (sector) {
-      lookup.get(row.id)!.set(sector.nameEN, row.avg_risk)
+      lookup.get(row.id)!.set(sector.code, row.avg_risk)
     }
   }
 
@@ -81,15 +73,10 @@ function buildMatrix(
     const rowLabel = shortName(inst.institution_name)
     const sectorMap = lookup.get(inst.institution_id)
 
-    for (const col of SECTOR_COLS) {
-      let value: number
-      if (sectorMap?.has(col)) {
-        value = sectorMap.get(col)!
-      } else {
-        // Fallback: use overall avg_risk_score with slight noise based on sector index
-        // to make the heatmap readable even without per-sector data
-        value = inst.avg_risk_score ?? 0
-      }
+    for (let i = 0; i < SECTORS.length; i++) {
+      const sectorCode = SECTORS[i].code
+      const col = sectorCols[i]
+      const value = sectorMap?.get(sectorCode) ?? inst.avg_risk_score ?? 0
       data.push({ row: rowLabel, col, value })
     }
   }
@@ -115,6 +102,8 @@ function HeatmapSkeleton() {
 // ============================================================================
 export default function InstitutionHeatmap() {
   const navigate = useNavigate()
+  const { t } = useTranslation('institutions')
+  const { t: ts } = useTranslation('sectors')
 
   // Fetch top 20 institutions by contract count
   const {
@@ -142,13 +131,21 @@ export default function InstitutionHeatmap() {
   const isLoading = loadingRankings || loadingScatter
   const hasError = rankingsError || scatterError
 
+  // Translated sector column names (depend on active language)
+  const sectorCols = useMemo(() => SECTORS.map((s) => ts(s.code)), [ts])
+  // Map translated name → sector id (rebuilt when language changes)
+  const sectorNameToId = useMemo(
+    () => Object.fromEntries(SECTORS.map((s) => [ts(s.code), s.id])),
+    [ts]
+  )
+
   const { rows, heatmapData, institutionIds } = useMemo(() => {
     if (!rankingsData?.data) {
       return { rows: [], heatmapData: [], institutionIds: new Map<string, number>() }
     }
     const institutions = rankingsData.data.slice(0, 20)
     const scatterRows: ScatterRow[] = (scatterData?.data ?? []) as ScatterRow[]
-    const { rows: r, data: d } = buildMatrix(institutions, scatterRows)
+    const { rows: r, data: d } = buildMatrix(institutions, scatterRows, sectorCols)
 
     // Build reverse lookup: shortName → institution_id
     const idMap = new Map<string, number>()
@@ -157,11 +154,11 @@ export default function InstitutionHeatmap() {
     }
 
     return { rows: r, heatmapData: d, institutionIds: idMap }
-  }, [rankingsData, scatterData])
+  }, [rankingsData, scatterData, sectorCols])
 
   const handleCellClick = (row: string, col: string, _value: number) => {
     const instId = institutionIds.get(row)
-    const sectorId = SECTOR_NAME_TO_ID[col]
+    const sectorId = sectorNameToId[col]
     if (instId && sectorId) {
       navigate(`/contracts?institution_id=${instId}&sector_id=${sectorId}`)
     } else if (instId) {
@@ -176,20 +173,15 @@ export default function InstitutionHeatmap() {
         <div className="flex items-center gap-2 mb-2">
           <Grid3X3 className="h-5 w-5 text-accent" aria-hidden="true" />
           <h1 className="text-2xl font-bold text-text-primary">
-            Institution × Sector Risk Heatmap
+            {t('heatmapPage.title')}
           </h1>
         </div>
         <p className="text-sm text-text-muted max-w-2xl">
-          Average risk score for each of the top 20 institutions (by contract count) across all 12
-          procurement sectors. Green = low risk, amber = moderate, red = high risk. Click any cell
-          to explore the contracts for that institution and sector.
+          {t('heatmapPage.description')}
         </p>
         <div className="flex items-start gap-2 mt-3 text-xs text-text-muted bg-background-card border border-border/50 rounded-md px-3 py-2 max-w-lg">
           <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-accent/60" aria-hidden="true" />
-          <span>
-            Click a cell to explore those contracts in the Contracts view with institution and sector
-            pre-filtered.
-          </span>
+          <span>{t('heatmapPage.clickHint')}</span>
         </div>
       </div>
 
@@ -201,9 +193,9 @@ export default function InstitutionHeatmap() {
         >
           <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-red-400">Failed to load heatmap data</p>
+            <p className="text-sm font-medium text-red-400">{t('heatmapPage.errorTitle')}</p>
             <p className="text-xs text-text-muted mt-0.5">
-              The institution rankings or sector data could not be fetched. Please try refreshing.
+              {t('heatmapPage.errorDesc')}
             </p>
           </div>
         </div>
@@ -223,10 +215,10 @@ export default function InstitutionHeatmap() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center justify-between">
-              <span>Risk Score Matrix</span>
+              <span>{t('heatmapPage.matrixTitle')}</span>
               {rankingsData && (
                 <span className="text-xs font-normal text-text-muted">
-                  Top {rows.length} institutions &times; {SECTOR_COLS.length} sectors
+                  {t('heatmapPage.matrixSubtitle', { n: rows.length, m: sectorCols.length })}
                 </span>
               )}
             </CardTitle>
@@ -235,7 +227,7 @@ export default function InstitutionHeatmap() {
             <Heatmap
               data={heatmapData}
               rows={rows}
-              columns={SECTOR_COLS}
+              columns={sectorCols}
               height={Math.max(400, rows.length * 28 + 80)}
               valueFormatter={(v) => (v > 0 ? (v * 100).toFixed(0) + '%' : '—')}
               onCellClick={handleCellClick}
