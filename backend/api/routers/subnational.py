@@ -12,11 +12,16 @@ Coverage note (served in every response):
 """
 
 import logging
-from typing import Optional
+import time as _time
+from typing import Any, Optional
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 from ..dependencies import get_db
+
+# ── Module-level response cache ───────────────────────────────────────────────
+_states_cache: dict[str, Any] = {}
+_STATES_CACHE_TTL = 3600  # 1 hour
 
 log = logging.getLogger(__name__)
 
@@ -213,73 +218,117 @@ async def list_states(
 ):
     """
     All 32 states with subnational procurement summary.
-    Only includes states that have at least min_contracts in COMPRANET.
-    Optional year filter restricts aggregations to a single year.
+    Reads from precomputed subnational_state_stats table — instant response.
+    Run precompute_stats.py after ETL to refresh.
     """
+    import json as _json
+
+    cache_key = f"{min_contracts}:{year}"
+    cached = _states_cache.get(cache_key)
+    if cached and (_time.time() - cached["ts"]) < _STATES_CACHE_TTL:
+        return cached["data"]
+
+    year_key = year if year is not None else 0
+
+    with get_db() as conn:
+        rows = conn.execute(
+            '''SELECT * FROM subnational_state_stats
+               WHERE year = ? AND contract_count >= ?
+               ORDER BY total_value_mxn DESC''',
+            (year_key, min_contracts),
+        ).fetchall()
+
+        # Fall back to live query if precomputed table is empty (e.g. first deploy)
+        if not rows:
+            log.warning("subnational_state_stats empty for year=%s — falling back to live query", year)
+            return await _list_states_live(conn, min_contracts, year)
+
+    states = []
+    for r in rows:
+        years_active: list[int] = []
+        if r['years_active']:
+            try:
+                years_active = _json.loads(r['years_active'])
+            except Exception:
+                pass
+        states.append(StateSummary(
+            state_code=r['state_code'],
+            state_name=r['state_name'],
+            contract_count=r['contract_count'],
+            total_value_mxn=r['total_value_mxn'],
+            avg_risk_score=r['avg_risk_score'],
+            institution_count=r['institution_count'],
+            vendor_count=r['vendor_count'],
+            direct_award_rate=r['direct_award_rate'],
+            single_bid_rate=r['single_bid_rate'],
+            top_institution=r['top_institution'],
+            top_institution_value_mxn=r['top_institution_value_mxn'],
+            years_active=years_active,
+        ))
+
+    total_contracts = sum(s.contract_count for s in states)
+    total_value = sum(s.total_value_mxn for s in states)
+
+    response = StateListResponse(
+        data=states,
+        total_states=len(states),
+        total_contracts=total_contracts,
+        total_value_mxn=total_value,
+        coverage_note=COVERAGE_NOTE,
+    )
+    _states_cache[cache_key] = {"ts": _time.time(), "data": response}
+    return response
+
+
+async def _list_states_live(conn: Any, min_contracts: int, year: Optional[int]) -> StateListResponse:
+    """Fallback live query used only when precomputed table is missing/empty."""
+    import json as _json
     year_clause = "AND c.contract_year = ?" if year is not None else ""
     year_params = (year,) if year is not None else ()
 
-    with get_db() as conn:
-        rows = conn.execute(f'''
-            SELECT
-                i.state_code,
-                COUNT(c.id)                                   AS contract_count,
-                COALESCE(SUM(c.amount_mxn), 0)               AS total_value_mxn,
-                COALESCE(AVG(c.risk_score), 0)               AS avg_risk_score,
-                COUNT(DISTINCT c.institution_id)             AS institution_count,
-                COUNT(DISTINCT c.vendor_id)                  AS vendor_count,
-                COALESCE(AVG(CASE WHEN c.is_direct_award=1 THEN 1.0 ELSE 0.0 END), 0) AS direct_award_rate,
-                COALESCE(AVG(CASE WHEN c.is_single_bid=1   THEN 1.0 ELSE 0.0 END), 0) AS single_bid_rate
-            FROM contracts c
-            JOIN institutions i ON c.institution_id = i.id
-            WHERE i.state_code IS NOT NULL AND i.state_code != ''
-              AND i.gobierno_nivel IN ('GE','GM','GEM')
-              {year_clause}
-            GROUP BY i.state_code
-            HAVING contract_count >= ?
-            ORDER BY total_value_mxn DESC
-        ''', year_params + (min_contracts,)).fetchall()
+    rows = conn.execute(f'''
+        SELECT i.state_code,
+               COUNT(c.id) AS contract_count,
+               COALESCE(SUM(c.amount_mxn), 0) AS total_value_mxn,
+               COALESCE(AVG(c.risk_score), 0) AS avg_risk_score,
+               COUNT(DISTINCT c.institution_id) AS institution_count,
+               COUNT(DISTINCT c.vendor_id) AS vendor_count,
+               COALESCE(AVG(CASE WHEN c.is_direct_award=1 THEN 1.0 ELSE 0.0 END), 0) AS direct_award_rate,
+               COALESCE(AVG(CASE WHEN c.is_single_bid=1   THEN 1.0 ELSE 0.0 END), 0) AS single_bid_rate,
+               GROUP_CONCAT(DISTINCT c.contract_year) AS years_csv
+        FROM contracts c
+        JOIN institutions i ON c.institution_id = i.id
+        WHERE i.state_code IS NOT NULL AND i.state_code != ''
+          AND i.gobierno_nivel IN ('GE','GM','GEM')
+          {year_clause}
+        GROUP BY i.state_code
+        HAVING contract_count >= ?
+        ORDER BY total_value_mxn DESC
+    ''', year_params + (min_contracts,)).fetchall()
 
-        # Top institution per state
-        top_inst = conn.execute(f'''
-            SELECT i.state_code,
-                   i.name AS institution_name,
-                   SUM(c.amount_mxn) AS inst_value
-            FROM contracts c
-            JOIN institutions i ON c.institution_id = i.id
-            WHERE i.state_code IS NOT NULL AND i.state_code != ''
-              AND i.gobierno_nivel IN ('GE','GM','GEM')
-              {year_clause}
-            GROUP BY i.state_code, i.id
-            ORDER BY i.state_code, inst_value DESC
-        ''', year_params).fetchall()
+    top_inst = conn.execute(f'''
+        SELECT i.state_code, i.name AS institution_name, SUM(c.amount_mxn) AS inst_value
+        FROM contracts c
+        JOIN institutions i ON c.institution_id = i.id
+        WHERE i.state_code IS NOT NULL AND i.state_code != ''
+          AND i.gobierno_nivel IN ('GE','GM','GEM')
+          {year_clause}
+        GROUP BY i.state_code, i.id
+        ORDER BY i.state_code, inst_value DESC
+    ''', year_params).fetchall()
 
-        top_by_state: dict[str, tuple] = {}
-        for r in top_inst:
-            if r['state_code'] not in top_by_state:
-                top_by_state[r['state_code']] = (r['institution_name'], r['inst_value'])
-
-        # Year ranges per state
-        years_raw = conn.execute(f'''
-            SELECT i.state_code, c.contract_year
-            FROM contracts c
-            JOIN institutions i ON c.institution_id = i.id
-            WHERE i.state_code IS NOT NULL AND i.state_code != ''
-              AND i.gobierno_nivel IN ('GE','GM','GEM')
-              AND c.contract_year IS NOT NULL
-              {year_clause}
-            GROUP BY i.state_code, c.contract_year
-            ORDER BY i.state_code, c.contract_year
-        ''', year_params).fetchall()
-
-        years_by_state: dict[str, list[int]] = {}
-        for r in years_raw:
-            years_by_state.setdefault(r['state_code'], []).append(r['contract_year'])
+    top_by_state: dict[str, tuple] = {}
+    for r in top_inst:
+        if r['state_code'] not in top_by_state:
+            top_by_state[r['state_code']] = (r['institution_name'], r['inst_value'])
 
     states = []
     for r in rows:
         code = r['state_code']
         top = top_by_state.get(code)
+        years_active = sorted(
+            int(y) for y in (r['years_csv'] or '').split(',') if y.strip().isdigit()
+        )
         states.append(StateSummary(
             state_code=code,
             state_name=STATE_NAMES.get(code, code),
@@ -292,17 +341,14 @@ async def list_states(
             single_bid_rate=round(r['single_bid_rate'], 4),
             top_institution=top[0] if top else None,
             top_institution_value_mxn=top[1] if top else None,
-            years_active=years_by_state.get(code, []),
+            years_active=years_active,
         ))
-
-    total_contracts = sum(s.contract_count for s in states)
-    total_value = sum(s.total_value_mxn for s in states)
 
     return StateListResponse(
         data=states,
         total_states=len(states),
-        total_contracts=total_contracts,
-        total_value_mxn=total_value,
+        total_contracts=sum(s.contract_count for s in states),
+        total_value_mxn=sum(s.total_value_mxn for s in states),
         coverage_note=COVERAGE_NOTE,
     )
 
