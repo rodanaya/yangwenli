@@ -596,6 +596,32 @@ def get_sector_year_breakdown():
 
         with get_db() as conn:
             cursor = conn.cursor()
+
+            # Fast path: use precomputed administrations stat
+            pc_row = cursor.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'administrations'"
+            ).fetchone()
+            if pc_row:
+                raw = json.loads(pc_row[0])
+                # administrations is a list of {year, sector_id, ...} objects
+                if isinstance(raw, list) and raw and "sector_id" in raw[0]:
+                    data = [SectorYearItem(
+                        year=r["year"],
+                        sector_id=r["sector_id"],
+                        contracts=r.get("contracts", 0),
+                        total_value=r.get("total_value", 0),
+                        avg_risk=r.get("avg_risk", 0),
+                        direct_award_pct=r.get("direct_award_pct", 0),
+                        single_bid_pct=r.get("single_bid_pct"),
+                        high_risk_pct=r.get("high_risk_pct", 0),
+                        vendor_count=r.get("vendor_count", 0),
+                        institution_count=r.get("institution_count", 0),
+                    ) for r in raw]
+                    result = SectorYearBreakdownResponse(data=data, total_rows=len(data))
+                    _sector_year_cache[cache_key] = {"ts": _time.time(), "data": result}
+                    return result
+
+            # Fallback: live query (slow — ~9s on first call, then cached 10min)
             cursor.execute("""
                 SELECT
                     contract_year as year, sector_id,

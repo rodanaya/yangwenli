@@ -134,12 +134,7 @@ def _search_contracts(q: str, limit: int) -> list[ContractResult]:
                   AND amount_mxn IS NOT NULL
                   AND amount_mxn > 0
                   AND amount_mxn <= 100000000000
-                ORDER BY CASE risk_level
-                  WHEN 'critical' THEN 0
-                  WHEN 'high'     THEN 1
-                  WHEN 'medium'   THEN 2
-                  ELSE                 3
-                END, amount_mxn DESC
+                ORDER BY risk_score DESC
                 LIMIT ?
                 """,
                 (f"%{q}%", limit),
