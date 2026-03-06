@@ -17,3 +17,6 @@ python-dateutil>=2.8.0
 # Observability & Caching
 structlog>=24.0.0          # Structured JSON logging
 cachetools>=5.3.0          # Thread-safe TTL caches
+
+# Scientific (used by analysis endpoints)
+numpy>=1.24.0
