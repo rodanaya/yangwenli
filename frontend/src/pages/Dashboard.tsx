@@ -943,23 +943,15 @@ export function Dashboard() {
       {/* SECTOR SPEND TREEMAP — where the money concentrates            */}
       {/* ================================================================ */}
       {sectorData.length > 0 && (
-        <Card className="border-border/40">
-          <CardContent className="pt-4 pb-3">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Layers className="h-4 w-4 text-accent" />
-                <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
-                  Spend by Sector
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <p className="text-[10px] text-text-muted font-mono">
-                  Size = total spend · Color = sector · Click to explore
-                </p>
-                <ChartDownloadButton targetRef={sectorTreemapRef} filename="rubli-sector-spend" />
-              </div>
+        <div className="rounded-xl bg-slate-900/50 border border-white/5 p-4">
+          <div className="flex items-center justify-between mb-1">
+            <div>
+              <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-1">Spend by Sector</h3>
+              <p className="text-xs text-white/50">Size = total spend · Color = sector · Click to explore</p>
             </div>
-            <div ref={sectorTreemapRef} style={{ height: 240 }}>
+            <ChartDownloadButton targetRef={sectorTreemapRef} filename="rubli-sector-spend" />
+          </div>
+          <div ref={sectorTreemapRef} style={{ height: 240 }} className="mt-3">
               <ResponsiveContainer width="100%" height="100%">
                 <Treemap
                   data={sectorData.map((s) => ({
@@ -1041,8 +1033,10 @@ export function Dashboard() {
                 />
               </ResponsiveContainer>
             </div>
-          </CardContent>
-        </Card>
+          <p className="text-xs text-white/50 italic mt-2 px-1">
+            Energia and Infraestructura together represent over half of total procurement value — their concentration makes them the highest-priority sectors for investigation.
+          </p>
+        </div>
       )}
 
       {/* ================================================================ */}
@@ -1182,68 +1176,60 @@ export function Dashboard() {
       {/* ================================================================ */}
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-5">
         {/* Sector Intelligence — 3 columns */}
-        <Card className="lg:col-span-3 border-border/40">
-          <CardContent className="pt-5 pb-3">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <div className="flex items-center gap-2 mb-0.5">
-                  <Scale className="h-4 w-4 text-risk-high" />
-                  <h2 className="text-base font-bold text-text-primary">{t('sectorIntelligence')}</h2>
-                </div>
-                <p className="text-xs text-text-muted">{t('sectorIntelligenceDesc')}</p>
-              </div>
-            </div>
-            {dashLoading ? (
-              <div className="space-y-2">{[...Array(6)].map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
-            ) : (
-              <SectorGrid data={sectorData} onSectorClick={(id) => navigate(`/sectors/${id}`)} />
-            )}
-          </CardContent>
-        </Card>
+        <div className="lg:col-span-3 rounded-xl bg-slate-900/50 border border-white/5 p-4">
+          <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-1">{t('sectorIntelligence')}</h3>
+          <p className="text-xs text-white/50 mb-4">{t('sectorIntelligenceDesc')}</p>
+          {dashLoading ? (
+            <div className="space-y-2">{[...Array(6)].map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
+          ) : (
+            <SectorGrid data={sectorData} onSectorClick={(id) => navigate(`/sectors/${id}`)} />
+          )}
+          <p className="text-xs text-white/50 italic mt-2 px-1">
+            Salud and Infraestructura consistently lead in value-at-risk — concentrated vendors and opaque direct awards drive their elevated scores.
+          </p>
+        </div>
 
         {/* Risk Trajectory — 2 columns */}
-        <Card className="lg:col-span-2 border-border/40">
-          <CardContent className="pt-5 pb-3">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <div className="flex items-center gap-2 mb-0.5">
-                  <TrendingDown className="h-4 w-4 text-risk-high" />
-                  <h2 className="text-base font-bold text-text-primary">{t('riskTrajectory')}</h2>
-                </div>
-                <p className="text-xs text-text-muted">{t('riskTrajectoryDesc')}</p>
-              </div>
-              <ChartDownloadButton targetRef={riskTrajectoryRef} filename="rubli-risk-trajectory" />
+        <div className="lg:col-span-2 rounded-xl bg-slate-900/50 border border-white/5 p-4">
+          <div className="flex items-center justify-between mb-1">
+            <div>
+              <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-1">{t('riskTrajectory')}</h3>
+              <p className="text-xs text-white/50">{t('riskTrajectoryDesc')}</p>
             </div>
-            {/* Sector selector */}
-            <div className="mb-3">
-              <select
-                className="text-xs font-mono bg-background-elevated/30 border border-border/40 rounded px-2 py-1 text-text-secondary focus:outline-none focus:border-accent/60 cursor-pointer"
-                value={selectedTrajectorySectorId ?? ''}
-                onChange={(e) => setSelectedTrajectorySectorId(e.target.value === '' ? null : Number(e.target.value))}
-                aria-label="Filter risk trajectory by sector"
-              >
-                <option value="">All Sectors</option>
-                {sectorData.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </select>
+            <ChartDownloadButton targetRef={riskTrajectoryRef} filename="rubli-risk-trajectory" />
+          </div>
+          {/* Sector selector */}
+          <div className="mb-3 mt-2">
+            <select
+              className="text-xs font-mono bg-white/5 border border-white/10 rounded px-2 py-1 text-white/60 focus:outline-none focus:border-accent/60 cursor-pointer"
+              value={selectedTrajectorySectorId ?? ''}
+              onChange={(e) => setSelectedTrajectorySectorId(e.target.value === '' ? null : Number(e.target.value))}
+              aria-label="Filter risk trajectory by sector"
+            >
+              <option value="">All Sectors</option>
+              {sectorData.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+          {dashLoading ? (
+            <div className="h-[340px] flex items-center justify-center"><Skeleton className="h-full w-full" /></div>
+          ) : (
+            <div ref={riskTrajectoryRef}>
+              <RiskTrajectoryChart
+                data={riskTrajectory}
+                sectorTrajectory={selectedTrajectorySectorId !== null ? sectorTrajectory : undefined}
+                sectorColor={selectedTrajectorySectorId !== null
+                  ? (SECTOR_COLORS[sectorData.find((s) => s.id === selectedTrajectorySectorId)?.code ?? ''] ?? '#64748b')
+                  : undefined}
+                yearlyTrends={fastDashboard?.yearly_trends}
+              />
             </div>
-            {dashLoading ? (
-              <div className="h-[340px] flex items-center justify-center"><Skeleton className="h-full w-full" /></div>
-            ) : (
-              <div ref={riskTrajectoryRef}>
-                <RiskTrajectoryChart
-                  data={riskTrajectory}
-                  sectorTrajectory={selectedTrajectorySectorId !== null ? sectorTrajectory : undefined}
-                  sectorColor={selectedTrajectorySectorId !== null
-                    ? (SECTOR_COLORS[sectorData.find((s) => s.id === selectedTrajectorySectorId)?.code ?? ''] ?? '#64748b')
-                    : undefined}
-                  yearlyTrends={fastDashboard?.yearly_trends}
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          )}
+          <p className="text-xs text-white/50 italic mt-2 px-1">
+            COVID-19 (2020) triggered emergency procurement exceptions that briefly elevated risk scores across all sectors.
+          </p>
+        </div>
       </div>
 
       {/* ================================================================ */}

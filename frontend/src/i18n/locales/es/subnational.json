@@ -66,5 +66,17 @@
   "loading": "Cargando datos estatales...",
   "noData": "Sin datos disponibles",
   "stateCount": "{{count}} estados con actividad de compras federales",
-  "totalSummary": "{{contracts}} contratos · {{value}} · {{vendors}} proveedores en {{states}} estados"
+  "totalSummary": "{{contracts}} contratos · {{value}} · {{vendors}} proveedores en {{states}} estados",
+  "yearLabel": "A\u00f1o:",
+  "yearAll": "Todos",
+  "showingYear": "Mostrando solo contratos de {{year}}",
+  "sortLabel": "Ordenar:",
+  "loadingMap": "Cargando mapa\u2026",
+  "mapTooltip": {
+    "risk": "Riesgo",
+    "contracts": "Contratos",
+    "value": "Valor",
+    "drillDown": "Clic para explorar \u2192"
+  },
+  "riskLevel": "Riesgo"
 }

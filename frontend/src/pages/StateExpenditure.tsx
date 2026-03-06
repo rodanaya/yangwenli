@@ -36,10 +36,7 @@ import {
   Line,
   ReferenceArea,
   ReferenceLine,
-  Bar,
-  Cell,
 } from '@/components/charts'
-import { SECTOR_COLORS } from '@/lib/colors'
 import ReactECharts from 'echarts-for-react'
 import * as echarts from 'echarts'
 import {
@@ -144,10 +141,10 @@ function MexicoChoropleth({
           const riskColor = riskToAreaColor(d.avg_risk_score)
           return [
             `<strong style="font-size:13px">${d.state_name}</strong>`,
-            `<span style="color:${riskColor};font-weight:700">Risk: ${(d.avg_risk_score ?? 0).toFixed(3)}</span>`,
-            `Contracts: ${(d.contract_count ?? 0).toLocaleString()}`,
-            `Value: ${formatCompactMXN(d.total_value_mxn ?? 0)}`,
-            `<span style="color:#94a3b8;font-size:10px">Click to drill down →</span>`,
+            `<span style="color:${riskColor};font-weight:700">${t('mapTooltip.risk')}: ${(d.avg_risk_score ?? 0).toFixed(3)}</span>`,
+            `${t('mapTooltip.contracts')}: ${(d.contract_count ?? 0).toLocaleString()}`,
+            `${t('mapTooltip.value')}: ${formatCompactMXN(d.total_value_mxn ?? 0)}`,
+            `<span style="color:#94a3b8;font-size:10px">${t('mapTooltip.drillDown')}</span>`,
           ].join('<br/>')
         },
       },
@@ -201,7 +198,7 @@ function MexicoChoropleth({
           />
         ) : (
           <div className="flex h-[380px] items-center justify-center text-xs text-muted-foreground">
-            Loading map…
+            {t('loadingMap')}
           </div>
         )}
 
@@ -316,7 +313,7 @@ function StatesList() {
 
       {/* Year filter */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs text-muted-foreground">Year:</span>
+        <span className="text-xs text-muted-foreground">{t('yearLabel')}</span>
         <div className="flex gap-1 flex-wrap" role="group" aria-label="Filter by year">
           <button
             onClick={() => setSelectedYear(undefined)}
@@ -326,7 +323,7 @@ function StatesList() {
                 : 'bg-muted text-muted-foreground hover:bg-muted/70'
             }`}
           >
-            All
+            {t('yearAll')}
           </button>
           {[2024,2023,2022,2021,2020,2019,2018].map((y) => (
             <button
@@ -345,7 +342,7 @@ function StatesList() {
         </div>
         {selectedYear && (
           <span className="text-[10px] text-muted-foreground">
-            Showing {selectedYear} contracts only
+            {t('showingYear', { year: selectedYear })}
           </span>
         )}
       </div>
@@ -359,7 +356,7 @@ function StatesList() {
       {/* Sort controls + States table */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Sort:</span>
+          <span className="text-xs text-muted-foreground">{t('sortLabel')}</span>
           <Button
             variant={sortBy === 'value' ? 'default' : 'outline'}
             size="sm"
@@ -520,62 +517,55 @@ function TopVendorsByYear({ code, stateName }: { code: string; stateName: string
         ) : error || vendors.length === 0 ? (
           <p className="px-4 py-6 text-sm text-muted-foreground text-center">{t('noData')}</p>
         ) : (
-          <div className="overflow-x-auto">
-          <table
-            className="w-full text-sm"
-            aria-label={`Top vendors in ${stateName} for ${selectedYear}`}
-          >
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="px-4 py-2 text-right font-medium text-muted-foreground w-10">
-                  {t('rank')}
-                </th>
-                <th className="px-4 py-2 text-left font-medium text-muted-foreground">
-                  {t('vendorName')}
-                </th>
-                <th className="px-4 py-2 text-right font-medium text-muted-foreground">
-                  {t('totalValue')}
-                </th>
-                <th className="px-4 py-2 text-right font-medium text-muted-foreground">
-                  {t('contracts')}
-                </th>
-                <th className="px-4 py-2 text-right font-medium text-muted-foreground">
-                  {t('riskScore')}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {vendors.slice(0, 10).map((v, idx) => (
-                <tr
-                  key={v.vendor_id ?? idx}
-                  className="cursor-pointer hover:bg-muted/30 transition-colors"
-                  onClick={() => navigate(`/vendors/${v.vendor_id}`)}
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') navigate(`/vendors/${v.vendor_id}`)
-                  }}
-                  role="row"
-                  aria-label={`${v.vendor_name}, rank ${idx + 1}`}
-                >
-                  <td className="px-4 py-2 text-right tabular-nums text-xs text-muted-foreground w-10">
-                    {idx + 1}
-                  </td>
-                  <td className="px-4 py-2 max-w-xs">
-                    <span className="line-clamp-1 text-xs font-medium">{v.vendor_name}</span>
-                  </td>
-                  <td className="px-4 py-2 text-right tabular-nums text-xs">
-                    {formatCompactMXN(v.total_value_mxn ?? 0)}
-                  </td>
-                  <td className="px-4 py-2 text-right tabular-nums text-xs">
-                    {(v.contract_count ?? 0).toLocaleString()}
-                  </td>
-                  <td className="px-4 py-2 text-right">
-                    <RiskBadge score={v.avg_risk_score ?? 0} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="px-4 pb-4">
+            <div className="space-y-1.5" aria-label={`Top vendors in ${stateName} for ${selectedYear}`}>
+              {vendors.slice(0, 10).map((v, idx) => {
+                const maxVal = vendors[0]?.total_value_mxn ?? 1
+                const pct = ((v.total_value_mxn ?? 0) / maxVal) * 100
+                const riskScore = v.avg_risk_score ?? 0
+                const riskColor =
+                  riskScore >= 0.5
+                    ? RISK_COLORS.critical
+                    : riskScore >= 0.3
+                    ? RISK_COLORS.high
+                    : riskScore >= 0.1
+                    ? RISK_COLORS.medium
+                    : RISK_COLORS.low
+                return (
+                  <button
+                    key={v.vendor_id ?? idx}
+                    className="w-full text-left group"
+                    onClick={() => navigate(`/vendors/${v.vendor_id}`)}
+                    aria-label={`#${idx + 1} ${v.vendor_name}`}
+                  >
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-[10px] font-mono text-muted-foreground w-5 flex-shrink-0 text-right">
+                        #{idx + 1}
+                      </span>
+                      <span className="text-xs font-medium group-hover:text-foreground truncate flex-1">
+                        {v.vendor_name}
+                      </span>
+                      <span className="text-xs tabular-nums text-muted-foreground flex-shrink-0">
+                        {formatCompactMXN(v.total_value_mxn ?? 0)}
+                      </span>
+                      <RiskBadge score={riskScore} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 flex-shrink-0" />
+                      <div className="flex-1 h-[5px] rounded-full bg-muted/40 overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{ width: `${pct}%`, backgroundColor: riskColor, opacity: 0.8 }}
+                        />
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+            <p className="text-xs text-muted-foreground italic mt-3">
+              Bar width proportional to contract value. Color indicates risk level.
+            </p>
           </div>
         )}
       </CardContent>
@@ -808,6 +798,7 @@ function StateDetail({ code }: { code: string }) {
             {d.year_trend.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t('noData')}</p>
             ) : (
+              <>
               <ResponsiveContainer width="100%" height={220}>
                 <ComposedChart
                   data={d.year_trend}
@@ -878,6 +869,7 @@ function StateDetail({ code }: { code: string }) {
               <p className="text-xs text-white/50 italic mt-2">
                 Shaded bands show administration periods. COVID reference line marks the 2020 emergency procurement surge.
               </p>
+              </>
             )}
           </CardContent>
         </Card>

@@ -36,6 +36,18 @@
     "moderate": "Moderado",
     "concentrated": "Concentrado"
   },
+  "heatmapPage": {
+    "title": "Mapa de Calor: Institución × Sector",
+    "description": "Puntuación de riesgo promedio de las 20 principales instituciones (por cantidad de contratos) en los 12 sectores de adquisiciones. Verde = riesgo bajo, ámbar = moderado, rojo = alto riesgo. Haz clic en cualquier celda para explorar los contratos.",
+    "clickHint": "Haz clic en una celda para explorar esos contratos en la vista de Contratos con institución y sector prefiltrados.",
+    "errorTitle": "Error al cargar el mapa de calor",
+    "errorDesc": "No se pudieron obtener los datos de clasificación de instituciones o sectores. Por favor, intenta actualizar.",
+    "matrixTitle": "Matriz de Puntuación de Riesgo",
+    "matrixSubtitle": "Top {{n}} instituciones × {{m}} sectores",
+    "footnote": "Los valores muestran la puntuación de riesgo promedio (0–100%). Haz clic en cualquier celda para ver los contratos filtrados.",
+    "empty": "No hay datos de instituciones disponibles.",
+    "legendTitle": "Instituciones mostradas (clasificadas por cantidad de contratos)"
+  },
   "publicationDelay": {
     "title": "Transparencia de Demora en Publicación",
     "contractsWithTimingData": "{{count}} contratos con datos de tiempo",

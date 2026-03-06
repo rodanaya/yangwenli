@@ -8,7 +8,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { SECTOR_COLORS, SECTORS, getSectorNameEN } from '@/lib/constants'
-import { RISK_COLORS } from '@/lib/constants'
 import { priceApi } from '@/api/client'
 import type { PriceHypothesisItem, SectorPriceBaseline, PriceHypothesesFilterParams, MlAnomaliesResponse } from '@/api/client'
 import {
@@ -20,9 +19,9 @@ import {
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
   Cell,
+  ReferenceLine,
 } from '@/components/charts'
 import {
-  TrendingUp,
   AlertTriangle,
   Table2,
   ChevronDown,
@@ -101,10 +100,14 @@ const SectorAnomalyBar = memo(function SectorAnomalyBar({
 }: {
   data: Array<{ sector_name: string; count: number; total_flagged_value?: number }>
 }) {
+  // Sort descending so highest-anomaly sectors appear at top (ECharts renders bottom→top for categories)
   const sorted = useMemo(() => [...data].sort((a, b) => a.count - b.count), [data])
 
   const option = useMemo(() => {
-    const names = sorted.map((d) => getSectorNameEN(d.sector_name))
+    // sorted is ascending by count; ECharts renders categories bottom→top so index 0 = bottom.
+    // Rank 1 = highest anomaly = last entry in sorted array (top of chart).
+    const n = sorted.length
+    const names = sorted.map((d, i) => `#${n - i}  ${getSectorNameEN(d.sector_name)}`)
     const values = sorted.map((d) => ({
       value: d.count,
       itemStyle: { color: SECTOR_COLORS[d.sector_name] ?? '#64748b', opacity: 0.85 },
@@ -116,19 +119,22 @@ const SectorAnomalyBar = memo(function SectorAnomalyBar({
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
+        backgroundColor: '#0f172a',
+        borderColor: '#1e293b',
+        textStyle: { color: '#e2e8f0', fontSize: 11 },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         formatter: (params: any[]) => {
           const idx = params[0]?.dataIndex ?? 0
           const row = sorted[idx]
-          return `<strong>${params[0]?.name}</strong><br/>${formatNumber(params[0]?.value)} anomalies${row?.total_flagged_value ? `<br/>${formatCompactMXN(row.total_flagged_value)} flagged` : ''}`
+          return `<strong>${getSectorNameEN(row.sector_name)}</strong><br/>${formatNumber(params[0]?.value)} anomalies${row?.total_flagged_value ? `<br/>${formatCompactMXN(row.total_flagged_value)} flagged` : ''}`
         },
       },
-      grid: { left: 110, right: 70, top: 4, bottom: 4, containLabel: false },
+      grid: { left: 130, right: 70, top: 4, bottom: 4, containLabel: false },
       xAxis: { type: 'value', show: false, max: maxCount * 1.25 },
       yAxis: {
         type: 'category',
         data: names,
-        axisLabel: { fontSize: 11, color: '#9ca3af' },
+        axisLabel: { fontSize: 10, color: '#6b7280', fontFamily: 'monospace' },
         axisLine: { show: false },
         axisTick: { show: false },
       },
@@ -476,18 +482,16 @@ export default function PriceIntelligence() {
 
       {/* ── 3. Sector Anomaly Map ─────────────────────────────────────────── */}
       {!summaryLoading && priceSummary?.by_sector && priceSummary.by_sector.length > 0 && (
-        <Card className="border-border/40">
-          <CardHeader className="pb-2 pt-4 px-5">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <TrendingUp className="h-3.5 w-3.5 text-accent" />
-              {t('sectorMapTitle')}
-            </CardTitle>
-            <CardDescription className="text-xs">{t('sectorMapDesc')}</CardDescription>
-          </CardHeader>
-          <CardContent className="px-5 pb-4">
-            <SectorAnomalyBar data={priceSummary.by_sector} />
-          </CardContent>
-        </Card>
+        <div className="bg-slate-900/50 border border-white/5 rounded-xl p-4">
+          <p className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-1">
+            {t('sectorMapTitle')}
+          </p>
+          <p className="text-xs text-white/40 mb-3">{t('sectorMapDesc')}</p>
+          <SectorAnomalyBar data={priceSummary.by_sector} />
+          <p className="text-xs text-white/50 italic mt-3">
+            Ranked by total anomaly count. Color reflects sector taxonomy. Higher counts suggest systematic overpricing patterns or data-entry errors in that sector.
+          </p>
+        </div>
       )}
       {summaryLoading && <Skeleton className="h-40 w-full rounded-lg" />}
 
@@ -538,15 +542,19 @@ export default function PriceIntelligence() {
                 amount: h.amount_mxn ?? 0,
                 type: h.hypothesis_type,
                 sector: h.sector_id,
+                confidence_level: h.confidence_level,
               }))
             return (
-              <div className="rounded-lg border border-border/40 bg-background-elevated/10 p-3">
-                <p className="text-[10px] text-text-muted mb-2">
-                  X axis = log₁₀(amount MXN) · Y axis = confidence score · Color = risk level · Click a dot to view contract
+              <div className="bg-slate-900/50 border border-white/5 rounded-xl p-4">
+                <p className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-1">
+                  Outlier Scatter: Amount vs. Confidence
+                </p>
+                <p className="text-[10px] text-white/40 mb-3">
+                  X axis = log₁₀(amount MXN) · Y axis = confidence score · Color = confidence level · Click a dot to view contract
                 </p>
                 <ResponsiveContainer width="100%" height={220}>
                   <ScatterChart margin={{ left: 8, right: 8, top: 4, bottom: 4 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#2a2f3e" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                     <XAxis
                       type="number"
                       dataKey="x"
@@ -562,8 +570,9 @@ export default function PriceIntelligence() {
                       name="Confidence"
                       domain={[0, 1] as [number, number]}
                     />
+                    <ReferenceLine y={0} stroke="rgba(255,255,255,0.2)" />
                     <RechartsTooltip
-                      contentStyle={{ background: '#1a1f2e', border: '1px solid #2a2f3e', borderRadius: 6, fontSize: 11 }}
+                      contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 6, fontSize: 11 }}
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       formatter={(_v: any, _name: any, props: any) => {
                         const p = props?.payload as { amount?: number; y?: number } | undefined
@@ -579,38 +588,37 @@ export default function PriceIntelligence() {
                       data={scatterData}
                       onClick={(d: { id?: number }) => d?.id && navigateToContract(d.id)}
                       style={{ cursor: 'pointer' }}
+                      r={4}
                     >
                       {scatterData.map((entry, i) => (
                         <Cell
                           key={i}
-                          fill={
-                            entry.y >= 0.8 ? RISK_COLORS.critical :
-                            entry.y >= 0.6 ? RISK_COLORS.high :
-                            entry.y >= 0.4 ? RISK_COLORS.medium :
-                            RISK_COLORS.low
-                          }
-                          opacity={0.8}
+                          fill={confidenceColor(entry.confidence_level ?? 'low')}
+                          opacity={entry.y >= 0.7 ? 1 : entry.y >= 0.4 ? 0.75 : 0.5}
                         />
                       ))}
                     </Scatter>
                   </ScatterChart>
                 </ResponsiveContainer>
-                <div className="flex gap-3 mt-1 text-[9px] text-text-muted flex-wrap">
+                <p className="text-xs text-white/50 italic mt-3">
+                  Dots colored by confidence level (dark blue = very high, light blue = low). Larger contracts in the upper-right corner represent the highest-priority anomalies.
+                </p>
+                <div className="flex gap-3 mt-2 text-[9px] text-white/50 flex-wrap">
                   <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: RISK_COLORS.critical }} />
-                    Confidence ≥80%
+                    <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: CONFIDENCE_COLORS.very_high }} />
+                    Very High
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: RISK_COLORS.high }} />
-                    60–80%
+                    <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: CONFIDENCE_COLORS.high }} />
+                    High
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: RISK_COLORS.medium }} />
-                    40–60%
+                    <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: CONFIDENCE_COLORS.medium }} />
+                    Medium
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: RISK_COLORS.low }} />
-                    &lt;40%
+                    <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: CONFIDENCE_COLORS.low }} />
+                    Low
                   </span>
                 </div>
               </div>
@@ -969,6 +977,7 @@ const FilterBar = memo(function FilterBar({
   onSortByChange,
   onSortOrderToggle,
 }: FilterBarProps) {
+  const { t: ts } = useTranslation('sectors')
   return (
     <div className="flex flex-wrap gap-2 items-center pb-1">
       {/* Type pills */}
@@ -1021,7 +1030,7 @@ const FilterBar = memo(function FilterBar({
         <option value="">All Sectors</option>
         {SECTORS.map((s) => (
           <option key={s.id} value={s.id}>
-            {s.nameEN}
+            {ts(s.code)}
           </option>
         ))}
       </select>

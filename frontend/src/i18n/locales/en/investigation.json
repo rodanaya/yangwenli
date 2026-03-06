@@ -185,11 +185,51 @@
     "priority": "PRIORITY {{n}}",
     "contracts": "contracts",
     "estLoss": "Est. Loss",
+    "atRisk": "At Risk",
     "avgRisk": "Avg Risk",
     "criticalPct": "Critical",
     "topSignal": "Top Signal",
     "viewContracts": "View Contracts",
     "close": "Close"
+  },
+  "pageTitle": "Investigation",
+  "pageSubtitle": "Deep-dive vendor and contract analysis",
+  "viewCards": "Card view",
+  "viewTable": "Table view",
+  "caseCount_one": "{{count}} case",
+  "caseCount_other": "{{count}} cases",
+  "noInvestigationCasesFound": "No investigation cases found",
+  "tryAdjustingFilters": "Try adjusting your filters",
+  "noCasesYet": "No cases have been created yet",
+  "kpi": {
+    "openCases": "Open Cases",
+    "totalAtRisk": "Total At Risk",
+    "estLosses": "Est. Losses",
+    "sectorsAffected": "Sectors Affected"
+  },
+  "sidebar": {
+    "estTotalLoss": "Est. Total Loss",
+    "acrossCases": "across {{n}} cases",
+    "signalRadar": "Signal Radar",
+    "sectors": "Sectors",
+    "quickLinks": "Quick Links",
+    "spendingCategories": "Spending Categories",
+    "criticalContracts": "Critical Risk Contracts",
+    "caseLibrary": "Case Library"
+  },
+  "signalTags": {
+    "multiple_price_anomalies": "Price Anomaly",
+    "high_single_bid_rate": "Single Bid",
+    "year_end_concentration": "Year-End Rush",
+    "high_avg_risk_score": "High Risk Score",
+    "high_direct_award_rate": "Direct Award",
+    "corporate_group_pattern": "Corp. Group",
+    "multi_entity_anomaly": "Multi-Entity"
+  },
+  "tableCol": {
+    "score": "Score",
+    "value": "Value",
+    "evidence": "Evidence"
   },
   "intake": {
     "title": "Start an Investigation",

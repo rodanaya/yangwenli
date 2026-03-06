@@ -252,6 +252,7 @@ function StatsBar() {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function CaseLibrary() {
   const { t } = useTranslation('cases')
+  const { t: ts } = useTranslation('sectors')
   const navigate = useNavigate()
 
   const [filters, setFilters] = useState<CaseLibraryParams>({})
@@ -372,7 +373,7 @@ export default function CaseLibrary() {
           <SelectContent>
             <SelectItem value="all">{t('filters.all')}</SelectItem>
             {SECTORS.map((s) => (
-              <SelectItem key={s.id} value={String(s.id)}>{s.nameEN}</SelectItem>
+              <SelectItem key={s.id} value={String(s.id)}>{ts(s.code)}</SelectItem>
             ))}
           </SelectContent>
         </Select>

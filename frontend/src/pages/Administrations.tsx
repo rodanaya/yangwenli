@@ -34,6 +34,7 @@ import {
   Tooltip,
   Legend,
   ReferenceLine,
+  ReferenceArea,
   Cell,
 } from '@/components/charts'
 import {
@@ -70,6 +71,15 @@ const PARTY_COLORS: Record<string, string> = {
   PAN: '#002395',
   PRI: '#008000',
   MORENA: '#8B0000',
+}
+
+// Administration colors for bar chart cells and reference bands
+const ADMIN_COLORS: Record<string, string> = {
+  Fox: '#6366f1',
+  Calderon: '#3b82f6',
+  'Pena Nieto': '#10b981',
+  AMLO: '#f59e0b',
+  Sheinbaum: '#ec4899',
 }
 
 // Sector list for the matrix grid
@@ -273,6 +283,7 @@ const PresidentAvatar = memo(function PresidentAvatar({
 
 export default function Administrations() {
   const { t } = useTranslation('administrations')
+  const { t: ts } = useTranslation('sectors')
   const [selectedAdmin, setSelectedAdmin] = useState<AdminName>('AMLO')
   const [activeTab, setActiveTab] = useState<'overview' | 'patterns' | 'political' | 'compare'>('overview')
   const [matrixMetric, setMatrixMetric] = useState<MatrixMetric>('risk')
@@ -332,12 +343,12 @@ export default function Administrations() {
       const sectorRows = filtered.filter((r) => r.sector_id === sector.id)
       const totalContracts = sectorRows.reduce((s, r) => s + r.contracts, 0)
       if (totalContracts === 0) {
-        return { sectorId: sector.id, code: sector.code, nameEN: sector.nameEN, color: sector.color, da: 0, sb: 0, hr: 0, risk: 0, contracts: 0 }
+        return { sectorId: sector.id, code: sector.code, name: ts(sector.code), color: sector.color, da: 0, sb: 0, hr: 0, risk: 0, contracts: 0 }
       }
       return {
         sectorId: sector.id,
         code: sector.code,
-        nameEN: sector.nameEN,
+        name: ts(sector.code),
         color: sector.color,
         contracts: totalContracts,
         da: sectorRows.reduce((s, r) => s + r.direct_award_pct * r.contracts, 0) / totalContracts,
@@ -346,7 +357,7 @@ export default function Administrations() {
         risk: sectorRows.reduce((s, r) => s + r.avg_risk * r.contracts, 0) / totalContracts,
       }
     })
-  }, [sectorYearData, selectedMeta])
+  }, [sectorYearData, selectedMeta, ts])
 
   // Transition data
   const transitions = useMemo(() => {
@@ -482,12 +493,12 @@ export default function Administrations() {
       for (let j = i + 1; j < activeSectors.length; j++) {
         const r = pearsonCorr(vectors[activeSectors[i].id], vectors[activeSectors[j].id])
         if (Math.abs(r) >= 0.70 && !isNaN(r)) {
-          pairs.push({ sectorA: activeSectors[i].nameEN, sectorB: activeSectors[j].nameEN, r })
+          pairs.push({ sectorA: ts(activeSectors[i].code), sectorB: ts(activeSectors[j].code), r })
         }
       }
     }
     return pairs.sort((a, b) => Math.abs(b.r) - Math.abs(a.r)).slice(0, 4)
-  }, [sectorYearData, selectedMeta])
+  }, [sectorYearData, selectedMeta, ts])
 
   const isLoading = yoyLoading || syLoading
 
@@ -750,17 +761,24 @@ export default function Administrations() {
                 <thead>
                   <tr className="border-b border-border">
                     <th className="text-left py-2 pr-4 text-text-muted font-normal text-xs">{t('table.metric')}</th>
-                    {adminAggs.map((a) => (
-                      <th
-                        key={a.name}
-                        className={cn(
-                          'text-right py-2 px-2 text-xs font-semibold',
-                          a.name === selectedAdmin ? 'text-accent' : 'text-text-muted'
-                        )}
-                      >
-                        {a.name}
-                      </th>
-                    ))}
+                    {adminAggs.map((a) => {
+                      const adminColor = ADMIN_COLORS[a.name]
+                      return (
+                        <th
+                          key={a.name}
+                          className={cn(
+                            'text-right py-2 px-2 text-xs font-semibold',
+                          )}
+                          style={{ color: a.name === selectedAdmin ? adminColor : `${adminColor}70` }}
+                        >
+                          <span
+                            className="inline-block w-2 h-2 rounded-full mr-1"
+                            style={{ backgroundColor: adminColor }}
+                          />
+                          {a.name}
+                        </th>
+                      )
+                    })}
                   </tr>
                 </thead>
                 <tbody>
@@ -976,7 +994,7 @@ export default function Administrations() {
                     <td className="px-3 py-2">
                       <div className="flex items-center gap-1.5">
                         <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: sector.color }} />
-                        <span className="text-text-secondary">{sector.nameEN}</span>
+                        <span className="text-text-secondary">{sector.name}</span>
                       </div>
                     </td>
                     <td className="text-right px-3 py-2">
@@ -1703,6 +1721,13 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
                   formatter={(value: unknown, name?: string) => [`${Number(value).toFixed(1)}%`, name]}
                 />
                 <Legend wrapperStyle={{ fontSize: 11, fontFamily: 'var(--font-family-mono)' }} />
+                {/* Administration background bands */}
+                <ReferenceArea x1={2002} x2={2006} fill={ADMIN_COLORS['Fox']} fillOpacity={0.04} label={{ value: 'Fox', fill: 'rgba(255,255,255,0.2)', fontSize: 9 }} />
+                <ReferenceArea x1={2006} x2={2012} fill={ADMIN_COLORS['Calderon']} fillOpacity={0.04} label={{ value: 'Calderón', fill: 'rgba(255,255,255,0.2)', fontSize: 9 }} />
+                <ReferenceArea x1={2012} x2={2018} fill={ADMIN_COLORS['Pena Nieto']} fillOpacity={0.04} label={{ value: 'EPN', fill: 'rgba(255,255,255,0.2)', fontSize: 9 }} />
+                <ReferenceArea x1={2018} x2={2024} fill={ADMIN_COLORS['AMLO']} fillOpacity={0.04} label={{ value: 'AMLO', fill: 'rgba(255,255,255,0.2)', fontSize: 9 }} />
+                {/* Direct award national average benchmark */}
+                <ReferenceLine y={78} stroke="rgba(255,165,0,0.4)" strokeDasharray="4 2" label={{ value: 'National avg 78%', fill: 'rgba(255,165,0,0.5)', fontSize: 10 }} />
                 {/* Admin transition reference lines */}
                 {transitionYears.map((year) => (
                   <ReferenceLine

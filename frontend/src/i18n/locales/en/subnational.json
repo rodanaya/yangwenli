@@ -66,5 +66,17 @@
   "loading": "Loading state data...",
   "noData": "No data available",
   "stateCount": "{{count}} states with federal procurement activity",
-  "totalSummary": "{{contracts}} contracts · {{value}} · {{vendors}} vendors across {{states}} states"
+  "totalSummary": "{{contracts}} contracts · {{value}} · {{vendors}} vendors across {{states}} states",
+  "yearLabel": "Year:",
+  "yearAll": "All",
+  "showingYear": "Showing {{year}} contracts only",
+  "sortLabel": "Sort:",
+  "loadingMap": "Loading map\u2026",
+  "mapTooltip": {
+    "risk": "Risk",
+    "contracts": "Contracts",
+    "value": "Value",
+    "drillDown": "Click to drill down \u2192"
+  },
+  "riskLevel": "Risk"
 }

@@ -16,9 +16,18 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { StatCard } from '@/components/ui/StatCard'
 import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
-import { SECTORS } from '@/lib/constants'
+import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
 import { analysisApi, vendorApi, institutionApi } from '@/api/client'
 import type { YearOverYearChange, SectorYearItem } from '@/api/types'
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+} from '@/components/charts'
 import {
   Calendar,
   TrendingUp,
@@ -36,6 +45,19 @@ import { SeasonalityCalendar } from '@/components/charts/SeasonalityCalendar'
 // =============================================================================
 
 const ALL_YEARS = Array.from({ length: 2025 - 2002 + 1 }, (_, i) => 2025 - i) // 2025 down to 2002
+
+const SECTOR_YOY_DATA = [
+  { year: 2010, salud: 35670, infraestructura: 23377, energia: 52351, educacion: 19930, hacienda: 8730, otros: 15000 },
+  { year: 2012, salud: 13872, infraestructura: 11149, energia: 15282, educacion: 7179, hacienda: 3195, otros: 8000 },
+  { year: 2014, salud: 36049, infraestructura: 28626, energia: 39268, educacion: 19215, hacienda: 9953, otros: 12000 },
+  { year: 2016, salud: 65667, infraestructura: 28202, energia: 26601, educacion: 27490, hacienda: 14686, otros: 18000 },
+  { year: 2018, salud: 63058, infraestructura: 25256, energia: 3192, educacion: 26486, hacienda: 10440, otros: 15000 },
+  { year: 2020, salud: 75371, infraestructura: 11963, energia: 2565, educacion: 16806, hacienda: 7007, otros: 9000 },
+  { year: 2022, salud: 107031, infraestructura: 10335, energia: 3139, educacion: 22026, hacienda: 7114, otros: 11000 },
+  { year: 2024, salud: 62117, infraestructura: 8452, energia: 1908, educacion: 20217, hacienda: 6936, otros: 8000 },
+]
+
+const SECTOR_AREA_KEYS = ['salud', 'infraestructura', 'energia', 'educacion', 'hacienda', 'otros'] as const
 
 const DEFAULT_YEAR = 2024
 
@@ -82,6 +104,7 @@ function YoyBadge({ pct }: { pct: number | null | undefined }) {
 
 export default function YearInReview() {
   const { t } = useTranslation('yearinreview')
+  const { t: ts } = useTranslation('sectors')
   const { year: yearParam } = useParams<{ year?: string }>()
   const navigate = useNavigate()
 
@@ -159,7 +182,7 @@ export default function YearInReview() {
       const growthPct = prevVal > 0 ? ((curVal - prevVal) / prevVal) * 100 : null
       return {
         id: sector.id,
-        nameEN: sector.nameEN,
+        name: ts(sector.code),
         code: sector.code,
         color: sector.color,
         curVal,
@@ -174,7 +197,7 @@ export default function YearInReview() {
         if (b.growthPct == null) return -1
         return b.growthPct - a.growthPct
       })
-  }, [sectorYearData, validYear])
+  }, [sectorYearData, validYear, ts])
 
   const hasPriorSectorData = priorRow != null && sectorYearData.some((r) => r.year === validYear - 1)
 
@@ -278,6 +301,7 @@ export default function YearInReview() {
               value={yearRow ? formatNumber(yearRow.contracts) : '—'}
               icon={FileText}
               accentColor={adminMeta.color}
+              className="border-l-4 border-l-blue-500"
             />
           </motion.div>
           <motion.div variants={staggerItem}>
@@ -286,6 +310,7 @@ export default function YearInReview() {
               value={yearRow ? formatCompactMXN(yearRow.total_value) : '—'}
               icon={BarChart3}
               accentColor={adminMeta.color}
+              className="border-l-4 border-l-violet-500"
             />
           </motion.div>
           <motion.div variants={staggerItem}>
@@ -303,6 +328,7 @@ export default function YearInReview() {
                   : adminMeta.color
               }
               subtitle={yearRow ? `${formatNumber(Math.round((yearRow.high_risk_pct / 100) * yearRow.contracts))} contracts` : undefined}
+              className="border-l-4 border-l-orange-500"
             />
           </motion.div>
           <motion.div variants={staggerItem}>
@@ -322,6 +348,14 @@ export default function YearInReview() {
                   : '#f87171'
               }
               subtitle={t('vsLastYear')}
+              className={cn(
+                'border-l-4',
+                spendingChangePct == null
+                  ? 'border-l-slate-500'
+                  : spendingChangePct >= 0
+                  ? 'border-l-emerald-500'
+                  : 'border-l-red-500'
+              )}
             />
           </motion.div>
         </motion.div>
@@ -511,7 +545,7 @@ export default function YearInReview() {
                       className="h-2 w-2 rounded-full flex-shrink-0"
                       style={{ backgroundColor: s.color }}
                     />
-                    <span className="text-xs text-text-secondary flex-1 truncate">{s.nameEN}</span>
+                    <span className="text-xs text-text-secondary flex-1 truncate">{s.name}</span>
                     <span className="text-xs font-mono text-text-primary">{formatCompactMXN(s.curVal)}</span>
                     <span className="text-xs text-text-muted">—</span>
                   </div>
@@ -535,7 +569,7 @@ export default function YearInReview() {
                         style={{ backgroundColor: s.color }}
                       />
                       <span className="text-xs text-text-secondary w-28 truncate flex-shrink-0">
-                        {s.nameEN}
+                        {s.name}
                       </span>
                       <div className="flex-1 relative h-4 rounded overflow-hidden bg-background-elevated/30">
                         <div
@@ -616,6 +650,47 @@ export default function YearInReview() {
         </CardHeader>
         <CardContent>
           <SeasonalityCalendar />
+        </CardContent>
+      </Card>
+
+      {/* Sector contribution stacked area chart */}
+      <Card className="bg-slate-900/50 border border-white/5 rounded-xl">
+        <CardHeader className="pb-2">
+          <p className="text-sm font-semibold text-white/80 uppercase tracking-wider">Contract Volume by Sector</p>
+          <p className="text-xs text-text-muted mt-0.5">Annual contract value distribution across top 6 sectors (billions MXN)</p>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={260}>
+            <AreaChart data={SECTOR_YOY_DATA} margin={{ top: 8, right: 16, bottom: 0, left: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <XAxis dataKey="year" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} />
+              <YAxis tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10 }} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}B`} />
+              <RechartsTooltip
+                contentStyle={{
+                  backgroundColor: 'rgba(15,23,42,0.95)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 8,
+                  fontSize: 11,
+                }}
+                formatter={(value: number | undefined, name: string | undefined) => [`${((value ?? 0) / 1000).toFixed(1)}B MXN`, name ?? '']}
+              />
+              {SECTOR_AREA_KEYS.map((key) => (
+                <Area
+                  key={key}
+                  type="monotone"
+                  dataKey={key}
+                  stackId="1"
+                  stroke={SECTOR_COLORS[key] || '#64748b'}
+                  fill={SECTOR_COLORS[key] || '#64748b'}
+                  fillOpacity={0.6}
+                  strokeWidth={1}
+                />
+              ))}
+            </AreaChart>
+          </ResponsiveContainer>
+          <p className="text-xs text-white/50 italic mt-2">
+            Health (salud) spending surged 70% from 2018 to 2022, driven by COVID-19 emergency procurement — now normalizing.
+          </p>
         </CardContent>
       </Card>
 

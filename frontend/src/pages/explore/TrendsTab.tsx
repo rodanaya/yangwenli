@@ -135,6 +135,7 @@ const RADAR_PRESETS: { id: RadarPreset; label: string; axes: { key: string; labe
 
 export default function TrendsTab() {
   const { t } = useTranslation('explore')
+  const { t: ts } = useTranslation('sectors')
   const [selectedYear, setSelectedYear] = useState(2024)
   const [radarPreset, setRadarPreset] = useState<RadarPreset>('risk')
   const [radarShowAll, setRadarShowAll] = useState(false)
@@ -275,7 +276,7 @@ export default function TrendsTab() {
       const critPct = totalRisk > 0 ? ((s.critical_risk_count || 0) / totalRisk) * 100 : 0
       return {
         code: s.sector_code,
-        name: SECTORS.find((sec) => sec.id === s.sector_id)?.nameEN ?? s.sector_name,
+        name: ts(SECTORS.find((sec) => sec.id === s.sector_id)?.code ?? s.sector_code),
         color: SECTOR_COLORS[s.sector_code] ?? '#64748b',
         values: {
           avgRisk: Math.min((s.avg_risk_score ?? 0) * 100, 100),
@@ -300,14 +301,14 @@ export default function TrendsTab() {
     })
 
     return { axes, sectors, chartData }
-  }, [sectorData, radarPreset, radarShowAll])
+  }, [sectorData, radarPreset, radarShowAll, ts])
 
   // Sector bubble data for landscape scatter chart
   const sectorBubbleData = useMemo(() => {
     if (!sectorData?.data) return []
     const maxValue = Math.max(...sectorData.data.map((s) => s.total_value_mxn || 1))
     return sectorData.data.map((s) => ({
-      name: SECTORS.find((sec) => sec.id === s.sector_id)?.nameEN ?? s.sector_name,
+      name: ts(SECTORS.find((sec) => sec.id === s.sector_id)?.code ?? s.sector_code),
       code: s.sector_code,
       x: s.total_contracts,
       y: (s.avg_risk_score ?? 0) * 100,
@@ -316,7 +317,7 @@ export default function TrendsTab() {
       vendors: s.total_vendors,
       color: SECTOR_COLORS[s.sector_code] ?? '#64748b',
     }))
-  }, [sectorData])
+  }, [sectorData, ts])
 
   return (
     <div className="space-y-4">

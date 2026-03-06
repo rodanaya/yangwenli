@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { analysisApi } from '@/api/client'
 import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
@@ -12,6 +13,8 @@ interface SectorTreemapPanelProps {
 }
 
 export function SectorTreemapPanel({ selectedSectorId, onSectorClick }: SectorTreemapPanelProps) {
+  const { t } = useTranslation('explore')
+  const { t: ts } = useTranslation('sectors')
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard', 'fast'],
     queryFn: () => analysisApi.getFastDashboard(),
@@ -26,7 +29,7 @@ export function SectorTreemapPanel({ selectedSectorId, onSectorClick }: SectorTr
         return {
           id: s.id,
           code: s.code,
-          name: meta?.nameEN || s.code,
+          name: ts(meta?.code ?? s.code),
           color: SECTOR_COLORS[s.code] || '#64748b',
           value: s.total_value_mxn || 0,
           contracts: s.total_contracts || 0,
@@ -34,14 +37,14 @@ export function SectorTreemapPanel({ selectedSectorId, onSectorClick }: SectorTr
         }
       })
       .sort((a, b) => b.value - a.value)
-  }, [data])
+  }, [data, ts])
 
   const total = useMemo(() => cells.reduce((s, c) => s + c.value, 0), [cells])
 
   if (isLoading) {
     return (
       <div>
-        <div className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Sectors by Value</div>
+        <div className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">{t('treemap.sectorsByValue')}</div>
         <div className="grid grid-cols-4 gap-1 h-24">
           {[...Array(12)].map((_, i) => <Skeleton key={i} className="h-full rounded" />)}
         </div>
@@ -52,13 +55,13 @@ export function SectorTreemapPanel({ selectedSectorId, onSectorClick }: SectorTr
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium text-text-muted uppercase tracking-wider">Sectors by Value</span>
+        <span className="text-xs font-medium text-text-muted uppercase tracking-wider">{t('treemap.sectorsByValue')}</span>
         {selectedSectorId && (
           <button
             onClick={() => onSectorClick(undefined)}
             className="text-[10px] text-accent hover:underline"
           >
-            Clear filter
+            {t('filters.clearFilter')}
           </button>
         )}
       </div>

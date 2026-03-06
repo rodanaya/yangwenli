@@ -46,5 +46,17 @@
     "competitive": "Competitive",
     "moderate": "Moderate",
     "concentrated": "Concentrated"
+  },
+  "heatmapPage": {
+    "title": "Institution × Sector Risk Heatmap",
+    "description": "Average risk score for each of the top 20 institutions (by contract count) across all 12 procurement sectors. Green = low risk, amber = moderate, red = high risk. Click any cell to explore the contracts for that institution and sector.",
+    "clickHint": "Click a cell to explore those contracts in the Contracts view with institution and sector pre-filtered.",
+    "errorTitle": "Failed to load heatmap data",
+    "errorDesc": "The institution rankings or sector data could not be fetched. Please try refreshing.",
+    "matrixTitle": "Risk Score Matrix",
+    "matrixSubtitle": "Top {{n}} institutions × {{m}} sectors",
+    "footnote": "Values show average risk score (0–100%). Click any cell to view filtered contracts.",
+    "empty": "No institution data available.",
+    "legendTitle": "Institutions shown (ranked by contract count)"
   }
 }
