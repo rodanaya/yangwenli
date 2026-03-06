@@ -804,7 +804,7 @@ export function Methodology() {
 
           {/* Section 8: Previous Model (v3.3) */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="v33" title="Previous Model (v3.3)" icon={History} defaultOpen={false}>
+          <CollapsibleSection id="v33" title={t('sectionLabels.v33')} icon={History} defaultOpen={false}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
                 The v3.3 model was a <strong className="text-text-primary">weighted indicator checklist</strong>{' '}
@@ -860,7 +860,7 @@ export function Methodology() {
 
           {/* Section 9: Data Sources */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="data-sources" title="Data Sources" icon={Database}>
+          <CollapsibleSection id="data-sources" title={t('sectionLabels.data-sources')} icon={Database}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
                 All procurement data comes from <strong className="text-text-primary">COMPRANET</strong>,
@@ -937,7 +937,7 @@ export function Methodology() {
 
           {/* Section 10: References */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="references" title="References" icon={FileText} defaultOpen={false}>
+          <CollapsibleSection id="references" title={t('sectionLabels.references')} icon={FileText} defaultOpen={false}>
             <div className="space-y-2">
               {REFERENCES.map((ref, i) => (
                 <div key={i} className="flex gap-2 py-1.5 border-b border-border/20 last:border-0">
