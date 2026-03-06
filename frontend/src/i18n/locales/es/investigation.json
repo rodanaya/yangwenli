@@ -185,11 +185,51 @@
     "priority": "PRIORIDAD {{n}}",
     "contracts": "contratos",
     "estLoss": "Pérdida Est.",
+    "atRisk": "En Riesgo",
     "avgRisk": "Riesgo Prom.",
     "criticalPct": "Crítico",
     "topSignal": "Señal Principal",
     "viewContracts": "Ver Contratos",
     "close": "Cerrar"
+  },
+  "pageTitle": "Investigación",
+  "pageSubtitle": "Análisis profundo de proveedores y contratos",
+  "viewCards": "Vista de tarjetas",
+  "viewTable": "Vista de tabla",
+  "caseCount_one": "{{count}} caso",
+  "caseCount_other": "{{count}} casos",
+  "noInvestigationCasesFound": "No se encontraron casos de investigación",
+  "tryAdjustingFilters": "Intenta ajustar tus filtros",
+  "noCasesYet": "Aún no se han creado casos",
+  "kpi": {
+    "openCases": "Casos Abiertos",
+    "totalAtRisk": "Total en Riesgo",
+    "estLosses": "Pérd. Est.",
+    "sectorsAffected": "Sectores Afectados"
+  },
+  "sidebar": {
+    "estTotalLoss": "Pérdida Total Est.",
+    "acrossCases": "en {{n}} casos",
+    "signalRadar": "Radar de Señales",
+    "sectors": "Sectores",
+    "quickLinks": "Accesos Rápidos",
+    "spendingCategories": "Categorías de Gasto",
+    "criticalContracts": "Contratos Riesgo Crítico",
+    "caseLibrary": "Biblioteca de Casos"
+  },
+  "signalTags": {
+    "multiple_price_anomalies": "Anomalía de Precio",
+    "high_single_bid_rate": "Un Solo Postor",
+    "year_end_concentration": "Cierre de Año",
+    "high_avg_risk_score": "Riesgo Alto",
+    "high_direct_award_rate": "Adjudicación Directa",
+    "corporate_group_pattern": "Grupo Corp.",
+    "multi_entity_anomaly": "Multi-Entidad"
+  },
+  "tableCol": {
+    "score": "Puntuación",
+    "value": "Valor",
+    "evidence": "Evidencia"
   },
   "intake": {
     "title": "Iniciar una Investigación",

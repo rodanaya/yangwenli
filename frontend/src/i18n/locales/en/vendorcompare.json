@@ -1,0 +1,47 @@
+{
+  "back": "Back",
+  "title": "Vendor Comparison",
+  "subtitle": "Side-by-side risk profile analysis for two selected vendors.",
+  "subtitlePicker": "Compare two vendors side-by-side across risk scores, procurement metrics, and z-score radar charts.",
+  "errorTitle": "Could not load vendor data",
+  "errorBody": "One or both vendor IDs may be invalid. Please check the IDs and try again.",
+  "viewProfile": "View full profile",
+  "radarTitle": "Z-Score Radar Comparison",
+  "radarSubtitle": "Solid line = Vendor A. Dashed line = Vendor B. Values toward edge = higher deviation from sector norms.",
+  "noRadarData": "No z-score data available for radar comparison.",
+  "metricTitle": "Metric Comparison",
+  "metricSubtitle": "The \"B vs A\" column shows how Vendor B differs. Red = worse risk; green = better.",
+  "metricColLabel": "Metric",
+  "metricColDelta": "B vs A",
+  "deltaEqual": "equal",
+  "vendorA": "Vendor A",
+  "vendorB": "Vendor B",
+  "picker": {
+    "title": "Compare Two Vendors",
+    "description": "Enter two vendor IDs to compare their risk profiles, procurement metrics, and z-score radar charts side-by-side.",
+    "labelA": "Vendor A \u2014 ID",
+    "labelB": "Vendor B \u2014 ID",
+    "placeholderA": "e.g. 12345",
+    "placeholderB": "e.g. 67890",
+    "compare": "Compare",
+    "hint": "You can also navigate here from any vendor\u2019s profile page using the \u201cCompare\u201d button."
+  },
+  "metrics": {
+    "totalContracts": "Total Contracts",
+    "totalValue": "Total Value",
+    "avgRiskScore": "Avg Risk Score",
+    "directAwardPct": "Direct Award %",
+    "singleBidPct": "Single Bid %",
+    "highRiskContracts": "High Risk Contracts",
+    "yearsActive": "Years Active",
+    "institutionsServed": "Institutions Served"
+  },
+  "radar": {
+    "priceVolatility": "Price Volatility",
+    "concentration": "Concentration",
+    "winRate": "Win Rate",
+    "directAward": "Direct Award",
+    "sectorMismatch": "Sector Mismatch",
+    "singleBid": "Single Bid"
+  }
+}

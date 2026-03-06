@@ -1,0 +1,17 @@
+{
+  "title": "API Explorer",
+  "subtitle": "Reference documentation for the RUBLI public API. All endpoints are read-only unless otherwise noted.",
+  "endpointCount": "{{n}} endpoints across {{groups}} resource groups.",
+  "baseUrl": "Base URL",
+  "production": "Production",
+  "local": "Local",
+  "responseNote": "All responses are JSON. Paginated endpoints return {{data}}, {{total}}, and {{pagination}} fields.",
+  "filterPlaceholder": "Filter endpoints by path or description\u2026",
+  "filterLabel": "Filter endpoints",
+  "noMatch": "No endpoints match \u201c{{query}}\u201d",
+  "endpointLabel_one": "{{count}} endpoint",
+  "endpointLabel_other": "{{count}} endpoints",
+  "copied": "Copied!",
+  "corsNote": "All endpoints support CORS from the RUBLI frontend. No authentication required for read-only endpoints.",
+  "dataNote": "Data covers 3.1M Mexican federal procurement contracts (2002\u20132025) from COMPRANET."
+}

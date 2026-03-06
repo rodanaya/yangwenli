@@ -113,6 +113,7 @@ function FiltersBar({
   onReset: () => void
 }) {
   const { t } = useTranslation('network')
+  const { t: ts } = useTranslation('sectors')
   const hasActive =
     filters.sectorId !== undefined ||
     filters.year !== undefined ||
@@ -135,7 +136,7 @@ function FiltersBar({
           <option value="">{t('filterAllSectors')}</option>
           {SECTORS.map((s) => (
             <option key={s.id} value={s.id}>
-              {s.nameEN}
+              {ts(s.code)}
             </option>
           ))}
         </select>

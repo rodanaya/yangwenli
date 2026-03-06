@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -113,6 +114,7 @@ export function SectorProfile() {
   const { id } = useParams<{ id: string }>()
   const sectorId = Number(id)
   const navigate = useNavigate()
+  const { t: ts } = useTranslation('sectors')
   const currentYear = useMemo(() => new Date().getFullYear() - 1, [])
 
   // Prev/next sector navigation using the static SECTORS list
@@ -363,8 +365,8 @@ export function SectorProfile() {
                   onClick={() => prevSector && navigate(`/sectors/${prevSector.id}`)}
                   disabled={!prevSector}
                   className="flex h-6 w-6 items-center justify-center rounded border border-border/40 text-text-muted hover:border-border hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                  aria-label={prevSector ? `Previous: ${prevSector.nameEN}` : 'No previous sector'}
-                  title={prevSector ? prevSector.nameEN : undefined}
+                  aria-label={prevSector ? `Previous: ${ts(prevSector.code)}` : 'No previous sector'}
+                  title={prevSector ? ts(prevSector.code) : undefined}
                 >
                   <ArrowLeft className="h-3 w-3" />
                 </button>
@@ -372,8 +374,8 @@ export function SectorProfile() {
                   onClick={() => nextSector && navigate(`/sectors/${nextSector.id}`)}
                   disabled={!nextSector}
                   className="flex h-6 w-6 items-center justify-center rounded border border-border/40 text-text-muted hover:border-border hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                  aria-label={nextSector ? `Next: ${nextSector.nameEN}` : 'No next sector'}
-                  title={nextSector ? nextSector.nameEN : undefined}
+                  aria-label={nextSector ? `Next: ${ts(nextSector.code)}` : 'No next sector'}
+                  title={nextSector ? ts(nextSector.code) : undefined}
                 >
                   <ArrowRight className="h-3 w-3" />
                 </button>
@@ -394,12 +396,12 @@ export function SectorProfile() {
                 <p className="text-xs text-text-muted font-mono uppercase tracking-widest">Sector · {sector.code}</p>
                 {prevSector && (
                   <Link to={`/sectors/${prevSector.id}`} className="text-[10px] text-text-muted hover:text-accent font-mono transition-colors">
-                    ← {prevSector.nameEN}
+                    ← {ts(prevSector.code)}
                   </Link>
                 )}
                 {nextSector && (
                   <Link to={`/sectors/${nextSector.id}`} className="text-[10px] text-text-muted hover:text-accent font-mono transition-colors">
-                    {nextSector.nameEN} →
+                    {ts(nextSector.code)} →
                   </Link>
                 )}
               </div>

@@ -73,5 +73,11 @@
     "totalQuestioned": "Total Questioned",
     "yearsAudited": "Years Audited",
     "institutions": "Institutions"
+  },
+  "scatter": {
+    "directAwardRate": "Direct Award Rate",
+    "directAwardPct": "Direct Award %",
+    "avgRisk": "Avg Risk",
+    "contracts": "Contracts"
   }
 }

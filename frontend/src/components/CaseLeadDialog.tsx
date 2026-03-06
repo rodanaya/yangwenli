@@ -90,7 +90,7 @@ interface CaseLeadDialogProps {
 }
 
 export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
-  const { i18n } = useTranslation()
+  const { t: ts } = useTranslation('sectors')
   const [form, setForm] = useState<CaseLeadForm>(EMPTY_FORM)
   const [submitState, setSubmitState] = useState<SubmitState>('idle')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -137,7 +137,7 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
     setErrorMsg(null)
 
     const sectorName = form.sectorId
-      ? SECTORS.find((s) => String(s.id) === form.sectorId)?.nameEN ?? form.sectorId
+      ? (() => { const sec = SECTORS.find((s) => String(s.id) === form.sectorId); return sec ? ts(sec.code) : form.sectorId })()
       : 'Unknown'
 
     const period = form.yearFrom
@@ -263,7 +263,7 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
                     <SelectItem value="unknown">Unknown / Multiple</SelectItem>
                     {SECTORS.map((s) => (
                       <SelectItem key={s.id} value={String(s.id)}>
-                        {i18n.language === 'es' ? s.name : s.nameEN}
+                        {ts(s.code)}
                       </SelectItem>
                     ))}
                   </SelectContent>

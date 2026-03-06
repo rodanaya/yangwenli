@@ -1,5 +1,6 @@
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { X, GitCompareArrows, ExternalLink } from 'lucide-react'
 import { cn, formatCompactMXN, formatDate, toTitleCase, getRiskLevel } from '@/lib/utils'
 import { SECTORS, RISK_COLORS } from '@/lib/constants'
@@ -81,6 +82,7 @@ export function ContractCompareModal({
   onOpenChange,
   onViewDetail,
 }: ContractCompareModalProps) {
+  const { t: ts } = useTranslation('sectors')
   if (!open || contracts.length === 0) return null
 
   const n = contracts.length
@@ -157,7 +159,7 @@ export function ContractCompareModal({
                           <span
                             className="w-2 h-2 rounded-full shrink-0 mt-0.5"
                             style={{ backgroundColor: sector.color }}
-                            title={sector.nameEN}
+                            title={ts(sector.code)}
                           />
                         )}
                         <div className="min-w-0">
@@ -245,7 +247,7 @@ export function ContractCompareModal({
                 values={contracts.map((c) => {
                   const sec = c.sector_id ? SECTORS.find((s) => s.id === c.sector_id) : null
                   return sec
-                    ? <span key={c.id} className="font-medium" style={{ color: sec.color }}>{sec.nameEN}</span>
+                    ? <span key={c.id} className="font-medium" style={{ color: sec.color }}>{ts(sec.code)}</span>
                     : <span key={c.id} className="text-text-muted">—</span>
                 })}
               />

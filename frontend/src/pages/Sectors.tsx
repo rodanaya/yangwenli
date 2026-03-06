@@ -1453,23 +1453,23 @@ export function Sectors() {
                   <XAxis
                     type="number"
                     dataKey="direct_award_pct"
-                    name="Direct Award %"
+                    name={t('scatter.directAwardPct')}
                     domain={[0, 100]}
                     tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
                     tickFormatter={(v: number) => `${v}%`}
-                    label={{ value: 'Direct Award Rate', position: 'insideBottom', offset: -10, fontSize: 10, fill: 'var(--color-text-muted)' }}
+                    label={{ value: t('scatter.directAwardRate'), position: 'insideBottom', offset: -10, fontSize: 10, fill: 'var(--color-text-muted)' }}
                   />
                   <YAxis
                     type="number"
                     dataKey="avg_risk"
-                    name="Avg Risk"
+                    name={t('scatter.avgRisk')}
                     domain={[0, 0.5]}
                     tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
                     tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
-                    label={{ value: 'Avg Risk', angle: -90, position: 'insideLeft', offset: 10, fontSize: 10, fill: 'var(--color-text-muted)' }}
+                    label={{ value: t('scatter.avgRisk'), angle: -90, position: 'insideLeft', offset: 10, fontSize: 10, fill: 'var(--color-text-muted)' }}
                     width={40}
                   />
-                  <ZAxis type="number" dataKey="total_contracts" range={[20, 600]} name="Contracts" />
+                  <ZAxis type="number" dataKey="total_contracts" range={[20, 600]} name={t('scatter.contracts')} />
                   <ReferenceLine x={50} stroke="rgba(255,255,255,0.15)" strokeDasharray="4 2" label={{ value: '50% avg', fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} />
                   <ReferenceLine x={70} stroke="#f59e0b" strokeDasharray="3 3" strokeOpacity={0.5} />
                   <ReferenceLine y={0.30} stroke="#ef4444" strokeDasharray="3 3" strokeOpacity={0.5} />

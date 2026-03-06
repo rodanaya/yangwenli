@@ -12,6 +12,7 @@
 import React, { useState, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Compass, X, Building2, Users, TrendingUp, AlertTriangle, Activity, Network, Clock, DollarSign, ChevronRight, Layers } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { cn } from '@/lib/utils'
@@ -67,6 +68,7 @@ const SUGGESTIONS: Record<'vendor' | 'institution', { label: string; params: Rec
 export function ExplorePage() {
   const [page, setPage] = useState(1)
   const navigate = useNavigate()
+  const { t: ts } = useTranslation('sectors')
   const [, setSearchParams] = useSearchParams()
   const filters = useExplorerFilters()
 
@@ -97,7 +99,7 @@ export function ExplorePage() {
   if (filters.sectorId != null) {
     const sector = SECTORS.find(s => s.id === filters.sectorId)
     activeChips.push({
-      label: `Sector: ${sector?.nameEN || filters.sectorId}`,
+      label: `Sector: ${sector ? ts(sector.code) : filters.sectorId}`,
       onRemove: () => { filters.setSectorId(undefined); setPage(1) },
     })
   }

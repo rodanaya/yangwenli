@@ -268,7 +268,10 @@ function RiskWaterfallChart({
                 dataKey="contribution"
                 position="right"
                 style={{ fontSize: 9, fill: 'rgba(148,163,184,0.8)' }}
-                formatter={(v: number) => v !== 0 ? (v >= 0 ? `+${v.toFixed(2)}` : v.toFixed(2)) : ''}
+                formatter={(v: unknown) => {
+                  const n = Number(v)
+                  return n !== 0 ? (n >= 0 ? `+${n.toFixed(2)}` : n.toFixed(2)) : ''
+                }}
               />
             </Bar>
           </BarChart>
@@ -645,6 +648,7 @@ function TopRiskFactorBars({ waterfallData }: { waterfallData: VendorWaterfallCo
 
 export function VendorProfile() {
   const { t } = useTranslation('vendors')
+  const { t: tc } = useTranslation('common')
   const { id } = useParams<{ id: string }>()
   const vendorId = Number(id)
   const navigate = useNavigate()
@@ -2045,7 +2049,7 @@ export function VendorProfile() {
                           <Bar
                             yAxisId="left"
                             dataKey="contract_count"
-                            name="Contracts"
+                            name={tc('contracts')}
                             fill={riskColor}
                             fillOpacity={0.45}
                             radius={[2, 2, 0, 0]}
@@ -2055,7 +2059,7 @@ export function VendorProfile() {
                             yAxisId="right"
                             type="monotone"
                             dataKey="avg_risk_score"
-                            name="Risk"
+                            name={tc('riskScore')}
                             stroke={riskColor}
                             strokeWidth={2}
                             dot={{ r: 2 }}

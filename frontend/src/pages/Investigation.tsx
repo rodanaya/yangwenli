@@ -114,14 +114,14 @@ const SCORE_COLOR: Record<PriorityLevel, string> = {
 }
 
 // Signal tag appearance map
-const SIGNAL_TAG_CONFIG: Record<string, { label: string; className: string }> = {
-  multiple_price_anomalies: { label: 'Price Anomaly', className: 'text-risk-high bg-risk-high/10 border-risk-high/25' },
-  high_single_bid_rate: { label: 'Single Bid', className: 'text-risk-medium bg-risk-medium/10 border-risk-medium/25' },
-  year_end_concentration: { label: 'Year-End Rush', className: 'text-text-secondary bg-border/15 border-border/30' },
-  high_avg_risk_score: { label: 'High Risk Score', className: 'text-risk-critical bg-risk-critical/10 border-risk-critical/25' },
-  high_direct_award_rate: { label: 'Direct Award', className: 'text-text-secondary bg-border/15 border-border/30' },
-  corporate_group_pattern: { label: 'Corp. Group', className: 'text-purple-400 bg-purple-400/10 border-purple-400/25' },
-  multi_entity_anomaly: { label: 'Multi-Entity', className: 'text-purple-400 bg-purple-400/10 border-purple-400/25' },
+const SIGNAL_TAG_CLASS: Record<string, string> = {
+  multiple_price_anomalies: 'text-risk-high bg-risk-high/10 border-risk-high/25',
+  high_single_bid_rate: 'text-risk-medium bg-risk-medium/10 border-risk-medium/25',
+  year_end_concentration: 'text-text-secondary bg-border/15 border-border/30',
+  high_avg_risk_score: 'text-risk-critical bg-risk-critical/10 border-risk-critical/25',
+  high_direct_award_rate: 'text-text-secondary bg-border/15 border-border/30',
+  corporate_group_pattern: 'text-purple-400 bg-purple-400/10 border-purple-400/25',
+  multi_entity_anomaly: 'text-purple-400 bg-purple-400/10 border-purple-400/25',
 }
 
 // ============================================================================
@@ -205,11 +205,11 @@ function CaseCard({
           {getSectorNameEN(caseItem.sector_name)}
         </span>
         {caseItem.signals_triggered.slice(0, 3).map((signal) => {
-          const cfg = SIGNAL_TAG_CONFIG[signal]
-          if (!cfg) return null
+          const cls = SIGNAL_TAG_CLASS[signal]
+          if (!cls) return null
           return (
-            <span key={signal} className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded border', cfg.className)}>
-              {cfg.label}
+            <span key={signal} className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded border', cls)}>
+              {t(`signalTags.${signal}`, signal.replace(/_/g, ' '))}
             </span>
           )
         })}
@@ -270,6 +270,7 @@ function CaseCard({
 // ============================================================================
 
 function IntelSidebar({ cases, onNavigate }: { cases: InvestigationCaseListItem[]; onNavigate: (path: string) => void }) {
+  const { t } = useTranslation('investigation')
   const signalCounts = useMemo(() => {
     const counts: Record<string, number> = {}
     for (const c of cases) {
@@ -300,23 +301,22 @@ function IntelSidebar({ cases, onNavigate }: { cases: InvestigationCaseListItem[
       {/* Total estimated loss KPI */}
       <div className="rounded-lg border border-risk-high/25 bg-risk-high/[0.04] p-3">
         <div className="text-[9px] font-mono uppercase tracking-widest text-text-muted/60 mb-1">
-          Est. Total Loss
+          {t('sidebar.estTotalLoss')}
         </div>
         <div className="text-xl font-black font-mono text-risk-high tabular-nums">
           {formatCompactMXN(totalEstLoss)}
         </div>
-        <div className="text-[10px] text-text-muted mt-0.5">across {cases.length} cases</div>
+        <div className="text-[10px] text-text-muted mt-0.5">{t('sidebar.acrossCases', { n: cases.length })}</div>
       </div>
 
       {/* Signal Radar */}
       <div>
         <div className="text-[9px] font-bold tracking-widest uppercase text-text-muted/50 font-mono mb-3">
-          Signal Radar
+          {t('sidebar.signalRadar')}
         </div>
         <div className="space-y-2.5">
           {signalCounts.map(([signal, count]) => {
-            const cfg = SIGNAL_TAG_CONFIG[signal]
-            const label = cfg?.label ?? signal.replace(/_/g, ' ')
+            const label = t(`signalTags.${signal}`, signal.replace(/_/g, ' '))
             return (
               <div key={signal}>
                 <div className="flex justify-between items-center text-[11px] font-mono mb-1">
@@ -338,7 +338,7 @@ function IntelSidebar({ cases, onNavigate }: { cases: InvestigationCaseListItem[
       {/* Sector Presence — clickable → SpendingCategories */}
       <div>
         <div className="text-[9px] font-bold tracking-widest uppercase text-text-muted/50 font-mono mb-3">
-          Sectors
+          {t('sidebar.sectors')}
         </div>
         <div className="space-y-1.5">
           {sectorCounts.map(([sector, count]) => {
@@ -370,7 +370,7 @@ function IntelSidebar({ cases, onNavigate }: { cases: InvestigationCaseListItem[
       {/* Quick links */}
       <div>
         <div className="text-[9px] font-bold tracking-widest uppercase text-text-muted/50 font-mono mb-2">
-          Quick Links
+          {t('sidebar.quickLinks')}
         </div>
         <div className="space-y-1">
           <button
@@ -378,21 +378,21 @@ function IntelSidebar({ cases, onNavigate }: { cases: InvestigationCaseListItem[
             className="w-full text-left text-[11px] text-text-muted hover:text-accent border border-border/30 hover:border-accent/40 rounded px-2.5 py-1.5 transition-colors flex items-center gap-2"
           >
             <span className="text-[10px]">▣</span>
-            Spending Categories
+            {t('sidebar.spendingCategories')}
           </button>
           <button
             onClick={() => onNavigate('/contracts?risk_level=critical')}
             className="w-full text-left text-[11px] text-text-muted hover:text-accent border border-border/30 hover:border-accent/40 rounded px-2.5 py-1.5 transition-colors flex items-center gap-2"
           >
             <span className="text-[10px]">⚡</span>
-            Critical Risk Contracts
+            {t('sidebar.criticalContracts')}
           </button>
           <button
             onClick={() => onNavigate('/cases')}
             className="w-full text-left text-[11px] text-text-muted hover:text-accent border border-border/30 hover:border-accent/40 rounded px-2.5 py-1.5 transition-colors flex items-center gap-2"
           >
             <span className="text-[10px]">📋</span>
-            Case Library
+            {t('sidebar.caseLibrary')}
           </button>
         </div>
       </div>
@@ -534,31 +534,31 @@ export function Investigation() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Investigation"
-        subtitle="Deep-dive vendor and contract analysis"
+        title={t('pageTitle')}
+        subtitle={t('pageSubtitle')}
         icon={Crosshair}
       />
 
       {/* KPI STRIP */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="rounded-lg border border-border/40 bg-background-elevated/30 p-3">
-          <div className="text-[9px] font-mono uppercase tracking-widest text-text-muted/60 mb-1">Open Cases</div>
+          <div className="text-[9px] font-mono uppercase tracking-widest text-text-muted/60 mb-1">{t('kpi.openCases')}</div>
           <div className="text-2xl font-black font-mono text-text-primary tabular-nums">{allCases.length}</div>
         </div>
         <div className="rounded-lg border border-border/40 bg-background-elevated/30 p-3">
-          <div className="text-[9px] font-mono uppercase tracking-widest text-text-muted/60 mb-1">Total At Risk</div>
+          <div className="text-[9px] font-mono uppercase tracking-widest text-text-muted/60 mb-1">{t('kpi.totalAtRisk')}</div>
           <div className="text-2xl font-black font-mono text-text-primary tabular-nums">
             {formatCompactMXN(allCases.reduce((s, c) => s + c.total_value_mxn, 0))}
           </div>
         </div>
         <div className="rounded-lg border border-risk-high/20 bg-risk-high/[0.04] p-3">
-          <div className="text-[9px] font-mono uppercase tracking-widest text-text-muted/60 mb-1">Est. Losses</div>
+          <div className="text-[9px] font-mono uppercase tracking-widest text-text-muted/60 mb-1">{t('kpi.estLosses')}</div>
           <div className="text-2xl font-black font-mono text-risk-high tabular-nums">
             {formatCompactMXN(allCases.reduce((s, c) => s + (c.estimated_loss_mxn || 0), 0))}
           </div>
         </div>
         <div className="rounded-lg border border-border/40 bg-background-elevated/30 p-3">
-          <div className="text-[9px] font-mono uppercase tracking-widest text-text-muted/60 mb-1">Sectors Affected</div>
+          <div className="text-[9px] font-mono uppercase tracking-widest text-text-muted/60 mb-1">{t('kpi.sectorsAffected')}</div>
           <div className="text-2xl font-black font-mono text-text-primary tabular-nums">
             {new Set(allCases.map((c) => c.sector_name)).size}
           </div>
@@ -595,14 +595,14 @@ export function Investigation() {
             <button
               onClick={() => setViewMode('cards')}
               className={cn('px-2 py-1.5 transition-colors', viewMode === 'cards' ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-secondary')}
-              title="Card view"
+              title={t('viewCards')}
             >
               <LayoutGrid className="h-3.5 w-3.5" />
             </button>
             <button
               onClick={() => setViewMode('table')}
               className={cn('px-2 py-1.5 transition-colors', viewMode === 'table' ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-secondary')}
-              title="Table view"
+              title={t('viewTable')}
             >
               <List className="h-3.5 w-3.5" />
             </button>
@@ -664,8 +664,8 @@ export function Investigation() {
           ) : cases.length === 0 ? (
             <EmptyState
               icon={statusFilter !== 'all' || minScore !== undefined || priorityFilter !== 'all' ? Filter : Search}
-              title="No investigation cases found"
-              description={statusFilter !== 'all' || minScore !== undefined || priorityFilter !== 'all' ? 'Try adjusting your filters' : 'No cases have been created yet'}
+              title={t('noInvestigationCasesFound')}
+              description={statusFilter !== 'all' || minScore !== undefined || priorityFilter !== 'all' ? t('tryAdjustingFilters') : t('noCasesYet')}
               variant="no-results"
               useIllustration={false}
             />
@@ -684,7 +684,7 @@ export function Investigation() {
                 ))}
               </motion.div>
               <p className="text-xs text-text-muted text-right mt-3">
-                {cases.length} {cases.length === 1 ? 'case' : 'cases'}
+                {t('caseCount_other', { count: cases.length })}
               </p>
             </>
           ) : (
@@ -696,11 +696,11 @@ export function Investigation() {
                       <SortHeader label={t('queue.priority') || 'Priority'} field="priority" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                       <th className="px-3 py-2.5 text-left text-xs font-medium text-text-muted">{t('table.case')}</th>
                       <th className="px-3 py-2.5 text-left text-xs font-medium text-text-muted">{t('table.sector')}</th>
-                      <SortHeader label="Score" field="suspicion_score" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+                      <SortHeader label={t('tableCol.score')} field="suspicion_score" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                       <SortHeader label={t('card.contracts')} field="total_contracts" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
-                      <SortHeader label="Value" field="total_value_mxn" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+                      <SortHeader label={t('tableCol.value')} field="total_value_mxn" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                       <th className="px-3 py-2.5 text-left text-xs font-medium text-text-muted">{t('table.status')}</th>
-                      <th className="px-3 py-2.5 text-left text-xs font-medium text-text-muted">Evidence</th>
+                      <th className="px-3 py-2.5 text-left text-xs font-medium text-text-muted">{t('tableCol.evidence')}</th>
                     </tr>
                   </thead>
               <tbody className="divide-y divide-border/30">
@@ -716,7 +716,7 @@ export function Investigation() {
             </table>
           </div>
           <div className="px-4 py-2 border-t border-border/30 bg-background-elevated/30 text-xs text-text-muted">
-            {cases.length} {cases.length === 1 ? 'case' : 'cases'}
+            {t('caseCount_other', { count: cases.length })}
           </div>
         </div>
       )}

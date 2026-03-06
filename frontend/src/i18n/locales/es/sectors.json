@@ -73,5 +73,11 @@
     "totalQuestioned": "Total Cuestionado",
     "yearsAudited": "Años Auditados",
     "institutions": "Instituciones"
+  },
+  "scatter": {
+    "directAwardRate": "Tasa de Adjudicación Directa",
+    "directAwardPct": "Adj. Directa %",
+    "avgRisk": "Riesgo Prom.",
+    "contracts": "Contratos"
   }
 }

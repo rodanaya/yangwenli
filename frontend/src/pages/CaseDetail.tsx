@@ -273,6 +273,7 @@ function SimilarCaseCard({ cas, onClick }: { cas: { name_en: string; slug: strin
 export default function CaseDetail() {
   const { slug } = useParams<{ slug: string }>()
   const { t, i18n } = useTranslation('cases')
+  const { t: ts } = useTranslation('sectors')
   const navigate = useNavigate()
 
   const { data, isLoading, error } = useQuery({
@@ -341,7 +342,7 @@ export default function CaseDetail() {
 
   // Derive sector names for sector_ids
   const sectorLabels = (data.sector_ids ?? [])
-    .map(sid => SECTORS.find(s => s.id === sid)?.nameEN)
+    .map(sid => { const sec = SECTORS.find(s => s.id === sid); return sec ? ts(sec.code) : undefined })
     .filter(Boolean) as string[]
 
   // Similar cases: same fraud_type, different slug, top 3 by severity

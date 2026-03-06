@@ -59,6 +59,10 @@ import esYearinreview from './locales/es/yearinreview.json'
 import enYearinreview from './locales/en/yearinreview.json'
 import esLanding from './locales/es/landing.json'
 import enLanding from './locales/en/landing.json'
+import esVendorcompare from './locales/es/vendorcompare.json'
+import enVendorcompare from './locales/en/vendorcompare.json'
+import esApiexplorer from './locales/es/apiexplorer.json'
+import enApiexplorer from './locales/en/apiexplorer.json'
 
 i18n
   .use(LanguageDetector)
@@ -79,6 +83,8 @@ i18n
         subnational: esSubnational,
         yearinreview: esYearinreview,
         landing: esLanding,
+        vendorcompare: esVendorcompare,
+        apiexplorer: esApiexplorer,
       },
       en: {
         common: enCommon, sectors: enSectors, nav: enNav, dashboard: enDashboard,
@@ -94,6 +100,8 @@ i18n
         subnational: enSubnational,
         yearinreview: enYearinreview,
         landing: enLanding,
+        vendorcompare: enVendorcompare,
+        apiexplorer: enApiexplorer,
       },
     },
     lng: localStorage.getItem('i18nextLng') || 'en', // Default to English when no saved preference

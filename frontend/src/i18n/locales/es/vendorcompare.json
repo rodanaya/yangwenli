@@ -1,0 +1,47 @@
+{
+  "back": "Volver",
+  "title": "Comparación de Proveedores",
+  "subtitle": "An\u00e1lisis comparativo de perfiles de riesgo para dos proveedores seleccionados.",
+  "subtitlePicker": "Compara dos proveedores lado a lado: puntuaciones de riesgo, m\u00e9tricas y gr\u00e1ficas de radar.",
+  "errorTitle": "No se pudo cargar la informaci\u00f3n",
+  "errorBody": "Uno o ambos IDs de proveedor pueden ser inv\u00e1lidos. Verifica los IDs e intenta de nuevo.",
+  "viewProfile": "Ver perfil completo",
+  "radarTitle": "Comparaci\u00f3n de Radar Z-Score",
+  "radarSubtitle": "L\u00ednea s\u00f3lida = Proveedor A. L\u00ednea discontinua = Proveedor B. Valores hacia el borde = mayor desviaci\u00f3n de la norma sectorial.",
+  "noRadarData": "No hay datos z-score disponibles para la comparaci\u00f3n de radar.",
+  "metricTitle": "Comparaci\u00f3n de M\u00e9tricas",
+  "metricSubtitle": "La columna \u201cB vs A\u201d muestra c\u00f3mo difiere el Proveedor B. Rojo = peor riesgo; verde = mejor.",
+  "metricColLabel": "M\u00e9trica",
+  "metricColDelta": "B vs A",
+  "deltaEqual": "igual",
+  "vendorA": "Proveedor A",
+  "vendorB": "Proveedor B",
+  "picker": {
+    "title": "Comparar Dos Proveedores",
+    "description": "Ingresa dos IDs de proveedor para comparar sus perfiles de riesgo, m\u00e9tricas y gr\u00e1ficas de radar.",
+    "labelA": "Proveedor A \u2014 ID",
+    "labelB": "Proveedor B \u2014 ID",
+    "placeholderA": "ej. 12345",
+    "placeholderB": "ej. 67890",
+    "compare": "Comparar",
+    "hint": "Tambi\u00e9n puedes llegar aqu\u00ed desde el perfil de cualquier proveedor usando el bot\u00f3n \u201cComparar\u201d."
+  },
+  "metrics": {
+    "totalContracts": "Total de Contratos",
+    "totalValue": "Valor Total",
+    "avgRiskScore": "Riesgo Promedio",
+    "directAwardPct": "Adjudicaci\u00f3n Directa %",
+    "singleBidPct": "Un Solo Postor %",
+    "highRiskContracts": "Contratos de Alto Riesgo",
+    "yearsActive": "A\u00f1os Activo",
+    "institutionsServed": "Instituciones Atendidas"
+  },
+  "radar": {
+    "priceVolatility": "Volatilidad de Precio",
+    "concentration": "Concentraci\u00f3n",
+    "winRate": "Tasa de \u00c9xito",
+    "directAward": "Adjudicaci\u00f3n Directa",
+    "sectorMismatch": "Desajuste Sectorial",
+    "singleBid": "Un Solo Postor"
+  }
+}

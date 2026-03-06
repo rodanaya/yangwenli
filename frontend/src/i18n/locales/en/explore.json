@@ -134,7 +134,8 @@
     "ascending": "Ascending",
     "descending": "Descending",
     "reset": "Clear filters",
-    "apply": "Apply"
+    "apply": "Apply",
+    "clearFilter": "Clear filter"
   },
   "search": {
     "nameOrRfc": "Search name or RFC...",
@@ -191,5 +192,8 @@
     "addToDossier": "Add to dossier",
     "noDossiersYet": "No dossiers yet",
     "whyTrack": "Why track {{name}}?"
+  },
+  "treemap": {
+    "sectorsByValue": "Sectors by value"
   }
 }

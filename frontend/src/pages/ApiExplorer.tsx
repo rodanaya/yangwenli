@@ -3,6 +3,7 @@
  * Route: /api-explorer
  */
 import { useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { ChevronDown, Copy, Check, Code2, Search } from 'lucide-react'
@@ -431,6 +432,7 @@ function EndpointGroup({
   group: EndpointGroup
   defaultOpen?: boolean
 }) {
+  const { t } = useTranslation('apiexplorer')
   const [open, setOpen] = useState(defaultOpen ?? false)
 
   return (
@@ -444,7 +446,7 @@ function EndpointGroup({
         <div className="flex items-center gap-3">
           <span className="text-sm font-semibold text-text-primary">{group.label}</span>
           <span className="text-[10px] text-text-muted font-mono bg-background-card border border-border/50 px-1.5 py-0.5 rounded">
-            {group.endpoints.length} endpoint{group.endpoints.length !== 1 ? 's' : ''}
+            {t('endpointLabel_other', { count: group.endpoints.length })}
           </span>
         </div>
         <ChevronDown
@@ -475,6 +477,7 @@ const BASE_URL_LOCAL = 'http://localhost:8001/api/v1'
 const BASE_URL_PROD = 'https://api.rubli.mx/api/v1'
 
 function CopyButton({ text, label }: { text: string; label: string }) {
+  const { t } = useTranslation('apiexplorer')
   const [copied, setCopied] = useState(false)
 
   const handleCopy = useCallback(() => {
@@ -493,7 +496,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
       aria-label={`Copy ${label}`}
     >
       {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-      {copied ? 'Copied!' : label}
+      {copied ? t('copied') : label}
     </Button>
   )
 }
@@ -502,6 +505,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 // Main page
 // ============================================================================
 export default function ApiExplorer() {
+  const { t } = useTranslation('apiexplorer')
   const [query, setQuery] = useState('')
 
   const filtered = query.trim()
@@ -523,32 +527,28 @@ export default function ApiExplorer() {
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-2">
           <Code2 className="h-5 w-5 text-accent" aria-hidden="true" />
-          <h1 className="text-2xl font-bold text-text-primary">API Explorer</h1>
+          <h1 className="text-2xl font-bold text-text-primary">{t('title')}</h1>
         </div>
         <p className="text-sm text-text-muted mb-4">
-          Reference documentation for the RUBLI public API. All endpoints are read-only unless
-          otherwise noted. {totalEndpoints} endpoints across {API_GROUPS.length} resource groups.
+          {t('subtitle')} {t('endpointCount', { n: totalEndpoints, groups: API_GROUPS.length })}
         </p>
 
         {/* Base URL notice */}
         <Card className="mb-4">
           <CardContent className="py-3">
-            <p className="text-xs font-medium text-text-secondary mb-2">Base URL</p>
+            <p className="text-xs font-medium text-text-secondary mb-2">{t('baseUrl')}</p>
             <div className="flex flex-col sm:flex-row gap-2">
               <div className="flex-1 flex items-center justify-between gap-2 bg-background-card rounded border border-border px-3 py-1.5">
                 <code className="text-xs font-mono text-text-muted">{BASE_URL_PROD}</code>
-                <CopyButton text={BASE_URL_PROD} label="Production" />
+                <CopyButton text={BASE_URL_PROD} label={t('production')} />
               </div>
               <div className="flex-1 flex items-center justify-between gap-2 bg-background-card rounded border border-border px-3 py-1.5">
                 <code className="text-xs font-mono text-text-muted">{BASE_URL_LOCAL}</code>
-                <CopyButton text={BASE_URL_LOCAL} label="Local" />
+                <CopyButton text={BASE_URL_LOCAL} label={t('local')} />
               </div>
             </div>
             <p className="text-[10px] text-text-muted/60 mt-2">
-              All responses are JSON. Paginated endpoints return{' '}
-              <code className="font-mono">data[]</code>,{' '}
-              <code className="font-mono">total</code>, and{' '}
-              <code className="font-mono">pagination</code> fields.
+              {t('responseNote', { data: 'data[]', total: 'total', pagination: 'pagination' })}
             </p>
           </CardContent>
         </Card>
@@ -558,11 +558,11 @@ export default function ApiExplorer() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
           <input
             type="search"
-            placeholder="Filter endpoints by path or description..."
+            placeholder={t('filterPlaceholder')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="w-full pl-9 pr-4 py-2 bg-background-card border border-border rounded-md text-sm text-text-primary placeholder:text-text-muted/50 outline-none focus:ring-1 focus:ring-accent/50"
-            aria-label="Filter endpoints"
+            aria-label={t('filterLabel')}
           />
         </div>
       </div>
@@ -570,7 +570,7 @@ export default function ApiExplorer() {
       {/* Endpoint groups */}
       {filtered.length === 0 ? (
         <div className="text-center py-16 text-text-muted text-sm">
-          No endpoints match &ldquo;{query}&rdquo;
+          {t('noMatch', { query })}
         </div>
       ) : (
         <div className="space-y-3" role="list" aria-label="API endpoint groups">
@@ -584,13 +584,8 @@ export default function ApiExplorer() {
 
       {/* Footer note */}
       <div className="mt-8 text-xs text-text-muted/60 text-center space-y-1">
-        <p>
-          All endpoints support CORS from the RUBLI frontend. No authentication required for
-          read-only endpoints.
-        </p>
-        <p>
-          Data covers 3.1M Mexican federal procurement contracts (2002–2025) from COMPRANET.
-        </p>
+        <p>{t('corsNote')}</p>
+        <p>{t('dataNote')}</p>
       </div>
     </div>
   )

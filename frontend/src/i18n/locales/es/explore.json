@@ -134,7 +134,8 @@
     "ascending": "Ascendente",
     "descending": "Descendente",
     "reset": "Limpiar filtros",
-    "apply": "Aplicar"
+    "apply": "Aplicar",
+    "clearFilter": "Quitar filtro"
   },
   "search": {
     "nameOrRfc": "Buscar nombre o RFC...",
@@ -191,5 +192,8 @@
     "addToDossier": "Agregar al expediente",
     "noDossiersYet": "Sin expedientes aún",
     "whyTrack": "¿Por qué seguir a {{name}}?"
+  },
+  "treemap": {
+    "sectorsByValue": "Sectores por valor"
   }
 }

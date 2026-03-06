@@ -543,6 +543,7 @@ export default function ProcurementIntelligence() {
   const navigate = useNavigate()
   const { t } = useTranslation('procurement')
   const { t: tRf } = useTranslation('redflags')
+  const { t: ts } = useTranslation('sectors')
   const { open: openEntityDrawer } = useEntityDrawer()
 
   // ── Filter / sort state ──────────────────────────────────────────────────
@@ -1301,7 +1302,7 @@ export default function ProcurementIntelligence() {
                         <div className="flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: row.sector.color }} />
                           <span className="text-[10px] text-text-secondary font-medium truncate max-w-[90px]">
-                            {row.sector.nameEN}
+                            {ts(row.sector.code)}
                           </span>
                         </div>
                       </td>
@@ -1324,8 +1325,8 @@ export default function ProcurementIntelligence() {
                               onClick={() => navigate(`/contracts?sector_id=${row.sector.id}&year=${cell.year}&risk_level=high`)}
                               className="w-10 h-7 rounded text-[10px] font-bold tabular-nums transition-opacity hover:opacity-80 flex items-center justify-center mx-auto"
                               style={{ backgroundColor: bg, color: textColor }}
-                              title={`${row.sector.nameEN} ${cell.year}: ${pct.toFixed(1)}% high-risk — click to explore`}
-                              aria-label={`${row.sector.nameEN} ${cell.year}: ${pct.toFixed(1)}% high-risk contracts`}
+                              title={`${ts(row.sector.code)} ${cell.year}: ${pct.toFixed(1)}% high-risk — click to explore`}
+                              aria-label={`${ts(row.sector.code)} ${cell.year}: ${pct.toFixed(1)}% high-risk contracts`}
                             >
                               {pct.toFixed(1)}
                             </button>
