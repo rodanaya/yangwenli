@@ -34,7 +34,7 @@
   "institutions": {
     "title": "Instituciones",
     "searchPlaceholder": "Buscar por nombre o siglas...",
-    "count": "{{count}} instituciones",
+    "count": "{{n}} instituciones",
     "columns": {
       "name": "Nombre",
       "type": "Tipo",

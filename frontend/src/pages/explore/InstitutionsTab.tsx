@@ -400,9 +400,9 @@ export default function InstitutionsTab() {
             onChange={(e) => { updateFilter('type', e.target.value || undefined); setActivePreset(null) }}
             aria-label="Filter by institution type"
           >
-            <option value="">All Types</option>
-            {INST_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
+            <option value="">{t('filters.allTypes')}</option>
+            {INST_TYPES.map((instType) => (
+              <option key={instType.value} value={instType.value}>{t(`institutions.types.${instType.value}`)}</option>
             ))}
           </select>
 
@@ -416,7 +416,7 @@ export default function InstitutionsTab() {
             }}
             aria-label="Minimum contracts"
           >
-            <option value="">Min contracts</option>
+            <option value="">{t('filters.minContracts')}</option>
             <option value="10">10+</option>
             <option value="50">50+</option>
             <option value="100">100+</option>
@@ -432,9 +432,9 @@ export default function InstitutionsTab() {
             onChange={(e) => { updateFilter('size_tier', e.target.value || undefined); setActivePreset(null) }}
             aria-label="Filter by size"
           >
-            <option value="">All Sizes</option>
-            {SIZE_TIERS.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
+            <option value="">{t('filters.allSizes')}</option>
+            {SIZE_TIERS.map((tier) => (
+              <option key={tier.value} value={tier.value}>{t(`institutions.sizes.${tier.value}`)}</option>
             ))}
           </select>
 
@@ -443,7 +443,7 @@ export default function InstitutionsTab() {
               className="text-xs text-accent hover:underline"
               onClick={clearAllFilters}
             >
-              Clear all
+              {t('filters.clearAll')}
             </button>
           )}
         </div>
@@ -452,13 +452,13 @@ export default function InstitutionsTab() {
       {/* Summary stats strip */}
       {pageStats && !isLoading && (
         <div className="flex items-center gap-4 px-3 py-2 rounded-md bg-background-elevated/30 border border-border/30">
-          <StatPill label="Page spending" value={formatCompactMXN(pageStats.totalValue)} />
-          <StatPill label="Page contracts" value={formatNumber(pageStats.totalContracts)} />
-          <StatPill label="Avg risk" value={`${(pageStats.avgRisk * 100).toFixed(1)}%`} color={pageStats.avgRisk >= 0.3 ? 'var(--risk-high)' : pageStats.avgRisk >= 0.1 ? 'var(--risk-medium)' : undefined} />
+          <StatPill label={t('stats.pageSpending')} value={formatCompactMXN(pageStats.totalValue)} />
+          <StatPill label={t('stats.pageContracts')} value={formatNumber(pageStats.totalContracts)} />
+          <StatPill label={t('stats.avgRisk')} value={`${(pageStats.avgRisk * 100).toFixed(1)}%`} color={pageStats.avgRisk >= 0.3 ? 'var(--risk-high)' : pageStats.avgRisk >= 0.1 ? 'var(--risk-medium)' : undefined} />
           {pageStats.highRiskCount > 0 && (
-            <StatPill label="High+ risk" value={String(pageStats.highRiskCount)} color="var(--risk-high)" />
+            <StatPill label={t('stats.highPlusRisk')} value={String(pageStats.highRiskCount)} color="var(--risk-high)" />
           )}
-          <StatPill label="Total vendors" value={formatNumber(pageStats.totalVendors)} />
+          <StatPill label={t('stats.totalVendors')} value={formatNumber(pageStats.totalVendors)} />
         </div>
       )}
 
@@ -473,7 +473,7 @@ export default function InstitutionsTab() {
         <Card>
           <CardContent className="p-8 text-center">
             <AlertCircle className="h-10 w-10 text-risk-high mx-auto mb-3" />
-            <p className="text-sm text-text-primary mb-2">Failed to load institutions</p>
+            <p className="text-sm text-text-primary mb-2">{t('empty.failedToLoadInstitutions')}</p>
             <p className="text-xs text-text-muted mb-3">
               {(error as Error).message === 'Network Error'
                 ? 'Backend not reachable.'
@@ -481,7 +481,7 @@ export default function InstitutionsTab() {
             </p>
             <Button variant="outline" size="sm" onClick={() => refetch()}>
               <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-              Retry
+              {t('common:retry')}
             </Button>
           </CardContent>
         </Card>
@@ -510,8 +510,8 @@ export default function InstitutionsTab() {
                     aria-sort={sortBy === col.key ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
                   >
                     <span className="inline-flex items-center gap-1">
-                      <span className="hidden sm:inline">{col.label}</span>
-                      <span className="sm:hidden">{col.shortLabel}</span>
+                      <span className="hidden sm:inline">{t(`institutions.col.${col.key}`)}</span>
+                      <span className="sm:hidden">{t(`institutions.col.${col.key}Short`)}</span>
                       {sortBy === col.key && (
                         <span className="text-accent">
                           {sortOrder === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
