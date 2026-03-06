@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SectionDescription } from '@/components/SectionDescription'
+import { CaseLeadButton } from '@/components/CaseLeadDialog'
 import { cn, formatNumber, formatCompactMXN } from '@/lib/utils'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { TableExportButton } from '@/components/TableExportButton'
@@ -336,15 +337,20 @@ export default function GroundTruth() {
       {/* Header                                                             */}
       {/* ================================================================== */}
       <motion.div variants={fadeIn} initial="initial" animate="animate">
-        <h1 className="text-2xl font-bold text-text-primary tracking-tight flex items-center gap-2">
-          {t('groundTruth.pageTitle')}
-          <Badge variant="outline" className="text-xs font-normal ml-1">
-            {t('groundTruth.liveData')}
-          </Badge>
-        </h1>
-        <p className="text-sm text-text-secondary mt-1">
-          {t('groundTruth.pageSubtitle')}
-        </p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-text-primary tracking-tight flex items-center gap-2">
+              {t('groundTruth.pageTitle')}
+              <Badge variant="outline" className="text-xs font-normal ml-1">
+                {t('groundTruth.liveData')}
+              </Badge>
+            </h1>
+            <p className="text-sm text-text-secondary mt-1">
+              {t('groundTruth.pageSubtitle')}
+            </p>
+          </div>
+          <CaseLeadButton className="shrink-0" />
+        </div>
       </motion.div>
 
       <SectionDescription variant="callout">

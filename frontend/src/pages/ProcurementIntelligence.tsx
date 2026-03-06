@@ -1227,6 +1227,132 @@ export default function ProcurementIntelligence() {
         </CardContent>
       </Card>
 
+      {/* ─── SECTION 2b: TOP RED FLAGS RANKING ──────────────────────────────── */}
+      {topRedFlags.length > 0 && (
+        <Card className="border-border/40">
+          <CardContent className="pt-5 pb-4">
+            <div className="flex items-center gap-2 mb-1">
+              <AlertTriangle className="h-4 w-4 text-risk-high" />
+              <h2 className="text-base font-bold text-text-primary">Top Red Flags — All-Time Frequency</h2>
+            </div>
+            <p className="text-xs text-text-muted mb-4">
+              Most common procurement red flags by contract count, ranked by frequency. Each contract may trigger multiple flags.
+            </p>
+            <div className="space-y-2">
+              {topRedFlags.map((flag, i) => {
+                const maxCount = topRedFlags[0]?.count ?? 1
+                const barPct = Math.max(2, Math.round((flag.count / maxCount) * 100))
+                const color = riskScoreToCategoricalColor(flag.avgRisk)
+                return (
+                  <div key={flag.factor} className="flex items-center gap-3">
+                    <span className="text-[10px] font-mono text-text-muted w-4 shrink-0 text-right">{i + 1}</span>
+                    <div className="w-[140px] shrink-0 text-right">
+                      <span className="text-[10px] font-mono font-bold text-text-secondary tracking-wide">
+                        {flag.label}
+                      </span>
+                    </div>
+                    <div className="flex-1 relative">
+                      <div className="h-2.5 rounded-sm w-full bg-border/10 overflow-hidden">
+                        <div
+                          className="h-full rounded-sm transition-all"
+                          style={{ width: `${barPct}%`, backgroundColor: color, opacity: 0.85 }}
+                        />
+                      </div>
+                    </div>
+                    <div className="w-[90px] shrink-0 flex items-center justify-end gap-1.5">
+                      <span className="text-[10px] font-mono tabular-nums text-text-muted">
+                        {formatNumber(flag.count)}
+                      </span>
+                      <button
+                        onClick={() => navigate(`/contracts?risk_factor=${flag.factor}`)}
+                        className="text-text-muted hover:text-accent transition-colors shrink-0"
+                        title={`View contracts with ${flag.label}`}
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ─── SECTION 2c: SECTOR × YEAR RISK HEATMAP ────────────────────────── */}
+      {heatmapData && (
+        <Card className="border-border/40">
+          <CardContent className="pt-5 pb-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Target className="h-4 w-4 text-accent" />
+              <h2 className="text-base font-bold text-text-primary">Sector Risk Heatmap (2020–2025)</h2>
+            </div>
+            <p className="text-xs text-text-muted mb-4">
+              High-risk rate (%) per sector per year. Darker red = higher concentration of high-risk contracts.
+              Click a cell to explore those contracts.
+            </p>
+            <div className="overflow-x-auto">
+              <table className="text-xs w-full" role="grid" aria-label="Sector risk heatmap 2020–2025">
+                <thead>
+                  <tr>
+                    <th className="text-left py-1.5 pr-3 text-[10px] font-semibold text-text-muted uppercase tracking-wide min-w-[100px]">Sector</th>
+                    {heatmapYears.map(y => (
+                      <th key={y} className="text-center py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide min-w-[52px]">
+                        {y}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {heatmapData.map(row => (
+                    <tr key={row.sector.id} className="hover:bg-background-elevated/20 transition-colors">
+                      <td className="py-1 pr-3">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: row.sector.color }} />
+                          <span className="text-[10px] text-text-secondary font-medium truncate max-w-[90px]">
+                            {row.sector.nameEN}
+                          </span>
+                        </div>
+                      </td>
+                      {row.cells.map(cell => {
+                        const pct = cell.pct
+                        if (pct == null) return (
+                          <td key={cell.year} className="py-1 px-2 text-center">
+                            <div className="w-10 h-7 rounded flex items-center justify-center mx-auto bg-border/10">
+                              <span className="text-[9px] text-text-muted">—</span>
+                            </div>
+                          </td>
+                        )
+                        // Color intensity: 0%=transparent, 50%+=full red
+                        const intensity = Math.min(1, pct / 25)
+                        const bg = `rgba(248,113,113,${intensity * 0.75 + 0.05})`
+                        const textColor = intensity > 0.5 ? '#fff' : '#94a3b8'
+                        return (
+                          <td key={cell.year} className="py-1 px-2 text-center">
+                            <button
+                              onClick={() => navigate(`/contracts?sector_id=${row.sector.id}&year=${cell.year}&risk_level=high`)}
+                              className="w-10 h-7 rounded text-[10px] font-bold tabular-nums transition-opacity hover:opacity-80 flex items-center justify-center mx-auto"
+                              style={{ backgroundColor: bg, color: textColor }}
+                              title={`${row.sector.nameEN} ${cell.year}: ${pct.toFixed(1)}% high-risk — click to explore`}
+                              aria-label={`${row.sector.nameEN} ${cell.year}: ${pct.toFixed(1)}% high-risk contracts`}
+                            >
+                              {pct.toFixed(1)}
+                            </button>
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-[9px] text-text-muted mt-2">
+              Values = % of contracts classified as high or critical risk for that sector and year. Click any cell to view those contracts.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* ─── SECTION 3: DECEMBER RUSH ─────────────────────────────────────── */}
       {spikeChartData.length > 0 && (
         <Card className="border-border/40">
