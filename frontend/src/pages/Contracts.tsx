@@ -200,6 +200,7 @@ const CONTRACT_COLUMN_DEFS: ColumnDef[] = [
 
 export function Contracts() {
   const { t } = useTranslation('contracts')
+  const { t: ts } = useTranslation('sectors')
   const [searchParams, setSearchParams] = useSearchParams()
   const [activePreset, setActivePreset] = useState<string | null>(null)
   const { open: openEntityDrawer } = useEntityDrawer()
@@ -492,7 +493,7 @@ export function Contracts() {
     if (filters.search) tags.push({ key: 'search', label: `"${filters.search}"` })
     if (filters.sector_id) {
       const sec = SECTORS.find((s) => s.id === filters.sector_id)
-      tags.push({ key: 'sector_id', label: sec ? sec.nameEN : `Sector ${filters.sector_id}` })
+      tags.push({ key: 'sector_id', label: sec ? ts(sec.code) : `Sector ${filters.sector_id}` })
     }
     if (filters.year) tags.push({ key: 'year', label: `Year ${filters.year}` })
     if (filters.risk_level) tags.push({ key: 'risk_level', label: `Risk: ${filters.risk_level}` })
@@ -673,7 +674,7 @@ export function Contracts() {
         >
           <option value="">{t('filters.allSectors')}</option>
           {SECTORS.map((s) => (
-            <option key={s.id} value={s.id}>{s.nameEN}</option>
+            <option key={s.id} value={s.id}>{ts(s.code)}</option>
           ))}
         </select>
 
