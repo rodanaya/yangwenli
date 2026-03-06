@@ -79,5 +79,6 @@
     "noMultiYearData": "Sin datos multianuales disponibles",
     "noYoyData": "Sin datos año a año disponibles"
   },
-  "loading": "Cargando..."
+  "loading": "Cargando...",
+  "anomalous": "anómalo"
 }

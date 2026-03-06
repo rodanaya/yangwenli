@@ -103,7 +103,7 @@ describe('Dashboard', () => {
     renderDashboard()
     expect(screen.getByText('Value Concentration')).toBeInTheDocument()
     expect(screen.getByText('Single Bidder')).toBeInTheDocument()
-    expect(screen.getByText('23 Years, 5 Governments')).toBeInTheDocument()
+    expect(screen.getByText('AI Intelligence · 23 Years of Data')).toBeInTheDocument()
     expect(screen.getByText('Top Vendors by Contract Value')).toBeInTheDocument()
   })
 })

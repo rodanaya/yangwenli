@@ -31,7 +31,12 @@
     "vendorConcentration": "Concentración de Proveedores",
     "avgRiskScore": "Puntuación de Riesgo Promedio"
   },
-  "públicationDelay": {
+  "concentration": {
+    "competitive": "Competitivo",
+    "moderate": "Moderado",
+    "concentrated": "Concentrado"
+  },
+  "publicationDelay": {
     "title": "Transparencia de Demora en Publicación",
     "contractsWithTimingData": "{{count}} contratos con datos de tiempo",
     "description": "Días entre la públicación del procedimiento y la adjudicación del contrato. Ventanas más cortas comprimen el tiempo de preparación de proveedores y favorecen a proveedores preselecciónados.",
@@ -41,10 +46,5 @@
     "ofProcedures": "de procedimientos",
     "slowest": "Más lento (P95)",
     "daysLabel": "días"
-  },
-  "concentration": {
-    "competitive": "Competitivo",
-    "moderate": "Moderado",
-    "concentrated": "Concentrado"
   }
 }
