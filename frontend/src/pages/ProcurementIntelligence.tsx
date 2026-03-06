@@ -116,6 +116,64 @@ function inferSectorColor(name: string): string {
 }
 
 // =============================================================================
+// Name abbreviation — shorten long government agency / vendor names
+// =============================================================================
+
+const KNOWN_ACRONYMS: Record<string, string> = {
+  'Instituto Mexicano Del Seguro Social': 'IMSS',
+  'Instituto Mexicano del Seguro Social': 'IMSS',
+  'Instituto De Seguridad Y Servicios Sociales De Los Trabajadores Del Estado': 'ISSSTE',
+  'Instituto de Seguridad y Servicios Sociales de los Trabajadores del Estado': 'ISSSTE',
+  'Comision Federal De Electricidad': 'CFE',
+  'Comisión Federal de Electricidad': 'CFE',
+  'Petroleos Mexicanos': 'PEMEX',
+  'Petróleos Mexicanos': 'PEMEX',
+  'Secretaria De Salud': 'SSA',
+  'Secretaría de Salud': 'SSA',
+  'Secretaria De Educacion Publica': 'SEP',
+  'Secretaría de Educación Pública': 'SEP',
+  'Secretaria De Hacienda Y Credito Publico': 'SHCP',
+  'Secretaría de Hacienda y Crédito Público': 'SHCP',
+  'Secretaria De La Defensa Nacional': 'SEDENA',
+  'Secretaría de la Defensa Nacional': 'SEDENA',
+  'Secretaria De Marina': 'SEMAR',
+  'Secretaría de Marina': 'SEMAR',
+  'Secretaria De Gobernacion': 'SEGOB',
+  'Secretaría de Gobernación': 'SEGOB',
+  'Secretaria De Comunicaciones Y Transportes': 'SCT',
+  'Secretaría de Comunicaciones y Transportes': 'SCT',
+  'Secretaria De Agricultura Y Desarrollo Rural': 'SADER',
+  'Secretaría de Agricultura y Desarrollo Rural': 'SADER',
+  'Secretaria De Medio Ambiente Y Recursos Naturales': 'SEMARNAT',
+  'Secretaría de Medio Ambiente y Recursos Naturales': 'SEMARNAT',
+  'Servicio De Administracion Tributaria': 'SAT',
+  'Servicio de Administración Tributaria': 'SAT',
+  'Comision Nacional Del Agua': 'CONAGUA',
+  'Comisión Nacional del Agua': 'CONAGUA',
+  'Instituto Politecnico Nacional': 'IPN',
+  'Instituto Politécnico Nacional': 'IPN',
+  'Universidad Nacional Autonoma De Mexico': 'UNAM',
+  'Universidad Nacional Autónoma de México': 'UNAM',
+  'Fondo De Cultura Economica': 'FCE',
+  'Fondo de Cultura Económica': 'FCE',
+}
+
+const SKIP_WORDS = new Set(['de', 'del', 'y', 'la', 'las', 'los', 'el', 'a', 'e', 'en', 'por', 'para', 'con', 'sa', 'sapi', 'cv', 'de cv', 's.a', 's.a.'])
+
+/** Abbreviate long names: check known acronyms first, then derive from initials, then truncate. */
+function abbreviateName(name: string, maxLen = 22): string {
+  if (name.length <= maxLen) return name
+  if (KNOWN_ACRONYMS[name]) return KNOWN_ACRONYMS[name]
+  const words = name.split(/\s+/)
+  const acronym = words
+    .filter(w => w.length > 1 && !SKIP_WORDS.has(w.toLowerCase()))
+    .map(w => w[0].toUpperCase())
+    .join('')
+  if (acronym.length >= 3 && acronym.length <= 7) return acronym
+  return name.slice(0, maxLen - 1) + '…'
+}
+
+// =============================================================================
 // Factor label helpers
 // =============================================================================
 
@@ -284,10 +342,10 @@ function SankeyFlowViz({ flows, totalValue }: { flows: FlowRow[]; totalValue: nu
             <div key={`${flow.sourceId}-${flow.targetId}`} className="flex items-center gap-2 group">
               {/* Left node — institution: dark text always, sector color as dot indicator */}
               <div
-                className="w-[130px] shrink-0 text-right text-[10px] font-bold truncate text-text-primary flex items-center justify-end gap-1"
+                className="w-[130px] shrink-0 text-right text-[10px] font-bold text-text-primary flex items-center justify-end gap-1"
                 title={flow.sourceName}
               >
-                <span className="truncate">{flow.sourceName}</span>
+                <span className="truncate">{abbreviateName(flow.sourceName)}</span>
                 <span
                   className="w-2 h-2 rounded-full shrink-0 inline-block"
                   style={{ backgroundColor: sectorColor }}
@@ -316,10 +374,10 @@ function SankeyFlowViz({ flows, totalValue }: { flows: FlowRow[]; totalValue: nu
 
               {/* Right node — vendor name */}
               <div
-                className="w-[110px] shrink-0 text-[10px] font-semibold truncate text-text-secondary"
+                className="w-[110px] shrink-0 text-[10px] font-semibold text-text-secondary"
                 title={flow.targetName}
               >
-                {flow.targetName}
+                {abbreviateName(flow.targetName, 20)}
               </div>
 
               {/* Value % */}
@@ -407,71 +465,6 @@ const FACTOR_DISPLAY_LABELS: Record<string, string> = {
   win_rate:           'WIN RATE SPIKE',
   institution_diversity: 'INSTITUTION SPREAD',
   sector_spread:      'SECTOR SPREAD',
-}
-
-interface FactorRow {
-  factor: string
-  label: string
-  count: number
-  avg_risk_score: number
-}
-
-function RiskFactorBreakdown({ factors }: { factors: FactorRow[] }) {
-  if (factors.length === 0) return null
-
-  const maxCount = factors[0]?.count ?? 1
-  const top = factors.slice(0, 8)
-
-  return (
-    <div className="rounded-lg border border-border/30 bg-background-elevated/10 p-4 mb-4">
-      <p className="text-[10px] font-bold tracking-widest uppercase text-text-muted font-mono mb-3">
-        Risk Signal Frequency — Top Contributing Factors
-      </p>
-      <div className="space-y-2">
-        {top.map((f) => {
-          const barPct = Math.max(2, Math.round((f.count / maxCount) * 100))
-          const color = riskScoreToCategoricalColor(f.avg_risk_score)
-          const label = FACTOR_DISPLAY_LABELS[f.factor] ?? f.label.toUpperCase()
-
-          return (
-            <div key={f.factor} className="flex items-center gap-3">
-              {/* Factor label */}
-              <div className="w-[150px] shrink-0 text-right">
-                <span className="text-[10px] font-mono font-bold text-text-secondary tracking-wide">
-                  {label}
-                </span>
-              </div>
-
-              {/* Bar */}
-              <div className="flex-1 relative">
-                <div className="h-2.5 rounded-sm w-full bg-border/10 overflow-hidden">
-                  <div
-                    className="h-full rounded-sm transition-all"
-                    style={{
-                      width: `${barPct}%`,
-                      backgroundColor: color,
-                      opacity: 0.85,
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Count */}
-              <div className="w-[80px] shrink-0 text-right">
-                <span className="text-[10px] font-mono tabular-nums text-text-muted">
-                  {formatNumber(f.count)} contracts
-                </span>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-      <p className="text-[9px] text-text-muted mt-3 leading-relaxed">
-        Bar length = relative frequency. Color = average risk score of flagged contracts.
-        Each contract may trigger multiple factors simultaneously.
-      </p>
-    </div>
-  )
 }
 
 // =============================================================================
@@ -1074,11 +1067,6 @@ export default function ProcurementIntelligence() {
             <h2 className="text-base font-bold text-text-primary">{t('riskFactors.title')}</h2>
           </div>
           <p className="text-xs text-text-muted mb-4">{t('riskFactors.subtitle')}</p>
-
-          {/* Task B — Risk Factor Breakdown panel */}
-          {!rfLoading && factors.length > 0 && (
-            <RiskFactorBreakdown factors={factors} />
-          )}
 
           <div className="grid gap-6 md:grid-cols-[1fr_320px]">
             {/* Factor frequency bar chart */}
