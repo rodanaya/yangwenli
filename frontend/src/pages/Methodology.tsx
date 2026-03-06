@@ -389,7 +389,7 @@ export function Methodology() {
 
           {/* Section 2: Model Overview */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="overview" title="Model Overview (v5.1)" icon={Shield}>
+          <CollapsibleSection id="overview" title={t('sectionLabels.overview')} icon={Shield}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
                 Every risk score is a <strong className="text-text-primary">statistical corruption risk indicator</strong>{' '}
@@ -472,7 +472,7 @@ export function Methodology() {
 
           {/* Section 3: The 12 Features */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="features" title="The 16 Features" icon={BarChart3}>
+          <CollapsibleSection id="features" title={t('sectionLabels.features')} icon={BarChart3}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
                 Each contract is described by 16 z-score features normalized by sector and year baselines.
@@ -509,7 +509,7 @@ export function Methodology() {
 
           {/* Section 3b: Risk Factor Evidence Base */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="risk-evidence" title="Risk Factor Evidence Base" icon={FlaskConical} defaultOpen={false}>
+          <CollapsibleSection id="risk-evidence" title={t('sectionLabels.risk-evidence')} icon={FlaskConical} defaultOpen={false}>
             <div className="space-y-3">
               <p className="text-xs text-text-secondary leading-relaxed">
                 Each risk factor is grounded in peer-reviewed literature on procurement corruption.
@@ -523,7 +523,7 @@ export function Methodology() {
 
           {/* Section 4: Key Findings */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="findings" title="Key Findings" icon={Brain}>
+          <CollapsibleSection id="findings" title={t('sectionLabels.findings')} icon={Brain}>
             <div className="space-y-4">
 
               {/* Finding 1: Vendor Concentration */}
@@ -606,7 +606,7 @@ export function Methodology() {
 
           {/* Section 5: Ground Truth Validation */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="validation" title="Ground Truth Validation" icon={Target}>
+          <CollapsibleSection id="validation" title={t('sectionLabels.validation')} icon={Target}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
                 The model was trained and validated against <strong className="text-text-primary">22 documented
@@ -680,7 +680,7 @@ export function Methodology() {
 
           {/* Section 6: Statistical Methods */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="methods" title="Statistical Methods" icon={Beaker}>
+          <CollapsibleSection id="methods" title={t('sectionLabels.methods')} icon={Beaker}>
             <div className="space-y-4">
 
               {/* Z-scores */}
@@ -762,7 +762,7 @@ export function Methodology() {
 
           {/* Section 7: Limitations */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="limitations" title="Limitations" icon={AlertTriangle}>
+          <CollapsibleSection id="limitations" title={t('sectionLabels.limitations')} icon={AlertTriangle}>
             <div className="space-y-3">
               {[
                 {

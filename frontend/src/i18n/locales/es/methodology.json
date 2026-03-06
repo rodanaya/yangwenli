@@ -262,14 +262,15 @@
     "liftVsRandom": "Lift vs Aleatorio"
   },
   "sectionLabels": {
-    "overview": "Descripción del Modelo",
+    "overview": "Descripción del Modelo (v5.1)",
     "features": "Las 16 Características",
+    "risk-evidence": "Base de Evidencia de Factores de Riesgo",
     "findings": "Hallazgos Clave",
-    "validation": "Validación",
+    "validation": "Validación de Verdad Fundamental",
     "methods": "Métodos Estadísticos",
     "limitations": "Limitaciones",
     "v33": "Modelo Anterior (v3.3)",
-    "dataSources": "Fuentes de Datos",
+    "data-sources": "Fuentes de Datos",
     "references": "Referencias"
   },
   "pageHeadline": "Cómo Detectamos Corrupción",

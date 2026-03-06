@@ -126,14 +126,15 @@
     "liftVsRandom": "Lift vs Random"
   },
   "sectionLabels": {
-    "overview": "Model Overview",
+    "overview": "Model Overview (v5.1)",
     "features": "The 16 Features",
+    "risk-evidence": "Risk Factor Evidence Base",
     "findings": "Key Findings",
     "validation": "Ground Truth Validation",
     "methods": "Statistical Methods",
     "limitations": "Limitations",
     "v33": "Previous Model (v3.3)",
-    "dataSources": "Data Sources",
+    "data-sources": "Data Sources",
     "references": "References"
   },
   "pageHeadline": "How We Detect Corruption",
