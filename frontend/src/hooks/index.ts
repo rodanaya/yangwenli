@@ -20,5 +20,9 @@ export type { ContractFilterState, ContractFilterActions, FilterableContract } f
 export { useBulkExport } from './useBulkExport'
 export type { ExportOptions } from './useBulkExport'
 
+// Saved searches / filters hook (localStorage-backed, generic)
+export { useSavedSearches } from './useSavedSearches'
+export type { SavedSearch } from './useSavedSearches'
+
 // Re-export existing hooks
 export { useTheme } from './useTheme'

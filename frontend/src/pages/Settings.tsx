@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTheme } from '@/hooks/useTheme'
 import { formatNumber, formatCompactMXN } from '@/lib/utils'
-import { analysisApi, exportApi } from '@/api/client'
+import { analysisApi, exportApi, contractApi, sectorApi } from '@/api/client'
 import type { GradeDistribution, StructureQuality, FieldCompleteness, KeyIssue } from '@/api/client'
 import {
   Moon,
@@ -29,6 +29,7 @@ import {
   FileWarning,
   Clock,
   Settings as SettingsIcon,
+  Archive,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -421,6 +422,12 @@ function ExportTab() {
         />
       </div>
 
+      {/* Bulk Export */}
+      <BulkExportSection
+        onSuccess={(msg) => showToast(msg, 'success')}
+        onError={(msg) => showToast(msg, 'error')}
+      />
+
       {/* Toast notifications */}
       <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
         {toasts.map(toast => (
@@ -760,6 +767,136 @@ function ExportCard({
               {format}
             </Button>
           ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// ============================================================================
+// Bulk Export Section
+// ============================================================================
+
+interface BulkExportSectionProps {
+  onSuccess: (msg: string) => void
+  onError: (msg: string) => void
+}
+
+function BulkExportSection({ onSuccess, onError }: BulkExportSectionProps) {
+  const [loadingKey, setLoadingKey] = useState<string | null>(null)
+
+  const handleHighRiskCSV = async () => {
+    setLoadingKey('high-risk')
+    try {
+      const result = await contractApi.getAll({ risk_level: 'critical', per_page: 1000, page: 1 })
+      const rows = result.data ?? result
+      const rowsArray = Array.isArray(rows) ? rows : []
+      if (!rowsArray.length) {
+        onError('No critical contracts found')
+        return
+      }
+      const headers = ['id', 'vendor_name', 'institution_name', 'amount_mxn', 'risk_score', 'risk_level', 'contract_date', 'sector_id']
+      const csvLines = [
+        headers.join(','),
+        ...rowsArray.map((r: Record<string, unknown>) =>
+          headers.map(h => {
+            const val = r[h]
+            if (val === null || val === undefined) return ''
+            const str = String(val)
+            return str.includes(',') || str.includes('"') ? `"${str.replace(/"/g, '""')}"` : str
+          }).join(',')
+        ),
+      ].join('\n')
+      const blob = new Blob(['\uFEFF' + csvLines], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `rubli_critical_contracts_${getTimestamp()}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      onSuccess(`Exported ${rowsArray.length} critical contracts as CSV`)
+    } catch (e) {
+      onError(e instanceof Error ? e.message : 'Export failed')
+    } finally {
+      setLoadingKey(null)
+    }
+  }
+
+  const handleSectorJSON = async () => {
+    setLoadingKey('sectors')
+    try {
+      const result = await sectorApi.getAll()
+      const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `rubli_sector_summary_${getTimestamp()}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      onSuccess('Sector summary exported as JSON')
+    } catch (e) {
+      onError(e instanceof Error ? e.message : 'Export failed')
+    } finally {
+      setLoadingKey(null)
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Archive className="h-4 w-4" aria-hidden="true" />
+          Bulk Export
+        </CardTitle>
+        <CardDescription>Quick exports for common investigation workflows</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between rounded-md border border-border/50 p-3">
+            <div>
+              <p className="text-sm font-medium">High-risk Contracts (CSV)</p>
+              <p className="text-xs text-text-muted mt-0.5">Top 1,000 critical-risk contracts with vendor and amount data</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleHighRiskCSV}
+              disabled={loadingKey !== null}
+              aria-label="Export high-risk contracts as CSV"
+            >
+              {loadingKey === 'high-risk' ? (
+                <Loader2 className="mr-2 h-3 w-3 animate-spin" aria-hidden="true" />
+              ) : (
+                <Download className="mr-2 h-3 w-3" aria-hidden="true" />
+              )}
+              Export CSV
+            </Button>
+          </div>
+
+          <div className="flex items-center justify-between rounded-md border border-border/50 p-3">
+            <div>
+              <p className="text-sm font-medium">Sector Summary (JSON)</p>
+              <p className="text-xs text-text-muted mt-0.5">All 12 sectors with contract counts, values and risk distributions</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSectorJSON}
+              disabled={loadingKey !== null}
+              aria-label="Export sector summary as JSON"
+            >
+              {loadingKey === 'sectors' ? (
+                <Loader2 className="mr-2 h-3 w-3 animate-spin" aria-hidden="true" />
+              ) : (
+                <Download className="mr-2 h-3 w-3" aria-hidden="true" />
+              )}
+              Export JSON
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

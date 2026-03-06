@@ -8,8 +8,19 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { SECTOR_COLORS, SECTORS, getSectorNameEN } from '@/lib/constants'
+import { RISK_COLORS } from '@/lib/constants'
 import { priceApi } from '@/api/client'
 import type { PriceHypothesisItem, SectorPriceBaseline, PriceHypothesesFilterParams, MlAnomaliesResponse } from '@/api/client'
+import {
+  ScatterChart,
+  Scatter,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  Cell,
+} from '@/components/charts'
 import {
   TrendingUp,
   AlertTriangle,
@@ -25,7 +36,11 @@ import {
   X,
   Brain,
   ExternalLink,
+  Crosshair,
 } from 'lucide-react'
+
+// Year range for filter
+const PRICE_YEARS = Array.from({ length: 2025 - 2002 + 1 }, (_, i) => 2025 - i)
 
 // ─── MacroStatCard ───────────────────────────────────────────────────────────
 
@@ -212,10 +227,12 @@ export default function PriceIntelligence() {
   const [hypothesisType, setHypothesisType] = useState<string>('all')
   const [confidenceLevel, setConfidenceLevel] = useState<string>('all')
   const [sectorId, setSectorId] = useState<number | undefined>(undefined)
+  const [yearFilter, setYearFilter] = useState<number | undefined>(undefined)
   const [reviewStatus, setReviewStatus] = useState<string>('all')
   const [sortBy, setSortBy] = useState<string>('confidence')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [page, setPage] = useState(1)
+  const [showScatter, setShowScatter] = useState(false)
 
   // ── Expanded row + inline review state ─────────────────────────────────
   const [expandedId, setExpandedId] = useState<number | null>(null)
@@ -236,10 +253,11 @@ export default function PriceIntelligence() {
     if (hypothesisType !== 'all') p.hypothesis_type = hypothesisType
     if (confidenceLevel !== 'all') p.confidence_level = confidenceLevel
     if (sectorId !== undefined) p.sector_id = sectorId
+    if (yearFilter !== undefined) p.year = yearFilter
     if (reviewStatus === 'pending') p.is_reviewed = false
     if (reviewStatus === 'reviewed') p.is_reviewed = true
     return p
-  }, [hypothesisType, confidenceLevel, sectorId, reviewStatus, sortBy, sortOrder, page])
+  }, [hypothesisType, confidenceLevel, sectorId, yearFilter, reviewStatus, sortBy, sortOrder, page])
 
   // ── Queries ──────────────────────────────────────────────────────────────
   const { data: priceSummary, isLoading: summaryLoading } = useQuery({
@@ -494,7 +512,101 @@ export default function PriceIntelligence() {
         ) : null}
       </div>
 
-      {/* ── 4b. Most Overpriced Contracts ────────────────────────────────── */}
+      {/* ── 4b. Scatter Plot: Amount vs. Confidence ────────────────────────── */}
+      {!hypothesesLoading && hypothesesData?.data && hypothesesData.data.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
+              <Crosshair className="h-3.5 w-3.5 text-accent" />
+              Outlier Scatter: Amount vs. Confidence
+            </h2>
+            <button
+              onClick={() => setShowScatter(v => !v)}
+              className="text-[10px] text-accent hover:underline font-mono uppercase tracking-wider flex items-center gap-1"
+            >
+              {showScatter ? 'Hide' : 'Show'} Chart
+            </button>
+          </div>
+          {showScatter && (() => {
+            const scatterData = hypothesesData.data
+              .filter(h => h.amount_mxn != null && h.amount_mxn > 0)
+              .map(h => ({
+                x: Math.log10(h.amount_mxn ?? 1),
+                y: h.confidence,
+                id: h.contract_id,
+                riskLevel: h.risk_level ?? 'low',
+                amount: h.amount_mxn ?? 0,
+                type: h.hypothesis_type,
+                sector: h.sector_id,
+              }))
+            return (
+              <div className="rounded-lg border border-border/40 bg-background-elevated/10 p-3">
+                <p className="text-[10px] text-text-muted mb-2">
+                  X axis = log₁₀(amount MXN) · Y axis = confidence score · Color = risk level · Click a dot to view contract
+                </p>
+                <ResponsiveContainer width="100%" height={220}>
+                  <ScatterChart margin={{ left: 8, right: 8, top: 4, bottom: 4 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#2a2f3e" />
+                    <XAxis
+                      type="number"
+                      dataKey="x"
+                      tick={{ fontSize: 10, fill: '#94a3b8' }}
+                      tickFormatter={(v: number) => `10^${v.toFixed(0)}`}
+                      name="Amount (log)"
+                    />
+                    <YAxis
+                      type="number"
+                      dataKey="y"
+                      tick={{ fontSize: 10, fill: '#94a3b8' }}
+                      tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
+                      name="Confidence"
+                      domain={[0, 1] as [number, number]}
+                    />
+                    <RechartsTooltip
+                      contentStyle={{ background: '#1a1f2e', border: '1px solid #2a2f3e', borderRadius: 6, fontSize: 11 }}
+                      formatter={(_v: unknown, name: string, props: { payload?: { id: number; amount: number; y: number } }) => {
+                        if (name === 'Confidence') return [`${((props.payload?.y ?? 0) * 100).toFixed(0)}%`, 'Confidence']
+                        return [formatCompactMXN(props.payload?.amount ?? 0), 'Amount']
+                      }}
+                      labelFormatter={(_l: unknown, payload: Array<{ payload?: { id: number } }>) =>
+                        payload?.[0]?.payload?.id ? `Contract #${payload[0].payload.id}` : ''
+                      }
+                    />
+                    <Scatter
+                      data={scatterData}
+                      onClick={(d: { id: number }) => d?.id && navigateToContract(d.id)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      {scatterData.map((entry, i) => (
+                        <Cell
+                          key={i}
+                          fill={
+                            entry.riskLevel === 'critical' ? RISK_COLORS.critical :
+                            entry.riskLevel === 'high' ? RISK_COLORS.high :
+                            entry.riskLevel === 'medium' ? RISK_COLORS.medium :
+                            RISK_COLORS.low
+                          }
+                          opacity={0.8}
+                        />
+                      ))}
+                    </Scatter>
+                  </ScatterChart>
+                </ResponsiveContainer>
+                <div className="flex gap-3 mt-1 text-[9px] text-text-muted flex-wrap">
+                  {(['critical', 'high', 'medium', 'low'] as const).map(level => (
+                    <span key={level} className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: RISK_COLORS[level] }} />
+                      {level.charAt(0).toUpperCase() + level.slice(1)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+        </div>
+      )}
+
+      {/* ── 4c. Most Overpriced Contracts ────────────────────────────────── */}
       {!hypothesesLoading && hypothesesData?.data && hypothesesData.data.length > 0 && (() => {
         const overpriced = [...hypothesesData.data]
           .filter(h => h.amount_mxn != null)
@@ -587,12 +699,14 @@ export default function PriceIntelligence() {
             hypothesisType={hypothesisType}
             confidenceLevel={confidenceLevel}
             sectorId={sectorId}
+            yearFilter={yearFilter}
             reviewStatus={reviewStatus}
             sortBy={sortBy}
             sortOrder={sortOrder}
             onTypeChange={(v) => { setHypothesisType(v); resetPage() }}
             onConfidenceChange={(v) => { setConfidenceLevel(v); resetPage() }}
             onSectorChange={(v) => { setSectorId(v); resetPage() }}
+            onYearChange={(v) => { setYearFilter(v); resetPage() }}
             onReviewStatusChange={(v) => { setReviewStatus(v); resetPage() }}
             onSortByChange={(v) => { setSortBy(v); resetPage() }}
             onSortOrderToggle={() => { setSortOrder((o) => o === 'desc' ? 'asc' : 'desc'); resetPage() }}
@@ -787,12 +901,14 @@ interface FilterBarProps {
   hypothesisType: string
   confidenceLevel: string
   sectorId: number | undefined
+  yearFilter: number | undefined
   reviewStatus: string
   sortBy: string
   sortOrder: 'asc' | 'desc'
   onTypeChange: (v: string) => void
   onConfidenceChange: (v: string) => void
   onSectorChange: (v: number | undefined) => void
+  onYearChange: (v: number | undefined) => void
   onReviewStatusChange: (v: string) => void
   onSortByChange: (v: string) => void
   onSortOrderToggle: () => void
@@ -828,12 +944,14 @@ const FilterBar = memo(function FilterBar({
   hypothesisType,
   confidenceLevel,
   sectorId,
+  yearFilter,
   reviewStatus,
   sortBy,
   sortOrder,
   onTypeChange,
   onConfidenceChange,
   onSectorChange,
+  onYearChange,
   onReviewStatusChange,
   onSortByChange,
   onSortOrderToggle,
@@ -892,6 +1010,19 @@ const FilterBar = memo(function FilterBar({
           <option key={s.id} value={s.id}>
             {s.nameEN}
           </option>
+        ))}
+      </select>
+
+      {/* Year dropdown */}
+      <select
+        value={yearFilter ?? ''}
+        onChange={(e) => onYearChange(e.target.value ? Number(e.target.value) : undefined)}
+        className="text-xs px-2.5 py-1.5 rounded-md border border-border bg-surface text-text-primary focus:outline-none focus:ring-1 focus:ring-accent/50"
+        aria-label="Filter by year"
+      >
+        <option value="">All Years</option>
+        {PRICE_YEARS.map((y) => (
+          <option key={y} value={y}>{y}</option>
         ))}
       </select>
 

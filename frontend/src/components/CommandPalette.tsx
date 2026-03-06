@@ -1,6 +1,7 @@
 /**
  * Command Palette — Section 4.4 upgrade
  * Centered modal (Cmd+K) with federated search + quick navigation actions.
+ * Section 5 addition: saved searches (localStorage, max 8).
  */
 
 import { useCallback, useEffect, useState } from 'react'
@@ -9,7 +10,7 @@ import { useQuery } from '@tanstack/react-query'
 import {
   AlertTriangle, BarChart3, BookOpen, Building2, FileText, Filter,
   FlaskConical, GitBranch, Globe, LayoutDashboard, Network, Scale,
-  Shield, TrendingUp, Users, Zap,
+  Shield, TrendingUp, Users, Zap, Bookmark, X as XIcon,
 } from 'lucide-react'
 import {
   CommandDialog,
@@ -23,6 +24,7 @@ import {
 } from '@/components/ui/command'
 import { searchApi } from '@/api/client'
 import { useDebouncedValue } from '@/hooks/useDebouncedSearch'
+import { useSavedSearches } from '@/hooks/useSavedSearches'
 import { RISK_COLORS } from '@/lib/constants'
 
 // ---------------------------------------------------------------------------
@@ -103,6 +105,8 @@ const SUGGESTED_SEARCHES = [
   { label: 'CFE', query: 'CFE' },
 ]
 
+const SAVED_SEARCHES_KEY = 'rubli_saved_searches'
+
 // ---------------------------------------------------------------------------
 // Risk level pill
 // ---------------------------------------------------------------------------
@@ -141,6 +145,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const debouncedQuery = useDebouncedValue(query, 250)
+  const { items: savedSearches, save: saveSearch, remove: removeSavedSearch } = useSavedSearches(SAVED_SEARCHES_KEY)
 
   // Reset query when palette closes
   useEffect(() => {
@@ -168,6 +173,11 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     setQuery(q)
   }, [])
 
+  const handleSaveSearch = useCallback(() => {
+    if (!query.trim()) return
+    saveSearch(query.trim(), query.trim())
+  }, [query, saveSearch])
+
   // Filter quick actions by query (client-side)
   const filteredActions =
     query.length > 0
@@ -186,14 +196,65 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       results.cases.length > 0)
 
   const isIdle = query.length === 0
+  const hasSavedSearches = savedSearches.length > 0
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
+      {/* ── Saved search chips (shown when there are saved searches) ── */}
+      {hasSavedSearches && (
+        <div className="flex flex-wrap items-center gap-1.5 px-3 pt-2 pb-1 border-b border-border/30">
+          <Bookmark className="h-3 w-3 text-text-muted shrink-0" aria-hidden="true" />
+          {savedSearches.map((s, i) => (
+            <span
+              key={`${s.value}-${i}`}
+              className="flex items-center gap-1 text-[11px] bg-accent/10 text-accent border border-accent/20 rounded-full px-2 py-0.5 max-w-[120px]"
+            >
+              <button
+                type="button"
+                className="truncate hover:underline focus:outline-none"
+                onClick={() => applyQuery(s.value)}
+                aria-label={`Apply saved search: ${s.label}`}
+                title={s.label}
+              >
+                {s.label}
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  removeSavedSearch(i)
+                }}
+                className="shrink-0 opacity-60 hover:opacity-100 focus:outline-none"
+                aria-label={`Remove saved search: ${s.label}`}
+              >
+                <XIcon className="h-2.5 w-2.5" aria-hidden="true" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
       <CommandInput
         placeholder="Search vendors, RFC, contracts, cases… or navigate"
         value={query}
         onValueChange={setQuery}
       />
+
+      {/* ── Save current search button ── */}
+      {query.trim().length > 0 && (
+        <div className="flex items-center justify-end px-3 py-1 border-b border-border/30">
+          <button
+            type="button"
+            onClick={handleSaveSearch}
+            className="flex items-center gap-1 text-[10px] text-text-muted hover:text-accent transition-colors"
+            aria-label={`Save search "${query}"`}
+          >
+            <Bookmark className="h-3 w-3" aria-hidden="true" />
+            Save this search
+          </button>
+        </div>
+      )}
+
       <CommandList>
         {/* ── Loading indicator ── */}
         {isFetching && debouncedQuery.length >= 2 && (
@@ -219,7 +280,6 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                     if (s.query) {
                       applyQuery(s.query)
                     } else {
-                      // "RFC" chip — place cursor with hint text
                       applyQuery('')
                     }
                   }}
