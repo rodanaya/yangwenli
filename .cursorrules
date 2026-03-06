@@ -1,0 +1,205 @@
+# RUBLI — Mexican Government Procurement Analysis Platform
+# Cursor AI context — read before every inline edit and chat response.
+
+## What this project is
+Full-stack corruption detection platform analyzing 3.1M federal procurement contracts
+(2002–2025). FastAPI backend + React/TypeScript frontend + SQLite.
+
+Backend port: 8001 | Frontend port: 3009
+
+---
+
+## Critical rules (NEVER violate these)
+
+### Python
+- Python 3.11 — NO backslashes inside f-string expressions. Use intermediate variables:
+  BAD:  f"{x\n}"
+  GOOD: val = x\n; f"{val}"
+- ALWAYS use parameterized queries, never string interpolation:
+  GOOD: cursor.execute("SELECT * FROM contracts WHERE id = ?", (contract_id,))
+  BAD:  cursor.execute(f"SELECT * FROM contracts WHERE id = {contract_id}")
+- Database connection pattern: `with get_db() as conn:` — NOT `conn = get_db()`.
+  get_db() is a @contextmanager — calling without `with` returns a generator silently.
+- FastAPI route ordering: static paths BEFORE parameterized paths.
+  `/contracts/export` must come before `/contracts/{id}` or the wrong handler fires.
+
+### TypeScript
+- After any .ts/.tsx change, BOTH must pass with 0 errors:
+  npx tsc --noEmit          ← lenient tsconfig.json
+  npm run build             ← strict tsconfig.app.json (noUnusedLocals, noUnusedParameters)
+- Remove all unused imports and variables before finishing.
+
+### Amount validation (MEMORIZE)
+| Value         | Action                    |
+|---------------|---------------------------|
+| > 100B MXN    | REJECT — decimal error    |
+| > 10B MXN     | FLAG — include but mark   |
+| <= 10B MXN    | Accept normally           |
+
+---
+
+## Architecture
+
+```
+backend/
+  api/
+    routers/      ← FastAPI route handlers (thin — delegate to services)
+    services/     ← Business logic, DB queries
+    main.py       ← App entry point, startup checks (30-60s cold start, normal)
+  scripts/        ← ETL pipeline, risk model training
+  RUBLI_NORMALIZED.db  ← SQLite, ~5.6GB, 3.1M contracts
+
+frontend/
+  src/
+    pages/        ← 36 page components (lazy-loaded)
+    components/   ← Shared UI (shadcn/ui base + custom)
+    components/ui/← Primitive UI: AnimatedCounter, RiskScoreBar, RiskLevelPill, StatCard
+    lib/api.ts    ← Typed API client (all fetch calls go here)
+    lib/constants.ts ← Risk thresholds, sector colors, shared constants
+    i18n/locales/ ← en/ and es/ JSON files, one per page namespace
+    hooks/        ← Custom React hooks
+```
+
+## Database schema (key columns)
+
+contracts table:
+  id, vendor_id, institution_id, sector_id, year, amount_mxn,
+  risk_score, risk_level (critical/high/medium/low),
+  risk_confidence_lower, risk_confidence_upper,
+  is_single_bid, is_direct_award, is_year_end,
+  risk_model_version ('v5.0' tag in model_calibration, active = v5.1)
+
+Risk levels: critical >= 0.50 | high >= 0.30 | medium >= 0.10 | low < 0.10
+(defined in frontend/src/lib/constants.ts)
+
+---
+
+## Risk model v5.1 (ACTIVE)
+
+- 16 z-score features, 12 per-sector logistic regressions + 1 global fallback
+- Elkan & Noto PU-learning correction (c = 0.882)
+- Train AUC: 0.964 | Test AUC: 0.957 (temporal split — train ≤2020, test ≥2021)
+- High-risk rate: 9.0% (OECD benchmark: 2-15%)
+- Scores are risk indicators, not corruption probabilities — use for triage, not verdicts
+
+Top predictors: price_volatility (+1.22), institution_diversity (-0.85), win_rate (+0.73)
+
+---
+
+## 12-sector taxonomy
+
+| ID | Code            | Color   |
+|----|-----------------|---------|
+|  1 | salud           | #dc2626 |
+|  2 | educacion       | #3b82f6 |
+|  3 | infraestructura | #ea580c |
+|  4 | energia         | #eab308 |
+|  5 | defensa         | #1e3a5f |
+|  6 | tecnologia      | #8b5cf6 |
+|  7 | hacienda        | #16a34a |
+|  8 | gobernacion     | #be123c |
+|  9 | agricultura     | #22c55e |
+| 10 | ambiente        | #10b981 |
+| 11 | trabajo         | #f97316 |
+| 12 | otros           | #64748b |
+
+---
+
+## Frontend patterns
+
+### Data fetching
+Always TanStack Query (useQuery / useMutation), never raw fetch in components.
+```tsx
+const { data, isLoading, error } = useQuery({
+  queryKey: ['contracts', filters],
+  queryFn: () => contractApi.getList(filters),
+});
+```
+
+### i18n — EVERY user-visible string must go through t()
+```tsx
+import { useTranslation } from 'react-i18next';
+const { t } = useTranslation('namespaceName');  // matches locales/en/namespaceName.json
+```
+Add keys to BOTH en/ AND es/ locale files. Never leave Spanish translation missing.
+
+### Standard page structure
+```tsx
+export default function PageName() {
+  const { t } = useTranslation('namespace');
+  const { data, isLoading, error } = useQuery({ ... });
+
+  if (isLoading) return <LoadingSpinner />;
+  if (error) return <ErrorMessage message={error.message} />;
+  if (!data) return <EmptyState />;
+
+  return <div className="space-y-6">...</div>;
+}
+```
+
+### New pages require ALL of:
+1. Component in frontend/src/pages/PageName.tsx
+2. Lazy import in frontend/src/App.tsx
+3. Route in frontend/src/App.tsx
+4. Sidebar entry in frontend/src/components/Sidebar.tsx
+5. i18n keys in locales/en/<namespace>.json AND locales/es/<namespace>.json
+
+---
+
+## Backend patterns
+
+### Standard router + service split
+```python
+# router: thin, just validates params and calls service
+@router.get("/contracts/{id}")
+async def get_contract(id: int):
+    with get_db() as conn:
+        return contracts_service.get_by_id(conn, id)
+
+# service: all business logic and DB queries
+def get_by_id(conn, contract_id: int) -> dict:
+    row = conn.execute(
+        "SELECT * FROM contracts WHERE id = ?", (contract_id,)
+    ).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    return dict(row)
+```
+
+### Standard response envelope
+```python
+{ "data": [...], "pagination": { "page": 1, "per_page": 50, "total": 31000 } }
+```
+
+### SQLite quirks
+- No STDEV function — use: SQRT(AVG(x*x) - AVG(x)*AVG(x))
+- PRAGMA synchronous=OFF gives ~900x speedup for batch writes
+- v_vendor_stats VIEW is 240x slower than vendor_stats TABLE for search
+- Always use vendor_stats TABLE (precomputed), never the VIEW in hot paths
+
+---
+
+## Known failure patterns (check these when debugging)
+
+| Symptom | Cause |
+|---------|-------|
+| 500 on any endpoint | Missing DB column — check with PRAGMA table_info |
+| Search returns empty | Using v_vendor_stats VIEW instead of vendor_stats TABLE |
+| Blank page | Lazy import not added to App.tsx |
+| ts build fails but noEmit passes | Unused var/import — strict tsconfig.app.json |
+| Wrong handler called | Route ordering: static path registered after /{id} |
+| get_db() bug | Called without `with` — returns generator, not connection |
+
+---
+
+## Test commands
+
+```bash
+# Backend (359 tests)
+python -m pytest backend/tests/ -q --tb=short -p no:cacheprovider
+
+# Frontend
+cd frontend && npx tsc --noEmit && npm run build
+```
+
+Target: 359 passing, 0 TypeScript errors in both commands.
