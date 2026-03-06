@@ -1,4 +1,5 @@
-import { useState, memo } from 'react'
+import { useState, memo, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -37,33 +38,33 @@ import {
 // ============================================================================
 
 const V5_COEFFICIENTS = [
-  { name: 'Price Volatility', coeff: 1.219, note: 'Strongest predictor' },
-  { name: 'Win Rate', coeff: 0.727, note: '' },
-  { name: 'Vendor Concentration', coeff: 0.428, note: '' },
-  { name: 'Industry Mismatch', coeff: 0.305, note: '' },
-  { name: 'Same-Day Contracts', coeff: 0.222, note: '' },
-  { name: 'Direct Award', coeff: 0.182, note: 'Reversed from v4.0 (-0.197)' },
-  { name: 'Network Members', coeff: 0.064, note: 'Now positive (was zeroed in v4.0)' },
-  { name: 'Year-End', coeff: 0.059, note: '' },
-  { name: 'Institution Risk', coeff: 0.057, note: '' },
-  { name: 'Price Ratio', coeff: -0.015, note: '' },
-  { name: 'Single Bid', coeff: 0.013, note: '' },
-  { name: 'Price Hyp. Confidence', coeff: 0.001, note: '' },
-  { name: 'Co-Bid Rate', coeff: 0.0, note: 'Regularized to zero' },
-  { name: 'Ad Period Days', coeff: -0.104, note: '' },
-  { name: 'Institution Diversity', coeff: -0.848, note: 'Serves many institutions = less risky' },
-  { name: 'Sector Spread', coeff: -0.374, note: 'Cross-sector operations = less risky' },
+  { nameKey: 'priceVolatility', coeff: 1.219 },
+  { nameKey: 'winRate', coeff: 0.727 },
+  { nameKey: 'vendorConcentration', coeff: 0.428 },
+  { nameKey: 'industryMismatch', coeff: 0.305 },
+  { nameKey: 'sameDayContracts', coeff: 0.222 },
+  { nameKey: 'directAward', coeff: 0.182 },
+  { nameKey: 'networkMembers', coeff: 0.064 },
+  { nameKey: 'yearEnd', coeff: 0.059 },
+  { nameKey: 'institutionRisk', coeff: 0.057 },
+  { nameKey: 'priceRatio', coeff: -0.015 },
+  { nameKey: 'singleBid', coeff: 0.013 },
+  { nameKey: 'priceHypConfidence', coeff: 0.001 },
+  { nameKey: 'coBidRate', coeff: 0.0 },
+  { nameKey: 'adPeriodDays', coeff: -0.104 },
+  { nameKey: 'institutionDiversity', coeff: -0.848 },
+  { nameKey: 'sectorSpread', coeff: -0.374 },
 ] as const
 
 const V33_WEIGHTS = [
-  { name: 'Single Bidding', weight: 18 },
-  { name: 'Non-Open Procedure', weight: 18 },
-  { name: 'Price Anomaly', weight: 18 },
-  { name: 'Vendor Concentration', weight: 12 },
-  { name: 'Short Ad Period', weight: 12 },
-  { name: 'Network Risk', weight: 8 },
-  { name: 'Year-End Timing', weight: 7 },
-  { name: 'Threshold Splitting', weight: 7 },
+  { nameKey: 'singleBidding', weight: 18 },
+  { nameKey: 'nonOpenProcedure', weight: 18 },
+  { nameKey: 'priceAnomaly', weight: 18 },
+  { nameKey: 'vendorConcentration', weight: 12 },
+  { nameKey: 'shortAdPeriod', weight: 12 },
+  { nameKey: 'networkRisk', weight: 8 },
+  { nameKey: 'yearEndTiming', weight: 7 },
+  { nameKey: 'thresholdSplitting', weight: 7 },
 ] as const
 
 const RISK_LEVELS_V5 = [
@@ -204,13 +205,12 @@ function Formula({ children }: { children: React.ReactNode }) {
 // ============================================================================
 
 const CoefficientChart = memo(function CoefficientChart() {
-  const chartData = V5_COEFFICIENTS.map((c) => ({
-    name: c.name,
+  const { t } = useTranslation('methodology')
+  const chartData = useMemo(() => V5_COEFFICIENTS.map((c) => ({
+    name: t(`featureNames.${c.nameKey}`),
     coeff: c.coeff,
-    note: c.note,
-    fill:
-      c.coeff > 0 ? '#4ade80' : c.coeff < 0 ? '#f87171' : '#64748b',
-  }))
+    fill: c.coeff > 0 ? '#4ade80' : c.coeff < 0 ? '#f87171' : '#64748b',
+  })), [t])
 
   return (
     <div className="h-[520px]">
@@ -239,9 +239,6 @@ const CoefficientChart = memo(function CoefficientChart() {
                     <p className="text-xs text-text-muted tabular-nums font-mono">
                       {d.coeff > 0 ? '+' : ''}{d.coeff.toFixed(3)}
                     </p>
-                    {d.note && (
-                      <p className="text-xs text-text-muted mt-0.5">{d.note}</p>
-                    )}
                   </div>
                 )
               }
@@ -260,7 +257,12 @@ const CoefficientChart = memo(function CoefficientChart() {
 })
 
 const V33WeightsChart = memo(function V33WeightsChart() {
-  const chartData = [...V33_WEIGHTS].sort((a, b) => b.weight - a.weight)
+  const { t } = useTranslation('methodology')
+  const chartData = useMemo(() =>
+    [...V33_WEIGHTS].sort((a, b) => b.weight - a.weight).map((c) => ({
+      name: t(`v33WeightNames.${c.nameKey}`),
+      weight: c.weight,
+    })), [t])
 
   return (
     <div className="h-[280px]">
@@ -305,11 +307,12 @@ const V33WeightsChart = memo(function V33WeightsChart() {
 // ============================================================================
 
 function TableOfContents() {
+  const { t } = useTranslation('methodology')
   return (
     <nav className="hidden lg:block sticky top-4" aria-label="Table of contents">
       <div className="space-y-0.5">
         <p className="text-xs font-semibold tracking-wider text-text-secondary font-mono mb-2 px-2">
-          CONTENTS
+          {t('contents')}
         </p>
         {SECTIONS.map((section) => {
           const Icon = section.icon
@@ -320,7 +323,7 @@ function TableOfContents() {
               className="flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-text-secondary hover:text-text-primary hover:bg-accent/5 transition-colors"
             >
               <Icon className="h-3 w-3 text-text-muted" aria-hidden="true" />
-              <span>{section.label}</span>
+              <span>{t(`sectionLabels.${section.id}`)}</span>
             </a>
           )
         })}
@@ -334,16 +337,17 @@ function TableOfContents() {
 // ============================================================================
 
 export function Methodology() {
+  const { t } = useTranslation('methodology')
   return (
     <div className="space-y-5">
       {/* Page Header */}
       <div>
         <h1 className="text-xl font-bold text-text-primary tracking-tight flex items-center gap-2">
           <BookOpen className="h-5 w-5 text-accent" />
-          How We Detect Corruption
+          {t('pageHeadline')}
         </h1>
         <p className="text-xs text-text-muted mt-0.5">
-          Statistical analysis of 3.1M Mexican government procurement contracts
+          {t('pageSubline')}
         </p>
       </div>
 
