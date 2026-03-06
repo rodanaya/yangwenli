@@ -322,7 +322,7 @@ export default function InstitutionsTab() {
               )}
             >
               <Icon className="h-3 w-3" />
-              {preset.label}
+              {t(`institutions.presets.${preset.id}`)}
             </button>
           )
         })}
@@ -333,8 +333,8 @@ export default function InstitutionsTab() {
         <div className="flex items-center gap-2">
           <p className="text-xs text-text-muted tabular-nums" aria-live="polite">
             {data
-              ? `${formatNumber(data.pagination.total)} institutions`
-              : 'Loading...'}
+              ? t('institutions.count', { count: data.pagination.total, replace: { count: formatNumber(data.pagination.total) } })
+              : t('institutions.count', { count: formatNumber(data?.pagination?.total ?? 0) })}
             {isFetching && !isLoading && <Loader2 className="inline h-3 w-3 ml-1 animate-spin" />}
           </p>
           {activeFilterTags.length > 0 && (
