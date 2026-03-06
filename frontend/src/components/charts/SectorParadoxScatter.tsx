@@ -116,29 +116,6 @@ function ScatterTooltip({ active, payload }: CustomTooltipProps) {
   )
 }
 
-// Annotation pin placed manually in SVG space (rendered inside the chart area)
-interface AnnotationProps {
-  x: number
-  y: number
-  text: string
-  align?: 'left' | 'right'
-}
-
-function Annotation({ x, y, text, align = 'left' }: AnnotationProps) {
-  const width = 130
-  const offsetX = align === 'right' ? -width - 8 : 8
-  return (
-    <g transform={`translate(${x},${y})`}>
-      <line x1={0} y1={0} x2={align === 'right' ? -8 : 8} y2={0} stroke="#71717a" strokeWidth={1} strokeDasharray="3,2" />
-      <foreignObject x={offsetX} y={-20} width={width} height={50}>
-        <div style={{ fontSize: 9, color: '#a1a1aa', lineHeight: 1.3, textAlign: align === 'right' ? 'right' : 'left' }}>
-          {text}
-        </div>
-      </foreignObject>
-    </g>
-  )
-}
-
 export function SectorParadoxScatter() {
   const { t } = useTranslation('procurement')
 
