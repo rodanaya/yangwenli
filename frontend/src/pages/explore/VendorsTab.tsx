@@ -87,6 +87,8 @@ const VENDOR_PRESETS = [
 
 export default function VendorsTab() {
   const { t } = useTranslation('explore')
+  const { t: ts } = useTranslation('sectors')
+  const { t: tc } = useTranslation('common')
   const [searchParams, setSearchParams] = useSearchParams()
   const [activePreset, setActivePreset] = useState<string | null>(null)
 
@@ -353,9 +355,9 @@ export default function VendorsTab() {
             onChange={(e) => { updateFilter('sector_id', e.target.value ? Number(e.target.value) : undefined); setActivePreset(null) }}
             aria-label="Filter by sector"
           >
-            <option value="">All Sectors</option>
+            <option value="">{t('filters.allSectors')}</option>
             {SECTORS.map((s) => (
-              <option key={s.id} value={s.id}>{s.nameEN}</option>
+              <option key={s.id} value={s.id}>{ts(s.code)}</option>
             ))}
           </select>
 
@@ -365,11 +367,11 @@ export default function VendorsTab() {
             onChange={(e) => { updateFilter('risk_level', e.target.value || undefined); setActivePreset(null) }}
             aria-label="Filter by risk level"
           >
-            <option value="">All Risk</option>
-            <option value="critical">Critical</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
+            <option value="">{t('filters.allRiskLevels')}</option>
+            <option value="critical">{tc('critical')}</option>
+            <option value="high">{tc('high')}</option>
+            <option value="medium">{tc('medium')}</option>
+            <option value="low">{tc('low')}</option>
           </select>
 
           <select
@@ -381,7 +383,7 @@ export default function VendorsTab() {
             }}
             aria-label="Minimum contracts"
           >
-            <option value="">Min contracts</option>
+            <option value="">{t('filters.minContracts')}</option>
             <option value="5">5+</option>
             <option value="10">10+</option>
             <option value="50">50+</option>
@@ -399,7 +401,7 @@ export default function VendorsTab() {
             }}
             aria-label="Minimum total value"
           >
-            <option value="">Min value</option>
+            <option value="">{t('filters.minValue')}</option>
             <option value="1000000">1M+ MXN</option>
             <option value="10000000">10M+ MXN</option>
             <option value="100000000">100M+ MXN</option>
@@ -417,9 +419,9 @@ export default function VendorsTab() {
             }}
             aria-label="RFC status"
           >
-            <option value="">RFC status</option>
-            <option value="true">Has RFC</option>
-            <option value="false">No RFC</option>
+            <option value="">{t('filters.rfcStatus')}</option>
+            <option value="true">{t('filters.hasRfc')}</option>
+            <option value="false">{t('filters.noRfc')}</option>
           </select>
 
           {hasActiveFilters && (
@@ -427,7 +429,7 @@ export default function VendorsTab() {
               className="text-xs text-accent hover:underline"
               onClick={clearAllFilters}
             >
-              Clear all
+              {t('filters.clearAll')}
             </button>
           )}
         </div>

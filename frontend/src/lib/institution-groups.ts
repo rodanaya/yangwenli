@@ -22,6 +22,8 @@ export interface InstitutionGroup {
   sectorId: number
   /** Official website (for favicon fallback) */
   website: string | null
+  /** Wikipedia article title (Spanish) for thumbnail fallback when no local logo */
+  wikiArticle?: string | null
   /** DB institution name fragments that belong to this group */
   members: string[]
 }
@@ -120,6 +122,7 @@ export const INSTITUTION_GROUPS: InstitutionGroup[] = [
     color: '#dc2626',
     sectorId: 1,
     website: null,
+    wikiArticle: 'Instituto_Nacional_de_Cancerología',
     members: [
       'HOSPITAL JUÁREZ DE MÉXICO',
       'HOSPITAL INFANTIL DE MÉXICO FEDERICO GÓMEZ',
@@ -220,6 +223,7 @@ export const INSTITUTION_GROUPS: InstitutionGroup[] = [
     color: '#22c55e',
     sectorId: 9,
     website: 'https://www.gob.mx/segalmex',
+    wikiArticle: 'Segalmex',
     members: [
       'Diconsa, S.A. de C.V.',
       'ALIMENTACIÓN PARA EL BIENESTAR, S.A. DE C.V.',
@@ -251,6 +255,7 @@ export const INSTITUTION_GROUPS: InstitutionGroup[] = [
     color: '#be123c',
     sectorId: 8,
     website: 'https://www.gob.mx/segob',
+    wikiArticle: 'Secretaría_de_Gobernación_(México)',
     members: [
       'SECRETARÍA DE GOBERNACIÓN',
       'SECRETARÍA ANTICORRUPCIÓN Y BUEN GOBIERNO',

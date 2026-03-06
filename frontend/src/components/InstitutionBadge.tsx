@@ -2,9 +2,12 @@
  * InstitutionBadge
  * Shows institution logo (if available) or a styled initials badge.
  * Used in: NetworkGraph nodes, MoneyFlow nodes, institution cards, tables.
+ *
+ * InstitutionLogoBanner also fetches from Wikipedia when no local SVG exists.
  */
 
 import { getInstitutionGroup } from '../lib/institution-groups'
+import { useWikipediaImage } from '../hooks/useWikipediaImage'
 
 interface InstitutionBadgeProps {
   name: string
@@ -89,18 +92,24 @@ export function InstitutionBadge({
 
 /**
  * InstitutionLogoBanner — wider rectangular version for cards and headers.
- * Uses the SVG logo at full aspect ratio, or a pill-shaped initials badge.
+ * Priority: local SVG → Wikipedia thumbnail → initials pill.
+ * Only fetches Wikipedia in header/detail contexts (not in tables/lists).
  */
 export function InstitutionLogoBanner({
   name,
   height = 28,
   className = '',
+  /** Set true in detail/profile headers to enable Wikipedia image fetch */
+  enableWiki = false,
 }: {
   name: string
   height?: number
   className?: string
+  enableWiki?: boolean
 }) {
   const group = getInstitutionGroup(name)
+  const wikiArticle = enableWiki ? (group?.wikiArticle ?? null) : null
+  const { src: wikiSrc } = useWikipediaImage(wikiArticle)
 
   if (group?.logo) {
     return (
@@ -109,6 +118,19 @@ export function InstitutionLogoBanner({
         alt={group.shortName}
         title={group.name}
         style={{ height, width: 'auto', maxWidth: height * 4 }}
+        className={`object-contain ${className}`}
+        onError={(e) => { e.currentTarget.style.display = 'none' }}
+      />
+    )
+  }
+
+  if (wikiSrc) {
+    return (
+      <img
+        src={wikiSrc}
+        alt={group?.shortName ?? name}
+        title={group?.name ?? name}
+        style={{ height, width: 'auto', maxWidth: height * 4, borderRadius: 4 }}
         className={`object-contain ${className}`}
         onError={(e) => { e.currentTarget.style.display = 'none' }}
       />

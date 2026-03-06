@@ -380,7 +380,16 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
   defaultSectors,
 }: SectorRiskTrendPanelProps) {
   const { t } = useTranslation('sectors')
-  const { sectorLines, isLoading, isLive, usingFallback } = useSectorTrendData()
+  const { sectorLines: rawSectorLines, isLoading, isLive, usingFallback } = useSectorTrendData()
+
+  // Localize sector names using the sectors namespace
+  const sectorLines = useMemo(
+    () => rawSectorLines.map((sl) => ({
+      ...sl,
+      sectorName: sl.sectorCode === 'all' ? t('charts.allSectors') : (t(sl.sectorCode) || sl.sectorName),
+    })),
+    [rawSectorLines, t]
+  )
 
   // Initialize enabled sectors from defaultSectors prop
   const [enabledSectorCodes, setEnabledSectorCodes] = useState<Set<string>>(() => {
