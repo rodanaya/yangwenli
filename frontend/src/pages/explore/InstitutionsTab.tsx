@@ -488,7 +488,7 @@ export default function InstitutionsTab() {
       ) : !data?.data?.length ? (
         <div className="py-12 text-center">
           <Building className="h-8 w-8 text-text-muted mx-auto mb-2 opacity-40" />
-          <p className="text-sm text-text-muted">No institutions match your filters</p>
+          <p className="text-sm text-text-muted">{t('empty.noInstitutionsMatch')}</p>
         </div>
       ) : (
         <div className="rounded-lg border border-border overflow-hidden">
@@ -583,6 +583,7 @@ export default function InstitutionsTab() {
 // =============================================================================
 
 function ValueConcentrationAlerts() {
+  const { t } = useTranslation('explore')
   const { data, isLoading, error } = useQuery({
     queryKey: ['value-concentration'],
     queryFn: () => analysisApi.getValueConcentration({ min_pct: 10, limit: 20 }),
@@ -604,9 +605,9 @@ function ValueConcentrationAlerts() {
       >
         <div className="flex items-center gap-2">
           <ShieldAlert className="h-4 w-4 text-amber-400" aria-hidden="true" />
-          <span className="text-sm font-semibold text-text-primary">Value Concentration Alerts</span>
+          <span className="text-sm font-semibold text-text-primary">{t('concentration.title')}</span>
           {data?.total != null && (
-            <span className="text-xs text-text-muted">({data.total} alerts)</span>
+            <span className="text-xs text-text-muted">({t('concentration.alertCount', { count: data.total })})</span>
           )}
         </div>
         {isOpen
@@ -617,8 +618,7 @@ function ValueConcentrationAlerts() {
       {isOpen && (
         <div id="value-concentration-content" className="p-4 space-y-3">
           <p className="text-xs text-text-muted">
-            Vendors holding a disproportionate share of a single institution's total spending.
-            Amber = 50%+ share. Red = 75%+ share.
+            {t('concentration.description')}
           </p>
 
           {isLoading ? (
@@ -630,23 +630,23 @@ function ValueConcentrationAlerts() {
           ) : error ? (
             <div className="py-8 text-center">
               <AlertCircle className="h-8 w-8 text-risk-high mx-auto mb-2" />
-              <p className="text-xs text-text-muted">Failed to load concentration data</p>
+              <p className="text-xs text-text-muted">{t('concentration.failed')}</p>
             </div>
           ) : !rows.length ? (
             <div className="py-8 text-center">
               <ShieldAlert className="h-8 w-8 text-text-muted mx-auto mb-2 opacity-40" aria-hidden="true" />
-              <p className="text-xs text-text-muted">No concentration alerts found</p>
+              <p className="text-xs text-text-muted">{t('concentration.noAlerts')}</p>
             </div>
           ) : (
             <div className="rounded-lg border border-border overflow-hidden">
               <table className="w-full text-xs" role="table" aria-label="Value concentration alerts">
                 <thead>
                   <tr className="bg-background-elevated/50">
-                    <th className="px-3 py-2 text-left font-semibold text-text-muted whitespace-nowrap">Institution</th>
-                    <th className="px-3 py-2 text-left font-semibold text-text-muted whitespace-nowrap">Vendor</th>
-                    <th className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap">Share %</th>
-                    <th className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap hidden sm:table-cell">Total Value</th>
-                    <th className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap hidden md:table-cell">Risk Score</th>
+                    <th className="px-3 py-2 text-left font-semibold text-text-muted whitespace-nowrap">{t('concentration.institution')}</th>
+                    <th className="px-3 py-2 text-left font-semibold text-text-muted whitespace-nowrap">{t('concentration.vendor')}</th>
+                    <th className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap">{t('concentration.share')}</th>
+                    <th className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap hidden sm:table-cell">{t('concentration.totalValue')}</th>
+                    <th className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap hidden md:table-cell">{t('common:riskScore')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">
@@ -741,6 +741,7 @@ function ValueConcentrationAlerts() {
 // =============================================================================
 
 function InstitutionRow({ institution, rank }: { institution: InstitutionResponse; rank: number }) {
+  const { t: ts } = useTranslation('sectors')
   const prefetch = usePrefetchOnHover({
     queryKey: ['institution', institution.id],
     queryFn: () => institutionApi.getById(institution.id),
