@@ -232,16 +232,19 @@ async def list_states(
     year_key = year if year is not None else 0
 
     with get_db() as conn:
-        rows = conn.execute(
-            '''SELECT * FROM subnational_state_stats
-               WHERE year = ? AND contract_count >= ?
-               ORDER BY total_value_mxn DESC''',
-            (year_key, min_contracts),
-        ).fetchall()
+        try:
+            rows = conn.execute(
+                '''SELECT * FROM subnational_state_stats
+                   WHERE year = ? AND contract_count >= ?
+                   ORDER BY total_value_mxn DESC''',
+                (year_key, min_contracts),
+            ).fetchall()
+        except Exception:
+            rows = []
 
-        # Fall back to live query if precomputed table is empty (e.g. first deploy)
+        # Fall back to live query if precomputed table is missing or empty
         if not rows:
-            log.warning("subnational_state_stats empty for year=%s — falling back to live query", year)
+            log.warning("subnational_state_stats unavailable for year=%s — falling back to live query", year)
             return await _list_states_live(conn, min_contracts, year)
 
     states = []
@@ -275,6 +278,7 @@ async def list_states(
         total_states=len(states),
         total_contracts=total_contracts,
         total_value_mxn=total_value,
+        total_vendors=sum(s.vendor_count for s in states),
         coverage_note=COVERAGE_NOTE,
     )
     _states_cache[cache_key] = {"ts": _time.time(), "data": response}
