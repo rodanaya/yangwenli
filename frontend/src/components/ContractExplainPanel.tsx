@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Sparkles, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react'
+import { api } from '@/api/client'
 
 interface Props {
   contractId: number
@@ -24,16 +25,17 @@ export function ContractExplainPanel({ contractId, riskLevel }: Props) {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/v1/ai/contracts/${contractId}/explain`)
-      if (res.status === 503) {
-        setError('AI explanation not configured. Set ANTHROPIC_API_KEY on the server.')
-        return
-      }
-      if (!res.ok) throw new Error('Request failed')
-      const data = await res.json()
+      const data = await api.get<{ explanation: string }>(
+        `/api/v1/ai/contracts/${contractId}/explain`
+      )
       setExplanation(data.explanation)
-    } catch {
-      setError('Could not load explanation. Try again later.')
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status
+      if (status === 503) {
+        setError('AI explanation not configured. Set ANTHROPIC_API_KEY on the server.')
+      } else {
+        setError('Could not load explanation. Try again later.')
+      }
     } finally {
       setLoading(false)
     }
