@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react-swc'
 import path from 'path'
 import { visualizer } from 'rollup-plugin-visualizer'
 import checker from 'vite-plugin-checker'
+import { compression } from 'vite-plugin-compression2'
 
 // API target: use env var for Docker, default to localhost
 // Use 127.0.0.1 instead of localhost to avoid Windows DNS resolution delay (~2s)
@@ -30,6 +31,15 @@ export default defineConfig({
         gzipSize: true,
         brotliSize: true,
         template: 'treemap',
+      }),
+
+    // Pre-compress all JS/CSS/JSON assets with gzip during build.
+    // Nginx serves the .gz files directly (gzip_static on) — zero per-request CPU cost.
+    isProduction &&
+      compression({
+        algorithms: ['gzip'],
+        exclude: [/\.(png|jpg|jpeg|gif|svg|ico|woff|woff2)$/],
+        threshold: 1024, // Only compress files > 1KB
       }),
   ],
   server: {

@@ -249,6 +249,64 @@ async def security_headers(request: Request, call_next):
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
 
+# HTTP Cache-Control middleware
+# Adds appropriate caching headers so browsers and CDNs avoid redundant refetches.
+# - public paths (read-only analytics): cached by the browser, reused across sessions
+# - private paths (user workspace/watchlist): never cached
+# - mutating methods (POST/PATCH/DELETE): never cached
+_CACHE_PRIVATE_PREFIXES = (
+    "/api/v1/watchlist",
+    "/api/v1/workspace",
+    "/api/v1/feedback",
+)
+_CACHE_LONG_PREFIXES = (  # 1h — precomputed, only changes when pipeline runs
+    "/api/v1/stats",
+    "/api/v1/cases",
+)
+_CACHE_MED_PREFIXES = (  # 10min — analytical read-only aggregates
+    "/api/v1/analysis",
+    "/api/v1/sectors",
+    "/api/v1/network",
+    "/api/v1/subnational",
+    "/api/v1/industries",
+    "/api/v1/categories",
+)
+_CACHE_SHORT_PREFIXES = (  # 5min — entity profiles (change only with new data)
+    "/api/v1/vendors",
+    "/api/v1/institutions",
+    "/api/v1/contracts",
+    "/api/v1/investigation",
+)
+
+@app.middleware("http")
+async def cache_control(request: Request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+    method = request.method
+    # Never cache mutations or non-2xx responses
+    if method in ("POST", "PATCH", "DELETE", "PUT") or response.status_code >= 400:
+        response.headers["Cache-Control"] = "no-store"
+        return response
+    # Never cache user-specific data
+    if path.startswith(_CACHE_PRIVATE_PREFIXES):
+        response.headers["Cache-Control"] = "private, no-store"
+        return response
+    # Never cache search (query-specific, not reusable)
+    if path.startswith("/api/v1/search"):
+        response.headers["Cache-Control"] = "no-cache"
+        return response
+    if path.startswith(_CACHE_LONG_PREFIXES):
+        response.headers["Cache-Control"] = "public, max-age=3600, stale-while-revalidate=86400"
+        return response
+    if path.startswith(_CACHE_MED_PREFIXES):
+        response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=3600"
+        return response
+    if path.startswith(_CACHE_SHORT_PREFIXES):
+        response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=1800"
+        return response
+    response.headers["Cache-Control"] = "no-cache"
+    return response
+
 # GZip compression for responses > 1KB
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
