@@ -72,18 +72,18 @@ const PARTY_COLORS: Record<string, string> = {
 
 // Sector list for the matrix grid
 const MATRIX_SECTORS = [
-  { key: 'salud',          code: 'S',  name: 'Salud' },
-  { key: 'educacion',      code: 'Ed', name: 'Educación' },
-  { key: 'infraestructura',code: 'In', name: 'Infraestructura' },
-  { key: 'energia',        code: 'En', name: 'Energía' },
-  { key: 'defensa',        code: 'D',  name: 'Defensa' },
-  { key: 'tecnologia',     code: 'T',  name: 'Tecnología' },
-  { key: 'hacienda',       code: 'H',  name: 'Hacienda' },
-  { key: 'gobernacion',    code: 'G',  name: 'Gobernación' },
-  { key: 'agricultura',    code: 'A',  name: 'Agricultura' },
-  { key: 'ambiente',       code: 'Am', name: 'Ambiente' },
-  { key: 'trabajo',        code: 'Tr', name: 'Trabajo' },
-  { key: 'otros',          code: 'O',  name: 'Otros' },
+  { key: 'salud',          code: 'S',  name: 'Health' },
+  { key: 'educacion',      code: 'Ed', name: 'Education' },
+  { key: 'infraestructura',code: 'In', name: 'Infrastructure' },
+  { key: 'energia',        code: 'En', name: 'Energy' },
+  { key: 'defensa',        code: 'D',  name: 'Defense' },
+  { key: 'tecnologia',     code: 'T',  name: 'Technology' },
+  { key: 'hacienda',       code: 'H',  name: 'Finance' },
+  { key: 'gobernacion',    code: 'G',  name: 'Interior' },
+  { key: 'agricultura',    code: 'A',  name: 'Agriculture' },
+  { key: 'ambiente',       code: 'Am', name: 'Environment' },
+  { key: 'trabajo',        code: 'Tr', name: 'Labor' },
+  { key: 'otros',          code: 'O',  name: 'Other' },
 ]
 
 type AdminName = typeof ADMINISTRATIONS[number]['name']
@@ -696,7 +696,7 @@ export default function Administrations() {
               {t('comparisonTable')}
             </CardTitle>
             <p className="text-xs text-text-muted mt-1">
-              Comparación de métricas promedio entre los cinco gobiernos — basado en datos reales de COMPRANET. La administración seleccionada aparece en azul.
+              {t('comparisonTableDesc')}
             </p>
           </CardHeader>
           <CardContent>
@@ -1085,38 +1085,38 @@ export default function Administrations() {
 // Hardcoded key events per administration — sourced from public records
 const HARDCODED_EVENTS: Record<string, Array<{ year: number; title: string; type: 'reform' | 'scandal' | 'audit' | 'crisis'; impact: 'high' | 'medium' | 'low' }>> = {
   Fox: [
-    { year: 2002, title: 'COMPRANET lanzado como sistema digital de compras', type: 'reform', impact: 'medium' },
-    { year: 2003, title: 'Primer auditoría ASF sobre contratación directa generalizada', type: 'audit', impact: 'medium' },
-    { year: 2004, title: 'Escándalo PEMEXGATE: desvíos en contratos de mantenimiento', type: 'scandal', impact: 'high' },
-    { year: 2005, title: 'Reforma a la Ley de Adquisiciones — nuevos requisitos de publicidad', type: 'reform', impact: 'medium' },
+    { year: 2002, title: 'COMPRANET launched as digital procurement platform', type: 'reform', impact: 'medium' },
+    { year: 2003, title: 'First ASF audit on widespread direct-award contracting', type: 'audit', impact: 'medium' },
+    { year: 2004, title: 'PEMEXGATE scandal: diversions in maintenance contracts', type: 'scandal', impact: 'high' },
+    { year: 2005, title: 'Acquisitions Law reform — new transparency requirements', type: 'reform', impact: 'medium' },
   ],
   Calderon: [
-    { year: 2007, title: 'Inicio de la Estrategia Nacional de Seguridad — contratos de defensa elevados', type: 'crisis', impact: 'medium' },
-    { year: 2008, title: 'Crisis financiera global — contracción de gasto federal', type: 'crisis', impact: 'medium' },
-    { year: 2009, title: 'Gripe AH1N1: compras de emergencia con mínima licitación', type: 'crisis', impact: 'high' },
-    { year: 2010, title: 'PEMEX contrata a Odebrecht para Etileno XXI — inicio de esquema de sobornos', type: 'scandal', impact: 'high' },
-    { year: 2012, title: 'Nueva Ley de Compras Gubernamentales — reforma más amplia en 15 años', type: 'reform', impact: 'high' },
+    { year: 2007, title: 'National Security Strategy launched — surge in defense contracts', type: 'crisis', impact: 'medium' },
+    { year: 2008, title: 'Global financial crisis — federal spending contraction', type: 'crisis', impact: 'medium' },
+    { year: 2009, title: 'AH1N1 flu: emergency procurement with minimal bidding', type: 'crisis', impact: 'high' },
+    { year: 2010, title: 'PEMEX hires Odebrecht for Etileno XXI — bribery scheme begins', type: 'scandal', impact: 'high' },
+    { year: 2012, title: 'New Government Procurement Law — broadest reform in 15 years', type: 'reform', impact: 'high' },
   ],
   'Pena Nieto': [
-    { year: 2014, title: 'Escándalo Casa Blanca — conflicto de interés con contratista Grupo Higa', type: 'scandal', impact: 'high' },
-    { year: 2015, title: 'Red de empresas fantasma en IMSS detectada por ASF', type: 'scandal', impact: 'high' },
-    { year: 2016, title: 'Investigación Odebrecht-PEMEX — sobornos por contratos de infraestructura', type: 'scandal', impact: 'high' },
-    { year: 2017, title: 'La Estafa Maestra: desvío de 7.6 MMA a través de universidades públicas', type: 'scandal', impact: 'high' },
-    { year: 2017, title: 'Sismos septiembre — compras de emergencia sin licitación', type: 'crisis', impact: 'medium' },
-    { year: 2018, title: 'Reforma CompraNet 5.0 — trazabilidad mejorada', type: 'reform', impact: 'medium' },
+    { year: 2014, title: 'Casa Blanca scandal — conflict of interest with contractor Grupo Higa', type: 'scandal', impact: 'high' },
+    { year: 2015, title: 'IMSS ghost-company network uncovered by ASF audit', type: 'scandal', impact: 'high' },
+    { year: 2016, title: 'Odebrecht-PEMEX investigation — bribes for infrastructure contracts', type: 'scandal', impact: 'high' },
+    { year: 2017, title: 'La Estafa Maestra: MXN 7.6B diverted through public universities', type: 'scandal', impact: 'high' },
+    { year: 2017, title: 'September earthquakes — emergency procurement without bidding', type: 'crisis', impact: 'medium' },
+    { year: 2018, title: 'CompraNet 5.0 reform — improved traceability', type: 'reform', impact: 'medium' },
   ],
   AMLO: [
-    { year: 2019, title: 'Decreto de austeridad — reducción drástica de contratos de servicios', type: 'reform', impact: 'high' },
-    { year: 2019, title: 'Militarización de megaproyectos (AIFA, Tren Maya) — contratos directos al EJÉRCITO', type: 'reform', impact: 'high' },
-    { year: 2020, title: 'Pandemia COVID-19: compras de emergencia de ventiladores y medicamentos', type: 'crisis', impact: 'high' },
-    { year: 2021, title: 'Escándalo Segalmex — fraude de 9.4 MMXN en distribución alimentaria', type: 'scandal', impact: 'high' },
-    { year: 2022, title: 'SAT publica lista definitiva EFOS: 38 proveedores de COMPRANET confirmados como fantasmas', type: 'audit', impact: 'high' },
-    { year: 2023, title: 'Tren Maya: FONATUR otorga contratos directos por 180 MMXN a Sedena', type: 'scandal', impact: 'medium' },
+    { year: 2019, title: 'Austerity decree — drastic reduction in service contracts', type: 'reform', impact: 'high' },
+    { year: 2019, title: 'Militarization of megaprojects (AIFA, Tren Maya) — direct awards to Army', type: 'reform', impact: 'high' },
+    { year: 2020, title: 'COVID-19 pandemic: emergency procurement of ventilators and medicines', type: 'crisis', impact: 'high' },
+    { year: 2021, title: 'Segalmex scandal — MXN 9.4B fraud in food distribution', type: 'scandal', impact: 'high' },
+    { year: 2022, title: 'SAT publishes final EFOS list: 38 COMPRANET vendors confirmed as ghost companies', type: 'audit', impact: 'high' },
+    { year: 2023, title: 'Tren Maya: FONATUR awards MXN 180M in direct contracts to Sedena', type: 'scandal', impact: 'medium' },
   ],
   Sheinbaum: [
-    { year: 2024, title: 'Claudia Sheinbaum toma posesión — primera presidenta de México', type: 'reform', impact: 'low' },
-    { year: 2024, title: 'Continuidad de obras militarizadas (AIFA, refinería Dos Bocas)', type: 'reform', impact: 'medium' },
-    { year: 2025, title: 'Datos preliminares — análisis en curso conforme se acumulan registros', type: 'audit', impact: 'low' },
+    { year: 2024, title: "Claudia Sheinbaum inaugurated — Mexico's first female president", type: 'reform', impact: 'low' },
+    { year: 2024, title: 'Continuation of militarized infrastructure (AIFA, Dos Bocas refinery)', type: 'reform', impact: 'medium' },
+    { year: 2025, title: 'Preliminary data — analysis ongoing as records accumulate', type: 'audit', impact: 'low' },
   ],
 }
 
@@ -1135,16 +1135,16 @@ function HardcodedEventsTimeline({ adminName }: { adminName: AdminName }) {
     crisis: '#fb923c',
   }
   const typeLabels: Record<string, string> = {
-    reform: 'Reforma',
-    scandal: 'Escándalo',
-    audit: 'Auditoría',
+    reform: 'Reform',
+    scandal: 'Scandal',
+    audit: 'Audit',
     crisis: 'Crisis',
   }
 
   if (events.length === 0) {
     return (
       <div className="py-6 text-center text-text-muted text-xs">
-        Sin eventos documentados para este período.
+        No events recorded for this period.
       </div>
     )
   }
@@ -1373,6 +1373,7 @@ function AdminSectorMatrix({
   metric: MatrixMetric
   onMetricChange: (m: MatrixMetric) => void
 }) {
+  const { t } = useTranslation('administrations')
   const isLive = liveMatrix !== null
   return (
     <Card className="bg-card border-border/40">
@@ -1380,12 +1381,10 @@ function AdminSectorMatrix({
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
             <CardTitle className="text-sm font-mono text-text-primary">
-              Matriz de Riesgo por Administración y Sector
+              {t('matrixTitle')}
             </CardTitle>
             <p className="text-[11px] text-text-muted mt-0.5">
-              {isLive
-                ? 'Valores promedio ponderados por volumen de contratos — cambia la métrica con los botones a la derecha'
-                : 'Estimaciones ilustrativas (cargando datos…)'}
+              {isLive ? t('matrixSubtitle') : t('matrixSubtitleLoading')}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">

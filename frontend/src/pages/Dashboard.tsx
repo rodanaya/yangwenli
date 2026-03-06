@@ -700,7 +700,7 @@ export function Dashboard() {
                           {monthlyData.months.map((entry: { month: number }) => (
                             <Cell
                               key={entry.month}
-                              fill={entry.month === 12 ? RISK_COLORS.medium : 'rgba(255,255,255,0.12)'}
+                              fill={entry.month === 12 ? RISK_COLORS.medium : 'rgba(255,255,255,0.28)'}
                             />
                           ))}
                         </Bar>
@@ -978,7 +978,7 @@ export function Dashboard() {
                               width={Math.min(labelSize * (name?.length ?? 0) * 0.64, w - 8)}
                               height={labelSize + 4}
                               rx={2}
-                              style={{ fill: 'rgba(0,0,0,0.45)' }}
+                              style={{ fill: 'rgba(0,0,0,0.65)' }}
                             />
                             <text
                               x={cx}
@@ -994,17 +994,17 @@ export function Dashboard() {
                         {showRisk && (
                           <>
                             <rect
-                              x={cx - 30} y={cy + 2}
-                              width={60} height={13}
+                              x={cx - 34} y={cy + 2}
+                              width={68} height={13}
                               rx={2}
-                              style={{ fill: 'rgba(0,0,0,0.40)' }}
+                              style={{ fill: 'rgba(0,0,0,0.65)' }}
                             />
                             <text
                               x={cx}
                               y={cy + 9}
                               textAnchor="middle"
                               dominantBaseline="middle"
-                              style={{ fill: 'rgba(255,255,255,0.90)', fontSize: 9, fontFamily: 'var(--font-mono)' }}
+                              style={{ fill: '#fff', fontSize: 9, fontFamily: 'var(--font-mono)', fontWeight: 600 }}
                             >
                               {(riskPct ?? 0).toFixed(1)}% high-risk
                             </text>

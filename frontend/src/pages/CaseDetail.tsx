@@ -515,7 +515,7 @@ export default function CaseDetail() {
                   </div>
                 ) : (
                   <div className="text-[11px] text-text-muted">
-                    {data.compranet_visibility === 'low'
+                    {data.compranet_visibility === 'invisible'
                       ? 'Subcontracts outside COMPRANET scope'
                       : data.compranet_visibility === 'partial'
                       ? 'Partial COMPRANET coverage'

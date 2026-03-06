@@ -34,8 +34,6 @@ import {
   Legend,
   ComposedChart,
   Line,
-  Bar,
-  BarChart,
 } from '@/components/charts'
 import {
   MapPin,
@@ -81,73 +79,203 @@ function RiskBadge({ score }: { score: number }) {
   )
 }
 
-// ── Cross-state risk comparison bar chart ────────────────────────────────────
-function RiskComparisonChart({ states }: { states: SubnationalStateSummary[] }) {
-  const { t } = useTranslation('subnational')
+// ── Mexico schematic tile map ─────────────────────────────────────────────────
+type StateTile = { code: string; col: number; row: number }
 
-  // Sort by avg_risk_score descending, take top 20 for readability
-  const sorted = useMemo(
-    () =>
-      [...states]
-        .sort((a, b) => (b.avg_risk_score ?? 0) - (a.avg_risk_score ?? 0))
-        .slice(0, 20),
-    [states],
-  )
+const STATE_TILES: StateTile[] = [
+  // Row 1 — northern border
+  { code: 'BC',    col: 1, row: 1 },
+  { code: 'SON',   col: 4, row: 1 },
+  { code: 'CHIH',  col: 5, row: 1 },
+  { code: 'COAH',  col: 6, row: 1 },
+  { code: 'NL',    col: 7, row: 1 },
+  { code: 'TAMPS', col: 8, row: 1 },
+  // Row 2 — Baja + upper Pacific
+  { code: 'BCS',   col: 1, row: 2 },
+  { code: 'SIN',   col: 3, row: 2 },
+  { code: 'DGO',   col: 4, row: 2 },
+  { code: 'ZAC',   col: 5, row: 2 },
+  { code: 'SLP',   col: 6, row: 2 },
+  // Row 3 — mid-Pacific to Gulf
+  { code: 'NAY',   col: 2, row: 3 },
+  { code: 'JAL',   col: 3, row: 3 },
+  { code: 'AGS',   col: 4, row: 3 },
+  { code: 'GTO',   col: 5, row: 3 },
+  { code: 'QRO',   col: 6, row: 3 },
+  { code: 'HGO',   col: 7, row: 3 },
+  { code: 'VER',   col: 8, row: 3 },
+  // Row 4 — central
+  { code: 'COL',   col: 2, row: 4 },
+  { code: 'MICH',  col: 3, row: 4 },
+  { code: 'MEX',   col: 4, row: 4 },
+  { code: 'CDMX',  col: 5, row: 4 },
+  { code: 'TLAX',  col: 6, row: 4 },
+  { code: 'PUE',   col: 7, row: 4 },
+  // Row 5 — south
+  { code: 'GRO',   col: 3, row: 5 },
+  { code: 'MOR',   col: 4, row: 5 },
+  { code: 'OAX',   col: 5, row: 5 },
+  // Row 6 — southeast peninsula
+  { code: 'CHIS',  col: 4, row: 6 },
+  { code: 'TAB',   col: 5, row: 6 },
+  { code: 'CAMP',  col: 6, row: 6 },
+  { code: 'YUC',   col: 7, row: 6 },
+  { code: 'QROO',  col: 8, row: 6 },
+]
+
+function riskToColor(score: number | null | undefined): string {
+  if (score === null || score === undefined) return 'hsl(var(--muted))'
+  if (score >= 0.5) return RISK_COLORS.critical
+  if (score >= 0.3) return RISK_COLORS.high
+  if (score >= 0.1) return RISK_COLORS.medium
+  return RISK_COLORS.low
+}
+
+function MexicoTileMap({
+  states,
+  onStateClick,
+}: {
+  states: SubnationalStateSummary[]
+  onStateClick: (code: string) => void
+}) {
+  const { t } = useTranslation('subnational')
+  const [hovered, setHovered] = useState<string | null>(null)
+
+  const dataMap = useMemo(() => {
+    const m = new Map<string, SubnationalStateSummary>()
+    states.forEach((s) => m.set(s.state_code, s))
+    return m
+  }, [states])
+
+  const hoveredData = hovered ? dataMap.get(hovered) : undefined
 
   return (
     <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <MapPin className="h-4 w-4 text-muted-foreground" />
           <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-            {t('riskComparison')}
+            {t('mapTitle', 'Corruption Risk by State')}
           </CardTitle>
         </div>
       </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={260}>
-          <BarChart
-            data={sorted}
-            layout="vertical"
-            margin={{ top: 4, right: 48, left: 8, bottom: 4 }}
-          >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="hsl(var(--border))"
-              horizontal={false}
-            />
-            <XAxis
-              type="number"
-              domain={[0, 0.5]}
-              tickFormatter={(v: number) => v.toFixed(2)}
-              tick={{ fontSize: 10 }}
-            />
-            <YAxis type="category" dataKey="state_code" tick={{ fontSize: 10 }} width={42} />
-            <Tooltip
-              formatter={(v: number | string | undefined) => [
-                typeof v === 'number' ? v.toFixed(4) : v,
-                t('stats.avgRisk'),
-              ]}
-              labelFormatter={(l: string) =>
-                sorted.find((s) => s.state_code === l)?.state_name ?? l
-              }
-            />
-            <Bar
-              dataKey="avg_risk_score"
-              name={t('stats.avgRisk')}
-              fill="#fb923c"
-              radius={[0, 2, 2, 0]}
-            />
-          </BarChart>
-        </ResponsiveContainer>
-        <p className="mt-1 text-[11px] text-muted-foreground">
-          Top 20 states by average risk score (descending). Click a state row in the table to drill
-          down.
-        </p>
+      <CardContent className="space-y-3">
+        {/* Schematic tile map — 9 cols × 6 rows */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(9, 1fr)',
+            gridTemplateRows: 'repeat(6, 1fr)',
+            gap: '3px',
+            aspectRatio: '9 / 6',
+          }}
+        >
+          {STATE_TILES.map((tile) => {
+            const data = dataMap.get(tile.code)
+            const score = data?.avg_risk_score ?? null
+            const bg = riskToColor(score)
+            const isHov = hovered === tile.code
+
+            return (
+              <div
+                key={tile.code}
+                role={data ? 'button' : undefined}
+                tabIndex={data ? 0 : -1}
+                aria-label={
+                  data
+                    ? `${data.state_name}, risk score ${score?.toFixed(3)}`
+                    : tile.code
+                }
+                style={{
+                  gridColumn: tile.col,
+                  gridRow: tile.row,
+                  backgroundColor: bg,
+                  borderRadius: '3px',
+                  cursor: data ? 'pointer' : 'default',
+                  opacity: isHov ? 0.8 : 1,
+                  outline: isHov ? '2px solid hsl(var(--foreground))' : 'none',
+                  outlineOffset: '-1px',
+                  transition: 'opacity 0.1s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  overflow: 'hidden',
+                }}
+                onClick={() => data && onStateClick(tile.code)}
+                onMouseEnter={() => setHovered(tile.code)}
+                onMouseLeave={() => setHovered(null)}
+                onKeyDown={(e) => {
+                  if ((e.key === 'Enter' || e.key === ' ') && data) {
+                    onStateClick(tile.code)
+                  }
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 'clamp(5px, 1.1vw, 9px)',
+                    fontWeight: 700,
+                    color: 'white',
+                    textShadow: '0 1px 2px rgba(0,0,0,0.7)',
+                    letterSpacing: '-0.03em',
+                    lineHeight: 1,
+                    pointerEvents: 'none',
+                    userSelect: 'none',
+                  }}
+                >
+                  {tile.code}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Hover info strip */}
+        <div className="min-h-[28px] flex items-center">
+          {hoveredData ? (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+              <span className="font-semibold">{hoveredData.state_name}</span>
+              <span className="text-muted-foreground flex items-center gap-1">
+                Risk: <RiskBadge score={hoveredData.avg_risk_score ?? 0} />
+              </span>
+              <span className="text-muted-foreground">
+                {(hoveredData.contract_count ?? 0).toLocaleString()} contracts
+              </span>
+              <span className="text-muted-foreground">
+                {formatCompactMXN(hoveredData.total_value_mxn ?? 0)}
+              </span>
+              <span className="text-[10px] text-muted-foreground">↩ click to drill down</span>
+            </div>
+          ) : (
+            <span className="text-xs text-muted-foreground italic">
+              {t('mapHint', 'Hover a state to preview · click to drill down')}
+            </span>
+          )}
+        </div>
+
+        {/* Risk legend */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+            {t('riskLevel', 'Risk')}:
+          </span>
+          {(['low', 'medium', 'high', 'critical'] as const).map((level) => (
+            <div key={level} className="flex items-center gap-1">
+              <div
+                className="h-3 w-3 rounded-sm"
+                style={{ backgroundColor: RISK_COLORS[level] }}
+              />
+              <span className="text-[10px] capitalize">{level}</span>
+            </div>
+          ))}
+          <div className="flex items-center gap-1">
+            <div className="h-3 w-3 rounded-sm border border-border bg-muted" />
+            <span className="text-[10px] text-muted-foreground">{t('noData', 'No data')}</span>
+          </div>
+        </div>
       </CardContent>
     </Card>
   )
 }
+
 
 // ── States list ──────────────────────────────────────────────────────────────
 function StatesList() {
@@ -232,8 +360,11 @@ function StatesList() {
 
       {data.coverage_note && <CoverageBanner />}
 
-      {/* Cross-state risk comparison bar chart */}
-      <RiskComparisonChart states={rawStates} />
+      {/* Mexico schematic tile map — risk-colored per state */}
+      <MexicoTileMap
+        states={rawStates}
+        onStateClick={(code) => navigate(`/state-expenditure/${code}`)}
+      />
 
       {/* Sort controls + States table */}
       <div className="space-y-2">

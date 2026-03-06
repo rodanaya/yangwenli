@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { vendorApi, institutionApi, dossierApi } from '@/api/client'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
-import { RISK_COLORS, SECTORS } from '@/lib/constants'
+import { RISK_COLORS, SECTORS, getRiskLevelFromScore } from '@/lib/constants'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   ExternalLink,
@@ -18,9 +18,15 @@ import {
   Plus,
   Loader2,
   CheckCircle,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react'
 import type { ExplorerFilters } from '@/hooks/useExplorerFilters'
 import type { DossierSummary } from '@/components/AddToDossierButton'
+
+type SortField = 'avg_risk_score' | 'total_contracts' | 'total_value_mxn' | 'direct_award_pct'
+type SortOrder = 'asc' | 'desc'
 
 const PAGE_SIZE = 25
 
@@ -32,34 +38,50 @@ interface ResultsTableProps {
 
 export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps) {
   const { sectorId, yearStart, yearEnd, riskLevels, searchText, entityType } = filters
+  const [sortField, setSortField] = useState<SortField>('avg_risk_score')
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
+
+  const handleSort = (field: SortField) => {
+    if (field === sortField) {
+      setSortOrder(o => o === 'desc' ? 'asc' : 'desc')
+    } else {
+      setSortField(field)
+      setSortOrder('desc')
+    }
+    onPageChange(1)
+  }
 
   // Build effective risk_level param: omit only when ALL 4 levels selected (no filter needed)
   const riskLevelParam = riskLevels.length === 4 ? undefined : (riskLevels.join(',') as any)
+  // Pass year filter — API accepts a single year; use yearStart as the primary filter
+  const yearParam = yearStart ?? yearEnd
 
   const vendorQuery = useQuery({
-    queryKey: ['explore', 'vendors', sectorId, yearStart, yearEnd, riskLevels, searchText, page],
+    queryKey: ['explore', 'vendors', sectorId, yearStart, yearEnd, riskLevels, searchText, page, sortField, sortOrder],
     queryFn: () => vendorApi.getAll({
       sector_id: sectorId,
       risk_level: riskLevelParam,
       search: searchText || undefined,
       page,
       per_page: PAGE_SIZE,
-      sort_by: 'avg_risk_score',
-      sort_order: 'desc',
+      sort_by: sortField,
+      sort_order: sortOrder,
+      year: yearParam,
     }),
     enabled: entityType === 'vendor',
     staleTime: 2 * 60 * 1000,
   })
 
   const institutionQuery = useQuery({
-    queryKey: ['explore', 'institutions', sectorId, yearStart, yearEnd, riskLevels, searchText, page],
+    queryKey: ['explore', 'institutions', sectorId, yearStart, yearEnd, riskLevels, searchText, page, sortField, sortOrder],
     queryFn: () => institutionApi.getAll({
       sector_id: sectorId,
       search: searchText || undefined,
       page,
       per_page: PAGE_SIZE,
-      sort_by: 'avg_risk_score',
-      sort_order: 'desc',
+      sort_by: sortField,
+      sort_order: sortOrder,
+      year: yearParam,
     }),
     enabled: entityType === 'institution',
     staleTime: 2 * 60 * 1000,
@@ -124,18 +146,19 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
           <thead>
             <tr className="border-b border-border/30 text-[11px] text-text-muted uppercase tracking-wider">
               <th className="text-left py-2 pr-3 font-medium">Vendor</th>
-              <th className="text-right py-2 px-2 font-medium">Contracts</th>
-              <th className="text-right py-2 px-2 font-medium hidden md:table-cell">Total Value</th>
-              <th className="text-right py-2 px-2 font-medium">Risk</th>
-              <th className="text-right py-2 pl-2 font-medium hidden lg:table-cell">DA %</th>
+              <SortHeader field="total_contracts" label="Contracts" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="text-right py-2 px-2" />
+              <SortHeader field="total_value_mxn" label="Total Value" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="text-right py-2 px-2 hidden md:table-cell" />
+              <SortHeader field="avg_risk_score" label="Risk" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="text-right py-2 px-2" />
+              <SortHeader field="direct_award_pct" label="DA %" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="text-right py-2 pl-2 hidden lg:table-cell" />
               <th className="w-16" />
             </tr>
           </thead>
           <tbody>
             {vendors.map((v: any) => {
-              const riskColor = RISK_COLORS[v.risk_level as keyof typeof RISK_COLORS] || RISK_COLORS.low
+              const riskLevel = getRiskLevelFromScore(v.avg_risk_score ?? 0)
+              const riskColor = RISK_COLORS[riskLevel]
               return (
-                <VendorRow key={v.vendor_id} vendor={v} riskColor={riskColor} />
+                <VendorRow key={v.id} vendor={v} riskColor={riskColor} />
               )
             })}
           </tbody>
@@ -160,17 +183,18 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
         <thead>
           <tr className="border-b border-border/30 text-[11px] text-text-muted uppercase tracking-wider">
             <th className="text-left py-2 pr-3 font-medium">Institution</th>
-            <th className="text-right py-2 px-2 font-medium">Contracts</th>
-            <th className="text-right py-2 px-2 font-medium hidden md:table-cell">Total Value</th>
-            <th className="text-right py-2 px-2 font-medium">Risk</th>
+            <SortHeader field="total_contracts" label="Contracts" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="text-right py-2 px-2" />
+            <SortHeader field="total_value_mxn" label="Total Value" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="text-right py-2 px-2 hidden md:table-cell" />
+            <SortHeader field="avg_risk_score" label="Risk" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="text-right py-2 px-2" />
             <th className="w-16" />
           </tr>
         </thead>
         <tbody>
           {institutions.map((inst: any) => {
-            const riskColor = RISK_COLORS[inst.risk_level as keyof typeof RISK_COLORS] || RISK_COLORS.low
+            const riskLevel = getRiskLevelFromScore(inst.avg_risk_score ?? 0)
+            const riskColor = RISK_COLORS[riskLevel]
             return (
-              <InstitutionRow key={inst.institution_id} institution={inst} riskColor={riskColor} />
+              <InstitutionRow key={inst.id} institution={inst} riskColor={riskColor} />
             )
           })}
         </tbody>
@@ -260,6 +284,9 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
 
 function InstitutionRow({ institution, riskColor }: { institution: any; riskColor: string }) {
   const sector = institution.sector_id ? SECTORS.find(s => s.id === institution.sector_id) : null
+  // InstitutionResponse uses `id` and `name` (not institution_id / institution_name)
+  const instId = institution.id ?? institution.institution_id
+  const instName = institution.name ?? institution.institution_name ?? '—'
 
   return (
     <tr
@@ -275,10 +302,10 @@ function InstitutionRow({ institution, riskColor }: { institution: any; riskColo
             />
           )}
           <Link
-            to={`/institutions/${institution.institution_id}`}
+            to={`/institutions/${instId}`}
             className="font-medium text-text-primary hover:text-accent transition-colors truncate block max-w-xs"
           >
-            {institution.institution_name}
+            {instName}
           </Link>
         </div>
         {sector && (
@@ -291,7 +318,7 @@ function InstitutionRow({ institution, riskColor }: { institution: any; riskColo
         {formatNumber(institution.total_contracts || 0)}
       </td>
       <td className="text-right py-2 px-2 font-mono text-text-secondary text-xs hidden md:table-cell">
-        {formatCompactMXN(institution.total_value_mxn || 0)}
+        {formatCompactMXN(institution.total_amount_mxn || institution.total_value_mxn || 0)}
       </td>
       <td className="text-right py-2 px-2">
         <span
@@ -304,15 +331,15 @@ function InstitutionRow({ institution, riskColor }: { institution: any; riskColo
       <td className="pl-1 pr-2">
         <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
           <Link
-            to={`/institutions/${institution.institution_id}`}
-            aria-label={`View ${institution.institution_name}`}
+            to={`/institutions/${instId}`}
+            aria-label={`View ${instName}`}
           >
             <ExternalLink className="h-3.5 w-3.5 text-text-muted hover:text-accent transition-colors" />
           </Link>
           <InlineDossierTrigger
             entityType="institution"
-            entityId={institution.institution_id}
-            entityName={institution.institution_name}
+            entityId={instId}
+            entityName={instName}
           />
         </div>
       </td>
@@ -439,6 +466,45 @@ function InlineDossierTrigger({
         </div>
       )}
     </div>
+  )
+}
+
+// =============================================================================
+// Sortable column header
+// =============================================================================
+
+function SortHeader({
+  field,
+  label,
+  sortField,
+  sortOrder,
+  onSort,
+  className = '',
+}: {
+  field: SortField
+  label: string
+  sortField: SortField
+  sortOrder: SortOrder
+  onSort: (field: SortField) => void
+  className?: string
+}) {
+  const isActive = sortField === field
+  return (
+    <th className={`font-medium cursor-pointer select-none ${className}`}>
+      <button
+        onClick={() => onSort(field)}
+        className="inline-flex items-center gap-0.5 hover:text-text-primary transition-colors uppercase tracking-wider text-[11px]"
+      >
+        {label}
+        {isActive ? (
+          sortOrder === 'desc'
+            ? <ArrowDown className="h-2.5 w-2.5 ml-0.5" />
+            : <ArrowUp className="h-2.5 w-2.5 ml-0.5" />
+        ) : (
+          <ArrowUpDown className="h-2.5 w-2.5 ml-0.5 opacity-30" />
+        )}
+      </button>
+    </th>
   )
 }
 

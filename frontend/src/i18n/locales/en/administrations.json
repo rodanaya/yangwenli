@@ -59,5 +59,9 @@
     "singleBid": "Single Bid",
     "highRisk": "High Risk",
     "avgRisk": "Avg Risk"
-  }
+  },
+  "comparisonTableDesc": "Average metrics across five administrations — based on actual COMPRANET data. Selected administration highlighted in blue.",
+  "matrixTitle": "Risk Matrix by Administration and Sector",
+  "matrixSubtitle": "Volume-weighted averages — toggle metric with buttons on the right",
+  "matrixSubtitleLoading": "Illustrative estimates (loading live data…)"
 }

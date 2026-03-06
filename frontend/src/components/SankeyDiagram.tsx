@@ -184,7 +184,7 @@ export function SankeyDiagram({
           // Number of electricity particles scales with flow thickness
           const numParticles = strokeW >= 10 ? 3 : strokeW >= 4 ? 2 : 1
           // Animation duration: slow and calm — heavier flows travel at the same pace
-          const dur = Math.max(6.0, Math.min(12.0, 9.0 + (strokeW - 1.5) * 0.15))
+          const dur = Math.max(14.0, Math.min(26.0, 18.0 + (strokeW - 1.5) * 0.2))
 
           return (
             <g key={i}>

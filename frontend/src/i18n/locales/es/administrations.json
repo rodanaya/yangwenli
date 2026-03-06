@@ -59,5 +59,9 @@
     "singleBid": "Lic. Unica",
     "highRisk": "Alto Riesgo",
     "avgRisk": "Riesgo Prom."
-  }
+  },
+  "comparisonTableDesc": "Comparación de métricas promedio entre los cinco gobiernos — basado en datos reales de COMPRANET. La administración seleccionada aparece en azul.",
+  "matrixTitle": "Matriz de Riesgo por Administración y Sector",
+  "matrixSubtitle": "Valores promedio ponderados por volumen de contratos — cambia la métrica con los botones a la derecha",
+  "matrixSubtitleLoading": "Estimaciones ilustrativas (cargando datos…)"
 }
