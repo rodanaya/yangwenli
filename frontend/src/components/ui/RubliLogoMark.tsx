@@ -1,13 +1,12 @@
 /**
- * RUBLI brand mark — stepped Aztec pyramid (Teotihuacán style).
+ * RUBLI brand mark — Águila Real (Mexican golden eagle) head in profile.
  *
- * Concept: "Mexican procurement intelligence"
- * — The pyramid steps mirror ascending risk tiers (low → critical)
- * — Each step is slightly narrower than the last, like a risk funnel
- * — The apex represents the anomaly/critical finding
- * — Ground line anchors the structure
+ * Concept: The eagle from Mexico's coat of arms — the nation's guardian —
+ * reimagined as a data sentinel that sees and exposes corruption.
+ * Crown feathers signal the águila real; the hooked beak is the hook
+ * of investigation and accountability.
  *
- * Scales cleanly from 16px (compact) to 64px (hero).
+ * Scales cleanly from 16px (sidebar) to 64px (hero).
  */
 
 interface RubliLogoMarkProps {
@@ -26,32 +25,33 @@ export function RubliLogoMark({ size = 20, className }: RubliLogoMarkProps) {
       className={className}
       aria-label="RUBLI"
     >
-      {/* Ground line */}
-      <line
-        x1="1.5"
-        y1="17"
-        x2="18.5"
-        y2="17"
-        stroke="currentColor"
-        strokeWidth="1.25"
-        strokeLinecap="round"
-        opacity="0.5"
+      {/* Eagle head silhouette — evenodd punches out the eye */}
+      <path
+        fillRule="evenodd"
+        d="
+          M 1.5 9.5
+          L 3 8.2
+          C 5 7 7.5 5.5 9 4.5
+          L 9.5 3
+          L 10.5 1.5
+          L 11.5 3
+          L 13 1.5
+          L 14.5 3.5
+          C 17 5 18 8 17 11.5
+          C 16 14.5 14 17 11 18.5
+          L 7.5 19
+          C 5.5 18.5 4 17 3 15
+          L 2.5 13
+          L 2 11.5
+          L 1.8 10.5
+          Z
+          M 14.8 9
+          A 1.5 1.5 0 1 0 11.8 9
+          A 1.5 1.5 0 1 0 14.8 9
+          Z
+        "
+        fill="currentColor"
       />
-
-      {/* Step 1 — base tier (widest) */}
-      <rect x="2" y="14" width="16" height="3" rx="0.5" fill="currentColor" opacity="0.30" />
-
-      {/* Step 2 */}
-      <rect x="4" y="11" width="12" height="3" rx="0.5" fill="currentColor" opacity="0.50" />
-
-      {/* Step 3 */}
-      <rect x="6" y="8" width="8" height="3" rx="0.5" fill="currentColor" opacity="0.70" />
-
-      {/* Step 4 */}
-      <rect x="8" y="5" width="4" height="3" rx="0.5" fill="currentColor" opacity="0.88" />
-
-      {/* Apex — the anomaly/critical finding */}
-      <rect x="9" y="2.5" width="2" height="2.5" rx="0.4" fill="currentColor" />
     </svg>
   )
 }
