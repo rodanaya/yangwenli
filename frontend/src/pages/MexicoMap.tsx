@@ -38,7 +38,7 @@ const STATE_NAME_MAP: Record<string, string> = {
   GRO: 'Guerrero',
   HID: 'Hidalgo',
   JAL: 'Jalisco',
-  MEX: 'Estado de México',
+  MEX: 'México',
   MIC: 'Michoacán',
   MOR: 'Morelos',
   NAY: 'Nayarit',
@@ -157,7 +157,7 @@ export default function MexicoMap() {
 
   // Register Mexico GeoJSON with ECharts
   useEffect(() => {
-    fetch('https://raw.githubusercontent.com/angelnmara/geojson/master/mexicoHigh.json')
+    fetch('/mexico.geojson')
       .then((r) => r.json())
       .then((geoJson) => {
         echarts.registerMap('Mexico', geoJson as Parameters<typeof echarts.registerMap>[1])
