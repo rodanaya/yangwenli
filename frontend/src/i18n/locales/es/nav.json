@@ -35,6 +35,8 @@
   "model": "Transparencia del Modelo",
   "methodology": "Metodología",
   "limitations": "Limitaciones",
+  "heatmap": "Mapa de Calor Institucional",
+  "apiExplorer": "Explorador de API",
   "settings": "Configuración",
   "expandSidebar": "Expandir barra lateral",
   "collapseSidebar": "Contraer barra lateral",

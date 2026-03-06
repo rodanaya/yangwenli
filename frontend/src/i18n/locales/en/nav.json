@@ -35,6 +35,8 @@
   "model": "Model Transparency",
   "methodology": "Methodology",
   "limitations": "Limitations",
+  "heatmap": "Institution Heatmap",
+  "apiExplorer": "API Explorer",
   "settings": "Settings",
   "expandSidebar": "Expand sidebar",
   "collapseSidebar": "Collapse sidebar",

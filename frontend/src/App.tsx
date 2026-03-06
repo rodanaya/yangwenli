@@ -48,6 +48,9 @@ const MoneyFlow = lazy(() => import('@/pages/MoneyFlow'))
 const Workspace = lazy(() => import('@/pages/Watchlist'))
 const StateExpenditure = lazy(() => import('@/pages/StateExpenditure'))
 const YearInReview = lazy(() => import('@/pages/YearInReview'))
+const VendorCompare = lazy(() => import('@/pages/VendorCompare'))
+const ApiExplorer = lazy(() => import('@/pages/ApiExplorer'))
+const InstitutionHeatmap = lazy(() => import('@/pages/InstitutionHeatmap'))
 
 // First-visit routing: redirect "/" to Landing for new users, Dashboard for returning users
 function FirstVisitRedirect() {
@@ -331,6 +334,31 @@ function App() {
               <Route path="detective-patterns" element={<Navigate to="/administrations" replace />} />
               <Route path="spending-categories" element={<Navigate to="/categories" replace />} />
               <Route path="institution-health" element={<Navigate to="/institutions/health" replace />} />
+
+              <Route
+                path="vendors/compare"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <VendorCompare />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="api-explorer"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <ApiExplorer />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="heatmap"
+                element={
+                  <SuspenseBoundary fallback={<DashboardSkeleton />}>
+                    <InstitutionHeatmap />
+                  </SuspenseBoundary>
+                }
+              />
 
               {/* Redirects from old routes */}
               <Route path="vendors" element={<Navigate to="/explore?tab=vendors" replace />} />

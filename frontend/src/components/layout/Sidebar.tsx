@@ -26,6 +26,8 @@ import {
   ArrowLeftRight,
   Calendar,
   ShoppingCart,
+  BarChart2,
+  Code2,
 } from 'lucide-react'
 import { RubliLogoMark } from '@/components/ui/RubliLogoMark'
 import { LanguageToggle } from '@/components/LanguageToggle'
@@ -75,6 +77,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { i18nKey: 'network', href: '/network', icon: Network },
       { i18nKey: 'moneyFlow', href: '/money-flow', icon: ArrowLeftRight },
       { i18nKey: 'contracts', href: '/contracts', icon: FileText },
+      { i18nKey: 'heatmap', href: '/heatmap', icon: BarChart2 },
     ],
   },
   {
@@ -90,6 +93,7 @@ const NAV_BOTTOM: { i18nKey: string; href: string; icon: React.ElementType }[] =
   { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
   { i18nKey: 'model', href: '/model', icon: FlaskConical },
   { i18nKey: 'limitations', href: '/limitations', icon: Info },
+  { i18nKey: 'apiExplorer', href: '/api-explorer', icon: Code2 },
   { i18nKey: 'settings', href: '/settings', icon: Settings },
 ]
 
