@@ -15,6 +15,7 @@
  */
 
 import { memo, useState, useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQueries, useQuery } from '@tanstack/react-query'
 import {
   LineChart,
@@ -378,6 +379,7 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
   className,
   defaultSectors,
 }: SectorRiskTrendPanelProps) {
+  const { t } = useTranslation('sectors')
   const { sectorLines, isLoading, isLive, usingFallback } = useSectorTrendData()
 
   // Initialize enabled sectors from defaultSectors prop
@@ -462,7 +464,7 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
     return (
       <div className={cn('bg-surface-secondary rounded-lg p-4', className)}>
         <div className="flex items-center justify-between mb-3">
-          <p className="text-base font-bold text-text-primary">Procurement Risk Trends by Sector</p>
+          <p className="text-base font-bold text-text-primary">{t('charts.trendTitle')}</p>
         </div>
         <div className="animate-pulse space-y-2">
           <div className="bg-surface-muted rounded h-6 w-48" />
@@ -477,10 +479,10 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
     return (
       <div className={cn('bg-surface-secondary rounded-lg p-4', className)}>
         <p className="text-base font-bold text-text-primary mb-2">
-          Procurement Risk Trends by Sector
+          {t('charts.trendTitle')}
         </p>
         <div className="flex items-center justify-center text-sm text-text-muted border border-border/30 rounded-lg bg-background-elevated/20" style={{ height: 380 }}>
-          No trend data available.
+          {t('charts.noTrendData')}
         </div>
       </div>
     )
@@ -494,7 +496,7 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
       <div className="flex items-start justify-between mb-3 gap-2">
         <div>
           <p className="text-base font-bold text-text-primary">
-            Procurement Risk Trends by Sector
+            {t('charts.trendTitle')}
           </p>
           <p className="text-xs text-text-muted font-mono mt-0.5">
             High-risk rate (%) · 2010–2025

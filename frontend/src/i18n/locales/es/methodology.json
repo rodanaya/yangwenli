@@ -225,5 +225,53 @@
       "step4Desc": "La corrección PU holdout de Elkan & Noto (2008) (c=0.8815) ajusta por contratos corruptos no etiquetados. Bootstrap (500 remuestreos) proporciona intervalos de confianza del 95%.",
       "thresholds": "Umbrales de Nivel de Riesgo"
     }
-  }
+  },
+  "featureNames": {
+    "priceVolatility": "Volatilidad de Precio",
+    "institutionDiversity": "Diversidad Institucional",
+    "winRate": "Tasa de Adjudicación",
+    "vendorConcentration": "Concentración de Proveedor",
+    "sectorSpread": "Dispersión Sectorial",
+    "industryMismatch": "Discordancia de Industria",
+    "sameDayContracts": "Contratos Mismo Día",
+    "directAward": "Adjudicación Directa",
+    "adPeriodDays": "Días de Publicación",
+    "networkMembers": "Miembros de Red",
+    "yearEnd": "Fin de Año",
+    "institutionRisk": "Riesgo Institucional",
+    "priceRatio": "Ratio de Precio",
+    "singleBid": "Licitación Única",
+    "priceHypConfidence": "Confianza Hipótesis Precio",
+    "coBidRate": "Tasa Co-licitación"
+  },
+  "v33WeightNames": {
+    "singleBidding": "Licitación Única",
+    "nonOpenProcedure": "Procedimiento No Abierto",
+    "priceAnomaly": "Anomalía de Precio",
+    "vendorConcentration": "Concentración de Proveedor",
+    "shortAdPeriod": "Período de Publicación Corto",
+    "networkRisk": "Riesgo de Red",
+    "yearEndTiming": "Fin de Año Fiscal",
+    "thresholdSplitting": "Fragmentación de Umbral"
+  },
+  "metricNames": {
+    "aucRoc": "AUC-ROC",
+    "brierScore": "Puntuación Brier",
+    "detectionRate": "Tasa de Detección (med+)",
+    "highPlusDetection": "Detección Alto+",
+    "liftVsRandom": "Lift vs Aleatorio"
+  },
+  "sectionLabels": {
+    "overview": "Descripción del Modelo",
+    "features": "Las 16 Características",
+    "findings": "Hallazgos Clave",
+    "validation": "Validación",
+    "methods": "Métodos Estadísticos",
+    "limitations": "Limitaciones",
+    "v33": "Modelo Anterior (v3.3)",
+    "dataSources": "Fuentes de Datos",
+    "references": "Referencias"
+  },
+  "pageHeadline": "Cómo Detectamos Corrupción",
+  "pageSubline": "Análisis estadístico de 3.1M contratos del gobierno federal mexicano"
 }

@@ -90,6 +90,54 @@
   "references": {
     "title": "References"
   },
+  "featureNames": {
+    "priceVolatility": "Price Volatility",
+    "institutionDiversity": "Institution Diversity",
+    "winRate": "Win Rate",
+    "vendorConcentration": "Vendor Concentration",
+    "sectorSpread": "Sector Spread",
+    "industryMismatch": "Industry Mismatch",
+    "sameDayContracts": "Same-Day Contracts",
+    "directAward": "Direct Award",
+    "adPeriodDays": "Ad Period Days",
+    "networkMembers": "Network Members",
+    "yearEnd": "Year-End",
+    "institutionRisk": "Institution Risk",
+    "priceRatio": "Price Ratio",
+    "singleBid": "Single Bid",
+    "priceHypConfidence": "Price Hyp. Confidence",
+    "coBidRate": "Co-Bid Rate"
+  },
+  "v33WeightNames": {
+    "singleBidding": "Single Bidding",
+    "nonOpenProcedure": "Non-Open Procedure",
+    "priceAnomaly": "Price Anomaly",
+    "vendorConcentration": "Vendor Concentration",
+    "shortAdPeriod": "Short Ad Period",
+    "networkRisk": "Network Risk",
+    "yearEndTiming": "Year-End Timing",
+    "thresholdSplitting": "Threshold Splitting"
+  },
+  "metricNames": {
+    "aucRoc": "AUC-ROC",
+    "brierScore": "Brier Score",
+    "detectionRate": "Detection Rate (med+)",
+    "highPlusDetection": "High+ Detection",
+    "liftVsRandom": "Lift vs Random"
+  },
+  "sectionLabels": {
+    "overview": "Model Overview",
+    "features": "The 16 Features",
+    "findings": "Key Findings",
+    "validation": "Ground Truth Validation",
+    "methods": "Statistical Methods",
+    "limitations": "Limitations",
+    "v33": "Previous Model (v3.3)",
+    "dataSources": "Data Sources",
+    "references": "References"
+  },
+  "pageHeadline": "How We Detect Corruption",
+  "pageSubline": "Statistical analysis of 3.1M Mexican government procurement contracts",
   "groundTruth": {
     "pageTitle": "Ground Truth War Room",
     "pageSubtitle": "Documented corruption cases validate the risk detection model",

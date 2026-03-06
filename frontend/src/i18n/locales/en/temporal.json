@@ -85,6 +85,30 @@
     "subtitle": "Risk spikes 64% every December — the year-end budget dump",
     "toggle_risk": "Avg Risk",
     "toggle_amount": "Avg Amount",
-    "callout": "Year-end fiscal pressure pushes larger, less competitive contracts through rushed approval chains every December — a pattern that repeats without exception across all 23 years of data."
+    "callout": "Year-end fiscal pressure pushes larger, less competitive contracts through rushed approval chains every December — a pattern that repeats without exception across all 23 years of data.",
+    "tooltip_avgRisk": "Avg Risk",
+    "tooltip_avgAmount": "Avg Amount",
+    "tooltip_contracts": "Contracts",
+    "center_risk": "+{{pct}}% risk",
+    "center_vsAvg": "vs Oct avg",
+    "legend_dec": "Dec",
+    "legend_adjMonths": "Nov / Jan",
+    "legend_other": "Other",
+    "annotation_label": "Year-End Budget Dump",
+    "annotation_perContract": "Avg MX${{amount}}M per contract"
+  },
+  "months": {
+    "Jan": "Jan",
+    "Feb": "Feb",
+    "Mar": "Mar",
+    "Apr": "Apr",
+    "May": "May",
+    "Jun": "Jun",
+    "Jul": "Jul",
+    "Aug": "Aug",
+    "Sep": "Sep",
+    "Oct": "Oct",
+    "Nov": "Nov",
+    "Dec": "Dec"
   }
 }

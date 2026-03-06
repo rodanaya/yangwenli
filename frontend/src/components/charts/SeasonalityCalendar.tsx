@@ -24,19 +24,19 @@ import { cn } from '@/lib/utils'
 // Static data — 23-year aggregate from RUBLI_NORMALIZED.db
 // =============================================================================
 
-const MONTHLY_DATA = [
-  { month: 1,  name: 'Jan', contracts: 238252, avgAmount: 5011251, avgRisk: 0.1273 },
-  { month: 2,  name: 'Feb', contracts: 228300, avgAmount: 3340387, avgRisk: 0.1010 },
-  { month: 3,  name: 'Mar', contracts: 287688, avgAmount: 3483800, avgRisk: 0.1052 },
-  { month: 4,  name: 'Apr', contracts: 281966, avgAmount: 2934832, avgRisk: 0.1003 },
-  { month: 5,  name: 'May', contracts: 275603, avgAmount: 2599297, avgRisk: 0.0963 },
-  { month: 6,  name: 'Jun', contracts: 265717, avgAmount: 3227334, avgRisk: 0.1027 },
-  { month: 7,  name: 'Jul', contracts: 287703, avgAmount: 2700221, avgRisk: 0.0909 },
-  { month: 8,  name: 'Aug', contracts: 258908, avgAmount: 2524459, avgRisk: 0.0919 },
-  { month: 9,  name: 'Sep', contracts: 241899, avgAmount: 3141557, avgRisk: 0.0950 },
-  { month: 10, name: 'Oct', contracts: 280608, avgAmount: 2482730, avgRisk: 0.0900 },
-  { month: 11, name: 'Nov', contracts: 264285, avgAmount: 2686841, avgRisk: 0.1143 },
-  { month: 12, name: 'Dec', contracts: 199078, avgAmount: 4873188, avgRisk: 0.1476 },
+const MONTHLY_DATA_BASE = [
+  { month: 1,  nameKey: 'Jan', contracts: 238252, avgAmount: 5011251, avgRisk: 0.1273 },
+  { month: 2,  nameKey: 'Feb', contracts: 228300, avgAmount: 3340387, avgRisk: 0.1010 },
+  { month: 3,  nameKey: 'Mar', contracts: 287688, avgAmount: 3483800, avgRisk: 0.1052 },
+  { month: 4,  nameKey: 'Apr', contracts: 281966, avgAmount: 2934832, avgRisk: 0.1003 },
+  { month: 5,  nameKey: 'May', contracts: 275603, avgAmount: 2599297, avgRisk: 0.0963 },
+  { month: 6,  nameKey: 'Jun', contracts: 265717, avgAmount: 3227334, avgRisk: 0.1027 },
+  { month: 7,  nameKey: 'Jul', contracts: 287703, avgAmount: 2700221, avgRisk: 0.0909 },
+  { month: 8,  nameKey: 'Aug', contracts: 258908, avgAmount: 2524459, avgRisk: 0.0919 },
+  { month: 9,  nameKey: 'Sep', contracts: 241899, avgAmount: 3141557, avgRisk: 0.0950 },
+  { month: 10, nameKey: 'Oct', contracts: 280608, avgAmount: 2482730, avgRisk: 0.0900 },
+  { month: 11, nameKey: 'Nov', contracts: 264285, avgAmount: 2686841, avgRisk: 0.1143 },
+  { month: 12, nameKey: 'Dec', contracts: 199078, avgAmount: 4873188, avgRisk: 0.1476 },
 ]
 
 // October has the lowest avg risk (0.09) — use as baseline for "64% higher"
@@ -74,9 +74,11 @@ interface MonthDatum {
 function CustomTooltip({
   active,
   payload,
+  t,
 }: {
   active?: boolean
   payload?: TooltipPayloadItem[]
+  t: (key: string) => string
 }) {
   if (!active || !payload?.length) return null
   const d = payload[0]?.payload
@@ -90,9 +92,9 @@ function CustomTooltip({
   return (
     <div className="rounded-lg border border-border/50 bg-background-elevated px-3 py-2 shadow-lg text-xs font-mono">
       <p className="font-bold text-text-primary mb-1">{d.name}</p>
-      <p className="text-text-secondary">Avg Risk: <span className="text-text-primary">{(d.avgRisk * 100).toFixed(2)}%</span></p>
-      <p className="text-text-secondary">Avg Amount: <span className="text-text-primary">MX${amountM}M</span></p>
-      <p className="text-text-secondary">Contracts: <span className="text-text-primary">{contractsK}</span></p>
+      <p className="text-text-secondary">{t('seasonality.tooltip_avgRisk')}: <span className="text-text-primary">{(d.avgRisk * 100).toFixed(2)}%</span></p>
+      <p className="text-text-secondary">{t('seasonality.tooltip_avgAmount')}: <span className="text-text-primary">MX${amountM}M</span></p>
+      <p className="text-text-secondary">{t('seasonality.tooltip_contracts')}: <span className="text-text-primary">{contractsK}</span></p>
     </div>
   )
 }
@@ -109,18 +111,18 @@ export function SeasonalityCalendar() {
 
   // Normalize to 0–100 scale for RadialBarChart
   const chartData: MonthDatum[] = useMemo(() => {
-    const values = MONTHLY_DATA.map((d) => (metric === 'risk' ? d.avgRisk : d.avgAmount))
+    const values = MONTHLY_DATA_BASE.map((d) => (metric === 'risk' ? d.avgRisk : d.avgAmount))
     const max = Math.max(...values)
     const min = Math.min(...values)
     const range = max - min || 1
 
-    return MONTHLY_DATA.map((d) => {
+    return MONTHLY_DATA_BASE.map((d) => {
       const raw = metric === 'risk' ? d.avgRisk : d.avgAmount
       // Scale to 20–100 so even min month has a visible bar
       const value = 20 + ((raw - min) / range) * 80
-      return { ...d, value }
+      return { ...d, name: t(`months.${d.nameKey}`), value }
     })
-  }, [metric])
+  }, [metric, t])
 
   const decRiskPctHigher = Math.round(((DEC_RISK - OCT_RISK) / OCT_RISK) * 100)
   const decAmountM = (DEC_AMOUNT / 1_000_000).toFixed(2)
@@ -191,7 +193,7 @@ export function SeasonalityCalendar() {
                 />
               ))}
             </RadialBar>
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<CustomTooltip t={t} />} />
           </RadialBarChart>
         </ResponsiveContainer>
 
@@ -201,11 +203,11 @@ export function SeasonalityCalendar() {
           style={{ paddingTop: '10%' }}
           aria-label="December is 64% higher risk than October average"
         >
-          <span className="text-2xl font-bold font-mono text-[#ef4444]">Dec</span>
+          <span className="text-2xl font-bold font-mono text-[#ef4444]">{t('months.Dec')}</span>
           <span className="text-sm font-bold font-mono text-text-primary">
-            +{decRiskPctHigher}% risk
+            +{decRiskPctHigher}% {t('seasonality.toggle_risk')}
           </span>
-          <span className="text-[10px] text-text-muted font-mono">vs Oct avg</span>
+          <span className="text-[10px] text-text-muted font-mono">{t('seasonality.center_vsAvg')}</span>
         </div>
       </div>
 
@@ -215,7 +217,7 @@ export function SeasonalityCalendar() {
           DEC
         </span>
         <p className="text-[11px] text-text-secondary leading-relaxed">
-          Year-End Budget Dump <span className="text-[#ef4444] font-bold">+{decRiskPctHigher}%</span> risk ·{' '}
+          {t('seasonality.annotation_label')} <span className="text-[#ef4444] font-bold">+{decRiskPctHigher}%</span> {t('seasonality.toggle_risk')} ·{' '}
           Avg MX${decAmountM}M per contract
         </p>
       </div>
@@ -229,15 +231,15 @@ export function SeasonalityCalendar() {
       <div className="flex items-center justify-center gap-4 text-[10px] font-mono text-text-muted">
         <span className="flex items-center gap-1">
           <span className="inline-block w-2.5 h-2.5 rounded-sm bg-[#ef4444]" />
-          Dec
+          {t('seasonality.legend_dec')}
         </span>
         <span className="flex items-center gap-1">
           <span className="inline-block w-2.5 h-2.5 rounded-sm bg-[#f97316]" />
-          Nov / Jan
+          {t('seasonality.legend_adjMonths')}
         </span>
         <span className="flex items-center gap-1">
           <span className="inline-block w-2.5 h-2.5 rounded-sm bg-[#3b82f6]" />
-          Other
+          {t('seasonality.legend_other')}
         </span>
       </div>
     </div>
