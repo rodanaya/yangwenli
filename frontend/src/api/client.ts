@@ -88,6 +88,7 @@ import type {
   ThematicReport,
   ReportTypeSummary,
   VendorAISummary,
+  VendorQQWResponse,
   FeatureImportanceItem,
   ModelComparisonItem,
   CommunityDetailResponse,
@@ -144,6 +145,7 @@ export type {
   ContractExportFilters,
   TrendDataPoint,
   ContractListItem,
+  VendorQQWResponse,
 } from './types'
 
 /** Generic query parameter map — used internally by buildQueryParams */
@@ -481,6 +483,11 @@ export const vendorApi = {
 
   async getAiSummary(vendorId: number): Promise<VendorAISummary> {
     const { data } = await api.get<VendorAISummary>(`/vendors/${vendorId}/ai-summary`)
+    return data
+  },
+
+  async getQQW(vendorId: number): Promise<VendorQQWResponse> {
+    const { data } = await api.get<VendorQQWResponse>(`/vendors/${vendorId}/qqw`)
     return data
   },
 }

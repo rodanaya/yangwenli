@@ -1831,3 +1831,159 @@ def list_verified_vendors(
             pagination=PaginationMeta.create(page, per_page, total),
             filters_applied=filters_applied
         )
+
+
+# ── QQW (QuiénesQuién.wiki) cross-reference ──────────────────────────────────
+
+class QQWContract(BaseModel):
+    qqw_ocid: Optional[str] = None
+    qqw_contract_id: Optional[str] = None
+    qqw_supplier_id: Optional[str] = None
+    qqw_supplier_name: Optional[str] = None
+    supplier_rfc: Optional[str] = None
+    buyer_name: Optional[str] = None
+    buyer_institution: Optional[str] = None
+    contact_person_id: Optional[str] = None
+    contact_person_name: Optional[str] = None
+    contract_value: Optional[float] = None
+    contract_currency: Optional[str] = None
+    contract_date: Optional[str] = None
+
+
+class QQWProcurementOfficial(BaseModel):
+    contact_person_id: str
+    contact_person_name: str
+    contract_count: int
+    buyer_institutions: list[str]
+
+
+class QQWResponse(BaseModel):
+    vendor_id: int
+    vendor_name: str
+    qqw_contract_count: int
+    has_data: bool
+    contracts: list[QQWContract]
+    procurement_officials: list[QQWProcurementOfficial]
+    note: str
+
+
+@router.get("/{vendor_id:int}/qqw", response_model=QQWResponse)
+def get_vendor_qqw(
+    vendor_id: int = Path(..., description="Vendor ID"),
+    limit: int = Query(20, ge=1, le=100, description="Max contracts to return"),
+):
+    """
+    Get QuiénesQuién.wiki cross-reference data for a vendor.
+
+    Returns contracts found in QQW's dataset plus a rolled-up list of
+    procurement officials (buyer contactPoint persons) who dealt with
+    this vendor across all institutions.
+
+    Requires vendor_qqw_data to be populated via:
+        python -m scripts.fetch_qqw_data
+    """
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT name FROM vendors WHERE id = ?", (vendor_id,))
+        vendor_row = cursor.fetchone()
+        if not vendor_row:
+            raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
+
+        vendor_name = vendor_row["name"]
+
+        # Check if QQW data has been fetched for this vendor
+        cursor.execute(
+            "SELECT COUNT(*) as cnt FROM vendor_qqw_data WHERE vendor_id = ?",
+            (vendor_id,),
+        )
+        total_rows = cursor.fetchone()["cnt"]
+
+        # Fetch contracts (excluding sentinel rows with no ocid)
+        cursor.execute(
+            """
+            SELECT qqw_ocid, qqw_contract_id, qqw_supplier_id, qqw_supplier_name,
+                   supplier_rfc, buyer_name, buyer_institution,
+                   contact_person_id, contact_person_name,
+                   contract_value, contract_currency, contract_date
+            FROM vendor_qqw_data
+            WHERE vendor_id = ?
+              AND qqw_ocid IS NOT NULL
+              AND qqw_ocid != ''
+            ORDER BY contract_date DESC
+            LIMIT ?
+            """,
+            (vendor_id, limit),
+        )
+        rows = cursor.fetchall()
+
+        contracts = [
+            QQWContract(
+                qqw_ocid=r["qqw_ocid"],
+                qqw_contract_id=r["qqw_contract_id"],
+                qqw_supplier_id=r["qqw_supplier_id"],
+                qqw_supplier_name=r["qqw_supplier_name"],
+                supplier_rfc=r["supplier_rfc"] or None,
+                buyer_name=r["buyer_name"],
+                buyer_institution=r["buyer_institution"],
+                contact_person_id=r["contact_person_id"],
+                contact_person_name=r["contact_person_name"],
+                contract_value=r["contract_value"],
+                contract_currency=r["contract_currency"],
+                contract_date=r["contract_date"],
+            )
+            for r in rows
+        ]
+
+        # Roll up procurement officials
+        cursor.execute(
+            """
+            SELECT contact_person_id, contact_person_name,
+                   COUNT(*) as contract_count,
+                   GROUP_CONCAT(DISTINCT buyer_institution) as institutions
+            FROM vendor_qqw_data
+            WHERE vendor_id = ?
+              AND contact_person_id IS NOT NULL
+              AND contact_person_id != ''
+            GROUP BY contact_person_id, contact_person_name
+            ORDER BY contract_count DESC
+            LIMIT 20
+            """,
+            (vendor_id,),
+        )
+        officials_rows = cursor.fetchall()
+
+        officials = [
+            QQWProcurementOfficial(
+                contact_person_id=r["contact_person_id"],
+                contact_person_name=r["contact_person_name"],
+                contract_count=r["contract_count"],
+                buyer_institutions=[
+                    inst.strip()
+                    for inst in (r["institutions"] or "").split(",")
+                    if inst.strip()
+                ],
+            )
+            for r in officials_rows
+        ]
+
+        has_data = len(contracts) > 0
+        note = (
+            "No QQW data yet — run: python -m scripts.fetch_qqw_data"
+            if total_rows == 0
+            else (
+                "No matching contracts found in QQW's dataset for this vendor."
+                if not has_data
+                else f"Sourced from QuiénesQuién.wiki — {total_rows} records fetched."
+            )
+        )
+
+        return QQWResponse(
+            vendor_id=vendor_id,
+            vendor_name=vendor_name,
+            qqw_contract_count=len(contracts),
+            has_data=has_data,
+            contracts=contracts,
+            procurement_officials=officials,
+            note=note,
+        )

@@ -847,6 +847,42 @@ export interface VendorExternalFlags {
 }
 
 // ============================================================================
+// QQW (QuiénesQuién.wiki) Types
+// ============================================================================
+
+export interface QQWContract {
+  qqw_ocid: string | null
+  qqw_contract_id: string | null
+  qqw_supplier_id: string | null
+  qqw_supplier_name: string | null
+  supplier_rfc: string | null
+  buyer_name: string | null
+  buyer_institution: string | null
+  contact_person_id: string | null
+  contact_person_name: string | null
+  contract_value: number | null
+  contract_currency: string | null
+  contract_date: string | null
+}
+
+export interface QQWProcurementOfficial {
+  contact_person_id: string
+  contact_person_name: string
+  contract_count: number
+  buyer_institutions: string[]
+}
+
+export interface VendorQQWResponse {
+  vendor_id: number
+  vendor_name: string
+  qqw_contract_count: number
+  has_data: boolean
+  contracts: QQWContract[]
+  procurement_officials: QQWProcurementOfficial[]
+  note: string
+}
+
+// ============================================================================
 // Classification Types
 // ============================================================================
 
