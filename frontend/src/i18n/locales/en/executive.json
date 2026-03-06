@@ -289,6 +289,69 @@
     "text": "26,872 contracts (0.9%) were originally recorded in foreign currencies (USD, EUR). Amounts have been converted to MXN using historical exchange rates."
   },
 
+  "topFraudSignals": {
+    "header": "Top 3 risk indicators — model coefficients (v5.1)",
+    "s1": {
+      "signal": "Price Volatility",
+      "detail": "The single strongest predictor (β = +1.22). Vendors whose contract amounts swing wildly across institutions — a hallmark of pricing manipulation rather than legitimate market fluctuation.",
+      "examples": "IMSS Ghost Network · COVID-19 Procurement"
+    },
+    "s2": {
+      "signal": "Abnormal Win Rate",
+      "detail": "Vendors winning contracts at rates far above their sector baseline (β = +0.73). Legitimate companies win some tenders; captured institutions award the same vendors repeatedly.",
+      "examples": "Toka IT Monopoly · Edenred Voucher Monopoly"
+    },
+    "s3": {
+      "signal": "Vendor Concentration",
+      "detail": "A single vendor capturing a disproportionate share of an institution's procurement (β = +0.43). High concentration with few competitors is the structural precondition for corruption.",
+      "examples": "Segalmex · PEMEX-Cotemar"
+    }
+  },
+
+  "caseInPoint": {
+    "label": "Case in Point",
+    "title": "IMSS Ghost Company Network · Health Sector · 2018–2022",
+    "desc1": "Two vendors — Pisa Farmacéutica and DIQN — won",
+    "contracts": "9,366 contracts",
+    "desc2": "worth billions of pesos through a single institution (IMSS), frequently on the same day, with no competing bids. The model flags",
+    "detection": "99.9%",
+    "desc3": "of these contracts as high-risk — the highest detection rate of any documented case. This single case demonstrates all three patterns operating simultaneously: direct award dominance, year-end concentration, and extreme vendor–institution lock-in.",
+    "link": "View all 22 documented cases"
+  },
+
+  "timeline": {
+    "header": "Ground Truth Cases — Chronological Timeline",
+    "types": {
+      "Ghost companies": "Ghost companies",
+      "Conflict of interest": "Conflict of interest",
+      "Bribery": "Bribery",
+      "Invoice fraud": "Invoice fraud",
+      "Bid rigging": "Bid rigging",
+      "Overpricing": "Overpricing",
+      "Monopoly": "Monopoly",
+      "Embezzlement": "Embezzlement",
+      "Procurement fraud": "Procurement fraud",
+      "Tender rigging": "Tender rigging"
+    },
+    "impact": {
+      "Undisclosed": "Undisclosed",
+      "Under investigation": "Under investigation",
+      "Documented / shared vendors": "Documented / shared vendors"
+    }
+  },
+
+  "modelEvolution": {
+    "header": "Model Evolution — AUC-ROC (higher = better discrimination)",
+    "random": "0.50 (random)",
+    "perfect": "1.00 (perfect)",
+    "v33label": "Weighted Checklist",
+    "v33tag": "8 rule-based factors",
+    "v40label": "Statistical Framework",
+    "v40tag": "Z-scores + Mahalanobis",
+    "v51label": "Per-Sector Sub-Models",
+    "v51tag": "Active · 16 features · ElasticNet"
+  },
+
   "patternWeb": {
     "node1": { "line1": "DIRECT", "line2": "AWARD", "sub": "71% of contracts" },
     "node2": { "line1": "DECEMBER", "line2": "RUSH", "sub": "1.33× spending spike" },

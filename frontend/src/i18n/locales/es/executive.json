@@ -289,6 +289,69 @@
     "text": "26,872 contratos (0.9%) fueron registrados originalmente en divisas extranjeras (USD, EUR). Los montos han sido convertidos a MXN usando tipos de cambio históricos."
   },
 
+  "topFraudSignals": {
+    "header": "Top 3 indicadores de riesgo — coeficientes del modelo (v5.1)",
+    "s1": {
+      "signal": "Volatilidad de Precios",
+      "detail": "El predictor individual más fuerte (β = +1.22). Proveedores cuyos montos de contratos varían drásticamente entre instituciones — sello distintivo de manipulación de precios, no de fluctuación legítima de mercado.",
+      "examples": "Red Fantasma IMSS · Contratación COVID-19"
+    },
+    "s2": {
+      "signal": "Tasa de Adjudicación Anómala",
+      "detail": "Proveedores que ganan contratos a tasas muy superiores a la línea base de su sector (β = +0.73). Las empresas legítimas ganan algunas licitaciones; las instituciones capturadas adjudican repetidamente a los mismos proveedores.",
+      "examples": "Toka IT Monopoly · Edenred Voucher Monopoly"
+    },
+    "s3": {
+      "signal": "Concentración de Proveedores",
+      "detail": "Un solo proveedor capturando una proporción desproporcionada de la contratación de una institución (β = +0.43). La alta concentración con pocos competidores es la precondición estructural para la corrupción.",
+      "examples": "Segalmex · PEMEX-Cotemar"
+    }
+  },
+
+  "caseInPoint": {
+    "label": "Caso Ilustrativo",
+    "title": "Red de Empresas Fantasma del IMSS · Sector Salud · 2018–2022",
+    "desc1": "Dos proveedores — Pisa Farmacéutica y DIQN — ganaron",
+    "contracts": "9,366 contratos",
+    "desc2": "por valor de miles de millones de pesos a través de una sola institución (IMSS), frecuentemente el mismo día, sin licitación competitiva. El modelo señala el",
+    "detection": "99.9%",
+    "desc3": "de estos contratos como de alto riesgo — la mayor tasa de detección de cualquier caso documentado. Este caso único demuestra los tres patrones actuando simultáneamente: dominio de adjudicación directa, concentración a fin de año y captura extrema proveedor–institución.",
+    "link": "Ver los 22 casos documentados"
+  },
+
+  "timeline": {
+    "header": "Casos Documentados — Cronología",
+    "types": {
+      "Ghost companies": "Empresas fantasma",
+      "Conflict of interest": "Conflicto de interés",
+      "Bribery": "Soborno",
+      "Invoice fraud": "Fraude de facturas",
+      "Bid rigging": "Colusión en licitaciones",
+      "Overpricing": "Sobreprecio",
+      "Monopoly": "Monopolio",
+      "Embezzlement": "Malversación",
+      "Procurement fraud": "Fraude en contratación",
+      "Tender rigging": "Manipulación de licitación"
+    },
+    "impact": {
+      "Undisclosed": "No divulgado",
+      "Under investigation": "Bajo investigación",
+      "Documented / shared vendors": "Documentado / proveedores compartidos"
+    }
+  },
+
+  "modelEvolution": {
+    "header": "Evolución del Modelo — AUC-ROC (mayor = mejor discriminación)",
+    "random": "0.50 (aleatorio)",
+    "perfect": "1.00 (perfecto)",
+    "v33label": "Lista Ponderada",
+    "v33tag": "8 factores basados en reglas",
+    "v40label": "Marco Estadístico",
+    "v40tag": "Z-scores + Mahalanobis",
+    "v51label": "Submodelos por Sector",
+    "v51tag": "Activo · 16 variables · ElasticNet"
+  },
+
   "patternWeb": {
     "node1": { "line1": "ADJ.", "line2": "DIRECTA", "sub": "71% de contratos" },
     "node2": { "line1": "CARRERA", "line2": "DICIEMBRE", "sub": "incremento 1.33×" },

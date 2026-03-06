@@ -444,37 +444,17 @@ function KeyFindings() {
 // ============================================================================
 
 function TopFraudSignals() {
+  const { t } = useTranslation('executive')
   const signals = [
-    {
-      rank: '01',
-      signal: 'Price Volatility',
-      detail:
-        'The single strongest predictor (β = +1.22). Vendors whose contract amounts swing wildly across institutions — a hallmark of pricing manipulation rather than legitimate market fluctuation.',
-      color: '#f87171',
-      examples: 'IMSS Ghost Network · COVID-19 Procurement',
-    },
-    {
-      rank: '02',
-      signal: 'Abnormal Win Rate',
-      detail:
-        'Vendors winning contracts at rates far above their sector baseline (β = +0.73). Legitimate companies win some tenders; captured institutions award the same vendors repeatedly.',
-      color: '#fb923c',
-      examples: 'Toka IT Monopoly · Edenred Voucher Monopoly',
-    },
-    {
-      rank: '03',
-      signal: 'Vendor Concentration',
-      detail:
-        'A single vendor capturing a disproportionate share of an institution\'s procurement (β = +0.43). High concentration with few competitors is the structural precondition for corruption.',
-      color: '#fbbf24',
-      examples: 'Segalmex · PEMEX-Cotemar',
-    },
+    { rank: '01', signalKey: 's1', color: '#f87171' },
+    { rank: '02', signalKey: 's2', color: '#fb923c' },
+    { rank: '03', signalKey: 's3', color: '#fbbf24' },
   ]
 
   return (
     <div className="rounded-xl border border-border/30 bg-surface-raised/10 p-5">
       <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-4">
-        Top 3 risk indicators — model coefficients (v5.1)
+        {t('topFraudSignals.header')}
       </p>
       <div className="space-y-4">
         {signals.map((s) => (
@@ -487,12 +467,12 @@ function TopFraudSignals() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-bold text-text-primary">{s.signal}</span>
+                <span className="text-sm font-bold text-text-primary">{t(`topFraudSignals.${s.signalKey}.signal`)}</span>
                 <div className="h-px flex-1 rounded-full" style={{ background: `${s.color}40` }} />
               </div>
-              <p className="text-xs leading-relaxed text-text-muted mb-1">{s.detail}</p>
+              <p className="text-xs leading-relaxed text-text-muted mb-1">{t(`topFraudSignals.${s.signalKey}.detail`)}</p>
               <p className="text-[10px] font-mono" style={{ color: `${s.color}99` }}>
-                Documented in: {s.examples}
+                {t(`topFraudSignals.${s.signalKey}.examples`)}
               </p>
             </div>
           </div>
@@ -1457,26 +1437,23 @@ function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
       {/* CASE IN POINT — one documented example to make the patterns concrete */}
       <div className="mt-6 rounded-xl border border-accent/20 bg-accent/5 p-5">
         <p className="text-[10px] font-bold uppercase tracking-widest text-accent font-mono mb-2">
-          Case in Point
+          {t('caseInPoint.label')}
         </p>
         <p className="text-sm font-bold text-text-primary mb-2">
-          IMSS Ghost Company Network · Health Sector · 2018–2022
+          {t('caseInPoint.title')}
         </p>
         <p className="text-sm leading-relaxed text-text-secondary">
-          Two vendors — Pisa Farmacéutica and DIQN — won{' '}
-          <strong className="text-text-primary">9,366 contracts</strong>{' '}
-          worth billions of pesos through a single institution (IMSS), frequently on the same day,
-          with no competing bids. The model flags{' '}
-          <strong className="text-risk-critical">99.9%</strong> of these contracts as high-risk —
-          the highest detection rate of any documented case. This single case demonstrates
-          all three patterns operating simultaneously: direct award dominance, year-end
-          concentration, and extreme vendor–institution lock-in.
+          {t('caseInPoint.desc1')}{' '}
+          <strong className="text-text-primary">{t('caseInPoint.contracts')}</strong>{' '}
+          {t('caseInPoint.desc2')}{' '}
+          <strong className="text-risk-critical">{t('caseInPoint.detection')}</strong>{' '}
+          {t('caseInPoint.desc3')}
         </p>
         <button
           onClick={() => navigate('/investigation')}
           className="mt-3 text-xs text-accent flex items-center gap-1 hover:underline font-mono"
         >
-          View all 22 documented cases <ArrowRight className="h-3 w-3" />
+          {t('caseInPoint.link')} <ArrowRight className="h-3 w-3" />
         </button>
       </div>
     </section>
@@ -1513,6 +1490,7 @@ const TIMELINE_CASES = [
 ] as const
 
 function CorruptionTimeline() {
+  const { t } = useTranslation('executive')
   const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
 
@@ -1530,7 +1508,7 @@ function CorruptionTimeline() {
   return (
     <div ref={ref} className="mb-6">
       <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-4">
-        Ground Truth Cases — Chronological Timeline
+        {t('timeline.header')}
       </p>
       <div className="relative">
         {/* Vertical line */}
@@ -1565,10 +1543,10 @@ function CorruptionTimeline() {
                     className="text-[10px] font-mono px-1.5 py-0.5 rounded"
                     style={{ color: dotColor, background: `${dotColor}18`, border: `1px solid ${dotColor}30` }}
                   >
-                    {c.type}
+                    {t(`timeline.types.${c.type}`, { defaultValue: c.type })}
                   </span>
                   <span className="text-[10px] text-text-muted font-mono capitalize">{c.sector}</span>
-                  <span className="text-[10px] text-text-muted font-mono">&middot; {c.impact}</span>
+                  <span className="text-[10px] text-text-muted font-mono">&middot; {t(`timeline.impact.${c.impact}`, { defaultValue: c.impact })}</span>
                 </div>
               </div>
             )
@@ -2064,8 +2042,44 @@ function CompetitionDeclineCard() {
 // S7: Across Administrations — Political Timeline
 // ============================================================================
 
+const PARTY_COLORS: Record<string, string> = {
+  PAN: '#1d4ed8',
+  PRI: '#16a34a',
+  MORENA: '#7c3aed',
+  PRD: '#f59e0b',
+  'N/A': '#64748b',
+}
+
+function getPartyColor(party: string): string {
+  for (const [key, color] of Object.entries(PARTY_COLORS)) {
+    if (party?.toUpperCase().includes(key)) return color
+  }
+  return PARTY_COLORS['N/A']
+}
+
+function AdminAvatar({ name, party }: { name: string; party: string }) {
+  const initials = name
+    .split(/\s+/)
+    .filter(w => w.length > 1)
+    .slice(0, 2)
+    .map(w => w[0].toUpperCase())
+    .join('')
+  const color = getPartyColor(party)
+  return (
+    <div
+      className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-sm font-black text-white select-none"
+      style={{ background: color, boxShadow: `0 0 0 2px ${color}40` }}
+      title={name}
+      aria-label={name}
+    >
+      {initials}
+    </div>
+  )
+}
+
 function SectionAdministrations({ data }: { data: ExecutiveSummaryResponse }) {
   const { t } = useTranslation('executive')
+  const navigate = useNavigate()
 
   return (
     <section>
@@ -2086,12 +2100,21 @@ function SectionAdministrations({ data }: { data: ExecutiveSummaryResponse }) {
             className="border border-border/30 rounded-lg p-5 bg-surface-raised/30"
           >
             <div className="flex items-start justify-between mb-3">
-              <div>
-                <h4 className="text-sm font-bold text-text-primary">{admin.full_name}</h4>
-                <p className="text-xs text-text-muted font-mono">
-                  {admin.years} &middot; {admin.party}
-                </p>
+              <div className="flex items-center gap-3">
+                <AdminAvatar name={admin.full_name} party={admin.party} />
+                <div>
+                  <h4 className="text-sm font-bold text-text-primary">{admin.full_name}</h4>
+                  <p className="text-xs text-text-muted font-mono">
+                    {admin.years} &middot; {admin.party}
+                  </p>
+                </div>
               </div>
+              <button
+                onClick={() => navigate('/administrations')}
+                className="text-[10px] text-accent hover:underline font-mono shrink-0 mt-0.5"
+              >
+                Full report →
+              </button>
             </div>
 
             {/* Stats row */}
@@ -2263,6 +2286,7 @@ function KeyMomentsPanel() {
 // ============================================================================
 
 function ModelEvolutionBars() {
+  const { t } = useTranslation('executive')
   const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
 
@@ -2278,27 +2302,9 @@ function ModelEvolutionBars() {
   }, [])
 
   const versions = [
-    {
-      version: 'v3.3',
-      label: 'Weighted Checklist',
-      auc: 0.584,
-      barColor: '#f87171',
-      tag: '8 rule-based factors',
-    },
-    {
-      version: 'v4.0',
-      label: 'Statistical Framework',
-      auc: 0.942,
-      barColor: '#fbbf24',
-      tag: 'Z-scores + Mahalanobis',
-    },
-    {
-      version: 'v5.1',
-      label: 'Per-Sector Sub-Models',
-      auc: 0.957,
-      barColor: '#4ade80',
-      tag: 'Active · 16 features · ElasticNet',
-    },
+    { version: 'v3.3', label: t('modelEvolution.v33label'), auc: 0.584, barColor: '#f87171', tag: t('modelEvolution.v33tag') },
+    { version: 'v4.0', label: t('modelEvolution.v40label'), auc: 0.942, barColor: '#fbbf24', tag: t('modelEvolution.v40tag') },
+    { version: 'v5.1', label: t('modelEvolution.v51label'), auc: 0.957, barColor: '#4ade80', tag: t('modelEvolution.v51tag') },
   ]
 
   const maxAuc = 1.0
@@ -2306,7 +2312,7 @@ function ModelEvolutionBars() {
   return (
     <div ref={ref} className="mb-8">
       <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-3">
-        Model Evolution — AUC-ROC (higher = better discrimination)
+        {t('modelEvolution.header')}
       </p>
       <div className="space-y-3">
         {versions.map((v, i) => (
@@ -2345,8 +2351,8 @@ function ModelEvolutionBars() {
         ))}
       </div>
       <div className="flex items-center justify-between mt-1 px-13 text-[9px] font-mono text-text-muted">
-        <span className="pl-14">0.50 (random)</span>
-        <span>1.00 (perfect)</span>
+        <span className="pl-14">{t('modelEvolution.random')}</span>
+        <span>{t('modelEvolution.perfect')}</span>
       </div>
     </div>
   )
