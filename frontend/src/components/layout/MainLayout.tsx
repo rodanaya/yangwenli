@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
+import { AppBanner } from './AppBanner'
 import { WelcomeModal } from '@/components/WelcomeModal'
 import { pageVariants } from '@/lib/animations'
 
@@ -54,6 +55,9 @@ export function MainLayout() {
       >
         {/* Header */}
         <Header onMenuClick={() => setMobileSidebarOpen(true)} />
+
+        {/* Version announcement banner */}
+        <AppBanner />
 
         {/* Page content */}
         <main id="main-content" className="flex-1 px-3 sm:px-5 py-5" tabIndex={-1}>

@@ -397,7 +397,7 @@ function WhatWeFound({ data }: { data: ExecutiveSummaryResponse }) {
         const Icon = f.icon
         return (
           <ScrollReveal key={f.desc} delay={i * 80}>
-            <div className={`rounded-xl border p-5 ${f.borderColor} ${f.bgColor}`}>
+            <div className={`rounded-xl border p-5 transition-shadow hover:border-accent/30 hover:shadow-[0_0_20px_rgba(0,0,0,0.15)] ${f.borderColor} ${f.bgColor}`}>
               <Icon className={`h-6 w-6 mb-3 ${f.iconColor}`} />
               <div className={`text-2xl font-bold mb-1 ${f.valueColor}`}>{f.value}</div>
               <div className="text-sm text-text-muted">{f.desc}</div>

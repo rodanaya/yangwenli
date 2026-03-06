@@ -50,6 +50,9 @@ import {
 import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN, CURRENT_MODEL_VERSION } from '@/lib/constants'
 import { GlobalSearch } from '@/components/GlobalSearch'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
+import { StatRing } from '@/components/ui/StatRing'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { LayoutDashboard } from 'lucide-react'
 
 // ============================================================================
 // Dashboard: Bold, data-dense intelligence overview
@@ -300,6 +303,8 @@ export function Dashboard() {
     queryKey: ['analysis', 'publication-delays'],
     queryFn: () => analysisApi.getPublicationDelays(),
     staleTime: 6 * 60 * 60 * 1000,
+    retry: 0, // endpoint may be unavailable on older deploys — don't block dashboard with retries
+    refetchOnWindowFocus: false,
   })
 
   const overview = fastDashboard?.overview
@@ -423,6 +428,11 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
+      <PageHeader
+        title="Procurement Intelligence"
+        subtitle="Real-time risk analysis across 3.1M contracts"
+        icon={LayoutDashboard}
+      />
       {dashError && (
         <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-risk-critical/30 bg-risk-critical/5 mb-2">
           <AlertTriangle className="h-4 w-4 text-risk-critical flex-shrink-0" />
@@ -537,6 +547,17 @@ export function Dashboard() {
         <p className="text-xs text-text-muted mb-2 font-mono uppercase tracking-wider">Investigate an entity</p>
         <GlobalSearch />
       </div>
+      </div>
+
+      {/* ================================================================ */}
+      {/* v1.1 STAT RINGS — High-level model performance summary           */}
+      {/* ================================================================ */}
+      <div className="flex items-center justify-center gap-8 py-4 px-6 rounded-xl border border-border/30 bg-surface/40">
+        <StatRing value={9} label="High Risk" color="#f87171" />
+        <div className="h-12 w-px bg-border/30" />
+        <StatRing value={84} label="Detection" color="#34d399" />
+        <div className="h-12 w-px bg-border/30" />
+        <StatRing value={91} label="Model AUC" color="#818cf8" />
       </div>
 
       {/* ================================================================ */}
@@ -1474,7 +1495,8 @@ export const _StatCard = memo(function _StatCard({ loading, label, value, detail
   return (
     <Card
       className={cn(
-        'border-l-4', borderColor,
+        'border-l-4 transition-shadow hover:border-accent/30 hover:shadow-[0_0_20px_rgba(0,0,0,0.15)]',
+        borderColor,
         onClick && 'cursor-pointer hover:shadow-lg hover:scale-[1.01] transition-all duration-200 group/sc'
       )}
       onClick={onClick}

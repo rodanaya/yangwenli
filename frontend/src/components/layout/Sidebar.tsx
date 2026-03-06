@@ -179,9 +179,14 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           </div>
           {!isCollapsed && (
             <div className="flex flex-col min-w-0">
-              <span className="text-xs font-bold tracking-wider uppercase text-text-primary font-mono">
-                RUBLI
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold tracking-wider uppercase text-text-primary font-mono">
+                  RUBLI
+                </span>
+                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-accent/20 bg-accent/10 text-accent leading-none">
+                  v1.1
+                </span>
+              </div>
               <span className="text-[10px] tracking-wider uppercase text-accent font-mono">
                 INTEL PLATFORM
               </span>
