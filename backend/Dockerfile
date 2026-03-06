@@ -28,7 +28,8 @@ RUN addgroup --system app && adduser --system --ingroup app app
 COPY --chown=app:app . .
 
 # Create data directory for SQLite database
-RUN mkdir -p /data && chown app:app /data
+# Also ensure /app is owned by app so SQLite can create WAL/SHM lock files
+RUN mkdir -p /data && chown app:app /data && chown app:app /app
 
 # Switch to non-root user
 USER app
