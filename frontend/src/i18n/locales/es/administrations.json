@@ -45,7 +45,7 @@
   "incompleteDataset": "Conjunto de Datos Incompleto",
   "incompleteDatasetDescription": "La administración de Sheinbaum inicio en octubre de 2024. Estos datos cubren ~4 meses vs. terminos completos de 6 años para otros presidentes. Las comparaciones directas pueden ser engañosas.",
   "aiDetectedAnomalies": "Anomalías Detectadas por IA",
-  "anomaliesNote": "años que se desvian >1.8σ de la linea base de 23 años",
+  "anomaliesNote": "años que se desvían >1.8σ de la línea base de 23 años",
   "sectorCorrelations": "Correlaciones de Riesgo Sectorial",
   "sectorCorrelationsNote": "Pares de sectores con trayectorias de riesgo correlacionadas (|r| ≥ 0.70) durante esta administración",
   "correlation": "correlación",
@@ -63,5 +63,12 @@
   "comparisonTableDesc": "Comparación de métricas promedio entre los cinco gobiernos — basado en datos reales de COMPRANET. La administración seleccionada aparece en azul.",
   "matrixTitle": "Matriz de Riesgo por Administración y Sector",
   "matrixSubtitle": "Valores promedio ponderados por volumen de contratos — cambia la métrica con los botones a la derecha",
-  "matrixSubtitleLoading": "Estimaciones ilustrativas (cargando datos…)"
+  "matrixSubtitleLoading": "Estimaciones ilustrativas (cargando datos…)",
+  "fingerprints": {
+    "title": "Huellas de Contratación Presidencial",
+    "subtitle": "Cómo se comparan los patrones de contratación de cada administración en dimensiones de riesgo",
+    "insight_lowest_risk": "Era de Menor Riesgo",
+    "insight_highest_da": "Mayor Adjudicación Directa",
+    "insight_biggest_spender": "Mayor Gasto"
+  }
 }
