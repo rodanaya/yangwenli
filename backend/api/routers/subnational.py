@@ -92,6 +92,7 @@ class StateListResponse(BaseModel):
     total_states: int
     total_contracts: int
     total_value_mxn: float
+    total_vendors: int
     coverage_note: str
 
 
@@ -349,6 +350,7 @@ async def _list_states_live(conn: Any, min_contracts: int, year: Optional[int]) 
         total_states=len(states),
         total_contracts=sum(s.contract_count for s in states),
         total_value_mxn=sum(s.total_value_mxn for s in states),
+        total_vendors=sum(s.vendor_count for s in states),
         coverage_note=COVERAGE_NOTE,
     )
 
