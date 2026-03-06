@@ -278,7 +278,7 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
     {
       value: highCriticalFormatted,
       label: 'High/Critical Contracts',
-      sub: `Critical + High risk · 9% of 3.1M`,
+      sub: `${highRiskRate}% of all 3.1M contracts`,
       glow: 'rgba(251,146,60,0.3)',
       color: '#fb923c',
     },
@@ -637,17 +637,17 @@ function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
       sub: '2002–2025',
       value: '3.1M',
       pct: 100,
-      color: 'rgba(148,163,184,0.25)',
-      border: 'rgba(148,163,184,0.4)',
-      text: '#94a3b8',
+      color: 'rgba(148,163,184,0.12)',
+      border: 'rgba(148,163,184,0.5)',
+      text: '#cbd5e1',
     },
     {
       label: 'Medium+ Risk',
       sub: 'Statistical anomaly detected',
       value: `${mediumPlusPct.toFixed(1)}%`,
       pct: 72,
-      color: 'rgba(251,191,36,0.15)',
-      border: 'rgba(251,191,36,0.5)',
+      color: 'rgba(251,191,36,0.12)',
+      border: 'rgba(251,191,36,0.7)',
       text: '#fbbf24',
     },
     {
@@ -655,8 +655,8 @@ function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
       sub: 'Priority investigation',
       value: `${(risk.high_pct + risk.critical_pct).toFixed(1)}%`,
       pct: 48,
-      color: 'rgba(251,146,60,0.18)',
-      border: 'rgba(251,146,60,0.6)',
+      color: 'rgba(251,146,60,0.14)',
+      border: 'rgba(251,146,60,0.8)',
       text: '#fb923c',
     },
     {
@@ -664,8 +664,8 @@ function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
       sub: 'Immediate action required',
       value: `${risk.critical_pct.toFixed(1)}%`,
       pct: 28,
-      color: 'rgba(248,113,113,0.2)',
-      border: 'rgba(248,113,113,0.7)',
+      color: 'rgba(248,113,113,0.18)',
+      border: 'rgba(248,113,113,0.9)',
       text: '#f87171',
     },
   ]
@@ -939,6 +939,7 @@ function AIPipelineChart() {
 // ============================================================================
 
 function PatternWebDiagram() {
+  const { t } = useTranslation('executive')
   const ref = useRef<SVGSVGElement>(null)
   const [visible, setVisible] = useState(false)
   useEffect(() => {
@@ -952,129 +953,144 @@ function PatternWebDiagram() {
     return () => obs.disconnect()
   }, [])
 
-  // Center of diagram
-  const cx = 260
-  const cy = 170
+  const cx = 300
+  const cy = 215
 
-  // Outer nodes — bigger triangle, more spacing
   const nodes = [
-    { x: 260, y: 48,  lines: ['DIRECT', 'AWARD'],        sub: '71% of contracts', color: '#fb923c', id: 'da' },
-    { x: 72,  y: 280, lines: ['DECEMBER', 'RUSH'],        sub: '1.33× spending spike', color: '#fbbf24', id: 'dr' },
-    { x: 448, y: 280, lines: ['VENDOR', 'CONCENTRATION'], sub: '10.6% high-risk rate', color: '#f87171', id: 'vc' },
+    { x: 300, y: 95,  line1: t('patternWeb.node1.line1'), line2: t('patternWeb.node1.line2'), sub: t('patternWeb.node1.sub'), color: '#fb923c', id: 'da' },
+    { x: 88,  y: 350, line1: t('patternWeb.node2.line1'), line2: t('patternWeb.node2.line2'), sub: t('patternWeb.node2.sub'), color: '#fbbf24', id: 'dr' },
+    { x: 512, y: 350, line1: t('patternWeb.node3.line1'), line2: t('patternWeb.node3.line2'), sub: t('patternWeb.node3.sub'), color: '#f87171', id: 'vc' },
   ]
 
-  // Edge connection labels
   const edges = [
-    { from: 0, to: 1, lines: ['no audit', 'trail'],            lx: 142, ly: 158 },
-    { from: 1, to: 2, lines: ['rushed spend', '→ capture'],    lx: 260, ly: 308 },
-    { from: 2, to: 0, lines: ['dominant vendors', 'win direct'], lx: 380, ly: 158 },
+    { from: 0, to: 1, line1: t('patternWeb.edge1Line1'), line2: t('patternWeb.edge1Line2'), lx: 170, ly: 204 },
+    { from: 1, to: 2, line1: t('patternWeb.edge2Line1'), line2: t('patternWeb.edge2Line2'), lx: 300, ly: 388 },
+    { from: 2, to: 0, line1: t('patternWeb.edge3Line1'), line2: t('patternWeb.edge3Line2'), lx: 430, ly: 204 },
   ]
+
+  const R  = 62  // outer node radius
+  const CR = 48  // center hub radius
 
   return (
-    <div className="flex justify-center my-6">
+    <div className="flex justify-center my-8">
       <svg
         ref={ref}
-        viewBox="0 0 520 380"
-        className="w-full max-w-xl"
+        viewBox="0 0 600 455"
+        className="w-full max-w-2xl"
         style={{ overflow: 'visible' }}
-        aria-label="Pattern web diagram showing how direct award, December rush, and vendor concentration reinforce each other"
+        role="img"
+        aria-label={t('patternWeb.ariaLabel')}
       >
         {/* Connecting lines */}
         {edges.map((edge, i) => {
           const from = nodes[edge.from]
-          const to = nodes[edge.to]
+          const to   = nodes[edge.to]
           return (
-            <g key={i}>
+            <g key={`edge-${i}`}>
               <line
                 x1={from.x} y1={from.y}
                 x2={to.x}   y2={to.y}
-                stroke="rgba(255,255,255,0.13)"
+                stroke="rgba(255,255,255,0.11)"
                 strokeWidth="1.5"
-                strokeDasharray="5 4"
-                style={{
-                  opacity: visible ? 1 : 0,
-                  transition: `opacity 600ms ${i * 150 + 300}ms ease`,
-                }}
+                strokeDasharray="6 5"
+                style={{ opacity: visible ? 1 : 0, transition: `opacity 600ms ${i * 150 + 300}ms ease` }}
               />
-              {/* Edge label — two lines in a subtle box */}
               <rect
-                x={edge.lx - 44} y={edge.ly - 13}
-                width={88} height={24}
-                rx={4}
-                fill="rgba(15,23,42,0.7)"
+                x={edge.lx - 52} y={edge.ly - 15}
+                width={104} height={28}
+                rx={5}
+                fill="rgba(6,10,24,0.85)"
+                stroke="rgba(255,255,255,0.06)"
+                strokeWidth="0.8"
                 style={{ opacity: visible ? 1 : 0, transition: `opacity 400ms ${i * 150 + 650}ms ease` }}
               />
               <text
                 textAnchor="middle"
                 fontFamily="monospace"
-                fill="rgba(148,163,184,0.9)"
+                fill="rgba(148,163,184,0.88)"
                 style={{ opacity: visible ? 1 : 0, transition: `opacity 400ms ${i * 150 + 700}ms ease` }}
               >
-                <tspan x={edge.lx} y={edge.ly - 2} fontSize="8.5">{edge.lines[0]}</tspan>
-                <tspan x={edge.lx} dy="11"         fontSize="8.5">{edge.lines[1]}</tspan>
+                <tspan x={edge.lx} y={edge.ly - 2} fontSize="9.5">{edge.line1}</tspan>
+                <tspan x={edge.lx} dy="13"          fontSize="9.5">{edge.line2}</tspan>
               </text>
             </g>
           )
         })}
 
-        {/* Center node — RISK AMPLIFIED */}
+        {/* Center hub */}
         <circle
           cx={cx} cy={cy}
-          r={visible ? 44 : 0}
-          fill="rgba(248,113,113,0.07)"
-          stroke="rgba(248,113,113,0.35)"
+          r={visible ? CR + 16 : 0}
+          fill="none"
+          stroke="rgba(248,113,113,0.10)"
+          strokeWidth="1"
+          style={{ transition: 'r 600ms 820ms cubic-bezier(0.16,1,0.3,1)' }}
+        />
+        <circle
+          cx={cx} cy={cy}
+          r={visible ? CR : 0}
+          fill="rgba(248,113,113,0.09)"
+          stroke="rgba(248,113,113,0.42)"
           strokeWidth="1.5"
           style={{ transition: 'r 500ms 800ms cubic-bezier(0.16,1,0.3,1)' }}
         />
-        <text textAnchor="middle" fontFamily="monospace" fontWeight="bold" fill="#f87171"
-          style={{ opacity: visible ? 1 : 0, transition: 'opacity 400ms 900ms ease' }}>
-          <tspan x={cx} y={cy - 7} fontSize="12">RISK</tspan>
-          <tspan x={cx} dy="17"    fontSize="12">AMPLIFIED</tspan>
+        <text
+          textAnchor="middle" fontFamily="monospace" fontWeight="700" fill="#f87171"
+          style={{ opacity: visible ? 1 : 0, transition: 'opacity 400ms 900ms ease' }}
+        >
+          <tspan x={cx} y={cy - 8} fontSize="13">{t('patternWeb.centerLine1')}</tspan>
+          <tspan x={cx} dy="19"    fontSize="13">{t('patternWeb.centerLine2')}</tspan>
         </text>
 
         {/* Outer nodes */}
         {nodes.map((node, i) => (
           <g key={node.id}>
-            {/* Pulse ring */}
-            <circle cx={node.x} cy={node.y}
-              r={visible ? 64 : 0}
-              fill="none" stroke={node.color} strokeWidth="0.5" opacity={0.15}
-              style={{ transition: `r 600ms ${i * 100 + 200}ms cubic-bezier(0.16,1,0.3,1)` }}
+            {/* Glow ring */}
+            <circle
+              cx={node.x} cy={node.y}
+              r={visible ? R + 18 : 0}
+              fill="none" stroke={node.color} strokeWidth="0.6" opacity={0.12}
+              style={{ transition: `r 700ms ${i * 120 + 150}ms cubic-bezier(0.16,1,0.3,1)` }}
             />
             {/* Main circle */}
-            <circle cx={node.x} cy={node.y}
-              r={visible ? 52 : 0}
-              fill={`${node.color}22`}
+            <circle
+              cx={node.x} cy={node.y}
+              r={visible ? R : 0}
+              fill={`${node.color}1c`}
               stroke={node.color}
               strokeWidth="1.5"
-              style={{ transition: `r 500ms ${i * 100 + 200}ms cubic-bezier(0.16,1,0.3,1)` }}
+              style={{ transition: `r 550ms ${i * 120 + 150}ms cubic-bezier(0.16,1,0.3,1)` }}
             />
-            {/* Dark background rect behind text for readability */}
+            {/* Label backdrop */}
             <rect
-              x={node.x - 46} y={node.y - 22}
-              width={92} height={34}
-              rx={4}
-              fill="rgba(10,15,30,0.75)"
-              style={{ opacity: visible ? 1 : 0, transition: `opacity 300ms ${i * 100 + 480}ms ease` }}
+              x={node.x - 52} y={node.y - 26}
+              width={104} height={42}
+              rx={5}
+              fill="rgba(6,10,24,0.82)"
+              style={{ opacity: visible ? 1 : 0, transition: `opacity 280ms ${i * 120 + 460}ms ease` }}
             />
-            {/* Two-line label */}
-            <text textAnchor="middle" fontFamily="monospace" fontWeight="bold" fill={node.color}
-              style={{ opacity: visible ? 1 : 0, transition: `opacity 400ms ${i * 100 + 500}ms ease` }}>
-              <tspan x={node.x} y={node.y - 8} fontSize="12">{node.lines[0]}</tspan>
-              <tspan x={node.x} dy="16"         fontSize="12">{node.lines[1]}</tspan>
+            {/* Two-line node label */}
+            <text
+              textAnchor="middle" fontFamily="monospace" fontWeight="700" fill={node.color}
+              style={{ opacity: visible ? 1 : 0, transition: `opacity 380ms ${i * 120 + 480}ms ease` }}
+            >
+              <tspan x={node.x} y={node.y - 10} fontSize="13">{node.line1}</tspan>
+              <tspan x={node.x} dy="19"          fontSize="13">{node.line2}</tspan>
             </text>
-            {/* Sub-stat background */}
+            {/* Sub-stat pill */}
             <rect
-              x={node.x - 46} y={node.y + 24}
-              width={92} height={16}
-              rx={3}
-              fill="rgba(10,15,30,0.70)"
-              style={{ opacity: visible ? 1 : 0, transition: `opacity 300ms ${i * 100 + 600}ms ease` }}
+              x={node.x - 52} y={node.y + 28}
+              width={104} height={19}
+              rx={4}
+              fill="rgba(6,10,24,0.78)"
+              stroke={`${node.color}28`}
+              strokeWidth="0.8"
+              style={{ opacity: visible ? 1 : 0, transition: `opacity 280ms ${i * 120 + 580}ms ease` }}
             />
-            {/* Sub-stat */}
-            <text x={node.x} y={node.y + 35}
-              textAnchor="middle" fontSize="9.5" fill="rgba(255,255,255,0.90)" fontFamily="monospace"
-              style={{ opacity: visible ? 1 : 0, transition: `opacity 400ms ${i * 100 + 620}ms ease` }}
+            <text
+              x={node.x} y={node.y + 40}
+              textAnchor="middle" fontSize="10" fill="rgba(255,255,255,0.85)" fontFamily="monospace"
+              style={{ opacity: visible ? 1 : 0, transition: `opacity 380ms ${i * 120 + 600}ms ease` }}
             >
               {node.sub}
             </text>

@@ -289,6 +289,21 @@
     "text": "26,872 contratos (0.9%) fueron registrados originalmente en divisas extranjeras (USD, EUR). Los montos han sido convertidos a MXN usando tipos de cambio históricos."
   },
 
+  "patternWeb": {
+    "node1": { "line1": "ADJ.", "line2": "DIRECTA", "sub": "71% de contratos" },
+    "node2": { "line1": "CARRERA", "line2": "DICIEMBRE", "sub": "incremento 1.33×" },
+    "node3": { "line1": "CONCENTRACIÓN", "line2": "PROVEEDOR", "sub": "10.6% riesgo alto" },
+    "centerLine1": "RIESGO",
+    "centerLine2": "AMPLIFICADO",
+    "edge1Line1": "sin auditoría",
+    "edge1Line2": "ni rastro",
+    "edge2Line1": "gasto apurado",
+    "edge2Line2": "→ captura",
+    "edge3Line1": "proveedores dom.",
+    "edge3Line2": "ganan directo",
+    "ariaLabel": "Red de patrones: adjudicación directa, carrera de diciembre y concentración de proveedores se refuerzan mutuamente amplificando el riesgo"
+  },
+
   "footer": {
     "platform": "Plataforma de Inteligencia RUBLI",
     "compranet": "COMPRANET 2002-2025",

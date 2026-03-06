@@ -289,6 +289,21 @@
     "text": "26,872 contracts (0.9%) were originally recorded in foreign currencies (USD, EUR). Amounts have been converted to MXN using historical exchange rates."
   },
 
+  "patternWeb": {
+    "node1": { "line1": "DIRECT", "line2": "AWARD", "sub": "71% of contracts" },
+    "node2": { "line1": "DECEMBER", "line2": "RUSH", "sub": "1.33× spending spike" },
+    "node3": { "line1": "VENDOR", "line2": "CONCENTRATION", "sub": "10.6% high-risk" },
+    "centerLine1": "RISK",
+    "centerLine2": "AMPLIFIED",
+    "edge1Line1": "no audit",
+    "edge1Line2": "trail",
+    "edge2Line1": "rushed spend",
+    "edge2Line2": "→ capture",
+    "edge3Line1": "dominant vendors",
+    "edge3Line2": "win direct",
+    "ariaLabel": "Pattern web: direct award, December rush, and vendor concentration reinforce each other into amplified risk"
+  },
+
   "footer": {
     "platform": "RUBLI Intelligence Platform",
     "compranet": "COMPRANET 2002-2025",
