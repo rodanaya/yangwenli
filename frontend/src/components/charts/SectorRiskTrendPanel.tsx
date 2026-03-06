@@ -28,7 +28,7 @@ import {
   ReferenceLine,
 } from '@/components/charts'
 import { analysisApi, sectorApi } from '@/api/client'
-import { SECTOR_COLORS, SECTOR_NAMES_EN, SECTORS } from '@/lib/constants'
+import { SECTOR_COLORS, SECTORS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import type { YearOverYearChange } from '@/api/types'
 
@@ -258,6 +258,7 @@ function CustomTooltip({ active, payload, label, visibleSectors }: CustomTooltip
  * Falls back to /analysis/year-over-year on failure.
  */
 function useSectorTrendData() {
+  const { t: ts } = useTranslation('sectors')
   // Fetch all sectors in parallel
   const sectorQueries = useQueries({
     queries: SECTORS.map((sector) => ({
@@ -316,7 +317,7 @@ function useSectorTrendData() {
         return {
           sectorId: sector.id,
           sectorCode: sector.code,
-          sectorName: SECTOR_NAMES_EN[sector.code] ?? sector.nameEN,
+          sectorName: ts(sector.code),
           color: SECTOR_COLORS[sector.code] ?? '#64748b',
           byYear,
         }
@@ -341,7 +342,7 @@ function useSectorTrendData() {
         {
           sectorId: sector.id,
           sectorCode: sector.code,
-          sectorName: SECTOR_NAMES_EN[sector.code] ?? sector.nameEN,
+          sectorName: ts(sector.code),
           color: SECTOR_COLORS[sector.code] ?? '#64748b',
           byYear,
         },
@@ -353,6 +354,7 @@ function useSectorTrendData() {
     ...sectorQueries.map((q) => q.data),
     allErrored,
     globalQuery.data,
+    ts,
   ])
 
   const isLive =
