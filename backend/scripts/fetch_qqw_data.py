@@ -131,24 +131,40 @@ def parse_qqw_response(data: dict, vendor_id: int, vendor_name: str) -> list[dic
         ocid = item.get("ocid", "")
         contract_id = item.get("id", "")
 
+        # Normalise contracts field — QQW may return a list or a dict keyed by id
+        raw_contracts = item.get("contracts", [])
+        if isinstance(raw_contracts, dict):
+            contracts_list = list(raw_contracts.values())
+        else:
+            contracts_list = raw_contracts if isinstance(raw_contracts, list) else []
+
         # Date: prefer contracts[].date, fall back to tender.tenderPeriod.startDate
         contract_date = None
-        contracts_list = item.get("contracts", [])
         if contracts_list:
-            contract_date = contracts_list[0].get("date") or contracts_list[0].get("dateSigned")
+            first_c = contracts_list[0] if isinstance(contracts_list[0], dict) else {}
+            contract_date = first_c.get("date") or first_c.get("dateSigned")
         if not contract_date:
             tp = item.get("tender", {}).get("tenderPeriod", {})
             contract_date = tp.get("startDate")
 
+        # Normalise awards — also may be a dict
+        raw_awards = item.get("awards", [])
+        if isinstance(raw_awards, dict):
+            awards = list(raw_awards.values())
+        else:
+            awards = raw_awards if isinstance(raw_awards, list) else []
+
         # Value: prefer awards, then contracts, then tender
         contract_value, contract_currency = None, None
-        awards = item.get("awards", [])
-        if awards and awards[0].get("value"):
-            v = awards[0]["value"]
-            contract_value = v.get("amount")
-            contract_currency = v.get("currency", "MXN")
+        if awards:
+            first_a = awards[0] if isinstance(awards[0], dict) else {}
+            v = first_a.get("value") or {}
+            if v.get("amount") is not None:
+                contract_value = v.get("amount")
+                contract_currency = v.get("currency", "MXN")
         if contract_value is None and contracts_list:
-            v = contracts_list[0].get("value") or {}
+            first_c = contracts_list[0] if isinstance(contracts_list[0], dict) else {}
+            v = first_c.get("value") or {}
             contract_value = v.get("amount")
             contract_currency = v.get("currency", "MXN")
 
@@ -210,6 +226,8 @@ def parse_qqw_response(data: dict, vendor_id: int, vendor_name: str) -> list[dic
                 supplier_rfc = main_id.get("id", "")
 
             for add_id in supplier.get("additionalIdentifiers", []):
+                if not isinstance(add_id, dict):
+                    continue
                 scheme = add_id.get("scheme", "").upper()
                 if scheme == "RFC":
                     supplier_rfc = add_id.get("id", "")
