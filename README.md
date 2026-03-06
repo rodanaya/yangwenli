@@ -5,7 +5,6 @@
 [![Backend Tests](https://github.com/rodanaya/yangwenli/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/rodanaya/yangwenli/actions/workflows/backend-tests.yml)
 [![Frontend Tests](https://github.com/rodanaya/yangwenli/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/rodanaya/yangwenli/actions/workflows/frontend-tests.yml)
 [![CodeQL](https://github.com/rodanaya/yangwenli/actions/workflows/codeql.yml/badge.svg)](https://github.com/rodanaya/yangwenli/actions/workflows/codeql.yml)
-[![Deploy](https://github.com/rodanaya/yangwenli/actions/workflows/deploy.yml/badge.svg)](https://github.com/rodanaya/yangwenli/actions/workflows/deploy.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
@@ -16,16 +15,9 @@
 
 ## What Is This?
 
-RUBLI is an intelligence platform that analyzes **3.1 million Mexican federal procurement contracts** (2002-2025) worth over **6 trillion pesos**. Using a 16-feature per-sector calibrated risk model validated against 22 documented corruption cases, it identifies patterns consistent with fraud, collusion, and abuse of public funds.
+RUBLI is a full-stack intelligence platform that analyzes **3.1 million Mexican federal procurement contracts** (2002–2025) worth over **9.5 trillion pesos**. It uses a 16-feature per-sector calibrated statistical risk model, validated against 22 documented corruption cases, to surface patterns consistent with fraud, collusion, and abuse of public funds.
 
-This is not a simple dashboard. It is a full analytical engine with:
-
-- **Statistical risk indicators** — every score measures similarity to documented corruption patterns with 95% bootstrap confidence intervals
-- **Per-sector sub-models** — 12 dedicated logistic regressions capture sector-specific corruption patterns
-- **Multivariate anomaly detection** via Mahalanobis distance across 16 feature dimensions
-- **Ground truth validation** against 22 documented cases including Odebrecht, Estafa Maestra, IMSS Ghost Companies, Segalmex, Toka IT Monopoly, SAT EFOS ghost networks, and more
-- **Network analysis** for vendor collusion and bid-rigging detection
-- **Bilingual interface** (Spanish/English) with 22+ interactive pages
+This is not a simple dashboard. It is a production analytical engine built for investigative journalists, government auditors, and transparency researchers.
 
 ### Key Metrics
 
@@ -33,15 +25,31 @@ This is not a simple dashboard. It is a full analytical engine with:
 |--------|-------|
 | Contracts analyzed | 3,110,007 |
 | Validated procurement value | ~9.5T MXN |
-| Vendors | 320,429 |
+| Vendors tracked | 320,429 |
 | Institutions | 4,456 |
-| Risk model | **v5.1** (per-sector calibrated) |
+| Interactive pages | 36 |
+| Active risk model | **v5.1** (per-sector calibrated) |
 | Train AUC-ROC | **0.964** |
-| Test AUC-ROC | **0.957** (temporal split, 2021+ holdout) |
-| Detection rate (known cases) | **99.8%** medium+ |
+| Test AUC-ROC | **0.957** (temporal holdout — 2021+ contracts) |
+| Ground truth detection | **99.8%** medium+ across 22 cases |
 | False negative rate | **0.2%** |
-| Ground truth cases | 22 (27 vendors, 26,582 contracts) |
-| High-risk rate | **9.0%** (OECD benchmark: 2-15%) |
+| Ground truth cases | 22 (27 vendors, 26,582 labeled contracts) |
+| High-risk rate | **9.0%** (OECD benchmark: 2–15%) |
+
+---
+
+## What It Detects
+
+The platform identifies six procurement fraud patterns documented in the academic and anti-corruption literature:
+
+- **Ghost company networks** — shell vendors with no real operations, used to siphon funds
+- **Vendor monopolization** — single vendors capturing entire institutional budgets
+- **Bid rigging and tender manipulation** — coordinated bidding to predetermine winners
+- **Overpricing** — systematic price inflation vs. sector norms
+- **Conflict of interest** — politically connected vendors winning contracts
+- **Emergency procurement abuse** — crisis procedures used to bypass competition
+
+Every risk score measures **statistical similarity to documented corruption patterns** — with 95% bootstrap confidence intervals — not a deterministic rule match.
 
 ---
 
@@ -49,35 +57,35 @@ This is not a simple dashboard. It is a full analytical engine with:
 
 ```
 rubli/
-├── backend/                  # Python/FastAPI REST API
-│   ├── api/                  # Endpoints, routers, services
-│   │   ├── routers/          # 10+ router modules
+├── backend/                  # Python 3.11 / FastAPI REST API
+│   ├── api/
+│   │   ├── routers/          # 10+ router modules (60+ endpoints)
 │   │   ├── services/         # Business logic layer
-│   │   └── main.py           # FastAPI app with GZip, CORS, caching
-│   ├── scripts/              # ETL pipeline, risk model training
-│   └── RUBLI_NORMALIZED.db   # SQLite database (~3.1M contracts)
+│   │   └── main.py           # GZip, CORS, startup checks
+│   ├── scripts/              # ETL pipeline, risk model training pipeline
+│   └── RUBLI_NORMALIZED.db   # SQLite (~3.1M contracts, ~5.6 GB)
 ├── frontend/                 # React 18 + TypeScript + Vite
 │   └── src/
-│       ├── pages/            # 22+ page components
-│       ├── components/       # Shared UI (shadcn/ui base)
-│       ├── api/              # API client + types
-│       ├── i18n/             # ES/EN translations
+│       ├── pages/            # 36 page components
+│       ├── components/       # Shared UI (shadcn/ui, Recharts, D3)
+│       ├── api/              # Typed API client
+│       ├── i18n/             # ES/EN translations (22+ namespaces)
 │       └── hooks/            # Custom React hooks
-├── docker-compose.yml        # Production deployment
-└── docs/                     # Methodology, model comparison, guides
+├── docker-compose.yml        # Production: backend + frontend + nginx
+└── docs/                     # Methodology, model comparison, dev guides
 ```
 
 ### Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| **Database** | SQLite with pre-computed aggregates, WAL mode, 200MB cache |
-| **Backend** | Python 3.11, FastAPI, uvicorn, service layer pattern |
-| **Frontend** | React 18, TypeScript, Vite, TanStack Query, Recharts |
-| **UI** | Tailwind CSS v4, shadcn/ui, custom dark intelligence theme |
-| **Risk Model** | Per-sector logistic regression, Mahalanobis distance, PU-learning (Elkan & Noto) |
-| **i18n** | react-i18next (Spanish/English) |
-| **Deploy** | Docker Compose (backend + frontend + nginx) |
+| Database | SQLite, WAL mode, 200MB cache, pre-computed aggregate tables |
+| Backend | Python 3.11, FastAPI, uvicorn, service layer pattern |
+| Frontend | React 18, TypeScript 5, Vite, TanStack Query v5, Recharts |
+| UI | Tailwind CSS v4, shadcn/ui, custom dark intelligence theme |
+| Risk Model | Per-sector logistic regression, Mahalanobis distance, Elkan & Noto PU-learning |
+| i18n | react-i18next — Spanish and English |
+| Deploy | Docker Compose (backend + frontend + nginx) |
 
 ---
 
@@ -86,56 +94,73 @@ rubli/
 ### Overview
 | Page | Route | Description |
 |------|-------|-------------|
-| Dashboard | `/` | Real-time intelligence brief with key metrics |
+| Dashboard | `/` | Real-time intelligence brief with key metrics and alerts |
 | Executive Summary | `/executive` | Flagship 9-section editorial intelligence report |
 
 ### Investigate
 | Page | Route | Description |
 |------|-------|-------------|
-| Patterns | `/patterns` | Detective pattern analysis (concentration, co-bidding, year-end) |
-| Red Flags | `/red-flags` | Risk factor co-occurrence and interaction analysis |
-| Money Flow | `/money-flow` | Sankey diagram of procurement flows |
-| Temporal Pulse | `/temporal` | Monthly rhythm analysis and seasonal patterns |
-| Administrations | `/administrations` | Presidential comparison (Fox through Sheinbaum) |
-| Institution Health | `/institutions/health` | HHI concentration rankings and institutional risk |
-| Price Intelligence | `/price-analysis` | Pricing anomalies and statistical outlier detection |
-| Contracts | `/contracts` | Full contract table with filtering and risk breakdown |
-| Network | `/network` | Force-directed vendor relationship graph |
+| Procurement Intelligence | `/procurement-intelligence` | Live alert ticker, sector heatmap, top risk signals |
+| Patterns | `/patterns` | Pattern analysis — concentration, co-bidding, year-end clustering |
+| Red Flags | `/red-flags` | Risk factor co-occurrence and interaction maps |
+| Money Flow | `/money-flow` | Sankey diagram of procurement flows by sector and institution |
+| Temporal Pulse | `/temporal` | Monthly rhythm analysis, seasonal corruption signals |
+| Administrations | `/administrations` | Presidential comparison: Fox through Sheinbaum |
+| Institution Health | `/institutions/health` | HHI concentration rankings, institutional risk scores |
+| Institution Heatmap | `/heatmap` | 20×12 institution × sector concentration matrix |
+| Price Intelligence | `/price-analysis` | Pricing anomalies, statistical outlier scatter plots |
+| Contracts | `/contracts` | Full contract table with risk filtering and bookmarks |
+| Network Graph | `/network` | Force-directed vendor relationship and co-bidding graph |
+| State Expenditure | `/state-expenditure` | Federal funds in state/municipal procurement (484K contracts) |
 | Watchlist | `/watchlist` | Tracked vendors and institutions |
-| Investigation | `/investigation` | Case management and anomaly investigation |
+| Investigation | `/investigation` | Case management and anomaly investigation workspace |
 | Spending Categories | `/categories` | CUCOP category-level spend analysis |
+| Vendor Compare | `/vendors/compare` | Side-by-side radar comparison of two vendor risk profiles |
+
+### Profiles
+| Page | Route | Description |
+|------|-------|-------------|
+| Vendor Profile | `/vendors/:id` | Radar chart, z-score breakdown, external records, collusion signals |
+| Institution Profile | `/institutions/:id` | Vendor concentration, sector exposure, risk trends |
+| Sector Profile | `/sectors/:id` | OECD benchmarks, red flag rates, top vendors |
+| Contract Detail | `/contracts/:id` | Full risk breakdown with confidence intervals |
+| Case Detail | `/cases/:id` | Fraud type, timeline, detection signals, impact KPIs |
 
 ### Understand
 | Page | Route | Description |
 |------|-------|-------------|
-| Sectors | `/sectors` | 12-sector taxonomy with drill-down profiles |
-| Ground Truth | `/ground-truth` | 22 validated corruption cases and detection performance |
-| Model Transparency | `/model` | v5.1 model coefficients, feature importance, explainability |
+| Sectors | `/sectors` | 12-sector taxonomy with treemap and sparkline trends |
+| Ground Truth | `/ground-truth` | 22 validated corruption cases and per-case detection rates |
+| Case Library | `/cases` | 43 documented scandals with fraud type classification |
+| Model Transparency | `/model` | v5.1 coefficients, feature importance, per-sector sub-models |
 | Methodology | `/methodology` | Full risk scoring methodology documentation |
-| Limitations | `/limitations` | Known model blind spots and workarounds |
-| Settings | `/settings` | Theme, language, data quality metrics |
+| Limitations | `/limitations` | Known blind spots, workarounds, and what the model cannot detect |
+| API Explorer | `/api-explorer` | Interactive catalog of all 57+ backend endpoints |
+| Settings | `/settings` | Theme, language, export (CSV/JSON), data quality metrics |
 
 ---
 
 ## Risk Model v5.1
 
-The platform uses a **per-sector statistical risk framework** — every score measures similarity to documented corruption patterns, normalized by sector and year baselines. Trained on contracts through 2020, tested on 2021+ for honest generalization.
+The platform uses a **per-sector statistical risk framework**. Scores measure similarity to documented corruption patterns, normalized by sector and year baselines. The model was trained on contracts through 2020 and tested on 2021+ contracts for honest generalization — no data leakage.
 
-> **Score Interpretation**: Risk scores are statistical risk indicators measuring similarity to documented corruption patterns, not calibrated probabilities of corruption. A score of 0.50 does not mean 50% probability of corruption — it means the contract closely resembles those from known cases. Use scores for investigation triage, not as verdicts.
+> **Score Interpretation**: Risk scores are statistical risk indicators, not calibrated probabilities. A score of 0.50 means the contract closely resembles those from known corruption cases — not a 50% probability of wrongdoing. Use scores for investigation triage, not as verdicts.
 
 ### Pipeline
 
 ```
-raw features → z-scores (sector/year baselines) → Mahalanobis distance
-  → per-sector logistic regression → Elkan & Noto PU correction → bootstrap 95% CI
+raw features
+  → z-scores (per sector/year baseline)
+  → Mahalanobis distance (Ledoit-Wolf covariance)
+  → 12 per-sector logistic regressions + 1 global fallback
+  → Elkan & Noto (2008) PU-learning correction (c = 0.882)
+  → 500-bootstrap 95% confidence intervals
 ```
 
 ### 16 Features
 
-Z-score normalized by sector and year:
-
-| # | Feature | Type | New in v5? |
-|---|---------|------|:----------:|
+| # | Feature | Type | New in v5 |
+|---|---------|------|:---------:|
 | 1 | single_bid | Binary | |
 | 2 | direct_award | Binary | |
 | 3 | price_ratio | Continuous | |
@@ -157,11 +182,11 @@ Z-score normalized by sector and year:
 
 | Feature | Coefficient | Interpretation |
 |---------|------------|----------------|
-| **price_volatility** | +1.22 | Wildly varying contract sizes — strongest predictor |
-| **institution_diversity** | -0.85 | Vendors serving many institutions are *less* suspicious |
+| **price_volatility** | +1.22 | Wildly varying contract sizes — strongest single predictor |
+| **institution_diversity** | −0.85 | Vendors serving many institutions are less suspicious |
 | **win_rate** | +0.73 | Abnormally high win rates increase risk |
-| vendor_concentration | +0.43 | Market share concentration |
-| industry_mismatch | +0.31 | Vendor operating outside primary sector |
+| vendor_concentration | +0.43 | Disproportionate market share |
+| industry_mismatch | +0.31 | Vendor working outside its primary sector |
 | direct_award | +0.18 | Correctly positive (was wrongly negative in v4.0) |
 
 ### Risk Levels
@@ -173,7 +198,7 @@ Z-score normalized by sector and year:
 | **Medium** | >= 0.10 | ~1,365,000 | ~43.9% |
 | **Low** | < 0.10 | ~1,417,000 | ~45.6% |
 
-**High-risk rate: 9.0%** — within OECD benchmark of 2-15%.
+**High-risk rate: 9.0%** — within OECD benchmark of 2–15%.
 
 ### Validation Against 22 Documented Cases
 
@@ -194,44 +219,45 @@ Z-score normalized by sector and year:
 | IPN Cartel de la Limpieza | Bid rigging | 48 | 64.6% | 0.551 |
 | Odebrecht-PEMEX | Bribery | 35 | 97.1% | 0.915 |
 | La Estafa Maestra | Ghost companies | 10 | 0% | 0.179 |
-| Grupo Higa | Conflict of interest | 3 | 33.3% | 0.359 |
+| Grupo Higa / Casa Blanca | Conflict of interest | 3 | 33.3% | 0.359 |
 | Oceanografia | Invoice fraud | 2 | 0% | 0.152 |
 
-**Note on SAT EFOS:** 38 RFC-confirmed ghost companies from the SAT EFOS definitivo list. Detection improved from 2.8% (v5.0) to 27.9% (v5.1) after inclusion in training, but remains partial — EFOS vendors are small shells (avg 3 contracts each), structurally different from the concentrated vendors that dominate training data.
+**Note on SAT EFOS:** 38 RFC-confirmed ghost companies from Mexico's official ghost company registry. Detection improved from 2.8% (v5.0) to 27.9% (v5.1) after inclusion in training — but remains partial. EFOS vendors average 3 contracts each vs. 1,565 for the dominant training cases; they represent a fundamentally different corruption pattern (invoice fraud at small scale vs. monopolistic capture).
 
 ### Model Evolution
 
-| Version | Train AUC | Test AUC | Cases | Key Innovation |
-|---------|-----------|----------|-------|---------------|
+| Version | AUC (train) | AUC (test) | Cases | Key Innovation |
+|---------|-------------|------------|-------|---------------|
 | v3.3 | 0.584 | — | — | IMF-aligned weighted checklist |
-| v4.0 | 0.951 | — (in-sample) | 9 | Statistical calibration, Mahalanobis distance |
-| v5.0 | 0.967 | 0.960 | 15 | Per-sector models, temporal validation, PU-learning |
-| **v5.1** | **0.964** | **0.957** | **22** | **Ground truth expansion, SAT EFOS integration** |
+| v4.0 | 0.951 | — (in-sample) | 9 | Z-score normalization, Mahalanobis distance |
+| v5.0 | 0.967 | 0.960 | 15 | Per-sector sub-models, temporal validation, PU-learning |
+| **v5.1** | **0.964** | **0.957** | **22** | Ground truth expansion, SAT EFOS integration |
 
 ---
 
-## Data Source
+## Data Sources
 
-All data comes from **COMPRANET**, Mexico's federal electronic procurement system. Four data structures span 2002-2025:
+All procurement data comes from **COMPRANET**, Mexico's federal electronic procurement system. Four data structures span 2002–2025:
 
 | Structure | Years | RFC Coverage | Quality |
 |-----------|-------|-------------|---------|
-| A | 2002-2010 | 0.1% | Lowest |
-| B | 2010-2017 | 15.7% | Better |
-| C | 2018-2022 | 30.3% | Good |
-| D | 2023-2025 | 47.4% | Best |
+| A | 2002–2010 | 0.1% | Lowest — risk may be underestimated |
+| B | 2010–2017 | 15.7% | Better |
+| C | 2018–2022 | 30.3% | Good |
+| D | 2023–2025 | 47.4% | Best |
 
-### External Data Sources
+### External Data Integrated
 
-In addition to COMPRANET:
-- **SAT EFOS Definitivo** — 13,960 RFC-confirmed ghost companies; 38 matched to RUBLI vendors (Case 22)
-- **SFP Sanctions** — 1,954 sanction records; 22 matched by RFC (Jaccard token match >= 0.80)
+| Source | Records | Matched to RUBLI |
+|--------|---------|-----------------|
+| SAT EFOS Definitivo | 13,960 RFC-confirmed ghost companies | 38 vendors (Case 22) |
+| SFP Sanctions | 1,954 debarment records | 22 vendors (Jaccard >= 0.80) |
 
-### Data Validation
+### Data Validation Rules
 
-- Amounts > 100B MXN are **rejected** (decimal point errors from source)
+- Amounts > 100B MXN are **rejected** as decimal errors (the ogulin lesson)
 - Amounts > 10B MXN are **flagged** for manual review
-- 12-sector taxonomy classifies institutions by Ramo codes
+- Mexico's entire federal budget is ~8T MXN/year — a 1T MXN contract would be 12.5% of GDP
 
 ---
 
@@ -249,7 +275,7 @@ In addition to COMPRANET:
 # Backend (port 8001)
 cd backend
 pip install -r requirements-api.txt
-python -m uvicorn api.main:app --port 8001 --reload --host 127.0.0.1
+uvicorn api.main:app --port 8001 --reload --host 127.0.0.1
 
 # Frontend (port 3009)
 cd frontend
@@ -257,51 +283,49 @@ npm install
 npm run dev -- --port 3009
 ```
 
-Open http://localhost:3009
+Open `http://localhost:3009`
 
-**Note:** On first startup, the backend runs `_startup_checks()` which scans 3.1M rows — expect 30-60s cold start. This is expected behavior.
+**Note:** On first startup, `_startup_checks()` scans 3.1M rows — expect 30–60s cold start. This is expected behavior.
 
-### Docker
+### Docker (Production)
 
 ```bash
 # Build and run (requires RUBLI_NORMALIZED.db in backend/)
 docker compose up --build
 
-# Frontend available at http://localhost:3009
+# Frontend available at http://localhost:80
 ```
 
-### Auto-Deploy (GitHub Actions → Hetzner)
+### Environment
 
-Push to `main` automatically deploys via SSH. Add these secrets to your GitHub repo (`Settings → Secrets → Actions`):
-
-| Secret | Value |
-|--------|-------|
-| `HETZNER_IP` | Server IP address |
-| `SSH_PRIVATE_KEY` | Private key for `root@<ip>` (paste full PEM) |
-
-The workflow syncs code only — the database stays on the server permanently.
+```bash
+# backend/.env
+DATABASE_PATH=./RUBLI_NORMALIZED.db
+CORS_ORIGINS=http://localhost:3009
+```
 
 ---
 
 ## API
 
-The backend exposes **60+ REST endpoints** across 10+ router modules. Full interactive documentation at `http://localhost:8001/docs` when running.
+The backend exposes **60+ REST endpoints** across 10+ router modules. Full interactive documentation at `http://localhost:8001/docs`.
 
 ### Key Endpoints
 
 | Endpoint | Description |
 |----------|-------------|
 | `GET /api/v1/executive/summary` | Consolidated executive intelligence report |
-| `GET /api/v1/contracts` | Paginated contract search with risk filters |
-| `GET /api/v1/contracts/{id}` | Contract detail with full risk breakdown |
-| `GET /api/v1/vendors/{id}` | Vendor profile with risk metrics |
+| `GET /api/v1/contracts` | Paginated contract search with risk/sector/year filters |
+| `GET /api/v1/contracts/{id}` | Contract detail with full risk breakdown and CIs |
+| `GET /api/v1/vendors/{id}` | Vendor profile with z-score radar and risk metrics |
 | `GET /api/v1/institutions/{id}` | Institution profile with vendor concentration |
-| `GET /api/v1/sectors/{id}/profile` | Sector deep-dive with trends |
+| `GET /api/v1/sectors/{id}/profile` | Sector deep-dive with benchmarks and trends |
 | `GET /api/v1/analysis/risk-overview` | Platform-wide risk distribution |
-| `GET /api/v1/analysis/money-flow` | Sankey flow data |
-| `GET /api/v1/network/co-bidders/{id}` | Co-bidding collusion analysis |
-| `GET /api/v1/investigation/top/{n}` | Top anomalous vendors for investigation |
+| `GET /api/v1/analysis/money-flow` | Sankey flow data by sector/institution |
+| `GET /api/v1/network/co-bidders/{id}` | Co-bidding collusion analysis for a vendor |
 | `GET /api/v1/search` | Federated search across contracts, vendors, institutions |
+| `GET /api/v1/subnational/states` | State-level expenditure breakdown |
+| `GET /api/v1/workspace/dossiers` | Investigation dossier management |
 
 ---
 
@@ -311,20 +335,31 @@ The backend exposes **60+ REST endpoints** across 10+ router modules. Full inter
 # Backend (359 tests)
 python -m pytest backend/tests/ -q --tb=short -p no:cacheprovider
 
-# TypeScript compilation check
-cd frontend && npx tsc --noEmit
+# TypeScript — both checks required
+cd frontend
+npx tsc --noEmit          # lenient tsconfig
+npm run build             # enforces noUnusedLocals/noUnusedParameters
 ```
+
+Target: 359 backend tests passing, 0 TypeScript errors in both checks.
 
 ---
 
 ## Known Limitations
 
-1. **Ground truth bias** — IMSS, Segalmex, and COVID-19 cases account for ~79% of training contracts. The model may underdetect novel patterns not resembling these large concentrated-vendor cases.
-2. **Ghost company blind spot** — Small shell companies (few contracts, low concentration) are structurally different from training data. SAT EFOS vendors avg score 0.283 vs 0.853 for main training cases.
-3. **Execution-phase fraud invisible** — RUBLI analyzes award data only. Cost overruns, kickbacks, and ghost workers during contract execution are not detectable from procurement records.
-4. **Data quality degrades with age** — 2002-2010 has 0.1% RFC coverage; risk scores may be underestimated for this period.
-5. **Co-bidding signal = zero** — The `co_bid_rate` coefficient was regularized to 0.0; bid rotation is not captured in the risk score (separate collusion detection tab available).
-6. **Correlation, not causation** — A high score indicates statistical similarity to corruption patterns, not proof of wrongdoing.
+1. **Execution-phase fraud invisible** — RUBLI analyzes contract award data only. Cost overruns, kickbacks, and ghost workers during contract execution are undetectable from procurement records. Cross-reference with ASF audit findings for this.
+
+2. **Ground truth bias** — IMSS, Segalmex, and COVID-19 cases account for ~79% of labeled training contracts. The model may underdetect novel patterns not resembling these large concentrated-vendor cases.
+
+3. **Ghost company blind spot (partial)** — Small shell companies (few contracts, low concentration) score significantly lower than large-monopoly corruption. SAT EFOS vendors average 0.283 vs. 0.853 for dominant training cases. Partially addressed in v5.1, not fully solved.
+
+4. **Vendor deduplication unsolved** — The same company appears under hundreds of name variations over 23 years. RFC is the primary key when available, but RFC coverage is 0.1% for 2002–2010. True vendor concentration is higher than displayed for early years.
+
+5. **Data quality degrades with age** — 2002–2010 has 0.1% RFC coverage; risk scores for this period are directional estimates.
+
+6. **Co-bidding signal regularized to zero** — `co_bid_rate` was pushed to 0.0 by ElasticNet. Bid rotation and cover bidding are not captured in the contract-level risk score (separate collusion detection tab available).
+
+7. **Correlation, not causation** — A high score indicates statistical similarity to corruption patterns, not proof of wrongdoing. Scores are investigation triage tools.
 
 See the `/limitations` page in the platform for the full interactive version with context and workarounds.
 
@@ -333,21 +368,33 @@ See the `/limitations` page in the platform for the full interactive version wit
 ## Methodology
 
 Full documentation:
+
 - [`docs/RISK_METHODOLOGY_v5.md`](docs/RISK_METHODOLOGY_v5.md) — v5.1 per-sector calibrated model (active)
 - [`docs/RISK_METHODOLOGY_v4.md`](docs/RISK_METHODOLOGY_v4.md) — v4.0 statistical framework (preserved)
 - [`docs/RISK_METHODOLOGY.md`](docs/RISK_METHODOLOGY.md) — v3.3 weighted checklist (preserved)
 - [`docs/MODEL_COMPARISON_REPORT.md`](docs/MODEL_COMPARISON_REPORT.md) — v3.3 vs v4.0 comparison
 
+Key methodological references:
+- Elkan & Noto (2008) — Positive-Unlabeled learning correction
+- Ledoit & Wolf (2004) — Covariance matrix shrinkage
+- IMF Working Paper 2022/094 — Corruption Risk Index methodology
+- OECD (2023) — Public Procurement Performance Report
+
+---
+
+## Project Name
+
+RUBLI is named after the pragmatic historian from *Legend of the Galactic Heroes* — a character who valued democratic institutions, transparency, and accountability over blind ambition. The platform shares his conviction: sunlight is the best disinfectant.
+
 ---
 
 ## Acknowledgments
 
-- **COMPRANET** — Mexico's federal procurement transparency platform
+- **COMPRANET** — Mexico's federal procurement transparency platform (datos.gob.mx)
 - **SAT** — EFOS definitivo ghost company registry
 - **SFP** — Sanction and debarment records
 - **IMF / World Bank / OECD** — Risk methodology frameworks
-- **Open Contracting Partnership** — Red flags library
-- **Elkan & Noto (2008)** — PU-learning methodology
+- **Open Contracting Partnership** — Procurement red flags library
 
 ---
 
