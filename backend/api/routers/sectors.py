@@ -264,6 +264,18 @@ def list_sectors(
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
+@router.get("/sectors/statistics", response_model=SectorListResponse)
+def get_sectors_statistics():
+    """
+    Get aggregated statistics for all sectors.
+
+    Alias for GET /sectors (no year filter). Returns the 12-sector breakdown
+    with contract counts, risk scores, and procedure metrics from precomputed_stats.
+    This endpoint exists separately so that /sectors/{sector_id} does not shadow it.
+    """
+    return list_sectors(year=None)
+
+
 @router.get("/sectors/{sector_id}", response_model=SectorDetailResponse)
 def get_sector(
     sector_id: int = Path(..., ge=1, le=12, description="Sector ID (1-12)"),

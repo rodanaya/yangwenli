@@ -92,13 +92,14 @@ def _warmup_caches():
     # Only warm the fastest endpoints — heavy queries (contracts/statistics)
     # are better left to first user request to avoid blocking the thread pool
     endpoints = [
-        "/api/v1/stats/dashboard/fast",          # Dashboard (highest priority, pre-computed)
-        "/api/v1/sectors",                        # Sectors list (small table)
-        "/api/v1/stats/data-quality",             # Header quality badge (cached)
-        "/api/v1/analysis/patterns/counts",       # DetectivePatterns page (LIKE queries on 3.1M rows)
-        "/api/v1/analysis/year-over-year",        # Shared by Trends, Patterns, Administrations
-        "/api/v1/contracts/statistics",           # Explore page (3.8s cold)
-        "/api/v1/analysis/overview",              # Patterns page (8.8s cold)
+        "/api/v1/stats/dashboard/fast",                # Dashboard (highest priority, pre-computed)
+        "/api/v1/sectors",                             # Sectors list (small table)
+        "/api/v1/stats/data-quality",                  # Header quality badge (cached)
+        "/api/v1/analysis/patterns/counts",            # DetectivePatterns page (LIKE queries on 3.1M rows)
+        "/api/v1/analysis/year-over-year",             # Shared by Trends, Patterns, Administrations
+        "/api/v1/contracts/statistics",                # Explore page (3.8s cold)
+        "/api/v1/analysis/overview",                   # Patterns page (8.8s cold)
+        "/api/v1/analysis/sector-year-breakdown",      # ProcurementIntelligence heatmap (slow cold)
     ]
     for ep in endpoints:
         try:
