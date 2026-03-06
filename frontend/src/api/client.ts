@@ -1448,6 +1448,7 @@ export interface PriceHypothesesFilterParams {
   confidence_level?: string
   min_confidence?: number
   sector_id?: number
+  year?: number
   is_reviewed?: boolean
   is_valid?: boolean
   sort_by?: string
@@ -2123,6 +2124,13 @@ export const subnationalApi = {
     const { data } = await api.get(
       `/subnational/states/${code}/institutions`,
       { params: options },
+    )
+    return data
+  },
+  async getStateSectors(code: string, year?: number): Promise<import('./types').SubnationalSectorsResponse> {
+    const { data } = await api.get<import('./types').SubnationalSectorsResponse>(
+      `/subnational/states/${code}/sectors`,
+      { params: year ? { year } : {} },
     )
     return data
   },

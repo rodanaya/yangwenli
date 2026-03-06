@@ -5,10 +5,10 @@
  * L0: Summary strip (total contracts / value / vendors across all states)
  * L1: States grid/table with key metrics + cross-state risk comparison bar chart
  * L2: State detail (institutions, year trend with risk overlay,
- *     top vendors by year, sector breakdown TODO, local vendors)
+ *     top vendors by year, sector breakdown, local vendors)
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -23,6 +23,7 @@ import type {
   SubnationalStateSummary,
   SubnationalVendor,
   SubnationalTopVendorsByYearResponse,
+  SubnationalSectorItem,
 } from '@/api/types'
 import {
   ResponsiveContainer,
@@ -459,6 +460,70 @@ function TopVendorsByYear({ code, stateName }: { code: string; stateName: string
   )
 }
 
+// ── Sector breakdown component ────────────────────────────────────────────────
+function SectorBreakdown({ code }: { code: string }) {
+  const { t } = useTranslation('subnational')
+  const navigate = useNavigate()
+  const { data, isLoading } = useQuery({
+    queryKey: ['subnational', 'sectors', code],
+    queryFn: () => subnationalApi.getStateSectors(code),
+    staleTime: 15 * 60 * 1000,
+    retry: 1,
+  })
+
+  const handleBarClick = useCallback((entry: SubnationalSectorItem) => {
+    navigate(`/sectors/${entry.sector_code}`)
+  }, [navigate])
+
+  if (isLoading) return <Skeleton className="h-48 w-full" />
+  if (!data?.sectors?.length) return null
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+          {t('spendingBySector')}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="pt-2">
+        <div className="space-y-2">
+          {data.sectors.map((s) => (
+            <button
+              key={s.sector_code}
+              onClick={() => handleBarClick(s)}
+              className="w-full text-left group"
+              aria-label={`${s.sector_name}: ${s.pct_of_state_total}%`}
+            >
+              <div className="flex items-center justify-between mb-0.5 gap-2">
+                <span className="text-xs font-medium text-text-secondary group-hover:text-text-primary truncate">
+                  {s.sector_name}
+                </span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-xs tabular-nums text-text-muted">
+                    {formatCompactMXN(s.total_value_mxn)}
+                  </span>
+                  <span className="text-xs tabular-nums text-text-muted w-10 text-right">
+                    {s.pct_of_state_total.toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-border/30 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-300 group-hover:opacity-80"
+                  style={{
+                    width: `${s.pct_of_state_total}%`,
+                    backgroundColor: s.sector_color,
+                  }}
+                />
+              </div>
+            </button>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 // ── State detail ─────────────────────────────────────────────────────────────
 function StateDetail({ code }: { code: string }) {
   const { t } = useTranslation('subnational')
@@ -682,28 +747,7 @@ function StateDetail({ code }: { code: string }) {
         </Card>
       </div>
 
-      {/*
-        TODO: Add GET /subnational/states/{code}/sectors endpoint to the backend.
-        The endpoint should return sector breakdown for this state:
-          [{ sector_code, sector_name, total_value_mxn, contract_count, pct_of_state_total }]
-        Once implemented, replace this placeholder with a horizontal BarChart using SECTOR_COLORS.
-      */}
-      <Card className="border-dashed border-border/60">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-            {t('spendingBySector')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground italic">
-            Sector breakdown requires{' '}
-            <code className="rounded bg-muted px-1 text-xs">
-              GET /subnational/states/{'{code}'}/sectors
-            </code>{' '}
-            endpoint (not yet implemented).
-          </p>
-        </CardContent>
-      </Card>
+      <SectorBreakdown code={code} />
 
       {/* Top institutions */}
       <Card>

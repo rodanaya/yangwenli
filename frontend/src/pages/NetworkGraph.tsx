@@ -1092,8 +1092,6 @@ export function NetworkGraph() {
       const hasShadow = riskLevel === 'critical' || riskLevel === 'high'
       const shadowColor = riskLevel === 'critical' ? '#f87171' : '#fb923c'
 
-      // TODO: Add is_sanctioned field to network graph node data from /network/graph endpoint
-      // When available, sanctioned nodes will get a red border ring
       const isSanctioned = (node as NetworkNode & { is_sanctioned?: boolean }).is_sanctioned === true
       const borderColor = isCenter ? '#ffffff'
         : isSanctioned ? '#dc2626'

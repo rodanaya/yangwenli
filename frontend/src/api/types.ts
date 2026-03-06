@@ -2050,3 +2050,22 @@ export interface SubnationalTopVendorsByYearResponse {
   year: number
   vendors: SubnationalTopVendorByYear[]
 }
+
+export interface SubnationalSectorItem {
+  sector_id: number
+  sector_code: string
+  sector_name: string
+  sector_color: string
+  contract_count: number
+  total_value_mxn: number
+  avg_risk_score: number
+  pct_of_state_total: number
+}
+
+export interface SubnationalSectorsResponse {
+  state_code: string
+  state_name: string
+  sectors: SubnationalSectorItem[]
+  total_value_mxn: number
+  coverage_note: string
+}

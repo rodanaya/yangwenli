@@ -171,6 +171,25 @@ class StateInstitutionsResponse(BaseModel):
     coverage_note: str
 
 
+class StateSectorItem(BaseModel):
+    sector_id: int
+    sector_code: str
+    sector_name: str
+    sector_color: str
+    contract_count: int
+    total_value_mxn: float
+    avg_risk_score: float
+    pct_of_state_total: float
+
+
+class StateSectorsResponse(BaseModel):
+    state_code: str
+    state_name: str
+    sectors: list[StateSectorItem]
+    total_value_mxn: float
+    coverage_note: str
+
+
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 def _validate_state(code: str) -> str:
@@ -495,8 +514,6 @@ async def get_state_institutions(
 ):
     """
     Top institutions (by contract value) operating in a state.
-    Uses contracts.state_code directly (not the institutions join) for a
-    lighter path, and supports optional year filtering.
     """
     code = _validate_state(code)
 
@@ -506,7 +523,7 @@ async def get_state_institutions(
     with get_db() as conn:
         rows = conn.execute(f'''
             SELECT
-                c.institution_name,
+                i.name                                       AS institution_name,
                 COUNT(*)                                     AS total_contracts,
                 COALESCE(SUM(c.amount_mxn), 0)              AS total_value_mxn,
                 AVG(COALESCE(c.risk_score, 0))              AS avg_risk_score,
@@ -516,9 +533,10 @@ async def get_state_institutions(
                     1
                 )                                            AS direct_award_pct
             FROM contracts c
-            WHERE c.state_code = ?
+            JOIN institutions i ON c.institution_id = i.id
+            WHERE i.state_code = ? AND i.gobierno_nivel IN ('GE','GM','GEM')
               {year_clause}
-            GROUP BY c.institution_name
+            GROUP BY i.id, i.name
             ORDER BY total_value_mxn DESC
             LIMIT ?
         ''', params).fetchall()
@@ -541,6 +559,66 @@ async def get_state_institutions(
                 total_value_mxn=r['total_value_mxn'],
                 avg_risk_score=round(r['avg_risk_score'], 4),
                 direct_award_pct=r['direct_award_pct'] or 0.0,
+            )
+            for r in rows
+        ],
+        coverage_note=COVERAGE_NOTE,
+    )
+
+
+@router.get("/states/{code}/sectors", response_model=StateSectorsResponse)
+async def get_state_sectors(
+    code: str,
+    year: Optional[int] = Query(None, ge=2002, le=2025),
+):
+    """
+    Sector breakdown for a state (by contract value, federally-funded only).
+    """
+    code = _validate_state(code)
+
+    year_clause = "AND c.contract_year = ?" if year is not None else ""
+    params: tuple = (code,) + ((year,) if year is not None else ())
+
+    with get_db() as conn:
+        rows = conn.execute(f'''
+            SELECT
+                s.id                                         AS sector_id,
+                s.code                                       AS sector_code,
+                s.name_es                                    AS sector_name,
+                s.color                                      AS sector_color,
+                COUNT(c.id)                                  AS contract_count,
+                COALESCE(SUM(c.amount_mxn), 0)              AS total_value_mxn,
+                AVG(COALESCE(c.risk_score, 0))              AS avg_risk_score
+            FROM contracts c
+            JOIN institutions i ON c.institution_id = i.id
+            JOIN sectors s      ON c.sector_id = s.id
+            WHERE i.state_code = ? AND i.gobierno_nivel IN ('GE','GM','GEM')
+              {year_clause}
+            GROUP BY s.id, s.code, s.name_es, s.color
+            ORDER BY total_value_mxn DESC
+        ''', params).fetchall()
+
+    if not rows:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No subnational sector data for state '{code}'",
+        )
+
+    state_total = sum(r['total_value_mxn'] for r in rows)
+    return StateSectorsResponse(
+        state_code=code,
+        state_name=STATE_NAMES[code],
+        total_value_mxn=state_total,
+        sectors=[
+            StateSectorItem(
+                sector_id=r['sector_id'],
+                sector_code=r['sector_code'],
+                sector_name=r['sector_name'],
+                sector_color=r['sector_color'],
+                contract_count=r['contract_count'],
+                total_value_mxn=r['total_value_mxn'],
+                avg_risk_score=round(r['avg_risk_score'], 4),
+                pct_of_state_total=round(100 * r['total_value_mxn'] / state_total, 1) if state_total else 0.0,
             )
             for r in rows
         ],

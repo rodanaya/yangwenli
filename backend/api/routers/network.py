@@ -60,6 +60,7 @@ class NetworkNode(BaseModel):
     pagerank: Optional[float] = Field(None, description="PageRank in co-bidding network")
     cobid_clustering_coeff: Optional[float] = Field(None, description="Co-bidding clustering coefficient (Wachs et al. 2021)")
     cobid_triangle_count: Optional[int] = Field(None, description="Number of co-bidding triangles")
+    is_sanctioned: bool = Field(False, description="True if vendor appears in SFP sanctions registry")
 
 
 class NetworkLink(BaseModel):
@@ -205,6 +206,33 @@ def get_network_graph(
                                 node["cobid_triangle_count"] = gf[vid]["cobid_triangle_count"]
             except Exception:
                 pass  # graph features not built yet — degrade gracefully
+
+        # Enrich vendor nodes with SFP sanction status
+        if vendor_ids:
+            try:
+                cursor = conn.cursor()
+                placeholders = ",".join("?" * len(vendor_ids))
+                # Match by RFC (exact) or normalised name (uppercase token match)
+                cursor.execute(
+                    f"""
+                    SELECT DISTINCT v.id AS vendor_id
+                    FROM vendors v
+                    JOIN sfp_sanctions sfp ON (
+                        (v.rfc IS NOT NULL AND v.rfc != '' AND v.rfc = sfp.rfc)
+                        OR UPPER(TRIM(v.name)) = UPPER(TRIM(sfp.company_name))
+                    )
+                    WHERE v.id IN ({placeholders})
+                    """,
+                    vendor_ids,
+                )
+                sanctioned_ids = {row["vendor_id"] for row in cursor.fetchall()}
+                for node in data["nodes"]:
+                    if node["id"].startswith("v-"):
+                        vid = int(node["id"][2:])
+                        if vid in sanctioned_ids:
+                            node["is_sanctioned"] = True
+            except Exception:
+                pass  # sfp_sanctions table absent — degrade gracefully
 
     if not data["nodes"] and vendor_id:
         raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found or has no connections")
