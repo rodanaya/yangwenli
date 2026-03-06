@@ -84,6 +84,9 @@ function RiskBadge({ score }: { score: number }) {
 }
 
 // ── Mexico choropleth map (ECharts + real GeoJSON) ───────────────────────────
+// Module-level cache — only register the map once across all mounts
+let mexGeoRegistered = false
+
 function riskToAreaColor(score: number | null | undefined): string {
   if (score === null || score === undefined) return '#334155'
   if (score >= 0.5) return RISK_COLORS.critical
@@ -100,16 +103,20 @@ function MexicoChoropleth({
   onStateClick: (code: string) => void
 }) {
   const { t } = useTranslation('subnational')
-  const [geoReady, setGeoReady] = useState(false)
+  const [geoReady, setGeoReady] = useState(mexGeoRegistered)
+  const [geoError, setGeoError] = useState(false)
 
   useEffect(() => {
+    if (mexGeoRegistered) { setGeoReady(true); return }
     fetch('/mexico-states.geojson')
-      .then((r) => r.json())
-      .then((geo: Parameters<typeof echarts.registerMap>[1]) => {
-        echarts.registerMap('mexico-states', geo)
+      .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json() })
+      .then((geo: object) => {
+        // ECharts 6 requires { geoJSON: ... } wrapper; also accepted by ECharts 5.1+
+        echarts.registerMap('mexico-states', { geoJSON: geo } as Parameters<typeof echarts.registerMap>[1])
+        mexGeoRegistered = true
         setGeoReady(true)
       })
-      .catch(() => { /* static file missing — show loading placeholder */ })
+      .catch(() => setGeoError(true))
   }, [])
 
   const dataMap = useMemo(() => {
@@ -153,13 +160,13 @@ function MexicoChoropleth({
           type: 'map' as const,
           map: 'mexico-states',
           roam: false,
+          selectedMode: false,
           data: seriesData,
           label: { show: false },
           emphasis: {
             label: { show: false },
             itemStyle: { areaColor: '#93c5fd', borderColor: '#3b82f6', borderWidth: 1.5 },
           },
-          select: { disabled: true },
           itemStyle: {
             borderColor: '#1e293b',
             borderWidth: 0.8,
@@ -190,14 +197,20 @@ function MexicoChoropleth({
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {geoReady ? (
+        {geoError ? (
+          <div className="flex h-[240px] sm:h-[360px] items-center justify-center gap-2 text-xs text-destructive">
+            <AlertTriangle className="h-4 w-4" />
+            {t('mapLoadError', 'Map failed to load')}
+          </div>
+        ) : geoReady ? (
           <ReactECharts
             option={option}
-            style={{ height: '380px', width: '100%' }}
+            style={{ height: '100%', width: '100%' }}
+            className="h-[240px] sm:h-[360px]"
             onEvents={onEvents}
           />
         ) : (
-          <div className="flex h-[380px] items-center justify-center text-xs text-muted-foreground">
+          <div className="flex h-[240px] sm:h-[360px] items-center justify-center text-xs text-muted-foreground">
             {t('loadingMap')}
           </div>
         )}
@@ -799,16 +812,16 @@ function StateDetail({ code }: { code: string }) {
               <p className="text-sm text-muted-foreground">{t('noData')}</p>
             ) : (
               <>
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={200}>
                 <ComposedChart
                   data={d.year_trend}
-                  margin={{ top: 16, right: 48, left: 0, bottom: 4 }}
+                  margin={{ top: 8, right: 40, left: 0, bottom: 4 }}
                 >
                   {/* Administration background bands */}
-                  <ReferenceArea x1={2007} x2={2012} fill="#3b82f6" fillOpacity={0.04} label={{ value: 'Calderón', fill: 'rgba(255,255,255,0.2)', fontSize: 9 }} />
-                  <ReferenceArea x1={2013} x2={2018} fill="#10b981" fillOpacity={0.04} label={{ value: 'EPN', fill: 'rgba(255,255,255,0.2)', fontSize: 9 }} />
-                  <ReferenceArea x1={2019} x2={2024} fill="#f59e0b" fillOpacity={0.04} label={{ value: 'AMLO', fill: 'rgba(255,255,255,0.2)', fontSize: 9 }} />
-                  <ReferenceLine x={2020} stroke="#ef4444aa" strokeDasharray="3 2" label={{ value: 'COVID', fill: '#ef4444aa', fontSize: 9 }} />
+                  <ReferenceArea x1={2007} x2={2012} fill="#3b82f6" fillOpacity={0.04} />
+                  <ReferenceArea x1={2013} x2={2018} fill="#10b981" fillOpacity={0.04} />
+                  <ReferenceArea x1={2019} x2={2024} fill="#f59e0b" fillOpacity={0.04} />
+                  <ReferenceLine x={2020} stroke="#ef4444aa" strokeDasharray="3 2" />
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="year" tick={{ fontSize: 10 }} />
                   {/* Left Y axis — spending value */}
@@ -828,14 +841,11 @@ function StateDetail({ code }: { code: string }) {
                     width={36}
                   />
                   <Tooltip
-                    formatter={(
-                      v: number | string | undefined,
-                      name: string | undefined,
-                    ) => {
+                    formatter={(v, name) => {
                       if (name === 'total_value_mxn') {
                         return [formatCompactMXN(Number(v ?? 0)), t('stats.totalValue')]
                       }
-                      return [typeof v === 'number' ? v.toFixed(4) : v, t('riskTrend')]
+                      return [typeof v === 'number' ? v.toFixed(4) : String(v ?? ''), t('riskTrend')]
                     }}
                     labelFormatter={(l) => `Year: ${l}`}
                   />
@@ -980,6 +990,7 @@ function VendorsTable({ vendors }: { vendors: SubnationalVendor[] }) {
   }
 
   return (
+    <div className="overflow-x-auto">
     <table className="w-full text-sm">
       <thead className="bg-muted/50">
         <tr>
@@ -1036,6 +1047,7 @@ function VendorsTable({ vendors }: { vendors: SubnationalVendor[] }) {
         ))}
       </tbody>
     </table>
+    </div>
   )
 }
 

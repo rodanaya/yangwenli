@@ -1566,8 +1566,8 @@ export default function ProcurementIntelligence() {
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <span className="text-text-muted tabular-nums">{pair.co_bid_count}</span>
-                          <span className={cn('font-bold font-mono tabular-nums', pair.co_bid_rate >= 0.7 ? 'text-risk-critical' : 'text-risk-high')}>
-                            {(pair.co_bid_rate * 100).toFixed(0)}%
+                          <span className={cn('font-bold font-mono tabular-nums', pair.co_bid_rate >= 70 ? 'text-risk-critical' : 'text-risk-high')}>
+                            {pair.co_bid_rate.toFixed(0)}%
                           </span>
                           {pair.is_potential_collusion && (
                             <AlertTriangle className="h-3 w-3 text-risk-critical shrink-0" />
@@ -1616,7 +1616,7 @@ export default function ProcurementIntelligence() {
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <span className="font-bold font-mono text-risk-high tabular-nums">
-                            {(alert.value_share_pct * 100).toFixed(0)}%
+                            {alert.value_share_pct.toFixed(0)}%
                           </span>
                           {alert.avg_risk_score != null && (
                             <span
