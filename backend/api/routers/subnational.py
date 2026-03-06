@@ -209,13 +209,18 @@ def _state_filter_clause() -> str:
 @router.get("/states", response_model=StateListResponse)
 async def list_states(
     min_contracts: int = Query(10, ge=1, description="Minimum contracts to include a state"),
+    year: Optional[int] = Query(None, ge=2002, le=2025, description="Filter by contract year"),
 ):
     """
     All 32 states with subnational procurement summary.
     Only includes states that have at least min_contracts in COMPRANET.
+    Optional year filter restricts aggregations to a single year.
     """
+    year_clause = "AND c.contract_year = ?" if year is not None else ""
+    year_params = (year,) if year is not None else ()
+
     with get_db() as conn:
-        rows = conn.execute('''
+        rows = conn.execute(f'''
             SELECT
                 i.state_code,
                 COUNT(c.id)                                   AS contract_count,
@@ -229,13 +234,14 @@ async def list_states(
             JOIN institutions i ON c.institution_id = i.id
             WHERE i.state_code IS NOT NULL AND i.state_code != ''
               AND i.gobierno_nivel IN ('GE','GM','GEM')
+              {year_clause}
             GROUP BY i.state_code
             HAVING contract_count >= ?
             ORDER BY total_value_mxn DESC
-        ''', (min_contracts,)).fetchall()
+        ''', year_params + (min_contracts,)).fetchall()
 
         # Top institution per state
-        top_inst = conn.execute('''
+        top_inst = conn.execute(f'''
             SELECT i.state_code,
                    i.name AS institution_name,
                    SUM(c.amount_mxn) AS inst_value
@@ -243,9 +249,10 @@ async def list_states(
             JOIN institutions i ON c.institution_id = i.id
             WHERE i.state_code IS NOT NULL AND i.state_code != ''
               AND i.gobierno_nivel IN ('GE','GM','GEM')
+              {year_clause}
             GROUP BY i.state_code, i.id
             ORDER BY i.state_code, inst_value DESC
-        ''').fetchall()
+        ''', year_params).fetchall()
 
         top_by_state: dict[str, tuple] = {}
         for r in top_inst:
@@ -253,16 +260,17 @@ async def list_states(
                 top_by_state[r['state_code']] = (r['institution_name'], r['inst_value'])
 
         # Year ranges per state
-        years_raw = conn.execute('''
+        years_raw = conn.execute(f'''
             SELECT i.state_code, c.contract_year
             FROM contracts c
             JOIN institutions i ON c.institution_id = i.id
             WHERE i.state_code IS NOT NULL AND i.state_code != ''
               AND i.gobierno_nivel IN ('GE','GM','GEM')
               AND c.contract_year IS NOT NULL
+              {year_clause}
             GROUP BY i.state_code, c.contract_year
             ORDER BY i.state_code, c.contract_year
-        ''').fetchall()
+        ''', year_params).fetchall()
 
         years_by_state: dict[str, list[int]] = {}
         for r in years_raw:

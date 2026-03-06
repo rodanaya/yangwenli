@@ -230,10 +230,11 @@ function StatesList() {
   const { t } = useTranslation('subnational')
   const navigate = useNavigate()
   const [sortBy, setSortBy] = useState<'value' | 'risk'>('value')
+  const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined)
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['subnational', 'states'],
-    queryFn: () => subnationalApi.getStates(),
+    queryKey: ['subnational', 'states', selectedYear],
+    queryFn: () => subnationalApi.getStates(selectedYear),
     staleTime: 15 * 60 * 1000,
   })
 
@@ -307,6 +308,42 @@ function StatesList() {
       </div>
 
       {data.coverage_note && <CoverageBanner />}
+
+      {/* Year filter */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-xs text-muted-foreground">Year:</span>
+        <div className="flex gap-1 flex-wrap" role="group" aria-label="Filter by year">
+          <button
+            onClick={() => setSelectedYear(undefined)}
+            className={`rounded px-2 py-0.5 text-xs font-mono transition-colors ${
+              selectedYear === undefined
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground hover:bg-muted/70'
+            }`}
+          >
+            All
+          </button>
+          {[2024,2023,2022,2021,2020,2019,2018].map((y) => (
+            <button
+              key={y}
+              onClick={() => setSelectedYear(y)}
+              className={`rounded px-2 py-0.5 text-xs font-mono transition-colors ${
+                selectedYear === y
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/70'
+              }`}
+              aria-pressed={selectedYear === y}
+            >
+              {y}
+            </button>
+          ))}
+        </div>
+        {selectedYear && (
+          <span className="text-[10px] text-muted-foreground">
+            Showing {selectedYear} contracts only
+          </span>
+        )}
+      </div>
 
       {/* Mexico choropleth map — real geographic shapes, risk-colored */}
       <MexicoChoropleth

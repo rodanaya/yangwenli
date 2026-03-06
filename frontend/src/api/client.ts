@@ -2110,8 +2110,11 @@ export const dossierApi = {
 }
 
 export const subnationalApi = {
-  async getStates(): Promise<import('./types').SubnationalStatesResponse> {
-    const { data } = await api.get<import('./types').SubnationalStatesResponse>('/subnational/states')
+  async getStates(year?: number): Promise<import('./types').SubnationalStatesResponse> {
+    const { data } = await api.get<import('./types').SubnationalStatesResponse>(
+      '/subnational/states',
+      year ? { params: { year } } : undefined,
+    )
     return data
   },
   async getStateDetail(code: string): Promise<import('./types').SubnationalStateDetail> {

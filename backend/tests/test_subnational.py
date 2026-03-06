@@ -47,6 +47,26 @@ class TestStatesList:
     def test_list_states_year_filter(self, client, base_url):
         r = client.get(f"{base_url}/subnational/states?year=2023")
         assert r.status_code == 200
+        data = r.json()
+        assert "data" in data
+        assert isinstance(data["data"], list)
+        # Same response shape as unfiltered
+        assert "total_states" in data
+        assert "total_contracts" in data
+        assert "total_value_mxn" in data
+
+    def test_list_states_year_filter_old_year_fewer_results(self, client, base_url):
+        """An early valid year should return fewer or equal states vs all-time."""
+        r_all = client.get(f"{base_url}/subnational/states")
+        r_old = client.get(f"{base_url}/subnational/states?year=2002")
+        assert r_all.status_code == 200
+        assert r_old.status_code == 200
+        assert r_old.json()["total_states"] <= r_all.json()["total_states"]
+
+    def test_list_states_year_filter_validation(self, client, base_url):
+        """Year outside valid range returns 422."""
+        r = client.get(f"{base_url}/subnational/states?year=1800")
+        assert r.status_code == 422
 
     def test_list_states_sector_filter_returns_200(self, client, base_url):
         """sector_id filter is accepted without error."""
