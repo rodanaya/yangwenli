@@ -79,5 +79,12 @@
     "noMultiYearData": "No multi-year data available",
     "noYoyData": "No year-over-year data available"
   },
-  "loading": "Loading..."
+  "loading": "Loading...",
+  "seasonality": {
+    "title": "The December Effect",
+    "subtitle": "Risk spikes 64% every December — the year-end budget dump",
+    "toggle_risk": "Avg Risk",
+    "toggle_amount": "Avg Amount",
+    "callout": "Year-end fiscal pressure pushes larger, less competitive contracts through rushed approval chains every December — a pattern that repeats without exception across all 23 years of data."
+  }
 }

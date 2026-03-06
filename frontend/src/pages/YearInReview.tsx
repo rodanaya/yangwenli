@@ -29,6 +29,7 @@ import {
   BarChart3,
   AlertTriangle,
 } from 'lucide-react'
+import { SeasonalityCalendar } from '@/components/charts/SeasonalityCalendar'
 
 // =============================================================================
 // Constants
@@ -601,6 +602,22 @@ export default function YearInReview() {
           </CardContent>
         </Card>
       </div>
+
+      {/* December Effect — seasonal radial chart */}
+      <Card className="bg-card border-border/40">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-mono text-text-primary flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-[#ef4444]" aria-hidden="true" />
+            The December Effect
+          </CardTitle>
+          <p className="text-xs text-text-muted mt-0.5">
+            Risk spikes 64% every December — the year-end budget dump (23-year aggregate)
+          </p>
+        </CardHeader>
+        <CardContent>
+          <SeasonalityCalendar />
+        </CardContent>
+      </Card>
 
       {/* Year navigation pills */}
       <div className="flex flex-wrap gap-1.5" role="navigation" aria-label="Year navigation">

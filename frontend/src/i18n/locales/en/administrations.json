@@ -63,5 +63,12 @@
   "comparisonTableDesc": "Average metrics across five administrations — based on actual COMPRANET data. Selected administration highlighted in blue.",
   "matrixTitle": "Risk Matrix by Administration and Sector",
   "matrixSubtitle": "Volume-weighted averages — toggle metric with buttons on the right",
-  "matrixSubtitleLoading": "Illustrative estimates (loading live data…)"
+  "matrixSubtitleLoading": "Illustrative estimates (loading live data…)",
+  "fingerprints": {
+    "title": "Presidential Procurement Fingerprints",
+    "subtitle": "How each administration's procurement patterns compare across risk dimensions",
+    "insight_lowest_risk": "Lowest Risk Era",
+    "insight_highest_da": "Highest Direct Awards",
+    "insight_biggest_spender": "Biggest Spender"
+  }
 }
