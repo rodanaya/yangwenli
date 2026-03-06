@@ -22,6 +22,7 @@ import {
 } from '@/lib/utils'
 import { contractApi, exportApi } from '@/api/client'
 import { RiskFeedbackButton } from '@/components/RiskFeedbackButton'
+import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
 import { TableExportButton } from '@/components/TableExportButton'
 import { SECTORS, RISK_COLORS } from '@/lib/constants'
@@ -1225,6 +1226,12 @@ function ContractRow({
             entityId={contract.id}
             className="h-5 w-5"
           />
+          <AddToDossierButton
+            entityType="contract"
+            entityId={contract.id}
+            entityName={contract.title ?? contract.contract_number ?? `Contract #${contract.id}`}
+            className="h-5 w-5"
+          />
         </div>
       </td>
 
@@ -1239,6 +1246,14 @@ function ContractRow({
       <td className="px-3 py-2 max-w-[180px]">
         {contract.vendor_id ? (
           <div className="flex items-center gap-1 min-w-0">
+            {contract.vendor_is_individual && (
+              <span
+                className="shrink-0 text-[9px] font-bold px-1 py-0.5 rounded border border-amber-500/40 bg-amber-500/10 text-amber-400 leading-none"
+                title="Natural person (individual) — not a company"
+              >
+                PERSON
+              </span>
+            )}
             <button
               className="text-xs font-medium text-text-primary hover:text-accent transition-colors truncate text-left flex-1"
               title={toTitleCase(contract.vendor_name || 'Unknown')}
