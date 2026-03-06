@@ -50,6 +50,7 @@ import {
   Info,
 } from 'lucide-react'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
+import AdministrationFingerprints from '@/components/charts/AdministrationFingerprints'
 
 // =============================================================================
 // Constants
@@ -624,6 +625,9 @@ export default function Administrations() {
           )
         })}
       </motion.div>
+
+      {/* Administration Fingerprints — radar comparison */}
+      <AdministrationFingerprints />
 
       {/* Editorial Narrative */}
       <motion.div

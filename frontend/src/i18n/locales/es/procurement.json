@@ -77,5 +77,18 @@
     "high": "Alto",
     "medium": "Medio",
     "low": "Bajo"
+  },
+  "risk_pyramid": {
+    "title": "La Pirámide de Riesgo",
+    "subtitle": "Menos contratos, mucho más dinero en la cima",
+    "callout": "Los contratos de riesgo crítico promedian 21.8M MXN — 14 veces más que los de bajo riesgo (promedio 1.6M MXN). Los contratos más sospechosos involucran el mayor dinero."
+  },
+  "sector_paradox": {
+    "title": "La Paradoja de Adjudicación Directa",
+    "subtitle": "¿Saltarse la competencia causa corrupción? No siempre.",
+    "callout": "Las tasas de competencia por sí solas no predicen la corrupción. Lo que importa es la concentración de proveedores, la manipulación de precios y las relaciones de red — no el tipo de procedimiento.",
+    "annotation_ag": "93% adjudicaciones directas, solo 2% alto riesgo",
+    "annotation_salud": "3.1T MXN, mayor riesgo",
+    "reference_line_label": "Correlación esperada"
   }
 }

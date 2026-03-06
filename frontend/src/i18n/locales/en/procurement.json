@@ -77,5 +77,18 @@
     "high": "High",
     "medium": "Medium",
     "low": "Low"
+  },
+  "risk_pyramid": {
+    "title": "The Risk Pyramid",
+    "subtitle": "Fewer contracts, far more money at the top",
+    "callout": "Critical-risk contracts average 21.8M MXN — 14x larger than low-risk contracts (1.6M MXN avg). The most suspicious contracts involve the most money."
+  },
+  "sector_paradox": {
+    "title": "The Direct Award Paradox",
+    "subtitle": "Does skipping competition cause corruption? Not always.",
+    "callout": "Competition rates alone don't predict corruption. What matters is vendor concentration, price manipulation, and network relationships — not the procurement procedure type.",
+    "annotation_ag": "93% direct awards, only 2% high-risk",
+    "annotation_salud": "3.1T MXN, highest risk",
+    "reference_line_label": "Expected correlation"
   }
 }

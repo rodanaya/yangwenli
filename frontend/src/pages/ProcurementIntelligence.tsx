@@ -11,6 +11,8 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
+import { RiskPyramid } from '@/components/charts/RiskPyramid'
+import { SectorParadoxScatter } from '@/components/charts/SectorParadoxScatter'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
@@ -1745,6 +1747,36 @@ export default function ProcurementIntelligence() {
           </CardContent>
         </Card>
       )}
+
+      {/* =========================================================== */}
+      {/* Risk Pyramid                                                  */}
+      {/* =========================================================== */}
+      <div className="border-t border-border/40 pt-6">
+        <div className="mb-4">
+          <h2 className="text-base font-semibold text-text-primary">{t('risk_pyramid.title')}</h2>
+          <p className="text-xs text-text-muted mt-0.5">{t('risk_pyramid.subtitle')}</p>
+        </div>
+        <Card className="bg-surface-elevated border-border">
+          <CardContent className="p-5">
+            <RiskPyramid />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* =========================================================== */}
+      {/* Direct Award Paradox Scatter                                  */}
+      {/* =========================================================== */}
+      <div className="border-t border-border/40 pt-6">
+        <div className="mb-4">
+          <h2 className="text-base font-semibold text-text-primary">{t('sector_paradox.title')}</h2>
+          <p className="text-xs text-text-muted mt-0.5">{t('sector_paradox.subtitle')}</p>
+        </div>
+        <Card className="bg-surface-elevated border-border">
+          <CardContent className="p-5">
+            <SectorParadoxScatter />
+          </CardContent>
+        </Card>
+      </div>
 
     </div>
   )

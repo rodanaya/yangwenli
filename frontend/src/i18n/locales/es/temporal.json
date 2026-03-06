@@ -79,5 +79,12 @@
     "noMultiYearData": "Sin datos multianuales disponibles",
     "noYoyData": "Sin datos año a año disponibles"
   },
-  "loading": "Cargando..."
+  "loading": "Cargando...",
+  "seasonality": {
+    "title": "El Efecto Diciembre",
+    "subtitle": "El riesgo se dispara 64% cada diciembre — el vaciado presupuestal de fin de año",
+    "toggle_risk": "Riesgo Prom.",
+    "toggle_amount": "Monto Prom.",
+    "callout": "La presión fiscal de fin de año impulsa contratos más grandes y menos competitivos a través de cadenas de aprobación apresuradas cada diciembre — un patrón que se repite sin excepción en los 23 años de datos."
+  }
 }
