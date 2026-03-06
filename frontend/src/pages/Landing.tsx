@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
@@ -49,21 +50,23 @@ function useCountUp(target: number, duration = 1800, enabled = false): number {
 // Arcs glow with their sector color on hover.
 // ---------------------------------------------------------------------------
 const SECTOR_ARCS = [
-  { name: 'Salud',           pct: 18, color: '#dc2626' },
-  { name: 'Infraestructura', pct: 16, color: '#ea580c' },
-  { name: 'Educación',       pct: 14, color: '#3b82f6' },
-  { name: 'Gobernación',     pct: 11, color: '#be123c' },
-  { name: 'Hacienda',        pct:  9, color: '#16a34a' },
-  { name: 'Tecnología',      pct:  8, color: '#8b5cf6' },
-  { name: 'Energía',         pct: 12, color: '#eab308' },
-  { name: 'Defensa',         pct:  3, color: '#1e3a5f' },
-  { name: 'Agricultura',     pct:  4, color: '#22c55e' },
-  { name: 'Ambiente',        pct:  2, color: '#10b981' },
-  { name: 'Trabajo',         pct:  2, color: '#f97316' },
-  { name: 'Otros',           pct:  1, color: '#64748b' },
+  { name: 'Salud',           nameEn: 'Health',          pct: 18, color: '#dc2626' },
+  { name: 'Infraestructura', nameEn: 'Infrastructure',  pct: 16, color: '#ea580c' },
+  { name: 'Educación',       nameEn: 'Education',       pct: 14, color: '#3b82f6' },
+  { name: 'Gobernación',     nameEn: 'Governance',      pct: 11, color: '#be123c' },
+  { name: 'Hacienda',        nameEn: 'Treasury',        pct:  9, color: '#16a34a' },
+  { name: 'Tecnología',      nameEn: 'Technology',      pct:  8, color: '#8b5cf6' },
+  { name: 'Energía',         nameEn: 'Energy',          pct: 12, color: '#eab308' },
+  { name: 'Defensa',         nameEn: 'Defense',         pct:  3, color: '#1e3a5f' },
+  { name: 'Agricultura',     nameEn: 'Agriculture',     pct:  4, color: '#22c55e' },
+  { name: 'Ambiente',        nameEn: 'Environment',     pct:  2, color: '#10b981' },
+  { name: 'Trabajo',         nameEn: 'Labor',           pct:  2, color: '#f97316' },
+  { name: 'Otros',           nameEn: 'Other',           pct:  1, color: '#64748b' },
 ]
 
 function SectorRing() {
+  const { i18n } = useTranslation()
+  const isEn = i18n.language.startsWith('en')
   const [hovered, setHovered] = useState<number | null>(null)
 
   const cx = 140
@@ -103,7 +106,7 @@ function SectorRing() {
       'Z',
     ].join(' ')
 
-    arcs.push({ d, color: sector.color, name: sector.name, idx })
+    arcs.push({ d, color: sector.color, name: isEn ? sector.nameEn : sector.name, idx })
     startDeg += spanDeg + gap
   })
 
@@ -180,7 +183,9 @@ function SectorRing() {
               className="w-2 h-2 rounded-full flex-shrink-0"
               style={{ backgroundColor: s.color, opacity: hovered === null || hovered === i ? 1 : 0.3 }}
             />
-            <span className="text-[10px] text-white/50 whitespace-nowrap leading-none">{s.name}</span>
+            <span className="text-[10px] text-white/50 whitespace-nowrap leading-none">
+              {isEn ? s.nameEn : s.name}
+            </span>
           </div>
         ))}
       </div>
