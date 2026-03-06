@@ -32,7 +32,33 @@ def precompute_stats():
     # 1. Overview stats
     print("\n1. Computing overview stats...")
     start = time.time()
-    cursor.execute("""
+    # MXN→USD rates and INPC deflators (same as executive.py — keep in sync)
+    MXN_USD_RATES = {
+        2002: 9.66, 2003: 10.79, 2004: 11.29, 2005: 10.90, 2006: 10.90,
+        2007: 10.93, 2008: 11.13, 2009: 13.51, 2010: 12.64, 2011: 12.43,
+        2012: 13.17, 2013: 12.77, 2014: 13.29, 2015: 15.87, 2016: 18.66,
+        2017: 18.93, 2018: 19.24, 2019: 19.26, 2020: 21.49, 2021: 20.28,
+        2022: 20.13, 2023: 17.74, 2024: 17.16,
+    }
+    INPC_DEFLATORS = {
+        2002: 0.382, 2003: 0.404, 2004: 0.420, 2005: 0.442,
+        2006: 0.456, 2007: 0.475, 2008: 0.493, 2009: 0.525,
+        2010: 0.544, 2011: 0.567, 2012: 0.586, 2013: 0.607,
+        2014: 0.632, 2015: 0.658, 2016: 0.671, 2017: 0.694,
+        2018: 0.741, 2019: 0.777, 2020: 0.799, 2021: 0.824,
+        2022: 0.885, 2023: 0.955, 2024: 1.000, 2025: 1.000,
+    }
+    DEFAULT_RATE = 17.20
+    DEFAULT_DEFLATOR = 0.700
+    usd_clauses = "\n".join(
+        f"            WHEN contract_year = {yr} THEN amount_mxn / {rate}"
+        for yr, rate in MXN_USD_RATES.items()
+    )
+    real_clauses = "\n".join(
+        f"            WHEN contract_year = {yr} THEN amount_mxn / {d}"
+        for yr, d in INPC_DEFLATORS.items()
+    )
+    cursor.execute(f"""
         SELECT
             COUNT(*) as total_contracts,
             COALESCE(SUM(amount_mxn), 0) as total_value,
@@ -44,8 +70,17 @@ def precompute_stats():
             ROUND(SUM(CASE WHEN is_direct_award = 1 THEN 1.0 ELSE 0 END) / COUNT(*) * 100, 2) as direct_pct,
             ROUND(SUM(CASE WHEN is_single_bid = 1 THEN 1.0 ELSE 0 END) / COUNT(*) * 100, 2) as single_pct,
             MIN(contract_year) as min_year,
-            MAX(contract_year) as max_year
+            MAX(contract_year) as max_year,
+            SUM(CASE
+{usd_clauses}
+                ELSE amount_mxn / {DEFAULT_RATE}
+            END) as total_value_usd,
+            SUM(CASE
+{real_clauses}
+                ELSE amount_mxn / {DEFAULT_DEFLATOR}
+            END) as total_value_real_mxn
         FROM contracts
+        WHERE amount_mxn > 0 AND amount_mxn < 100000000000
     """)
     row = cursor.fetchone()
     stats['overview'] = {
@@ -60,6 +95,8 @@ def precompute_stats():
         'single_bid_pct': row['single_pct'],
         'min_year': row['min_year'],
         'max_year': row['max_year'],
+        'total_value_usd': round(row['total_value_usd'] or 0, 0),
+        'total_value_real_mxn': round(row['total_value_real_mxn'] or 0, 0),
     }
     print(f"   Done ({time.time() - start:.1f}s)")
 

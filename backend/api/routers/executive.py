@@ -140,22 +140,28 @@ def _build_summary(conn) -> dict:
         f"            WHEN contract_year = {yr} THEN amount_mxn / {d}"
         for yr, d in INPC_DEFLATORS.items()
     )
-    combined_sql = f"""
-        SELECT
-            SUM(CASE
+    # Fast path: read from precomputed_stats (stored by precompute_stats.py)
+    total_value_usd = overview.get("total_value_usd")
+    total_value_real_mxn = overview.get("total_value_real_mxn")
+
+    if total_value_usd is None or total_value_real_mxn is None:
+        # Fallback: live query for DBs where precompute_stats hasn't run yet
+        combined_sql = f"""
+            SELECT
+                SUM(CASE
 {usd_clauses}
-                ELSE amount_mxn / {DEFAULT_RATE}
-            END) AS total_value_usd,
-            SUM(CASE
+                    ELSE amount_mxn / {DEFAULT_RATE}
+                END) AS total_value_usd,
+                SUM(CASE
 {real_clauses}
-                ELSE amount_mxn / {DEFAULT_DEFLATOR}
-            END) AS total_value_real_mxn
-        FROM contracts
-        WHERE amount_mxn > 0 AND amount_mxn < 100000000000
-    """
-    combined_row = cur.execute(combined_sql).fetchone()
-    total_value_usd = (combined_row["total_value_usd"] or 0.0) if combined_row else 0.0
-    total_value_real_mxn = (combined_row["total_value_real_mxn"] or 0.0) if combined_row else 0.0
+                    ELSE amount_mxn / {DEFAULT_DEFLATOR}
+                END) AS total_value_real_mxn
+            FROM contracts
+            WHERE amount_mxn > 0 AND amount_mxn < 100000000000
+        """
+        combined_row = cur.execute(combined_sql).fetchone()
+        total_value_usd = (combined_row["total_value_usd"] or 0.0) if combined_row else 0.0
+        total_value_real_mxn = (combined_row["total_value_real_mxn"] or 0.0) if combined_row else 0.0
 
     headline = {
         "total_contracts": overview.get("total_contracts", 0),
