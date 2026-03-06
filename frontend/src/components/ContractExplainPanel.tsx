@@ -28,7 +28,7 @@ export function ContractExplainPanel({ contractId, riskLevel }: Props) {
       const data = await api.get<{ explanation: string }>(
         `/api/v1/ai/contracts/${contractId}/explain`
       )
-      setExplanation(data.explanation)
+      setExplanation(data.data.explanation)
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status
       if (status === 503) {
