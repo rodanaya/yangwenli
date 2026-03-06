@@ -117,3 +117,54 @@ audit_report_task3.md
 
 # Rollback/recovery scripts (local only)
 backend/scripts/rollback_v5_scores.py
+
+# Claude Code / IDE config (internal dev tooling)
+CLAUDE.md
+CLAUDE.local.md
+CLAUDE.local.md.template
+.mcp.json
+.cursorignore
+.cursorrules
+
+# Internal analysis & investigation scripts
+analyze_structures.py
+audit_queries.py
+check_if_problem_exists.py
+column_mapping.csv
+column_mapping.py
+investigate_structure_c.py
+investigate_structure_c_v2.py
+tmp_*.py
+
+# Internal audit / working documents
+AUDIT_*.md
+CLASSIFICATION_REPORT*.md
+COMPRANET_DATA_QUALITY_REPORT.md
+COMPRANET_DEEP_ANALYSIS_REPORT.txt
+CRITICAL_FINDINGS.md
+DATA_QUALITY_*.md
+DATA_QUALITY_REPORT.md
+DATA_STRUCTURE_REPORT.md
+INVESTIGATION_REPORT_*.md
+PATTERN_FIX_GUIDE.md
+PROJECT_STATUS.md
+RUBLI_TECHNICAL_SPEC.md
+RUBLI_ROADMAP.md
+RUBLI_LITERATURE_REVIEW.md
+VENDOR_DEDUPLICATION_RESULTS.md
+VENDOR_DUPLICATES_REPORT.md
+.lighthouserc.json
+
+# Internal docs
+docs/AGENTS.md
+docs/CLAUDE_CODE_GUIDE.md
+docs/CONFIGURATION_REFERENCE.md
+docs/WORKFLOW_PATTERNS.md
+docs/FRONTEND_RENOVATION_PLAN.md
+docs/LAUNCH_CONTENT.md
+docs/POST_ASF_CLEANUP_RUNBOOK.md
+docs/RESEARCH_SUMMARY.md
+docs/VALIDATION_REPORT.md
+docs/PATTERNS_DETECTED.md
+docs/RISK_METHODOLOGY_v5.1_EXPLORATION.md
+scripts/headless-pipeline.sh
