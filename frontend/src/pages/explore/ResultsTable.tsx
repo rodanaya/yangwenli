@@ -84,6 +84,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
     queryKey: ['explore', 'institutions', sectorId, yearStart, yearEnd, riskLevels, searchText, page, sortField, sortOrder],
     queryFn: () => institutionApi.getAll({
       sector_id: sectorId,
+      risk_level: riskLevelParam,
       search: searchText || undefined,
       page,
       per_page: PAGE_SIZE,

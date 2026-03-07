@@ -70,7 +70,19 @@ export function useExplorerFilters(): ExplorerFilters & ExplorerFilterSetters {
 
   const toggleRiskLevel = useCallback((level: string) => {
     const current = filters.riskLevels
-    const next = current.includes(level) ? current.filter(l => l !== level) : [...current, level]
+    const allActive = current.length === RISK_ALL.length
+    let next: string[]
+    if (allActive) {
+      // When all are active, clicking one selects ONLY that level
+      next = [level]
+    } else if (current.includes(level)) {
+      // Remove from selection; if last one, go back to all
+      next = current.filter(l => l !== level)
+      if (next.length === 0) next = RISK_ALL
+    } else {
+      // Add to current selection
+      next = [...current, level]
+    }
     const allSelected = next.length === RISK_ALL.length
     update({ risk: allSelected ? null : next.join(',') })
   }, [filters.riskLevels, update])

@@ -48,6 +48,7 @@ class InstitutionService(BaseService):
         search: str | None = None,
         min_contracts: int | None = None,
         is_legally_decentralized: bool | None = None,
+        risk_level: str | None = None,
         sort_by: str = "total_contracts",
         sort_order: str = "desc",
     ) -> PaginatedResult:
@@ -75,6 +76,24 @@ class InstitutionService(BaseService):
             qb.where("COALESCE(s.total_contracts, i.total_contracts, 0) >= ?", min_contracts)
         if is_legally_decentralized is not None:
             qb.filter_boolean(is_legally_decentralized, column="i.is_legally_decentralized")
+        if risk_level is not None:
+            risk_ranges = {
+                "critical": ("COALESCE(s.high_risk_pct, 0) >= ?", [25.0]),
+                "high": ("COALESCE(s.high_risk_pct, 0) >= ? AND COALESCE(s.high_risk_pct, 0) < ?", [10.0, 25.0]),
+                "medium": ("COALESCE(s.high_risk_pct, 0) >= ? AND COALESCE(s.high_risk_pct, 0) < ?", [2.0, 10.0]),
+                "low": ("COALESCE(s.high_risk_pct, 0) < ?", [2.0]),
+            }
+            levels = [l.strip() for l in risk_level.split(",") if l.strip() in risk_ranges]
+            if len(levels) == 1:
+                cond, vals = risk_ranges[levels[0]]
+                qb.where(cond, *vals)
+            elif len(levels) > 1:
+                parts, params_flat = [], []
+                for lvl in levels:
+                    cond, vals = risk_ranges[lvl]
+                    parts.append(f"({cond})")
+                    params_flat.extend(vals)
+                qb.where(f"({' OR '.join(parts)})", *params_flat)
 
         qb.sort(
             sort_by,

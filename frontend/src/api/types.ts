@@ -941,6 +941,7 @@ export interface InstitutionFilterParams {
   size_tier?: string
   state_code?: string
   min_contracts?: number
+  risk_level?: string
   search?: string
   page?: number
   per_page?: number

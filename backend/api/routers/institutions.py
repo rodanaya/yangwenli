@@ -111,15 +111,27 @@ def list_institutions(
     search: Optional[str] = Query(None, min_length=2, description="Search institution name"),
     min_contracts: Optional[int] = Query(None, ge=0, description="Minimum contract count"),
     is_legally_decentralized: Optional[bool] = Query(None, description="Filter by legal decentralized status"),
+    risk_level: Optional[str] = Query(None, description="Filter by risk level: critical, high, medium, low (comma-separated)"),
     sort_by: str = Query("total_contracts", description="Sort field"),
     sort_order: str = Query("desc", pattern="^(asc|desc)$", description="Sort order"),
 ):
     """
     List institutions with pagination, filters, and sorting.
 
-    Supports filtering by type, size, autonomy, sector, state, and search.
+    Supports filtering by type, size, autonomy, sector, state, search, and risk level.
     Joins with institution_stats for richer metrics.
     """
+    # Validate risk_level before database operations (supports comma-separated: "critical,high")
+    VALID_RISK_LEVELS = {"low", "medium", "high", "critical"}
+    if risk_level is not None:
+        requested = {l.strip().lower() for l in risk_level.split(",") if l.strip()}
+        invalid = requested - VALID_RISK_LEVELS
+        if invalid:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid risk_level(s) {invalid}. Must be one of: {', '.join(sorted(VALID_RISK_LEVELS))}"
+            )
+
     with get_db() as conn:
         result = institution_service.list_institutions(
             conn,
@@ -133,6 +145,7 @@ def list_institutions(
             search=search,
             min_contracts=min_contracts,
             is_legally_decentralized=is_legally_decentralized,
+            risk_level=risk_level,
             sort_by=sort_by,
             sort_order=sort_order,
         )

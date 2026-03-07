@@ -80,11 +80,14 @@ class VendorService(BaseService):
         if sector_id is not None:
             qb.where("s.primary_sector_id = ?", sector_id)
         if risk_level is not None:
+            # Use high_risk_pct (% of high+critical contracts) for vendor-level filtering.
+            # avg_risk_score is too strict at vendor level since many low-risk contracts
+            # dilute the average — using high_risk_pct gives more meaningful results.
             risk_ranges = {
-                "critical": ("s.avg_risk_score >= ?", [THRESHOLDS['critical']]),
-                "high": ("s.avg_risk_score >= ? AND s.avg_risk_score < ?", [THRESHOLDS['high'], THRESHOLDS['critical']]),
-                "medium": ("s.avg_risk_score >= ? AND s.avg_risk_score < ?", [THRESHOLDS['medium'], THRESHOLDS['high']]),
-                "low": ("s.avg_risk_score < ?", [THRESHOLDS['medium']]),
+                "critical": ("COALESCE(s.high_risk_pct, 0) >= ?", [25.0]),
+                "high": ("COALESCE(s.high_risk_pct, 0) >= ? AND COALESCE(s.high_risk_pct, 0) < ?", [10.0, 25.0]),
+                "medium": ("COALESCE(s.high_risk_pct, 0) >= ? AND COALESCE(s.high_risk_pct, 0) < ?", [2.0, 10.0]),
+                "low": ("COALESCE(s.high_risk_pct, 0) < ?", [2.0]),
             }
             # Support comma-separated levels: "critical,high" selects both ranges
             levels = [l.strip() for l in risk_level.split(",") if l.strip() in risk_ranges]
