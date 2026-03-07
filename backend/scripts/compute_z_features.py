@@ -634,15 +634,22 @@ def main():
         total = cursor.fetchone()[0]
         print(f"\nProcessing {total:,} contracts...")
 
+        # Check if price_hypothesis_confidence column exists (may be absent in older DBs)
+        cursor.execute("PRAGMA table_info(contracts)")
+        col_names = {row[1] for row in cursor.fetchall()}
+        phc_col = "price_hypothesis_confidence" if "price_hypothesis_confidence" in col_names else "0.0 AS price_hypothesis_confidence"
+        if "price_hypothesis_confidence" not in col_names:
+            print("  NOTE: price_hypothesis_confidence column not found — using 0.0")
+
         processed = 0
         offset = 0
 
         while offset < total:
-            cursor.execute("""
+            cursor.execute(f"""
                 SELECT id, vendor_id, institution_id, sector_id,
                        amount_mxn, is_direct_award, is_single_bid,
                        is_year_end, publication_date, contract_date,
-                       contract_year, price_hypothesis_confidence
+                       contract_year, {phc_col}
                 FROM contracts
                 ORDER BY id
                 LIMIT ? OFFSET ?
