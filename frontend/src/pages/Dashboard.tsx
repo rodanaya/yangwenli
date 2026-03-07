@@ -53,6 +53,7 @@ import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { LayoutDashboard } from 'lucide-react'
 import { RiskCalendarHeatmap } from '@/components/charts/RiskCalendarHeatmap'
+import { SectorRiskHeatmap } from '@/components/charts/SectorRiskHeatmap'
 
 // ============================================================================
 // Dashboard: Bold, data-dense intelligence overview
@@ -107,6 +108,54 @@ const AI_SIGNALS = [
     bg: 'bg-background-elevated/20' as const,
   },
 ]
+
+// ============================================================================
+// HEATMAP PANEL — tab-toggled heatmap views
+// ============================================================================
+
+type HeatmapTab = 'monthly' | 'sector'
+
+function HeatmapPanel() {
+  const [tab, setTab] = React.useState<HeatmapTab>('monthly')
+
+  const TABS: { id: HeatmapTab; label: string; desc: string }[] = [
+    { id: 'monthly', label: 'Month × Year', desc: 'Risk by calendar month 2016–2025' },
+    { id: 'sector',  label: 'Sector × Year', desc: 'Risk per sector 2002–2025' },
+  ]
+
+  return (
+    <Card className="border-border/40">
+      <CardContent className="pt-4 pb-4">
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <Layers className="h-4 w-4 text-accent" />
+            <h2 className="text-sm font-bold text-text-primary">Risk Heatmaps</h2>
+          </div>
+          <div className="flex gap-1 border border-border/30 rounded-md p-0.5">
+            {TABS.map(t => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                  tab === t.id
+                    ? 'bg-accent/20 text-accent'
+                    : 'text-text-muted hover:text-text-secondary'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <p className="text-[10px] text-text-muted mb-3">
+          {TABS.find(t => t.id === tab)?.desc}
+        </p>
+        {tab === 'monthly' && <RiskCalendarHeatmap />}
+        {tab === 'sector'  && <SectorRiskHeatmap />}
+      </CardContent>
+    </Card>
+  )
+}
 
 // ============================================================================
 // ERA TIMELINE — 5 administrations as proportional horizontal strip
@@ -292,11 +341,12 @@ export function Dashboard() {
     months: Array<{ month: number; contracts: number; value: number }>
   } | null | undefined
 
-  // API call 8: Top investigation case for Ground Truth "smoking gun"
-  const { data: topCaseData } = useQuery({
+  // API call 8: reserved (smoking gun removed from UI — kept for future use)
+  useQuery({
     queryKey: ['investigation', 'top-1-dashboard'],
     queryFn: () => investigationApi.getTopCases(1),
     staleTime: 30 * 60 * 1000,
+    enabled: false,
   })
 
   const { data: pubDelayData } = useQuery({
@@ -1245,24 +1295,9 @@ export function Dashboard() {
       </div>
 
       {/* ================================================================ */}
-      {/* RISK CALENDAR HEATMAP — monthly risk 2016–2025               */}
+      {/* HEATMAPS — 3 views: monthly · sector×year · sector×admin     */}
       {/* ================================================================ */}
-      <Card className="border-border/40">
-        <CardContent className="pt-5 pb-4">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <div className="flex items-center gap-2 mb-0.5">
-                <Calendar className="h-4 w-4 text-accent" />
-                <h2 className="text-base font-bold text-text-primary">Monthly Risk Heatmap</h2>
-              </div>
-              <p className="text-xs text-text-muted">
-                Average risk score by month 2016–2025 — December budget-year-end spikes visible
-              </p>
-            </div>
-          </div>
-          <RiskCalendarHeatmap />
-        </CardContent>
-      </Card>
+      <HeatmapPanel />
 
       {/* ================================================================ */}
       {/* YEAR-END RISK SURGE CALLOUT — compact audit-insight card       */}
@@ -1288,88 +1323,69 @@ export function Dashboard() {
 
 
       {/* ================================================================ */}
-      {/* GROUND TRUTH — Validated against real corruption */}
+      {/* GROUND TRUTH — compact pill grid                             */}
       {/* ================================================================ */}
       <Card className="border-border/40">
-        <CardContent className="pt-5 pb-4">
-          <div className="flex items-center justify-between mb-1">
-            <div>
-              <div className="flex items-center gap-2 mb-0.5">
-                <Target className="h-4 w-4 text-accent" />
-                <h2 className="text-base font-bold text-text-primary">{t('validatedAgainstReal')}</h2>
-              </div>
-              <p className="text-xs text-text-muted">
-                {t('retroactiveDetection', {
-                  detected: groundTruth?.cases ?? 22,
-                  total: groundTruth?.cases ?? 22,
-                  num: formatNumber(groundTruth?.contracts ?? 26582),
-                })}
-              </p>
+        <CardContent className="pt-4 pb-3">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Target className="h-4 w-4 text-accent" />
+              <h2 className="text-sm font-bold text-text-primary">{t('validatedAgainstReal')}</h2>
+              <span className="text-[10px] font-mono text-text-muted bg-background-elevated/40 px-1.5 py-0.5 rounded">
+                AUC {modelAuc.toFixed(3)} · {groundTruth?.cases ?? 22}/22 cases
+              </span>
             </div>
             <button
               onClick={() => navigate('/executive-summary')}
-              className="text-xs text-accent hover:text-accent flex items-center gap-1 transition-colors"
+              className="text-xs text-accent flex items-center gap-1 transition-colors hover:underline shrink-0"
             >
               {t('fullAnalysis')} <ArrowUpRight className="h-3 w-3" />
             </button>
           </div>
           {execLoading ? (
-            <div className="space-y-2 mt-3">
-              {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-7" />)}
+            <div className="flex flex-wrap gap-1.5">
+              {[...Array(10)].map((_, i) => <Skeleton key={i} className="h-6 w-32 rounded-full" />)}
             </div>
           ) : (
-            <>
-              <CaseDetectionChart cases={corruptionCases} />
-            </>
-          )}
-          {/* SMOKING GUN — one concrete high-risk investigation lead */}
-          {!!topCaseData?.data?.[0] && (() => {
-            const lead = topCaseData.data[0] as Record<string, unknown>
-            const riskPct = ((Number(lead.avg_risk_score) || Number(lead.suspicion_score) || 0) * 100).toFixed(0)
-            return (
-              <div className="mt-3 mb-1 pt-3 border-t border-border/20">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-mono mb-2">
-                  {t('smokingGunLabel')}
-                </p>
-                <button
-                  onClick={() => navigate('/investigation')}
-                  className="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg border border-risk-critical/20 bg-risk-critical/5 hover:bg-risk-critical/10 transition-colors group"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-text-primary truncate">
-                      {toTitleCase(String(lead.title || lead.vendor_name || 'Unknown Vendor'))}
-                    </p>
-                    <p className="text-xs text-text-muted mt-0.5">
-                      {formatCompactMXN(Number(lead.total_value || 0))}
-                      {lead.sector_id ? ` · Sector ${lead.sector_id}` : ''}
-                    </p>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="text-base font-black tabular-nums font-mono text-risk-critical">{riskPct}%</p>
-                    <p className="text-[10px] text-text-muted font-mono">
-                      {Number(lead.total_contracts || 0).toLocaleString()} contracts
-                    </p>
-                  </div>
-                  <ArrowUpRight className="h-4 w-4 text-text-muted group-hover:text-accent transition-colors flex-shrink-0" />
-                </button>
-              </div>
-            )
-          })()}
-
-          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/30">
-            <div className="flex items-center gap-1.5">
-              <Zap className="h-3.5 w-3.5 text-accent" />
-              <span className="text-xs text-text-muted font-medium">
-                {t('casesDetected', {
-                  detected: groundTruth?.cases ?? 22,
-                  total: groundTruth?.cases ?? 22,
+            <div className="flex flex-wrap gap-1.5">
+              {[...corruptionCases]
+                .filter(c => c.contracts >= 10)
+                .sort((a, b) => b.high_plus_pct - a.high_plus_pct)
+                .slice(0, 12)
+                .map(c => {
+                  const pct = c.high_plus_pct
+                  const bg =
+                    pct >= 90 ? 'rgba(74,222,128,0.12)' :
+                    pct >= 50 ? 'rgba(251,191,36,0.12)' :
+                    'rgba(248,113,113,0.12)'
+                  const border =
+                    pct >= 90 ? 'rgba(74,222,128,0.35)' :
+                    pct >= 50 ? 'rgba(251,191,36,0.35)' :
+                    'rgba(248,113,113,0.35)'
+                  const textColor =
+                    pct >= 90 ? '#4ade80' :
+                    pct >= 50 ? '#fbbf24' :
+                    '#f87171'
+                  return (
+                    <div
+                      key={c.name}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border"
+                      style={{ backgroundColor: bg, borderColor: border }}
+                      title={`${c.name}: ${pct.toFixed(0)}% detected (${formatNumber(c.contracts)} contracts, avg ${c.avg_score.toFixed(2)})`}
+                    >
+                      <span className="text-text-secondary truncate max-w-[140px]">{c.name}</span>
+                      <span className="font-black font-mono tabular-nums shrink-0" style={{ color: textColor }}>
+                        {pct.toFixed(0)}%
+                      </span>
+                    </div>
+                  )
                 })}
-              </span>
             </div>
-            <span className="text-xs text-text-muted">
-              AUC {modelAuc.toFixed(3)}
-            </span>
-          </div>
+          )}
+          <p className="text-[10px] text-text-muted mt-2">
+            High+ detection rate per documented case · hover for details ·{' '}
+            <button onClick={() => navigate('/executive-summary')} className="underline">full breakdown →</button>
+          </p>
         </CardContent>
       </Card>
 
@@ -1947,118 +1963,6 @@ const SectorGrid = memo(function SectorGrid({
           </button>
         )
       })}
-    </div>
-  )
-})
-
-// ============================================================================
-// CASE DETECTION CHART — Corruption cases with detection bars
-// ============================================================================
-
-const CaseDetectionChart = memo(function CaseDetectionChart({
-  cases,
-}: {
-  cases: ExecutiveCaseDetail[]
-}) {
-  const { t } = useTranslation('dashboard')
-  const { t: tc } = useTranslation('common')
-
-  const filteredCases = useMemo(() => {
-    return [...cases]
-      .filter((c) => c.contracts >= 10)
-      .sort((a, b) => b.high_plus_pct - a.high_plus_pct)
-      .slice(0, 10)
-  }, [cases])
-
-  return (
-    <div className="mt-3 space-y-0">
-      {filteredCases.map((c) => {
-        const detected = c.high_plus_pct
-        const sectorColor = SECTOR_COLORS[c.sector] || '#64748b'
-        const trackColor =
-          detected >= 90 ? 'rgba(74,222,128,0.18)' :
-          detected >= 50 ? 'rgba(251,191,36,0.18)' :
-          'rgba(248,113,113,0.18)'
-        const fillColor =
-          detected >= 90 ? '#4ade80' :
-          detected >= 50 ? '#fbbf24' :
-          '#f87171'
-        const pctColor =
-          detected >= 90 ? 'text-risk-low' :
-          detected >= 50 ? 'text-risk-medium' :
-          'text-risk-critical'
-
-        return (
-          <div
-            key={c.name}
-            className="group grid items-center gap-x-3 py-2 px-2 hover:bg-background-elevated/30 rounded transition-colors"
-            style={{ gridTemplateColumns: '170px 1fr 44px 42px 38px' }}
-          >
-            {/* Case name + type */}
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: sectorColor }} />
-                <span className="text-xs font-semibold text-text-primary truncate leading-tight">{c.name}</span>
-              </div>
-              <div className="mt-0.5 ml-3">
-                <span className="text-[10px] text-text-muted font-medium">{c.type}</span>
-              </div>
-            </div>
-
-            {/* Slim track + fill */}
-            <div className="relative h-4 flex items-center">
-              {/* Track */}
-              <div className="absolute inset-0 rounded-full" style={{ backgroundColor: trackColor }} />
-              {/* Fill */}
-              <div
-                className="absolute left-0 top-0 h-full rounded-full transition-all duration-700 ease-out"
-                style={{ width: `${Math.max(detected, 2)}%`, backgroundColor: fillColor, opacity: 0.9 }}
-              />
-              {/* Tick marks at 25/50/75/100 */}
-              {[25, 50, 75].map((tick) => (
-                <div
-                  key={tick}
-                  className="absolute top-0 h-full w-px opacity-20"
-                  style={{ left: `${tick}%`, backgroundColor: 'var(--color-border)' }}
-                />
-              ))}
-            </div>
-
-            {/* Detection % */}
-            <div className="text-right">
-              <span className={cn('text-xs font-black tabular-nums font-mono', pctColor)}>
-                {detected.toFixed(0)}%
-              </span>
-            </div>
-
-            {/* Contract count */}
-            <div className="text-right">
-              <span className="text-[11px] text-text-muted tabular-nums font-mono">
-                {formatNumber(c.contracts)}
-              </span>
-            </div>
-
-            {/* Avg score */}
-            <div className="text-right">
-              <span className="text-[11px] font-bold tabular-nums font-mono text-text-secondary">
-                {c.avg_score.toFixed(2)}
-              </span>
-            </div>
-          </div>
-        )
-      })}
-
-      {/* Column footer labels */}
-      <div
-        className="grid items-center gap-x-3 pt-2 px-2 border-t border-border/20 mt-1"
-        style={{ gridTemplateColumns: '170px 1fr 44px 42px 38px' }}
-      >
-        <span className="text-[10px] text-text-muted uppercase tracking-wider font-bold">{t('caseLabel')}</span>
-        <span className="text-[10px] text-text-muted uppercase tracking-wider font-bold">{t('detectionRate')} (high+)</span>
-        <span className="text-[10px] text-text-muted uppercase tracking-wider font-bold text-right">%</span>
-        <span className="text-[10px] text-text-muted uppercase tracking-wider font-bold text-right">{tc('contracts')}</span>
-        <span className="text-[10px] text-text-muted uppercase tracking-wider font-bold text-right">avg</span>
-      </div>
     </div>
   )
 })
