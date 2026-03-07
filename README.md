@@ -445,9 +445,9 @@ Key methodological references:
 
 ---
 
-## Project Name
+## About RUBLI
 
-RUBLI is named after the pragmatic historian from *Legend of the Galactic Heroes* — a character who valued democratic institutions, transparency, and accountability over blind ambition. The platform shares his conviction: sunlight is the best disinfectant.
+RUBLI is an open-source procurement intelligence platform for Mexican federal contracting data. It applies statistical risk modeling and machine learning to make 3.1 million contracts investigable by journalists, auditors, NGOs, and citizens. Sunlight is the best disinfectant.
 
 ---
 

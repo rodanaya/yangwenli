@@ -19,6 +19,7 @@ import {
   FileText,
   History,
   FlaskConical,
+  GitBranch,
 } from 'lucide-react'
 import { RiskFactorTable } from '@/components/RiskExplainer'
 import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
@@ -123,6 +124,54 @@ const MODEL_COMPARISON = [
   { metric: 'Detection Rate (med+)', v33: '67.1%', v50: '99.8%', improvement: '+33pp' },
   { metric: 'High+ Detection', v33: '18.3%', v50: '93.0%', improvement: '+75pp' },
   { metric: 'Lift vs Random', v33: '1.22x', v50: '4.04x', improvement: '+2.8x' },
+] as const
+
+const MODEL_EVOLUTION_STEPS = [
+  {
+    version: 'v3.3',
+    date: 'Feb 2026',
+    title: 'Weighted Checklist',
+    desc: '8 expert-weighted factors, IMF CRI aligned. AUC barely above random.',
+    metric: 'AUC 0.584',
+    active: false,
+    overlay: false,
+  },
+  {
+    version: 'v4.0',
+    date: 'Feb 2026',
+    title: 'Statistical Framework',
+    desc: 'Z-score normalization, Bayesian calibration, 9 corruption cases, 12 features.',
+    metric: 'AUC 0.942',
+    active: false,
+    overlay: false,
+  },
+  {
+    version: 'v5.0',
+    date: 'Feb 2026',
+    title: 'Per-Sector Models',
+    desc: '12 sector sub-models, 15 documented cases, temporal train/test split.',
+    metric: 'AUC 0.960',
+    active: false,
+    overlay: false,
+  },
+  {
+    version: 'v5.1',
+    date: 'Feb 27, 2026',
+    title: 'EFOS Integration',
+    desc: '22 cases including SAT EFOS Case 22: 38 RFC-confirmed ghost companies.',
+    metric: 'AUC 0.957',
+    active: true,
+    overlay: false,
+  },
+  {
+    version: 'v5.2 layer',
+    date: 'Mar 2026',
+    title: 'Analytical Overlay',
+    desc: 'SHAP per-vendor explanations + PyOD cross-model ensemble + Evidently drift monitoring.',
+    metric: '456K vendors explained',
+    active: false,
+    overlay: true,
+  },
 ] as const
 
 // ============================================================================
@@ -301,6 +350,98 @@ const V33WeightsChart = memo(function V33WeightsChart() {
     </div>
   )
 })
+
+// ============================================================================
+// Model Evolution Timeline
+// ============================================================================
+
+function ModelEvolutionTimeline() {
+  const steps = MODEL_EVOLUTION_STEPS
+  const nodes = steps.reduce<React.ReactNode[]>((acc, step, i) => {
+    if (i > 0) {
+      acc.push(
+        <ChevronRight
+          key={`arrow-${i}`}
+          className="h-4 w-4 text-text-muted flex-shrink-0 self-center"
+          aria-hidden="true"
+        />
+      )
+    }
+    acc.push(
+      <div
+        key={step.version}
+        className={cn(
+          'w-40 flex-shrink-0 rounded-lg border p-3 text-[11px] space-y-1.5',
+          step.active
+            ? 'border-accent/40 bg-accent/5'
+            : step.overlay
+              ? 'border-dashed border-border/60 bg-transparent'
+              : 'border-border/40 bg-background-elevated/20'
+        )}
+      >
+        <div className="flex items-center justify-between gap-1">
+          <span
+            className={cn(
+              'font-mono font-bold px-1.5 py-0.5 rounded text-[10px]',
+              step.active
+                ? 'bg-accent/15 text-accent'
+                : step.overlay
+                  ? 'bg-border/30 text-text-muted'
+                  : 'bg-border/20 text-text-secondary'
+            )}
+          >
+            {step.version}
+          </span>
+          <span className="text-[10px] text-text-muted">{step.date}</span>
+        </div>
+        <p className="font-semibold text-text-primary leading-tight">{step.title}</p>
+        <p className="text-text-muted leading-relaxed">{step.desc}</p>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span
+            className={cn(
+              'font-mono text-[10px] font-semibold',
+              step.active ? 'text-accent' : step.overlay ? 'text-text-muted' : 'text-text-secondary'
+            )}
+          >
+            {step.metric}
+          </span>
+          {step.active && (
+            <span className="text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded bg-accent/10 text-accent">
+              Active
+            </span>
+          )}
+          {step.overlay && (
+            <span className="text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded bg-border/30 text-text-muted">
+              Overlay
+            </span>
+          )}
+        </div>
+      </div>
+    )
+    return acc
+  }, [])
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <GitBranch className="h-4 w-4 text-accent" aria-hidden="true" />
+          Model Evolution
+        </CardTitle>
+        <p className="text-xs text-text-muted">
+          From expert-weighted checklist (v3.3) to per-sector ML with cross-model validation and explainability (v5.2 layer).
+        </p>
+      </CardHeader>
+      <CardContent>
+        <div className="overflow-x-auto pb-1">
+          <div className="flex items-stretch gap-1.5 min-w-max">
+            {nodes}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
 
 // ============================================================================
 // Table of Contents (sidebar)
