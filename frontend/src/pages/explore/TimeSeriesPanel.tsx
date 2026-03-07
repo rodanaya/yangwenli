@@ -163,10 +163,10 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
                 fontSize: 11,
                 color: 'rgb(226 232 240)',
               }}
-              formatter={(value: any, name: string) => {
+              formatter={(value: any, name: string | undefined) => {
                 if (name === 'contracts') return [Number(value).toLocaleString(), 'Contracts']
                 if (name === 'avgRisk') return [`${Number(value).toFixed(1)}%`, 'Avg risk']
-                return [value, name]
+                return [value, name ?? '']
               }}
               labelStyle={{ color: 'rgb(148 163 184)', fontSize: 10 }}
             />
