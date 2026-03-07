@@ -33,7 +33,7 @@ This is not a simple dashboard. It is a production analytical engine built for i
 | Test AUC-ROC | **0.957** (temporal holdout — 2021+ contracts) |
 | Ground truth detection | **99.8%** medium+ across 22 training cases |
 | False negative rate | **0.2%** |
-| Ground truth cases | 25 (95 vendors) |
+| Ground truth cases | 25 (98 vendors) |
 | High-risk rate | **9.0%** (OECD benchmark: 2–15%) |
 
 ---

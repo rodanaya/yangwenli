@@ -1,6 +1,6 @@
 # Ground Truth: Documented Corruption Cases
 
-**Last Updated:** March 7, 2026 | **Cases:** 25 | **Matched Vendors:** 95 | **Active training cases:** 22 (Cases 1–22, excl. 16–19)
+**Last Updated:** March 7, 2026 | **Cases:** 25 | **Matched Vendors:** 98 | **Active training cases:** 22 (Cases 1–22, excl. 16–19)
 
 ---
 
@@ -337,11 +337,18 @@ Single 15.79B MXN direct-award contract from Banco del Bienestar to a company in
 
 No-RFC intermediary inserted into BIRMEX vaccine supply chain. Received 22.8% of all BIRMEX spending 2018–2022. Sanofi supplied identical hexavalente vaccines simultaneously via direct contracts — consistent with intermediary resale at markup. First two contracts labeled "Asociación Público Privada" (unprecedented for vaccine procurement). Disappeared after 2022 AMLO procurement reform. Estimated markup: 295M–1.18B MXN (5–20% of 5.91B). No public investigation found as of Mar 2026. Two Lithuanian-registered companies (UAB JORINIS, ENTAFARMA UAB) also appeared at BIRMEX in 2021 — under investigation for related pattern.
 
-**Matched Vendor (1):**
+**Matched Vendors (4 — multi-channel scheme):**
 
-| Vendor | Vendor ID | Contracts | Match Confidence |
-|--------|-----------|-----------|-----------------|
-| SUMINISTRADOR DE VACUNAS, S.A. DE C.V. | 233284 | 11 | 1.0 |
+| Vendor | Vendor ID | Value | Role | Confidence |
+|--------|-----------|-------|------|------------|
+| SUMINISTRADOR DE VACUNAS, S.A. DE C.V. | 233284 | 5,910M MXN | Primary (2018–2022) | 1.0 |
+| UAB JORINIS | 266933 | 1,986M MXN | Secondary (Jan–Feb 2021) | 0.85 |
+| ENTAFARMA UAB | 267422 | 161M MXN | Secondary (Jan 2021) | 0.85 |
+| KLASNIC SA DE CV (RFC: KLA080605QCA) | 266932 | 774M MXN | Secondary (Jan 2021) | 0.75 |
+
+**Total scheme: ~8.8B MXN.** UAB JORINIS and ENTAFARMA UAB are Lithuanian-registered (UAB = uždaroji akcinė bendrovė) companies with no RFC that appeared in a single 2.78B MXN procedure (AA-012NEF001-E2-2021, Jan 22, 2021) at BIRMEX and disappeared immediately. KLASNIC is a domestic counterpart activated for the same transaction. All participated in procedure AA-012NEF001-E2-2021 simultaneously.
+
+**Model blind spot documented:** UAB JORINIS scores only 7% risk despite Mahalanobis distance of 706 (p=4.6×10⁻¹⁴⁰) — one of the most statistically extreme contracts in the database. The logistic regression fails because vendor_concentration is near zero (single-use intermediary vs. large concentrated vendors in training data). The Mahalanobis distance correctly flags these contracts even when the risk score does not.
 
 ---
 
