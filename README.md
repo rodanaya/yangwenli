@@ -248,6 +248,56 @@ The v5.2 pipeline requires `contract_z_features` to be populated (`compute_z_fea
 
 ---
 
+## ARIA: Automated Risk Investigation Algorithm (In Design)
+
+ARIA is the next major capability — a 9-module pipeline that **combines all four risk signals** (risk_score, Mahalanobis, SHAP, PyOD ensemble) into a unified investigation queue with pattern classification, LLM-generated investigation memos, and automatic ground truth updates.
+
+**The problem ARIA solves:** Our four risk signals are currently displayed independently. The canonical blind-spot case — UAB JORINIS, a Lithuanian shell company inserted into BIRMEX's vaccine supply chain — scores 7% risk (logistic regression sees near-zero vendor_concentration and assigns low risk) but has Mahalanobis distance = 706 (p = 4.6×10⁻¹⁴⁰, one of the most statistically extreme contracts in 3M records). A human investigator flags this immediately. ARIA would surface it automatically.
+
+### How It Works
+
+```
+All vendors (320K)
+  ├── Investigation Priority Score (IPS)
+  │     = MAX(risk_score, mahalanobis_norm) × 0.40     ← blind spot fix: MAX not average
+  │       + ensemble_anomaly × 0.20
+  │       + financial_scale_log × 0.20
+  │       + external_flags × 0.20
+  │
+  ├── Pattern Classifier (7 types)
+  │     P1: Concentrated monopoly   P5: Overpricing
+  │     P2: Ghost company           P6: Institution capture
+  │     P3: Single-use intermediary P7: Conflict of interest
+  │     P4: Bid rigging
+  │
+  ├── External Cross-Reference
+  │     ✅ SAT EFOS definitivo (13,960 confirmed ghost companies)
+  │     ✅ SFP sanctions (1,954 debarment records)
+  │     🔍 Media search via Claude web_search (Animal Político, Proceso, ASF summaries)
+  │
+  ├── False Positive Screening
+  │     Patent exceptions (LAASSP Art.41) · data errors · structural monopolies
+  │
+  └── Investigation Queue → LLM Memo (Claude API + web search)
+        Structured memo: hypothesis, evidence, investigative questions, recommended action
+```
+
+### Key Design Decisions
+
+| Decision | Rationale |
+|----------|-----------|
+| MAX(risk_score, mahalanobis_norm) not average | Intermediaries score near-zero on risk_score but 700+ Mahalanobis — averaging would bury them |
+| Rule-based pattern classifier | Only 25 labeled cases — too few for ML, deterministic rules are transparent and auditable |
+| LLM called once per vendor (not per module) | Minimizes cost (~$11/full run); all scoring is deterministic upstream |
+| Web search inside LLM call | Only public sources available (no ASF PDF API, no RUPC — datos.gob.mx removed it) |
+| Auto-GT-update only for RFC-confirmed EFOS | Strict evidence standard; all other matches flagged for human review |
+
+**Full spec:** [`docs/ARIA_SPEC.md`](docs/ARIA_SPEC.md) (1,100+ lines)
+
+**Status:** Design complete. Implementation roadmap: Phase 1 (IPS + pattern + external ref, ~1 week) → Phase 2 (intermediary + temporal detection, ~2 weeks) → Phase 3 (LLM memos + feedback loop, ~2 weeks).
+
+---
+
 ## Data Sources
 
 All procurement data comes from **COMPRANET**, Mexico's federal electronic procurement system. Four data structures span 2002–2025:

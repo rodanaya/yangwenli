@@ -266,16 +266,42 @@ Thresholds: >= 0.70 strong, 0.50-0.70 moderate, < 0.30 normal.
 
 ## 7. Module 5: External Cross-Reference Engine
 
-Batch cross-reference all vendors with RFC against:
+### Data Availability Reality
 
-| Source | Table | Match | Strength |
-|--------|-------|-------|----------|
-| SAT EFOS | sat_efos_vendors | RFC exact | Direct evidence |
-| SFP Sanctions | sfp_sanctions | RFC exact, name fuzzy | Strong |
-| ASF Findings | asf_cases | RFC, name | Moderate |
-| Ground Truth | ground_truth_vendors | vendor_id FK | Direct |
+**Critical constraint**: ARIA can only automatically cross-reference structured data that already exists in the database or is publicly downloadable as machine-readable files. The most important external sources — investigative journalism, ASF PDF audit reports, congressional testimony — require human reading or LLM-assisted web search (handled in Module 7).
 
-Single batch SQL query joins vendors against all four sources. Name-based fuzzy matching (Jaccard >= 0.80 auto, >= 0.60 review) for non-RFC vendors.
+| Source | Status | Table | Match | Strength |
+|--------|--------|-------|-------|----------|
+| SAT EFOS definitivo | ✅ IN DB | `sat_efos_definitivo` | RFC exact | Direct (SAT-confirmed ghost company) |
+| SFP Sanctions | ✅ IN DB | `sfp_sanctions` | RFC exact + Jaccard name | Strong (government sanction record) |
+| Ground Truth cases | ✅ IN DB | `ground_truth_vendors` | vendor_id FK | Direct (already investigated) |
+| ASF audit reports | ❌ NOT STRUCTURED | — | — | PDFs only — no machine-readable DB |
+| Animal Político / Proceso | ❌ NO API | — | — | Web search required (Module 7) |
+| SAT black list (69-B no definitivo) | ❌ NOT LOADED | To be downloaded | RFC | Moderate |
+| RUPC (blacklisted suppliers) | ❌ BLOCKED | datos.gob.mx removed it | — | Was Strong |
+
+**What this means in practice:**
+- The only *automated* external signals are SAT EFOS and SFP sanctions
+- Media evidence (Animal Político, Latinus, Aristegui, Proceso, ASF) is gathered by the LLM in Module 7 via web search — not automated DB lookup
+- ASF structured data requires a scraper project (future work, 2-4 weeks)
+
+### Batch SQL Cross-Reference (Automated)
+
+Single batch query against the two available structured sources:
+
+```sql
+SELECT v.id AS vendor_id, v.name, v.rfc,
+    CASE WHEN e.rfc IS NOT NULL THEN 1 ELSE 0 END AS is_efos,
+    CASE WHEN s.rfc IS NOT NULL THEN 1 ELSE 0 END AS is_sfp_sanctioned,
+    CASE WHEN g.vendor_id IS NOT NULL THEN 1 ELSE 0 END AS in_ground_truth
+FROM vendors v
+LEFT JOIN sat_efos_definitivo e ON v.rfc = e.rfc
+LEFT JOIN sfp_sanctions s ON v.rfc = s.rfc
+LEFT JOIN ground_truth_vendors g ON v.id = g.vendor_id
+WHERE v.id IN (SELECT vendor_id FROM aria_queue WHERE aria_run_id = ?)
+```
+
+Name-based fuzzy matching (Jaccard >= 0.80 auto, >= 0.60 flag for review) runs as a Python post-processing step for vendors with NULL RFC — targets the ~53% of vendors without registered RFC.
 
 ---
 
@@ -296,21 +322,120 @@ Sectors with regulated monopoly (Energia vouchers, Defensa clearance). If entire
 
 ## 9. Module 7: Evidence Synthesis and LLM Integration
 
-LLM called in exactly ONE place: generating the memo text. All scoring is deterministic.
+The LLM is called in **two sequential steps** per Tier 1/2 vendor:
 
-### Input: Structured JSON evidence package
+1. **Web search** — gather media and public source evidence
+2. **Memo generation** — synthesize all evidence into a structured investigation memo
 
-Vendor profile, all scores, pattern classifications, external flags, FP screens, top SHAP factors, contract summary, comparable GT cases.
+All scoring upstream (Modules 1-6) is deterministic. The LLM only touches evidence text and memo generation.
 
-### Prompt
+### Step 1: Web Search (media evidence gathering)
 
-Generates Spanish-language investigation memo: Resumen Ejecutivo, Perfil del Proveedor, Senales de Riesgo, Patron Detectado, Verificaciones Externas, Preguntas de Investigacion, Clasificacion.
+For each Tier 1 or 2 vendor, Claude calls `web_search` with these queries (in Spanish):
 
-Model: claude-sonnet-4-20250514 | Max tokens: 1,500 | Temperature: 0.3
+```
+"{vendor_name}" corrupción Mexico
+"{vendor_name}" ASF auditoria observación
+"{vendor_name}" Animal Político OR Proceso OR Latinus OR Aristegui
+"{vendor_name}" {institution_name} irregularidades
+RFC {rfc} EFOS México (if RFC available)
+```
 
-### Cost: ~6 per full run (500 Tier 1 + 5,000 Tier 2 memos)
+Results are scraped for relevant excerpts (title, URL, snippet, date). False positives filtered by requiring at least one of: vendor name exact match, RFC match, or institution name co-occurrence. Results stored in `aria_web_evidence` table with source URL, snippet, and relevance score.
 
-### Fallback: Template-based memo via string interpolation (no LLM required)
+**What web search can realistically find:**
+- Investigative press articles (Animal Político, Latinus, Aristegui, Proceso, El Universal)
+- ASF Cuenta Pública summaries (ASF publishes Spanish-language summaries online)
+- FGR press releases (when there are formal charges)
+- SFP Informe de Resultados (available as PDF via IFAI)
+- Company registration data (Buró de Entidades Financieras, SIGER)
+
+**What it cannot reliably find:**
+- Full ASF audit PDF text (too long for web snippet)
+- Internal government records
+- Sealed FGR investigations
+
+### Step 2: Memo Generation (single Claude API call)
+
+After web search, one Claude call generates the full memo.
+
+**Input JSON to Claude:**
+```json
+{
+  "vendor": { "name", "rfc", "sector", "years_active", "total_value_mxn", "contract_count" },
+  "scores": { "ips_final", "risk_score", "mahalanobis_distance", "burst_score", "ensemble_anomaly" },
+  "patterns": [ { "type": "P3_INTERMEDIARY", "confidence": 0.82 } ],
+  "shap_top3": [ { "feature": "z_price_volatility", "shap_value": 1.44 }, ... ],
+  "external_flags": { "is_efos": false, "is_sfp_sanctioned": false, "in_ground_truth": false },
+  "fp_screens": { "fp1_patent": false, "fp2_data_error": false, "fp3_structural": false },
+  "comparable_gt_cases": [ { "case_name": "BIRMEX Vaccine Intermediary", "similarity": 0.87 } ],
+  "web_evidence": [ { "source": "Animal Político", "url": "...", "snippet": "...", "date": "2022-05-14" } ],
+  "contract_sample": [ { "year", "amount_mxn", "institution", "procedure_type" } ]
+}
+```
+
+**Prompt template:**
+
+```
+Eres un analista de inteligencia financiera especializado en auditoría de contrataciones
+gubernamentales en México. Se te proporciona un paquete de evidencia estructurada sobre
+un proveedor del gobierno federal. Tu tarea es redactar un memorando de investigación
+conciso y factual en español.
+
+EVIDENCIA ESTRUCTURADA:
+{json_evidence}
+
+Redacta el memorando en las siguientes secciones EXACTAS (usa estos encabezados):
+
+## RESUMEN EJECUTIVO
+(2-3 oraciones: qué hace el proveedor, por qué es sospechoso, magnitud financiera)
+
+## PERFIL DEL PROVEEDOR
+(tabla con: RFC, sector, años activo, total contratos, valor total MXN, instituciones principales)
+
+## SEÑALES DE RIESGO DETECTADAS
+(lista de señales con valores numéricos concretos, ordenadas por importancia)
+
+## PATRÓN PROBABLE DE CORRUPCIÓN
+(patrón clasificado, confianza %, por qué se clasifica así, caso GT comparable)
+
+## EVIDENCIA PÚBLICA DISPONIBLE
+(solo si hay web_evidence; cita fuente, fecha y hallazgo exacto. Si no hay evidencia pública,
+escribe: "No se encontró cobertura pública del proveedor en medios especializados.")
+
+## HIPÓTESIS ALTERNATIVAS (FALSOS POSITIVOS)
+(razones por las que podría NO ser corrupción; FP screens aplicadas)
+
+## PREGUNTAS DE INVESTIGACIÓN SUGERIDAS
+(5 preguntas concretas para un investigador humano)
+
+## CLASIFICACIÓN RECOMENDADA
+Acción: [AGREGAR_A_GT / REVISAR_URGENTE / REVISAR_RUTINA / DESCARTAR]
+Nivel de confianza: [ALTO / MEDIO / BAJO]
+Razón en 1 oración.
+
+Sé preciso, factual y conservador. No afirmes corrupción sin evidencia sólida.
+```
+
+**Model**: `claude-sonnet-4-6` (current deployed model)
+**Max tokens**: 1,800
+**Temperature**: 0.2 (low — we want consistent, factual output)
+
+### Output Storage
+
+Memo stored in `aria_queue.memo_text` (Markdown). Web evidence stored in `aria_web_evidence` (separate table with URL deduplication).
+
+### Cost Estimate
+
+| Volume | Web searches | Memo tokens | Approx cost |
+|--------|-------------|-------------|-------------|
+| 500 Tier 1 vendors | 4 searches × 500 = 2,000 | 2,000 × 500 = 1M | ~$3 |
+| 5,000 Tier 2 vendors | 4 searches × 5,000 = 20,000 | 1,000 × 2,000 = 2M | ~$8 |
+| **Full run** | **22,000 searches** | **~3M tokens** | **~$11 total** |
+
+### Fallback: Template-based memo (no LLM required)
+
+If ANTHROPIC_API_KEY is not set or LLM call fails, a deterministic template generates a simplified memo from the JSON evidence package — no free text, but all numeric signals are presented in structured format. Fallback is always available for Phase 1 deployment.
 
 ---
 
@@ -423,6 +548,25 @@ Model: claude-sonnet-4-20250514 | Max tokens: 1,500 | Temperature: 0.3
     CREATE INDEX IF NOT EXISTS idx_aria_pattern ON aria_queue(primary_pattern);
     CREATE INDEX IF NOT EXISTS idx_aria_status ON aria_queue(review_status);
     CREATE INDEX IF NOT EXISTS idx_aria_efos ON aria_queue(is_efos_definitivo);
+
+### Web Evidence Cache
+
+    CREATE TABLE IF NOT EXISTS aria_web_evidence (
+        id                INTEGER PRIMARY KEY AUTOINCREMENT,
+        vendor_id         INTEGER NOT NULL,
+        aria_run_id       TEXT NOT NULL,
+        query             TEXT NOT NULL,
+        source_name       TEXT,                    -- 'Animal Político', 'ASF', 'Proceso', etc.
+        source_url        TEXT,
+        snippet           TEXT,
+        published_date    TEXT,
+        relevance_score   REAL DEFAULT 0.0,        -- 0-1, computed by keyword overlap
+        created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (vendor_id) REFERENCES vendors(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_web_ev_vendor ON aria_web_evidence(vendor_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_web_ev_url ON aria_web_evidence(vendor_id, source_url);
 
 ### Ground Truth Auto-Update Log
 
