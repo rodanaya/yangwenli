@@ -140,8 +140,28 @@ def run():
             id INTEGER PRIMARY KEY, model_a TEXT, model_b TEXT, metric TEXT, value REAL
         )""",
         "feature_importance": """CREATE TABLE IF NOT EXISTS feature_importance (
-            id INTEGER PRIMARY KEY, feature_name TEXT, importance REAL, model_version TEXT
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            rank INTEGER NOT NULL,
+            factor_name VARCHAR(100) NOT NULL,
+            shap_mean_abs REAL,
+            coefficient REAL,
+            direction VARCHAR(20) NOT NULL DEFAULT 'risk',
+            model_version VARCHAR(20) NOT NULL DEFAULT 'v5.2',
+            sector_id INTEGER
         )""",
+        "drift_report": """CREATE TABLE IF NOT EXISTS drift_report (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            reference_year_range VARCHAR(50),
+            current_year INTEGER,
+            sector_id INTEGER,
+            dataset_drift INTEGER NOT NULL DEFAULT 0,
+            n_drifted INTEGER NOT NULL DEFAULT 0,
+            n_features INTEGER NOT NULL DEFAULT 16,
+            feature_drift TEXT,
+            ks_stats TEXT,
+            created_at TIMESTAMP DEFAULT (datetime('now'))
+        )""",
+
         "validation_results": """CREATE TABLE IF NOT EXISTS validation_results (
             id INTEGER PRIMARY KEY, metric TEXT, value REAL, model_version TEXT
         )""",
@@ -186,6 +206,7 @@ def run():
         "risk_confidence_lower", "risk_confidence_upper",
         "mahalanobis_distance", "risk_model_version",
         "data_quality_score", "data_quality_grade",
+        "ensemble_anomaly_score",
     ]
 
     # Columns being DROPPED (not in keep_columns):

@@ -70,44 +70,47 @@ import { SectorRiskHeatmap } from '@/components/charts/SectorRiskHeatmap'
 // ============================================================================
 
 // v5.1 model top-4 predictors (from RISK_METHODOLOGY_v5.md global model coefficients)
-const AI_SIGNALS = [
-  {
-    icon: TrendingDown,
-    coefficient: '+1.22',
-    label: 'Erratic Pricing',
-    description: 'Price volatility vs. sector norm',
-    color: 'text-risk-critical' as const,
-    border: 'border-risk-critical/20' as const,
-    bg: 'bg-risk-critical/5' as const,
-  },
-  {
-    icon: Scale,
-    coefficient: '−0.85',
-    label: 'Focused Buyer',
-    description: 'Serves very few institutions',
-    color: 'text-risk-high' as const,
-    border: 'border-risk-high/20' as const,
-    bg: 'bg-risk-high/5' as const,
-  },
-  {
-    icon: Target,
-    coefficient: '+0.73',
-    label: 'Win Rate Spike',
-    description: 'Abnormal win rate for sector',
-    color: 'text-risk-medium' as const,
-    border: 'border-risk-medium/20' as const,
-    bg: 'bg-risk-medium/5' as const,
-  },
-  {
-    icon: Crosshair,
-    coefficient: '+0.43',
-    label: 'Market Capture',
-    description: 'Dominates sector spending',
-    color: 'text-text-secondary' as const,
-    border: 'border-border/30' as const,
-    bg: 'bg-background-elevated/20' as const,
-  },
-]
+// Returns translated signal data — must be called inside a component where t() is available.
+function getAiSignals(t: (key: string) => string) {
+  return [
+    {
+      icon: TrendingDown,
+      coefficient: '+1.22',
+      label: t('aiSignals.erraticPricing.label'),
+      description: t('aiSignals.erraticPricing.description'),
+      color: 'text-risk-critical' as const,
+      border: 'border-risk-critical/20' as const,
+      bg: 'bg-risk-critical/5' as const,
+    },
+    {
+      icon: Scale,
+      coefficient: '−0.85',
+      label: t('aiSignals.focusedBuyer.label'),
+      description: t('aiSignals.focusedBuyer.description'),
+      color: 'text-risk-high' as const,
+      border: 'border-risk-high/20' as const,
+      bg: 'bg-risk-high/5' as const,
+    },
+    {
+      icon: Target,
+      coefficient: '+0.73',
+      label: t('aiSignals.winRateSpike.label'),
+      description: t('aiSignals.winRateSpike.description'),
+      color: 'text-risk-medium' as const,
+      border: 'border-risk-medium/20' as const,
+      bg: 'bg-risk-medium/5' as const,
+    },
+    {
+      icon: Crosshair,
+      coefficient: '+0.43',
+      label: t('aiSignals.marketCapture.label'),
+      description: t('aiSignals.marketCapture.description'),
+      color: 'text-text-secondary' as const,
+      border: 'border-border/30' as const,
+      bg: 'bg-background-elevated/20' as const,
+    },
+  ]
+}
 
 // ============================================================================
 // ADMIN × SECTOR HEATMAP — 5 presidencies × 12 sectors risk intensity grid
@@ -490,6 +493,7 @@ export function Dashboard() {
   const navigate = useNavigate()
   const { open: openEntityDrawer } = useEntityDrawer()
   const { t } = useTranslation('dashboard')
+  const aiSignals = getAiSignals(t)
   // API call 1: Fast precomputed dashboard stats
   const { data: fastDashboard, isLoading: dashLoading, error: dashError, refetch: dashRefetch } = useQuery({
     queryKey: ['dashboard', 'fast'],
@@ -1076,7 +1080,7 @@ export function Dashboard() {
             whileInView="animate"
             viewport={{ once: true, margin: '-40px' }}
           >
-            {AI_SIGNALS.map((signal) => (
+            {aiSignals.map((signal) => (
               <motion.div key={signal.label} variants={staggerItem} className={cn('rounded-lg border p-3', signal.border, signal.bg)}>
                 <div className="flex items-center gap-2 mb-2">
                   <signal.icon className={cn('h-3.5 w-3.5', signal.color)} />

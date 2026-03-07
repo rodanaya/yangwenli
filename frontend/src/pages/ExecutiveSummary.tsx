@@ -72,6 +72,7 @@ function usePatternCounts() {
 
 export function ExecutiveSummary() {
   const navigate = useNavigate()
+  const { t } = useTranslation('executive')
   const { data, isLoading, isError, refetch } = useExecutiveSummary()
   const { data: patternCounts } = usePatternCounts()
 
@@ -83,15 +84,15 @@ export function ExecutiveSummary() {
     return (
       <div className="max-w-4xl mx-auto py-24 flex flex-col items-center gap-4 text-center">
         <AlertTriangle className="h-10 w-10 text-risk-critical" />
-        <h2 className="text-lg font-bold text-text-primary">Failed to load Executive Summary</h2>
+        <h2 className="text-lg font-bold text-text-primary">{t('error.title')}</h2>
         <p className="text-sm text-text-muted max-w-sm">
-          The report data could not be retrieved. Check your connection and try again.
+          {t('error.body')}
         </p>
         <button
           onClick={() => void refetch()}
           className="px-4 py-2 text-sm font-semibold rounded-md bg-accent text-background-base hover:bg-accent/90 transition-colors"
         >
-          Retry
+          {t('error.retry')}
         </button>
       </div>
     )

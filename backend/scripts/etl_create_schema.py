@@ -697,6 +697,36 @@ CREATE TABLE IF NOT EXISTS rupc_vendors (
 CREATE INDEX IF NOT EXISTS idx_rupc_rfc ON rupc_vendors(rfc);
 -- Covering index for startup health check query (risk_level GROUP BY + MIN/MAX risk_score)
 CREATE INDEX IF NOT EXISTS idx_c_risk_level_score ON contracts(risk_level, risk_score);
+
+-- v5.2: SHAP-based feature importance (populated by compute_shap_explanations.py)
+CREATE TABLE IF NOT EXISTS feature_importance (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    rank INTEGER NOT NULL,
+    factor_name VARCHAR(100) NOT NULL,
+    shap_mean_abs REAL,
+    coefficient REAL,
+    direction VARCHAR(20) NOT NULL DEFAULT 'risk',
+    model_version VARCHAR(20) NOT NULL DEFAULT 'v5.2',
+    sector_id INTEGER,
+    created_at TIMESTAMP DEFAULT (datetime('now')),
+    FOREIGN KEY (sector_id) REFERENCES sectors(id)
+);
+CREATE INDEX IF NOT EXISTS idx_fi_model_sector ON feature_importance(model_version, sector_id);
+
+-- v5.2: Evidently drift monitoring reports
+CREATE TABLE IF NOT EXISTS drift_report (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reference_year_range VARCHAR(50),
+    current_year INTEGER,
+    sector_id INTEGER,
+    dataset_drift INTEGER NOT NULL DEFAULT 0,
+    n_drifted INTEGER NOT NULL DEFAULT 0,
+    n_features INTEGER NOT NULL DEFAULT 16,
+    feature_drift TEXT,
+    ks_stats TEXT,
+    created_at TIMESTAMP DEFAULT (datetime('now'))
+);
+
 """
 
 # =============================================================================

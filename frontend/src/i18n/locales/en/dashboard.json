@@ -149,5 +149,11 @@
   "compranetContextBody": "CompraNet — Mexico's federal procurement portal and the source of all 3.1M contracts here — was abolished by Congress on April 10, 2025. Before any law changed, 1.9 million contracts from 2012–2023 had already been removed from public access in August 2024. The independent transparency watchdog INAI was constitutionally eliminated in December 2024. The 3.1M contracts in this database were captured before these changes and may represent one of the most complete surviving records of Mexico's federal procurement history.",
   "compranetContextDate1": "CompraNet abolished · April 2025",
   "compranetContextDate2": "INAI eliminated · December 2024",
-  "compranetContextLink": "See platform limitations"
+  "compranetContextLink": "See platform limitations",
+  "aiSignals": {
+    "erraticPricing": { "label": "Erratic Pricing", "description": "Price volatility vs. sector norm" },
+    "focusedBuyer": { "label": "Focused Buyer", "description": "Serves very few institutions" },
+    "winRateSpike": { "label": "Win Rate Spike", "description": "Abnormal win rate for sector" },
+    "marketCapture": { "label": "Market Capture", "description": "Dominates sector spending" }
+  }
 }

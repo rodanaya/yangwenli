@@ -374,5 +374,10 @@
     "quote": "\"Hay cosas que no pueden medirse en t\u00e9rminos de victoria o derrota.\"",
     "copyright": "\u00a9 {{year}} Proyecto RUBLI. Todos los Derechos Reservados.",
     "disclaimer": "Las puntuaciones de riesgo son indicadores estadísticos de riesgo con intervalos de confianza. Una puntuaci\u00f3n alta indica anomal\u00eda estad\u00edstica consistente con patrones de corrupci\u00f3n \u2014 no constituye prueba de irregularidades."
+  },
+  "error": {
+    "title": "Error al cargar el Resumen Ejecutivo",
+    "body": "No se pudieron recuperar los datos del reporte. Verifica tu conexión e inténtalo de nuevo.",
+    "retry": "Reintentar"
   }
 }

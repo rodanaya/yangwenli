@@ -374,5 +374,10 @@
     "quote": "\"There are things that cannot be measured in terms of victory or defeat.\"",
     "copyright": "\u00a9 {{year}} RUBLI Project. All Rights Reserved.",
     "disclaimer": "Risk scores are statistical indicators with confidence intervals. A high score indicates similarity to documented corruption patterns \u2014 it does not constitute proof of wrongdoing."
+  },
+  "error": {
+    "title": "Failed to load Executive Summary",
+    "body": "The report data could not be retrieved. Check your connection and try again.",
+    "retry": "Retry"
   }
 }

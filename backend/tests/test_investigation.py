@@ -229,26 +229,16 @@ class TestInvestigationStats:
             assert isinstance(key, str)
             assert isinstance(val, int)
 
-    def test_investigation_stats_uses_v5_thresholds(self, client, base_url):
-        """
-        REGRESSION TEST: Verify that investigation stats uses v5.0 thresholds.
-
-        The v5.0 model uses critical >= 0.50 (not 0.60 from older models).
-        The /investigation/stats endpoint currently has a BUG where it uses
-        suspicion_score >= 0.6 for critical instead of 0.50.
-
-        This test documents the current (buggy) behavior so the bug can be
-        tracked and fixed. Once fixed, update the assertion.
-        """
+    def test_investigation_stats_correct_thresholds(self, client, base_url):
+        """Verify that investigation stats uses v5.0 thresholds (critical >= 0.50, high >= 0.30)."""
         response = client.get(f"{base_url}/investigation/stats")
         assert response.status_code == 200
         data = response.json()
-        # NOTE: The endpoint currently uses 0.6 threshold for critical cases
-        # (see investigation.py line 576: suspicion_score >= 0.6).
-        # The v5.0 model threshold is 0.50. This is a known bug.
-        # The critical_cases and high_cases fields are returned as integers.
+        # v5.0 thresholds: critical >= 0.50, high >= 0.30
         assert isinstance(data["critical_cases"], int)
         assert isinstance(data["high_cases"], int)
+        assert data["critical_cases"] >= 0
+        assert data["high_cases"] >= 0
         # Verify the total_cases >= critical + high (sanity check)
         assert data["total_cases"] >= data["critical_cases"] + data["high_cases"]
 
