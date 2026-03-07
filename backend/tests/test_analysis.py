@@ -153,3 +153,70 @@ class TestAnalysisPerCaseDetection:
             assert "total_contracts" in case
             assert "detection_rate" in case
             assert 0 <= case["detection_rate"] <= 1
+
+
+class TestAnalysisFeatureImportance:
+    """Tests for GET /analysis/feature-importance (v5.2 SHAP)."""
+
+    def test_feature_importance_returns_200(self, client, base_url):
+        response = client.get(f"{base_url}/analysis/feature-importance")
+        assert response.status_code == 200
+
+    def test_feature_importance_structure(self, client, base_url):
+        response = client.get(f"{base_url}/analysis/feature-importance")
+        assert response.status_code == 200
+        data = response.json()
+        assert "features" in data
+        assert isinstance(data["features"], list)
+
+    def test_feature_importance_item_fields(self, client, base_url):
+        response = client.get(f"{base_url}/analysis/feature-importance")
+        data = response.json()
+        if data.get("features"):
+            item = data["features"][0]
+            assert "factor_name" in item
+            assert "rank" in item
+            assert "direction" in item
+
+    def test_feature_importance_sector_filter(self, client, base_url):
+        response = client.get(f"{base_url}/analysis/feature-importance?sector_id=1")
+        assert response.status_code == 200
+
+
+class TestAnalysisPyodAgreement:
+    """Tests for GET /analysis/pyod-agreement (v5.2 cross-model)."""
+
+    def test_pyod_agreement_returns_200(self, client, base_url):
+        response = client.get(f"{base_url}/analysis/pyod-agreement")
+        assert response.status_code == 200
+
+    def test_pyod_agreement_structure(self, client, base_url):
+        response = client.get(f"{base_url}/analysis/pyod-agreement")
+        data = response.json()
+        assert "both_flagged" in data
+        assert "confirmation_rate" in data
+        assert "by_risk_level" in data
+
+    def test_pyod_agreement_types(self, client, base_url):
+        response = client.get(f"{base_url}/analysis/pyod-agreement")
+        data = response.json()
+        assert isinstance(data["both_flagged"], int)
+        assert isinstance(data["confirmation_rate"], float)
+
+
+class TestAnalysisDrift:
+    """Tests for GET /analysis/drift (v5.2 Evidently drift)."""
+
+    def test_drift_returns_200_or_404(self, client, base_url):
+        """Drift endpoint returns 200 if data exists, 404 if not yet computed."""
+        response = client.get(f"{base_url}/analysis/drift")
+        assert response.status_code in (200, 404)
+
+    def test_drift_structure_when_present(self, client, base_url):
+        response = client.get(f"{base_url}/analysis/drift")
+        if response.status_code == 200:
+            data = response.json()
+            assert "dataset_drift" in data
+            assert "n_drifted" in data
+            assert "drifted_features" in data
+            assert isinstance(data["drifted_features"], list)

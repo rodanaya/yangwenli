@@ -2018,7 +2018,8 @@ export interface FeatureImportanceV52Item {
 }
 
 export interface FeatureImportanceResponse {
-  data: FeatureImportanceV52Item[]
+  features: FeatureImportanceV52Item[]
+  total: number
   sector_id: number | null
   model_version: string
 }

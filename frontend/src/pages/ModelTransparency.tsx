@@ -374,11 +374,11 @@ function SHAPImportanceSection() {
       ))}
     </div>
   )
-  if (!data?.data?.length) return (
+  if (!data?.features?.length) return (
     <p className="text-sm text-text-muted">No SHAP data available. Run compute_shap_explanations.py first.</p>
   )
 
-  const items = data.data.slice(0, 16)
+  const items = data.features.slice(0, 16)
   const maxVal = Math.max(...items.map((d) => d.shap_mean_abs), 0.01)
 
   return (

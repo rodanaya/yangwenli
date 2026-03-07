@@ -286,3 +286,35 @@ class TestVendorVerified:
         """Test getting verified vendor classifications."""
         response = client.get(f"{base_url}/vendors/verified")
         assert response.status_code == 200
+
+
+class TestVendorSHAP:
+    """Tests for GET /vendors/{vendor_id}/shap (v5.2 SHAP explanations)."""
+
+    def test_vendor_shap_returns_200_or_404(self, client, base_url):
+        """SHAP endpoint returns 200 if vendor has SHAP data, 404 otherwise."""
+        list_response = client.get(f"{base_url}/vendors?per_page=1")
+        if list_response.status_code == 200 and list_response.json()["data"]:
+            vendor_id = list_response.json()["data"][0]["id"]
+            response = client.get(f"{base_url}/vendors/{vendor_id}/shap")
+            assert response.status_code in (200, 404)
+
+    def test_vendor_shap_not_found(self, client, base_url):
+        """Non-existent vendor should return 404."""
+        response = client.get(f"{base_url}/vendors/999999999/shap")
+        assert response.status_code == 404
+
+    def test_vendor_shap_structure_when_present(self, client, base_url):
+        """When SHAP data exists, response should have risk_factors and protective_factors."""
+        list_response = client.get(f"{base_url}/vendors?per_page=20")
+        if list_response.status_code != 200:
+            return
+        for vendor in list_response.json().get("data", []):
+            response = client.get(f"{base_url}/vendors/{vendor['id']}/shap")
+            if response.status_code == 200:
+                data = response.json()
+                assert "top_risk_factors" in data
+                assert "top_protect_factors" in data
+                assert isinstance(data["top_risk_factors"], list)
+                assert isinstance(data["top_protect_factors"], list)
+                break
