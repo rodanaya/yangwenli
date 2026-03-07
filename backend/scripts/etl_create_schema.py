@@ -522,6 +522,9 @@ CREATE INDEX IF NOT EXISTS idx_contracts_sector_year ON contracts(sector_id, con
 CREATE INDEX IF NOT EXISTS idx_contracts_vendor_year ON contracts(vendor_id, contract_year);
 CREATE INDEX IF NOT EXISTS idx_contracts_institution_year ON contracts(institution_id, contract_year);
 
+-- Transparency / publication delay index (column added by ETL pipeline when computing delays)
+CREATE INDEX IF NOT EXISTS idx_contracts_pub_delay ON contracts(publication_delay_days);
+
 -- Vendor analytics (no avg_risk_score - computed via view)
 CREATE INDEX IF NOT EXISTS idx_vendors_ghost ON vendors(ghost_probability);
 CREATE INDEX IF NOT EXISTS idx_vendors_rfc ON vendors(rfc);

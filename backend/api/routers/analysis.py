@@ -34,6 +34,54 @@ router = APIRouter(prefix="/analysis", tags=["analysis"])
 
 
 # =============================================================================
+# SIMPLE IN-MEMORY CACHE (matches pattern in sectors.py)
+# =============================================================================
+
+class SimpleCache:
+    """Thread-safe in-memory cache with TTL support for expensive queries."""
+
+    def __init__(self):
+        import threading
+        self._cache: Dict[str, Dict[str, Any]] = {}
+        self._lock = threading.Lock()
+
+    def get(self, key: str) -> Any:
+        """Get cached value if not expired."""
+        with self._lock:
+            if key in self._cache:
+                entry = self._cache[key]
+                if datetime.now() < entry["expires_at"]:
+                    return entry["value"]
+                else:
+                    del self._cache[key]
+            return None
+
+    def set(self, key: str, value: Any, ttl_seconds: int = 3600) -> None:
+        """Set cached value with TTL."""
+        with self._lock:
+            self._cache[key] = {
+                "value": value,
+                "expires_at": datetime.now() + timedelta(seconds=ttl_seconds),
+            }
+
+    def invalidate(self, pattern: str = None) -> None:
+        """Invalidate cache entries matching pattern (or all if None)."""
+        with self._lock:
+            if pattern is None:
+                self._cache.clear()
+            else:
+                keys_to_delete = [k for k in self._cache if pattern in k]
+                for k in keys_to_delete:
+                    del self._cache[k]
+
+
+# Global cache instance for analysis router
+_analysis_cache = SimpleCache()
+
+SECTOR_YEAR_CACHE_TTL = 3600  # 1 hour
+
+
+# =============================================================================
 # RESPONSE MODELS
 # =============================================================================
 
@@ -597,19 +645,14 @@ class SectorYearBreakdownResponse(BaseModel):
     total_rows: int
 
 
-_sector_year_cache: Dict[str, Any] = {}
-_SECTOR_YEAR_CACHE_TTL = 600  # 10 minutes
-
-
 @router.get("/sector-year-breakdown", response_model=SectorYearBreakdownResponse)
 def get_sector_year_breakdown():
     """Get sector x year cross-tabulation for administration analysis."""
     try:
-        import time as _time
         cache_key = "sector_year_all"
-        cached = _sector_year_cache.get(cache_key)
-        if cached and (_time.time() - cached["ts"]) < _SECTOR_YEAR_CACHE_TTL:
-            return cached["data"]
+        cached = _analysis_cache.get(cache_key)
+        if cached is not None:
+            return cached
 
         with get_db() as conn:
             cursor = conn.cursor()
@@ -634,10 +677,10 @@ def get_sector_year_breakdown():
                         institution_count=r.get("institution_count", 0),
                     ) for r in raw]
                     result = SectorYearBreakdownResponse(data=data, total_rows=len(data))
-                    _sector_year_cache[cache_key] = {"ts": _time.time(), "data": result}
+                    _analysis_cache.set(cache_key, result, ttl_seconds=SECTOR_YEAR_CACHE_TTL)
                     return result
 
-            # Fallback: live query (slow — ~9s on first call, then cached 10min)
+            # Fallback: live query (slow — ~9s on first call, then cached 1 hour)
             cursor.execute("""
                 SELECT
                     contract_year as year, sector_id,
@@ -669,7 +712,7 @@ def get_sector_year_breakdown():
             ) for row in cursor.fetchall()]
 
             result = SectorYearBreakdownResponse(data=data, total_rows=len(data))
-            _sector_year_cache[cache_key] = {"ts": _time.time(), "data": result}
+            _analysis_cache.set(cache_key, result, ttl_seconds=SECTOR_YEAR_CACHE_TTL)
             return result
 
     except sqlite3.Error as e:
@@ -3566,6 +3609,28 @@ def get_publication_delays():
     cached = _pub_delay_cache.get("pub_delays")
     if cached and (_time.time() - cached["ts"]) < _PUB_DELAY_TTL:
         return cached["data"]
+
+    with get_db() as conn:
+        # Fast path: read from precomputed_stats if available and fully formed
+        try:
+            pc_row = conn.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'publication_delays'"
+            ).fetchone()
+            if pc_row:
+                precomputed = json.loads(pc_row[0])
+                # Verify the precomputed data has the full expected output structure
+                if (
+                    isinstance(precomputed, dict)
+                    and "distribution" in precomputed
+                    and "avg_delay_days" in precomputed
+                    and "timely_pct" in precomputed
+                    and "by_year" in precomputed
+                    and "total_with_delay_data" in precomputed
+                ):
+                    _pub_delay_cache["pub_delays"] = {"ts": _time.time(), "data": precomputed}
+                    return precomputed
+        except Exception as pc_err:
+            logger.debug(f"precomputed_stats fast path skipped: {pc_err}")
 
     with get_db() as conn:
         conn.row_factory = sqlite3.Row

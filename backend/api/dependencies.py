@@ -20,15 +20,17 @@ def get_db_connection() -> sqlite3.Connection:
     """
     conn = sqlite3.connect(str(DB_PATH), timeout=DB_QUERY_TIMEOUT)
     conn.row_factory = sqlite3.Row
-    # Set busy timeout to handle concurrent access
-    conn.execute(f"PRAGMA busy_timeout = {DB_QUERY_TIMEOUT * 1000}")
+    # Set busy timeout to handle concurrent access (5s — short enough to fail fast,
+    # long enough for normal lock contention; 30s was too long and caused cascading failures)
+    conn.execute("PRAGMA busy_timeout = 5000")
     # WAL mode allows concurrent readers while one writer is active
     conn.execute("PRAGMA journal_mode = WAL")
-    conn.execute("PRAGMA read_uncommitted = ON")
+    # read_uncommitted removed: reads dirty (uncommitted) data from other connections,
+    # which is a data integrity risk — WAL already gives good read concurrency
     # Enforce referential integrity
     conn.execute("PRAGMA foreign_keys = ON")
-    # Performance: 200MB page cache + 1GB memory-mapped I/O
-    conn.execute("PRAGMA cache_size = -200000")
+    # Performance: 32MB page cache (was 200MB — reduces memory exhaustion under concurrent load)
+    conn.execute("PRAGMA cache_size = -32768")
     conn.execute("PRAGMA mmap_size = 1073741824")
     return conn
 
