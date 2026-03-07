@@ -18,7 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { RISK_COLORS, SECTOR_COLORS, SECTORS } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
-import type { MoneyFlowItem, RiskFactorFrequency, FactorCooccurrence, ThresholdGamingResponse, SectorYearItem, YearOverYearChange } from '@/api/types'
+import type { MoneyFlowItem, RiskFactorFrequency, ThresholdGamingResponse, SectorYearItem, YearOverYearChange } from '@/api/types'
 import {
   BarChart,
   Bar,
@@ -53,25 +53,6 @@ import {
 // Colour helpers
 // =============================================================================
 
-function lerpColor(colorA: string, colorB: string, t: number): string {
-  const parse = (hex: string) => {
-    const h = hex.replace('#', '')
-    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]
-  }
-  const a = parse(colorA); const b = parse(colorB)
-  const r = Math.round(a[0] + (b[0] - a[0]) * t)
-  const g = Math.round(a[1] + (b[1] - a[1]) * t)
-  const bl = Math.round(a[2] + (b[2] - a[2]) * t)
-  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${bl.toString(16).padStart(2, '0')}`
-}
-
-function riskScoreToColor(score: number): string {
-  if (score >= 0.5) return RISK_COLORS.critical
-  if (score >= 0.3) return lerpColor(RISK_COLORS.high, RISK_COLORS.critical, (score - 0.3) / 0.2)
-  if (score >= 0.1) return lerpColor(RISK_COLORS.medium, RISK_COLORS.high, (score - 0.1) / 0.2)
-  return lerpColor(RISK_COLORS.low, RISK_COLORS.medium, score / 0.1)
-}
-
 /** Maps a risk score to a categorical RISK_COLORS entry (no lerp blending).
  *  Use this for bar/cell fills so each bar gets a distinct, readable color. */
 function riskScoreToCategoricalColor(score: number): string {
@@ -87,13 +68,6 @@ function riskBadgeClass(risk: number | null): string {
   if (risk >= 0.3) return 'text-risk-high font-bold'
   if (risk >= 0.1) return 'text-risk-medium'
   return 'text-risk-low'
-}
-
-function liftToColor(lift: number): string {
-  if (lift >= 2) return 'bg-risk-critical/30 text-risk-critical'
-  if (lift >= 1.5) return 'bg-risk-high/25 text-risk-high'
-  if (lift >= 1) return 'bg-risk-medium/20 text-risk-medium'
-  return 'bg-zinc-700/30 text-text-muted'
 }
 
 // =============================================================================
@@ -160,21 +134,6 @@ const KNOWN_ACRONYMS: Record<string, string> = {
   'Fondo de Cultura Económica': 'FCE',
 }
 
-const SKIP_WORDS = new Set(['de', 'del', 'y', 'la', 'las', 'los', 'el', 'a', 'e', 'en', 'por', 'para', 'con', 'sa', 'sapi', 'cv', 'de cv', 's.a', 's.a.'])
-
-/** Abbreviate long names: check known acronyms first, then derive from initials, then truncate. */
-function abbreviateName(name: string, maxLen = 22): string {
-  if (name.length <= maxLen) return name
-  if (KNOWN_ACRONYMS[name]) return KNOWN_ACRONYMS[name]
-  const words = name.split(/\s+/)
-  const acronym = words
-    .filter(w => w.length > 1 && !SKIP_WORDS.has(w.toLowerCase()))
-    .map(w => w[0].toUpperCase())
-    .join('')
-  if (acronym.length >= 3 && acronym.length <= 7) return acronym
-  return name.slice(0, maxLen - 1) + '…'
-}
-
 // =============================================================================
 // Factor label helpers
 // =============================================================================
@@ -216,83 +175,6 @@ function consolidateFactors(data: RiskFactorFrequency[], t: TFn) {
 }
 
 // =============================================================================
-// Co-occurrence heatmap
-// =============================================================================
-
-function CooccurrenceHeatmap({ cooccurrences, factors, t, onCellClick }: {
-  cooccurrences: FactorCooccurrence[]
-  factors: string[]
-  t: TFn
-  onCellClick?: (fa: string, fb: string) => void
-}) {
-  const filtered = useMemo(() => cooccurrences.filter(c => c.lift > 1.0), [cooccurrences])
-  const liftMap = useMemo(() => {
-    const m = new Map<string, number>()
-    for (const c of filtered) {
-      m.set(`${c.factor_a}|${c.factor_b}`, c.lift)
-      m.set(`${c.factor_b}|${c.factor_a}`, c.lift)
-    }
-    return m
-  }, [filtered])
-  const relevantFactors = useMemo(() => {
-    const seen = new Set<string>()
-    for (const c of filtered) { seen.add(c.factor_a); seen.add(c.factor_b) }
-    return factors.filter(f => seen.has(f))
-  }, [factors, filtered])
-
-  if (relevantFactors.length === 0) return (
-    <div className="flex items-center justify-center h-24 text-text-muted text-xs">No co-occurrence data</div>
-  )
-
-  return (
-    <div className="overflow-x-auto">
-      <table className="text-xs" role="grid">
-        <thead>
-          <tr>
-            <th className="sticky left-0 bg-background-card z-10 p-1 min-w-[90px]" />
-            {relevantFactors.map(f => (
-              <th key={f} className="p-1 text-text-muted font-normal"
-                style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', minWidth: 26 }}>
-                {getFactorLabel(f, t)}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {relevantFactors.map(rowF => (
-            <tr key={rowF}>
-              <td className="sticky left-0 bg-background-card z-10 p-1 text-text-secondary font-medium whitespace-nowrap pr-2 text-[11px]">
-                {getFactorLabel(rowF, t)}
-              </td>
-              {relevantFactors.map(colF => {
-                const lift = liftMap.get(`${rowF}|${colF}`)
-                return (
-                  <td key={colF} className="p-0.5 text-center"
-                    title={lift != null ? `${getFactorLabel(rowF, t)} + ${getFactorLabel(colF, t)}: lift ${lift.toFixed(2)}` : '—'}>
-                    {rowF === colF ? (
-                      <div className="w-6 h-6 rounded bg-border/20 text-text-muted flex items-center justify-center">—</div>
-                    ) : lift != null ? (
-                      <button
-                        onClick={() => onCellClick?.(rowF, colF)}
-                        className={cn('w-6 h-6 rounded flex items-center justify-center text-xs font-medium hover:ring-1 hover:ring-accent/50 transition-all', liftToColor(lift))}
-                      >
-                        {lift.toFixed(1)}
-                      </button>
-                    ) : (
-                      <div className="w-6 h-6 rounded bg-border/10" />
-                    )}
-                  </td>
-                )
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-// =============================================================================
 // Sort icon helper
 // =============================================================================
 
@@ -320,128 +202,26 @@ interface FlowRow {
   highRiskPct: number
 }
 
-/** Vertical Sankey-style node pair showing sector color on the left node. */
-function SankeyFlowViz({ flows, totalValue }: { flows: FlowRow[]; totalValue: number }) {
-  if (flows.length === 0) return null
-
-  // Take top 8 flows by value for the visual
-  const top = flows.slice(0, 8)
-  const maxVal = top[0]?.value ?? 1
-
-  return (
-    <div className="mb-4 p-3 rounded-lg bg-background-elevated/20 border border-border/30">
-      <p className="text-[10px] text-text-muted uppercase tracking-wider font-mono mb-3">
-        Money Flow — Institution to Vendor (top {top.length} by value)
-      </p>
-      <div className="space-y-1.5">
-        {top.map((flow) => {
-          const barWidth = Math.max(4, Math.round((flow.value / maxVal) * 100))
-          const sectorColor = inferSectorColor(flow.sourceName)
-          const riskColor = riskScoreToColor(flow.avgRisk)
-          const valuePct = totalValue > 0 ? (flow.value / totalValue) * 100 : 0
-
-          return (
-            <div key={`${flow.sourceId}-${flow.targetId}`} className="flex items-center gap-2 group">
-              {/* Left node — institution: dark text always, sector color as dot indicator */}
-              <div
-                className="w-[130px] shrink-0 text-right text-[10px] font-bold text-text-primary flex items-center justify-end gap-1"
-                title={flow.sourceName}
-              >
-                <span className="truncate">{abbreviateName(flow.sourceName)}</span>
-                <span
-                  className="w-2 h-2 rounded-full shrink-0 inline-block"
-                  style={{ backgroundColor: sectorColor }}
-                />
-              </div>
-
-              {/* Flow bar */}
-              <div className="flex-1 relative h-4 flex items-center">
-                <div
-                  className="h-3 rounded-sm transition-all opacity-70 group-hover:opacity-100"
-                  style={{
-                    width: `${barWidth}%`,
-                    background: `linear-gradient(90deg, ${sectorColor}80, ${riskColor}90)`,
-                  }}
-                />
-                {/* Value label inside bar if wide enough */}
-                {barWidth > 25 && (
-                  <span
-                    className="absolute left-1.5 text-[9px] font-mono font-bold text-white/90 leading-none pointer-events-none"
-                    style={{ top: '50%', transform: 'translateY(-50%)' }}
-                  >
-                    {formatCompactMXN(flow.value)}
-                  </span>
-                )}
-              </div>
-
-              {/* Right node — vendor name */}
-              <div
-                className="w-[110px] shrink-0 text-[10px] font-semibold text-text-secondary"
-                title={flow.targetName}
-              >
-                {abbreviateName(flow.targetName, 20)}
-              </div>
-
-              {/* Value % */}
-              <div className="w-[36px] shrink-0 text-right">
-                <span className="text-[9px] font-mono tabular-nums text-text-muted">
-                  {valuePct.toFixed(1)}%
-                </span>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Legend */}
-      <div className="flex gap-4 mt-3 pt-2 border-t border-border/20 text-[9px] text-text-muted">
-        <span>Left color = Sector</span>
-        <span>Right color = Risk level</span>
-        <span>Bar width = Relative value</span>
-      </div>
-    </div>
-  )
-}
-
 // =============================================================================
-// Task A — Concentration alert banner
+// Concentration alert banner
 // =============================================================================
 
 function ConcentrationAlert({ flows, totalValue }: { flows: FlowRow[]; totalValue: number }) {
   const alert = useMemo(() => {
     if (!flows.length || totalValue === 0) return null
-    // Find the single largest flow
-    const top = [...flows].sort((a, b) => b.value - a.value)[0]
-    const pct = (top.value / totalValue) * 100
+    const top3Value = flows.slice(0, 3).reduce((s, f) => s + f.value, 0)
+    const pct = (top3Value / totalValue) * 100
     if (pct < 30) return null
-    return { flow: top, pct }
+    return { pct }
   }, [flows, totalValue])
 
   if (!alert) return null
 
   return (
-    <div
-      className="flex items-start gap-2 px-3 py-2 rounded-lg mb-3 border"
-      style={{
-        background: `${RISK_COLORS.high}15`,
-        borderColor: `${RISK_COLORS.high}40`,
-      }}
-    >
-      <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" style={{ color: RISK_COLORS.high }} />
-      <p className="text-xs leading-snug">
-        <span className="font-bold uppercase tracking-wide" style={{ color: RISK_COLORS.high }}>
-          Concentration:{' '}
-        </span>
-        <span className="text-text-secondary font-semibold">{alert.flow.sourceName}</span>
-        <span className="text-text-muted"> → </span>
-        <span className="text-text-secondary font-semibold">{alert.flow.targetName}</span>
-        <span className="text-text-muted"> represents </span>
-        <span className="font-bold font-mono" style={{ color: RISK_COLORS.high }}>
-          {alert.pct.toFixed(1)}%
-        </span>
-        <span className="text-text-muted"> of shown spend ({formatCompactMXN(alert.flow.value)})</span>
-      </p>
-    </div>
+    <p className="text-xs text-risk-high mb-3 flex items-center gap-1.5">
+      <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      Top 3 vendors hold <span className="font-bold font-mono">{alert.pct.toFixed(1)}%</span> of visible flow value
+    </p>
   )
 }
 
@@ -470,69 +250,6 @@ const FACTOR_DISPLAY_LABELS: Record<string, string> = {
 }
 
 // =============================================================================
-// Task C — Mini risk heatmap (5 squares: low → critical)
-// =============================================================================
-
-/**
- * Renders 5 × 10px colored squares showing a risk distribution profile.
- * Inputs are raw counts per level. The squares visualize proportional risk weight.
- */
-function RiskMiniHeatmap({
-  highRiskPct,
-  avgRisk,
-  title,
-}: {
-  highRiskPct: number
-  avgRisk: number
-  title?: string
-}) {
-  // Build 5 squares: each represents 20% of risk spectrum from low→critical.
-  // We use avgRisk and highRiskPct to construct a rough distribution profile.
-  const squares = useMemo(() => {
-    // Heuristic color assignment for each square slot (0=lowest, 4=highest risk)
-    const levels = [
-      { threshold: 0.0,  color: RISK_COLORS.low },
-      { threshold: 0.05, color: lerpColor(RISK_COLORS.low, RISK_COLORS.medium, 0.5) },
-      { threshold: 0.10, color: RISK_COLORS.medium },
-      { threshold: 0.30, color: RISK_COLORS.high },
-      { threshold: 0.50, color: RISK_COLORS.critical },
-    ]
-    return levels.map(({ threshold, color }) => {
-      // Intensity: how relevant is this risk level given avgRisk?
-      const distance = Math.abs(avgRisk - threshold)
-      const intensity = Math.max(0.15, 1 - distance * 4)
-      return { color, intensity }
-    })
-  }, [avgRisk])
-
-  const tooltipText = title
-    ? `${title}\nAvg risk: ${(avgRisk * 100).toFixed(0)}% · High-risk: ${(highRiskPct * 100).toFixed(0)}%`
-    : `Avg risk: ${(avgRisk * 100).toFixed(0)}% · High-risk: ${(highRiskPct * 100).toFixed(0)}%`
-
-  return (
-    <div
-      className="flex gap-0.5 items-center"
-      role="img"
-      aria-label={tooltipText}
-      title={tooltipText}
-    >
-      {squares.map((sq, i) => (
-        <div
-          key={i}
-          className="rounded-[2px] shrink-0"
-          style={{
-            width: 10,
-            height: 10,
-            backgroundColor: sq.color,
-            opacity: sq.intensity,
-          }}
-        />
-      ))}
-    </div>
-  )
-}
-
-// =============================================================================
 // Main component
 // =============================================================================
 
@@ -555,7 +272,6 @@ export default function ProcurementIntelligence() {
 
   // ── Risk factor state ────────────────────────────────────────────────────
   const [selectedFactor, setSelectedFactor] = useState<string | null>(null)
-  const [showHeatmap, setShowHeatmap] = useState(false)
 
   // ── Collusion state ──────────────────────────────────────────────────────
   const [expandedLead, setExpandedLead] = useState<string | null>(null)
@@ -858,15 +574,7 @@ export default function ProcurementIntelligence() {
             </div>
           )}
 
-          {/* Task A — Sankey-style flow visualization */}
-          {!flowLoading && filteredFlows.length > 0 && (
-            <SankeyFlowViz
-              flows={filteredFlows}
-              totalValue={visibleFlowsTotal}
-            />
-          )}
-
-          {/* Task A — Concentration alert banner */}
+          {/* Concentration alert banner */}
           {!flowLoading && filteredFlows.length > 0 && (
             <ConcentrationAlert
               flows={filteredFlows}
@@ -907,147 +615,142 @@ export default function ProcurementIntelligence() {
             <p className="text-sm text-text-muted text-center py-8">{t('highRiskFlows.empty')}</p>
           ) : (
             <>
-              {/* Column headers — added Risk Profile column for Task C */}
-              <div className="grid grid-cols-[20px_1fr_12px_1fr_90px_56px_48px_52px_32px] gap-x-2 px-2 pb-1 text-[10px] text-text-muted uppercase tracking-wide border-b border-border/30 mb-1">
-                <span>#</span>
-                <span>{t('highRiskFlows.institution')}</span>
-                <span />
-                <span>{t('highRiskFlows.vendor')}</span>
-                <button onClick={() => handleSort('value')} className="text-left hover:text-text-primary transition-colors">
-                  {t('highRiskFlows.value')}<SortIcon active={sortKey === 'value'} dir={sortDir} />
-                </button>
-                <button onClick={() => handleSort('risk')} className="text-left hover:text-text-primary transition-colors">
-                  {t('highRiskFlows.risk')}<SortIcon active={sortKey === 'risk'} dir={sortDir} />
-                </button>
-                <button onClick={() => handleSort('contracts')} className="text-left hover:text-text-primary transition-colors">
-                  {t('highRiskFlows.contracts')}<SortIcon active={sortKey === 'contracts'} dir={sortDir} />
-                </button>
-                {/* Task C — mini heatmap column header */}
-                <span title="Risk profile: 5 squares from low (green) to critical (red)">Profile</span>
-                <span />
-              </div>
-
-              <div className="space-y-0.5">
-                {filteredFlows.map((flow, i) => {
-                  const flowKey = `${flow.sourceId}-${flow.targetId}`
-                  const isExpanded = expandedRow === flowKey
-                  return (
-                    <div key={flowKey}>
-                      <div
-                        className={cn(
-                          'grid grid-cols-[20px_1fr_12px_1fr_90px_56px_48px_52px_32px] gap-x-2 items-center px-2 py-1.5 rounded text-xs transition-colors',
-                          isExpanded
-                            ? 'bg-background-elevated/60 ring-1 ring-accent/20'
-                            : 'hover:bg-background-elevated/30',
-                          flow.avgRisk >= 0.5 && 'border-l-2 border-risk-critical',
-                          flow.avgRisk >= 0.3 && flow.avgRisk < 0.5 && 'border-l-2 border-risk-high',
-                        )}
-                      >
-                        <span className="text-text-muted font-mono text-[10px]">{i + 1}</span>
-
-                        {/* Institution — colored dot with sector color */}
-                        <button
-                          onClick={() => openEntityDrawer(flow.sourceId, 'institution')}
-                          className="text-left truncate text-text-secondary hover:text-accent transition-colors font-medium flex items-center gap-1 min-w-0"
-                          title={flow.sourceName}
+              <table className="w-full text-xs border-separate border-spacing-y-0.5" role="grid">
+                <thead>
+                  <tr className="text-[10px] text-text-muted uppercase tracking-wide border-b border-border/30">
+                    <th className="text-left pb-1 w-6">#</th>
+                    <th className="text-left pb-1">{t('highRiskFlows.institution')} / {t('highRiskFlows.vendor')}</th>
+                    <th className="text-right pb-1 w-24">
+                      <button onClick={() => handleSort('value')} className="hover:text-text-primary transition-colors">
+                        {t('highRiskFlows.value')}<SortIcon active={sortKey === 'value'} dir={sortDir} />
+                      </button>
+                    </th>
+                    <th className="text-right pb-1 w-14">
+                      <button onClick={() => handleSort('risk')} className="hover:text-text-primary transition-colors">
+                        {t('highRiskFlows.risk')}<SortIcon active={sortKey === 'risk'} dir={sortDir} />
+                      </button>
+                    </th>
+                    <th className="text-right pb-1 w-16">
+                      <button onClick={() => handleSort('contracts')} className="hover:text-text-primary transition-colors">
+                        {t('highRiskFlows.contracts')}<SortIcon active={sortKey === 'contracts'} dir={sortDir} />
+                      </button>
+                    </th>
+                    <th className="text-right pb-1 w-8" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredFlows.map((flow, i) => {
+                    const flowKey = `${flow.sourceId}-${flow.targetId}`
+                    const isExpanded = expandedRow === flowKey
+                    return (
+                      <>
+                        <tr
+                          key={flowKey}
+                          className={cn(
+                            'transition-colors',
+                            isExpanded ? 'bg-background-elevated/60 ring-1 ring-accent/20' : 'hover:bg-background-elevated/30',
+                            flow.avgRisk >= 0.5 ? '[&>td:first-child]:border-l-2 [&>td:first-child]:border-risk-critical' : '',
+                            flow.avgRisk >= 0.3 && flow.avgRisk < 0.5 ? '[&>td:first-child]:border-l-2 [&>td:first-child]:border-risk-high' : '',
+                          )}
                         >
-                          <span
-                            className="w-1.5 h-1.5 rounded-full shrink-0 inline-block"
-                            style={{ backgroundColor: inferSectorColor(flow.sourceName) }}
-                          />
-                          <span className="truncate">{flow.sourceName}</span>
-                        </button>
+                          <td className="py-2 pl-1 text-text-muted font-mono text-[10px] rounded-l">{i + 1}</td>
 
-                        <ArrowRight className="h-3 w-3 text-text-muted shrink-0" />
-
-                        {/* Vendor */}
-                        <button
-                          onClick={() => openEntityDrawer(flow.targetId, 'vendor')}
-                          className="text-left truncate text-text-secondary hover:text-accent transition-colors font-medium"
-                          title={flow.targetName}
-                        >
-                          {flow.targetName}
-                        </button>
-
-                        {/* Value */}
-                        <span className="text-text-secondary tabular-nums font-mono text-right">
-                          {formatCompactMXN(flow.value)}
-                        </span>
-
-                        {/* Risk */}
-                        <span
-                          className={cn('tabular-nums font-mono text-right', riskBadgeClass(flow.avgRisk))}
-                        >
-                          {(flow.avgRisk * 100).toFixed(0)}%
-                        </span>
-
-                        {/* Contracts */}
-                        <span className="text-text-muted tabular-nums text-right">
-                          {formatNumber(flow.contracts)}
-                        </span>
-
-                        {/* Task C — Mini risk heatmap */}
-                        <div className="flex justify-center">
-                          <RiskMiniHeatmap
-                            highRiskPct={flow.highRiskPct}
-                            avgRisk={flow.avgRisk}
-                            title={`${flow.sourceName} → ${flow.targetName}`}
-                          />
-                        </div>
-
-                        {/* Expand toggle */}
-                        <button
-                          onClick={() => setExpandedRow(isExpanded ? null : flowKey)}
-                          className="flex items-center justify-center text-text-muted hover:text-accent transition-colors"
-                          aria-label={isExpanded ? 'Collapse' : 'Expand'}
-                        >
-                          {isExpanded
-                            ? <ChevronUp className="h-3.5 w-3.5" />
-                            : <ChevronDown className="h-3.5 w-3.5" />}
-                        </button>
-                      </div>
-
-                      {/* Expanded detail row */}
-                      {isExpanded && (
-                        <div className="px-3 py-2 mb-0.5 rounded-b bg-background-elevated/40 border border-t-0 border-accent/20 flex flex-wrap gap-3 text-xs">
-                          <div className="flex gap-4 flex-wrap flex-1">
-                            <span className="text-text-muted">
-                              High-risk contracts:{' '}
-                              <span className="font-bold text-risk-high">
-                                {(flow.highRiskPct * 100).toFixed(0)}%
-                              </span>
-                            </span>
-                            <span className="text-text-muted">
-                              Total value:{' '}
-                              <span className="font-bold text-text-primary">{formatCompactMXN(flow.value)}</span>
-                            </span>
-                          </div>
-                          <div className="flex gap-2">
+                          {/* Institution + Vendor — two-line cell */}
+                          <td className="py-2 pr-3 min-w-0">
                             <button
                               onClick={() => openEntityDrawer(flow.sourceId, 'institution')}
-                              className="text-accent hover:text-accent/80 transition-colors flex items-center gap-1"
+                              className="flex items-center gap-1.5 text-left hover:text-accent transition-colors font-semibold text-text-primary leading-tight max-w-full"
+                              title={flow.sourceName}
                             >
-                              Institution profile <ExternalLink className="h-3 w-3" />
+                              <span
+                                className="w-2 h-2 rounded-full shrink-0 inline-block"
+                                style={{ backgroundColor: inferSectorColor(flow.sourceName) }}
+                              />
+                              <span className="truncate">{flow.sourceName}</span>
                             </button>
                             <button
                               onClick={() => openEntityDrawer(flow.targetId, 'vendor')}
-                              className="text-accent hover:text-accent/80 transition-colors flex items-center gap-1"
+                              className="flex items-center gap-1.5 text-left hover:text-accent transition-colors text-text-muted text-[11px] leading-tight mt-0.5 max-w-full"
+                              title={flow.targetName}
                             >
-                              Vendor profile <ExternalLink className="h-3 w-3" />
+                              <ArrowRight className="h-2.5 w-2.5 shrink-0 text-text-muted/50" />
+                              <span className="truncate">{flow.targetName}</span>
                             </button>
+                          </td>
+
+                          {/* Value */}
+                          <td className="py-2 text-right tabular-nums font-mono text-text-secondary">
+                            {formatCompactMXN(flow.value)}
+                          </td>
+
+                          {/* Risk */}
+                          <td className={cn('py-2 text-right tabular-nums font-mono', riskBadgeClass(flow.avgRisk))}>
+                            {(flow.avgRisk * 100).toFixed(0)}%
+                          </td>
+
+                          {/* Contracts */}
+                          <td className="py-2 text-right tabular-nums text-text-muted">
+                            {formatNumber(flow.contracts)}
+                          </td>
+
+                          {/* Expand toggle */}
+                          <td className="py-2 text-right rounded-r">
                             <button
-                              onClick={() => navigate(`/contracts?institution_id=${flow.sourceId}&vendor_id=${flow.targetId}`)}
-                              className="text-accent hover:text-accent/80 transition-colors flex items-center gap-1"
+                              onClick={() => setExpandedRow(isExpanded ? null : flowKey)}
+                              className="text-text-muted hover:text-accent transition-colors"
+                              aria-label={isExpanded ? 'Collapse' : 'Expand'}
                             >
-                              {t('highRiskFlows.investigate')} <ArrowRight className="h-3 w-3" />
+                              {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                             </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
+                          </td>
+                        </tr>
+
+                        {/* Expanded detail row */}
+                        {isExpanded && (
+                          <tr key={`${flowKey}-expanded`}>
+                            <td colSpan={6} className="pb-1">
+                              <div className="px-3 py-2 rounded-b bg-background-elevated/40 border border-t-0 border-accent/20 flex flex-wrap gap-3 text-xs">
+                                <div className="flex gap-4 flex-wrap flex-1">
+                                  <span className="text-text-muted">
+                                    High-risk contracts:{' '}
+                                    <span className="font-bold text-risk-high">
+                                      {(flow.highRiskPct * 100).toFixed(0)}%
+                                    </span>
+                                  </span>
+                                  <span className="text-text-muted">
+                                    Total value:{' '}
+                                    <span className="font-bold text-text-primary">{formatCompactMXN(flow.value)}</span>
+                                  </span>
+                                </div>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => openEntityDrawer(flow.sourceId, 'institution')}
+                                    className="text-accent hover:text-accent/80 transition-colors flex items-center gap-1"
+                                  >
+                                    Institution profile <ExternalLink className="h-3 w-3" />
+                                  </button>
+                                  <button
+                                    onClick={() => openEntityDrawer(flow.targetId, 'vendor')}
+                                    className="text-accent hover:text-accent/80 transition-colors flex items-center gap-1"
+                                  >
+                                    Vendor profile <ExternalLink className="h-3 w-3" />
+                                  </button>
+                                  <button
+                                    onClick={() => navigate(`/contracts?institution_id=${flow.sourceId}&vendor_id=${flow.targetId}`)}
+                                    className="text-accent hover:text-accent/80 transition-colors flex items-center gap-1"
+                                  >
+                                    {t('highRiskFlows.investigate')} <ArrowRight className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </>
+                    )
+                  })}
+                </tbody>
+              </table>
 
               {!showMore && totalFlowCount > 15 && (
                 <button
@@ -1071,16 +774,17 @@ export default function ProcurementIntelligence() {
           </div>
           <p className="text-xs text-text-muted mb-4">{t('riskFactors.subtitle')}</p>
 
+          <p className="text-xs text-text-secondary mb-4">
+            Each bar shows how many contracts trigger this risk signal. Click any bar to explore those contracts.
+          </p>
+
           <div className="grid gap-6 md:grid-cols-[1fr_320px]">
             {/* Factor frequency bar chart */}
             <div>
-              <p className="text-xs text-text-muted mb-2">
-                Click a factor to explore the contracts it flags.
-              </p>
-              {rfLoading ? <Skeleton className="h-60" /> : factors.length === 0 ? (
+              {rfLoading ? <Skeleton className="h-80" /> : factors.length === 0 ? (
                 <p className="text-xs text-text-muted text-center py-8">No factor data</p>
               ) : (
-                <ResponsiveContainer width="100%" height={Math.max(factors.length * 28, 200)}>
+                <ResponsiveContainer width="100%" height={Math.max(factors.length * 28, 320)}>
                   <BarChart
                     data={factors}
                     layout="vertical"
@@ -1186,36 +890,6 @@ export default function ProcurementIntelligence() {
             </div>
           </div>
 
-          {/* Heatmap toggle */}
-          {rfData?.top_cooccurrences && rfData.top_cooccurrences.length > 0 && (
-            <div className="mt-4 pt-3 border-t border-border/30">
-              <button
-                onClick={() => setShowHeatmap(v => !v)}
-                className="flex items-center gap-1.5 text-xs text-accent hover:text-accent/80 transition-colors"
-              >
-                {showHeatmap
-                  ? <><ChevronUp className="h-3.5 w-3.5" />{t('riskFactors.hideHeatmap')}</>
-                  : <><ChevronDown className="h-3.5 w-3.5" />{t('riskFactors.showHeatmap')}</>
-                }
-              </button>
-              {showHeatmap && (
-                <div className="mt-3">
-                  <p className="text-xs text-text-muted mb-2">
-                    {t('riskFactors.heatmapSubtitle')}{' '}
-                    <span className="text-accent">Click a cell to view contracts with both factors.</span>
-                  </p>
-                  <CooccurrenceHeatmap
-                    cooccurrences={rfData.top_cooccurrences}
-                    factors={rfData.factor_frequencies?.map((f: RiskFactorFrequency) => f.factor) ?? []}
-                    t={tRf}
-                    onCellClick={(fa, fb) =>
-                      navigate(`/contracts?risk_factor=${fa}&risk_factor_2=${fb}`)
-                    }
-                  />
-                </div>
-              )}
-            </div>
-          )}
         </CardContent>
       </Card>
 

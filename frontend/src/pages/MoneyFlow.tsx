@@ -508,6 +508,11 @@ export default function MoneyFlow() {
       <div>
         <h1 className="text-2xl font-bold text-text-primary font-mono tracking-tight">{t('pageTitle')}</h1>
         <p className="text-sm text-text-muted mt-1">{t('pageSubtitle')}</p>
+        <p className="text-xs text-text-muted/70 mt-2 max-w-2xl leading-relaxed">
+          Explore how federal procurement funds flow from government institutions to vendors.
+          Node size represents total contract value. Color represents average risk similarity score — how closely
+          procurement patterns resemble documented corruption cases (v5.1 model).
+        </p>
       </div>
 
       {/* Summary Stats Bar */}
@@ -574,97 +579,157 @@ export default function MoneyFlow() {
 
       {/* Narrative context strip */}
       {showDiagram && (
-        <div className="text-xs text-text-muted px-1 flex flex-wrap gap-x-4 gap-y-1">
+        <div className="rounded-lg border border-border/30 bg-background-elevated/40 px-4 py-3 flex flex-wrap gap-x-6 gap-y-1.5 text-xs text-text-muted">
           <span>
-            <span className="text-amber-300 font-medium">{highRiskPct.toFixed(0)}%</span>
+            <strong className="text-amber-300 font-semibold">{highRiskPct.toFixed(0)}%</strong>
             {' '}of flow value has high- or critical-risk similarity
           </span>
-          <span>·</span>
+          <span className="text-border/60">·</span>
           <span>
             Top 3 vendors hold{' '}
-            <span className="text-text-secondary font-medium">{top3VendorPct.toFixed(0)}%</span>{' '}
+            <strong className="text-text-secondary font-semibold">{top3VendorPct.toFixed(0)}%</strong>{' '}
             of total visible value
           </span>
-          <span>·</span>
+          <span className="text-border/60">·</span>
           <span>
-            {links.length} flows ranked by {apiSortBy === 'risk' ? 'avg risk similarity' : 'value'}
+            <strong className="text-text-secondary font-semibold">{links.length}</strong>{' '}
+            flows ranked by {apiSortBy === 'risk' ? 'avg risk similarity' : 'value'}
           </span>
         </div>
       )}
 
       {/* Controls */}
       <div className="bg-background-elevated border border-border/30 rounded-lg p-4 space-y-3">
-        <div className="flex flex-wrap items-center gap-3">
+        {/* Primary filter row: labeled dropdowns */}
+        <div className="flex flex-wrap items-end gap-4">
           {/* Sector */}
-          <Select
-            value={sectorId ? String(sectorId) : 'all'}
-            onValueChange={v => { setParam('sector', v === 'all' ? undefined : v); setSelectedNode(null) }}
-          >
-            <SelectTrigger className="w-44 h-8 text-xs">
-              <SelectValue placeholder={t('filters.allSectors')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('filters.allSectors')}</SelectItem>
-              {SECTORS.map(s => (
-                <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-mono uppercase tracking-wider text-text-muted/60">Sector</label>
+            <Select
+              value={sectorId ? String(sectorId) : 'all'}
+              onValueChange={v => { setParam('sector', v === 'all' ? undefined : v); setSelectedNode(null) }}
+            >
+              <SelectTrigger className="w-44 h-8 text-xs">
+                <SelectValue placeholder={t('filters.allSectors')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('filters.allSectors')}</SelectItem>
+                {SECTORS.map(s => (
+                  <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Year with data quality badge */}
-          <Select
-            value={year ? String(year) : 'all'}
-            onValueChange={v => { setParam('year', v === 'all' ? undefined : v); setSelectedNode(null) }}
-          >
-            <SelectTrigger className="w-36 h-8 text-xs">
-              <SelectValue placeholder={t('filters.allYears')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('filters.allYears')}</SelectItem>
-              {YEARS.map(y => {
-                const q = getYearQualityLabel(y)
-                return (
-                  <SelectItem key={y} value={String(y)}>
-                    <span className="flex items-center gap-1.5">
-                      {y}
-                      <span className="text-[10px] text-text-muted" title={q.rfcPct}>{q.icon}</span>
-                    </span>
-                  </SelectItem>
-                )
-              })}
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-mono uppercase tracking-wider text-text-muted/60">Year</label>
+            <Select
+              value={year ? String(year) : 'all'}
+              onValueChange={v => { setParam('year', v === 'all' ? undefined : v); setSelectedNode(null) }}
+            >
+              <SelectTrigger className="w-36 h-8 text-xs">
+                <SelectValue placeholder={t('filters.allYears')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('filters.allYears')}</SelectItem>
+                {YEARS.map(y => {
+                  const q = getYearQualityLabel(y)
+                  return (
+                    <SelectItem key={y} value={String(y)}>
+                      <span className="flex items-center gap-1.5">
+                        {y}
+                        <span className="text-[10px] text-text-muted" title={q.rfcPct}>{q.icon}</span>
+                      </span>
+                    </SelectItem>
+                  )
+                })}
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Flow limit */}
-          <Select
-            value={String(flowLimit)}
-            onValueChange={v => { setParam('limit', v === '20' ? undefined : v); setSelectedNode(null) }}
-          >
-            <SelectTrigger className="w-36 h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">Top 10 flows</SelectItem>
-              <SelectItem value="20">Top 20 flows</SelectItem>
-              <SelectItem value="50">Top 50 flows</SelectItem>
-              <SelectItem value="100">Top 100 flows</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-mono uppercase tracking-wider text-text-muted/60">Top N Flows</label>
+            <Select
+              value={String(flowLimit)}
+              onValueChange={v => { setParam('limit', v === '20' ? undefined : v); setSelectedNode(null) }}
+            >
+              <SelectTrigger className="w-36 h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">Top 10 flows</SelectItem>
+                <SelectItem value="20">Top 20 flows</SelectItem>
+                <SelectItem value="50">Top 50 flows</SelectItem>
+                <SelectItem value="100">Top 100 flows</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Backend rank order */}
-          <Select
-            value={apiSortBy}
-            onValueChange={v => { setParam('api_sort', v === 'value' ? undefined : v); setSelectedNode(null) }}
-          >
-            <SelectTrigger className="w-36 h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="value">Rank by value</SelectItem>
-              <SelectItem value="risk">Rank by risk</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-mono uppercase tracking-wider text-text-muted/60">Rank by</label>
+            <Select
+              value={apiSortBy}
+              onValueChange={v => { setParam('api_sort', v === 'value' ? undefined : v); setSelectedNode(null) }}
+            >
+              <SelectTrigger className="w-36 h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="value">Value</SelectItem>
+                <SelectItem value="risk">Risk similarity</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
+          {/* View toggle + export — pushed to the right */}
+          <div className="ml-auto flex items-end gap-2">
+            {links.length > 0 && (
+              <button
+                onClick={exportCSV}
+                className="flex items-center gap-1.5 px-2.5 py-1 h-8 rounded text-xs text-text-muted hover:text-text-secondary border border-border/30 transition-colors"
+                title="Export visible flows to CSV"
+              >
+                <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                CSV
+              </button>
+            )}
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-mono uppercase tracking-wider text-text-muted/60">View as</label>
+              <div className="flex items-center gap-1 rounded-md border border-border/30 p-0.5 bg-background/40">
+                <button
+                  onClick={() => setViewMode('diagram')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-all ${
+                    viewMode === 'diagram'
+                      ? 'bg-accent/20 text-accent'
+                      : 'text-text-muted hover:text-text-secondary'
+                  }`}
+                  aria-pressed={viewMode === 'diagram'}
+                >
+                  <BarChart2 className="h-3.5 w-3.5" aria-hidden="true" />
+                  Diagram
+                </button>
+                <button
+                  onClick={() => setViewMode('table')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-all ${
+                    viewMode === 'table'
+                      ? 'bg-accent/20 text-accent'
+                      : 'text-text-muted hover:text-text-secondary'
+                  }`}
+                  aria-pressed={viewMode === 'table'}
+                >
+                  <List className="h-3.5 w-3.5" aria-hidden="true" />
+                  Table
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Secondary toggles row */}
+        <div className="flex flex-wrap items-center gap-3 pt-1 border-t border-border/20">
           {/* Direct Awards toggle */}
           <button
             onClick={() => { setParam('da', directAwardOnly ? undefined : '1'); setSelectedNode(null) }}
@@ -718,46 +783,6 @@ export default function MoneyFlow() {
               </button>
             ))}
           </div>
-
-          {/* Export + View toggle */}
-          <div className="ml-auto flex items-center gap-2">
-            {links.length > 0 && (
-              <button
-                onClick={exportCSV}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs text-text-muted hover:text-text-secondary border border-border/30 transition-colors"
-                title="Export visible flows to CSV"
-              >
-                <Download className="h-3.5 w-3.5" aria-hidden="true" />
-                CSV
-              </button>
-            )}
-            <div className="flex items-center gap-1 rounded-md border border-border/30 p-0.5 bg-background/40">
-              <button
-                onClick={() => setViewMode('diagram')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-all ${
-                  viewMode === 'diagram'
-                    ? 'bg-accent/20 text-accent'
-                    : 'text-text-muted hover:text-text-secondary'
-                }`}
-                aria-pressed={viewMode === 'diagram'}
-              >
-                <BarChart2 className="h-3.5 w-3.5" aria-hidden="true" />
-                Diagram
-              </button>
-              <button
-                onClick={() => setViewMode('table')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-all ${
-                  viewMode === 'table'
-                    ? 'bg-accent/20 text-accent'
-                    : 'text-text-muted hover:text-text-secondary'
-                }`}
-                aria-pressed={viewMode === 'table'}
-              >
-                <List className="h-3.5 w-3.5" aria-hidden="true" />
-                Table
-              </button>
-            </div>
-          </div>
         </div>
 
         {totalValue > 0 && (
@@ -788,6 +813,10 @@ export default function MoneyFlow() {
               : <Users className="h-5 w-5 text-cyan-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
             }
             <div className="flex-1 min-w-0">
+              {/* Entity type label */}
+              <p className="text-[10px] font-mono uppercase tracking-wider text-cyan-400/70 mb-1">
+                {selectedNode.type === 'institution' ? 'Government Institution' : 'Vendor'}
+              </p>
               {selectedNode.type === 'institution' && (() => {
                 const grp = getInstitutionGroup(fullNames.get(selectedNode.id) ?? selectedNode.name)
                 if (!grp?.logo) return null

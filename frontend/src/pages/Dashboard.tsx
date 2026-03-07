@@ -46,6 +46,7 @@ import {
   ReferenceLine,
   ReferenceArea,
   Treemap,
+  LabelList,
 } from '@/components/charts'
 import { RISK_COLORS, SECTOR_COLORS, SECTORS, getSectorNameEN, CURRENT_MODEL_VERSION } from '@/lib/constants'
 import { GlobalSearch } from '@/components/GlobalSearch'
@@ -1178,90 +1179,68 @@ export function Dashboard() {
               <ChartDownloadButton targetRef={sectorTreemapRef} filename="rubli-sector-spend" />
             </div>
           </div>
-          <div ref={sectorTreemapRef} style={{ height: 380 }} className="mt-3">
-              <ResponsiveContainer width="100%" height="100%">
-                <Treemap
-                  data={sectorData.map((s) => ({
-                    name: s.name,
-                    size: s.totalValue,
-                    riskPct: s.riskPct,
-                    code: s.code,
-                    id: s.id,
-                  }))}
-                  dataKey="size"
-                  aspectRatio={4 / 3}
-                  content={({ x, y, width, height, name, code, riskPct }: {
-                    x?: number; y?: number; width?: number; height?: number;
-                    name?: string; code?: string; riskPct?: number
-                  }) => {
-                    const w = width ?? 0
-                    const h = height ?? 0
-                    if (w < 30 || h < 20) return <g />
-                    const fill = treemapViewMode === 'risk'
-                      ? riskHeatColor((riskPct ?? 0) / 100)
-                      : (SECTOR_COLORS[code ?? ''] ?? '#64748b')
-                    const cx = (x ?? 0) + w / 2
-                    const cy = (y ?? 0) + h / 2
-                    const showLabel = w > 60 && h > 30
-                    const showRisk  = w > 60 && h > 48
-                    const labelSize = Math.min(12, Math.max(9, w / 7))
-                    const labelY    = showRisk ? cy - 9 : cy
-                    return (
-                      <g>
-                        <rect
-                          x={x} y={y} width={w} height={h}
-                          style={{ fill, fillOpacity: 0.85, stroke: 'var(--color-background)', strokeWidth: 2 }}
-                        />
-                        {showLabel && (
-                          <>
-                            <rect
-                              x={cx - Math.min(labelSize * (name?.length ?? 0) * 0.32, w / 2 - 4)}
-                              y={labelY - labelSize / 2 - 2}
-                              width={Math.min(labelSize * (name?.length ?? 0) * 0.64, w - 8)}
-                              height={labelSize + 4}
-                              rx={2}
-                              style={{ fill: 'rgba(0,0,0,0.65)' }}
-                            />
-                            <text
-                              x={cx}
-                              y={labelY}
-                              textAnchor="middle"
-                              dominantBaseline="middle"
-                              style={{ fill: '#fff', fontSize: labelSize, fontWeight: 700, fontFamily: 'var(--font-mono)' }}
-                            >
-                              {name}
-                            </text>
-                          </>
-                        )}
-                        {showRisk && (
-                          <>
-                            <rect
-                              x={cx - 34} y={cy + 2}
-                              width={68} height={13}
-                              rx={2}
-                              style={{ fill: 'rgba(0,0,0,0.65)' }}
-                            />
-                            <text
-                              x={cx}
-                              y={cy + 9}
-                              textAnchor="middle"
-                              dominantBaseline="middle"
-                              style={{ fill: '#fff', fontSize: 9, fontFamily: 'var(--font-mono)', fontWeight: 600 }}
-                            >
-                              {(riskPct ?? 0).toFixed(1)}% high-risk
-                            </text>
-                          </>
-                        )}
-                      </g>
-                    )
-                  }}
-                  onClick={(node: any) => {
-                    if (node?.id) navigate(`/sectors/${node.id}`)
-                  }}
-                  style={{ cursor: 'pointer' }}
+          <div ref={sectorTreemapRef} style={{ height: 320 }} className="mt-3">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                layout="vertical"
+                data={[...sectorData].sort((a, b) => b.totalValue - a.totalValue).map((s) => ({
+                  name: s.name,
+                  size: s.totalValue,
+                  riskPct: s.riskPct,
+                  code: s.code,
+                  id: s.id,
+                }))}
+                margin={{ top: 0, right: 120, left: 0, bottom: 0 }}
+                onClick={(data: any) => {
+                  const id = data?.activePayload?.[0]?.payload?.id
+                  if (id) navigate(`/sectors/${id}`)
+                }}
+                style={{ cursor: 'pointer' }}
+              >
+                <XAxis type="number" hide />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  width={90}
+                  tick={{ fontSize: 11, fill: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)' }}
+                  axisLine={false}
+                  tickLine={false}
                 />
-              </ResponsiveContainer>
-            </div>
+                <Bar dataKey="size" radius={[0, 3, 3, 0]} isAnimationActive={false}>
+                  {[...sectorData].sort((a, b) => b.totalValue - a.totalValue).map((s) => (
+                    <Cell
+                      key={s.code}
+                      fill={
+                        treemapViewMode === 'risk'
+                          ? riskHeatColor(s.riskPct / 100)
+                          : (SECTOR_COLORS[s.code] ?? '#64748b')
+                      }
+                      fillOpacity={0.85}
+                    />
+                  ))}
+                  <LabelList
+                    dataKey="size"
+                    position="right"
+                    formatter={(v: number) => formatCompactMXN(v)}
+                    style={{ fontSize: 10, fontFamily: 'var(--font-mono)', fill: 'var(--color-text-muted)' }}
+                  />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 px-1">
+            {[...sectorData].sort((a, b) => b.totalValue - a.totalValue).map((s) => {
+              const riskColor =
+                s.riskPct >= 30 ? 'text-risk-critical' :
+                s.riskPct >= 10 ? 'text-risk-high' :
+                'text-risk-medium'
+              return (
+                <span key={s.code} className={`text-[10px] font-mono ${riskColor}`}>
+                  {s.name} {s.riskPct.toFixed(1)}%
+                </span>
+              )
+            })}
+          </div>
           <p className="text-xs text-text-muted italic mt-2 px-1">
             Energia and Infraestructura together represent over half of total procurement value — their concentration makes them the highest-priority sectors for investigation.
           </p>
@@ -1578,47 +1557,56 @@ export function Dashboard() {
             </button>
           </div>
           {execLoading ? (
-            <div className="flex flex-wrap gap-1.5">
-              {[...Array(10)].map((_, i) => <Skeleton key={i} className="h-6 w-32 rounded-full" />)}
+            <div className="space-y-1.5">
+              {[...Array(8)].map((_, i) => <Skeleton key={i} className="h-6" />)}
             </div>
           ) : (
-            <div className="flex flex-wrap gap-1.5">
-              {[...corruptionCases]
-                .filter(c => c.contracts >= 10)
-                .sort((a, b) => b.high_plus_pct - a.high_plus_pct)
-                .slice(0, 12)
-                .map(c => {
-                  const pct = c.high_plus_pct
-                  const bg =
-                    pct >= 90 ? 'rgba(74,222,128,0.12)' :
-                    pct >= 50 ? 'rgba(251,191,36,0.12)' :
-                    'rgba(248,113,113,0.12)'
-                  const border =
-                    pct >= 90 ? 'rgba(74,222,128,0.35)' :
-                    pct >= 50 ? 'rgba(251,191,36,0.35)' :
-                    'rgba(248,113,113,0.35)'
-                  const textColor =
-                    pct >= 90 ? '#4ade80' :
-                    pct >= 50 ? '#fbbf24' :
-                    '#f87171'
-                  return (
-                    <div
-                      key={c.name}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border"
-                      style={{ backgroundColor: bg, borderColor: border }}
-                      title={`${c.name}: ${pct.toFixed(0)}% detected (${formatNumber(c.contracts)} contracts, avg ${c.avg_score.toFixed(2)})`}
-                    >
-                      <span className="text-text-secondary truncate max-w-[140px]">{c.name}</span>
-                      <span className="font-black font-mono tabular-nums shrink-0" style={{ color: textColor }}>
-                        {pct.toFixed(0)}%
-                      </span>
-                    </div>
-                  )
-                })}
+            <div>
+              <div className="flex items-center gap-2 mb-1.5 px-1">
+                <span className="text-[10px] font-mono text-text-muted flex-1">Case</span>
+                <span className="text-[10px] font-mono text-text-muted w-[120px]">Detection rate (high+)</span>
+                <span className="text-[10px] font-mono text-text-muted w-10 text-right">%</span>
+              </div>
+              <div className="space-y-1">
+                {[...corruptionCases]
+                  .filter(c => c.contracts >= 10)
+                  .sort((a, b) => b.high_plus_pct - a.high_plus_pct)
+                  .slice(0, 10)
+                  .map(c => {
+                    const pct = c.high_plus_pct
+                    const barColor =
+                      pct >= 90 ? '#4ade80' :
+                      pct >= 50 ? '#fbbf24' :
+                      '#f87171'
+                    const textColor =
+                      pct >= 90 ? 'text-green-400' :
+                      pct >= 50 ? 'text-amber-400' :
+                      'text-red-400'
+                    const truncatedName = c.name.length > 28 ? c.name.slice(0, 28) + '…' : c.name
+                    return (
+                      <div
+                        key={c.name}
+                        className="flex items-center gap-2 px-1 py-0.5 rounded hover:bg-background-elevated/20 transition-colors"
+                        title={`${c.name}: ${pct.toFixed(0)}% detected (${formatNumber(c.contracts)} contracts, avg score ${c.avg_score.toFixed(2)})`}
+                      >
+                        <span className="text-[11px] text-text-secondary flex-1 truncate font-mono">{truncatedName}</span>
+                        <div className="w-[120px] h-1.5 rounded-full bg-background-elevated/50 overflow-hidden shrink-0">
+                          <div
+                            className="h-full rounded-full"
+                            style={{ width: `${Math.min(pct, 100)}%`, backgroundColor: barColor, opacity: 0.8 }}
+                          />
+                        </div>
+                        <span className={cn('text-[11px] font-black font-mono tabular-nums w-10 text-right shrink-0', textColor)}>
+                          {pct.toFixed(0)}%
+                        </span>
+                      </div>
+                    )
+                  })}
+              </div>
             </div>
           )}
           <p className="text-[10px] text-text-muted mt-2">
-            High+ detection rate per documented case · hover for details ·{' '}
+            High+ detection rate per documented case ·{' '}
             <button onClick={() => navigate('/executive-summary')} className="underline">full breakdown →</button>
           </p>
         </CardContent>

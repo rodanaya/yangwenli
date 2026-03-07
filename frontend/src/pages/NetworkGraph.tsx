@@ -10,7 +10,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import ReactECharts from 'echarts-for-react'
-import { Network, Search, X, ExternalLink, Users, UserCircle, RotateCcw, ChevronDown, ChevronUp, ZoomIn, ZoomOut, AlertTriangle, Info, Eye, Layers, FileText } from 'lucide-react'
+import { Network, Search, X, ExternalLink, Users, UserCircle, RotateCcw, ChevronDown, ChevronUp, ZoomIn, ZoomOut, AlertTriangle, Info, Eye, Layers, FileText, List, GitBranch } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { RiskBadge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -622,6 +622,179 @@ function ExampleChip({
 }
 
 // ---------------------------------------------------------------------------
+// TopConnectionsTable — ranked list of institution→vendor flows
+// ---------------------------------------------------------------------------
+
+function TopConnectionsTable({
+  graphData,
+  nodes,
+  links,
+  onOpenEntity,
+}: {
+  graphData: { nodes: NetworkNode[]; links: NetworkLink[] }
+  nodes: NetworkNode[]
+  links: NetworkLink[]
+  onOpenEntity: (id: number, type: 'vendor' | 'institution') => void
+}) {
+  const [listSearch, setListSearch] = useState('')
+
+  const nodeMap = useMemo(() => {
+    const m = new Map<string, NetworkNode>()
+    nodes.forEach((n) => m.set(n.id, n))
+    return m
+  }, [nodes])
+
+  const sortedLinks = useMemo(() => {
+    return [...links].sort((a, b) => b.value - a.value)
+  }, [links])
+
+  const filteredLinks = useMemo(() => {
+    if (!listSearch.trim()) return sortedLinks.slice(0, 50)
+    const q = listSearch.toLowerCase()
+    return sortedLinks
+      .filter((l) => {
+        const src = nodeMap.get(l.source)
+        const tgt = nodeMap.get(l.target)
+        return (
+          src?.name.toLowerCase().includes(q) ||
+          tgt?.name.toLowerCase().includes(q)
+        )
+      })
+      .slice(0, 50)
+  }, [sortedLinks, listSearch, nodeMap])
+
+  if (graphData.links.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center gap-2">
+        <GitBranch className="h-8 w-8 text-text-muted/30" />
+        <p className="text-sm text-text-muted">No connections to display.</p>
+        <p className="text-xs text-text-muted/60">Search for a vendor or institution above to load its network.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* Search within list */}
+      <div className="relative">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted pointer-events-none" />
+        <input
+          type="text"
+          placeholder="Filter connections by name…"
+          value={listSearch}
+          onChange={(e) => setListSearch(e.target.value)}
+          className="w-full h-8 pl-8 pr-8 text-xs rounded border border-border bg-background-card focus:outline-none focus:ring-1 focus:ring-accent"
+          aria-label="Filter connections"
+        />
+        {listSearch && (
+          <button
+            onClick={() => setListSearch('')}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
+            aria-label="Clear filter"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        )}
+      </div>
+
+      <div className="text-[10px] text-text-muted/60">
+        Showing top {filteredLinks.length} of {graphData.links.length} connections · sorted by total value
+      </div>
+
+      {/* Table */}
+      <div className="rounded border border-border/40 overflow-hidden">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="bg-background-elevated/40 text-[10px] text-text-muted uppercase tracking-wider">
+              <th className="text-right px-3 py-2 w-8">#</th>
+              <th className="text-left px-3 py-2">Institution</th>
+              <th className="w-6" />
+              <th className="text-left px-3 py-2">Vendor</th>
+              <th className="text-right px-3 py-2">Total value</th>
+              <th className="text-right px-3 py-2">Contracts</th>
+              <th className="text-right px-3 py-2 pr-4">Avg risk</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/20">
+            {filteredLinks.map((link, i) => {
+              const src = nodeMap.get(link.source)
+              const tgt = nodeMap.get(link.target)
+              // Determine which is institution and which is vendor
+              const inst = src?.type === 'institution' ? src : tgt?.type === 'institution' ? tgt : src
+              const vendor = src?.type === 'vendor' ? src : tgt?.type === 'vendor' ? tgt : tgt
+
+              const instId = inst ? parseInt(inst.id.slice(2), 10) : null
+              const vendorId = vendor ? parseInt(vendor.id.slice(2), 10) : null
+
+              const avgRisk = link.avg_risk ?? null
+              const riskLevel = avgRisk != null ? getRiskLevelFromScore(avgRisk) : null
+              const riskColor = riskLevel ? RISK_COLORS[riskLevel] : '#64748b'
+
+              return (
+                <tr
+                  key={`${link.source}|${link.target}`}
+                  className="hover:bg-background-elevated/20 transition-colors"
+                >
+                  <td className="text-right px-3 py-2 text-text-muted/50 font-mono tabular-nums">{i + 1}</td>
+                  <td className="px-3 py-2 max-w-[180px]">
+                    {inst && instId != null ? (
+                      <button
+                        onClick={() => onOpenEntity(instId, 'institution')}
+                        className="text-left text-blue-400 hover:text-blue-300 hover:underline truncate block w-full"
+                        title={inst.name}
+                      >
+                        {toTitleCase(inst.name)}
+                      </button>
+                    ) : (
+                      <span className="text-text-muted truncate block">{inst?.name ?? '—'}</span>
+                    )}
+                  </td>
+                  <td className="text-text-muted/30 text-center">→</td>
+                  <td className="px-3 py-2 max-w-[200px]">
+                    {vendor && vendorId != null ? (
+                      <button
+                        onClick={() => onOpenEntity(vendorId, 'vendor')}
+                        className="text-left text-accent hover:text-accent/80 hover:underline truncate block w-full"
+                        title={vendor.name}
+                      >
+                        {toTitleCase(vendor.name)}
+                      </button>
+                    ) : (
+                      <span className="text-text-muted truncate block">{vendor?.name ?? '—'}</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-right font-mono tabular-nums text-text-primary whitespace-nowrap">
+                    {formatCompactMXN(link.value)}
+                  </td>
+                  <td className="px-3 py-2 text-right font-mono tabular-nums text-text-secondary">
+                    {formatNumber(link.contracts)}
+                  </td>
+                  <td className="px-3 py-2 pr-4 text-right">
+                    {avgRisk != null ? (
+                      <span
+                        className="inline-block font-mono text-[10px] px-1.5 py-0.5 rounded tabular-nums"
+                        style={{
+                          color: riskColor,
+                          backgroundColor: `${riskColor}20`,
+                        }}
+                      >
+                        {(avgRisk * 100).toFixed(0)}%
+                      </span>
+                    ) : (
+                      <span className="text-text-muted/40">—</span>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // CommunitySidePanel — slide-out left panel listing Louvain communities
 // ---------------------------------------------------------------------------
 
@@ -923,6 +1096,8 @@ interface CenterEntity {
 
 export function NetworkGraph() {
   const { t } = useTranslation('network')
+  const { open: openEntityDrawer } = useEntityDrawer()
+  const [mainTab, setMainTab] = useState<'graph' | 'list'>('list')
   const [filters, setFilters] = useState<GraphFilters>(DEFAULT_FILTERS)
   const [centerEntity, setCenterEntity] = useState<CenterEntity | null>(null)
   const [selectedNode, setSelectedNode] = useState<NetworkNode | null>(null)
@@ -1153,13 +1328,16 @@ export function NetworkGraph() {
       backgroundColor: 'transparent',
       tooltip: {
         trigger: 'item',
-        backgroundColor: 'var(--color-background)',
-        borderColor: 'var(--color-border)',
-        textStyle: { color: 'var(--color-text-primary)', fontSize: 12 },
+        backgroundColor: '#1a1f2e',
+        borderColor: '#2d3748',
+        padding: [10, 14],
+        textStyle: { color: '#e2e8f0', fontSize: 12 },
+        extraCssText: 'border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);',
         formatter: (params: {
           dataType: string
           data: {
             name: string
+            node_type?: string
             contracts?: number
             value?: number
             avg_risk?: number
@@ -1167,14 +1345,38 @@ export function NetworkGraph() {
           }
         }) => {
           if (params.dataType === 'node') {
-            const { name, contracts, value, risk_score } = params.data
-            const riskPct = risk_score != null ? ` • Risk: ${(risk_score * 100).toFixed(0)}%` : ''
-            return `<strong>${name}</strong><br/>${formatNumber(contracts ?? 0)} contracts<br/>${formatCompactMXN(value ?? 0)}${riskPct}`
+            const { name, node_type, contracts, value, risk_score } = params.data
+            const typeLabel = node_type === 'institution' ? 'Institution' : 'Vendor'
+            const typeColor = node_type === 'institution' ? '#60a5fa' : '#a78bfa'
+            const riskLevel = risk_score != null ? getRiskLevelFromScore(risk_score) : null
+            const riskColor = riskLevel ? RISK_COLORS[riskLevel] : '#94a3b8'
+            const riskBadge = risk_score != null
+              ? `<span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:600;color:${riskColor};background:${riskColor}22;margin-left:4px;">${(risk_score * 100).toFixed(0)}%</span>`
+              : ''
+            return [
+              `<div style="font-weight:700;font-size:13px;margin-bottom:4px;color:#f1f5f9;">${toTitleCase(name)}</div>`,
+              `<div style="margin-bottom:6px;"><span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:${typeColor};background:${typeColor}22;padding:2px 6px;border-radius:4px;">${typeLabel}</span>${riskBadge}</div>`,
+              `<div style="display:flex;flex-direction:column;gap:2px;font-size:11px;color:#94a3b8;">`,
+              `<div><span style="color:#64748b;min-width:80px;display:inline-block;">Value:</span> <span style="color:#e2e8f0;font-weight:600;">${formatCompactMXN(value ?? 0)}</span></div>`,
+              `<div><span style="color:#64748b;min-width:80px;display:inline-block;">Contracts:</span> <span style="color:#e2e8f0;">${formatNumber(contracts ?? 0)}</span></div>`,
+              `</div>`,
+            ].join('')
           }
           if (params.dataType === 'edge') {
             const { contracts, value, avg_risk } = params.data
-            const riskPct = avg_risk != null ? ` • Avg risk: ${(avg_risk * 100).toFixed(0)}%` : ''
-            return `${formatNumber(contracts ?? 0)} contracts<br/>${formatCompactMXN(value ?? 0)}${riskPct}`
+            const riskLevel = avg_risk != null ? getRiskLevelFromScore(avg_risk) : null
+            const riskColor = riskLevel ? RISK_COLORS[riskLevel] : '#94a3b8'
+            const riskRow = avg_risk != null
+              ? `<div><span style="color:#64748b;min-width:80px;display:inline-block;">Avg risk:</span> <span style="color:${riskColor};font-weight:600;">${(avg_risk * 100).toFixed(0)}%</span></div>`
+              : ''
+            return [
+              `<div style="font-weight:600;font-size:12px;color:#94a3b8;margin-bottom:4px;">Connection</div>`,
+              `<div style="display:flex;flex-direction:column;gap:2px;font-size:11px;color:#94a3b8;">`,
+              `<div><span style="color:#64748b;min-width:80px;display:inline-block;">Total value:</span> <span style="color:#e2e8f0;font-weight:600;">${formatCompactMXN(value ?? 0)}</span></div>`,
+              `<div><span style="color:#64748b;min-width:80px;display:inline-block;">Contracts:</span> <span style="color:#e2e8f0;">${formatNumber(contracts ?? 0)}</span></div>`,
+              riskRow,
+              `</div>`,
+            ].join('')
           }
           return ''
         },
@@ -1439,8 +1641,16 @@ export function NetworkGraph() {
       </div>
 
       <ScrollReveal direction="fade">
+      <details open className="rounded border border-border/30 bg-background-elevated/10">
+        <summary className="flex items-center gap-2 px-3 py-2 cursor-pointer select-none text-xs font-medium text-text-muted hover:text-text-primary transition-colors list-none">
+          <ChevronDown className="h-3.5 w-3.5 transition-transform [details[open]_&]:rotate-0 [-rotate-90]" />
+          Filters
+        </summary>
+        <div className="px-3 pb-3 flex flex-wrap items-center gap-3 border-t border-border/20 pt-3">
+          <FiltersBar filters={filters} onChange={patchFilters} onReset={resetFilters} />
+        </div>
+      </details>
       <div className="flex items-center gap-3">
-        <FiltersBar filters={filters} onChange={patchFilters} onReset={resetFilters} />
         {/* Color mode toggle */}
         <div className="flex items-center gap-1 rounded border border-border bg-background-elevated text-xs shrink-0">
           <button
@@ -1561,8 +1771,76 @@ export function NetworkGraph() {
         </div>
       )}
 
+      {/* Main content tabs */}
+      <div className="flex border-b border-border/40 mb-0">
+        <button
+          onClick={() => setMainTab('list')}
+          className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            mainTab === 'list'
+              ? 'border-accent text-accent'
+              : 'border-transparent text-text-muted hover:text-text-secondary'
+          }`}
+          aria-selected={mainTab === 'list'}
+          role="tab"
+        >
+          <List className="h-3.5 w-3.5" />
+          Top Connections
+        </button>
+        <button
+          onClick={() => setMainTab('graph')}
+          className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            mainTab === 'graph'
+              ? 'border-accent text-accent'
+              : 'border-transparent text-text-muted hover:text-text-secondary'
+          }`}
+          aria-selected={mainTab === 'graph'}
+          role="tab"
+        >
+          <Network className="h-3.5 w-3.5" />
+          Graph View
+        </button>
+      </div>
+
+      {/* Top Connections list tab */}
+      {mainTab === 'list' && (
+        <div className="rounded-md border border-border/40 bg-background-card p-4">
+          {!centerEntity ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
+              <div className="flex items-center justify-center h-14 w-14 rounded-full bg-accent/10 border border-accent/20">
+                <List className="h-7 w-7 text-accent opacity-70" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-text-primary">Search for a vendor or institution</p>
+                <p className="text-xs text-text-muted mt-1">Use the search bar above to load connections.</p>
+              </div>
+            </div>
+          ) : isLoading ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <Network className="h-8 w-8 text-accent animate-pulse" />
+              <p className="text-sm text-text-muted">Loading connections…</p>
+            </div>
+          ) : graphData ? (
+            <TopConnectionsTable
+              graphData={graphData}
+              nodes={graphData.nodes as NetworkNode[]}
+              links={graphData.links as NetworkLink[]}
+              onOpenEntity={(id, type) => openEntityDrawer(id, type)}
+            />
+          ) : null}
+        </div>
+      )}
+
       {/* Main content: communities panel (left) + graph + side panel (right) */}
-      <div className="flex border border-border rounded-md overflow-hidden" style={{ height: 'calc(100vh - 220px)', minHeight: '500px' }}>
+      <div
+        className="flex border border-border rounded-md overflow-hidden"
+        style={{
+          height: mainTab === 'graph' ? 'calc(100vh - 220px)' : '0',
+          minHeight: mainTab === 'graph' ? '500px' : '0',
+          overflow: mainTab === 'graph' ? 'hidden' : 'hidden',
+          visibility: mainTab === 'graph' ? 'visible' : 'hidden',
+          borderWidth: mainTab === 'graph' ? undefined : '0',
+        }}
+      >
 
         {/* Left: Communities sidebar — slides in from left */}
         <div
@@ -1650,14 +1928,18 @@ export function NetworkGraph() {
           )}
 
           {isEmpty && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background-card">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background-card px-6 text-center">
               <Network className="h-10 w-10 opacity-30" />
-              <p className="text-sm text-text-muted">{t('noConnections')}</p>
+              <p className="text-sm text-text-muted">No connections found.</p>
+              <p className="text-xs text-text-muted/70 max-w-xs">
+                Try adjusting your filters — reduce the minimum contracts threshold or select a different sector.
+              </p>
               <button
                 onClick={resetFilters}
-                className="text-xs text-accent hover:underline"
+                className="mt-1 text-xs text-accent hover:underline flex items-center gap-1"
               >
-                {t('resetFilters')}
+                <RotateCcw className="h-3 w-3" />
+                Reset all filters
               </button>
             </div>
           )}

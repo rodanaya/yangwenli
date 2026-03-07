@@ -23,7 +23,8 @@ import {
   CartesianGrid,
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
-  Treemap,
+  BarChart,
+  Bar,
   LineChart,
   Line,
   Legend,
@@ -32,6 +33,7 @@ import {
   ZAxis,
   ReferenceLine,
   Cell,
+  LabelList,
 } from '@/components/charts'
 import {
   ShoppingCart,
@@ -108,15 +110,6 @@ function getRiskLabel(score: number): string {
   if (score >= 0.3) return 'High'
   if (score >= 0.1) return 'Medium'
   return 'Low'
-}
-
-function getTextColor(bgColor: string): string {
-  const hex = bgColor.replace('#', '')
-  const r = parseInt(hex.substring(0, 2), 16)
-  const g = parseInt(hex.substring(2, 4), 16)
-  const b = parseInt(hex.substring(4, 6), 16)
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
-  return luminance > 0.5 ? '#1a1f2e' : '#e2e8f0'
 }
 
 function SortIndicator({ field, sortField, sortDir }: { field: SortField; sortField: SortField; sortDir: SortDir }) {
@@ -413,48 +406,7 @@ const SECTOR_OPTIONS = [
   { code: 'otros', label: 'Other' },
 ]
 
-// =============================================================================
-// Treemap content component
-// =============================================================================
-
-function TreemapContent(props: {
-  x: number; y: number; width: number; height: number;
-  name: string; value: number; depth: number; fill: string;
-}) {
-  const { x, y, width, height, name, value, depth, fill } = props
-  if (depth !== 1 || width < 50 || height < 30) return null
-  const textFill = getTextColor(fill)
-  return (
-    <g>
-      <rect x={x} y={y} width={width} height={height} fill={fill} stroke="var(--color-background)" strokeWidth={2} rx={3} />
-      <text
-        x={x + width / 2}
-        y={y + height / 2 - (height > 50 ? 6 : 0)}
-        textAnchor="middle"
-        dominantBaseline="central"
-        fill={textFill}
-        fontSize={width > 120 ? 12 : 10}
-        fontWeight="bold"
-        style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
-      >
-        {truncate(name, width > 120 ? 24 : 14)}
-      </text>
-      {height > 50 && (
-        <text
-          x={x + width / 2}
-          y={y + height / 2 + 14}
-          textAnchor="middle"
-          dominantBaseline="central"
-          fill={textFill}
-          fontSize={10}
-          opacity={0.8}
-        >
-          {formatCompactMXN(value)}
-        </text>
-      )}
-    </g>
-  )
-}
+// (TreemapContent removed — replaced by horizontal BarChart)
 
 // =============================================================================
 // Sector aggregation (for "by sector" view)
@@ -1714,7 +1666,7 @@ export default function SpendingCategories() {
 
       {/* Section 3: Charts */}
       <div className="space-y-5">
-          {/* Treemap */}
+          {/* Top Categories — Horizontal Bar Chart */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2">
@@ -1722,7 +1674,7 @@ export default function SpendingCategories() {
                 {t('treemap.title')}
               </CardTitle>
               <CardDescription>
-                {t('treemap.description')}
+                Top 30 spending categories by total value. Color = sector. Click a bar to drill down.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -1742,22 +1694,76 @@ export default function SpendingCategories() {
                 </div>
               )}
               {summaryLoading ? (
-                <ChartSkeleton height={380} />
+                <ChartSkeleton height={500} />
               ) : treemapData.length > 0 ? (
-                <div style={{ height: 380 }}>
+                <div style={{ height: Math.max(380, treemapData.length * 22 + 60) }}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <Treemap
+                    <BarChart
+                      layout="vertical"
                       data={treemapData}
-                      dataKey="value"
-                      nameKey="name"
-                      onClick={(data: any) => {
-                        if (data.category_id != null) {
-                          setSelectedCategoryId((prev: number | null) => prev === data.category_id ? null : data.category_id!)
+                      margin={{ top: 4, right: 120, bottom: 4, left: 8 }}
+                      onClick={(chartData: { activePayload?: Array<{ payload: { category_id?: number } }> } | null) => {
+                        const cid = chartData?.activePayload?.[0]?.payload?.category_id
+                        if (cid != null) {
+                          setSelectedCategoryId((prev: number | null) => prev === cid ? null : cid)
                         }
                       }}
                       style={{ cursor: 'pointer' }}
-                      content={<TreemapContent x={0} y={0} width={0} height={0} name="" value={0} depth={0} fill="" />}
-                    />
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
+                      <XAxis
+                        type="number"
+                        dataKey="value"
+                        tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
+                        tickFormatter={(v: number) => formatCompactMXN(v)}
+                        axisLine={{ stroke: 'var(--color-border)' }}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        type="category"
+                        dataKey="name"
+                        width={200}
+                        tick={{ fill: 'var(--color-text-secondary)', fontSize: 10 }}
+                        tickFormatter={(v: string) => v.length > 28 ? v.slice(0, 27) + '…' : v}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <RechartsTooltip
+                        content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null
+                          const d = payload[0].payload as { name: string; value: number; fill: string; category_id: number }
+                          return (
+                            <div
+                              className="rounded-lg border p-3 text-xs font-mono shadow-lg"
+                              style={{ backgroundColor: '#0d1117', borderColor: 'rgba(255,255,255,0.08)' }}
+                            >
+                              <p className="font-bold text-text-primary mb-1 max-w-[220px] whitespace-normal">{d.name}</p>
+                              <p className="text-text-secondary">{formatCompactMXN(d.value)}</p>
+                              {selectedCategoryId === d.category_id && (
+                                <p className="text-amber-400 mt-1">Selected — click to deselect</p>
+                              )}
+                            </div>
+                          )
+                        }}
+                      />
+                      <Bar dataKey="value" radius={[0, 3, 3, 0]} maxBarSize={18}>
+                        {treemapData.map((entry, index) => (
+                          <Cell
+                            key={`bar-cell-${index}`}
+                            fill={entry.fill}
+                            fillOpacity={selectedCategoryId === null || selectedCategoryId === entry.category_id ? 0.85 : 0.35}
+                            stroke={selectedCategoryId === entry.category_id ? '#f59e0b' : 'transparent'}
+                            strokeWidth={selectedCategoryId === entry.category_id ? 1.5 : 0}
+                          />
+                        ))}
+                        <LabelList
+                          dataKey="value"
+                          position="right"
+                          formatter={(v: number) => formatCompactMXN(v)}
+                          style={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
+                        />
+                      </Bar>
+                    </BarChart>
                   </ResponsiveContainer>
                 </div>
               ) : (
@@ -1821,33 +1827,42 @@ export default function SpendingCategories() {
               ) : trendChartData.years.length > 0 ? (
                 <div style={{ height: 320 }} ref={trendChartRef}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart margin={{ top: 10, right: 30, bottom: 0, left: 10 }}>
+                    <LineChart margin={{ top: 10, right: 30, bottom: 20, left: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
                       <XAxis
                         dataKey="year"
                         type="number"
                         domain={[trendChartData.years[0], trendChartData.years[trendChartData.years.length - 1]]}
                         ticks={trendChartData.years}
-                        tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                        tick={{ fill: 'var(--color-text-muted)', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
                         axisLine={{ stroke: 'var(--color-border)' }}
                         tickLine={false}
+                        interval={trendChartData.years.length > 10 ? 2 : 0}
                       />
                       <YAxis
-                        tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                        tick={{ fill: 'var(--color-text-muted)', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
                         axisLine={{ stroke: 'var(--color-border)' }}
                         tickLine={false}
                         tickFormatter={(v: number) => formatCompactMXN(v)}
+                        width={72}
                       />
                       <RechartsTooltip
                         content={({ active, payload, label }) => {
                           if (!active || !payload?.length) return null
                           return (
-                            <div className="chart-tooltip">
-                              <p className="font-medium text-xs text-text-primary mb-1">{label}</p>
+                            <div
+                              className="rounded-lg border p-3 text-xs font-mono shadow-lg space-y-1.5"
+                              style={{ backgroundColor: '#0d1117', borderColor: 'rgba(255,255,255,0.08)' }}
+                            >
+                              <p className="font-bold text-text-primary text-[11px]">{label}</p>
                               {payload.map((p, i) => (
-                                <p key={i} className="text-xs tabular-nums" style={{ color: p.color }}>
-                                  {p.name}: {formatCompactMXN(p.value as number)}
-                                </p>
+                                <div key={i} className="flex items-center gap-2">
+                                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.color ?? '#888' }} />
+                                  <span className="text-text-muted/80 truncate max-w-[180px]">{truncate(String(p.name), 30)}</span>
+                                  <span className="ml-auto font-semibold tabular-nums" style={{ color: p.color ?? '#e2e8f0' }}>
+                                    {formatCompactMXN(p.value as number)}
+                                  </span>
+                                </div>
                               ))}
                             </div>
                           )
@@ -1855,9 +1870,12 @@ export default function SpendingCategories() {
                       />
                       <Legend
                         verticalAlign="bottom"
-                        height={36}
+                        height={48}
+                        wrapperStyle={{ paddingTop: 8 }}
                         formatter={(value: string) => (
-                          <span className="text-xs text-text-muted">{truncate(value, 30)}</span>
+                          <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                            {truncate(value, 28)}
+                          </span>
                         )}
                       />
                       {trendChartData.series.map((series, idx) => (
@@ -1868,9 +1886,10 @@ export default function SpendingCategories() {
                           dataKey="value"
                           name={series.name}
                           stroke={TREND_COLORS[idx % TREND_COLORS.length]}
-                          strokeWidth={2}
-                          dot={{ r: 3 }}
-                          activeDot={{ r: 5 }}
+                          strokeWidth={2.5}
+                          dot={{ r: 3, fill: TREND_COLORS[idx % TREND_COLORS.length], strokeWidth: 0 }}
+                          activeDot={{ r: 5, strokeWidth: 2, stroke: '#0d1117' }}
+                          connectNulls={false}
                         />
                       ))}
                     </LineChart>

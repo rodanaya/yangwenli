@@ -1062,25 +1062,149 @@ export function Sectors() {
           <CardContent>
             {isLoading ? (
               <Skeleton className="h-[450px]" />
-            ) : (
-              <Heatmap
-                data={sectorHeatmapData.data}
-                rows={sectorHeatmapData.rows}
-                columns={sectorHeatmapData.columns}
-                height={450}
-                colorRange={['#1e3a8a', '#4b5563', '#dc2626']}
-                valueFormatter={(v, row, col) => {
-                  const cell = sectorHeatmapData.data.find((d) => d.row === row && d.col === col)
-                  const rawValue = (cell as { rawValue?: number })?.rawValue ?? v
-                  if (col === 'Avg Risk') return `${(rawValue * 100).toFixed(1)}%`
-                  return `${rawValue.toFixed(1)}%`
-                }}
-                onCellClick={(row) => handleSectorClick(row)}
-              />
-            )}
+            ) : (() => {
+                // Shorten column labels so x-axis text doesn't overlap bar fills
+                const colAbbrevMap: Record<string, string> = {
+                  'Direct Award %': 'DA %',
+                  'Single Bid %': 'SB %',
+                  'High Risk %': 'HR %',
+                  'Avg Risk': 'Avg Risk',
+                }
+                const shortCols = sectorHeatmapData.columns.map((c) => colAbbrevMap[c] ?? c)
+                const shortData = sectorHeatmapData.data.map((d) => ({
+                  ...d,
+                  col: colAbbrevMap[d.col] ?? d.col,
+                }))
+                return (
+                  <Heatmap
+                    data={shortData}
+                    rows={sectorHeatmapData.rows}
+                    columns={shortCols}
+                    height={450}
+                    colorRange={['#1e3a8a', '#4b5563', '#dc2626']}
+                    valueFormatter={(v, row, col) => {
+                      // Reverse-map short col name back to full name for lookup
+                      const fullCol = Object.entries(colAbbrevMap).find(([, abbr]) => abbr === col)?.[0] ?? col
+                      const cell = sectorHeatmapData.data.find((d) => d.row === row && d.col === fullCol)
+                      const rawValue = (cell as { rawValue?: number })?.rawValue ?? v
+                      if (fullCol === 'Avg Risk') return `${(rawValue * 100).toFixed(1)}%`
+                      return `${rawValue.toFixed(1)}%`
+                    }}
+                    onCellClick={(row) => handleSectorClick(row)}
+                  />
+                )
+              })()}
           </CardContent>
         </Card>
       </ScrollReveal>
+
+      {/* ================================================================ */}
+      {/* CRI SCATTER — Institution Risk Landscape (Fazekas-style)         */}
+      {/* ================================================================ */}
+      {criScatterData && criScatterData.data.length > 0 && (
+        <ScrollReveal direction="fade">
+          <Card className="bg-slate-900/50 border border-white/5 rounded-xl">
+            <CardHeader className="pb-2">
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-sm font-semibold text-white/80 uppercase tracking-wider">Institution Risk Landscape</p>
+                  <CardDescription className="text-xs text-text-muted mt-0.5">
+                    Each bubble = one institution. X: direct award rate. Y: avg risk score. Size: contract volume. Top-right = highest concern.
+                  </CardDescription>
+                </div>
+                {/* Sector filter */}
+                <select
+                  value={criSectorFilter}
+                  onChange={e => setCriSectorFilter(e.target.value)}
+                  className="text-xs bg-background-elevated border border-border/50 rounded px-2 py-1 text-text-primary font-mono h-7 self-start"
+                  aria-label="Filter by sector"
+                >
+                  <option value="">All sectors</option>
+                  {Object.entries(SECTOR_COLORS).map(([code]) => (
+                    <option key={code} value={code}>{getSectorNameEN(code)}</option>
+                  ))}
+                </select>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={360}>
+                <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.2} />
+                  <XAxis
+                    type="number"
+                    dataKey="direct_award_pct"
+                    name={t('scatter.directAwardPct')}
+                    domain={[0, 100]}
+                    tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                    tickFormatter={(v: number) => `${v}%`}
+                    label={{ value: t('scatter.directAwardRate'), position: 'insideBottom', offset: -10, fontSize: 10, fill: 'var(--color-text-muted)' }}
+                  />
+                  <YAxis
+                    type="number"
+                    dataKey="avg_risk"
+                    name={t('scatter.avgRisk')}
+                    domain={[0, 0.5]}
+                    tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                    tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
+                    label={{ value: t('scatter.avgRisk'), angle: -90, position: 'insideLeft', offset: 10, fontSize: 10, fill: 'var(--color-text-muted)' }}
+                    width={40}
+                  />
+                  <ZAxis type="number" dataKey="total_contracts" range={[20, 600]} name={t('scatter.contracts')} />
+                  <ReferenceLine x={50} stroke="rgba(255,255,255,0.15)" strokeDasharray="4 2" label={{ value: '50% avg', fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} />
+                  <ReferenceLine x={70} stroke="#f59e0b" strokeDasharray="3 3" strokeOpacity={0.5} />
+                  <ReferenceLine y={0.30} stroke="#ef4444" strokeDasharray="3 3" strokeOpacity={0.5} />
+                  <RechartsTooltip
+                    cursor={{ strokeDasharray: '3 3' }}
+                    contentStyle={{
+                      backgroundColor: 'var(--color-card)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 8,
+                      fontSize: 11,
+                      fontFamily: 'var(--font-family-mono)',
+                    }}
+                    content={({ payload }) => {
+                      if (!payload?.length) return null
+                      const d = payload[0]?.payload
+                      if (!d) return null
+                      return (
+                        <div className="p-2 max-w-[240px]">
+                          <div className="font-semibold text-text-primary text-[11px] leading-tight mb-1">{d.name}</div>
+                          <div className="text-[10px] text-text-muted space-y-0.5">
+                            <div>Sector: {d.sector_code}</div>
+                            <div>Contracts: {d.total_contracts.toLocaleString()}</div>
+                            <div>Avg Risk: {(d.avg_risk * 100).toFixed(2)}%</div>
+                            <div>Direct Award: {d.direct_award_pct.toFixed(1)}%</div>
+                            <div>Single Bid: {d.single_bid_pct.toFixed(1)}%</div>
+                          </div>
+                        </div>
+                      )
+                    }}
+                  />
+                  <Scatter
+                    data={criSectorFilter
+                      ? criScatterData.data.filter((d: { sector_code: string }) => d.sector_code === criSectorFilter)
+                      : criScatterData.data}
+                    fill="#64748b"
+                    fillOpacity={0.7}
+                    shape={(props: any) => {
+                      const { cx, cy, r } = props as { cx: number; cy: number; r: number; payload: Record<string, unknown> }
+                      const payload = props.payload as { sector_code: string }
+                      const color = SECTOR_COLORS[payload.sector_code] || '#64748b'
+                      return <circle cx={cx} cy={cy} r={r || 4} fill={color} fillOpacity={0.65} stroke={color} strokeOpacity={0.9} strokeWidth={0.5} />
+                    }}
+                  />
+                </ScatterChart>
+              </ResponsiveContainer>
+              <p className="mt-2 text-[10px] text-text-muted font-mono">
+                Dashed amber line = 70% direct award threshold · Dashed red line = 30% high-risk threshold · Bubble color = sector · Size = contract volume
+              </p>
+              <p className="text-xs text-white/50 italic mt-2">
+                Institutions in the top-right quadrant (high direct award + high risk) warrant priority investigation.
+              </p>
+            </CardContent>
+          </Card>
+        </ScrollReveal>
+      )}
 
       {/* Section 2b: Sortable Comparison Table */}
       <style>{`
@@ -1417,114 +1541,6 @@ export function Sectors() {
 
         </div>
       </ScrollReveal>
-
-      {/* ================================================================ */}
-      {/* CRI SCATTER — Institution Risk Landscape (Fazekas-style)         */}
-      {/* ================================================================ */}
-      {criScatterData && criScatterData.data.length > 0 && (
-        <ScrollReveal direction="fade">
-          <Card className="bg-slate-900/50 border border-white/5 rounded-xl">
-            <CardHeader className="pb-2">
-              <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div>
-                  <p className="text-sm font-semibold text-white/80 uppercase tracking-wider">Institution Risk Landscape</p>
-                  <CardDescription className="text-xs text-text-muted mt-0.5">
-                    Each bubble = one institution. X: direct award rate. Y: avg risk score. Size: contract volume. Top-right = highest concern.
-                  </CardDescription>
-                </div>
-                {/* Sector filter */}
-                <select
-                  value={criSectorFilter}
-                  onChange={e => setCriSectorFilter(e.target.value)}
-                  className="text-xs bg-background-elevated border border-border/50 rounded px-2 py-1 text-text-primary font-mono h-7 self-start"
-                  aria-label="Filter by sector"
-                >
-                  <option value="">All sectors</option>
-                  {Object.entries(SECTOR_COLORS).map(([code]) => (
-                    <option key={code} value={code}>{getSectorNameEN(code)}</option>
-                  ))}
-                </select>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={360}>
-                <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.2} />
-                  <XAxis
-                    type="number"
-                    dataKey="direct_award_pct"
-                    name={t('scatter.directAwardPct')}
-                    domain={[0, 100]}
-                    tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-                    tickFormatter={(v: number) => `${v}%`}
-                    label={{ value: t('scatter.directAwardRate'), position: 'insideBottom', offset: -10, fontSize: 10, fill: 'var(--color-text-muted)' }}
-                  />
-                  <YAxis
-                    type="number"
-                    dataKey="avg_risk"
-                    name={t('scatter.avgRisk')}
-                    domain={[0, 0.5]}
-                    tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-                    tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
-                    label={{ value: t('scatter.avgRisk'), angle: -90, position: 'insideLeft', offset: 10, fontSize: 10, fill: 'var(--color-text-muted)' }}
-                    width={40}
-                  />
-                  <ZAxis type="number" dataKey="total_contracts" range={[20, 600]} name={t('scatter.contracts')} />
-                  <ReferenceLine x={50} stroke="rgba(255,255,255,0.15)" strokeDasharray="4 2" label={{ value: '50% avg', fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} />
-                  <ReferenceLine x={70} stroke="#f59e0b" strokeDasharray="3 3" strokeOpacity={0.5} />
-                  <ReferenceLine y={0.30} stroke="#ef4444" strokeDasharray="3 3" strokeOpacity={0.5} />
-                  <RechartsTooltip
-                    cursor={{ strokeDasharray: '3 3' }}
-                    contentStyle={{
-                      backgroundColor: 'var(--color-card)',
-                      border: '1px solid var(--color-border)',
-                      borderRadius: 8,
-                      fontSize: 11,
-                      fontFamily: 'var(--font-family-mono)',
-                    }}
-                    content={({ payload }) => {
-                      if (!payload?.length) return null
-                      const d = payload[0]?.payload
-                      if (!d) return null
-                      return (
-                        <div className="p-2 max-w-[240px]">
-                          <div className="font-semibold text-text-primary text-[11px] leading-tight mb-1">{d.name}</div>
-                          <div className="text-[10px] text-text-muted space-y-0.5">
-                            <div>Sector: {d.sector_code}</div>
-                            <div>Contracts: {d.total_contracts.toLocaleString()}</div>
-                            <div>Avg Risk: {(d.avg_risk * 100).toFixed(2)}%</div>
-                            <div>Direct Award: {d.direct_award_pct.toFixed(1)}%</div>
-                            <div>Single Bid: {d.single_bid_pct.toFixed(1)}%</div>
-                          </div>
-                        </div>
-                      )
-                    }}
-                  />
-                  <Scatter
-                    data={criSectorFilter
-                      ? criScatterData.data.filter((d: { sector_code: string }) => d.sector_code === criSectorFilter)
-                      : criScatterData.data}
-                    fill="#64748b"
-                    fillOpacity={0.7}
-                    shape={(props: any) => {
-                      const { cx, cy, r } = props as { cx: number; cy: number; r: number; payload: Record<string, unknown> }
-                      const payload = props.payload as { sector_code: string }
-                      const color = SECTOR_COLORS[payload.sector_code] || '#64748b'
-                      return <circle cx={cx} cy={cy} r={r || 4} fill={color} fillOpacity={0.65} stroke={color} strokeOpacity={0.9} strokeWidth={0.5} />
-                    }}
-                  />
-                </ScatterChart>
-              </ResponsiveContainer>
-              <p className="mt-2 text-[10px] text-text-muted font-mono">
-                Dashed amber line = 70% direct award threshold · Dashed red line = 30% high-risk threshold · Bubble color = sector · Size = contract volume
-              </p>
-              <p className="text-xs text-white/50 italic mt-2">
-                Institutions in the top-right quadrant (high direct award + high risk) warrant priority investigation.
-              </p>
-            </CardContent>
-          </Card>
-        </ScrollReveal>
-      )}
 
       {/* ================================================================ */}
       {/* MARKET HEALTH — Supplier Diversity (HHI)                        */}
