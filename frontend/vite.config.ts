@@ -41,6 +41,7 @@ export default defineConfig({
         exclude: [/\.(png|jpg|jpeg|gif|svg|ico|woff|woff2)$/],
         threshold: 1024, // Only compress files > 1KB
       }),
+
   ],
   server: {
     port: 3009,

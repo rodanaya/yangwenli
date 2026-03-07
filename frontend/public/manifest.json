@@ -1,0 +1,42 @@
+{
+  "name": "RUBLI — Procurement Intelligence",
+  "short_name": "RUBLI",
+  "description": "AI-powered corruption detection platform for Mexican government procurement",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "categories": ["government", "finance", "analytics"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/",
+      "description": "Open procurement dashboard"
+    },
+    {
+      "name": "Explore Contracts",
+      "url": "/explore",
+      "description": "Explore 3.1M contracts"
+    },
+    {
+      "name": "Sector Analysis",
+      "url": "/sectors",
+      "description": "Sector risk breakdown"
+    }
+  ]
+}

@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 import { AppBanner } from './AppBanner'
+import { MobileBottomNav } from './MobileBottomNav'
 import { WelcomeModal } from '@/components/WelcomeModal'
 import { pageVariants } from '@/lib/animations'
 
@@ -59,8 +60,8 @@ export function MainLayout() {
         {/* Version announcement banner */}
         <AppBanner />
 
-        {/* Page content */}
-        <main id="main-content" className="flex-1 px-3 sm:px-5 py-5" tabIndex={-1}>
+        {/* Page content — extra bottom padding on mobile so bottom nav doesn't cover content */}
+        <main id="main-content" className="flex-1 px-3 sm:px-5 py-5 pb-20 md:pb-5" tabIndex={-1}>
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={location.pathname}
@@ -75,14 +76,17 @@ export function MainLayout() {
           </AnimatePresence>
         </main>
 
-        {/* Footer — minimal status bar */}
-        <footer className="border-t border-border/30 px-5 py-2.5">
+        {/* Footer — hidden on mobile (bottom nav replaces it) */}
+        <footer className="hidden md:block border-t border-border/30 px-5 py-2.5">
           <div className="flex items-center justify-between text-xs text-text-muted font-mono tracking-wide">
             <span>RUBLI // PROCUREMENT INTELLIGENCE</span>
             <span>3.1M CONTRACTS // 2002-2025</span>
           </div>
         </footer>
       </div>
+
+      {/* Mobile bottom navigation — fixed, only on < md */}
+      <MobileBottomNav onMenuClick={() => setMobileSidebarOpen(true)} />
     </div>
   )
 }
