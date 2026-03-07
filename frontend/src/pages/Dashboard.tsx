@@ -121,9 +121,10 @@ const ADMIN_PERIODS = [
   { name: 'Sheinbaum',  startYear: 2025, endYear: 2030, color: '#f97316' },
 ]
 
-function riskHeatColor(risk: number): string {
-  // 0 → green (#4ade80), 0.10 → amber (#fbbf24), 0.20+ → red (#f87171)
-  const t = Math.min(risk / 0.20, 1)
+function riskHeatColor(risk: number, maxRisk = 0.20): string {
+  // Normalize to the actual data max so relative differences are visible.
+  // 0 → green (#4ade80), mid → amber (#fbbf24), max+ → red (#f87171)
+  const t = Math.min(risk / Math.max(maxRisk, 0.001), 1)
   if (t < 0.5) {
     const tt = t / 0.5
     return `rgb(${Math.round(74 + (251 - 74) * tt)},${Math.round(222 + (191 - 222) * tt)},${Math.round(128 + (36 - 128) * tt)})`
@@ -139,23 +140,38 @@ function AdminSectorHeatmap() {
     staleTime: 10 * 60 * 1000,
   })
 
-  const grid = useMemo(() => {
-    if (!syd?.data) return null
-    return ADMIN_PERIODS.map(admin => ({
-      admin,
-      cells: SECTORS.map(sector => {
+  const { grid, maxRisk } = useMemo(() => {
+    if (!syd?.data) return { grid: null, maxRisk: 0.20 }
+    const rows_all = ADMIN_PERIODS.flatMap(admin =>
+      SECTORS.map(sector => {
         const rows = syd.data.filter(
           (d) => d.sector_id === sector.id && d.year >= admin.startYear && d.year <= admin.endYear
         )
-        const avgRisk = rows.length > 0
+        return rows.length > 0
           ? rows.reduce((s, d) => s + (d.avg_risk || 0), 0) / rows.length
           : 0
-        return { sector, avgRisk }
-      }),
-    }))
+      })
+    )
+    const computedMax = Math.max(...rows_all, 0.001)
+    return {
+      grid: ADMIN_PERIODS.map(admin => ({
+        admin,
+        cells: SECTORS.map(sector => {
+          const rows = syd.data.filter(
+            (d) => d.sector_id === sector.id && d.year >= admin.startYear && d.year <= admin.endYear
+          )
+          const avgRisk = rows.length > 0
+            ? rows.reduce((s, d) => s + (d.avg_risk || 0), 0) / rows.length
+            : 0
+          return { sector, avgRisk }
+        }),
+      })),
+      maxRisk: computedMax,
+    }
   }, [syd])
 
   if (isLoading || !grid) return <Skeleton className="h-44 w-full" />
+  const maxLabel = (maxRisk * 100).toFixed(1) + '%'
 
   return (
     <div>
@@ -187,7 +203,7 @@ function AdminSectorHeatmap() {
                   <div
                     key={sector.code}
                     className="flex-1 rounded-sm flex items-center justify-center cursor-default"
-                    style={{ height: 30, backgroundColor: riskHeatColor(avgRisk) }}
+                    style={{ height: 30, backgroundColor: riskHeatColor(avgRisk, maxRisk) }}
                     title={`${admin.name} × ${sector.code}: ${(avgRisk * 100).toFixed(1)}% avg risk`}
                   >
                     {avgRisk >= 0.10 && (
@@ -206,12 +222,12 @@ function AdminSectorHeatmap() {
       <div className="flex items-center gap-2 mt-2 text-[9px] text-text-muted font-mono">
         <span>Low</span>
         <div className="flex h-2 rounded overflow-hidden" style={{ width: 80 }}>
-          {[0, 0.04, 0.08, 0.12, 0.16, 0.20].map((v, i) => (
-            <div key={i} className="flex-1" style={{ backgroundColor: riskHeatColor(v) }} />
+          {[0, 0.2, 0.4, 0.6, 0.8, 1.0].map((v, i) => (
+            <div key={i} className="flex-1" style={{ backgroundColor: riskHeatColor(v * maxRisk, maxRisk) }} />
           ))}
         </div>
-        <span>High</span>
-        <span className="ml-auto opacity-60">avg risk score · numbers shown when ≥10%</span>
+        <span>{maxLabel} (max)</span>
+        <span className="ml-auto opacity-60">relative scale · numbers shown when ≥10%</span>
       </div>
     </div>
   )

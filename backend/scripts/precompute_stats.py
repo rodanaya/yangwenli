@@ -178,7 +178,11 @@ def precompute_stats():
             COALESCE(AVG(risk_score), 0) as avg_risk,
             SQRT(
                 MAX(0, AVG(risk_score * risk_score) - AVG(risk_score) * AVG(risk_score))
-            ) as risk_stddev
+            ) as risk_stddev,
+            ROUND(100.0 * SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) as direct_award_pct,
+            ROUND(100.0 * SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END)
+                / NULLIF(SUM(CASE WHEN is_direct_award = 0 THEN 1 ELSE 0 END), 0), 2) as single_bid_pct,
+            ROUND(100.0 * SUM(CASE WHEN risk_level IN ('high', 'critical') THEN 1 ELSE 0 END) / COUNT(*), 2) as high_risk_pct
         FROM contracts
         WHERE contract_year IS NOT NULL
         GROUP BY contract_year
@@ -192,6 +196,9 @@ def precompute_stats():
             'value_mxn': row['value'],
             'avg_risk': round(row['avg_risk'], 4),
             'risk_stddev': round(row['risk_stddev'] or 0, 4),
+            'direct_award_pct': round(row['direct_award_pct'] or 0, 2),
+            'single_bid_pct': round(row['single_bid_pct'] or 0, 2),
+            'high_risk_pct': round(row['high_risk_pct'] or 0, 2),
         })
     stats['yearly_trends'] = yearly
     print(f"   Done ({time.time() - start:.1f}s)")

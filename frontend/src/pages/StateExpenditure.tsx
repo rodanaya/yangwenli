@@ -87,6 +87,42 @@ function RiskBadge({ score }: { score: number }) {
 // Module-level cache — only register the map once across all mounts
 let mexGeoRegistered = false
 
+// Map backend state_code (INEGI abbreviation) → GeoJSON feature name
+const STATE_CODE_TO_GEO_NAME: Record<string, string> = {
+  AGS: 'Aguascalientes',
+  BC: 'Baja California',
+  BCS: 'Baja California Sur',
+  CAMP: 'Campeche',
+  CDMX: 'Ciudad de México',
+  CHIH: 'Chihuahua',
+  CHIS: 'Chiapas',
+  COAH: 'Coahuila',
+  COL: 'Colima',
+  DGO: 'Durango',
+  GRO: 'Guerrero',
+  GTO: 'Guanajuato',
+  HGO: 'Hidalgo',
+  JAL: 'Jalisco',
+  MEX: 'México',       // GeoJSON uses "México", not "Estado de México"
+  MICH: 'Michoacán',
+  MOR: 'Morelos',
+  NAY: 'Nayarit',
+  NL: 'Nuevo León',
+  OAX: 'Oaxaca',
+  PUE: 'Puebla',
+  QRO: 'Querétaro',
+  QR: 'Quintana Roo',
+  SIN: 'Sinaloa',
+  SLP: 'San Luis Potosí',
+  SON: 'Sonora',
+  TAB: 'Tabasco',
+  TAM: 'Tamaulipas',
+  TLAX: 'Tlaxcala',
+  VER: 'Veracruz',
+  YUC: 'Yucatán',
+  ZAC: 'Zacatecas',
+}
+
 function riskToAreaColor(score: number | null | undefined): string {
   if (score === null || score === undefined) return '#334155'
   if (score >= 0.5) return RISK_COLORS.critical
@@ -108,11 +144,11 @@ function MexicoChoropleth({
 
   useEffect(() => {
     if (mexGeoRegistered) { setGeoReady(true); return }
-    fetch('/mexico-states.geojson')
+    fetch('/mexico.geojson')
       .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json() })
       .then((geo: object) => {
         // ECharts 6 requires { geoJSON: ... } wrapper; also accepted by ECharts 5.1+
-        echarts.registerMap('mexico-states', { geoJSON: geo } as Parameters<typeof echarts.registerMap>[1])
+        echarts.registerMap('mexico-states', { geoJSON: geo as object } as Parameters<typeof echarts.registerMap>[1])
         mexGeoRegistered = true
         setGeoReady(true)
       })
@@ -129,7 +165,7 @@ function MexicoChoropleth({
     if (!geoReady) return {}
 
     const seriesData = states.map((s) => ({
-      name: s.state_code,
+      name: STATE_CODE_TO_GEO_NAME[s.state_code] ?? s.state_name ?? s.state_code,
       value: s.avg_risk_score ?? 0,
       itemStyle: { areaColor: riskToAreaColor(s.avg_risk_score) },
     }))
@@ -143,7 +179,10 @@ function MexicoChoropleth({
         borderWidth: 1,
         textStyle: { color: '#e2e8f0', fontSize: 12, fontFamily: 'monospace' },
         formatter: (params: { name: string; value: number }) => {
-          const d = dataMap.get(params.name)
+          // params.name is the GeoJSON feature name; look up by geo name
+          const geoToCode = Object.fromEntries(Object.entries(STATE_CODE_TO_GEO_NAME).map(([k, v]) => [v, k]))
+          const code = geoToCode[params.name]
+          const d = code ? dataMap.get(code) : undefined
           if (!d) return params.name
           const riskColor = riskToAreaColor(d.avg_risk_score)
           return [
