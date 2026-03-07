@@ -1,4 +1,4 @@
-import { useState, memo, useMemo } from 'react'
+import { useState, memo, useMemo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem } from '@/lib/animations'
@@ -357,7 +357,7 @@ const V33WeightsChart = memo(function V33WeightsChart() {
 
 function ModelEvolutionTimeline() {
   const steps = MODEL_EVOLUTION_STEPS
-  const nodes = steps.reduce<React.ReactNode[]>((acc, step, i) => {
+  const nodes = steps.reduce<ReactNode[]>((acc, step, i) => {
     if (i > 0) {
       acc.push(
         <ChevronRight
@@ -516,6 +516,9 @@ export function Methodology() {
           </motion.div>
         ))}
       </motion.div>
+
+      {/* Model Evolution Flowchart */}
+      <ModelEvolutionTimeline />
 
       {/* Layout: TOC sidebar + content */}
       <div className="grid gap-5 lg:grid-cols-[1fr_200px]">
