@@ -847,5 +847,162 @@ def detect_intermediary(vendor_id, conn):
     return min(burst, 1.0)
 ```
 
+
 ### 14.6 False Positive Screening
 
+Three screens. Cumulative penalty capped at -0.40.
+
+**FP1: Patent Exceptions** (-0.15 to -0.20): ~25 curated patent holders + keyword check.
+**FP2: Data Errors** (-0.25): max contract > 100x second-largest.
+**FP3: Structural Monopoly** (-0.10 to -0.15): sector <= 10 active vendors.
+
+### 14.7 LLM Evidence Synthesis
+
+Single integration point. JSON evidence in, Spanish memo out. 7 sections.
+Model: claude-sonnet-4-20250514, 1500 tokens, temp 0.3. Cost: ~$6/run.
+
+### 14.8 Template-Based Fallback Memo
+
+String-interpolation template for Tier 2/3. Same 7 sections, generic questions.
+Cost: zero. Latency: < 1ms.
+
+### 14.9 External Cross-Reference Batch Query
+
+Single SQL joining vendors vs sat_efos_vendors, sfp_sanctions, asf_cases,
+ground_truth_vendors by RFC. Non-RFC: Jaccard >= 0.80 auto, >= 0.60 review.
+
+---
+
+## 15. Implementation Roadmap
+
+### Phase 1: Foundation (Week 1-2) -- 3 dev-days
+
+| Task | File | Hours |
+|------|------|-------|
+| ARIA DB schema | scripts/aria_create_schema.py | 2 |
+| Vendor aggregation | scripts/aria_aggregate_vendors.py | 4 |
+| IPS computation | scripts/aria_compute_ips.py | 4 |
+| External cross-ref | scripts/aria_external_xref.py | 3 |
+| Basic queue API | api/routers/aria.py | 4 |
+| DQ checks | scripts/aria_dq_checks.py | 3 |
+| Unit tests | tests/test_aria.py | 4 |
+
+**Exit:** aria_queue populated, UAB JORINIS Tier 1, >= 80% GT Tier 1-2.
+
+### Phase 2: Pattern Detection (Week 3-4) -- 5 dev-days
+
+| Task | File | Hours |
+|------|------|-------|
+| Pattern classifier | scripts/aria_pattern_classifier.py | 6 |
+| Intermediary detection | scripts/aria_intermediary_detection.py | 6 |
+| Temporal anomaly | scripts/aria_temporal_anomaly.py | 4 |
+| FP screening | scripts/aria_fp_screening.py | 4 |
+| GT auto-update | scripts/aria_gt_update.py | 4 |
+| Pipeline + API + tests | scripts/aria_pipeline.py + api/ + tests/ | 14 |
+
+**Exit:** >= 80% GT classified, P3 catches intermediaries, FP -20%.
+
+### Phase 3: LLM + Frontend (Week 5-6) -- 6 dev-days
+
+| Task | File | Hours |
+|------|------|-------|
+| LLM + template memos | scripts/aria_generate_memos.py | 9 |
+| APIs + frontend | api/ + pages/aria/ | 24 |
+| E2E tests + docs | tests/ + docs/ | 7 |
+
+**Total: ~14 dev-days across 6 weeks**
+
+---
+
+## 16. Validation Strategy
+
+### 16.1 GT Regression
+
+After each run, verify all GT vendors: >= 80% Tier 1-2, zero Tier 4,
+UAB JORINIS-type in Tier 1, Mann-Whitney p < 0.001.
+
+### 16.2 FP Rate
+
+50 patent holders: >= 40 screened. 100 Tier 1 random: >= 50% suspicious.
+
+### 16.3 IPS Calibration
+
+Tier 1: 500-2000 vendors. Tier 4: >= 70%. r(IPS, risk_score) = 0.5-0.7.
+
+### 16.4 Pattern Accuracy
+
+| Case | Expected |
+|------|----------|
+| IMSS Ghost | P1 |
+| Segalmex | P1 |
+| COVID-19 | P1/P6 |
+| EFOS | P2 |
+| Estafa Maestra | P2 |
+| UAB JORINIS | P3 |
+| IPN Cartel | P4 |
+| Cyber Robotic | P5 |
+| Cotemar | P6 |
+| Grupo Higa | P7 |
+
+**Target: >= 80% correct primary pattern.**
+
+---
+
+## 17. Known Limitations
+
+| # | Limitation | Mitigation |
+|---|-----------|------------|
+| L1 | IPS inherits v5.1 blind spots | MAX(risk_score, mahalanobis) |
+| L2 | Product overlap needs partida (2023+) | 1 of 6 burst sub-scores |
+| L3 | LLM memos not deterministic | JSON evidence is truth |
+| L4 | FP patent list curated | Quarterly review + keywords |
+| L5 | GT auto-update feedback loop | Cap 100/run, track separately |
+| L6 | co_bid_rate = 0 in v5.1 | P4 rule-based compensates |
+| L7 | No real-time scoring | Schedule within 1h of ETL |
+| L8 | Mahalanobis sigmoid heuristic | Validate vs GT |
+| L9 | Name matching ~5% error | Threshold tiers + human review |
+| L10 | SHAP on per-vendor means | Correct granularity for queue |
+
+---
+
+## Appendix A: Configuration Constants
+
+    IPS_PRIMARY_WEIGHT = 0.60
+    IPS_SECONDARY_WEIGHT = 0.40
+    IPS_TIER1_THRESHOLD = 0.70
+    IPS_TIER2_THRESHOLD = 0.40
+    IPS_TIER3_THRESHOLD = 0.20
+    MAHA_SIGMOID_MIDPOINT = 80
+    MAHA_SIGMOID_STEEPNESS = 1.5
+    EXTERNAL_FLAG_BOOST = 0.08
+    EFOS_BOOST = 0.15
+    FP_PENALTY_CAP = -0.40
+    PATTERN_MIN_CONFIDENCE = 0.30
+    INTERMEDIARY_MAX_CONTRACTS = 50
+    GT_AUTO_INSERT_LIMIT = 100
+    FUZZY_MATCH_AUTO = 0.80
+    LLM_MAX_TOKENS = 1500
+    DQ_AMOUNT_MAX = 100_000_000_000
+
+(Full list: 50+ values in scripts/aria_config.py)
+
+## Appendix B: Glossary
+
+| Term | Definition |
+|------|-----------|
+| **IPS** | Investigation Priority Score |
+| **Mahalanobis** | Multivariate anomaly measure |
+| **SHAP** | Per-feature contribution decomposition |
+| **Burstiness** | Goh-Barabasi temporal irregularity |
+| **EFOS** | SAT ghost company list |
+| **SFP** | Federal sanctions registry |
+| **ASF** | Federal audit authority |
+| **LAASSP** | Federal procurement law |
+| **RFC** | Mexican taxpayer ID |
+| **Partida** | Product/service code (2023+) |
+
+---
+
+*The goal is not a perfect model, but a useful one that helps investigators focus limited resources on the most suspicious patterns.*
+
+*ARIA is named for the investigative clarity it aims to provide -- not a verdict, but a structured guide for those who must decide where to look first.*
