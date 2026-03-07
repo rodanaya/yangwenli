@@ -169,3 +169,5 @@ docs/VALIDATION_REPORT.md
 docs/PATTERNS_DETECTED.md
 docs/RISK_METHODOLOGY_v5.1_EXPLORATION.md
 scripts/headless-pipeline.sh
+backend/scripts/_subcategory_results.json
+backend/DUPLICATE_INVESTIGATION_REPORT.md
