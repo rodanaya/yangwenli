@@ -1729,6 +1729,34 @@ export const categoriesApi = {
     return data
   },
 
+  getSubcategories: async (categoryId: number) => {
+    const { data } = await api.get(`/categories/${categoryId}/subcategories`)
+    return data as {
+      category_id: number
+      category_name: string
+      total: number
+      data: {
+        subcategory_id: number
+        code: string
+        name_en: string
+        name_es: string
+        is_catch_all: boolean
+        display_order: number
+        total_contracts: number
+        total_value: number
+        avg_risk: number
+        direct_award_pct: number
+        single_bid_pct: number
+        year_min: number | null
+        year_max: number | null
+        top_vendor_name: string | null
+        top_vendor_id: number | null
+        example_titles: string[]
+        pct_of_category: number
+      }[]
+    }
+  },
+
   getVendorInstitution: async (categoryId: number, limit = 25) => {
     const { data } = await api.get(`/categories/${categoryId}/vendor-institution`, { params: { limit } })
     return data as {

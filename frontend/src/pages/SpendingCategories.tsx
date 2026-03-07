@@ -660,6 +660,350 @@ function CategoryDetailPanel({
 }
 
 // =============================================================================
+// Subcategory Drill-Down Panel
+// =============================================================================
+
+interface SubcategoryItem {
+  subcategory_id: number
+  code: string
+  name_en: string
+  name_es: string
+  is_catch_all: boolean
+  display_order: number
+  total_contracts: number
+  total_value: number
+  avg_risk: number
+  direct_award_pct: number
+  single_bid_pct: number
+  year_min: number | null
+  year_max: number | null
+  top_vendor_name: string | null
+  top_vendor_id: number | null
+  example_titles: string[]
+  pct_of_category: number
+}
+
+type SubSort = 'value' | 'risk' | 'da' | 'sb'
+
+function SubcategoryPanel({
+  categoryName,
+  items,
+  loading,
+  onNavigate,
+}: {
+  categoryName: string
+  items: SubcategoryItem[]
+  loading: boolean
+  onNavigate: (path: string) => void
+}) {
+  const [expandedId, setExpandedId] = useState<number | null>(null)
+  const [subSort, setSubSort] = useState<SubSort>('value')
+
+  const sorted = useMemo(() => {
+    const main = items.filter(i => !i.is_catch_all)
+    const catchAll = items.filter(i => i.is_catch_all)
+    const comparators: Record<SubSort, (a: SubcategoryItem, b: SubcategoryItem) => number> = {
+      value: (a, b) => b.total_value - a.total_value,
+      risk:  (a, b) => b.avg_risk - a.avg_risk,
+      da:    (a, b) => b.direct_award_pct - a.direct_award_pct,
+      sb:    (a, b) => b.single_bid_pct - a.single_bid_pct,
+    }
+    return [...main.sort(comparators[subSort]), ...catchAll]
+  }, [items, subSort])
+
+  const maxValue = items.filter(i => !i.is_catch_all).reduce((m, i) => Math.max(m, i.total_value), 1)
+
+  // Coverage: sum of named subcategory pcts (excluding catch-all)
+  const classifiedPct = useMemo(
+    () => items.filter(i => !i.is_catch_all).reduce((s, i) => s + i.pct_of_category, 0),
+    [items],
+  )
+  const catchAllPct = items.find(i => i.is_catch_all)?.pct_of_category ?? 0
+
+  if (loading) {
+    return (
+      <Card className="border-blue-500/20 bg-blue-500/[0.02] overflow-hidden">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <BarChart3 className="h-3.5 w-3.5 text-blue-400" />
+            What Was Purchased — {categoryName}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (sorted.length === 0) return null
+
+  const namedCount = sorted.filter(i => !i.is_catch_all).length
+  const SORT_OPTS: { key: SubSort; label: string }[] = [
+    { key: 'value', label: 'Value' },
+    { key: 'risk',  label: 'Risk' },
+    { key: 'da',    label: 'DA%' },
+    { key: 'sb',    label: 'SB%' },
+  ]
+
+  return (
+    <Card className="border-blue-500/20 bg-blue-500/[0.02] overflow-hidden">
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <BarChart3 className="h-3.5 w-3.5 text-blue-400" />
+              What Was Purchased
+            </CardTitle>
+            <CardDescription className="text-xs mt-0.5">
+              {namedCount} subcategories · {categoryName} · click a row to expand
+            </CardDescription>
+          </div>
+          {/* Sort tabs */}
+          <div className="flex items-center gap-0.5 flex-shrink-0">
+            <span className="text-[9px] text-text-muted/50 font-mono uppercase mr-1.5">Sort</span>
+            {SORT_OPTS.map(opt => (
+              <button
+                key={opt.key}
+                onClick={() => setSubSort(opt.key)}
+                className={cn(
+                  'px-2 py-0.5 text-[10px] rounded transition-colors font-mono',
+                  subSort === opt.key
+                    ? 'bg-blue-500/20 text-blue-400'
+                    : 'text-text-muted/60 hover:text-text-primary hover:bg-background-elevated',
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Coverage bar */}
+        <div className="mt-2.5">
+          <div className="flex items-center justify-between text-[10px] font-mono text-text-muted/60 mb-1">
+            <span>{classifiedPct.toFixed(0)}% of category spend classified into named subcategories</span>
+            <span className="text-text-muted/40">{catchAllPct.toFixed(0)}% unclassified</span>
+          </div>
+          <div className="h-1.5 bg-border/20 rounded-full overflow-hidden flex">
+            <div
+              className="h-full bg-blue-500/50 transition-all duration-700 rounded-l-full"
+              style={{ width: `${Math.min(classifiedPct, 100)}%` }}
+            />
+            <div
+              className="h-full bg-border/30"
+              style={{ width: `${Math.min(catchAllPct, 100)}%` }}
+            />
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-0">
+        {/* Column headers */}
+        <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-wider text-text-muted/60">
+          <div className="flex-1 min-w-0">Subcategory</div>
+          <span className="w-20 text-right flex-shrink-0">Value</span>
+          <span className="w-12 text-right flex-shrink-0">Share</span>
+          <span className="w-10 text-right flex-shrink-0 hidden lg:block">Risk</span>
+          <span className="w-10 text-right flex-shrink-0 hidden xl:block">DA%</span>
+          <span className="w-4 flex-shrink-0" />
+        </div>
+
+        <div className="divide-y divide-border/10">
+          {sorted.map((sub) => {
+            const isHighDA = sub.direct_award_pct >= 70
+            const isHighSB = sub.single_bid_pct >= 25
+            const isFlagged = !sub.is_catch_all && (isHighDA || isHighSB || sub.avg_risk >= 0.3)
+            const barWidth = sub.is_catch_all
+              ? Math.min(sub.pct_of_category, 100)
+              : Math.min((sub.total_value / maxValue) * 100, 100)
+            // DA portion of bar (competitive vs direct-award split)
+            const daBarWidth = barWidth * (sub.direct_award_pct / 100)
+
+            return (
+              <div key={sub.subcategory_id}>
+                <button
+                  className={cn(
+                    'w-full flex items-center gap-3 px-4 py-2.5 hover:bg-background-elevated/40 transition-colors text-left',
+                    sub.is_catch_all && 'opacity-50',
+                    expandedId === sub.subcategory_id && 'bg-background-elevated/30',
+                    isFlagged && !sub.is_catch_all && 'border-l-2 border-l-amber-500/60',
+                  )}
+                  onClick={() => setExpandedId(prev => prev === sub.subcategory_id ? null : sub.subcategory_id)}
+                  aria-expanded={expandedId === sub.subcategory_id}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium text-text-primary mb-1.5 flex items-center gap-1.5">
+                      {sub.is_catch_all && (
+                        <span className="text-[9px] font-mono bg-background-elevated px-1 py-0.5 rounded text-text-muted/50 uppercase tracking-wider flex-shrink-0">
+                          other
+                        </span>
+                      )}
+                      {isFlagged && (
+                        <span title={`${isHighDA ? `${sub.direct_award_pct.toFixed(0)}% direct award` : ''}${isHighDA && isHighSB ? ' · ' : ''}${isHighSB ? `${sub.single_bid_pct.toFixed(0)}% single bid` : ''}`}>
+                          <AlertTriangle className="h-2.5 w-2.5 text-amber-400 flex-shrink-0" />
+                        </span>
+                      )}
+                      <span className="truncate">{sub.name_en || sub.name_es}</span>
+                      <span className="text-[10px] font-mono text-text-muted/40 flex-shrink-0">
+                        {formatNumber(sub.total_contracts)}
+                      </span>
+                    </div>
+
+                    {/* Stacked bar: risk-colored fill with DA overlay */}
+                    <div className="h-1 bg-border/20 rounded-full overflow-hidden relative">
+                      {/* Full bar colored by risk */}
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
+                        style={{
+                          width: `${barWidth}%`,
+                          backgroundColor: sub.is_catch_all ? '#64748b' : getRiskColor(sub.avg_risk),
+                          opacity: 0.55,
+                        }}
+                      />
+                      {/* DA overlay (darker segment at start of bar) */}
+                      {!sub.is_catch_all && daBarWidth > 0 && (
+                        <div
+                          className="absolute inset-y-0 left-0 rounded-l-full transition-all duration-700"
+                          style={{
+                            width: `${daBarWidth}%`,
+                            backgroundColor: getRiskColor(sub.avg_risk),
+                            opacity: 0.9,
+                          }}
+                        />
+                      )}
+                    </div>
+                    {/* Bar legend hint */}
+                    {!sub.is_catch_all && sub.direct_award_pct > 0 && sub.direct_award_pct < 100 && (
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[8px] font-mono text-text-muted/30">
+                          <span className="inline-block w-1.5 h-1.5 rounded-sm mr-0.5" style={{ backgroundColor: getRiskColor(sub.avg_risk), opacity: 0.9 }} />
+                          DA {sub.direct_award_pct.toFixed(0)}%
+                        </span>
+                        <span className="text-[8px] font-mono text-text-muted/30">
+                          <span className="inline-block w-1.5 h-1.5 rounded-sm mr-0.5" style={{ backgroundColor: getRiskColor(sub.avg_risk), opacity: 0.4 }} />
+                          Competitive {(100 - sub.direct_award_pct).toFixed(0)}%
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <span className="w-20 text-right text-xs font-mono font-bold text-text-primary tabular-nums flex-shrink-0">
+                    {formatCompactMXN(sub.total_value)}
+                  </span>
+                  <span className="w-12 text-right text-xs font-mono text-text-muted tabular-nums flex-shrink-0">
+                    {sub.pct_of_category.toFixed(1)}%
+                  </span>
+                  <span
+                    className="w-10 text-right text-xs font-mono tabular-nums flex-shrink-0 hidden lg:block"
+                    style={{ color: sub.avg_risk > 0 ? getRiskColor(sub.avg_risk) : undefined }}
+                  >
+                    {sub.avg_risk > 0 ? `${(sub.avg_risk * 100).toFixed(0)}%` : '—'}
+                  </span>
+                  <span
+                    className="w-10 text-right text-xs font-mono tabular-nums flex-shrink-0 hidden xl:block"
+                    style={{ color: isHighDA ? '#fb923c' : undefined }}
+                  >
+                    {sub.direct_award_pct > 0 ? `${sub.direct_award_pct.toFixed(0)}%` : '—'}
+                  </span>
+                  <span className="w-4 text-right text-text-muted/40 text-[10px] flex-shrink-0 select-none">
+                    {expandedId === sub.subcategory_id ? '▲' : '▼'}
+                  </span>
+                </button>
+
+                {/* Expanded detail */}
+                {expandedId === sub.subcategory_id && sub.total_contracts > 0 && (
+                  <div className="px-4 pb-4 pt-3 bg-background-elevated/20 border-t border-border/10">
+                    {/* Flag alerts */}
+                    {isFlagged && (
+                      <div className="flex items-center gap-1.5 mb-3 rounded-md border border-amber-500/20 bg-amber-500/5 px-3 py-1.5">
+                        <AlertTriangle className="h-3 w-3 text-amber-400 flex-shrink-0" />
+                        <span className="text-[11px] text-amber-300/80">
+                          {[
+                            isHighDA && `${sub.direct_award_pct.toFixed(0)}% direct award (low competition)`,
+                            isHighSB && `${sub.single_bid_pct.toFixed(0)}% single-bid procedures`,
+                            sub.avg_risk >= 0.3 && `avg risk ${(sub.avg_risk * 100).toFixed(0)}%`,
+                          ].filter(Boolean).join(' · ')}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+                      <div>
+                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">Contracts</p>
+                        <p className="text-sm font-mono font-bold text-text-primary">{formatNumber(sub.total_contracts)}</p>
+                      </div>
+                      {sub.year_min != null && sub.year_max != null && (
+                        <div>
+                          <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">Active Years</p>
+                          <p className="text-sm font-mono font-bold text-text-primary">{sub.year_min}–{sub.year_max}</p>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">Direct Award</p>
+                        <p
+                          className="text-sm font-mono font-bold"
+                          style={{ color: isHighDA ? '#fb923c' : 'var(--color-text-primary)' }}
+                        >
+                          {sub.direct_award_pct > 0 ? `${sub.direct_award_pct.toFixed(0)}%` : '—'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">Single Bid</p>
+                        <p
+                          className="text-sm font-mono font-bold"
+                          style={{ color: isHighSB ? '#fb923c' : 'var(--color-text-primary)' }}
+                        >
+                          {sub.single_bid_pct > 0 ? `${sub.single_bid_pct.toFixed(0)}%` : '—'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {sub.top_vendor_name && (
+                      <div className="mb-3 flex items-center gap-2">
+                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted flex-shrink-0">Top Vendor</p>
+                        {sub.top_vendor_id ? (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onNavigate(`/vendors/${sub.top_vendor_id}`) }}
+                            className="text-xs font-mono text-accent hover:text-accent/80 transition-colors flex items-center gap-1 truncate"
+                          >
+                            {truncate(sub.top_vendor_name, 45)}
+                            <ArrowUpRight className="h-3 w-3 flex-shrink-0" />
+                          </button>
+                        ) : (
+                          <span className="text-xs font-mono text-text-secondary truncate">{truncate(sub.top_vendor_name, 45)}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {sub.example_titles.length > 0 && (
+                      <div>
+                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-1.5">
+                          Example Contract Titles
+                        </p>
+                        <div className="space-y-1.5">
+                          {sub.example_titles.slice(0, 4).map((title, i) => (
+                            <p key={i} className="text-[11px] text-text-muted italic leading-snug pl-2 border-l border-border/30">
+                              {truncate(title, 120)}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -693,6 +1037,13 @@ export default function SpendingCategories() {
     queryFn: () => categoriesApi.getVendorInstitution(selectedCategoryId!, 15),
     enabled: selectedCategoryId !== null,
     staleTime: 5 * 60 * 1000,
+  })
+
+  const { data: subcategoryData, isLoading: subcategoryLoading } = useQuery({
+    queryKey: ['categories', 'subcategories', selectedCategoryId],
+    queryFn: () => categoriesApi.getSubcategories(selectedCategoryId!),
+    enabled: selectedCategoryId !== null,
+    staleTime: 10 * 60 * 1000,
   })
 
   const allCategories: CategoryStat[] = summaryData?.data ?? []
@@ -1337,6 +1688,16 @@ export default function SpendingCategories() {
           )}
         </CardContent>
       </Card>
+
+      {/* Subcategory Drill-Down Panel */}
+      {selectedCategoryId !== null && (subcategoryLoading || (subcategoryData?.data?.length ?? 0) > 0) && (
+        <SubcategoryPanel
+          categoryName={selectedCategoryName ?? ''}
+          items={subcategoryData?.data ?? []}
+          loading={subcategoryLoading}
+          onNavigate={navigate}
+        />
+      )}
 
       {/* Vendor × Institution Drill-Down Panel */}
       {selectedCategoryId !== null && (

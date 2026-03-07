@@ -229,6 +229,81 @@ def get_category_vendor_institution(
     }
 
 
+@router.get("/{category_id}/subcategories")
+def get_category_subcategories(category_id: int):
+    """Return precomputed subcategory breakdown for a category."""
+    with get_db() as conn:
+        cur = conn.cursor()
+
+        # Verify category exists
+        cur.execute("SELECT id, name_es FROM categories WHERE id = ?", (category_id,))
+        cat = cur.fetchone()
+        if not cat:
+            raise HTTPException(status_code=404, detail=f"Category {category_id} not found")
+
+        # Check tables exist
+        cur.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='subcategory_definitions'"
+        )
+        if not cur.fetchone():
+            return {"data": [], "category_id": category_id, "total": 0}
+
+        cur.execute("""
+            SELECT
+                sd.id             AS subcategory_id,
+                sd.code,
+                sd.name_en,
+                sd.name_es,
+                sd.is_catch_all,
+                sd.display_order,
+                COALESCE(ss.total_contracts, 0)   AS total_contracts,
+                COALESCE(ss.total_value, 0)        AS total_value,
+                COALESCE(ss.avg_risk, 0)           AS avg_risk,
+                COALESCE(ss.direct_award_pct, 0)   AS direct_award_pct,
+                COALESCE(ss.single_bid_pct, 0)     AS single_bid_pct,
+                ss.year_min,
+                ss.year_max,
+                ss.top_vendor_name,
+                ss.top_vendor_id,
+                ss.example_titles,
+                COALESCE(ss.pct_of_category, 0)    AS pct_of_category
+            FROM subcategory_definitions sd
+            LEFT JOIN subcategory_stats ss ON ss.subcategory_id = sd.id
+            WHERE sd.category_id = ?
+            ORDER BY COALESCE(ss.total_value, 0) DESC
+        """, (category_id,))
+        rows = cur.fetchall()
+
+    import json as _json
+    return {
+        "category_id": category_id,
+        "category_name": cat["name_es"],
+        "total": len(rows),
+        "data": [
+            {
+                "subcategory_id": r["subcategory_id"],
+                "code": r["code"],
+                "name_en": r["name_en"],
+                "name_es": r["name_es"],
+                "is_catch_all": bool(r["is_catch_all"]),
+                "display_order": r["display_order"],
+                "total_contracts": r["total_contracts"],
+                "total_value": r["total_value"],
+                "avg_risk": round(r["avg_risk"] or 0, 4),
+                "direct_award_pct": round(r["direct_award_pct"] or 0, 1),
+                "single_bid_pct": round(r["single_bid_pct"] or 0, 1),
+                "year_min": r["year_min"],
+                "year_max": r["year_max"],
+                "top_vendor_name": r["top_vendor_name"],
+                "top_vendor_id": r["top_vendor_id"],
+                "example_titles": _json.loads(r["example_titles"] or "[]"),
+                "pct_of_category": round(r["pct_of_category"] or 0, 1),
+            }
+            for r in rows
+        ],
+    }
+
+
 @router.get("/trends")
 def get_category_trends(
     year_from: int = Query(2010, ge=2002, le=2025),
