@@ -8,8 +8,12 @@ Improvements over v4.0:
   4. Per-sector sub-models for sectors with enough ground truth
   5. Expanded ground truth (15 cases, 27 vendors across all 12 sectors)
 
+v5.2 addition:
+  6. Optuna Bayesian TPE hyperparameter search (--use-optuna, 200 trials)
+
 Usage:
     python -m scripts.calibrate_risk_model_v5 [--n-bootstrap 1000] [--random-sample 15000]
+    python -m scripts.calibrate_risk_model_v5 --use-optuna [--optuna-trials 200]
 """
 
 import sys
@@ -31,6 +35,13 @@ try:
     HAS_DEPS = True
 except ImportError:
     HAS_DEPS = False
+
+try:
+    import optuna
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
+    HAS_OPTUNA = True
+except ImportError:
+    HAS_OPTUNA = False
 
 DB_PATH = Path(__file__).parent.parent / "RUBLI_NORMALIZED.db"
 
@@ -266,6 +277,90 @@ def cross_validate_hyperparams(X, y, n_folds=5):
         print(f"    C={C:<6} l1_ratio={l1:<5} AUC={mean_auc:.4f} +/- {std_auc:.4f}{marker}")
 
     return best_params
+
+
+def optuna_optimize_hyperparams(X, y, n_trials=200, n_folds=5):
+    """Bayesian TPE hyperparameter search via Optuna.
+
+    Searches a continuous space: log-uniform C in [0.001, 100],
+    l1_ratio in [0.0, 1.0]. Typically finds better hyperparameters than
+    the 12-point grid in cross_validate_hyperparams in fewer total model fits.
+
+    Returns best (C, l1_ratio) by mean CV AUC-ROC.
+    """
+    if not HAS_OPTUNA:
+        print("  Optuna not installed — falling back to grid CV")
+        return cross_validate_hyperparams(X, y, n_folds=n_folds)
+
+    n_pos = int(np.sum(y == 1))
+    n_neg = int(np.sum(y == 0))
+    weight_ratio = min(n_pos / max(n_neg, 1), 20)
+    actual_folds = min(n_folds, n_pos, n_neg)
+    if actual_folds < 2:
+        print("  WARNING: Not enough samples for Optuna CV, using defaults")
+        return 0.1, 0.25
+
+    skf = StratifiedKFold(n_splits=actual_folds, shuffle=True, random_state=42)
+
+    def objective(trial):
+        C = trial.suggest_float('C', 0.001, 100.0, log=True)
+        l1_ratio = trial.suggest_float('l1_ratio', 0.0, 1.0)
+
+        fold_aucs = []
+        for fold_train, fold_test in skf.split(X, y):
+            X_tr, X_te = X[fold_train], X[fold_test]
+            y_tr, y_te = y[fold_train], y[fold_test]
+
+            if np.sum(y_te == 1) < 1 or np.sum(y_te == 0) < 1:
+                continue
+
+            try:
+                if l1_ratio < 0.01:
+                    model = LogisticRegression(
+                        C=C, penalty='l2',
+                        class_weight={0: 1, 1: weight_ratio},
+                        max_iter=1000, solver='lbfgs', random_state=42
+                    )
+                else:
+                    model = LogisticRegression(
+                        C=C, penalty='elasticnet', l1_ratio=l1_ratio,
+                        class_weight={0: 1, 1: weight_ratio},
+                        max_iter=2000, solver='saga', random_state=42
+                    )
+                model.fit(X_tr, y_tr)
+                y_prob = model.predict_proba(X_te)[:, 1]
+                fold_aucs.append(roc_auc_score(y_te, y_prob))
+            except Exception:
+                continue
+
+        return float(np.mean(fold_aucs)) if fold_aucs else 0.0
+
+    study = optuna.create_study(
+        direction='maximize',
+        sampler=optuna.samplers.TPESampler(seed=42),
+        pruner=optuna.pruners.MedianPruner(n_startup_trials=20),
+    )
+    study.optimize(objective, n_trials=n_trials, show_progress_bar=False)
+
+    best_C = float(study.best_params['C'])
+    best_l1 = float(study.best_params['l1_ratio'])
+    best_auc = float(study.best_value)
+
+    # Round l1_ratio to 0 if very small (use L2 path)
+    if best_l1 < 0.01:
+        best_l1 = 0.0
+
+    print(f"\n  Optuna best ({n_trials} trials): C={best_C:.4f}, "
+          f"l1_ratio={best_l1:.4f}, AUC={best_auc:.4f}")
+
+    # Show top 5 trials
+    sorted_trials = sorted(study.trials, key=lambda t: t.value or 0, reverse=True)
+    print(f"  Top 5 trials:")
+    for t in sorted_trials[:5]:
+        print(f"    trial={t.number:>3}  C={t.params['C']:.4f}  "
+              f"l1_ratio={t.params['l1_ratio']:.4f}  AUC={t.value:.4f}")
+
+    return best_C, best_l1
 
 
 def _run_bootstrap(X_train, y_train, C, l1_ratio, weight_ratio, n_bootstrap,
@@ -652,6 +747,10 @@ def main():
                         help='Force C value (skip CV). Use 10.0 to match original v5.1.')
     parser.add_argument('--force-l1-ratio', type=float, default=None,
                         help='Force l1_ratio (skip CV). Use 0.25 to match original v5.1.')
+    parser.add_argument('--use-optuna', action='store_true',
+                        help='Use Optuna Bayesian TPE search instead of grid CV (v5.2).')
+    parser.add_argument('--optuna-trials', type=int, default=200,
+                        help='Number of Optuna trials (default: 200).')
     args = parser.parse_args()
 
     # Allow CLI override of the module-level constant
@@ -668,6 +767,7 @@ def main():
     print(f"Bootstrap: {args.n_bootstrap}")
     print(f"Random sample: {args.random_sample}")
     print(f"Temporal split: {'Yes' if not args.no_temporal_split else 'No'}")
+    print(f"Optuna: {'Yes (' + str(args.optuna_trials) + ' trials)' if args.use_optuna else 'No (grid CV)'}")
 
     if not DB_PATH.exists():
         print(f"ERROR: Database not found: {DB_PATH}")
@@ -717,6 +817,15 @@ def main():
             best_C = args.force_C
             best_l1 = args.force_l1_ratio if args.force_l1_ratio is not None else 0.25
             print(f"\n  Forcing hyperparameters: C={best_C}, l1_ratio={best_l1} (CV skipped)")
+        elif args.use_optuna:
+            print(f"\n  Running Optuna TPE search ({args.optuna_trials} trials)...")
+            if not HAS_OPTUNA:
+                print("  WARNING: optuna not installed — falling back to grid CV")
+                print("  Install with: pip install optuna")
+            best_C, best_l1 = optuna_optimize_hyperparams(
+                X_train, y_train, n_trials=args.optuna_trials, n_folds=5
+            )
+            print(f"\n  Optuna result: C={best_C:.4f}, l1_ratio={best_l1:.4f}")
         else:
             best_C, best_l1 = cross_validate_hyperparams(X_train, y_train, n_folds=5)
             print(f"\n  Best: C={best_C}, l1_ratio={best_l1}")

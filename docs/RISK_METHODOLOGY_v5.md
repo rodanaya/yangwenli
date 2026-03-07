@@ -408,22 +408,29 @@ Vendor-level features (vendor_concentration, win_rate, price_volatility, institu
 ## 10. Pipeline Execution
 
 ```bash
-# Full v5.0 pipeline
+# Full v5.1 pipeline
 cd backend
 
 # 1-3: Feature computation (skip if already done)
 python -m scripts.compute_factor_baselines
-python -m scripts.compute_z_features
+python -m scripts.compute_z_features       # ~45min on 3.1M contracts
 python -m scripts.compute_mahalanobis
 
-# 4: Calibrate v5.0 model
-python -m scripts.calibrate_risk_model_v5
+# 4: Calibrate model — grid CV (default) or Optuna TPE (v5.2)
+python -m scripts.calibrate_risk_model_v5                    # grid CV
+python -m scripts.calibrate_risk_model_v5 --use-optuna       # Bayesian (v5.2)
 
 # 5: Score all contracts
 python -m scripts.calculate_risk_scores_v5 --batch-size 100000
 
 # 6: Regenerate stats
 python -m scripts.precompute_stats
+
+# v5.2 enrichment pipeline (run after z-features and scoring are done)
+python -m scripts.compute_shap_explanations          # SHAP per vendor
+python -m scripts.compute_ml_anomalies_pyod          # PyOD ensemble anomaly scores
+python -m scripts.compute_vendor_drift               # drift detection vs 2002-2020 baseline
+python -m scripts.refresh_vendor_communities         # Louvain community refresh
 ```
 
 ### Database Tables
@@ -452,13 +459,93 @@ python -m scripts.precompute_stats
 
 ---
 
+## 11. v5.2 Analytical Engine Improvements
+
+v5.2 adds four layers of ML tooling on top of the v5.1 logistic regression core:
+
+### 11.1 Optuna Bayesian Hyperparameter Search
+
+The 12-trial grid search (C ∈ {0.01, 0.1, 1.0, 10.0} × l1_ratio ∈ {0.0, 0.25, 0.5}) is replaced by an Optuna TPE study with 200 trials over a continuous space (log-uniform C ∈ [0.001, 100], l1_ratio ∈ [0.0, 1.0]). TPE builds a probabilistic model of the objective function and focuses trials on promising regions, typically finding better hyperparameters than grid search with fewer model fits.
+
+```bash
+python -m scripts.calibrate_risk_model_v5 --use-optuna --optuna-trials 200
+```
+
+Grid CV is still available as default for fast reproducibility.
+
+### 11.2 Exact SHAP Explanations for Linear Models
+
+For logistic regression, SHAP values have an exact analytical form:
+`φ_i(x) = β_i × (x_i − E[x_i])`
+
+The `compute_shap_explanations.py` script computes per-vendor SHAP vectors using the sector-specific model coefficients and background means. Results are stored in `vendor_shap_v52` and `feature_importance` tables.
+
+```bash
+# Requires contract_z_features to be populated first
+python -m scripts.compute_shap_explanations
+```
+
+| Output Table | Contents |
+|---|---|
+| `vendor_shap_v52` | Per-vendor SHAP JSON, top risk/protect factors |
+| `feature_importance` | Global feature importance ranks by mean |φ_i| |
+
+### 11.3 PyOD Multi-Algorithm Anomaly Detection
+
+Scales contract-level anomaly detection from 1,004 rows to all 3.1M contracts using PyOD 2's unified API. Three complementary algorithms produce an ensemble score:
+
+| Algorithm | Type | Strength |
+|---|---|---|
+| IForest (200 trees) | Tree-based | Global outliers, fast, scalable |
+| COPOD | Copula tail-probability | Fastest at 3M+ scale |
+| LOF | Local density | Cluster-based local anomalies |
+
+Ensemble = mean of per-model normalized scores. Contamination=0.09 matches v5.1's 9% high-risk rate.
+
+```bash
+python -m scripts.compute_ml_anomalies_pyod  # all 3.1M, IForest+COPOD
+python -m scripts.compute_ml_anomalies_pyod --models iforest,copod,lof --sample 500000
+```
+
+### 11.4 Distribution Drift Detection (Evidently + KS)
+
+`compute_vendor_drift.py` detects when new COMPRANET data batches have shifted feature distributions relative to the training baseline (2002–2020). Uses Kolmogorov-Smirnov tests on all 16 z-score features. Evidently provides richer HTML reports if installed.
+
+```bash
+python -m scripts.compute_vendor_drift  # compare 2024 vs 2002-2020 baseline
+python -m scripts.compute_vendor_drift --reference-year-min 2002 --current-year 2024
+```
+
+If >25% of features drift significantly, the script recommends model retraining.
+
+### 11.5 Louvain Community Refresh
+
+A lightweight `refresh_vendor_communities.py` script re-runs Louvain community detection after new data ingestion, without rebuilding centrality metrics. Updates `community_id`, `community_size`, and `community_avg_risk` in `vendor_graph_features`.
+
+```bash
+python -m scripts.refresh_vendor_communities
+python -m scripts.refresh_vendor_communities --resolution 1.2  # smaller communities
+```
+
+### v5.2 MCP Servers Added
+
+Three new MCP servers were added to `.mcp.json`:
+
+| Server | Purpose |
+|---|---|
+| DuckDB (motherduck) | 200x faster OLAP queries over 3.1M contracts |
+| Optuna | Manage hyperparameter tuning studies interactively |
+| GitHub | Search procurement fraud ML papers and repos |
+
+---
+
 ## Version History
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| **5.2.0** | TBD | Temporal feature leakage fix (point-in-time vendor stats), per-sector bootstrap CIs, Platt scaling applied at inference, PU correction hyperparameter alignment, class weight correction, 1,000 bootstrap resamples, per-sector AUCs persisted. Score framing updated: "risk indicators" not "calibrated probabilities." |
-| **5.1.0** | TBD | Ground truth expansion: Case 22 (SAT EFOS, 38 vendors), Cases 20–21 (pending vendor match). External data integration: SAT EFOS 13,960 records, SFP sanctions 1,954 records (22 RFC-matched). ASF audit findings (scraper in progress). Ghost company blind spot fix. |
-| **5.0.1** | 2026-02-16 | Updated docs to match database: 16 features (4 new behavioral), Train AUC 0.967, Test AUC 0.960, c=0.887, C=10.0/l1=0.25. Fixed views referencing empty risk_scores table. Superseded by v5.2. |
+| **5.2.0** | 2026-03-07 | Analytical engine: Optuna TPE hyperparameter search, exact SHAP explanations, PyOD multi-algorithm anomaly detection (IForest+COPOD+LOF ensemble), Evidently drift detection, Louvain community refresh. MCP servers: DuckDB, Optuna, GitHub. Temporal feature leakage fix (point-in-time vendor stats via vendor_rolling_stats). Per-sector bootstrap CIs, per-sector AUCs persisted. |
+| **5.1.0** | 2026-02-27 | Ground truth expansion: Case 22 (SAT EFOS, 38 vendors), Cases 20–21 (pending vendor match). External data integration: SAT EFOS 13,960 records, SFP sanctions 1,954 records (22 RFC-matched). Ghost company blind spot fix (EFOS avg 0.028→0.283). |
+| **5.0.1** | 2026-02-16 | Updated docs to match database: 16 features (4 new behavioral), Train AUC 0.967, Test AUC 0.960, c=0.887, C=10.0/l1=0.25. Fixed views referencing empty risk_scores table. |
 | **5.0.0** | 2026-02-14 | Per-sector sub-models, diversified ground truth (15 cases, 27 vendors), temporal train/test split, Elkan & Noto PU correction, cross-validated ElasticNet. |
 | 4.0.2 | 2026-02-09 | Dampened coefficients, OECD-compliant thresholds. AUC 0.942. |
 | 4.0.1 | 2026-02-09 | Retrained with diversified ground truth (9 cases). AUC 0.951. |
