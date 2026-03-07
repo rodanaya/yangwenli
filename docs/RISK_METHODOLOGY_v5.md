@@ -1,21 +1,23 @@
-# Risk Scoring Methodology v5.0
+# Risk Scoring Methodology v5.1 (Active) + v5.2 Analytical Layer
 
-**Last Updated:** February 26, 2026 | **Contracts:** 3,110,007 | **Years:** 2002-2025
+**Last Updated:** March 7, 2026 | **Contracts:** 3,051,294 | **Years:** 2002-2025
+
+> **Active model**: v5.1 (contract risk scores). v5.2 adds SHAP explanations, PyOD ensemble anomaly detection, and vendor drift monitoring on top of v5.1 scores — the underlying scores are unchanged.
 
 ---
 
-## Quick Reference
+## Quick Reference (v5.1 — Active)
 
 | Level | Threshold | Count | % | Action |
 |-------|-----------|-------|---|--------|
-| **Critical** | >= 0.50 | 178,938 | 5.8% | Immediate investigation |
-| **High** | >= 0.30 | 67,190 | 2.2% | Priority review |
-| **Medium** | >= 0.10 | 294,468 | 9.5% | Watch list |
-| **Low** | < 0.10 | 2,569,411 | 82.6% | Standard monitoring |
+| **Critical** | >= 0.50 | 190,132 | 6.1% | Immediate investigation |
+| **High** | >= 0.30 | 88,728 | 2.9% | Priority review |
+| **Medium** | >= 0.10 | 408,836 | 13.2% | Watch list |
+| **Low** | < 0.10 | 2,363,598 | 77.8% | Standard monitoring |
 
-**High-risk rate: 7.9%** (OECD benchmark: 2-15%)
+**High-risk rate: 9.0%** (OECD benchmark: 2-15%)
 
-**Validation (v5.0.1):** Train AUC = 0.967, Test AUC = 0.960 (temporal split), PU c = 0.887
+**Validation (v5.1):** Train AUC = 0.964, Test AUC = 0.957 (temporal split), PU c = 0.882
 
 > **Score Interpretation Note**: Risk scores are statistical risk indicators measuring similarity to documented corruption patterns — not calibrated probabilities of corruption. The Positive-Unlabeled learning framework estimates similarity to *known* corruption cases (selected from high-profile documented scandals). A score of 0.50 does not mean a 50% probability of corruption; it means the contract's procurement characteristics closely resemble those from known cases. Use scores for investigation triage, not as probabilistic estimates.
 
@@ -543,7 +545,7 @@ Three new MCP servers were added to `.mcp.json`:
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| **5.2.0** | 2026-03-07 | Analytical engine: Optuna TPE hyperparameter search, exact SHAP explanations, PyOD multi-algorithm anomaly detection (IForest+COPOD+LOF ensemble), Evidently drift detection, Louvain community refresh. MCP servers: DuckDB, Optuna, GitHub. Temporal feature leakage fix (point-in-time vendor stats via vendor_rolling_stats). Per-sector bootstrap CIs, per-sector AUCs persisted. |
+| **5.2.0** | 2026-03-07 | Analytical enrichment layer (v5.1 contract scores unchanged). SHAP explanations per vendor (`vendor_shap_v52`, 456K rows): φᵢ = βᵢ × (zᵢ − E[zᵢ]). PyOD ensemble anomaly (`contract_anomaly_scores`, 9.3M rows: IForest+COPOD+ensemble avg=0.138). Vendor drift detection via KS-test (`drift_report`). Ground truth: Cases 23–25 added (Bahud Processing 15.8B, Garza Ponce 13.8B, BIRMEX Suministrador Vacunas 5.9B) → 25 cases, 95 vendors. DB cleanup: 58,713 duplicate/zero contracts removed → 3,051,294. New enrichment columns: `is_election_year`, `publication_delay_days`, `sexenio_year`, `ensemble_anomaly_score`. v5.2 UI: VendorProfile SHAP panel, ContractDetail "AI Confirmed" badge, Dashboard CrossModelValidationWidget, ModelTransparency SHAP+Drift. 479 backend tests. |
 | **5.1.0** | 2026-02-27 | Ground truth expansion: Case 22 (SAT EFOS, 38 vendors), Cases 20–21 (pending vendor match). External data integration: SAT EFOS 13,960 records, SFP sanctions 1,954 records (22 RFC-matched). Ghost company blind spot fix (EFOS avg 0.028→0.283). |
 | **5.0.1** | 2026-02-16 | Updated docs to match database: 16 features (4 new behavioral), Train AUC 0.967, Test AUC 0.960, c=0.887, C=10.0/l1=0.25. Fixed views referencing empty risk_scores table. |
 | **5.0.0** | 2026-02-14 | Per-sector sub-models, diversified ground truth (15 cases, 27 vendors), temporal train/test split, Elkan & Noto PU correction, cross-validated ElasticNet. |

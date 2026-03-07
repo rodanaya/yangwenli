@@ -23,17 +23,17 @@ This is not a simple dashboard. It is a production analytical engine built for i
 
 | Metric | Value |
 |--------|-------|
-| Contracts analyzed | 3,110,007 |
-| Validated procurement value | ~9.5T MXN |
+| Contracts analyzed | 3,051,294 |
+| Validated procurement value | ~9.3T MXN |
 | Vendors tracked | 320,429 |
 | Institutions | 4,456 |
 | Interactive pages | 36 |
-| Active risk model | **v5.1** (per-sector calibrated) |
+| Active risk model | **v5.1** (per-sector calibrated) + **v5.2** analytical enrichment |
 | Train AUC-ROC | **0.964** |
 | Test AUC-ROC | **0.957** (temporal holdout — 2021+ contracts) |
-| Ground truth detection | **99.8%** medium+ across 22 cases |
+| Ground truth detection | **99.8%** medium+ across 22 training cases |
 | False negative rate | **0.2%** |
-| Ground truth cases | 22 (27 vendors, 26,582 labeled contracts) |
+| Ground truth cases | 25 (95 vendors) |
 | High-risk rate | **9.0%** (OECD benchmark: 2–15%) |
 
 ---
@@ -140,7 +140,7 @@ rubli/
 
 ---
 
-## Risk Model v5.1
+## Risk Model v5.1 + v5.2 Analytical Layer
 
 The platform uses a **per-sector statistical risk framework**. Scores measure similarity to documented corruption patterns, normalized by sector and year baselines. The model was trained on contracts through 2020 and tested on 2021+ contracts for honest generalization — no data leakage.
 
@@ -193,14 +193,14 @@ raw features
 
 | Level | Threshold | Count | % |
 |-------|-----------|-------|---|
-| **Critical** | >= 0.50 | 201,745 | 6.5% |
-| **High** | >= 0.30 | 126,553 | 4.1% |
-| **Medium** | >= 0.10 | ~1,365,000 | ~43.9% |
-| **Low** | < 0.10 | ~1,417,000 | ~45.6% |
+| **Critical** | >= 0.50 | 190,132 | 6.1% |
+| **High** | >= 0.30 | 88,728 | 2.9% |
+| **Medium** | >= 0.10 | 408,836 | 13.2% |
+| **Low** | < 0.10 | 2,363,598 | 77.8% |
 
 **High-risk rate: 9.0%** — within OECD benchmark of 2–15%.
 
-### Validation Against 22 Documented Cases
+### Validation Against 22 Training Cases (25 total in DB)
 
 | Case | Type | Contracts | High+ Detection | Avg Score |
 |------|------|-----------|:---:|-----------|
@@ -232,6 +232,19 @@ raw features
 | v4.0 | 0.951 | — (in-sample) | 9 | Z-score normalization, Mahalanobis distance |
 | v5.0 | 0.967 | 0.960 | 15 | Per-sector sub-models, temporal validation, PU-learning |
 | **v5.1** | **0.964** | **0.957** | **22** | Ground truth expansion, SAT EFOS integration |
+| **v5.2** | — (scores unchanged) | — | **25** | SHAP explanations, PyOD ensemble anomaly, vendor drift detection |
+
+### v5.2 Analytical Enrichment Layer
+
+v5.2 adds three analytical layers on top of v5.1 scores — the base contract risk scores are unchanged.
+
+| Component | Output | Description |
+|-----------|--------|-------------|
+| **SHAP Explanations** | `vendor_shap_v52` (456K rows) | Exact per-vendor feature contributions: φᵢ = βᵢ × (zᵢ − E[zᵢ]). Powers the VendorProfile radar chart and risk breakdown panels. |
+| **PyOD Ensemble Anomaly** | `contract_anomaly_scores` (9.3M rows) | IForest + COPOD + ensemble score per contract. `contracts.ensemble_anomaly_score` avg=0.138, P91 threshold=0.260. Powers "AI Confirmed" badges on contracts scoring high on both the statistical risk model and the unsupervised anomaly detector. |
+| **Vendor Drift Detection** | `drift_report` | KS-test across 16 z-score features vs. 2002–2020 baseline. Flags vendors whose procurement pattern has shifted significantly — indicating either reformed behavior or new corruption tactics. |
+
+The v5.2 pipeline requires `contract_z_features` to be populated (`compute_z_features.py`) before running.
 
 ---
 
@@ -285,7 +298,7 @@ npm run dev -- --port 3009
 
 Open `http://localhost:3009`
 
-**Note:** On first startup, `_startup_checks()` scans 3.1M rows — expect 30–60s cold start. This is expected behavior.
+**Note:** On first startup, `_startup_checks()` scans ~3.05M rows — expect 30–60s cold start. This is expected behavior.
 
 ### Docker (Production)
 
@@ -332,7 +345,7 @@ The backend exposes **60+ REST endpoints** across 10+ router modules. Full inter
 ## Testing
 
 ```bash
-# Backend (359 tests)
+# Backend (479 tests)
 python -m pytest backend/tests/ -q --tb=short -p no:cacheprovider
 
 # TypeScript — both checks required
@@ -341,7 +354,7 @@ npx tsc --noEmit          # lenient tsconfig
 npm run build             # enforces noUnusedLocals/noUnusedParameters
 ```
 
-Target: 359 backend tests passing, 0 TypeScript errors in both checks.
+Target: 479 backend tests passing, 0 TypeScript errors in both checks.
 
 ---
 

@@ -1,6 +1,6 @@
 # Ground Truth: Documented Corruption Cases
 
-**Last Updated:** February 9, 2026 | **Cases:** 9 | **Matched Vendors:** 17 | **Contracts:** 21,252
+**Last Updated:** March 7, 2026 | **Cases:** 25 | **Matched Vendors:** 95 | **Active training cases:** 22 (Cases 1–22, excl. 16–19)
 
 ---
 
@@ -291,6 +291,57 @@ To reduce bias, prioritize adding cases that involve:
 | evidence_strength | VARCHAR | How strongly this contract is linked |
 | match_method | VARCHAR | vendor_match, procedure_match, manual |
 | match_confidence | REAL | 0-1 confidence |
+
+---
+
+---
+
+## Cases 23–25 (Added March 7, 2026)
+
+### Case 23: BAHUD PROCESSING MEXICO — Banco del Bienestar Direct Award (2021)
+| Property | Value |
+|----------|-------|
+| **Case ID** | BAHUD_BANCO_BIENESTAR_2021 |
+| **Type** | Procurement fraud |
+| **Amount** | 15,787M MXN (1 contract, direct award) |
+| **RFC** | BPM1809043P8 (incorporated 2018, 3 yrs before contract) |
+| **Confidence** | Medium |
+| **Sector** | Hacienda |
+
+Single 15.79B MXN direct-award contract from Banco del Bienestar to a company incorporated only 3 years prior. Matches ghost company fingerprint pattern (≤5 contracts, >50M MXN, all direct award).
+
+---
+
+### Case 24: CONSTRUCTORA GARZA PONCE — Nuevo León Infrastructure Capture (2006–2024)
+| Property | Value |
+|----------|-------|
+| **Case ID** | GARZA_PONCE_NL_INFRA |
+| **Type** | Institution capture |
+| **Amount** | 13,825M MXN (22 contracts) |
+| **Confidence** | Low |
+| **Sector** | Infraestructura |
+
+22 contracts at 100% risk score, 82.2% concentrated at NL-Secretaría de Infraestructura. Regional institution capture pattern spanning 18 years. Added at low confidence — concentration may reflect legitimate specialization rather than corruption.
+
+---
+
+### Case 25: BIRMEX VACCINE INTERMEDIARY — Suministrador de Vacunas (2018–2022)
+| Property | Value |
+|----------|-------|
+| **Case ID** | BIRMEX_SUMINISTRADOR_VACUNAS_2018_2022 |
+| **Type** | Overpricing / intermediary extraction |
+| **Amount** | 5,910M MXN (11 direct-award contracts) |
+| **RFC** | NULL (no RFC registered) |
+| **Confidence** | Medium |
+| **Sector** | Salud (BIRMEX) |
+
+No-RFC intermediary inserted into BIRMEX vaccine supply chain. Received 22.8% of all BIRMEX spending 2018–2022. Sanofi supplied identical hexavalente vaccines simultaneously via direct contracts — consistent with intermediary resale at markup. First two contracts labeled "Asociación Público Privada" (unprecedented for vaccine procurement). Disappeared after 2022 AMLO procurement reform. Estimated markup: 295M–1.18B MXN (5–20% of 5.91B). No public investigation found as of Mar 2026. Two Lithuanian-registered companies (UAB JORINIS, ENTAFARMA UAB) also appeared at BIRMEX in 2021 — under investigation for related pattern.
+
+**Matched Vendor (1):**
+
+| Vendor | Vendor ID | Contracts | Match Confidence |
+|--------|-----------|-----------|-----------------|
+| SUMINISTRADOR DE VACUNAS, S.A. DE C.V. | 233284 | 11 | 1.0 |
 
 ---
 
