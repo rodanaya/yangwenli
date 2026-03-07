@@ -53,6 +53,7 @@ import {
 } from 'lucide-react'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import AdministrationFingerprints from '@/components/charts/AdministrationFingerprints'
+import { AdminSectorSunburst } from '@/components/charts/AdminSectorSunburst'
 
 // =============================================================================
 // Constants
@@ -588,6 +589,22 @@ export default function Administrations() {
 
       {activeTab === 'overview' && (
       <>
+
+      {/* Spending Fingerprint Sunburst */}
+      <Card className="border-border/40">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-mono flex items-center gap-2">
+            <Activity className="h-4 w-4 text-accent" />
+            Spending Fingerprint by Administration
+          </CardTitle>
+          <p className="text-xs text-text-muted">
+            Inner ring = administration · Outer ring = sector spending · Hover to inspect
+          </p>
+        </CardHeader>
+        <CardContent>
+          <AdminSectorSunburst />
+        </CardContent>
+      </Card>
 
       {/* L0: Admin Selector */}
       <motion.div

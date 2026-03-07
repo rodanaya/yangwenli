@@ -21,6 +21,7 @@ import { networkApi, vendorApi, institutionApi } from '@/api/client'
 import type { NetworkNode, NetworkLink, CoBidderItem, CommunitiesResponse, CommunityDetailResponse } from '@/api/client'
 import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
 import { getInstitutionGroup, getShortName as getInstShortName, getInstitutionColor } from '@/lib/institution-groups'
+import { CommunityBubbles } from '@/components/charts/CommunityBubbles'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -2005,6 +2006,10 @@ export function NetworkGraph() {
                 )}
                 {commData.graph_ready && commData.communities.length > 0 && (
                   <>
+                    {/* Bubble cluster overview */}
+                    <div className="mb-4">
+                      <CommunityBubbles />
+                    </div>
                     <div className="mb-3 space-y-2">
                       <p className="text-xs text-text-muted">
                         {commData.total_communities.toLocaleString()} co-bidding clusters detected ·{' '}

@@ -9,7 +9,7 @@ import { useState, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps'
-import { Map as MapIcon, AlertTriangle, DollarSign, Shield, FileText, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
+import { Map as MapIcon, AlertTriangle, DollarSign, Shield, FileText, ZoomIn, ZoomOut, RotateCcw, Grid3X3 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
@@ -18,6 +18,7 @@ import { RISK_COLORS } from '@/lib/constants'
 import { subnationalApi } from '@/api/client'
 import type { SubnationalStateSummary } from '@/api/types'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { HexMap } from '@/components/charts/HexMap'
 
 // GeoJSON served from public/ — same origin fetch, no CORS issues
 const GEO_URL = '/mexico.geojson'
@@ -155,6 +156,7 @@ function MapTooltip({
 export default function MexicoMap() {
   const navigate   = useNavigate()
   const [metric, setMetric]     = useState<Metric>('amount')
+  const [viewMode, setViewMode] = useState<'choropleth' | 'hex'>('choropleth')
   const [zoom, setZoom]         = useState(DEFAULT_ZOOM)
   const [center, setCenter]     = useState<[number, number]>(DEFAULT_CENTER)
   const [hoveredCode, setHoveredCode] = useState<string | null>(null)
@@ -209,23 +211,45 @@ export default function MexicoMap() {
         icon={MapIcon}
       />
 
-      {/* Metric selector */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs text-muted-foreground">Show:</span>
-        {(Object.keys(METRIC_CONFIG) as Metric[]).map((m) => (
+      {/* Controls row: metric selector + view toggle */}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-muted-foreground">Show:</span>
+          {(Object.keys(METRIC_CONFIG) as Metric[]).map((m) => (
+            <Button
+              key={m}
+              variant={metric === m ? 'default' : 'outline'}
+              size="sm"
+              className="h-7 text-xs gap-1.5"
+              onClick={() => setMetric(m)}
+            >
+              {m === 'amount'    && <DollarSign className="h-3 w-3" />}
+              {m === 'risk'      && <Shield     className="h-3 w-3" />}
+              {m === 'contracts' && <FileText   className="h-3 w-3" />}
+              {METRIC_CONFIG[m].label}
+            </Button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1 border border-border/40 rounded-md p-0.5">
           <Button
-            key={m}
-            variant={metric === m ? 'default' : 'outline'}
+            variant={viewMode === 'choropleth' ? 'default' : 'ghost'}
             size="sm"
-            className="h-7 text-xs gap-1.5"
-            onClick={() => setMetric(m)}
+            className="h-6 text-xs gap-1.5 px-2"
+            onClick={() => setViewMode('choropleth')}
+            title="Geographic choropleth"
           >
-            {m === 'amount'    && <DollarSign className="h-3 w-3" />}
-            {m === 'risk'      && <Shield     className="h-3 w-3" />}
-            {m === 'contracts' && <FileText   className="h-3 w-3" />}
-            {cfg.label === METRIC_CONFIG[m].label ? METRIC_CONFIG[m].label : METRIC_CONFIG[m].label}
+            <MapIcon className="h-3 w-3" /> Choropleth
           </Button>
-        ))}
+          <Button
+            variant={viewMode === 'hex' ? 'default' : 'ghost'}
+            size="sm"
+            className="h-6 text-xs gap-1.5 px-2"
+            onClick={() => setViewMode('hex')}
+            title="Equal-area hex grid"
+          >
+            <Grid3X3 className="h-3 w-3" /> Hex Grid
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -264,8 +288,13 @@ export default function MexicoMap() {
             </div>
           )}
 
-          {/* Map */}
-          {!isLoading && !error && (
+          {/* Hex Grid view */}
+          {!isLoading && !error && viewMode === 'hex' && (
+            <HexMap states={states} metric={metric} />
+          )}
+
+          {/* Choropleth map */}
+          {!isLoading && !error && viewMode === 'choropleth' && (
             // eslint-disable-next-line jsx-a11y/no-static-element-interactions
             <div
               className="relative rounded overflow-hidden bg-slate-50 dark:bg-slate-900/30 border border-border"

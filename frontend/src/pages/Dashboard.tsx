@@ -50,10 +50,9 @@ import {
 import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN, CURRENT_MODEL_VERSION } from '@/lib/constants'
 import { GlobalSearch } from '@/components/GlobalSearch'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
-import { StatRing } from '@/components/ui/StatRing'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { LayoutDashboard } from 'lucide-react'
-import { ProcurementCalendar } from '@/components/ProcurementCalendar'
+import { RiskCalendarHeatmap } from '@/components/charts/RiskCalendarHeatmap'
 
 // ============================================================================
 // Dashboard: Bold, data-dense intelligence overview
@@ -125,7 +124,7 @@ const TOTAL_YEARS = 2030 - 2001
 
 function EraTimelineStrip() {
   const [hoveredEra, setHoveredEra] = React.useState<string | null>(null)
-  const currentYear = 2026
+  const currentYear = new Date().getFullYear()
 
   return (
     <div className="rounded border border-border/20 overflow-hidden bg-background-elevated/10">
@@ -511,7 +510,7 @@ export function Dashboard() {
               AUC {modelMeta?.auc_test != null ? modelMeta.auc_test.toFixed(3) : '0.957'} · {modelMeta?.version ?? CURRENT_MODEL_VERSION}
             </span>
           </div>
-          <p className="text-xs text-white/40">
+          <p className="text-xs text-text-muted/70">
             Data as of {lastUpdated
               ? lastUpdated
               : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -551,14 +550,21 @@ export function Dashboard() {
       </div>
 
       {/* ================================================================ */}
-      {/* v1.1 STAT RINGS — High-level model performance summary           */}
+      {/* 4 KPI TILES — Live API data, replaces hardcoded stat rings      */}
       {/* ================================================================ */}
-      <div className="flex items-center justify-center gap-8 py-4 px-6 rounded-xl border border-border/30 bg-surface/40">
-        <StatRing value={9} label="High Risk" color="#f87171" />
-        <div className="h-12 w-px bg-border/30" />
-        <StatRing value={84} label="Detection" color="#34d399" />
-        <div className="h-12 w-px bg-border/30" />
-        <StatRing value={91} label="Model AUC" color="#818cf8" />
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {([
+          { label: 'High / Critical Risk', value: dashLoading ? '—' : `${criticalHighContractPct.toFixed(1)}%`, sub: 'of all 3.1M contracts', color: '#f87171' },
+          { label: 'Value at Risk', value: dashLoading ? '—' : `${criticalHighValuePct.toFixed(1)}%`, sub: 'of total procurement spend', color: '#fb923c' },
+          { label: 'Model AUC', value: execLoading ? '—' : modelAuc.toFixed(3), sub: 'temporal train/test split', color: '#818cf8' },
+          { label: 'Cases Validated', value: execLoading ? '—' : String(groundTruth?.cases ?? 22), sub: 'documented corruption cases', color: '#34d399' },
+        ] as const).map(({ label, value, sub, color }) => (
+          <div key={label} className="px-4 py-3 rounded-lg border border-border/30 bg-background-elevated/20">
+            <p className="text-[10px] font-bold tracking-wider uppercase text-text-muted font-mono mb-1">{label}</p>
+            <p className="text-2xl font-black tabular-nums font-mono leading-none" style={{ color }}>{value}</p>
+            <p className="text-[10px] text-text-muted mt-1">{sub}</p>
+          </div>
+        ))}
       </div>
 
       {/* ================================================================ */}
@@ -944,11 +950,11 @@ export function Dashboard() {
       {/* SECTOR SPEND TREEMAP — where the money concentrates            */}
       {/* ================================================================ */}
       {sectorData.length > 0 && (
-        <div className="rounded-xl bg-slate-900/50 border border-white/5 p-4">
+        <div className="rounded-xl bg-background-elevated/20 border border-border/30 p-4">
           <div className="flex items-center justify-between mb-1">
             <div>
-              <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-1">Spend by Sector</h3>
-              <p className="text-xs text-white/50">Size = total spend · Color = sector · Click to explore</p>
+              <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider mb-1">Spend by Sector</h3>
+              <p className="text-xs text-text-muted">Size = total spend · Color = sector · Click to explore</p>
             </div>
             <ChartDownloadButton targetRef={sectorTreemapRef} filename="rubli-sector-spend" />
           </div>
@@ -1034,77 +1040,28 @@ export function Dashboard() {
                 />
               </ResponsiveContainer>
             </div>
-          <p className="text-xs text-white/50 italic mt-2 px-1">
+          <p className="text-xs text-text-muted italic mt-2 px-1">
             Energia and Infraestructura together represent over half of total procurement value — their concentration makes them the highest-priority sectors for investigation.
           </p>
         </div>
       )}
 
       {/* ================================================================ */}
-      {/* ADMINISTRATION REPORT CARD — 5 governments compared           */}
+      {/* ADMINISTRATION COMPARISON — Compact link to full analysis      */}
       {/* ================================================================ */}
-      <Card className="border-border/40">
-        <CardContent className="pt-5 pb-4">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <div className="flex items-center gap-2 mb-0.5">
-                <Scale className="h-4 w-4 text-accent" />
-                <h2 className="text-base font-bold text-text-primary">{t('adminReportCardTitle')}</h2>
-              </div>
-              <p className="text-xs text-text-muted">{t('adminReportCardDesc')}</p>
-            </div>
-            <button
-              onClick={() => navigate('/administrations')}
-              className="text-xs text-accent flex items-center gap-1"
-            >
-              {t('fullBreakdown')} <ArrowUpRight className="h-3 w-3" />
-            </button>
-          </div>
-          {execLoading ? (
-            <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-5">
-              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-32" />)}
-            </div>
-          ) : (
-            <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-5">
-              {(execData?.administrations || []).map((admin) => {
-                const hrColor = admin.high_risk_pct >= 10 ? 'text-risk-critical' :
-                  admin.high_risk_pct >= 8 ? 'text-risk-high' :
-                  admin.high_risk_pct >= 6 ? 'text-risk-medium' : 'text-risk-low'
-                const partyClass = admin.party === 'PAN' ? 'bg-blue-500/15 text-blue-400' :
-                  admin.party === 'PRI' ? 'bg-green-600/15 text-green-500' :
-                  'bg-rose-700/15 text-rose-400'
-                return (
-                  <button
-                    key={admin.name}
-                    onClick={() => navigate('/administrations')}
-                    className="flex flex-col gap-1 p-3 rounded-lg border border-border/30 hover:border-border/60 hover:bg-background-elevated/30 transition-all text-left"
-                  >
-                    <span className={cn('text-[9px] font-bold px-1.5 py-0.5 rounded font-mono self-start', partyClass)}>
-                      {admin.party}
-                    </span>
-                    <p className="text-sm font-bold text-text-primary leading-tight mt-0.5">{admin.name}</p>
-                    <p className="text-[9px] text-text-muted font-mono">{admin.years}</p>
-                    <div className="mt-1.5 space-y-1">
-                      <div>
-                        <p className="text-[9px] text-text-muted font-mono">{t('adminDirectAwardShort')}</p>
-                        <p className="text-base font-black tabular-nums font-mono text-risk-medium">
-                          {admin.direct_award_pct.toFixed(0)}%
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-[9px] text-text-muted font-mono">{t('adminHighRiskShort')}</p>
-                        <p className={cn('text-base font-black tabular-nums font-mono', hrColor)}>
-                          {admin.high_risk_pct.toFixed(1)}%
-                        </p>
-                      </div>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <button
+        onClick={() => navigate('/administrations')}
+        className="w-full flex items-center gap-4 px-5 py-4 rounded-xl border border-border/30 bg-background-elevated/10 hover:border-accent/30 hover:bg-accent/5 transition-all text-left group"
+      >
+        <div className="p-2 rounded-lg bg-border/20 shrink-0 group-hover:bg-accent/10 transition-colors">
+          <Scale className="h-5 w-5 text-text-muted group-hover:text-accent transition-colors" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-text-primary">{t('adminReportCardTitle')}</p>
+          <p className="text-xs text-text-muted mt-0.5">{t('adminReportCardDesc')}</p>
+        </div>
+        <ArrowUpRight className="h-4 w-4 text-text-muted group-hover:text-accent transition-colors flex-shrink-0" />
+      </button>
 
       {/* ================================================================ */}
       {/* TOP FLAGGED VENDORS — Largest recipients with AI risk scores   */}
@@ -1177,32 +1134,32 @@ export function Dashboard() {
       {/* ================================================================ */}
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-5">
         {/* Sector Intelligence — 3 columns */}
-        <div className="lg:col-span-3 rounded-xl bg-slate-900/50 border border-white/5 p-4">
-          <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-1">{t('sectorIntelligence')}</h3>
-          <p className="text-xs text-white/50 mb-4">{t('sectorIntelligenceDesc')}</p>
+        <div className="lg:col-span-3 rounded-xl bg-background-elevated/20 border border-border/30 p-4">
+          <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider mb-1">{t('sectorIntelligence')}</h3>
+          <p className="text-xs text-text-muted mb-4">{t('sectorIntelligenceDesc')}</p>
           {dashLoading ? (
             <div className="space-y-2">{[...Array(6)].map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
           ) : (
             <SectorGrid data={sectorData} onSectorClick={(id) => navigate(`/sectors/${id}`)} />
           )}
-          <p className="text-xs text-white/50 italic mt-2 px-1">
+          <p className="text-xs text-text-muted italic mt-2 px-1">
             Salud and Infraestructura consistently lead in value-at-risk — concentrated vendors and opaque direct awards drive their elevated scores.
           </p>
         </div>
 
         {/* Risk Trajectory — 2 columns */}
-        <div className="lg:col-span-2 rounded-xl bg-slate-900/50 border border-white/5 p-4">
+        <div className="lg:col-span-2 rounded-xl bg-background-elevated/20 border border-border/30 p-4">
           <div className="flex items-center justify-between mb-1">
             <div>
-              <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-1">{t('riskTrajectory')}</h3>
-              <p className="text-xs text-white/50">{t('riskTrajectoryDesc')}</p>
+              <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider mb-1">{t('riskTrajectory')}</h3>
+              <p className="text-xs text-text-muted">{t('riskTrajectoryDesc')}</p>
             </div>
             <ChartDownloadButton targetRef={riskTrajectoryRef} filename="rubli-risk-trajectory" />
           </div>
           {/* Sector selector */}
           <div className="mb-3 mt-2">
             <select
-              className="text-xs font-mono bg-white/5 border border-white/10 rounded px-2 py-1 text-white/60 focus:outline-none focus:border-accent/60 cursor-pointer"
+              className="text-xs font-mono bg-background-elevated/60 border border-border/30 rounded px-2 py-1 text-text-muted focus:outline-none focus:border-accent/60 cursor-pointer"
               value={selectedTrajectorySectorId ?? ''}
               onChange={(e) => setSelectedTrajectorySectorId(e.target.value === '' ? null : Number(e.target.value))}
               aria-label="Filter risk trajectory by sector"
@@ -1227,7 +1184,7 @@ export function Dashboard() {
               />
             </div>
           )}
-          <p className="text-xs text-white/50 italic mt-2 px-1">
+          <p className="text-xs text-text-muted italic mt-2 px-1">
             COVID-19 (2020) triggered emergency procurement exceptions that briefly elevated risk scores across all sectors.
           </p>
         </div>
@@ -1236,14 +1193,14 @@ export function Dashboard() {
       {/* ================================================================ */}
       {/* RISK DISTRIBUTION — Gauge + Full-width stacked bar             */}
       {/* ================================================================ */}
-      <div className="rounded-xl bg-slate-900/50 border border-white/5 p-4">
+      <div className="rounded-xl bg-background-elevated/20 border border-border/30 p-4">
         <div className="flex items-center justify-between mb-1">
           <div>
-            <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+            <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider mb-1 flex items-center gap-1.5">
               {t('riskDistribution')}
               <RiskScoreDisclaimer />
             </h3>
-            <p className="text-xs text-white/50">
+            <p className="text-xs text-text-muted">
               {t('riskDistLabel', { total: formatNumber(overview?.total_contracts || 0) })}
             </p>
           </div>
@@ -1264,14 +1221,14 @@ export function Dashboard() {
                   const d = riskDist.find((r) => r.risk_level === level)
                   const color = DONUT_COLORS[level] ?? '#64748b'
                   return (
-                    <div key={level} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-white/5 bg-white/5">
+                    <div key={level} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-border/20 bg-background-elevated/20">
                       <div className="w-2.5 h-8 rounded-sm flex-shrink-0" style={{ backgroundColor: color, opacity: 0.75 }} />
                       <div className="min-w-0">
-                        <p className="text-[10px] text-white/50 capitalize font-mono uppercase tracking-wide">{level}</p>
+                        <p className="text-[10px] text-text-muted capitalize font-mono uppercase tracking-wide">{level}</p>
                         <p className="text-lg font-black tabular-nums font-mono leading-tight" style={{ color }}>
                           {(d?.percentage ?? 0).toFixed(1)}%
                         </p>
-                        <p className="text-[10px] text-white/40 font-mono tabular-nums">{formatNumber(d?.count ?? 0)}</p>
+                        <p className="text-[10px] text-text-muted font-mono tabular-nums">{formatNumber(d?.count ?? 0)}</p>
                       </div>
                     </div>
                   )
@@ -1282,10 +1239,30 @@ export function Dashboard() {
             <RiskDistributionAnnotation data={riskDist} />
           </div>
         )}
-        <p className="text-xs text-white/50 italic mt-2 px-1">
+        <p className="text-xs text-text-muted italic mt-2 px-1">
           Critical and high contracts share statistical patterns with documented corruption cases — concentrated vendors, abnormal win rates, and sector mismatches drive the score.
         </p>
       </div>
+
+      {/* ================================================================ */}
+      {/* RISK CALENDAR HEATMAP — monthly risk 2016–2025               */}
+      {/* ================================================================ */}
+      <Card className="border-border/40">
+        <CardContent className="pt-5 pb-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <Calendar className="h-4 w-4 text-accent" />
+                <h2 className="text-base font-bold text-text-primary">Monthly Risk Heatmap</h2>
+              </div>
+              <p className="text-xs text-text-muted">
+                Average risk score by month 2016–2025 — December budget-year-end spikes visible
+              </p>
+            </div>
+          </div>
+          <RiskCalendarHeatmap />
+        </CardContent>
+      </Card>
 
       {/* ================================================================ */}
       {/* YEAR-END RISK SURGE CALLOUT — compact audit-insight card       */}
@@ -1461,21 +1438,6 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* ================================================================ */}
-      {/* PROCUREMENT SEASONALITY — December Dump visualization          */}
-      {/* ================================================================ */}
-      <div className="rounded-xl bg-slate-900/50 border border-white/5 p-4">
-        <div className="flex items-center gap-2 mb-1">
-          <Calendar className="h-4 w-4 text-amber-400" />
-          <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">
-            Procurement Seasonality
-          </h3>
-        </div>
-        <p className="text-xs text-white/50 mb-4">
-          December absorbs ~22% of annual contracts as agencies rush to spend year-end budgets
-        </p>
-        <ProcurementCalendar />
-      </div>
     </div>
   )
 }
@@ -1856,7 +1818,7 @@ const TopCriticalFlags = memo(function TopCriticalFlags({ navigate, execData, ex
           return (
             <button
               key={vendor.id}
-              onClick={() => navigate(`/contracts?risk_level=critical`)}
+              onClick={() => navigate(`/vendors/${vendor.id}`)}
               className="flex items-start gap-2.5 p-2.5 rounded-md border border-risk-critical/15 bg-background-card/60 hover:border-risk-critical/35 hover:bg-risk-critical/8 transition-all text-left group"
             >
               <span

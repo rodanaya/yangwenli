@@ -39,6 +39,7 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import { SeasonalityCalendar } from '@/components/charts/SeasonalityCalendar'
+import { RacingBarChart } from '@/components/charts/RacingBarChart'
 
 // =============================================================================
 // Constants
@@ -636,6 +637,22 @@ export default function YearInReview() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Sector Spending Race — animated bar chart 2002→2025 */}
+      <Card className="bg-card border-border/40">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-mono text-text-primary flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 text-accent" aria-hidden="true" />
+            Sector Spending Race
+          </CardTitle>
+          <p className="text-xs text-text-muted mt-0.5">
+            Top 8 sectors by annual spending — press Play to watch budgets shift across administrations
+          </p>
+        </CardHeader>
+        <CardContent>
+          <RacingBarChart />
+        </CardContent>
+      </Card>
 
       {/* December Effect — seasonal radial chart */}
       <Card className="bg-card border-border/40">
