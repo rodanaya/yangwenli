@@ -47,7 +47,7 @@ import {
   ReferenceArea,
   Treemap,
 } from '@/components/charts'
-import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN, CURRENT_MODEL_VERSION } from '@/lib/constants'
+import { RISK_COLORS, SECTOR_COLORS, SECTORS, getSectorNameEN, CURRENT_MODEL_VERSION } from '@/lib/constants'
 import { GlobalSearch } from '@/components/GlobalSearch'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -110,48 +110,181 @@ const AI_SIGNALS = [
 ]
 
 // ============================================================================
+// ADMIN × SECTOR HEATMAP — 5 presidencies × 12 sectors risk intensity grid
+// ============================================================================
+
+const ADMIN_PERIODS = [
+  { name: 'Fox',        startYear: 2001, endYear: 2006, color: '#3b82f6' },
+  { name: 'Calderón',   startYear: 2007, endYear: 2012, color: '#60a5fa' },
+  { name: 'Peña Nieto', startYear: 2013, endYear: 2018, color: '#22c55e' },
+  { name: 'AMLO',       startYear: 2019, endYear: 2024, color: '#ef4444' },
+  { name: 'Sheinbaum',  startYear: 2025, endYear: 2030, color: '#f97316' },
+]
+
+function riskHeatColor(risk: number): string {
+  // 0 → green (#4ade80), 0.10 → amber (#fbbf24), 0.20+ → red (#f87171)
+  const t = Math.min(risk / 0.20, 1)
+  if (t < 0.5) {
+    const tt = t / 0.5
+    return `rgb(${Math.round(74 + (251 - 74) * tt)},${Math.round(222 + (191 - 222) * tt)},${Math.round(128 + (36 - 128) * tt)})`
+  }
+  const tt = (t - 0.5) / 0.5
+  return `rgb(${Math.round(251 + (248 - 251) * tt)},${Math.round(191 + (113 - 191) * tt)},${Math.round(36 + (113 - 36) * tt)})`
+}
+
+function AdminSectorHeatmap() {
+  const { data: syd, isLoading } = useQuery({
+    queryKey: ['analysis', 'sector-year-breakdown'],
+    queryFn: () => analysisApi.getSectorYearBreakdown(),
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const grid = useMemo(() => {
+    if (!syd?.data) return null
+    return ADMIN_PERIODS.map(admin => ({
+      admin,
+      cells: SECTORS.map(sector => {
+        const rows = syd.data.filter(
+          (d) => d.sector_id === sector.id && d.year >= admin.startYear && d.year <= admin.endYear
+        )
+        const avgRisk = rows.length > 0
+          ? rows.reduce((s, d) => s + (d.avg_risk || 0), 0) / rows.length
+          : 0
+        return { sector, avgRisk }
+      }),
+    }))
+  }, [syd])
+
+  if (isLoading || !grid) return <Skeleton className="h-44 w-full" />
+
+  return (
+    <div>
+      <div className="overflow-x-auto pb-1">
+        <div style={{ minWidth: 520 }}>
+          {/* Sector header row */}
+          <div className="flex mb-1" style={{ paddingLeft: 84 }}>
+            {SECTORS.map(s => (
+              <div
+                key={s.code}
+                className="flex-1 text-center text-[7px] text-text-muted font-mono uppercase tracking-wider truncate px-0.5"
+                title={s.code}
+              >
+                {s.code.slice(0, 4)}
+              </div>
+            ))}
+          </div>
+          {/* Administration rows */}
+          {grid.map(({ admin, cells }) => (
+            <div key={admin.name} className="flex items-center mb-1">
+              <div
+                className="flex-shrink-0 text-[9px] font-bold font-mono pr-2 text-right leading-tight"
+                style={{ width: 84, color: admin.color }}
+              >
+                {admin.name}
+              </div>
+              <div className="flex flex-1 gap-0.5">
+                {cells.map(({ sector, avgRisk }) => (
+                  <div
+                    key={sector.code}
+                    className="flex-1 rounded-sm flex items-center justify-center cursor-default"
+                    style={{ height: 30, backgroundColor: riskHeatColor(avgRisk) }}
+                    title={`${admin.name} × ${sector.code}: ${(avgRisk * 100).toFixed(1)}% avg risk`}
+                  >
+                    {avgRisk >= 0.10 && (
+                      <span className="text-[7px] font-bold text-white/90 font-mono tabular-nums leading-none">
+                        {(avgRisk * 100).toFixed(0)}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* Legend */}
+      <div className="flex items-center gap-2 mt-2 text-[9px] text-text-muted font-mono">
+        <span>Low</span>
+        <div className="flex h-2 rounded overflow-hidden" style={{ width: 80 }}>
+          {[0, 0.04, 0.08, 0.12, 0.16, 0.20].map((v, i) => (
+            <div key={i} className="flex-1" style={{ backgroundColor: riskHeatColor(v) }} />
+          ))}
+        </div>
+        <span>High</span>
+        <span className="ml-auto opacity-60">avg risk score · numbers shown when ≥10%</span>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
 // HEATMAP PANEL — tab-toggled heatmap views
 // ============================================================================
 
-type HeatmapTab = 'monthly' | 'sector'
+type HeatmapTab = 'monthly' | 'sector' | 'admin'
 
 function HeatmapPanel() {
   const [tab, setTab] = React.useState<HeatmapTab>('monthly')
+  const [expanded, setExpanded] = React.useState(false)
 
-  const TABS: { id: HeatmapTab; label: string; desc: string }[] = [
-    { id: 'monthly', label: 'Month × Year', desc: 'Risk by calendar month 2016–2025' },
-    { id: 'sector',  label: 'Sector × Year', desc: 'Risk per sector 2002–2025' },
+  const TABS: { id: HeatmapTab; label: string; shortLabel: string; desc: string }[] = [
+    { id: 'monthly', label: 'Month × Year',   shortLabel: 'Monthly', desc: 'Risk by calendar month 2016–2025' },
+    { id: 'sector',  label: 'Sector × Year',  shortLabel: 'Sector',  desc: 'Risk per sector 2002–2025' },
+    { id: 'admin',   label: 'Admin × Sector', shortLabel: 'Admin',   desc: 'Avg risk per presidential term across all 12 sectors' },
   ]
 
   return (
     <Card className="border-border/40">
       <CardContent className="pt-4 pb-4">
+        {/* Header — always visible */}
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <Layers className="h-4 w-4 text-accent" />
             <h2 className="text-sm font-bold text-text-primary">Risk Heatmaps</h2>
           </div>
-          <div className="flex gap-1 border border-border/30 rounded-md p-0.5">
-            {TABS.map(t => (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                  tab === t.id
-                    ? 'bg-accent/20 text-accent'
-                    : 'text-text-muted hover:text-text-secondary'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1 border border-border/30 rounded-md p-0.5">
+              {TABS.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => { setTab(t.id); setExpanded(true) }}
+                  className={`px-2 sm:px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                    tab === t.id
+                      ? 'bg-accent/20 text-accent'
+                      : 'text-text-muted hover:text-text-secondary'
+                  }`}
+                >
+                  <span className="hidden sm:inline">{t.label}</span>
+                  <span className="sm:hidden">{t.shortLabel}</span>
+                </button>
+              ))}
+            </div>
+            {/* Mobile collapse toggle */}
+            <button
+              className="md:hidden flex items-center gap-1 text-xs text-text-muted hover:text-text-primary transition-colors px-1.5 py-1 rounded border border-border/30"
+              onClick={() => setExpanded(e => !e)}
+              aria-expanded={expanded}
+              aria-label={expanded ? 'Collapse heatmap' : 'Expand heatmap'}
+            >
+              {expanded ? '▲' : '▼'}
+            </button>
           </div>
         </div>
-        <p className="text-[10px] text-text-muted mb-3">
-          {TABS.find(t => t.id === tab)?.desc}
-        </p>
-        {tab === 'monthly' && <RiskCalendarHeatmap />}
-        {tab === 'sector'  && <SectorRiskHeatmap />}
+        {/* Content — always visible on desktop, collapsible on mobile */}
+        <div className={expanded ? '' : 'hidden md:block'}>
+          <p className="text-[10px] text-text-muted mb-3">
+            {TABS.find(t => t.id === tab)?.desc}
+          </p>
+          {tab === 'monthly' && <RiskCalendarHeatmap />}
+          {tab === 'sector'  && <SectorRiskHeatmap />}
+          {tab === 'admin'   && <AdminSectorHeatmap />}
+        </div>
+        {/* Mobile expand hint */}
+        {!expanded && (
+          <p className="md:hidden text-[10px] text-text-muted text-center py-1">
+            Tap ▼ to view heatmap
+          </p>
+        )}
       </CardContent>
     </Card>
   )
@@ -426,6 +559,9 @@ export function Dashboard() {
 
   // Sector selector for Risk Trajectory chart (null = "All Sectors")
   const [selectedTrajectorySectorId, setSelectedTrajectorySectorId] = useState<number | null>(null)
+
+  // Sector treemap view mode
+  const [treemapViewMode, setTreemapViewMode] = useState<'value' | 'risk'>('value')
 
   // API call: sector × year breakdown for per-sector risk trajectories
   const { data: sectorYearData } = useQuery({
@@ -1001,14 +1137,32 @@ export function Dashboard() {
       {/* ================================================================ */}
       {sectorData.length > 0 && (
         <div className="rounded-xl bg-background-elevated/20 border border-border/30 p-4">
-          <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
             <div>
               <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider mb-1">Spend by Sector</h3>
-              <p className="text-xs text-text-muted">Size = total spend · Color = sector · Click to explore</p>
+              <p className="text-xs text-text-muted">
+                {treemapViewMode === 'value' ? 'Size = total spend · Color = sector' : 'Size = total spend · Color = high-risk rate'} · Click to explore
+              </p>
             </div>
-            <ChartDownloadButton targetRef={sectorTreemapRef} filename="rubli-sector-spend" />
+            <div className="flex items-center gap-2">
+              <div className="flex items-center rounded border border-border/30 overflow-hidden text-[10px] font-medium">
+                <button
+                  onClick={() => setTreemapViewMode('value')}
+                  className={cn('px-2 py-0.5 transition-colors', treemapViewMode === 'value' ? 'bg-accent/20 text-accent' : 'text-text-muted hover:text-text-secondary')}
+                >
+                  Value
+                </button>
+                <button
+                  onClick={() => setTreemapViewMode('risk')}
+                  className={cn('px-2 py-0.5 border-l border-border/30 transition-colors', treemapViewMode === 'risk' ? 'bg-red-500/20 text-red-400' : 'text-text-muted hover:text-text-secondary')}
+                >
+                  Risk
+                </button>
+              </div>
+              <ChartDownloadButton targetRef={sectorTreemapRef} filename="rubli-sector-spend" />
+            </div>
           </div>
-          <div ref={sectorTreemapRef} style={{ height: 240 }} className="mt-3">
+          <div ref={sectorTreemapRef} style={{ height: 380 }} className="mt-3">
               <ResponsiveContainer width="100%" height="100%">
                 <Treemap
                   data={sectorData.map((s) => ({
@@ -1027,7 +1181,9 @@ export function Dashboard() {
                     const w = width ?? 0
                     const h = height ?? 0
                     if (w < 30 || h < 20) return <g />
-                    const fill = SECTOR_COLORS[code ?? ''] ?? '#64748b'
+                    const fill = treemapViewMode === 'risk'
+                      ? riskHeatColor((riskPct ?? 0) / 100)
+                      : (SECTOR_COLORS[code ?? ''] ?? '#64748b')
                     const cx = (x ?? 0) + w / 2
                     const cy = (y ?? 0) + h / 2
                     const showLabel = w > 60 && h > 30
@@ -1263,7 +1419,7 @@ export function Dashboard() {
           </div>
         ) : (
           <div ref={riskDistRef} className="space-y-3 mt-3">
-            {/* Donut + 4 stat cards */}
+            {/* Donut + 4 stat cards (clickable → filtered contract list) */}
             <div className="flex flex-col sm:flex-row items-center gap-6">
               <RiskDonutChart data={riskDist} />
               <div className="flex-1 grid grid-cols-2 gap-2 w-full">
@@ -1271,20 +1427,83 @@ export function Dashboard() {
                   const d = riskDist.find((r) => r.risk_level === level)
                   const color = DONUT_COLORS[level] ?? '#64748b'
                   return (
-                    <div key={level} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-border/20 bg-background-elevated/20">
-                      <div className="w-2.5 h-8 rounded-sm flex-shrink-0" style={{ backgroundColor: color, opacity: 0.75 }} />
-                      <div className="min-w-0">
+                    <button
+                      key={level}
+                      onClick={() => navigate(`/contracts?risk_level=${level}`)}
+                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-border/20 bg-background-elevated/20 hover:border-accent/30 hover:bg-accent/5 transition-all text-left group"
+                    >
+                      <div className="w-2.5 h-8 rounded-sm flex-shrink-0 group-hover:opacity-100" style={{ backgroundColor: color, opacity: 0.75 }} />
+                      <div className="min-w-0 flex-1">
                         <p className="text-[10px] text-text-muted capitalize font-mono uppercase tracking-wide">{level}</p>
                         <p className="text-lg font-black tabular-nums font-mono leading-tight" style={{ color }}>
                           {(d?.percentage ?? 0).toFixed(1)}%
                         </p>
                         <p className="text-[10px] text-text-muted font-mono tabular-nums">{formatNumber(d?.count ?? 0)}</p>
                       </div>
-                    </div>
+                      <ArrowUpRight className="h-3 w-3 text-text-muted opacity-0 group-hover:opacity-100 flex-shrink-0 transition-opacity" />
+                    </button>
                   )
                 })}
               </div>
             </div>
+
+            {/* Stacked proportion bars — contracts % and value % side by side */}
+            {(() => {
+              const totalValue = riskDist.reduce((s, d) => s + (d.total_value_mxn || 0), 0)
+              return (
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-[10px] font-mono text-text-muted uppercase tracking-wider mb-1">Contracts by risk level</p>
+                    <div className="flex h-7 rounded overflow-hidden gap-px">
+                      {(['critical', 'high', 'medium', 'low'] as const).map(level => {
+                        const d = riskDist.find(r => r.risk_level === level)
+                        const pct = d?.percentage ?? 0
+                        return pct > 0.5 ? (
+                          <button
+                            key={level}
+                            onClick={() => navigate(`/contracts?risk_level=${level}`)}
+                            className="flex items-center justify-center hover:opacity-90 transition-opacity"
+                            style={{ width: `${pct}%`, backgroundColor: DONUT_COLORS[level] ?? '#64748b', opacity: 0.75 }}
+                            title={`${level}: ${pct.toFixed(1)}% of contracts`}
+                          >
+                            {pct > 5 && (
+                              <span className="text-[9px] font-bold text-white font-mono tabular-nums">{pct.toFixed(0)}%</span>
+                            )}
+                          </button>
+                        ) : null
+                      })}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-[10px] font-mono text-text-muted uppercase tracking-wider">Value by risk level</p>
+                      <p className="text-[10px] font-mono text-text-muted">{formatCompactMXN(totalValue)} total</p>
+                    </div>
+                    <div className="flex h-7 rounded overflow-hidden gap-px">
+                      {(['critical', 'high', 'medium', 'low'] as const).map(level => {
+                        const d = riskDist.find(r => r.risk_level === level)
+                        const val = d?.total_value_mxn ?? 0
+                        const pct = totalValue > 0 ? (val / totalValue) * 100 : 0
+                        return pct > 0.5 ? (
+                          <button
+                            key={level}
+                            onClick={() => navigate(`/contracts?risk_level=${level}`)}
+                            className="flex items-center justify-center hover:opacity-90 transition-opacity"
+                            style={{ width: `${pct}%`, backgroundColor: DONUT_COLORS[level] ?? '#64748b', opacity: 0.75 }}
+                            title={`${level}: ${pct.toFixed(1)}% of value (${formatCompactMXN(val)})`}
+                          >
+                            {pct > 5 && (
+                              <span className="text-[9px] font-bold text-white font-mono tabular-nums">{pct.toFixed(0)}%</span>
+                            )}
+                          </button>
+                        ) : null
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
+
             {/* Plain-language annotation */}
             <RiskDistributionAnnotation data={riskDist} />
           </div>

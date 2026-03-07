@@ -492,8 +492,8 @@ export default function InstitutionsTab() {
           <p className="text-sm text-text-muted">{t('empty.noInstitutionsMatch')}</p>
         </div>
       ) : (
-        <div className="rounded-lg border border-border overflow-hidden">
-          <table className="w-full text-xs">
+        <div className="rounded-lg border border-border overflow-hidden overflow-x-auto">
+          <table className="w-full text-xs min-w-[600px]">
             <thead>
               <tr className="bg-background-elevated/50">
                 <th className="w-8 px-2 py-2 text-xs font-semibold text-text-muted text-center">#</th>
