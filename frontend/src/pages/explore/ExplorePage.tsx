@@ -11,39 +11,22 @@
 
 import React, { useState, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Compass, X, Building2, Users, TrendingUp, AlertTriangle, Activity, Network, Clock, DollarSign, ChevronRight, Layers } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { X, Building2, Users, Layers, TrendingUp } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { cn } from '@/lib/utils'
+import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { useExplorerFilters } from '@/hooks/useExplorerFilters'
 import { SectorTreemapPanel } from './SectorTreemapPanel'
 import { TimeSeriesPanel } from './TimeSeriesPanel'
 import { RiskDistributionStrip } from './RiskDistributionStrip'
 import { ResultsTable } from './ResultsTable'
 import { SECTORS } from '@/lib/constants'
+import { analysisApi } from '@/api/client'
 
 const RISK_LABELS: Record<string, string> = {
   critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low',
-}
-
-// Pre-computed intelligence insights (static facts from v5.1 model)
-const INTELLIGENCE_INSIGHTS = [
-  { icon: TrendingUp,    color: 'red',     title: 'Highest Risk Sector',    value: 'Salud',   detail: 'Avg risk score 0.34 · 9,366 IMSS contracts', href: '/sectors/1' },
-  { icon: AlertTriangle, color: 'orange',  title: 'Corruption Cases',        value: '22',      detail: 'Documented cases in ground truth DB', href: '/cases' },
-  { icon: Activity,      color: 'cyan',    title: 'ML Detection Rate',       value: '99.8%',   detail: 'Known corrupt contracts flagged', href: '/model' },
-  { icon: Network,       color: 'purple',  title: 'Suspicious Vendors',      value: '8,701',   detail: 'With abnormal co-bidding patterns', href: '/network' },
-  { icon: Clock,         color: 'amber',   title: 'Single-Bid Procedures',   value: '~22%',    detail: 'Competitive tenders with 1 bidder', href: '/contracts?single_bid=true' },
-  { icon: DollarSign,    color: 'emerald', title: 'Validated Spend',          value: '~7T MXN', detail: '3.1M contracts 2002–2025', href: '/contracts' },
-] as const
-
-const INSIGHT_STYLES: Record<string, { border: string; bg: string; icon: string; value: string }> = {
-  red:     { border: 'border-red-500/20',     bg: 'bg-red-500/5',     icon: 'text-red-400',     value: 'text-red-300' },
-  orange:  { border: 'border-orange-500/20',  bg: 'bg-orange-500/5',  icon: 'text-orange-400',  value: 'text-orange-300' },
-  cyan:    { border: 'border-cyan-500/20',    bg: 'bg-cyan-500/5',    icon: 'text-cyan-400',    value: 'text-cyan-300' },
-  purple:  { border: 'border-purple-500/20',  bg: 'bg-purple-500/5',  icon: 'text-purple-400',  value: 'text-purple-300' },
-  amber:   { border: 'border-amber-500/20',   bg: 'bg-amber-500/5',   icon: 'text-amber-400',   value: 'text-amber-300' },
-  emerald: { border: 'border-emerald-500/20', bg: 'bg-emerald-500/5', icon: 'text-emerald-400', value: 'text-emerald-300' },
 }
 
 // Suggestion chips per entity type
@@ -67,10 +50,23 @@ const SUGGESTIONS: Record<'vendor' | 'institution', { label: string; params: Rec
 
 export function ExplorePage() {
   const [page, setPage] = useState(1)
-  const navigate = useNavigate()
   const { t: ts } = useTranslation('sectors')
   const [, setSearchParams] = useSearchParams()
   const filters = useExplorerFilters()
+
+  // Shared fast dashboard data — same queryKey as SectorTreemapPanel, free from cache
+  const { data: dashData } = useQuery({
+    queryKey: ['dashboard', 'fast'],
+    queryFn: () => analysisApi.getFastDashboard(),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const activeSectorData = filters.sectorId != null && dashData?.sectors
+    ? (dashData.sectors as any[]).find(s => s.id === filters.sectorId)
+    : null
+  const activeSectorMeta = filters.sectorId != null
+    ? SECTORS.find(s => s.id === filters.sectorId)
+    : null
 
   // Reset page when filters change
   const handleSectorClick = useCallback((id: number | undefined) => {
@@ -157,48 +153,14 @@ export function ExplorePage() {
         icon={Layers}
       />
 
-      {/* Intelligence Insights strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-        {INTELLIGENCE_INSIGHTS.map((insight) => {
-          const s = INSIGHT_STYLES[insight.color]
-          const Icon = insight.icon
-          return (
-            <button
-              key={insight.title}
-              onClick={() => navigate(insight.href)}
-              className={cn(
-                'rounded-lg border p-3 text-left transition-all duration-150 group',
-                s.border, s.bg,
-                'hover:scale-[1.02] hover:shadow-md'
-              )}
-            >
-              <Icon className={cn('h-4 w-4 mb-2', s.icon)} />
-              <div className={cn('text-lg font-bold font-mono leading-none mb-1', s.value)}>
-                {insight.value}
-              </div>
-              <div className="text-[10px] font-medium text-text-muted/80 leading-tight">{insight.title}</div>
-              <div className="text-[10px] text-text-muted/50 mt-0.5 leading-tight hidden group-hover:block truncate">{insight.detail}</div>
-              <ChevronRight className={cn('h-3 w-3 mt-1 opacity-0 group-hover:opacity-60 transition-opacity', s.icon)} />
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
-            <Compass className="h-4.5 w-4.5 text-accent" />
-            Explore
-          </h2>
-          <p className="text-xs text-text-muted mt-0.5">
-            Click any panel to filter. All views are connected.
-          </p>
-        </div>
+      {/* Crossfilter orientation */}
+      <div className="flex items-center gap-2 text-xs text-text-muted border-b border-border/20 pb-4">
+        <Layers className="h-3.5 w-3.5 text-accent flex-shrink-0" />
+        <span>Click any panel to filter all others — sector, time range, and risk level are cross-connected</span>
         {hasFilters && (
           <button
             onClick={() => { filters.clearAll(); setPage(1) }}
-            className="text-xs text-text-muted hover:text-risk-high transition-colors flex items-center gap-1"
+            className="ml-auto flex items-center gap-1 text-text-muted hover:text-risk-high transition-colors whitespace-nowrap"
           >
             <X className="h-3 w-3" />
             Clear all filters
@@ -220,6 +182,63 @@ export function ExplorePage() {
           />
         </div>
       </div>
+
+      {/* Active sector intel card */}
+      {activeSectorData && activeSectorMeta && (() => {
+        const sd = activeSectorData
+        const highRisk = (sd.high_risk_count || 0) + (sd.critical_risk_count || 0)
+        const riskRate = sd.total_contracts > 0 ? (highRisk / sd.total_contracts * 100) : 0
+        const daRate = sd.total_contracts > 0 ? ((sd.direct_award_count || 0) / sd.total_contracts * 100) : 0
+        return (
+          <div
+            className="rounded-lg border p-3 flex flex-wrap items-center gap-x-5 gap-y-2"
+            style={{
+              borderColor: `${activeSectorMeta.color}50`,
+              backgroundColor: `${activeSectorMeta.color}0a`,
+            }}
+          >
+            <div className="flex items-center gap-2 shrink-0">
+              <TrendingUp className="h-3.5 w-3.5" style={{ color: activeSectorMeta.color }} />
+              <span className="text-sm font-semibold" style={{ color: activeSectorMeta.color }}>
+                {ts(activeSectorMeta.code)}
+              </span>
+              <span className="text-[10px] text-text-muted uppercase tracking-wider">sector intel</span>
+            </div>
+            <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs">
+              <div>
+                <span className="text-text-muted">Contracts</span>
+                <span className="ml-1.5 font-mono font-semibold text-text-primary">
+                  {formatNumber(sd.total_contracts || 0)}
+                </span>
+              </div>
+              <div>
+                <span className="text-text-muted">Total value</span>
+                <span className="ml-1.5 font-mono font-semibold text-text-primary">
+                  {formatCompactMXN(sd.total_value_mxn || 0)}
+                </span>
+              </div>
+              <div>
+                <span className="text-text-muted">High+ risk</span>
+                <span className="ml-1.5 font-mono font-semibold text-orange-400">
+                  {riskRate.toFixed(1)}%
+                </span>
+              </div>
+              <div>
+                <span className="text-text-muted">Direct award</span>
+                <span className="ml-1.5 font-mono font-semibold text-text-primary">
+                  {daRate.toFixed(0)}%
+                </span>
+              </div>
+              <div>
+                <span className="text-text-muted">Avg risk score</span>
+                <span className="ml-1.5 font-mono font-semibold text-text-primary">
+                  {((sd.avg_risk_score || 0) * 100).toFixed(1)}%
+                </span>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Risk distribution */}
       <div className="bg-background-elevated/20 border border-border/20 rounded-lg p-4">
@@ -268,7 +287,7 @@ export function ExplorePage() {
               <button
                 key={s.label}
                 onClick={() => applySuggestion(s.params)}
-                className="px-2 py-1 rounded-full border border-border/30 bg-white/[0.03] text-xs text-text-muted hover:border-accent/40 hover:text-accent transition-colors"
+                className="px-2 py-1 rounded-full border border-border/30 bg-background-elevated/20 text-xs text-text-muted hover:border-accent/40 hover:text-accent transition-colors"
               >
                 {s.label}
               </button>
@@ -281,7 +300,7 @@ export function ExplorePage() {
             value={filters.searchText}
             onChange={handleSearchChange}
             placeholder={`Search ${filters.entityType}s…`}
-            className="h-8 px-3 rounded-lg border border-border/40 bg-background-elevated/60 text-sm text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/50 transition-all"
+            className="flex-1 min-w-[180px] h-8 px-3 rounded-lg border border-border/40 bg-background-elevated/60 text-sm text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/50 transition-all"
           />
 
           {/* Active filter chips */}

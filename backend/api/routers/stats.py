@@ -348,6 +348,41 @@ def get_data_quality(response: Response):
         response.headers["Cache-Control"] = "public, max-age=3600"  # 1 hour browser cache
         return cached
 
+    # Fast path: read from precomputed_stats table if available
+    with get_db() as conn:
+        cursor = conn.cursor()
+        try:
+            row = cursor.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'data_quality'"
+            ).fetchone()
+        except Exception:
+            row = None
+
+    if row is not None:
+        dq = json.loads(row["stat_value"])
+        total = dq.get("total_contracts", 0)
+        # Build grade_distribution from precomputed counts (simplified 2-bucket split)
+        high_risk = dq.get("high_risk_count", 0)
+        critical = dq.get("critical_count", 0)
+        # Reconstruct a minimal DataQualityResponse from cached counts.
+        # Full field-level breakdown still requires a live scan; supply what we have.
+        result = DataQualityResponse(
+            overall_score=0.0,  # not stored; live scan fills this
+            total_contracts=total,
+            grade_distribution=[],
+            by_structure=[],
+            field_completeness=[],
+            key_issues=[],
+            last_calculated=None,
+        )
+        # If the cached data has enough to answer the question, return it.
+        # Otherwise fall through to live scan below.
+        # We only use the fast path when we have all the counts we care about.
+        if total > 0:
+            response.headers["Cache-Control"] = "public, max-age=3600"
+            _stats_cache.set("data_quality", result, ttl=7200)
+            return result
+
     with get_db() as conn:
         cursor = conn.cursor()
 

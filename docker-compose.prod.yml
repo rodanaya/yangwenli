@@ -29,6 +29,11 @@ services:
       retries: 3
       start_period: 120s
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2'
     networks:
       - rubli-network
 
@@ -42,6 +47,11 @@ services:
       backend:
         condition: service_healthy
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1'
     networks:
       - rubli-network
 
@@ -60,6 +70,11 @@ services:
     depends_on:
       - frontend
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1'
     networks:
       - rubli-network
 

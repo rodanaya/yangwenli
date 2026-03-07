@@ -1223,8 +1223,8 @@ export default function InstitutionHealth() {
       {/* Section 3: ASF Audit Cross-Reference */}
       <ASFCrossReferenceSection asfData={asfData?.items ?? []} totalFindings={asfData?.total_findings ?? 0} />
 
-      {/* Section 4: Charts (collapsed) */}
-      <details className="mt-4 group">
+      {/* Section 4: Charts (expanded by default) */}
+      <details className="mt-4 group" open>
         <summary className="flex items-center gap-2 cursor-pointer select-none list-none text-xs font-medium text-text-muted hover:text-text-primary transition-colors py-1">
           <BarChart3 className="h-3.5 w-3.5" />
           Show charts (risk vs concentration scatter, top 10 concentrated, risk-factor heatmap)

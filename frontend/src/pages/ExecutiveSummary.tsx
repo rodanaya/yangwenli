@@ -261,7 +261,7 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
   const { risk } = data
   const highRiskRate = (risk.high_pct + risk.critical_pct).toFixed(1)
 
-  const highCriticalCount = (risk.critical_count ?? 201_745) + (risk.high_count ?? 126_553)
+  const highCriticalCount = (risk.critical_count ?? 0) + (risk.high_count ?? 0)
   // Always display as compact number to prevent card overflow
   const highCriticalFormatted = highCriticalCount >= 1_000_000
     ? `${(highCriticalCount / 1_000_000).toFixed(1)}M`
@@ -2554,7 +2554,8 @@ function SectionRecommendations({ navigate }: { navigate: (path: string) => void
       audience: 'For Investigators (ASF / SFP)',
       color: '#f87171',
       steps: [
-        'Start with the 201,745 critical-risk contracts — filter by sector (Salud, Agricultura) and institution to triage the highest-value cases first.',
+        // TODO: fetch from API — hardcoded critical count should come from risk distribution endpoint
+        'Start with the critical-risk contracts — filter by sector (Salud, Agricultura) and institution to triage the highest-value cases first.',
         'Cross-reference the 38 SAT-confirmed EFOS ghost vendors (Case 22) against active contracts. Any current procurement relationship warrants immediate review.',
         'Run vendor network analysis on co-bidding clusters — 8,701 vendors show suspicious co-bid rates above 50%, a hallmark of bid rotation.',
       ],

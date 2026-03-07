@@ -29,6 +29,13 @@ import type { DossierSummary } from '@/components/AddToDossierButton'
 type SortField = 'avg_risk_score' | 'total_contracts' | 'total_value_mxn' | 'direct_award_pct'
 type SortOrder = 'asc' | 'desc'
 
+const SORT_LABELS: Record<SortField, string> = {
+  avg_risk_score: 'risk',
+  total_contracts: 'contracts',
+  total_value_mxn: 'value',
+  direct_award_pct: 'direct award %',
+}
+
 const PAGE_SIZE = 25
 
 interface ResultsTableProps {
@@ -135,12 +142,21 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
 
   if (isVendor) {
     const vendors = (vendorQuery.data?.data || []) as any[]
+    const pageAvgRisk = vendors.length > 0
+      ? vendors.reduce((s, v) => s + (v.avg_risk_score || 0), 0) / vendors.length
+      : 0
+    const pageHighPlus = vendors.filter(v => (v.avg_risk_score || 0) >= 0.30).length
     return (
       <div>
-        <div className="flex items-center justify-between mb-1.5">
+        <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
           <span className="text-xs text-text-muted tabular-nums">
-            Showing {rangeStart}–{rangeEnd} of {formatNumber(pagination.total)} vendors · sorted by risk score
+            Showing {rangeStart}–{rangeEnd} of {formatNumber(pagination.total)} vendors · sorted by {SORT_LABELS[sortField]} {sortOrder === 'desc' ? '↓' : '↑'}
           </span>
+          <div className="flex items-center gap-3 text-[11px] text-text-muted">
+            <span>Page avg risk: <span className="font-mono font-semibold text-text-primary">{(pageAvgRisk * 100).toFixed(0)}%</span></span>
+            <span className="text-border/60">·</span>
+            <span>High+ on page: <span className="font-mono font-semibold text-orange-400">{pageHighPlus}<span className="text-text-muted font-normal">/{vendors.length}</span></span></span>
+          </div>
         </div>
         <div className="overflow-x-auto -mx-4 sm:mx-0">
         <table className="w-full text-sm" role="grid">
@@ -172,12 +188,21 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
 
   // Institutions view
   const institutions = (institutionQuery.data?.data || []) as any[]
+  const instPageAvgRisk = institutions.length > 0
+    ? institutions.reduce((s, v) => s + (v.avg_risk_score || 0), 0) / institutions.length
+    : 0
+  const instPageHighPlus = institutions.filter(v => (v.avg_risk_score || 0) >= 0.30).length
   return (
     <div>
-      <div className="flex items-center justify-between mb-1.5">
+      <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
         <span className="text-xs text-text-muted tabular-nums">
-          Showing {rangeStart}–{rangeEnd} of {formatNumber(pagination.total)} institutions · sorted by risk score
+          Showing {rangeStart}–{rangeEnd} of {formatNumber(pagination.total)} institutions · sorted by {SORT_LABELS[sortField]} {sortOrder === 'desc' ? '↓' : '↑'}
         </span>
+        <div className="flex items-center gap-3 text-[11px] text-text-muted">
+          <span>Page avg risk: <span className="font-mono font-semibold text-text-primary">{(instPageAvgRisk * 100).toFixed(0)}%</span></span>
+          <span className="text-border/60">·</span>
+          <span>High+ on page: <span className="font-mono font-semibold text-orange-400">{instPageHighPlus}<span className="text-text-muted font-normal">/{institutions.length}</span></span></span>
+        </div>
       </div>
       <div className="overflow-x-auto -mx-4 sm:mx-0">
       <table className="w-full text-sm" role="grid">
@@ -217,8 +242,9 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
   return (
     <tr
       className="border-b border-border/10 hover:bg-background-elevated/30 transition-colors group"
+      style={{ borderLeft: `2px solid ${riskColor}` }}
     >
-      <td className="py-2 pr-3">
+      <td className="py-2 pl-2 pr-3">
         <div className="flex items-center gap-1.5 min-w-0">
           {sector && (
             <span
@@ -294,8 +320,9 @@ function InstitutionRow({ institution, riskColor }: { institution: any; riskColo
   return (
     <tr
       className="border-b border-border/10 hover:bg-background-elevated/30 transition-colors group"
+      style={{ borderLeft: `2px solid ${riskColor}` }}
     >
-      <td className="py-2 pr-3">
+      <td className="py-2 pl-2 pr-3">
         <div className="flex items-center gap-1.5 min-w-0">
           {sector && (
             <span

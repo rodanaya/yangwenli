@@ -406,8 +406,40 @@ def precompute_stats():
         print(f"   Warning: HHI computation failed: {e}")
         import traceback; traceback.print_exc()
 
+    # 10. Data quality stats (feeds /api/v1/stats/data-quality fast path)
+    print("10. Computing data quality stats...")
+    start = time.time()
+    try:
+        dq_row = cursor.execute("""
+            SELECT
+                COUNT(*) as total_contracts,
+                SUM(CASE WHEN v.rfc IS NOT NULL AND v.rfc != '' THEN 1 ELSE 0 END) as contracts_with_rfc,
+                SUM(CASE WHEN c.amount_mxn > 0 THEN 1 ELSE 0 END) as contracts_with_amount,
+                SUM(CASE WHEN c.amount_mxn > 10000000000 THEN 1 ELSE 0 END) as contracts_flagged,
+                SUM(CASE WHEN c.amount_mxn > 100000000000 THEN 1 ELSE 0 END) as contracts_rejected,
+                SUM(CASE WHEN c.risk_level IN ('critical', 'high') THEN 1 ELSE 0 END) as high_risk_count,
+                SUM(CASE WHEN c.risk_level = 'critical' THEN 1 ELSE 0 END) as critical_count
+            FROM contracts c
+            LEFT JOIN vendors v ON c.vendor_id = v.id
+        """).fetchone()
+        total = int(dq_row["total_contracts"] or 0)
+        with_rfc = int(dq_row["contracts_with_rfc"] or 0)
+        stats['data_quality'] = {
+            'total_contracts': total,
+            'contracts_with_rfc': with_rfc,
+            'rfc_coverage_pct': round(with_rfc / total * 100, 2) if total > 0 else 0,
+            'contracts_with_amount': int(dq_row["contracts_with_amount"] or 0),
+            'contracts_flagged': int(dq_row["contracts_flagged"] or 0),
+            'contracts_rejected': int(dq_row["contracts_rejected"] or 0),
+            'high_risk_count': int(dq_row["high_risk_count"] or 0),
+            'critical_count': int(dq_row["critical_count"] or 0),
+        }
+        print(f"   Done ({time.time() - start:.1f}s)")
+    except Exception as e:
+        print(f"   Warning: data quality stats failed: {e}")
+
     # Save all stats to database
-    print("\n10. Saving to database...")
+    print("\n11. Saving to database...")
     for key, value in stats.items():
         cursor.execute("""
             INSERT OR REPLACE INTO precomputed_stats (stat_key, stat_value, updated_at)

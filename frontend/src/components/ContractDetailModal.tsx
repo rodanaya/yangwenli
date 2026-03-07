@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { contractApi } from '@/api/client'
+import { contractApi, vendorApi } from '@/api/client'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { RiskBadge, Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -9,6 +9,7 @@ import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
 import { Link } from 'react-router-dom'
 import { RiskExplanationPanel } from '@/components/RiskExplanation'
 import { ContractExplainPanel } from '@/components/ContractExplainPanel'
+import { SanctionsAlertBanner } from '@/components/SanctionsAlertBanner'
 import {
   Building2,
   Calendar,
@@ -31,6 +32,13 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
     queryKey: ['contract', contractId],
     queryFn: () => contractApi.getById(contractId!),
     enabled: open && contractId !== null,
+  })
+
+  const { data: externalFlags } = useQuery({
+    queryKey: ['vendor-external-flags', contract?.vendor_id],
+    queryFn: () => vendorApi.getExternalFlags(contract!.vendor_id!),
+    enabled: open && !!contract?.vendor_id,
+    staleTime: 10 * 60 * 1000,
   })
 
   return (
@@ -56,8 +64,25 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
         ) : contract ? (
           <div className="space-y-5">
             {/* Sanctions Alert Banner */}
-            {/* TODO: Fetch vendorApi.getExternalFlags(contract.vendor_id) to show SFP/EFOS sanctions inline.
-                For now, users can click through to the vendor profile to see external flags. */}
+            {externalFlags && (externalFlags.sfp_sanctions.length > 0 || externalFlags.sat_efos) && (
+              <SanctionsAlertBanner
+                sanctions={[
+                  ...externalFlags.sfp_sanctions.map(s => ({
+                    list_type: 'sfp' as const,
+                    match_method: 'rfc' as const,
+                    match_confidence: 1,
+                    sanction_type: s.sanction_type ?? undefined,
+                  })),
+                  ...(externalFlags.sat_efos ? [{
+                    list_type: (externalFlags.sat_efos.stage === 'definitivo' ? 'efos_definitivo' : 'efos_presunto') as 'efos_definitivo' | 'efos_presunto',
+                    match_method: 'rfc' as const,
+                    match_confidence: 1,
+                  }] : []),
+                ]}
+                vendorName={contract.vendor_name ?? ''}
+                className="mb-1"
+              />
+            )}
 
             {/* Section 1: Overview */}
             <section>

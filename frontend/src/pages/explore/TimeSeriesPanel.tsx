@@ -4,8 +4,9 @@ import { analysisApi } from '@/api/client'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   ResponsiveContainer,
-  AreaChart,
-  Area,
+  ComposedChart,
+  Bar,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -54,7 +55,7 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
         <div className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">
           Contracts Over Time
         </div>
-        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-32 w-full" />
       </div>
     )
   }
@@ -65,7 +66,7 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
         <div className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">
           Contracts Over Time
         </div>
-        <div className="h-24 w-full flex items-center justify-center text-[11px] text-text-muted/60 border border-border/20 rounded bg-background-elevated/10">
+        <div className="h-32 w-full flex items-center justify-center text-[11px] text-text-muted/60 border border-border/20 rounded bg-background-elevated/10">
           No trend data available
         </div>
       </div>
@@ -125,34 +126,35 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
         )}
       </div>
       <div
-        style={{ height: 80, cursor: 'crosshair', userSelect: 'none' }}
+        style={{ height: 120, cursor: 'crosshair', userSelect: 'none' }}
         onMouseLeave={() => {
           if (isBrushing) handleMouseUp()
         }}
       >
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart
+          <ComposedChart
             data={chartData}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
-            margin={{ top: 2, right: 4, left: 4, bottom: 2 }}
+            margin={{ top: 4, right: 4, left: 4, bottom: 2 }}
           >
             <defs>
-              <linearGradient id="tsGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="10%" stopColor="#6366f1" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="#6366f1" stopOpacity={0.02} />
+              <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#6366f1" stopOpacity={0.85} />
+                <stop offset="100%" stopColor="#6366f1" stopOpacity={0.25} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgb(71 85 105 / 0.15)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgb(71 85 105 / 0.12)" vertical={false} />
             <XAxis
               dataKey="year"
               tick={{ fontSize: 9, fill: 'rgb(148 163 184)' }}
               tickLine={false}
               axisLine={false}
-              interval={3}
+              interval={4}
             />
-            <YAxis hide />
+            <YAxis yAxisId="left" hide />
+            <YAxis yAxisId="right" hide domain={[0, 'dataMax + 5']} />
             <RechartsTooltip
               contentStyle={{
                 backgroundColor: 'rgb(15 23 42)',
@@ -161,31 +163,53 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
                 fontSize: 11,
                 color: 'rgb(226 232 240)',
               }}
-              formatter={(value: any) => [Number(value).toLocaleString(), 'Contracts']}
+              formatter={(value: any, name: string) => {
+                if (name === 'contracts') return [Number(value).toLocaleString(), 'Contracts']
+                if (name === 'avgRisk') return [`${Number(value).toFixed(1)}%`, 'Avg risk']
+                return [value, name]
+              }}
               labelStyle={{ color: 'rgb(148 163 184)', fontSize: 10 }}
             />
             {hasSelection && (
               <ReferenceArea
                 x1={selStart}
                 x2={selEnd}
-                fill="rgb(99 102 241 / 0.2)"
-                stroke="rgb(99 102 241 / 0.6)"
+                yAxisId="left"
+                fill="rgb(99 102 241 / 0.18)"
+                stroke="rgb(99 102 241 / 0.5)"
                 strokeWidth={1}
               />
             )}
-            <Area
-              type="monotone"
+            <Bar
               dataKey="contracts"
-              stroke="#6366f1"
+              fill="url(#barGrad)"
+              yAxisId="left"
+              isAnimationActive={false}
+              radius={[1, 1, 0, 0]}
+            />
+            <Line
+              type="monotone"
+              dataKey="avgRisk"
+              stroke="#f87171"
               strokeWidth={1.5}
-              fill="url(#tsGrad)"
               dot={false}
+              yAxisId="right"
               isAnimationActive={false}
             />
-          </AreaChart>
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
-      <p className="text-[10px] text-text-muted/60 mt-1">Click and drag to filter by year range</p>
+      <div className="flex items-center gap-4 mt-1.5 text-[10px] text-text-muted/60">
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-2 rounded-sm" style={{ backgroundColor: 'rgba(99,102,241,0.6)' }} />
+          <span>Contracts</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-0.5 bg-red-400" />
+          <span>Avg risk %</span>
+        </div>
+        <span className="ml-auto">Drag to filter year range</span>
+      </div>
     </div>
   )
 }
