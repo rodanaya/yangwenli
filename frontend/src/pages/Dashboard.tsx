@@ -406,7 +406,7 @@ function EraTimelineStrip() {
 
 function CrossModelValidationWidget() {
   const { data, isLoading } = useQuery({
-    queryKey: ['analysis', 'pyod-agreement'],
+    queryKey: ['pyod-agreement'],
     queryFn: () => analysisApi.getPyodAgreement(),
     staleTime: 60 * 60 * 1000,
   })
@@ -414,27 +414,34 @@ function CrossModelValidationWidget() {
   if (isLoading) return <Skeleton className="h-24" />
   if (!data) return null
 
+  const bothFlaggedLabel = data.both_flagged >= 1_000_000
+    ? `${(data.both_flagged / 1_000_000).toFixed(1)}M`
+    : `${Math.round(data.both_flagged / 1_000)}K`
+
+  // confirmation_rate is a 0–1 decimal representing fraction of v5.1 high-risk confirmed by PyOD
+  const confirmationPct = (data.confirmation_rate * 100).toFixed(1)
+
   return (
     <div className="rounded-xl border border-border/40 bg-background-card/50 p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
           <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
-            v5.2 Cross-Model Validation
+            Cross-Model Validation
           </p>
         </div>
-        <span className="text-[10px] text-text-muted">IForest + COPOD ensemble</span>
+        <span className="text-[10px] text-text-muted">v5.1 ∩ PyOD unsupervised</span>
       </div>
       <div className="grid grid-cols-3 gap-3">
         <div className="text-center">
           <p className="text-xl font-bold text-text-primary tabular-nums">
-            {(data.both_flagged / 1000).toFixed(0)}K
+            {bothFlaggedLabel}
           </p>
           <p className="text-[10px] text-text-muted mt-0.5">Dual-Confirmed</p>
         </div>
         <div className="text-center">
           <p className="text-xl font-bold text-accent tabular-nums">
-            {data.confirmation_rate.toFixed(0)}%
+            {confirmationPct}%
           </p>
           <p className="text-[10px] text-text-muted mt-0.5">Agreement Rate</p>
         </div>
@@ -446,7 +453,7 @@ function CrossModelValidationWidget() {
         </div>
       </div>
       <p className="text-[10px] text-text-muted/60 mt-3 text-center">
-        Two independent methods agree: unsupervised ML confirms v5.1 risk ordering
+        {confirmationPct}% of high-risk contracts confirmed by unsupervised ML — two independent methods agree
       </p>
     </div>
   )
@@ -561,6 +568,7 @@ export function Dashboard() {
     retry: 0, // endpoint may be unavailable on older deploys — don't block dashboard with retries
     refetchOnWindowFocus: false,
   })
+
 
   const overview = fastDashboard?.overview
   const sectors = fastDashboard?.sectors

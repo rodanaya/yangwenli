@@ -30,6 +30,7 @@
   "workspace": "Workspace",
   "investigation": "Investigation",
   "caseLibrary": "Cases",
+  "ariaQueue": "Investigation Queue",
   "sectors": "Sectors",
   "groundTruth": "Ground Truth",
   "model": "Model Transparency",

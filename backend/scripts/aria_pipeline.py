@@ -11,8 +11,9 @@ import json
 import logging
 import math
 import sqlite3
+import statistics
 import uuid
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import datetime
 from pathlib import Path
 
@@ -230,16 +231,17 @@ def classify_patterns(vendor_data: dict) -> dict:
 # ---------------------------------------------------------------------------
 
 def compute_burst_score(vendor_id: int, conn: sqlite3.Connection) -> tuple:
-    """Returns (burst_score 0-1, detail_dict).
+    """Goh-Barabasi burstiness B = (sigma - mu) / (sigma + mu) on inter-contract intervals.
+    B=1 maximally bursty, B=0 Poisson, B=-1 perfectly periodic.
 
     Only flags as intermediary if value_per_contract >= 10M MXN
-    and activity_span <= 5 years.
+    and activity_span <= 5 years and n_contracts <= 100.
     """
     rows = conn.execute(
         """
-        SELECT contract_year, amount_mxn, institution_id
+        SELECT contract_year, amount_mxn
         FROM contracts
-        WHERE vendor_id = ? AND amount_mxn > 0
+        WHERE vendor_id = ? AND amount_mxn > 0 AND amount_mxn < 100000000000
         ORDER BY contract_year
         """,
         (vendor_id,),
@@ -248,64 +250,76 @@ def compute_burst_score(vendor_id: int, conn: sqlite3.Connection) -> tuple:
     if len(rows) < 2:
         return 0.0, {}
 
-    years_list = [r[0] for r in rows if r[0] is not None]
+    years = [r[0] for r in rows if r[0] is not None]
     amounts = [r[1] for r in rows if r[1] is not None and r[1] > 0]
 
-    if not years_list or not amounts:
+    if not years or not amounts:
         return 0.0, {}
 
-    activity_span = max(years_list) - min(years_list) + 1
     total_value = sum(amounts)
-    value_per_contract = total_value / len(amounts)
+    n_contracts = len(rows)
+    activity_span = max(years) - min(years) + 1
 
-    # Only flag intermediary for short windows
-    if activity_span > 5:
+    # Skip if not an intermediary profile: too many contracts or too long active
+    if activity_span > 5 or n_contracts > 100:
         return 0.0, {}
 
-    # Only flag if contracts are financially significant
+    # Minimum value threshold: only flag significant intermediaries
+    value_per_contract = total_value / n_contracts
     if value_per_contract < 10_000_000:
         return 0.0, {}
 
-    contracts_per_year = len(rows) / max(activity_span, 1)
-    current_year = 2025
-    is_disappeared = 1 if max(years_list) <= current_year - 2 else 0
+    # Inter-arrival times (years between consecutive contracts)
+    inter_arrivals = [years[i + 1] - years[i] for i in range(len(years) - 1)]
+    # Floor at 0.01 to avoid zero intervals
+    adjusted = [max(0.01, ia) for ia in inter_arrivals]
 
-    short_window = 1.0 if activity_span <= 1 else (0.5 if activity_span <= 2 else 0.0)
+    if len(adjusted) < 2:
+        burstiness = 0.5 if activity_span <= 1 else 0.0
+    else:
+        mu = statistics.mean(adjusted)
+        sigma = statistics.stdev(adjusted)
+        if mu + sigma < 0.001:
+            burstiness = 0.0
+        else:
+            b = (sigma - mu) / (sigma + mu)
+            # Normalize from [-1, 1] to [0, 1]
+            burstiness = (b + 1) / 2
 
-    # Value concentration: fraction of total value in the peak year
+    # Value concentration: fraction of total value in peak year
     year_values: dict = defaultdict(float)
     for r in rows:
         if r[0] is not None and r[1] is not None:
             year_values[r[0]] += r[1]
-
     peak_share = max(year_values.values()) / total_value if total_value > 0 else 0
 
-    # Burstiness via year std-dev proxy
-    if len(years_list) > 2:
-        try:
-            import statistics
-            burstiness = statistics.stdev(years_list) / (statistics.mean(years_list) + 0.001)
-            burstiness = min(1.0, burstiness / 3.0)
-        except Exception:
-            burstiness = 0.0
-    else:
-        burstiness = 0.5 if activity_span <= 1 else 0.0
+    # Disappearance: last contract >= 2 years ago
+    current_year = 2025
+    is_disappeared = 1 if max(years) <= current_year - 2 else 0
+
+    # Short window score
+    short_window = 1.0 if activity_span <= 1 else (0.5 if activity_span <= 2 else 0.1)
+
+    # Contracts per year intensity
+    intensity = min(1.0, n_contracts / (activity_span * 5))
 
     burst_score = (
         0.25 * burstiness
         + 0.25 * peak_share
         + 0.20 * is_disappeared
-        + 0.15 * min(1.0, contracts_per_year / 10.0)
+        + 0.15 * intensity
         + 0.15 * short_window
     )
 
     detail = {
         "activity_span_years": activity_span,
-        "contracts_per_year": round(contracts_per_year, 2),
+        "n_contracts": n_contracts,
         "value_per_contract": round(value_per_contract, 0),
+        "total_value": round(total_value, 0),
         "peak_share": round(peak_share, 3),
-        "is_disappeared": is_disappeared,
         "burstiness": round(burstiness, 3),
+        "is_disappeared": is_disappeared,
+        "intensity": round(intensity, 3),
     }
 
     return round(min(1.0, burst_score), 4), detail
@@ -477,6 +491,187 @@ def screen_false_positives(
     }
 
 
+
+# ---------------------------------------------------------------------------
+# Module 4 support: Institution capture features
+# ---------------------------------------------------------------------------
+
+def load_vendor_institution_features(conn: sqlite3.Connection, vendor_ids: list) -> dict:
+    """Returns {vendor_id: {top_institution_ratio, institution_count}}."""
+    if not vendor_ids:
+        return {}
+
+    placeholders = ",".join("?" * len(vendor_ids))
+    rows = conn.execute(f"""
+        SELECT
+            c.vendor_id,
+            c.institution_id,
+            COUNT(*) as cnt,
+            SUM(c.amount_mxn) as val
+        FROM contracts c
+        WHERE c.vendor_id IN ({placeholders})
+          AND c.amount_mxn > 0
+        GROUP BY c.vendor_id, c.institution_id
+    """, vendor_ids).fetchall()
+
+    vendor_institutions: dict = defaultdict(list)
+    for r in rows:
+        vendor_institutions[r[0]].append((r[1], r[2], r[3]))
+
+    result = {}
+    for vid, inst_list in vendor_institutions.items():
+        total_cnt = sum(x[1] for x in inst_list)
+        if total_cnt == 0:
+            continue
+        top = max(inst_list, key=lambda x: x[1])
+        top_ratio = top[1] / total_cnt
+        result[vid] = {
+            "top_institution_ratio": round(top_ratio, 4),
+            "institution_count": len(inst_list),
+        }
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Module 4 support: Z-score feature loading
+# ---------------------------------------------------------------------------
+
+def load_vendor_z_features(conn: sqlite3.Connection, vendor_ids: list) -> dict:
+    """Returns {vendor_id: {avg_z_price_ratio, avg_z_industry_mismatch, avg_co_bid_rate}}."""
+    if not vendor_ids:
+        return {}
+    placeholders = ",".join("?" * len(vendor_ids))
+    rows = conn.execute(f"""
+        SELECT c.vendor_id,
+               AVG(czf.z_price_ratio) as avg_z_price_ratio,
+               AVG(czf.z_industry_mismatch) as avg_z_industry_mismatch,
+               AVG(czf.z_co_bid_rate) as avg_co_bid_rate
+        FROM contracts c
+        JOIN contract_z_features czf ON c.id = czf.contract_id
+        WHERE c.vendor_id IN ({placeholders})
+        GROUP BY c.vendor_id
+    """, vendor_ids).fetchall()
+    return {
+        r[0]: {
+            "avg_z_price_ratio": r[1] or 0,
+            "avg_z_industry_mismatch": r[2] or 0,
+            "avg_co_bid_rate": r[3] or 0,
+        }
+        for r in rows
+    }
+
+
+# ---------------------------------------------------------------------------
+# Module 8: Ground Truth Auto-Update
+# ---------------------------------------------------------------------------
+
+def run_gt_auto_update(
+    results: list,
+    conn,
+    run_id: str,
+    dry_run: bool = False,
+) -> tuple:
+    """Module 8: Automatically insert high-confidence GT matches.
+    Returns (auto_inserts, flags).
+
+    Rules:
+    1. RFC in EFOS AND >= 5 contracts AND not already in GT -> AUTO-INSERT (direct, 1.0)
+    2. RFC in EFOS AND < 5 contracts -> FLAG for review
+    3. RFC in SFP AND risk_score >= 0.30 AND >= 3 contracts -> AUTO-INSERT (circumstantial, 0.85)
+    4. RFC in SFP AND risk_score < 0.30 -> FLAG for review
+    5. mahalanobis_norm >= 0.99 AND total_value >= 1B MXN AND NOT in GT -> FLAG
+    6. IPS >= 0.80 AND pattern_confidence >= 0.70 AND NOT in GT AND NOT FP -> FLAG
+    """
+    auto_inserts = 0
+    flags = 0
+    MAX_AUTO_INSERTS = 100  # safety limit per run
+
+    for r in results:
+        if r["in_ground_truth"]:
+            continue  # already known
+
+        action = None
+        confidence_level = None
+        match_confidence = 0.0
+        source = None
+        evidence = {}
+
+        # Rule 1 & 2: EFOS
+        if r["is_efos_definitivo"]:
+            if r["total_contracts"] >= 5:
+                action = "auto_insert"
+                confidence_level = "direct"
+                match_confidence = 1.0
+                source = "efos_rfc"
+                evidence = {"efos_rfc": r.get("efos_rfc"), "total_contracts": r["total_contracts"]}
+            else:
+                action = "flag_review"
+                confidence_level = "direct"
+                match_confidence = 0.90
+                source = "efos_rfc"
+                evidence = {"efos_rfc": r.get("efos_rfc"), "total_contracts": r["total_contracts"]}
+
+        # Rule 3 & 4: SFP sanctions
+        elif r["is_sfp_sanctioned"]:
+            if r["avg_risk_score"] >= 0.30 and r["total_contracts"] >= 3:
+                action = "auto_insert"
+                confidence_level = "circumstantial"
+                match_confidence = 0.85
+                source = "sfp_rfc"
+                evidence = {"sfp_type": r.get("sfp_sanction_type"), "risk_score": r["avg_risk_score"]}
+            else:
+                action = "flag_review"
+                confidence_level = "circumstantial"
+                match_confidence = 0.60
+                source = "sfp_rfc"
+                evidence = {"sfp_type": r.get("sfp_sanction_type")}
+
+        # Rule 5: extreme Mahalanobis + scale
+        elif r["mahalanobis_norm"] >= 0.99 and r["total_value_mxn"] >= 1_000_000_000:
+            action = "flag_review"
+            confidence_level = "circumstantial"
+            match_confidence = 0.50
+            source = "mahalanobis_scale"
+            evidence = {"mahalanobis_norm": r["mahalanobis_norm"], "total_value_mxn": r["total_value_mxn"]}
+
+        # Rule 6: high IPS + pattern confidence
+        elif (r["ips_final"] >= 0.80 and r["pattern_confidence"] >= 0.70
+              and not r["fp_patent_exception"] and not r["fp_data_error"]):
+            action = "flag_review"
+            confidence_level = "circumstantial"
+            match_confidence = 0.40
+            source = "ips_pattern"
+            evidence = {
+                "ips_final": r["ips_final"],
+                "pattern": r["primary_pattern"],
+                "pattern_confidence": r["pattern_confidence"],
+            }
+
+        if action is None:
+            continue
+
+        if action == "auto_insert" and auto_inserts >= MAX_AUTO_INSERTS:
+            action = "flag_review"  # demote to flag if limit hit
+
+        if not dry_run and conn is not None:
+            conn.execute("""
+                INSERT OR IGNORE INTO aria_gt_updates
+                (vendor_id, vendor_name, action, confidence_level, match_confidence,
+                 source, evidence_detail, aria_run_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (r["vendor_id"], r["vendor_name"], action, confidence_level,
+                  match_confidence, source, json.dumps(evidence), run_id))
+
+        if action == "auto_insert":
+            auto_inserts += 1
+        else:
+            flags += 1
+
+    if not dry_run and conn is not None:
+        conn.commit()
+
+    return auto_inserts, flags
+
 # ---------------------------------------------------------------------------
 # Main pipeline
 # ---------------------------------------------------------------------------
@@ -540,6 +735,23 @@ def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
         vendors = conn.execute(query).fetchall()
         logger.info("  Processing %d vendors...", len(vendors))
 
+        # -- Load institution features per vendor ----------------------------
+        vendor_ids = [v["id"] for v in vendors]
+        logger.info("  Loading institution features...")
+        institution_features = load_vendor_institution_features(conn, vendor_ids)
+        logger.info("  Institution features: %d vendors", len(institution_features))
+
+        # -- Load z-score features per vendor (if available) -----------------
+        z_count = conn.execute("SELECT COUNT(*) FROM contract_z_features").fetchone()[0]
+        if z_count > 0 and limit and limit <= 5000:
+            logger.info("  Loading z-score features...")
+            z_features = load_vendor_z_features(conn, vendor_ids)
+            logger.info("  Z-features loaded for %d vendors", len(z_features))
+        else:
+            z_features = {}
+            if z_count == 0:
+                logger.warning("  contract_z_features is empty — skipping z-feature enrichment")
+
         results = []
         tier_counts = [0, 0, 0, 0]
 
@@ -580,8 +792,12 @@ def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
             avg_contract_amt = total_val / max(total_contracts, 1)
 
             # Pattern classification
+            # Institution and z-score features for this vendor
+            inst_feat = institution_features.get(vid, {})
+            zf = z_features.get(vid, {})
+
             vendor_data_dict = {
-                "vendor_concentration": 0.0,  # not in vendor_stats — Phase 2
+                "vendor_concentration": 0.0,  # not in vendor_stats — future
                 "total_contracts":      total_contracts,
                 "direct_award_rate":    (v["direct_award_rate"] or 0) / 100.0,
                 "single_bid_rate":      (v["single_bid_rate"] or 0) / 100.0,
@@ -590,9 +806,9 @@ def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
                 "burst_score":          burst_score,
                 "is_efos_definitivo":   is_efos,
                 "in_ground_truth":      in_gt,
-                "avg_z_price_ratio":    0.0,   # Phase 2
-                "industry_mismatch_rate": 0.0, # Phase 2
-                "top_institution_ratio":  0.0, # Phase 2
+                "avg_z_price_ratio":    zf.get("avg_z_price_ratio", 0),
+                "industry_mismatch_rate": max(0, zf.get("avg_z_industry_mismatch", 0)),
+                "top_institution_ratio":  inst_feat.get("top_institution_ratio", 0),
                 "sector_vendor_count":  sector_counts.get(v["sector_id"], 999),
                 "max_contract_amount":  v["max_risk_score"] or 0.0,
                 "avg_contract_amount":  avg_contract_amt,
@@ -646,12 +862,17 @@ def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
                 "years_active":           years_active,
                 "direct_award_rate":      (v["direct_award_rate"] or 0) / 100.0,
                 "single_bid_rate":        (v["single_bid_rate"] or 0) / 100.0,
+                "top_institution_ratio":  inst_feat.get("top_institution_ratio", 0),
             })
 
         logger.info(
             "  Tiers: T1=%d, T2=%d, T3=%d, T4=%d",
             tier_counts[0], tier_counts[1], tier_counts[2], tier_counts[3],
         )
+
+        # -- Module 8: GT auto-update ----------------------------------------
+        auto_inserts, gt_flags = run_gt_auto_update(results, conn, run_id, dry_run)
+        logger.info("  GT auto-update: %d auto-inserts, %d flagged", auto_inserts, gt_flags)
 
         # -- Persist results -------------------------------------------------
         if not dry_run:
@@ -675,7 +896,9 @@ def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
                     tier1_count = ?,
                     tier2_count = ?,
                     tier3_count = ?,
-                    tier4_count = ?
+                    tier4_count = ?,
+                    gt_auto_inserts = ?,
+                    gt_flags = ?
                 WHERE id = ?
                 """,
                 (
@@ -685,6 +908,8 @@ def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
                     tier_counts[1],
                     tier_counts[2],
                     tier_counts[3],
+                    auto_inserts,
+                    gt_flags,
                     run_id,
                 ),
             )

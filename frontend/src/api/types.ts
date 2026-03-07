@@ -2155,3 +2155,59 @@ export interface SubnationalSectorsResponse {
   total_value_mxn: number
   coverage_note: string
 }
+
+// ============================================================================
+// ARIA Investigation Queue Types
+// ============================================================================
+
+export interface AriaQueueItem {
+  vendor_id: number
+  vendor_name: string
+  ips_final: number
+  ips_raw: number
+  ips_tier: 1 | 2 | 3 | 4
+  primary_pattern: string | null
+  pattern_confidence: number
+  pattern_confidences?: Record<string, number>
+  total_contracts: number
+  total_value_mxn: number
+  avg_risk_score: number
+  is_efos_definitivo: boolean
+  is_sfp_sanctioned: boolean
+  in_ground_truth: boolean
+  fp_penalty: number
+  burst_score: number
+  review_status: 'pending' | 'confirmed' | 'dismissed' | 'reviewing'
+  primary_sector_name: string | null
+  // detail only:
+  risk_score_norm?: number
+  mahalanobis_norm?: number
+  ensemble_norm?: number
+  financial_scale_norm?: number
+  external_flags_score?: number
+  memo_text?: string | null
+  memo_generated_at?: string | null
+  activity_span_days?: number
+  reviewer_name?: string | null
+}
+
+export interface AriaStats {
+  run_id: string | null
+  started_at: string | null
+  completed_at: string | null
+  status: string
+  vendors_processed: number
+  tier1_count: number
+  tier2_count: number
+  tier3_count: number
+  tier4_count: number
+  gt_auto_inserts: number
+  gt_flags: number
+}
+
+export interface AriaQueueResponse {
+  data: AriaQueueItem[]
+  pagination: PaginationMeta
+  run_summary: AriaStats | null
+  message?: string
+}

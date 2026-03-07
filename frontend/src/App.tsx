@@ -54,6 +54,7 @@ const InstitutionHeatmap = lazy(() => import('@/pages/InstitutionHeatmap'))
 const InstitutionCompare = lazy(() => import('@/pages/InstitutionCompare'))
 const MexicoMap = lazy(() => import('@/pages/MexicoMap'))
 const Annotations = lazy(() => import('@/pages/Annotations'))
+const AriaQueue = lazy(() => import('@/pages/AriaQueue'))
 
 // First-visit routing: redirect "/" to Landing for new users, Dashboard for returning users
 function FirstVisitRedirect() {
@@ -183,6 +184,14 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <Investigation />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="aria"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <AriaQueue />
                   </SuspenseBoundary>
                 }
               />

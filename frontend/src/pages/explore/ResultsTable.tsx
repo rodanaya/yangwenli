@@ -29,6 +29,13 @@ import type { DossierSummary } from '@/components/AddToDossierButton'
 type SortField = 'avg_risk_score' | 'total_contracts' | 'total_value_mxn' | 'direct_award_pct'
 type SortOrder = 'asc' | 'desc'
 
+function isAiConfirmed(row: any): boolean {
+  const level = row.avg_risk_level ?? row.risk_level
+  const isHighRisk = level === 'high' || level === 'critical'
+  const score: number | undefined = row.ensemble_anomaly_score
+  return isHighRisk && score != null && score >= 0.5
+}
+
 const SORT_LABELS: Record<SortField, string> = {
   avg_risk_score: 'risk',
   total_contracts: 'contracts',
@@ -48,6 +55,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
   const { sectorId, yearStart, yearEnd, riskLevels, searchText, entityType } = filters
   const [sortField, setSortField] = useState<SortField>('avg_risk_score')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
+  const [aiConfirmedOnly, setAiConfirmedOnly] = useState(false)
 
   const handleSort = (field: SortField) => {
     if (field === sortField) {
@@ -142,11 +150,13 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
   const rangeEnd = Math.min(page * PAGE_SIZE, pagination.total)
 
   if (isVendor) {
-    const vendors = (vendorQuery.data?.data || []) as any[]
+    const allVendors = (vendorQuery.data?.data || []) as any[]
+    const vendors = aiConfirmedOnly ? allVendors.filter(isAiConfirmed) : allVendors
     const pageAvgRisk = vendors.length > 0
       ? vendors.reduce((s, v) => s + (v.avg_risk_score || 0), 0) / vendors.length
       : 0
     const pageHighPlus = vendors.filter(v => (v.avg_risk_score || 0) >= 0.30).length
+    const aiConfirmedCount = allVendors.filter(isAiConfirmed).length
     return (
       <div>
         <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
@@ -159,6 +169,26 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
             <span>High+ on page: <span className="font-mono font-semibold text-orange-400">{pageHighPlus}<span className="text-text-muted font-normal">/{vendors.length}</span></span></span>
           </div>
         </div>
+        {/* AI Confirmed filter chip */}
+        <div className="mb-2">
+          <button
+            onClick={() => setAiConfirmedOnly(prev => !prev)}
+            className={`inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded border transition-colors ${
+              aiConfirmedOnly
+                ? 'bg-risk-critical/20 text-risk-critical border-risk-critical/40'
+                : 'bg-transparent text-text-muted border-border/40 hover:border-border hover:text-text-primary'
+            }`}
+            aria-pressed={aiConfirmedOnly}
+          >
+            <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            AI Confirmed
+            {aiConfirmedCount > 0 && (
+              <span className="font-mono">{aiConfirmedCount}</span>
+            )}
+          </button>
+        </div>
         <div className="overflow-x-auto -mx-4 sm:mx-0">
         <table className="w-full text-sm" role="grid">
           <thead>
@@ -168,6 +198,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
               <SortHeader field="total_value_mxn" label="Total Value" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="text-right py-2 px-2 hidden md:table-cell" />
               <SortHeader field="avg_risk_score" label="Risk" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="text-right py-2 px-2" />
               <SortHeader field="direct_award_pct" label="DA %" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="text-right py-2 pl-2 hidden lg:table-cell" />
+              <th className="text-right py-2 px-2 font-medium hidden xl:table-cell w-20">Anomaly</th>
               <th className="w-16" />
             </tr>
           </thead>
@@ -298,6 +329,15 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
             {vendor.direct_award_pct.toFixed(0)}%
           </span>
         ) : '–'}
+      </td>
+      <td className="text-right py-2 px-2 font-mono text-xs hidden xl:table-cell w-20">
+        {vendor.ensemble_anomaly_score != null ? (
+          <span className={isAiConfirmed(vendor) ? 'text-risk-critical font-semibold' : 'text-text-muted'}>
+            {(vendor.ensemble_anomaly_score * 100).toFixed(0)}%
+          </span>
+        ) : (
+          <span className="text-text-muted/40">–</span>
+        )}
       </td>
       <td className="pl-1 pr-2">
         <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">

@@ -16,7 +16,7 @@ import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem, slideUp, fadeIn } from '@/lib/animations'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { RiskBadge } from '@/components/ui/badge'
+import { Badge, RiskBadge } from '@/components/ui/badge'
 import { formatCompactMXN, formatNumber, getRiskLevel, toTitleCase } from '@/lib/utils'
 import { RISK_COLORS } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
@@ -763,6 +763,10 @@ export default function InstitutionHealth() {
       {/* Filter bar */}
       <div className="flex items-center gap-3 flex-wrap">
         <SlidersHorizontal className="h-3.5 w-3.5 text-text-muted" />
+        <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-mono border-accent/40 text-accent/80 gap-1">
+          <Brain className="h-2.5 w-2.5" aria-hidden="true" />
+          v5.2 Analytical Layer
+        </Badge>
         <label htmlFor="min-contracts" className="text-xs text-text-muted whitespace-nowrap">
           {t('minimumContracts')}
         </label>
@@ -1250,6 +1254,15 @@ export default function InstitutionHealth() {
           )}
         </CardContent>
       </Card>
+
+      {/* PyOD per-contract anomaly score note */}
+      <p className="text-[11px] text-text-muted leading-relaxed px-1">
+        Cross-model anomaly scores (PyOD ensemble: Isolation Forest + COPOD) are computed per contract, not per institution.
+        Visit an individual institution profile to see contract-level anomaly flags and outlier distributions.
+        Institutions where avg risk score ≥ 0.40 are marked{' '}
+        <Zap className="h-3 w-3 inline text-accent" aria-hidden="true" />{' '}
+        where both the supervised v5.1 model and PyOD unsupervised detection converge.
+      </p>
 
       {/* Section 3: ASF Audit Cross-Reference */}
       <ASFCrossReferenceSection asfData={asfData?.items ?? []} totalFindings={asfData?.total_findings ?? 0} />

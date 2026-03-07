@@ -362,7 +362,7 @@ function LimitationCard({
 
 function SHAPImportanceSection() {
   const { data, isLoading } = useQuery({
-    queryKey: ['analysis', 'feature-importance-v52'],
+    queryKey: ['feature-importance-v52'],
     queryFn: () => analysisApi.getFeatureImportanceV52(),
     staleTime: 24 * 60 * 60 * 1000, // 24 hours
   })
@@ -382,42 +382,78 @@ function SHAPImportanceSection() {
   const maxVal = Math.max(...items.map((d) => d.shap_mean_abs), 0.01)
 
   return (
-    <div className="space-y-2">
+    <div>
       <p className="text-xs text-text-muted mb-3">
-        Mean absolute SHAP values from the global v5.2 model (computed across 456K vendors).
-        Higher = more influence on risk score. Sign indicates direction.
+        Mean absolute SHAP values from the global {data.model_version ?? 'v5.2'} model.
+        Higher = more influence on risk score. Direction indicates risk-increasing or protective.
       </p>
-      {items.map((item) => (
-        <div key={item.factor_name} className="grid grid-cols-[1fr,auto] items-center gap-3">
-          <div>
-            <div className="flex justify-between text-xs mb-0.5">
-              <span className="text-text-secondary font-medium capitalize">
-                {item.factor_name.replace(/_/g, ' ')}
-              </span>
-              <span className={cn(
-                'font-mono text-[10px] tabular-nums',
-                item.direction === 'risk' ? 'text-risk-critical' : 'text-risk-low'
-              )}>
-                {item.direction === 'risk' ? '+' : ''}{item.coefficient.toFixed(3)}
-              </span>
-            </div>
-            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-              <div
-                className={cn(
-                  'h-full rounded-full',
-                  item.direction === 'risk'
-                    ? 'bg-gradient-to-r from-risk-high to-risk-critical'
-                    : 'bg-gradient-to-r from-emerald-700 to-emerald-500'
-                )}
-                style={{ width: `${(item.shap_mean_abs / maxVal) * 100}%` }}
-              />
-            </div>
-          </div>
-          <span className="text-[10px] text-text-muted font-mono tabular-nums w-14 text-right">
-            #{item.rank}
-          </span>
-        </div>
-      ))}
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs" role="table" aria-label="SHAP feature importance">
+          <thead>
+            <tr className="border-b border-border/30">
+              <th className="text-left py-2 pr-3 text-text-muted font-medium w-10">Rank</th>
+              <th className="text-left py-2 px-3 text-text-muted font-medium">Factor</th>
+              <th className="text-left py-2 px-3 text-text-muted font-medium min-w-[140px]">SHAP Mean |Abs|</th>
+              <th className="text-center py-2 px-3 text-text-muted font-medium">Direction</th>
+              <th className="text-right py-2 pl-3 text-text-muted font-medium">Coefficient</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) => (
+              <tr
+                key={item.factor_name}
+                className="border-b border-border/10 hover:bg-background-elevated/30 transition-colors"
+              >
+                <td className="py-2 pr-3 tabular-nums text-text-muted">#{item.rank}</td>
+                <td className="py-2 px-3 text-text-primary font-medium capitalize">
+                  {FACTOR_LABELS[item.factor_name] ?? item.factor_name.replace(/_/g, ' ')}
+                </td>
+                <td className="py-2 px-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden max-w-[100px]">
+                      <div
+                        className={cn(
+                          'h-full rounded-full',
+                          item.direction === 'risk'
+                            ? 'bg-gradient-to-r from-risk-high to-risk-critical'
+                            : 'bg-gradient-to-r from-emerald-700 to-emerald-500'
+                        )}
+                        style={{ width: `${(item.shap_mean_abs / maxVal) * 100}%` }}
+                        role="presentation"
+                      />
+                    </div>
+                    <span className="tabular-nums text-text-secondary font-mono text-[10px]">
+                      {item.shap_mean_abs.toFixed(4)}
+                    </span>
+                  </div>
+                </td>
+                <td className="py-2 px-3 text-center">
+                  {item.direction === 'risk' ? (
+                    <Badge
+                      className="text-[10px] px-1.5 py-0 bg-risk-critical/10 text-risk-critical border-risk-critical/20"
+                      variant="outline"
+                    >
+                      Risk
+                    </Badge>
+                  ) : (
+                    <Badge
+                      className="text-[10px] px-1.5 py-0 bg-risk-low/10 text-risk-low border-risk-low/20"
+                      variant="outline"
+                    >
+                      Protective
+                    </Badge>
+                  )}
+                </td>
+                <td className="py-2 pl-3 text-right tabular-nums font-mono text-[10px]">
+                  <span className={item.direction === 'risk' ? 'text-risk-critical' : 'text-risk-low'}>
+                    {item.coefficient >= 0 ? '+' : ''}{item.coefficient.toFixed(3)}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
@@ -427,66 +463,171 @@ function SHAPImportanceSection() {
 // ============================================================================
 
 function DriftMonitorSection() {
-  const { data, isLoading } = useQuery({
-    queryKey: ['analysis', 'drift'],
+  const [open, setOpen] = useState(true)
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['drift-report'],
     queryFn: () => analysisApi.getDrift(),
     staleTime: 24 * 60 * 60 * 1000,
+    retry: (failureCount, error) => {
+      // Do not retry on 404 — no report has been computed yet
+      const axiosError = error as { response?: { status: number } }
+      if (axiosError?.response?.status === 404) return false
+      return failureCount < 2
+    },
   })
 
-  if (isLoading) return <Skeleton className="h-32" />
-  if (!data) return <p className="text-sm text-text-muted">No drift report found. Run compute_vendor_drift.py first.</p>
-
-  const alertColor = data.dataset_drift ? 'text-risk-high' : 'text-risk-low'
-  const alertBg = data.dataset_drift ? 'bg-risk-high/10 border-risk-high/30' : 'bg-risk-low/10 border-risk-low/30'
+  const is404 = isError && (() => {
+    // narrow: axios errors carry response.status
+    const err = data as unknown
+    void err
+    return true // isError covers 404; we show a gentle message for all errors
+  })()
 
   return (
-    <div className="space-y-4">
-      <div className={cn('rounded-lg px-4 py-3 border', alertBg)}>
-        <div className="flex items-center gap-2">
-          {data.dataset_drift ? (
-            <AlertTriangle className={cn('h-4 w-4', alertColor)} aria-hidden="true" />
-          ) : (
-            <CheckCircle className={cn('h-4 w-4', alertColor)} aria-hidden="true" />
-          )}
-          <p className={cn('text-sm font-semibold', alertColor)}>
-            {data.dataset_drift ? 'Significant Drift Detected' : 'No Significant Drift'}
-          </p>
-        </div>
-        <p className="text-xs text-text-muted mt-1">
-          {data.n_drifted} of {data.n_features} features drifted between {data.reference_year_range} (train)
-          and {data.current_year} (current).{' '}
-          {data.dataset_drift ? 'Consider retraining the model.' : 'Model is stable for current data.'}
-        </p>
-      </div>
-
-      {data.drifted_features.length > 0 && (
-        <div>
-          <p className="text-xs font-medium text-text-secondary mb-2">
-            Drifted Features ({data.drifted_features.length})
-          </p>
-          <div className="space-y-1">
-            {data.drifted_features.slice(0, 8).map((f) => (
-              <div key={f.feature} className="flex items-center justify-between text-xs">
-                <span className="text-text-secondary capitalize">
-                  {f.feature.replace(/^z_/, '').replace(/_/g, ' ')}
-                </span>
-                <div className="flex items-center gap-2">
-                  {f.mean_shift !== undefined && (
-                    <span className={f.mean_shift > 0 ? 'text-risk-high' : 'text-risk-low'}>
-                      {f.mean_shift > 0 ? '+' : ''}{f.mean_shift.toFixed(3)}
-                    </span>
-                  )}
-                  <span className="text-text-muted font-mono">KS={f.ks_stat.toFixed(3)}</span>
-                </div>
-              </div>
-            ))}
+    <Card>
+      <CardHeader className="pb-2">
+        <button
+          onClick={() => setOpen((prev) => !prev)}
+          className="flex items-center justify-between w-full text-left gap-2"
+          aria-expanded={open}
+          aria-controls="drift-monitor-body"
+        >
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-accent" aria-hidden="true" />
+            <CardTitle className="text-sm">Data Drift Monitor</CardTitle>
+            {data && (
+              <Badge
+                className={cn(
+                  'text-[10px] px-1.5 py-0 ml-1',
+                  data.dataset_drift
+                    ? 'bg-risk-high/10 text-risk-high border-risk-high/20'
+                    : 'bg-risk-low/10 text-risk-low border-risk-low/20'
+                )}
+                variant="outline"
+              >
+                {data.dataset_drift ? 'Drift Detected' : 'Stable'}
+              </Badge>
+            )}
           </div>
-        </div>
+          <span className="text-text-muted text-xs" aria-hidden="true">{open ? '▲' : '▼'}</span>
+        </button>
+        <CardDescription className="text-xs">
+          Kolmogorov-Smirnov test comparing training baseline vs current data
+        </CardDescription>
+      </CardHeader>
+
+      {open && (
+        <CardContent id="drift-monitor-body">
+          {isLoading && <Skeleton className="h-32" />}
+
+          {(isError || is404) && !isLoading && (
+            <p className="text-sm text-text-muted">
+              No drift report computed yet. Run compute_vendor_drift.py first.
+            </p>
+          )}
+
+          {data && !isError && (
+            <div className="space-y-4">
+              {/* Overall status banner */}
+              <div
+                className={cn(
+                  'rounded-lg px-4 py-3 border',
+                  data.dataset_drift
+                    ? 'bg-risk-high/10 border-risk-high/30'
+                    : 'bg-risk-low/10 border-risk-low/30'
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  {data.dataset_drift ? (
+                    <AlertTriangle className="h-4 w-4 text-risk-high" aria-hidden="true" />
+                  ) : (
+                    <CheckCircle className="h-4 w-4 text-risk-low" aria-hidden="true" />
+                  )}
+                  <p className={cn(
+                    'text-sm font-semibold',
+                    data.dataset_drift ? 'text-risk-high' : 'text-risk-low'
+                  )}>
+                    {data.dataset_drift ? 'Significant Drift Detected' : 'No Significant Drift'}
+                  </p>
+                </div>
+                <p className="text-xs text-text-muted mt-1">
+                  <span className="tabular-nums font-medium text-text-secondary">{data.n_drifted}</span>
+                  {' '}of{' '}
+                  <span className="tabular-nums font-medium text-text-secondary">{data.n_features}</span>
+                  {' '}features drifted between{' '}
+                  <span className="font-medium text-text-secondary">{data.reference_year_range}</span>
+                  {' '}(train) and{' '}
+                  <span className="font-medium text-text-secondary">{data.current_year}</span>
+                  {' '}(current).{' '}
+                  {data.dataset_drift
+                    ? 'Consider retraining the model.'
+                    : 'Model is stable for current data.'}
+                </p>
+              </div>
+
+              {/* Drifted features table */}
+              {data.drifted_features.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-text-secondary mb-2">
+                    Drifted Features ({data.drifted_features.length})
+                  </p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs" role="table" aria-label="Drifted features">
+                      <thead>
+                        <tr className="border-b border-border/30">
+                          <th className="text-left py-2 pr-4 text-text-muted font-medium">Feature</th>
+                          <th className="text-right py-2 px-3 text-text-muted font-medium">KS Stat</th>
+                          <th className="text-right py-2 px-3 text-text-muted font-medium">p-value</th>
+                          <th className="text-right py-2 pl-3 text-text-muted font-medium">Mean Shift</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.drifted_features.map((f) => (
+                          <tr key={f.feature} className="border-b border-border/10 hover:bg-background-elevated/30 transition-colors">
+                            <td className="py-2 pr-4 text-text-secondary capitalize">
+                              {f.feature.replace(/^z_/, '').replace(/_/g, ' ')}
+                            </td>
+                            <td className="py-2 px-3 text-right tabular-nums font-mono text-text-primary">
+                              {f.ks_stat.toFixed(3)}
+                            </td>
+                            <td className="py-2 px-3 text-right tabular-nums font-mono text-text-muted">
+                              {f.p_value < 0.001 ? '<0.001' : f.p_value.toFixed(3)}
+                            </td>
+                            <td className="py-2 pl-3 text-right tabular-nums font-mono">
+                              <span className={f.mean_shift > 0 ? 'text-risk-high' : 'text-risk-low'}>
+                                {f.mean_shift > 0 ? '+' : ''}{f.mean_shift.toFixed(3)}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Stable features summary */}
+              {data.stable_features.length > 0 && (
+                <p className="text-xs text-text-muted">
+                  <CheckCircle className="inline h-3 w-3 text-risk-low mr-1" aria-hidden="true" />
+                  {data.stable_features.length} feature{data.stable_features.length !== 1 ? 's' : ''} stable:{' '}
+                  {data.stable_features.slice(0, 5).map((f) =>
+                    f.feature.replace(/^z_/, '').replace(/_/g, ' ')
+                  ).join(', ')}
+                  {data.stable_features.length > 5 && ` + ${data.stable_features.length - 5} more`}
+                </p>
+              )}
+
+              <p className="text-[10px] text-text-muted">
+                Report generated: {new Date(data.created_at).toLocaleDateString()} ·
+                Reference: {data.reference_year_range} ·
+                Current: {data.current_year}
+              </p>
+            </div>
+          )}
+        </CardContent>
       )}
-      <p className="text-[10px] text-text-muted">
-        Report generated: {new Date(data.created_at).toLocaleDateString()} · Reference: {data.reference_year_range} · Current: {data.current_year}
-      </p>
-    </div>
+    </Card>
   )
 }
 
@@ -1294,20 +1435,7 @@ export default function ModelTransparency() {
       {/* ================================================================ */}
       {/* Distribution Drift Monitor (v5.2 live)                          */}
       {/* ================================================================ */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Activity className="h-4 w-4 text-accent" aria-hidden="true" />
-            Distribution Drift Monitor
-          </CardTitle>
-          <CardDescription className="text-xs">
-            Kolmogorov-Smirnov test comparing training baseline vs current data
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DriftMonitorSection />
-        </CardContent>
-      </Card>
+      <DriftMonitorSection />
 
       {/* ================================================================ */}
       {/* L5: Known Limitations                                            */}

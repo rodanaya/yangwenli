@@ -843,11 +843,12 @@ export function VendorProfile() {
   })
 
   // Fetch v5.2 SHAP explanation — deferred until user opens Risk tab
-  const { data: shapData } = useQuery({
+  const { data: shapData, isError: shapError } = useQuery({
     queryKey: ['vendor', vendorId, 'shap-v52'],
     queryFn: () => vendorApi.getShap(vendorId),
     enabled: !!vendorId && activeTab === 'risk',
     staleTime: 60 * 60 * 1000, // 1 hour — SHAP values don't change often
+    retry: false, // 404 = no SHAP data for this vendor, don't retry
   })
 
   // Determine if vendor has co-bidding risk
@@ -2233,25 +2234,56 @@ export function VendorProfile() {
                 </Card>
               )}
 
-              {/* Fallback: inline waterfall from risk profile factors */}
+              {/* SHAP-based factor chart (per-vendor exact values) — preferred over global-coefficient fallback */}
               {!waterfallData?.length && !waterfallLoading && (
               <Card className="hover-lift">
                 <CardHeader>
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4" />
-                    {t('risk.riskFactorContributionFallback')}
+                    <Brain className="h-4 w-4 text-accent" />
+                    Per-Vendor Risk Factor Analysis
+                    {shapData && (
+                      <span className="text-[9px] bg-accent/10 text-accent px-1.5 py-0.5 rounded ml-1">SHAP</span>
+                    )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {riskLoading ? (
-                    <Skeleton className="h-[220px]" />
-                  ) : riskProfile?.top_risk_factors?.length ? (
-                    <RiskWaterfallChart
-                      riskFactors={riskProfile.top_risk_factors}
-                      riskScore={riskProfile.avg_risk_score ?? vendor.avg_risk_score ?? 0}
-                    />
+                  {shapData ? (
+                    <>
+                      <SHAPPanel shapData={shapData} />
+                      <p className="text-[9px] text-text-muted/50 mt-3 border-t border-border/20 pt-2">
+                        Based on {shapData.n_contracts.toLocaleString()} contracts
+                        {shapData.updated_at ? ` · Updated ${formatDate(shapData.updated_at)}` : ''}
+                      </p>
+                    </>
+                  ) : shapError ? (
+                    // 404 = no SHAP data pre-computed for this vendor; fall back to global-coefficient approximation
+                    riskLoading ? (
+                      <Skeleton className="h-[220px]" />
+                    ) : riskProfile?.top_risk_factors?.length ? (
+                      <>
+                        <RiskWaterfallChart
+                          riskFactors={riskProfile.top_risk_factors}
+                          riskScore={riskProfile.avg_risk_score ?? vendor.avg_risk_score ?? 0}
+                        />
+                        <p className="text-[9px] text-text-muted/50 mt-2">
+                          Approximate contributions using global model coefficients — per-vendor SHAP not available for this vendor.
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-sm text-text-muted">{t('risk.noRiskFactorData')}</p>
+                    )
                   ) : (
-                    <p className="text-sm text-text-muted">{t('risk.noRiskFactorData')}</p>
+                    // SHAP still loading
+                    riskLoading ? (
+                      <Skeleton className="h-[220px]" />
+                    ) : riskProfile?.top_risk_factors?.length ? (
+                      <RiskWaterfallChart
+                        riskFactors={riskProfile.top_risk_factors}
+                        riskScore={riskProfile.avg_risk_score ?? vendor.avg_risk_score ?? 0}
+                      />
+                    ) : (
+                      <p className="text-sm text-text-muted">{t('risk.noRiskFactorData')}</p>
+                    )
                   )}
                 </CardContent>
               </Card>
@@ -2282,10 +2314,14 @@ export function VendorProfile() {
                     <div className="mt-4 border-t border-border/30 pt-4">
                       <div className="flex items-center gap-2 mb-3">
                         <Brain className="h-3.5 w-3.5 text-accent" />
-                        <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">v5.2 SHAP Analysis</p>
-                        <span className="text-[9px] bg-accent/10 text-accent px-1.5 py-0.5 rounded">Live</span>
+                        <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">SHAP Analysis</p>
+                        <span className="text-[9px] bg-accent/10 text-accent px-1.5 py-0.5 rounded">Per-Vendor</span>
                       </div>
                       <SHAPPanel shapData={shapData} />
+                      <p className="text-[9px] text-text-muted/50 mt-2">
+                        Based on {shapData.n_contracts.toLocaleString()} contracts
+                        {shapData.updated_at ? ` · Updated ${formatDate(shapData.updated_at)}` : ''}
+                      </p>
                     </div>
                   )}
                 </div>

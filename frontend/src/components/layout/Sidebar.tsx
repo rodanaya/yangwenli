@@ -30,6 +30,7 @@ import {
   Code2,
   MessageSquarePlus,
   StickyNote,
+  Shield,
 } from 'lucide-react'
 import { RubliLogoMark } from '@/components/ui/RubliLogoMark'
 import { LanguageToggle } from '@/components/LanguageToggle'
@@ -73,6 +74,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
     sectionKey: 'sections.investigate',
     items: [
       { i18nKey: 'caseLibrary', href: '/cases', icon: Library },
+      { i18nKey: 'ariaQueue', href: '/aria', icon: Shield },
       { i18nKey: 'investigation', href: '/investigation', icon: Crosshair },
       { i18nKey: 'procurementIntelligence', href: '/procurement-intelligence', icon: Zap },
       { i18nKey: 'yearInReview', href: '/year-in-review', icon: Calendar },

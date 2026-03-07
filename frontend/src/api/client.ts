@@ -98,6 +98,9 @@ import type {
   FeatureImportanceResponse,
   PyodAgreementResponse,
   DriftReportResponse,
+  AriaQueueItem,
+  AriaStats,
+  AriaQueueResponse,
 } from './types'
 
 // Re-export types that were moved from client.ts to types.ts for backward compatibility
@@ -158,6 +161,9 @@ export type {
   PyodAgreementResponse,
   DriftFeature,
   DriftReportResponse,
+  AriaQueueItem,
+  AriaStats,
+  AriaQueueResponse,
 } from './types'
 
 /** Generic query parameter map — used internally by buildQueryParams */
@@ -2249,6 +2255,66 @@ export const subnationalApi = {
   },
 }
 
+// ============================================================================
+// ARIA Investigation Queue API
+// ============================================================================
+
+export const ariaApi = {
+  /**
+   * Fetch the investigation queue with optional filters and pagination
+   */
+  async getQueue(params?: {
+    tier?: number
+    pattern?: string
+    search?: string
+    efos_only?: boolean
+    page?: number
+    per_page?: number
+  }): Promise<AriaQueueResponse> {
+    const queryParams = params ? buildQueryParams(params as QueryParams) : ''
+    const { data } = await api.get<AriaQueueResponse>(`/aria/queue?${queryParams}`)
+    return data
+  },
+
+  /**
+   * Get detailed breakdown for a single vendor in the queue
+   */
+  async getVendorDetail(vendorId: number): Promise<AriaQueueItem> {
+    const { data } = await api.get<AriaQueueItem>(`/aria/queue/${vendorId}`)
+    return data
+  },
+
+  /**
+   * Update review status for a queue item
+   */
+  async updateReview(
+    vendorId: number,
+    update: { review_status: AriaQueueItem['review_status']; reviewer_name?: string }
+  ): Promise<AriaQueueItem> {
+    const { data } = await api.patch<AriaQueueItem>(`/aria/queue/${vendorId}/review`, {
+      status: update.review_status,
+      reviewer_name: update.reviewer_name,
+    })
+    return data
+  },
+
+  /**
+   * Fetch aggregate stats about the latest ARIA run
+   */
+  async getStats(): Promise<AriaStats | null> {
+    const { data } = await api.get<{ latest_run: AriaStats | null; review_stats: Record<string, number>; queue_total: number }>('/aria/stats')
+    return data.latest_run
+  },
+
+  /**
+   * Trigger a new ARIA pipeline run (async — returns immediately)
+   */
+  async runPipeline(): Promise<{ message: string; run_id: string }> {
+    const { data } = await api.post<{ message: string; run_id: string }>('/aria/run')
+    return data
+  },
+}
+
 // Default export with all API modules
 export default {
   sector: sectorApi,
@@ -2270,4 +2336,5 @@ export default {
   feedback: feedbackApi,
   dossiers: dossierApi,
   issues: issueApi,
+  aria: ariaApi,
 }
