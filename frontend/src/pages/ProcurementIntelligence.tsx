@@ -92,49 +92,6 @@ function inferSectorColor(name: string): string {
 }
 
 // =============================================================================
-// Name abbreviation — shorten long government agency / vendor names
-// =============================================================================
-
-const KNOWN_ACRONYMS: Record<string, string> = {
-  'Instituto Mexicano Del Seguro Social': 'IMSS',
-  'Instituto Mexicano del Seguro Social': 'IMSS',
-  'Instituto De Seguridad Y Servicios Sociales De Los Trabajadores Del Estado': 'ISSSTE',
-  'Instituto de Seguridad y Servicios Sociales de los Trabajadores del Estado': 'ISSSTE',
-  'Comision Federal De Electricidad': 'CFE',
-  'Comisión Federal de Electricidad': 'CFE',
-  'Petroleos Mexicanos': 'PEMEX',
-  'Petróleos Mexicanos': 'PEMEX',
-  'Secretaria De Salud': 'SSA',
-  'Secretaría de Salud': 'SSA',
-  'Secretaria De Educacion Publica': 'SEP',
-  'Secretaría de Educación Pública': 'SEP',
-  'Secretaria De Hacienda Y Credito Publico': 'SHCP',
-  'Secretaría de Hacienda y Crédito Público': 'SHCP',
-  'Secretaria De La Defensa Nacional': 'SEDENA',
-  'Secretaría de la Defensa Nacional': 'SEDENA',
-  'Secretaria De Marina': 'SEMAR',
-  'Secretaría de Marina': 'SEMAR',
-  'Secretaria De Gobernacion': 'SEGOB',
-  'Secretaría de Gobernación': 'SEGOB',
-  'Secretaria De Comunicaciones Y Transportes': 'SCT',
-  'Secretaría de Comunicaciones y Transportes': 'SCT',
-  'Secretaria De Agricultura Y Desarrollo Rural': 'SADER',
-  'Secretaría de Agricultura y Desarrollo Rural': 'SADER',
-  'Secretaria De Medio Ambiente Y Recursos Naturales': 'SEMARNAT',
-  'Secretaría de Medio Ambiente y Recursos Naturales': 'SEMARNAT',
-  'Servicio De Administracion Tributaria': 'SAT',
-  'Servicio de Administración Tributaria': 'SAT',
-  'Comision Nacional Del Agua': 'CONAGUA',
-  'Comisión Nacional del Agua': 'CONAGUA',
-  'Instituto Politecnico Nacional': 'IPN',
-  'Instituto Politécnico Nacional': 'IPN',
-  'Universidad Nacional Autonoma De Mexico': 'UNAM',
-  'Universidad Nacional Autónoma de México': 'UNAM',
-  'Fondo De Cultura Economica': 'FCE',
-  'Fondo de Cultura Económica': 'FCE',
-}
-
-// =============================================================================
 // Factor label helpers
 // =============================================================================
 

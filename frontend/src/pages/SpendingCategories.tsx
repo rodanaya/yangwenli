@@ -1702,12 +1702,6 @@ export default function SpendingCategories() {
                       layout="vertical"
                       data={treemapData}
                       margin={{ top: 4, right: 120, bottom: 4, left: 8 }}
-                      onClick={(chartData: { activePayload?: Array<{ payload: { category_id?: number } }> } | null) => {
-                        const cid = chartData?.activePayload?.[0]?.payload?.category_id
-                        if (cid != null) {
-                          setSelectedCategoryId((prev: number | null) => prev === cid ? null : cid)
-                        }
-                      }}
                       style={{ cursor: 'pointer' }}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
@@ -1746,7 +1740,17 @@ export default function SpendingCategories() {
                           )
                         }}
                       />
-                      <Bar dataKey="value" radius={[0, 3, 3, 0]} maxBarSize={18}>
+                      <Bar
+                        dataKey="value"
+                        radius={[0, 3, 3, 0]}
+                        maxBarSize={18}
+                        onClick={(barData: { category_id?: number }) => {
+                          const cid = barData?.category_id
+                          if (cid != null) {
+                            setSelectedCategoryId((prev: number | null) => prev === cid ? null : cid)
+                          }
+                        }}
+                      >
                         {treemapData.map((entry, index) => (
                           <Cell
                             key={`bar-cell-${index}`}
@@ -1759,7 +1763,7 @@ export default function SpendingCategories() {
                         <LabelList
                           dataKey="value"
                           position="right"
-                          formatter={(v: number) => formatCompactMXN(v)}
+                          formatter={(v: unknown) => formatCompactMXN(Number(v))}
                           style={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
                         />
                       </Bar>
