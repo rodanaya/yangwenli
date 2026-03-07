@@ -1744,8 +1744,9 @@ export default function SpendingCategories() {
                         dataKey="value"
                         radius={[0, 3, 3, 0]}
                         maxBarSize={18}
-                        onClick={(barData: { category_id?: number }) => {
-                          const cid = barData?.category_id
+                        onClick={(barData) => {
+                          const d = barData as { category_id?: number } | null
+                          const cid = d?.category_id
                           if (cid != null) {
                             setSelectedCategoryId((prev: number | null) => prev === cid ? null : cid)
                           }

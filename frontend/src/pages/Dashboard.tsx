@@ -45,7 +45,6 @@ import {
   Pie,
   ReferenceLine,
   ReferenceArea,
-  Treemap,
   LabelList,
 } from '@/components/charts'
 import { RISK_COLORS, SECTOR_COLORS, SECTORS, getSectorNameEN, CURRENT_MODEL_VERSION } from '@/lib/constants'
@@ -1221,7 +1220,7 @@ export function Dashboard() {
                   <LabelList
                     dataKey="size"
                     position="right"
-                    formatter={(v: number) => formatCompactMXN(v)}
+                    formatter={(v: unknown) => formatCompactMXN(v as number)}
                     style={{ fontSize: 10, fontFamily: 'var(--font-mono)', fill: 'var(--color-text-muted)' }}
                   />
                 </Bar>
