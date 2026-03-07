@@ -22,7 +22,7 @@ def get_db_connection() -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     # Set busy timeout to handle concurrent access (5s — short enough to fail fast,
     # long enough for normal lock contention; 30s was too long and caused cascading failures)
-    conn.execute("PRAGMA busy_timeout = 5000")
+    conn.execute("PRAGMA busy_timeout = 30000")
     # WAL mode allows concurrent readers while one writer is active
     conn.execute("PRAGMA journal_mode = WAL")
     # read_uncommitted removed: reads dirty (uncommitted) data from other connections,

@@ -695,6 +695,8 @@ CREATE TABLE IF NOT EXISTS rupc_vendors (
     loaded_at TEXT DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_rupc_rfc ON rupc_vendors(rfc);
+-- Covering index for startup health check query (risk_level GROUP BY + MIN/MAX risk_score)
+CREATE INDEX IF NOT EXISTS idx_c_risk_level_score ON contracts(risk_level, risk_score);
 """
 
 # =============================================================================
