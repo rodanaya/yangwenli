@@ -86,10 +86,13 @@ def load_v5_calibrations(conn):
     global_cal = parse_cal(row)
 
     # Sanity check: intercept should be negative and pu_correction in expected range
-    if not (-5.0 < global_cal['intercept'] < -0.5):
+    # Threshold is -0.3 (not -0.5) to accommodate v5.2 temporal-leakage-fix models where
+    # price_hyp_confidence is zeroed and the intercept shifts slightly toward 0.
+    # The v5.2-failure mode had C=0.01 + intercept=+0.39; the guard still catches that.
+    if not (-5.0 < global_cal['intercept'] < -0.3):
         raise ValueError(
             f"Loaded calibration has suspicious intercept={global_cal['intercept']:.4f}. "
-            f"Expected between -5.0 and -0.5. "
+            f"Expected between -5.0 and -0.3. "
             f"Run calibrate_risk_model_v5.py to regenerate calibration before scoring."
         )
     if not (0.70 < global_cal['pu_correction'] < 0.99):
@@ -284,11 +287,12 @@ def main():
         score_dist = {'critical': 0, 'high': 0, 'medium': 0, 'low': 0}
 
         while True:
+            # Use sector_id from contract_z_features directly (no JOIN needed — it's
+            # always populated by compute_z_features.py, avoiding a 3.1M-row random join).
             cursor.execute(f"""
                 SELECT zf.contract_id, {', '.join(f'zf.{c}' for c in Z_COLS)},
-                       zf.mahalanobis_distance, c.sector_id
+                       zf.mahalanobis_distance, zf.sector_id
                 FROM contract_z_features zf
-                JOIN contracts c ON zf.contract_id = c.id
                 WHERE zf.contract_id > ?
                 ORDER BY zf.contract_id
                 LIMIT ?
