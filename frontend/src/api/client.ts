@@ -94,6 +94,10 @@ import type {
   CommunityDetailResponse,
   ComparePeriodResponse,
   InstitutionRiskFactorResponse,
+  VendorSHAPResponse,
+  FeatureImportanceResponse,
+  PyodAgreementResponse,
+  DriftReportResponse,
 } from './types'
 
 // Re-export types that were moved from client.ts to types.ts for backward compatibility
@@ -146,6 +150,14 @@ export type {
   TrendDataPoint,
   ContractListItem,
   VendorQQWResponse,
+  VendorSHAPFactor,
+  VendorSHAPResponse,
+  FeatureImportanceV52Item,
+  FeatureImportanceResponse,
+  PyodRiskLevelBreakdown,
+  PyodAgreementResponse,
+  DriftFeature,
+  DriftReportResponse,
 } from './types'
 
 /** Generic query parameter map — used internally by buildQueryParams */
@@ -488,6 +500,15 @@ export const vendorApi = {
 
   async getQQW(vendorId: number): Promise<VendorQQWResponse> {
     const { data } = await api.get<VendorQQWResponse>(`/vendors/${vendorId}/qqw`)
+    return data
+  },
+
+  /**
+   * Get SHAP-based risk explanation for a vendor (v5.2)
+   * Returns per-feature SHAP values and top contributing factors
+   */
+  async getShap(vendorId: number): Promise<VendorSHAPResponse> {
+    const { data } = await api.get<VendorSHAPResponse>(`/vendors/${vendorId}/shap`)
     return data
   },
 }
@@ -1140,6 +1161,35 @@ export const analysisApi = {
     const { data } = await api.get<YearSummaryResponse>(
       `/analysis/year-summary/${year}`,
     )
+    return data
+  },
+
+  /**
+   * Get SHAP-based global feature importance (v5.2)
+   * Optional sector_id for per-sector model breakdown
+   */
+  async getFeatureImportanceV52(sectorId?: number): Promise<FeatureImportanceResponse> {
+    const { data } = await api.get<FeatureImportanceResponse>(
+      `/analysis/feature-importance${sectorId ? `?sector_id=${sectorId}` : ''}`
+    )
+    return data
+  },
+
+  /**
+   * Get PyOD anomaly detection agreement with v5.1 risk scores
+   * Shows confirmation rate between ML outlier detection and risk model
+   */
+  async getPyodAgreement(): Promise<PyodAgreementResponse> {
+    const { data } = await api.get<PyodAgreementResponse>('/analysis/pyod-agreement')
+    return data
+  },
+
+  /**
+   * Get latest feature drift report (v5.2)
+   * Uses Kolmogorov-Smirnov test to detect distributional shift
+   */
+  async getDrift(): Promise<DriftReportResponse> {
+    const { data } = await api.get<DriftReportResponse>('/analysis/drift')
     return data
   },
 }

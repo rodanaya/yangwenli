@@ -28,7 +28,7 @@ import VendorContractTimeline from '@/components/VendorContractTimeline'
 import VendorContractRiskMatrix from '@/components/VendorContractRiskMatrix'
 import VendorContractBreakdown from '@/components/VendorContractBreakdown'
 import { buildVendorNarrative } from '@/lib/narratives'
-import type { ContractListItem, VendorExternalFlags, VendorWaterfallContribution, VendorQQWResponse } from '@/api/types'
+import type { ContractListItem, VendorExternalFlags, VendorWaterfallContribution, VendorQQWResponse, VendorSHAPResponse } from '@/api/types'
 import {
   AreaChart,
   Area,
@@ -643,6 +643,69 @@ function TopRiskFactorBars({ waterfallData }: { waterfallData: VendorWaterfallCo
 }
 
 // ============================================================================
+// SHAP Explanation Panel (v5.2 per-vendor exact Shapley values)
+// ============================================================================
+
+function SHAPPanel({ shapData }: { shapData: VendorSHAPResponse }) {
+  const allFactors = [
+    ...shapData.top_risk_factors.map(f => ({ ...f, isRisk: true })),
+    ...shapData.top_protect_factors.map(f => ({ ...f, isRisk: false })),
+  ]
+  const maxAbs = Math.max(...allFactors.map(f => Math.abs(f.shap)), 0.01)
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-text-muted">
+        SHAP values show the exact contribution of each factor to this vendor&apos;s risk score.
+        Values computed from {shapData.n_contracts} contracts in this sector.
+      </p>
+      <div className="space-y-2">
+        {shapData.top_risk_factors.map((f) => (
+          <div key={f.factor}>
+            <div className="flex justify-between text-xs mb-0.5">
+              <span className="text-text-secondary font-medium">
+                {f.factor.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+              </span>
+              <span className="text-risk-critical font-mono text-[10px]">+{f.shap.toFixed(3)}</span>
+            </div>
+            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-risk-high to-risk-critical"
+                style={{ width: `${Math.min((f.shap / maxAbs) * 100, 100)}%` }}
+              />
+            </div>
+          </div>
+        ))}
+        {shapData.top_protect_factors.length > 0 && (
+          <>
+            <p className="text-[10px] text-text-muted pt-1">Protective factors (reducing risk):</p>
+            {shapData.top_protect_factors.map((f) => (
+              <div key={f.factor}>
+                <div className="flex justify-between text-xs mb-0.5">
+                  <span className="text-text-secondary font-medium">
+                    {f.factor.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                  </span>
+                  <span className="text-risk-low font-mono text-[10px]">{f.shap.toFixed(3)}</span>
+                </div>
+                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400"
+                    style={{ width: `${Math.min((Math.abs(f.shap) / maxAbs) * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+      <p className="text-[9px] text-text-muted/50 border-t border-border/20 pt-1">
+        v5.2 SHAP — φᵢ = βᵢ × (zᵢ − E[zᵢ]) — exact Shapley values from logistic regression
+      </p>
+    </div>
+  )
+}
+
+// ============================================================================
 // Main VendorProfile component
 // ============================================================================
 
@@ -777,6 +840,14 @@ export function VendorProfile() {
     queryFn: () => vendorApi.getLinkedScandals(vendorId),
     enabled: !!vendorId,
     staleTime: 30 * 60 * 1000,
+  })
+
+  // Fetch v5.2 SHAP explanation — deferred until user opens Risk tab
+  const { data: shapData } = useQuery({
+    queryKey: ['vendor', vendorId, 'shap-v52'],
+    queryFn: () => vendorApi.getShap(vendorId),
+    enabled: !!vendorId && activeTab === 'risk',
+    staleTime: 60 * 60 * 1000, // 1 hour — SHAP values don't change often
   })
 
   // Determine if vendor has co-bidding risk
@@ -2207,6 +2278,16 @@ export function VendorProfile() {
                   <p className="text-xs text-white/50 italic mt-3">
                     z-score = standard deviations above sector-year average. Values above +2 are statistically unusual for this sector.
                   </p>
+                  {shapData && (
+                    <div className="mt-4 border-t border-border/30 pt-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Brain className="h-3.5 w-3.5 text-accent" />
+                        <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">v5.2 SHAP Analysis</p>
+                        <span className="text-[9px] bg-accent/10 text-accent px-1.5 py-0.5 rounded">Live</span>
+                      </div>
+                      <SHAPPanel shapData={shapData} />
+                    </div>
+                  )}
                 </div>
               )}
 

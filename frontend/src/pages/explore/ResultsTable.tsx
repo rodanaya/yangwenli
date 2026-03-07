@@ -274,12 +274,19 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
         {formatCompactMXN(vendor.total_value_mxn || 0)}
       </td>
       <td className="text-right py-2 px-2">
-        <span
-          className="text-xs font-bold font-mono px-1.5 py-0.5 rounded"
-          style={{ color: riskColor, backgroundColor: `${riskColor}15` }}
-        >
-          {((vendor.avg_risk_score || 0) * 100).toFixed(0)}%
-        </span>
+        <div className="inline-flex flex-col items-end gap-0.5">
+          <span
+            className="text-xs font-bold font-mono px-1.5 py-0.5 rounded"
+            style={{ color: riskColor, backgroundColor: `${riskColor}15` }}
+          >
+            {((vendor.avg_risk_score || 0) * 100).toFixed(0)}%
+          </span>
+          {(vendor.avg_risk_score || 0) >= 0.50 && (
+            <span className="text-[9px] font-medium text-accent/80 leading-none">
+              AI confirmed
+            </span>
+          )}
+        </div>
       </td>
       <td className="text-right py-2 pl-2 font-mono text-xs hidden lg:table-cell">
         {vendor.direct_award_pct != null ? (

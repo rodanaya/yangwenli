@@ -357,6 +357,140 @@ function LimitationCard({
 }
 
 // ============================================================================
+// SHAP Feature Importance Section (v5.2 live data)
+// ============================================================================
+
+function SHAPImportanceSection() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['analysis', 'feature-importance-v52'],
+    queryFn: () => analysisApi.getFeatureImportanceV52(),
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+  })
+
+  if (isLoading) return (
+    <div className="space-y-2">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <Skeleton key={i} className="h-8 w-full" />
+      ))}
+    </div>
+  )
+  if (!data?.data?.length) return (
+    <p className="text-sm text-text-muted">No SHAP data available. Run compute_shap_explanations.py first.</p>
+  )
+
+  const items = data.data.slice(0, 16)
+  const maxVal = Math.max(...items.map((d) => d.shap_mean_abs), 0.01)
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs text-text-muted mb-3">
+        Mean absolute SHAP values from the global v5.2 model (computed across 456K vendors).
+        Higher = more influence on risk score. Sign indicates direction.
+      </p>
+      {items.map((item) => (
+        <div key={item.factor_name} className="grid grid-cols-[1fr,auto] items-center gap-3">
+          <div>
+            <div className="flex justify-between text-xs mb-0.5">
+              <span className="text-text-secondary font-medium capitalize">
+                {item.factor_name.replace(/_/g, ' ')}
+              </span>
+              <span className={cn(
+                'font-mono text-[10px] tabular-nums',
+                item.direction === 'risk' ? 'text-risk-critical' : 'text-risk-low'
+              )}>
+                {item.direction === 'risk' ? '+' : ''}{item.coefficient.toFixed(3)}
+              </span>
+            </div>
+            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+              <div
+                className={cn(
+                  'h-full rounded-full',
+                  item.direction === 'risk'
+                    ? 'bg-gradient-to-r from-risk-high to-risk-critical'
+                    : 'bg-gradient-to-r from-emerald-700 to-emerald-500'
+                )}
+                style={{ width: `${(item.shap_mean_abs / maxVal) * 100}%` }}
+              />
+            </div>
+          </div>
+          <span className="text-[10px] text-text-muted font-mono tabular-nums w-14 text-right">
+            #{item.rank}
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ============================================================================
+// Distribution Drift Monitor Section (v5.2 live data)
+// ============================================================================
+
+function DriftMonitorSection() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['analysis', 'drift'],
+    queryFn: () => analysisApi.getDrift(),
+    staleTime: 24 * 60 * 60 * 1000,
+  })
+
+  if (isLoading) return <Skeleton className="h-32" />
+  if (!data) return <p className="text-sm text-text-muted">No drift report found. Run compute_vendor_drift.py first.</p>
+
+  const alertColor = data.dataset_drift ? 'text-risk-high' : 'text-risk-low'
+  const alertBg = data.dataset_drift ? 'bg-risk-high/10 border-risk-high/30' : 'bg-risk-low/10 border-risk-low/30'
+
+  return (
+    <div className="space-y-4">
+      <div className={cn('rounded-lg px-4 py-3 border', alertBg)}>
+        <div className="flex items-center gap-2">
+          {data.dataset_drift ? (
+            <AlertTriangle className={cn('h-4 w-4', alertColor)} aria-hidden="true" />
+          ) : (
+            <CheckCircle className={cn('h-4 w-4', alertColor)} aria-hidden="true" />
+          )}
+          <p className={cn('text-sm font-semibold', alertColor)}>
+            {data.dataset_drift ? 'Significant Drift Detected' : 'No Significant Drift'}
+          </p>
+        </div>
+        <p className="text-xs text-text-muted mt-1">
+          {data.n_drifted} of {data.n_features} features drifted between {data.reference_year_range} (train)
+          and {data.current_year} (current).{' '}
+          {data.dataset_drift ? 'Consider retraining the model.' : 'Model is stable for current data.'}
+        </p>
+      </div>
+
+      {data.drifted_features.length > 0 && (
+        <div>
+          <p className="text-xs font-medium text-text-secondary mb-2">
+            Drifted Features ({data.drifted_features.length})
+          </p>
+          <div className="space-y-1">
+            {data.drifted_features.slice(0, 8).map((f) => (
+              <div key={f.feature} className="flex items-center justify-between text-xs">
+                <span className="text-text-secondary capitalize">
+                  {f.feature.replace(/^z_/, '').replace(/_/g, ' ')}
+                </span>
+                <div className="flex items-center gap-2">
+                  {f.mean_shift !== undefined && (
+                    <span className={f.mean_shift > 0 ? 'text-risk-high' : 'text-risk-low'}>
+                      {f.mean_shift > 0 ? '+' : ''}{f.mean_shift.toFixed(3)}
+                    </span>
+                  )}
+                  <span className="text-text-muted font-mono">KS={f.ks_stat.toFixed(3)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      <p className="text-[10px] text-text-muted">
+        Report generated: {new Date(data.created_at).toLocaleDateString()} · Reference: {data.reference_year_range} · Current: {data.current_year}
+      </p>
+    </div>
+  )
+}
+
+// ============================================================================
 // Main Component
 // ============================================================================
 
@@ -1133,6 +1267,45 @@ export default function ModelTransparency() {
               </div>
             </>
           )}
+        </CardContent>
+      </Card>
+
+      {/* ================================================================ */}
+      {/* SHAP Feature Importance (v5.2 live)                             */}
+      {/* ================================================================ */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Brain className="h-4 w-4 text-accent" aria-hidden="true" />
+            v5.2 SHAP Feature Importance
+            <span className="text-[10px] font-normal bg-accent/10 text-accent px-1.5 py-0.5 rounded ml-auto">
+              Live Data
+            </span>
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Exact Shapley values from 456K vendors — replaces coefficient-based approximation
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SHAPImportanceSection />
+        </CardContent>
+      </Card>
+
+      {/* ================================================================ */}
+      {/* Distribution Drift Monitor (v5.2 live)                          */}
+      {/* ================================================================ */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Activity className="h-4 w-4 text-accent" aria-hidden="true" />
+            Distribution Drift Monitor
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Kolmogorov-Smirnov test comparing training baseline vs current data
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DriftMonitorSection />
         </CardContent>
       </Card>
 

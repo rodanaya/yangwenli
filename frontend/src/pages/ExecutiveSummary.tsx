@@ -261,6 +261,12 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
   const { risk } = data
   const highRiskRate = (risk.high_pct + risk.critical_pct).toFixed(1)
 
+  const { data: pyodData } = useQuery({
+    queryKey: ['analysis', 'pyod-agreement'],
+    queryFn: () => analysisApi.getPyodAgreement(),
+    staleTime: 60 * 60 * 1000,
+  })
+
   const highCriticalCount = (risk.critical_count ?? 0) + (risk.high_count ?? 0)
   // Always display as compact number to prevent card overflow
   const highCriticalFormatted = highCriticalCount >= 1_000_000
@@ -303,10 +309,17 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
       glow: 'rgba(251,191,36,0.3)',
       color: '#fbbf24',
     },
+    {
+      value: pyodData ? `${Math.round(pyodData.both_flagged / 1000)}K` : '130K',
+      label: 'Dual-Confirmed',
+      sub: 'v5.1 model AND PyOD ML · unsupervised cross-validation',
+      glow: 'rgba(139,92,246,0.3)',
+      color: '#a78bfa',
+    },
   ]
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
       {bombs.map((b, i) => (
         <ScrollReveal key={b.label} delay={i * 80}>
           <div

@@ -356,6 +356,10 @@ def get_contract(
         detail["amount_mxn"] = detail.get("amount_mxn") or 0
         detail["risk_factors"] = parse_risk_factors(detail.get("risk_factors"))
 
+        # Derive PyOD outlier flag from ensemble_anomaly_score (threshold 0.2598)
+        eas = detail.get("ensemble_anomaly_score")
+        detail["pyod_is_outlier"] = bool(eas >= 0.2598) if eas is not None else None
+
         return ContractDetail(**detail)
 
 

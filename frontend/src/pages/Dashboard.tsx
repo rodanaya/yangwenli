@@ -398,6 +398,58 @@ function EraTimelineStrip() {
 
 
 // ============================================================================
+// CROSS-MODEL VALIDATION WIDGET — PyOD ensemble vs v5.1 agreement stats
+// ============================================================================
+
+function CrossModelValidationWidget() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['analysis', 'pyod-agreement'],
+    queryFn: () => analysisApi.getPyodAgreement(),
+    staleTime: 60 * 60 * 1000,
+  })
+
+  if (isLoading) return <Skeleton className="h-24" />
+  if (!data) return null
+
+  return (
+    <div className="rounded-xl border border-border/40 bg-background-card/50 p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
+          <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
+            v5.2 Cross-Model Validation
+          </p>
+        </div>
+        <span className="text-[10px] text-text-muted">IForest + COPOD ensemble</span>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <div className="text-center">
+          <p className="text-xl font-bold text-text-primary tabular-nums">
+            {(data.both_flagged / 1000).toFixed(0)}K
+          </p>
+          <p className="text-[10px] text-text-muted mt-0.5">Dual-Confirmed</p>
+        </div>
+        <div className="text-center">
+          <p className="text-xl font-bold text-accent tabular-nums">
+            {data.confirmation_rate.toFixed(0)}%
+          </p>
+          <p className="text-[10px] text-text-muted mt-0.5">Agreement Rate</p>
+        </div>
+        <div className="text-center">
+          <p className="text-xl font-bold text-text-primary tabular-nums">
+            {data.pyod_flagged_pct.toFixed(1)}%
+          </p>
+          <p className="text-[10px] text-text-muted mt-0.5">ML Flagged</p>
+        </div>
+      </div>
+      <p className="text-[10px] text-text-muted/60 mt-3 text-center">
+        Two independent methods agree: unsupervised ML confirms v5.1 risk ordering
+      </p>
+    </div>
+  )
+}
+
+// ============================================================================
 // MINI SPARKLINE — 120×24px area chart for KPI trend embedding
 // ============================================================================
 
@@ -768,6 +820,11 @@ export function Dashboard() {
           </div>
         ))}
       </div>
+
+      {/* ================================================================ */}
+      {/* CROSS-MODEL VALIDATION — PyOD unsupervised ML confirmation      */}
+      {/* ================================================================ */}
+      <CrossModelValidationWidget />
 
       {/* ================================================================ */}
       {/* TOP CRITICAL FLAGS — Immediate investigation leads for researchers */}

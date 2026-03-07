@@ -100,6 +100,10 @@ class ContractDetail(ContractBase):
     # Full-vector ML anomaly score (Ouyang, Goh & Lim 2022)
     ml_anomaly_score_full: Optional[float] = None
 
+    # v5.2 PyOD ensemble anomaly score and flag (threshold = 0.2598)
+    ensemble_anomaly_score: Optional[float] = None
+    pyod_is_outlier: Optional[bool] = None
+
     # Metadata
     source_structure: Optional[str] = None
     source_year: Optional[int] = None

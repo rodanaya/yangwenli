@@ -103,6 +103,8 @@ export interface ContractListItem extends ContractBase {
   procedure_type?: string | null
   mahalanobis_distance?: number
   risk_factors?: string[]
+  ensemble_anomaly_score?: number
+  pyod_is_outlier?: boolean
 }
 
 export interface ContractDetail extends ContractBase {
@@ -146,6 +148,8 @@ export interface ContractDetail extends ContractBase {
   source_year?: number
   url?: string
   contract_status?: string
+  ensemble_anomaly_score?: number
+  pyod_is_outlier?: boolean
 }
 
 export interface ContractListResponse extends PaginatedResponse<ContractListItem> {}
@@ -1979,6 +1983,85 @@ export interface SubnationalStatesResponse {
   total_contracts: number
   total_value_mxn: number
   total_vendors: number
+}
+
+// ============================================================================
+// v5.2 SHAP + PyOD types
+// ============================================================================
+
+export interface VendorSHAPFactor {
+  factor: string
+  shap: number
+  label_es: string
+}
+
+export interface VendorSHAPResponse {
+  vendor_id: number
+  sector_id: number
+  n_contracts: number
+  shap_values: Record<string, number>         // 16 factor SHAP values
+  top_risk_factors: VendorSHAPFactor[]        // top 3 positive contributors
+  top_protect_factors: VendorSHAPFactor[]     // top 3 negative contributors
+  base_value: number
+  risk_score: number
+  mean_z_vector: Record<string, number>
+  updated_at: string
+}
+
+export interface FeatureImportanceV52Item {
+  rank: number
+  factor_name: string
+  shap_mean_abs: number
+  coefficient: number
+  direction: 'risk' | 'protective'
+  sector_id: number | null
+}
+
+export interface FeatureImportanceResponse {
+  data: FeatureImportanceV52Item[]
+  sector_id: number | null
+  model_version: string
+}
+
+export interface PyodRiskLevelBreakdown {
+  risk_level: string
+  contracts: number
+  avg_anomaly_score: number
+  avg_risk_score: number
+}
+
+export interface PyodAgreementResponse {
+  total_contracts: number
+  v51_high_risk: number
+  v51_high_risk_pct: number
+  pyod_flagged: number
+  pyod_flagged_pct: number
+  both_flagged: number
+  both_flagged_pct: number
+  confirmation_rate: number
+  pyod_threshold: number
+  by_risk_level: PyodRiskLevelBreakdown[]
+}
+
+export interface DriftFeature {
+  feature: string
+  ks_stat: number
+  p_value: number
+  mean_shift: number
+  drifted: boolean
+}
+
+export interface DriftReportResponse {
+  id: number
+  reference_year_range: string
+  current_year: number
+  sector_id: number | null
+  dataset_drift: boolean
+  n_drifted: number
+  n_features: number
+  drifted_features: DriftFeature[]
+  stable_features: DriftFeature[]
+  created_at: string
 }
 
 export interface SubnationalYearTrend {

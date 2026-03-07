@@ -122,6 +122,12 @@ class VendorDetailResponse(BaseModel):
     is_efos_ghost: Optional[bool] = Field(False, description="True if vendor RFC matches SAT EFOS ghost company list (Case 22)")
     is_sfp_sanctioned: Optional[bool] = Field(False, description="True if vendor RFC matches SFP sanctions registry")
 
+    # v5.2 SHAP top risk factors (optional — populated when vendor_shap_v52 row exists)
+    shap_top_risk_factors: Optional[List[Dict[str, Any]]] = Field(
+        None,
+        description="Top 3 risk-driving SHAP factors from v5.2 analytical engine",
+    )
+
     model_config = ConfigDict(from_attributes=True)
 
 

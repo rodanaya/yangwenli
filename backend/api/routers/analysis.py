@@ -5055,3 +5055,314 @@ def get_year_summary(year: int = Path(..., ge=2002, le=2026)):
     except Exception as e:
         logger.error("Error in get_year_summary: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+# =============================================================================
+# V5.2 ANALYTICAL ENGINE ENDPOINTS
+# =============================================================================
+
+
+class FeatureImportanceItem(BaseModel):
+    """Single feature importance entry from the v5.2 model."""
+    rank: int
+    factor_name: str
+    shap_mean_abs: Optional[float]
+    coefficient: Optional[float]
+    direction: str  # 'risk' | 'protective'
+    sector_id: Optional[int]
+
+
+class FeatureImportanceResponse(BaseModel):
+    """Feature importance list from the v5.2 model."""
+    model_version: str
+    sector_id: Optional[int]
+    features: List[FeatureImportanceItem]
+    total: int
+
+
+@router.get("/feature-importance", response_model=FeatureImportanceResponse)
+def get_feature_importance(
+    sector_id: Optional[int] = Query(None, ge=1, le=12, description="Sector ID (1-12). Omit for global model."),
+):
+    """
+    Return feature importance rankings from the v5.2 analytical engine.
+
+    When sector_id is omitted, returns the global model's feature importances.
+    When sector_id is provided, returns the sector-specific sub-model's importances.
+    Sorted by rank ascending (most important first).
+    Cached for 24 hours.
+    """
+    cache_key = f"feature_importance:{sector_id}"
+    cached = _analysis_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+        if sector_id is None:
+            cursor.execute(
+                """
+                SELECT rank, factor_name, shap_mean_abs, coefficient
+                FROM feature_importance
+                WHERE model_version = 'v5.2' AND sector_id IS NULL
+                ORDER BY rank ASC
+                """,
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT rank, factor_name, shap_mean_abs, coefficient
+                FROM feature_importance
+                WHERE model_version = 'v5.2' AND sector_id = ?
+                ORDER BY rank ASC
+                """,
+                (sector_id,),
+            )
+        rows = cursor.fetchall()
+
+    features = []
+    for row in rows:
+        coeff = row["coefficient"]
+        direction = "protective" if (coeff is not None and coeff < 0) else "risk"
+        features.append(
+            FeatureImportanceItem(
+                rank=row["rank"],
+                factor_name=row["factor_name"] or "",
+                shap_mean_abs=row["shap_mean_abs"],
+                coefficient=coeff,
+                direction=direction,
+                sector_id=sector_id,
+            )
+        )
+
+    result = FeatureImportanceResponse(
+        model_version="v5.2",
+        sector_id=sector_id,
+        features=features,
+        total=len(features),
+    )
+    _analysis_cache.set(cache_key, result, ttl_seconds=86400)
+    return result
+
+
+class PyODAgreementByLevel(BaseModel):
+    risk_level: str
+    contracts: int
+    avg_anomaly_score: float
+    avg_risk_score: float
+
+
+class PyODAgreementResponse(BaseModel):
+    """Cross-model validation statistics comparing v5.1 risk scores with PyOD ensemble."""
+    total_contracts: int
+    v51_high_risk: int
+    v51_high_risk_pct: float
+    pyod_flagged: int
+    pyod_flagged_pct: float
+    both_flagged: int
+    both_flagged_pct: float
+    confirmation_rate: float
+    pyod_threshold: float
+    by_risk_level: List[PyODAgreementByLevel]
+
+
+@router.get("/pyod-agreement", response_model=PyODAgreementResponse)
+def get_pyod_agreement():
+    """
+    Cross-model validation statistics comparing v5.1 logistic risk scores against
+    the PyOD ensemble anomaly detector (iForest + COPOD).
+
+    Returns agreement rates, confirmation rate (how many v5.1 high-risk contracts
+    are also flagged by PyOD), and per-risk-level anomaly score breakdowns.
+    Cached for 1 hour.
+    """
+    cache_key = "pyod_agreement"
+    cached = _analysis_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT
+                COUNT(*) AS total_contracts,
+                SUM(CASE WHEN risk_score >= 0.30 THEN 1 ELSE 0 END) AS v51_high_risk,
+                SUM(CASE WHEN ensemble_anomaly_score >= 0.2598 THEN 1 ELSE 0 END) AS pyod_flagged,
+                SUM(CASE WHEN risk_score >= 0.30 AND ensemble_anomaly_score >= 0.2598
+                         THEN 1 ELSE 0 END) AS both_flagged
+            FROM contracts
+            WHERE ensemble_anomaly_score IS NOT NULL
+            """
+        )
+        agg = cursor.fetchone()
+
+        total = agg["total_contracts"] or 0
+        v51_hr = agg["v51_high_risk"] or 0
+        pyod_fl = agg["pyod_flagged"] or 0
+        both = agg["both_flagged"] or 0
+
+        v51_hr_pct = round(v51_hr / total * 100, 4) if total > 0 else 0.0
+        pyod_fl_pct = round(pyod_fl / total * 100, 4) if total > 0 else 0.0
+        both_pct = round(both / total * 100, 4) if total > 0 else 0.0
+        confirmation_rate = round(both / v51_hr * 100, 4) if v51_hr > 0 else 0.0
+
+        cursor.execute(
+            """
+            SELECT
+                risk_level,
+                COUNT(*) AS contracts,
+                ROUND(AVG(ensemble_anomaly_score), 4) AS avg_anomaly_score,
+                ROUND(AVG(risk_score), 4) AS avg_risk_score
+            FROM contracts
+            WHERE ensemble_anomaly_score IS NOT NULL
+            GROUP BY risk_level
+            ORDER BY
+                CASE risk_level
+                    WHEN 'critical' THEN 1
+                    WHEN 'high'     THEN 2
+                    WHEN 'medium'   THEN 3
+                    WHEN 'low'      THEN 4
+                    ELSE 5
+                END
+            """
+        )
+        level_rows = cursor.fetchall()
+
+    by_level = [
+        PyODAgreementByLevel(
+            risk_level=r["risk_level"] or "unknown",
+            contracts=r["contracts"] or 0,
+            avg_anomaly_score=r["avg_anomaly_score"] or 0.0,
+            avg_risk_score=r["avg_risk_score"] or 0.0,
+        )
+        for r in level_rows
+    ]
+
+    result = PyODAgreementResponse(
+        total_contracts=total,
+        v51_high_risk=v51_hr,
+        v51_high_risk_pct=v51_hr_pct,
+        pyod_flagged=pyod_fl,
+        pyod_flagged_pct=pyod_fl_pct,
+        both_flagged=both,
+        both_flagged_pct=both_pct,
+        confirmation_rate=confirmation_rate,
+        pyod_threshold=0.2598,
+        by_risk_level=by_level,
+    )
+    _analysis_cache.set(cache_key, result, ttl_seconds=3600)
+    return result
+
+
+class DriftedFeatureItem(BaseModel):
+    feature: str
+    ks_stat: Optional[float]
+    p_value: Optional[float]
+    mean_shift: Optional[float]
+    drifted: bool
+
+
+class DriftReportResponse(BaseModel):
+    """Latest feature drift report comparing reference years to current year."""
+    id: int
+    reference_year_range: Optional[str]
+    current_year: Optional[int]
+    sector_id: Optional[int]
+    dataset_drift: bool
+    n_drifted: int
+    n_features: int
+    drifted_features: List[DriftedFeatureItem]
+    stable_features: List[DriftedFeatureItem]
+    created_at: Optional[str]
+
+
+@router.get("/drift", response_model=DriftReportResponse)
+def get_drift_report():
+    """
+    Return the latest feature drift report from the v5.2 analytical engine.
+
+    Compares procurement feature distributions between the reference year range
+    and the current year. Returns drifted and stable feature lists with
+    Kolmogorov-Smirnov statistics and mean shift values.
+    Cached for 1 hour.
+    """
+    cache_key = "drift_report_latest"
+    cached = _analysis_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT id, reference_year_range, current_year, sector_id,
+                   dataset_drift, n_drifted, n_features,
+                   feature_drift, ks_stats, created_at
+            FROM drift_report
+            ORDER BY id DESC
+            LIMIT 1
+            """
+        )
+        row = cursor.fetchone()
+
+    if row is None:
+        raise HTTPException(status_code=404, detail="No drift report available")
+
+    # Parse the ks_stats JSON which contains per-feature details
+    ks_raw = row["ks_stats"]
+    if ks_raw:
+        try:
+            ks_data = json.loads(ks_raw) if isinstance(ks_raw, str) else ks_raw
+        except (json.JSONDecodeError, ValueError):
+            ks_data = {}
+    else:
+        ks_data = {}
+
+    # Parse feature_drift JSON (feature -> bool mapping)
+    fd_raw = row["feature_drift"]
+    if fd_raw:
+        try:
+            fd_data = json.loads(fd_raw) if isinstance(fd_raw, str) else fd_raw
+        except (json.JSONDecodeError, ValueError):
+            fd_data = {}
+    else:
+        fd_data = {}
+
+    drifted_features: List[DriftedFeatureItem] = []
+    stable_features: List[DriftedFeatureItem] = []
+
+    # ks_data may be a dict of {feature: {ks_stat, p_value, mean_shift}} or
+    # the feature_drift dict itself; handle both shapes gracefully.
+    all_features = set(fd_data.keys()) | set(ks_data.keys())
+    for feature in sorted(all_features):
+        ks_entry = ks_data.get(feature, {}) if isinstance(ks_data, dict) else {}
+        is_drifted = bool(fd_data.get(feature, False)) if isinstance(fd_data, dict) else False
+
+        item = DriftedFeatureItem(
+            feature=feature,
+            ks_stat=ks_entry.get("ks_stat") if isinstance(ks_entry, dict) else None,
+            p_value=ks_entry.get("p_value") if isinstance(ks_entry, dict) else None,
+            mean_shift=ks_entry.get("mean_shift") if isinstance(ks_entry, dict) else None,
+            drifted=is_drifted,
+        )
+        if is_drifted:
+            drifted_features.append(item)
+        else:
+            stable_features.append(item)
+
+    result = DriftReportResponse(
+        id=row["id"],
+        reference_year_range=row["reference_year_range"],
+        current_year=row["current_year"],
+        sector_id=row["sector_id"],
+        dataset_drift=bool(row["dataset_drift"]),
+        n_drifted=row["n_drifted"] or 0,
+        n_features=row["n_features"] or 0,
+        drifted_features=drifted_features,
+        stable_features=stable_features,
+        created_at=row["created_at"],
+    )
+    _analysis_cache.set(cache_key, result, ttl_seconds=3600)
+    return result

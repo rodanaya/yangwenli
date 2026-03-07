@@ -98,6 +98,20 @@ class VendorAISummaryResponse(BaseModel):
     generated_by: str
 
 
+class VendorSHAPResponse(BaseModel):
+    """SHAP explanation from the v5.2 analytical engine for a vendor."""
+    vendor_id: int
+    sector_id: Optional[int]
+    n_contracts: int
+    shap_values: Dict[str, float]
+    top_risk_factors: List[Dict[str, Any]]
+    top_protect_factors: List[Dict[str, Any]]
+    base_value: float
+    risk_score: float
+    mean_z_vector: Dict[str, float]
+    updated_at: Optional[str]
+
+
 # =============================================================================
 # VENDOR LIST AND DETAIL ENDPOINTS
 # =============================================================================
@@ -552,6 +566,19 @@ def get_vendor(
             except Exception:
                 is_sfp_sanctioned = False
 
+        # Fetch SHAP top risk factors from v5.2 engine (best-effort, non-blocking)
+        shap_top_risk_factors = None
+        try:
+            shap_row = cursor.execute(
+                "SELECT top_risk_factors FROM vendor_shap_v52 WHERE vendor_id = ? LIMIT 1",
+                (vendor_id,),
+            ).fetchone()
+            if shap_row and shap_row["top_risk_factors"]:
+                raw_shap = shap_row["top_risk_factors"]
+                shap_top_risk_factors = json.loads(raw_shap) if isinstance(raw_shap, str) else raw_shap
+        except Exception:
+            pass  # SHAP table missing or malformed — degrade gracefully
+
         return VendorDetailResponse(
             id=detail["id"],
             name=detail["name"],
@@ -591,7 +618,73 @@ def get_vendor(
             cobid_triangle_count=extra["cobid_triangle_count"] if extra else None,
             is_efos_ghost=is_efos_ghost,
             is_sfp_sanctioned=is_sfp_sanctioned,
+            shap_top_risk_factors=shap_top_risk_factors,
         )
+
+
+@router.get("/{vendor_id:int}/shap", response_model=VendorSHAPResponse)
+def get_vendor_shap(
+    vendor_id: int = Path(..., description="Vendor ID"),
+):
+    """
+    Get SHAP explanation from the v5.2 analytical engine for a vendor.
+
+    Returns the decomposed SHAP values for all 16 risk features, the top risk-driving
+    factors, the top protective factors, the base value (intercept), the v5.2 risk score,
+    and the mean z-score vector averaged across all of the vendor's contracts.
+
+    Returns 404 if the vendor has no row in the v5.2 SHAP table.
+    Cached for 1 hour.
+    """
+    cache_key = f"shap:{vendor_id}"
+    cached = _get_vendor_cache(cache_key)
+    if cached is not None:
+        return cached
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT vendor_id, sector_id, n_contracts, shap_values,
+                   top_risk_factors, top_protect_factors, base_value,
+                   risk_score, mean_z_vector, updated_at
+            FROM vendor_shap_v52
+            WHERE vendor_id = ?
+            """,
+            (vendor_id,),
+        )
+        row = cursor.fetchone()
+
+    if row is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No SHAP data found for vendor {vendor_id} in v5.2 engine",
+        )
+
+    def _parse_json_field(raw: Any) -> Any:
+        if raw is None:
+            return {}
+        if isinstance(raw, str):
+            try:
+                return json.loads(raw)
+            except (json.JSONDecodeError, ValueError):
+                return {}
+        return raw
+
+    result = VendorSHAPResponse(
+        vendor_id=row["vendor_id"],
+        sector_id=row["sector_id"],
+        n_contracts=row["n_contracts"] or 0,
+        shap_values=_parse_json_field(row["shap_values"]),
+        top_risk_factors=_parse_json_field(row["top_risk_factors"]) or [],
+        top_protect_factors=_parse_json_field(row["top_protect_factors"]) or [],
+        base_value=row["base_value"] or 0.0,
+        risk_score=row["risk_score"] or 0.0,
+        mean_z_vector=_parse_json_field(row["mean_z_vector"]),
+        updated_at=row["updated_at"],
+    )
+    _set_vendor_cache(cache_key, result)
+    return result
 
 
 class VendorPercentileResponse(BaseModel):

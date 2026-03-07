@@ -212,6 +212,43 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                   )}
                 </div>
 
+                {/* PyOD Cross-Model Validation */}
+                {contract.ensemble_anomaly_score != null && (
+                  <div className="flex items-center gap-2 py-2 px-3 rounded-lg bg-background-elevated/40 border border-border/30">
+                    <div className="flex-1">
+                      <p className="text-[10px] text-text-muted uppercase tracking-wider mb-0.5">ML Anomaly Score</p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-mono font-medium text-text-primary tabular-nums">
+                          {(contract.ensemble_anomaly_score * 100).toFixed(1)}%
+                        </span>
+                        {contract.ensemble_anomaly_score >= 0.2598 && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-accent/15 text-accent border border-accent/30">
+                            <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            AI Confirmed
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-1.5 h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{
+                            width: `${Math.min(contract.ensemble_anomaly_score * 100, 100)}%`,
+                            background: contract.ensemble_anomaly_score >= 0.2598
+                              ? 'linear-gradient(90deg, #f59e0b, #ef4444)'
+                              : 'linear-gradient(90deg, #6b7280, #9ca3af)',
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className="text-right text-[10px] text-text-muted">
+                      <p>IForest+COPOD</p>
+                      <p>ensemble</p>
+                    </div>
+                  </div>
+                )}
+
                 {/* v5.1 Risk Explanation */}
                 <RiskExplanationPanel contractId={contract.id} compact />
 
