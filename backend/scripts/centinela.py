@@ -715,6 +715,20 @@ Examples:
         xref = cross_reference_new_entries(conn)
         results["cross_reference"] = xref
 
+    # Trigger ARIA pipeline re-run with fresh external data
+    if args.trigger_aria and not args.dry_run:
+        logger.info("\nTriggering ARIA pipeline with refreshed registry data ...")
+        try:
+            from scripts.aria_pipeline import run_pipeline as aria_run
+            conn.close()  # Release DB lock before ARIA opens its own connection
+            conn = None
+            aria_result = aria_run(dry_run=False)
+            results["aria"] = {"status": "ok", "vendors": aria_result[1] if len(aria_result) > 1 else "done"}
+            logger.info("ARIA pipeline completed successfully.")
+        except Exception as e:
+            logger.error(f"ARIA pipeline failed: {e}", exc_info=True)
+            results["aria"] = {"status": "error", "reason": str(e)}
+
     # Summary
     print("\n" + "=" * 60)
     print("  CENTINELA Run Summary")
@@ -727,7 +741,8 @@ Examples:
         print(f"  {icon} {name:<30} {status:<10} {records} records")
     print("=" * 60)
 
-    conn.close()
+    if conn:
+        conn.close()
 
 
 if __name__ == "__main__":

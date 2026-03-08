@@ -63,7 +63,9 @@ def normalize_financial(total_value_mxn: float) -> float:
     return min(1.0, log_val / 30.0)
 
 
-def compute_external_flags_score(is_efos: int, is_sfp: int, in_gt: int) -> float:
+def compute_external_flags_score(
+    is_efos: int, is_sfp: int, in_gt: int, shell_score: int = 0
+) -> float:
     if in_gt:
         return 1.0
     score = 0.0
@@ -71,6 +73,11 @@ def compute_external_flags_score(is_efos: int, is_sfp: int, in_gt: int) -> float
         score += 0.70
     if is_sfp:
         score += 0.40
+    # CENTINELA shell_score boost: high shell indicators from company_registry
+    if shell_score >= 4:
+        score += 0.20  # strong shell company indicators
+    elif shell_score >= 2:
+        score += 0.10  # moderate shell indicators
     return min(1.0, score)
 
 
@@ -332,9 +339,11 @@ def compute_burst_score(vendor_id: int, conn: sqlite3.Connection) -> tuple:
 def load_external_crossref(conn: sqlite3.Connection) -> dict:
     """Batch load external flags for all vendors.
 
-    Returns {vendor_id: {is_efos, efos_rfc, is_sfp, sfp_type, in_gt}}.
+    Returns {vendor_id: {is_efos, efos_rfc, is_sfp, sfp_type, in_gt,
+                         shell_score, rfc_age_years}}.
 
-    Uses sat_efos_vendors (stage='definitivo') and sfp_sanctions.
+    Uses sat_efos_vendors (stage='definitivo'), sfp_sanctions,
+    and company_registry (CENTINELA enrichment).
     """
     # Verify column names via PRAGMA
     efos_cols = [r[1] for r in conn.execute("PRAGMA table_info(sat_efos_vendors)").fetchall()]
@@ -377,7 +386,25 @@ def load_external_crossref(conn: sqlite3.Connection) -> dict:
             "is_sfp":    int(r[4]),
             "sfp_type":  r[5],
             "in_gt":     int(r[6]),
+            "shell_score": 0,
+            "rfc_age_years": None,
         }
+
+    # Enrich with CENTINELA company_registry data (shell_score, RFC age)
+    tables = {r[0] for r in conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table'"
+    ).fetchall()}
+    if "company_registry" in tables:
+        cr_rows = conn.execute(
+            "SELECT vendor_id, shell_score, rfc_age_years FROM company_registry"
+        ).fetchall()
+        for cr in cr_rows:
+            vid = cr[0]
+            if vid in result:
+                result[vid]["shell_score"] = cr[1] or 0
+                result[vid]["rfc_age_years"] = cr[2]
+        logger.info("  CENTINELA company_registry: enriched %d vendors with shell_score/RFC age", len(cr_rows))
+
     return result
 
 
@@ -682,6 +709,27 @@ def run_gt_auto_update(
 # Main pipeline
 # ---------------------------------------------------------------------------
 
+def check_centinela_freshness(conn: sqlite3.Connection) -> None:
+    """Warn if external registries are stale (CENTINELA integration)."""
+    try:
+        from scripts.centinela import get_registry_status
+        statuses = get_registry_status(conn)
+        stale = [s for s in statuses if s["is_stale"] and s["records"] > 0]
+        if stale:
+            names = ", ".join(s["name"] for s in stale)
+            logger.warning(
+                "CENTINELA: %d stale registries (%s). "
+                "Run `python -m scripts.centinela --stale-only` to refresh.",
+                len(stale), names,
+            )
+        never_loaded = [s for s in statuses if s["records"] == 0]
+        if never_loaded:
+            names = ", ".join(s["name"] for s in never_loaded)
+            logger.info("CENTINELA: %d registries never loaded (%s).", len(never_loaded), names)
+    except Exception as e:
+        logger.debug("CENTINELA freshness check skipped: %s", e)
+
+
 def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
     run_id = str(uuid.uuid4())[:8]
     logger.info("ARIA run %s starting (dry_run=%s, limit=%s)...", run_id, dry_run, limit)
@@ -692,6 +740,9 @@ def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
     conn.execute("PRAGMA busy_timeout=30000")
 
     try:
+        # -- CENTINELA freshness check ---------------------------------------
+        check_centinela_freshness(conn)
+
         # -- Record run start ------------------------------------------------
         if not dry_run:
             conn.execute(
@@ -785,7 +836,8 @@ def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
             maha_norm     = normalize_mahalanobis(max_maha)
             ensemble_norm = min(1.0, ensemble)
             financial_norm = normalize_financial(total_val)
-            ext_score     = compute_external_flags_score(is_efos, is_sfp, in_gt)
+            shell_score   = ext.get("shell_score", 0)
+            ext_score     = compute_external_flags_score(is_efos, is_sfp, in_gt, shell_score)
 
             ips_raw = compute_ips(risk_norm, maha_norm, ensemble_norm, financial_norm, ext_score)
 
