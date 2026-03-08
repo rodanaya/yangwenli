@@ -501,18 +501,22 @@ def load_vendor_institution_features(conn: sqlite3.Connection, vendor_ids: list)
     if not vendor_ids:
         return {}
 
-    placeholders = ",".join("?" * len(vendor_ids))
-    rows = conn.execute(f"""
+    # Use a temp table to avoid SQLite's SQL variable limit (~32766)
+    conn.execute("CREATE TEMP TABLE IF NOT EXISTS _aria_vids (vendor_id INTEGER PRIMARY KEY)")
+    conn.execute("DELETE FROM _aria_vids")
+    conn.executemany("INSERT OR IGNORE INTO _aria_vids VALUES (?)", [(v,) for v in vendor_ids])
+
+    rows = conn.execute("""
         SELECT
             c.vendor_id,
             c.institution_id,
             COUNT(*) as cnt,
             SUM(c.amount_mxn) as val
         FROM contracts c
-        WHERE c.vendor_id IN ({placeholders})
-          AND c.amount_mxn > 0
+        INNER JOIN _aria_vids t ON c.vendor_id = t.vendor_id
+        WHERE c.amount_mxn > 0
         GROUP BY c.vendor_id, c.institution_id
-    """, vendor_ids).fetchall()
+    """).fetchall()
 
     vendor_institutions: dict = defaultdict(list)
     for r in rows:
@@ -540,17 +544,19 @@ def load_vendor_z_features(conn: sqlite3.Connection, vendor_ids: list) -> dict:
     """Returns {vendor_id: {avg_z_price_ratio, avg_z_industry_mismatch, avg_co_bid_rate}}."""
     if not vendor_ids:
         return {}
-    placeholders = ",".join("?" * len(vendor_ids))
-    rows = conn.execute(f"""
+    # Use temp table (already created by load_vendor_institution_features, or create here)
+    conn.execute("CREATE TEMP TABLE IF NOT EXISTS _aria_vids (vendor_id INTEGER PRIMARY KEY)")
+    # Table already populated by load_vendor_institution_features; reuse it
+    rows = conn.execute("""
         SELECT c.vendor_id,
                AVG(czf.z_price_ratio) as avg_z_price_ratio,
                AVG(czf.z_industry_mismatch) as avg_z_industry_mismatch,
                AVG(czf.z_co_bid_rate) as avg_co_bid_rate
         FROM contracts c
         JOIN contract_z_features czf ON c.id = czf.contract_id
-        WHERE c.vendor_id IN ({placeholders})
+        INNER JOIN _aria_vids t ON c.vendor_id = t.vendor_id
         GROUP BY c.vendor_id
-    """, vendor_ids).fetchall()
+    """).fetchall()
     return {
         r[0]: {
             "avg_z_price_ratio": r[1] or 0,
