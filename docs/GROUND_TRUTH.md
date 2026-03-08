@@ -1,6 +1,6 @@
 # Ground Truth: Documented Corruption Cases
 
-**Last Updated:** March 7, 2026 | **Cases:** 25 | **Matched Vendors:** 98 | **Active training cases:** 22 (Cases 1–22, excl. 16–19)
+**Last Updated:** March 8, 2026 | **Cases:** 27 | **Matched Vendors:** 100 | **Active training cases:** 22 (Cases 1–22, excl. 16–19) | **Cases 26–27 added by ARIA pipeline**
 
 ---
 
@@ -352,4 +352,54 @@ No-RFC intermediary inserted into BIRMEX vaccine supply chain. Received 22.8% of
 
 ---
 
-*Ground truth is sourced from ASF audits, DOJ filings, investigative journalism (Animal Politico, Aristegui Noticias), and FGR investigations. All cases are publicly documented. Inclusion does not imply that every associated contract was corrupt — it indicates the vendor was involved in a documented corruption case.*
+## Cases 26–27 (Added March 8, 2026 — ARIA Pipeline Discovery)
+
+> These cases were discovered automatically by the ARIA investigation pipeline on 2026-03-08. Both are confirmed by formal SFP sanctions, making them the first cases added through automated detection rather than manual research.
+
+### Case 26: MULTICORPORACION BREXOT — COVID ISSSTE Medical Equipment Fraud (2020)
+| Property | Value |
+|----------|-------|
+| **Case ID** | MULTICORPORACION_BREXOT_COVID_ISSSTE_2020 |
+| **Type** | Procurement fraud |
+| **Amount** | 605M MXN (11 contracts, all direct award) |
+| **RFC** | MBR1701305L9 |
+| **Confidence** | High |
+| **Sector** | Salud (ISSSTE) |
+
+Company active for exactly 1 year (2020). Received 11 direct-award contracts from ISSSTE exclusively for COVID-era medical equipment: a 575M MXN contract for "EQUIPO MÉDICO," robot sanitization services (C-44 robots), and medical materials. All contracts in 2020, 100% direct award, 100% concentrated at ISSSTE. SFP imposed formal sanction: **SANCIONATORIA CON MULTA E INHABILITACIÓN** under RFC MBR1701305L9. Risk score 1.00, Mahalanobis norm 1.000, burst score 0.750 (sudden activity then disappears).
+
+**Matched Vendors (1):**
+
+| Vendor | Vendor ID | Contracts | Match Confidence |
+|--------|-----------|-----------|-----------------|
+| MULTICORPORACION BREXOT SA DE CV | 261748 | 11 | 0.99 |
+
+**ARIA detection:** IPS=0.739, Pattern=P6 (Institution Capture), SFP external flag triggered.
+
+---
+
+### Case 27: GRUPO LABORATORIOS IMPERIALES PHARMA — Vaccine Intermediary SSA/IMSS (2018)
+| Property | Value |
+|----------|-------|
+| **Case ID** | LABORATORIOS_IMPERIALES_PHARMA_VACCINE_2018 |
+| **Type** | Overpricing / intermediary extraction |
+| **Amount** | 1,265M MXN (24 contracts, 92% direct award) |
+| **RFC** | GLI1705153K1 (incorporated 2017-05-15) |
+| **Confidence** | High |
+| **Sector** | Salud (SSA + IMSS) |
+
+Company incorporated May 2017, received 24 contracts in 2018 for **national vaccine scheme supplies** (BCG, Triple Viral/MMR, Hepatitis B) from Secretaría de Salud and IMSS, then disappeared. 92% direct award. SFP imposed formal sanction: **SANCIONATORIA CON MULTA E INHABILITACIÓN** under RFC GLI1705153K1. Burst score 0.850 (single year burst, no activity before or after).
+
+**Notable:** Operates in the same sector (salud, vaccines), same year (2018), and same institutional clients (SSA, IMSS) as Case 25 (BIRMEX Suministrador de Vacunas). Possible coordinated multi-channel vaccine intermediary network. Whereas Case 25 targeted BIRMEX, this vendor targeted the SSA/IMSS direct procurement channel simultaneously.
+
+**Matched Vendors (1):**
+
+| Vendor | Vendor ID | Contracts | Match Confidence |
+|--------|-----------|-----------|-----------------|
+| GRUPO LABORATORIOS IMPERIALES PHARMA SA DE CV | 236035 | 24 | 0.99 |
+
+**ARIA detection:** IPS=0.730, Pattern=P3 (Single-Use Intermediary), SFP external flag triggered.
+
+---
+
+*Ground truth is sourced from ASF audits, DOJ filings, investigative journalism (Animal Politico, Aristegui Noticias), FGR investigations, and SFP sanction registry. All cases are publicly documented. Inclusion does not imply that every associated contract was corrupt — it indicates the vendor was involved in a documented corruption case.*

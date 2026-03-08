@@ -165,10 +165,10 @@ const MODEL_EVOLUTION_STEPS = [
   },
   {
     version: 'v5.2 layer',
-    date: 'Mar 2026',
-    title: 'Analytical Overlay',
-    desc: 'SHAP per-vendor explanations + PyOD cross-model ensemble + Evidently drift monitoring.',
-    metric: '456K vendors explained',
+    date: 'Mar 7, 2026',
+    title: 'Analytical Overlay (Live)',
+    desc: 'SHAP per-vendor explanations (456K vendors) + PyOD cross-model ensemble (9.3M scores) + KS drift monitoring. See Vendor Profile → Risk tab, Contract detail → AI Confirmed, Dashboard → Cross-Model.',
+    metric: '~130K dual-confirmed',
     active: false,
     overlay: true,
   },
@@ -184,6 +184,7 @@ const SECTIONS = [
   { id: 'findings', label: 'Key Findings', icon: Brain },
   { id: 'validation', label: 'Ground Truth Validation', icon: Target },
   { id: 'methods', label: 'Statistical Methods', icon: Beaker },
+  { id: 'v52-layer', label: 'v5.2 Analytical Layer', icon: FlaskConical },
   { id: 'limitations', label: 'Limitations', icon: AlertTriangle },
   { id: 'v33', label: 'Previous Model (v3.3)', icon: History },
   { id: 'data-sources', label: 'Data Sources', icon: Database },
@@ -900,6 +901,105 @@ export function Methodology() {
                   but given data uncertainty, it could be as low as 0.22 or as high as 0.48.
                 </p>
               </div>
+            </div>
+          </CollapsibleSection>
+          </motion.div>
+
+          {/* Section 6b: v5.2 Analytical Layer */}
+          <motion.div variants={staggerItem}>
+          <CollapsibleSection id="v52-layer" title={t('sectionLabels.v52-layer')} icon={FlaskConical}>
+            <div className="space-y-4">
+              <p className="text-xs text-text-secondary leading-relaxed">
+                The <strong className="text-text-primary">v5.2 analytical layer</strong> adds three independent
+                ML tools on top of the active v5.1 risk scores. These tools do not replace or alter any contract
+                risk scores — they provide additional explanations and cross-validation signals.
+              </p>
+
+              {/* Three pillars */}
+              <div className="grid gap-3 sm:grid-cols-3">
+                {[
+                  {
+                    title: 'SHAP Explanations',
+                    icon: Brain,
+                    badge: '456K vendors',
+                    color: 'text-accent',
+                    bg: 'bg-accent/5 border-accent/15',
+                    body: 'Exact Shapley values (φᵢ = βᵢ × (zᵢ − E[zᵢ])) computed for each vendor using their sector-specific model coefficients. Shows which of the 16 z-score features drove the risk score up or down.',
+                    where: 'Vendor Profile → Risk tab → SHAP Analysis panel',
+                  },
+                  {
+                    title: 'PyOD Cross-Validation',
+                    icon: Target,
+                    badge: '9.3M scores',
+                    color: 'text-risk-high',
+                    bg: 'bg-risk-high/5 border-risk-high/15',
+                    body: 'Isolation Forest + COPOD ensemble anomaly detection run independently on all 3.1M contracts. A high ensemble score means the contract is a statistical outlier even without knowing the ground truth label.',
+                    where: 'Contract detail → AI Confirmed badge · Dashboard → Cross-Model Validation · Explore → AI Confirmed filter',
+                  },
+                  {
+                    title: 'Drift Monitoring',
+                    icon: BarChart3,
+                    badge: '16 features',
+                    color: 'text-risk-medium',
+                    bg: 'bg-risk-medium/5 border-risk-medium/15',
+                    body: 'Kolmogorov-Smirnov tests compare the 2024–2025 feature distribution against the 2002–2020 training baseline. Detects when new procurement data develops patterns unlike the training period.',
+                    where: 'Model Transparency → Drift Monitor section',
+                  },
+                ].map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <div key={item.title} className={`p-3 rounded-md border ${item.bg} space-y-2`}>
+                      <div className="flex items-center justify-between gap-1">
+                        <div className="flex items-center gap-1.5">
+                          <Icon className={`h-3.5 w-3.5 ${item.color}`} aria-hidden="true" />
+                          <p className={`text-xs font-semibold ${item.color}`}>{item.title}</p>
+                        </div>
+                        <span className="text-[10px] font-mono text-text-muted">{item.badge}</span>
+                      </div>
+                      <p className="text-xs text-text-secondary leading-relaxed">{item.body}</p>
+                      <p className="text-[10px] text-text-muted font-mono border-t border-border/30 pt-1.5">
+                        Where to find: {item.where}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Key numbers */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: 'Vendors with SHAP', value: '456K' },
+                  { label: 'PyOD Scores Computed', value: '9.33M' },
+                  { label: 'Features Drift-Monitored', value: '16' },
+                  { label: 'Dual-Confirmed Contracts', value: '~130K' },
+                ].map((m) => (
+                  <div key={m.label} className="p-2.5 rounded-md bg-background-elevated/50 text-center">
+                    <p className="text-lg font-bold tabular-nums text-accent font-mono">{m.value}</p>
+                    <p className="text-xs text-text-muted">{m.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* AI Confirmed explanation */}
+              <div className="p-3 rounded-md bg-background-elevated/40 border border-border/30 space-y-1.5">
+                <p className="text-xs font-semibold text-text-primary">
+                  What "AI Confirmed" means
+                </p>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  A contract is <strong className="text-text-primary">dual-confirmed</strong> when the supervised
+                  v5.1 logistic model scores it as high or critical risk <em>and</em> the unsupervised PyOD
+                  ensemble independently scores it above the 0.50 anomaly threshold. Two completely different
+                  methods — one trained on labeled corruption cases, one trained on no labels at all — agree
+                  that this contract is unusual. This convergence reduces the false-positive rate for
+                  investigation triage.
+                </p>
+              </div>
+
+              <p className="text-xs text-text-muted">
+                Note: v5.2 is an analytical overlay — it adds explanability and cross-validation. The active
+                risk model is v5.1. Contract <code className="font-mono bg-border/20 px-1 py-0.5 rounded">risk_score</code> values
+                are unchanged by the v5.2 layer.
+              </p>
             </div>
           </CollapsibleSection>
           </motion.div>

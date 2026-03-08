@@ -232,7 +232,7 @@ const LIMITATIONS = [
     body: [
       'Five features — vendor_concentration, win_rate, price_volatility, institution_diversity, sector_spread — are computed as vendor-level aggregates over all available data (2002–2025). When scoring a contract from 2019, these features include information from 2020–2025 that could not have been known at award time.',
       'This constitutes indirect temporal leakage. The model\'s test set uses contracts from 2021+, but vendor features for those contracts include data from 2022–2025. The reported Test AUC of 0.9572 is therefore optimistic — the true prospective performance on genuinely unseen future vendors is unknown but expected to be lower.',
-      'A planned v5.2 update will address this with point-in-time feature computation: features for a contract in year T will use only vendor history from years ≤ T−1. A new vendor_rolling_stats table is being built to support this.',
+      'The v5.2 analytical layer attempted to address this with a vendor_rolling_stats table for point-in-time feature computation (features for year T using only history ≤ T−1). However, the cold-start problem — first-year vendors receiving extreme z-scores with no prior history — made the retrained model unstable (38.3% high-risk rate vs the expected 9%). The v5.1 model remains active. This limitation persists.',
     ],
     workaround: 'For newly-created vendors with no historical COMPRANET activity, risk scores are less reliable because vendor-level features cannot be computed. Newly incorporated vendors should be flagged separately for manual review regardless of their risk score.',
   },

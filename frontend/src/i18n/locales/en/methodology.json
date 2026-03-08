@@ -132,6 +132,7 @@
     "findings": "Key Findings",
     "validation": "Ground Truth Validation",
     "methods": "Statistical Methods",
+    "v52-layer": "v5.2 Analytical Layer (Live)",
     "limitations": "Limitations",
     "v33": "Previous Model (v3.3)",
     "data-sources": "Data Sources",
