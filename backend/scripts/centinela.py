@@ -33,12 +33,14 @@ Usage:
     # Use Playwright for web-only registries (RUPC, ComprasMX)
     python -m scripts.centinela --registry rupc --use-playwright
 """
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
+
 import argparse
 import json
 import logging
 import sqlite3
 import subprocess
-import sys
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -91,6 +93,13 @@ REGISTRIES = {
         "freshness_days": 180,  # Annual reports
         "method": "wayback_pdf",
     },
+    "rfc": {
+        "name": "RFC Validation & Shell Scoring",
+        "description": "Offline RFC validator + EFOS/SFP cross-ref → company_registry",
+        "table": "company_registry",
+        "freshness_days": 30,  # Rebuild monthly or after EFOS/SFP refresh
+        "method": "offline",
+    },
 }
 
 
@@ -111,7 +120,7 @@ def get_registry_status(conn: sqlite3.Connection) -> list[dict]:
 
         # Find most recent load timestamp
         last_loaded = None
-        for col in ("loaded_at", "scraped_at"):
+        for col in ("loaded_at", "scraped_at", "analyzed_at"):
             try:
                 row = conn.execute(
                     f"SELECT MAX({col}) FROM {table}"
@@ -151,7 +160,7 @@ def print_status(statuses: list[dict]) -> None:
     print("  CENTINELA — External Registry Status")
     print("=" * 72)
     for s in statuses:
-        icon = "🔴" if s["is_stale"] else "🟢"
+        icon = "STALE" if s["is_stale"] else "  OK "
         age = f"{s['days_old']}d old" if s["days_old"] is not None else "never loaded"
         target = f"(target: {s['freshness_target']}d)"
         print(f"  {icon} {s['name']:<30} {s['records']:>8,} records | {age:<15} {target}")
@@ -427,12 +436,206 @@ def log_run(conn: sqlite3.Connection, registry: str, status: str, records: int) 
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+# RFC Validation + Shell Scoring (offline, no network required)
+# ──────────────────────────────────────────────────────────────────────────────
+
+_ALNUM = set('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
+_RFC_BLACKLIST = {
+    'BUE','CAC','COC','CUE','FEL','GUE','JOT','LOC','MAM','MEA',
+    'MIE','MOC','MON','NAC','OCC','PED','PEN','PIS','PUT','QUI',
+    'RAT','RON','SCR','SER','SEX','TEM'
+}
+_RFC_PLACEHOLDERS = {'XAXX010101000', 'XEXX010101000'}
+
+from datetime import date as _date
+
+
+def _validate_rfc(rfc: str) -> dict:
+    """Validate Mexican RFC. Returns dict: valid, entity_type, inc_date, error, birth_year."""
+    r = {'valid': False, 'entity_type': None, 'inc_date': None, 'error': None, 'birth_year': None}
+    if not rfc:
+        r['error'] = 'no_rfc'; return r
+    rfc = rfc.strip().upper()
+    if rfc in _RFC_PLACEHOLDERS:
+        r['error'] = 'placeholder'; return r
+    if len(rfc) == 12:
+        entity, letters, date_part, hclave = 'moral', rfc[:3], rfc[3:9], rfc[9:12]
+    elif len(rfc) == 13:
+        entity, letters, date_part, hclave = 'fisica', rfc[:4], rfc[4:10], rfc[10:13]
+    else:
+        r['error'] = f'bad_length_{len(rfc)}'; return r
+    if not letters.isalpha():
+        r['error'] = 'non_alpha_prefix'; return r
+    if entity == 'moral' and letters[:3] in _RFC_BLACKLIST:
+        r['error'] = 'blacklisted_prefix'; return r
+    if not all(c in _ALNUM for c in hclave):
+        r['error'] = 'bad_homoclave'; return r
+    try:
+        yy, mm, dd = int(date_part[:2]), int(date_part[2:4]), int(date_part[4:6])
+        if not (1 <= mm <= 12 and 1 <= dd <= 31):
+            r['error'] = 'bad_date'; return r
+        full_year = 2000 + yy if yy <= 25 else 1900 + yy
+        try:
+            inc = _date(full_year, mm, dd)
+        except ValueError:
+            inc = _date(full_year, mm, 1)
+        r['inc_date'] = inc
+        r['birth_year'] = full_year
+    except (ValueError, IndexError):
+        r['error'] = 'bad_date'; return r
+    r['valid'] = True
+    r['entity_type'] = entity
+    return r
+
+
+_COMPANY_REGISTRY_DDL = """
+CREATE TABLE IF NOT EXISTS company_registry (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    vendor_id       INTEGER NOT NULL UNIQUE,
+    rfc             TEXT,
+    rfc_valid       INTEGER,
+    rfc_entity_type TEXT,
+    rfc_inc_year    INTEGER,
+    rfc_inc_date    TEXT,
+    rfc_age_years   REAL,
+    rfc_error       TEXT,
+    efos_stage      TEXT,
+    sfp_sanctioned  INTEGER DEFAULT 0,
+    sfp_sanction_type TEXT,
+    shell_score     INTEGER,
+    shell_flags     TEXT,
+    siger_scraped   INTEGER DEFAULT 0,
+    siger_status    TEXT,
+    siger_razon_social TEXT,
+    siger_objeto_social TEXT,
+    siger_cap_social TEXT,
+    siger_scraped_at TEXT,
+    analyzed_at     TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_cr_vendor  ON company_registry(vendor_id);
+CREATE INDEX IF NOT EXISTS idx_cr_rfc     ON company_registry(rfc);
+CREATE INDEX IF NOT EXISTS idx_cr_shell   ON company_registry(shell_score DESC);
+CREATE INDEX IF NOT EXISTS idx_cr_efos    ON company_registry(efos_stage);
+"""
+
+
+def refresh_rfc(dry_run: bool = False, conn_override: sqlite3.Connection | None = None) -> dict:
+    """
+    Build/refresh company_registry via offline RFC validation + EFOS/SFP cross-reference.
+    Safe to rerun — uses INSERT OR REPLACE (idempotent).
+    """
+    logger.info("Rebuilding company_registry (RFC validation + cross-refs) ...")
+    conn = conn_override or sqlite3.connect(str(DB_PATH))
+
+    # Create schema
+    for stmt in _COMPANY_REGISTRY_DDL.strip().split(';'):
+        s = stmt.strip()
+        if s:
+            conn.execute(s)
+    conn.commit()
+
+    # Load cross-ref indices
+    efos_idx: dict[str, str] = {}
+    try:
+        for rfc, stage in conn.execute("SELECT rfc, stage FROM sat_efos_vendors WHERE rfc IS NOT NULL"):
+            efos_idx[rfc.strip().upper()] = stage
+        logger.info(f"  EFOS index: {len(efos_idx):,}")
+    except sqlite3.OperationalError:
+        logger.warning("  sat_efos_vendors unavailable")
+
+    sfp_idx: dict[str, str] = {}
+    try:
+        for rfc, tipo in conn.execute("SELECT rfc, sanction_type FROM sfp_sanctions WHERE rfc IS NOT NULL"):
+            sfp_idx[rfc.strip().upper()] = tipo
+        logger.info(f"  SFP index: {len(sfp_idx):,}")
+    except sqlite3.OperationalError:
+        logger.warning("  sfp_sanctions unavailable")
+
+    today = _date.today()
+    now = datetime.now().isoformat()
+
+    vendors = conn.execute("SELECT id, rfc FROM vendors").fetchall()
+    logger.info(f"  Processing {len(vendors):,} vendors ...")
+
+    stats = dict(no_rfc=0, invalid=0, valid=0, efos=0, sfp=0, shell_high=0)
+    rows = []
+
+    for vid, rfc in vendors:
+        rfc_clean = rfc.strip().upper() if rfc else None
+        v = _validate_rfc(rfc_clean) if rfc_clean else {'valid': False, 'error': 'no_rfc',
+            'entity_type': None, 'inc_date': None, 'birth_year': None}
+
+        if not rfc_clean: stats['no_rfc'] += 1
+        elif v['valid']: stats['valid'] += 1
+        else: stats['invalid'] += 1
+
+        inc = v.get('inc_date')
+        age = round((today - inc).days / 365.25, 2) if inc else None
+
+        efos = efos_idx.get(rfc_clean) if rfc_clean else None
+        sfp_tipo = sfp_idx.get(rfc_clean) if rfc_clean else None
+        if efos: stats['efos'] += 1
+        if sfp_tipo: stats['sfp'] += 1
+
+        # Shell score
+        score = 0
+        flags = []
+        if not rfc_clean:
+            score += 4; flags.append('NO_RFC')
+        elif not v['valid']:
+            score += 3; flags.append(f"INVALID_RFC:{v.get('error','?')}")
+        elif age is not None:
+            if age < 2: score += 2; flags.append(f'NEW_COMPANY_{int(age*12)}mo')
+            elif age < 5: score += 1; flags.append(f'YOUNG_COMPANY_{int(age)}yr')
+        if efos == 'definitivo': score += 5; flags.append('EFOS_DEFINITIVO')
+        elif efos == 'presunto': score += 2; flags.append('EFOS_PRESUNTO')
+        if sfp_tipo: score += 3; flags.append(f'SFP:{sfp_tipo[:20]}')
+        score = min(score, 10)
+        if score >= 5: stats['shell_high'] += 1
+
+        rows.append((
+            vid, rfc_clean,
+            1 if v['valid'] else (0 if rfc_clean else None),
+            v.get('entity_type'), v.get('birth_year'),
+            inc.isoformat() if inc else None, age,
+            v.get('error') if not v['valid'] else None,
+            efos, sfp_tipo is not None, sfp_tipo,
+            score, json.dumps(flags), now,
+        ))
+
+    if dry_run:
+        logger.info(f"Dry run: {len(rows):,} rows would be upserted")
+        return {"status": "dry_run", "records": len(rows)}
+
+    conn.executemany('''
+        INSERT OR REPLACE INTO company_registry
+        (vendor_id, rfc, rfc_valid, rfc_entity_type, rfc_inc_year, rfc_inc_date,
+         rfc_age_years, rfc_error, efos_stage, sfp_sanctioned, sfp_sanction_type,
+         shell_score, shell_flags, analyzed_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    ''', rows)
+    conn.commit()
+
+    logger.info(
+        f"company_registry: {len(rows):,} upserted | "
+        f"no_rfc={stats['no_rfc']:,} invalid={stats['invalid']:,} valid={stats['valid']:,} | "
+        f"efos={stats['efos']} sfp={stats['sfp']} shell_high={stats['shell_high']}"
+    )
+
+    if not conn_override:
+        conn.close()
+
+    return {"status": "ok", "records": len(rows), **stats}
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 # Main orchestrator
 # ──────────────────────────────────────────────────────────────────────────────
 
 REFRESH_FNS = {
     "efos": refresh_efos,
     "sfp": refresh_sfp,
+    "rfc": refresh_rfc,
     "rupc": refresh_rupc,
     "asf": refresh_asf,
 }
@@ -457,6 +660,8 @@ Examples:
     parser.add_argument("--dry-run", action="store_true", help="Parse but don't write to DB")
     parser.add_argument("--use-playwright", action="store_true", help="Use Playwright for web-only registries")
     parser.add_argument("--cross-ref", action="store_true", help="Run cross-reference after refresh")
+    parser.add_argument("--trigger-aria", action="store_true",
+                        help="Re-run ARIA pipeline after refreshing (updates IPS with fresh external data)")
     args = parser.parse_args()
 
     conn = sqlite3.connect(str(DB_PATH))
@@ -517,7 +722,7 @@ Examples:
     for key, result in results.items():
         status = result.get("status", "unknown")
         records = result.get("records", "—")
-        icon = {"ok": "✓", "dry_run": "~", "skipped": "⊘", "failed": "✗", "error": "✗"}.get(status, "?")
+        icon = {"ok": "OK", "dry_run": "~", "skipped": "--", "failed": "!!", "error": "!!"}.get(status, "?")
         name = REGISTRIES.get(key, {}).get("name", key)
         print(f"  {icon} {name:<30} {status:<10} {records} records")
     print("=" * 60)
