@@ -225,129 +225,134 @@ def refresh_sfp(dry_run: bool = False) -> dict:
     return {"status": "ok", "records": count}
 
 
+_RUPC_EXCEL_URL = (
+    "https://comprasmx.buengobierno.gob.mx/gobmx-api/proveedores-contratistas/descargar/excel"
+)
+
+_RUPC_DDL = """
+CREATE TABLE IF NOT EXISTS rupc_vendors (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    folio           TEXT,
+    rfc             TEXT,
+    company_name    TEXT,
+    country         TEXT,
+    size_class      TEXT,
+    sector          TEXT,
+    giro            TEXT,
+    contracts       INTEGER,
+    registered_date TEXT,
+    contracts_eval_laassp INTEGER,
+    grade_laassp    TEXT,
+    contracts_eval_lopsrm INTEGER,
+    grade_lopsrm    TEXT,
+    website         TEXT,
+    loaded_at       TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_rupc_rfc ON rupc_vendors(rfc COLLATE NOCASE);
+"""
+
+
 def refresh_rupc(dry_run: bool = False, use_playwright: bool = False) -> dict:
     """
-    Refresh RUPC vendor registry.
-    Since CompraNet was abolished (Apr 2025), RUPC is web-only.
-    Uses Playwright to scrape the web interface.
+    Refresh RUPC vendor registry by downloading the Excel file from ComprasMX.
+    Falls back to local file if download fails.
     """
     logger.info("Refreshing RUPC Vendor Registry ...")
 
-    if not use_playwright:
-        # Try the old URL first (may still work for cached/archived data)
-        from scripts.load_rupc import download_and_parse, save_to_db
-        records = download_and_parse(REGISTRIES["rupc"]["url"])
-        if records:
-            if dry_run:
-                return {"status": "dry_run", "records": len(records)}
-            count = save_to_db(records)
-            return {"status": "ok", "records": count}
-
-        logger.info("RUPC CSV unavailable (expected since Apr 2025). Use --use-playwright to scrape web portal.")
-        return {"status": "skipped", "records": 0, "reason": "web-only, needs --use-playwright"}
-
-    # Playwright-based scraping
-    return _scrape_rupc_playwright(dry_run)
-
-
-def _scrape_rupc_playwright(dry_run: bool = False) -> dict:
-    """Scrape RUPC via Playwright browser automation."""
-    try:
-        from playwright.sync_api import sync_playwright
-    except ImportError:
-        logger.error("playwright not installed. Run: pip install playwright && playwright install chromium")
-        return {"status": "failed", "reason": "playwright not installed"}
-
-    records = []
-    logger.info("Launching Playwright browser for RUPC scraping ...")
+    # Try downloading Excel directly
+    excel_path = DATA_DIR / "rupc_vendors.xlsx"
+    downloaded = False
 
     try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            context = browser.new_context(
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                locale="es-MX",
-            )
-            page = context.new_page()
-
-            # Navigate to RUPC search
-            page.goto(REGISTRIES["rupc"]["url"], wait_until="networkidle", timeout=30000)
-            logger.info(f"Page loaded: {page.title()}")
-
-            # The RUPC interface typically has a search form
-            # We'll search for common vendor patterns and paginate
-            # This is a best-effort scraper — the portal may require
-            # specific search terms (no bulk listing available)
-
-            # Try to find the search form and results table
-            page.wait_for_timeout(3000)
-
-            # Check if there's a search/query interface
-            snapshot = page.content()
-            if "buscar" in snapshot.lower() or "search" in snapshot.lower():
-                logger.info("RUPC search form detected. Performing sample queries ...")
-
-                # Search by common letters to enumerate vendors
-                # This is a pragmatic approach since bulk download is unavailable
-                search_terms = ["SA DE CV", "SC", "SPR"]
-                for term in search_terms:
-                    try:
-                        # Look for search input
-                        search_input = page.query_selector(
-                            'input[type="text"], input[name*="busca"], input[placeholder*="Buscar"]'
-                        )
-                        if search_input:
-                            search_input.fill(term)
-                            # Submit
-                            submit_btn = page.query_selector(
-                                'button[type="submit"], input[type="submit"], button:has-text("Buscar")'
-                            )
-                            if submit_btn:
-                                submit_btn.click()
-                                page.wait_for_timeout(3000)
-
-                            # Extract table rows
-                            rows = page.query_selector_all("table tbody tr")
-                            for row in rows:
-                                cells = row.query_selector_all("td")
-                                if len(cells) >= 3:
-                                    records.append({
-                                        "rfc": (cells[0].inner_text() or "").strip(),
-                                        "company_name": (cells[1].inner_text() or "").strip(),
-                                        "compliance_grade": (cells[2].inner_text() or "").strip() if len(cells) > 2 else None,
-                                        "status": (cells[3].inner_text() or "").strip() if len(cells) > 3 else None,
-                                    })
-                            logger.info(f"  '{term}': found {len(rows)} rows")
-                    except Exception as e:
-                        logger.warning(f"  Search for '{term}' failed: {e}")
-                    time.sleep(2)  # Rate limit
-
-            browser.close()
-
+        import httpx
+        logger.info(f"  Downloading RUPC Excel from ComprasMX ...")
+        resp = httpx.get(_RUPC_EXCEL_URL, timeout=60, follow_redirects=True,
+                         headers={"User-Agent": "Mozilla/5.0 RUBLI/1.0"})
+        if resp.status_code == 200 and len(resp.content) > 10000:
+            excel_path.write_bytes(resp.content)
+            logger.info(f"  Downloaded {len(resp.content)/1024:.0f} KB")
+            downloaded = True
+        else:
+            logger.warning(f"  Download returned status {resp.status_code}, {len(resp.content)} bytes")
     except Exception as e:
-        logger.error(f"Playwright RUPC scrape failed: {e}")
-        return {"status": "failed", "reason": str(e)}
+        logger.warning(f"  Download failed: {e}")
 
-    # Deduplicate by RFC
-    seen = set()
-    unique = []
-    for r in records:
-        if r["rfc"] and r["rfc"] not in seen:
-            seen.add(r["rfc"])
-            unique.append(r)
-    records = unique
+    # Fall back to local file (may have been downloaded via Playwright earlier)
+    if not downloaded:
+        local_candidates = sorted(DATA_DIR.glob("*rupc*.*xls*"), key=lambda p: p.stat().st_mtime, reverse=True)
+        pw_candidates = sorted(Path(__file__).parent.parent.parent.glob(".playwright-mcp/*rovedores*.*xls*"),
+                               key=lambda p: p.stat().st_mtime, reverse=True)
+        candidates = local_candidates + pw_candidates
+        if candidates:
+            excel_path = candidates[0]
+            logger.info(f"  Using local file: {excel_path.name}")
+        else:
+            logger.warning("  No RUPC Excel file available. Try downloading manually from ComprasMX.")
+            return {"status": "skipped", "records": 0, "reason": "no Excel file available"}
 
-    logger.info(f"RUPC: scraped {len(records)} unique vendor records")
+    # Parse Excel
+    try:
+        import openpyxl
+    except ImportError:
+        logger.error("openpyxl not installed. Run: pip install openpyxl")
+        return {"status": "failed", "reason": "openpyxl not installed"}
+
+    wb = openpyxl.load_workbook(excel_path, read_only=True, data_only=True)
+    ws = wb.active
+    rows_iter = ws.iter_rows(values_only=True)
+    header = next(rows_iter, None)
+    if not header:
+        return {"status": "failed", "reason": "empty Excel file"}
+
+    # Map columns by position (ComprasMX format: Folio, RFC, Nombre, Pais, Tamano, ...)
+    now = datetime.now().isoformat()
+    records = []
+    for row in rows_iter:
+        if not row or not row[0]:
+            continue
+        r = list(row) + [None] * (15 - len(row))  # pad
+        records.append((
+            str(r[0]).strip() if r[0] else None,  # folio
+            str(r[1]).strip().upper() if r[1] else None,  # rfc
+            str(r[2]).strip() if r[2] else None,  # company_name
+            str(r[3]).strip() if r[3] else None,  # country
+            str(r[4]).strip() if r[4] else None,  # size_class
+            str(r[5]).strip() if r[5] else None,  # sector
+            str(r[6]).strip() if r[6] else None,  # giro
+            int(r[7]) if r[7] and str(r[7]).isdigit() else None,  # contracts
+            str(r[8]).strip() if r[8] else None,  # registered_date
+            int(r[9]) if r[9] and str(r[9]).replace('.0','').isdigit() else None,  # contracts_eval_laassp
+            str(r[10]).strip() if r[10] else None,  # grade_laassp
+            int(r[11]) if r[11] and str(r[11]).replace('.0','').isdigit() else None,  # contracts_eval_lopsrm
+            str(r[12]).strip() if r[12] else None,  # grade_lopsrm
+            str(r[13]).strip() if r[13] else None,  # website
+            now,  # loaded_at
+        ))
+    wb.close()
+    logger.info(f"  Parsed {len(records):,} vendors from Excel")
 
     if dry_run:
         return {"status": "dry_run", "records": len(records)}
 
-    if records:
-        from scripts.load_rupc import save_to_db
-        count = save_to_db(records)
-        return {"status": "ok", "records": count}
+    # Write to DB
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.execute("PRAGMA busy_timeout = 30000")
+    for stmt in _RUPC_DDL.strip().split(';'):
+        s = stmt.strip()
+        if s:
+            conn.execute(s)
+    conn.execute("DELETE FROM rupc_vendors")
+    conn.executemany('''INSERT INTO rupc_vendors
+        (folio, rfc, company_name, country, size_class, sector, giro, contracts,
+         registered_date, contracts_eval_laassp, grade_laassp, contracts_eval_lopsrm,
+         grade_lopsrm, website, loaded_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    ''', records)
+    conn.commit()
+    conn.close()
 
-    return {"status": "ok", "records": 0}
+    logger.info(f"  RUPC: {len(records):,} vendors loaded")
+    return {"status": "ok", "records": len(records)}
 
 
 def refresh_asf(dry_run: bool = False, year: int = 2021) -> dict:
@@ -551,6 +556,14 @@ def refresh_rfc(dry_run: bool = False, conn_override: sqlite3.Connection | None 
     except sqlite3.OperationalError:
         logger.warning("  sfp_sanctions unavailable")
 
+    rupc_rfcs: set[str] = set()
+    try:
+        for (rfc_row,) in conn.execute("SELECT rfc FROM rupc_vendors WHERE rfc IS NOT NULL"):
+            rupc_rfcs.add(rfc_row.strip().upper())
+        logger.info(f"  RUPC index: {len(rupc_rfcs):,}")
+    except sqlite3.OperationalError:
+        logger.warning("  rupc_vendors unavailable")
+
     today = _date.today()
     now = datetime.now().isoformat()
 
@@ -590,6 +603,8 @@ def refresh_rfc(dry_run: bool = False, conn_override: sqlite3.Connection | None 
         if efos == 'definitivo': score += 5; flags.append('EFOS_DEFINITIVO')
         elif efos == 'presunto': score += 2; flags.append('EFOS_PRESUNTO')
         if sfp_tipo: score += 3; flags.append(f'SFP:{sfp_tipo[:20]}')
+        if rfc_clean and v['valid'] and rupc_rfcs and rfc_clean not in rupc_rfcs:
+            score += 1; flags.append('NOT_IN_RUPC')
         score = min(score, 10)
         if score >= 5: stats['shell_high'] += 1
 
