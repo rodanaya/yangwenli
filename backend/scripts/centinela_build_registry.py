@@ -1,15 +1,17 @@
 """
-Build company registry from multiple sources:
+Centinela — Company Registry Enrichment Layer
+=============================================
+Builds the company_registry table from multiple sources:
 1. RFC algorithmic validation (offline — validates format, extracts incorporation date)
-2. SAT EFOS cross-reference (already in sat_efos_vendors table)
-3. SFP sanctions cross-reference (already in sfp_sanctions table)
-4. SIGER scraper (optional — requires account; invoke with --scrape-siger)
+2. SAT EFOS cross-reference (sat_efos_vendors table)
+3. SFP sanctions cross-reference (sfp_sanctions table)
+4. SIGER/RPC scraper (optional — see centinela_scrape.py)
 
 Usage:
     cd backend
-    python scripts/build_company_registry.py            # RFC validation + cross-refs only
-    python scripts/build_company_registry.py --limit 500  # limit SIGER scraping
-    python scripts/build_company_registry.py --vendor-id 12345  # single vendor
+    python scripts/centinela_build_registry.py              # RFC validation + cross-refs
+    python scripts/centinela_build_registry.py --aria-only  # only ARIA queue vendors
+    python scripts/centinela_build_registry.py --vendor-id 12345
 """
 import sys
 sys.stdout.reconfigure(encoding='utf-8')

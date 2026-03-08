@@ -1,19 +1,23 @@
 """
-SIGER / RPC company registry scraper for Mexico.
+Centinela — SIGER/RPC Company Registry Scraper
+===============================================
+Scrapes Mexico's company registry to enrich vendor data.
 
 SIGER = Sistema de Información del Registro Empresarial (Secretaría de Economía)
 RPC   = Registro Público de Comercio
 
+Requires centinela_build_registry.py to have been run first (creates schema).
+
 Usage:
     cd backend
-    python scripts/scrape_siger.py --test-rfc ABC010101ABC
-    python scripts/scrape_siger.py --from-aria-queue --limit 50
-    python scripts/scrape_siger.py --resume   # continue where left off
+    python scripts/centinela_scrape.py --dry-run --from-aria-queue
+    python scripts/centinela_scrape.py --from-aria-queue --limit 50
+    python scripts/centinela_scrape.py --test-rfc ABC010101ABC
+    python scripts/centinela_scrape.py --resume   # continue where left off
 
-Credentials (for authenticated endpoints):
-    Set env vars: SIGER_USER, SIGER_PASS
-    Or pass via --user / --pass flags
-    Or store in backend/.siger_credentials (user:pass, not committed)
+Credentials:
+    Set env vars:  SIGER_USER, SIGER_PASS
+    Or create:     backend/.siger_credentials  (format: user:password, NOT committed)
 """
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
@@ -333,7 +337,7 @@ def main():
     # Check that company_registry exists
     tbl = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='company_registry'").fetchone()
     if not tbl:
-        print('ERROR: Run build_company_registry.py first to create the schema and do RFC analysis.')
+        print('ERROR: Run centinela_build_registry.py first to create the schema and do RFC analysis.')
         sys.exit(1)
 
     # Setup session
