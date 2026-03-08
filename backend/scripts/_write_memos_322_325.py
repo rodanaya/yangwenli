@@ -1,10 +1,16 @@
-"""Write Spanish investigation memos for GT cases 322-325."""
+"""Write Spanish investigation memos for GT cases 322-325 (to files) and 322-333 (to aria_queue DB)."""
 import os
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
+import sqlite3
 
+DB = "RUBLI_NORMALIZED.db"
 MEMO_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "memos")
 os.makedirs(MEMO_DIR, exist_ok=True)
 
-MEMO_322 = """# Caso 322: Dragados y Urbanizaciones Siglo 21 - Captura Institucional CONAGUA
+# ---- File-based memos for cases 330-333 (Dragados, Grupo Op, Lavanderia, GVARGAS) ----
+
+MEMO_330 = """# Caso 330: Dragados y Urbanizaciones Siglo 21 - Captura Institucional CONAGUA
 
 ## Resumen Ejecutivo
 
@@ -57,7 +63,7 @@ Este caso exhibe el patron clasico de **captura institucional (P6)**:
 Evidencia circunstancial fuerte (concentracion + single-bid + longevidad), pero requiere verificacion de fuentes externas (ASF, medios) para confirmar irregularidades.
 """
 
-MEMO_323 = """# Caso 323: Grupo Operativo Internacional en Seguridad Privada - Monopolio Vigilancia ISSSTE
+MEMO_331 = """# Caso 331: Grupo Operativo Internacional en Seguridad Privada - Monopolio Vigilancia ISSSTE
 
 ## Resumen Ejecutivo
 
@@ -104,7 +110,7 @@ En 2015 se observan 3 contratos separados (41M + 38M + 20M = 99M) todos por adju
 Patron claro de monopolio institucional, pero el sector seguridad puede tener justificaciones operativas (conocimiento de instalaciones, acreditaciones). Requiere verificacion ASF.
 """
 
-MEMO_324 = """# Caso 324: Lavanderia de Hospitales y Sanatorios - Monopolio Lavanderia Sector Salud
+MEMO_332 = """# Caso 332: Lavanderia de Hospitales y Sanatorios - Monopolio Lavanderia Sector Salud
 
 ## Resumen Ejecutivo
 
@@ -167,7 +173,7 @@ Este caso representa un **monopolio multi-institucional de servicio esencial**:
 El patron de monopolio multi-institucional de 23 anios es altamente sospechoso, pero la lavanderia hospitalaria es un servicio especializado con barreras de entrada (capacidad industrial, normas sanitarias). Requiere verificacion de precios y RFC.
 """
 
-MEMO_325 = """# Caso 325: GVARGAS Comercializadora - Intermediario Equipo de Seguridad Pemex
+MEMO_333 = """# Caso 333: GVARGAS Comercializadora - Intermediario Equipo de Seguridad Pemex
 
 ## Resumen Ejecutivo
 
@@ -231,21 +237,85 @@ Patron clasico de **intermediario de commodities**:
 Patron de intermediario consistente con riesgos de sobreprecio, pero requiere verificacion de precios de mercado y confirmacion de que no es fabricante directo.
 """
 
-MEMOS = {
-    322: ("322_dragados_conagua.md", MEMO_322),
-    323: ("323_grupo_operativo_issste.md", MEMO_323),
-    324: ("324_lavanderia_hospitales.md", MEMO_324),
-    325: ("325_gvargas_pemex.md", MEMO_325),
+FILE_MEMOS = {
+    330: ("330_dragados_conagua.md", MEMO_330),
+    331: ("331_grupo_operativo_issste.md", MEMO_331),
+    332: ("332_lavanderia_hospitales.md", MEMO_332),
+    333: ("333_gvargas_pemex.md", MEMO_333),
+}
+
+# ---- DB-based memos for aria_queue (all 8 vendors) ----
+
+DB_MEMOS = {
+    # Cases 322-325
+    149312: ("needs_review", "CASO: MARIA PATRICIA PEREZ ZEPEDA — Persona Fisica con Contrato Anomalo INC\n\n"
+        "Persona fisica suministrando abarrotes al INC. Contrato 2018 por 725.8M MXN anomalo vs demas (100K-4M). "
+        "Ratio 175:1. 100% contratos con INC. 92% AD. Sin RFC. 50 contratos 2015-2021.\n\n"
+        "RECOMENDACION: Verificar monto contrato 2018 — posible error decimal. Cuenta Publica ASF INC 2018."),
+    200238: ("needs_review", "CASO: SILODISA SAPI — Monopolio Logistico Farmaceutico ISSSTE\n\n"
+        "Contrato 2.87B MXN (2017) para cadena de suministro de medicamentos ISSSTE. "
+        "Monopolio logistico farmaceutico. SAPI. AD 277.8M complementario. Transicion 2021 115.2M. Sin RFC.\n\n"
+        "RECOMENDACION: Auditorias ASF ISSSTE 2017-2021. Verificar subcontratacion y margen intermediacion."),
+    14312: ("needs_review", "CASO: DISTRIBUIDORA MEDICA LUNA — Contrato Anomalo Material Curacion ISSSTE\n\n"
+        "Contrato 2017 por 714.1M MXN concentra 96.2% del valor. 77 contratos restantes suman <28.4M. "
+        "Ratio 25:1. IMSS/ISSSTE/SS Tlaxcala. 55% DA. Sin RFC. 78 contratos 2003-2021.\n\n"
+        "RECOMENDACION: Verificar monto contrato 2017. Investigar capacidad operativa y rol de intermediario."),
+    84232: ("needs_review", "CASO: INGENIERIA Y SERVICIOS ADM — Multi-Sector CFE/SCT/CAPUFE\n\n"
+        "2.54B MXN en 19 contratos (2011-2018). CFE subestaciones, SCT tren electrico GDL, CAPUFE peaje. "
+        "73.7% licitacion publica — menor riesgo procedimental. Sin RFC.\n\n"
+        "RECOMENDACION: Verificar RFC y estructura accionaria. Informes ASF tren electrico GDL 2017."),
+    # Cases 330-333
+    24384: ("needs_review", "CASO: DRAGADOS SIGLO 21 — Captura Institucional CONAGUA\n\n"
+        "94% contratos en CONAGUA (84/89, 3.18B MXN). 85% single-bid. 19 anios continuos (2006-2025). "
+        "Agua Saludable para La Laguna 487M. Sin RFC.\n\n"
+        "RECOMENDACION: ASF proyectos Agua Saludable. Investigar vinculos directivos CONAGUA."),
+    13583: ("needs_review", "CASO: GRUPO OPERATIVO INT — Monopolio Vigilancia ISSSTE\n\n"
+        "97% valor en ISSSTE (631M/652M). Contratos plurianuales vigilancia 2005-2015. "
+        "72% single-bid. Fragmentacion 2015 (3 contratos DA vs 1 plurianual). Sin RFC.\n\n"
+        "RECOMENDACION: Estudios de mercado ISSSTE. Investigar transicion post-2015."),
+    4699: ("needs_review", "CASO: LAVANDERIA HOSPITALES — Monopolio Multi-Institucional Salud\n\n"
+        "Monopolio lavanderia hospitalaria 23 anios. ISSSTE 1.36B, IMSS-Bienestar 1.06B, IMSS 373M, HGM 317M. "
+        "157 contratos, 64% single-bid. 4.06B MXN total. Sin RFC.\n\n"
+        "RECOMENDACION: Verificar RFC urgente. Comparar precios vs benchmarks. ASF lavanderia ISSSTE/IMSS."),
+    34768: ("needs_review", "CASO: GVARGAS — Intermediario Commodities Pemex\n\n"
+        "75% valor en Pemex-EP (380M/509M). 67.8% DA. Equipo proteccion personal — commodities via intermediario. "
+        "Montos duplicados 81.4M (2012/2013). 83 contratos 2008-2019. Sin RFC.\n\n"
+        "RECOMENDACION: Comparar precios vs fabricantes. Padron proveedores Pemex para RFC."),
 }
 
 
 def main():
-    for case_id, (filename, content) in MEMOS.items():
+    # Write markdown files
+    for case_id, (filename, content) in FILE_MEMOS.items():
         path = os.path.join(MEMO_DIR, filename)
         with open(path, "w", encoding="utf-8") as f:
             f.write(content)
         print(f"  Wrote {path}")
 
+    # Write to aria_queue DB
+    conn = sqlite3.connect(DB)
+    cur = conn.cursor()
+    for vendor_id, (status, memo_text) in DB_MEMOS.items():
+        cur.execute(
+            "UPDATE aria_queue SET memo_text=?, review_status=?, "
+            "memo_generated_at=CURRENT_TIMESTAMP WHERE vendor_id=?",
+            (memo_text, status, vendor_id)
+        )
+        if cur.rowcount == 0:
+            cur.execute(
+                "INSERT OR IGNORE INTO aria_queue "
+                "(vendor_id, review_status, memo_text, memo_generated_at) "
+                "VALUES (?,?,?,CURRENT_TIMESTAMP)",
+                (vendor_id, status, memo_text)
+            )
+        print(f"  DB memo VID={vendor_id}: {status}")
+    conn.commit()
+    count = conn.execute(
+        "SELECT COUNT(*) FROM aria_queue WHERE memo_text IS NOT NULL"
+    ).fetchone()[0]
+    print(f"Total DB memos: {count}")
+    conn.close()
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     main()
