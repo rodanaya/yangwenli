@@ -35,14 +35,24 @@ def get_db_connection() -> sqlite3.Connection:
     return conn
 
 
-@contextmanager
 def get_db() -> Generator[sqlite3.Connection, None, None]:
-    """Context manager for database connections."""
+    """FastAPI dependency that yields a database connection.
+
+    Works with both ``Depends(get_db)`` **and** ``with get_db() as conn:``.
+    FastAPI >=0.135 rejects ``@contextmanager``-wrapped generators in
+    ``Depends``, so we keep this as a bare generator and wrap it for
+    ``with`` usage via ``__enter__``/``__exit__`` on the generator object.
+    """
     conn = get_db_connection()
     try:
         yield conn
     finally:
         conn.close()
+
+
+# Alias wrapped in @contextmanager for ``with get_db_ctx() as conn:`` usage
+# in scripts and non-FastAPI code.
+get_db_ctx = contextmanager(get_db)
 
 
 def verify_database_exists() -> bool:

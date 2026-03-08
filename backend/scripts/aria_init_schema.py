@@ -5,11 +5,13 @@ Run from backend/ directory:
     python -m scripts.aria_init_schema
 """
 
+import os
 import sqlite3
 import sys
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent.parent / "RUBLI_NORMALIZED.db"
+_default_db = Path(__file__).parent.parent / "RUBLI_NORMALIZED.db"
+DB_PATH = Path(os.environ.get("DATABASE_PATH", str(_default_db)))
 
 
 DDL_STATEMENTS = [
