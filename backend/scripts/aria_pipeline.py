@@ -882,6 +882,15 @@ def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
 
         # -- Persist results -------------------------------------------------
         if not dry_run:
+            # Preserve manual memos and review status before wiping
+            preserved = {}
+            for row in conn.execute(
+                "SELECT vendor_id, memo_text, review_status, memo_generated_at, "
+                "reviewer_name, reviewer_notes, reviewed_at FROM aria_queue "
+                "WHERE memo_text IS NOT NULL OR review_status NOT IN ('pending', '')"
+            ).fetchall():
+                preserved[row[0]] = row[1:]
+
             # Replace all previous aria_queue rows with current run
             conn.execute("DELETE FROM aria_queue")
 
@@ -892,6 +901,17 @@ def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
                     f"INSERT OR REPLACE INTO aria_queue ({cols}) VALUES ({placeholders})",
                     list(r.values()),
                 )
+
+            # Restore preserved memos
+            if preserved:
+                for vid, (memo, status, memo_at, rname, rnotes, rat) in preserved.items():
+                    conn.execute(
+                        "UPDATE aria_queue SET memo_text=?, review_status=?, "
+                        "memo_generated_at=?, reviewer_name=?, reviewer_notes=?, reviewed_at=? "
+                        "WHERE vendor_id=?",
+                        (memo, status, memo_at, rname, rnotes, rat, vid),
+                    )
+                logger.info("  Restored %d preserved memos/review statuses.", len(preserved))
 
             conn.execute(
                 """
