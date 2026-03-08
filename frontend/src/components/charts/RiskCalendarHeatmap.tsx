@@ -21,8 +21,8 @@ function riskToColor(risk: number): string {
   if (risk < 0.20) return '#86efac'
   if (risk < 0.30) return '#fde68a' // medium — amber
   if (risk < 0.40) return '#fbbf24'
-  if (risk < 0.50) return '#f97316' // high — orange
-  return '#ef4444'                   // critical — red
+  if (risk < 0.50) return '#fb923c' // high — orange
+  return '#f87171'                   // critical — red
 }
 
 function riskLabel(risk: number): string {
@@ -146,8 +146,8 @@ export function RiskCalendarHeatmap() {
           { label: 'None', color: '#f1f5f9' },
           { label: 'Low', color: '#bbf7d0' },
           { label: 'Medium', color: '#fbbf24' },
-          { label: 'High', color: '#f97316' },
-          { label: 'Critical', color: '#ef4444' },
+          { label: 'High', color: '#fb923c' },
+          { label: 'Critical', color: '#f87171' },
         ].map(({ label, color }) => (
           <div key={label} className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-[2px]" style={{ backgroundColor: color }} />

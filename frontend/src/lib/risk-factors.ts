@@ -24,8 +24,8 @@ export interface ParsedFactor {
 }
 
 const CATEGORY_COLORS: Record<FactorCategory, string> = {
-  competition: '#ef4444',   // red — single bid, concentration
-  pricing: '#f59e0b',       // amber — price anomaly, overpricing
+  competition: '#f87171',   // red — single bid, concentration
+  pricing: '#fbbf24',       // amber — price anomaly, overpricing
   timing: '#8b5cf6',        // violet — year end, short ad, splitting
   network: '#3b82f6',       // blue — network risk, co-bidding
   institutional: '#6366f1', // indigo — institution risk, mismatch

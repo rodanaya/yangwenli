@@ -1319,7 +1319,7 @@ export function NetworkGraph() {
       avg_risk: link.avg_risk,
       lineStyle: {
         width: linkWidth(link.contracts),
-        color: (link.avg_risk ?? 0) >= 0.3 ? '#ef444480' : '#47556980',
+        color: (link.avg_risk ?? 0) >= 0.3 ? '#f8717180' : '#47556980',
         curveness: 0.1,
       },
     }))

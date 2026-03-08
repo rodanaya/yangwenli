@@ -28,10 +28,10 @@ interface PyramidRow {
 }
 
 const PYRAMID_DATA: PyramidRow[] = [
-  { level: 'critical', label: 'Critical Risk', pctContracts: 6.1, pctValue: 41.8, contracts: 190083, billions: 4147.04, color: '#ef4444', description: '≥0.50 score' },
-  { level: 'high', label: 'High Risk', pctContracts: 2.9, pctValue: 6.1, contracts: 88707, billions: 602.88, color: '#f97316', description: '0.30–0.50 score' },
-  { level: 'medium', label: 'Medium Risk', pctContracts: 13.2, pctValue: 13.9, contracts: 408861, billions: 1380.64, color: '#f59e0b', description: '0.10–0.30 score' },
-  { level: 'low', label: 'Low Risk', pctContracts: 77.8, pctValue: 38.2, contracts: 2420971, billions: 3797.00, color: '#22c55e', description: '<0.10 score' },
+  { level: 'critical', label: 'Critical Risk', pctContracts: 6.1, pctValue: 41.8, contracts: 190083, billions: 4147.04, color: '#f87171', description: '≥0.50 score' },
+  { level: 'high', label: 'High Risk', pctContracts: 2.9, pctValue: 6.1, contracts: 88707, billions: 602.88, color: '#fb923c', description: '0.30–0.50 score' },
+  { level: 'medium', label: 'Medium Risk', pctContracts: 13.2, pctValue: 13.9, contracts: 408861, billions: 1380.64, color: '#fbbf24', description: '0.10–0.30 score' },
+  { level: 'low', label: 'Low Risk', pctContracts: 77.8, pctValue: 38.2, contracts: 2420971, billions: 3797.00, color: '#4ade80', description: '<0.10 score' },
 ]
 
 // For left chart: negative values so bars grow left

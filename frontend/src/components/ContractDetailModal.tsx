@@ -241,7 +241,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                             style={{
                               width: `${Math.min(contract.ensemble_anomaly_score * 100, 100)}%`,
                               background: isAiConfirmed
-                                ? 'linear-gradient(90deg, #f59e0b, #ef4444)'
+                                ? 'linear-gradient(90deg, #fbbf24, #f87171)'
                                 : 'linear-gradient(90deg, #6b7280, #9ca3af)',
                             }}
                           />

@@ -178,14 +178,14 @@ export function SectorParadoxScatter() {
             {/* Diagonal reference line: "expected" positive correlation */}
             <ReferenceLine
               segment={[{ x: 25, y: 5 }, { x: 100, y: 20 }]}
-              stroke="#ef444466"
+              stroke="#f8717166"
               strokeWidth={1.5}
               strokeDasharray="6 3"
               label={{
                 value: t('sector_paradox.reference_line_label'),
                 position: 'insideTopRight',
                 fontSize: 9,
-                fill: '#ef444499',
+                fill: '#f8717199',
               }}
             />
 

@@ -1399,7 +1399,7 @@ export default function ModelTransparency() {
                 role="note"
                 aria-label="Procedure risk paradox finding"
               >
-                <p className="font-semibold text-[#f59e0b] mb-1">Counterintuitive Finding</p>
+                <p className="font-semibold text-[#fbbf24] mb-1">Counterintuitive Finding</p>
                 In Defensa and Salud, competitive procedures score{' '}
                 <span className="font-semibold text-text-primary">1.7–2.3× higher risk</span> than
                 direct awards — challenging OECD assumptions that direct awards are inherently riskier.

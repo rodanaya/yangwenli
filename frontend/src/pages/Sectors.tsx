@@ -326,10 +326,10 @@ interface RiskStackBarProps {
 
 function RiskStackBar({ criticalPct, highPct, mediumPct, lowPct }: RiskStackBarProps) {
   const segments = [
-    { key: 'critical', pct: criticalPct, color: '#ef4444', label: 'Critical' },
-    { key: 'high',     pct: highPct,     color: '#f97316', label: 'High' },
-    { key: 'medium',   pct: mediumPct,   color: '#eab308', label: 'Medium' },
-    { key: 'low',      pct: lowPct,      color: '#22c55e', label: 'Low' },
+    { key: 'critical', pct: criticalPct, color: '#f87171', label: 'Critical' },
+    { key: 'high',     pct: highPct,     color: '#fb923c', label: 'High' },
+    { key: 'medium',   pct: mediumPct,   color: '#fbbf24', label: 'Medium' },
+    { key: 'low',      pct: lowPct,      color: '#4ade80', label: 'Low' },
   ]
   const title = segments
     .filter(s => s.pct > 0)
@@ -892,10 +892,10 @@ export function Sectors() {
                     lowPct={selectedSector.low_risk_count / Math.max(selectedSector.total_contracts, 1) * 100}
                   />
                   <div className="flex justify-between mt-1 text-[9px] font-mono text-text-muted">
-                    <span className="text-[#ef4444]">{(selectedSector.critical_risk_count / Math.max(selectedSector.total_contracts, 1) * 100).toFixed(1)}% crit</span>
-                    <span className="text-[#f97316]">{(selectedSector.high_risk_count / Math.max(selectedSector.total_contracts, 1) * 100).toFixed(1)}% high</span>
-                    <span className="text-[#eab308]">{(selectedSector.medium_risk_count / Math.max(selectedSector.total_contracts, 1) * 100).toFixed(1)}% med</span>
-                    <span className="text-[#22c55e]">{(selectedSector.low_risk_count / Math.max(selectedSector.total_contracts, 1) * 100).toFixed(1)}% low</span>
+                    <span className="text-[#f87171]">{(selectedSector.critical_risk_count / Math.max(selectedSector.total_contracts, 1) * 100).toFixed(1)}% crit</span>
+                    <span className="text-[#fb923c]">{(selectedSector.high_risk_count / Math.max(selectedSector.total_contracts, 1) * 100).toFixed(1)}% high</span>
+                    <span className="text-[#fbbf24]">{(selectedSector.medium_risk_count / Math.max(selectedSector.total_contracts, 1) * 100).toFixed(1)}% med</span>
+                    <span className="text-[#4ade80]">{(selectedSector.low_risk_count / Math.max(selectedSector.total_contracts, 1) * 100).toFixed(1)}% low</span>
                   </div>
                 </div>
                 {/* Quick CTAs */}
@@ -950,10 +950,10 @@ export function Sectors() {
                 <XAxis dataKey="year" tick={{ fontSize: 10 }} />
                 <YAxis tickFormatter={(v: number) => `${(v / 1e9).toFixed(0)}B`} tick={{ fontSize: 10 }} />
                 <RechartsTooltip formatter={(value: any) => [formatCompactMXN(value as number), 'Questioned']} />
-                <Bar dataKey="total_amount_mxn" fill="#ef4444" opacity={0.5} />
+                <Bar dataKey="total_amount_mxn" fill="#f87171" opacity={0.5} />
                 <Bar
                   dataKey="total_amount_mxn"
-                  fill="#22c55e"
+                  fill="#4ade80"
                   opacity={0.6}
                   {...{ data: sectorASF.findings.map(f => ({
                     ...f,
@@ -1151,8 +1151,8 @@ export function Sectors() {
                   />
                   <ZAxis type="number" dataKey="total_contracts" range={[20, 600]} name={t('scatter.contracts')} />
                   <ReferenceLine x={50} stroke="rgba(255,255,255,0.15)" strokeDasharray="4 2" label={{ value: '50% avg', fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} />
-                  <ReferenceLine x={70} stroke="#f59e0b" strokeDasharray="3 3" strokeOpacity={0.5} />
-                  <ReferenceLine y={0.30} stroke="#ef4444" strokeDasharray="3 3" strokeOpacity={0.5} />
+                  <ReferenceLine x={70} stroke="#fbbf24" strokeDasharray="3 3" strokeOpacity={0.5} />
+                  <ReferenceLine y={0.30} stroke="#f87171" strokeDasharray="3 3" strokeOpacity={0.5} />
                   <RechartsTooltip
                     cursor={{ strokeDasharray: '3 3' }}
                     contentStyle={{

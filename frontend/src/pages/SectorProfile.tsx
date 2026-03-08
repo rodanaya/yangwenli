@@ -437,7 +437,7 @@ export function SectorProfile() {
           <KPICard title="Vendors" value={stats?.total_vendors} icon={Users} color={sectorColor} />
         </motion.div>
         <motion.div variants={staggerItem}>
-          <KPICard title="High + Critical" value={(stats?.high_risk_count ?? 0) + (stats?.critical_risk_count ?? 0)} icon={AlertTriangle} color="#ef4444" />
+          <KPICard title="High + Critical" value={(stats?.high_risk_count ?? 0) + (stats?.critical_risk_count ?? 0)} icon={AlertTriangle} color="#f87171" />
         </motion.div>
       </motion.div>
 
@@ -459,7 +459,7 @@ export function SectorProfile() {
                 <div className="text-xs text-text-muted leading-relaxed">
                   <span className="font-bold text-text-primary">{topRiskSignal.label}</span> is the #1 red flag —
                   appears in {topRiskSignal.percentage.toFixed(1)}% of contracts with avg risk{' '}
-                  <span className="font-bold" style={{ color: topRiskSignal.avgRisk >= 0.5 ? '#ef4444' : topRiskSignal.avgRisk >= 0.3 ? '#f97316' : '#eab308' }}>
+                  <span className="font-bold" style={{ color: topRiskSignal.avgRisk >= 0.5 ? '#f87171' : topRiskSignal.avgRisk >= 0.3 ? '#fb923c' : '#fbbf24' }}>
                     {(topRiskSignal.avgRisk * 100).toFixed(0)}%
                   </span>.
                 </div>
@@ -1470,7 +1470,7 @@ function MonthlyDeviation({
                     y={y}
                     textAnchor="end"
                     dominantBaseline="middle"
-                    fill={isDecember ? '#ef4444' : 'var(--color-text-muted)'}
+                    fill={isDecember ? '#f87171' : 'var(--color-text-muted)'}
                     fontSize={isDecember ? 11 : 10}
                     fontWeight={isDecember ? 700 : 400}
                   >
@@ -1509,7 +1509,7 @@ function MonthlyDeviation({
               {chartData.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
-                  fill={entry.isDecember ? '#ef4444' : entry.above ? color : 'var(--color-text-muted)'}
+                  fill={entry.isDecember ? '#f87171' : entry.above ? color : 'var(--color-text-muted)'}
                   opacity={entry.isDecember ? 1 : entry.above ? 0.85 : 0.35}
                 />
               ))}

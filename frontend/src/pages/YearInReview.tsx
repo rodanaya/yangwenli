@@ -658,7 +658,7 @@ export default function YearInReview() {
       <Card className="bg-card border-border/40">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-mono text-text-primary flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-[#ef4444]" aria-hidden="true" />
+            <AlertTriangle className="h-4 w-4 text-[#f87171]" aria-hidden="true" />
             The December Effect
           </CardTitle>
           <p className="text-xs text-text-muted mt-0.5">
