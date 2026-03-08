@@ -1,0 +1,413 @@
+{
+  "generated": "2026-03-08",
+  "source": "SIGER 2.0 — Sistema Integral de Gestión Registral (rpc.economia.gob.mx/siger2)",
+  "scope": "ARIA-flagged Tier 1-2 vendors with RFC, looked up in Mexico commercial registry",
+  "note": "Free consultation returns FME + company name + registry office only. Full corporate documents (shareholders, partners) cost $736 MXN/company. FME format: N-YYYY###### = post-2016 electronic filing; integer = pre-2016 paper registry.",
+  "red_flags": {
+    "very_recent_incorporation": "Incorporated 2021-2024 but winning billions in government contracts",
+    "non_cdmx_registry": "Registered outside Mexico City but supplying federal agencies — may indicate regulatory arbitrage",
+    "old_registry_no_n_prefix": "Pre-2016 companies (no N- prefix) — longer operating history, less suspicious on incorporation date alone"
+  },
+  "findings": [
+    {
+      "vendor_name": "BAHUD PROCESSING MÉXICO",
+      "rfc": "BPM1809043P8",
+      "aria_pattern": "P2 (ghost company / intermediary)",
+      "total_value_mxn": 15790000000,
+      "siger": {
+        "fme": "N-2018076600",
+        "registered_name": "BAHUD PROCESSING MÉXICO, S.A. DE C.V.",
+        "registry_office": "Ciudad de México",
+        "incorporation_year": 2018
+      },
+      "rfc_date_decoded": "September 4, 2018",
+      "red_flags": ["Incorporated Sep 2018 (same month as RFC)", "15.79B MXN in contracts — largest single-company flag", "P2 ghost company pattern"]
+    },
+    {
+      "vendor_name": "ICA CONSTRUCTORA",
+      "rfc": "ICO170407UI6",
+      "aria_pattern": "P7 (bid rotation)",
+      "total_value_mxn": 44480000000,
+      "siger": {
+        "fme": "N-2017033512",
+        "registered_name": "ICA CONSTRUCTORA, S.A. DE C.V.",
+        "registry_office": "Ciudad de México",
+        "incorporation_year": 2017
+      },
+      "rfc_date_decoded": "April 7, 2017",
+      "red_flags": ["44.48B MXN — highest value in sample", "Incorporated 2017 (entity may be ICA group restructure post-bankruptcy)", "P7 bid rotation pattern"]
+    },
+    {
+      "vendor_name": "GAMS SOLUTIONS",
+      "rfc": "GSO151013EH6",
+      "aria_pattern": "P6 (institution capture)",
+      "total_value_mxn": 8210000000,
+      "siger": {
+        "fme": "545469",
+        "registered_name": "GAMS SOLUTIONS, S.A. DE C.V.",
+        "registry_office": "Ciudad de México",
+        "incorporation_year": "pre-2016 (old FME format)"
+      },
+      "rfc_date_decoded": "October 13, 2015",
+      "red_flags": ["8.21B MXN", "P6 institution capture", "FME 545469 (old format, likely 2015 registration matches RFC date)"]
+    },
+    {
+      "vendor_name": "SERVICIOS INTEGRALES RETIMAR",
+      "rfc": "SIR220609IA9",
+      "aria_pattern": "P6 (institution capture)",
+      "total_value_mxn": 2310000000,
+      "siger": {
+        "fme": "N-2022069919",
+        "registered_name": "SERVICIOS INTEGRALES RETIMAR, S.A. DE C.V.",
+        "registry_office": "Ciudad de México",
+        "incorporation_year": 2022,
+        "related_entity": {
+          "fme": "N-2024061085",
+          "name": "RETIMAR SERVICES (or similar)",
+          "registry_office": "Ciudad de México",
+          "incorporation_year": 2024,
+          "note": "Appeared in SIGER search alongside SIR220609 — possible successor/related entity"
+        }
+      },
+      "rfc_date_decoded": "June 9, 2022",
+      "red_flags": ["VERY RECENT: Incorporated June 2022", "2.31B MXN within ~2 years of incorporation", "Related entity N-2024061085 registered 2024 — possible shell succession pattern", "P6 institution capture"]
+    },
+    {
+      "vendor_name": "LAMAP",
+      "rfc": "LAM211108FQA",
+      "aria_pattern": "P3 (single-source monopoly)",
+      "total_value_mxn": 4730000000,
+      "siger": {
+        "fme": "N-2021092394",
+        "registered_name": "LAMAP (full name in registry)",
+        "registry_office": "Ciudad de México",
+        "incorporation_year": 2021
+      },
+      "rfc_date_decoded": "November 8, 2021",
+      "red_flags": ["VERY RECENT: Incorporated Nov 2021", "4.73B MXN within ~2-3 years of incorporation", "P3 monopoly pattern"]
+    },
+    {
+      "vendor_name": "INTEGMEV",
+      "rfc": "INT191209LR2",
+      "aria_pattern": "P2 (intermediary)",
+      "total_value_mxn": 3070000000,
+      "siger": {
+        "fme": "N-2020048714",
+        "registered_name": "INTEGMEV (full name in registry)",
+        "registry_office": "Naucalpan",
+        "incorporation_year": 2020
+      },
+      "rfc_date_decoded": "December 9, 2019",
+      "red_flags": ["Incorporated Dec 2019 / FME issued 2020", "3.07B MXN", "Registered in Naucalpan (Estado de México) not CDMX", "P2 intermediary pattern"]
+    },
+    {
+      "vendor_name": "ARMOT SEGURIDAD",
+      "rfc": "ASP220621KC5",
+      "aria_pattern": "P3 (single-source monopoly)",
+      "total_value_mxn": 3670000000,
+      "siger": {
+        "fme": "N-2022076046",
+        "registered_name": "ARMOT SEGURIDAD (full name in registry)",
+        "registry_office": "Pachuca",
+        "incorporation_year": 2022
+      },
+      "rfc_date_decoded": "June 21, 2022",
+      "red_flags": ["VERY RECENT: Incorporated June 2022", "3.67B MXN within ~2 years", "Registered in Pachuca (Hidalgo) — security company serving federal agencies from state capital", "P3 monopoly pattern"]
+    },
+    {
+      "vendor_name": "SERPROSEP",
+      "rfc": "SER1901309N3",
+      "aria_pattern": "P3 (single-source monopoly)",
+      "total_value_mxn": 3240000000,
+      "siger": {
+        "fme": "N-2019010920",
+        "registered_name": "SERPROSEP (full name in registry)",
+        "registry_office": "Ciudad de México",
+        "incorporation_year": 2019
+      },
+      "rfc_date_decoded": "January 30, 2019",
+      "red_flags": ["3.24B MXN", "Incorporated Jan 2019", "P3 monopoly pattern"]
+    },
+    {
+      "vendor_name": "ARMOUR KING",
+      "rfc": "AKI1905237F3",
+      "aria_pattern": "P3 (single-source monopoly)",
+      "total_value_mxn": 2130000000,
+      "siger": {
+        "fme": "N-2019078530",
+        "registered_name": "ARMOUR KING (full name in registry)",
+        "registry_office": "Ciudad de México",
+        "incorporation_year": 2019
+      },
+      "rfc_date_decoded": "May 23, 2019",
+      "red_flags": ["2.13B MXN", "Incorporated May 2019", "English name for Mexican government contractor — unusual", "P3 monopoly pattern"]
+    },
+    {
+      "vendor_name": "MULTICORPORACION BREXOT",
+      "rfc": "MBR1701305L9",
+      "aria_pattern": "P6 (institution capture)",
+      "total_value_mxn": 600000000,
+      "siger": {
+        "fme": "N-2017009072",
+        "registered_name": "MULTICORPORACION BREXOT (full name in registry)",
+        "registry_office": "Ciudad de México",
+        "incorporation_year": 2017
+      },
+      "rfc_date_decoded": "January 30, 2017",
+      "red_flags": ["Incorporated Jan 2017", "P6 institution capture"]
+    },
+    {
+      "vendor_name": "GRUPO LABORATORIOS IMPERIALES",
+      "rfc": "GLI1705153K1",
+      "aria_pattern": "P3 (single-source monopoly)",
+      "total_value_mxn": 1260000000,
+      "siger": {
+        "fme": "N-2017049682",
+        "registered_name": "GRUPO LABORATORIOS IMPERIALES (full name in registry)",
+        "registry_office": "Ciudad de México",
+        "incorporation_year": 2017
+      },
+      "rfc_date_decoded": "May 15, 2017",
+      "red_flags": ["1.26B MXN", "Incorporated May 2017", "P3 monopoly pattern — laboratory supplier"]
+    },
+    {
+      "vendor_name": "TRANS CE CARGO",
+      "rfc": "TCC160907TD5",
+      "aria_pattern": "P6 (institution capture)",
+      "total_value_mxn": 2570000000,
+      "siger": {
+        "fme": "563448",
+        "registered_name": "TRANS CE CARGO (full name in registry)",
+        "registry_office": "Ciudad de México",
+        "incorporation_year": "pre-2016 (old FME format)"
+      },
+      "rfc_date_decoded": "September 7, 2016",
+      "red_flags": ["2.57B MXN", "P6 institution capture"]
+    },
+    {
+      "vendor_name": "WHITEMED",
+      "rfc": "WHI231017IC4",
+      "aria_pattern": "P3 (single-source monopoly)",
+      "total_value_mxn": 1070000000,
+      "siger": {
+        "fme": "N-2023086882",
+        "registered_name": "WHITEMED (full name in registry)",
+        "registry_office": "Monterrey",
+        "incorporation_year": 2023
+      },
+      "rfc_date_decoded": "October 17, 2023",
+      "red_flags": ["EXTREMELY RECENT: Incorporated Oct 2023", "1.07B MXN within months of incorporation", "Registered in Monterrey — winning federal health contracts", "English name for Mexican health contractor", "P3 monopoly pattern"]
+    },
+    {
+      "vendor_name": "PHARMAJAL",
+      "rfc": "PSI141223JF2",
+      "aria_pattern": "P3 (single-source monopoly)",
+      "total_value_mxn": 1650000000,
+      "siger": {
+        "fme": "87114",
+        "registered_name": "PHARMAJAL (full name in registry)",
+        "registry_office": "Guadalajara",
+        "incorporation_year": "pre-2016 (old FME format)"
+      },
+      "rfc_date_decoded": "December 23, 2014",
+      "red_flags": ["1.65B MXN", "P3 monopoly pattern — pharma distributor Guadalajara"]
+    },
+    {
+      "vendor_name": "GX2 DESARROLLOS",
+      "rfc": "GDE200619SG7",
+      "aria_pattern": "P3 (single-source monopoly)",
+      "total_value_mxn": 5890000000,
+      "siger": {
+        "fme": "N-2020036751",
+        "registered_name": "GX2 DESARROLLOS, SOCIEDAD ANÓNIMA DE CAPITAL VARIABLE",
+        "registry_office": "Culiacán",
+        "incorporation_year": 2020
+      },
+      "rfc_date_decoded": "June 19, 2020",
+      "red_flags": ["5.89B MXN", "Incorporated Jun 2020 — COVID-era company", "Registered in Culiacán (Sinaloa) — significant red flag for federal contract winner", "P3 monopoly pattern", "S.A. de C.V. (not SAPI or SA — simplest corporate form)"]
+    },
+    {
+      "vendor_name": "CREATIVIDAD E INTEGRACION EN SERVICIOS MEDICOS",
+      "rfc": "MTE9909144K1",
+      "aria_pattern": "P6 (institution capture)",
+      "total_value_mxn": 6700000000,
+      "siger": {
+        "fme": "257244",
+        "registered_name": "CREATIVIDAD E INTEGRACIÓN EN SERVICIOS MÉDICOS, SOCIEDAD ANÓNIMA DE CAPITAL VARIABLE",
+        "registry_office": "Ciudad de México",
+        "incorporation_year": "pre-2016 (old FME format)"
+      },
+      "rfc_date_decoded": "September 14, 1999",
+      "red_flags": ["6.70B MXN", "Incorporated 1999 — long operating history (reduces suspicion on incorporation date)", "P6 institution capture — dominant position at specific institution(s)", "Medical services company with very high concentration"]
+    },
+    {
+      "vendor_name": "ALMACENAJE Y DISTRIBUCION AVIOR",
+      "rfc": "ADA000803GM5",
+      "aria_pattern": "P3 (single-source monopoly)",
+      "total_value_mxn": 3980000000,
+      "siger": {
+        "fme": "6689",
+        "registered_name": "ALMACENAJE Y DISTRIBUCION AVIOR, S.A. DE C.V.",
+        "registry_office": "Queretaro",
+        "incorporation_year": "pre-2016 (old FME format)"
+      },
+      "rfc_date_decoded": "August 3, 2000",
+      "red_flags": ["3.98B MXN", "Incorporated 2000 — established company", "Registered in Querétaro", "P3 monopoly — warehousing/distribution company"]
+    },
+    {
+      "vendor_name": "COMERCIALIZADORA REALZA",
+      "rfc": "CRE150423BF1",
+      "aria_pattern": "P3 (single-source monopoly)",
+      "total_value_mxn": 630000000,
+      "siger": {
+        "fme": "58779",
+        "registered_name": "COMERCIALIZADORA REALZA S.A. DE C.V.",
+        "registry_office": "Merida",
+        "incorporation_year": "pre-2016 (old FME format)"
+      },
+      "rfc_date_decoded": "April 23, 2015",
+      "red_flags": ["Registered in Mérida (Yucatán) — regional company winning federal contracts", "P3 monopoly pattern"]
+    },
+    {
+      "vendor_name": "ADACA MEDICAL",
+      "rfc": "AME1403041P9",
+      "aria_pattern": "P3 (single-source monopoly)",
+      "total_value_mxn": 650000000,
+      "siger": {
+        "fme": "510771",
+        "registered_name": "ADACA MEDICAL, SOCIEDAD ANÓNIMA DE CAPITAL VARIABLE",
+        "registry_office": "Ciudad de México",
+        "incorporation_year": "pre-2016 (old FME format)"
+      },
+      "rfc_date_decoded": "March 4, 2014",
+      "red_flags": ["Incorporated Mar 2014", "P3 monopoly — medical equipment/supplies"]
+    },
+    {
+      "vendor_name": "GRUPO FARMACEUTICO SIGMUN",
+      "rfc": "GFS120207M65",
+      "aria_pattern": "P2 (ghost company / intermediary)",
+      "total_value_mxn": 710000000,
+      "siger": {
+        "fme": "474827",
+        "registered_name": "GRUPO FARMACEUTICO SIGMUN, S.A. DE C.V.",
+        "registry_office": "Ciudad de México",
+        "incorporation_year": "pre-2016 (old FME format)"
+      },
+      "rfc_date_decoded": "February 7, 2012",
+      "red_flags": ["Incorporated 2012 — established pharma company", "P2 ghost/intermediary pattern despite age — may be using clean shell for recent fraud"]
+    },
+    {
+      "vendor_name": "HYOSUNG SOLUTIONS",
+      "rfc": "HSO200602PH2",
+      "aria_pattern": "P3 (single-source monopoly)",
+      "total_value_mxn": 1620000000,
+      "siger": {
+        "fme": "N-2020037572",
+        "registered_name": "HYOSUNG SOLUTIONS, SOCIEDAD DE RESPONSABILIDAD LIMITADA DE CAPITAL VARIABLE",
+        "registry_office": "Ciudad de México",
+        "incorporation_year": 2020
+      },
+      "rfc_date_decoded": "June 2, 2020",
+      "red_flags": ["COVID-era incorporation June 2020", "1.62B MXN", "Korean brand name (Hyosung is Korean conglomerate) — may be legitimate subsidiary or name piggybacking", "S. de R.L. de C.V. — limited partnership form, different from standard SA de CV", "P3 monopoly pattern"]
+    },
+    {
+      "vendor_name": "CORPORATIVO EJECUTIVO MZT",
+      "rfc": "CEM171107HV1",
+      "aria_pattern": "P3 (single-source monopoly)",
+      "total_value_mxn": 1090000000,
+      "siger": {
+        "fme": "N-2018024769",
+        "registered_name": "CORPORATIVO EJECUTIVO MZT, S.A. DE C.V.",
+        "registry_office": "Naucalpan",
+        "incorporation_year": 2018
+      },
+      "rfc_date_decoded": "November 7, 2017",
+      "red_flags": ["MZT = Mazatlán abbreviation — Sinaloa connection", "Registered in Naucalpan (Estado de México)", "1.09B MXN", "P3 monopoly pattern"]
+    },
+    {
+      "vendor_name": "CFE DISTRIBUCION",
+      "rfc": "CDI160330RC9",
+      "aria_pattern": "P3 (single-source monopoly)",
+      "total_value_mxn": 2600000000,
+      "siger": {
+        "fme": "557931",
+        "registered_name": "CFE DISTRIBUCION EMPRESA PRODUCTIVA SUBSIDIARIA DE LA COMISION FEDERAL DE ELECTRICIDAD",
+        "registry_office": "Ciudad de México",
+        "incorporation_year": "2016 (created by CFE restructuring law)"
+      },
+      "rfc_date_decoded": "March 30, 2016",
+      "red_flags": ["NOTE: This is a state-owned enterprise (SOE) — subsidiary of CFE created under 2013 energy reform", "P3 'monopoly' flag is expected for a state utility", "Likely a data/methodology false positive — CFE Distribución is legally a natural monopoly", "Recommend exclusion from investigation target list"]
+    }
+  ],
+  "priority_investigation_targets": {
+    "tier_1_critical": [
+      {
+        "vendor": "WHITEMED",
+        "fme": "N-2023086882",
+        "reason": "Incorporated Oct 2023, winning 1.07B MXN in health contracts within months. English name. Monterrey registry. Highest suspicion ratio (contract value / company age)."
+      },
+      {
+        "vendor": "SERVICIOS INTEGRALES RETIMAR + RETIMAR SERVICES",
+        "fme": "N-2022069919 + N-2024061085",
+        "reason": "Two related entities, incorporated 2022 and 2024. 2.31B MXN. Institution capture pattern. Possible shell succession."
+      },
+      {
+        "vendor": "GX2 DESARROLLOS",
+        "fme": "N-2020036751",
+        "reason": "5.89B MXN. COVID-era company (Jun 2020). Culiacán registry is a significant red flag for federal procurement. SA de CV."
+      },
+      {
+        "vendor": "LAMAP",
+        "fme": "N-2021092394",
+        "reason": "4.73B MXN. Incorporated Nov 2021. P3 monopoly. Short operating history."
+      },
+      {
+        "vendor": "ARMOT SEGURIDAD",
+        "fme": "N-2022076046",
+        "reason": "3.67B MXN. Incorporated Jun 2022. Pachuca registry. Security services — opaque sector."
+      }
+    ],
+    "tier_2_high": [
+      {
+        "vendor": "BAHUD PROCESSING MÉXICO",
+        "fme": "N-2018076600",
+        "reason": "15.79B MXN (highest absolute value). P2 ghost company. Sep 2018 incorporation. Already in RUBLI ground truth (Case 23)."
+      },
+      {
+        "vendor": "HYOSUNG SOLUTIONS",
+        "fme": "N-2020037572",
+        "reason": "1.62B MXN. COVID-era Jun 2020. Korean brand name — verify if genuine Hyosung Group subsidiary or name appropriation."
+      },
+      {
+        "vendor": "INTEGMEV",
+        "fme": "N-2020048714",
+        "reason": "3.07B MXN. Dec 2019 / 2020. Naucalpan. P2 intermediary."
+      },
+      {
+        "vendor": "CORPORATIVO EJECUTIVO MZT",
+        "fme": "N-2018024769",
+        "reason": "MZT = Mazatlán / Sinaloa connection. 1.09B MXN. Naucalpan registry."
+      }
+    ],
+    "tier_3_monitor": [
+      "CREATIVIDAD E INTEGRACION EN SERVICIOS MEDICOS (FME 257244) — old company 1999, but 6.70B and P6",
+      "ALMACENAJE Y DISTRIBUCION AVIOR (FME 6689) — old company 2000, Querétaro, 3.98B",
+      "ICA CONSTRUCTORA (FME N-2017033512) — likely ICA group restructure post-2016 bankruptcy, 44.48B"
+    ],
+    "false_positive": [
+      "CFE DISTRIBUCION (FME 557931) — state-owned enterprise, legal monopoly by design"
+    ]
+  },
+  "not_found_in_siger": [],
+  "summary_statistics": {
+    "total_vendors_searched": 24,
+    "found_in_siger": 23,
+    "not_found": 0,
+    "incorporated_post_2020": 6,
+    "incorporated_2017_2019": 8,
+    "established_pre_2016": 9,
+    "culiacan_registered": 1,
+    "non_cdmx_registry": 6,
+    "total_contract_value_mxn": "~107 billion MXN across all flagged vendors"
+  }
+}
