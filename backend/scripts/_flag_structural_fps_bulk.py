@@ -58,6 +58,9 @@ STRUCTURAL_FPS = {
     148090: 'ETN TURISTAR LUJO - migrant transport, LP-dominant',
     200238: 'SILODISA - LP-dominant ISSSTE logistics',
     128027: 'CONSORCIO EMPRESARIAL ADPER - low contract count, ambiguous',
+    # === ADDITIONAL PHARMA/DEVICE OEMs ===
+    238348: 'BIOGEN MEXICO - patented MS drugs OEM (Tecfidera, Avonex, Vumerity)',
+    1381:   'CARL ZEISS DE MEXICO - surgical optics/microscopes OEM',
     # === BIOTECH/BLOOD PRODUCTS ===
     4389:   'FRESENIUS KABI - IV solutions/clinical nutrition OEM',
     246753: 'KEDRION MEXICANA - blood plasma products OEM',
