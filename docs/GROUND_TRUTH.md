@@ -1,6 +1,6 @@
 # Ground Truth: Documented Corruption Cases
 
-**Last Updated:** March 8, 2026 | **Cases:** 27 | **Matched Vendors:** 100 | **Active training cases:** 22 (Cases 1–22, excl. 16–19) | **Cases 26–27 added by ARIA pipeline**
+**Last Updated:** March 8, 2026 | **Cases:** 33 | **Matched Vendors:** 115 | **Active training cases:** 22 (Cases 1–22, excl. 16–19) | **Cases 26–33 added by ARIA pipeline + web research**
 
 ---
 
@@ -402,4 +402,167 @@ Company incorporated May 2017, received 24 contracts in 2018 for **national vacc
 
 ---
 
-*Ground truth is sourced from ASF audits, DOJ filings, investigative journalism (Animal Politico, Aristegui Noticias), FGR investigations, and SFP sanction registry. All cases are publicly documented. Inclusion does not imply that every associated contract was corrupt — it indicates the vendor was involved in a documented corruption case.*
+---
+
+### Case 28: Confecciones Isaac — IMSS/Penal Uniform Overpricing (2010–2025)
+| Property | Value |
+|----------|-------|
+| **Case ID** | CONFECCIONES_ISAAC_UNIFORM_OVERPRICING |
+| **Type** | Overpricing |
+| **Amount** | 1,112M MXN (137 contracts) |
+| **RFC** | None registered |
+| **Confidence** | Medium |
+| **Sector** | Salud (IMSS) + Gobernacion (OADPRS) |
+
+Confecciones Isaac SA de CV inflated uniform and clothing prices 10–429% above market rates across 137 contracts with IMSS and the federal prison system (OADPRS/Prevención y Readaptación Social). FGR opened criminal investigation after ASF confirmed price overruns in Cuenta Pública audits. No RFC on record — characteristic of opaque supplier. Pattern spans 11 sectors 2010–2025.
+
+**Matched Vendors (1):**
+
+| Vendor | Vendor ID | Contracts | Avg Risk Score |
+|--------|-----------|-----------|----------------|
+| CONFECCIONES ISAAC,S.A. DE C.V. | 58023 | 137 | 0.359 |
+
+---
+
+### Case 29: Zapata Internacional SA CV — PEMEX Ghost Company (SAT EFOS Definitivo)
+| Property | Value |
+|----------|-------|
+| **Case ID** | ZAPATA_INTERNACIONAL_PEMEX_GHOST_EFOS |
+| **Type** | Ghost company (EFOS) |
+| **Amount** | 1,711M MXN (3 contracts) |
+| **RFC** | None registered |
+| **Confidence** | High |
+| **Sector** | Energía (PEMEX-EP) |
+
+SAT confirmed EFOS Definitivo (Art. 69-B). Received 3 PEMEX Exploración y Producción contracts in 2006–2007 for oil well drilling. Wells were non-performing. **Critical model blind spot:** v5.1 scores 0.005 (near-zero) because single-use vendor with only 3 contracts produces zero concentration signal — same failure pattern as BIRMEX intermediaries (Case 25).
+
+**Matched Vendors (1):**
+
+| Vendor | Vendor ID | Contracts | Risk Score |
+|--------|-----------|-----------|------------|
+| ZAPATA INTERNACIONAL SA CV | 27506 | 3 | 0.005 |
+
+---
+
+### Case 30: BIRMEX Medicine Overpricing Ring (2020–2025)
+| Property | Value |
+|----------|-------|
+| **Case ID** | BIRMEX_MEDICINE_OVERPRICING_2025 |
+| **Type** | Overpricing + document falsification |
+| **Amount** | 7B+ MXN overpricing (26B MXN total purchase annulled) |
+| **Confidence** | High |
+| **Sector** | Salud |
+
+BIRMEX annulled a 26B MXN consolidated medicine purchase after discovering 13B MXN overpricing across 175 medication codes. Biomics Lab México inhabilitada definitivamente by SFP (April 2025) after falsifying COFEPRIS registration documents. 59+ companies submitted false documentation. Four BIRMEX officials removed. Farmacéuticos Maypo under active SFP investigation (6.24B MXN AMLO-era contracts).
+
+**Matched Vendors (2):**
+
+| Vendor | Vendor ID | Contracts | Risk Score | Status |
+|--------|-----------|-----------|------------|--------|
+| BIOMICS LAB MEXICO SA DE CV | 258535 | 182 | 0.689 | SFP inhabilitada definitiva |
+| FARMACEUTICOS MAYPO S.A DE C.V | 2873 | 18,772 | 0.664 | Under SFP investigation |
+
+---
+
+### Case 31: IMSS Diabetes/Insulin Ring — 19 Shell Companies (2022–2024)
+| Property | Value |
+|----------|-------|
+| **Case ID** | IMSS_DIABETES_OVERPRICING_RING_2022_2024 |
+| **Type** | Overpricing via newly created shell companies |
+| **Amount** | 1,666M MXN across 1,382 contracts |
+| **Confidence** | High |
+| **Sector** | Salud (IMSS delegaciones estatales) |
+
+IMSS awarded 1,666M MXN to 19 newly-created companies for diabetes/insulin medications at 678–1,022% above consolidated prices. Poyago charged 2,300 MXN for sitagliptina/metformina vs. 225 MXN consolidated price (1,022% markup). Ring linked to Amílcar Olán (former IMSS Tabasco official). Direct award rate rose from 80% (2018) to 95% (2023). Congressional complaint filed, MCCI investigation published May 2025.
+
+**Matched Vendors (3):**
+
+| Vendor | Vendor ID | Amount | RFC | Markup |
+|--------|-----------|--------|-----|--------|
+| POYAGO SA DE CV | 300207 | 373M | POY121128FY4 | 1,022% |
+| GRUPO OSHERX SA DE CV | 281352 | 242M | GOS2202175F2 | 827% |
+| PHARMA TRIMED SA DE CV | 286381 | 7M | PTR210715AA5 | 678% |
+
+---
+
+### Case 32: Konkistolo / FamilyDuck Simulated Competition Ring (2022–2025)
+| Property | Value |
+|----------|-------|
+| **Case ID** | KONKISTOLO_SIMULATED_COMPETITION_RING_2022_2025 |
+| **Type** | Bid rigging / simulated competition |
+| **Amount** | 1,925M MXN across 5 companies |
+| **Confidence** | High |
+| **Sector** | Multiple |
+
+Network of 5 recently-created companies simulating competition in federal tenders. Konkistolo: alleged majority owner reported identity theft; non-existent address. FamilyDuck (885M MXN) and Grupo Pelmu (515M MXN) appear as competitors in same procedures. **All score 0.000 in v5.1 — critical model blind spot** (new companies, no historical concentration). Adiam Abastecedora separately inhabilitada 15 months (SFP, Aug 2025) for mattress contract fraud (37.6M MXN). MCCI Anuario de la Corrupción 2025.
+
+**Matched Vendors (5):**
+
+| Vendor | Vendor ID | Amount | RFC | Risk Score |
+|--------|-----------|--------|-----|------------|
+| KONKISTOLO SA DE CV | 297273 | 243M | KON230118UV6 | **0.000** |
+| COMERCIALIZADORA FAMILYDUCK SA DE CV | 293066 | 885M | CFA230107UC6 | **0.000** |
+| GRUPO PELMU SA DE CV | 279096 | 515M | GPE050222296 | **0.000** |
+| TODOLOGOS.COM SA DE CV | 288385 | 163M | TOD220214AR9 | **0.000** |
+| ADIAM ABASTECEDORA DE INSUMOS Y ALIMENTOS MEXICO SA DE CV | 291049 | 119M | AAI211104U57 | 0.018 |
+
+---
+
+### Case 33: Cloud Enterprise Services — Guardia Nacional Drone Overpricing (2023)
+| Property | Value |
+|----------|-------|
+| **Case ID** | CLOUD_ENTERPRISE_GN_DRONE_OVERPRICING_2023 |
+| **Type** | Overpricing / false documentation |
+| **Amount** | 125M MXN (25 contracts) |
+| **Confidence** | Medium |
+| **Sector** | Gobernacion (Guardia Nacional) |
+
+Cloud Enterprise Services awarded GN drone contract (119.2M MXN, Oct 2023) despite not scoring highest in tender. Drone "airworthiness certificate" was an Israeli amateur registration stating the Colugo ARC53 Hybrid VTOL was "built by an amateur." Congressional complaint filed to SFP, FGR, SAT, SHCP, UIF (November 2023). Also held SEDENA and SHCP contracts. Owner: Enrique Ruiz Hernández.
+
+**Matched Vendors (1):**
+
+| Vendor | Vendor ID | Contracts | Risk Score |
+|--------|-----------|-----------|------------|
+| CLOUD ENTERPRISE SERVICES S DE RL DE CV | 142577 | 25 | 0.063 |
+
+---
+
+### Case 34: La Barredora Guinda — Tabasco EFOS Ghost Network (2020–2024)
+| Property | Value |
+|----------|-------|
+| **Case ID** | BARREDORA_GUINDA_TABASCO_NETWORK_2024 |
+| **Type** | Ghost company (EFOS) + bid rigging |
+| **Amount** | 2,360M MXN (network of ~20 companies) |
+| **Confidence** | High |
+| **Sector** | Ambiente (Conagua) + state agencies |
+
+Network of ~20 companies linked to Alejandro Márquez "El Ganso" (friend of ex-secretary Adán Augusto López) received 2.36B MXN from Conagua and state agencies in 6 states (Tabasco, Campeche, Chiapas, Hidalgo, Puebla, Quintana Roo). Lead company on SAT EFOS Definitivo list. Three linked companies bid together in Conagua river-cleaning procedure May 2024. MCCI investigation published February 2026.
+
+**Matched Vendors (1, remainder not in DB):**
+
+| Vendor | Vendor ID | Contracts | RFC | Risk Score |
+|--------|-----------|-----------|-----|------------|
+| COMERCIO Y CONSTRUCCION DE TABASCO SA DE CV | 248612 | 17 | CCT1808139U3 | 0.006 |
+
+---
+
+### Case 35: Clan Biomédica — Interacción Biomédica + 83 Shells (IPN/ISSSTE 2012–2023)
+| Property | Value |
+|----------|-------|
+| **Case ID** | INTERACCION_BIOMEDICA_IPN_ISSSTE_GHOST_NETWORK |
+| **Type** | Ghost company network + conflict of interest |
+| **Amount** | 1,613M MXN (1.613B MXN from ISSSTE 2012–2019) |
+| **Confidence** | High |
+| **Sector** | Salud (ISSSTE) + Educacion (IPN) |
+
+Javier Tapia Santoyo (ex-secretary of administration IPN, ex-treasurer ISSSTE) ran 84 shell companies headed by Interacción Biomédica SA de CV. Received 1.613B MXN from ISSSTE while serving as public official — direct conflict of interest. FGR indictment 2019 (FED/FECC/UNAI-CDMX/0000530/2019). **Tapia Santoyo formally vinculado a proceso March 6, 2026** (2 days before this entry). Company on SAT EFOS Definitivo. Case identified by TOJIL December 2023.
+
+**Matched Vendors (1, underrepresented in DB due to Structure B coverage):**
+
+| Vendor | Vendor ID | DB Contracts | Risk Score | Note |
+|--------|-----------|-------------|------------|------|
+| INTERACCION BIOMEDICA SA DE CV | 148296 | 41 | 0.180 | 1.613B MXN total; DB shows only 41M MXN |
+
+---
+
+*Ground truth is sourced from ASF audits, DOJ filings, investigative journalism (Animal Político, Aristegui Noticias, Proceso, MCCI), FGR investigations, SFP sanction registry, and SAT EFOS lists. All cases are publicly documented. Inclusion does not imply that every associated contract was corrupt — it indicates the vendor was involved in a documented corruption case.*
