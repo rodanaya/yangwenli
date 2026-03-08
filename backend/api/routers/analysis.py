@@ -4381,12 +4381,22 @@ def get_industry_risk_clusters(
             #  2. vendor_primary: keep the top sector_id per vendor.
             #  3. Join to vendor_stats for aggregate stats; filter by min_contracts.
 
+            # Build optional sector filter for the sector_agg CTE only.
+            # vendor_sector_counts is computed once across all vendors; the
+            # WHERE clause in sector_agg restricts which sectors are returned.
             sector_filter = ""
             params: list = [min_contracts]
             if sector_id is not None:
-                sector_filter = "AND vp.primary_sector = ?"
+                sector_filter = "WHERE q.primary_sector = ?"
                 params.append(sector_id)
 
+            # Single-pass consolidated query:
+            #  1. vendor_sector_counts  – GROUP BY (vendor_id, sector_id) once.
+            #  2. vendor_primary        – each vendor's dominant sector (ties → lowest id).
+            #  3. qualified             – inner join to vendor_stats + min_contracts filter.
+            #  4. sector_agg            – aggregate stats per sector.
+            #  5. top_vendor            – ROW_NUMBER() picks #1 by value per sector.
+            # Final SELECT joins sector_agg with top_vendor — no Python loop needed.
             cursor.execute(f"""
                 WITH vendor_sector_counts AS (
                     SELECT
@@ -4407,71 +4417,78 @@ def get_industry_risk_clusters(
                         SELECT MAX(n) FROM vendor_sector_counts vsc2
                         WHERE vsc2.vendor_id = vsc1.vendor_id
                     )
-                    GROUP BY vendor_id   -- break ties: pick lowest sector_id
-                )
-                SELECT
-                    vp.primary_sector                               AS sector_id,
-                    s.name_es                                       AS sector_name,
-                    COUNT(*)                                        AS vendor_count,
-                    COALESCE(SUM(vs.total_value_mxn), 0)           AS total_value,
-                    COALESCE(AVG(vs.avg_risk_score), 0)            AS avg_risk_score,
-                    SUM(CASE WHEN vs.avg_risk_score >= 0.30 THEN 1 ELSE 0 END)
-                                                                    AS high_risk_vendor_count
-                FROM vendor_primary vp
-                JOIN vendor_stats vs ON vp.vendor_id = vs.vendor_id
-                JOIN sectors s ON vp.primary_sector = s.id
-                WHERE vs.total_contracts >= ?
-                  {sector_filter}
-                GROUP BY vp.primary_sector, s.name_es
-                ORDER BY avg_risk_score DESC
-            """, params)
-
-            sector_rows = cursor.fetchall()
-
-            # For each sector, find the top vendor by total_value
-            items: List[IndustryRiskClusterItem] = []
-            for row in sector_rows:
-                sid = row["sector_id"]
-
-                cursor.execute("""
-                    WITH vendor_sector_counts AS (
-                        SELECT vendor_id, sector_id, COUNT(*) AS n
-                        FROM contracts
-                        WHERE vendor_id IS NOT NULL AND sector_id IS NOT NULL
-                        GROUP BY vendor_id, sector_id
-                    ),
-                    vendor_primary AS (
-                        SELECT vendor_id, sector_id AS primary_sector
-                        FROM vendor_sector_counts vsc1
-                        WHERE n = (
-                            SELECT MAX(n) FROM vendor_sector_counts vsc2
-                            WHERE vsc2.vendor_id = vsc1.vendor_id
-                        )
-                        GROUP BY vendor_id
-                    )
-                    SELECT vnd.name, vs.total_value_mxn, vs.avg_risk_score
+                    GROUP BY vendor_id   -- break ties: keep lowest sector_id
+                ),
+                qualified AS (
+                    SELECT
+                        vp.vendor_id,
+                        vp.primary_sector,
+                        vs.total_value_mxn,
+                        vs.avg_risk_score,
+                        vs.total_contracts
                     FROM vendor_primary vp
                     JOIN vendor_stats vs ON vp.vendor_id = vs.vendor_id
-                    JOIN vendors vnd ON vp.vendor_id = vnd.id
-                    WHERE vp.primary_sector = ?
-                      AND vs.total_contracts >= ?
-                    ORDER BY vs.total_value_mxn DESC
-                    LIMIT 1
-                """, [sid, min_contracts])
+                    WHERE vs.total_contracts >= ?
+                ),
+                sector_agg AS (
+                    SELECT
+                        q.primary_sector                                        AS sector_id,
+                        s.name_es                                               AS sector_name,
+                        COUNT(*)                                                AS vendor_count,
+                        COALESCE(SUM(q.total_value_mxn), 0)                    AS total_value,
+                        COALESCE(AVG(q.avg_risk_score), 0)                     AS avg_risk_score,
+                        SUM(CASE WHEN q.avg_risk_score >= 0.30 THEN 1 ELSE 0 END)
+                                                                                AS high_risk_vendor_count
+                    FROM qualified q
+                    JOIN sectors s ON q.primary_sector = s.id
+                    {sector_filter}
+                    GROUP BY q.primary_sector, s.name_es
+                ),
+                top_vendor AS (
+                    SELECT
+                        q.primary_sector,
+                        vnd.name                    AS top_vendor_name,
+                        q.total_value_mxn           AS top_vendor_value,
+                        q.avg_risk_score            AS top_vendor_risk,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY q.primary_sector
+                            ORDER BY q.total_value_mxn DESC
+                        )                           AS rn
+                    FROM qualified q
+                    JOIN vendors vnd ON q.vendor_id = vnd.id
+                )
+                SELECT
+                    sa.sector_id,
+                    sa.sector_name,
+                    sa.vendor_count,
+                    sa.total_value,
+                    sa.avg_risk_score,
+                    sa.high_risk_vendor_count,
+                    tv.top_vendor_name,
+                    tv.top_vendor_value,
+                    tv.top_vendor_risk
+                FROM sector_agg sa
+                LEFT JOIN top_vendor tv
+                       ON sa.sector_id = tv.primary_sector AND tv.rn = 1
+                ORDER BY sa.avg_risk_score DESC
+            """, params)
 
-                top = cursor.fetchone()
+            rows = cursor.fetchall()
 
-                items.append(IndustryRiskClusterItem(
-                    sector_id=sid,
+            items: List[IndustryRiskClusterItem] = [
+                IndustryRiskClusterItem(
+                    sector_id=row["sector_id"],
                     sector_name=row["sector_name"],
                     vendor_count=row["vendor_count"],
                     total_value=round(row["total_value"], 2),
                     avg_risk_score=round(row["avg_risk_score"], 4),
                     high_risk_vendor_count=row["high_risk_vendor_count"],
-                    top_vendor_name=top["name"] if top else None,
-                    top_vendor_value=round(top["total_value_mxn"], 2) if top else None,
-                    top_vendor_risk=round(top["avg_risk_score"], 4) if top else None,
-                ))
+                    top_vendor_name=row["top_vendor_name"],
+                    top_vendor_value=round(row["top_vendor_value"], 2) if row["top_vendor_value"] is not None else None,
+                    top_vendor_risk=round(row["top_vendor_risk"], 4) if row["top_vendor_risk"] is not None else None,
+                )
+                for row in rows
+            ]
 
             result = IndustryRiskClustersResponse(
                 data=items,

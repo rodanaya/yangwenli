@@ -1623,7 +1623,7 @@ export function Sectors() {
               <span className="text-risk-high font-semibold">high</span> ≥30% ·{' '}
               <span className="text-risk-medium font-semibold">medium</span> ≥10% ·{' '}
               <span className="text-risk-low font-semibold">low</span> &lt;10%
-              ) · Min 100 vendors per sector
+              ) · Min 100 contracts/vendor
             </CardDescription>
           </CardHeader>
           <CardContent>
