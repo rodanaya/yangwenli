@@ -17,7 +17,7 @@ from typing import Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from ..dependencies import get_db
+from ..dependencies import get_db_dep
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ def get_aria_queue(
     status: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=100),
-    conn: sqlite3.Connection = Depends(get_db),
+    conn: sqlite3.Connection = Depends(get_db_dep),
 ):
     """List the ARIA investigation queue with filters and pagination."""
     empty_pagination = {
@@ -184,7 +184,7 @@ def get_aria_queue(
 @router.get("/queue/{vendor_id}")
 def get_aria_queue_vendor(
     vendor_id: int,
-    conn: sqlite3.Connection = Depends(get_db),
+    conn: sqlite3.Connection = Depends(get_db_dep),
 ):
     """Full ARIA detail for a single vendor."""
     if not _table_exists(conn, "aria_queue"):
@@ -227,7 +227,7 @@ class ReviewUpdate(BaseModel):
 def patch_aria_review(
     vendor_id: int,
     body: ReviewUpdate,
-    conn: sqlite3.Connection = Depends(get_db),
+    conn: sqlite3.Connection = Depends(get_db_dep),
 ):
     """Update the review status for a vendor in the ARIA queue."""
     if body.status not in _VALID_REVIEW_STATUSES:
@@ -279,7 +279,7 @@ def patch_aria_review(
 # ---------------------------------------------------------------------------
 
 @router.get("/stats")
-def get_aria_stats(conn: sqlite3.Connection = Depends(get_db)):
+def get_aria_stats(conn: sqlite3.Connection = Depends(get_db_dep)):
     """Latest ARIA run summary and queue review statistics."""
     latest_run = None
     if _table_exists(conn, "aria_runs"):
@@ -332,7 +332,7 @@ def get_gt_updates(
     source: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=100),
-    conn: sqlite3.Connection = Depends(get_db),
+    conn: sqlite3.Connection = Depends(get_db_dep),
 ):
     """Paginated list of ARIA ground truth update proposals."""
     empty_pagination = {
@@ -411,7 +411,7 @@ class GTUpdateReview(BaseModel):
 def patch_gt_update_review(
     update_id: int,
     body: GTUpdateReview,
-    conn: sqlite3.Connection = Depends(get_db),
+    conn: sqlite3.Connection = Depends(get_db_dep),
 ):
     """Approve or reject an ARIA ground truth update proposal."""
     if body.status not in _VALID_GT_REVIEW_STATUSES:
@@ -469,7 +469,7 @@ def _launch_pipeline(cmd: list, cwd: str) -> None:
 def trigger_aria_run(
     request: RunRequest,
     background_tasks: BackgroundTasks,
-    conn: sqlite3.Connection = Depends(get_db),
+    conn: sqlite3.Connection = Depends(get_db_dep),
 ):
     """Launch the ARIA pipeline as a background subprocess. Returns immediately."""
     if _table_exists(conn, "aria_runs"):

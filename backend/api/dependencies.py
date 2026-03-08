@@ -37,7 +37,24 @@ def get_db_connection() -> sqlite3.Connection:
 
 @contextmanager
 def get_db() -> Generator[sqlite3.Connection, None, None]:
-    """Context manager for database connections."""
+    """Context manager for database connections.
+
+    Use for ``with get_db() as conn:`` in endpoint bodies and scripts.
+    For FastAPI ``Depends()``, use :func:`get_db_dep` instead.
+    """
+    conn = get_db_connection()
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+
+def get_db_dep() -> Generator[sqlite3.Connection, None, None]:
+    """Bare generator for ``Depends(get_db_dep)`` in FastAPI routes.
+
+    FastAPI >=0.130 rejects ``@contextmanager``-wrapped generators in
+    ``Depends()``. This unwrapped version works with all FastAPI versions.
+    """
     conn = get_db_connection()
     try:
         yield conn
