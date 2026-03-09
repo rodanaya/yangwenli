@@ -1,7 +1,7 @@
 # ARIA: Automated Risk Investigation Algorithm
 
-**Version:** 1.0 Draft | **Author:** Risk Model Engineer | **Date:** 2026-03-07
-**Status:** Design Specification -- Not Yet Implemented
+**Version:** 1.1 | **Author:** Risk Model Engineer | **Date:** 2026-03-09
+**Status:** Fully Implemented (All 3 Phases Live)
 
 ---
 
@@ -194,8 +194,8 @@ Combine heterogeneous risk signals into a single 0-1 score. The IPS must handle 
 
 | ID | Name | Archetypes | Key Features |
 |----|------|-----------|-------------|
-| P1 | Concentrated Monopoly | IMSS Ghost, Segalmex, Edenred | vendor_concentration > 0.30, institution_count <= 3 |
-| P2 | Ghost Company | EFOS, Estafa Maestra, Decoaro | total_contracts <= 20, direct_award > 0.80, (is_efos OR years_active <= 3) |
+| P1 | Concentrated Monopoly | IMSS Ghost, Segalmex, Edenred | vendor sector share > 0.03 (3%), institution_count <= 3 |
+| P2 | Ghost Company | EFOS, Estafa Maestra, Decoaro | is_efos OR (no RFC + years<=2 + tc<=10 + DA>80% + value>=1M) |
 | P3 | Single-Use Intermediary | UAB JORINIS | burst_score > 0.7, high_value, disappeared |
 | P4 | Bid Rigging | IPN Cartel | co_bid_rate > 0.50, win_rate > 0.70, low price_variance |
 | P5 | Overpricing | Cyber Robotic | z_price_ratio > 2.0, industry_mismatch |
@@ -206,9 +206,9 @@ Combine heterogeneous risk signals into a single 0-1 score. The IPS must handle 
 
 Each rule produces confidence in [0, 1]. A vendor can match multiple patterns. Minimum confidence threshold: 0.30.
 
-**P1 (Concentrated Monopoly)**: vendor_concentration > 0.50 -> 0.8; > 0.30 -> 0.5; > 0.15 -> 0.2. Boost +0.15 if institution_count <= 3. Boost +0.10 if win_rate > 0.80.
+**P1 (Concentrated Monopoly)**: Vendor sector share (all-time value within primary sector) > 0.03 -> 0.8; > 0.01 -> 0.5; > 0.005 -> 0.2. Boost +0.15 if top_institution_ratio > 0.70. Boost +0.10 if single_bid_rate > 0.80. Thresholds calibrated for Mexican procurement where top vendor holds ~6% sector share.
 
-**P2 (Ghost Company)**: is_efos_definitivo -> 0.90. Else: total_contracts <= 20 AND direct_award > 0.80 -> 0.4; years_active <= 3 -> +0.2; no RFC -> +0.15.
+**P2 (Ghost Company)**: is_efos_definitivo -> 0.90. Else requires ALL of: no RFC + years_active<=2 + total_contracts<=10 + direct_award>0.80 + total_value>=1M -> 0.50. Alt: no RFC + years<=3 + tc<=5 + DA>90% + value>=5M -> 0.40. Burst bonus +0.15 if burst_score > 0.5. Previous rule (tc<=20 AND DA>80%) matched 242K vendors; new rule matches ~3.3K.
 
 **P3 (Single-Use Intermediary)**: burst_score > 0.5 -> confidence = burst_score. (Detail in Module 4.)
 
@@ -1019,42 +1019,30 @@ ground_truth_vendors by RFC. Non-RFC: Jaccard >= 0.80 auto, >= 0.60 review.
 
 ## 15. Implementation Roadmap
 
-### Phase 1: Foundation (Week 1-2) -- 3 dev-days
+> **All 3 phases completed.** 3,178 lines, 18 files, 66 tests passing (as of commit 4ee0583).
 
-| Task | File | Hours |
-|------|------|-------|
-| ARIA DB schema | scripts/aria_create_schema.py | 2 |
-| Vendor aggregation | scripts/aria_aggregate_vendors.py | 4 |
-| IPS computation | scripts/aria_compute_ips.py | 4 |
-| External cross-ref | scripts/aria_external_xref.py | 3 |
-| Basic queue API | api/routers/aria.py | 4 |
-| DQ checks | scripts/aria_dq_checks.py | 3 |
-| Unit tests | tests/test_aria.py | 4 |
+### Phase 1: Foundation -- COMPLETE
 
-**Exit:** aria_queue populated, UAB JORINIS Tier 1, >= 80% GT Tier 1-2.
+Unified pipeline in `scripts/aria_pipeline.py` (M1-M6 + M8). Schema in `scripts/aria_init_schema.py`. API in `api/routers/aria.py` (7 endpoints). 66 tests in `tests/test_aria*.py`.
 
-### Phase 2: Pattern Detection (Week 3-4) -- 5 dev-days
+### Phase 2: Pattern Detection + Intermediary -- COMPLETE
 
-| Task | File | Hours |
-|------|------|-------|
-| Pattern classifier | scripts/aria_pattern_classifier.py | 6 |
-| Intermediary detection | scripts/aria_intermediary_detection.py | 6 |
-| Temporal anomaly | scripts/aria_temporal_anomaly.py | 4 |
-| FP screening | scripts/aria_fp_screening.py | 4 |
-| GT auto-update | scripts/aria_gt_update.py | 4 |
-| Pipeline + API + tests | scripts/aria_pipeline.py + api/ + tests/ | 14 |
+Goh-Barabasi burstiness (M3), institution capture ratio (M4), z-score enrichment, M8 GT auto-update (6 rules). All integrated into `aria_pipeline.py`.
 
-**Exit:** >= 80% GT classified, P3 catches intermediaries, FP -20%.
+### Phase 3: LLM + Frontend -- COMPLETE
 
-### Phase 3: LLM + Frontend (Week 5-6) -- 6 dev-days
+`scripts/aria_generate_memos.py` — web search + Claude memo generation with template fallback. Frontend: `AriaQueue.tsx` at `/aria` with tier cards, pattern filter, expandable rows, review status, memo display.
 
-| Task | File | Hours |
-|------|------|-------|
-| LLM + template memos | scripts/aria_generate_memos.py | 9 |
-| APIs + frontend | api/ + pages/aria/ | 24 |
-| E2E tests + docs | tests/ + docs/ | 7 |
+### v1.1 Calibration Update (March 9, 2026)
 
-**Total: ~14 dev-days across 6 weeks**
+| Change | Before | After | Impact |
+|--------|--------|-------|--------|
+| P1 thresholds | 0.50/0.30/0.15 (vendor_concentration hardcoded to 0.0) | 0.03/0.01/0.005 (computed inline from sector totals) | P1: 0 -> 113 detections |
+| P2 classifier | tc<=20 AND DA>80% | EFOS OR (no RFC + yrs<=2 + tc<=10 + DA>80% + val>=1M) | P2: 242K -> 3.3K |
+| Queue pruning | All 320K vendors | tc>=2 OR risk>=0.10 OR EFOS/SFP/GT | 320K -> 198K |
+| Shell score boost | >=4 (+0.20) | >=7 (+0.25) | Stopped boosting 85% of vendors |
+
+**Current queue:** T1=285, T2=894, T3=5,151, T4=191,708 (198K total)
 
 ---
 
@@ -1109,26 +1097,27 @@ Tier 1: 500-2000 vendors. Tier 4: >= 70%. r(IPS, risk_score) = 0.5-0.7.
 
 ---
 
-## Appendix A: Configuration Constants
+## Appendix A: Configuration Constants (as implemented in aria_pipeline.py)
 
-    IPS_PRIMARY_WEIGHT = 0.60
-    IPS_SECONDARY_WEIGHT = 0.40
-    IPS_TIER1_THRESHOLD = 0.70
-    IPS_TIER2_THRESHOLD = 0.40
-    IPS_TIER3_THRESHOLD = 0.20
-    MAHA_SIGMOID_MIDPOINT = 80
-    MAHA_SIGMOID_STEEPNESS = 1.5
-    EXTERNAL_FLAG_BOOST = 0.08
-    EFOS_BOOST = 0.15
-    FP_PENALTY_CAP = -0.40
+    W_RISK = 0.40               # IPS weight: risk score component
+    W_ENSEMBLE = 0.20           # IPS weight: ensemble anomaly
+    W_FINANCIAL = 0.20          # IPS weight: financial scale
+    W_EXTERNAL = 0.20           # IPS weight: external flags
+    TIER1_THRESHOLD = 0.80      # IPS >= 0.80
+    TIER2_THRESHOLD = 0.60      # IPS >= 0.60
+    TIER3_THRESHOLD = 0.40      # IPS >= 0.40
+    MAHA_SIGMOID_MIDPOINT = 80  # Mahalanobis logistic center
+    MAHA_SIGMOID_STEEPNESS = 0.02
+    FP_PENALTY_CAP = 0.40       # Max FP penalty deduction
     PATTERN_MIN_CONFIDENCE = 0.30
-    INTERMEDIARY_MAX_CONTRACTS = 50
-    GT_AUTO_INSERT_LIMIT = 100
-    FUZZY_MATCH_AUTO = 0.80
-    LLM_MAX_TOKENS = 1500
+    GT_AUTO_INSERT_LIMIT = 100  # Max auto-inserts per run
+    SHELL_SCORE_HIGH = 7        # shell_score >= 7 for +0.25
+    SHELL_SCORE_MED = 5         # shell_score >= 5 for +0.10
+    P1_HIGH = 0.03              # vendor sector share > 3% -> 0.80
+    P1_MED = 0.01               # > 1% -> 0.50
+    P1_LOW = 0.005              # > 0.5% -> 0.20
+    P2_MIN_VALUE = 1_000_000    # Ghost company minimum total value
     DQ_AMOUNT_MAX = 100_000_000_000
-
-(Full list: 50+ values in scripts/aria_config.py)
 
 ## Appendix B: Glossary
 
