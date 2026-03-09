@@ -1634,9 +1634,9 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
   // OECD benchmark: ~20-30% direct award is "normal"
   const daVsOECD = allTimeAvg.da - 25 // deviation from OECD midpoint
   // December rush: approximate from single-bid patterns at year-end (use hr as proxy)
-  const maxDA = Math.max(...yoyData.map(y => y.direct_award_pct), 0)
-  const maxSB = Math.max(...yoyData.map(y => y.single_bid_pct), 0)
-  const maxHR = Math.max(...yoyData.map(y => y.high_risk_pct), 0)
+  const maxDA = yoyData.length > 0 ? Math.max(...yoyData.map(y => y.direct_award_pct), 0) : 0
+  const maxSB = yoyData.length > 0 ? Math.max(...yoyData.map(y => y.single_bid_pct), 0) : 0
+  const maxHR = yoyData.length > 0 ? Math.max(...yoyData.map(y => y.high_risk_pct), 0) : 0
   const peakDAYear = yoyData.find(y => y.direct_award_pct === maxDA)?.year
 
   // Admin transition years for reference lines
@@ -2145,8 +2145,8 @@ function buildCompareRows(data: ComparePeriodResponse): CompareRow[] {
   return [
     {
       metric: 'Avg Risk Score',
-      p1: (data.period1.avg_risk * 100).toFixed(3) + '%',
-      p2: (data.period2.avg_risk * 100).toFixed(3) + '%',
+      p1: ((data.period1?.avg_risk ?? 0) * 100).toFixed(3) + '%',
+      p2: ((data.period2?.avg_risk ?? 0) * 100).toFixed(3) + '%',
       delta: riskDelta,
       deltaFmt: (riskDelta > 0 ? '+' : '') + (riskDelta * 100).toFixed(3) + 'pp',
       signal: Math.abs(riskDelta) < 0.0005 ? 'neutral' : riskDelta > 0 ? 'worse' : 'better',
@@ -2154,8 +2154,8 @@ function buildCompareRows(data: ComparePeriodResponse): CompareRow[] {
     },
     {
       metric: 'Total Spending',
-      p1: formatCompactMXN(data.period1.total_value),
-      p2: formatCompactMXN(data.period2.total_value),
+      p1: formatCompactMXN(data.period1?.total_value ?? 0),
+      p2: formatCompactMXN(data.period2?.total_value ?? 0),
       delta: valueDelta,
       deltaFmt: (valueDelta > 0 ? '+' : '') + formatCompactMXN(valueDelta),
       signal: 'neutral',
@@ -2313,7 +2313,7 @@ function ComparePeriodView() {
         <Card>
           <CardHeader>
             <CardTitle className="text-xs font-mono text-text-muted">
-              Results: Period A ({data.period1.start}–{data.period1.end}) vs Period B ({data.period2.start}–{data.period2.end})
+              Results: Period A ({data.period1?.start}–{data.period1?.end}) vs Period B ({data.period2?.start}–{data.period2?.end})
             </CardTitle>
           </CardHeader>
           <CardContent>

@@ -1158,6 +1158,7 @@ export interface ExecutiveGroundTruth {
   vendors: number
   contracts: number
   detection_rate: number
+  high_plus_rate: number
   auc: number
   case_details: ExecutiveCaseDetail[]
 }
@@ -1171,8 +1172,12 @@ export interface ExecutiveModelPredictor {
 export interface ExecutiveModel {
   version: string
   auc: number
-  brier: number
-  lift: number
+  brier: number | null
+  train_auc?: number
+  pu_correction?: number | null
+  features?: number
+  sub_models?: number
+  lift?: number
   top_predictors: ExecutiveModelPredictor[]
   counterintuitive: string[]
 }

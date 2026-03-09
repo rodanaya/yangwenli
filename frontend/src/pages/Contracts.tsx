@@ -553,7 +553,7 @@ export function Contracts() {
             Contracts
           </h2>
           <p className="text-xs text-text-muted mt-0.5" aria-live="polite">
-            {data ? `${formatNumber(data.pagination.total)} records` : 'Loading...'}
+            {data ? `${formatNumber(data?.pagination?.total ?? 0)} records` : 'Loading...'}
             {isFetching && !isLoading && (
               <Loader2 className="inline h-3 w-3 ml-1.5 animate-spin text-accent" />
             )}
@@ -577,7 +577,7 @@ export function Contracts() {
             size="sm"
             className="h-7 text-xs px-2"
             onClick={handleExport}
-            disabled={isExporting || !data || data.pagination.total === 0}
+            disabled={isExporting || !data || (data?.pagination?.total ?? 0) === 0}
             title="Export to CSV"
           >
             {isExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
@@ -1050,12 +1050,12 @@ export function Contracts() {
       </Card>
 
       {/* Pagination — Fix 6: use filters.per_page throughout */}
-      {data && data.pagination.total > 0 && (
+      {data && (data?.pagination?.total ?? 0) > 0 && (
         <div className="flex items-center justify-between">
           <p className="text-xs text-text-muted tabular-nums">
             {(() => {
-              const { start, end } = getPaginationRange(filters.page || 1, filters.per_page || 50, data.pagination.total)
-              return `${formatNumber(start)}-${formatNumber(end)} of ${formatNumber(data.pagination.total)}`
+              const { start, end } = getPaginationRange(filters.page || 1, filters.per_page || 50, data.pagination?.total ?? 0)
+              return `${formatNumber(start)}-${formatNumber(end)} of ${formatNumber(data.pagination?.total ?? 0)}`
             })()}
           </p>
           <div className="flex items-center gap-1.5">
@@ -1070,14 +1070,14 @@ export function Contracts() {
               <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
             <span className="text-xs text-text-muted tabular-nums px-1">
-              {clampPage(filters.page || 1, data.pagination.total_pages)}/{Math.max(1, data.pagination.total_pages)}
+              {clampPage(filters.page || 1, data.pagination?.total_pages ?? 1)}/{Math.max(1, data.pagination?.total_pages ?? 1)}
             </span>
             <Button
               variant="outline"
               size="sm"
               className="h-7 text-xs px-2"
-              disabled={filters.page === data.pagination.total_pages || data.pagination.total_pages === 0}
-              onClick={() => updateFilter('page', Math.min(data.pagination.total_pages, (filters.page || 1) + 1))}
+              disabled={filters.page === (data.pagination?.total_pages ?? 0) || (data.pagination?.total_pages ?? 0) === 0}
+              onClick={() => updateFilter('page', Math.min(data.pagination?.total_pages ?? 1, (filters.page || 1) + 1))}
               aria-label="Next page"
             >
               <ChevronRight className="h-3.5 w-3.5" />

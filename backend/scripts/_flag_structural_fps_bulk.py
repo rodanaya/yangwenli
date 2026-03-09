@@ -47,8 +47,36 @@ STRUCTURAL_FPS = {
     45048:  'COMISION FEDERAL DE ELECTRICIDAD - state electricity utility',
     14912:  'GAS METROPOLITANO - natural gas distribution utility',
     5801:   'INFRA DEL SUR - industrial gas (structural few-provider market)',
-    # === FINANCIAL/INSURANCE ===
+    # === FINANCIAL/INSURANCE (regulated oligopoly, ~5-6 carriers dominate gov insurance) ===
     17192:  'SEGUROS ATLAS - insurance (regulated market)',
+    477:    'GRUPO NACIONAL PROVINCIAL - insurance (regulated oligopoly, top gov insurer)',
+    44204:  'SEGUROS BANORTE - insurance (regulated oligopoly, Banorte group)',
+    11196:  'METLIFE MEXICO - insurance (regulated oligopoly, multinational)',
+    16826:  'GRUPO MEXICANO DE SEGUROS - insurance (regulated oligopoly)',
+    2954:   'ASEGURADORA INTERACCIONES - insurance (regulated oligopoly, Banorte group)',
+    656:    'SEGUROS INBURSA - insurance (regulated oligopoly, Slim group)',
+    47980:  'SEGUROS INBURSA SA (variant) - insurance (regulated oligopoly, Slim group)',
+    10955:  'SEGUROS AFIRME - insurance (regulated oligopoly, Afirme group)',
+    16619:  'QUALITAS COMPANIA DE SEGUROS - auto/fleet insurance (regulated oligopoly)',
+    15198:  'SEGUROS BANORTE GENERALI - insurance (regulated oligopoly, legacy Banorte)',
+    43890:  'AXA SEGUROS - insurance (regulated oligopoly, multinational)',
+    23234:  'MAPFRE TEPEYAC - insurance (regulated oligopoly, Spanish multinational)',
+    # === OILFIELD SERVICES (patented tech, LAASSP Art. 41, few global providers) ===
+    8143:   'DOWELL SCHLUMBERGER - oilfield services OEM (patented tech, global oligopoly)',
+    7434:   'HALLIBURTON DE MEXICO - oilfield services OEM (patented tech, global oligopoly)',
+    7435:   'WEATHERFORD DE MEXICO - oilfield services OEM (patented tech, global oligopoly)',
+    8447:   'NALCO DE MEXICO - Ecolab/Nalco water treatment chemicals for PEMEX (specialty OEM)',
+    # === UPSTREAM ENERGY (E&P majors, legitimate) ===
+    15430:  'REPSOL EXPLORACION - upstream E&P major (legitimate energy)',
+    29819:  'REPSOL COMERCIALIZADORA DE GAS - gas commercialization (Repsol subsidiary)',
+    # === MAJOR CONSTRUCTION / ENGINEERING (Mexico top-tier, legitimate scale) ===
+    1094:   'INGENIEROS CIVILES ASOCIADOS (ICA) - Mexico largest construction firm',
+    9045:   'ICA FLUOR DANIEL - ICA/Fluor JV for energy megaprojects',
+    192250: 'ICA CONSTRUCTORA DE INFRAESTRUCTURA - ICA infrastructure subsidiary',
+    7370:   'CEMEX CONCRETOS - Mexico largest cement/concrete company (NYSE: CX)',
+    # === GOVERNMENT ENTITIES (inter-governmental contracting) ===
+    218649: 'GOBIERNO DE LA CIUDAD DE MEXICO - government entity (inter-gov contracting)',
+    82436:  'SERVICIO DE PROTECCION FEDERAL - federal security agency (gov entity)',
     # === TELECOMS/IT OEMs ===
     33794:  'T-SYSTEMS MEXICO - Deutsche Telekom IT subsidiary',
     3387:   'ALESTRA SA DE RL - AT&T Mexico telecoms subsidiary',
@@ -58,7 +86,10 @@ STRUCTURAL_FPS = {
     148090: 'ETN TURISTAR LUJO - migrant transport, LP-dominant',
     200238: 'SILODISA - LP-dominant ISSSTE logistics',
     128027: 'CONSORCIO EMPRESARIAL ADPER - low contract count, ambiguous',
-    # === ADDITIONAL PHARMA/DEVICE OEMs ===
+    # === ADDITIONAL PHARMA/DEVICE OEMs (patented drugs, LAASSP Art. 41) ===
+    4472:   'GLAXOSMITHKLINE MEXICO - patented pharma OEM (vaccines, respiratory)',
+    5231:   'BRISTOL MYERS SQUIBB MEXICO - patented pharma OEM (oncology, cardiovascular)',
+    4332:   'BAXTER SA DE CV - medical devices/IV solutions OEM (structural)',
     238348: 'BIOGEN MEXICO - patented MS drugs OEM (Tecfidera, Avonex, Vumerity)',
     1381:   'CARL ZEISS DE MEXICO - surgical optics/microscopes OEM',
     # === BIOTECH/BLOOD PRODUCTS ===

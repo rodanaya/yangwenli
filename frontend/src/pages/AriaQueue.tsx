@@ -814,7 +814,7 @@ export default function AriaQueue() {
               {/* Total count */}
               {data && (
                 <span className="ml-auto text-xs text-text-muted font-mono">
-                  {formatNumber(data.pagination.total)} leads
+                  {formatNumber(data?.pagination?.total ?? 0)} leads
                 </span>
               )}
             </div>
@@ -890,10 +890,10 @@ export default function AriaQueue() {
             )}
 
             {/* Pagination */}
-            {!isLoading && hasData && data && data.pagination.total_pages > 1 && (
+            {!isLoading && hasData && data && (data?.pagination?.total_pages ?? 0) > 1 && (
               <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/20">
                 <span className="text-xs text-text-muted font-mono">
-                  Page {data.pagination.page} of {data.pagination.total_pages}
+                  Page {data.pagination?.page ?? 1} of {data.pagination?.total_pages ?? 1}
                 </span>
                 <div className="flex gap-2">
                   <Button
@@ -908,7 +908,7 @@ export default function AriaQueue() {
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled={page >= data.pagination.total_pages}
+                    disabled={page >= (data.pagination?.total_pages ?? 1)}
                     onClick={() => setPage((p) => p + 1)}
                     className="text-xs h-7"
                   >

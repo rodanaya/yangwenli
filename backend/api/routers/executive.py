@@ -301,8 +301,29 @@ def _build_summary(conn) -> dict:
         detection_rate = round(gt_detected / gt_contracts * 100, 1) if gt_contracts else 0
         high_plus_rate = round(gt_high / gt_contracts * 100, 1) if gt_contracts else 0
     except Exception:
-        gt_cases, gt_vendors, gt_contracts = 392, 610, 284000
+        gt_cases, gt_vendors, gt_contracts = 376, 594, 314700
         detection_rate, high_plus_rate = 99.8, 93.0
+
+    # Per-case detection stats for the frontend table
+    try:
+        case_rows = cur.execute("""
+            SELECT gc.case_name AS name, gc.case_type AS type,
+                   COUNT(c.id) AS contracts,
+                   ROUND(SUM(CASE WHEN c.risk_score >= 0.30 THEN 1.0 ELSE 0 END)
+                         / MAX(COUNT(c.id), 1) * 100, 1) AS high_plus_pct,
+                   ROUND(AVG(c.risk_score), 4) AS avg_score,
+                   COALESCE(gc.notes, '') AS sector
+            FROM ground_truth_cases gc
+            JOIN ground_truth_vendors gv ON gv.case_id = gc.id
+            JOIN contracts c ON c.vendor_id = gv.vendor_id
+            WHERE gv.vendor_id IS NOT NULL
+            GROUP BY gc.id
+            ORDER BY contracts DESC
+            LIMIT 25
+        """).fetchall()
+        case_details = [dict(r) for r in case_rows]
+    except Exception:
+        case_details = []
 
     ground_truth = {
         "cases": gt_cases,
@@ -312,6 +333,7 @@ def _build_summary(conn) -> dict:
         "high_plus_rate": high_plus_rate,
         "auc": 0.957,
         "train_auc": 0.964,
+        "case_details": case_details,
     }
 
     # 11. Model info — live from model_calibration table
@@ -370,6 +392,9 @@ def _build_summary(conn) -> dict:
             "brier": 0.060,
             "pu_correction": 0.882,
         }
+
+    # Lift from v4.0 comparison report (stable between retrainings)
+    model["lift"] = 4.04
 
     # Static model interpretation (stable between retrainings)
     model["top_predictors"] = [

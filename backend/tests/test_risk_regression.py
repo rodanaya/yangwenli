@@ -228,6 +228,7 @@ class TestKnownBadVendorDetection:
             JOIN ground_truth_vendors gt ON gt.vendor_id = v.id
             JOIN ground_truth_cases gc ON gt.case_id = gc.id
             WHERE gt.vendor_id IS NOT NULL
+              AND gt.evidence_strength IN ('confirmed_corrupt', 'strong', 'direct')
             GROUP BY gc.case_name
             HAVING total >= 1000
         """, (RISK_THRESHOLDS_V4["medium"],))

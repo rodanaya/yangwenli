@@ -170,7 +170,7 @@ function InstitutionHeatmap({ items }: { items: InstitutionHealthItem[] }) {
   const colStats = useMemo(() =>
     HEATMAP_COLS.map(col => {
       const vals = rows.map(r => r[col.key] as number)
-      return { min: Math.min(...vals), max: Math.max(...vals) }
+      return vals.length > 0 ? { min: Math.min(...vals), max: Math.max(...vals) } : { min: 0, max: 1 }
     }),
     [rows]
   )

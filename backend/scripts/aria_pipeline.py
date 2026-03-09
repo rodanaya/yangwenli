@@ -20,6 +20,23 @@ from pathlib import Path
 DB_PATH = Path(__file__).parent.parent / "RUBLI_NORMALIZED.db"
 ARIA_VERSION = "1.0"
 
+# 12-Sector taxonomy mapping
+SECTOR_MAP = {
+    1: "salud",
+    2: "educacion",
+    3: "infraestructura",
+    4: "energia",
+    5: "defensa",
+    6: "tecnologia",
+    7: "hacienda",
+    8: "gobernacion",
+    9: "agricultura",
+    10: "ambiente",
+    11: "trabajo",
+    12: "otros"
+}
+
+
 # ---------------------------------------------------------------------------
 # IPS weights
 # ---------------------------------------------------------------------------
@@ -594,6 +611,34 @@ def load_vendor_z_features(conn: sqlite3.Connection, vendor_ids: list) -> dict:
     }
 
 
+
+# ---------------------------------------------------------------------------
+# Helper: Get primary sector for vendor
+# ---------------------------------------------------------------------------
+
+def get_primary_sector(vendor_id: int, conn: sqlite3.Connection) -> tuple:
+    """
+    Returns (primary_sector_id, primary_sector_name).
+    Finds the sector with the most contracts for this vendor.
+    If no contracts found, returns (None, None).
+    """
+    row = conn.execute("""
+        SELECT sector_id, COUNT(*) as cnt
+        FROM contracts
+        WHERE vendor_id = ?
+        GROUP BY sector_id
+        ORDER BY cnt DESC
+        LIMIT 1
+    """, (vendor_id,)).fetchone()
+    
+    if row:
+        sector_id = row[0]
+        sector_name = SECTOR_MAP.get(sector_id, "otros")
+        return sector_id, sector_name
+    
+    return None, None
+
+
 # ---------------------------------------------------------------------------
 # Module 8: Ground Truth Auto-Update
 # ---------------------------------------------------------------------------
@@ -880,6 +925,7 @@ def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
 
             # False positive screening
             fp = screen_false_positives(vname, vendor_data_dict, conn)
+            primary_sector_id, primary_sector_name = get_primary_sector(vid, conn)
             ips_final = round(max(0.0, ips_raw - fp["penalty"]), 6)
             tier = assign_tier(ips_final)
             tier_counts[tier - 1] += 1
@@ -916,7 +962,8 @@ def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
                 "total_value_mxn":        total_val,
                 "avg_risk_score":         avg_risk,
                 "max_risk_score":         v["max_risk_score"] or 0.0,
-                "primary_sector_id":      v["sector_id"],
+                "primary_sector_id":      primary_sector_id,
+                "primary_sector_name":    primary_sector_name,
                 "years_active":           years_active,
                 "direct_award_rate":      (v["direct_award_rate"] or 0) / 100.0,
                 "single_bid_rate":        (v["single_bid_rate"] or 0) / 100.0,

@@ -824,12 +824,12 @@ export default function CaseDetail() {
             ))}
           </div>
         </section>
-      ) : data.key_actors.filter(a => a.role === 'vendor').length > 0 ? (
+      ) : (data.key_actors ?? []).filter(a => a.role === 'vendor').length > 0 ? (
         /* Fallback: key actors vendors when no ground truth linked vendors */
         <section className="mb-6">
           <h2 className="text-sm font-bold font-mono text-text-primary mb-3">Connected Vendors</h2>
           <div className="space-y-2">
-            {data.key_actors
+            {(data.key_actors ?? [])
               .filter(a => a.role === 'vendor')
               .map((actor, i) => (
                 <div key={i} className="bg-card border border-border/40 rounded-lg p-3 flex flex-col gap-1.5">
@@ -858,11 +858,11 @@ export default function CaseDetail() {
       ) : null}
 
       {/* ── Key Actors (non-vendor) ─────────────────────────────────────────── */}
-      {data.key_actors.filter(a => a.role !== 'vendor').length > 0 && (
+      {(data.key_actors ?? []).filter(a => a.role !== 'vendor').length > 0 && (
         <section className="mb-6">
           <h2 className="text-sm font-bold font-mono text-text-primary mb-3">{t('detail.keyActors')}</h2>
           <div className="space-y-2">
-            {data.key_actors
+            {(data.key_actors ?? [])
               .filter(a => a.role !== 'vendor')
               .map((actor, i) => (
                 <div key={i} className="flex gap-3 bg-card border border-border/40 rounded-lg p-3">
@@ -890,11 +890,11 @@ export default function CaseDetail() {
       {/* ── Sources ─────────────────────────────────────────────────────────── */}
       <section className="mb-6">
         <h2 className="text-sm font-bold font-mono text-text-primary mb-3">{t('detail.sources')}</h2>
-        {data.sources.length === 0 ? (
+        {(data.sources ?? []).length === 0 ? (
           <p className="text-xs text-text-muted">{t('detail.noSources')}</p>
         ) : (
           <div className="space-y-2">
-            {data.sources.map((src, i) => (
+            {(data.sources ?? []).map((src, i) => (
               <div key={i} className="flex gap-3 bg-card border border-border/40 rounded-lg p-3">
                 <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex-shrink-0 h-fit">
                   {t(`detail.sourceTypes.${src.type}`)}

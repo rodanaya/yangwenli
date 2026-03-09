@@ -334,7 +334,7 @@ export default function InstitutionsTab() {
         <div className="flex items-center gap-2">
           <p className="text-xs text-text-muted tabular-nums" aria-live="polite">
             {data
-              ? t('institutions.count', { n: formatNumber(data.pagination.total) })
+              ? t('institutions.count', { n: formatNumber(data?.pagination?.total ?? 0) })
               : tc('loading')}
             {isFetching && !isLoading && <Loader2 className="inline h-3 w-3 ml-1 animate-spin" />}
           </p>
@@ -538,12 +538,12 @@ export default function InstitutionsTab() {
       )}
 
       {/* Pagination */}
-      {data && data.pagination.total_pages > 1 && (
+      {data && (data?.pagination?.total_pages ?? 0) > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-xs text-text-muted tabular-nums">
             {(filters.page! - 1) * filters.per_page! + 1}-
-            {Math.min(filters.page! * filters.per_page!, data.pagination.total)} of{' '}
-            {formatNumber(data.pagination.total)}
+            {Math.min(filters.page! * filters.per_page!, data.pagination?.total ?? 0)} of{' '}
+            {formatNumber(data.pagination?.total ?? 0)}
           </p>
           <div className="flex items-center gap-1.5">
             <Button
@@ -557,13 +557,13 @@ export default function InstitutionsTab() {
               <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
             <span className="text-xs text-text-muted tabular-nums px-1">
-              {filters.page}/{data.pagination.total_pages}
+              {filters.page}/{data.pagination?.total_pages ?? 1}
             </span>
             <Button
               variant="outline"
               size="sm"
               className="h-7 text-xs px-2"
-              disabled={filters.page === data.pagination.total_pages}
+              disabled={filters.page === (data.pagination?.total_pages ?? 0)}
               onClick={() => updateFilter('page', filters.page! + 1)}
               aria-label="Next page"
             >

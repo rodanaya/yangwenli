@@ -407,8 +407,8 @@ export default function MoneyFlow() {
     setSelectedNode(prev => prev?.id === node.id ? null : enriched)
   }, [fullNames])
 
-  const totalValue = useMemo(() => links.reduce((s, l) => s + l.value, 0), [links])
-  const totalContracts = useMemo(() => links.reduce((s, l) => s + l.contractCount, 0), [links])
+  const totalValue = useMemo(() => (links ?? []).reduce((s, l) => s + l.value, 0), [links])
+  const totalContracts = useMemo(() => (links ?? []).reduce((s, l) => s + l.contractCount, 0), [links])
   const uniqueInstitutions = useMemo(() => new Set(links.map(l => l.source)).size, [links])
   const uniqueVendors = useMemo(() => new Set(links.map(l => l.target)).size, [links])
 
