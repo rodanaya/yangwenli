@@ -934,7 +934,7 @@ function AIPipelineChart() {
 
 function PatternWebDiagram() {
   const { t } = useTranslation('executive')
-  const ref = useRef<SVGSVGElement>(null)
+  const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
   useEffect(() => {
     const el = ref.current
@@ -947,150 +947,96 @@ function PatternWebDiagram() {
     return () => obs.disconnect()
   }, [])
 
-  const cx = 300
-  const cy = 215
-
-  const nodes = [
-    { x: 300, y: 95,  line1: t('patternWeb.node1.line1'), line2: t('patternWeb.node1.line2'), sub: t('patternWeb.node1.sub'), color: '#fb923c', id: 'da' },
-    { x: 88,  y: 350, line1: t('patternWeb.node2.line1'), line2: t('patternWeb.node2.line2'), sub: t('patternWeb.node2.sub'), color: '#fbbf24', id: 'dr' },
-    { x: 512, y: 350, line1: t('patternWeb.node3.line1'), line2: t('patternWeb.node3.line2'), sub: t('patternWeb.node3.sub'), color: '#f87171', id: 'vc' },
+  const items = [
+    {
+      label: t('patternWeb.node1.line1') + ' ' + t('patternWeb.node1.line2'),
+      stat: t('patternWeb.node1.sub'),
+      color: '#fb923c',
+      edge: t('patternWeb.edge1Line1'),
+    },
+    {
+      label: t('patternWeb.node2.line1') + ' ' + t('patternWeb.node2.line2'),
+      stat: t('patternWeb.node2.sub'),
+      color: '#fbbf24',
+      edge: t('patternWeb.edge2Line1'),
+    },
+    {
+      label: t('patternWeb.node3.line1') + ' ' + t('patternWeb.node3.line2'),
+      stat: t('patternWeb.node3.sub'),
+      color: '#f87171',
+      edge: t('patternWeb.edge3Line1'),
+    },
   ]
-
-  const edges = [
-    { from: 0, to: 1, line1: t('patternWeb.edge1Line1'), line2: t('patternWeb.edge1Line2'), lx: 170, ly: 204 },
-    { from: 1, to: 2, line1: t('patternWeb.edge2Line1'), line2: t('patternWeb.edge2Line2'), lx: 300, ly: 388 },
-    { from: 2, to: 0, line1: t('patternWeb.edge3Line1'), line2: t('patternWeb.edge3Line2'), lx: 430, ly: 204 },
-  ]
-
-  const R  = 62  // outer node radius
-  const CR = 48  // center hub radius
 
   return (
-    <div className="flex justify-center my-8">
-      <svg
-        ref={ref}
-        viewBox="0 0 600 455"
-        className="w-full max-w-2xl"
-        style={{ overflow: 'visible' }}
-        role="img"
-        aria-label={t('patternWeb.ariaLabel')}
-      >
-        {/* Connecting lines */}
-        {edges.map((edge, i) => {
-          const from = nodes[edge.from]
-          const to   = nodes[edge.to]
-          return (
-            <g key={`edge-${i}`}>
-              <line
-                x1={from.x} y1={from.y}
-                x2={to.x}   y2={to.y}
-                stroke="rgba(255,255,255,0.11)"
-                strokeWidth="1.5"
-                strokeDasharray="6 5"
-                style={{ opacity: visible ? 1 : 0, transition: `opacity 600ms ${i * 150 + 300}ms ease` }}
-              />
-              <rect
-                x={edge.lx - 52} y={edge.ly - 15}
-                width={104} height={28}
-                rx={5}
-                fill="rgba(6,10,24,0.85)"
-                stroke="rgba(255,255,255,0.06)"
-                strokeWidth="0.8"
-                style={{ opacity: visible ? 1 : 0, transition: `opacity 400ms ${i * 150 + 650}ms ease` }}
-              />
-              <text
-                textAnchor="middle"
-                fontFamily="monospace"
-                fill="rgba(148,163,184,0.88)"
-                style={{ opacity: visible ? 1 : 0, transition: `opacity 400ms ${i * 150 + 700}ms ease` }}
+    <div ref={ref} className="my-8" role="img" aria-label={t('patternWeb.ariaLabel')}>
+      <div className="rounded-xl border border-border/30 bg-surface-alt/50 p-5 overflow-hidden">
+        {/* Three pattern rows stacked vertically with progress-bar style */}
+        <div className="space-y-3">
+          {items.map((item, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-4 transition-all duration-500"
+              style={{
+                opacity: visible ? 1 : 0,
+                transform: visible ? 'translateX(0)' : 'translateX(-20px)',
+                transitionDelay: `${i * 120}ms`,
+              }}
+            >
+              {/* Stat badge */}
+              <div
+                className="flex-shrink-0 w-20 text-center rounded-md py-1.5 font-mono font-black text-base tabular-nums"
+                style={{
+                  color: item.color,
+                  background: `${item.color}14`,
+                  border: `1px solid ${item.color}30`,
+                }}
               >
-                <tspan x={edge.lx} y={edge.ly - 2} fontSize="9.5">{edge.line1}</tspan>
-                <tspan x={edge.lx} dy="13"          fontSize="9.5">{edge.line2}</tspan>
-              </text>
-            </g>
-          )
-        })}
+                {item.stat}
+              </div>
 
-        {/* Center hub */}
-        <circle
-          cx={cx} cy={cy}
-          r={visible ? CR + 16 : 0}
-          fill="none"
-          stroke="rgba(248,113,113,0.10)"
-          strokeWidth="1"
-          style={{ transition: 'r 600ms 820ms cubic-bezier(0.16,1,0.3,1)' }}
-        />
-        <circle
-          cx={cx} cy={cy}
-          r={visible ? CR : 0}
-          fill="rgba(248,113,113,0.09)"
-          stroke="rgba(248,113,113,0.42)"
-          strokeWidth="1.5"
-          style={{ transition: 'r 500ms 800ms cubic-bezier(0.16,1,0.3,1)' }}
-        />
-        <text
-          textAnchor="middle" fontFamily="monospace" fontWeight="700" fill="#f87171"
-          style={{ opacity: visible ? 1 : 0, transition: 'opacity 400ms 900ms ease' }}
+              {/* Bar + label */}
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-semibold text-text-primary mb-1 truncate">
+                  {item.label}
+                </div>
+                <div className="relative h-1.5 rounded-full bg-white/5 overflow-hidden">
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-full transition-all duration-700 ease-out"
+                    style={{
+                      width: visible ? (i === 0 ? '71%' : i === 1 ? '44%' : '62%') : '0%',
+                      background: `linear-gradient(90deg, ${item.color}88, ${item.color})`,
+                      transitionDelay: `${i * 120 + 200}ms`,
+                    }}
+                  />
+                </div>
+                <div className="text-[10px] text-text-muted mt-0.5 font-mono">{item.edge}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Separator + result */}
+        <div
+          className="mt-4 pt-3 border-t border-border/20 flex items-center justify-center gap-3 transition-all duration-500"
+          style={{
+            opacity: visible ? 1 : 0,
+            transitionDelay: '500ms',
+          }}
         >
-          <tspan x={cx} y={cy - 8} fontSize="13">{t('patternWeb.centerLine1')}</tspan>
-          <tspan x={cx} dy="19"    fontSize="13">{t('patternWeb.centerLine2')}</tspan>
-        </text>
-
-        {/* Outer nodes */}
-        {nodes.map((node, i) => (
-          <g key={node.id}>
-            {/* Glow ring */}
-            <circle
-              cx={node.x} cy={node.y}
-              r={visible ? R + 18 : 0}
-              fill="none" stroke={node.color} strokeWidth="0.6" opacity={0.12}
-              style={{ transition: `r 700ms ${i * 120 + 150}ms cubic-bezier(0.16,1,0.3,1)` }}
-            />
-            {/* Main circle */}
-            <circle
-              cx={node.x} cy={node.y}
-              r={visible ? R : 0}
-              fill={`${node.color}1c`}
-              stroke={node.color}
-              strokeWidth="1.5"
-              style={{ transition: `r 550ms ${i * 120 + 150}ms cubic-bezier(0.16,1,0.3,1)` }}
-            />
-            {/* Label backdrop */}
-            <rect
-              x={node.x - 52} y={node.y - 26}
-              width={104} height={42}
-              rx={5}
-              fill="rgba(6,10,24,0.82)"
-              style={{ opacity: visible ? 1 : 0, transition: `opacity 280ms ${i * 120 + 460}ms ease` }}
-            />
-            {/* Two-line node label */}
-            <text
-              textAnchor="middle" fontFamily="monospace" fontWeight="700" fill={node.color}
-              style={{ opacity: visible ? 1 : 0, transition: `opacity 380ms ${i * 120 + 480}ms ease` }}
-            >
-              <tspan x={node.x} y={node.y - 10} fontSize="13">{node.line1}</tspan>
-              <tspan x={node.x} dy="19"          fontSize="13">{node.line2}</tspan>
-            </text>
-            {/* Sub-stat pill */}
-            <rect
-              x={node.x - 52} y={node.y + 28}
-              width={104} height={19}
-              rx={4}
-              fill="rgba(6,10,24,0.78)"
-              stroke={`${node.color}28`}
-              strokeWidth="0.8"
-              style={{ opacity: visible ? 1 : 0, transition: `opacity 280ms ${i * 120 + 580}ms ease` }}
-            />
-            <text
-              x={node.x} y={node.y + 40}
-              textAnchor="middle" fontSize="10" fill="rgba(255,255,255,0.85)" fontFamily="monospace"
-              style={{ opacity: visible ? 1 : 0, transition: `opacity 380ms ${i * 120 + 600}ms ease` }}
-            >
-              {node.sub}
-            </text>
-          </g>
-        ))}
-      </svg>
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-risk-critical/30 to-transparent" />
+          <div className="text-center px-4">
+            <span className="text-[10px] font-bold tracking-widest uppercase text-risk-critical/60 font-mono">
+              {t('patternWeb.centerLine1')}
+            </span>
+            <span className="mx-2 text-risk-critical/30">|</span>
+            <span className="text-sm font-black text-risk-critical font-mono">
+              {t('patternWeb.centerLine2')}
+            </span>
+          </div>
+          <div className="h-px flex-1 bg-gradient-to-l from-transparent via-risk-critical/30 to-transparent" />
+        </div>
+      </div>
     </div>
   )
 }
