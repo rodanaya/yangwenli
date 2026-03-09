@@ -19,7 +19,7 @@ import { EntityDrawerProvider } from '@/contexts/EntityDrawerContext'
 import { EntityProfileDrawer } from '@/components/EntityProfileDrawer'
 
 // Lazy load all page components for code splitting
-const Landing = lazy(() => import('@/pages/Landing'))
+const Intro = lazy(() => import('@/pages/Intro'))
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const Contracts = lazy(() => import('@/pages/Contracts'))
 const Explore = lazy(() => import('@/pages/explore'))
@@ -56,10 +56,10 @@ const MexicoMap = lazy(() => import('@/pages/MexicoMap'))
 const Annotations = lazy(() => import('@/pages/Annotations'))
 const AriaQueue = lazy(() => import('@/pages/AriaQueue'))
 
-// First-visit routing: redirect "/" to Landing for new users, Dashboard for returning users
+// First-visit routing: redirect "/" to Intro for new users, Dashboard for returning users
 function FirstVisitRedirect() {
-  const seen = localStorage.getItem('rubli_seen_landing')
-  if (!seen) return <Navigate to="/landing" replace />
+  const seen = localStorage.getItem('rubli_seen_intro')
+  if (!seen) return <Navigate to="/intro" replace />
   return <Navigate to="/dashboard" replace />
 }
 
@@ -85,15 +85,17 @@ function App() {
           <BrowserRouter>
           <NuqsAdapter>
           <Routes>
-            {/* Landing page — full-screen, no sidebar */}
+            {/* Intro page — full-screen, no sidebar */}
             <Route
-              path="landing"
+              path="intro"
               element={
                 <SuspenseBoundary fallback={<DashboardSkeleton />}>
-                  <Landing />
+                  <Intro />
                 </SuspenseBoundary>
               }
             />
+            {/* Legacy /landing redirect */}
+            <Route path="landing" element={<Navigate to="/intro" replace />} />
             <Route path="/" element={<MainLayout />}>
               <Route index element={<FirstVisitRedirect />} />
               <Route

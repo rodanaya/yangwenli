@@ -345,15 +345,15 @@ function FeaturedCasesStrip({ onNavigate }: { onNavigate: (path: string) => void
 }
 
 // ===========================================================================
-// Main Landing page — condensed: Hero + Numbers + Patterns + How + CTA
+// Main Intro page — condensed: Hero + Numbers + Patterns + How + CTA
 // ===========================================================================
-export default function Landing() {
+export default function Intro() {
   const navigate = useNavigate()
   const { t } = useTranslation('landing')
   const belowFoldRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    if (localStorage.getItem('rubli_seen_landing')) {
+    if (localStorage.getItem('rubli_seen_intro')) {
       navigate('/dashboard', { replace: true })
     }
   }, [navigate])
@@ -379,7 +379,7 @@ export default function Landing() {
   }
 
   const goToApp = useCallback((path: string = '/dashboard') => {
-    localStorage.setItem('rubli_seen_landing', '1')
+    localStorage.setItem('rubli_seen_intro', '1')
     navigate(path)
   }, [navigate])
 
