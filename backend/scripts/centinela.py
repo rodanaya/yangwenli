@@ -76,7 +76,7 @@ REGISTRIES = {
         "table": "sfp_sanctions",
         "freshness_days": 7,  # Updated weekly
         "method": "csv",
-        "url": "https://datosabiertos.funcionpublica.gob.mx/datosabiertos/sanc/proveedores_sancionados.csv",
+        "url": "https://repodatos.atdt.gob.mx/api_update/sabg/servidores_publicos_sancionados_vigentes/sancionados_102025_sabg.csv",
     },
     "rupc": {
         "name": "RUPC Vendor Registry",
