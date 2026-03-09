@@ -91,10 +91,12 @@ def compute_external_flags_score(
     if is_sfp:
         score += 0.40
     # CENTINELA shell_score boost: high shell indicators from company_registry
-    if shell_score >= 4:
-        score += 0.20  # strong shell company indicators
-    elif shell_score >= 2:
-        score += 0.10  # moderate shell indicators
+    # Note: score of 4 is baseline (85% of vendors score exactly 4).
+    # Only boost for clearly above-baseline scores.
+    if shell_score >= 7:
+        score += 0.25  # very strong shell indicators
+    elif shell_score >= 5:
+        score += 0.10  # above-baseline shell indicators
     return min(1.0, score)
 
 
@@ -158,12 +160,14 @@ def classify_patterns(vendor_data: dict) -> dict:
 
     # ------------------------------------------------------------------
     # P1: Concentrated Monopoly
+    # Thresholds calibrated for Mexican procurement: top vendor ~5% sector share.
+    # vc = vendor's share of total sector value (all-time).
     # ------------------------------------------------------------------
-    if vc > 0.50:
+    if vc > 0.03:
         p1 = 0.80
-    elif vc > 0.30:
+    elif vc > 0.01:
         p1 = 0.50
-    elif vc > 0.15:
+    elif vc > 0.005:
         p1 = 0.20
     else:
         p1 = 0.0
@@ -171,7 +175,6 @@ def classify_patterns(vendor_data: dict) -> dict:
     if p1 > 0:
         if top_inst_ratio > 0.70:
             p1 = min(1.0, p1 + 0.15)
-        # Use single_bid_rate as win_rate proxy
         if sb_rate > 0.80:
             p1 = min(1.0, p1 + 0.10)
 
@@ -179,16 +182,25 @@ def classify_patterns(vendor_data: dict) -> dict:
 
     # ------------------------------------------------------------------
     # P2: Ghost Company
+    # Previous: tc<=20 AND da>80% matched 194K vendors (false positive flood).
+    # New: require strong evidence. EFOS match = 0.90. Non-EFOS requires:
+    #   no RFC + short-lived + few contracts + mostly DA + significant value (>=1M).
+    # Brings P2 from ~242K to ~3K+38 = ~3K actionable vendors.
     # ------------------------------------------------------------------
+    total_value = vendor_data.get("total_value_mxn", 0) or 0
     if is_efos:
         p2 = 0.90
     else:
         p2 = 0.0
-        if tc <= 20 and da_rate > 0.80:
+        # Ghost company heuristic: no RFC + short-lived + few contracts + DA + real money
+        if (rfc is None and years <= 2 and tc <= 10
+                and da_rate > 0.80 and total_value >= 1_000_000):
+            p2 = 0.50
+        elif (rfc is None and years <= 3 and tc <= 5
+                and da_rate > 0.90 and total_value >= 5_000_000):
             p2 = 0.40
-        if years <= 3:
-            p2 = min(1.0, p2 + 0.20)
-        if rfc is None:
+        # Disappeared bursty vendor bonus
+        if p2 > 0 and burst > 0.5:
             p2 = min(1.0, p2 + 0.15)
 
     patterns["P2"] = round(p2, 4)
@@ -488,6 +500,46 @@ def load_sector_vendor_counts(conn: sqlite3.Connection) -> dict:
         "SELECT sector_id, COUNT(DISTINCT vendor_id) AS cnt FROM contracts GROUP BY sector_id"
     ).fetchall()
     return {r[0]: r[1] for r in rows}
+
+
+def load_vendor_sector_concentration(conn: sqlite3.Connection) -> dict:
+    """Returns {vendor_id: max_sector_share} — vendor's share of their largest sector.
+
+    Computes vendor_value_in_sector / sector_total_value for each vendor's
+    primary sector. Used for P1 Concentrated Monopoly classification.
+    """
+    # Step 1: sector totals (all-time, excluding outliers)
+    sector_totals = {}
+    for r in conn.execute(
+        "SELECT sector_id, SUM(amount_mxn) FROM contracts "
+        "WHERE amount_mxn > 0 AND amount_mxn < 100000000000 AND sector_id IS NOT NULL "
+        "GROUP BY sector_id"
+    ).fetchall():
+        sector_totals[r[0]] = r[1]
+
+    # Step 2: per-vendor-per-sector value (only vendors with significant value)
+    rows = conn.execute(
+        """
+        SELECT c.vendor_id, c.sector_id, SUM(c.amount_mxn) AS vendor_sector_val
+        FROM contracts c
+        WHERE c.amount_mxn > 0 AND c.amount_mxn < 100000000000 AND c.sector_id IS NOT NULL
+        GROUP BY c.vendor_id, c.sector_id
+        """
+    ).fetchall()
+
+    # Step 3: compute max share across sectors for each vendor
+    vendor_max_share: dict = {}
+    for r in rows:
+        vid, sid, val = r[0], r[1], r[2]
+        st = sector_totals.get(sid, 1)
+        share = val / st if st > 0 else 0
+        if vid not in vendor_max_share or share > vendor_max_share[vid]:
+            vendor_max_share[vid] = share
+
+    logger.info("  Vendor concentration: %d vendors computed, max=%.4f",
+                len(vendor_max_share),
+                max(vendor_max_share.values()) if vendor_max_share else 0)
+    return vendor_max_share
 
 
 # ---------------------------------------------------------------------------
@@ -812,7 +864,13 @@ def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
         logger.info("  Loading sector vendor counts...")
         sector_counts = load_sector_vendor_counts(conn)
 
+        logger.info("  Loading vendor sector concentration...")
+        concentration_map = load_vendor_sector_concentration(conn)
+
         # -- Load vendors from vendor_stats ----------------------------------
+        # Minimum filter: skip single-contract zero-risk vendors to prune queue
+        # from 320K to ~100K actionable vendors.  Vendors with EFOS/SFP/GT flags
+        # are always included regardless of contract count.
         query = """
             SELECT
                 v.id,
@@ -829,7 +887,13 @@ def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
                 vs.last_contract_year
             FROM vendors v
             JOIN vendor_stats vs ON v.id = vs.vendor_id
-            WHERE vs.total_contracts >= 1
+            WHERE (
+                vs.total_contracts >= 2
+                OR vs.avg_risk_score >= 0.10
+                OR v.id IN (SELECT vendor_id FROM ground_truth_vendors WHERE vendor_id IS NOT NULL)
+                OR v.rfc IN (SELECT rfc FROM sat_efos_vendors WHERE stage = 'definitivo' AND rfc IS NOT NULL)
+                OR v.rfc IN (SELECT rfc FROM sfp_sanctions WHERE rfc IS NOT NULL)
+            )
         """
         if limit:
             query += f" ORDER BY vs.total_value_mxn DESC LIMIT {limit}"
@@ -900,7 +964,7 @@ def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
             zf = z_features.get(vid, {})
 
             vendor_data_dict = {
-                "vendor_concentration": 0.0,  # not in vendor_stats — future
+                "vendor_concentration": concentration_map.get(vid, 0.0),
                 "total_contracts":      total_contracts,
                 "direct_award_rate":    (v["direct_award_rate"] or 0) / 100.0,
                 "single_bid_rate":      (v["single_bid_rate"] or 0) / 100.0,
@@ -915,6 +979,7 @@ def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
                 "sector_vendor_count":  sector_counts.get(v["sector_id"], 999),
                 "max_contract_amount":  v["max_risk_score"] or 0.0,
                 "avg_contract_amount":  avg_contract_amt,
+                "total_value_mxn":      total_val,
             }
 
             patterns = classify_patterns(vendor_data_dict)
