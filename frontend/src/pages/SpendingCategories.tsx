@@ -1416,7 +1416,7 @@ export default function SpendingCategories() {
           </CardTitle>
           <CardDescription className="text-xs">
             {viewMode === 'partida'
-              ? `${sortedCategories.length} categories. Click column headers to sort.`
+              ? `${sortedCategories.length} categories. Click column headers to sort · click any row to see subcategories below.`
               : `${sectorAggregates.length} sectors. Click column headers to sort.`}
           </CardDescription>
         </CardHeader>
@@ -1642,6 +1642,12 @@ export default function SpendingCategories() {
       </Card>
 
       {/* Subcategory Drill-Down Panel */}
+      {selectedCategoryId === null && viewMode === 'partida' && sortedCategories.length > 0 && (
+        <div className="flex items-center gap-2 rounded-lg border border-dashed border-accent/30 bg-accent/5 px-4 py-3 text-xs text-text-muted">
+          <ArrowUpRight className="h-3.5 w-3.5 text-accent flex-shrink-0" />
+          <span>Click any category row above to reveal <span className="font-semibold text-text-secondary">subcategories</span>, top vendors, and institution breakdowns.</span>
+        </div>
+      )}
       {selectedCategoryId !== null && (subcategoryLoading || (subcategoryData?.data?.length ?? 0) > 0) && (
         <SubcategoryPanel
           categoryName={selectedCategoryName ?? ''}

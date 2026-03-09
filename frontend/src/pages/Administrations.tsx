@@ -50,6 +50,7 @@ import {
   FileText,
   Activity,
   Info,
+  ChevronDown,
 } from 'lucide-react'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import AdministrationFingerprints from '@/components/charts/AdministrationFingerprints'
@@ -590,25 +591,9 @@ export default function Administrations() {
       {activeTab === 'overview' && (
       <>
 
-      {/* Spending Fingerprint Sunburst */}
-      <Card className="border-border/40">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-mono flex items-center gap-2">
-            <Activity className="h-4 w-4 text-accent" />
-            Spending Fingerprint by Administration
-          </CardTitle>
-          <p className="text-xs text-text-muted">
-            Inner ring = administration · Outer ring = sector spending · Hover to inspect
-          </p>
-        </CardHeader>
-        <CardContent>
-          <AdminSectorSunburst />
-        </CardContent>
-      </Card>
-
       {/* L0: Admin Selector */}
       <motion.div
-        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3"
         variants={staggerContainer}
         initial="initial"
         animate="animate"
@@ -622,7 +607,7 @@ export default function Administrations() {
               key={admin.name}
               onClick={() => setSelectedAdmin(admin.name)}
               className={cn(
-                'relative text-left rounded-lg border p-3 transition-all duration-200 overflow-hidden',
+                'relative text-left rounded-lg border p-2.5 transition-all duration-200 overflow-hidden w-full',
                 isSelected
                   ? 'border-accent bg-accent/10 shadow-md scale-[1.02]'
                   : 'border-border/50 hover:border-border hover:bg-background-card/50'
@@ -637,23 +622,23 @@ export default function Administrations() {
                 <span className="absolute top-[3px] left-3 right-3 h-[2px] rounded-b" style={{ backgroundColor: admin.color }} />
               )}
               {/* President avatar + name row */}
-              <div className="flex items-center gap-2 mb-1.5 mt-1">
+              <div className="flex items-center gap-2 mb-1 mt-1">
                 <PresidentAvatar
                   wikiArticle={admin.wikiArticle}
                   fullName={admin.fullName}
                   color={admin.color}
-                  size={32}
+                  size={28}
                 />
                 <div className="flex-1 min-w-0">
                   <span className={cn(
-                    'text-sm font-semibold block truncate leading-tight',
+                    'text-xs font-semibold block truncate leading-tight',
                     isSelected ? 'text-text-primary' : 'text-text-secondary'
                   )}>
-                    {admin.fullName}
+                    {admin.name}
                   </span>
                 </div>
                 <span
-                  className="text-[10px] font-mono ml-auto px-1.5 py-0.5 rounded flex-shrink-0"
+                  className="text-[9px] font-mono px-1 py-0.5 rounded flex-shrink-0"
                   style={{
                     backgroundColor: `${PARTY_COLORS[admin.party] || '#64748b'}25`,
                     color: PARTY_COLORS[admin.party] || '#64748b',
@@ -694,6 +679,29 @@ export default function Administrations() {
           )
         })}
       </motion.div>
+
+      {/* Spending Fingerprint Sunburst — collapsed by default */}
+      <details className="group">
+        <summary className="cursor-pointer list-none">
+          <Card className="border-border/40 group-open:rounded-b-none">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-mono flex items-center gap-2">
+                <Activity className="h-4 w-4 text-accent" />
+                Spending Fingerprint by Administration
+                <ChevronDown className="h-3.5 w-3.5 text-text-muted ml-auto transition-transform group-open:rotate-180" />
+              </CardTitle>
+              <p className="text-xs text-text-muted">
+                Inner ring = administration · Outer ring = sector spending · Click to expand
+              </p>
+            </CardHeader>
+          </Card>
+        </summary>
+        <Card className="border-border/40 border-t-0 rounded-t-none">
+          <CardContent className="pt-4">
+            <AdminSectorSunburst />
+          </CardContent>
+        </Card>
+      </details>
 
       {/* Administration Fingerprints — radar comparison */}
       <AdministrationFingerprints />
@@ -2169,7 +2177,7 @@ function ComparePeriodView() {
   const [p1End, setP1End] = useState('2018')
   const [p2Start, setP2Start] = useState('2018')
   const [p2End, setP2End] = useState('2024')
-  const [enabled, setEnabled] = useState(false)
+  const [enabled, setEnabled] = useState(true)
 
   const { data, isLoading, isFetching } = useQuery<ComparePeriodResponse>({
     queryKey: ['compare-periods', p1Start, p1End, p2Start, p2End],
@@ -2207,7 +2215,7 @@ function ComparePeriodView() {
                   onClick={() => {
                     setP1Start(preset.start)
                     setP1End(preset.end)
-                    setEnabled(false)
+                    setEnabled(true)
                   }}
                   className={cn(
                     'px-2.5 py-1 rounded text-xs font-medium border transition-colors',
@@ -2237,7 +2245,7 @@ function ComparePeriodView() {
                   min={2002}
                   max={2025}
                   value={p1Start}
-                  onChange={(e) => { setP1Start(e.target.value); setEnabled(false) }}
+                  onChange={(e) => { setP1Start(e.target.value); setEnabled(true) }}
                   className={inputCls}
                   aria-label="Period A start year"
                 />
@@ -2247,7 +2255,7 @@ function ComparePeriodView() {
                   min={2002}
                   max={2025}
                   value={p1End}
-                  onChange={(e) => { setP1End(e.target.value); setEnabled(false) }}
+                  onChange={(e) => { setP1End(e.target.value); setEnabled(true) }}
                   className={inputCls}
                   aria-label="Period A end year"
                 />
@@ -2261,7 +2269,7 @@ function ComparePeriodView() {
                   min={2002}
                   max={2025}
                   value={p2Start}
-                  onChange={(e) => { setP2Start(e.target.value); setEnabled(false) }}
+                  onChange={(e) => { setP2Start(e.target.value); setEnabled(true) }}
                   className={inputCls}
                   aria-label="Period B start year"
                 />
@@ -2271,7 +2279,7 @@ function ComparePeriodView() {
                   min={2002}
                   max={2025}
                   value={p2End}
-                  onChange={(e) => { setP2End(e.target.value); setEnabled(false) }}
+                  onChange={(e) => { setP2End(e.target.value); setEnabled(true) }}
                   className={inputCls}
                   aria-label="Period B end year"
                 />

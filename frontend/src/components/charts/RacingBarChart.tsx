@@ -150,21 +150,17 @@ export function RacingBarChart() {
                 className="absolute left-0 right-0 flex items-center gap-2"
                 style={{ top: entry.rank * 30, height: 26 }}
               >
-                <span className="text-[10px] text-muted-foreground w-4 shrink-0 text-right">
-                  {entry.rank + 1}
+                <span className="text-[10px] text-muted-foreground w-20 shrink-0 text-right truncate pr-1.5">
+                  {entry.name}
                 </span>
                 <div className="flex-1 relative h-full flex items-center">
                   <motion.div
-                    className="h-5 rounded-r-sm flex items-center pl-2"
+                    className="h-5 rounded-r-sm"
                     style={{ backgroundColor: entry.color, minWidth: 4 }}
-                    animate={{ width: `${pct}%` }}
+                    animate={{ width: `${Math.max(pct, 2)}%` }}
                     transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-                  >
-                    <span className="text-[10px] font-semibold text-white truncate">
-                      {entry.name}
-                    </span>
-                  </motion.div>
-                  <span className="absolute right-0 text-[10px] tabular-nums text-muted-foreground ml-1 whitespace-nowrap">
+                  />
+                  <span className="text-[10px] tabular-nums text-muted-foreground ml-1.5 whitespace-nowrap">
                     {formatCompactMXN(entry.value)}
                   </span>
                 </div>

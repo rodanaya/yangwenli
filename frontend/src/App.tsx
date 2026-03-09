@@ -46,7 +46,7 @@ const CaseDetail = lazy(() => import('@/pages/CaseDetail'))
 const MoneyFlow = lazy(() => import('@/pages/MoneyFlow'))
 // Workspace is the new name for Watchlist
 const Workspace = lazy(() => import('@/pages/Watchlist'))
-const StateExpenditure = lazy(() => import('@/pages/StateExpenditure'))
+// StateExpenditure removed — redirects to /map
 const YearInReview = lazy(() => import('@/pages/YearInReview'))
 const VendorCompare = lazy(() => import('@/pages/VendorCompare'))
 const ApiExplorer = lazy(() => import('@/pages/ApiExplorer'))
@@ -251,22 +251,8 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
-              <Route
-                path="state-expenditure"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <StateExpenditure />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="state-expenditure/:code"
-                element={
-                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
-                    <StateExpenditure />
-                  </SuspenseBoundary>
-                }
-              />
+              <Route path="state-expenditure" element={<Navigate to="/map" replace />} />
+              <Route path="state-expenditure/:code" element={<Navigate to="/map" replace />} />
               <Route
                 path="year-in-review"
                 element={

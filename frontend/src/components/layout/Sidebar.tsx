@@ -67,7 +67,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { i18nKey: 'explore', href: '/explore', icon: Layers },
       { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
       { i18nKey: 'administrations', href: '/administrations', icon: History },
-      { i18nKey: 'stateExpenditure', href: '/state-expenditure', icon: MapPin },
+      { i18nKey: 'mexicoMap', href: '/map', icon: MapPin },
     ],
   },
   {

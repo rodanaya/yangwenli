@@ -428,6 +428,18 @@ function SectorTreemapContent(props: TreemapContentProps) {
 // INDUSTRY RISK HEATMAP — Treemap: cell size = total value, color = avg risk
 // ============================================================================
 
+/** Linearly interpolate between two hex colors */
+function lerpColor(a: string, b: string, t: number): string {
+  const ah = parseInt(a.slice(1), 16)
+  const bh = parseInt(b.slice(1), 16)
+  const ar = (ah >> 16) & 0xff, ag = (ah >> 8) & 0xff, ab = ah & 0xff
+  const br = (bh >> 16) & 0xff, bg = (bh >> 8) & 0xff, bb = bh & 0xff
+  const r = Math.round(ar + (br - ar) * t)
+  const g = Math.round(ag + (bg - ag) * t)
+  const b2 = Math.round(ab + (bb - ab) * t)
+  return `rgb(${r},${g},${b2})`
+}
+
 interface IndustryHeatmapContentProps {
   x?: number
   y?: number
@@ -443,8 +455,12 @@ function IndustryHeatmapContent(props: IndustryHeatmapContentProps) {
   if (width < 20 || height < 20) return null
   const showLabel = width > 55 && height > 32
   const showVendors = width > 80 && height > 52
-  const riskLevel = getRiskLevelFromScore(avg_risk_score)
-  const fillColor = RISK_COLORS[riskLevel]
+  // Continuous gradient: lerp from dark-teal (#134e4a) at risk=0 to bright-red (#ef4444) at risk>=0.3
+  // This gives much better visual contrast than categorical colors for low-risk clustering
+  const t = Math.min(avg_risk_score / 0.30, 1)
+  const fillColor = t < 0.5
+    ? lerpColor('#134e4a', '#eab308', t * 2)    // teal → amber
+    : lerpColor('#eab308', '#ef4444', (t - 0.5) * 2) // amber → red
   const riskPct = (avg_risk_score * 100).toFixed(1)
 
   return (
@@ -454,7 +470,7 @@ function IndustryHeatmapContent(props: IndustryHeatmapContentProps) {
         y={y + 1}
         width={width - 2}
         height={height - 2}
-        style={{ fill: fillColor, fillOpacity: 0.7, stroke: 'rgba(0,0,0,0.3)', strokeWidth: 1 }}
+        style={{ fill: fillColor, fillOpacity: 0.85, stroke: 'rgba(0,0,0,0.4)', strokeWidth: 1 }}
         rx={3}
         ry={3}
       />

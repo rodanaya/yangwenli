@@ -42,9 +42,10 @@ export const Heatmap = memo(function Heatmap({
       return [colIndex, rowIndex, d.value]
     })
 
-    const values = data.map((d) => d.value)
-    const minValue = Math.min(...values, 0)
-    const maxValue = Math.max(...values, 1)
+    const values = data.map((d) => d.value).filter((v) => v > 0)
+    const minValue = 0
+    // Use at least 0.5 as max so low-risk values don't saturate the whole scale
+    const maxValue = Math.max(...values, 0.5)
 
     return {
       backgroundColor: 'transparent',

@@ -735,17 +735,17 @@ export default function ProcurementIntelligence() {
             Each bar shows how many contracts trigger this risk signal. Click any bar to explore those contracts.
           </p>
 
-          <div className="grid gap-6 md:grid-cols-[1fr_320px]">
+          <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
             {/* Factor frequency bar chart */}
             <div>
               {rfLoading ? <Skeleton className="h-80" /> : factors.length === 0 ? (
                 <p className="text-xs text-text-muted text-center py-8">No factor data</p>
               ) : (
-                <ResponsiveContainer width="100%" height={Math.max(factors.length * 28, 320)}>
+                <ResponsiveContainer width="100%" height={Math.max(factors.length * 32, 360)}>
                   <BarChart
                     data={factors}
                     layout="vertical"
-                    margin={{ left: 4, right: 12, top: 0, bottom: 0 }}
+                    margin={{ left: 4, right: 12, top: 4, bottom: 4 }}
                     onClick={(payload: any) => {
                       const factor = payload?.activePayload?.[0]?.payload?.factor
                       if (factor) setSelectedFactor(prev => prev === factor ? null : factor)
@@ -754,7 +754,7 @@ export default function ProcurementIntelligence() {
                   >
                     <CartesianGrid strokeDasharray="3 3" stroke="#2a2f3e" horizontal={false} />
                     <XAxis type="number" tick={{ fontSize: 10, fill: '#94a3b8' }} tickFormatter={v => formatNumber(v)} />
-                    <YAxis type="category" dataKey="label" tick={{ fontSize: 10, fill: '#94a3b8' }} width={90} />
+                    <YAxis type="category" dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} width={130} />
                     <RechartsTooltip
                       contentStyle={{ background: '#1a1f2e', border: '1px solid #2a2f3e', borderRadius: 6, fontSize: 11 }}
                       formatter={(v: any, _: any, p: any) => [
