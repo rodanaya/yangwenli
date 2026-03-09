@@ -929,119 +929,6 @@ function AIPipelineChart() {
 }
 
 // ============================================================================
-// GRAPHIC 3: Pattern Web SVG
-// ============================================================================
-
-function PatternWebDiagram() {
-  const { t } = useTranslation('executive')
-  const ref = useRef<HTMLDivElement>(null)
-  const [visible, setVisible] = useState(false)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } },
-      { threshold: 0.15 }
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [])
-
-  const items = [
-    {
-      label: t('patternWeb.node1.line1') + ' ' + t('patternWeb.node1.line2'),
-      stat: t('patternWeb.node1.sub'),
-      color: '#fb923c',
-      edge: t('patternWeb.edge1Line1'),
-    },
-    {
-      label: t('patternWeb.node2.line1') + ' ' + t('patternWeb.node2.line2'),
-      stat: t('patternWeb.node2.sub'),
-      color: '#fbbf24',
-      edge: t('patternWeb.edge2Line1'),
-    },
-    {
-      label: t('patternWeb.node3.line1') + ' ' + t('patternWeb.node3.line2'),
-      stat: t('patternWeb.node3.sub'),
-      color: '#f87171',
-      edge: t('patternWeb.edge3Line1'),
-    },
-  ]
-
-  return (
-    <div ref={ref} className="my-8" role="img" aria-label={t('patternWeb.ariaLabel')}>
-      <div className="rounded-xl border border-border/30 bg-surface-alt/50 p-5 overflow-hidden">
-        {/* Three pattern rows stacked vertically with progress-bar style */}
-        <div className="space-y-3">
-          {items.map((item, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-4 transition-all duration-500"
-              style={{
-                opacity: visible ? 1 : 0,
-                transform: visible ? 'translateX(0)' : 'translateX(-20px)',
-                transitionDelay: `${i * 120}ms`,
-              }}
-            >
-              {/* Stat badge */}
-              <div
-                className="flex-shrink-0 w-20 text-center rounded-md py-1.5 font-mono font-black text-base tabular-nums"
-                style={{
-                  color: item.color,
-                  background: `${item.color}14`,
-                  border: `1px solid ${item.color}30`,
-                }}
-              >
-                {item.stat}
-              </div>
-
-              {/* Bar + label */}
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-semibold text-text-primary mb-1 truncate">
-                  {item.label}
-                </div>
-                <div className="relative h-1.5 rounded-full bg-white/5 overflow-hidden">
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-full transition-all duration-700 ease-out"
-                    style={{
-                      width: visible ? (i === 0 ? '71%' : i === 1 ? '44%' : '62%') : '0%',
-                      background: `linear-gradient(90deg, ${item.color}88, ${item.color})`,
-                      transitionDelay: `${i * 120 + 200}ms`,
-                    }}
-                  />
-                </div>
-                <div className="text-[10px] text-text-muted mt-0.5 font-mono">{item.edge}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Separator + result */}
-        <div
-          className="mt-4 pt-3 border-t border-border/20 flex items-center justify-center gap-3 transition-all duration-500"
-          style={{
-            opacity: visible ? 1 : 0,
-            transitionDelay: '500ms',
-          }}
-        >
-          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-risk-critical/30 to-transparent" />
-          <div className="text-center px-4">
-            <span className="text-[10px] font-bold tracking-widest uppercase text-risk-critical/60 font-mono">
-              {t('patternWeb.centerLine1')}
-            </span>
-            <span className="mx-2 text-risk-critical/30">|</span>
-            <span className="text-sm font-black text-risk-critical font-mono">
-              {t('patternWeb.centerLine2')}
-            </span>
-          </div>
-          <div className="h-px flex-1 bg-gradient-to-l from-transparent via-risk-critical/30 to-transparent" />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ============================================================================
 // Risk Level Infographic — 4-tier visual stack
 // ============================================================================
 
@@ -1348,7 +1235,7 @@ function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
         {t('sPatterns.intro')}
       </p>
 
-      <PatternWebDiagram />
+      {/* Pattern detail cards below serve as the visual — diagram removed */}
 
       <div className="space-y-4">
         {patterns.map((p, idx) => {
