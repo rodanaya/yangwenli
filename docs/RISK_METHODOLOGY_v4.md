@@ -1,6 +1,8 @@
 # Risk Scoring Methodology v4.0
 
-> **Superseded**: v4.0 is preserved for reference. Active model is v5.2 (see RISK_METHODOLOGY_v5.md).
+> **Superseded**: v4.0 is preserved for reference. Active model is v5.1 (see RISK_METHODOLOGY_v5.md).
+>
+> **Terminology correction (March 2026):** This document originally described v4.0 scores as "calibrated probabilities of corruption." This framing is **incorrect**. Risk scores are statistical similarity indicators — they measure how closely a contract's procurement characteristics resemble those from documented corruption cases. They are NOT calibrated probabilities. The Positive-Unlabeled learning correction factor (c=0.890) does NOT represent true labeling coverage of all corruption; it reflects the model's detection rate for patterns similar to the training cases. See RISK_METHODOLOGY_v5.md Section 9 for full limitations. References to "probability" below are retained for historical accuracy but should be read as "risk indicator score."
 
 **Last Updated:** February 9, 2026 | **Contracts:** 3,110,017 | **Years:** 2002-2025
 

@@ -65,7 +65,7 @@
     "mahalanobisFormula": "D²(z) = zᵀ Σ⁻¹ z",
     "perSector": "Regresión Logística por Sector",
     "perSectorDesc": "v5.1 entrena 12 modelos dedicados (uno por sector) más un respaldo global. Los patrones de corrupción difieren por sector — Energía es impulsado por desajuste industrial, mientras que Agricultura es impulsado por concentración de proveedores (+1.82).",
-    "perSectorFormula": "P(corrupto|z) = σ(β₀ + βᵀz) / c, donde c = 0.887 (corrección PU)"
+    "perSectorFormula": "Indicador(z) = σ(β₀ + βᵀz) / c, donde c = 0.882 (corrección PU). Los puntajes son indicadores de similitud estadística, no probabilidades calibradas."
   },
   "modelComparison": {
     "title": "Comparación de Modelos: v3.3 → v5.1",
@@ -153,7 +153,7 @@
     "coeffChart": {
       "title": "¿Qué Impulsa las Puntuaciones de Riesgo?",
       "description": "Coeficientes de regresión logística — barras más grandes significan mayor influencia en la puntuación de riesgo",
-      "callout": "Cada coeficiente representa el cambio en log-odds de corrupción por cada aumento de 1 desviación estándar en la característica z-normalizada. Los valores positivos aumentan el riesgo; los negativos lo disminuyen.",
+      "callout": "Cada coeficiente representa el cambio en log-odds del indicador de riesgo por cada aumento de 1 desviación estándar en la característica z-normalizada. Los valores positivos aumentan el puntaje; los negativos lo disminuyen. Los coeficientes miden asociación estadística con patrones documentados de corrupción, no probabilidad literal.",
       "calloutCI": " Las barras de error muestran intervalos de confianza del 95% por bootstrap (1,000 remuestreos).",
       "sectorLabel": "Seleccionar sector para coeficientes",
       "sectorGlobal": "Global (todos los sectores)",
@@ -208,7 +208,7 @@
       "smallCase": "Detección de Casos Pequeños",
       "smallCaseDesc": "Los casos con pocos contratos tienen tasas de detección más bajas: La Estafa Maestra (10 contratos, 0% alto+), Oceanografía (2 contratos, 50% detección). El modelo requiere suficiente volumen de contratos para detectar patrones de forma confiable.",
       "noCausal": "Sin Afirmaciones Causales",
-      "noCausalDesc": "Un P(corrupto|z) alto indica una anomalía estadística consistente con patrones de corrupción observados en 22 casos documentados. No prueba corrupción. Algunos sectores (defensa, energía) tienen razones estructurales para una alta concentración de proveedores que son legítimas.",
+      "noCausalDesc": "Un puntaje de riesgo alto indica una anomalía estadística consistente con patrones de corrupción observados en 22 casos documentados. No prueba corrupción. Algunos sectores (defensa, energía) tienen razones estructurales para una alta concentración de proveedores que son legítimas.",
       "dataQuality": "Variación en la Calidad de Datos",
       "dataQualityDesc": "Los datos de la Estructura A (2002-2010) tienen solo 0.1% de cobertura RFC, lo que hace poco confiable la identificación de proveedores en ese período. Los z-scores y las puntuaciones de riesgo para contratos anteriores pueden ser menos precisos. El análisis de redes es más confiable para datos de 2010+ donde la cobertura RFC supera el 15%."
     },

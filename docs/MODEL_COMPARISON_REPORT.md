@@ -1,5 +1,7 @@
 # Risk Model Comparison Report: v3.3 vs v4.0
 
+> **Terminology correction (March 2026):** This report describes v4.0 scores as "calibrated corruption probabilities." This framing is incorrect — scores are statistical risk indicators measuring similarity to documented corruption patterns, not literal probabilities. Both v3.3 and v4.0 are superseded by v5.1 (see RISK_METHODOLOGY_v5.md). References to "probability" below are historical.
+
 **Generated:** February 9, 2026 | **Database:** 3,110,017 contracts | **Ground Truth:** 9 cases, 17 vendors, 21,252 contracts
 
 ---

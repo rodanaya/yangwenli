@@ -72,7 +72,7 @@ export function formatDate(date: string | Date): string {
 import { getRiskLevelFromScore } from './constants'
 
 /**
- * Get risk level from score (v4.0 thresholds — calibrated probabilities)
+ * Get risk level from score (v4.0 thresholds — risk similarity indicators)
  * Delegates to the canonical function in constants.ts
  */
 export function getRiskLevel(score: number): 'critical' | 'high' | 'medium' | 'low' {

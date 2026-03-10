@@ -203,7 +203,7 @@
     "coeffChart": {
       "title": "What Drives Risk Scores?",
       "description": "Logistic regression coefficients — larger bars mean stronger influence on the risk score",
-      "callout": "Each coefficient represents the change in log-odds of corruption per 1 standard deviation increase in the z-scored feature. Positive values increase risk; negative values decrease it.",
+      "callout": "Each coefficient represents the change in the risk indicator's log-odds per 1 standard deviation increase in the z-scored feature. Positive values increase the risk score; negative values decrease it. Coefficients measure statistical association with documented corruption patterns, not literal probability of corruption.",
       "calloutCI": " Error bars show 95% bootstrap confidence intervals (1,000 resamples).",
       "sectorLabel": "Select sector for coefficients",
       "sectorGlobal": "Global (all sectors)",
@@ -258,7 +258,7 @@
       "smallCase": "Small-Case Detection",
       "smallCaseDesc": "Cases with few contracts have lower detection rates: La Estafa Maestra (10 contracts, 0% high+), Oceanografia (2 contracts, 50% detection). The model requires sufficient contract volume to detect patterns reliably.",
       "noCausal": "No Causal Claims",
-      "noCausalDesc": "A high P(corrupt|z) indicates a statistical anomaly consistent with corruption patterns observed in 22 documented cases. It does not prove corruption. Some sectors (defense, energy) have structural reasons for high vendor concentration that are legitimate.",
+      "noCausalDesc": "A high risk score indicates a statistical anomaly consistent with corruption patterns observed in 22 documented cases. It does not prove corruption. Some sectors (defense, energy) have structural reasons for high vendor concentration that are legitimate.",
       "dataQuality": "Data Quality Variation",
       "dataQualityDesc": "Structure A data (2002-2010) has only 0.1% RFC coverage, making vendor identification unreliable for that period. Z-scores and risk scores for earlier contracts may be less accurate. Network analysis is most reliable for 2010+ data where RFC coverage exceeds 15%."
     },

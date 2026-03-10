@@ -880,7 +880,7 @@ export function Methodology() {
                 <p className="text-xs font-semibold text-text-primary mb-1">PU-Learning Correction (Elkan & Noto 2008)</p>
                 <p className="text-xs text-text-secondary leading-relaxed">
                   Since unlabeled contracts are not necessarily clean (some may be corrupt but undetected),
-                  we apply a Positive-Unlabeled learning correction: <Mono>P(corrupt|x) = P(labeled=1|x) / c</Mono>
+                  we apply a Positive-Unlabeled learning correction: <Mono>S(x) = P(labeled=1|x) / c</Mono>
                 </p>
                 <p className="text-xs text-text-muted mt-1">
                   Estimated c = 0.8815 using Elkan & Noto holdout method (20% held-out positives) — meaning
@@ -1031,7 +1031,7 @@ export function Methodology() {
                 },
                 {
                   title: 'No causal claims',
-                  text: 'A high P(corrupt|x) indicates a statistical anomaly consistent with corruption patterns. It does not constitute proof of wrongdoing. Risk scores are intended to prioritize investigation, not determine guilt.',
+                  text: 'A high risk score indicates a statistical anomaly consistent with documented corruption patterns. It does not constitute proof of wrongdoing. Risk scores are intended to prioritize investigation, not determine guilt.',
                 },
               ].map((item) => (
                 <div key={item.title} className="flex gap-2">

@@ -17,19 +17,19 @@ RISK_THRESHOLDS = {
     'low': 0.0,
 }
 
-# Risk level thresholds (v4.0) — calibrated probability model
-# Aligned with documented methodology (RISK_METHODOLOGY_v4.md)
-# High+ rate: 11.0% (OECD benchmark: 2-15%)
+# Risk level thresholds — statistical risk indicators (NOT probabilities)
+# Scores measure similarity to documented corruption patterns.
+# A score of 0.50 does NOT mean "50% probability of corruption."
+# High+ rate: 9.0% (OECD benchmark: 2-15%)
 RISK_THRESHOLDS_V4 = {
-    'critical': 0.50,   # ≥50% estimated corruption probability
-    'high': 0.30,       # ≥30% probability
-    'medium': 0.10,     # ≥10% probability
-    'low': 0.0,         # <10% probability
+    'critical': 0.50,   # Strongest similarity to known corruption patterns
+    'high': 0.30,       # Strong similarity
+    'medium': 0.10,     # Moderate similarity
+    'low': 0.0,         # Low similarity
 }
 
-# Risk level thresholds (v5.0) — per-sector calibrated probability model
-# Same thresholds as v4.0, validated against diversified ground truth (15 cases)
-# High+ rate: 10.6% (OECD benchmark: 2-15%)
+# v5.1 uses the same thresholds, validated against 22 documented cases
+# High+ rate: 9.0% (OECD benchmark: 2-15%)
 RISK_THRESHOLDS_V5 = RISK_THRESHOLDS_V4
 
 # Active model version

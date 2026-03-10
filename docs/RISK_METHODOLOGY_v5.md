@@ -328,7 +328,21 @@ Corruption that does not match this pattern is systematically underdetected:
 - Distributed corruption across many small contracts
 - Corruption in Defensa, Ambiente, Trabajo (few training cases)
 
-### 9.3 Vendor Deduplication — Unsolved Identity Problem
+### 9.3 Vendor-Level Labeling — Not All Contracts From a Bad Vendor Are Bad
+
+The model labels **all contracts** from a ground-truth vendor as positive (corrupt). This is a deliberate simplification required by the Positive-Unlabeled framework, but it introduces label noise:
+
+- **Laboratorios Pisa** has ~5,800 contracts spanning 2002–2025 across 94 institutions. Some are competitive bids from 2003 at children's hospitals — almost certainly legitimate. Yet all are labeled as positive training examples.
+- **LICONSA** is a government parastatal distributing subsidized milk. Its ~3,000 contracts include routine milk deliveries that are labeled as "corrupt" because the vendor was implicated in the Segalmex scandal during a specific period.
+- **Top 5 vendors account for ~85% of positive training data.** The model's understanding of "corruption" is dominated by the business characteristics of these 5 vendors.
+
+**Estimated contamination**: 30–50% of positive training contracts are likely clean — legitimate transactions from vendors who committed fraud only in specific periods, at specific institutions, or through specific contract types.
+
+**Impact on learned coefficients**: The model learns features of *large pharmaceutical/agricultural distributors* (high price_volatility, high win_rate, moderate vendor_concentration) rather than features of *corruption per se*. This is why the model performs well on similar cases (AUC 0.957) but poorly on structurally different corruption (La Estafa Maestra: 0% high+, Grupo Higa: 33% high+).
+
+**Planned mitigation (v6.0)**: Scope positive labels to contracts matching the documented fraud mechanism — specific institution, time period, and contract type. This would reduce the positive set from ~280K to ~50–80K contracts but dramatically improve label precision.
+
+### 9.4 Vendor Deduplication — Unsolved Identity Problem
 
 The same company appears under hundreds of name variations across 23 years of data from different government systems. The platform uses RFC as the primary match key when available, but RFC coverage is 0.1% (2002–2010), 15.7% (2010–2017), 30.3% (2018–2022), 47.4% (2023–2025).
 
@@ -340,7 +354,7 @@ The same company appears under hundreds of name variations across 23 years of da
 
 **Impact**: True vendor concentration is higher than displayed for 2002–2017 data. The "Top Vendor" per category is the single name-string with the most contracts — the real dominant vendor may be spread across name variants.
 
-### 9.4 Co-Bidding Signal — Regularized to Zero
+### 9.5 Co-Bidding Signal — Regularized to Zero
 
 `co_bid_rate` was regularized to exactly 0.000 in both global and all 12 per-sector models. Co-bidding patterns do not discriminate between corrupt and clean vendors in our current training data — because the dominant training cases involve market concentration rather than coordinated bidding rings.
 
@@ -351,7 +365,7 @@ The same company appears under hundreds of name variations across 23 years of da
 
 The Vendor Profile → Collusion Detection tab provides a separate heuristic analysis, but this does not feed into the contract-level risk score.
 
-### 9.5 Data Quality by Period
+### 9.6 Data Quality by Period
 
 | Structure | Years | RFC Coverage | Quality |
 |-----------|-------|-------------|---------|
@@ -362,7 +376,7 @@ The Vendor Profile → Collusion Detection tab provides a separate heuristic ana
 
 Risk scores for 2002–2010 contracts are directional estimates, not precise probabilities.
 
-### 9.6 Structural Concentration — Legitimate Monopolies
+### 9.7 Structural Concentration — Legitimate Monopolies
 
 Some sectors have quasi-monopolies driven by regulation, clearance requirements, or market structure:
 - **Energía**: Specialized equipment suppliers require technical certification; Edenred/Sodexo hold ~90% of the meal voucher market by regulation
@@ -371,21 +385,21 @@ Some sectors have quasi-monopolies driven by regulation, clearance requirements,
 
 The z-score normalization partially handles this by comparing within sector/year, but concentration signals persist.
 
-### 9.7 PU Learning Assumption — SCAR Violation
+### 9.8 PU Learning Assumption — SCAR Violation
 
 The Elkan & Noto correction assumes labeled positives are a **S**elected **C**ompletely **A**t **R**andom (SCAR) sample of all corrupt contracts. The labeled positives are NOT a random sample of corrupt contracts. They are contracts from **publicly documented, high-profile scandals** — IMSS, Segalmex, COVID procurement — selected because they attracted regulatory and media attention. Selection probability is correlated with vendor size, sector prominence, and media visibility. The SCAR assumption is structurally violated. The correction factor c=0.887 estimates how well the model detects cases **similar to already-known scandals**. True coverage of all corruption (including undiscovered, small-scale, or non-media-visible fraud) is likely far lower (estimated 0.10–0.30). This is a fundamental limitation of any model trained on documented cases only.
 
-### 9.8 Temporal Stationarity
+### 9.9 Temporal Stationarity
 
 The model was trained on contracts ≤2020 and tested on ≥2021 (AUC 0.960). It assumes corruption patterns are relatively stable over time. If a new administration introduces fundamentally different fraud mechanisms, the model may be slow to detect them until new ground truth cases are documented and incorporated.
 
-### 9.9 Correlation Is Not Causation
+### 9.10 Correlation Is Not Causation
 
 A risk score of 0.85 means: *"This contract has statistical characteristics similar to contracts from documented corruption cases."* It does not mean the contract is corrupt. A legitimate bulk medicine purchase by IMSS from a major pharmaceutical supplier scores high for the same reasons a fraudulent one does — large amount, concentrated vendor, same institution.
 
 Scores are **investigation triage**, not verdicts.
 
-### 9.10 Temporal Feature Leakage — Being Fixed in v5.2
+### 9.11 Temporal Feature Leakage — Being Fixed in v5.2
 
 Vendor-level features (vendor_concentration, win_rate, price_volatility, institution_diversity, sector_spread) are currently computed using full-dataset history (2002–2025). A contract from 2019 has its vendor_concentration computed using 2020–2025 activity. This constitutes indirect leakage of future information into the training set, inflating the reported Test AUC of 0.960. The true prospective performance on genuinely unseen vendors is unknown but expected to be lower. **v5.2 fix**: Point-in-time feature computation using rolling aggregates (features for year T use only data from years ≤ T−1). A new `compute_vendor_rolling_stats.py` pipeline step produces a `vendor_rolling_stats` table for this purpose.
 
@@ -395,6 +409,7 @@ Vendor-level features (vendor_concentration, win_rate, price_volatility, institu
 |-----------|--------|----------|
 | Execution-phase fraud invisible | Construction/infrastructure underscored | Partial (needs ASF data) |
 | Training bias (3 dominant cases) | Small-vendor corruption underdetected | Partial (Case 22 added in v5.1, but 3 large cases still dominate) |
+| **Vendor-level labeling (30–50% label noise)** | **All contracts from GT vendors labeled corrupt; ~85% of positives from 5 vendors; model learns vendor profile, not corruption** | **Yes (v6.0: contract-level scoping by institution + time period)** |
 | **Ghost company blind spot (partial fix)** | **EFOS definitivo vendors score avg 0.283 in v5.1 (up from 0.028 in v5.0); 58.2% still score low** | **Partial (Case 22 in v5.1; pattern fundamentally different from training majority)** |
 | Vendor deduplication unsolved | True concentration understated pre-2018 | Partial (RFC blocking) |
 | Co-bidding signal = zero | Bid rotation not in risk score | Yes (needs collusion ground truth) |
