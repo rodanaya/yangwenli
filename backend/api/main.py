@@ -74,6 +74,7 @@ from .routers.subnational import router as subnational_router
 from .routers.issues import router as issues_router
 from .routers.ai_explain import router as ai_router
 from .routers.aria import router as aria_router
+from .routers.procurement_health import router as phi_router
 
 logger = structlog.get_logger("rubli.api")
 
@@ -341,6 +342,7 @@ app.include_router(subnational_router, prefix="/api/v1")
 app.include_router(issues_router, prefix="/api/v1")
 app.include_router(ai_router, prefix="/api/v1")
 app.include_router(aria_router, prefix="/api/v1")
+app.include_router(phi_router)  # PHI has its own /api/v1/procurement-health prefix
 
 
 def _get_latest_backup_info() -> dict | None:

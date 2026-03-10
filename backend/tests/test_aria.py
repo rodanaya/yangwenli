@@ -196,6 +196,7 @@ class TestPatternClassifier:
             "direct_award_rate":  0.90,
             "years_active":       2,
             "rfc":                None,
+            "total_value_mxn":    5_000_000,
         })
         patterns = classify_patterns(data)
         assert patterns["P2"] >= 0.50
