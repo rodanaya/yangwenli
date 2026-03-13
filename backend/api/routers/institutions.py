@@ -1602,9 +1602,9 @@ def get_concentration_rankings(
             year = row[0] if row and row[0] is not None else 2024
 
         sector_filter = "AND i.sector_id = ?" if sector_id else ""
-        params: List[Any] = [year, year, limit]
+        params: List[Any] = [year, limit]
         if sector_id:
-            params = [year, year, sector_id, limit]
+            params = [year, sector_id, limit]
 
         rows = conn.execute(f"""
             WITH vendor_shares AS (
@@ -1662,9 +1662,9 @@ def get_concentration_rankings(
         ]
 
         # Also compute least concentrated (most diverse)
-        params_asc: List[Any] = [year, year, limit]
+        params_asc: List[Any] = [year, limit]
         if sector_id:
-            params_asc = [year, year, sector_id, limit]
+            params_asc = [year, sector_id, limit]
 
         rows_asc = conn.execute(f"""
             WITH vendor_shares AS (
