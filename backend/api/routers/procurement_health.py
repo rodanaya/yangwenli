@@ -299,6 +299,43 @@ def _compute_sector_phi(conn: sqlite3.Connection, sector_id: Optional[int] = Non
 
 
 # ---------------------------------------------------------------------------
+# Precomputed data helpers
+# ---------------------------------------------------------------------------
+
+_METHODOLOGY = {
+    "name": "Procurement Health Index (PHI)",
+    "version": "1.0",
+    "based_on": [
+        "IMF Working Paper WP/2022/094",
+        "OECD Government at a Glance 2025",
+        "EU Single Market Scoreboard (ECA SR-2023-28)",
+        "US DOJ/FTC HHI Guidelines 2023",
+    ],
+    "indicators": len(THRESHOLDS),
+    "description": (
+        "Rule-based procurement health assessment using internationally "
+        "recognized indicators. No machine learning. Every number is "
+        "verifiable from raw COMPRANET data."
+    ),
+}
+
+_GRADE_ORDER = {"F": 0, "D": 1, "C": 2, "B": 3, "A": 4, "N/A": 5}
+
+
+def _load_precomputed(conn: sqlite3.Connection, key: str):
+    """Return parsed JSON from precomputed_stats, or None if missing."""
+    row = conn.execute(
+        "SELECT stat_value FROM precomputed_stats WHERE stat_key = ?", (key,)
+    ).fetchone()
+    if row is None:
+        return None
+    try:
+        return json.loads(row["stat_value"])
+    except Exception:
+        return None
+
+
+# ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
 
@@ -307,51 +344,41 @@ async def phi_all_sectors(
     year_min: Optional[int] = Query(None, description="Filter: minimum year"),
     year_max: Optional[int] = Query(None, description="Filter: maximum year"),
 ):
-    """PHI report card for all 12 sectors."""
+    """PHI report card for all 12 sectors. Served from precomputed data (<100ms)."""
     with get_db() as conn:
-        # Get sector list
+        # Fast path: precomputed all-time data (no year filter)
+        if year_min is None and year_max is None:
+            cached = _load_precomputed(conn, "phi_sectors")
+            if cached is not None:
+                results = cached["sectors"]
+                results.sort(key=lambda x: _GRADE_ORDER.get(x.get("grade", "N/A"), 5))
+                return {
+                    "methodology": _METHODOLOGY,
+                    "thresholds": THRESHOLDS,
+                    "national": cached["national"],
+                    "sectors": results,
+                    "source": "precomputed",
+                }
+
+        # Fallback: live computation (year-filtered or cache miss)
+        logger.warning("PHI /sectors falling back to live computation (year_min=%s year_max=%s)",
+                       year_min, year_max)
         sectors = conn.execute(
             "SELECT id, name_en as name FROM sectors ORDER BY id"
         ).fetchall()
-
         results = []
         for s in sectors:
             phi = _compute_sector_phi(conn, sector_id=s["id"],
                                       year_min=year_min, year_max=year_max)
-            results.append({
-                "sector_id": s["id"],
-                "sector_name": s["name"],
-                **phi,
-            })
-
-        # Sort by grade (worst first for journalistic impact)
-        grade_order = {"F": 0, "D": 1, "C": 2, "B": 3, "A": 4, "N/A": 5}
-        results.sort(key=lambda x: grade_order.get(x.get("grade", "N/A"), 5))
-
-        # Overall national
+            results.append({"sector_id": s["id"], "sector_name": s["name"], **phi})
+        results.sort(key=lambda x: _GRADE_ORDER.get(x.get("grade", "N/A"), 5))
         national = _compute_sector_phi(conn, year_min=year_min, year_max=year_max)
-
         return {
-            "methodology": {
-                "name": "Procurement Health Index (PHI)",
-                "version": "1.0",
-                "based_on": [
-                    "IMF Working Paper WP/2022/094",
-                    "OECD Government at a Glance 2025",
-                    "EU Single Market Scoreboard (ECA SR-2023-28)",
-                    "US DOJ/FTC HHI Guidelines 2023",
-                ],
-                "indicators": len(THRESHOLDS),
-                "description": "Rule-based procurement health assessment using internationally "
-                               "recognized indicators. No machine learning. Every number is "
-                               "verifiable from raw COMPRANET data.",
-            },
+            "methodology": _METHODOLOGY,
             "thresholds": THRESHOLDS,
-            "national": {
-                "sector_name": "National (all sectors)",
-                **national,
-            },
+            "national": {"sector_name": "National (all sectors)", **national},
             "sectors": results,
+            "source": "live",
         }
 
 
@@ -369,11 +396,16 @@ async def phi_sector_detail(
         if not sector:
             raise HTTPException(status_code=404, detail="Sector not found")
 
-        # Current indicators
+        # Fast path: precomputed all-time data (no year filter)
+        if year_min is None and year_max is None:
+            cached = _load_precomputed(conn, f"phi_sector_detail_{sector_id}")
+            if cached is not None:
+                return {**cached, "source": "precomputed"}
+
+        # Fallback: live computation
+        logger.warning("PHI /sectors/%d falling back to live computation", sector_id)
         phi = _compute_sector_phi(conn, sector_id=sector_id,
                                   year_min=year_min, year_max=year_max)
-
-        # Year-over-year trend (last 10 years)
         trend = []
         for year in range(2015, 2026):
             year_phi = _compute_sector_phi(conn, sector_id=sector_id,
@@ -387,19 +419,32 @@ async def phi_sector_detail(
                     "grade": year_phi["grade"],
                     "total_contracts": year_phi["total_contracts"],
                 })
-
         return {
             "sector_id": sector["id"],
             "sector_name": sector["name"],
             **phi,
             "trend": trend,
+            "source": "live",
         }
 
 
 @router.get("/trend")
 async def phi_national_trend():
-    """National PHI trend over time — how has procurement health changed?"""
+    """National PHI trend over time. Served from precomputed data."""
     with get_db() as conn:
+        cached = _load_precomputed(conn, "phi_trend")
+        if cached is not None:
+            return {
+                "description": (
+                    "National procurement health trend — how Mexico's procurement "
+                    "transparency has evolved over 15 years"
+                ),
+                "years": cached,
+                "source": "precomputed",
+            }
+
+        # Fallback: live computation
+        logger.warning("PHI /trend falling back to live computation")
         results = []
         for year in range(2010, 2026):
             phi = _compute_sector_phi(conn, year_min=year, year_max=year)
@@ -416,39 +461,45 @@ async def phi_national_trend():
                     "total_contracts": phi["total_contracts"],
                     "total_value_mxn": phi["total_value_mxn"],
                 })
-
         return {
-            "description": "National procurement health trend — how Mexico's procurement "
-                           "transparency has evolved over 15 years",
+            "description": (
+                "National procurement health trend — how Mexico's procurement "
+                "transparency has evolved over 15 years"
+            ),
             "years": results,
+            "source": "live",
         }
 
 
 @router.get("/ml-correlation")
 async def phi_ml_correlation():
-    """Show correlation between PHI indicators and ML risk scores.
-
-    Demonstrates that simple, transparent indicators and the ML model
-    converge on the same conclusions — building credibility for both.
-    """
+    """Correlation between PHI indicators and ML risk scores. Served from precomputed data."""
     with get_db() as conn:
-        # Compare avg risk score by PHI indicator values
-        correlations = {}
+        cached = _load_precomputed(conn, "phi_ml_correlation")
+        if cached is not None:
+            return {
+                "description": (
+                    "Correlation between simple PHI indicators and ML risk scores. "
+                    "When both approaches flag the same contracts, confidence increases."
+                ),
+                **cached,
+                "source": "precomputed",
+            }
 
-        # 1. Direct award vs competitive — avg risk score
+        # Fallback: live computation
+        logger.warning("PHI /ml-correlation falling back to live computation")
+        correlations: Dict[str, Any] = {}
         da_risk = conn.execute("""
             SELECT
                 CASE WHEN is_direct_award = 1 THEN 'Direct Award' ELSE 'Competitive' END as method,
                 COUNT(*) as contracts,
                 ROUND(AVG(risk_score), 4) as avg_risk,
                 ROUND(SUM(amount_mxn)/1e9, 1) as value_billion
-            FROM contracts
-            WHERE amount_mxn > 0
+            FROM contracts WHERE amount_mxn > 0
             GROUP BY is_direct_award
         """).fetchall()
         correlations["by_procedure_type"] = [dict(r) for r in da_risk]
 
-        # 2. Single bid vs multi-bid — avg risk score
         sb_risk = conn.execute("""
             SELECT
                 CASE WHEN is_single_bid = 1 THEN 'Single Bid'
@@ -456,48 +507,43 @@ async def phi_ml_correlation():
                      ELSE 'Direct Award' END as category,
                 COUNT(*) as contracts,
                 ROUND(AVG(risk_score), 4) as avg_risk
-            FROM contracts
-            WHERE amount_mxn > 0
-            GROUP BY category
-            ORDER BY avg_risk DESC
+            FROM contracts WHERE amount_mxn > 0
+            GROUP BY category ORDER BY avg_risk DESC
         """).fetchall()
         correlations["by_competition"] = [dict(r) for r in sb_risk]
 
-        # 3. Sectors ranked by PHI grade vs avg ML risk
         sector_comparison = conn.execute("""
-            SELECT
-                s.name as sector,
-                COUNT(*) as contracts,
-                ROUND(AVG(CASE WHEN c.is_direct_award = 0 THEN 1.0 ELSE 0.0 END) * 100, 1) as competition_rate,
-                ROUND(AVG(c.risk_score), 4) as avg_ml_risk
-            FROM contracts c
-            JOIN sectors s ON c.sector_id = s.id
+            SELECT s.name_es as sector,
+                   COUNT(*) as contracts,
+                   ROUND(AVG(CASE WHEN c.is_direct_award = 0 THEN 1.0 ELSE 0.0 END) * 100, 1) as competition_rate,
+                   ROUND(AVG(c.risk_score), 4) as avg_ml_risk
+            FROM contracts c JOIN sectors s ON c.sector_id = s.id
             WHERE c.amount_mxn > 0
-            GROUP BY s.id
-            ORDER BY avg_ml_risk DESC
+            GROUP BY s.id ORDER BY avg_ml_risk DESC
         """).fetchall()
         correlations["sector_comparison"] = [dict(r) for r in sector_comparison]
 
-        # 4. Agreement rate — what % of high-risk ML contracts also have PHI red flags?
         agreement = conn.execute("""
-            SELECT
-                COUNT(*) as total_high_risk,
-                SUM(CASE WHEN is_direct_award = 1 OR is_single_bid = 1 THEN 1 ELSE 0 END) as also_phi_flagged,
-                ROUND(SUM(CASE WHEN is_direct_award = 1 OR is_single_bid = 1 THEN 1.0 ELSE 0.0 END)
-                      / COUNT(*) * 100, 1) as agreement_pct
-            FROM contracts
-            WHERE risk_score >= 0.30 AND amount_mxn > 0
+            SELECT COUNT(*) as total_high_risk,
+                   SUM(CASE WHEN is_direct_award = 1 OR is_single_bid = 1 THEN 1 ELSE 0 END) as also_phi_flagged,
+                   ROUND(SUM(CASE WHEN is_direct_award = 1 OR is_single_bid = 1 THEN 1.0 ELSE 0.0 END)
+                         / COUNT(*) * 100, 1) as agreement_pct
+            FROM contracts WHERE risk_score >= 0.30 AND amount_mxn > 0
         """).fetchone()
         correlations["ml_phi_agreement"] = {
             "high_risk_contracts": agreement["total_high_risk"],
             "also_flagged_by_phi": agreement["also_phi_flagged"],
             "agreement_rate": agreement["agreement_pct"],
-            "interpretation": "Percentage of ML high-risk contracts that also trigger "
-                              "at least one simple PHI red flag (direct award or single bid)",
+            "interpretation": (
+                "Percentage of ML high-risk contracts that also trigger "
+                "at least one simple PHI red flag (direct award or single bid)"
+            ),
         }
-
         return {
-            "description": "Correlation between simple PHI indicators and ML risk scores. "
-                           "When both approaches flag the same contracts, confidence increases.",
+            "description": (
+                "Correlation between simple PHI indicators and ML risk scores. "
+                "When both approaches flag the same contracts, confidence increases."
+            ),
             "correlations": correlations,
+            "source": "live",
         }
