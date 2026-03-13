@@ -2315,6 +2315,31 @@ export const ariaApi = {
   },
 }
 
+// ============================================================================
+// Procurement Health Index (PHI) Endpoints
+// ============================================================================
+
+export const phiApi = {
+  async getSectors(yearMin?: number, yearMax?: number) {
+    const params = buildQueryParams({ year_min: yearMin, year_max: yearMax })
+    const { data } = await api.get(`/procurement-health/sectors?${params}`)
+    return data
+  },
+  async getSectorDetail(sectorId: number, yearMin?: number, yearMax?: number) {
+    const params = buildQueryParams({ year_min: yearMin, year_max: yearMax })
+    const { data } = await api.get(`/procurement-health/sectors/${sectorId}?${params}`)
+    return data
+  },
+  async getTrend() {
+    const { data } = await api.get('/procurement-health/trend')
+    return data
+  },
+  async getCorrelation() {
+    const { data } = await api.get('/procurement-health/ml-correlation')
+    return data
+  },
+}
+
 // Default export with all API modules
 export default {
   sector: sectorApi,
@@ -2337,4 +2362,5 @@ export default {
   dossiers: dossierApi,
   issues: issueApi,
   aria: ariaApi,
+  phi: phiApi,
 }

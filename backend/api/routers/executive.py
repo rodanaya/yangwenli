@@ -373,24 +373,25 @@ def _build_summary(conn) -> dict:
             test_auc_val = cal_row["test_auc"]
         except (IndexError, KeyError):
             pass
+        is_v6 = cal_row["model_version"] == 'v6.0'
         model = {
             "version": cal_row["model_version"],
             "features": 16,
-            "sub_models": 13,
-            "auc": round(test_auc_val, 3) if test_auc_val else 0.957,
-            "train_auc": round(train_auc, 3) if train_auc else 0.964,
+            "sub_models": 1 if is_v6 else 13,
+            "auc": round(test_auc_val, 3) if test_auc_val else 0.959,
+            "train_auc": round(train_auc, 3) if train_auc else 0.924,
             "brier": round(cal_row["brier_score"], 3) if cal_row["brier_score"] else None,
             "pu_correction": round(cal_row["pu_correction_factor"], 3) if cal_row["pu_correction_factor"] else None,
         }
     else:
         model = {
-            "version": "v5.1",
+            "version": "v6.0",
             "features": 16,
-            "sub_models": 13,
-            "auc": 0.957,
-            "train_auc": 0.964,
-            "brier": 0.060,
-            "pu_correction": 0.882,
+            "sub_models": 1,
+            "auc": 0.959,
+            "train_auc": 0.924,
+            "brier": 0.090,
+            "pu_correction": 0.759,
         }
 
     # Lift from v4.0 comparison report (stable between retrainings)

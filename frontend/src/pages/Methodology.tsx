@@ -160,6 +160,15 @@ const MODEL_EVOLUTION_STEPS = [
     title: 'EFOS Integration',
     desc: '22 cases including SAT EFOS Case 22: 38 RFC-confirmed ghost companies.',
     metric: 'AUC 0.957',
+    active: false,
+    overlay: false,
+  },
+  {
+    version: 'v6.0',
+    date: 'Mar 10, 2026',
+    title: 'Honest Anomaly Ranker',
+    desc: 'Vendor-stratified split (no vendor in both train+test), time-windowed labels, 519 GT vendors.',
+    metric: 'AUC 0.959',
     active: true,
     overlay: false,
   },
@@ -537,9 +546,9 @@ export function Methodology() {
           <CollapsibleSection id="overview" title={t('sectionLabels.overview')} icon={Shield}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
-                Every risk score is a <strong className="text-text-primary">statistical corruption risk indicator</strong>{' '}
-                <Mono>S(corrupt|features)</Mono> with 95% confidence intervals. Unlike the previous weighted
-                checklist, v5.1 scores measure statistical similarity to documented corruption patterns: a score of 0.35 means this contract's procurement characteristics closely resemble those from known corruption cases.
+                Every risk score is a <strong className="text-text-primary">statistical risk indicator</strong>{' '}
+                <Mono>S(features)</Mono> with 95% confidence intervals. The v6.0 model uses vendor-stratified
+                validation (no vendor appears in both training and test sets), producing an honest test AUC of 0.959. A score of 0.35 means this contract's procurement characteristics closely resemble those from documented corruption cases.
               </p>
 
               <div className="p-3 rounded-md bg-accent/5 border border-accent/10">
@@ -550,7 +559,7 @@ export function Methodology() {
                   S(z) = sigma(beta_0 + beta^T z) / c
                 </Formula>
                 <p className="text-xs text-text-muted">
-                  Where z = z-score features, beta = learned coefficients, sigma = logistic sigmoid, c = PU correction (0.882).
+                  Where z = z-score features, beta = learned coefficients, sigma = logistic sigmoid, c = PU correction (0.759).
                   S(z) is a <strong>risk similarity score</strong> — it measures how closely a contract&apos;s
                   procurement characteristics resemble those from documented corruption cases. It is not a
                   literal probability of corruption.
@@ -607,9 +616,9 @@ export function Methodology() {
               </div>
 
               <p className="text-xs text-text-muted">
-                High-risk rate: <strong className="text-text-secondary">10.6%</strong> (critical + high).
-                Thresholds were calibrated using 22 documented corruption cases to yield a rate consistent with
-                international procurement risk ranges. v5.1 is the active model, replacing v5.0 on February 27, 2026.
+                High-risk rate: <strong className="text-text-secondary">~9-11%</strong> (critical + high).
+                Thresholds calibrated against 289+ documented cases to yield a rate consistent with
+                international procurement risk ranges. v6.0 is the active model (Mar 10, 2026), using vendor-stratified validation.
               </p>
             </div>
           </CollapsibleSection>
@@ -621,7 +630,7 @@ export function Methodology() {
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
                 Each contract is described by 16 z-score features normalized by sector and year baselines.
-                v5.1 uses 4 behavioral features added in v5.0: price_volatility, institution_diversity, win_rate, and sector_spread.
+                v6.0 uses 4 behavioral features added in v5.0: price_volatility, institution_diversity, win_rate, and sector_spread.
                 The chart below shows the learned cross-validated ElasticNet coefficients.
                 Positive coefficients increase the risk score; negative coefficients decrease it.
               </p>
@@ -911,7 +920,7 @@ export function Methodology() {
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
                 The <strong className="text-text-primary">v5.2 analytical layer</strong> adds three independent
-                ML tools on top of the active v5.1 risk scores. These tools do not replace or alter any contract
+                ML tools on top of the active v6.0 risk scores. These tools do not replace or alter any contract
                 risk scores — they provide additional explanations and cross-validation signals.
               </p>
 
@@ -987,7 +996,7 @@ export function Methodology() {
                 </p>
                 <p className="text-xs text-text-secondary leading-relaxed">
                   A contract is <strong className="text-text-primary">dual-confirmed</strong> when the supervised
-                  v5.1 logistic model scores it as high or critical risk <em>and</em> the unsupervised PyOD
+                  v6.0 logistic model scores it as high or critical risk <em>and</em> the unsupervised PyOD
                   ensemble independently scores it above the 0.50 anomaly threshold. Two completely different
                   methods — one trained on labeled corruption cases, one trained on no labels at all — agree
                   that this contract is unusual. This convergence reduces the false-positive rate for
@@ -997,7 +1006,7 @@ export function Methodology() {
 
               <p className="text-xs text-text-muted">
                 Note: v5.2 is an analytical overlay — it adds explanability and cross-validation. The active
-                risk model is v5.1. Contract <code className="font-mono bg-border/20 px-1 py-0.5 rounded">risk_score</code> values
+                risk model is v6.0. Contract <code className="font-mono bg-border/20 px-1 py-0.5 rounded">risk_score</code> values
                 are unchanged by the v5.2 layer.
               </p>
             </div>
@@ -1070,12 +1079,12 @@ export function Methodology() {
                   MODEL COMPARISON
                 </p>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-xs" role="table" aria-label="Model comparison v3.3 vs v5.1">
+                  <table className="w-full text-xs" role="table" aria-label="Model comparison v3.3 vs v6.0">
                     <thead>
                       <tr className="border-b border-border/50">
                         <th className="text-left py-2 pr-3 text-text-muted font-medium">Metric</th>
                         <th className="text-right py-2 pr-3 text-text-muted font-medium">v3.3</th>
-                        <th className="text-right py-2 pr-3 text-text-muted font-medium">v5.1</th>
+                        <th className="text-right py-2 pr-3 text-text-muted font-medium">v6.0</th>
                         <th className="text-right py-2 text-text-muted font-medium">Change</th>
                       </tr>
                     </thead>

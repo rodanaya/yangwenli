@@ -55,6 +55,7 @@ const InstitutionCompare = lazy(() => import('@/pages/InstitutionCompare'))
 const MexicoMap = lazy(() => import('@/pages/MexicoMap'))
 const Annotations = lazy(() => import('@/pages/Annotations'))
 const AriaQueue = lazy(() => import('@/pages/AriaQueue'))
+const ReportCard = lazy(() => import('@/pages/ReportCard'))
 
 // First-visit routing: redirect "/" to Intro for new users, Dashboard for returning users
 function FirstVisitRedirect() {
@@ -98,6 +99,14 @@ function App() {
             <Route path="landing" element={<Navigate to="/intro" replace />} />
             <Route path="/" element={<MainLayout />}>
               <Route index element={<FirstVisitRedirect />} />
+              <Route
+                path="report-card"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <ReportCard />
+                  </SuspenseBoundary>
+                }
+              />
               <Route
                 path="executive-summary"
                 element={

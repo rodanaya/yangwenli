@@ -62,8 +62,8 @@ describe('formatPercent', () => {
 })
 
 describe('Risk model version', () => {
-  it('is set to v5.1', () => {
-    expect(CURRENT_MODEL_VERSION).toBe('v5.1')
+  it('is set to v6.0', () => {
+    expect(CURRENT_MODEL_VERSION).toBe('v6.0')
   })
 })
 

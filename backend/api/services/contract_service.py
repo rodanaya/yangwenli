@@ -313,21 +313,33 @@ class ContractService(BaseService):
 
         z_values = [z_row[col] or 0.0 for col in self.Z_COLS]
 
-        # 3. Load the appropriate model (sector-specific or global)
-        # Try sector model first
+        # 3. Load the appropriate model (v6.0 global, or v5.0 sector/global fallback)
+        # Try v6.0 global model first (active)
         cal_row = self._execute_one(
             conn,
             """
             SELECT intercept, coefficients, pu_correction_factor, sector_id
             FROM model_calibration
-            WHERE model_version = 'v5.0' AND sector_id = ?
+            WHERE model_version = 'v6.0' AND sector_id IS NULL
             ORDER BY created_at DESC LIMIT 1
             """,
-            (sector_id,),
         )
-        model_type = "sector"
+        model_type = "global"
         if cal_row is None:
-            # Fall back to global model
+            # Fall back to v5.0 sector model
+            cal_row = self._execute_one(
+                conn,
+                """
+                SELECT intercept, coefficients, pu_correction_factor, sector_id
+                FROM model_calibration
+                WHERE model_version = 'v5.0' AND sector_id = ?
+                ORDER BY created_at DESC LIMIT 1
+                """,
+                (sector_id,),
+            )
+            model_type = "sector"
+        if cal_row is None:
+            # Fall back to v5.0 global model
             cal_row = self._execute_one(
                 conn,
                 """
@@ -340,7 +352,7 @@ class ContractService(BaseService):
             model_type = "global"
 
         if cal_row is None:
-            logger.warning("No v5.0 calibration found", contract_id=contract_id)
+            logger.warning("No v6.0/v5.0 calibration found", contract_id=contract_id)
             return {
                 "contract_id": contract_id,
                 "risk_score": contract_row["risk_score"] or 0,

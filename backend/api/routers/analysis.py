@@ -366,10 +366,10 @@ def get_model_metadata():
             ).fetchone()
             if not row:
                 return {
-                    "version": "v5.1", "trained_at": "2026-02-27",
-                    "n_contracts": 3110007, "auc_test": 0.957,
-                    "auc_train": 0.964, "pu_correction": 0.882,
-                    "updated_at": "2026-02-27",
+                    "version": "v6.0", "trained_at": "2026-03-10",
+                    "n_contracts": 3051294, "auc_test": 0.959,
+                    "auc_train": 0.924, "pu_correction": 0.759,
+                    "updated_at": "2026-03-10",
                 }
             train_auc = None
             test_auc_val = None

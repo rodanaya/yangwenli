@@ -74,6 +74,16 @@ THRESHOLDS = {
         "direction": "lower_is_better",
         "source": "LAASSP Art. 32; EU Directive 2014/24",
     },
+    "amendment_rate": {
+        # % of contracts with contract modifications (convenio modificatorio)
+        # EU average: ~10-15%. High rates suggest poor planning or scope creep.
+        "green": 10,
+        "yellow": 20,
+        # >20% = red
+        "unit": "%",
+        "direction": "lower_is_better",
+        "source": "EU Court of Auditors SR-2023-28; OECD 2023",
+    },
 }
 
 # Grade mapping
@@ -211,6 +221,19 @@ def _compute_sector_phi(conn: sqlite3.Connection, sector_id: Optional[int] = Non
     short_ads = ad_row["short_ads"] or 0
     short_ad_rate = round(short_ads / max(with_ad, 1) * 100, 1)
 
+    # 6. Amendment rate (convenio modificatorio)
+    amend_row = conn.execute(f"""
+        SELECT
+            COUNT(*) as total_with_data,
+            SUM(CASE WHEN has_amendment = 1 THEN 1 ELSE 0 END) as amendments
+        FROM contracts c
+        WHERE {where} AND has_amendment IS NOT NULL
+    """, params).fetchone()
+
+    amend_total = amend_row["total_with_data"] or 0
+    amendments = amend_row["amendments"] or 0
+    amendment_rate = round(amendments / max(amend_total, 1) * 100, 1)
+
     # Build indicators
     indicators = {
         "competition_rate": {
@@ -247,6 +270,13 @@ def _compute_sector_phi(conn: sqlite3.Connection, sector_id: Optional[int] = Non
             "label": "Short Ad Period Rate",
             "description": f"{short_ad_rate}% of procedures had <15 days advertisement",
             "benchmark": "LAASSP requires 15+ days",
+        },
+        "amendment_rate": {
+            "value": amendment_rate,
+            "light": _traffic_light("amendment_rate", amendment_rate),
+            "label": "Contract Amendment Rate",
+            "description": f"{amendment_rate}% of contracts have modifications (convenio modificatorio)",
+            "benchmark": "EU avg: ~10-15%; >20% indicates poor planning",
         },
     }
 

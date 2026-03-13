@@ -63,6 +63,8 @@ import esVendorcompare from './locales/es/vendorcompare.json'
 import enVendorcompare from './locales/en/vendorcompare.json'
 import esApiexplorer from './locales/es/apiexplorer.json'
 import enApiexplorer from './locales/en/apiexplorer.json'
+import esReportcard from './locales/es/reportcard.json'
+import enReportcard from './locales/en/reportcard.json'
 
 i18n
   .use(LanguageDetector)
@@ -85,6 +87,7 @@ i18n
         landing: esLanding,
         vendorcompare: esVendorcompare,
         apiexplorer: esApiexplorer,
+        reportcard: esReportcard,
       },
       en: {
         common: enCommon, sectors: enSectors, nav: enNav, dashboard: enDashboard,
@@ -102,6 +105,7 @@ i18n
         landing: enLanding,
         vendorcompare: enVendorcompare,
         apiexplorer: enApiexplorer,
+        reportcard: enReportcard,
       },
     },
     lng: localStorage.getItem('i18nextLng') || 'en', // Default to English when no saved preference

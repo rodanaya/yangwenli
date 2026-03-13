@@ -31,6 +31,7 @@ import {
   MessageSquarePlus,
   StickyNote,
   Shield,
+  ClipboardCheck,
 } from 'lucide-react'
 import { RubliLogoMark } from '@/components/ui/RubliLogoMark'
 import { LanguageToggle } from '@/components/LanguageToggle'
@@ -62,6 +63,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
   {
     sectionKey: 'sections.overview',
     items: [
+      { i18nKey: 'reportCard', href: '/report-card', icon: ClipboardCheck },
       { i18nKey: 'executive', href: '/executive-summary', icon: FileText },
       { i18nKey: 'dashboard', href: '/', icon: LayoutDashboard },
       { i18nKey: 'explore', href: '/explore', icon: Layers },

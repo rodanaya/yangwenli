@@ -28,12 +28,13 @@ RISK_THRESHOLDS_V4 = {
     'low': 0.0,         # Low similarity
 }
 
-# v5.1 uses the same thresholds, validated against 22 documented cases
+# v5.1/v6.0 use the same thresholds, validated against 22+ documented cases
 # High+ rate: 9.0% (OECD benchmark: 2-15%)
 RISK_THRESHOLDS_V5 = RISK_THRESHOLDS_V4
 
 # Active model version
-CURRENT_MODEL_VERSION = 'v5.1'
+# v6.0: vendor-stratified split, time-windowed labels, honest test AUC 0.959
+CURRENT_MODEL_VERSION = 'v6.0'
 
 
 def get_risk_level(score: float, model_version: str = None) -> str:

@@ -65,9 +65,9 @@ export const RISK_COLORS = {
 } as const
 
 // Active risk model version (fallback — Dashboard fetches live from /analysis/model/metadata)
-export const CURRENT_MODEL_VERSION = 'v5.1'
+export const CURRENT_MODEL_VERSION = 'v6.0'
 
-// Risk thresholds (v5.1 - per-sector risk scoring model)
+// Risk thresholds (v6.0 - vendor-stratified anomaly ranker, same thresholds as v4.0+)
 // Scores are statistical risk indicators, not calibrated probabilities
 // SINGLE SOURCE OF TRUTH — all other files import from here
 export const RISK_THRESHOLDS = {
@@ -78,7 +78,7 @@ export const RISK_THRESHOLDS = {
 } as const
 
 /**
- * Canonical risk level classifier — v5.1 thresholds (same as v4.0).
+ * Canonical risk level classifier — v6.0 thresholds (same as v4.0+).
  * ALL components must use this function (or import it via utils.ts).
  */
 export function getRiskLevelFromScore(score: number): 'critical' | 'high' | 'medium' | 'low' {
