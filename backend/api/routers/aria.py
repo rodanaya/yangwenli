@@ -72,6 +72,7 @@ def get_aria_queue(
     pattern: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
     efos_only: bool = Query(False),
+    new_vendor_only: bool = Query(False),
     min_ips: Optional[float] = Query(None, ge=0, le=1),
     status: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
@@ -109,6 +110,8 @@ def get_aria_queue(
         params.append(f"%{search}%")
     if efos_only:
         conditions.append("q.is_efos_definitivo = 1")
+    if new_vendor_only:
+        conditions.append("q.new_vendor_risk = 1")
     if min_ips is not None:
         conditions.append("q.ips_final >= ?")
         params.append(min_ips)
@@ -134,7 +137,7 @@ def get_aria_queue(
                q.is_sfp_sanctioned, q.in_ground_truth, q.fp_penalty,
                q.burst_score, q.review_status, q.primary_sector_name,
                q.primary_sector_id, q.years_active, q.direct_award_rate,
-               q.computed_at
+               q.computed_at, COALESCE(q.new_vendor_risk, 0) as new_vendor_risk
         FROM aria_queue q
         {where_sql}
         ORDER BY q.ips_final DESC
@@ -146,7 +149,7 @@ def get_aria_queue(
     data = []
     for row in rows:
         d = _row_to_dict(row)
-        _bool_fields(d, "is_efos_definitivo", "is_sfp_sanctioned", "in_ground_truth")
+        _bool_fields(d, "is_efos_definitivo", "is_sfp_sanctioned", "in_ground_truth", "new_vendor_risk")
         data.append(d)
 
     # Latest run summary

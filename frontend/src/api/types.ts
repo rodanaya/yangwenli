@@ -2180,6 +2180,7 @@ export interface AriaQueueItem {
   is_efos_definitivo: boolean
   is_sfp_sanctioned: boolean
   in_ground_truth: boolean
+  new_vendor_risk: boolean
   fp_penalty: number
   burst_score: number
   review_status: 'pending' | 'confirmed' | 'dismissed' | 'reviewing'

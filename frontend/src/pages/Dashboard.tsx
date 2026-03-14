@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
+import React, { memo, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 import { useNavigate } from 'react-router-dom'
@@ -7,10 +7,10 @@ import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn, formatCompactMXN, formatCompactUSD, formatNumber, toTitleCase } from '@/lib/utils'
+import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
 import { analysisApi, investigationApi } from '@/api/client'
-import type { ExecutiveCaseDetail, ExecutiveSummaryResponse } from '@/api/types'
+import type { ExecutiveCaseDetail } from '@/api/types'
 import {
   ArrowRight,
   ArrowUpRight,
@@ -18,16 +18,12 @@ import {
   Target,
   Search,
   Crosshair,
-  Radar,
   Activity,
-  Zap,
   TrendingDown,
   TrendingUp,
-  Scale,
   FileSearch,
   AlertTriangle,
   Layers,
-  Calendar,
   BarChart3,
   Users,
   DollarSign,
@@ -52,13 +48,10 @@ import {
   ReferenceArea,
   LabelList,
 } from '@/components/charts'
-import { RISK_COLORS, SECTOR_COLORS, SECTORS, getSectorNameEN, CURRENT_MODEL_VERSION } from '@/lib/constants'
-import { GlobalSearch } from '@/components/GlobalSearch'
+import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN, CURRENT_MODEL_VERSION } from '@/lib/constants'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { LayoutDashboard } from 'lucide-react'
-import { RiskCalendarHeatmap } from '@/components/charts/RiskCalendarHeatmap'
-import { SectorRiskHeatmap } from '@/components/charts/SectorRiskHeatmap'
 
 // ============================================================================
 // Dashboard 2.0: Situation Room
@@ -1069,16 +1062,6 @@ export function Dashboard() {
         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
       })
     : null
-
-  // Animated KPI pulse
-  const [justLoaded, setJustLoaded] = useState(false)
-  useEffect(() => {
-    if (!dashLoading && overview) {
-      setJustLoaded(true)
-      const timer = setTimeout(() => setJustLoaded(false), 1000)
-      return () => clearTimeout(timer)
-    }
-  }, [dashLoading, overview])
 
   // Sector trajectory selector
   const [selectedTrajectorySectorId, setSelectedTrajectorySectorId] = useState<number | null>(null)
