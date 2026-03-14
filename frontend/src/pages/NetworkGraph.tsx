@@ -11,7 +11,6 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import ReactECharts from 'echarts-for-react'
 import { Network, Search, X, ExternalLink, Users, UserCircle, RotateCcw, ChevronDown, ChevronUp, ZoomIn, ZoomOut, AlertTriangle, Info, Eye, Layers, FileText, List, GitBranch } from 'lucide-react'
-import { PageHeader } from '@/components/layout/PageHeader'
 import { RiskBadge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SectionDescription } from '@/components/SectionDescription'
@@ -1591,21 +1590,30 @@ export function NetworkGraph() {
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-      <PageHeader
-        title="Vendor Network"
-        subtitle="Relationship graph across procurement data"
-        icon={Network}
-        actions={
+      <div className="card p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center h-10 w-10 rounded-lg" style={{ background: 'var(--color-accent-glow)', border: '1px solid var(--color-accent)', color: 'var(--color-accent)' }}>
+              <Network className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="text-gradient text-2xl font-bold font-mono tracking-tight">Vendor Network Analysis</h1>
+              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Relationship graph across procurement data</p>
+            </div>
+          </div>
           <button
             onClick={() => setShowInstructions(true)}
-            className="shrink-0 flex items-center gap-1.5 text-xs text-text-muted hover:text-accent border border-border/40 hover:border-accent/40 rounded px-2.5 py-1.5 transition-colors"
+            className="shrink-0 flex items-center gap-1.5 text-xs border rounded px-2.5 py-1.5 transition-colors"
+            style={{ color: 'var(--color-text-muted)', borderColor: 'var(--color-border)' }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--color-accent)'; e.currentTarget.style.borderColor = 'var(--color-accent)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--color-text-muted)'; e.currentTarget.style.borderColor = 'var(--color-border)' }}
             title="How to use the Network Explorer"
           >
             <Info className="h-3.5 w-3.5" />
             How to use
           </button>
-        }
-      />
+        </div>
+      </div>
 
       <SectionDescription>{t('pageDesc')}</SectionDescription>
       {/* Graph stats are shown inline in the header above */}
@@ -1710,9 +1718,9 @@ export function NetworkGraph() {
       </div>
       </ScrollReveal>
 
-      {/* Key Network Stats strip — shown when graph data is loaded */}
+      {/* Key Network Stats strip -- shown when graph data is loaded */}
       {graphStats && graphData && (
-        <div className="flex flex-wrap gap-6 px-4 py-2 bg-background-elevated/30 rounded border border-border/20 text-xs">
+        <div className="flex flex-wrap gap-6 px-4 py-3 rounded-xl text-xs" style={{ background: 'var(--color-background-elevated)', border: '1px solid var(--color-border)' }}>
           <div className="flex flex-col gap-0.5">
             <span className="text-text-muted uppercase tracking-wider text-[10px] font-medium">Nodes</span>
             <span className="font-mono font-semibold text-text-primary tabular-nums">{graphStats.totalNodes}</span>
@@ -1744,7 +1752,7 @@ export function NetworkGraph() {
 
       {/* Top-5 most connected nodes */}
       {graphStats && graphData && graphStats.topByDegree.length > 0 && (
-        <div className="px-4 py-2 bg-background-elevated/20 rounded border border-border/15">
+        <div className="card px-4 py-3">
           <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted mb-1.5">Top Connected Nodes</div>
           <div className="flex flex-col gap-1">
             {graphStats.topByDegree.map((node, i) => (

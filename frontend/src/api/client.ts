@@ -2101,6 +2101,35 @@ export const searchApi = {
 }
 
 // ============================================================================
+// Alerts API — critical-risk contract feed
+// ============================================================================
+
+export interface AlertItem {
+  type: string
+  vendor_id: number | null
+  vendor_name: string | null
+  risk_score: number | null
+  amount_mxn: number | null
+  contract_date: string | null
+  sector_name: string | null
+  contract_id: number
+}
+
+export interface AlertFeedResponse {
+  alerts: AlertItem[]
+  total: number
+}
+
+export const alertsApi = {
+  async feed(days = 30, limit = 20): Promise<AlertFeedResponse> {
+    const { data } = await api.get<AlertFeedResponse>('/alerts/feed', {
+      params: { days, limit },
+    })
+    return data
+  },
+}
+
+// ============================================================================
 // Feedback API (feature 4.7 — False Positive Feedback Loop)
 // ============================================================================
 
@@ -2364,4 +2393,5 @@ export default {
   issues: issueApi,
   aria: ariaApi,
   phi: phiApi,
+  alerts: alertsApi,
 }

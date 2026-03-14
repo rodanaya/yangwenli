@@ -122,9 +122,9 @@ export function Settings() {
         whileInView="animate"
         viewport={{ once: true, margin: '-50px' }}
       >
-        <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+        <h2 className="text-lg font-bold tracking-tight flex items-center gap-2 font-mono">
           <SettingsIcon className="h-4.5 w-4.5 text-accent" />
-          Settings
+          <span className="text-gradient">Platform Settings</span>
         </h2>
         <p className="text-xs text-text-muted mt-0.5">Configure preferences, export data, and review data quality</p>
       </motion.div>
@@ -190,62 +190,67 @@ function GeneralTab() {
     >
       {/* Theme settings */}
       <motion.div variants={staggerItem}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            {theme === 'dark' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+      <div className="card-elevated rounded-xl overflow-hidden">
+        <div className="px-6 py-4" style={{ borderLeft: '3px solid var(--color-accent)' }}>
+          <h3 className="flex items-center gap-2 text-base font-semibold text-text-primary font-mono">
+            {theme === 'dark' ? <Moon className="h-4 w-4 text-accent" /> : <Sun className="h-4 w-4 text-accent" />}
             Appearance
-          </CardTitle>
-          <CardDescription>Customize the look and feel</CardDescription>
-        </CardHeader>
-        <CardContent>
+          </h3>
+          <p className="text-xs text-text-muted mt-0.5">Customize the look and feel</p>
+        </div>
+        <div className="px-6 py-4" style={{ borderTop: '1px solid var(--color-border)' }}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Theme</p>
+              <p className="text-sm font-medium text-text-primary">Theme</p>
               <p className="text-xs text-text-muted">Switch between light and dark mode</p>
             </div>
-            <Button variant="outline" onClick={toggleTheme}>
+            <button
+              onClick={toggleTheme}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              style={{
+                backgroundColor: theme === 'dark' ? 'var(--color-accent)' : 'var(--color-background-elevated)',
+                color: theme === 'dark' ? '#080c14' : 'var(--color-text-primary)',
+                border: theme === 'dark' ? 'none' : '1px solid var(--color-border)',
+              }}
+            >
               {theme === 'dark' ? (
                 <>
-                  <Sun className="mr-2 h-4 w-4" />
+                  <Sun className="h-4 w-4" />
                   Light Mode
                 </>
               ) : (
                 <>
-                  <Moon className="mr-2 h-4 w-4" />
+                  <Moon className="h-4 w-4" />
                   Dark Mode
                 </>
               )}
-            </Button>
+            </button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
       </motion.div>
 
       {/* Data info */}
       <motion.div variants={staggerItem}>
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Database className="h-4 w-4" />
-                Data Information
-              </CardTitle>
-              <CardDescription>About the procurement data</CardDescription>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => refetch()}
-              disabled={isLoading}
-              aria-label="Refresh statistics"
-            >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </Button>
+      <div className="card-elevated rounded-xl overflow-hidden">
+        <div className="px-6 py-4 flex items-center justify-between" style={{ borderLeft: '3px solid var(--color-accent-data)' }}>
+          <div>
+            <h3 className="flex items-center gap-2 text-base font-semibold text-text-primary font-mono">
+              <Database className="h-4 w-4 text-accent-data" />
+              Data Information
+            </h3>
+            <p className="text-xs text-text-muted mt-0.5">About the procurement data</p>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            aria-label="Refresh statistics"
+            className="p-2 rounded-lg text-text-muted hover:text-accent hover:bg-accent/10 transition-colors"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
+        <div className="px-6 py-4 space-y-4" style={{ borderTop: '1px solid var(--color-border)' }}>
           {error ? (
             <p className="text-sm text-risk-critical">Failed to load statistics</p>
           ) : (
@@ -316,33 +321,33 @@ function GeneralTab() {
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
       </motion.div>
 
       {/* About */}
       <motion.div variants={staggerItem}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Info className="h-4 w-4" />
+      <div className="card-elevated rounded-xl overflow-hidden">
+        <div className="px-6 py-4" style={{ borderLeft: '3px solid var(--color-accent)' }}>
+          <h3 className="flex items-center gap-2 text-base font-semibold text-text-primary font-mono">
+            <Info className="h-4 w-4 text-accent" />
             About RUBLI
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div className="px-6 py-4" style={{ borderTop: '1px solid var(--color-border)' }}>
           <p className="text-sm text-text-muted mb-4">
             RUBLI (Red Unificada de Busqueda de Licitaciones Irregulares) is an AI-Powered Corruption Detection
             Platform for Mexican Government Procurement. Named after the unified network concept for detecting
             irregular procurement patterns across federal sectors.
           </p>
-          <div className="text-xs text-text-muted space-y-1">
-            <p>Risk Model: v6.0 Vendor-Stratified Framework (Test AUC: 0.849)</p>
-            <p>Sectors: 12-sector taxonomy</p>
-            <p>Backend: FastAPI + SQLite</p>
-            <p>Frontend: React + TypeScript + TailwindCSS</p>
+          <div className="text-xs text-text-muted space-y-1 font-mono">
+            <p><span className="text-accent">Risk Model:</span> v6.0 Vendor-Stratified Framework (Test AUC: 0.849)</p>
+            <p><span className="text-accent">Sectors:</span> 12-sector taxonomy</p>
+            <p><span className="text-accent">Backend:</span> FastAPI + SQLite</p>
+            <p><span className="text-accent">Frontend:</span> React + TypeScript + TailwindCSS</p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
       </motion.div>
     </motion.div>
   )

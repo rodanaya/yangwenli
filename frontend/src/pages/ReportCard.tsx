@@ -87,17 +87,17 @@ interface CorrelationResponse {
 // ---------------------------------------------------------------------------
 
 const LIGHT_COLORS = {
-  green: { bg: 'bg-emerald-500', text: 'text-emerald-600', ring: 'ring-emerald-200' },
-  yellow: { bg: 'bg-amber-400', text: 'text-amber-600', ring: 'ring-amber-200' },
-  red: { bg: 'bg-red-500', text: 'text-red-600', ring: 'ring-red-200' },
+  green: { bg: 'bg-emerald-500', text: 'text-emerald-400', ring: 'ring-emerald-500/30' },
+  yellow: { bg: 'bg-amber-400', text: 'text-amber-400', ring: 'ring-amber-400/30' },
+  red: { bg: 'bg-red-500', text: 'text-red-400', ring: 'ring-red-500/30' },
 } as const
 
-const GRADE_COLORS: Record<string, string> = {
-  A: 'text-emerald-600 bg-emerald-50 border-emerald-300',
-  B: 'text-blue-600 bg-blue-50 border-blue-300',
-  C: 'text-amber-600 bg-amber-50 border-amber-300',
-  D: 'text-orange-600 bg-orange-50 border-orange-300',
-  F: 'text-red-700 bg-red-50 border-red-400',
+const GRADE_COLORS: Record<string, { text: string; bg: string; border: string }> = {
+  A: { text: '#4ade80', bg: 'rgba(74, 222, 128, 0.1)', border: 'rgba(74, 222, 128, 0.3)' },
+  B: { text: '#60a5fa', bg: 'rgba(96, 165, 250, 0.1)', border: 'rgba(96, 165, 250, 0.3)' },
+  C: { text: '#fbbf24', bg: 'rgba(251, 191, 36, 0.1)', border: 'rgba(251, 191, 36, 0.3)' },
+  D: { text: '#fb923c', bg: 'rgba(251, 146, 60, 0.1)', border: 'rgba(251, 146, 60, 0.3)' },
+  F: { text: '#f87171', bg: 'rgba(248, 113, 113, 0.1)', border: 'rgba(248, 113, 113, 0.3)' },
 }
 
 function TrafficDot({ light }: { light: 'green' | 'yellow' | 'red' }) {
@@ -111,13 +111,18 @@ function GradeBadge({ grade, size = 'md' }: { grade: string; size?: 'sm' | 'md' 
     lg: 'w-20 h-20 text-4xl',
     xl: 'w-32 h-32 text-7xl',
   }
+  const colors = GRADE_COLORS[grade] || GRADE_COLORS.F
   return (
     <div
       className={cn(
-        'rounded-full border-2 font-bold flex items-center justify-center',
-        GRADE_COLORS[grade] || GRADE_COLORS.F,
+        'rounded-full border-2 font-bold flex items-center justify-center font-mono',
         sizeClasses[size]
       )}
+      style={{
+        color: colors.text,
+        backgroundColor: colors.bg,
+        borderColor: colors.border,
+      }}
     >
       {grade}
     </div>
@@ -148,30 +153,41 @@ const INDICATOR_I18N: Record<string, string> = {
 
 function HeroSection({ national, t }: { national: PHINational; t: (k: string, o?: Record<string, unknown>) => string }) {
   return (
-    <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-8 md:p-12 mb-12">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent" />
+    <section
+      className="relative overflow-hidden rounded-2xl p-8 md:p-12 mb-12"
+      style={{
+        background: 'linear-gradient(135deg, #080c14 0%, #0e1420 50%, #141c2c 100%)',
+        border: '1px solid var(--color-border)',
+      }}
+    >
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse at top right, rgba(245, 158, 11, 0.06), transparent 60%)',
+        }}
+      />
       <div className="relative z-10 flex flex-col items-center text-center gap-6">
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-gradient font-mono">
           {t('title')}
         </h1>
-        <p className="text-slate-300 text-lg max-w-2xl">
+        <p className="text-text-muted text-lg max-w-2xl">
           {t('subtitle')}
         </p>
 
         <GradeBadge grade={national.grade} size="xl" />
 
-        <h2 className="text-2xl font-semibold mt-2">
+        <h2 className="text-2xl font-semibold mt-2 text-text-primary font-mono">
           {t('nationalGrade')}:{' '}
-          <span className="text-amber-400">
+          <span className="text-accent">
             {t(`grade${national.grade}`)}
           </span>
         </h2>
 
-        <div className="flex flex-wrap justify-center gap-6 text-sm text-slate-400 mt-2">
+        <div className="flex flex-wrap justify-center gap-6 text-sm text-text-muted mt-2">
           <span>{(national.total_contracts / 1_000_000).toFixed(1)}M+ {t('heroContracts')}</span>
-          <span className="text-slate-600">|</span>
+          <span style={{ color: 'var(--color-border)' }}>|</span>
           <span>{t('heroPeriod')}</span>
-          <span className="text-slate-600">|</span>
+          <span style={{ color: 'var(--color-border)' }}>|</span>
           <span>{t('heroBenchmarks')}</span>
         </div>
 
@@ -181,7 +197,7 @@ function HeroSection({ national, t }: { national: PHINational; t: (k: string, o?
             return ind ? <TrafficDot key={key} light={ind.light} /> : null
           })}
         </div>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-text-muted">
           {t('greenCount', { count: national.greens })} / {t('yellowCount', { count: national.yellows })} / {t('redCount', { count: national.reds })}
         </p>
       </div>
@@ -196,7 +212,9 @@ function IndicatorCard({ indicatorKey, indicator, t }: {
 }) {
   const i18nKey = INDICATOR_I18N[indicatorKey]
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 flex flex-col gap-4">
+    <div
+      className="card-elevated rounded-xl p-6 flex flex-col gap-4"
+    >
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           <div className={cn(
@@ -209,22 +227,22 @@ function IndicatorCard({ indicatorKey, indicator, t }: {
             </span>
           </div>
           <div>
-            <h3 className="font-semibold text-slate-900 dark:text-slate-100">
+            <h3 className="font-semibold text-text-primary">
               {t(i18nKey)}
             </h3>
-            <p className={cn('text-2xl font-bold mt-1', LIGHT_COLORS[indicator.light].text)}>
+            <p className={cn('text-2xl font-bold font-mono mt-1', LIGHT_COLORS[indicator.light].text)}>
               {indicator.value}
               {!['hhi', 'avg_bidders'].includes(indicatorKey) ? '%' : ''}
             </p>
           </div>
         </div>
       </div>
-      <p className="text-sm text-slate-500 dark:text-slate-400">
+      <p className="text-sm text-text-muted">
         {t(`${i18nKey}Desc`)}
       </p>
-      <div className="mt-auto pt-3 border-t border-slate-100 dark:border-slate-700">
-        <p className="text-xs text-slate-400">
-          <span className="font-medium">{t('benchmark')}:</span> {indicator.benchmark}
+      <div className="mt-auto pt-3" style={{ borderTop: '1px solid var(--color-border)' }}>
+        <p className="text-xs text-text-muted">
+          <span className="font-medium text-text-secondary">{t('benchmark')}:</span> {indicator.benchmark}
         </p>
       </div>
     </div>
@@ -239,15 +257,16 @@ function SectorCard({ sector, t }: { sector: PHISector; t: (k: string) => string
   return (
     <button
       onClick={() => navigate(`/sectors/${sector.sector_id}`)}
-      className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 text-left hover:shadow-lg hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200 group"
+      className="card rounded-xl p-5 text-left transition-all duration-200 group hover:border-border-hover"
+      style={{ boxShadow: 'none' }}
     >
       <div className="flex items-center gap-3 mb-3">
         <div className="w-1 h-10 rounded-full" style={{ backgroundColor: color }} />
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate group-hover:text-blue-600 transition-colors">
+          <h3 className="font-semibold text-text-primary truncate group-hover:text-accent transition-colors">
             {sectorMeta?.nameEN || sector.sector_name}
           </h3>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-text-muted">
             {sector.total_contracts.toLocaleString()} {t('contracts')}
           </p>
         </div>
@@ -259,7 +278,7 @@ function SectorCard({ sector, t }: { sector: PHISector; t: (k: string) => string
           return ind ? <TrafficDot key={key} light={ind.light} /> : null
         })}
       </div>
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-text-muted font-mono">
         {formatCompactMXN(sector.total_value_mxn)}
       </p>
     </button>
@@ -277,20 +296,20 @@ function TrendSection({ t }: { t: (k: string) => string }) {
 
   return (
     <section className="mb-12">
-      <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+      <h2 className="text-2xl font-bold text-text-primary mb-2 font-mono">
         {t('sectionTrend')}
       </h2>
-      <p className="text-slate-500 dark:text-slate-400 mb-6">
+      <p className="text-text-muted mb-6">
         {t('sectionTrendSubtitle')}
       </p>
 
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+      <div className="card-elevated rounded-xl p-6">
         {/* Grade timeline */}
         <div className="flex items-center gap-1 mb-6 overflow-x-auto pb-2">
           {years.map((y) => (
             <div key={y.year} className="flex flex-col items-center min-w-[3rem]">
               <GradeBadge grade={y.grade} size="sm" />
-              <span className="text-[10px] text-slate-400 mt-1">{y.year}</span>
+              <span className="text-[10px] text-text-muted mt-1 font-mono">{y.year}</span>
             </div>
           ))}
         </div>
@@ -299,19 +318,19 @@ function TrendSection({ t }: { t: (k: string) => string }) {
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={years} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="year" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} domain={[0, 100]} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+              <XAxis dataKey="year" tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }} />
+              <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }} domain={[0, 100]} />
               <RechartsTooltip
                 contentStyle={{
-                  backgroundColor: '#1e293b',
-                  border: 'none',
+                  backgroundColor: 'var(--color-background-elevated)',
+                  border: '1px solid var(--color-border)',
                   borderRadius: '8px',
-                  color: '#f8fafc',
+                  color: 'var(--color-text-primary)',
                   fontSize: 13,
                 }}
               />
-              <Legend />
+              <Legend wrapperStyle={{ color: 'var(--color-text-muted)' }} />
               <Line
                 type="monotone"
                 dataKey="competition_rate"
@@ -347,22 +366,28 @@ function AgreementSection({ t }: { t: (k: string, o?: Record<string, unknown>) =
 
   return (
     <section className="mb-12">
-      <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+      <h2 className="text-2xl font-bold text-text-primary mb-2 font-mono">
         {t('sectionAgreement')}
       </h2>
-      <p className="text-slate-500 dark:text-slate-400 mb-6">
+      <p className="text-text-muted mb-6">
         {t('sectionAgreementSubtitle')}
       </p>
 
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 rounded-xl border border-blue-200 dark:border-slate-700 p-8">
+      <div
+        className="rounded-xl p-8"
+        style={{
+          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(99, 102, 241, 0.05))',
+          border: '1px solid rgba(59, 130, 246, 0.2)',
+        }}
+      >
         <div className="text-center">
-          <p className="text-5xl md:text-6xl font-bold text-blue-700 dark:text-blue-400 mb-4">
+          <p className="text-5xl md:text-6xl font-bold font-mono mb-4" style={{ color: '#60a5fa' }}>
             {agreement.agreement_rate}%
           </p>
-          <p className="text-lg text-slate-700 dark:text-slate-300 max-w-xl mx-auto">
+          <p className="text-lg text-text-secondary max-w-xl mx-auto">
             {t('agreementStat', { pct: agreement.agreement_rate })}
           </p>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-4 max-w-lg mx-auto">
+          <p className="text-sm text-text-muted mt-4 max-w-lg mx-auto">
             {t('agreementExplain', {
               total: agreement.high_risk_contracts.toLocaleString(),
               flagged: agreement.also_flagged_by_phi.toLocaleString(),
@@ -376,15 +401,15 @@ function AgreementSection({ t }: { t: (k: string, o?: Record<string, unknown>) =
 
 function MethodologyFooter({ sources, t }: { sources: string[]; t: (k: string) => string }) {
   return (
-    <section className="mt-16 border-t border-slate-200 dark:border-slate-700 pt-8 pb-4">
-      <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+    <section className="mt-16 pt-8 pb-4" style={{ borderTop: '1px solid var(--color-border)' }}>
+      <h3 className="text-lg font-semibold text-text-primary mb-2 font-mono">
         {t('methodologyNote')}
       </h3>
-      <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 max-w-3xl">
+      <p className="text-sm text-text-muted mb-4 max-w-3xl">
         {t('methodologyText')}
       </p>
-      <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('sources')}</h4>
-      <ul className="text-xs text-slate-400 space-y-1">
+      <h4 className="text-sm font-medium text-text-secondary mb-2">{t('sources')}</h4>
+      <ul className="text-xs text-text-muted space-y-1">
         {sources.map((s) => (
           <li key={s}>{s}</li>
         ))}
@@ -414,8 +439,8 @@ function ReportCard() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-slate-500">{t('loading')}</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4" />
+          <p className="text-text-muted">{t('loading')}</p>
         </div>
       </div>
     )
@@ -424,7 +449,7 @@ function ReportCard() {
   if (error || !data) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-red-500">{t('error')}</p>
+        <p className="text-risk-critical">{t('error')}</p>
       </div>
     )
   }
@@ -438,10 +463,10 @@ function ReportCard() {
 
       {/* Section 2: The 6 Indicators */}
       <section className="mb-12">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+        <h2 className="text-2xl font-bold text-text-primary mb-2 font-mono">
           {t('sectionIndicators')}
         </h2>
-        <p className="text-slate-500 dark:text-slate-400 mb-6">
+        <p className="text-text-muted mb-6">
           {t('sectionIndicatorsSubtitle')}
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -456,10 +481,10 @@ function ReportCard() {
 
       {/* Section 3: Sector Report Cards */}
       <section className="mb-12">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+        <h2 className="text-2xl font-bold text-text-primary mb-2 font-mono">
           {t('sectionSectors')}
         </h2>
-        <p className="text-slate-500 dark:text-slate-400 mb-6">
+        <p className="text-text-muted mb-6">
           {t('sectionSectorsSubtitle')}
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

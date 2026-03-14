@@ -17,7 +17,7 @@ import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { staggerContainer, slideUp, fadeIn } from '@/lib/animations'
 import { ScrollReveal, useCountUp } from '@/hooks/useAnimations'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatNumber, formatCompactMXN } from '@/lib/utils'
 import { SECTORS, RISK_COLORS } from '@/lib/constants'
@@ -522,11 +522,14 @@ export default function Administrations() {
   return (
     <div className="space-y-6 p-6 max-w-[1600px] mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <div className="card p-5 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-text-primary font-mono tracking-tight">
-            {t('title')}
-          </h1>
+          <div className="flex items-center gap-2.5 mb-1">
+            <Landmark className="h-5 w-5 text-amber-400" />
+            <h1 className="text-xl font-bold font-mono tracking-tight text-gradient">
+              {t('title')}
+            </h1>
+          </div>
           <p className="text-sm text-text-muted mt-1">
             {t('subtitle')}
           </p>
@@ -607,10 +610,10 @@ export default function Administrations() {
               key={admin.name}
               onClick={() => setSelectedAdmin(admin.name)}
               className={cn(
-                'relative text-left rounded-lg border p-2.5 transition-all duration-200 overflow-hidden w-full',
+                'interactive-card hover-lift relative text-left rounded-xl p-2.5 overflow-hidden w-full',
                 isSelected
-                  ? 'border-accent bg-accent/10 shadow-md scale-[1.02]'
-                  : 'border-border/50 hover:border-border hover:bg-background-card/50'
+                  ? 'card-elevated border-amber-500/50 shadow-[0_0_20px_-5px_rgba(245,158,11,0.3)]'
+                  : 'card'
               )}
             >
               {/* Party color stripe at top */}
@@ -683,7 +686,7 @@ export default function Administrations() {
       {/* Spending Fingerprint Sunburst — collapsed by default */}
       <details className="group">
         <summary className="cursor-pointer list-none">
-          <Card className="border-border/40 group-open:rounded-b-none">
+          <div className="card group-open:rounded-b-none">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-mono flex items-center gap-2">
                 <Activity className="h-4 w-4 text-accent" />
@@ -694,13 +697,13 @@ export default function Administrations() {
                 Inner ring = administration · Outer ring = sector spending · Click to expand
               </p>
             </CardHeader>
-          </Card>
+          </div>
         </summary>
-        <Card className="border-border/40 border-t-0 rounded-t-none">
+        <div className="card border-t-0 rounded-t-none">
           <CardContent className="pt-4">
             <AdminSectorSunburst />
           </CardContent>
-        </Card>
+        </div>
       </details>
 
       {/* Administration Fingerprints — radar comparison */}
@@ -708,7 +711,7 @@ export default function Administrations() {
 
       {/* Editorial Narrative */}
       <motion.div
-        className="flex items-start gap-3 rounded-lg border border-border/40 bg-card px-4 py-3"
+        className="card flex items-start gap-3 px-4 py-3"
         variants={fadeIn}
         initial="initial"
         whileInView="animate"
@@ -771,7 +774,7 @@ export default function Administrations() {
       {/* L2 + L3 side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* L2: Administration Comparison Table */}
-        <Card className="bg-card border-border/40">
+        <div className="card-elevated">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-mono text-text-primary">
               {t('comparisonTable')}
@@ -784,16 +787,14 @@ export default function Administrations() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-2 pr-4 text-text-muted font-normal text-xs">{t('table.metric')}</th>
+                  <tr>
+                    <th className="data-cell-header text-left">{t('table.metric')}</th>
                     {adminAggs.map((a) => {
                       const adminColor = ADMIN_COLORS[a.name]
                       return (
                         <th
                           key={a.name}
-                          className={cn(
-                            'text-right py-2 px-2 text-xs font-semibold',
-                          )}
+                          className="data-cell-header text-right"
                           style={{ color: a.name === selectedAdmin ? adminColor : `${adminColor}70` }}
                         >
                           <span
@@ -808,15 +809,15 @@ export default function Administrations() {
                 </thead>
                 <tbody>
                   {ADMIN_METRIC_KEYS.map((metric) => (
-                    <tr key={metric.key} className="border-b border-border/30">
-                      <td className="py-2 pr-4 text-xs text-text-muted">{t(metric.labelKey)}</td>
+                    <tr key={metric.key}>
+                      <td className="data-cell text-text-muted">{t(metric.labelKey)}</td>
                       {adminAggs.map((a) => {
                         const value = a[metric.key] as number
                         return (
                           <td
                             key={a.name}
                             className={cn(
-                              'text-right py-2 px-2 text-xs font-mono',
+                              'data-cell text-right font-mono',
                               a.name === selectedAdmin
                                 ? 'font-semibold text-text-primary'
                                 : 'text-text-muted'
@@ -832,10 +833,10 @@ export default function Administrations() {
               </table>
             </div>
           </CardContent>
-        </Card>
+        </div>
 
         {/* L3: Yearly Deep Dive */}
-        <Card className="bg-card border-border/40">
+        <div className="card">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-mono text-text-primary">
               {t('yearlyTrends', { admin: selectedAdmin, start: selectedMeta.dataStart, end: Math.min(selectedMeta.end - 1, 2025) })}
@@ -983,14 +984,14 @@ export default function Administrations() {
               </div>
             )}
           </CardContent>
-        </Card>
+        </div>
       </div>
 
       {/* L4 + L5 side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* L4: Sector Heatmap */}
         <ScrollReveal direction="fade">
-        <Card className="bg-card border-border/40">
+        <div className="card-elevated">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-mono text-text-primary">
               {t('sectorProfile', { admin: selectedAdmin })}
@@ -1002,12 +1003,12 @@ export default function Administrations() {
           <CardContent className="overflow-x-auto">
             <table className="w-full text-xs font-mono">
               <thead>
-                <tr className="border-b border-border/30">
-                  <th className="text-left px-3 py-2.5 text-xs text-text-muted font-medium">{t('heatmap.sector')}</th>
-                  <th className="text-right px-3 py-2.5 text-xs text-text-muted font-medium" title="Percentage of contracts awarded directly without competitive bidding">{t('heatmap.directAward')}</th>
-                  <th className="text-right px-3 py-2.5 text-xs text-text-muted font-medium" title="Percentage of competitive procedures with only one bidder">{t('heatmap.singleBid')}</th>
-                  <th className="text-right px-3 py-2.5 text-xs text-text-muted font-medium" title="Percentage of contracts scored as high or critical risk">{t('heatmap.highRisk')}</th>
-                  <th className="text-right px-3 py-2.5 text-xs text-text-muted font-medium" title="Average risk score (0-100%)">{t('heatmap.avgRisk')}</th>
+                <tr>
+                  <th className="data-cell-header text-left">{t('heatmap.sector')}</th>
+                  <th className="data-cell-header text-right" title="Percentage of contracts awarded directly without competitive bidding">{t('heatmap.directAward')}</th>
+                  <th className="data-cell-header text-right" title="Percentage of competitive procedures with only one bidder">{t('heatmap.singleBid')}</th>
+                  <th className="data-cell-header text-right" title="Percentage of contracts scored as high or critical risk">{t('heatmap.highRisk')}</th>
+                  <th className="data-cell-header text-right" title="Average risk score (0-100%)">{t('heatmap.avgRisk')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1015,23 +1016,23 @@ export default function Administrations() {
                   .filter((s) => s.contracts > 0)
                   .sort((a, b) => b.hr - a.hr)
                   .map((sector) => (
-                  <tr key={sector.sectorId} className="border-b border-border/10 hover:bg-card-hover/50">
-                    <td className="px-3 py-2">
+                  <tr key={sector.sectorId} className="hover:bg-background-elevated/30 transition-colors">
+                    <td className="data-cell">
                       <div className="flex items-center gap-1.5">
                         <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: sector.color }} />
                         <span className="text-text-secondary">{sector.name}</span>
                       </div>
                     </td>
-                    <td className="text-right px-3 py-2">
+                    <td className="data-cell text-right">
                       <HeatCell value={sector.da} max={100} />
                     </td>
-                    <td className="text-right px-3 py-2">
+                    <td className="data-cell text-right">
                       <HeatCell value={sector.sb} max={50} />
                     </td>
-                    <td className="text-right px-3 py-2">
+                    <td className="data-cell text-right">
                       <HeatCell value={sector.hr} max={30} />
                     </td>
-                    <td className="text-right px-3 py-2">
+                    <td className="data-cell text-right">
                       <HeatCell value={sector.risk * 100} max={50} />
                     </td>
                   </tr>
@@ -1059,11 +1060,11 @@ export default function Administrations() {
               </div>
             )}
           </CardContent>
-        </Card>
+        </div>
         </ScrollReveal>
 
         {/* L5: Transition Impact */}
-        <Card className="bg-card border-border/40">
+        <div className="card">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-mono text-text-primary">
               {t('transitionImpact')}
@@ -1110,7 +1111,7 @@ export default function Administrations() {
               </div>
             )}
           </CardContent>
-        </Card>
+        </div>
       </div>
 
       {/* Admin × Sector Risk Matrix */}
@@ -1122,7 +1123,7 @@ export default function Administrations() {
       />
 
       {/* L6: Events Timeline */}
-      <Card className="bg-card border-border/40">
+      <div className="card">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-mono text-text-primary">
             {t('keyEvents', { admin: selectedAdmin, start: selectedMeta.dataStart, end: Math.min(selectedMeta.end - 1, 2025) })}
@@ -1158,7 +1159,7 @@ export default function Administrations() {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </div>
 
       </> /* end overview tab */
       )}
@@ -1294,8 +1295,7 @@ function StatCard({
     : value
 
   return (
-    <Card className="bg-card border-border/40">
-      <CardContent className="p-4">
+    <div className="card hover-lift p-4">
         <div className="flex items-center gap-1.5 mb-1">
           <Icon className="h-3.5 w-3.5 text-text-muted" />
           <span className="text-xs font-mono text-text-muted uppercase tracking-wider">{label}</span>
@@ -1309,8 +1309,7 @@ function StatCard({
             <span className="text-xs text-text-muted ml-1">{t('statCards.vsAvg')}</span>
           </div>
         )}
-      </CardContent>
-    </Card>
+    </div>
   )
 }
 
@@ -1464,7 +1463,7 @@ function AdminSectorMatrix({
   const { t } = useTranslation('administrations')
   const isLive = liveMatrix !== null
   return (
-    <Card className="bg-card border-border/40">
+    <div className="card-elevated">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
@@ -1592,7 +1591,7 @@ function AdminSectorMatrix({
           </p>
         )}
       </CardContent>
-    </Card>
+    </div>
   )
 }
 
@@ -1653,7 +1652,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
       {/* Systemic pattern summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <ScrollReveal delay={0} direction="up">
-        <Card className="bg-card border-border/40">
+        <div className="card">
           <CardContent className="p-4">
             <div className="text-xs font-mono text-text-muted uppercase tracking-wider mb-1">Direct Award Rate</div>
             <div className={cn('text-2xl font-bold font-mono', allTimeAvg.da > 50 ? 'text-risk-critical' : allTimeAvg.da > 30 ? 'text-risk-high' : 'text-risk-medium')}>
@@ -1669,11 +1668,11 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
               Peak: {maxDA.toFixed(1)}%{peakDAYear ? ` (${peakDAYear})` : ''}
             </div>
           </CardContent>
-        </Card>
+        </div>
         </ScrollReveal>
 
         <ScrollReveal delay={80} direction="up">
-        <Card className="bg-card border-border/40">
+        <div className="card">
           <CardContent className="p-4">
             <div className="text-xs font-mono text-text-muted uppercase tracking-wider mb-1">Single Bidder Rate</div>
             <div className={cn('text-2xl font-bold font-mono', allTimeAvg.sb > 30 ? 'text-risk-critical' : allTimeAvg.sb > 15 ? 'text-risk-high' : 'text-risk-medium')}>
@@ -1686,11 +1685,11 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
               Peak: {maxSB.toFixed(1)}% · All-time high-risk: {maxHR.toFixed(1)}%
             </div>
           </CardContent>
-        </Card>
+        </div>
         </ScrollReveal>
 
         <ScrollReveal delay={160} direction="up">
-        <Card className="bg-card border-border/40">
+        <div className="card">
           <CardContent className="p-4">
             <div className="text-xs font-mono text-text-muted uppercase tracking-wider mb-1">High Risk Rate</div>
             <div className={cn('text-2xl font-bold font-mono', allTimeAvg.hr > 15 ? 'text-risk-critical' : allTimeAvg.hr > 8 ? 'text-risk-high' : 'text-risk-low')}>
@@ -1704,13 +1703,13 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
               Avg risk score: {(allTimeAvg.risk * 100).toFixed(1)}% across 3.1M contracts
             </div>
           </CardContent>
-        </Card>
+        </div>
         </ScrollReveal>
       </div>
 
       {/* 23-year trend chart */}
       <ScrollReveal direction="fade">
-      <Card className="bg-card border-border/40">
+      <div className="card">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-mono text-text-primary">
@@ -1829,13 +1828,13 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
             </p>
           )}
         </CardContent>
-      </Card>
+      </div>
       </ScrollReveal>
 
       {/* Political Budget Cycle — sexenio-year breakdown */}
       {politicalData && politicalData.sexenio_year_breakdown.length > 0 && (
         <ScrollReveal direction="fade">
-        <Card className="bg-card border-border/40">
+        <div className="card">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-mono text-text-primary">
               Political Budget Cycle — Risk by Sexenio Year
@@ -1899,7 +1898,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
               </p>
             )}
           </CardContent>
-        </Card>
+        </div>
         </ScrollReveal>
       )}
     </div>
@@ -1940,7 +1939,7 @@ function PoliticalCycleView() {
   return (
     <div className="space-y-6">
       {/* Election Year Effect — 3 cards */}
-      <Card>
+      <div className="card">
         <CardHeader>
           <CardTitle className="text-sm font-mono flex items-center gap-2">
             <Activity className="h-4 w-4 text-accent" />
@@ -2025,12 +2024,12 @@ function PoliticalCycleView() {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </div>
 
       {/* Sexenio Year Breakdown Chart */}
       {breakdownData.length > 0 && (
         <ScrollReveal>
-          <Card>
+          <div className="card">
             <CardHeader>
               <CardTitle className="text-sm font-mono flex items-center gap-2">
                 <Landmark className="h-4 w-4 text-accent" />
@@ -2107,7 +2106,7 @@ function PoliticalCycleView() {
                 Higher risk in late sexenio years may indicate &quot;budget dump&quot; spending.
               </p>
             </CardContent>
-          </Card>
+          </div>
         </ScrollReveal>
       )}
     </div>
@@ -2193,7 +2192,7 @@ function ComparePeriodView() {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <div className="card">
         <CardHeader>
           <CardTitle className="text-sm font-mono flex items-center gap-2">
             <ArrowRight className="h-4 w-4 text-accent" />
@@ -2295,22 +2294,22 @@ function ComparePeriodView() {
             {isFetching ? 'Loading…' : 'Compare Periods'}
           </button>
         </CardContent>
-      </Card>
+      </div>
 
       {/* Loading skeleton */}
       {isLoading && (
-        <Card>
+        <div className="card">
           <CardContent className="pt-5 space-y-3">
             {Array.from({ length: 2 }).map((_, i) => (
               <Skeleton key={i} className="h-10 w-full" />
             ))}
           </CardContent>
-        </Card>
+        </div>
       )}
 
       {/* Results table */}
       {data && !isLoading && (
-        <Card>
+        <div className="card">
           <CardHeader>
             <CardTitle className="text-xs font-mono text-text-muted">
               Results: Period A ({data.period1?.start}–{data.period1?.end}) vs Period B ({data.period2?.start}–{data.period2?.end})
@@ -2365,7 +2364,7 @@ function ComparePeriodView() {
               Signal: "Worse" = risk increased between periods. "Better" = risk decreased. Spending change is reported as neutral — higher spending may reflect legitimate growth or procurement expansion.
             </p>
           </CardContent>
-        </Card>
+        </div>
       )}
     </div>
   )

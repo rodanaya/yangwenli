@@ -10,14 +10,11 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps'
 import { Map as MapIcon, AlertTriangle, DollarSign, Shield, FileText, ZoomIn, ZoomOut, RotateCcw, Grid3X3 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Button } from '@/components/ui/button'
 import { formatCompactMXN } from '@/lib/utils'
 import { RISK_COLORS } from '@/lib/constants'
 import { subnationalApi } from '@/api/client'
 import type { SubnationalStateSummary } from '@/api/types'
-import { PageHeader } from '@/components/layout/PageHeader'
 import { HexMap } from '@/components/charts/HexMap'
 
 // GeoJSON served from public/ — same origin fetch, no CORS issues
@@ -77,9 +74,9 @@ const METRIC_CONFIG: Record<Metric, {
   colorRange: [string, string]
   format: (v: number) => string
 }> = {
-  amount:    { label: 'Total Spending',  colorRange: ['#dbeafe', '#1d4ed8'], format: formatCompactMXN },
-  risk:      { label: 'Avg Risk Score',  colorRange: ['#dcfce7', '#dc2626'], format: (v) => v.toFixed(3) },
-  contracts: { label: 'Contract Count',  colorRange: ['#ede9fe', '#7c3aed'], format: (v) => v.toLocaleString() },
+  amount:    { label: 'Total Spending',  colorRange: ['#0d1117', '#3b82f6'], format: formatCompactMXN },
+  risk:      { label: 'Avg Risk Score',  colorRange: ['#0d1117', '#f87171'], format: (v) => v.toFixed(3) },
+  contracts: { label: 'Contract Count',  colorRange: ['#0d1117', '#f59e0b'], format: (v) => v.toLocaleString() },
 }
 
 function getMetricValue(state: SubnationalStateSummary, metric: Metric): number {
@@ -130,23 +127,23 @@ function MapTooltip({
   const riskColor = getRiskColor(state.avg_risk_score ?? 0)
   return (
     <div
-      className="pointer-events-none fixed z-50 rounded border border-slate-700 bg-slate-900/95 px-3 py-2 shadow-xl text-xs"
-      style={{ left: x + 14, top: y - 10 }}
+      className="pointer-events-none fixed z-50 rounded-lg border px-3 py-2 shadow-xl text-xs"
+      style={{ left: x + 14, top: y - 10, background: 'var(--color-background-elevated)', borderColor: 'var(--color-border)' }}
     >
-      <p className="font-semibold text-slate-100 text-sm mb-1">
+      <p className="font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-mono)' }}>
         {state.state_name}
-        <span className="ml-1.5 text-slate-400 font-mono text-[10px]">{state.state_code}</span>
+        <span className="ml-1.5 font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>{state.state_code}</span>
       </p>
-      <div className="space-y-0.5 text-slate-300">
-        <p>Spending: <span className="text-white font-medium">{formatCompactMXN(state.total_value_mxn ?? 0)}</span></p>
-        <p>Contracts: <span className="text-white font-medium">{(state.contract_count ?? 0).toLocaleString()}</span></p>
+      <div className="space-y-0.5" style={{ color: 'var(--color-text-secondary)' }}>
+        <p>Spending: <span className="font-medium" style={{ color: 'var(--color-text-primary)' }}>{formatCompactMXN(state.total_value_mxn ?? 0)}</span></p>
+        <p>Contracts: <span className="font-medium" style={{ color: 'var(--color-text-primary)' }}>{(state.contract_count ?? 0).toLocaleString()}</span></p>
         <p>
           Risk:{' '}
           <span className="font-bold" style={{ color: riskColor }}>
             {(state.avg_risk_score ?? 0).toFixed(3)}
           </span>
         </p>
-        <p className="text-slate-500 text-[10px] pt-0.5">Click to drill down</p>
+        <p className="text-[10px] pt-0.5" style={{ color: 'var(--color-text-muted)' }}>Click to drill down</p>
       </div>
     </div>
   )
@@ -205,78 +202,92 @@ export default function MexicoMap() {
 
   return (
     <div className="space-y-6 p-4 md:p-6">
-      <PageHeader
-        title="Mexico Procurement Map"
-        subtitle="Federal spending by state — click any state to drill down"
-        icon={MapIcon}
-      />
+      {/* Header */}
+      <div className="card p-6">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center justify-center h-10 w-10 rounded-lg" style={{ background: 'var(--color-accent-glow)', border: '1px solid var(--color-accent)', color: 'var(--color-accent)' }}>
+            <MapIcon className="h-5 w-5" />
+          </div>
+          <div>
+            <h1 className="text-gradient text-2xl font-bold font-mono tracking-tight">Mexico Procurement Map</h1>
+            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Federal spending by state -- click any state to drill down</p>
+          </div>
+        </div>
+      </div>
 
       {/* Controls row: metric selector + view toggle */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs text-muted-foreground">Show:</span>
+          <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Show:</span>
           {(Object.keys(METRIC_CONFIG) as Metric[]).map((m) => (
-            <Button
+            <button
               key={m}
-              variant={metric === m ? 'default' : 'outline'}
-              size="sm"
-              className="h-7 text-xs gap-1.5"
+              className="h-7 px-3 text-xs rounded-md border font-medium flex items-center gap-1.5 transition-all"
+              style={
+                metric === m
+                  ? { background: 'var(--color-accent)', borderColor: 'var(--color-accent)', color: '#0f172a' }
+                  : { background: 'var(--color-background-card)', borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }
+              }
               onClick={() => setMetric(m)}
             >
               {m === 'amount'    && <DollarSign className="h-3 w-3" />}
               {m === 'risk'      && <Shield     className="h-3 w-3" />}
               {m === 'contracts' && <FileText   className="h-3 w-3" />}
               {METRIC_CONFIG[m].label}
-            </Button>
+            </button>
           ))}
         </div>
-        <div className="flex items-center gap-1 border border-border/40 rounded-md p-0.5">
-          <Button
-            variant={viewMode === 'choropleth' ? 'default' : 'ghost'}
-            size="sm"
-            className="h-6 text-xs gap-1.5 px-2"
+        <div className="flex items-center gap-1 rounded-md p-0.5" style={{ border: '1px solid var(--color-border)', background: 'var(--color-background-card)' }}>
+          <button
+            className="h-6 text-xs gap-1.5 px-2 rounded flex items-center transition-all font-medium"
+            style={
+              viewMode === 'choropleth'
+                ? { background: 'var(--color-accent)', color: '#0f172a' }
+                : { color: 'var(--color-text-muted)' }
+            }
             onClick={() => setViewMode('choropleth')}
             title="Geographic choropleth"
           >
             <MapIcon className="h-3 w-3" /> Choropleth
-          </Button>
-          <Button
-            variant={viewMode === 'hex' ? 'default' : 'ghost'}
-            size="sm"
-            className="h-6 text-xs gap-1.5 px-2"
+          </button>
+          <button
+            className="h-6 text-xs gap-1.5 px-2 rounded flex items-center transition-all font-medium"
+            style={
+              viewMode === 'hex'
+                ? { background: 'var(--color-accent)', color: '#0f172a' }
+                : { color: 'var(--color-text-muted)' }
+            }
             onClick={() => setViewMode('hex')}
             title="Equal-area hex grid"
           >
             <Grid3X3 className="h-3 w-3" /> Hex Grid
-          </Button>
+          </button>
         </div>
       </div>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <MapIcon className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                {cfg.label} by State
-              </CardTitle>
-            </div>
-            {/* Zoom controls */}
-            <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomIn}  title="Zoom in">
-                <ZoomIn  className="h-3.5 w-3.5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomOut} title="Zoom out">
-                <ZoomOut className="h-3.5 w-3.5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleReset}   title="Reset view">
-                <RotateCcw className="h-3.5 w-3.5" />
-              </Button>
-            </div>
+      <div className="card">
+        <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: 'var(--color-border)' }}>
+          <div className="flex items-center gap-2">
+            <MapIcon className="h-4 w-4" style={{ color: 'var(--color-accent)' }} />
+            <span className="text-sm font-semibold uppercase tracking-wide font-mono" style={{ color: 'var(--color-text-muted)' }}>
+              {cfg.label} by State
+            </span>
           </div>
-        </CardHeader>
+          {/* Zoom controls */}
+          <div className="flex items-center gap-1">
+            <button className="h-7 w-7 flex items-center justify-center rounded transition-colors" style={{ color: 'var(--color-text-muted)' }} onClick={handleZoomIn}  title="Zoom in">
+              <ZoomIn  className="h-3.5 w-3.5" />
+            </button>
+            <button className="h-7 w-7 flex items-center justify-center rounded transition-colors" style={{ color: 'var(--color-text-muted)' }} onClick={handleZoomOut} title="Zoom out">
+              <ZoomOut className="h-3.5 w-3.5" />
+            </button>
+            <button className="h-7 w-7 flex items-center justify-center rounded transition-colors" style={{ color: 'var(--color-text-muted)' }} onClick={handleReset}   title="Reset view">
+              <RotateCcw className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
 
-        <CardContent>
+        <div className="p-5">
           {/* Loading */}
           {isLoading && <Skeleton className="h-[460px] w-full" />}
 
@@ -297,8 +308,8 @@ export default function MexicoMap() {
           {!isLoading && !error && viewMode === 'choropleth' && (
             // eslint-disable-next-line jsx-a11y/no-static-element-interactions
             <div
-              className="relative rounded overflow-hidden bg-slate-50 dark:bg-slate-900/30 border border-border"
-              style={{ height: 460 }}
+              className="relative rounded-lg overflow-hidden"
+              style={{ height: 460, background: '#080c14', border: '1px solid var(--color-border)' }}
               onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
               onMouseLeave={() => setHoveredCode(null)}
             >
@@ -326,7 +337,7 @@ export default function MexicoMap() {
                         const value     = stateData ? getMetricValue(stateData, metric) : 0
                         const fill      = stateData
                           ? getStateColor(value, maxValue, cfg.colorRange)
-                          : '#e2e8f0'
+                          : '#1e2d45'
                         const isHovered = code === hoveredCode
 
                         return (
@@ -356,21 +367,21 @@ export default function MexicoMap() {
 
               {/* Color scale legend */}
               <div className="absolute bottom-3 left-3 flex flex-col gap-1">
-                <span className="text-[9px] text-slate-500 uppercase tracking-wide">{cfg.label}</span>
+                <span className="text-[9px] uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>{cfg.label}</span>
                 <div
                   className="w-24 h-2.5 rounded"
                   style={{
                     background: `linear-gradient(to right, ${cfg.colorRange[0]}, ${cfg.colorRange[1]})`,
                   }}
                 />
-                <div className="flex justify-between text-[9px] text-slate-500">
+                <div className="flex justify-between text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
                   <span>Low</span>
                   <span>High</span>
                 </div>
               </div>
 
               {/* Hint */}
-              <div className="absolute bottom-3 right-3 text-[10px] text-slate-400 hidden sm:block">
+              <div className="absolute bottom-3 right-3 text-[10px] hidden sm:block" style={{ color: 'var(--color-text-muted)' }}>
                 Drag to pan · scroll to zoom
               </div>
             </div>
@@ -384,86 +395,90 @@ export default function MexicoMap() {
           {/* Risk legend */}
           {!isLoading && !error && (
             <div className="mt-3 flex items-center gap-4 flex-wrap">
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Risk:</span>
+              <span className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>Risk:</span>
               {(['low', 'medium', 'high', 'critical'] as const).map((level) => (
                 <div key={level} className="flex items-center gap-1">
                   <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: RISK_COLORS[level] }} />
-                  <span className="text-[10px] capitalize">{level}</span>
+                  <span className="text-[10px] capitalize" style={{ color: 'var(--color-text-secondary)' }}>{level}</span>
                 </div>
               ))}
-              <span className="text-[10px] text-muted-foreground ml-2">hover = tooltip</span>
+              <span className="text-[10px] ml-2" style={{ color: 'var(--color-text-muted)' }}>hover = tooltip</span>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* State summary table */}
       {!isLoading && !error && states.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              All States — {cfg.label}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/50">
-                  <tr>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground text-xs">State</th>
-                    <th className="px-4 py-2 text-right font-medium text-muted-foreground text-xs">Contracts</th>
-                    <th className="px-4 py-2 text-right font-medium text-muted-foreground text-xs">Total Spending</th>
-                    <th className="px-4 py-2 text-right font-medium text-muted-foreground text-xs">Avg Risk</th>
-                    <th className="px-4 py-2 text-right font-medium text-muted-foreground text-xs hidden sm:table-cell">
-                      Direct Award
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {[...states]
-                    .sort((a, b) => getMetricValue(b, metric) - getMetricValue(a, metric))
-                    .map((s) => {
-                      const riskScore = s.avg_risk_score ?? 0
-                      const riskColor = getRiskColor(riskScore)
-                      return (
-                        <tr
-                          key={s.state_code}
-                          className="cursor-pointer hover:bg-muted/40 transition-colors"
-                          onClick={() => navigate(`/state-expenditure/${s.state_code}`)}
-                        >
-                          <td className="px-4 py-2">
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex h-6 w-9 items-center justify-center rounded bg-muted text-[10px] font-mono font-semibold">
-                                {s.state_code}
-                              </span>
-                              <span className="text-xs font-medium">{s.state_name}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-2 text-right tabular-nums text-xs">
-                            {(s.contract_count ?? 0).toLocaleString()}
-                          </td>
-                          <td className="px-4 py-2 text-right tabular-nums text-xs">
-                            {formatCompactMXN(s.total_value_mxn ?? 0)}
-                          </td>
-                          <td className="px-4 py-2 text-right text-xs">
+        <div className="card overflow-hidden">
+          <div className="px-5 py-3 border-b" style={{ borderColor: 'var(--color-border)' }}>
+            <span className="text-sm font-semibold uppercase tracking-wide font-mono" style={{ color: 'var(--color-text-muted)' }}>
+              All States -- {cfg.label}
+            </span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ background: 'var(--color-background-elevated)' }}>
+                  <th className="data-cell-header px-4 py-2.5 text-left text-xs">State</th>
+                  <th className="data-cell-header px-4 py-2.5 text-right text-xs">Contracts</th>
+                  <th className="data-cell-header px-4 py-2.5 text-right text-xs">Total Spending</th>
+                  <th className="data-cell-header px-4 py-2.5 text-right text-xs">Avg Risk</th>
+                  <th className="data-cell-header px-4 py-2.5 text-right text-xs hidden sm:table-cell">
+                    Direct Award
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...states]
+                  .sort((a, b) => getMetricValue(b, metric) - getMetricValue(a, metric))
+                  .map((s) => {
+                    const riskScore = s.avg_risk_score ?? 0
+                    const riskColor = getRiskColor(riskScore)
+                    return (
+                      <tr
+                        key={s.state_code}
+                        className="cursor-pointer transition-colors border-b"
+                        style={{ borderColor: 'var(--color-border)' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-background-elevated)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                        onClick={() => navigate(`/state-expenditure/${s.state_code}`)}
+                      >
+                        <td className="data-cell px-4 py-2.5">
+                          <div className="flex items-center gap-2">
                             <span
-                              className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold text-white"
-                              style={{ backgroundColor: riskColor }}
+                              className="inline-flex h-6 w-9 items-center justify-center rounded text-[10px] font-mono font-semibold"
+                              style={{ background: 'var(--color-background-elevated)', color: 'var(--color-accent)', border: '1px solid var(--color-border)' }}
                             >
-                              {riskScore.toFixed(3)}
+                              {s.state_code}
                             </span>
-                          </td>
-                          <td className="px-4 py-2 text-right tabular-nums text-xs hidden sm:table-cell">
-                            {((s.direct_award_rate ?? 0) * 100).toFixed(1)}%
-                          </td>
-                        </tr>
-                      )
-                    })}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                            <span className="text-xs font-medium" style={{ color: 'var(--color-text-primary)' }}>{s.state_name}</span>
+                          </div>
+                        </td>
+                        <td className="data-cell px-4 py-2.5 text-right tabular-nums text-xs font-mono" style={{ color: 'var(--color-text-secondary)' }}>
+                          {(s.contract_count ?? 0).toLocaleString()}
+                        </td>
+                        <td className="data-cell px-4 py-2.5 text-right tabular-nums text-xs font-mono" style={{ color: 'var(--color-text-secondary)' }}>
+                          {formatCompactMXN(s.total_value_mxn ?? 0)}
+                        </td>
+                        <td className="data-cell px-4 py-2.5 text-right text-xs">
+                          <span
+                            className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold font-mono"
+                            style={{ backgroundColor: riskColor + '22', color: riskColor }}
+                          >
+                            {riskScore.toFixed(3)}
+                          </span>
+                        </td>
+                        <td className="data-cell px-4 py-2.5 text-right tabular-nums text-xs font-mono hidden sm:table-cell" style={{ color: 'var(--color-text-muted)' }}>
+                          {((s.direct_award_rate ?? 0) * 100).toFixed(1)}%
+                        </td>
+                      </tr>
+                    )
+                  })}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </div>
   )

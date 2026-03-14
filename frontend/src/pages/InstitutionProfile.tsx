@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge, Badge } from '@/components/ui/badge'
@@ -325,7 +325,7 @@ export function InstitutionProfile() {
     <div className="space-y-5">
       {/* ── HEADER ─────────────────────────────────────────────────────────── */}
       <motion.div
-        className="flex items-start justify-between gap-4 rounded-lg border border-border/40 bg-background-card p-4"
+        className="card flex items-start justify-between gap-4 p-4"
         style={{ borderLeftWidth: '4px', borderLeftColor: riskColor }}
         variants={slideUp}
         initial="initial"
@@ -345,7 +345,7 @@ export function InstitutionProfile() {
           </div>
           <div className="min-w-0">
             <InstitutionLogoBanner name={institution.name} height={32} className="mb-2" enableWiki />
-            <h1 className="text-lg font-bold leading-tight truncate">{toTitleCase(institution.name)}</h1>
+            <h1 className="text-lg font-bold leading-tight truncate text-gradient">{toTitleCase(institution.name)}</h1>
             {(() => {
               const _group = getInstitutionGroup(institution.name)
               return _group ? (
@@ -590,7 +590,7 @@ export function InstitutionProfile() {
         <div className="space-y-4">
 
           {/* Risk Distribution */}
-          <Card className="border-border/40">
+          <div className="card-elevated">
             <CardHeader className="pb-2 pt-4">
               <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                 <Shield className="h-3.5 w-3.5 text-accent" />
@@ -641,11 +641,11 @@ export function InstitutionProfile() {
                 <p className="text-xs text-text-muted">No risk data available</p>
               )}
             </CardContent>
-          </Card>
+          </div>
 
           {/* Risk Factor Breakdown (Waterfall) */}
           {(waterfallDataError || waterfallLoading || waterfallData?.features?.length > 0) && (
-          <Card className="border-border/40">
+          <div className="card-elevated">
             <CardHeader className="pb-2 pt-4">
               <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                 <Shield className="h-3.5 w-3.5 text-accent" />
@@ -665,11 +665,11 @@ export function InstitutionProfile() {
                 />
               ) : null}
             </CardContent>
-          </Card>
+          </div>
           )}
 
           {/* Institution Details */}
-          <Card className="border-border/40">
+          <div className="card-elevated">
             <CardHeader className="pb-2 pt-4">
               <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                 <Building2 className="h-3.5 w-3.5 text-accent" />
@@ -694,11 +694,11 @@ export function InstitutionProfile() {
                 </>
               )}
             </CardContent>
-          </Card>
+          </div>
 
           {/* Peer Comparison */}
           {(peerLoading || peerComparison) && (
-          <Card className="border-border/40">
+          <div className="card-elevated">
             <CardHeader className="pb-2 pt-4">
               <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                 <Users className="h-3.5 w-3.5 text-accent" />
@@ -766,7 +766,7 @@ export function InstitutionProfile() {
                 <p className="text-xs text-text-muted">Insufficient peers for comparison</p>
               )}
             </CardContent>
-          </Card>
+          </div>
           )}
 
           {/* Direct Award Rate vs Benchmark */}
@@ -780,7 +780,7 @@ export function InstitutionProfile() {
             const daDiff = directAwardPct != null ? directAwardPct - NATIONAL_DA_BENCHMARK : null
             const sbDiff = singleBidPct != null ? singleBidPct - NATIONAL_SB_BENCHMARK : null
             return (
-              <Card className="border-border/40">
+              <div className="card-elevated">
                 <CardHeader className="pb-2 pt-4">
                   <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                     <AlertTriangle className="h-3.5 w-3.5 text-accent" />
@@ -865,7 +865,7 @@ export function InstitutionProfile() {
                     Vertical line = national average across all institutions. Higher than average direct awards or single bids increase corruption risk.
                   </p>
                 </CardContent>
-              </Card>
+              </div>
             )
           })()}
 
@@ -875,7 +875,7 @@ export function InstitutionProfile() {
         <div className="lg:col-span-2 space-y-5">
 
           {/* Risk Trajectory */}
-          <Card className="border-border/40">
+          <div className="card-elevated">
             <CardHeader className="pb-2 pt-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
@@ -921,10 +921,10 @@ export function InstitutionProfile() {
                 </div>
               )}
             </CardContent>
-          </Card>
+          </div>
 
           {/* Top Vendors */}
-          <Card className="border-border/40">
+          <div className="card-elevated">
             <CardHeader className="pb-2 pt-4">
               <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                 <Users className="h-3.5 w-3.5 text-accent" />
@@ -947,11 +947,11 @@ export function InstitutionProfile() {
                 <p className="text-sm text-text-muted">No vendor data available</p>
               )}
             </CardContent>
-          </Card>
+          </div>
 
           {/* Top Procurement Categories */}
           {(categoriesLoading || (topCategories?.data?.length ?? 0) > 0) && (
-          <Card className="border-border/40">
+          <div className="card-elevated">
             <CardHeader className="pb-2 pt-4">
               <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                 <FileText className="h-3.5 w-3.5 text-accent" />
@@ -984,12 +984,12 @@ export function InstitutionProfile() {
                 </div>
               )}
             </CardContent>
-          </Card>
+          </div>
           )}
 
           {/* Vendor Loyalty Heatmap */}
           {(loyaltyLoading || (vendorLoyalty?.vendors?.length ?? 0) > 0) && (
-          <Card className="border-border/40">
+          <div className="card-elevated">
             <CardHeader className="pb-2 pt-4">
               <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                 <TrendingUp className="h-3.5 w-3.5 text-accent" />
@@ -1069,7 +1069,7 @@ export function InstitutionProfile() {
                 </div>
               ) : null}
             </CardContent>
-          </Card>
+          </div>
           )}
 
           {/* Most Suspicious Contract — spotlight card */}
@@ -1080,8 +1080,8 @@ export function InstitutionProfile() {
             const contractRiskLevel = getRiskLevelFromScore(contractRiskScore)
             const contractColor = RISK_COLORS[contractRiskLevel] ?? '#64748b'
             return (
-              <Card
-                className="border-l-4 cursor-pointer hover:bg-background-elevated/20 transition-colors"
+              <div
+                className="card-elevated border-l-4 cursor-pointer hover:bg-background-elevated/20 transition-colors"
                 style={{ borderLeftColor: contractColor }}
                 onClick={() => { setSelectedContractId(topContract.id); setIsDetailOpen(true) }}
                 role="button"
@@ -1123,12 +1123,12 @@ export function InstitutionProfile() {
                   </div>
                   <p className="text-[10px] text-text-muted/60 italic">Click to view full contract details</p>
                 </CardContent>
-              </Card>
+              </div>
             )
           })()}
 
           {/* High-Risk Contracts */}
-          <Card className="border-border/40">
+          <div className="card-elevated">
             <CardHeader className="pb-2 pt-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
@@ -1165,10 +1165,10 @@ export function InstitutionProfile() {
                 <p className="p-4 text-sm text-text-muted">No contracts found</p>
               )}
             </CardContent>
-          </Card>
+          </div>
 
           {/* Recent Contracts */}
-          <Card className="border-border/40">
+          <div className="card-elevated">
             <CardHeader className="pb-2 pt-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
@@ -1207,10 +1207,10 @@ export function InstitutionProfile() {
                 <p className="p-4 text-sm text-text-muted">No contracts found</p>
               )}
             </CardContent>
-          </Card>
+          </div>
 
           {/* ASF Audit Findings */}
-          <Card>
+          <div className="card-elevated">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
@@ -1270,14 +1270,14 @@ export function InstitutionProfile() {
                 </div>
               )}
             </CardContent>
-          </Card>
+          </div>
 
         </div>
       </div>
 
       {/* Known Scandals in this sector */}
       {(sectorCasesError || (sectorCases && sectorCases.length > 0)) && (
-        <Card>
+        <div className="card-elevated">
           <CardContent className="pt-5 pb-4">
             {sectorCasesError ? (
               <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load sector scandals.</p>
@@ -1305,7 +1305,7 @@ export function InstitutionProfile() {
               </>
             )}
           </CardContent>
-        </Card>
+        </div>
       )}
 
       <ContractDetailModal
@@ -1340,8 +1340,8 @@ function KpiChip({
 }) {
   return (
     <div className={cn(
-      'rounded-lg border bg-background-card p-3 space-y-0.5',
-      highlight ? 'border-risk-critical/30' : 'border-border/40'
+      'card hover-lift p-3 space-y-0.5',
+      highlight ? 'border-risk-critical/30' : ''
     )}>
       <div className="flex items-center justify-between">
         <span className="text-xs text-text-muted">{label}</span>

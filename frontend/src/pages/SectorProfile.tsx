@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
@@ -340,8 +340,8 @@ export function SectorProfile() {
 
       {/* ── HERO HEADER ─────────────────────────────────────────────────── */}
       <motion.div
-        className="relative rounded-xl border border-border/30 overflow-hidden p-6"
-        style={{ background: `linear-gradient(135deg, ${hex(sectorColor, 0.12)} 0%, transparent 60%)` }}
+        className="card relative overflow-hidden p-6"
+        style={{ background: `linear-gradient(135deg, ${hex(sectorColor, 0.12)} 0%, var(--bg-surface) 60%)` }}
         variants={slideUp}
         initial="initial"
         animate="animate"
@@ -389,7 +389,7 @@ export function SectorProfile() {
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-2xl font-black tracking-tight capitalize text-text-primary">{sector.name}</h1>
+                <h1 className="text-2xl font-black tracking-tight capitalize text-gradient">{sector.name}</h1>
                 {stats && <RiskBadge score={stats.avg_risk_score} className="text-sm px-2.5 py-0.5" />}
               </div>
               <div className="flex items-center gap-3 mt-0.5">
@@ -503,7 +503,7 @@ export function SectorProfile() {
         <div className="space-y-6">
 
           {/* RISK DONUT */}
-          <Card className="border-border/40 overflow-hidden">
+          <div className="card-elevated overflow-hidden">
             <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${RISK_COLORS.critical}, ${RISK_COLORS.high}, ${RISK_COLORS.medium}, ${RISK_COLORS.low})` }} />
             <CardHeader className="pb-0">
               <CardTitle className="flex items-center gap-2 text-sm">
@@ -520,10 +520,10 @@ export function SectorProfile() {
                 <RiskDonut data={riskDist.data} color={sectorColor} />
               ) : null}
             </CardContent>
-          </Card>
+          </div>
 
           {/* RISK SIGNATURE — ranked bars */}
-          <Card className="border-border/40">
+          <div className="card-elevated">
             <CardHeader className="pb-0">
               <CardTitle className="flex items-center gap-2 text-sm">
                 <Activity className="h-4 w-4" style={{ color: sectorColor }} />
@@ -542,7 +542,7 @@ export function SectorProfile() {
                 <p className="text-xs text-text-muted py-4 text-center">No factor data</p>
               )}
             </CardContent>
-          </Card>
+          </div>
 
           {/* HIGHEST-RISK VENDOR CALLOUT */}
           {topRiskVendors?.data?.[0] && (() => {
@@ -553,7 +553,7 @@ export function SectorProfile() {
               riskScore >= 0.3 ? RISK_COLORS.high :
               riskScore >= 0.1 ? RISK_COLORS.medium : RISK_COLORS.low
             return (
-              <Card className="border-border/40" style={{ borderColor: `${riskColor}40` }}>
+              <div className="card-elevated" style={{ borderColor: `${riskColor}40` }}>
                 <div className="h-0.5 w-full" style={{ background: riskColor }} />
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center gap-2 text-sm">
@@ -593,12 +593,12 @@ export function SectorProfile() {
                     </p>
                   </Link>
                 </CardContent>
-              </Card>
+              </div>
             )
           })()}
 
           {/* PROCUREMENT STATS */}
-          <Card className="border-border/40">
+          <div className="card-elevated">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Procurement Patterns</CardTitle>
             </CardHeader>
@@ -608,11 +608,11 @@ export function SectorProfile() {
               <StatRow label="Avg Risk Score" value={formatPercentSafe(stats?.avg_risk_score, true) || '-'} />
               <StatRow label="High Risk Count" value={formatNumber((stats?.high_risk_count || 0) + (stats?.critical_risk_count || 0))} />
             </CardContent>
-          </Card>
+          </div>
 
           {/* PRICE INTELLIGENCE */}
           {(priceLoading || priceBaseline || priceBaselinesError) && (
-            <Card className="border-border/40">
+            <div className="card-elevated">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-sm">
                   <Zap className="h-4 w-4 text-amber-400" />
@@ -628,12 +628,12 @@ export function SectorProfile() {
                   <PriceDistribution baseline={priceBaseline} color={sectorColor} />
                 ) : null}
               </CardContent>
-            </Card>
+            </div>
           )}
 
           {/* DOCUMENTED CASES */}
           {(sectorCasesError || (sectorCases && sectorCases.length > 0)) && (
-            <Card className="border-border/40">
+            <div className="card-elevated">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-sm">
                   <Shield className="h-4 w-4 text-risk-critical" />
@@ -670,7 +670,7 @@ export function SectorProfile() {
                   View all →
                 </Link>
               </CardContent>
-            </Card>
+            </div>
           )}
         </div>
 
@@ -678,7 +678,7 @@ export function SectorProfile() {
         <div className="lg:col-span-2 space-y-6">
 
           {/* TREND AREA */}
-          <Card className="border-border/40 overflow-hidden">
+          <div className="card-elevated overflow-hidden">
             <CardHeader>
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="flex items-center gap-2">
@@ -697,10 +697,10 @@ export function SectorProfile() {
                 )}
               </div>
             </CardContent>
-          </Card>
+          </div>
 
           {/* MONTHLY DEVIATION */}
-          <Card className="border-border/40">
+          <div className="card-elevated">
             <CardHeader>
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -762,10 +762,10 @@ export function SectorProfile() {
                 )}
               </div>
             </CardContent>
-          </Card>
+          </div>
 
           {/* TOP VENDORS */}
-          <Card className="border-border/40">
+          <div className="card-elevated">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-4 w-4" style={{ color: sectorColor }} />
@@ -801,11 +801,11 @@ export function SectorProfile() {
                 )}
               </div>
             </CardContent>
-          </Card>
+          </div>
 
           {/* KNOWN CASES */}
           {(topCasesError || caseData.length > 0) && (
-            <Card className="border-risk-high/30 bg-risk-critical/3 overflow-hidden">
+            <div className="card-elevated border-risk-high/30 bg-risk-critical/3 overflow-hidden">
               <div className="h-1 w-full bg-gradient-to-r from-risk-critical to-risk-high" />
               <CardHeader className="flex flex-row items-center justify-between pb-3">
                 <CardTitle className="flex items-center gap-2 text-sm">
@@ -825,11 +825,11 @@ export function SectorProfile() {
                   <InvestigationCases data={caseData} />
                 )}
               </CardContent>
-            </Card>
+            </div>
           )}
 
           {/* MONEY FLOW */}
-          <Card className="border-border/40">
+          <div className="card-elevated">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm">
                 <ArrowRight className="h-4 w-4" style={{ color: sectorColor }} />
@@ -848,10 +848,10 @@ export function SectorProfile() {
                 <p className="text-xs text-text-muted py-4 text-center">No flow data</p>
               )}
             </CardContent>
-          </Card>
+          </div>
 
           {/* AI PRICE ANOMALIES */}
-          <Card className="border-border/40">
+          <div className="card-elevated">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div>
@@ -880,10 +880,10 @@ export function SectorProfile() {
                 </div>
               )}
             </CardContent>
-          </Card>
+          </div>
 
           {/* INSTITUTIONS IN SECTOR — drill-down table */}
-          <Card>
+          <div className="card-elevated">
             <CardContent className="pt-5 pb-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -927,13 +927,13 @@ export function SectorProfile() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs" role="table" aria-label="Institutions in sector">
                     <thead>
-                      <tr className="border-b border-border/30">
-                        <th className="text-left py-2 pr-3 font-medium text-text-muted uppercase tracking-wider">Institution</th>
-                        <th className="text-left py-2 px-3 font-medium text-text-muted uppercase tracking-wider hidden sm:table-cell">Type</th>
-                        <th className="text-right py-2 px-3 font-medium text-text-muted uppercase tracking-wider">Contracts</th>
-                        <th className="text-right py-2 px-3 font-medium text-text-muted uppercase tracking-wider hidden md:table-cell">Total Value</th>
-                        <th className="text-center py-2 px-3 font-medium text-text-muted uppercase tracking-wider">Avg Risk</th>
-                        <th className="text-right py-2 pl-3 font-medium text-text-muted uppercase tracking-wider hidden lg:table-cell">Direct Award %</th>
+                      <tr>
+                        <th className="data-cell-header text-left">Institution</th>
+                        <th className="data-cell-header text-left hidden sm:table-cell">Type</th>
+                        <th className="data-cell-header text-right">Contracts</th>
+                        <th className="data-cell-header text-right hidden md:table-cell">Total Value</th>
+                        <th className="data-cell-header text-center">Avg Risk</th>
+                        <th className="data-cell-header text-right hidden lg:table-cell">Direct Award %</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -950,9 +950,9 @@ export function SectorProfile() {
                         return (
                           <tr
                             key={inst.id}
-                            className="border-b border-border/20 hover:bg-background-elevated/20 transition-colors"
+                            className="hover:bg-background-elevated/30 transition-colors"
                           >
-                            <td className="py-2.5 pr-3">
+                            <td className="data-cell">
                               <Link
                                 to={`/institutions/${inst.id}`}
                                 className="font-medium text-text-secondary hover:text-accent transition-colors truncate block max-w-[200px]"
@@ -961,19 +961,19 @@ export function SectorProfile() {
                                 {toTitleCase(inst.name)}
                               </Link>
                             </td>
-                            <td className="py-2.5 px-3 text-text-muted hidden sm:table-cell">
+                            <td className="data-cell text-text-muted hidden sm:table-cell">
                               {inst.institution_type
                                 ? <span className="px-1.5 py-0.5 rounded bg-background-elevated/50 border border-border/30 font-mono text-[10px]">{inst.institution_type}</span>
                                 : <span className="text-text-muted/40">—</span>
                               }
                             </td>
-                            <td className="py-2.5 px-3 text-right font-mono tabular-nums text-text-primary">
+                            <td className="data-cell text-right font-mono tabular-nums text-text-primary">
                               {formatNumber(inst.total_contracts ?? 0)}
                             </td>
-                            <td className="py-2.5 px-3 text-right font-mono tabular-nums text-text-primary hidden md:table-cell">
+                            <td className="data-cell text-right font-mono tabular-nums text-text-primary hidden md:table-cell">
                               {inst.total_amount_mxn != null ? formatCompactMXN(inst.total_amount_mxn) : '—'}
                             </td>
-                            <td className="py-2.5 px-3 text-center">
+                            <td className="data-cell text-center">
                               {inst.avg_risk_score != null ? (
                                 <span className={cn('font-mono tabular-nums font-semibold', riskColor)}>
                                   {(inst.avg_risk_score * 100).toFixed(1)}%
@@ -982,7 +982,7 @@ export function SectorProfile() {
                                 <span className="text-text-muted/40">—</span>
                               )}
                             </td>
-                            <td className="py-2.5 pl-3 text-right font-mono tabular-nums hidden lg:table-cell">
+                            <td className="data-cell text-right font-mono tabular-nums hidden lg:table-cell">
                               {inst.direct_award_pct != null ? (
                                 <span className={cn(daHigh ? 'text-amber-400/90' : 'text-text-muted')}>
                                   {formatPercentSafe(inst.direct_award_pct)}
@@ -1005,13 +1005,13 @@ export function SectorProfile() {
                 </div>
               )}
             </CardContent>
-          </Card>
+          </div>
 
           {/* QUICK ACTIONS */}
           <div className="grid gap-3 md:grid-cols-3">
             <Link to={`/contracts?sector_id=${sectorId}`} className="group">
-              <div className="rounded-lg border border-border/40 p-4 hover:border-accent/50 hover:bg-accent/5 transition-all cursor-pointer">
-                <FileText className="h-5 w-5 mb-2 text-text-muted group-hover:text-accent transition-colors" />
+              <div className="interactive-card hover-lift card p-4">
+                <FileText className="h-5 w-5 mb-2 text-text-muted group-hover:text-amber-400 transition-colors" />
                 <p className="text-sm font-medium">All Contracts</p>
                 <p className="text-xs text-text-muted font-mono tabular-nums">
                   {stats?.total_contracts ? formatNumber(stats.total_contracts) : 'Browse full list'}
@@ -1019,8 +1019,8 @@ export function SectorProfile() {
               </div>
             </Link>
             <Link to={`/vendors?sector_id=${sectorId}`} className="group">
-              <div className="rounded-lg border border-border/40 p-4 hover:border-accent/50 hover:bg-accent/5 transition-all cursor-pointer">
-                <Users className="h-5 w-5 mb-2 text-text-muted group-hover:text-accent transition-colors" />
+              <div className="interactive-card hover-lift card p-4">
+                <Users className="h-5 w-5 mb-2 text-text-muted group-hover:text-amber-400 transition-colors" />
                 <p className="text-sm font-medium">Vendors</p>
                 <p className="text-xs text-text-muted font-mono tabular-nums">
                   {stats?.total_vendors ? formatNumber(stats.total_vendors) : 'All sector vendors'}
@@ -1028,7 +1028,7 @@ export function SectorProfile() {
               </div>
             </Link>
             <Link to={`/contracts?sector_id=${sectorId}&risk_level=high`} className="group">
-              <div className="rounded-lg border border-risk-high/30 p-4 hover:border-risk-high/60 hover:bg-risk-high/5 transition-all cursor-pointer">
+              <div className="interactive-card hover-lift card p-4" style={{ borderColor: 'var(--color-risk-high)' }}>
                 <AlertTriangle className="h-5 w-5 mb-2 text-risk-high" />
                 <p className="text-sm font-medium text-risk-high">High Risk Only</p>
                 <p className="text-xs text-text-muted font-mono tabular-nums">
@@ -1756,7 +1756,7 @@ function KPICard({
   const sub = format === 'currency' && value !== undefined ? formatCompactUSD(value) : undefined
 
   return (
-    <Card className="border-border/40 overflow-hidden">
+    <div className="card-elevated overflow-hidden">
       <div className="h-0.5 w-full" style={{ background: color }} />
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
@@ -1773,7 +1773,7 @@ function KPICard({
           </div>
         </div>
       </CardContent>
-    </Card>
+    </div>
   )
 }
 

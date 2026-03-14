@@ -505,12 +505,19 @@ export default function MoneyFlow() {
 
   return (
     <div className="space-y-6 p-6">
-      <div>
-        <h1 className="text-2xl font-bold text-text-primary font-mono tracking-tight">{t('pageTitle')}</h1>
-        <p className="text-sm text-text-muted mt-1">{t('pageSubtitle')}</p>
-        <p className="text-xs text-text-muted/70 mt-2 max-w-2xl leading-relaxed">
+      <div className="card p-6">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center justify-center h-10 w-10 rounded-lg" style={{ background: 'var(--color-accent-glow)', border: '1px solid var(--color-accent)', color: 'var(--color-accent)' }}>
+            <GitBranch className="h-5 w-5" />
+          </div>
+          <div>
+            <h1 className="text-gradient text-2xl font-bold font-mono tracking-tight">{t('pageTitle')}</h1>
+            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{t('pageSubtitle')}</p>
+          </div>
+        </div>
+        <p className="text-xs mt-2 max-w-2xl leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
           Explore how federal procurement funds flow from government institutions to vendors.
-          Node size represents total contract value. Color represents average risk similarity score — how closely
+          Node size represents total contract value. Color represents average risk similarity score -- how closely
           procurement patterns resemble documented corruption cases (v6.0 model).
         </p>
       </div>
@@ -518,51 +525,51 @@ export default function MoneyFlow() {
       {/* Summary Stats Bar */}
       {showDiagram && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <div className="rounded-lg bg-white/5 border border-border/20 p-4">
+          <div className="card-elevated rounded-lg p-4">
             <div className="flex items-center gap-2 mb-1">
-              <DollarSign className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
-              <span className="text-xs text-text-muted uppercase tracking-wider">Total Flow</span>
+              <DollarSign className="h-3.5 w-3.5" style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
+              <span className="text-xs uppercase tracking-wider font-mono" style={{ color: 'var(--color-text-muted)' }}>Total Flow</span>
             </div>
-            <div className="text-xl font-bold font-mono text-text-primary">
+            <div className="text-xl font-bold font-mono" style={{ color: 'var(--color-text-primary)' }}>
               {formatCompactMXN(totalValue)}
             </div>
           </div>
-          <div className="rounded-lg bg-red-500/8 border border-red-500/25 p-4">
+          <div className="rounded-lg p-4" style={{ background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.2)' }}>
             <div className="flex items-center gap-2 mb-1">
               <AlertTriangle className="h-3.5 w-3.5 text-red-400" aria-hidden="true" />
-              <span className="text-xs text-red-400 uppercase tracking-wider">High-Risk Flow</span>
+              <span className="text-xs text-red-400 uppercase tracking-wider font-mono">High-Risk Flow</span>
             </div>
             <div className="text-xl font-bold font-mono text-red-300">
               {formatCompactMXN(highRiskValue)}
             </div>
-            <div className="text-xs text-text-muted mt-0.5">
-              {highRiskPct.toFixed(0)}% of total · similarity ≥ 30%
+            <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+              {highRiskPct.toFixed(0)}% of total
             </div>
           </div>
-          <div className="rounded-lg bg-white/5 border border-border/20 p-4">
+          <div className="card-elevated rounded-lg p-4">
             <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
-              <span className="text-xs text-text-muted uppercase tracking-wider">Contracts</span>
+              <TrendingUp className="h-3.5 w-3.5" style={{ color: 'var(--color-accent-data)' }} aria-hidden="true" />
+              <span className="text-xs uppercase tracking-wider font-mono" style={{ color: 'var(--color-text-muted)' }}>Contracts</span>
             </div>
-            <div className="text-xl font-bold font-mono text-text-primary">
+            <div className="text-xl font-bold font-mono" style={{ color: 'var(--color-text-primary)' }}>
               {totalContracts.toLocaleString()}
             </div>
           </div>
-          <div className="rounded-lg bg-white/5 border border-border/20 p-4">
+          <div className="card-elevated rounded-lg p-4">
             <div className="flex items-center gap-2 mb-1">
-              <Building2 className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
-              <span className="text-xs text-text-muted uppercase tracking-wider">Institutions</span>
+              <Building2 className="h-3.5 w-3.5" style={{ color: 'var(--color-accent-data)' }} aria-hidden="true" />
+              <span className="text-xs uppercase tracking-wider font-mono" style={{ color: 'var(--color-text-muted)' }}>Institutions</span>
             </div>
-            <div className="text-xl font-bold font-mono text-text-primary">
+            <div className="text-xl font-bold font-mono" style={{ color: 'var(--color-text-primary)' }}>
               {uniqueInstitutions.toLocaleString()}
             </div>
           </div>
-          <div className="rounded-lg bg-white/5 border border-border/20 p-4">
+          <div className="card-elevated rounded-lg p-4">
             <div className="flex items-center gap-2 mb-1">
-              <Users className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
-              <span className="text-xs text-text-muted uppercase tracking-wider">Vendors</span>
+              <Users className="h-3.5 w-3.5" style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
+              <span className="text-xs uppercase tracking-wider font-mono" style={{ color: 'var(--color-text-muted)' }}>Vendors</span>
             </div>
-            <div className="text-xl font-bold font-mono text-text-primary">
+            <div className="text-xl font-bold font-mono" style={{ color: 'var(--color-text-primary)' }}>
               {uniqueVendors.toLocaleString()}
             </div>
           </div>
@@ -599,7 +606,7 @@ export default function MoneyFlow() {
       )}
 
       {/* Controls */}
-      <div className="bg-background-elevated border border-border/30 rounded-lg p-4 space-y-3">
+      <div className="card p-4 space-y-3">
         {/* Primary filter row: labeled dropdowns */}
         <div className="flex flex-wrap items-end gap-4">
           {/* Sector */}
