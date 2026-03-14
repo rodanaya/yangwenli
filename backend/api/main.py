@@ -225,8 +225,10 @@ register_error_handlers(app)
 
 # Attach rate limiter to app (if available)
 if RATE_LIMITING_ENABLED and limiter:
+    from slowapi.middleware import SlowAPIMiddleware
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_middleware(SlowAPIMiddleware)
 
 # Request logging middleware (must be added before CORS/GZip so it wraps them)
 app.add_middleware(RequestLoggingMiddleware)

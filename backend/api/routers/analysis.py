@@ -10,7 +10,7 @@ import logging
 import json
 import time as _time
 from typing import Optional, List, Dict, Any, Tuple
-from fastapi import APIRouter, HTTPException, Query, Path
+from fastapi import APIRouter, HTTPException, Query, Path, Request
 from pydantic import BaseModel, Field
 from datetime import datetime, timedelta
 
@@ -31,6 +31,21 @@ from ..models.asf import SectorASFResponse, SectorASFFinding, ASFInstitutionSumm
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/analysis", tags=["analysis"])
+
+# Rate limiting for expensive endpoints (graceful degradation if slowapi missing)
+try:
+    from slowapi import Limiter
+    from slowapi.util import get_remote_address
+    _analysis_limiter = Limiter(key_func=get_remote_address)
+except ImportError:
+    _analysis_limiter = None
+
+
+def _rate_limit(limit_string: str):
+    """Rate limit decorator that degrades gracefully if slowapi is missing."""
+    if _analysis_limiter:
+        return _analysis_limiter.limit(limit_string)
+    return lambda f: f
 
 
 # =============================================================================
@@ -646,7 +661,8 @@ class SectorYearBreakdownResponse(BaseModel):
 
 
 @router.get("/sector-year-breakdown", response_model=SectorYearBreakdownResponse)
-def get_sector_year_breakdown():
+@_rate_limit("30/minute")
+def get_sector_year_breakdown(request: Request):
     """Get sector x year cross-tabulation for administration analysis."""
     try:
         cache_key = "sector_year_all"
@@ -2037,7 +2053,9 @@ class InstitutionPeriodResponse(BaseModel):
 
 
 @router.get("/patterns/co-bidding", response_model=CoBiddingResponse)
+@_rate_limit("30/minute")
 def get_co_bidding_patterns(
+    request: Request,
     min_co_bids: int = Query(5, ge=2, description="Minimum co-bid count"),
     min_rate: float = Query(50.0, ge=0, le=100, description="Minimum co-bid rate %"),
     limit: int = Query(100, ge=1, le=500, description="Maximum pairs to return"),
@@ -2340,7 +2358,9 @@ def get_year_end_patterns(
 
 
 @router.get("/leads", response_model=InvestigationLeadsResponse)
+@_rate_limit("30/minute")
 def get_investigation_leads(
+    request: Request,
     lead_type: Optional[str] = Query(None, description="Filter by type: risk, cluster, concentration, price, year_end"),
     priority: Optional[str] = Query(None, description="Filter by priority: HIGH, MEDIUM"),
     sector_id: Optional[int] = Query(None, ge=1, le=12),
@@ -2749,7 +2769,9 @@ _MONEY_FLOW_CACHE_TTL = 600  # 10 minutes
 
 
 @router.get("/money-flow", response_model=MoneyFlowResponse)
+@_rate_limit("30/minute")
 def get_money_flow(
+    request: Request,
     sector_id: Optional[int] = Query(None, ge=1, le=12),
     year: Optional[int] = Query(None, ge=2002, le=2026),
     limit: int = Query(50, ge=10, le=200),
@@ -3601,7 +3623,8 @@ _pub_delay_cache: Dict[str, Any] = {}
 _PUB_DELAY_TTL = 6 * 3600  # 6 hours
 
 @router.get("/transparency/publication-delays", tags=["analysis"])
-def get_publication_delays():
+@_rate_limit("30/minute")
+def get_publication_delays(request: Request):
     """
     Distribution of publication delay (days between contract date and COMPRANET publication).
     Measures government transparency in procurement reporting.
