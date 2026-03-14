@@ -139,19 +139,27 @@ def main():
             return 1
 
         global_intercept = row['intercept']
-        coefs = json.loads(row['coefficients'])
+        coefs_raw = json.loads(row['coefficients'])
         pu_c = row['pu_correction_factor']
         print(f"\n  Global model: intercept={global_intercept:.4f}, pu_c={pu_c:.4f}")
 
-        # Factor names (must match z_feature columns)
-        factor_names = [
-            'price_volatility', 'vendor_concentration', 'institution_diversity',
-            'price_ratio', 'network_member_count', 'direct_award', 'sector_spread',
-            'same_day_count', 'ad_period_days', 'single_bid', 'win_rate',
-            'year_end', 'institution_risk', 'industry_mismatch', 'co_bid_rate',
-            'price_hyp_confidence',
-        ]
-        assert len(factor_names) == len(coefs), f"Coef count mismatch: {len(coefs)} vs {len(factor_names)}"
+        # coefficients may be dict (factor→value) or list
+        if isinstance(coefs_raw, dict):
+            factor_names = list(coefs_raw.keys())
+            coefs = list(coefs_raw.values())
+        else:
+            # list — must match z_feature column order
+            factor_names = [
+                'price_volatility', 'vendor_concentration', 'institution_diversity',
+                'price_ratio', 'network_member_count', 'direct_award', 'sector_spread',
+                'same_day_count', 'ad_period_days', 'single_bid', 'win_rate',
+                'year_end', 'institution_risk', 'industry_mismatch', 'co_bid_rate',
+                'price_hyp_confidence',
+            ]
+            coefs = coefs_raw
+        print(f"  {len(coefs)} coefficients loaded")
+
+        assert len(coefs) == len(factor_names), f"Coef/factor mismatch: {len(coefs)} vs {len(factor_names)}"
 
         # Sample logits
         logits = compute_logits(conn, coefs, global_intercept, factor_names)
