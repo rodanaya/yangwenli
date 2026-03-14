@@ -2211,6 +2211,18 @@ export interface AriaStats {
   gt_flags: number
 }
 
+export interface AriaStatsResponse {
+  latest_run: AriaStats | null
+  review_stats: {
+    pending: number
+    confirmed: number
+    dismissed: number
+    reviewing: number
+  }
+  queue_total: number
+  new_vendor_count: number
+}
+
 export interface AriaQueueResponse {
   data: AriaQueueItem[]
   pagination: PaginationMeta

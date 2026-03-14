@@ -99,7 +99,7 @@ import type {
   PyodAgreementResponse,
   DriftReportResponse,
   AriaQueueItem,
-  AriaStats,
+  AriaStatsResponse,
   AriaQueueResponse,
 } from './types'
 
@@ -163,6 +163,7 @@ export type {
   DriftReportResponse,
   AriaQueueItem,
   AriaStats,
+  AriaStatsResponse,
   AriaQueueResponse,
 } from './types'
 
@@ -2301,9 +2302,9 @@ export const ariaApi = {
   /**
    * Fetch aggregate stats about the latest ARIA run
    */
-  async getStats(): Promise<AriaStats | null> {
-    const { data } = await api.get<{ latest_run: AriaStats | null; review_stats: Record<string, number>; queue_total: number }>('/aria/stats')
-    return data.latest_run
+  async getStats(): Promise<AriaStatsResponse> {
+    const { data } = await api.get<AriaStatsResponse>('/aria/stats')
+    return data
   },
 
   /**

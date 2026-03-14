@@ -152,7 +152,12 @@ function ExternalFlags({ item }: { item: AriaQueueItem }) {
           GT
         </span>
       )}
-      {!item.is_efos_definitivo && !item.is_sfp_sanctioned && !item.in_ground_truth && (
+      {item.new_vendor_risk && (
+        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono bg-purple-900/70 text-purple-200 border border-purple-700/50" title="New/suspicious vendor — ML model blind spot">
+          NEW
+        </span>
+      )}
+      {!item.is_efos_definitivo && !item.is_sfp_sanctioned && !item.in_ground_truth && !item.new_vendor_risk && (
         <span className="text-text-muted text-xs">—</span>
       )}
     </div>
@@ -588,6 +593,7 @@ export default function AriaQueue() {
   const [selectedPattern, setSelectedPattern] = useState<string>('')
   const [searchTerm, setSearchTerm] = useState('')
   const [efosOnly, setEfosOnly] = useState(false)
+  const [newVendorOnly, setNewVendorOnly] = useState(false)
   const [page, setPage] = useState(1)
 
   // Confirmation modal
@@ -603,10 +609,11 @@ export default function AriaQueue() {
       ...(selectedPattern ? { pattern: selectedPattern } : {}),
       ...(searchTerm.trim() ? { search: searchTerm.trim() } : {}),
       ...(efosOnly ? { efos_only: true } : {}),
+      ...(newVendorOnly ? { new_vendor_only: true } : {}),
       page,
       per_page: 50,
     }),
-    [selectedTier, selectedPattern, searchTerm, efosOnly, page]
+    [selectedTier, selectedPattern, searchTerm, efosOnly, newVendorOnly, page]
   )
 
   // Fetch queue
@@ -661,12 +668,14 @@ export default function AriaQueue() {
   }
 
   const hasData = (data?.data?.length ?? 0) > 0
+  const latestRun = stats?.latest_run
   const tierCounts = {
-    1: stats?.tier1_count ?? 0,
-    2: stats?.tier2_count ?? 0,
-    3: stats?.tier3_count ?? 0,
-    4: stats?.tier4_count ?? 0,
+    1: latestRun?.tier1_count ?? 0,
+    2: latestRun?.tier2_count ?? 0,
+    3: latestRun?.tier3_count ?? 0,
+    4: latestRun?.tier4_count ?? 0,
   }
+  const newVendorCount = stats?.new_vendor_count ?? 0
 
   return (
     <motion.div
@@ -686,9 +695,9 @@ export default function AriaQueue() {
           </div>
           <p className="text-sm text-text-muted font-mono">
             ARIA — Automated Risk Investigation Algorithm
-            {stats?.completed_at && (
+            {latestRun?.completed_at && (
               <span className="ml-2 text-text-muted/60">
-                · Last run: {new Date(stats.completed_at).toLocaleString()}
+                · Last run: {new Date(latestRun.completed_at).toLocaleString()}
               </span>
             )}
           </p>
@@ -793,8 +802,27 @@ export default function AriaQueue() {
                 <span className="text-xs text-text-secondary">EFOS only</span>
               </label>
 
+              {/* New vendor toggle */}
+              <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={newVendorOnly}
+                  onChange={(e) => {
+                    setNewVendorOnly(e.target.checked)
+                    setPage(1)
+                  }}
+                  className="rounded"
+                />
+                <span className="text-xs text-text-secondary">
+                  New vendors only
+                  {newVendorCount > 0 && (
+                    <span className="ml-1 text-purple-400">({newVendorCount})</span>
+                  )}
+                </span>
+              </label>
+
               {/* Clear filters */}
-              {(selectedTier || selectedPattern || searchTerm || efosOnly) && (
+              {(selectedTier || selectedPattern || searchTerm || efosOnly || newVendorOnly) && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -804,6 +832,7 @@ export default function AriaQueue() {
                     setSelectedPattern('')
                     setSearchTerm('')
                     setEfosOnly(false)
+                    setNewVendorOnly(false)
                     setPage(1)
                   }}
                 >

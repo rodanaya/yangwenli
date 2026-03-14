@@ -301,6 +301,7 @@ def get_aria_stats(conn: sqlite3.Connection = Depends(get_db_dep)):
 
     review_stats = {"pending": 0, "confirmed": 0, "dismissed": 0, "reviewing": 0}
     queue_total = 0
+    new_vendor_count = 0
 
     if _table_exists(conn, "aria_queue"):
         queue_total_row = conn.execute("SELECT COUNT(*) FROM aria_queue").fetchone()
@@ -318,10 +319,19 @@ def get_aria_stats(conn: sqlite3.Connection = Depends(get_db_dep)):
             if s in review_stats:
                 review_stats[s] = sr["cnt"]
 
+        try:
+            nv_row = conn.execute(
+                "SELECT COUNT(*) FROM aria_queue WHERE new_vendor_risk = 1"
+            ).fetchone()
+            new_vendor_count = nv_row[0] if nv_row else 0
+        except Exception:
+            new_vendor_count = 0
+
     return {
         "latest_run": latest_run,
         "review_stats": review_stats,
         "queue_total": queue_total,
+        "new_vendor_count": new_vendor_count,
     }
 
 

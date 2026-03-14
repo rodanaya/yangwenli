@@ -173,7 +173,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
     refetchOnWindowFocus: false,
     retry: 0,
   })
-  const ariaT1Count = ariaStats?.tier1_count ?? 0
+  const ariaT1Count = ariaStats?.latest_run?.tier1_count ?? 0
 
   const [reportOpen, setReportOpen] = useState(false)
 
