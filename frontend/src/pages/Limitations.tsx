@@ -1,5 +1,5 @@
-import { memo } from 'react'
-import { motion } from 'framer-motion'
+import { memo, useState, useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { staggerContainer, staggerItem, fadeIn } from '@/lib/animations'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -14,10 +14,10 @@ import {
   Search,
   GitMerge,
   BarChart3,
-  Info,
   CheckCircle2,
   XCircle,
   MinusCircle,
+  ChevronDown,
 } from 'lucide-react'
 
 // ============================================================================
@@ -314,118 +314,144 @@ function FixableIcon({ fixable }: { fixable: 'yes' | 'partial' | 'no' }) {
   return <XCircle className="h-3.5 w-3.5 text-risk-critical shrink-0" />
 }
 
-const LimitationCard = memo(function LimitationCard({ lim }: { lim: typeof LIMITATIONS[number] }) {
+const LimitationCard = memo(function LimitationCard({ lim, defaultOpen = false }: { lim: typeof LIMITATIONS[number]; defaultOpen?: boolean }) {
   const { t } = useTranslation('limitations')
+  const [open, setOpen] = useState(defaultOpen)
   const Icon = lim.icon
+  const sev = lim.severity as 'high' | 'medium' | 'low'
+
+  // Left border color based on severity
+  const borderColor = sev === 'high' ? 'border-l-risk-critical' : sev === 'medium' ? 'border-l-risk-high' : 'border-l-risk-medium'
+
   return (
-    <Card id={lim.id} className="scroll-mt-4">
-      <CardHeader className="pb-3">
-        <div className="flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-background-card border border-border/50 shrink-0">
-            <Icon className="h-4 w-4 text-accent" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap mb-1">
-              <SeverityBadge severity={lim.severity as 'high' | 'medium' | 'low'} />
-            </div>
-            <CardTitle className="text-sm font-semibold leading-snug">{lim.title}</CardTitle>
-            <p className="text-xs text-text-muted mt-1">{lim.summary}</p>
-          </div>
+    <div id={lim.id} className={cn('card scroll-mt-4 border-l-[3px] overflow-hidden', borderColor)}>
+      {/* Clickable header -- always visible */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-background-elevated/30 transition-colors"
+        aria-expanded={open}
+        aria-controls={`lim-${lim.id}`}
+      >
+        <div className="p-1.5 rounded-md bg-background-elevated border border-border/50 shrink-0 mt-0.5">
+          <Icon className="h-3.5 w-3.5 text-accent" />
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Body paragraphs */}
-        <div className="space-y-2">
-          {lim.body.map((p, i) => (
-            <p key={i} className="text-xs text-text-primary leading-relaxed">{p}</p>
-          ))}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap mb-0.5">
+            <SeverityBadge severity={sev} />
+          </div>
+          <p className="text-sm font-semibold text-text-primary leading-snug">{lim.title}</p>
+          <p className="text-xs text-text-muted mt-0.5 line-clamp-2">{lim.summary}</p>
         </div>
+        <ChevronDown className={cn('h-4 w-4 text-text-muted shrink-0 mt-1 transition-transform duration-200', open && 'rotate-180')} />
+      </button>
 
-        {/* Blind spots list */}
-        {'blind_spots' in lim && lim.blind_spots && (
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">{t('whatThisMisses')}</p>
-            <ul className="space-y-1">
-              {(lim.blind_spots as readonly string[]).map((s) => (
-                <li key={s} className="flex items-start gap-2 text-xs text-text-primary">
-                  <XCircle className="h-3 w-3 text-risk-high shrink-0 mt-0.5" />
-                  {s}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Why hard (vendor dedup) */}
-        {'why_hard' in lim && lim.why_hard && (
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">{t('whyHardToFix')}</p>
-            <div className="space-y-2">
-              {(lim.why_hard as readonly { label: string; detail: string }[]).map((item) => (
-                <div key={item.label} className="flex items-start gap-2 text-xs">
-                  <span className="font-medium text-text-primary shrink-0">{item.label}:</span>
-                  <span className="text-text-muted">{item.detail}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Impact note */}
-        {'impact' in lim && lim.impact && (
-          <div className="p-3 rounded-md bg-border/20 border border-border/40">
-            <p className="text-xs text-text-primary"><span className="font-medium">{t('impact')}: </span>{lim.impact}</p>
-          </div>
-        )}
-
-        {/* Data quality table */}
-        {'table' in lim && lim.table && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="px-2 py-1.5 text-left text-text-muted font-medium">{t('cards.dataQuality.table.period')}</th>
-                  <th className="px-2 py-1.5 text-right text-text-muted font-medium">{t('cards.dataQuality.table.rfcCoverage')}</th>
-                  <th className="px-2 py-1.5 text-left text-text-muted font-medium">{t('cards.dataQuality.table.quality')}</th>
-                  <th className="px-2 py-1.5 text-left text-text-muted font-medium hidden sm:table-cell">{t('cards.dataQuality.table.notes')}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/40">
-                {(lim.table as readonly { structure: string; rfc: string; quality: string; notes: string }[]).map((row) => (
-                  <tr key={row.structure}>
-                    <td className="px-2 py-1.5 font-mono text-text-primary">{row.structure}</td>
-                    <td className="px-2 py-1.5 text-right tabular-nums text-text-muted">{row.rfc}</td>
-                    <td className="px-2 py-1.5 text-text-muted">{row.quality}</td>
-                    <td className="px-2 py-1.5 text-text-muted hidden sm:table-cell">{row.notes}</td>
-                  </tr>
+      {/* Expandable body */}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            id={`lim-${lim.id}`}
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4 space-y-4 border-t border-border/30 pt-3">
+              {/* Body paragraphs */}
+              <div className="space-y-2">
+                {lim.body.map((p, i) => (
+                  <p key={i} className="text-xs text-text-primary leading-relaxed">{p}</p>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              </div>
 
-        {/* Sectors affected */}
-        {'sectors_most_affected' in lim && lim.sectors_most_affected && (
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-text-muted">{t('mostAffected')}:</span>
-            {(lim.sectors_most_affected as readonly string[]).map((s) => (
-              <span key={s} className="text-xs px-2 py-0.5 rounded bg-border/30 text-text-muted border border-border/40">{s}</span>
-            ))}
-          </div>
-        )}
+              {/* Blind spots list */}
+              {'blind_spots' in lim && lim.blind_spots && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">{t('whatThisMisses')}</p>
+                  <ul className="space-y-1">
+                    {(lim.blind_spots as readonly string[]).map((s) => (
+                      <li key={s} className="flex items-start gap-2 text-xs text-text-primary">
+                        <XCircle className="h-3 w-3 text-risk-high shrink-0 mt-0.5" />
+                        {s}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
-        {/* Workaround */}
-        {'workaround' in lim && lim.workaround && (
-          <div className="flex items-start gap-2 p-3 rounded-md bg-accent/5 border border-accent/15">
-            <Info className="h-3.5 w-3.5 text-accent shrink-0 mt-0.5" />
-            <p className="text-xs text-text-primary">
-              <span className="font-medium text-accent">{t('workaround')}: </span>
-              {lim.workaround}
-            </p>
-          </div>
+              {/* Why hard (vendor dedup) */}
+              {'why_hard' in lim && lim.why_hard && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">{t('whyHardToFix')}</p>
+                  <div className="space-y-2">
+                    {(lim.why_hard as readonly { label: string; detail: string }[]).map((item) => (
+                      <div key={item.label} className="flex items-start gap-2 text-xs">
+                        <span className="font-medium text-text-primary shrink-0">{item.label}:</span>
+                        <span className="text-text-muted">{item.detail}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Impact note -- amber box */}
+              {'impact' in lim && lim.impact && (
+                <div className="p-3 rounded-md bg-risk-medium/5 border border-risk-medium/20">
+                  <p className="text-xs text-text-primary"><span className="font-medium text-risk-medium">{t('impact')}: </span>{lim.impact}</p>
+                </div>
+              )}
+
+              {/* Data quality table */}
+              {'table' in lim && lim.table && (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="px-2 py-1.5 text-left text-text-muted font-medium">{t('cards.dataQuality.table.period')}</th>
+                        <th className="px-2 py-1.5 text-right text-text-muted font-medium">{t('cards.dataQuality.table.rfcCoverage')}</th>
+                        <th className="px-2 py-1.5 text-left text-text-muted font-medium">{t('cards.dataQuality.table.quality')}</th>
+                        <th className="px-2 py-1.5 text-left text-text-muted font-medium hidden sm:table-cell">{t('cards.dataQuality.table.notes')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/40">
+                      {(lim.table as readonly { structure: string; rfc: string; quality: string; notes: string }[]).map((row) => (
+                        <tr key={row.structure}>
+                          <td className="px-2 py-1.5 font-mono text-text-primary">{row.structure}</td>
+                          <td className="px-2 py-1.5 text-right tabular-nums text-text-muted">{row.rfc}</td>
+                          <td className="px-2 py-1.5 text-text-muted">{row.quality}</td>
+                          <td className="px-2 py-1.5 text-text-muted hidden sm:table-cell">{row.notes}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Sectors affected */}
+              {'sectors_most_affected' in lim && lim.sectors_most_affected && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs text-text-muted">{t('mostAffected')}:</span>
+                  {(lim.sectors_most_affected as readonly string[]).map((s) => (
+                    <span key={s} className="text-xs px-2 py-0.5 rounded bg-border/30 text-text-muted border border-border/40">{s}</span>
+                  ))}
+                </div>
+              )}
+
+              {/* Workaround -- green box */}
+              {'workaround' in lim && lim.workaround && (
+                <div className="flex items-start gap-2 p-3 rounded-md bg-risk-low/5 border border-risk-low/20">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-risk-low shrink-0 mt-0.5" />
+                  <p className="text-xs text-text-primary">
+                    <span className="font-medium text-risk-low">Mitigation: </span>
+                    {lim.workaround}
+                  </p>
+                </div>
+              )}
+            </div>
+          </motion.div>
         )}
-      </CardContent>
-    </Card>
+      </AnimatePresence>
+    </div>
   )
 })
 
@@ -433,8 +459,29 @@ const LimitationCard = memo(function LimitationCard({ lim }: { lim: typeof LIMIT
 // Page
 // ============================================================================
 
+// Category mapping for grouped display
+const CATEGORY_MAP: Record<string, { label: string; ids: string[] }> = {
+  'Data Quality': { label: 'Data Quality', ids: ['data-quality', 'vendor-deduplication', 'data-pipeline'] },
+  'Model Design': { label: 'Model Design', ids: ['training-bias', 'cobidding-zero', 'scar-violation', 'temporal-leakage', 'mexico-concentration'] },
+  'Coverage Gaps': { label: 'Coverage Gaps', ids: ['execution-phase', 'contract-modifications'] },
+  'Interpretation': { label: 'Interpretation', ids: ['causal', 'structural-concentration', 'temporal'] },
+}
+
 export default function Limitations() {
   const { t } = useTranslation('limitations')
+
+  const severityCounts = useMemo(() => {
+    const counts = { high: 0, medium: 0, low: 0 }
+    LIMITATIONS.forEach((l) => { counts[l.severity as keyof typeof counts]++ })
+    return counts
+  }, [])
+
+  const groupedLimitations = useMemo(() => {
+    return Object.entries(CATEGORY_MAP).map(([category, { ids }]) => ({
+      category,
+      items: ids.map((id) => LIMITATIONS.find((l) => l.id === id)!).filter(Boolean),
+    }))
+  }, [])
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -445,14 +492,56 @@ export default function Limitations() {
         whileInView="animate"
         viewport={{ once: true, margin: '-50px' }}
       >
-        <div className="flex items-center gap-2 mb-1">
-          <AlertTriangle className="h-4.5 w-4.5 text-risk-high" />
-          <h2 className="text-lg font-bold tracking-tight">{t('pageTitle')}</h2>
+        <div className="flex items-center gap-3 mb-1">
+          <div className="p-2 rounded-lg bg-risk-high/10 border border-risk-high/20">
+            <AlertTriangle className="h-4 w-4 text-risk-high" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold tracking-tight">{t('pageTitle')}</h2>
+            <p className="text-xs text-text-muted">
+              {t('pageDescription')}
+            </p>
+          </div>
         </div>
-        <p className="text-xs text-text-muted">
-          {t('pageDescription')}
-        </p>
       </motion.div>
+
+      {/* Severity summary card */}
+      <div className="card p-4">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm font-semibold text-text-primary">
+            {LIMITATIONS.length} known limitations across 3 severity levels
+          </p>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-critical/5 border border-risk-critical/15">
+            <span className="h-2.5 w-2.5 rounded-full bg-risk-critical" />
+            <div>
+              <span className="text-lg font-bold tabular-nums text-risk-critical">{severityCounts.high}</span>
+              <span className="text-xs text-text-muted ml-1.5">High Impact</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-high/5 border border-risk-high/15">
+            <span className="h-2.5 w-2.5 rounded-full bg-risk-high" />
+            <div>
+              <span className="text-lg font-bold tabular-nums text-risk-high">{severityCounts.medium}</span>
+              <span className="text-xs text-text-muted ml-1.5">Medium Impact</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-medium/5 border border-risk-medium/15">
+            <span className="h-2.5 w-2.5 rounded-full bg-risk-medium" />
+            <div>
+              <span className="text-lg font-bold tabular-nums text-risk-medium">{severityCounts.low}</span>
+              <span className="text-xs text-text-muted ml-1.5">Low Impact</span>
+            </div>
+          </div>
+        </div>
+        {/* Fixable legend */}
+        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/30 text-xs text-text-muted">
+          <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3 w-3 text-risk-low" /> {t('fixableWithData')}</span>
+          <span className="flex items-center gap-1.5"><MinusCircle className="h-3 w-3 text-risk-medium" /> {t('partialFix')}</span>
+          <span className="flex items-center gap-1.5"><XCircle className="h-3 w-3 text-risk-critical" /> {t('structuralConstraint')}</span>
+        </div>
+      </div>
 
       {/* Quick-nav chips */}
       <div className="flex items-center gap-1.5 flex-wrap">
@@ -474,6 +563,35 @@ export default function Limitations() {
           </a>
         ))}
       </div>
+
+      {/* Grouped limitation cards */}
+      {groupedLimitations.map(({ category, items: catItems }) => (
+        <div key={category} className="space-y-3">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-text-primary">{category}</h3>
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-border/40 text-text-muted tabular-nums">
+              {catItems.length}
+            </span>
+          </div>
+          <motion.div
+            className="space-y-3"
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true, margin: '-50px' }}
+          >
+            {catItems.map((lim) => (
+              <motion.div
+                key={lim.id}
+                variants={staggerItem}
+                whileHover={{ x: 4 }}
+              >
+                <LimitationCard lim={lim} />
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      ))}
 
       {/* Summary table */}
       <Card>
@@ -506,33 +624,9 @@ export default function Limitations() {
                 ))}
               </tbody>
             </table>
-            <div className="flex items-center gap-4 px-4 py-2 border-t border-border/40 text-xs text-text-muted">
-              <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3 w-3 text-risk-low" /> {t('fixableWithData')}</span>
-              <span className="flex items-center gap-1.5"><MinusCircle className="h-3 w-3 text-risk-medium" /> {t('partialFix')}</span>
-              <span className="flex items-center gap-1.5"><XCircle className="h-3 w-3 text-risk-critical" /> {t('structuralConstraint')}</span>
-            </div>
           </div>
         </CardContent>
       </Card>
-
-      {/* Limitation cards */}
-      <motion.div
-        className="space-y-4"
-        variants={staggerContainer}
-        initial="initial"
-        whileInView="animate"
-        viewport={{ once: true, margin: '-50px' }}
-      >
-        {LIMITATIONS.map((lim) => (
-          <motion.div
-            key={lim.id}
-            variants={staggerItem}
-            whileHover={{ x: 4 }}
-          >
-            <LimitationCard lim={lim} />
-          </motion.div>
-        ))}
-      </motion.div>
 
       {/* Footer disclaimer */}
       <div className="p-4 rounded-lg border border-border/50 bg-background-card/50">

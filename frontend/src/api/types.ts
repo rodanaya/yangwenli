@@ -2185,6 +2185,7 @@ export interface AriaQueueItem {
   burst_score: number
   review_status: 'pending' | 'confirmed' | 'dismissed' | 'reviewing'
   primary_sector_name: string | null
+  direct_award_rate?: number
   // detail only:
   risk_score_norm?: number
   mahalanobis_norm?: number

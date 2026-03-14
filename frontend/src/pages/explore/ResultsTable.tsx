@@ -192,14 +192,14 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
         <div className="overflow-x-auto -mx-4 sm:mx-0">
         <table className="w-full text-sm" role="grid">
           <thead>
-            <tr className="border-b border-border/30 text-[11px] text-text-muted uppercase tracking-wider">
-              <th className="text-left py-2 pr-3 font-medium">Vendor</th>
-              <SortHeader field="total_contracts" label="Contracts" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="text-right py-2 px-2" />
-              <SortHeader field="total_value_mxn" label="Total Value" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="text-right py-2 px-2 hidden md:table-cell" />
-              <SortHeader field="avg_risk_score" label="Risk" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="text-right py-2 px-2" />
-              <SortHeader field="direct_award_pct" label="DA %" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="text-right py-2 pl-2 hidden lg:table-cell" />
-              <th className="text-right py-2 px-2 font-medium hidden xl:table-cell w-20">Anomaly</th>
-              <th className="w-16" />
+            <tr>
+              <th className="data-cell-header text-left">Vendor</th>
+              <SortHeader field="total_contracts" label="Contracts" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right" />
+              <SortHeader field="total_value_mxn" label="Total Value" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right hidden md:table-cell" />
+              <SortHeader field="avg_risk_score" label="Risk" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right" />
+              <SortHeader field="direct_award_pct" label="DA %" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right hidden lg:table-cell" />
+              <th className="data-cell-header text-right hidden xl:table-cell w-20">Anomaly</th>
+              <th className="data-cell-header w-16" />
             </tr>
           </thead>
           <tbody>
@@ -239,12 +239,12 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
       <div className="overflow-x-auto -mx-4 sm:mx-0">
       <table className="w-full text-sm" role="grid">
         <thead>
-          <tr className="border-b border-border/30 text-[11px] text-text-muted uppercase tracking-wider">
-            <th className="text-left py-2 pr-3 font-medium">Institution</th>
-            <SortHeader field="total_contracts" label="Contracts" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="text-right py-2 px-2" />
-            <SortHeader field="total_value_mxn" label="Total Value" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="text-right py-2 px-2 hidden md:table-cell" />
-            <SortHeader field="avg_risk_score" label="Risk" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="text-right py-2 px-2" />
-            <th className="w-16" />
+          <tr>
+            <th className="data-cell-header text-left">Institution</th>
+            <SortHeader field="total_contracts" label="Contracts" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right" />
+            <SortHeader field="total_value_mxn" label="Total Value" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right hidden md:table-cell" />
+            <SortHeader field="avg_risk_score" label="Risk" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right" />
+            <th className="data-cell-header w-16" />
           </tr>
         </thead>
         <tbody>
@@ -273,10 +273,10 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
 
   return (
     <tr
-      className="border-b border-border/10 hover:bg-background-elevated/30 transition-colors group"
-      style={{ borderLeft: `2px solid ${riskColor}` }}
+      className="border-b border-border/10 hover:bg-background-elevated/30 transition-colors group interactive-card"
+      style={{ borderLeft: `3px solid ${riskColor}` }}
     >
-      <td className="py-2 pl-2 pr-3">
+      <td className="data-cell">
         <div className="flex items-center gap-1.5 min-w-0">
           {sector && (
             <span
@@ -298,20 +298,23 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
           </div>
         )}
       </td>
-      <td className="text-right py-2 px-2 font-mono text-text-secondary text-xs">
+      <td className="data-cell text-right font-mono text-text-secondary text-xs">
         {formatNumber(vendor.total_contracts)}
       </td>
-      <td className="text-right py-2 px-2 font-mono text-text-secondary text-xs hidden md:table-cell">
+      <td className="data-cell text-right font-mono text-text-secondary text-xs hidden md:table-cell">
         {formatCompactMXN(vendor.total_value_mxn || 0)}
       </td>
-      <td className="text-right py-2 px-2">
+      <td className="data-cell text-right">
         <div className="inline-flex flex-col items-end gap-0.5">
-          <span
-            className="text-xs font-bold font-mono px-1.5 py-0.5 rounded"
-            style={{ color: riskColor, backgroundColor: `${riskColor}15` }}
-          >
-            {((vendor.avg_risk_score || 0) * 100).toFixed(0)}%
-          </span>
+          {(() => {
+            const level = getRiskLevelFromScore(vendor.avg_risk_score ?? 0)
+            const riskClass = level === 'critical' ? 'risk-critical' : level === 'high' ? 'risk-high' : level === 'medium' ? 'risk-medium' : 'risk-low'
+            return (
+              <span className={`${riskClass} text-xs font-bold font-mono px-1.5 py-0.5 rounded`}>
+                {((vendor.avg_risk_score || 0) * 100).toFixed(0)}%
+              </span>
+            )
+          })()}
           {(vendor.avg_risk_score || 0) >= 0.50 && (
             <span className="text-[9px] font-medium text-accent/80 leading-none">
               AI confirmed
@@ -319,18 +322,18 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
           )}
         </div>
       </td>
-      <td className="text-right py-2 pl-2 font-mono text-xs hidden lg:table-cell">
+      <td className="data-cell text-right font-mono text-xs hidden lg:table-cell">
         {vendor.direct_award_pct != null ? (
           <span style={{
-            color: vendor.direct_award_pct >= 90 ? '#f87171'
-                 : vendor.direct_award_pct >= 70 ? '#fb923c'
+            color: vendor.direct_award_pct >= 90 ? 'var(--color-risk-critical, #f87171)'
+                 : vendor.direct_award_pct >= 70 ? 'var(--color-risk-high, #fb923c)'
                  : 'var(--color-text-muted)'
           }}>
             {vendor.direct_award_pct.toFixed(0)}%
           </span>
         ) : '–'}
       </td>
-      <td className="text-right py-2 px-2 font-mono text-xs hidden xl:table-cell w-20">
+      <td className="data-cell text-right font-mono text-xs hidden xl:table-cell w-20">
         {vendor.ensemble_anomaly_score != null ? (
           <span className={isAiConfirmed(vendor) ? 'text-risk-critical font-semibold' : 'text-text-muted'}>
             {(vendor.ensemble_anomaly_score * 100).toFixed(0)}%
@@ -339,7 +342,7 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
           <span className="text-text-muted/40">–</span>
         )}
       </td>
-      <td className="pl-1 pr-2">
+      <td className="data-cell">
         <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
           <Link
             to={`/vendors/${vendor.id}`}
@@ -367,10 +370,10 @@ function InstitutionRow({ institution, riskColor }: { institution: any; riskColo
 
   return (
     <tr
-      className="border-b border-border/10 hover:bg-background-elevated/30 transition-colors group"
-      style={{ borderLeft: `2px solid ${riskColor}` }}
+      className="border-b border-border/10 hover:bg-background-elevated/30 transition-colors group interactive-card"
+      style={{ borderLeft: `3px solid ${riskColor}` }}
     >
-      <td className="py-2 pl-2 pr-3">
+      <td className="data-cell">
         <div className="flex items-center gap-1.5 min-w-0">
           {sector && (
             <span
@@ -392,21 +395,24 @@ function InstitutionRow({ institution, riskColor }: { institution: any; riskColo
           </div>
         )}
       </td>
-      <td className="text-right py-2 px-2 font-mono text-text-secondary text-xs">
+      <td className="data-cell text-right font-mono text-text-secondary text-xs">
         {formatNumber(institution.total_contracts || 0)}
       </td>
-      <td className="text-right py-2 px-2 font-mono text-text-secondary text-xs hidden md:table-cell">
+      <td className="data-cell text-right font-mono text-text-secondary text-xs hidden md:table-cell">
         {formatCompactMXN(institution.total_amount_mxn || institution.total_value_mxn || 0)}
       </td>
-      <td className="text-right py-2 px-2">
-        <span
-          className="text-xs font-bold font-mono px-1.5 py-0.5 rounded"
-          style={{ color: riskColor, backgroundColor: `${riskColor}15` }}
-        >
-          {((institution.avg_risk_score || 0) * 100).toFixed(0)}%
-        </span>
+      <td className="data-cell text-right">
+        {(() => {
+          const level = getRiskLevelFromScore(institution.avg_risk_score ?? 0)
+          const riskClass = level === 'critical' ? 'risk-critical' : level === 'high' ? 'risk-high' : level === 'medium' ? 'risk-medium' : 'risk-low'
+          return (
+            <span className={`${riskClass} text-xs font-bold font-mono px-1.5 py-0.5 rounded`}>
+              {((institution.avg_risk_score || 0) * 100).toFixed(0)}%
+            </span>
+          )
+        })()}
       </td>
-      <td className="pl-1 pr-2">
+      <td className="data-cell">
         <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
           <Link
             to={`/institutions/${instId}`}
@@ -644,26 +650,26 @@ function Pagination({
 }) {
   if (!pagination || pagination.total_pages <= 1) return null
   return (
-    <div className="flex items-center justify-between mt-4 text-sm">
-      <span className="text-text-muted text-xs">
+    <div className="flex items-center justify-between mt-4 text-sm card p-3">
+      <span className="text-text-muted text-xs font-mono">
         {pagination.total.toLocaleString()} total
       </span>
       <div className="flex items-center gap-1">
         <button
           onClick={() => onPageChange(page - 1)}
           disabled={page <= 1}
-          className="p-1.5 rounded hover:bg-background-elevated/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="p-1.5 rounded border border-border/40 hover:bg-background-elevated/50 hover:border-border-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           aria-label="Previous page"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
-        <span className="px-2 text-text-muted font-mono text-xs">
+        <span className="px-3 text-text-primary font-mono text-xs font-bold">
           {page} / {pagination.total_pages}
         </span>
         <button
           onClick={() => onPageChange(page + 1)}
           disabled={page >= pagination.total_pages}
-          className="p-1.5 rounded hover:bg-background-elevated/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="p-1.5 rounded border border-border/40 hover:bg-background-elevated/50 hover:border-border-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           aria-label="Next page"
         >
           <ChevronRight className="h-4 w-4" />

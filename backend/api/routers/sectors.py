@@ -385,6 +385,65 @@ def get_sector(
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
+@router.get("/sectors/{sector_id}/timeline")
+def get_sector_timeline(
+    sector_id: int = Path(..., ge=1, le=12, description="Sector ID (1-12)"),
+):
+    """
+    Get yearly timeline for a sector with contract counts, values, and risk metrics.
+
+    Returns one entry per year with total contracts, total value, high-risk count,
+    and average risk score. Useful for temporal trend visualizations.
+    """
+    cache_key = f"sector_timeline:{sector_id}"
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT name_es FROM sectors WHERE id = ?", (sector_id,))
+            sector_row = cursor.fetchone()
+            if not sector_row:
+                raise HTTPException(status_code=404, detail=f"Sector {sector_id} not found")
+
+            cursor.execute(
+                """
+                SELECT
+                    contract_year AS year,
+                    COUNT(*) AS contracts,
+                    COALESCE(SUM(amount_mxn), 0) AS total_value,
+                    SUM(CASE WHEN risk_level IN ('high', 'critical') THEN 1 ELSE 0 END) AS high_risk_count,
+                    ROUND(COALESCE(AVG(risk_score), 0), 4) AS avg_risk
+                FROM contracts
+                WHERE sector_id = ? AND contract_year IS NOT NULL
+                GROUP BY contract_year
+                ORDER BY contract_year
+                """,
+                (sector_id,),
+            )
+            years = [
+                {
+                    "year": row[0],
+                    "contracts": row[1],
+                    "total_value": row[2],
+                    "high_risk_count": row[3],
+                    "avg_risk": row[4],
+                }
+                for row in cursor.fetchall()
+            ]
+
+            result = {"sector_id": sector_id, "years": years}
+            _cache.set(cache_key, result, SECTORS_CACHE_TTL)
+            return result
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error in get_sector_timeline: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
 @router.get("/sectors/{sector_id}/trends", response_model=SectorTrendListResponse)
 def get_sector_trends(
     sector_id: int = Path(..., ge=1, le=12, description="Sector ID"),

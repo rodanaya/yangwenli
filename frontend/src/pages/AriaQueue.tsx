@@ -6,13 +6,13 @@
  * 4 tiers. Investigators can review, confirm, or dismiss each lead.
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 import { ariaApi } from '@/api/client'
-import type { AriaQueueItem } from '@/api/types'
+import type { AriaQueueItem, AriaQueueResponse } from '@/api/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -31,20 +31,59 @@ import {
   Play,
   Loader2,
   Filter,
+  Cpu,
+  Download,
+  X,
+  Info,
 } from 'lucide-react'
 
 // ============================================================================
 // Constants
 // ============================================================================
 
-const PATTERN_LABELS: Record<string, { label: string; color: string }> = {
-  P1: { label: 'Monopoly', color: 'bg-red-900 text-red-200' },
-  P2: { label: 'Ghost Co.', color: 'bg-purple-900 text-purple-200' },
-  P3: { label: 'Intermediary', color: 'bg-orange-900 text-orange-200' },
-  P4: { label: 'Bid Rigging', color: 'bg-yellow-900 text-yellow-200' },
-  P5: { label: 'Overpricing', color: 'bg-blue-900 text-blue-200' },
-  P6: { label: 'Inst. Capture', color: 'bg-pink-900 text-pink-200' },
-  P7: { label: 'Conflict', color: 'bg-gray-700 text-gray-300' },
+const PATTERN_LABELS: Record<string, { label: string; color: string; description: string }> = {
+  P1: {
+    label: 'Monopoly',
+    color: 'bg-red-900 text-red-200',
+    description:
+      'Vendor holds a disproportionate share of contracts within a sector, indicating potential market dominance through non-competitive means.',
+  },
+  P2: {
+    label: 'Ghost Co.',
+    color: 'bg-purple-900 text-purple-200',
+    description:
+      'Entity exhibits characteristics of a shell company: short operating history, few contracts, high direct-award rate, and no verifiable RFC or physical presence.',
+  },
+  P3: {
+    label: 'Intermediary',
+    color: 'bg-orange-900 text-orange-200',
+    description:
+      'Vendor appears to act as a pass-through, winning contracts in sectors outside its primary industry and potentially reselling to actual providers.',
+  },
+  P4: {
+    label: 'Bid Rigging',
+    color: 'bg-yellow-900 text-yellow-200',
+    description:
+      'Multiple vendors exhibit coordinated bidding patterns, including bid rotation, cover bidding, or market allocation by geography or institution.',
+  },
+  P5: {
+    label: 'Overpricing',
+    color: 'bg-blue-900 text-blue-200',
+    description:
+      'Contract amounts are statistically anomalous compared to sector benchmarks, suggesting inflated pricing or quantity manipulation.',
+  },
+  P6: {
+    label: 'Inst. Capture',
+    color: 'bg-pink-900 text-pink-200',
+    description:
+      'Vendor receives a disproportionate share of contracts from a single institution, often through direct awards, suggesting institutional capture.',
+  },
+  P7: {
+    label: 'Conflict',
+    color: 'bg-gray-700 text-gray-300',
+    description:
+      'Potential conflict of interest detected through shared addresses, representatives, or RFC patterns between vendor and awarding officials.',
+  },
 }
 
 const TIER_CONFIG: Record<
@@ -88,6 +127,42 @@ const REVIEW_STATUS_CONFIG: Record<
 }
 
 // ============================================================================
+// Generic overlay modal
+// ============================================================================
+
+function OverlayModal({
+  open,
+  onClose,
+  children,
+  maxWidth = 'max-w-lg',
+}: {
+  open: boolean
+  onClose: () => void
+  children: React.ReactNode
+  maxWidth?: string
+}) {
+  if (!open) return null
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className={cn(
+          'bg-background border border-border/60 rounded-xl p-6 w-full shadow-2xl',
+          maxWidth
+        )}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
 // Sub-components
 // ============================================================================
 
@@ -111,7 +186,7 @@ function TierStatCard({
         'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
         isActive
           ? cn('border-current', cfg.badgeClass)
-          : 'border-border/40 hover:border-border/80 bg-surface-alt/30'
+          : 'border-border/40 hover:border-border/80 bg-background-card'
       )}
       aria-pressed={isActive}
     >
@@ -123,14 +198,32 @@ function TierStatCard({
   )
 }
 
-function PatternBadge({ pattern }: { pattern: string | null }) {
-  if (!pattern) return <span className="text-text-muted text-xs">—</span>
+function PatternBadge({
+  pattern,
+  onClick,
+}: {
+  pattern: string | null
+  onClick?: (pattern: string) => void
+}) {
+  if (!pattern) return <span className="text-text-muted text-xs">--</span>
   const cfg = PATTERN_LABELS[pattern]
   if (!cfg) return <span className="text-xs font-mono text-text-muted">{pattern}</span>
   return (
-    <span className={cn('inline-flex items-center px-1.5 py-0.5 rounded text-xs font-mono', cfg.color)}>
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation()
+        onClick?.(pattern)
+      }}
+      className={cn(
+        'inline-flex items-center px-1.5 py-0.5 rounded text-xs font-mono cursor-pointer',
+        'hover:ring-1 hover:ring-white/20 transition-shadow',
+        cfg.color
+      )}
+      aria-label={`View details for pattern ${pattern}: ${cfg.label}`}
+    >
       {pattern}: {cfg.label}
-    </span>
+    </button>
   )
 }
 
@@ -153,13 +246,17 @@ function ExternalFlags({ item }: { item: AriaQueueItem }) {
         </span>
       )}
       {item.new_vendor_risk && (
-        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono bg-purple-900/70 text-purple-200 border border-purple-700/50" title="New/suspicious vendor — ML model blind spot">
+        <span
+          className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono bg-purple-900/70 text-purple-200 border border-purple-700/50"
+          title="New/suspicious vendor -- ML model blind spot"
+        >
           NEW
         </span>
       )}
-      {!item.is_efos_definitivo && !item.is_sfp_sanctioned && !item.in_ground_truth && !item.new_vendor_risk && (
-        <span className="text-text-muted text-xs">—</span>
-      )}
+      {!item.is_efos_definitivo &&
+        !item.is_sfp_sanctioned &&
+        !item.in_ground_truth &&
+        !item.new_vendor_risk && <span className="text-text-muted text-xs">--</span>}
     </div>
   )
 }
@@ -174,7 +271,7 @@ function IpsBar({ score, tier }: { score: number; tier: 1 | 2 | 3 | 4 }) {
   const pct = Math.min(100, Math.max(0, score * 100))
   return (
     <div className="flex items-center gap-2 min-w-[80px]">
-      <div className="relative flex-1 h-1.5 bg-surface-alt rounded-full overflow-hidden">
+      <div className="relative flex-1 h-1.5 bg-background-elevated rounded-full overflow-hidden">
         <div
           className={cn('absolute left-0 top-0 h-full rounded-full transition-all', tierColors[tier])}
           style={{ width: `${pct}%` }}
@@ -227,6 +324,63 @@ function ReviewStatusSelect({
   )
 }
 
+// ============================================================================
+// IPS Trajectory display (horizontal bar in expanded view)
+// ============================================================================
+
+function IpsTrajectoryBar({ score }: { score: number }) {
+  const pct = Math.min(100, Math.max(0, score * 100))
+  return (
+    <div className="mt-3 mb-1">
+      <h4 className="text-xs font-mono uppercase tracking-wider text-text-muted mb-1.5">
+        Investigation Priority
+      </h4>
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 h-3 bg-background-elevated rounded-full overflow-hidden">
+          <div
+            className="absolute left-0 top-0 h-full rounded-full bg-accent transition-all"
+            style={{ width: `${pct}%` }}
+            aria-hidden="true"
+          />
+        </div>
+        <span className="text-sm font-mono font-bold tabular-nums text-accent w-14 text-right">
+          {pct.toFixed(1)}%
+        </span>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// Inline memo display
+// ============================================================================
+
+function MemoPanel({ memoText }: { memoText: string | null | undefined }) {
+  return (
+    <div className="mt-4 rounded-lg bg-background-elevated border-l-4 border-l-accent/70 overflow-hidden">
+      <div className="px-4 py-2.5 flex items-center gap-2 border-b border-border/20">
+        <Cpu className="h-3.5 w-3.5 text-accent" />
+        <h4 className="text-xs font-mono uppercase tracking-wider text-accent font-semibold">
+          LLM Analysis
+        </h4>
+      </div>
+      <div className="px-4 py-3">
+        {memoText ? (
+          <pre className="text-xs text-text-secondary whitespace-pre-wrap font-sans leading-relaxed max-h-48 overflow-y-auto">
+            {memoText}
+          </pre>
+        ) : (
+          <p className="text-xs text-text-muted italic">No AI memo generated yet</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// Score breakdown panel (expanded row)
+// ============================================================================
+
 function ScoreBreakdownPanel({ item }: { item: AriaQueueItem }) {
   const components = [
     { label: 'Risk Score', value: item.risk_score_norm },
@@ -254,7 +408,7 @@ function ScoreBreakdownPanel({ item }: { item: AriaQueueItem }) {
           {components.map(({ label, value }) => (
             <div key={label} className="flex items-center gap-2">
               <span className="text-xs text-text-secondary w-32 flex-shrink-0">{label}</span>
-              <div className="flex-1 h-1.5 bg-surface-alt rounded-full overflow-hidden">
+              <div className="flex-1 h-1.5 bg-background-elevated rounded-full overflow-hidden">
                 {value !== undefined && value !== null && (
                   <div
                     className="h-full bg-accent/60 rounded-full"
@@ -264,7 +418,7 @@ function ScoreBreakdownPanel({ item }: { item: AriaQueueItem }) {
                 )}
               </div>
               <span className="text-xs font-mono tabular-nums text-text-muted w-10 text-right">
-                {value !== undefined && value !== null ? value.toFixed(3) : '—'}
+                {value !== undefined && value !== null ? value.toFixed(3) : '--'}
               </span>
             </div>
           ))}
@@ -273,7 +427,7 @@ function ScoreBreakdownPanel({ item }: { item: AriaQueueItem }) {
               <span className="text-xs font-semibold text-text-primary w-32 flex-shrink-0">
                 IPS Raw
               </span>
-              <div className="flex-1 h-1.5 bg-surface-alt rounded-full overflow-hidden">
+              <div className="flex-1 h-1.5 bg-background-elevated rounded-full overflow-hidden">
                 <div
                   className="h-full bg-accent rounded-full"
                   style={{ width: `${Math.min(100, item.ips_raw * 100)}%` }}
@@ -296,7 +450,7 @@ function ScoreBreakdownPanel({ item }: { item: AriaQueueItem }) {
               <span className="text-xs font-bold text-text-primary w-32 flex-shrink-0">
                 IPS Final
               </span>
-              <div className="flex-1 h-2 bg-surface-alt rounded-full overflow-hidden">
+              <div className="flex-1 h-2 bg-background-elevated rounded-full overflow-hidden">
                 <div
                   className={cn('h-full rounded-full', {
                     'bg-red-500': item.ips_tier === 1,
@@ -327,7 +481,7 @@ function ScoreBreakdownPanel({ item }: { item: AriaQueueItem }) {
               <span className="text-xs font-mono text-text-secondary w-24 flex-shrink-0">
                 {key}: {label}
               </span>
-              <div className="flex-1 h-1.5 bg-surface-alt rounded-full overflow-hidden">
+              <div className="flex-1 h-1.5 bg-background-elevated rounded-full overflow-hidden">
                 <div
                   className="h-full bg-accent/50 rounded-full"
                   style={{ width: `${Math.min(100, confidence * 100)}%` }}
@@ -335,23 +489,11 @@ function ScoreBreakdownPanel({ item }: { item: AriaQueueItem }) {
                 />
               </div>
               <span className="text-xs font-mono tabular-nums text-text-muted w-10 text-right">
-                {confidence > 0 ? confidence.toFixed(2) : '—'}
+                {confidence > 0 ? confidence.toFixed(2) : '--'}
               </span>
             </div>
           ))}
         </div>
-
-        {/* Memo */}
-        {item.memo_text && (
-          <div className="mt-3">
-            <h4 className="text-xs font-mono uppercase tracking-wider text-text-muted mb-1">
-              Investigation Memo
-            </h4>
-            <pre className="text-xs text-text-secondary bg-surface-alt/30 rounded p-2 whitespace-pre-wrap font-sans leading-relaxed max-h-32 overflow-y-auto">
-              {item.memo_text}
-            </pre>
-          </div>
-        )}
       </div>
     </div>
   )
@@ -365,10 +507,16 @@ function QueueRow({
   item,
   onStatusUpdate,
   updatingId,
+  isSelected,
+  onSelectToggle,
+  onPatternClick,
 }: {
   item: AriaQueueItem
   onStatusUpdate: (vendorId: number, status: AriaQueueItem['review_status']) => void
   updatingId: number | null
+  isSelected: boolean
+  onSelectToggle: (vendorId: number) => void
+  onPatternClick: (pattern: string) => void
 }) {
   const navigate = useNavigate()
   const [expanded, setExpanded] = useState(false)
@@ -400,7 +548,8 @@ function QueueRow({
       className={cn(
         'border-l-4 rounded-r-lg mb-1.5 overflow-hidden transition-colors',
         cfg.borderClass,
-        expanded ? cfg.bgClass : 'hover:bg-surface-alt/20'
+        isSelected ? 'ring-1 ring-accent/40 bg-accent/5' : '',
+        expanded ? cfg.bgClass : 'hover:bg-background-elevated/30'
       )}
     >
       {/* Main row */}
@@ -416,8 +565,23 @@ function QueueRow({
           }
         }}
         aria-expanded={expanded}
-        aria-label={`${item.vendor_name} — T${item.ips_tier} ${cfg.label}. Click to expand.`}
+        aria-label={`${item.vendor_name} -- T${item.ips_tier} ${cfg.label}. Click to expand.`}
       >
+        {/* Checkbox for bulk selection */}
+        <div
+          className="flex-shrink-0"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onSelectToggle(item.vendor_id)}
+            className="rounded border-border/50 bg-transparent cursor-pointer"
+            aria-label={`Select ${item.vendor_name}`}
+          />
+        </div>
+
         {/* Tier badge */}
         <span
           className={cn(
@@ -443,7 +607,7 @@ function QueueRow({
 
         {/* Pattern */}
         <div className="hidden md:block flex-shrink-0 w-32">
-          <PatternBadge pattern={item.primary_pattern} />
+          <PatternBadge pattern={item.primary_pattern} onClick={onPatternClick} />
         </div>
 
         {/* Contracts + Value */}
@@ -461,7 +625,7 @@ function QueueRow({
           <ExternalFlags item={item} />
         </div>
 
-        {/* Status selector — stop propagation so clicks don't toggle row */}
+        {/* Status selector -- stop propagation so clicks don't toggle row */}
         <div
           className="flex-shrink-0"
           onClick={(e) => e.stopPropagation()}
@@ -491,7 +655,15 @@ function QueueRow({
             </div>
           ) : (
             <>
+              {/* IPS trajectory bar */}
+              <IpsTrajectoryBar score={displayItem.ips_final} />
+
+              {/* Score breakdown */}
               <ScoreBreakdownPanel item={displayItem} />
+
+              {/* Memo panel */}
+              <MemoPanel memoText={displayItem.memo_text} />
+
               <div className="mt-3 flex justify-end">
                 <Button
                   variant="outline"
@@ -528,36 +700,222 @@ function RunConfirmModal({
 }) {
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="bg-background border border-border/60 rounded-xl p-6 w-full max-w-sm shadow-2xl">
-        <h2 className="text-base font-semibold text-text-primary mb-2 flex items-center gap-2">
-          <Play className="h-4 w-4 text-accent" />
-          Run ARIA Pipeline?
-        </h2>
-        <p className="text-sm text-text-secondary mb-5">
-          This will re-score all vendors and rebuild the investigation queue. The run may take
-          several minutes. Existing review statuses will be preserved.
-        </p>
-        <div className="flex gap-2 justify-end">
-          <Button variant="ghost" size="sm" onClick={onCancel} disabled={isRunning}>
-            Cancel
-          </Button>
-          <Button size="sm" onClick={onConfirm} disabled={isRunning} className="gap-1.5">
-            {isRunning ? (
-              <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Starting…
-              </>
-            ) : (
-              <>
-                <Play className="h-3.5 w-3.5" />
-                Run Now
-              </>
-            )}
-          </Button>
-        </div>
+    <OverlayModal open={open} onClose={onCancel} maxWidth="max-w-sm">
+      <h2 className="text-base font-semibold text-text-primary mb-2 flex items-center gap-2">
+        <Play className="h-4 w-4 text-accent" />
+        Run ARIA Pipeline?
+      </h2>
+      <p className="text-sm text-text-secondary mb-5">
+        This will re-score all vendors and rebuild the investigation queue. The run may take several
+        minutes. Existing review statuses will be preserved.
+      </p>
+      <div className="flex gap-2 justify-end">
+        <Button variant="ghost" size="sm" onClick={onCancel} disabled={isRunning}>
+          Cancel
+        </Button>
+        <Button size="sm" onClick={onConfirm} disabled={isRunning} className="gap-1.5">
+          {isRunning ? (
+            <>
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Starting...
+            </>
+          ) : (
+            <>
+              <Play className="h-3.5 w-3.5" />
+              Run Now
+            </>
+          )}
+        </Button>
       </div>
-    </div>
+    </OverlayModal>
+  )
+}
+
+// ============================================================================
+// Pattern Deep-Dive Modal
+// ============================================================================
+
+function PatternDeepDiveModal({
+  open,
+  onClose,
+  pattern,
+  queueData,
+}: {
+  open: boolean
+  onClose: () => void
+  pattern: string | null
+  queueData: AriaQueueItem[]
+}) {
+  if (!pattern) return null
+
+  const cfg = PATTERN_LABELS[pattern]
+  if (!cfg) return null
+
+  // Find vendors with this pattern from currently loaded data
+  const matchingVendors = queueData
+    .filter((item) => item.primary_pattern === pattern)
+    .sort((a, b) => b.ips_final - a.ips_final)
+
+  const top3 = matchingVendors.slice(0, 3)
+
+  return (
+    <OverlayModal open={open} onClose={onClose} maxWidth="max-w-md">
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <span
+            className={cn(
+              'inline-flex items-center px-2 py-1 rounded text-sm font-mono font-bold',
+              cfg.color
+            )}
+          >
+            {pattern}
+          </span>
+          <h2 className="text-base font-semibold text-text-primary">{cfg.label}</h2>
+        </div>
+        <button
+          onClick={onClose}
+          className="text-text-muted hover:text-text-primary transition-colors"
+          aria-label="Close"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        {/* Description */}
+        <div className="flex gap-2">
+          <Info className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-text-secondary leading-relaxed">{cfg.description}</p>
+        </div>
+
+        {/* Count */}
+        <div className="bg-background-elevated rounded-lg px-4 py-3">
+          <p className="text-xs font-mono uppercase tracking-wider text-text-muted mb-1">
+            Vendors with this pattern (loaded page)
+          </p>
+          <p className="text-xl font-bold font-mono tabular-nums text-text-primary">
+            {matchingVendors.length}
+          </p>
+        </div>
+
+        {/* Top 3 */}
+        {top3.length > 0 && (
+          <div>
+            <h3 className="text-xs font-mono uppercase tracking-wider text-text-muted mb-2">
+              Highest IPS
+            </h3>
+            <div className="space-y-2">
+              {top3.map((v) => (
+                <div
+                  key={v.vendor_id}
+                  className="flex items-center gap-3 bg-background-elevated rounded-lg px-3 py-2"
+                >
+                  <span
+                    className={cn(
+                      'text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border',
+                      TIER_CONFIG[v.ips_tier].badgeClass
+                    )}
+                  >
+                    T{v.ips_tier}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-text-primary truncate">{v.vendor_name}</p>
+                  </div>
+                  <span className="text-xs font-mono tabular-nums text-accent font-bold">
+                    {v.ips_final.toFixed(3)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-5 flex justify-end">
+        <Button variant="outline" size="sm" onClick={onClose}>
+          Close
+        </Button>
+      </div>
+    </OverlayModal>
+  )
+}
+
+// ============================================================================
+// Bulk action floating bar
+// ============================================================================
+
+function BulkActionBar({
+  selectedCount,
+  onConfirm,
+  onDismiss,
+  onExport,
+  isProcessing,
+  progress,
+}: {
+  selectedCount: number
+  onConfirm: () => void
+  onDismiss: () => void
+  onExport: () => void
+  isProcessing: boolean
+  progress: { done: number; total: number } | null
+}) {
+  if (selectedCount < 2) return null
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ y: 80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 80, opacity: 0 }}
+        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40"
+      >
+        <div className="bg-background-card border border-border rounded-xl shadow-2xl px-5 py-3 flex items-center gap-4">
+          {isProcessing && progress ? (
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-4 w-4 animate-spin text-accent" />
+              <span className="text-sm text-text-secondary font-mono">
+                {progress.done}/{progress.total}
+              </span>
+            </div>
+          ) : (
+            <>
+              <span className="text-sm text-text-secondary font-mono">
+                {selectedCount} selected
+              </span>
+              <Button
+                size="sm"
+                onClick={onConfirm}
+                disabled={isProcessing}
+                className="gap-1.5 text-xs bg-green-800 hover:bg-green-700 text-green-100 border-green-600"
+              >
+                <Shield className="h-3.5 w-3.5" />
+                Confirm {selectedCount}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onDismiss}
+                disabled={isProcessing}
+                className="gap-1.5 text-xs border-red-700/50 text-red-300 hover:bg-red-900/30"
+              >
+                <X className="h-3.5 w-3.5" />
+                Dismiss {selectedCount}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onExport}
+                disabled={isProcessing}
+                className="gap-1.5 text-xs border-blue-700/50 text-blue-300 hover:bg-blue-900/30"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Export {selectedCount}
+              </Button>
+            </>
+          )}
+        </div>
+      </motion.div>
+    </AnimatePresence>
   )
 }
 
@@ -582,6 +940,55 @@ function EmptyState({ onRun, isRunning }: { onRun: () => void; isRunning: boolea
 }
 
 // ============================================================================
+// CSV export helpers
+// ============================================================================
+
+function escapeCsvField(value: string): string {
+  if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+    return `"${value.replace(/"/g, '""')}"`
+  }
+  return value
+}
+
+function generateCsv(items: AriaQueueItem[]): string {
+  const headers = [
+    'vendor_name',
+    'ips_final',
+    'avg_risk_score',
+    'pattern_types',
+    'total_contracts',
+    'direct_award_rate',
+    'review_status',
+  ]
+
+  const rows = items.map((item) =>
+    [
+      escapeCsvField(item.vendor_name),
+      item.ips_final.toFixed(4),
+      item.avg_risk_score.toFixed(4),
+      item.primary_pattern ?? '',
+      String(item.total_contracts),
+      item.direct_award_rate !== undefined ? item.direct_award_rate.toFixed(4) : '',
+      item.review_status,
+    ].join(',')
+  )
+
+  return [headers.join(','), ...rows].join('\n')
+}
+
+function downloadCsv(csv: string, filename: string): void {
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
+// ============================================================================
 // Main page
 // ============================================================================
 
@@ -598,6 +1005,14 @@ export default function AriaQueue() {
 
   // Confirmation modal
   const [confirmOpen, setConfirmOpen] = useState(false)
+
+  // Pattern deep-dive modal
+  const [patternModalPattern, setPatternModalPattern] = useState<string | null>(null)
+
+  // Bulk selection
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [bulkProcessing, setBulkProcessing] = useState(false)
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null)
 
   // Track which vendor's status is being updated
   const [updatingId, setUpdatingId] = useState<number | null>(null)
@@ -667,6 +1082,87 @@ export default function AriaQueue() {
     reviewMutation.mutate({ vendorId, status })
   }
 
+  // Bulk selection handlers
+  const handleSelectToggle = useCallback((vendorId: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(vendorId)) {
+        next.delete(vendorId)
+      } else {
+        next.add(vendorId)
+      }
+      return next
+    })
+  }, [])
+
+  const runBulkAction = useCallback(
+    async (status: AriaQueueItem['review_status']) => {
+      const ids = Array.from(selectedIds)
+      if (ids.length === 0) return
+      setBulkProcessing(true)
+      setBulkProgress({ done: 0, total: ids.length })
+      for (let i = 0; i < ids.length; i++) {
+        try {
+          await ariaApi.updateReview(ids[i], { review_status: status })
+        } catch {
+          // continue on error
+        }
+        setBulkProgress({ done: i + 1, total: ids.length })
+      }
+      setBulkProcessing(false)
+      setBulkProgress(null)
+      setSelectedIds(new Set())
+      void queryClient.invalidateQueries({ queryKey: ['aria-queue'] })
+    },
+    [selectedIds, queryClient]
+  )
+
+  const handleBulkExportSelected = useCallback(() => {
+    if (!data?.data) return
+    const selected = data.data.filter((item) => selectedIds.has(item.vendor_id))
+    if (selected.length === 0) return
+    const csv = generateCsv(selected)
+    downloadCsv(csv, `aria_selected_${selected.length}_vendors.csv`)
+  }, [data, selectedIds])
+
+  // Export T1/T2 handler -- fetches all high-IPS vendors
+  const [exportingCsv, setExportingCsv] = useState(false)
+  const handleExportT1T2 = useCallback(async () => {
+    setExportingCsv(true)
+    try {
+      // Fetch T1 and T2 pages (up to 500 each)
+      const results: AriaQueueItem[] = []
+      for (const tier of [1, 2] as const) {
+        let pg = 1
+        let hasMore = true
+        while (hasMore) {
+          const resp: AriaQueueResponse = await ariaApi.getQueue({
+            tier,
+            page: pg,
+            per_page: 200,
+          })
+          results.push(...resp.data)
+          hasMore = pg < (resp.pagination?.total_pages ?? 1)
+          pg++
+          // Safety cap at 2000 per tier
+          if (results.length > 4000) break
+        }
+      }
+      if (results.length > 0) {
+        const csv = generateCsv(results)
+        downloadCsv(csv, `aria_t1_t2_${results.length}_vendors.csv`)
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setExportingCsv(false)
+    }
+  }, [])
+
+  const handlePatternClick = useCallback((pattern: string) => {
+    setPatternModalPattern(pattern)
+  }, [])
+
   const hasData = (data?.data?.length ?? 0) > 0
   const latestRun = stats?.latest_run
   const tierCounts = {
@@ -685,7 +1181,10 @@ export default function AriaQueue() {
       className="space-y-5 max-w-7xl mx-auto"
     >
       {/* Page header */}
-      <motion.div variants={staggerItem} className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+      <motion.div
+        variants={staggerItem}
+        className="flex flex-col sm:flex-row sm:items-start justify-between gap-3"
+      >
         <div>
           <div className="flex items-center gap-2.5 mb-1">
             <Shield className="h-5 w-5 text-accent" aria-hidden="true" />
@@ -694,15 +1193,31 @@ export default function AriaQueue() {
             </h1>
           </div>
           <p className="text-sm text-text-muted font-mono">
-            ARIA — Automated Risk Investigation Algorithm
+            ARIA -- Automated Risk Investigation Algorithm
             {latestRun?.completed_at && (
               <span className="ml-2 text-text-muted/60">
-                · Last run: {new Date(latestRun.completed_at).toLocaleString()}
+                -- Last run: {new Date(latestRun.completed_at).toLocaleString()}
               </span>
             )}
           </p>
         </div>
         <div className="flex gap-2 flex-shrink-0">
+          {/* Export T1/T2 */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void handleExportT1T2()}
+            disabled={exportingCsv}
+            className="gap-1.5 text-xs"
+            aria-label="Export T1 and T2 vendors to CSV"
+          >
+            {exportingCsv ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Download className="h-3.5 w-3.5" />
+            )}
+            Export T1/T2
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -761,7 +1276,7 @@ export default function AriaQueue() {
                     setSelectedPattern(e.target.value)
                     setPage(1)
                   }}
-                  className="text-xs bg-surface-alt border border-border/40 rounded px-2 py-1.5 focus:outline-none focus:border-accent/60"
+                  className="text-xs bg-background-elevated border border-border/40 rounded px-2 py-1.5 focus:outline-none focus:border-accent/60"
                 >
                   <option value="">All Patterns</option>
                   {Object.entries(PATTERN_LABELS).map(([key, cfg]) => (
@@ -774,10 +1289,13 @@ export default function AriaQueue() {
 
               {/* Search */}
               <div className="flex items-center gap-1.5 flex-1 min-w-[160px] max-w-xs">
-                <Search className="h-3.5 w-3.5 text-text-muted flex-shrink-0" aria-hidden="true" />
+                <Search
+                  className="h-3.5 w-3.5 text-text-muted flex-shrink-0"
+                  aria-hidden="true"
+                />
                 <input
                   type="search"
-                  placeholder="Search vendor name…"
+                  placeholder="Search vendor name..."
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value)
@@ -802,24 +1320,40 @@ export default function AriaQueue() {
                 <span className="text-xs text-text-secondary">EFOS only</span>
               </label>
 
-              {/* New vendor toggle */}
-              <label className="flex items-center gap-1.5 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={newVendorOnly}
-                  onChange={(e) => {
-                    setNewVendorOnly(e.target.checked)
-                    setPage(1)
-                  }}
-                  className="rounded"
-                />
-                <span className="text-xs text-text-secondary">
-                  New vendors only
-                  {newVendorCount > 0 && (
-                    <span className="ml-1 text-purple-400">({newVendorCount})</span>
+              {/* New vendor toggle pill */}
+              <button
+                type="button"
+                onClick={() => {
+                  setNewVendorOnly(!newVendorOnly)
+                  setPage(1)
+                }}
+                className={cn(
+                  'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono transition-all cursor-pointer border',
+                  newVendorOnly
+                    ? 'bg-purple-900/60 text-purple-200 border-purple-600'
+                    : 'bg-transparent text-text-muted border-border/40 hover:border-purple-700/50 hover:text-purple-300'
+                )}
+                title="Vendors created after 2022 -- highest ML blind spot risk"
+                aria-pressed={newVendorOnly}
+              >
+                <span
+                  className={cn(
+                    'inline-block w-1.5 h-1.5 rounded-full',
+                    newVendorOnly ? 'bg-purple-400' : 'bg-text-muted/40'
                   )}
-                </span>
-              </label>
+                />
+                New Vendors
+                {newVendorCount > 0 && (
+                  <span
+                    className={cn(
+                      'font-bold tabular-nums',
+                      newVendorOnly ? 'text-purple-300' : 'text-purple-400/70'
+                    )}
+                  >
+                    {formatNumber(newVendorCount)}
+                  </span>
+                )}
+              </button>
 
               {/* Clear filters */}
               {(selectedTier || selectedPattern || searchTerm || efosOnly || newVendorOnly) && (
@@ -865,6 +1399,7 @@ export default function AriaQueue() {
             {/* Column header */}
             {hasData && (
               <div className="flex items-center gap-3 px-3 pb-2 text-[10px] font-mono uppercase tracking-wider text-text-muted/60 border-b border-border/20 mb-1.5">
+                <span className="w-5" />
                 <span className="w-6">T</span>
                 <span className="flex-1">Vendor / Sector</span>
                 <span className="hidden sm:block w-28">IPS Score</span>
@@ -889,7 +1424,9 @@ export default function AriaQueue() {
             {isError && !isLoading && (
               <div className="flex flex-col items-center py-12 text-center">
                 <AlertTriangle className="h-8 w-8 text-risk-high mb-3" />
-                <p className="text-sm text-text-secondary mb-3">Failed to load investigation queue</p>
+                <p className="text-sm text-text-secondary mb-3">
+                  Failed to load investigation queue
+                </p>
                 <Button variant="outline" size="sm" onClick={() => refetch()}>
                   Retry
                 </Button>
@@ -913,6 +1450,9 @@ export default function AriaQueue() {
                     item={item}
                     onStatusUpdate={handleStatusUpdate}
                     updatingId={updatingId}
+                    isSelected={selectedIds.has(item.vendor_id)}
+                    onSelectToggle={handleSelectToggle}
+                    onPatternClick={handlePatternClick}
                   />
                 ))}
               </div>
@@ -950,12 +1490,30 @@ export default function AriaQueue() {
         </Card>
       </motion.div>
 
+      {/* Bulk action bar */}
+      <BulkActionBar
+        selectedCount={selectedIds.size}
+        onConfirm={() => void runBulkAction('confirmed')}
+        onDismiss={() => void runBulkAction('dismissed')}
+        onExport={handleBulkExportSelected}
+        isProcessing={bulkProcessing}
+        progress={bulkProgress}
+      />
+
       {/* Run confirmation modal */}
       <RunConfirmModal
         open={confirmOpen}
         onConfirm={() => runMutation.mutate()}
         onCancel={() => setConfirmOpen(false)}
         isRunning={runMutation.isPending}
+      />
+
+      {/* Pattern deep-dive modal */}
+      <PatternDeepDiveModal
+        open={patternModalPattern !== null}
+        onClose={() => setPatternModalPattern(null)}
+        pattern={patternModalPattern}
+        queueData={data?.data ?? []}
       />
     </motion.div>
   )

@@ -121,7 +121,7 @@ function SimpleTabs({ defaultTab, tabs, children, onTabChange }: TabsProps) {
   }
   return (
     <div>
-      <div className="flex gap-1 border-b border-border/50 mb-6 overflow-x-auto">
+      <div className="flex gap-1 border-b border-border mb-6 overflow-x-auto">
         {tabs.map((tab) => {
           const Icon = tab.icon
           return (
@@ -129,10 +129,10 @@ function SimpleTabs({ defaultTab, tabs, children, onTabChange }: TabsProps) {
               key={tab.key}
               onClick={() => handleTabChange(tab.key)}
               className={cn(
-                'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors',
+                'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-all',
                 active === tab.key
-                  ? 'border-accent text-accent'
-                  : 'border-transparent text-text-muted hover:text-text-secondary'
+                  ? 'border-accent text-accent bg-accent/5'
+                  : 'border-transparent text-text-muted hover:text-text-secondary hover:bg-background-elevated/30'
               )}
             >
               {Icon && <Icon className="h-3.5 w-3.5" />}
@@ -992,9 +992,9 @@ export function VendorProfile() {
           to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-      {/* Header — risk-colored left border */}
+      {/* Hero Header — Obsidian Intelligence */}
       <motion.div
-        className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 rounded-lg border bg-background-card p-4"
+        className="card p-5 relative overflow-hidden"
         style={{
           borderLeftWidth: '4px',
           borderLeftColor: riskColor,
@@ -1004,7 +1004,12 @@ export function VendorProfile() {
         initial="initial"
         animate="animate"
       >
-        <div className="flex items-center gap-4">
+        {/* Risk glow effect */}
+        <div
+          className="absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl opacity-10 pointer-events-none"
+          style={{ backgroundColor: riskColor }}
+        />
+        <div className="flex items-center gap-4 relative">
           <Link to="/explore?tab=vendors">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4" />
@@ -1012,14 +1017,19 @@ export function VendorProfile() {
           </Link>
           <div className="flex items-center gap-3">
             <div
-              className="flex h-12 w-12 items-center justify-center rounded-lg"
-              style={{ backgroundColor: `${riskColor}15`, color: riskColor }}
+              className="flex h-14 w-14 items-center justify-center rounded-xl border"
+              style={{
+                backgroundColor: `${riskColor}10`,
+                borderColor: `${riskColor}30`,
+                color: riskColor,
+                boxShadow: `0 0 20px ${riskColor}15`,
+              }}
             >
-              <Users className="h-6 w-6" />
+              <Users className="h-7 w-7" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-semibold">{toTitleCase(vendor.name)}</h1>
+                <h1 className="text-gradient text-xl font-bold font-mono tracking-tight">{toTitleCase(vendor.name)}</h1>
                 {/* F2: Ground truth badge */}
                 {groundTruthStatus?.is_known_bad && groundTruthStatus.cases?.map((c) => (
                   <Link
@@ -1238,7 +1248,7 @@ export function VendorProfile() {
 
         return (
           <div
-            className="rounded-lg border border-border/50 bg-background-card p-4"
+            className="card p-4"
             style={{ animation: 'vpFadeUp 500ms cubic-bezier(0.16, 1, 0.3, 1) 100ms both' }}
           >
             <h3 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2">

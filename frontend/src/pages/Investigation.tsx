@@ -17,7 +17,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { investigationApi } from '@/api/client'
 import { SECTOR_COLORS, getSectorNameEN } from '@/lib/constants'
-import { PageHeader } from '@/components/layout/PageHeader'
 import { TableExportButton } from '@/components/TableExportButton'
 import { EmptyState } from '@/components/EmptyState'
 import type {
@@ -36,9 +35,9 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Search,
   LayoutGrid,
   List,
+  ShieldAlert,
 } from 'lucide-react'
 
 // ============================================================================
@@ -169,7 +168,7 @@ function CaseCard({
   return (
     <div
       onClick={onClick}
-      className="relative group cursor-pointer rounded-lg border border-border/40 bg-background-elevated/20 p-4 hover:border-border/70 hover:bg-background-elevated/50 transition-all duration-200"
+      className="card hover-lift interactive-card relative group p-4"
       style={{ borderLeftWidth: '3px', borderLeftColor: sectorColor }}
     >
       {/* Faint rank watermark */}
@@ -299,7 +298,7 @@ function IntelSidebar({ cases, onNavigate }: { cases: InvestigationCaseListItem[
   return (
     <div className="space-y-5">
       {/* Total estimated loss KPI */}
-      <div className="rounded-lg border border-risk-high/25 bg-risk-high/[0.04] p-3">
+      <div className="card p-3 border-risk-high/25 bg-risk-high/[0.04]">
         <div className="text-[9px] font-mono uppercase tracking-widest text-text-muted/60 mb-1">
           {t('sidebar.estTotalLoss')}
         </div>
@@ -533,31 +532,43 @@ export function Investigation() {
 
   return (
     <div className="space-y-5">
-      <PageHeader
-        title={t('pageTitle')}
-        subtitle={t('pageSubtitle')}
-        icon={Crosshair}
-      />
+      {/* Header with amber accent */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
+            <Crosshair className="h-5 w-5 text-accent" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-text-primary flex items-center gap-2">
+              {t('pageTitle')}
+              <span className="text-xs font-mono font-medium bg-accent/15 text-accent border border-accent/25 rounded-full px-2.5 py-0.5 tabular-nums">
+                {allCases.length}
+              </span>
+            </h1>
+            <p className="text-xs text-text-secondary mt-0.5">{t('pageSubtitle')}</p>
+          </div>
+        </div>
+      </div>
 
       {/* KPI STRIP */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="rounded-lg border border-border/40 bg-background-elevated/30 p-3">
+        <div className="card p-3">
           <div className="text-[9px] font-mono uppercase tracking-widest text-text-muted/60 mb-1">{t('kpi.openCases')}</div>
           <div className="text-2xl font-black font-mono text-text-primary tabular-nums">{allCases.length}</div>
         </div>
-        <div className="rounded-lg border border-border/40 bg-background-elevated/30 p-3">
+        <div className="card p-3">
           <div className="text-[9px] font-mono uppercase tracking-widest text-text-muted/60 mb-1">{t('kpi.totalAtRisk')}</div>
           <div className="text-2xl font-black font-mono text-text-primary tabular-nums">
             {formatCompactMXN(allCases.reduce((s, c) => s + c.total_value_mxn, 0))}
           </div>
         </div>
-        <div className="rounded-lg border border-risk-high/20 bg-risk-high/[0.04] p-3">
+        <div className="card p-3 border-risk-high/20 bg-risk-high/[0.04]">
           <div className="text-[9px] font-mono uppercase tracking-widest text-text-muted/60 mb-1">{t('kpi.estLosses')}</div>
           <div className="text-2xl font-black font-mono text-risk-high tabular-nums">
             {formatCompactMXN(allCases.reduce((s, c) => s + (c.estimated_loss_mxn || 0), 0))}
           </div>
         </div>
-        <div className="rounded-lg border border-border/40 bg-background-elevated/30 p-3">
+        <div className="card p-3">
           <div className="text-[9px] font-mono uppercase tracking-widest text-text-muted/60 mb-1">{t('kpi.sectorsAffected')}</div>
           <div className="text-2xl font-black font-mono text-text-primary tabular-nums">
             {new Set(allCases.map((c) => c.sector_name)).size}
@@ -663,7 +674,7 @@ export function Investigation() {
             </div>
           ) : cases.length === 0 ? (
             <EmptyState
-              icon={statusFilter !== 'all' || minScore !== undefined || priorityFilter !== 'all' ? Filter : Search}
+              icon={statusFilter !== 'all' || minScore !== undefined || priorityFilter !== 'all' ? Filter : ShieldAlert}
               title={t('noInvestigationCasesFound')}
               description={statusFilter !== 'all' || minScore !== undefined || priorityFilter !== 'all' ? t('tryAdjustingFilters') : t('noCasesYet')}
               variant="no-results"

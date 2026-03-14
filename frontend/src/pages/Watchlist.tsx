@@ -23,7 +23,6 @@ import WorkspaceJournalistGuide from '@/components/WorkspaceJournalistGuide'
 import { watchlistApi, vendorApi, dossierApi, type WatchlistItem, type WatchlistItemUpdate, type DossierItem } from '@/api/client'
 import {
   Eye,
-  EyeOff,
   Trash2,
   Users,
   Building2,
@@ -44,6 +43,7 @@ import {
   FolderOpen,
   Folder,
   Plus,
+  Crosshair,
 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
@@ -558,12 +558,14 @@ export function Watchlist() {
   if (error) {
     return (
       <div className="space-y-6">
-        <div>
-          <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
-            <Eye className="h-4.5 w-4.5 text-accent" />
-            {t('errorTitle')}
-          </h2>
-          <p className="text-xs text-text-muted mt-0.5">{t('errorDescription')}</p>
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-risk-critical/10 border border-risk-critical/20">
+            <AlertTriangle className="h-4 w-4 text-risk-critical" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold tracking-tight">{t('errorTitle')}</h2>
+            <p className="text-xs text-text-muted mt-0.5">{t('errorDescription')}</p>
+          </div>
         </div>
         <Card className="border-risk-critical/30 bg-risk-critical/5">
           <CardContent className="p-6 text-center">
@@ -607,14 +609,16 @@ export function Watchlist() {
       <div className="flex-1 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
-              <Eye className="h-4.5 w-4.5 text-accent" />
-              {t('title')}
-            </h2>
-            <p className="text-xs text-text-muted mt-0.5">
-              {t('subtitleFull')}
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
+              <Eye className="h-4 w-4 text-accent" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold tracking-tight">{t('title')}</h2>
+              <p className="text-xs text-text-muted mt-0.5">
+                {t('subtitleFull')}
+              </p>
+            </div>
           </div>
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
@@ -809,8 +813,8 @@ export function Watchlist() {
                     }
                     return (
                       <div className="p-12 text-center text-text-muted">
-                        <EyeOff className="h-12 w-12 mx-auto mb-4 opacity-25" />
-                        <p className="text-sm font-medium mb-1 text-text-primary">Your investigation watchlist is empty</p>
+                        <Crosshair className="h-12 w-12 mx-auto mb-4 text-accent opacity-30" />
+                        <p className="text-sm font-medium mb-1 text-text-primary">Your investigation workspace is empty</p>
                         <p className="text-xs max-w-xs mx-auto mb-2 leading-relaxed">
                           Add vendors and institutions to track their risk score changes over time. Get notified when a low-risk vendor becomes high-risk.
                         </p>

@@ -15,16 +15,15 @@ import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { TableExportButton } from '@/components/TableExportButton'
 import { CaseLeadButton } from '@/components/CaseLeadDialog'
 import { AlertCircle, Search, X, Eye, EyeOff, Activity, BarChart3, Library } from 'lucide-react'
-import { PageHeader } from '@/components/layout/PageHeader'
 import { RISK_COLORS, SECTORS } from '@/lib/constants'
 import { staggerContainer, staggerItem, slideUp } from '@/lib/animations'
 
 // ── severity colour ──────────────────────────────────────────────────────────
 const SEVERITY_COLORS: Record<number, string> = {
-  1: 'bg-muted text-muted-foreground',
-  2: 'bg-yellow-500/20 text-yellow-400',
-  3: 'bg-orange-500/20 text-orange-400',
-  4: 'bg-red-500/20 text-red-400',
+  1: 'bg-accent-data/10 text-accent-data border border-accent-data/20',
+  2: 'bg-risk-medium/15 text-risk-medium border border-risk-medium/20',
+  3: 'bg-risk-high/15 text-risk-high border border-risk-high/20',
+  4: 'bg-risk-critical/15 text-risk-critical border border-risk-critical/20',
 }
 
 const LEGAL_STATUS_COLORS: Record<string, string> = {
@@ -84,16 +83,26 @@ function CaseCard({ cas, onClick, onNavigate }: { cas: ScandalListItem; onClick:
       : String(cas.contract_year_start)
     : null
 
-  // Border accent for severity 4 (critical) cases
-  const cardBorder = cas.severity === 4
-    ? 'border-red-500/40 hover:border-red-500/60'
-    : 'border-border/60 hover:border-accent/50'
+  // Left border color by fraud type
+  const fraudBorderColor: Record<string, string> = {
+    ghost_company: 'border-l-red-500',
+    bid_rigging: 'border-l-orange-500',
+    overpricing: 'border-l-amber-500',
+    conflict_of_interest: 'border-l-purple-500',
+    embezzlement: 'border-l-rose-500',
+    bribery: 'border-l-pink-500',
+    procurement_fraud: 'border-l-yellow-500',
+    monopoly: 'border-l-blue-500',
+    emergency_fraud: 'border-l-cyan-500',
+    tender_rigging: 'border-l-indigo-500',
+  }
+  const leftBorder = fraudBorderColor[cas.fraud_type] ?? 'border-l-border'
 
   return (
     <motion.div
       variants={staggerItem}
-      whileHover={{ y: -3, transition: { duration: 0.15 } }}
-      className={`bg-card border ${cardBorder} rounded-lg hover:bg-card/80 transition-all group flex flex-col overflow-hidden`}
+      whileHover={{ y: -2, transition: { duration: 0.15 } }}
+      className={`card hover-lift border-l-[3px] ${leftBorder} group flex flex-col overflow-hidden`}
     >
       {/* ML training data banner */}
       {isMLLinked && (
@@ -240,7 +249,7 @@ function StatsBar() {
         { label: t('statsBar.gtLinked'), value: data?.gt_linked_count ?? '–' },
         { label: t('statsBar.compranetVisible'), value: data?.compranet_visible_count ?? '–' },
       ].map(({ label, value }) => (
-        <motion.div key={label} variants={slideUp} className="bg-card border border-border/50 rounded-lg px-4 py-3">
+        <motion.div key={label} variants={slideUp} className="card px-4 py-3">
           <div className="text-xl font-bold font-mono text-accent">{value}</div>
           <div className="text-[11px] text-text-muted mt-0.5">{label}</div>
         </motion.div>
@@ -292,12 +301,18 @@ export default function CaseLibrary() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <PageHeader
-        title="Case Library"
-        subtitle="43 documented corruption cases"
-        icon={Library}
-        actions={<CaseLeadButton className="shrink-0" />}
-      />
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
+            <Library className="h-4 w-4 text-accent" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold tracking-tight">{t('pageTitle', { defaultValue: 'Case Library' })}</h2>
+            <p className="text-xs text-text-muted">{t('pageSubtitle', { defaultValue: 'Documented corruption cases' })}</p>
+          </div>
+        </div>
+        <CaseLeadButton className="shrink-0" />
+      </div>
 
       <StatsBar />
 

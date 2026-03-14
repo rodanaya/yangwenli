@@ -410,15 +410,13 @@ function SHAPImportanceSection() {
                 </td>
                 <td className="py-2 px-3">
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden max-w-[100px]">
+                    <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden max-w-[120px]">
                       <div
-                        className={cn(
-                          'h-full rounded-full',
-                          item.direction === 'risk'
-                            ? 'bg-gradient-to-r from-risk-high to-risk-critical'
-                            : 'bg-gradient-to-r from-emerald-700 to-emerald-500'
-                        )}
-                        style={{ width: `${(item.shap_mean_abs / maxVal) * 100}%` }}
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${(item.shap_mean_abs / maxVal) * 100}%`,
+                          backgroundColor: item.direction === 'risk' ? 'var(--color-accent)' : 'var(--color-accent-data)',
+                        }}
                         role="presentation"
                       />
                     </div>
@@ -430,14 +428,14 @@ function SHAPImportanceSection() {
                 <td className="py-2 px-3 text-center">
                   {item.direction === 'risk' ? (
                     <Badge
-                      className="text-[10px] px-1.5 py-0 bg-risk-critical/10 text-risk-critical border-risk-critical/20"
+                      className="text-[10px] px-1.5 py-0 bg-accent/10 text-accent border-accent/20"
                       variant="outline"
                     >
                       Risk
                     </Badge>
                   ) : (
                     <Badge
-                      className="text-[10px] px-1.5 py-0 bg-risk-low/10 text-risk-low border-risk-low/20"
+                      className="text-[10px] px-1.5 py-0 bg-accent-data/10 text-accent-data border-accent-data/20"
                       variant="outline"
                     >
                       Protective
@@ -445,7 +443,7 @@ function SHAPImportanceSection() {
                   )}
                 </td>
                 <td className="py-2 pl-3 text-right tabular-nums font-mono text-[10px]">
-                  <span className={item.direction === 'risk' ? 'text-risk-critical' : 'text-risk-low'}>
+                  <span className={item.direction === 'risk' ? 'text-accent' : 'text-accent-data'}>
                     {item.coefficient >= 0 ? '+' : ''}{item.coefficient.toFixed(3)}
                   </span>
                 </td>
@@ -582,24 +580,28 @@ function DriftMonitorSection() {
                         </tr>
                       </thead>
                       <tbody>
-                        {data.drifted_features.map((f) => (
+                        {data.drifted_features.map((f) => {
+                          const driftSeverity = f.ks_stat >= 0.2 ? 'text-risk-critical' : f.ks_stat >= 0.1 ? 'text-risk-high' : 'text-risk-medium'
+                          return (
                           <tr key={f.feature} className="border-b border-border/10 hover:bg-background-elevated/30 transition-colors">
-                            <td className="py-2 pr-4 text-text-secondary capitalize">
+                            <td className="py-2 pr-4 text-text-secondary capitalize flex items-center gap-2">
+                              <span className={cn('h-1.5 w-1.5 rounded-full', f.ks_stat >= 0.2 ? 'bg-risk-critical' : f.ks_stat >= 0.1 ? 'bg-risk-high' : 'bg-risk-medium')} />
                               {f.feature.replace(/^z_/, '').replace(/_/g, ' ')}
                             </td>
-                            <td className="py-2 px-3 text-right tabular-nums font-mono text-text-primary">
+                            <td className={cn('py-2 px-3 text-right tabular-nums font-mono', driftSeverity)}>
                               {f.ks_stat.toFixed(3)}
                             </td>
                             <td className="py-2 px-3 text-right tabular-nums font-mono text-text-muted">
                               {f.p_value < 0.001 ? '<0.001' : f.p_value.toFixed(3)}
                             </td>
                             <td className="py-2 pl-3 text-right tabular-nums font-mono">
-                              <span className={f.mean_shift > 0 ? 'text-risk-high' : 'text-risk-low'}>
+                              <span className={f.mean_shift > 0 ? 'text-accent' : 'text-accent-data'}>
                                 {f.mean_shift > 0 ? '+' : ''}{f.mean_shift.toFixed(3)}
                               </span>
                             </td>
                           </tr>
-                        ))}
+                          )
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -1429,6 +1431,98 @@ export default function ModelTransparency() {
         </CardHeader>
         <CardContent>
           <SHAPImportanceSection />
+        </CardContent>
+      </Card>
+
+      {/* ================================================================ */}
+      {/* Model Version Timeline                                          */}
+      {/* ================================================================ */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-accent" aria-hidden="true" />
+            <div>
+              <CardTitle className="text-sm">Model Evolution Timeline</CardTitle>
+              <CardDescription className="text-xs">
+                Four generations of risk scoring, from expert checklists to vendor-stratified ML
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="relative">
+            {/* Timeline line */}
+            <div className="absolute left-[18px] top-3 bottom-3 w-px bg-border/40" />
+
+            {[
+              { version: 'v3.3', date: 'Feb 2026', auc: '0.584', label: 'Weighted Checklist', desc: '8 base factors, IMF-aligned weights, interaction effects. AUC barely above random.', color: '#64748b' },
+              { version: 'v4.0', date: 'Feb 2026', auc: '0.942', label: 'Statistical Framework', desc: 'Z-scores, Mahalanobis distance, Bayesian logistic regression. 12 features, PU-learning correction.', color: '#fb923c' },
+              { version: 'v5.1', date: 'Feb 2026', auc: '0.957', label: 'Per-Sector Sub-Models', desc: '16 z-score features, 13 models (1 global + 12 sector). Temporal split inflated AUC due to vendor leakage.', color: '#3b82f6' },
+              { version: 'v6.1', date: 'Mar 2026', auc: '0.849', label: 'Vendor-Stratified (Active)', desc: '~390 cases, ~725 vendors. Vendor-stratified 70/30 split. OECD-calibrated intercept. Honest AUC.', color: 'var(--color-accent)', active: true },
+            ].map((item) => (
+              <div key={item.version} className="relative flex items-start gap-4 pb-5 last:pb-0">
+                <div
+                  className={cn(
+                    'relative z-10 flex items-center justify-center w-9 h-9 rounded-full border-2 shrink-0 text-xs font-bold tabular-nums',
+                    'active' in item && item.active
+                      ? 'bg-accent/15 border-accent text-accent'
+                      : 'bg-background-card border-border text-text-muted'
+                  )}
+                >
+                  {item.version}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-semibold text-text-primary">{item.label}</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-background-elevated border border-border/50 text-text-muted">{item.date}</span>
+                    <span className="text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded" style={{ backgroundColor: `${item.color}15`, color: item.color, border: `1px solid ${item.color}30` }}>
+                      AUC {item.auc}
+                    </span>
+                  </div>
+                  <p className="text-xs text-text-muted mt-0.5 leading-relaxed">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ================================================================ */}
+      {/* Intercept Explanation Card                                       */}
+      {/* ================================================================ */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Scale className="h-4 w-4 text-accent" aria-hidden="true" />
+            <div>
+              <CardTitle className="text-sm">Model Intercept & Baseline Risk</CardTitle>
+              <CardDescription className="text-xs">
+                What the intercept means for score interpretation
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="card p-4 space-y-2">
+              <p className="text-xs text-text-muted uppercase tracking-wider font-medium">Global Intercept</p>
+              <p className="text-3xl font-bold tabular-nums text-accent">-2.856</p>
+              <p className="text-xs text-text-muted leading-relaxed">
+                This means a contract with all z-scores at zero (perfectly average for its sector and year) has a baseline logit of -2.856, corresponding to a raw probability of ~5.4% before PU correction.
+              </p>
+            </div>
+            <div className="card p-4 space-y-2">
+              <p className="text-xs text-text-muted uppercase tracking-wider font-medium">Baseline Risk After PU</p>
+              <p className="text-3xl font-bold tabular-nums text-accent-data">~12.5%</p>
+              <p className="text-xs text-text-muted leading-relaxed">
+                After dividing by the PU correction factor (c=0.448), an average contract scores ~12.5%. This is why the medium threshold is set at 15% -- most contracts score below it. The OECD intercept calibration (delta=-1.16) was applied post-hoc to bring the high-risk rate from 23.6% to 9.9%.
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 p-3 rounded-md bg-accent/5 border border-accent/15 text-xs text-text-muted leading-relaxed">
+            <span className="font-medium text-accent">Why this matters: </span>
+            The intercept sets the "center of gravity" for the entire score distribution. When v6.1 used a less-regularized model (C=1.0 vs v6.0's C=0.35), the intercept shifted from -2.82 to -1.69, causing the high-risk rate to balloon to 23.6%. The post-hoc calibration restored OECD compliance by shifting it back to -2.856.
+          </div>
         </CardContent>
       </Card>
 

@@ -6,13 +6,17 @@ related vendors, and top vendors analysis.
 
 Thin router — business logic lives in VendorService.
 """
+import csv
+import io
 import json
 import math
 import logging
+import sqlite3
 import threading
 from datetime import datetime, timedelta
 from typing import Optional, List, Any, Dict
 from fastapi import APIRouter, HTTPException, Query, Path
+from fastapi.responses import StreamingResponse
 from collections import Counter
 from pydantic import BaseModel
 
@@ -458,6 +462,104 @@ def get_top_vendors(
         response = VendorTopListResponse(data=vendors, metric=by, total=len(vendors))
         _set_vendor_cache(cache_key, response)
         return response
+
+
+# =============================================================================
+# VENDOR CSV EXPORT (risk-filtered)
+# =============================================================================
+
+
+class VendorTrajectoryResponse(BaseModel):
+    """Risk score trajectory across model versions."""
+    vendor_id: int
+    vendor_name: str
+    scores: Dict[str, Optional[float]]
+
+
+@router.get("/export")
+def export_vendors_risk_csv(
+    sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by primary sector"),
+    min_risk: float = Query(0.30, ge=0.0, le=1.0, description="Minimum avg risk score"),
+    risk_level: Optional[str] = Query(None, description="Filter by risk level: critical, high, medium, low"),
+    limit: int = Query(1000, ge=1, le=5000, description="Maximum rows (max 5000)"),
+):
+    """
+    Export high-risk vendors as CSV.
+
+    Returns vendors filtered by minimum risk score with aggregate statistics.
+    Designed for investigation triage and journalist data downloads.
+    """
+    VALID_RISK_LEVELS = {"low", "medium", "high", "critical"}
+    if risk_level is not None:
+        rl = risk_level.strip().lower()
+        if rl not in VALID_RISK_LEVELS:
+            raise HTTPException(status_code=422, detail=f"Invalid risk_level: {risk_level}")
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            conditions = ["vs.avg_risk_score >= ?"]
+            params: list = [min_risk]
+
+            if sector_id is not None:
+                conditions.append("vs.primary_sector_id = ?")
+                params.append(sector_id)
+
+            if risk_level is not None:
+                conditions.append("vs.avg_risk_level = ?")
+                params.append(risk_level.strip().lower())
+
+            where_clause = " AND ".join(conditions)
+
+            query = f"""
+                SELECT
+                    vs.vendor_id,
+                    v.name AS vendor_name,
+                    v.rfc,
+                    s.name_es AS sector_name,
+                    vs.total_contracts,
+                    vs.total_value_mxn,
+                    ROUND(vs.avg_risk_score, 4) AS avg_risk_score,
+                    vs.avg_risk_level AS risk_level,
+                    ROUND(vs.direct_award_pct, 2) AS direct_award_pct,
+                    (vs.last_contract_year - vs.first_contract_year + 1) AS years_active
+                FROM vendor_stats vs
+                JOIN vendors v ON v.id = vs.vendor_id
+                LEFT JOIN sectors s ON s.id = vs.primary_sector_id
+                WHERE {where_clause}
+                ORDER BY vs.avg_risk_score DESC
+                LIMIT ?
+            """
+            params.append(limit)
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+
+            columns = [
+                "vendor_id", "vendor_name", "rfc", "sector_name",
+                "total_contracts", "total_value_mxn", "avg_risk_score",
+                "risk_level", "direct_award_pct", "years_active",
+            ]
+
+            output = io.StringIO()
+            writer = csv.writer(output)
+            writer.writerow(columns)
+            for row in rows:
+                writer.writerow(list(row))
+            output.seek(0)
+
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"rubli_vendors_{timestamp}.csv"
+
+            return StreamingResponse(
+                iter([output.getvalue()]),
+                media_type="text/csv",
+                headers={"Content-Disposition": f"attachment; filename={filename}"},
+            )
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error in export_vendors_risk_csv: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
 
 
 @router.get("/{vendor_id:int}", response_model=VendorDetailResponse)
@@ -2185,3 +2287,59 @@ def get_vendor_qqw(
             procurement_officials=officials,
             note=note,
         )
+
+
+# =============================================================================
+# VENDOR RISK TRAJECTORY (across model versions)
+# =============================================================================
+
+@router.get("/{vendor_id:int}/trajectory", response_model=VendorTrajectoryResponse)
+def get_vendor_trajectory(
+    vendor_id: int = Path(..., description="Vendor ID"),
+):
+    """
+    Get a vendor's average risk score across model versions (v3, v4, v5, v6).
+
+    Returns the average risk score from each model version for this vendor,
+    enabling comparison of how the vendor's risk profile evolved across
+    successive model iterations.
+    """
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT name FROM vendors WHERE id = ?", (vendor_id,))
+            vendor_row = cursor.fetchone()
+            if not vendor_row:
+                raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
+
+            cursor.execute(
+                """
+                SELECT
+                    AVG(risk_score_v3) AS avg_v3,
+                    AVG(risk_score_v4) AS avg_v4,
+                    AVG(risk_score_v5) AS avg_v5,
+                    AVG(risk_score) AS avg_v6
+                FROM contracts
+                WHERE vendor_id = ?
+                """,
+                (vendor_id,),
+            )
+            row = cursor.fetchone()
+
+            scores = {
+                "v3": round(row["avg_v3"], 4) if row["avg_v3"] is not None else None,
+                "v4": round(row["avg_v4"], 4) if row["avg_v4"] is not None else None,
+                "v5": round(row["avg_v5"], 4) if row["avg_v5"] is not None else None,
+                "v6": round(row["avg_v6"], 4) if row["avg_v6"] is not None else None,
+            }
+
+            return VendorTrajectoryResponse(
+                vendor_id=vendor_id,
+                vendor_name=vendor_row["name"],
+                scores=scores,
+            )
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error in get_vendor_trajectory: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")

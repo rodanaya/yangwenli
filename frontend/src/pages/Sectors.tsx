@@ -23,7 +23,7 @@ import { SECTOR_COLORS, SECTORS, RISK_COLORS, getRiskLevelFromScore, getSectorNa
 import { Heatmap } from '@/components/charts/Heatmap'
 import type { SectorStatistics } from '@/api/types'
 import { AlertTriangle, BarChart3, Layers, X } from 'lucide-react'
-import { PageHeader } from '@/components/layout/PageHeader'
+// PageHeader replaced by inline Obsidian Intelligence header
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { ScrollReveal } from '@/hooks/useAnimations'
 import { StatCard as SharedStatCard } from '@/components/DashboardWidgets'
@@ -799,11 +799,42 @@ export function Sectors() {
 
   return (
     <div className="space-y-5">
-      <PageHeader
-        title="Sector Analysis"
-        subtitle="12-sector taxonomy with risk breakdown"
-        icon={BarChart3}
-      />
+      {/* Hero Header */}
+      <div className="card p-6">
+        <h1 className="text-gradient text-2xl font-bold tracking-tight">Sector Intelligence</h1>
+        <p className="text-text-secondary text-sm mt-1">
+          {aggregates
+            ? `${formatNumber(aggregates.totalContracts)} contracts across ${aggregates.sectorCount} active sectors`
+            : '12-sector taxonomy with risk breakdown'}
+        </p>
+        {/* Summary stat pills */}
+        {aggregates && (
+          <div className="flex flex-wrap gap-3 mt-4">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-1.5 bg-background-elevated/40">
+              <span className="text-xs text-text-muted">Total Value</span>
+              <span className="text-sm font-bold font-mono text-text-primary">{formatCompactMXN(aggregates.totalValue)}</span>
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-1.5 bg-background-elevated/40">
+              <span className="text-xs text-text-muted">Avg Risk</span>
+              <span className={cn(
+                'text-sm font-bold font-mono',
+                aggregates.avgRisk >= 0.30 ? 'text-risk-critical' : aggregates.avgRisk >= 0.15 ? 'text-risk-high' : 'text-text-primary'
+              )}>
+                {(aggregates.avgRisk * 100).toFixed(1)}%
+              </span>
+            </div>
+            {topSector && (
+              <div className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-1.5 bg-background-elevated/40">
+                <span className="text-xs text-text-muted">Most Active</span>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: SECTOR_COLORS[topSector.sector_code] || '#64748b' }} />
+                  <span className="text-sm font-bold font-mono text-text-primary">{getSectorNameEN(topSector.sector_code)}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* ================================================================ */}
       {/* SECTOR RANKING STRIP — All 12 sectors by avg risk, clickable  */}
@@ -1344,10 +1375,10 @@ export function Sectors() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[820px] text-xs" role="table">
                 <thead>
-                  <tr className="border-b border-border bg-background-elevated/30 text-text-muted">
-                    <th className="px-3 py-2.5 text-left font-medium">{t('table.sector')}</th>
+                  <tr className="text-text-muted">
+                    <th className="data-cell-header text-left">{t('table.sector')}</th>
                     <th
-                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                      className="data-cell-header text-right cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
                       onClick={() => handleSort('total_contracts')}
                       aria-sort={sortField === 'total_contracts' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
                     >
@@ -1355,7 +1386,7 @@ export function Sectors() {
                       <SortIndicator field="total_contracts" sortField={sortField} sortDir={sortDir} />
                     </th>
                     <th
-                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                      className="data-cell-header text-right cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
                       onClick={() => handleSort('total_value_mxn')}
                       aria-sort={sortField === 'total_value_mxn' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
                     >
@@ -1363,7 +1394,7 @@ export function Sectors() {
                       <SortIndicator field="total_value_mxn" sortField={sortField} sortDir={sortDir} />
                     </th>
                     <th
-                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                      className="data-cell-header text-right cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
                       onClick={() => handleSort('avg_risk_score')}
                       aria-sort={sortField === 'avg_risk_score' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
                     >
@@ -1371,7 +1402,7 @@ export function Sectors() {
                       <SortIndicator field="avg_risk_score" sortField={sortField} sortDir={sortDir} />
                     </th>
                     <th
-                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                      className="data-cell-header text-right cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
                       onClick={() => handleSort('high_risk_pct')}
                       aria-sort={sortField === 'high_risk_pct' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
                     >
@@ -1379,20 +1410,20 @@ export function Sectors() {
                       <SortIndicator field="high_risk_pct" sortField={sortField} sortDir={sortDir} />
                     </th>
                     <th
-                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                      className="data-cell-header text-right cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
                       onClick={() => handleSort('direct_award_pct')}
                       aria-sort={sortField === 'direct_award_pct' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
                     >
                       {t('table.directAwardPct')}
                       <SortIndicator field="direct_award_pct" sortField={sortField} sortDir={sortDir} />
                     </th>
-                    <th className="px-3 py-2.5 text-left font-medium whitespace-nowrap hidden xl:table-cell w-[100px]">
+                    <th className="data-cell-header text-left whitespace-nowrap hidden xl:table-cell w-[100px]">
                       Risk Levels
                     </th>
-                    <th className="px-3 py-2.5 text-center font-medium whitespace-nowrap hidden xl:table-cell">
+                    <th className="data-cell-header text-center whitespace-nowrap hidden xl:table-cell">
                       {t('table.riskTrend')}
                     </th>
-                    <th className="px-3 py-2.5 text-left font-medium whitespace-nowrap hidden lg:table-cell">
+                    <th className="data-cell-header text-left whitespace-nowrap hidden lg:table-cell">
                       {t('table.topRamo')}
                     </th>
                   </tr>
@@ -1406,13 +1437,15 @@ export function Sectors() {
                     return (
                       <tr
                         key={sector.sector_id}
-                        className="border-b border-border/20 hover:bg-background-elevated/40 transition-colors"
+                        className="border-b border-border/20 hover:bg-background-elevated/40 transition-colors cursor-pointer"
                         style={{
+                          borderLeft: `3px solid ${color}`,
                           opacity: 0,
                           animation: `fadeInUp 600ms cubic-bezier(0.16, 1, 0.3, 1) ${i * 40 + 200}ms both`,
                         }}
+                        onClick={() => navigate(`/sectors/${sector.sector_id}`)}
                       >
-                        <td className="px-3 py-2.5">
+                        <td className="data-cell">
                           <div className="flex items-center gap-2 flex-wrap">
                             <div
                               className="w-2.5 h-2.5 rounded-full flex-shrink-0"
@@ -1422,10 +1455,10 @@ export function Sectors() {
                             <Link
                               to={`/sectors/${sector.sector_id}`}
                               className="font-medium text-text-primary hover:text-accent transition-colors"
+                              onClick={(e) => e.stopPropagation()}
                             >
                               {getSectorNameEN(sector.sector_code)}
                             </Link>
-                            {/* ASF audit badge — shown when this sector has audit findings loaded */}
                             {sectorASF && sectorASF.sector_id === sector.sector_id && sectorASF.findings.length > 0 && (
                               <span
                                 className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 flex-shrink-0"
@@ -1437,23 +1470,22 @@ export function Sectors() {
                             )}
                           </div>
                         </td>
-                        <td className="px-3 py-2.5 text-right font-mono text-text-secondary tabular-nums">
+                        <td className="data-cell text-right font-mono text-text-secondary tabular-nums">
                           {formatNumber(sector.total_contracts)}
                         </td>
-                        <td className="px-3 py-2.5 text-right font-mono text-text-secondary tabular-nums">
+                        <td className="data-cell text-right font-mono text-text-secondary tabular-nums">
                           {formatCompactMXN(sector.total_value_mxn)}
                         </td>
-                        <td className="px-3 py-2.5 text-right">
+                        <td className="data-cell text-right">
                           <RiskBadge score={sector.avg_risk_score} className="text-xs px-1.5 py-0" />
                         </td>
-                        <td className="px-3 py-2.5 text-right font-mono text-text-secondary tabular-nums">
+                        <td className="data-cell text-right font-mono text-text-secondary tabular-nums">
                           {formatPercentSafe(sector.high_risk_pct, false)}
                         </td>
-                        <td className="px-3 py-2.5 text-right font-mono text-text-secondary tabular-nums">
+                        <td className="data-cell text-right font-mono text-text-secondary tabular-nums">
                           {formatPercentSafe(sector.direct_award_pct, false)}
                         </td>
-                        {/* Risk Stack Bar — % at each level */}
-                        <td className="px-3 py-2.5 hidden xl:table-cell w-[100px]">
+                        <td className="data-cell hidden xl:table-cell w-[100px]">
                           <RiskStackBar
                             criticalPct={sector.critical_risk_count / Math.max(sector.total_contracts, 1) * 100}
                             highPct={sector.high_risk_count / Math.max(sector.total_contracts, 1) * 100}
@@ -1461,11 +1493,10 @@ export function Sectors() {
                             lowPct={sector.low_risk_count / Math.max(sector.total_contracts, 1) * 100}
                           />
                         </td>
-                        {/* Sparkline */}
-                        <td className="px-3 py-2.5 hidden xl:table-cell">
+                        <td className="data-cell hidden xl:table-cell">
                           <MiniSparkline points={sparkPoints} color={color} />
                         </td>
-                        <td className="px-3 py-2.5 text-text-muted font-mono hidden lg:table-cell">
+                        <td className="data-cell text-text-muted font-mono hidden lg:table-cell">
                           {topRamo}
                         </td>
                       </tr>
