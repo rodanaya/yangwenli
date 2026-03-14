@@ -667,7 +667,7 @@ def save_to_db(conn, results, run_id):
             bootstrap_ci,
             res.get('n_pos_train', 0),
             res.get('n_train', 0) - res.get('n_pos_train', 0),
-            res.get('n_bootstrap', args.n_bootstrap),
+            res.get('n_bootstrap', 0),
             hyperparams,
             datetime.now().isoformat(),
             0.0, 0.0,
@@ -686,6 +686,8 @@ def main():
     parser.add_argument('--neg-ratio', type=float, default=5.0, help='Negative:positive ratio')
     parser.add_argument('--max-per-vendor', type=int, default=200, help='Max contracts per GT vendor')
     parser.add_argument('--no-db-windows', action='store_true', help='Skip DB windows, use legacy hardcoded 15-case dict')
+    parser.add_argument('--force-C', type=float, default=None, help='Skip Optuna, use this C value directly')
+    parser.add_argument('--force-l1-ratio', type=float, default=None, help='Skip Optuna, use this l1_ratio directly')
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args()
 
@@ -708,7 +710,11 @@ def main():
                                    case_windows=case_windows)
 
         # Step 2: Hyperparameter search
-        if args.use_optuna:
+        if args.force_C is not None and args.force_l1_ratio is not None:
+            print(f"\n[2/4] Using forced hyperparameters (skipping Optuna)...")
+            C = args.force_C
+            l1_ratio = args.force_l1_ratio
+        elif args.use_optuna:
             print("\n[2/4] Optuna hyperparameter search...")
             best_params = optuna_search(data, n_trials=args.optuna_trials)
             C = best_params['C']
