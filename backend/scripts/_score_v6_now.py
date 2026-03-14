@@ -18,9 +18,9 @@ def sigmoid(x):
     return np.where(x >= 0, 1.0/(1.0+np.exp(-x)), np.exp(x)/(1.0+np.exp(x)))
 
 def get_risk_level(score):
-    if score >= 0.50: return 'critical'
-    if score >= 0.30: return 'high'
-    if score >= 0.10: return 'medium'
+    if score >= 0.60: return 'critical'
+    if score >= 0.40: return 'high'
+    if score >= 0.15: return 'medium'
     return 'low'
 
 def load_all_calibrations(conn):
