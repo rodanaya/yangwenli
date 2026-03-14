@@ -38,23 +38,23 @@ import {
 // Static Data
 // ============================================================================
 
-const V5_COEFFICIENTS = [
-  { nameKey: 'priceVolatility', coeff: 1.219 },
-  { nameKey: 'winRate', coeff: 0.727 },
-  { nameKey: 'vendorConcentration', coeff: 0.428 },
-  { nameKey: 'industryMismatch', coeff: 0.305 },
-  { nameKey: 'sameDayContracts', coeff: 0.222 },
-  { nameKey: 'directAward', coeff: 0.182 },
-  { nameKey: 'networkMembers', coeff: 0.064 },
-  { nameKey: 'yearEnd', coeff: 0.059 },
-  { nameKey: 'institutionRisk', coeff: 0.057 },
-  { nameKey: 'priceRatio', coeff: -0.015 },
-  { nameKey: 'singleBid', coeff: 0.013 },
-  { nameKey: 'priceHypConfidence', coeff: 0.001 },
+const V6_COEFFICIENTS = [
+  { nameKey: 'priceVolatility', coeff: 1.156 },
+  { nameKey: 'vendorConcentration', coeff: 0.863 },
+  { nameKey: 'priceRatio', coeff: 0.201 },
+  { nameKey: 'networkMembers', coeff: 0.199 },
+  { nameKey: 'directAward', coeff: 0.132 },
+  { nameKey: 'sectorSpread', coeff: 0.117 },
+  { nameKey: 'sameDayContracts', coeff: 0.107 },
+  { nameKey: 'adPeriodDays', coeff: 0.079 },
+  { nameKey: 'yearEnd', coeff: 0.029 },
+  { nameKey: 'industryMismatch', coeff: 0.012 },
   { nameKey: 'coBidRate', coeff: 0.0 },
-  { nameKey: 'adPeriodDays', coeff: -0.104 },
-  { nameKey: 'institutionDiversity', coeff: -0.848 },
-  { nameKey: 'sectorSpread', coeff: -0.374 },
+  { nameKey: 'priceHypConfidence', coeff: 0.0 },
+  { nameKey: 'institutionRisk', coeff: -0.016 },
+  { nameKey: 'winRate', coeff: -0.056 },
+  { nameKey: 'singleBid', coeff: -0.065 },
+  { nameKey: 'institutionDiversity', coeff: -0.436 },
 ] as const
 
 const V33_WEIGHTS = [
@@ -68,11 +68,11 @@ const V33_WEIGHTS = [
   { nameKey: 'thresholdSplitting', weight: 7 },
 ] as const
 
-const RISK_LEVELS_V5 = [
-  { level: 'Critical', threshold: '>= 0.50', meaning: 'Very high similarity to known corruption patterns', pct: '6.5%', count: '201,745', color: '#f87171' },
-  { level: 'High', threshold: '>= 0.30', meaning: 'High similarity to known corruption patterns', pct: '4.1%', count: '126,553', color: '#fb923c' },
-  { level: 'Medium', threshold: '>= 0.10', meaning: 'Moderate similarity to known corruption patterns', pct: '43.9%', count: '~1,363,000', color: '#fbbf24' },
-  { level: 'Low', threshold: '< 0.10', meaning: 'Low similarity to known corruption patterns', pct: '45.6%', count: '~1,415,000', color: '#4ade80' },
+const RISK_LEVELS_V6 = [
+  { level: 'Critical', threshold: '>= 0.50', meaning: 'Very high similarity to known corruption patterns', pct: '14.7%', count: '448,074', color: '#f87171' },
+  { level: 'High', threshold: '>= 0.30', meaning: 'High similarity to known corruption patterns', pct: '10.6%', count: '322,609', color: '#fb923c' },
+  { level: 'Medium', threshold: '>= 0.10', meaning: 'Moderate similarity to known corruption patterns', pct: '44.0%', count: '1,341,725', color: '#fbbf24' },
+  { level: 'Low', threshold: '< 0.10', meaning: 'Low similarity to known corruption patterns', pct: '30.8%', count: '938,886', color: '#4ade80' },
 ] as const
 
 const CORRUPTION_CASES = [
@@ -119,19 +119,19 @@ const REFERENCES = [
 ] as const
 
 const MODEL_COMPARISON = [
-  { metric: 'AUC-ROC', v33: '0.584', v50: '0.9572', improvement: '+64%' },
-  { metric: 'Brier Score', v33: '0.411', v50: '0.060', improvement: '-85%' },
-  { metric: 'Detection Rate (med+)', v33: '67.1%', v50: '99.8%', improvement: '+33pp' },
-  { metric: 'High+ Detection', v33: '18.3%', v50: '93.0%', improvement: '+75pp' },
-  { metric: 'Lift vs Random', v33: '1.22x', v50: '4.04x', improvement: '+2.8x' },
+  { metric: 'AUC-ROC', v33: '0.584', v60: '0.849', improvement: '+44%' },
+  { metric: 'Brier Score', v33: '0.411', v60: '0.090', improvement: '-78%' },
+  { metric: 'Detection Rate (med+)', v33: '67.1%', v60: '88.7%', improvement: '+22pp' },
+  { metric: 'High+ Detection', v33: '18.3%', v60: '25.3%', improvement: '+7pp' },
+  { metric: 'Lift vs Random', v33: '1.22x', v60: '2.3x', improvement: '+1.1x' },
 ] as const
 
 const MODEL_EVOLUTION_STEPS = [
   {
     version: 'v3.3',
     date: 'Feb 2026',
-    title: 'Weighted Checklist',
-    desc: '8 expert-weighted factors, IMF CRI aligned. AUC barely above random.',
+    titleKey: 'v33Title',
+    descKey: 'v33Desc',
     metric: 'AUC 0.584',
     active: false,
     overlay: false,
@@ -139,8 +139,8 @@ const MODEL_EVOLUTION_STEPS = [
   {
     version: 'v4.0',
     date: 'Feb 2026',
-    title: 'Statistical Framework',
-    desc: 'Z-score normalization, Bayesian calibration, 9 corruption cases, 12 features.',
+    titleKey: 'v40Title',
+    descKey: 'v40Desc',
     metric: 'AUC 0.942',
     active: false,
     overlay: false,
@@ -148,8 +148,8 @@ const MODEL_EVOLUTION_STEPS = [
   {
     version: 'v5.0',
     date: 'Feb 2026',
-    title: 'Per-Sector Models',
-    desc: '12 sector sub-models, 15 documented cases, temporal train/test split.',
+    titleKey: 'v50Title',
+    descKey: 'v50Desc',
     metric: 'AUC 0.960',
     active: false,
     overlay: false,
@@ -157,26 +157,26 @@ const MODEL_EVOLUTION_STEPS = [
   {
     version: 'v5.1',
     date: 'Feb 27, 2026',
-    title: 'EFOS Integration',
-    desc: '22 cases including SAT EFOS Case 22: 38 RFC-confirmed ghost companies.',
-    metric: 'AUC 0.957',
+    titleKey: 'v51Title',
+    descKey: 'v51Desc',
+    metric: 'AUC 0.957 (temporal)',
     active: false,
     overlay: false,
   },
   {
     version: 'v6.0',
     date: 'Mar 10, 2026',
-    title: 'Honest Anomaly Ranker',
-    desc: 'Vendor-stratified split (no vendor in both train+test), time-windowed labels, 519 GT vendors.',
-    metric: 'AUC 0.959',
+    titleKey: 'v60Title',
+    descKey: 'v60Desc',
+    metric: 'AUC 0.849',
     active: true,
     overlay: false,
   },
   {
     version: 'v5.2 layer',
     date: 'Mar 7, 2026',
-    title: 'Analytical Overlay (Live)',
-    desc: 'SHAP per-vendor explanations (456K vendors) + PyOD cross-model ensemble (9.3M scores) + KS drift monitoring. See Vendor Profile → Risk tab, Contract detail → AI Confirmed, Dashboard → Cross-Model.',
+    titleKey: 'v52Title',
+    descKey: 'v52Desc',
     metric: '~130K dual-confirmed',
     active: false,
     overlay: true,
@@ -188,16 +188,16 @@ const MODEL_EVOLUTION_STEPS = [
 // ============================================================================
 
 const SECTIONS = [
-  { id: 'overview', label: 'Model Overview', icon: Shield },
-  { id: 'features', label: 'The 16 Features', icon: BarChart3 },
-  { id: 'findings', label: 'Key Findings', icon: Brain },
-  { id: 'validation', label: 'Ground Truth Validation', icon: Target },
-  { id: 'methods', label: 'Statistical Methods', icon: Beaker },
-  { id: 'v52-layer', label: 'v5.2 Analytical Layer', icon: FlaskConical },
-  { id: 'limitations', label: 'Limitations', icon: AlertTriangle },
-  { id: 'v33', label: 'Previous Model (v3.3)', icon: History },
-  { id: 'data-sources', label: 'Data Sources', icon: Database },
-  { id: 'references', label: 'References', icon: FileText },
+  { id: 'overview', icon: Shield },
+  { id: 'features', icon: BarChart3 },
+  { id: 'findings', icon: Brain },
+  { id: 'validation', icon: Target },
+  { id: 'methods', icon: Beaker },
+  { id: 'v52-layer', icon: FlaskConical },
+  { id: 'limitations', icon: AlertTriangle },
+  { id: 'v33', icon: History },
+  { id: 'data-sources', icon: Database },
+  { id: 'references', icon: FileText },
 ] as const
 
 // ============================================================================
@@ -265,7 +265,7 @@ function Formula({ children }: { children: React.ReactNode }) {
 
 const CoefficientChart = memo(function CoefficientChart() {
   const { t } = useTranslation('methodology')
-  const chartData = useMemo(() => V5_COEFFICIENTS.map((c) => ({
+  const chartData = useMemo(() => V6_COEFFICIENTS.map((c) => ({
     name: t(`featureNames.${c.nameKey}`),
     coeff: c.coeff,
     fill: c.coeff > 0 ? '#4ade80' : c.coeff < 0 ? '#f87171' : '#64748b',
@@ -279,7 +279,7 @@ const CoefficientChart = memo(function CoefficientChart() {
           <XAxis
             type="number"
             tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-            domain={[-1.0, 1.4]}
+            domain={[-0.6, 1.3]}
             tickFormatter={(v: number) => v.toFixed(1)}
           />
           <YAxis
@@ -366,6 +366,7 @@ const V33WeightsChart = memo(function V33WeightsChart() {
 // ============================================================================
 
 function ModelEvolutionTimeline() {
+  const { t } = useTranslation('methodology')
   const steps = MODEL_EVOLUTION_STEPS
   const nodes = steps.reduce<ReactNode[]>((acc, step, i) => {
     if (i > 0) {
@@ -404,8 +405,8 @@ function ModelEvolutionTimeline() {
           </span>
           <span className="text-[10px] text-text-muted">{step.date}</span>
         </div>
-        <p className="font-semibold text-text-primary leading-tight">{step.title}</p>
-        <p className="text-text-muted leading-relaxed">{step.desc}</p>
+        <p className="font-semibold text-text-primary leading-tight">{t(`evolution.steps.${step.titleKey}`)}</p>
+        <p className="text-text-muted leading-relaxed">{t(`evolution.steps.${step.descKey}`)}</p>
         <div className="flex items-center gap-1.5 flex-wrap">
           <span
             className={cn(
@@ -417,12 +418,12 @@ function ModelEvolutionTimeline() {
           </span>
           {step.active && (
             <span className="text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded bg-accent/10 text-accent">
-              Active
+              {t('evolution.active')}
             </span>
           )}
           {step.overlay && (
             <span className="text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded bg-border/30 text-text-muted">
-              Overlay
+              {t('evolution.overlay')}
             </span>
           )}
         </div>
@@ -436,10 +437,10 @@ function ModelEvolutionTimeline() {
       <CardHeader className="pb-3">
         <CardTitle className="text-sm flex items-center gap-2">
           <GitBranch className="h-4 w-4 text-accent" aria-hidden="true" />
-          Model Evolution
+          {t('evolution.title')}
         </CardTitle>
         <p className="text-xs text-text-muted">
-          From expert-weighted checklist (v3.3) to per-sector ML with cross-model validation and explainability (v5.2 layer).
+          {t('evolution.subtitle')}
         </p>
       </CardHeader>
       <CardContent>
@@ -474,7 +475,7 @@ function TableOfContents() {
               className="flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-text-secondary hover:text-text-primary hover:bg-accent/5 transition-colors"
             >
               <Icon className="h-3 w-3 text-text-muted" aria-hidden="true" />
-              <span>{t(`sectionLabels.${section.id}`)}</span>
+              <span>{t(`sectionLabels.${section.id as string}`)}</span>
             </a>
           )
         })}
@@ -510,18 +511,20 @@ export function Methodology() {
         whileInView="animate"
         viewport={{ once: true, margin: '-50px' }}
       >
-        {[
-          { label: '3.1M Contracts', variant: 'default' as const },
-          { label: 'AUC 0.9572', variant: 'default' as const },
-          { label: '22 Cases Validated', variant: 'default' as const },
-          { label: '12 Sectors', variant: 'default' as const },
-        ].map((kpi) => (
-          <motion.div key={kpi.label} variants={staggerItem}>
+        {(
+          [
+            t('kpiBadges.contracts'),
+            t('kpiBadges.auc'),
+            t('kpiBadges.cases'),
+            t('kpiBadges.sectors'),
+          ] as string[]
+        ).map((label) => (
+          <motion.div key={label} variants={staggerItem}>
             <Badge
-              variant={kpi.variant}
+              variant="default"
               className="text-xs px-3 py-1 bg-accent/10 text-accent border-accent/20"
             >
-              {kpi.label}
+              {label}
             </Badge>
           </motion.div>
         ))}
@@ -546,23 +549,19 @@ export function Methodology() {
           <CollapsibleSection id="overview" title={t('sectionLabels.overview')} icon={Shield}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
-                Every risk score is a <strong className="text-text-primary">statistical risk indicator</strong>{' '}
-                <Mono>S(features)</Mono> with 95% confidence intervals. The v6.0 model uses vendor-stratified
-                validation (no vendor appears in both training and test sets), producing an honest test AUC of 0.959. A score of 0.35 means this contract's procurement characteristics closely resemble those from documented corruption cases.
+                {t('body.overview.p1Start')}<strong className="text-text-primary">{t('body.overview.p1StatisticalIndicator')}</strong>{' '}
+                <Mono>S(features)</Mono>{t('body.overview.p1End')}
               </p>
 
               <div className="p-3 rounded-md bg-accent/5 border border-accent/10">
                 <p className="text-xs font-semibold uppercase tracking-wider text-accent mb-2">
-                  SCORE FORMULA
+                  {t('body.overview.formulaLabel')}
                 </p>
                 <Formula>
-                  S(z) = sigma(beta_0 + beta^T z) / c
+                  {t('body.overview.formulaExpr')}
                 </Formula>
                 <p className="text-xs text-text-muted">
-                  Where z = z-score features, beta = learned coefficients, sigma = logistic sigmoid, c = PU correction (0.759).
-                  S(z) is a <strong>risk similarity score</strong> — it measures how closely a contract&apos;s
-                  procurement characteristics resemble those from documented corruption cases. It is not a
-                  literal probability of corruption.
+                  {t('body.overview.formulaDescStart')}<strong>{t('body.overview.formulaDescStrong')}</strong>{t('body.overview.formulaDescEnd')}
                 </p>
               </div>
 
@@ -570,7 +569,7 @@ export function Methodology() {
               <div>
                 <div className="flex items-center gap-1.5 mb-2">
                   <p className="text-xs font-semibold uppercase tracking-wider text-text-muted font-mono">
-                    RISK LEVEL THRESHOLDS
+                    {t('body.overview.riskThresholdsLabel')}
                   </p>
                   <RiskScoreDisclaimer />
                 </div>
@@ -578,15 +577,15 @@ export function Methodology() {
                   <table className="w-full text-xs" role="table" aria-label="Risk level thresholds">
                     <thead>
                       <tr className="border-b border-border/50">
-                        <th className="text-left py-2 pr-3 text-text-muted font-medium">Level</th>
-                        <th className="text-left py-2 pr-3 text-text-muted font-medium">Threshold</th>
-                        <th className="text-left py-2 pr-3 text-text-muted font-medium">Meaning</th>
-                        <th className="text-right py-2 pr-3 text-text-muted font-medium">Distribution</th>
-                        <th className="text-right py-2 text-text-muted font-medium">Count</th>
+                        <th className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.overview.tableColLevel')}</th>
+                        <th className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.overview.tableColThreshold')}</th>
+                        <th className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.overview.tableColMeaning')}</th>
+                        <th className="text-right py-2 pr-3 text-text-muted font-medium">{t('body.overview.tableColDistribution')}</th>
+                        <th className="text-right py-2 text-text-muted font-medium">{t('body.overview.tableColCount')}</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {RISK_LEVELS_V5.map((r) => (
+                      {RISK_LEVELS_V6.map((r) => (
                         <tr key={r.level} className="border-b border-border/20">
                           <td className="py-2 pr-3">
                             <div className="flex items-center gap-2">
@@ -616,9 +615,7 @@ export function Methodology() {
               </div>
 
               <p className="text-xs text-text-muted">
-                High-risk rate: <strong className="text-text-secondary">~9-11%</strong> (critical + high).
-                Thresholds calibrated against 289+ documented cases to yield a rate consistent with
-                international procurement risk ranges. v6.0 is the active model (Mar 10, 2026), using vendor-stratified validation.
+                {t('body.overview.highRiskSummaryStart')}<strong className="text-text-secondary">{t('body.overview.highRiskSummaryValue')}</strong>{t('body.overview.highRiskSummaryEnd')}
               </p>
             </div>
           </CollapsibleSection>
@@ -629,10 +626,7 @@ export function Methodology() {
           <CollapsibleSection id="features" title={t('sectionLabels.features')} icon={BarChart3}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
-                Each contract is described by 16 z-score features normalized by sector and year baselines.
-                v6.0 uses 4 behavioral features added in v5.0: price_volatility, institution_diversity, win_rate, and sector_spread.
-                The chart below shows the learned cross-validated ElasticNet coefficients.
-                Positive coefficients increase the risk score; negative coefficients decrease it.
+                {t('body.features.p1')}
               </p>
 
               <CoefficientChart />
@@ -640,22 +634,20 @@ export function Methodology() {
               <div className="grid grid-cols-3 gap-2 text-xs">
                 <div className="flex items-center gap-1.5">
                   <div className="h-2.5 w-2.5 rounded-full bg-[#f87171]" aria-hidden="true" />
-                  <span className="text-text-muted">Increases risk</span>
+                  <span className="text-text-muted">{t('body.features.legendIncreasesRisk')}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div className="h-2.5 w-2.5 rounded-full bg-[#4ade80]" aria-hidden="true" />
-                  <span className="text-text-muted">Decreases risk</span>
+                  <span className="text-text-muted">{t('body.features.legendDecreasesRisk')}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div className="h-2.5 w-2.5 rounded-full bg-[#64748b]" aria-hidden="true" />
-                  <span className="text-text-muted">No signal</span>
+                  <span className="text-text-muted">{t('body.features.legendNoSignal')}</span>
                 </div>
               </div>
 
               <p className="text-xs text-text-muted">
-                Coefficients from cross-validated ElasticNet (C=10.0, l1_ratio=0.25).
-                4 new features (price_volatility, institution_diversity, win_rate, sector_spread) absorb
-                variance previously captured by vendor_concentration alone, producing a more balanced model.
+                {t('body.features.footerNote')}
               </p>
             </div>
           </CollapsibleSection>
@@ -666,9 +658,7 @@ export function Methodology() {
           <CollapsibleSection id="risk-evidence" title={t('sectionLabels.risk-evidence')} icon={FlaskConical} defaultOpen={false}>
             <div className="space-y-3">
               <p className="text-xs text-text-secondary leading-relaxed">
-                Each risk factor is grounded in peer-reviewed literature on procurement corruption.
-                The table below shows each factor's learned coefficient, global evidence strength, and
-                key source. Hover over a factor name for mechanism details.
+                {t('body.riskEvidence.p1')}
               </p>
               <RiskFactorTable />
             </div>
@@ -683,50 +673,44 @@ export function Methodology() {
               {/* Finding 1: Vendor Concentration */}
               <div className="p-3 rounded-md bg-accent/5 border border-accent/10">
                 <p className="text-xs font-semibold uppercase tracking-wider text-accent mb-1">
-                  #1 PREDICTOR
+                  {t('body.findings.finding1Label')}
                 </p>
                 <p className="text-sm font-bold text-text-primary">
-                  Price Volatility is the strongest predictor (+1.22)
+                  {t('body.findings.finding1Title')}
                 </p>
                 <p className="text-xs text-text-muted mt-1 leading-relaxed">
-                  Vendors with wildly varying contract sizes are the strongest corruption signal.
-                  This is followed by institution diversity (-0.85, associated with lower risk) and win rate (+0.73).
-                  Vendor concentration (+0.43) remains important but is no longer the dominant predictor,
-                  as the 4 new behavioral features absorb much of the variance it previously captured alone.
+                  {t('body.findings.finding1Body')}
                 </p>
               </div>
 
               {/* Finding 2: Reversed factors */}
               <div className="p-3 rounded-md bg-risk-medium/5 border border-risk-medium/10">
                 <p className="text-xs font-semibold uppercase tracking-wider text-risk-medium mb-1">
-                  COUNTERINTUITIVE
+                  {t('body.findings.finding2Label')}
                 </p>
                 <p className="text-sm font-bold text-text-primary">
-                  Direct awards now CORRECTLY increase risk (fixed in v5.0, retained in v5.1)
+                  {t('body.findings.finding2Title')}
                 </p>
                 <div className="mt-2 space-y-2">
                   <div className="flex gap-2">
                     <span className="text-xs text-text-muted shrink-0 w-2">1.</span>
                     <p className="text-xs text-text-secondary leading-relaxed">
-                      <strong className="text-text-primary">Direct awards now increase risk</strong>{' '}
-                      <Mono>(beta = +0.182)</Mono> -- With diversified ground truth and new behavioral features,
-                      direct awards correctly increase risk, aligning with OECD guidance. This was reversed (-0.197) in v4.0.
+                      <strong className="text-text-primary">{t('body.findings.finding2Item1Strong')}</strong>{' '}
+                      <Mono>{t('body.findings.finding2Item1Mono')}</Mono>{t('body.findings.finding2Item1End')}
                     </p>
                   </div>
                   <div className="flex gap-2">
                     <span className="text-xs text-text-muted shrink-0 w-2">2.</span>
                     <p className="text-xs text-text-secondary leading-relaxed">
-                      <strong className="text-text-primary">Network membership now correctly positive</strong>{' '}
-                      <Mono>(beta = +0.064)</Mono> -- Network membership now naturally increases risk.
-                      In v4.0, the -4.11 raw coefficient was a training artifact that had to be zeroed.
+                      <strong className="text-text-primary">{t('body.findings.finding2Item2Strong')}</strong>{' '}
+                      <Mono>{t('body.findings.finding2Item2Mono')}</Mono>{t('body.findings.finding2Item2End')}
                     </p>
                   </div>
                   <div className="flex gap-2">
                     <span className="text-xs text-text-muted shrink-0 w-2">3.</span>
                     <p className="text-xs text-text-secondary leading-relaxed">
-                      <strong className="text-text-primary">Protective factors discovered</strong>{' '}
-                      <Mono>(institution_diversity -0.85, sector_spread -0.37)</Mono> -- Vendors serving many
-                      institutions or operating across sectors are LESS suspicious, suggesting legitimate diversified operations.
+                      <strong className="text-text-primary">{t('body.findings.finding2Item3Strong')}</strong>{' '}
+                      <Mono>{t('body.findings.finding2Item3Mono')}</Mono>{t('body.findings.finding2Item3End')}
                     </p>
                   </div>
                 </div>
@@ -735,23 +719,16 @@ export function Methodology() {
               {/* Finding 3: Co-bidding */}
               <div className="p-3 rounded-md bg-background-elevated/50 border border-border/50">
                 <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-1">
-                  NO SIGNAL
+                  {t('body.findings.finding3Label')}
                 </p>
                 <p className="text-xs text-text-secondary leading-relaxed">
-                  <strong className="text-text-primary">Co-bidding provides NO signal</strong> --
-                  The co_bid_rate coefficient was regularized to exactly 0.0 by L2 regularization. Co-bidding
-                  patterns do not help distinguish known-bad contracts from random contracts in this dataset.
-                  This suggests the known-bad vendors operate through market concentration rather than collusion.
+                  <strong className="text-text-primary">{t('body.findings.finding3BodyStrong')}</strong>{t('body.findings.finding3BodyEnd')}
                 </p>
               </div>
 
               <div className="p-3 rounded-md border border-risk-high/20 bg-risk-high/5">
                 <p className="text-xs text-text-secondary leading-relaxed">
-                  <strong className="text-text-primary">These findings challenge the standard OECD/IMF
-                  anti-corruption framework</strong> for Mexican procurement. The traditional indicators
-                  (single bidding, direct awards, short ad periods) that dominate international methodology
-                  are weak or reversed in our ground truth data. This may reflect the specific characteristics
-                  of Mexican procurement corruption, or the limitations of our ground truth sample.
+                  <strong className="text-text-primary">{t('body.findings.finding4Strong')}</strong>{t('body.findings.finding4End')}
                 </p>
               </div>
             </div>
@@ -763,21 +740,20 @@ export function Methodology() {
           <CollapsibleSection id="validation" title={t('sectionLabels.validation')} icon={Target}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
-                The model was trained and validated against <strong className="text-text-primary">22 documented
-                Mexican corruption cases</strong>, matching 27 vendors to 26,582 contracts across all 12 sectors in the COMPRANET database.
+                {t('body.validation.p1Start')}<strong className="text-text-primary">{t('body.validation.p1Strong')}</strong>{t('body.validation.p1End')}
               </p>
 
               {/* Cases table */}
               <div className="overflow-x-auto">
-                <table className="w-full text-xs" role="table" aria-label="Corruption cases validation">
+                <table className="w-full text-xs" role="table" aria-label={t('body.validation.tableAriaLabel')}>
                   <thead>
                     <tr className="border-b border-border/50">
-                      <th className="text-left py-2 pr-2 text-text-muted font-medium">Case</th>
-                      <th className="text-left py-2 pr-2 text-text-muted font-medium">Type</th>
-                      <th className="text-right py-2 pr-2 text-text-muted font-medium">Contracts</th>
-                      <th className="text-right py-2 pr-2 text-text-muted font-medium">Detected</th>
-                      <th className="text-right py-2 pr-2 text-text-muted font-medium">High+</th>
-                      <th className="text-right py-2 text-text-muted font-medium">Avg Score</th>
+                      <th className="text-left py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColCase')}</th>
+                      <th className="text-left py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColType')}</th>
+                      <th className="text-right py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColContracts')}</th>
+                      <th className="text-right py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColDetected')}</th>
+                      <th className="text-right py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColHighPlus')}</th>
+                      <th className="text-right py-2 text-text-muted font-medium">{t('body.validation.tableColAvgScore')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -805,20 +781,16 @@ export function Methodology() {
                 </table>
               </div>
               <p className="text-xs text-text-muted">
-                *Case 9 (PEMEX Emilio Lozoya) shares vendors with the Odebrecht case. Documented for reference
-                but does not contribute additional training data. Cases 16–19 are in the database but inactive
-                (caused v5.0.2 regression). Cases 20–21 have vendor matching pending. Case 22 (SAT EFOS,
-                38 RFC-confirmed ghost companies) is included in the active v5.1 model — avg score improved
-                from 0.028 (v5.0) to 0.283 (v5.1), but 58.2% of EFOS contracts still score below medium.
+                {t('body.validation.footnote')}
               </p>
 
               {/* Validation metrics */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {[
-                  { label: 'Test AUC-ROC', value: '0.9572' },
-                  { label: 'Brier Score', value: '0.060' },
-                  { label: 'Lift', value: '4.04x' },
-                  { label: 'Ground Truth Coverage (medium+)', value: '99.8%' },
+                  { label: t('body.validation.metricTestAuc'), value: '0.849' },
+                  { label: t('body.validation.metricTrainAuc'), value: '0.849' },
+                  { label: t('body.validation.metricHighPlus'), value: '25.3%' },
+                  { label: t('body.validation.metricMedPlus'), value: '88.7%' },
                 ].map((m) => (
                   <div key={m.label} className="p-2.5 rounded-md bg-background-elevated/50">
                     <p className="text-lg font-bold tabular-nums text-text-primary font-mono">
@@ -839,75 +811,59 @@ export function Methodology() {
 
               {/* Z-scores */}
               <div>
-                <p className="text-xs font-semibold text-text-primary mb-1">Z-Score Normalization</p>
+                <p className="text-xs font-semibold text-text-primary mb-1">{t('body.methods.zScoreTitle')}</p>
                 <p className="text-xs text-text-secondary leading-relaxed">
-                  Each feature is normalized relative to its sector and year baseline. A direct award in
-                  Defensa (where 80% are direct) is less suspicious than in Educacion (where 50% are direct).
+                  {t('body.methods.zScoreP1')}
                 </p>
                 <Formula>
-                  z_i = (x_i - mu_i(sector, year)) / max(sigma_i(sector, year), 0.001)
+                  {t('body.methods.zScoreFormula')}
                 </Formula>
                 <p className="text-xs text-text-muted">
-                  3,372 baselines computed across 12 sectors, ~24 years, and 16 features.
-                  Fallback hierarchy: sector+year (if n &gt;= 30), sector-only (if n &gt;= 100), global.
+                  {t('body.methods.zScoreNote')}
                 </p>
               </div>
 
               {/* Mahalanobis */}
               <div>
-                <p className="text-xs font-semibold text-text-primary mb-1">Mahalanobis Distance</p>
+                <p className="text-xs font-semibold text-text-primary mb-1">{t('body.methods.mahalanobisTitle')}</p>
                 <p className="text-xs text-text-secondary leading-relaxed">
-                  Captures multivariate anomalies -- contracts that are unusual across multiple dimensions
-                  simultaneously. This replaces the 5 hardcoded interaction pairs from v3.3 with a full
-                  covariance-based approach.
+                  {t('body.methods.mahalanobisP1')}
                 </p>
                 <Formula>
-                  D^2(z) = z^T Sigma^(-1) z ~ chi^2(16)
+                  {t('body.methods.mahalanobisFormula')}
                 </Formula>
                 <p className="text-xs text-text-muted">
-                  Covariance estimated with Ledoit-Wolf shrinkage for stability in small sectors.
-                  P-values computed against chi-squared distribution with 16 degrees of freedom.
+                  {t('body.methods.mahalanobisNote')}
                 </p>
               </div>
 
               {/* Logistic Regression */}
               <div>
-                <p className="text-xs font-semibold text-text-primary mb-1">Per-Sector Logistic Regression</p>
+                <p className="text-xs font-semibold text-text-primary mb-1">{t('body.methods.logisticTitle')}</p>
                 <p className="text-xs text-text-secondary leading-relaxed">
-                  Cross-validated ElasticNet (C=10.0, l1_ratio=0.25) trained on 26,704 known-bad contracts from
-                  22 corruption cases with temporal split (train on contracts &lt;= 2020, test on &gt;= 2021).
-                  12 per-sector sub-models + 1 global fallback capture sector-specific corruption patterns.
+                  {t('body.methods.logisticP1')}
                 </p>
                 <p className="text-xs text-text-muted mt-1">
-                  Train AUC: 0.9642, Test AUC: 0.9572. No ad-hoc coefficient dampening needed — ElasticNet
-                  regularization naturally controls coefficient magnitudes.
+                  {t('body.methods.logisticNote')}
                 </p>
               </div>
 
               {/* PU Learning */}
               <div>
-                <p className="text-xs font-semibold text-text-primary mb-1">PU-Learning Correction (Elkan & Noto 2008)</p>
+                <p className="text-xs font-semibold text-text-primary mb-1">{t('body.methods.puTitle')}</p>
                 <p className="text-xs text-text-secondary leading-relaxed">
-                  Since unlabeled contracts are not necessarily clean (some may be corrupt but undetected),
-                  we apply a Positive-Unlabeled learning correction: <Mono>S(x) = P(labeled=1|x) / c</Mono>
+                  {t('body.methods.puP1Start')}<Mono>S(x) = P(labeled=1|x) / c</Mono>
                 </p>
                 <p className="text-xs text-text-muted mt-1">
-                  Estimated c = 0.8815 using Elkan & Noto holdout method (20% held-out positives) — meaning
-                  ~88% of truly corrupt contracts would be labeled if we had perfect coverage. This replaces
-                  v4.0's circular estimator (c=0.890) with an honest out-of-sample estimate. IMPORTANT:
-                  The SCAR assumption (labeled positives are random sample of all corrupt contracts) is
-                  structurally violated — known cases are high-profile scandals, not a random sample.
-                  c=0.8815 estimates coverage of scandal-similar corruption only.
+                  {t('body.methods.puNote')}
                 </p>
               </div>
 
               {/* Bootstrap CIs */}
               <div>
-                <p className="text-xs font-semibold text-text-primary mb-1">Bootstrap Confidence Intervals</p>
+                <p className="text-xs font-semibold text-text-primary mb-1">{t('body.methods.bootstrapTitle')}</p>
                 <p className="text-xs text-text-secondary leading-relaxed">
-                  Each contract receives a 95% confidence interval from 500 bootstrap resamples of the
-                  training data. A score of 0.35 [0.22, 0.48] means: the risk indicator is 0.35,
-                  but given data uncertainty, it could be as low as 0.22 or as high as 0.48.
+                  {t('body.methods.bootstrapP1')}
                 </p>
               </div>
             </div>
@@ -919,55 +875,53 @@ export function Methodology() {
           <CollapsibleSection id="v52-layer" title={t('sectionLabels.v52-layer')} icon={FlaskConical}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
-                The <strong className="text-text-primary">v5.2 analytical layer</strong> adds three independent
-                ML tools on top of the active v6.0 risk scores. These tools do not replace or alter any contract
-                risk scores — they provide additional explanations and cross-validation signals.
+                {t('body.v52layer.p1Start')}<strong className="text-text-primary">{t('body.v52layer.p1Strong')}</strong>{t('body.v52layer.p1End')}
               </p>
 
               {/* Three pillars */}
               <div className="grid gap-3 sm:grid-cols-3">
                 {[
                   {
-                    title: 'SHAP Explanations',
+                    titleKey: 'shapeTitle',
                     icon: Brain,
-                    badge: '456K vendors',
+                    badgeKey: 'shapBadge',
                     color: 'text-accent',
                     bg: 'bg-accent/5 border-accent/15',
-                    body: 'Exact Shapley values (φᵢ = βᵢ × (zᵢ − E[zᵢ])) computed for each vendor using their sector-specific model coefficients. Shows which of the 16 z-score features drove the risk score up or down.',
-                    where: 'Vendor Profile → Risk tab → SHAP Analysis panel',
+                    bodyKey: 'shapBody',
+                    whereKey: 'shapWhere',
                   },
                   {
-                    title: 'PyOD Cross-Validation',
+                    titleKey: 'pyodTitle',
                     icon: Target,
-                    badge: '9.3M scores',
+                    badgeKey: 'pyodBadge',
                     color: 'text-risk-high',
                     bg: 'bg-risk-high/5 border-risk-high/15',
-                    body: 'Isolation Forest + COPOD ensemble anomaly detection run independently on all 3.1M contracts. A high ensemble score means the contract is a statistical outlier even without knowing the ground truth label.',
-                    where: 'Contract detail → AI Confirmed badge · Dashboard → Cross-Model Validation · Explore → AI Confirmed filter',
+                    bodyKey: 'pyodBody',
+                    whereKey: 'pyodWhere',
                   },
                   {
-                    title: 'Drift Monitoring',
+                    titleKey: 'driftTitle',
                     icon: BarChart3,
-                    badge: '16 features',
+                    badgeKey: 'driftBadge',
                     color: 'text-risk-medium',
                     bg: 'bg-risk-medium/5 border-risk-medium/15',
-                    body: 'Kolmogorov-Smirnov tests compare the 2024–2025 feature distribution against the 2002–2020 training baseline. Detects when new procurement data develops patterns unlike the training period.',
-                    where: 'Model Transparency → Drift Monitor section',
+                    bodyKey: 'driftBody',
+                    whereKey: 'driftWhere',
                   },
                 ].map((item) => {
                   const Icon = item.icon
                   return (
-                    <div key={item.title} className={`p-3 rounded-md border ${item.bg} space-y-2`}>
+                    <div key={item.titleKey} className={`p-3 rounded-md border ${item.bg} space-y-2`}>
                       <div className="flex items-center justify-between gap-1">
                         <div className="flex items-center gap-1.5">
                           <Icon className={`h-3.5 w-3.5 ${item.color}`} aria-hidden="true" />
-                          <p className={`text-xs font-semibold ${item.color}`}>{item.title}</p>
+                          <p className={`text-xs font-semibold ${item.color}`}>{t(`body.v52layer.${item.titleKey}`)}</p>
                         </div>
-                        <span className="text-[10px] font-mono text-text-muted">{item.badge}</span>
+                        <span className="text-[10px] font-mono text-text-muted">{t(`body.v52layer.${item.badgeKey}`)}</span>
                       </div>
-                      <p className="text-xs text-text-secondary leading-relaxed">{item.body}</p>
+                      <p className="text-xs text-text-secondary leading-relaxed">{t(`body.v52layer.${item.bodyKey}`)}</p>
                       <p className="text-[10px] text-text-muted font-mono border-t border-border/30 pt-1.5">
-                        Where to find: {item.where}
+                        {t('body.v52layer.whereToFind')} {t(`body.v52layer.${item.whereKey}`)}
                       </p>
                     </div>
                   )
@@ -977,14 +931,14 @@ export function Methodology() {
               {/* Key numbers */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                  { label: 'Vendors with SHAP', value: '456K' },
-                  { label: 'PyOD Scores Computed', value: '9.33M' },
-                  { label: 'Features Drift-Monitored', value: '16' },
-                  { label: 'Dual-Confirmed Contracts', value: '~130K' },
+                  { labelKey: 'statVendorsShap', value: '456K' },
+                  { labelKey: 'statPyodScores', value: '9.33M' },
+                  { labelKey: 'statDriftFeatures', value: '16' },
+                  { labelKey: 'statDualConfirmed', value: '~130K' },
                 ].map((m) => (
-                  <div key={m.label} className="p-2.5 rounded-md bg-background-elevated/50 text-center">
+                  <div key={m.labelKey} className="p-2.5 rounded-md bg-background-elevated/50 text-center">
                     <p className="text-lg font-bold tabular-nums text-accent font-mono">{m.value}</p>
-                    <p className="text-xs text-text-muted">{m.label}</p>
+                    <p className="text-xs text-text-muted">{t(`body.v52layer.${m.labelKey}`)}</p>
                   </div>
                 ))}
               </div>
@@ -992,22 +946,15 @@ export function Methodology() {
               {/* AI Confirmed explanation */}
               <div className="p-3 rounded-md bg-background-elevated/40 border border-border/30 space-y-1.5">
                 <p className="text-xs font-semibold text-text-primary">
-                  What "AI Confirmed" means
+                  {t('body.v52layer.aiConfirmedTitle')}
                 </p>
                 <p className="text-xs text-text-secondary leading-relaxed">
-                  A contract is <strong className="text-text-primary">dual-confirmed</strong> when the supervised
-                  v6.0 logistic model scores it as high or critical risk <em>and</em> the unsupervised PyOD
-                  ensemble independently scores it above the 0.50 anomaly threshold. Two completely different
-                  methods — one trained on labeled corruption cases, one trained on no labels at all — agree
-                  that this contract is unusual. This convergence reduces the false-positive rate for
-                  investigation triage.
+                  {t('body.v52layer.aiConfirmedStart')}<strong className="text-text-primary">{t('body.v52layer.aiConfirmedStrong')}</strong>{t('body.v52layer.aiConfirmedEnd')}
                 </p>
               </div>
 
               <p className="text-xs text-text-muted">
-                Note: v5.2 is an analytical overlay — it adds explanability and cross-validation. The active
-                risk model is v6.0. Contract <code className="font-mono bg-border/20 px-1 py-0.5 rounded">risk_score</code> values
-                are unchanged by the v5.2 layer.
+                {t('body.v52layer.noteStart')}<code className="font-mono bg-border/20 px-1 py-0.5 rounded">{t('body.v52layer.noteCode')}</code>{t('body.v52layer.noteEnd')}
               </p>
             </div>
           </CollapsibleSection>
@@ -1017,37 +964,21 @@ export function Methodology() {
           <motion.div variants={staggerItem}>
           <CollapsibleSection id="limitations" title={t('sectionLabels.limitations')} icon={AlertTriangle}>
             <div className="space-y-3">
-              {[
-                {
-                  title: 'Ground truth concentration',
-                  text: 'While diversified to 22 cases across all 12 sectors (up from 9 in 3 sectors), three cases (IMSS, Segalmex, COVID-19) still account for 79% of the 26,582 training contracts. Vendor concentration remains the dominant predictor in most per-sector sub-models.',
-                },
-                {
-                  title: 'Small-case detection is weaker',
-                  text: 'Cases with few contracts (La Estafa Maestra: 10, Grupo Higa: 3, Oceanografia: 2) have lower detection rates. The model requires sufficient contract volume to detect patterns reliably.',
-                },
-                {
-                  title: 'Data quality varies by period',
-                  text: 'Structure A (2002-2010) has only 0.1% RFC coverage. Z-scores and risk estimates are less reliable for this period. Network analysis requires 2010+ data for meaningful results.',
-                },
-                {
-                  title: 'PU assumption sensitivity',
-                  text: 'The Elkan & Noto correction (c=0.887) assumes labeled positives are representative of all corrupt contracts. If undiscovered corruption has fundamentally different patterns, the correction may be inaccurate.',
-                },
-                {
-                  title: 'Co-bidding provides no signal',
-                  text: 'The co_bid_rate coefficient was regularized to exactly 0.0 in both the global model and all 12 per-sector sub-models. Co-bidding patterns do not discriminate in our current ground truth.',
-                },
-                {
-                  title: 'No causal claims',
-                  text: 'A high risk score indicates a statistical anomaly consistent with documented corruption patterns. It does not constitute proof of wrongdoing. Risk scores are intended to prioritize investigation, not determine guilt.',
-                },
-              ].map((item) => (
-                <div key={item.title} className="flex gap-2">
+              {(
+                [
+                  { titleKey: 'item1Title', textKey: 'item1Text' },
+                  { titleKey: 'item2Title', textKey: 'item2Text' },
+                  { titleKey: 'item3Title', textKey: 'item3Text' },
+                  { titleKey: 'item4Title', textKey: 'item4Text' },
+                  { titleKey: 'item5Title', textKey: 'item5Text' },
+                  { titleKey: 'item6Title', textKey: 'item6Text' },
+                ] as const
+              ).map((item) => (
+                <div key={item.titleKey} className="flex gap-2">
                   <AlertTriangle className="h-3.5 w-3.5 text-risk-medium shrink-0 mt-0.5" aria-hidden="true" />
                   <div>
-                    <p className="text-xs font-medium text-text-primary">{item.title}</p>
-                    <p className="text-xs text-text-muted leading-relaxed mt-0.5">{item.text}</p>
+                    <p className="text-xs font-medium text-text-primary">{t(`body.limitations.${item.titleKey}`)}</p>
+                    <p className="text-xs text-text-muted leading-relaxed mt-0.5">{t(`body.limitations.${item.textKey}`)}</p>
                   </div>
                 </div>
               ))}
@@ -1060,32 +991,28 @@ export function Methodology() {
           <CollapsibleSection id="v33" title={t('sectionLabels.v33')} icon={History} defaultOpen={false}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
-                The v3.3 model was a <strong className="text-text-primary">weighted indicator checklist</strong>{' '}
-                with 8 base factors aligned to the IMF Corruption Risk Index methodology. Each factor contributed
-                a percentage of the total score, with interaction bonuses for correlated factor pairs. Scores were
-                preserved in the <Mono>risk_score_v3</Mono> column for comparison.
+                {t('body.v33section.p1Start')}<strong className="text-text-primary">{t('body.v33section.p1Strong')}</strong>{t('body.v33section.p1End')}<Mono>{t('body.v33section.p1Mono')}</Mono>{t('body.v33section.p1MonoEnd')}
               </p>
 
               <V33WeightsChart />
 
               <p className="text-xs text-text-muted">
-                Additional bonus factors: Co-bidding +5%, Price Hypothesis +5%, Industry Mismatch +3%, Institution Risk +3%.
-                5 interaction pairs with up to +15% bonus. Score capped at 1.0.
+                {t('body.v33section.bonusFactors')}
               </p>
 
               {/* Comparison table */}
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2 font-mono">
-                  MODEL COMPARISON
+                  {t('body.v33section.modelComparisonLabel')}
                 </p>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-xs" role="table" aria-label="Model comparison v3.3 vs v6.0">
+                  <table className="w-full text-xs" role="table" aria-label={t('body.v33section.tableAriaLabel')}>
                     <thead>
                       <tr className="border-b border-border/50">
-                        <th className="text-left py-2 pr-3 text-text-muted font-medium">Metric</th>
-                        <th className="text-right py-2 pr-3 text-text-muted font-medium">v3.3</th>
-                        <th className="text-right py-2 pr-3 text-text-muted font-medium">v6.0</th>
-                        <th className="text-right py-2 text-text-muted font-medium">Change</th>
+                        <th className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.v33section.tableColMetric')}</th>
+                        <th className="text-right py-2 pr-3 text-text-muted font-medium">{t('body.v33section.tableColV33')}</th>
+                        <th className="text-right py-2 pr-3 text-text-muted font-medium">{t('body.v33section.tableColV60')}</th>
+                        <th className="text-right py-2 text-text-muted font-medium">{t('body.v33section.tableColChange')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1096,7 +1023,7 @@ export function Methodology() {
                             {row.v33}
                           </td>
                           <td className="py-2 pr-3 text-right font-mono text-accent font-semibold">
-                            {row.v50}
+                            {row.v60}
                           </td>
                           <td className="py-2 text-right font-mono text-[#4ade80]">
                             {row.improvement}
@@ -1116,20 +1043,18 @@ export function Methodology() {
           <CollapsibleSection id="data-sources" title={t('sectionLabels.data-sources')} icon={Database}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
-                All procurement data comes from <strong className="text-text-primary">COMPRANET</strong>,
-                the Mexican government's official electronic procurement system. The data spans 4 different
-                structures with varying column counts and quality levels.
+                {t('body.dataSources.p1Start')}<strong className="text-text-primary">{t('body.dataSources.p1Strong')}</strong>{t('body.dataSources.p1End')}
               </p>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-xs" role="table" aria-label="COMPRANET data structures">
+                <table className="w-full text-xs" role="table" aria-label={t('body.dataSources.tableAriaLabel')}>
                   <thead>
                     <tr className="border-b border-border/50">
-                      <th className="text-left py-2 pr-3 text-text-muted font-medium">Structure</th>
-                      <th className="text-left py-2 pr-3 text-text-muted font-medium">Years</th>
-                      <th className="text-left py-2 pr-3 text-text-muted font-medium">Quality</th>
-                      <th className="text-right py-2 pr-3 text-text-muted font-medium">RFC Coverage</th>
-                      <th className="text-left py-2 text-text-muted font-medium">Notes</th>
+                      <th className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.dataSources.tableColStructure')}</th>
+                      <th className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.dataSources.tableColYears')}</th>
+                      <th className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.dataSources.tableColQuality')}</th>
+                      <th className="text-right py-2 pr-3 text-text-muted font-medium">{t('body.dataSources.tableColRfc')}</th>
+                      <th className="text-left py-2 text-text-muted font-medium">{t('body.dataSources.tableColNotes')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1168,20 +1093,18 @@ export function Methodology() {
               {/* Amount validation */}
               <div className="p-3 rounded-md bg-risk-critical/5 border border-risk-critical/10">
                 <p className="text-xs font-semibold uppercase tracking-wider text-risk-critical mb-1">
-                  AMOUNT VALIDATION
+                  {t('body.dataSources.amountValidationLabel')}
                 </p>
                 <div className="space-y-1 text-xs text-text-secondary">
                   <p>
-                    <strong className="text-text-primary">Reject:</strong> Contracts exceeding 100B MXN
-                    are excluded as data entry errors (decimal point mistakes in original COMPRANET data).
+                    <strong className="text-text-primary">{t('body.dataSources.rejectStrong')}</strong>{t('body.dataSources.rejectEnd')}
                   </p>
                   <p>
-                    <strong className="text-text-primary">Flag:</strong> Contracts between 10B and 100B MXN
-                    are included but marked for manual review.
+                    <strong className="text-text-primary">{t('body.dataSources.flagStrong')}</strong>{t('body.dataSources.flagEnd')}
                   </p>
                 </div>
                 <p className="text-xs text-text-muted mt-2">
-                  Context: Mexico's entire federal budget is ~8T MXN annually. A 100B contract would be 1.25% of the national budget.
+                  {t('body.dataSources.context')}
                 </p>
               </div>
             </div>
@@ -1207,8 +1130,7 @@ export function Methodology() {
                 </div>
               ))}
               <p className="text-xs text-text-muted pt-2">
-                Risk scores are statistical indicators with confidence intervals. A high score indicates
-                similarity to documented corruption patterns -- it does not constitute proof of wrongdoing.
+                {t('body.references.footer')}
               </p>
             </div>
           </CollapsibleSection>

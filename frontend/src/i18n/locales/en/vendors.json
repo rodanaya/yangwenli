@@ -79,8 +79,8 @@
     "maxD2": "Max D²",
     "anomalousContracts": "Anomalous Contracts",
     "chiSquaredNote": "Based on chi-squared test (k=12, p<0.05)",
-    "riskFactorContribution": "Risk Factor Contribution (v5.1 Z-Scores)",
-    "riskFactorContributionFallback": "Risk Factor Contribution (v5.1 Model)",
+    "riskFactorContribution": "Risk Factor Contribution (v6.0 Z-Scores)",
+    "riskFactorContributionFallback": "Risk Factor Contribution (v6.0 Model)",
     "riskFactorDetails": "Risk Factor Details",
     "noRiskFactorData": "No risk factor data available",
     "noRiskFactors": "No risk factors available"
@@ -108,7 +108,7 @@
   "flags": {
     "highDirectAward": "{{pct}}% of contracts were direct awards (bypassed competitive tendering)",
     "highSingleBid": "{{pct}}% of competitive procedures had only this vendor bidding",
-    "suspiciousCoBidding": "Suspicious co-bidding patterns detected (heuristic analysis — not included in the v5.1 ML risk score, which assigns co_bid_rate a coefficient of 0.000)",
+    "suspiciousCoBidding": "Suspicious co-bidding patterns detected (heuristic analysis — not included in the v6.0 ML risk score, which assigns co_bid_rate a coefficient of 0.000)",
     "highClustering": "High network clustering ({{pct}}%) — bidding partners form a tightly-knit group",
     "primaryDriver": "Primary driver: {{factor}} (z={{z}} — {{z}} SDs above sector average)"
   },

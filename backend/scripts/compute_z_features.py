@@ -402,20 +402,23 @@ def _get_rolling_stats(aux, vendor_id, sector_id, year):
 
     FIX C1: Uses data up to year-1 to prevent temporal leakage.
     Falls back to current year if no prior history exists (earliest year).
-    Returns None if no rolling stats available at all (vendor has no history),
-    which means features default to 0 (sector average z-score).
+
+    Returns (stats_dict, as_of_year_used) so caller can look up the matching
+    sector total denominator with the same year boundary (prevents mismatch
+    where vendor total covers year Y but sector denominator covers year Y-1).
+    Returns (None, None) if no rolling stats available at all.
     """
     rs = aux['rolling_stats']
     # Prefer year-1 (strictly past data)
     key_prev = (vendor_id, sector_id, year - 1)
     if key_prev in rs:
-        return rs[key_prev]
+        return rs[key_prev], year - 1
     # Fallback: current year (for vendors in their earliest year)
     key_curr = (vendor_id, sector_id, year)
     if key_curr in rs:
-        return rs[key_curr]
+        return rs[key_curr], year
     # No history at all — return None, caller uses defaults (z-score = 0)
-    return None
+    return None, None
 
 
 def compute_raw_features(row, aux):
@@ -451,14 +454,16 @@ def compute_raw_features(row, aux):
     use_rolling = aux['has_rolling_stats']
 
     if use_rolling and vendor_id and sector_id and year:
-        rstats = _get_rolling_stats(aux, vendor_id, sector_id, year)
+        rstats, as_of_yr = _get_rolling_stats(aux, vendor_id, sector_id, year)
 
         # Vendor concentration = vendor's cumulative sector value / sector cumulative total
-        if rstats and rstats['total_value'] > 0:
-            # Get sector cumulative total as of year-1 (or current year fallback)
+        # FIX: use sector total keyed to the SAME as_of_year as the rolling stats to prevent
+        # year-boundary mismatch (e.g. vendor total from year 2002 vs sector total from 2001).
+        if rstats and rstats['total_value'] > 0 and as_of_yr is not None:
             syt = aux['sector_year_totals']
-            sect_total = syt.get((sector_id, year - 1), syt.get((sector_id, year), 1.0))
-            features['vendor_concentration'] = rstats['total_value'] / sect_total if sect_total > 0 else 0.0
+            sect_total = syt.get((sector_id, as_of_yr), 1.0)
+            raw_conc = rstats['total_value'] / sect_total if sect_total > 0 else 0.0
+            features['vendor_concentration'] = min(raw_conc, 1.0)  # cap at 1.0 (safety)
         else:
             features['vendor_concentration'] = 0.0
 

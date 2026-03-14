@@ -18,7 +18,7 @@ import { SECTOR_COLORS } from '@/lib/constants'
 
 // ============================================================================
 // HARDCODED DETECTION DATA — real cases from RISK_METHODOLOGY_v5.md
-// Updated to reflect v5.1 detection performance
+// Updated to reflect v6.0 detection performance
 // ============================================================================
 
 interface DetectionCase {
@@ -246,7 +246,7 @@ export const ModelDetectionStory = memo(function ModelDetectionStory({
         <span>
           AUC{' '}
           <span className="font-black text-accent text-sm not-uppercase normal-case tracking-normal font-sans">
-            0.957
+            0.849
           </span>
         </span>
         <Tooltip delayDuration={200}>
@@ -258,7 +258,7 @@ export const ModelDetectionStory = memo(function ModelDetectionStory({
           <TooltipContent side="top" className="max-w-xs p-3">
             <p className="font-semibold text-xs mb-1">Detection Rate (high+)</p>
             <p className="text-xs text-text-secondary leading-relaxed">
-              % of contracts from each documented corruption case flagged as <strong>high or critical</strong> risk by the v5.1 model. Bars sorted ascending — best detection at top.
+              % of contracts from each documented corruption case flagged as <strong>high or critical</strong> risk by the v6.0 model. Bars sorted ascending — best detection at top.
             </p>
           </TooltipContent>
         </Tooltip>
@@ -360,7 +360,7 @@ export const ModelDetectionStory = memo(function ModelDetectionStory({
       </div>
 
       <p className="text-[10px] text-text-muted/40 font-mono px-2">
-        Bar color: <span style={{ color: '#4ade80' }}>■</span> ≥90% · <span style={{ color: '#fbbf24' }}>■</span> ≥50% · <span style={{ color: '#f87171' }}>■</span> &lt;50% · Left stripe = fraud type · Dot = sector · v5.1 model
+        Bar color: <span style={{ color: '#4ade80' }}>■</span> ≥90% · <span style={{ color: '#fbbf24' }}>■</span> ≥50% · <span style={{ color: '#f87171' }}>■</span> &lt;50% · Left stripe = fraud type · Dot = sector · v6.0 model
       </p>
     </div>
   )

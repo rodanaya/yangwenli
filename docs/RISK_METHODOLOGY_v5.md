@@ -1,12 +1,14 @@
-# Risk Scoring Methodology v5.1 (Active) + v5.2 Analytical Layer
+# Risk Scoring Methodology v5.1 (Superseded by v6.0) + v5.2 Analytical Layer
+
+> **Superseded**: v5.1 is preserved for reference. Active model is v6.0 (see docs/RISK_METHODOLOGY_v6.md).
 
 **Last Updated:** March 7, 2026 | **Contracts:** 3,051,294 | **Years:** 2002-2025
 
-> **Active model**: v5.1 (contract risk scores). v5.2 adds SHAP explanations, PyOD ensemble anomaly detection, and vendor drift monitoring on top of v5.1 scores — the underlying scores are unchanged.
+> **Superseded**. v5.1 contract risk scores are preserved in the `risk_score_v5` column. See RISK_METHODOLOGY_v6.md for the active model. v5.2 adds SHAP explanations, PyOD ensemble anomaly detection, and vendor drift monitoring as an enrichment layer.
 
 ---
 
-## Quick Reference (v5.1 — Active)
+## Quick Reference (v5.1 — Preserved)
 
 | Level | Threshold | Count | % | Action |
 |-------|-----------|-------|---|--------|

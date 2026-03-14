@@ -18,7 +18,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { BookOpen, TrendingUp, TrendingDown, Minus, FlaskConical } from 'lucide-react'
 
 // ---------------------------------------------------------------------------
-// FACTOR_EXPLANATIONS — evidence base for all 16 v5.1 risk features
+// FACTOR_EXPLANATIONS — evidence base for all 16 v6.0 risk features
 // ---------------------------------------------------------------------------
 
 export interface FactorExplanation {
@@ -34,7 +34,7 @@ export interface FactorExplanation {
 export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
   vendor_concentration: {
     title: 'Market Concentration',
-    coefficient: 0.428,
+    coefficient: 0.863,
     direction: 'positive',
     mechanism:
       "When one vendor captures a disproportionate share of an institution's contracts, it suggests either a legitimate monopoly or exclusive access through corruption. Ghost company networks captured >90% of institutional spending in documented cases.",
@@ -42,11 +42,11 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Principal-Agent Theory (Klitgaard 1988): Monopoly power is the primary enabling condition for procurement corruption — it eliminates price competition and reduces the ability to compare against market rates.',
     citation: 'Fazekas & Kocsis (2020), British Journal of Political Science',
     rubli_note:
-      "RUBLI's strongest predictor globally (+0.428). Dominates per-sector models: Salud (+1.39), Agricultura (+1.82), Infraestructura (+0.97). Reflects documented IMSS ghost companies, Segalmex, and COVID-19 procurement fraud.",
+      "Top predictor globally in v6.0 (+0.863). Expanded ground truth (390 cases, 725 vendors) reveals market concentration remains the strongest signal across diverse corruption types. Dominates per-sector models.",
   },
   price_volatility: {
     title: 'Price Volatility',
-    coefficient: 1.219,
+    coefficient: 1.156,
     direction: 'positive',
     mechanism:
       "Vendors whose contract amounts vary wildly relative to sector norms are inconsistent with normal market pricing. Either they are winning contracts far above or below market rates depending on the occasion — a sign of discretionary pricing rather than competitive markets.",
@@ -54,11 +54,11 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Rent-Seeking Theory (Tullock 1967): Rents are extracted through price inflation above competitive levels. Porter & Zona (1993): Price manipulation is detectable in bid distributions — colluding firms show unusual variance patterns.',
     citation: 'Porter & Zona (1993): Price manipulation detectable in bid distributions',
     rubli_note:
-      'Top global predictor in v5.1 (+1.219). Vendors with wildly varying contract amounts relative to sector norms scored the highest.',
+      'Top global predictor in v6.0 (+1.156). Remains strongest across 390 documented cases. Vendors with wildly varying contract amounts relative to sector norms consistently scored highest.',
   },
   institution_diversity: {
     title: 'Institution Diversity',
-    coefficient: -0.848,
+    coefficient: -0.436,
     direction: 'negative',
     mechanism:
       'Vendors that serve many different government institutions have demonstrated legitimate broad reach. Corruption networks typically capture one or a few institutions — broad multi-institution presence is a protective factor.',
@@ -66,31 +66,31 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Competition Theory (Coviello & Mariniello 2014): Competition and transparency reduce award concentration. Vendors serving many buyers have more accountability exposure and less ability to corrupt all of them simultaneously.',
     citation: 'Coviello & Mariniello (2014): Competition and transparency reduce award concentration',
     rubli_note:
-      'Strong protective factor (-0.848). Negative coefficient means more institutions served = lower risk. Part of the behavioral features added in v5.0/v5.1 to capture vendor-level patterns.',
+      'Protective factor in v6.0 (-0.436). Negative coefficient means more institutions served = lower risk. Reduced weight vs v5.x reflects expanded ground truth showing institution capture is strongest in specific sector-institution pairs, not universal.',
   },
   win_rate: {
     title: 'Win Rate',
-    coefficient: 0.727,
-    direction: 'positive',
+    coefficient: -0.056,
+    direction: 'neutral',
     mechanism:
-      "A vendor's win rate far above the sector baseline is suspicious. In competitive markets, no single vendor should win an anomalously high fraction of contracts unless they have preferential access or have captured the selection process.",
+      "A vendor's win rate far above the sector baseline could be suspicious or legitimate depending on context. In Mexico's expanded ground truth, high win rates are not a strong discriminator — some legitimate market-dominant vendors have high win rates.",
     theory:
-      'Bid-Ring Theory (Conley & Decarolis 2016): Bid rings are detectable via win pattern analysis. Abnormally high win rates are a key indicator of market capture through collusion or corruption.',
+      'Bid-Ring Theory (Conley & Decarolis 2016): Bid rings are detectable via win pattern analysis. However, Mexico-specific analysis shows high win rates can reflect both corruption and legitimate market dominance.',
     citation: 'Conley & Decarolis (2016): Bid rings detectable via win pattern analysis',
     rubli_note:
-      'Win rate (+0.727). A vendor winning contracts at a rate far above the sector baseline signals preferential access. The z-score normalizes by sector and year.',
+      'Near-zero in v6.0 (-0.056). With expanded ground truth, win_rate lost predictive power. Corruption in Mexico manifests through vendor_concentration and price_volatility more consistently than through abnormal win rates.',
   },
   sector_spread: {
     title: 'Sector Spread',
-    coefficient: -0.374,
-    direction: 'negative',
+    coefficient: 0.117,
+    direction: 'positive',
     mechanism:
-      "Vendors operating across many sectors have genuinely diversified operations. Corruption networks tend to focus on a single sector where they have embedded relationships. Cross-sector presence is a protective factor.",
+      "Vendors operating across many sectors have diversified risk exposure. However, v6.0 analysis shows some corruption networks intentionally operate across sectors to avoid detection. Cross-sector presence is a weak positive signal.",
     theory:
-      'Agency Theory: Corruption requires sustained access to specific procurement officials. Operating across many sectors dilutes the benefit of any single corrupt relationship.',
-    citation: 'Fazekas & Kocsis (2020)',
+      'Extended ground truth: Some major corruption cases (LICONSA ecosystem, IMSS networks) span multiple sectors. Sector spread alone is insufficient for distinguishing corruption.',
+    citation: 'RUBLI v6.0 ground truth analysis (390 cases)',
     rubli_note:
-      'Sector spread (-0.374). Protective factor similar to institution_diversity but at the sector level. Vendors operating in 6+ sectors score significantly lower.',
+      'Flipped to positive in v6.0 (+0.117). Earlier models underestimated cross-sector networks. With expanded cases, sector_spread lost its protective factor status. Now slightly increases risk.',
   },
   industry_mismatch: {
     title: 'Industry Mismatch',
@@ -118,7 +118,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
   },
   direct_award: {
     title: 'Direct Award (Non-Competitive)',
-    coefficient: 0.182,
+    coefficient: 0.132,
     direction: 'positive',
     mechanism:
       'Contracts awarded without competitive bidding remove the market check on price and vendor quality, and maximize official discretion. Legal under certain conditions, but the absence of competition enables corruption.',
@@ -126,7 +126,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Principal-Agent Theory: Discretion is the second enabling condition (after monopoly). Direct awards maximize official discretion — the awarding official can choose any vendor without justifying the choice through price competition.',
     citation: 'OECD (2016): Preventing Corruption in Public Procurement',
     rubli_note:
-      'Coefficient +0.182 in v5.1 (was -0.197 in v4.0 before ground truth diversification). Mexico issues ~70% of contracts as direct awards — the z-score normalizes by sector/year baseline, so this measures excess direct awards above sector norms.',
+      'Coefficient +0.132 in v6.0 (reduced from +0.182 in v5.x). Mexico issues ~70% of contracts as direct awards — the z-score normalizes by sector/year baseline. Reduced weight reflects that many legitimate monopolies use direct awards.',
   },
   ad_period_days: {
     title: 'Advertisement Period',
@@ -142,7 +142,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
   },
   network_member_count: {
     title: 'Network Membership',
-    coefficient: 0.064,
+    coefficient: 0.199,
     direction: 'positive',
     mechanism:
       "Vendors belonging to a group of related entities (sharing addresses, legal representatives, or consistent co-bidding patterns) may be part of shell company networks or bid-rigging cartels.",
@@ -150,7 +150,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Network Theory of Corruption (Wachs et al. 2021): Procurement fraud often involves coordinated networks of companies. Network membership — being connected to other vendors — is a risk signal.',
     citation: 'Fazekas, Skuhrovec & Wachs (2020): Network analysis of procurement graphs',
     rubli_note:
-      'Corrected to positive in v5.1 (+0.064). In v4.0 this was negative (-4.11) — a training artifact. The Louvain community detection (v3.3 feature) detected 1,837 vendor communities. Strongest in Hacienda (+0.77) and Infraestructura (+0.61) per-sector models.',
+      'Increased to +0.199 in v6.0 (from +0.064 in v5.x). Expanded ground truth revealed network effects are stronger predictors than earlier models estimated. The Louvain community detection detects 1,837 vendor communities with correlation to corruption.',
   },
   year_end: {
     title: 'Year-End Award',
@@ -210,7 +210,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Bid-Ring Theory (Porter & Zona 1993): Co-bidding as a collusion indicator. Vendors that consistently appear together and alternate wins are likely coordinating rather than genuinely competing.',
     citation: 'Porter & Zona (1993): Co-bidding as collusion indicator',
     rubli_note:
-      'Regularized to zero in v5.1. Co-bidding patterns do not discriminate in Mexico\'s training data because the dominant corruption cases (IMSS, Segalmex, COVID) involve market concentration, not coordinated bidding rings. The Collusion Detection tab provides separate heuristic analysis.',
+      'Regularized to zero in v6.0. Co-bidding patterns do not discriminate in Mexico\'s training data because the dominant corruption cases (IMSS, Segalmex, COVID) involve market concentration, not coordinated bidding rings. The Collusion Detection tab provides separate heuristic analysis.',
   },
   price_hyp_confidence: {
     title: 'Price Hypothesis Confidence',
@@ -478,7 +478,7 @@ export function RiskFactorTable({ factors, className }: RiskFactorTableProps) {
         <span className="flex items-center gap-1"><TrendingUp size={11} className="text-risk-critical" /> Increases risk</span>
         <span className="flex items-center gap-1"><TrendingDown size={11} className="text-risk-low" /> Decreases risk (protective)</span>
         <span className="flex items-center gap-1"><Minus size={11} /> Negligible / regularized to zero</span>
-        <span className="flex items-center gap-1"><FlaskConical size={11} /> Coefficients from v5.1 ElasticNet model (C=10.0, l1_ratio=0.25)</span>
+        <span className="flex items-center gap-1"><FlaskConical size={11} /> Coefficients from v6.0 ElasticNet model (C=1.28, l1_ratio=0.961)</span>
       </div>
     </div>
   )
@@ -491,7 +491,7 @@ export function RiskFactorTable({ factors, className }: RiskFactorTableProps) {
 function getEvidenceStrength(factor: string): string {
   const map: Record<string, string> = {
     vendor_concentration: 'Strong (multiple countries)',
-    price_volatility: 'Strong (v5.1 top predictor)',
+    price_volatility: 'Strong (v6.0 top predictor)',
     institution_diversity: 'Negative — protective factor',
     win_rate: 'Strong — abnormal rates = market capture',
     sector_spread: 'Negative — protective factor',

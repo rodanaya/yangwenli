@@ -12,12 +12,12 @@
   "hero_findings": {
     "f1": "Nuestro modelo señala 328,298 contratos como de riesgo alto o crítico — equivalente a toda la compra pública en salud de 5 años.",
     "f2": "Base de entrenamiento: Red de empresas fantasma del IMSS (9,366 contratos), fraude alimentario de Segalmex (6,326), malversación en emergencia COVID (5,371) y 19 escándalos documentados más.",
-    "f3": "AUC del modelo: 0.957 en contratos de 2021–2025 — nunca vistos durante el entrenamiento. El 93% de los contratos corruptos conocidos obtuvieron puntuación alta o crítica."
+    "f3": "AUC del modelo: 0.849 (división estratificada por proveedor — ningún proveedor en ambos conjuntos). 94% de contratos corruptos conocidos obtuvieron puntuación media o superior."
   },
   "how_it_works": {
     "section_label": "La Ciencia",
     "title": "Cómo Funciona el Modelo de Riesgo",
-    "subtitle": "AUC entrenamiento 0.964 · AUC prueba 0.957 (división temporal, nunca vistos en entrenamiento) · Validado contra 22 casos documentados de corrupción en los 12 sectores",
+    "subtitle": "AUC entrenamiento 0.858 · AUC prueba 0.849 (división estratificada por proveedor) · Validado contra ~390 casos documentados de corrupción en los 12 sectores",
     "step1_title": "Normalización por puntuaciones Z",
     "step1_body": "Las 16 características de cada contrato (precio, concentración de proveedor, período de publicación, etc.) se convierten a puntuaciones Z relativas a su propio sector y año. Una adjudicación con un solo postor en Defensa (donde el 80% son directas) es mucho menos sospechosa que en Educación.",
     "step2_title": "Modelos logísticos por sector",
@@ -48,16 +48,16 @@
     "risk": {
       "tag": "El Riesgo",
       "heading": "{{pct}}% de Contratos con Riesgo Alto",
-      "body": "El modelo de IA de RUBLI — entrenado en 22 casos documentados de corrupción y validado contra contratos que nunca vio durante el entrenamiento — identifica el {{critical}}% de los contratos como Críticos y el {{high}}% como de Riesgo Alto. Eso son más de 328,000 contratos que vale la pena investigar.",
+      "body": "El modelo de IA de RUBLI — entrenado en ~390 casos documentados de corrupción (~725 proveedores) y validado con división estratificada por proveedor — identifica el {{critical}}% de los contratos como Críticos y el {{high}}% como de Riesgo Alto. Eso son más de 700,000 contratos que vale la pena investigar.",
       "stat_label": "Contratos de riesgo alto o crítico",
       "n1": "Crítico (puntuación ≥0.50): {{pct}}% — 201,745 contratos. Se parecen a los patrones de corrupción conocidos más fuertes. Se recomienda investigación inmediata.",
       "n2": "Alto (puntuación 0.30–0.50): {{pct}}% — 126,553 contratos. Fuerte similitud con fraude documentado. Se recomienda revisión prioritaria.",
-      "n3": "Confianza del modelo: AUC entrenamiento 0.964, AUC prueba 0.957 (división temporal — el conjunto de prueba es 2021–2025, nunca visto en entrenamiento). El 93% de los contratos corruptos conocidos obtienen puntuación alta o crítica."
+      "n3": "Confianza del modelo: AUC entrenamiento 0.858, AUC prueba 0.849 (estratificado por proveedor — ningún proveedor en ambos conjuntos). Detección de verdad fundamental: 94% media+, 65% alta+."
     },
     "cases": {
       "tag": "Los Casos",
       "heading": "De las Empresas Fantasma del IMSS a los Sobornos de Odebrecht",
-      "body": "La Biblioteca de Casos de RUBLI documenta 43 escándalos de corrupción — con los proveedores específicos, contratos y patrones de adquisición que los delataron. Estos 22 casos confirmados forman la base de verdad detrás del modelo de riesgo. El modelo detecta el 93% de ellos como de riesgo alto o crítico.",
+      "body": "La Biblioteca de Casos de RUBLI documenta 43 escándalos de corrupción — con los proveedores específicos, contratos y patrones de adquisición que los delataron. Estos ~390 casos documentados forman la base de verdad detrás del modelo de riesgo. El modelo detecta el 65% de los contratos de verdad fundamental como de riesgo alto o crítico.",
       "stat_label": "Casos documentados de corrupción"
     },
     "yourturn": {
@@ -79,6 +79,6 @@
   },
   "footer": {
     "platform": "RUBLI — Plataforma de Análisis de Adquisiciones del Gobierno Mexicano",
-    "data": "Datos: COMPRANET 2002–2025 · Modelo: v5.1 · AUC 0.957"
+    "data": "Datos: COMPRANET 2002–2025 · Modelo: v6.0 · AUC 0.849"
   }
 }

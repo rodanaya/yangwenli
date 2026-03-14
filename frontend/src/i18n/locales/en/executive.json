@@ -4,7 +4,7 @@
     "dateline": "February 2026  |  RUBLI Intelligence Platform",
     "title": "9.6 Trillion Pesos Under the Microscope",
     "subtitle": "A Comprehensive Analysis of Mexican Federal Procurement, 2002-2025",
-    "lead": "Between 2002 and 2025, the Mexican federal government awarded {{totalContracts}} public procurement contracts worth a combined {{totalValue}} — roughly {{totalValueUSD}}. This report presents the findings of a systematic, AI-driven analysis of every one of those contracts. Using a 16-feature per-sector risk model validated against twenty-two documented corruption cases, we identified patterns consistent with fraud, collusion, and abuse in contracts worth an estimated {{valueAtRisk}} — {{pct}}% of all procurement value. These findings do not constitute proof of wrongdoing. They are statistical signals that warrant investigation.",
+    "lead": "Between 2002 and 2025, the Mexican federal government awarded {{totalContracts}} public procurement contracts worth a combined {{totalValue}} — roughly {{totalValueUSD}}. This report presents the findings of a systematic, AI-driven analysis of every one of those contracts. Using a 16-feature per-sector risk model validated against ~390 documented corruption cases (~725 vendors), we identified patterns consistent with fraud, collusion, and abuse in contracts worth an estimated {{valueAtRisk}} — {{pct}}% of all procurement value. These findings do not constitute proof of wrongdoing. They are statistical signals that warrant investigation.",
     "contracts": "Contracts",
     "totalValue": "Total Value",
     "vendors": "Vendors",
@@ -17,7 +17,7 @@
       "71% of federal contracts skip open competition — a structural feature of Mexican procurement, not an exception",
       "Every December for 23 years, spending spikes 1.33× — budget dumping repeated across every administration",
       "10.6% of total procurement value is flagged as high or critical risk, concentrated in a handful of dominant vendors",
-      "Our AI model achieves AUC-ROC 0.957 — correctly ranking a corrupt contract above a clean one 95.7% of the time — and would have flagged IMSS fraud 8 years before the scandal broke"
+      "Our AI model achieves AUC-ROC 0.849 (vendor-stratified split) — correctly ranking a corrupt contract above a clean one 84.9% of the time — and would have flagged IMSS fraud 8 years before the scandal broke"
     ]
   },
 
@@ -108,7 +108,7 @@
     "highRiskContracts": "High-risk contracts",
     "directAwards": "Direct awards",
     "singleBidders": "Single bidders",
-    "p3": "A counterintuitive finding: <bold>direct awards are not the primary risk signal</bold>. In our model, direct award procedures carry only a slightly positive coefficient (+0.182), providing minimal discriminating signal. The real red flag is not how a contract is awarded, but <bold>who keeps winning</bold>. Price volatility — vendors with wildly varying contract sizes — is the strongest single predictor of corruption in v5.1."
+    "p3": "A counterintuitive finding: <bold>direct awards are not the primary risk signal</bold>. In our model, direct award procedures carry only a slightly positive coefficient (+0.182), providing minimal discriminating signal. The real red flag is not how a contract is awarded, but <bold>who keeps winning</bold>. Price volatility — vendors with wildly varying contract sizes — is the strongest single predictor of corruption in v6.0."
   },
 
   "s2": {
@@ -196,7 +196,7 @@
 
   "s8": {
     "title": "How We Know",
-    "p1": "The v5.1 model transforms procurement analysis from a weighted indicator checklist to a <bold>statistical risk scoring framework</bold>. Every contract receives a score measuring similarity to documented corruption patterns, derived from 16 features normalized against sector and year baselines using z-scores, with multivariate anomaly detection via Mahalanobis distance and logistic regression trained on {{contracts}} known-bad contracts.",
+    "p1": "The v6.0 model transforms procurement analysis from a weighted indicator checklist to a <bold>statistical risk scoring framework</bold>. Every contract receives a score measuring similarity to documented corruption patterns, derived from 16 features normalized against sector and year baselines using z-scores, with multivariate anomaly detection via Mahalanobis distance and logistic regression trained on {{contracts}} known-bad contracts.",
     "discriminationPower": "Discrimination power",
     "calibrationQuality": "Calibration quality",
     "vsRandom": "vs random baseline",
@@ -212,8 +212,8 @@
     "limitations": {
       "groundTruth": {
         "title": "Ground Truth Concentration",
-        "text": "While ground truth has been diversified to 22 cases across all 12 sectors, the three largest cases (IMSS, Segalmex, COVID) still contribute the majority of training contracts. The model excels at detecting concentration-based fraud but may underdetect novel corruption schemes.",
-        "mitigation": "Adding 8+ cases in v6.0. Workaround: per-sector models reduce this bias."
+        "text": "While ground truth has been expanded to ~390 cases (~725 vendors) across all 12 sectors, the three largest cases (IMSS, Segalmex, COVID) still contribute the majority of training contracts. The model excels at detecting concentration-based fraud but may underdetect novel corruption schemes.",
+        "mitigation": "v6.0 added ~370 new cases via systematic COMPRANET scanning. Per-sector models and per-vendor caps reduce concentration bias."
       },
       "dataQuality": {
         "title": "Data Quality Degrades with Age",
@@ -227,8 +227,8 @@
       },
       "unknowns": {
         "title": "Unknown Unknowns",
-        "text": "Novel corruption schemes that do not resemble the 22 documented cases will not be flagged by this model. The model detects what it has been trained to recognize — patterns from the past, not innovation in fraud.",
-        "mitigation": "ASF audit data integration is in the v6.0 roadmap."
+        "text": "Novel corruption schemes that do not resemble the ~390 documented cases will not be flagged by this model. The model detects what it has been trained to recognize — patterns from the past, not innovation in fraud.",
+        "mitigation": "ASF audit data integration planned. Cross-reference with external registries (EFOS, SFP sanctions) for complementary signals."
       },
       "executionPhase": {
         "title": "Execution-Phase Fraud Is Invisible",
@@ -237,13 +237,13 @@
       },
       "scarViolation": {
         "title": "Labeled Cases Are Not a Random Sample",
-        "text": "The PU-learning correction (c=0.882) assumes labeled corruption cases are randomly selected from all corrupt contracts. They are not — they are high-profile scandals selected by media visibility and regulatory attention. The correction factor only estimates how well the model detects cases similar to already-known scandals; true coverage of undiscovered or small-scale corruption is unknown.",
+        "text": "The PU-learning correction (c=0.448) assumes labeled corruption cases are randomly selected from all corrupt contracts. They are not — they are high-profile scandals selected by media visibility and regulatory attention. The correction factor only estimates how well the model detects cases similar to already-known scandals; true coverage of undiscovered or small-scale corruption is unknown.",
         "mitigation": "Treat risk scores as investigation triage for scandal-similar patterns, not as prevalence estimates of all corruption."
       },
       "temporalLeakage": {
         "title": "Vendor Features Use Future Data",
-        "text": "Vendor-level features (concentration, win rate, price volatility) are currently computed using full 2002–2025 history. A 2019 contract's vendor concentration score includes 2020–2025 activity. This inflates the reported Test AUC of 0.957; true prospective performance on genuinely unseen vendors is lower.",
-        "mitigation": "v5.2 will fix this with point-in-time rolling aggregates. Until then, interpret AUC as an upper bound."
+        "text": "Vendor-level features (concentration, win rate, price volatility) are currently computed using full 2002–2025 history. A 2019 contract's vendor concentration score includes 2020–2025 activity. v6.0 mitigates the validation impact with vendor-stratified splitting (AUC 0.849), but the underlying feature leakage in vendor aggregates persists.",
+        "mitigation": "Point-in-time rolling aggregates planned for future release. Vendor-stratified split prevents the model from memorizing individual vendor patterns."
       }
     },
     "calibrationNote": "This rate reflects thresholds calibrated to the OECD 2\u201315% international benchmark. Under alternative thresholds, the rate ranges from 2% to 23%. These are statistical signals for triage \u2014 not prevalence estimates of actual corruption."
@@ -290,7 +290,7 @@
   },
 
   "topFraudSignals": {
-    "header": "Top 3 risk indicators — model coefficients (v5.1)",
+    "header": "Top 3 risk indicators — model coefficients (v6.0)",
     "s1": {
       "signal": "Price Volatility",
       "detail": "The single strongest predictor (β = +1.22). Vendors whose contract amounts swing wildly across institutions — a hallmark of pricing manipulation rather than legitimate market fluctuation.",
@@ -316,7 +316,7 @@
     "desc2": "worth billions of pesos through a single institution (IMSS), frequently on the same day, with no competing bids. The model flags",
     "detection": "99.9%",
     "desc3": "of these contracts as high-risk — the highest detection rate of any documented case. This single case demonstrates all three patterns operating simultaneously: direct award dominance, year-end concentration, and extreme vendor–institution lock-in.",
-    "link": "View all 22 documented cases"
+    "link": "View all documented cases"
   },
 
   "timeline": {
@@ -349,7 +349,9 @@
     "v40label": "Statistical Framework",
     "v40tag": "Z-scores + Mahalanobis",
     "v51label": "Per-Sector Sub-Models",
-    "v51tag": "Active · 16 features · ElasticNet"
+    "v51tag": "16 features · ElasticNet",
+    "v60label": "Vendor-Stratified",
+    "v60tag": "Active · Optuna TPE · honest split"
   },
 
   "patternWeb": {

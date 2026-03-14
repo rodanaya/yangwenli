@@ -69,13 +69,13 @@ import { SectorRiskHeatmap } from '@/components/charts/SectorRiskHeatmap'
 // 8. NAVIGATE DEEPER — 6 link cards
 // ============================================================================
 
-// v5.1 model top-4 predictors (from RISK_METHODOLOGY_v5.md global model coefficients)
+// v6.0 model top-4 predictors (from RISK_METHODOLOGY_v6.md global model coefficients)
 // Returns translated signal data — must be called inside a component where t() is available.
 function getAiSignals(t: (key: string) => string) {
   return [
     {
       icon: TrendingDown,
-      coefficient: '+1.22',
+      coefficient: '+1.16',
       label: t('aiSignals.erraticPricing.label'),
       description: t('aiSignals.erraticPricing.description'),
       color: 'text-risk-critical' as const,
@@ -401,7 +401,7 @@ function EraTimelineStrip() {
 
 
 // ============================================================================
-// CROSS-MODEL VALIDATION WIDGET — PyOD ensemble vs v5.1 agreement stats
+// CROSS-MODEL VALIDATION WIDGET — PyOD ensemble vs v6.0 agreement stats
 // ============================================================================
 
 function CrossModelValidationWidget() {
@@ -418,7 +418,7 @@ function CrossModelValidationWidget() {
     ? `${(data.both_flagged / 1_000_000).toFixed(1)}M`
     : `${Math.round(data.both_flagged / 1_000)}K`
 
-  // confirmation_rate is a 0–1 decimal representing fraction of v5.1 high-risk confirmed by PyOD
+  // confirmation_rate is a 0–1 decimal representing fraction of v6.0 high-risk confirmed by PyOD
   const confirmationPct = (data.confirmation_rate * 100).toFixed(1)
 
   return (
@@ -430,7 +430,7 @@ function CrossModelValidationWidget() {
             Cross-Model Validation
           </p>
         </div>
-        <span className="text-[10px] text-text-muted">v5.1 ∩ PyOD unsupervised</span>
+        <span className="text-[10px] text-text-muted">v6.0 ∩ PyOD unsupervised</span>
       </div>
       <div className="grid grid-cols-3 gap-3">
         <div className="text-center">
@@ -684,7 +684,7 @@ export function Dashboard() {
   }, [execData])
 
   const groundTruth = execData?.ground_truth
-  const modelAuc = execData?.model?.auc ?? 0.957
+  const modelAuc = execData?.model?.auc ?? 0.849
 
   const lastUpdated = fastDashboard?.cached_at
     ? new Date(fastDashboard.cached_at).toLocaleString('en-US', {
@@ -760,20 +760,20 @@ export function Dashboard() {
         <div className="text-[11px] text-text-muted/50 font-mono mt-1 flex items-center gap-1 flex-wrap">
           <span>Risk model {modelMeta?.version ?? CURRENT_MODEL_VERSION}</span>
           <span className="text-text-muted/30">·</span>
-          <span>AUC {modelMeta?.auc_test != null ? modelMeta.auc_test.toFixed(3) : '0.957'}</span>
+          <span>AUC {modelMeta?.auc_test != null ? modelMeta.auc_test.toFixed(3) : '0.849'}</span>
           <span className="text-text-muted/30">·</span>
           <span className="cursor-help border-b border-dotted border-text-muted/30" title="Label Coverage (c): proportion of corrupt contracts the model reliably detects among all known cases. Elkan & Noto (2008) PU-learning correction.">
-            c={modelMeta?.pu_correction != null ? modelMeta.pu_correction.toFixed(3) : '0.882'}
+            c={modelMeta?.pu_correction != null ? modelMeta.pu_correction.toFixed(3) : '0.448'}
           </span>
           <span className="text-text-muted/30">·</span>
           <span>{(overview?.total_contracts || 0) > 0 ? formatNumber(overview?.total_contracts || 0) : '3,110,007'} contracts · 2002–2025</span>
         </div>
         {/* Model Confidence Badge */}
         <div className="mt-2 flex items-center gap-3 flex-wrap">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 cursor-help" title="AUC measures how well the model separates corrupt from clean contracts. 0.957 = ranks corrupt contracts higher 95.7% of the time. Temporal split: trained ≤2020, tested ≥2021.">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 cursor-help" title="AUC measures how well the model separates corrupt from clean contracts. 0.849 = ranks corrupt contracts higher 84.2% of the time. Vendor-stratified split: no vendor in both train and test.">
             <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-xs font-mono text-emerald-400">
-              AUC {modelMeta?.auc_test != null ? modelMeta.auc_test.toFixed(3) : '0.957'} · {modelMeta?.version ?? CURRENT_MODEL_VERSION}
+              AUC {modelMeta?.auc_test != null ? modelMeta.auc_test.toFixed(3) : '0.849'} · {modelMeta?.version ?? CURRENT_MODEL_VERSION}
             </span>
           </div>
           <p className="text-xs text-text-muted/70">
@@ -1060,7 +1060,7 @@ export function Dashboard() {
       </div>
 
       {/* ================================================================ */}
-      {/* HOW THE AI WORKS — Top 4 v5.1 model predictors                */}
+      {/* HOW THE AI WORKS — Top 4 v6.0 model predictors                */}
       {/* ================================================================ */}
       <Card className="border-border/40">
         <CardContent className="pt-5 pb-4">
@@ -1102,7 +1102,7 @@ export function Dashboard() {
             ))}
           </motion.div>
           <p className="text-[10px] text-text-muted mt-3 font-mono">
-            Coefficient = log-odds contribution to risk score. v5.1 · Train AUC 0.964 · Test AUC 0.957
+            Coefficient = log-odds contribution to risk score. v6.0 · Train AUC 0.849 · Test AUC 0.849
           </p>
         </CardContent>
       </Card>
@@ -1614,7 +1614,7 @@ export function Dashboard() {
               <Target className="h-4 w-4 text-accent" />
               <h2 className="text-sm font-bold text-text-primary">{t('validatedAgainstReal')}</h2>
               <span className="text-[10px] font-mono text-text-muted bg-background-elevated/40 px-1.5 py-0.5 rounded">
-                AUC {modelAuc.toFixed(3)} · {groundTruth?.cases ?? 22}/22 cases
+                AUC {modelAuc.toFixed(3)} · {groundTruth?.cases ?? 390} cases
               </span>
             </div>
             <button

@@ -283,7 +283,7 @@ export const contractApi = {
   },
 
   /**
-   * Get v5.1 risk score explanation with per-feature contributions
+   * Get v6.0 risk score explanation with per-feature contributions
    */
   async getRiskExplanation(contractId: number): Promise<RiskExplanation> {
     const { data } = await api.get<RiskExplanation>(`/contracts/${contractId}/risk-explain`)
@@ -1182,7 +1182,7 @@ export const analysisApi = {
   },
 
   /**
-   * Get PyOD anomaly detection agreement with v5.1 risk scores
+   * Get PyOD anomaly detection agreement with v6.0 risk scores
    * Shows confirmation rate between ML outlier detection and risk model
    */
   async getPyodAgreement(): Promise<PyodAgreementResponse> {

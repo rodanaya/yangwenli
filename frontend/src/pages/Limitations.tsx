@@ -50,12 +50,12 @@ const LIMITATIONS = [
     icon: BarChart3,
     title: 'Training Data Bias — Three Cases Dominate',
     severity: 'high',
-    summary: 'The risk model was trained on 22 documented corruption cases (including SAT EFOS ghost companies), but the signal remains concentrated in three large health/agriculture mega-cases.',
+    summary: 'The v6.0 risk model was trained on ~390 documented corruption cases (~725 vendors), but the signal remains concentrated in health/agriculture mega-cases despite per-vendor capping.',
     body: [
-      'The v5.1 model expanded ground truth to include Case 22 (SAT EFOS ghost companies) and now covers all 12 sectors. However, the training signal is still concentrated:',
-      'IMSS Ghost Companies (9,366 contracts) + Segalmex (6,326) + COVID-19 Procurement (5,371) = ~21,000 of ~27,000 labeled contracts. These three cases all involve large, concentrated vendors in the health/agriculture sectors. The model has effectively learned: large vendor + high concentration + same institution = risk.',
+      'The v6.0 model dramatically expanded ground truth to ~390 cases and ~725 vendors across all 12 sectors, with a per-vendor cap of 100 training contracts. However, the training signal is still concentrated:',
+      'The IMSS, Segalmex, DICONSA/LICONSA, and COVID-19 ecosystems still contribute a disproportionate share of positive training data. These cases all involve large, concentrated vendors in the health/agriculture sectors. The model has effectively learned: large vendor + high concentration + same institution = risk.',
       'Corruption that doesn\'t match this pattern is systematically underdetected. A local official awarding contracts to a family member\'s new shell company — few contracts, small amounts, not concentrated — may score low because it doesn\'t resemble IMSS Pisa.',
-      'Partial fix in v5.1: Case 22 (SAT Art. 69-B Definitivo, 38 RFC-confirmed ghost companies) was added to the training set. Average risk score for EFOS vendors improved from 0.028 (v5.0) to 0.283 (v5.1). However, 58.2% of EFOS contracts still score below the medium threshold — the fundamental detection gap remains because EFOS vendors have very few contracts per RFC (avg 3), unlike the large concentrated vendors (avg 1,565 contracts) that dominate training data.',
+      'EFOS ghost company detection improved significantly: Case 22 (SAT Art. 69-B Definitivo, 38 RFC-confirmed ghost companies) is in the training set. However, the fundamental detection gap persists for small-shell vendors with very few contracts per RFC (avg 3), unlike the large concentrated vendors that dominate training data.',
     ],
     blind_spots: [
       'Small-vendor corruption (new shell companies, low contract volume)',
@@ -178,7 +178,7 @@ const LIMITATIONS = [
     severity: 'low',
     summary: 'The model was trained on contracts through 2020. Corruption patterns may evolve, and new patterns in 2021–2025 data may go undetected.',
     body: [
-      'The v5.1 model uses a temporal train/test split: trained on contracts ≤2020, tested on ≥2021. The test AUC of 0.957 (vs train 0.964) confirms good generalization to the near future.',
+      'The v6.0 model uses a vendor-stratified 70/30 split: no vendor appears in both train and test sets. The test AUC of 0.849 (vs train 0.849) confirms honest generalization without vendor data leakage.',
       'However, the model assumes corruption patterns are relatively stable over time — that what was corrupt in 2018 is structured similarly to what is corrupt in 2024. If a new administration introduces fundamentally different procurement fraud mechanisms, the model may be slow to detect them.',
       'Recalibration with new ground truth cases should occur when major new corruption cases are documented.',
     ],
@@ -226,13 +226,13 @@ const LIMITATIONS = [
   {
     id: 'temporal-leakage',
     icon: TrendingUp,
-    title: 'Temporal Feature Leakage — Test AUC Is Optimistic',
+    title: 'Temporal Feature Leakage — Vendor Aggregates Use Future Data',
     severity: 'medium',
-    summary: 'Vendor-level features (concentration, win rate, price volatility) are computed using full-dataset history (2002–2025). A 2019 contract uses its vendor\'s 2020–2025 activity. This inflates the reported Test AUC of 0.9572.',
+    summary: 'Vendor-level features (concentration, win rate, price volatility) are computed using full-dataset history (2002–2025). A 2019 contract uses its vendor\'s 2020–2025 activity. v6.0 mitigates this with vendor-stratified splitting but the underlying feature leakage persists.',
     body: [
       'Five features — vendor_concentration, win_rate, price_volatility, institution_diversity, sector_spread — are computed as vendor-level aggregates over all available data (2002–2025). When scoring a contract from 2019, these features include information from 2020–2025 that could not have been known at award time.',
-      'This constitutes indirect temporal leakage. The model\'s test set uses contracts from 2021+, but vendor features for those contracts include data from 2022–2025. The reported Test AUC of 0.9572 is therefore optimistic — the true prospective performance on genuinely unseen future vendors is unknown but expected to be lower.',
-      'The v5.2 analytical layer attempted to address this with a vendor_rolling_stats table for point-in-time feature computation (features for year T using only history ≤ T−1). However, the cold-start problem — first-year vendors receiving extreme z-scores with no prior history — made the retrained model unstable (38.3% high-risk rate vs the expected 9%). The v5.1 model remains active. This limitation persists.',
+      'v6.0 mitigates the validation impact by using vendor-stratified splitting (no vendor in both train and test), which prevents the model from memorizing individual vendor patterns. The test AUC of 0.849 is more honest than v5.1\'s 0.957 temporal split. However, the underlying feature leakage in vendor aggregates persists.',
+      'Point-in-time rolling features (vendor_rolling_stats table) would fully fix this but create cold-start problems for first-year vendors. This limitation persists in v6.0.',
     ],
     workaround: 'For newly-created vendors with no historical COMPRANET activity, risk scores are less reliable because vendor-level features cannot be computed. Newly incorporated vendors should be flagged separately for manual review regardless of their risk score.',
   },
@@ -278,7 +278,7 @@ const SEVERITY_LABELS: Record<string, string> = {
 const SUMMARY_ROWS = [
   { limitation: 'Execution-phase fraud invisible', impact: 'Construction/infrastructure underscored', fixable: 'partial', fix: 'Requires ASF audit data integration' },
   { limitation: 'Training bias (3 dominant cases)', impact: 'Small-vendor & multi-sector corruption underdetected', fixable: 'yes', fix: 'Add more labeled ground truth cases' },
-  { limitation: 'Ghost company blind spot (partial fix in v5.1)', impact: 'EFOS vendors avg 0.283 (up from 0.028); 58% still score low', fixable: 'partial', fix: 'Case 22 added; pattern fundamentally different from training majority' },
+  { limitation: 'Ghost company blind spot (improved in v6.0)', impact: 'EFOS vendors detection improved; small-shell pattern remains challenging', fixable: 'partial', fix: 'Case 22 included; per-vendor cap reduces mega-case dominance' },
   { limitation: 'Vendor deduplication unsolved', impact: 'True concentration understated pre-2018', fixable: 'partial', fix: 'RFC + address blocking (partial fix only)' },
   { limitation: 'Co-bidding signal = zero', impact: 'Bid rotation & cover bidding not in risk score', fixable: 'yes', fix: 'Need collusion-specific ground truth' },
   { limitation: 'CompraNet abolished, data pipeline disrupted', impact: 'Future data unavailable; 1.9M historical contracts already deleted', fixable: 'no', fix: 'Dependent on government platform decisions' },
@@ -288,8 +288,8 @@ const SUMMARY_ROWS = [
   { limitation: 'Temporal stationarity', impact: 'New fraud patterns may be undetected', fixable: 'yes', fix: 'Periodic retraining with new cases' },
   { limitation: 'Contract modifications invisible', impact: 'Infrastructure/energy execution-phase costs untracked', fixable: 'partial', fix: 'Requires ASF audit data integration (Phase 6)' },
   { limitation: 'Mexico-specific concentration model', impact: 'Bid-rotation collusion in competitive procedures underdetected', fixable: 'yes', fix: 'Add collusion-ring ground truth cases to training data' },
-  { limitation: 'PU learning SCAR assumption violated', impact: 'c=0.8815 only covers scandal-similar corruption; true coverage estimated 0.10–0.30', fixable: 'partial', fix: 'Better labeled data from prosecutors, SAT, ASF' },
-  { limitation: 'Temporal feature leakage in vendor aggregates', impact: 'Test AUC 0.9572 is optimistic; true prospective performance unknown', fixable: 'yes', fix: 'v5.2 point-in-time rolling features (vendor_rolling_stats table)' },
+  { limitation: 'PU learning SCAR assumption violated', impact: 'c=0.448 only covers scandal-similar corruption; true coverage estimated 0.10–0.30', fixable: 'partial', fix: 'Better labeled data from prosecutors, SAT, ASF' },
+  { limitation: 'Temporal feature leakage in vendor aggregates', impact: 'Vendor-level features use full history; mitigated by vendor-stratified split in v6.0', fixable: 'yes', fix: 'Point-in-time rolling features (vendor_rolling_stats table)' },
 ] as const
 
 // ============================================================================

@@ -720,10 +720,10 @@ export default function CaseDetail() {
           </div>
           {avgDetectionScore != null && avgDetectionScore < 0.30 && (
             <div className="mb-3 p-2 rounded border border-amber-500/30 bg-amber-500/5 text-[11px] text-amber-300/80">
-              ⚠ Low average score ({Math.round(avgDetectionScore * 100)}%): the v5.1 model&apos;s pattern
+              ⚠ Low average score ({Math.round(avgDetectionScore * 100)}%): the v6.0 model&apos;s pattern
               matching is weak for this case. This may reflect a corruption pattern (e.g. small-scale
-              invoice fraud, single-contract bribery) that differs substantially from the large-vendor
-              concentration cases that dominate the training set.
+              invoice fraud, single-contract bribery) that differs substantially from the market-concentration
+              cases that dominate the expanded training set.
             </div>
           )}
           <div className="space-y-2 text-sm text-text-muted">
@@ -739,7 +739,7 @@ export default function CaseDetail() {
               <div className="flex items-start gap-2 text-[11px] text-text-muted">
                 <Activity className="h-3.5 w-3.5 text-cyan-400 flex-shrink-0 mt-0.5" />
                 <span>
-                  This case is part of the v5.1 model&apos;s ground truth training set.
+                  This case is part of the v6.0 model&apos;s ground truth training set.
                   The {linkedVendors.length > 0 ? `${linkedVendors.length} matched vendor${linkedVendors.length !== 1 ? 's' : ''}` : 'contracts'} from
                   this case provided labeled examples — procurement patterns from documented corruption cases
                   used to train the similarity model.

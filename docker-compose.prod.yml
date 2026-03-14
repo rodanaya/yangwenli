@@ -23,16 +23,21 @@ services:
       # Set CORS_ORIGINS in .env.prod (e.g. https://rubli.site)
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost}
     healthcheck:
-      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8001/health', timeout=5)"]
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 120s
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     deploy:
       resources:
         limits:
-          memory: 2G
+          memory: 768M
           cpus: '2'
     networks:
       - rubli-network
@@ -47,10 +52,15 @@ services:
       backend:
         condition: service_healthy
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 256M
           cpus: '1'
     networks:
       - rubli-network
@@ -70,10 +80,15 @@ services:
     depends_on:
       - frontend
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 256M
           cpus: '1'
     networks:
       - rubli-network

@@ -511,7 +511,7 @@ export default function MoneyFlow() {
         <p className="text-xs text-text-muted/70 mt-2 max-w-2xl leading-relaxed">
           Explore how federal procurement funds flow from government institutions to vendors.
           Node size represents total contract value. Color represents average risk similarity score — how closely
-          procurement patterns resemble documented corruption cases (v5.1 model).
+          procurement patterns resemble documented corruption cases (v6.0 model).
         </p>
       </div>
 
@@ -762,7 +762,7 @@ export default function MoneyFlow() {
           <div className="flex gap-1.5 items-center flex-wrap">
             <span
               className="text-xs text-text-muted cursor-help"
-              title="Risk similarity score measures how closely procurement patterns resemble documented corruption cases (v5.1 model). This is not a probability of guilt — use for investigation triage only."
+              title="Risk similarity score measures how closely procurement patterns resemble documented corruption cases (v6.0 model). This is not a probability of guilt — use for investigation triage only."
             >
               {t('riskLabel')}{' '}
               <span className="text-text-muted/60 text-[10px]">ℹ</span>
@@ -1080,7 +1080,7 @@ export default function MoneyFlow() {
           <div className="text-xs text-text-muted space-y-1">
             <p className="font-medium text-amber-300">How to read flow colors</p>
             <p>
-              Colors show <strong className="text-text-secondary">statistical similarity to documented corruption patterns</strong> (v5.1 model) — not probability of guilt:
+              Colors show <strong className="text-text-secondary">statistical similarity to documented corruption patterns</strong> (v6.0 model) — not probability of guilt:
               {' '}<span style={{ color: '#f87171' }}>red = critical (≥50%)</span>,
               {' '}<span style={{ color: '#fb923c' }}>orange = high (≥30%)</span>,
               {' '}<span style={{ color: '#fbbf24' }}>amber = medium (≥10%)</span>,

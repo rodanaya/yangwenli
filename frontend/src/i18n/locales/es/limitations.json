@@ -33,8 +33,8 @@
     },
     "trainingBias": {
       "title": "Sesgo en Datos de Entrenamiento — Tres Casos Dominan",
-      "summary": "El modelo de riesgo fue entrenado con 22 casos documentados de corrupción, pero el 79% de los contratos de entrenamiento provienen de solo tres mega-casos en salud y agricultura.",
-      "body1": "El modelo v5.1 mejoró significativamente respecto al v4.0 al diversificar de 9 a 22 casos de verdad fundamental en los 12 sectores. Sin embargo, la señal de entrenamiento sigue concentrada:",
+      "summary": "El modelo de riesgo fue entrenado con ~390 casos documentados de corrupción (~725 proveedores), pero el 79% de los contratos de entrenamiento provienen de solo tres mega-casos en salud y agricultura.",
+      "body1": "El modelo v6.0 mejoró significativamente respecto al v5.1 al expandir a ~390 casos documentados de corrupción (~725 proveedores) en los 12 sectores, con límite por proveedor y validación estratificada. Sin embargo, la señal de entrenamiento sigue concentrada:",
       "body2": "Empresas fantasma del IMSS (9,366 contratos) + Segalmex (6,326) + Contrataciones COVID-19 (5,371) = ~21,000 de ~27,000 contratos etiquetados. Estos tres casos involucran proveedores grandes y concentrados en los sectores de salud/agricultura. El modelo ha aprendido efectivamente: proveedor grande + alta concentración + misma institución = riesgo.",
       "body3": "La corrupción que no coincide con este patrón es sistemáticamente subdetectada. Un funcionario local adjudicando contratos a la empresa fantasma de un familiar — pocos contratos, montos pequeños, no concentrado — puede obtener una puntuación baja porque no se parece a IMSS Pisa.",
       "workaround": "Al investigar instituciones u oficiales específicos, no confíe solo en las puntuaciones de riesgo. Use el filtro de Contratos para encontrar adjudicaciones directas y licitaciones con un solo participante independientemente de la puntuación."
@@ -109,7 +109,7 @@
     "temporal": {
       "title": "Estacionariedad Temporal — El Modelo Puede Volverse Obsoleto",
       "summary": "El modelo fue entrenado con contratos hasta 2020. Los patrones de corrupción pueden evolucionar, y nuevos patrones en datos de 2021–2025 pueden no ser detectados.",
-      "body1": "El modelo v5.1 usa una división temporal entrenamiento/prueba: entrenado con contratos ≤2020, probado con ≥2021. El AUC de prueba de 0.957 (vs entrenamiento 0.964) confirma buena generalización al futuro cercano.",
+      "body1": "El modelo v6.0 usa una división estratificada por proveedor (ningún proveedor aparece en ambos conjuntos). El AUC de prueba de 0.849 es una estimación honesta de generalización a proveedores no vistos.",
       "body2": "Sin embargo, el modelo asume que los patrones de corrupción son relativamente estables en el tiempo — que lo que era corrupto en 2018 tiene una estructura similar a lo corrupto en 2024. Si una nueva administración introduce mecanismos de fraude en contrataciones fundamentalmente diferentes, el modelo puede ser lento para detectarlos.",
       "body3": "La recalibración con nuevos casos de verdad fundamental debe ocurrir cuando se documenten nuevos casos importantes de corrupción.",
       "workaround": "Monitoree la página de Verdad Fundamental para casos recién agregados. Después de que se documenten escándalos importantes, el modelo debe reentrenarse para incorporar los nuevos patrones."

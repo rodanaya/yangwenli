@@ -67,7 +67,7 @@
   "welcome": {
     "subtitle": "Red Unificada de Busqueda de Licitaciones Irregulares — AI-Powered Corruption Detection for Mexican Government Procurement",
     "step1Title": "Follow the Money",
-    "step1Desc": "23 years of Mexican federal procurement — 3.1 million contracts, 9+ trillion MXN — every one scored for corruption risk patterns using a model validated against 22 documented fraud cases.",
+    "step1Desc": "23 years of Mexican federal procurement — 3.1 million contracts, 9+ trillion MXN — every one scored for corruption risk patterns using a model validated against ~390 documented fraud cases (~725 vendors).",
     "step2Title": "What Risk Scores Actually Mean",
     "step2Desc": "Scores are STATISTICAL INDICATORS (0–1 scale), not verdicts. A score of 0.68 means this contract closely resembles procurement patterns found in documented fraud cases — not that it is definitely corrupt. Correlation, not causation.",
     "step2ScoreLabel": "Example: Score 0.68",

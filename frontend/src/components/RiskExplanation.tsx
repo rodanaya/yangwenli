@@ -1,5 +1,5 @@
 /**
- * Visual breakdown of v5.1 risk score feature contributions.
+ * Visual breakdown of v6.0 risk score feature contributions.
  * Shows horizontal bars for each z-score feature's impact on the risk score.
  */
 

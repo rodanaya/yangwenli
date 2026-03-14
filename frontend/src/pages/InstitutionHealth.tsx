@@ -746,13 +746,12 @@ export default function InstitutionHealth() {
             <Brain className="h-4 w-4 text-accent" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-text-primary mb-1">v5.2 Cross-Model Validation Active</p>
+            <p className="text-sm font-semibold text-text-primary mb-1">v6.0 Cross-Model Validation Active</p>
             <p className="text-xs text-text-muted leading-relaxed">
               Institution risk scores have been independently validated by PyOD ensemble anomaly detection
               (Isolation Forest + COPOD). Institutions ranked here show strong agreement between the
-              supervised v5.1 model and unsupervised ML — providing higher confidence in risk rankings.
-              PyOD anomaly scores are monotonic with v5.1 risk levels: Critical avg=0.296, Low avg=0.121.
-              Institutions with avg risk score ≥ 0.40 are marked{' '}
+              supervised v6.0 model and unsupervised ML — providing higher confidence in risk rankings.
+              PyOD anomaly scores are monotonic with v6.0 risk levels. Institutions with avg risk score ≥ 0.40 are marked{' '}
               <Zap className="h-3 w-3 inline text-accent" aria-hidden="true" />{' '}
               where both models converge.
             </p>
@@ -765,7 +764,7 @@ export default function InstitutionHealth() {
         <SlidersHorizontal className="h-3.5 w-3.5 text-text-muted" />
         <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-mono border-accent/40 text-accent/80 gap-1">
           <Brain className="h-2.5 w-2.5" aria-hidden="true" />
-          v5.2 Analytical Layer
+          v6.0 Analytical Layer
         </Badge>
         <label htmlFor="min-contracts" className="text-xs text-text-muted whitespace-nowrap">
           {t('minimumContracts')}
@@ -1261,7 +1260,7 @@ export default function InstitutionHealth() {
         Visit an individual institution profile to see contract-level anomaly flags and outlier distributions.
         Institutions where avg risk score ≥ 0.40 are marked{' '}
         <Zap className="h-3 w-3 inline text-accent" aria-hidden="true" />{' '}
-        where both the supervised v5.1 model and PyOD unsupervised detection converge.
+        where both the supervised v6.0 model and PyOD unsupervised detection converge.
       </p>
 
       {/* Section 3: ASF Audit Cross-Reference */}

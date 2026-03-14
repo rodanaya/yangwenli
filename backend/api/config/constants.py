@@ -19,21 +19,32 @@ RISK_THRESHOLDS = {
 
 # Risk level thresholds — statistical risk indicators (NOT probabilities)
 # Scores measure similarity to documented corruption patterns.
-# A score of 0.50 does NOT mean "50% probability of corruption."
-# High+ rate: 9.0% (OECD benchmark: 2-15%)
+# A score of 0.60 does NOT mean "60% probability of corruption."
+# v4.0/v5.1 thresholds (preserved for backward compatibility)
 RISK_THRESHOLDS_V4 = {
-    'critical': 0.50,   # Strongest similarity to known corruption patterns
-    'high': 0.30,       # Strong similarity
-    'medium': 0.10,     # Moderate similarity
+    'critical': 0.50,   # v4.0/v5.1 thresholds
+    'high': 0.30,
+    'medium': 0.10,
+    'low': 0.0,
+}
+
+# v6.0 thresholds — recalibrated for PU-corrected scores (c=0.448)
+# PU correction amplifies raw probabilities ~2x vs v5.1 (c=0.882)
+# Thresholds raised proportionally to maintain OECD 2-15% benchmark
+# High+ rate: ~13.4% (within OECD benchmark)
+# GT detection: 68.2% high+, 86.0% medium+
+RISK_THRESHOLDS_V6 = {
+    'critical': 0.60,   # Strongest similarity to known corruption patterns
+    'high': 0.40,       # Strong similarity
+    'medium': 0.15,     # Moderate similarity
     'low': 0.0,         # Low similarity
 }
 
-# v5.1/v6.0 use the same thresholds, validated against 22+ documented cases
-# High+ rate: 9.0% (OECD benchmark: 2-15%)
-RISK_THRESHOLDS_V5 = RISK_THRESHOLDS_V4
+# Active thresholds for current model
+RISK_THRESHOLDS_V5 = RISK_THRESHOLDS_V6
 
 # Active model version
-# v6.0: vendor-stratified split, time-windowed labels, honest test AUC 0.959
+# v6.0: vendor-stratified split, test AUC 0.849 (vendor-stratified)
 CURRENT_MODEL_VERSION = 'v6.0'
 
 
@@ -45,7 +56,12 @@ def get_risk_level(score: float, model_version: str = None) -> str:
         model_version: 'v3.3' or 'v4.0'. If None, uses CURRENT_MODEL_VERSION.
     """
     version = model_version or CURRENT_MODEL_VERSION
-    thresholds = RISK_THRESHOLDS_V4 if version >= 'v4.0' else RISK_THRESHOLDS  # v5.0 uses same thresholds as v4.0
+    if version >= 'v6.0':
+        thresholds = RISK_THRESHOLDS_V6
+    elif version >= 'v4.0':
+        thresholds = RISK_THRESHOLDS_V4
+    else:
+        thresholds = RISK_THRESHOLDS
 
     if score >= thresholds['critical']:
         return 'critical'

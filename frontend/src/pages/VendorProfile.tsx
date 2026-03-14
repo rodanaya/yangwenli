@@ -79,22 +79,22 @@ import { slideUp, staggerContainer, staggerItem } from '@/lib/animations'
 import { RiskWhisker } from '@/components/ui/risk-whisker'
 
 // ============================================================================
-// Model coefficients for the waterfall chart (v5.1 global model, calibrated 2026-02-27)
-// Source: RISK_METHODOLOGY_v5.md — cross-validated ElasticNet (C=10.0, l1_ratio=0.25)
-// Negative coefficients (institution_diversity, sector_spread, ad_period_days, price_ratio)
+// Model coefficients for the waterfall chart (v6.0 global model, calibrated 2026-03-13)
+// Source: RISK_METHODOLOGY_v6.md — Optuna TPE (C=1.28, l1_ratio=0.961)
+// Negative coefficients (institution_diversity, ad_period_days)
 // mean that HIGHER values of those features REDUCE risk.
 // ============================================================================
 const MODEL_COEFFICIENTS: Record<string, number> = {
-  price_volatility:     1.219,
-  institution_diversity: -0.848,
-  win_rate:             0.727,
-  vendor_concentration: 0.428,
-  sector_spread:        -0.374,
+  price_volatility:     1.156,
+  institution_diversity: -0.436,
+  win_rate:             -0.056,
+  vendor_concentration: 0.863,
+  sector_spread:        0.117,
   industry_mismatch:    0.305,
   same_day_count:       0.222,
-  direct_award:         0.182,
+  direct_award:         0.132,
   ad_period_days:       -0.104,
-  network_member_count: 0.064,
+  network_member_count: 0.199,
   year_end:             0.059,
   institution_risk:     0.057,
   price_ratio:          -0.015,
@@ -573,7 +573,7 @@ const FACTOR_EXPLANATIONS: Record<string, string> = {
   vendor_concentration: 'This vendor holds an unusually large share of its sector\'s total contract value.',
   win_rate: 'This vendor wins contracts at a rate far above what would be expected by chance.',
   institution_diversity: 'This vendor serves fewer institutions than average (negative z-score). The model treats narrow buyer dependence as a risk signal — vendors with broad institutional reach are associated with lower risk.',
-  sector_spread: 'This vendor operates across fewer sectors than its peers (negative z-score). Vendors with more diversified sector activity are associated with lower risk in the v5.1 model.',
+  sector_spread: 'This vendor operates across fewer sectors than its peers (negative z-score). Vendors with more diversified sector activity are associated with lower risk in the v6.0 model.',
   industry_mismatch: 'This vendor won contracts outside its core industry — a potential shell company indicator.',
   same_day_count: 'Multiple contracts were awarded to this vendor on the same day, consistent with threshold-splitting fraud.',
   direct_award: 'A high share of this vendor\'s contracts were awarded directly, bypassing competitive tendering.',
@@ -1349,7 +1349,7 @@ export function VendorProfile() {
           </CardHeader>
           <CardContent>
             <div className="mb-3 p-2 rounded border border-amber-500/30 bg-amber-500/5 text-[11px] text-amber-300/80">
-              ⚠ This is a <strong>separate heuristic analysis</strong>. The v5.1 ML risk score assigns <code>co_bid_rate</code> a coefficient of <strong>0.000</strong> — co-bidding patterns did not discriminate corrupt from clean vendors in the training data and do not contribute to the displayed risk score.
+              ⚠ This is a <strong>separate heuristic analysis</strong>. The v6.0 ML risk score assigns <code>co_bid_rate</code> a coefficient of <strong>0.000</strong> — co-bidding patterns did not discriminate corrupt from clean vendors in the training data and do not contribute to the displayed risk score.
             </div>
             <p className="text-sm text-text-muted mb-4">
               {t('coBidding.description')}

@@ -331,8 +331,8 @@ def _build_summary(conn) -> dict:
         "contracts": gt_contracts,
         "detection_rate": detection_rate,
         "high_plus_rate": high_plus_rate,
-        "auc": 0.957,
-        "train_auc": 0.964,
+        "auc": 0.849,
+        "train_auc": 0.858,
         "case_details": case_details,
     }
 
@@ -378,8 +378,8 @@ def _build_summary(conn) -> dict:
             "version": cal_row["model_version"],
             "features": 16,
             "sub_models": 1 if is_v6 else 13,
-            "auc": round(test_auc_val, 3) if test_auc_val else 0.959,
-            "train_auc": round(train_auc, 3) if train_auc else 0.924,
+            "auc": round(test_auc_val, 3) if test_auc_val else 0.849,
+            "train_auc": round(train_auc, 3) if train_auc else 0.858,
             "brier": round(cal_row["brier_score"], 3) if cal_row["brier_score"] else None,
             "pu_correction": round(cal_row["pu_correction_factor"], 3) if cal_row["pu_correction_factor"] else None,
         }
@@ -388,10 +388,10 @@ def _build_summary(conn) -> dict:
             "version": "v6.0",
             "features": 16,
             "sub_models": 1,
-            "auc": 0.959,
-            "train_auc": 0.924,
+            "auc": 0.849,
+            "train_auc": 0.858,
             "brier": 0.090,
-            "pu_correction": 0.759,
+            "pu_correction": 0.448,
         }
 
     # Lift from v4.0 comparison report (stable between retrainings)

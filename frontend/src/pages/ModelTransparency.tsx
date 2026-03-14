@@ -1,8 +1,8 @@
 /**
  * Model Transparency Page
  *
- * Explains the v5.1 risk scoring model: coefficients, validation metrics,
- * per-case detection performance, model comparison (v3.3 vs v5.1), and
+ * Explains the v6.0 risk scoring model: coefficients, validation metrics,
+ * per-case detection performance, model comparison (v3.3 vs v6.0), and
  * known limitations. All data is hardcoded from methodology documentation.
  */
 
@@ -55,7 +55,7 @@ import {
 } from '@/components/charts'
 
 // ============================================================================
-// Hardcoded Model Data (from v5.1 methodology documentation)
+// Hardcoded Model Data (from v6.0 methodology documentation)
 // ============================================================================
 
 interface Coefficient {
@@ -88,16 +88,16 @@ const MODEL_COEFFICIENTS: Coefficient[] = [
 ]
 
 const VALIDATION_METRICS = {
-  auc_train: 0.9642,
-  auc_roc: 0.9572,
-  brier_score: 0.060,
-  detection_rate_medium_plus: 0.998,
-  detection_rate_high_plus: 0.930,
-  high_risk_rate: 0.106,
-  pu_correction: 0.8815,
-  ground_truth_cases: 22,
-  ground_truth_vendors: 27,
-  ground_truth_contracts: 26582,
+  auc_train: 0.858,
+  auc_roc: 0.849,
+  brier_score: 0.090,
+  detection_rate_medium_plus: 0.887,
+  detection_rate_high_plus: 0.253,
+  high_risk_rate: 0.253,
+  pu_correction: 0.448,
+  ground_truth_cases: 390,
+  ground_truth_vendors: 725,
+  ground_truth_contracts: 310296,
 } as const
 
 interface CaseDetection {
@@ -128,7 +128,7 @@ const CASE_DETECTION: CaseDetection[] = [
 
 const MODEL_COMPARISON = {
   v33: { auc: 0.584, detection: 67.1, high_plus: 18.3, brier: 0.411, lift: 1.22 },
-  v50: { auc: 0.957, detection: 99.8, high_plus: 93.0, brier: 0.060, lift: 4.04 },
+  v60: { auc: 0.849, detection: 88.7, high_plus: 25.3, brier: 0.090, lift: 2.3 },
 } as const
 
 const SECTOR_MODELS = [
@@ -745,7 +745,7 @@ export default function ModelTransparency() {
   const comparisonData = useMemo(() => {
     if (modelComparison && modelComparison.length >= 2) {
       const v33 = modelComparison.find((m) => m.model === 'v3.3')
-      const v50 = modelComparison.find((m) => m.model === 'v5.1') ?? modelComparison.find((m) => m.model === 'v5.0')
+      const v50 = modelComparison.find((m) => m.model === 'v6.0') ?? modelComparison.find((m) => m.model === 'v5.1') ?? modelComparison.find((m) => m.model === 'v5.0')
       if (v33 && v50) {
         return [
           { metric: 'AUC-ROC', v33: v33.auc, v50: v50.auc },
@@ -755,11 +755,11 @@ export default function ModelTransparency() {
       }
     }
     return [
-      { metric: 'AUC-ROC', v33: MODEL_COMPARISON.v33.auc, v50: MODEL_COMPARISON.v50.auc },
-      { metric: 'Detection %', v33: MODEL_COMPARISON.v33.detection, v50: MODEL_COMPARISON.v50.detection },
-      { metric: 'High+ %', v33: MODEL_COMPARISON.v33.high_plus, v50: MODEL_COMPARISON.v50.high_plus },
-      { metric: 'Lift', v33: MODEL_COMPARISON.v33.lift, v50: MODEL_COMPARISON.v50.lift },
-      { metric: '1 - Brier', v33: 1 - MODEL_COMPARISON.v33.brier, v50: 1 - MODEL_COMPARISON.v50.brier },
+      { metric: 'AUC-ROC', v33: MODEL_COMPARISON.v33.auc, v50: MODEL_COMPARISON.v60.auc },
+      { metric: 'Detection %', v33: MODEL_COMPARISON.v33.detection, v50: MODEL_COMPARISON.v60.detection },
+      { metric: 'High+ %', v33: MODEL_COMPARISON.v33.high_plus, v50: MODEL_COMPARISON.v60.high_plus },
+      { metric: 'Lift', v33: MODEL_COMPARISON.v33.lift, v50: MODEL_COMPARISON.v60.lift },
+      { metric: '1 - Brier', v33: 1 - MODEL_COMPARISON.v33.brier, v50: 1 - MODEL_COMPARISON.v60.brier },
     ]
   }, [modelComparison])
 
@@ -1042,7 +1042,7 @@ export default function ModelTransparency() {
       </Card>
 
       {/* ================================================================ */}
-      {/* L3: Model Comparison — v3.3 vs v5.1                              */}
+      {/* L3: Model Comparison — v3.3 vs v6.0                              */}
       {/* ================================================================ */}
       <motion.div
         variants={slideUp}
@@ -1088,7 +1088,7 @@ export default function ModelTransparency() {
                 />
                 <RechartsTooltip content={<ComparisonTooltip />} cursor={{ fill: '#ffffff08' }} />
                 <Bar dataKey="v33" name="v3.3 (Checklist)" fill="#64748b" radius={[4, 4, 0, 0]} barSize={28} />
-                <Bar dataKey="v50" name="v5.1 (Per-Sector)" fill="#58a6ff" radius={[4, 4, 0, 0]} barSize={28} />
+                <Bar dataKey="v50" name="v6.0 (Per-Sector)" fill="#58a6ff" radius={[4, 4, 0, 0]} barSize={28} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -1120,36 +1120,36 @@ export default function ModelTransparency() {
                 <tr className="border-b border-border/10">
                   <td className="py-2 pr-4 text-text-secondary">{t('modelTransparency.comparison.rowAuc')}</td>
                   <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{MODEL_COMPARISON.v33.auc.toFixed(3)}</td>
-                  <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v50.auc.toFixed(3)}</td>
-                  <td className="py-2 pl-3 text-right"><DeltaLabel v33={MODEL_COMPARISON.v33.auc} v50={MODEL_COMPARISON.v50.auc} /></td>
+                  <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v60.auc.toFixed(3)}</td>
+                  <td className="py-2 pl-3 text-right"><DeltaLabel v33={MODEL_COMPARISON.v33.auc} v50={MODEL_COMPARISON.v60.auc} /></td>
                 </tr>
                 <tr className="border-b border-border/10">
                   <td className="py-2 pr-4 text-text-secondary">{t('modelTransparency.comparison.rowDetection')}</td>
                   <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{MODEL_COMPARISON.v33.detection}%</td>
-                  <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v50.detection}%</td>
-                  <td className="py-2 pl-3 text-right"><DeltaLabel v33={MODEL_COMPARISON.v33.detection} v50={MODEL_COMPARISON.v50.detection} suffix="pp" /></td>
+                  <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v60.detection}%</td>
+                  <td className="py-2 pl-3 text-right"><DeltaLabel v33={MODEL_COMPARISON.v33.detection} v50={MODEL_COMPARISON.v60.detection} suffix="pp" /></td>
                 </tr>
                 <tr className="border-b border-border/10">
                   <td className="py-2 pr-4 text-text-secondary">{t('modelTransparency.comparison.rowHighPlus')}</td>
                   <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{MODEL_COMPARISON.v33.high_plus}%</td>
-                  <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v50.high_plus}%</td>
-                  <td className="py-2 pl-3 text-right"><DeltaLabel v33={MODEL_COMPARISON.v33.high_plus} v50={MODEL_COMPARISON.v50.high_plus} suffix="pp" /></td>
+                  <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v60.high_plus}%</td>
+                  <td className="py-2 pl-3 text-right"><DeltaLabel v33={MODEL_COMPARISON.v33.high_plus} v50={MODEL_COMPARISON.v60.high_plus} suffix="pp" /></td>
                 </tr>
                 <tr className="border-b border-border/10">
                   <td className="py-2 pr-4 text-text-secondary">{t('modelTransparency.comparison.rowBrier')}</td>
                   <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{MODEL_COMPARISON.v33.brier.toFixed(3)}</td>
-                  <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v50.brier.toFixed(3)}</td>
+                  <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v60.brier.toFixed(3)}</td>
                   <td className="py-2 pl-3 text-right">
                     <span className="text-xs font-medium text-risk-low">
-                      -{(MODEL_COMPARISON.v33.brier - MODEL_COMPARISON.v50.brier).toFixed(2)}
+                      -{(MODEL_COMPARISON.v33.brier - MODEL_COMPARISON.v60.brier).toFixed(2)}
                     </span>
                   </td>
                 </tr>
                 <tr>
                   <td className="py-2 pr-4 text-text-secondary">{t('modelTransparency.comparison.rowLift')}</td>
                   <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{MODEL_COMPARISON.v33.lift}x</td>
-                  <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v50.lift}x</td>
-                  <td className="py-2 pl-3 text-right"><DeltaLabel v33={MODEL_COMPARISON.v33.lift} v50={MODEL_COMPARISON.v50.lift} suffix="x" /></td>
+                  <td className="py-2 px-3 text-right tabular-nums text-text-primary font-medium">{MODEL_COMPARISON.v60.lift}x</td>
+                  <td className="py-2 pl-3 text-right"><DeltaLabel v33={MODEL_COMPARISON.v33.lift} v50={MODEL_COMPARISON.v60.lift} suffix="x" /></td>
                 </tr>
               </tbody>
             </table>

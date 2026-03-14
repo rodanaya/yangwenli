@@ -83,7 +83,7 @@ const SCANDAL_ANNOTATIONS: ScandalAnnotation[] = [
 ]
 
 // ============================================================================
-// STATIC FALLBACK DATA — approximate per-sector estimates based on v5.1 model
+// STATIC FALLBACK DATA — approximate per-sector estimates based on v6.0 model
 // ============================================================================
 
 const FALLBACK_SECTOR_DATA: Record<string, Record<number, number>> = {

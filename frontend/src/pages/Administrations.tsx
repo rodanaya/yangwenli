@@ -1697,7 +1697,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
               {allTimeAvg.hr.toFixed(1)}%
             </div>
             <div className="mt-1 text-xs text-text-muted leading-relaxed">
-              Contracts scored critical or high risk by the v5.1 risk model. Thresholds calibrated using 22 documented corruption cases.
+              Contracts scored critical or high risk by the v6.0 risk model. Thresholds calibrated using ~390 documented corruption cases.
             </div>
             <div className="mt-2 text-xs text-text-muted">
               {/* HARDCODED: "3.1M contracts" — update if total_contracts from API endpoint is available */}

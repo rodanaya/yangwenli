@@ -28,7 +28,7 @@ import { cn } from '@/lib/utils'
 
 // ============================================================================
 // FALLBACK DATA — approximate values if no API endpoint available
-// Based on RUBLI v5.1 model distribution and known procurement patterns
+// Based on RUBLI v6.0 model distribution and known procurement patterns
 // ============================================================================
 
 const FALLBACK_DATA = [

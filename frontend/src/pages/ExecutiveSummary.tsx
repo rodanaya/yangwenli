@@ -278,7 +278,7 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
     {
       value: `${highRiskRate}%`,
       label: 'High-Risk Rate',
-      sub: 'OECD-calibrated · v5.1',
+      sub: 'OECD-calibrated · v6.0',
       glow: 'rgba(248,113,113,0.3)',
       color: '#f87171',
     },
@@ -297,9 +297,9 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
       color: '#22d3ee',
     },
     {
-      value: '0.957',
+      value: '0.849',
       label: 'Model AUC',
-      sub: 'Train/test temporal split · v5.1',
+      sub: 'Vendor-stratified split · v6.0',
       glow: 'rgba(34,197,94,0.3)',
       color: '#4ade80',
     },
@@ -313,7 +313,7 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
     {
       value: pyodData ? `${Math.round(pyodData.both_flagged / 1000)}K` : '130K',
       label: 'Dual-Confirmed',
-      sub: 'v5.1 model AND PyOD ML · unsupervised cross-validation',
+      sub: 'v6.0 model AND PyOD ML · unsupervised cross-validation',
       glow: 'rgba(139,92,246,0.3)',
       color: '#a78bfa',
     },
@@ -800,7 +800,7 @@ function AIPipelineChart() {
       icon: Brain,
       title: 'LOGISTIC REG.',
       sub: '12 sub-models',
-      detail: 'AUC 0.957',
+      detail: 'AUC 0.849',
       color: '#f59e0b',
       bg: 'rgba(245,158,11,0.1)',
       border: 'rgba(245,158,11,0.3)',
@@ -819,7 +819,7 @@ function AIPipelineChart() {
   return (
     <div ref={ref} className="my-6">
       <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-4">
-        Detection Pipeline — v5.1 Model Architecture
+        Detection Pipeline — v6.0 Model Architecture
       </p>
 
       {/* Pipeline nodes — centered on desktop, horizontal scroll on mobile */}
@@ -912,8 +912,8 @@ function AIPipelineChart() {
         className="mt-3 flex items-center gap-2 px-3 py-2 rounded border border-border/20 bg-background-elevated/20"
       >
         <span className="text-[10px] font-mono text-text-muted">
-          PU-learning correction c=0.882 (Elkan &amp; Noto 2008) · Bootstrap 95% CI per
-          contract · Temporal split train≤2020 / test≥2021
+          PU-learning correction c=0.448 (Elkan &amp; Noto 2008) · Bootstrap 95% CI per
+          contract · Vendor-stratified split (390 cases, 725 vendors)
         </span>
       </div>
 
@@ -2121,7 +2121,7 @@ function KeyMomentsPanel() {
       {/* Footer note */}
       <div className="px-5 py-2.5 bg-surface-raised/10 border-t border-border/10">
         <p className="text-[10px] text-text-muted font-mono">
-          Fuentes: ASF, IMCO, Contralínea, Aristegui Noticias · Escándalos incluidos en ground truth del modelo v5.1
+          Fuentes: ASF, IMCO, Contralínea, Aristegui Noticias · Escándalos incluidos en ground truth del modelo v6.0
         </p>
       </div>
     </div>
@@ -2150,8 +2150,9 @@ function ModelEvolutionBars() {
 
   const versions = [
     { version: 'v3.3', label: t('modelEvolution.v33label'), auc: 0.584, barColor: '#f87171', tag: t('modelEvolution.v33tag') },
-    { version: 'v4.0', label: t('modelEvolution.v40label'), auc: 0.942, barColor: '#fbbf24', tag: t('modelEvolution.v40tag') },
-    { version: 'v5.1', label: t('modelEvolution.v51label'), auc: 0.957, barColor: '#4ade80', tag: t('modelEvolution.v51tag') },
+    { version: 'v4.0', label: t('modelEvolution.v40label'), auc: 0.942, barColor: '#fbbf24', tag: t('modelEvolution.v40tag'), note: 'in-sample' },
+    { version: 'v5.1', label: t('modelEvolution.v51label'), auc: 0.957, barColor: '#86efac', tag: t('modelEvolution.v51tag'), note: 'temporal split' },
+    { version: 'v6.0', label: t('modelEvolution.v60label'), auc: 0.849, barColor: '#4ade80', tag: t('modelEvolution.v60tag'), note: 'vendor-stratified' },
   ]
 
   const maxAuc = 1.0
@@ -2231,19 +2232,19 @@ function SectionModel({ data }: { data: ExecutiveSummaryResponse }) {
       {/* Plain-language AUC explanation for non-technical readers */}
       <div className="mb-6 rounded-xl border border-green-500/20 bg-green-500/5 p-5">
         <p className="text-[10px] font-bold uppercase tracking-widest text-green-400 font-mono mb-2">
-          What does AUC 0.957 mean in plain language?
+          What does AUC 0.849 mean in plain language?
         </p>
         <p className="text-sm leading-relaxed text-text-secondary">
           Imagine picking two contracts at random — one from a documented corruption case, one
           clean. Our model ranks the corrupt contract higher{' '}
-          <strong className="text-text-primary">95.7% of the time</strong>. A coin flip would
+          <strong className="text-text-primary">84.9% of the time</strong>. A coin flip would
           achieve 50%. A model this accurate means investigators can focus on the top-flagged
           contracts and find real wrongdoing — rather than searching blindly across 3.1 million
           records.
         </p>
         <p className="text-xs text-text-muted mt-2 italic">
-          AUC = Area Under the ROC Curve. Validated on contracts from 2021–2025 that the model
-          never saw during training (temporal holdout split).
+          AUC = Area Under the ROC Curve. Validated with vendor-stratified splitting: no vendor
+          appears in both training and test sets.
         </p>
       </div>
 
@@ -2519,7 +2520,7 @@ function ReportFooter({ data }: { data: ExecutiveSummaryResponse }) {
       </p>
       <p className="text-xs text-text-secondary font-mono">
         {new Date(data.generated_at).toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' })}
-        {' '}&middot; {t('footer.compranet')} &middot; Model v5.1 (AUC {data.model.auc})
+        {' '}&middot; {t('footer.compranet')} &middot; Model v6.0 (AUC {data.model.auc})
       </p>
       <p className="text-xs text-text-secondary font-mono">
         {formatNumber(data.headline.total_contracts)} {t('header.contracts').toLowerCase()}

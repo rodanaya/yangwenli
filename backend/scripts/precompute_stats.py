@@ -9,6 +9,328 @@ from datetime import datetime
 
 DB_PATH = "RUBLI_NORMALIZED.db"
 
+# ---------------------------------------------------------------------------
+# PHI helpers (mirrors procurement_health.py — keep thresholds in sync)
+# ---------------------------------------------------------------------------
+
+_PHI_THRESHOLDS = {
+    "competition_rate": {"green": 60, "yellow": 35, "direction": "higher_is_better"},
+    "single_bid_rate":  {"green": 10, "yellow": 20, "direction": "lower_is_better"},
+    "avg_bidders":      {"green": 3.0, "yellow": 2.0, "direction": "higher_is_better"},
+    "hhi":              {"green": 1000, "yellow": 1800, "direction": "lower_is_better"},
+    "short_ad_rate":    {"green": 10, "yellow": 20, "direction": "lower_is_better"},
+    "amendment_rate":   {"green": 10, "yellow": 20, "direction": "lower_is_better"},
+}
+
+def _phi_traffic_light(indicator: str, value: float) -> str:
+    t = _PHI_THRESHOLDS[indicator]
+    if t["direction"] == "higher_is_better":
+        if value >= t["green"]:   return "green"
+        elif value >= t["yellow"]: return "yellow"
+        else:                      return "red"
+    else:
+        if value <= t["green"]:   return "green"
+        elif value <= t["yellow"]: return "yellow"
+        else:                      return "red"
+
+
+def _phi_grade(greens: int, total: int) -> str:
+    if total == 0:
+        return "N/A"
+    ratio = greens / total
+    if ratio >= 0.8:   return "A"
+    elif ratio >= 0.6: return "B"
+    elif ratio >= 0.4: return "C"
+    elif ratio >= 0.2: return "D"
+    else:              return "F"
+
+
+def _compute_phi_for(cursor: sqlite3.Cursor,
+                     sector_id=None, year_min=None, year_max=None) -> dict:
+    """Compute all 6 PHI indicators. Returns indicator dict."""
+    where_parts = ["c.amount_mxn > 0"]
+    params: list = []
+    if sector_id is not None:
+        where_parts.append("c.sector_id = ?")
+        params.append(sector_id)
+    if year_min is not None:
+        where_parts.append("c.contract_year >= ?")
+        params.append(year_min)
+    if year_max is not None:
+        where_parts.append("c.contract_year <= ?")
+        params.append(year_max)
+    where = " AND ".join(where_parts)
+
+    # 1. Competition rate
+    row = cursor.execute(f"""
+        SELECT COUNT(*) as total,
+               SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) as direct_awards,
+               SUM(amount_mxn) as total_value,
+               SUM(CASE WHEN is_direct_award = 1 THEN amount_mxn ELSE 0 END) as da_value
+        FROM contracts c WHERE {where}
+    """, params).fetchone()
+    total = row["total"] or 0
+    if total == 0:
+        return {}
+    direct_awards = row["direct_awards"] or 0
+    total_value = row["total_value"] or 1
+    competition_rate = round((1 - direct_awards / total) * 100, 1)
+    da_rate_value = round((row["da_value"] or 0) / total_value * 100, 1)
+
+    # 2. Single bid rate
+    sb = cursor.execute(f"""
+        SELECT COUNT(*) as competitive,
+               SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) as single_bids
+        FROM contracts c WHERE {where} AND is_direct_award = 0
+    """, params).fetchone()
+    competitive = sb["competitive"] or 0
+    single_bids = sb["single_bids"] or 0
+    single_bid_rate = round(single_bids / max(competitive, 1) * 100, 1)
+
+    # 3. Average bidders
+    br = cursor.execute(f"""
+        SELECT AVG(bidder_count) as avg_bidders
+        FROM (
+            SELECT procedure_number, COUNT(DISTINCT vendor_id) as bidder_count
+            FROM contracts c
+            WHERE {where} AND is_direct_award = 0 AND procedure_number IS NOT NULL
+            GROUP BY procedure_number
+        )
+    """, params).fetchone()
+    avg_bidders = round(br["avg_bidders"] or 0, 2)
+
+    # 4. HHI
+    hhi_rows = cursor.execute(f"""
+        SELECT vendor_id, SUM(amount_mxn) as vendor_total
+        FROM contracts c
+        WHERE {where} AND vendor_id IS NOT NULL
+        GROUP BY vendor_id
+    """, params).fetchall()
+    hhi = 0.0
+    for hr in hhi_rows:
+        share_pct = (hr["vendor_total"] / total_value) * 100
+        hhi += share_pct ** 2
+    hhi = round(hhi, 1)
+
+    # 5. Short ad period rate
+    ar = cursor.execute(f"""
+        SELECT COUNT(*) as with_ad,
+               SUM(CASE WHEN publication_delay_days < 15 THEN 1 ELSE 0 END) as short_ads
+        FROM contracts c
+        WHERE {where} AND is_direct_award = 0 AND publication_delay_days > 0
+    """, params).fetchone()
+    with_ad = ar["with_ad"] or 0
+    short_ads = ar["short_ads"] or 0
+    short_ad_rate = round(short_ads / max(with_ad, 1) * 100, 1)
+
+    # 6. Amendment rate
+    amr = cursor.execute(f"""
+        SELECT COUNT(*) as total_with_data,
+               SUM(CASE WHEN has_amendment = 1 THEN 1 ELSE 0 END) as amendments
+        FROM contracts c
+        WHERE {where} AND has_amendment IS NOT NULL
+    """, params).fetchone()
+    amend_total = amr["total_with_data"] or 0
+    amendments = amr["amendments"] or 0
+    amendment_rate = round(amendments / max(amend_total, 1) * 100, 1)
+
+    indicators = {
+        "competition_rate": {
+            "value": competition_rate,
+            "light": _phi_traffic_light("competition_rate", competition_rate),
+            "label": "Competition Rate",
+            "description": f"{competition_rate}% of contracts awarded competitively",
+            "benchmark": "OECD avg: 70-85%",
+        },
+        "single_bid_rate": {
+            "value": single_bid_rate,
+            "light": _phi_traffic_light("single_bid_rate", single_bid_rate),
+            "label": "Single Bidding Rate",
+            "description": f"{single_bid_rate}% of competitive procedures had only 1 bidder",
+            "benchmark": "EU threshold: <=10% green, >20% red",
+        },
+        "avg_bidders": {
+            "value": avg_bidders,
+            "light": _phi_traffic_light("avg_bidders", avg_bidders),
+            "label": "Average Bidders",
+            "description": f"{avg_bidders} average bidders per competitive procedure",
+            "benchmark": "OECD minimum: 3.0",
+        },
+        "hhi": {
+            "value": hhi,
+            "light": _phi_traffic_light("hhi", hhi),
+            "label": "Vendor Concentration (HHI)",
+            "description": f"HHI = {hhi} (0 = perfect competition, 10000 = monopoly)",
+            "benchmark": "DOJ/FTC: <1000 unconcentrated, >1800 highly concentrated",
+        },
+        "short_ad_rate": {
+            "value": short_ad_rate,
+            "light": _phi_traffic_light("short_ad_rate", short_ad_rate),
+            "label": "Short Ad Period Rate",
+            "description": f"{short_ad_rate}% of procedures had <15 days advertisement",
+            "benchmark": "LAASSP requires 15+ days",
+        },
+        "amendment_rate": {
+            "value": amendment_rate,
+            "light": _phi_traffic_light("amendment_rate", amendment_rate),
+            "label": "Contract Amendment Rate",
+            "description": f"{amendment_rate}% of contracts have modifications",
+            "benchmark": "EU avg: ~10-15%; >20% indicates poor planning",
+        },
+    }
+    greens = sum(1 for ind in indicators.values() if ind["light"] == "green")
+    yellows = sum(1 for ind in indicators.values() if ind["light"] == "yellow")
+    reds = sum(1 for ind in indicators.values() if ind["light"] == "red")
+    grade = _phi_grade(greens, len(indicators))
+
+    return {
+        "total_contracts": total,
+        "total_value_mxn": round(row["total_value"] or 0, 0),
+        "direct_award_rate_by_value": da_rate_value,
+        "competitive_contracts": competitive,
+        "indicators": indicators,
+        "grade": grade,
+        "greens": greens,
+        "yellows": yellows,
+        "reds": reds,
+        "total_indicators": len(indicators),
+    }
+
+
+def _precompute_phi(cursor: sqlite3.Cursor, stats: dict) -> None:
+    """Compute and store phi_sectors, phi_trend, phi_sector_details, phi_ml_correlation."""
+
+    # -- phi_sectors: all-time per-sector + national --
+    sector_rows = cursor.execute(
+        "SELECT id, name_en as name FROM sectors ORDER BY id"
+    ).fetchall()
+
+    sector_results = []
+    for s in sector_rows:
+        phi = _compute_phi_for(cursor, sector_id=s["id"])
+        if phi:
+            sector_results.append({"sector_id": s["id"], "sector_name": s["name"], **phi})
+            print(f"   Sector {s['id']:2d} ({s['name']:20s}): grade={phi.get('grade','?')}")
+
+    national = _compute_phi_for(cursor)
+    stats["phi_sectors"] = {
+        "national": {"sector_name": "National (all sectors)", **(national or {})},
+        "sectors": sector_results,
+    }
+
+    # -- phi_sector_detail_{id}: per-sector with 2010-2025 yearly trend --
+    for s in sector_rows:
+        sid = s["id"]
+        all_time = _compute_phi_for(cursor, sector_id=sid)
+        if not all_time:
+            continue
+        trend = []
+        for yr in range(2010, 2026):
+            yp = _compute_phi_for(cursor, sector_id=sid, year_min=yr, year_max=yr)
+            if yp and yp.get("total_contracts", 0) > 0:
+                trend.append({
+                    "year": yr,
+                    "competition_rate": yp["indicators"]["competition_rate"]["value"],
+                    "single_bid_rate": yp["indicators"]["single_bid_rate"]["value"],
+                    "avg_bidders": yp["indicators"]["avg_bidders"]["value"],
+                    "grade": yp["grade"],
+                    "total_contracts": yp["total_contracts"],
+                })
+        key = f"phi_sector_detail_{sid}"
+        stats[key] = {
+            "sector_id": sid,
+            "sector_name": s["name"],
+            **all_time,
+            "trend": trend,
+        }
+        print(f"   Sector detail {sid} ({s['name']}): {len(trend)} trend years")
+
+    # -- phi_trend: national year-by-year 2010-2025 --
+    trend_results = []
+    for yr in range(2010, 2026):
+        phi = _compute_phi_for(cursor, year_min=yr, year_max=yr)
+        if phi and phi.get("total_contracts", 0) > 100:
+            trend_results.append({
+                "year": yr,
+                "grade": phi["grade"],
+                "greens": phi["greens"],
+                "reds": phi["reds"],
+                "competition_rate": phi["indicators"]["competition_rate"]["value"],
+                "single_bid_rate": phi["indicators"]["single_bid_rate"]["value"],
+                "avg_bidders": phi["indicators"]["avg_bidders"]["value"],
+                "da_rate_by_value": phi["direct_award_rate_by_value"],
+                "total_contracts": phi["total_contracts"],
+                "total_value_mxn": phi["total_value_mxn"],
+            })
+    stats["phi_trend"] = trend_results
+    print(f"   phi_trend: {len(trend_results)} years")
+
+    # -- phi_ml_correlation: static queries --
+    da_risk = cursor.execute("""
+        SELECT
+            CASE WHEN is_direct_award = 1 THEN 'Direct Award' ELSE 'Competitive' END as method,
+            COUNT(*) as contracts,
+            ROUND(AVG(risk_score), 4) as avg_risk,
+            ROUND(SUM(amount_mxn)/1e9, 1) as value_billion
+        FROM contracts
+        WHERE amount_mxn > 0
+        GROUP BY is_direct_award
+    """).fetchall()
+
+    sb_risk = cursor.execute("""
+        SELECT
+            CASE WHEN is_single_bid = 1 THEN 'Single Bid'
+                 WHEN is_direct_award = 0 THEN 'Multiple Bids'
+                 ELSE 'Direct Award' END as category,
+            COUNT(*) as contracts,
+            ROUND(AVG(risk_score), 4) as avg_risk
+        FROM contracts
+        WHERE amount_mxn > 0
+        GROUP BY category
+        ORDER BY avg_risk DESC
+    """).fetchall()
+
+    sector_cmp = cursor.execute("""
+        SELECT s.name_es as sector,
+               COUNT(*) as contracts,
+               ROUND(AVG(CASE WHEN c.is_direct_award = 0 THEN 1.0 ELSE 0.0 END) * 100, 1) as competition_rate,
+               ROUND(AVG(c.risk_score), 4) as avg_ml_risk
+        FROM contracts c
+        JOIN sectors s ON c.sector_id = s.id
+        WHERE c.amount_mxn > 0
+        GROUP BY s.id
+        ORDER BY avg_ml_risk DESC
+    """).fetchall()
+
+    agreement = cursor.execute("""
+        SELECT
+            COUNT(*) as total_high_risk,
+            SUM(CASE WHEN is_direct_award = 1 OR is_single_bid = 1 THEN 1 ELSE 0 END) as also_phi_flagged,
+            ROUND(SUM(CASE WHEN is_direct_award = 1 OR is_single_bid = 1 THEN 1.0 ELSE 0.0 END)
+                  / COUNT(*) * 100, 1) as agreement_pct
+        FROM contracts
+        WHERE risk_score >= 0.30 AND amount_mxn > 0
+    """).fetchone()
+
+    stats["phi_ml_correlation"] = {
+        "correlations": {
+            "by_procedure_type": [dict(r) for r in da_risk],
+            "by_competition": [dict(r) for r in sb_risk],
+            "sector_comparison": [dict(r) for r in sector_cmp],
+            "ml_phi_agreement": {
+                "high_risk_contracts": agreement["total_high_risk"],
+                "also_flagged_by_phi": agreement["also_phi_flagged"],
+                "agreement_rate": agreement["agreement_pct"],
+                "interpretation": (
+                    "Percentage of ML high-risk contracts that also trigger "
+                    "at least one simple PHI red flag (direct award or single bid)"
+                ),
+            },
+        }
+    }
+    print("   phi_ml_correlation: done")
+
+
 def precompute_stats():
     print("=" * 60)
     print("PRE-COMPUTING DASHBOARD STATISTICS")
@@ -447,8 +769,18 @@ def precompute_stats():
     except Exception as e:
         print(f"   Warning: data quality stats failed: {e}")
 
+    # 11. PHI — Procurement Health Index
+    print("11. Computing PHI (Procurement Health Index)...")
+    start = time.time()
+    try:
+        _precompute_phi(cursor, stats)
+        print(f"   Done ({time.time() - start:.1f}s)")
+    except Exception as e:
+        print(f"   Warning: PHI computation failed: {e}")
+        import traceback; traceback.print_exc()
+
     # Save all stats to database
-    print("\n11. Saving to database...")
+    print("\n12. Saving to database...")
     for key, value in stats.items():
         cursor.execute("""
             INSERT OR REPLACE INTO precomputed_stats (stat_key, stat_value, updated_at)

@@ -266,7 +266,7 @@ def get_contract_features(
     """
     Get z-score features for a contract with human-readable labels.
 
-    Returns each of the 16 z-score features used by the v5.1 risk model,
+    Returns each of the 16 z-score features used by the v6.0 risk model,
     sorted by absolute z-score (most anomalous first). Includes a rough
     percentile estimate and direction indicator (high_risk/low_risk).
 

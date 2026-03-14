@@ -12,12 +12,12 @@
   "hero_findings": {
     "f1": "Our model flags 328,298 contracts as high or critical risk — equivalent to the entire public health procurement of 5 years.",
     "f2": "Training ground truth: IMSS Ghost Company Network (9,366 contracts), Segalmex food fraud (6,326), COVID emergency embezzlement (5,371), and 19 more documented scandals.",
-    "f3": "Model AUC 0.957 on contracts from 2021–2025 — never seen during training. 93% of known-corrupt contracts scored high or critical."
+    "f3": "Model AUC 0.849 (vendor-stratified split — no vendor in both train and test). 94% of known-corrupt contracts scored medium or above."
   },
   "how_it_works": {
     "section_label": "The Science",
     "title": "How the Risk Model Works",
-    "subtitle": "Train AUC 0.964 · Test AUC 0.957 (temporal split, never seen during training) · Validated against 22 documented corruption cases across all 12 sectors",
+    "subtitle": "Train AUC 0.858 · Test AUC 0.849 (vendor-stratified split) · Validated against ~390 documented corruption cases across all 12 sectors",
     "step1_title": "Z-score normalization",
     "step1_body": "Each contract's 16 features (price, vendor concentration, ad period, etc.) are converted to z-scores relative to its own sector and year. A single-bid award in Defensa (where 80% are direct) is far less suspicious than in Educación.",
     "step2_title": "Per-sector logistic models",
@@ -48,16 +48,16 @@
     "risk": {
       "tag": "The Risk",
       "heading": "{{pct}}% of Contracts Flagged High-Risk",
-      "body": "RUBLI's AI model — trained on 22 documented corruption cases and validated against contracts it never saw during training — identifies {{critical}}% of contracts as Critical and {{high}}% as High risk. That's over 328,000 contracts worth investigating.",
+      "body": "RUBLI's AI model — trained on ~390 documented corruption cases (~725 vendors) and validated with vendor-stratified splitting — identifies {{critical}}% of contracts as Critical and {{high}}% as High risk. That's over 700,000 contracts worth investigating.",
       "stat_label": "High or Critical risk contracts",
       "n1": "Critical (≥0.50 score): {{pct}}% — 201,745 contracts. These resemble the strongest known corruption patterns. Immediate investigation warranted.",
       "n2": "High (0.30–0.50 score): {{pct}}% — 126,553 contracts. Strong similarity to documented fraud. Priority review recommended.",
-      "n3": "Model confidence: Train AUC 0.964, Test AUC 0.957 (temporal split — test set is 2021–2025, never seen during training). 93% of ground-truth corruption contracts score high or critical."
+      "n3": "Model confidence: Train AUC 0.858, Test AUC 0.849 (vendor-stratified — no vendor in both train and test). Ground-truth detection: 94% medium+, 65% high+."
     },
     "cases": {
       "tag": "The Cases",
       "heading": "From IMSS Ghost Companies to Odebrecht Bribes",
-      "body": "RUBLI's Case Library documents 43 corruption scandals — with the specific vendors, contracts, and procurement patterns that gave them away. These 22 matched cases form the ground truth behind the risk model. The model detects 93% of them as high or critical risk.",
+      "body": "RUBLI's Case Library documents 43 corruption scandals — with the specific vendors, contracts, and procurement patterns that gave them away. These ~390 documented cases form the ground truth behind the risk model. The model detects 65% of ground-truth contracts as high or critical risk.",
       "stat_label": "Documented corruption cases"
     },
     "yourturn": {
@@ -79,6 +79,6 @@
   },
   "footer": {
     "platform": "RUBLI — Mexican Government Procurement Analysis Platform",
-    "data": "Data: COMPRANET 2002–2025 · Model: v5.1 · AUC 0.957"
+    "data": "Data: COMPRANET 2002–2025 · Model: v6.0 · AUC 0.849"
   }
 }

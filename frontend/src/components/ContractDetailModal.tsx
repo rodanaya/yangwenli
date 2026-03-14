@@ -255,7 +255,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                   )
                 })()}
 
-                {/* v5.1 Risk Explanation */}
+                {/* v6.0 Risk Explanation */}
                 <RiskExplanationPanel contractId={contract.id} compact />
 
                 {/* AI-powered plain-language explanation */}

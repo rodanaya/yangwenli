@@ -79,8 +79,8 @@
     "maxD2": "D² Máximo",
     "anomalousContracts": "Contratos Anómalos",
     "chiSquaredNote": "Basado en prueba chi-cuadrado (k=12, p<0.05)",
-    "riskFactorContribution": "Contribución de Factores de Riesgo (Puntuaciones Z v5.1)",
-    "riskFactorContributionFallback": "Contribución de Factores de Riesgo (Modelo v5.1)",
+    "riskFactorContribution": "Contribución de Factores de Riesgo (Puntuaciones Z v6.0)",
+    "riskFactorContributionFallback": "Contribución de Factores de Riesgo (Modelo v6.0)",
     "riskFactorDetails": "Detalles de Factores de Riesgo",
     "noRiskFactorData": "No hay datos de factores de riesgo disponibles",
     "noRiskFactors": "No hay factores de riesgo disponibles"
@@ -108,7 +108,7 @@
   "flags": {
     "highDirectAward": "{{pct}}% de contratos fueron adjudicaciones directas (sin licitación competitiva)",
     "highSingleBid": "{{pct}}% de los procedimientos competitivos tuvieron solo este proveedor licitando",
-    "suspiciousCoBidding": "Patrones sospechosos de co-licitación detectados (análisis heurístico — no incluido en el puntaje ML v5.1, que asigna co_bid_rate un coeficiente de 0.000)",
+    "suspiciousCoBidding": "Patrones sospechosos de co-licitación detectados (análisis heurístico — no incluido en el puntaje ML v6.0, que asigna co_bid_rate un coeficiente de 0.000)",
     "highClustering": "Alta concentración de red ({{pct}}%) — los socios licitadores forman un grupo muy unido",
     "primaryDriver": "Factor principal: {{factor}} (z={{z}} — {{z}} desviaciones estándar sobre el promedio sectorial)"
   },

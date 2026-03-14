@@ -4,7 +4,7 @@
     "dateline": "Febrero 2026  |  Plataforma de Inteligencia RUBLI",
     "title": "9.6 Billones de Pesos Bajo el Microscopio",
     "subtitle": "Un An\u00e1lisis Integral de la Contrataci\u00f3n P\u00fablica Federal de M\u00e9xico, 2002-2025",
-    "lead": "Entre 2002 y 2025, el gobierno federal mexicano adjudic\u00f3 {{totalContracts}} contratos de contrataci\u00f3n p\u00fablica por un valor combinado de {{totalValue}} \u2014 aproximadamente {{totalValueUSD}}. Este informe presenta los hallazgos de un an\u00e1lisis sistem\u00e1tico impulsado por inteligencia artificial de cada uno de esos contratos. Utilizando un modelo calibrado por sector con 16 variables, validado contra veintid\u00f3s casos documentados de corrupci\u00f3n, identificamos patrones consistentes con fraude, colusi\u00f3n y abuso en contratos por un valor estimado de {{valueAtRisk}} \u2014 {{pct}}% del valor total de contrataci\u00f3n. Estos hallazgos no constituyen prueba de irregularidades. Son se\u00f1ales estad\u00edsticas que ameritan investigaci\u00f3n.",
+    "lead": "Entre 2002 y 2025, el gobierno federal mexicano adjudic\u00f3 {{totalContracts}} contratos de contrataci\u00f3n p\u00fablica por un valor combinado de {{totalValue}} \u2014 aproximadamente {{totalValueUSD}}. Este informe presenta los hallazgos de un an\u00e1lisis sistem\u00e1tico impulsado por inteligencia artificial de cada uno de esos contratos. Utilizando un modelo calibrado por sector con 16 variables, validado contra ~390 casos documentados de corrupci\u00f3n (~725 proveedores), identificamos patrones consistentes con fraude, colusi\u00f3n y abuso en contratos por un valor estimado de {{valueAtRisk}} \u2014 {{pct}}% del valor total de contrataci\u00f3n. Estos hallazgos no constituyen prueba de irregularidades. Son se\u00f1ales estad\u00edsticas que ameritan investigaci\u00f3n.",
     "contracts": "Contratos",
     "totalValue": "Valor Total",
     "vendors": "Proveedores",
@@ -17,7 +17,7 @@
       "El 71% de los contratos federales omiten la licitación abierta — una característica estructural, no una excepción",
       "Cada diciembre durante 23 años, el gasto aumenta 1.33× — vaciado presupuestal repetido en cada administración",
       "El 10.6% del valor total de contratación está clasificado como riesgo alto o crítico, concentrado en pocos proveedores dominantes",
-      "Nuestro modelo de IA alcanza un AUC-ROC de 0.957 — clasifica correctamente un contrato corrupto sobre uno limpio el 95.7% de las veces — y habría detectado el fraude del IMSS 8 años antes del escándalo"
+      "Nuestro modelo de IA alcanza un AUC-ROC de 0.849 (división estratificada por proveedor) — clasifica correctamente un contrato corrupto sobre uno limpio el 84.9% de las veces — y habría detectado el fraude del IMSS 8 años antes del escándalo"
     ]
   },
 
@@ -108,7 +108,7 @@
     "highRiskContracts": "Contratos de alto riesgo",
     "directAwards": "Adjudicaciones directas",
     "singleBidders": "Licitantes \u00fanicos",
-    "p3": "Un hallazgo contraintuitivo: <bold>las adjudicaciones directas no son la principal se\u00f1al de riesgo</bold>. En nuestro modelo, los procedimientos de adjudicaci\u00f3n directa tienen solo un coeficiente ligeramente positivo (+0.182), proporcionando m\u00ednima capacidad discriminatoria. La verdadera se\u00f1al de alerta no es c\u00f3mo se adjudica un contrato, sino <bold>qui\u00e9n sigue ganando</bold>. La volatilidad de precios \u2014 proveedores con montos de contratos que var\u00edan dr\u00e1sticamente \u2014 es el predictor individual m\u00e1s fuerte de corrupci\u00f3n en v5.1."
+    "p3": "Un hallazgo contraintuitivo: <bold>las adjudicaciones directas no son la principal se\u00f1al de riesgo</bold>. En nuestro modelo, los procedimientos de adjudicaci\u00f3n directa tienen solo un coeficiente ligeramente positivo (+0.182), proporcionando m\u00ednima capacidad discriminatoria. La verdadera se\u00f1al de alerta no es c\u00f3mo se adjudica un contrato, sino <bold>qui\u00e9n sigue ganando</bold>. La volatilidad de precios \u2014 proveedores con montos de contratos que var\u00edan dr\u00e1sticamente \u2014 es el predictor individual m\u00e1s fuerte de corrupci\u00f3n en v6.0."
   },
 
   "s2": {
@@ -196,7 +196,7 @@
 
   "s8": {
     "title": "C\u00f3mo lo Sabemos",
-    "p1": "El modelo v5.1 transforma el an\u00e1lisis de contrataci\u00f3n de una lista de verificaci\u00f3n de indicadores ponderados a un <bold>marco de indicadores estadísticos de riesgo</bold>. Cada contrato recibe una puntuaci\u00f3n que refleja su similitud con patrones de corrupción documentados, derivada de 16 variables normalizadas contra l\u00edneas base sectoriales y anuales usando z-scores, con detecci\u00f3n de anomal\u00edas multivariada v\u00eda distancia de Mahalanobis y regresi\u00f3n log\u00edstica bayesiana entrenada con {{contracts}} contratos confirmados como irregulares.",
+    "p1": "El modelo v6.0 transforma el an\u00e1lisis de contrataci\u00f3n de una lista de verificaci\u00f3n de indicadores ponderados a un <bold>marco de indicadores estadísticos de riesgo</bold>. Cada contrato recibe una puntuaci\u00f3n que refleja su similitud con patrones de corrupción documentados, derivada de 16 variables normalizadas contra l\u00edneas base sectoriales y anuales usando z-scores, con detecci\u00f3n de anomal\u00edas multivariada v\u00eda distancia de Mahalanobis y regresi\u00f3n log\u00edstica bayesiana entrenada con {{contracts}} contratos confirmados como irregulares.",
     "discriminationPower": "Poder discriminatorio",
     "calibrationQuality": "Calidad de calibraci\u00f3n",
     "vsRandom": "vs l\u00ednea base aleatoria",
@@ -212,8 +212,8 @@
     "limitations": {
       "groundTruth": {
         "title": "Concentraci\u00f3n de Verdad Base",
-        "text": "Aunque la verdad de campo se ha diversificado a 22 casos en los 12 sectores, los tres casos m\u00e1s grandes (IMSS, Segalmex, COVID) a\u00fan contribuyen la mayor\u00eda de contratos de entrenamiento. El modelo sobresale detectando fraude basado en concentraci\u00f3n, pero puede subdetectar esquemas de corrupci\u00f3n novedosos.",
-        "mitigation": "Agregando 8+ casos en v6.0. Soluci\u00f3n temporal: los modelos por sector reducen este sesgo."
+        "text": "Aunque la verdad de campo se ha expandido a ~390 casos (~725 proveedores) en los 12 sectores, los tres casos m\u00e1s grandes (IMSS, Segalmex, COVID) a\u00fan contribuyen la mayor\u00eda de contratos de entrenamiento. El modelo sobresale detectando fraude basado en concentraci\u00f3n, pero puede subdetectar esquemas de corrupci\u00f3n novedosos.",
+        "mitigation": "v6.0 agreg\u00f3 ~370 casos nuevos mediante escaneo sistem\u00e1tico de COMPRANET. Los modelos por sector y l\u00edmites por proveedor reducen el sesgo de concentraci\u00f3n."
       },
       "dataQuality": {
         "title": "La Calidad de Datos se Degrada con el Tiempo",
@@ -227,8 +227,8 @@
       },
       "unknowns": {
         "title": "Inc\u00f3gnitas Desconocidas",
-        "text": "Los esquemas de corrupci\u00f3n novedosos que no se parezcan a los 22 casos documentados no ser\u00e1n se\u00f1alados por este modelo. El modelo detecta lo que fue entrenado a reconocer \u2014 patrones del pasado, no innovaci\u00f3n en el fraude.",
-        "mitigation": "La integraci\u00f3n de datos de auditor\u00eda de la ASF est\u00e1 en la hoja de ruta de v6.0."
+        "text": "Los esquemas de corrupci\u00f3n novedosos que no se parezcan a los ~390 casos documentados no ser\u00e1n se\u00f1alados por este modelo. El modelo detecta lo que fue entrenado a reconocer \u2014 patrones del pasado, no innovaci\u00f3n en el fraude.",
+        "mitigation": "Se planea integraci\u00f3n de datos de auditor\u00eda de la ASF. Cruce con registros externos (EFOS, sanciones SFP) para se\u00f1ales complementarias."
       },
       "executionPhase": {
         "title": "El Fraude en Ejecuci\u00f3n es Invisible",
@@ -237,13 +237,13 @@
       },
       "scarViolation": {
         "title": "Los Casos Etiquetados No Son Muestra Aleatoria",
-        "text": "La correci\u00f3n de aprendizaje PU (c=0.882) asume que los casos de corrupci\u00f3n etiquetados son una muestra aleatoria de todos los contratos corruptos. No lo son: son esc\u00e1ndalos de alto perfil seleccionados por visibilidad medi\u00e1tica y atenci\u00f3n regulatoria. El factor de correcci\u00f3n solo estima qu\u00e9 tan bien el modelo detecta casos similares a esc\u00e1ndalos ya conocidos.",
+        "text": "La correci\u00f3n de aprendizaje PU (c=0.448) asume que los casos de corrupci\u00f3n etiquetados son una muestra aleatoria de todos los contratos corruptos. No lo son: son esc\u00e1ndalos de alto perfil seleccionados por visibilidad medi\u00e1tica y atenci\u00f3n regulatoria. El factor de correcci\u00f3n solo estima qu\u00e9 tan bien el modelo detecta casos similares a esc\u00e1ndalos ya conocidos.",
         "mitigation": "Tratar las puntuaciones de riesgo como priorizaci\u00f3n de investigaci\u00f3n para patrones similares a esc\u00e1ndalos, no como estimaciones de prevalencia de toda la corrupci\u00f3n."
       },
       "temporalLeakage": {
         "title": "Las Variables de Proveedores Usan Datos Futuros",
-        "text": "Las variables a nivel de proveedor (concentraci\u00f3n, tasa de adjudicaci\u00f3n, volatilidad de precios) se calculan actualmente usando el historial completo 2002–2025. La concentraci\u00f3n de un contrato de 2019 incluye actividad de 2020–2025. Esto infla el AUC de prueba reportado de 0.957; el rendimiento prospectivo real sobre proveedores genuinamente no vistos es menor.",
-        "mitigation": "v5.2 corregir\u00e1 esto con agregados rodantes en tiempo real. Hasta entonces, interpretar el AUC como cota superior."
+        "text": "Las variables a nivel de proveedor (concentraci\u00f3n, tasa de adjudicaci\u00f3n, volatilidad de precios) se calculan actualmente usando el historial completo 2002–2025. La concentraci\u00f3n de un contrato de 2019 incluye actividad de 2020–2025. v6.0 mitiga el impacto en validaci\u00f3n con divisi\u00f3n estratificada por proveedor (AUC 0.849), pero la filtraci\u00f3n temporal subyacente en los agregados de proveedores persiste.",
+        "mitigation": "Agregados rodantes en tiempo real planificados para versiones futuras. La divisi\u00f3n estratificada por proveedor evita que el modelo memorice patrones individuales."
       }
     },
     "calibrationNote": "Esta tasa refleja umbrales calibrados con la referencia internacional de la OCDE (2\u201315%). Con umbrales alternativos, la tasa var\u00eda del 2% al 23%. Estas son se\u00f1ales estad\u00edsticas para priorizaci\u00f3n \u2014 no estimaciones de la prevalencia real de corrupci\u00f3n."
@@ -290,7 +290,7 @@
   },
 
   "topFraudSignals": {
-    "header": "Top 3 indicadores de riesgo — coeficientes del modelo (v5.1)",
+    "header": "Top 3 indicadores de riesgo — coeficientes del modelo (v6.0)",
     "s1": {
       "signal": "Volatilidad de Precios",
       "detail": "El predictor individual más fuerte (β = +1.22). Proveedores cuyos montos de contratos varían drásticamente entre instituciones — sello distintivo de manipulación de precios, no de fluctuación legítima de mercado.",
@@ -316,7 +316,7 @@
     "desc2": "por valor de miles de millones de pesos a través de una sola institución (IMSS), frecuentemente el mismo día, sin licitación competitiva. El modelo señala el",
     "detection": "99.9%",
     "desc3": "de estos contratos como de alto riesgo — la mayor tasa de detección de cualquier caso documentado. Este caso único demuestra los tres patrones actuando simultáneamente: dominio de adjudicación directa, concentración a fin de año y captura extrema proveedor–institución.",
-    "link": "Ver los 22 casos documentados"
+    "link": "Ver todos los casos documentados"
   },
 
   "timeline": {
@@ -349,7 +349,9 @@
     "v40label": "Marco Estadístico",
     "v40tag": "Z-scores + Mahalanobis",
     "v51label": "Submodelos por Sector",
-    "v51tag": "Activo · 16 variables · ElasticNet"
+    "v51tag": "16 variables · ElasticNet",
+    "v60label": "Estratificado por Proveedor",
+    "v60tag": "Activo · Optuna TPE · split honesto"
   },
 
   "patternWeb": {

@@ -67,18 +67,20 @@ export const RISK_COLORS = {
 // Active risk model version (fallback — Dashboard fetches live from /analysis/model/metadata)
 export const CURRENT_MODEL_VERSION = 'v6.0'
 
-// Risk thresholds (v6.0 - vendor-stratified anomaly ranker, same thresholds as v4.0+)
-// Scores are statistical risk indicators, not calibrated probabilities
+// Risk thresholds (v6.0 — recalibrated for PU-corrected scores, c=0.448)
+// PU correction amplifies raw probabilities ~2x vs v5.1 (c=0.882)
+// Thresholds raised proportionally to maintain OECD 2-15% benchmark
+// High+ rate: ~13.4% | GT detection: 68.2% high+, 86.0% medium+
 // SINGLE SOURCE OF TRUTH — all other files import from here
 export const RISK_THRESHOLDS = {
-  critical: 0.50, // Very high similarity to known corruption patterns
-  high: 0.30,     // High similarity to known corruption patterns
-  medium: 0.10,   // Moderate similarity to known corruption patterns
+  critical: 0.60, // Strongest similarity to known corruption patterns
+  high: 0.40,     // Strong similarity to known corruption patterns
+  medium: 0.15,   // Moderate similarity to known corruption patterns
   low: 0,         // Low similarity to known corruption patterns
 } as const
 
 /**
- * Canonical risk level classifier — v6.0 thresholds (same as v4.0+).
+ * Canonical risk level classifier — v6.0 recalibrated thresholds.
  * ALL components must use this function (or import it via utils.ts).
  */
 export function getRiskLevelFromScore(score: number): 'critical' | 'high' | 'medium' | 'low' {

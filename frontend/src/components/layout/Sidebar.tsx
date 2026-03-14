@@ -23,10 +23,6 @@ import {
   Info,
   FlaskConical,
   MapPin,
-  ArrowLeftRight,
-  Calendar,
-  ShoppingCart,
-  BarChart2,
   Code2,
   MessageSquarePlus,
   StickyNote,
@@ -58,7 +54,7 @@ interface NavSectionDef {
   items: { i18nKey: string; href: string; icon: React.ElementType }[]
 }
 
-// 3 groups as per Section 4.1 IA redesign
+// 3 groups — streamlined from 25→19 sidebar items
 const NAV_SECTIONS: NavSectionDef[] = [
   {
     sectionKey: 'sections.overview',
@@ -69,7 +65,6 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { i18nKey: 'explore', href: '/explore', icon: Layers },
       { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
       { i18nKey: 'administrations', href: '/administrations', icon: History },
-      { i18nKey: 'mexicoMap', href: '/map', icon: MapPin },
     ],
   },
   {
@@ -79,12 +74,8 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { i18nKey: 'ariaQueue', href: '/aria', icon: Shield },
       { i18nKey: 'investigation', href: '/investigation', icon: Crosshair },
       { i18nKey: 'procurementIntelligence', href: '/procurement-intelligence', icon: Zap },
-      { i18nKey: 'yearInReview', href: '/year-in-review', icon: Calendar },
-      { i18nKey: 'categories', href: '/categories', icon: ShoppingCart },
       { i18nKey: 'network', href: '/network', icon: Network },
-      { i18nKey: 'moneyFlow', href: '/money-flow', icon: ArrowLeftRight },
       { i18nKey: 'contracts', href: '/contracts', icon: FileText },
-      { i18nKey: 'heatmap', href: '/heatmap', icon: BarChart2 },
       { i18nKey: 'mexicoMap', href: '/map', icon: MapPin },
     ],
   },

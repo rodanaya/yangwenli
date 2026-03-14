@@ -473,38 +473,22 @@ def check_alerts():
                 ORDER BY updated_at DESC
             """).fetchall()
 
+            # Batch-load names and risk scores (single query per type, not N+1)
+            lookup = batch_load_names_and_risks(conn, rows)
+
             triggered = []
             for row in rows:
                 item_type = row["item_type"]
                 item_id = row["item_id"]
                 threshold = row["alert_threshold"]
 
-                # Resolve current risk score
-                current_risk: float | None = None
-                if item_type == "vendor":
-                    r = conn.execute(
-                        "SELECT avg_risk_score FROM vendor_stats WHERE vendor_id = ?",
-                        (item_id,)
-                    ).fetchone()
-                    if r:
-                        current_risk = r[0]
-                elif item_type == "institution":
-                    r = conn.execute(
-                        "SELECT avg_risk_score FROM institution_stats WHERE institution_id = ?",
-                        (item_id,)
-                    ).fetchone()
-                    if r:
-                        current_risk = r[0]
-                elif item_type == "contract":
-                    r = conn.execute(
-                        "SELECT risk_score FROM contracts WHERE id = ?",
-                        (item_id,)
-                    ).fetchone()
-                    if r:
-                        current_risk = r[0]
+                type_map = lookup.get(item_type, {})
+                entry = type_map.get(item_id)
+                if not entry:
+                    continue
+                name, current_risk = entry
 
                 if current_risk is not None and current_risk >= threshold:
-                    name, _ = get_item_name_and_risk(conn, item_type, item_id)
                     triggered.append({
                         "id": row["id"],
                         "item_type": item_type,

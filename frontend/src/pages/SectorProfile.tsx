@@ -228,18 +228,18 @@ export function SectorProfile() {
     const stats = sector?.statistics
     if (!stats) return result
 
-    // High-risk rate — compare against platform-wide 10.6% baseline (v5.1)
+    // High-risk rate — compare against platform-wide 11.8% baseline (v6.0)
     // Note: OECD 2-15% is a single-bid rate benchmark, not an ML output benchmark.
     // We use deviation from the platform-wide rate as the reference.
     const highRiskRate = stats.total_contracts > 0
       ? (stats.high_risk_count + stats.critical_risk_count) / stats.total_contracts
       : 0
-    const platformBaseline = 0.106 // v5.1 platform-wide high-risk rate
+    const platformBaseline = 0.118 // v6.0 platform-wide high-risk rate
     if (highRiskRate > platformBaseline * 1.5) {
       result.push({
         type: 'critical',
         title: 'Elevated High-Risk Rate',
-        body: `${(highRiskRate * 100).toFixed(1)}% high-risk rate is significantly above the platform average of 10.6%.`,
+        body: `${(highRiskRate * 100).toFixed(1)}% high-risk rate is significantly above the platform average of 11.8%.`,
         icon: 'AlertTriangle',
       })
     } else if (highRiskRate < 0.02 && stats.total_contracts > 1000) {
@@ -276,7 +276,7 @@ export function SectorProfile() {
           title: 'Vendor Concentration',
           body: hasStructuralConcentration
             ? `${vendorName} holds ${(topShare * 100).toFixed(1)}% of sector value. Note: this sector may have structural concentration due to regulatory requirements or certified supplier limits.`
-            : `${vendorName} holds ${(topShare * 100).toFixed(1)}% of sector contract value — a key risk indicator in the v5.1 model.`,
+            : `${vendorName} holds ${(topShare * 100).toFixed(1)}% of sector contract value — a key risk indicator in the v6.0 model.`,
           icon: 'TrendingUp',
         })
       }
