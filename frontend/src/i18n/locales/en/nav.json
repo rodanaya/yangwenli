@@ -1,6 +1,9 @@
 {
   "sections": {
     "overview": "OVERVIEW",
+    "investigation": "INVESTIGATION",
+    "analysis": "ANALYSIS",
+    "platform": "PLATFORM",
     "analyze": "ANALYZE",
     "investigate": "INVESTIGATE",
     "understand": "UNDERSTAND",
@@ -11,6 +14,7 @@
     "understandSection": "UNDERSTAND",
     "myWorkspace": "MY WORKSPACE"
   },
+  "moneyFlow": "Money Flow",
   "executive": "Executive Summary",
   "dashboard": "Dashboard",
   "explore": "Explore",

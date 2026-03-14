@@ -1,4 +1,4 @@
-import { useState, memo, useMemo, type ReactNode } from 'react'
+import { useState, memo, useMemo, useCallback, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem } from '@/lib/animations'
@@ -20,6 +20,9 @@ import {
   History,
   FlaskConical,
   GitBranch,
+  Copy,
+  Check,
+  Printer,
 } from 'lucide-react'
 import { RiskFactorTable } from '@/components/RiskExplainer'
 import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
@@ -455,6 +458,46 @@ function ModelEvolutionTimeline() {
 }
 
 // ============================================================================
+// Copy All Citations Button
+// ============================================================================
+
+function CopyCitationButton() {
+  const { t } = useTranslation('methodology')
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = useCallback(async () => {
+    const text = REFERENCES.map(
+      (ref, i) => `[${i + 1}] ${ref.authors} (${ref.year}). ${ref.title}.`
+    ).join('\n')
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      const el = document.createElement('textarea')
+      el.value = text
+      document.body.appendChild(el)
+      el.select()
+      document.execCommand('copy')
+      document.body.removeChild(el)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }, [])
+
+  return (
+    <button
+      onClick={() => void handleCopy()}
+      className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-text-muted hover:text-text-secondary transition-colors"
+      title={t('copyCitation')}
+    >
+      {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+      {copied ? t('citationCopied') : t('copyCitation')}
+    </button>
+  )
+}
+
+// ============================================================================
 // Table of Contents (sidebar)
 // ============================================================================
 
@@ -493,14 +536,24 @@ export function Methodology() {
   return (
     <div className="space-y-5">
       {/* Page Header */}
-      <div>
-        <h1 className="text-xl font-bold text-text-primary tracking-tight flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-accent" />
-          {t('pageHeadline')}
-        </h1>
-        <p className="text-xs text-text-muted mt-0.5">
-          {t('pageSubline')}
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-text-primary tracking-tight flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-accent" />
+            {t('pageHeadline')}
+          </h1>
+          <p className="text-xs text-text-muted mt-0.5">
+            {t('pageSubline')}
+          </p>
+        </div>
+        <button
+          onClick={() => window.print()}
+          className="print:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white/80 transition-colors flex-shrink-0"
+          title="Export as PDF"
+        >
+          <Printer className="w-3.5 h-3.5" />
+          PDF
+        </button>
       </div>
 
       {/* Hero KPI badges */}
@@ -1115,6 +1168,9 @@ export function Methodology() {
           <motion.div variants={staggerItem}>
           <CollapsibleSection id="references" title={t('sectionLabels.references')} icon={FileText} defaultOpen={false}>
             <div className="space-y-2">
+              <div className="flex justify-end mb-2">
+                <CopyCitationButton />
+              </div>
               {REFERENCES.map((ref, i) => (
                 <div key={i} className="flex gap-2 py-1.5 border-b border-border/20 last:border-0">
                   <span className="text-xs text-text-muted font-mono w-4 shrink-0 text-right">

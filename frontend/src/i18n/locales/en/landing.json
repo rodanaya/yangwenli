@@ -1,84 +1,54 @@
 {
   "skip_to_app": "Skip to app",
-  "chapter_label": "Chapter {{num}} — {{tag}}",
   "hero": {
-    "badge": "AI-Powered Anti-Corruption Research Platform",
-    "headline_part2": "3.1 million",
-    "headline_part4": "Follow the money.",
-    "subheading": "RUBLI analyzes every federal procurement contract Mexico has published since 2002 — flagging corruption patterns, mapping vendor networks, and surfacing cases the data reveals.",
-    "cta_enter": "Start investigating",
-    "cta_scroll": "See how it works"
+    "headline": "3.1 Million Contracts. One Question:",
+    "headline_accent": "Who Got Paid?",
+    "sub": "RUBLI tracks every Mexican federal procurement contract since 2002. Powered by ML risk scoring, network analysis, and 390 documented corruption cases.",
+    "cta_primary": "Explore the Data",
+    "cta_secondary": "Read the Methodology",
+    "stat_contracts": "Contracts scanned",
+    "stat_flagged": "High-risk flagged",
+    "stat_value": "Analyzed (MXN)"
   },
-  "hero_findings": {
-    "f1": "Our model flags 328,298 contracts as high or critical risk — equivalent to the entire public health procurement of 5 years.",
-    "f2": "Training ground truth: IMSS Ghost Company Network (9,366 contracts), Segalmex food fraud (6,326), COVID emergency embezzlement (5,371), and 19 more documented scandals.",
-    "f3": "Model AUC 0.849 (vendor-stratified split — no vendor in both train and test). 94% of known-corrupt contracts scored medium or above."
+  "scale": {
+    "title": "The Scale of Federal Procurement",
+    "contracts": "contracts",
+    "vendors": "vendors profiled",
+    "sectors": "federal sectors",
+    "years": "2002 - 2025"
   },
-  "how_it_works": {
-    "section_label": "The Science",
-    "title": "How the Risk Model Works",
-    "subtitle": "Train AUC 0.858 · Test AUC 0.849 (vendor-stratified split) · Validated against ~390 documented corruption cases across all 12 sectors",
-    "step1_title": "Z-score normalization",
-    "step1_body": "Each contract's 16 features (price, vendor concentration, ad period, etc.) are converted to z-scores relative to its own sector and year. A single-bid award in Defensa (where 80% are direct) is far less suspicious than in Educación.",
-    "step2_title": "Per-sector logistic models",
-    "step2_body": "12 dedicated logistic regression sub-models — one per sector — capture sector-specific corruption fingerprints. Energy fraud looks different from health fraud. The global model provides a fallback.",
-    "step3_title": "Positive-Unlabeled learning",
-    "step3_body": "Only documented corruption cases are labeled. The remaining 3.1M contracts are unlabeled (not necessarily clean). Elkan & Noto's PU-learning correction (c=0.88) adjusts for this selection bias.",
-    "step4_title": "95% confidence intervals",
-    "step4_body": "Each score ships with bootstrap confidence bounds. A contract scoring 0.42 [0.31, 0.55] is genuinely uncertain — one scoring 0.89 [0.81, 0.95] is not. Investigators see both.",
-    "caveat1": "A high risk score means the contract's procurement characteristics closely resemble those from documented corruption cases — not that corruption is proven. Scores are investigation triage, not verdicts.",
-    "caveat2": "Key limitation: RUBLI analyzes contract award data only. Execution-phase fraud (cost overruns, ghost workers, kickbacks) is invisible. Infrastructure and energy sectors are likely underscored for this reason."
+  "how": {
+    "tag": "How It Works",
+    "title": "From Raw Data to Investigation Leads",
+    "sub": "Three steps. 16 ML features. 12 per-sector models.",
+    "step1_title": "Ingest",
+    "step1_body": "23 years of COMPRANET procurement data -- 3.1 million contracts, 320K vendors, 12 sectors. Cleaned, classified, and normalized.",
+    "step2_title": "Analyze",
+    "step2_body": "ML risk scoring with 16 z-score features, per-sector logistic models, PU-learning correction. Train AUC 0.858, Test AUC 0.849.",
+    "step3_title": "Investigate",
+    "step3_body": "Ranked investigation queue with evidence, SHAP explanations, confidence intervals. Every score has a reason."
   },
-  "chapters": {
-    "scale": {
-      "tag": "The Scale",
-      "heading": "{{value}} in Government Contracts",
-      "body": "Between 2002 and 2025, Mexico's federal government awarded over {{total}} million contracts worth an estimated ~9.5 trillion pesos. RUBLI tracks every peso — from emergency health procurement to major infrastructure works — in a single searchable database.",
-      "stat_label": "Total procurement value (2002–2025)"
-    },
-    "patterns": {
-      "tag": "The Patterns",
-      "heading": "Systemic Red Flags — In Every Administration",
-      "body": "Year-end budget dumps. Direct awards without competition. Suspiciously short publication windows. Single vendors winning 90%+ of a sector's contracts. These patterns are not aberrations — the data shows they repeat across every administration since 2002, in every sector.",
-      "stat_label": "of contracts awarded directly (no competition)",
-      "n1": "78% of all contracts are direct awards — meaning no open competition, no public bids. In health procurement alone, this rate exceeded 85% during the 2020 COVID emergency.",
-      "n2": "December contracts spike 40–60% above monthly averages every year. Budget-year-end pressure pushes institutions toward rushed, uncompetitive awards.",
-      "n3": "Vendor concentration: in Agricultura, the top 3 vendors captured 71% of sector value during Segalmex's peak years. In Salud, IMSS's ghost company network won 9,366 contracts without meaningful competition."
-    },
-    "risk": {
-      "tag": "The Risk",
-      "heading": "{{pct}}% of Contracts Flagged High-Risk",
-      "body": "RUBLI's AI model — trained on ~390 documented corruption cases (~725 vendors) and validated with vendor-stratified splitting — identifies {{critical}}% of contracts as Critical and {{high}}% as High risk. That's over 700,000 contracts worth investigating.",
-      "stat_label": "High or Critical risk contracts",
-      "n1": "Critical (≥0.50 score): {{pct}}% — 201,745 contracts. These resemble the strongest known corruption patterns. Immediate investigation warranted.",
-      "n2": "High (0.30–0.50 score): {{pct}}% — 126,553 contracts. Strong similarity to documented fraud. Priority review recommended.",
-      "n3": "Model confidence: Train AUC 0.858, Test AUC 0.849 (vendor-stratified — no vendor in both train and test). Ground-truth detection: 94% medium+, 65% high+."
-    },
-    "cases": {
-      "tag": "The Cases",
-      "heading": "From IMSS Ghost Companies to Odebrecht Bribes",
-      "body": "RUBLI's Case Library documents 43 corruption scandals — with the specific vendors, contracts, and procurement patterns that gave them away. These ~390 documented cases form the ground truth behind the risk model. The model detects 65% of ground-truth contracts as high or critical risk.",
-      "stat_label": "Documented corruption cases"
-    },
-    "yourturn": {
-      "tag": "Your Turn",
-      "heading": "Start Investigating",
-      "body": "Search any vendor, institution, or contract. Follow the network of co-bidders. Build a dossier. Export to your newsroom. RUBLI gives investigative journalists and anti-corruption researchers the tools to follow the money — across 23 years of data, in seconds.",
-      "stat_label": "Contracts searchable in seconds"
-    }
-  },
-  "featured_cases": {
-    "label": "Biggest Cases",
-    "contracts": "{{num}} contracts"
+  "snapshot": {
+    "tag": "Live Risk Snapshot",
+    "title": "Current Risk Distribution",
+    "high_risk_rate": "High-risk rate",
+    "top_sectors": "Top sectors by risk",
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "contracts_label": "contracts",
+    "avg_risk": "avg risk"
   },
   "cta": {
-    "open_dashboard": "Open Dashboard",
-    "search_vendor": "Search a vendor",
-    "see_methodology": "See the methodology",
-    "browse_cases": "Browse case library"
+    "tag": "Start Now",
+    "title": "Open-source. No account required.",
+    "sub": "Data from COMPRANET 2002-2025. Model v6.1. AUC 0.849.",
+    "dashboard": "Start with the Dashboard",
+    "executive": "Read the Executive Summary"
   },
   "footer": {
-    "platform": "RUBLI — Mexican Government Procurement Analysis Platform",
-    "data": "Data: COMPRANET 2002–2025 · Model: v6.0 · AUC 0.849"
+    "platform": "RUBLI -- Mexican Government Procurement Analysis Platform",
+    "data": "Data: COMPRANET 2002-2025 | Model: v6.1 | AUC 0.849"
   }
 }

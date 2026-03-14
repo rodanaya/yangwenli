@@ -381,5 +381,8 @@
     "title": "Error al cargar el Resumen Ejecutivo",
     "body": "No se pudieron recuperar los datos del reporte. Verifica tu conexión e inténtalo de nuevo.",
     "retry": "Reintentar"
-  }
+  },
+  "share": "Compartir",
+  "shareCopied": "Enlace copiado!",
+  "exportPdf": "Imprimir / PDF"
 }

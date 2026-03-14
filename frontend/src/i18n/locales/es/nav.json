@@ -1,6 +1,9 @@
 {
   "sections": {
     "overview": "RESUMEN",
+    "investigation": "INVESTIGACION",
+    "analysis": "ANALISIS",
+    "platform": "PLATAFORMA",
     "analyze": "ANALIZAR",
     "investigate": "INVESTIGAR",
     "understand": "COMPRENDER",
@@ -11,6 +14,7 @@
     "understandSection": "ENTENDER",
     "myWorkspace": "MI ESPACIO"
   },
+  "moneyFlow": "Flujo de Dinero",
   "executive": "Resumen Ejecutivo",
   "dashboard": "Panel",
   "explore": "Explorar",

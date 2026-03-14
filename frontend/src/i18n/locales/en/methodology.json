@@ -472,5 +472,7 @@
     "references": {
       "footer": "Risk scores are statistical indicators with confidence intervals. A high score indicates similarity to documented corruption patterns -- it does not constitute proof of wrongdoing."
     }
-  }
+  },
+  "copyCitation": "Copy citation",
+  "citationCopied": "Citation copied!"
 }

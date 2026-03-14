@@ -472,5 +472,7 @@
     "references": {
       "footer": "Las puntuaciones de riesgo son indicadores estadísticos con intervalos de confianza. Una puntuación alta indica similitud con patrones de corrupción documentados — no constituye prueba de irregularidad."
     }
-  }
+  },
+  "copyCitation": "Copiar cita",
+  "citationCopied": "Cita copiada!"
 }

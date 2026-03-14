@@ -14,7 +14,6 @@ import {
   ChevronRight,
   Network,
   Crosshair,
-  Layers,
   Library,
   Briefcase,
   X,
@@ -28,12 +27,15 @@ import {
   StickyNote,
   Shield,
   ClipboardCheck,
+  DollarSign,
+  Search,
+  Eye,
 } from 'lucide-react'
 import { RubliLogoMark } from '@/components/ui/RubliLogoMark'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { watchlistApi, caseLibraryApi } from '@/api/client'
+import { watchlistApi, caseLibraryApi, ariaApi } from '@/api/client'
 import { ReportIssueDialog } from '@/components/ReportIssueDialog'
 
 export interface SidebarProps {
@@ -49,52 +51,61 @@ interface NavItem {
   icon: React.ElementType
 }
 
-interface NavSectionDef {
-  sectionKey: string
-  items: { i18nKey: string; href: string; icon: React.ElementType }[]
+interface NavItemDef {
+  i18nKey: string
+  href: string
+  icon: React.ElementType
+  badgeSource?: 'aria-t1' | 'watchlist' | 'cases'
 }
 
-// 3 groups — streamlined from 25→19 sidebar items
+interface NavSectionDef {
+  sectionKey: string
+  items: NavItemDef[]
+}
+
+// 4 sections — ops-center layout
 const NAV_SECTIONS: NavSectionDef[] = [
   {
     sectionKey: 'sections.overview',
     items: [
-      { i18nKey: 'reportCard', href: '/report-card', icon: ClipboardCheck },
+      { i18nKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
       { i18nKey: 'executive', href: '/executive-summary', icon: FileText },
-      { i18nKey: 'dashboard', href: '/', icon: LayoutDashboard },
-      { i18nKey: 'explore', href: '/explore', icon: Layers },
-      { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
-      { i18nKey: 'administrations', href: '/administrations', icon: History },
+      { i18nKey: 'reportCard', href: '/report-card', icon: ClipboardCheck },
     ],
   },
   {
-    sectionKey: 'sections.investigate',
+    sectionKey: 'sections.investigation',
     items: [
-      { i18nKey: 'caseLibrary', href: '/cases', icon: Library },
-      { i18nKey: 'ariaQueue', href: '/aria', icon: Shield },
+      { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, badgeSource: 'aria-t1' },
+      { i18nKey: 'caseLibrary', href: '/cases', icon: Library, badgeSource: 'cases' },
+      { i18nKey: 'workspace', href: '/workspace', icon: Briefcase, badgeSource: 'watchlist' },
       { i18nKey: 'investigation', href: '/investigation', icon: Crosshair },
-      { i18nKey: 'procurementIntelligence', href: '/procurement-intelligence', icon: Zap },
-      { i18nKey: 'network', href: '/network', icon: Network },
+    ],
+  },
+  {
+    sectionKey: 'sections.analysis',
+    items: [
+      { i18nKey: 'administrations', href: '/administrations', icon: History },
+      { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
+      { i18nKey: 'explore', href: '/explore', icon: Search },
       { i18nKey: 'contracts', href: '/contracts', icon: FileText },
+      { i18nKey: 'network', href: '/network', icon: Network },
+      { i18nKey: 'moneyFlow', href: '/money-flow', icon: DollarSign },
+      { i18nKey: 'procurementIntelligence', href: '/procurement-intelligence', icon: Zap },
       { i18nKey: 'mexicoMap', href: '/map', icon: MapPin },
     ],
   },
   {
-    sectionKey: 'sections.myWorkspace',
+    sectionKey: 'sections.platform',
     items: [
-      { i18nKey: 'workspace', href: '/workspace', icon: Briefcase },
+      { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
+      { i18nKey: 'limitations', href: '/limitations', icon: Info },
+      { i18nKey: 'model', href: '/model', icon: FlaskConical },
       { i18nKey: 'annotations', href: '/annotations', icon: StickyNote },
+      { i18nKey: 'apiExplorer', href: '/api-explorer', icon: Code2 },
+      { i18nKey: 'settings', href: '/settings', icon: Settings },
     ],
   },
-]
-
-// After-divider items (Methodology, Limitations, Model Transparency, Settings)
-const NAV_BOTTOM: { i18nKey: string; href: string; icon: React.ElementType }[] = [
-  { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
-  { i18nKey: 'model', href: '/model', icon: FlaskConical },
-  { i18nKey: 'limitations', href: '/limitations', icon: Info },
-  { i18nKey: 'apiExplorer', href: '/api-explorer', icon: Code2 },
-  { i18nKey: 'settings', href: '/settings', icon: Settings },
 ]
 
 function NavSection({
@@ -110,7 +121,7 @@ function NavSection({
     <div>
       {!collapsed && (
         <div className="mb-1.5 px-2 flex items-center gap-2">
-          <span className="text-[10px] font-bold tracking-widest uppercase text-text-muted/50 font-mono">
+          <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-text-muted/50 font-mono select-none">
             {title}
           </span>
           <div className="flex-1 h-px bg-border/20" />
@@ -134,7 +145,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   // On mobile: use mobileOpen for collapse decision (always show full sidebar when open)
   const isCollapsed = collapsed && !mobileOpen
 
-  // 4.3C Alert System — poll for triggered watchlist alerts every 5 minutes
+  // Watchlist alert count (5 min stale)
   const { data: alerts } = useQuery({
     queryKey: ['watchlist-alerts-check'],
     queryFn: () => watchlistApi.checkAlerts(),
@@ -142,9 +153,9 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
     refetchOnWindowFocus: false,
     retry: 0,
   })
-  const alertCount = alerts?.length ?? 0
+  const watchlistCount = alerts?.length ?? 0
 
-  // Case Library — fetch total case count for nav badge (1h cache, silent fail)
+  // Case Library count (1h cache)
   const { data: caseStats } = useQuery({
     queryKey: ['case-library-count'],
     queryFn: () => caseLibraryApi.getStats(),
@@ -154,13 +165,39 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   })
   const caseCount = caseStats?.total_cases ?? 0
 
+  // ARIA T1 count (5 min stale)
+  const { data: ariaStats } = useQuery({
+    queryKey: ['aria-stats-sidebar'],
+    queryFn: () => ariaApi.getStats(),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 0,
+  })
+  const ariaT1Count = ariaStats?.tier1_count ?? 0
+
   const [reportOpen, setReportOpen] = useState(false)
+
+  function getBadgeCount(source?: NavItemDef['badgeSource']): number {
+    if (!source) return 0
+    switch (source) {
+      case 'aria-t1': return ariaT1Count
+      case 'watchlist': return watchlistCount
+      case 'cases': return caseCount
+      default: return 0
+    }
+  }
+
+  function getBadgeStyle(source?: NavItemDef['badgeSource']): 'alert' | 'count' {
+    if (source === 'watchlist') return 'alert'
+    return 'count'
+  }
 
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 h-screen flex flex-col border-r border-border/50 bg-sidebar transition-all duration-300 z-50',
-        // Mobile: overlay — hidden off-screen, revealed when open
+        'fixed left-0 top-0 h-screen flex flex-col border-r border-border/50 bg-sidebar z-50',
+        'transition-all duration-200 ease-out',
+        // Mobile: overlay -- hidden off-screen, revealed when open
         'w-64 -translate-x-full',
         mobileOpen && 'translate-x-0',
         // Desktop: always visible, width controlled by collapsed state
@@ -172,20 +209,20 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
       <div className="flex h-14 items-center border-b border-border/30 px-3">
         <div className="flex flex-1 items-center gap-2.5 overflow-hidden">
           <div className="relative flex-shrink-0">
-            <RubliLogoMark size={20} className="text-accent" />
-            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-signal-live shadow-[0_0_6px_var(--color-signal-live)]" />
+            <RubliLogoMark size={22} className="text-accent" />
+            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-signal-live shadow-[0_0_6px_var(--color-signal-live)] animate-pulse" />
           </div>
           {!isCollapsed && (
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold tracking-wider uppercase text-text-primary font-mono">
+                <span className="text-sm font-bold tracking-[0.15em] uppercase text-text-primary font-mono">
                   RUBLI
                 </span>
-                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-accent/20 bg-accent/10 text-accent leading-none">
-                  v1.1
+                <span className="text-[8px] font-mono px-1 py-0.5 rounded border border-signal-live/30 bg-signal-live/10 text-signal-live leading-none tracking-wider uppercase">
+                  LIVE
                 </span>
               </div>
-              <span className="text-[10px] tracking-wider uppercase text-accent font-mono">
+              <span className="text-[10px] tracking-[0.12em] uppercase text-text-muted/60 font-mono">
                 INTEL PLATFORM
               </span>
             </div>
@@ -213,30 +250,17 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
               {section.items.map((itemDef) => {
                 const title = t(itemDef.i18nKey)
                 const item: NavItem = { title, href: itemDef.href, icon: itemDef.icon }
-                const isActive =
-                  itemDef.href === '/'
-                    ? location.pathname === '/' || location.pathname === '/dashboard'
-                    : itemDef.href === '/sectors'
-                    ? location.pathname === '/sectors' || location.pathname.startsWith('/sectors/')
-                    : itemDef.href === '/workspace'
-                    ? location.pathname === '/workspace' || location.pathname === '/watchlist' || location.pathname.startsWith('/workspace/')
-                    : itemDef.href === '/cases'
-                    ? location.pathname === '/cases' || location.pathname.startsWith('/cases/')
-                    : itemDef.href === '/investigation'
-                    ? location.pathname === '/investigation' || location.pathname.startsWith('/investigation/')
-                    : location.pathname === itemDef.href || location.pathname.startsWith(itemDef.href + '/')
-                // Show alert badge on the Workspace nav item (4.3C Alert System)
-                const badge = itemDef.href === '/workspace' && alertCount > 0 ? alertCount : 0
-                // Show case count badge on Case Library nav item
-                const countBadge = itemDef.href === '/cases' && caseCount > 0 ? caseCount : 0
+                const isActive = getIsActive(itemDef.href, location.pathname)
+                const badge = getBadgeCount(itemDef.badgeSource)
+                const badgeStyle = getBadgeStyle(itemDef.badgeSource)
                 return (
                   <SidebarNavItem
                     key={item.href}
                     item={item}
                     collapsed={isCollapsed}
                     isActive={isActive}
-                    badge={badge}
-                    countBadge={countBadge}
+                    badge={badgeStyle === 'alert' && badge > 0 ? badge : 0}
+                    countBadge={badgeStyle === 'count' && badge > 0 ? badge : 0}
                   />
                 )
               })}
@@ -245,24 +269,35 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         </nav>
       </ScrollArea>
 
-      {/* Divider + secondary nav (Methodology, Settings) */}
+      {/* System status panel */}
       <div className="px-2 py-2 border-t border-border/20">
-        <div className="space-y-0.5">
-          {NAV_BOTTOM.map((itemDef) => {
-            const title = t(itemDef.i18nKey)
-            const item: NavItem = { title, href: itemDef.href, icon: itemDef.icon }
-            const isActive =
-              location.pathname === itemDef.href || location.pathname.startsWith(itemDef.href + '/')
-            return (
-              <SidebarNavItem
-                key={item.href}
-                item={item}
-                collapsed={isCollapsed}
-                isActive={isActive}
-              />
-            )
-          })}
-        </div>
+        {!isCollapsed ? (
+          <div className="space-y-1.5 px-1">
+            <div className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-signal-live shadow-[0_0_4px_var(--color-signal-live)] flex-shrink-0" />
+              <span className="text-[10px] font-mono text-text-muted/60 tracking-wide">
+                3.1M contracts indexed
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Eye className="h-3 w-3 text-text-muted/40 flex-shrink-0" />
+              <span className="text-[10px] font-mono text-text-muted/40 tracking-wide">
+                v6.1 · AUC 0.849
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex justify-center py-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="h-1.5 w-1.5 rounded-full bg-signal-live shadow-[0_0_4px_var(--color-signal-live)]" />
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8}>
+                <p className="text-xs font-mono">3.1M indexed · v6.1</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        )}
       </div>
 
       {/* Report an issue button */}
@@ -293,7 +328,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         )}
       </div>
 
-      {/* Bottom bar — language toggle + collapse button */}
+      {/* Bottom bar -- language toggle + collapse button */}
       <div className="border-t border-border/30 p-2">
         <div className="flex items-center justify-end">
           <div className="flex items-center gap-0.5">
@@ -318,6 +353,26 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   )
 }
 
+/** Determine if a nav item is active based on current pathname */
+function getIsActive(href: string, pathname: string): boolean {
+  if (href === '/dashboard') {
+    return pathname === '/' || pathname === '/dashboard'
+  }
+  if (href === '/sectors') {
+    return pathname === '/sectors' || pathname.startsWith('/sectors/')
+  }
+  if (href === '/workspace') {
+    return pathname === '/workspace' || pathname === '/watchlist' || pathname.startsWith('/workspace/')
+  }
+  if (href === '/cases') {
+    return pathname === '/cases' || pathname.startsWith('/cases/')
+  }
+  if (href === '/investigation') {
+    return pathname === '/investigation' || pathname.startsWith('/investigation/')
+  }
+  return pathname === href || pathname.startsWith(href + '/')
+}
+
 function SidebarNavItem({
   item,
   collapsed,
@@ -340,30 +395,31 @@ function SidebarNavItem({
         'group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-all duration-150',
         'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
         isActive
-          ? 'text-accent bg-accent/10'
-          : 'text-text-secondary hover:text-text-primary hover:bg-sidebar-hover',
-        collapsed && 'justify-center px-0'
+          ? 'border-l-2 border-amber-500 bg-amber-500/[0.08] text-amber-300'
+          : 'border-l-2 border-transparent text-text-secondary hover:text-text-primary hover:bg-white/[0.04]',
+        collapsed && 'justify-center px-0 border-l-0',
+        isActive && collapsed && 'bg-amber-500/[0.08]'
       )}
       aria-current={isActive ? 'page' : undefined}
     >
-      {isActive && (
-        <span className="absolute left-0 top-1 bottom-1 w-[2px] rounded-r bg-accent shadow-[0_0_6px_var(--color-accent-glow)]" />
-      )}
-      {/* Icon — show badge dot in collapsed mode */}
+      {/* Icon -- show badge dot in collapsed mode */}
       <span className="relative flex-shrink-0">
         <Icon
           className={cn(
             'h-4 w-4 transition-colors',
-            isActive ? 'text-accent' : 'text-text-muted group-hover:text-text-secondary'
+            isActive ? 'text-amber-400' : 'text-text-muted group-hover:text-text-secondary'
           )}
           aria-hidden="true"
         />
         {badge > 0 && collapsed && (
           <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-orange-500" aria-hidden="true" />
         )}
+        {countBadge > 0 && collapsed && badge === 0 && (
+          <span className="absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full bg-amber-500/60" aria-hidden="true" />
+        )}
       </span>
       {!collapsed && <span className="truncate">{item.title}</span>}
-      {/* Alert badge — only visible in expanded mode */}
+      {/* Alert badge -- only visible in expanded mode */}
       {badge > 0 && !collapsed && (
         <span
           className="ml-auto flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white px-1"
@@ -372,13 +428,13 @@ function SidebarNavItem({
           {badge > 9 ? '9+' : badge}
         </span>
       )}
-      {/* Count badge — subdued, shows total items (e.g. case count) */}
+      {/* Count badge -- subdued, shows total items */}
       {countBadge > 0 && !collapsed && badge === 0 && (
         <span
           className="ml-auto flex h-4 min-w-[1.25rem] items-center justify-center rounded bg-surface-alt/60 text-[10px] font-mono text-text-muted px-1 border border-border/30"
           aria-label={`${countBadge} items`}
         >
-          {countBadge}
+          {countBadge > 999 ? `${Math.round(countBadge / 1000)}k` : countBadge}
         </span>
       )}
     </NavLink>
@@ -388,8 +444,8 @@ function SidebarNavItem({
     return (
       <Tooltip>
         <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-        <TooltipContent side="right" sideOffset={8}>
-          <p className="text-xs">{item.title}</p>
+        <TooltipContent side="right" sideOffset={8} className="bg-amber-950/90 border-amber-500/20 text-amber-200">
+          <p className="text-xs font-mono">{item.title}</p>
         </TooltipContent>
       </Tooltip>
     )

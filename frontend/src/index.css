@@ -23,28 +23,37 @@
   --color-risk-medium: #fbbf24;
   --color-risk-low: #4ade80;
 
-  /* Dark Theme (Default) — Deep intelligence aesthetic */
-  --color-background: #06080d;
-  --color-background-card: #0d1117;
-  --color-background-elevated: #161b22;
-  --color-border: #21262d;
-  --color-border-hover: #30363d;
-  --color-text-primary: #e6edf3;
-  --color-text-secondary: #8b949e;
-  --color-text-muted: #6e7681;
-  --color-accent: #7aa2c8;
-  --color-accent-hover: #5e8cb5;
-  --color-accent-glow: #7aa2c833;
+  /* RUBLI 2.0 — Obsidian Intelligence Theme */
+  --color-background: #080c14;
+  --color-background-card: #0e1420;
+  --color-background-elevated: #141c2c;
+  --color-border: #1e2d45;
+  --color-border-hover: #2a4060;
 
-  /* Sidebar */
-  --color-sidebar: #010409;
-  --color-sidebar-hover: #0d1117;
-  --color-sidebar-active: #161b22;
+  /* Text — warmer, less cold */
+  --color-text-primary: #e8eef6;
+  --color-text-secondary: #7d90aa;
+  --color-text-muted: #4a5d73;
+
+  /* Accent — amber/gold intelligence feel */
+  --color-accent: #f59e0b;
+  --color-accent-hover: #d97706;
+  --color-accent-glow: #f59e0b22;
+
+  /* Secondary accent — electric blue for data */
+  --color-accent-data: #3b82f6;
+  --color-accent-data-glow: #3b82f611;
+
+  /* Sidebar — almost black */
+  --color-sidebar: #050810;
+  --color-sidebar-hover: #0a0f1a;
+  --color-sidebar-active: #0e1420;
 
   /* Signal colors for live indicators */
-  --color-signal-pulse: #7aa2c8;
-  --color-signal-live: #3fb950;
-  --color-signal-warn: #d29922;
+  --color-signal-pulse: #f59e0b;
+  --color-signal-live: #22c55e;
+  --color-signal-warn: #f59e0b;
+  --color-signal-danger: #ef4444;
 
   /* Typography */
   --font-family-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
@@ -94,15 +103,15 @@
     --color-text-primary: #1f2328;
     --color-text-secondary: #656d76;
     --color-text-muted: #8b949e;
-    --color-accent: #3d7ab5;
-    --color-accent-hover: #2d6097;
-    --color-accent-glow: #3d7ab522;
+    --color-accent: #d97706;
+    --color-accent-hover: #b45309;
+    --color-accent-glow: #d9770622;
     --color-sidebar: #ffffff;
     --color-sidebar-hover: #f6f8fa;
     --color-sidebar-active: #eaeef2;
-    --color-signal-pulse: #3d7ab5;
+    --color-signal-pulse: #d97706;
     --color-signal-live: #1a7f37;
-    --color-signal-warn: #9a6700;
+    --color-signal-warn: #d97706;
   }
 
   body {
@@ -172,7 +181,7 @@
 
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, var(--color-accent), #60a5fa);
+    background-image: linear-gradient(135deg, var(--color-accent), #fbbf24);
   }
 
   /* Risk badges */
@@ -303,10 +312,27 @@
   .signal-live::after { animation: none; }
 }
 
+/* Scan-line shimmer for stat bombs */
+@keyframes scan-line {
+  0% { transform: translateY(-100%); opacity: 0; }
+  30% { opacity: 0.15; }
+  100% { transform: translateY(200%); opacity: 0; }
+}
+.stat-bomb-value::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent);
+  height: 40%;
+  animation: scan-line 2s ease-out 0.3s 1 forwards;
+  pointer-events: none;
+}
+
 /* Print */
 @media print {
   .no-print { display: none !important; }
   body { background: white; color: black; }
   .card { border: 1px solid #e5e7eb; background: white; }
+  .stat-bomb-value::after { display: none; }
 }
 

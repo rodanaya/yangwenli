@@ -22,11 +22,16 @@ import {
   Activity,
   Zap,
   TrendingDown,
+  TrendingUp,
   Scale,
   FileSearch,
   AlertTriangle,
   Layers,
   Calendar,
+  BarChart3,
+  Users,
+  DollarSign,
+  Gauge,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -56,411 +61,27 @@ import { RiskCalendarHeatmap } from '@/components/charts/RiskCalendarHeatmap'
 import { SectorRiskHeatmap } from '@/components/charts/SectorRiskHeatmap'
 
 // ============================================================================
-// Dashboard: Bold, data-dense intelligence overview
+// Dashboard 2.0: Situation Room
 //
 // Layout:
-// 1. HERO — Giant MXN value headline + context
-// 2. 5 KEY METRICS — Value at risk, high-risk rate, direct awards, single bid, AUC
-// 3. RISK DISTRIBUTION — Full-width stacked bar
-// 4. SECTORS + TRAJECTORY — 2-column grid
-// 5. TOP INSTITUTIONS + VENDORS — 2-column tables
-// 6. GROUND TRUTH — Validated against real corruption cases
-// 7. RED FLAGS + INVESTIGATION — Pattern counts + ML leads
-// 8. NAVIGATE DEEPER — 6 link cards
+// 1. LIVE ALERT BANNER (critical vendors detected)
+// 2. HEADLINE ROW: 4 KPI cards
+// 3. RISK DISTRIBUTION (Donut) + TOP RISK SECTORS (Horizontal bar)
+// 4. TEMPORAL TREND (full-width area chart)
+// 5. TOP VENDORS AT RISK + RECENT HIGH-RISK CONTRACTS
+// 6. SECTOR GRID: 12 sector cards with mini sparklines
 // ============================================================================
 
-// v6.0 model top-4 predictors (from RISK_METHODOLOGY_v6.md global model coefficients)
-// Returns translated signal data — must be called inside a component where t() is available.
-function getAiSignals(t: (key: string) => string) {
-  return [
-    {
-      icon: TrendingDown,
-      coefficient: '+1.16',
-      label: t('aiSignals.erraticPricing.label'),
-      description: t('aiSignals.erraticPricing.description'),
-      color: 'text-risk-critical' as const,
-      border: 'border-risk-critical/20' as const,
-      bg: 'bg-risk-critical/5' as const,
-    },
-    {
-      icon: Scale,
-      coefficient: '−0.85',
-      label: t('aiSignals.focusedBuyer.label'),
-      description: t('aiSignals.focusedBuyer.description'),
-      color: 'text-risk-high' as const,
-      border: 'border-risk-high/20' as const,
-      bg: 'bg-risk-high/5' as const,
-    },
-    {
-      icon: Target,
-      coefficient: '+0.73',
-      label: t('aiSignals.winRateSpike.label'),
-      description: t('aiSignals.winRateSpike.description'),
-      color: 'text-risk-medium' as const,
-      border: 'border-risk-medium/20' as const,
-      bg: 'bg-risk-medium/5' as const,
-    },
-    {
-      icon: Crosshair,
-      coefficient: '+0.43',
-      label: t('aiSignals.marketCapture.label'),
-      description: t('aiSignals.marketCapture.description'),
-      color: 'text-text-secondary' as const,
-      border: 'border-border/30' as const,
-      bg: 'bg-background-elevated/20' as const,
-    },
-  ]
+// Risk donut colors
+const DONUT_COLORS: Record<string, string> = {
+  critical: '#f87171',
+  high: '#fb923c',
+  medium: '#fbbf24',
+  low: '#4ade80',
 }
 
 // ============================================================================
-// ADMIN × SECTOR HEATMAP — 5 presidencies × 12 sectors risk intensity grid
-// ============================================================================
-
-const ADMIN_PERIODS = [
-  { name: 'Fox',        startYear: 2001, endYear: 2006, color: '#3b82f6' },
-  { name: 'Calderón',   startYear: 2007, endYear: 2012, color: '#60a5fa' },
-  { name: 'Peña Nieto', startYear: 2013, endYear: 2018, color: '#22c55e' },
-  { name: 'AMLO',       startYear: 2019, endYear: 2024, color: '#ef4444' },
-  { name: 'Sheinbaum',  startYear: 2025, endYear: 2030, color: '#f97316' },
-]
-
-function riskHeatColor(risk: number, maxRisk = 0.20): string {
-  // Normalize to the actual data max so relative differences are visible.
-  // 0 → green (#4ade80), mid → amber (#fbbf24), max+ → red (#f87171)
-  const t = Math.min(risk / Math.max(maxRisk, 0.001), 1)
-  if (t < 0.5) {
-    const tt = t / 0.5
-    return `rgb(${Math.round(74 + (251 - 74) * tt)},${Math.round(222 + (191 - 222) * tt)},${Math.round(128 + (36 - 128) * tt)})`
-  }
-  const tt = (t - 0.5) / 0.5
-  return `rgb(${Math.round(251 + (248 - 251) * tt)},${Math.round(191 + (113 - 191) * tt)},${Math.round(36 + (113 - 36) * tt)})`
-}
-
-function AdminSectorHeatmap() {
-  const { data: syd, isLoading } = useQuery({
-    queryKey: ['analysis', 'sector-year-breakdown'],
-    queryFn: () => analysisApi.getSectorYearBreakdown(),
-    staleTime: 10 * 60 * 1000,
-  })
-
-  const { grid, maxRisk } = useMemo(() => {
-    if (!syd?.data) return { grid: null, maxRisk: 0.20 }
-    const rows_all = ADMIN_PERIODS.flatMap(admin =>
-      SECTORS.map(sector => {
-        const rows = syd.data.filter(
-          (d) => d.sector_id === sector.id && d.year >= admin.startYear && d.year <= admin.endYear
-        )
-        return rows.length > 0
-          ? rows.reduce((s, d) => s + (d.avg_risk || 0), 0) / rows.length
-          : 0
-      })
-    )
-    const computedMax = Math.max(...rows_all, 0.001)
-    return {
-      grid: ADMIN_PERIODS.map(admin => ({
-        admin,
-        cells: SECTORS.map(sector => {
-          const rows = syd.data.filter(
-            (d) => d.sector_id === sector.id && d.year >= admin.startYear && d.year <= admin.endYear
-          )
-          const avgRisk = rows.length > 0
-            ? rows.reduce((s, d) => s + (d.avg_risk || 0), 0) / rows.length
-            : 0
-          return { sector, avgRisk }
-        }),
-      })),
-      maxRisk: computedMax,
-    }
-  }, [syd])
-
-  if (isLoading || !grid) return <Skeleton className="h-44 w-full" />
-  const maxLabel = (maxRisk * 100).toFixed(1) + '%'
-
-  return (
-    <div>
-      <div className="overflow-x-auto pb-1">
-        <div style={{ minWidth: 520 }}>
-          {/* Sector header row */}
-          <div className="flex mb-1" style={{ paddingLeft: 84 }}>
-            {SECTORS.map(s => (
-              <div
-                key={s.code}
-                className="flex-1 text-center text-[7px] text-text-muted font-mono uppercase tracking-wider truncate px-0.5"
-                title={s.code}
-              >
-                {s.code.slice(0, 4)}
-              </div>
-            ))}
-          </div>
-          {/* Administration rows */}
-          {grid.map(({ admin, cells }) => (
-            <div key={admin.name} className="flex items-center mb-1">
-              <div
-                className="flex-shrink-0 text-[9px] font-bold font-mono pr-2 text-right leading-tight"
-                style={{ width: 84, color: admin.color }}
-              >
-                {admin.name}
-              </div>
-              <div className="flex flex-1 gap-0.5">
-                {cells.map(({ sector, avgRisk }) => (
-                  <div
-                    key={sector.code}
-                    className="flex-1 rounded-sm flex items-center justify-center cursor-default"
-                    style={{ height: 30, backgroundColor: riskHeatColor(avgRisk, maxRisk) }}
-                    title={`${admin.name} × ${sector.code}: ${(avgRisk * 100).toFixed(1)}% avg risk`}
-                  >
-                    {avgRisk >= 0.10 && (
-                      <span className="text-[7px] font-bold text-white/90 font-mono tabular-nums leading-none">
-                        {(avgRisk * 100).toFixed(0)}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      {/* Legend */}
-      <div className="flex items-center gap-2 mt-2 text-[9px] text-text-muted font-mono">
-        <span>Low</span>
-        <div className="flex h-2 rounded overflow-hidden" style={{ width: 80 }}>
-          {[0, 0.2, 0.4, 0.6, 0.8, 1.0].map((v, i) => (
-            <div key={i} className="flex-1" style={{ backgroundColor: riskHeatColor(v * maxRisk, maxRisk) }} />
-          ))}
-        </div>
-        <span>{maxLabel} (max)</span>
-        <span className="ml-auto opacity-60">relative scale · numbers shown when ≥10%</span>
-      </div>
-    </div>
-  )
-}
-
-// ============================================================================
-// HEATMAP PANEL — tab-toggled heatmap views
-// ============================================================================
-
-type HeatmapTab = 'monthly' | 'sector' | 'admin'
-
-function HeatmapPanel() {
-  const [tab, setTab] = React.useState<HeatmapTab>('monthly')
-  const [expanded, setExpanded] = React.useState(false)
-
-  const TABS: { id: HeatmapTab; label: string; shortLabel: string; desc: string }[] = [
-    { id: 'monthly', label: 'Month × Year',   shortLabel: 'Monthly', desc: 'Risk by calendar month 2016–2025' },
-    { id: 'sector',  label: 'Sector × Year',  shortLabel: 'Sector',  desc: 'Risk per sector 2002–2025' },
-    { id: 'admin',   label: 'Admin × Sector', shortLabel: 'Admin',   desc: 'Avg risk per presidential term across all 12 sectors' },
-  ]
-
-  return (
-    <Card className="border-border/40">
-      <CardContent className="pt-4 pb-4">
-        {/* Header — always visible */}
-        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <Layers className="h-4 w-4 text-accent" />
-            <h2 className="text-sm font-bold text-text-primary">Risk Heatmaps</h2>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1 border border-border/30 rounded-md p-0.5">
-              {TABS.map(t => (
-                <button
-                  key={t.id}
-                  onClick={() => { setTab(t.id); setExpanded(true) }}
-                  className={`px-2 sm:px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                    tab === t.id
-                      ? 'bg-accent/20 text-accent'
-                      : 'text-text-muted hover:text-text-secondary'
-                  }`}
-                >
-                  <span className="hidden sm:inline">{t.label}</span>
-                  <span className="sm:hidden">{t.shortLabel}</span>
-                </button>
-              ))}
-            </div>
-            {/* Mobile collapse toggle */}
-            <button
-              className="md:hidden flex items-center gap-1 text-xs text-text-muted hover:text-text-primary transition-colors px-1.5 py-1 rounded border border-border/30"
-              onClick={() => setExpanded(e => !e)}
-              aria-expanded={expanded}
-              aria-label={expanded ? 'Collapse heatmap' : 'Expand heatmap'}
-            >
-              {expanded ? '▲' : '▼'}
-            </button>
-          </div>
-        </div>
-        {/* Content — always visible on desktop, collapsible on mobile */}
-        <div className={expanded ? '' : 'hidden md:block'}>
-          <p className="text-[10px] text-text-muted mb-3">
-            {TABS.find(t => t.id === tab)?.desc}
-          </p>
-          {tab === 'monthly' && <RiskCalendarHeatmap />}
-          {tab === 'sector'  && <SectorRiskHeatmap />}
-          {tab === 'admin'   && <AdminSectorHeatmap />}
-        </div>
-        {/* Mobile expand hint */}
-        {!expanded && (
-          <p className="md:hidden text-[10px] text-text-muted text-center py-1">
-            Tap ▼ to view heatmap
-          </p>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
-
-// ============================================================================
-// ERA TIMELINE — 5 administrations as proportional horizontal strip
-// ============================================================================
-
-const ERA_DATA = [
-  { name: 'Fox', years: '2001–06', color: '#3b82f6', party: 'PAN', startYear: 2001, endYear: 2006 },
-  { name: 'Calderón', years: '2007–12', color: '#60a5fa', party: 'PAN', startYear: 2007, endYear: 2012 },
-  { name: 'Peña Nieto', years: '2013–18', color: '#22c55e', party: 'PRI', startYear: 2013, endYear: 2018 },
-  { name: 'AMLO', years: '2019–24', color: '#ef4444', party: 'MORENA', startYear: 2019, endYear: 2024 },
-  { name: 'Sheinbaum', years: '2025–', color: '#f97316', party: 'MORENA', startYear: 2025, endYear: 2030 },
-]
-
-const TOTAL_YEARS = 2030 - 2001
-
-function EraTimelineStrip() {
-  const [hoveredEra, setHoveredEra] = React.useState<string | null>(null)
-  const currentYear = new Date().getFullYear()
-
-  return (
-    <div className="rounded border border-border/20 overflow-hidden bg-background-elevated/10">
-      {/* Color bar row */}
-      <div className="flex h-2">
-        {ERA_DATA.map((era) => {
-          const widthPct = ((era.endYear - era.startYear) / TOTAL_YEARS) * 100
-          return (
-            <div
-              key={era.name}
-              className="relative transition-opacity duration-150"
-              style={{
-                width: `${widthPct}%`,
-                backgroundColor: era.color,
-                opacity: hoveredEra === null || hoveredEra === era.name ? 1 : 0.35,
-              }}
-              onMouseEnter={() => setHoveredEra(era.name)}
-              onMouseLeave={() => setHoveredEra(null)}
-            />
-          )
-        })}
-      </div>
-      {/* Label row */}
-      <div className="flex">
-        {ERA_DATA.map((era) => {
-          const widthPct = ((era.endYear - era.startYear) / TOTAL_YEARS) * 100
-          const isHovered = hoveredEra === era.name
-          const isCurrent = era.startYear <= currentYear && currentYear < era.endYear
-          const partyBg =
-            era.party === 'PAN' ? 'bg-blue-500/15 text-blue-400' :
-            era.party === 'PRI' ? 'bg-green-600/15 text-green-500' :
-            'bg-rose-700/15 text-rose-400'
-          return (
-            <button
-              key={era.name}
-              className={cn(
-                'relative flex flex-col items-start gap-0.5 px-2 py-1.5 transition-colors text-left',
-                isHovered ? 'bg-background-elevated/40' : ''
-              )}
-              style={{ width: `${widthPct}%` }}
-              onMouseEnter={() => setHoveredEra(era.name)}
-              onMouseLeave={() => setHoveredEra(null)}
-              aria-label={`${era.name} administration, ${era.years}, ${era.party}`}
-            >
-              <div className="flex items-center gap-1 min-w-0 w-full">
-                <span
-                  className="text-[10px] font-bold font-mono truncate"
-                  style={{ color: era.color }}
-                >
-                  {era.name}
-                </span>
-                {isCurrent && (
-                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 animate-pulse" style={{ backgroundColor: era.color }} />
-                )}
-              </div>
-              <div className="flex items-center gap-1 min-w-0">
-                <span className={cn('text-[9px] font-bold px-1 rounded font-mono hidden sm:block', partyBg)}>
-                  {era.party}
-                </span>
-                <span className="text-[9px] text-text-muted font-mono hidden md:block truncate">{era.years}</span>
-              </div>
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-// ============================================================================
-// RISK GAUGE — SVG half-ring showing critical+high percentage
-// ============================================================================
-
-
-// ============================================================================
-// CROSS-MODEL VALIDATION WIDGET — PyOD ensemble vs v6.0 agreement stats
-// ============================================================================
-
-function CrossModelValidationWidget() {
-  const { data, isLoading } = useQuery({
-    queryKey: ['pyod-agreement'],
-    queryFn: () => analysisApi.getPyodAgreement(),
-    staleTime: 60 * 60 * 1000,
-  })
-
-  if (isLoading) return <Skeleton className="h-24" />
-  if (!data) return null
-
-  const bothFlaggedLabel = data.both_flagged >= 1_000_000
-    ? `${(data.both_flagged / 1_000_000).toFixed(1)}M`
-    : `${Math.round(data.both_flagged / 1_000)}K`
-
-  // confirmation_rate is a 0–1 decimal representing fraction of v6.0 high-risk confirmed by PyOD
-  const confirmationPct = (data.confirmation_rate * 100).toFixed(1)
-
-  return (
-    <div className="rounded-xl border border-border/40 bg-background-card/50 p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
-          <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
-            Cross-Model Validation
-          </p>
-        </div>
-        <span className="text-[10px] text-text-muted">v6.0 ∩ PyOD unsupervised</span>
-      </div>
-      <div className="grid grid-cols-3 gap-3">
-        <div className="text-center">
-          <p className="text-xl font-bold text-text-primary tabular-nums">
-            {bothFlaggedLabel}
-          </p>
-          <p className="text-[10px] text-text-muted mt-0.5">Dual-Confirmed</p>
-        </div>
-        <div className="text-center">
-          <p className="text-xl font-bold text-accent tabular-nums">
-            {confirmationPct}%
-          </p>
-          <p className="text-[10px] text-text-muted mt-0.5">Agreement Rate</p>
-        </div>
-        <div className="text-center">
-          <p className="text-xl font-bold text-text-primary tabular-nums">
-            {data.pyod_flagged_pct.toFixed(1)}%
-          </p>
-          <p className="text-[10px] text-text-muted mt-0.5">ML Flagged</p>
-        </div>
-      </div>
-      <p className="text-[10px] text-text-muted/60 mt-3 text-center">
-        {confirmationPct}% of high-risk contracts confirmed by unsupervised ML — two independent methods agree
-      </p>
-    </div>
-  )
-}
-
-// ============================================================================
-// MINI SPARKLINE — 120×24px area chart for KPI trend embedding
+// MINI SPARKLINE — 120x24px area chart for KPI trend embedding
 // ============================================================================
 
 function MiniSparkline({
@@ -496,1321 +117,116 @@ function MiniSparkline({
   )
 }
 
-export function Dashboard() {
-  const navigate = useNavigate()
-  const { open: openEntityDrawer } = useEntityDrawer()
-  const { t } = useTranslation('dashboard')
-  const aiSignals = getAiSignals(t)
-  // API call 1: Fast precomputed dashboard stats
-  const { data: fastDashboard, isLoading: dashLoading, error: dashError, refetch: dashRefetch } = useQuery({
-    queryKey: ['dashboard', 'fast'],
-    queryFn: () => analysisApi.getFastDashboard(),
-    staleTime: 5 * 60 * 1000,
-  })
-
-  // API call 2: (yoy removed — using fastDashboard.yearly_trends instead)
-
-  // API call 3: Executive summary (ground truth, top institutions/vendors, risk data)
-  const { data: execData, isLoading: execLoading } = useQuery({
-    queryKey: ['executive', 'summary'],
-    queryFn: () => analysisApi.getExecutiveSummary(),
-    staleTime: 10 * 60 * 1000,
-  })
-
-  // API call 4: Pattern counts
-  useQuery({
-    queryKey: ['analysis', 'patterns', 'counts'],
-    queryFn: () => analysisApi.getPatternCounts(),
-    staleTime: 5 * 60 * 1000,
-  })
-
-  // API call 5: Money flow — top institution→vendor flows (30ms, uses precomputed table)
-  const { data: moneyFlowData } = useQuery({
-    queryKey: ['analysis', 'money-flow', 'dashboard'],
-    queryFn: () => analysisApi.getMoneyFlow(),
-    staleTime: 10 * 60 * 1000,
-  })
-
-  // Model metadata — version + AUC pulled live from model_calibration table
-  const { data: modelMeta } = useQuery({
-    queryKey: ['analysis', 'model-metadata'],
-    queryFn: () => analysisApi.getModelMetadata(),
-    staleTime: 60 * 60 * 1000, // 1h — changes only after retraining
-    retry: 0,
-    refetchOnWindowFocus: false,
-  })
-
-  // API call 6+7 replaced: december_spike and monthly_2023 are now precomputed
-  // and returned directly in the fast-dashboard response (zero extra API calls)
-  const decemberSpike = fastDashboard?.december_spike as {
-    average_spike_ratio: number
-    years_with_significant_spike: number
-    total_years_analyzed: number
-    pattern_detected: boolean
-    years: Array<{ year: number; spike_ratio: number; is_significant: boolean }>
-  } | null | undefined
-  const monthlyData = fastDashboard?.monthly_2023 as {
-    months: Array<{ month: number; contracts: number; value: number }>
-  } | null | undefined
-
-  // API call 8: reserved (smoking gun removed from UI — kept for future use)
-  useQuery({
-    queryKey: ['investigation', 'top-1-dashboard'],
-    queryFn: () => investigationApi.getTopCases(1),
-    staleTime: 30 * 60 * 1000,
-    enabled: false,
-  })
-
-  const { data: pubDelayData } = useQuery({
-    queryKey: ['analysis', 'publication-delays'],
-    queryFn: () => analysisApi.getPublicationDelays(),
-    staleTime: 6 * 60 * 60 * 1000,
-    retry: 0, // endpoint may be unavailable on older deploys — don't block dashboard with retries
-    refetchOnWindowFocus: false,
-  })
-
-
-  const overview = fastDashboard?.overview
-  const sectors = fastDashboard?.sectors
-  const riskDist = fastDashboard?.risk_distribution
-
-  // Value concentration: % of contracts that are high/critical vs % of total value they hold
-  const criticalHighContractPct = useMemo(() => {
-    if (!riskDist) return 0
-    return riskDist
-      .filter(d => d.risk_level === 'critical' || d.risk_level === 'high')
-      .reduce((s, d) => s + (d.percentage || 0), 0)
-  }, [riskDist])
-
-  const criticalHighValuePct = useMemo(() => {
-    if (!riskDist) return 0
-    const totalVal = riskDist.reduce((s, d) => s + (d.total_value_mxn || 0), 0)
-    const flaggedVal = riskDist
-      .filter(d => d.risk_level === 'critical' || d.risk_level === 'high')
-      .reduce((s, d) => s + (d.total_value_mxn || 0), 0)
-    return totalVal > 0 ? (flaggedVal / totalVal) * 100 : 0
-  }, [riskDist])
-
-  // Sectors sorted by value at risk
-  const sectorData = useMemo(() => {
-    if (!sectors) return []
-    return sectors
-      .map((s) => {
-        const ct = s.total_contracts || 1
-        const hrRate = ((s.high_risk_count || 0) + (s.critical_risk_count || 0)) / ct
-        const daRate = (s.direct_award_count || 0) / ct
-        return {
-          name: getSectorNameEN(s.code),
-          code: s.code,
-          id: s.id,
-          valueAtRisk: hrRate * (s.total_value_mxn || 0),
-          riskPct: hrRate * 100,
-          contracts: s.total_contracts,
-          totalValue: s.total_value_mxn || 0,
-          avgRisk: s.avg_risk_score || 0,
-          directAwardPct: daRate * 100,
-        }
-      })
-      .sort((a, b) => b.valueAtRisk - a.valueAtRisk)
-  }, [sectors])
-
-  // Risk trajectory from precomputed yearly_trends (fast, no extra API call)
-  const riskTrajectory = useMemo(() => {
-    if (!fastDashboard?.yearly_trends) return []
-    return fastDashboard.yearly_trends
-      .filter((d) => d.year >= 2010)
-      .map((d) => ({
-        year: d.year,
-        highRiskPct: (d.avg_risk || 0) * 100,
-        avgRisk: (d.avg_risk || 0) * 100,
-        contracts: d.contracts,
-      }))
-  }, [fastDashboard])
-
-  // Animated KPI: briefly pulse numbers when data first arrives
-  const [justLoaded, setJustLoaded] = useState(false)
-  useEffect(() => {
-    if (!dashLoading && overview) {
-      setJustLoaded(true)
-      const timer = setTimeout(() => setJustLoaded(false), 1000)
-      return () => clearTimeout(timer)
-    }
-  }, [dashLoading, overview])
-
-  // Sector selector for Risk Trajectory chart (null = "All Sectors")
-  const [selectedTrajectorySectorId, setSelectedTrajectorySectorId] = useState<number | null>(null)
-
-  // Sector treemap view mode
-  const [treemapViewMode, setTreemapViewMode] = useState<'value' | 'risk'>('value')
-
-  // API call: sector × year breakdown for per-sector risk trajectories
-  const { data: sectorYearData } = useQuery({
-    queryKey: ['analysis', 'sector-year-breakdown'],
-    queryFn: () => analysisApi.getSectorYearBreakdown(),
-    staleTime: 10 * 60 * 1000,
-  })
-
-  // Per-sector trajectory filtered to the selected sector
-  const sectorTrajectory = useMemo(() => {
-    if (selectedTrajectorySectorId === null || !sectorYearData?.data) return []
-    return sectorYearData.data
-      .filter((d) => d.sector_id === selectedTrajectorySectorId && d.year >= 2010)
-      .map((d) => ({
-        year: d.year,
-        highRiskPct: (d.avg_risk || 0) * 100,
-        avgRisk: (d.avg_risk || 0) * 100,
-        contracts: d.contracts,
-      }))
-      .sort((a, b) => a.year - b.year)
-  }, [sectorYearData, selectedTrajectorySectorId])
-
-  // Refs for chart export buttons
-  const riskTrajectoryRef = useRef<HTMLDivElement>(null)
-  const sectorTreemapRef = useRef<HTMLDivElement>(null)
-  const riskDistRef = useRef<HTMLDivElement>(null)
-
-  // Top 3 money flows for dashboard teaser
-  const topFlows = useMemo(() => {
-    if (!moneyFlowData?.flows) return []
-    return [...moneyFlowData.flows]
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 3)
-  }, [moneyFlowData])
-
-  // Ground truth cases from executive API
-  const corruptionCases = useMemo(() => {
-    if (!execData?.ground_truth?.case_details) return []
-    return execData.ground_truth.case_details
-  }, [execData])
-
-  const groundTruth = execData?.ground_truth
-  const modelAuc = execData?.model?.auc ?? 0.849
-
-  const lastUpdated = fastDashboard?.cached_at
-    ? new Date(fastDashboard.cached_at).toLocaleString('en-US', {
-        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
-      })
-    : null
-
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Procurement Intelligence"
-        subtitle="Real-time risk analysis across 3.1M contracts"
-        icon={LayoutDashboard}
-      />
-      {dashError && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-risk-critical/30 bg-risk-critical/5 mb-2">
-          <AlertTriangle className="h-4 w-4 text-risk-critical flex-shrink-0" />
-          <p className="text-sm text-risk-critical flex-1">
-            Dashboard data failed to load. Some sections may be unavailable.
-          </p>
-          <button
-            onClick={() => void dashRefetch()}
-            className="text-sm text-risk-critical underline hover:no-underline font-medium flex-shrink-0"
-          >
-            Retry
-          </button>
-        </div>
-      )}
-      {/* ================================================================ */}
-      {/* HERO — Two-column: value headline left + global search right    */}
-      {/* ================================================================ */}
-      <div className="pb-2 grid grid-cols-1 md:grid-cols-[5fr_3fr] gap-6 items-start">
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-accent" />
-            <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
-              {t('intelligenceBrief')}
-            </span>
-          </div>
-          {lastUpdated && (
-            <div className="flex items-center gap-1.5 text-xs text-text-muted font-mono">
-              <Activity className="h-3 w-3 text-signal-live" />
-              <span>{t('synced')} {lastUpdated.toUpperCase()}</span>
-            </div>
-          )}
-        </div>
-        {dashLoading ? (
-          <Skeleton className="h-14 w-full max-w-sm" />
-        ) : (
-          <div>
-            <h1 className={cn('text-4xl md:text-5xl font-black text-text-primary tracking-tight leading-none transition-opacity', justLoaded && 'animate-pulse')}>
-              {formatCompactMXN(overview?.total_value_mxn || 0)}
-            </h1>
-            <p className="text-sm text-text-muted font-mono mt-0.5">
-              ≈ {formatCompactUSD(overview?.total_value_mxn || 0)} USD
-            </p>
-            <p className="text-lg text-text-muted mt-1 font-medium">
-              {t('underSurveillance')}
-            </p>
-          </div>
-        )}
-        <div className="text-sm text-text-muted mt-2">
-          {dashLoading ? (
-            <Skeleton className="h-4 w-96" />
-          ) : (
-            t('contractsAnalyzed', {
-              contracts: formatNumber(overview?.total_contracts || 0),
-              vendors: formatNumber(overview?.total_vendors || 0),
-            })
-          )}
-        </div>
-        <div className="text-[11px] text-text-muted/50 font-mono mt-1 flex items-center gap-1 flex-wrap">
-          <span>Risk model {modelMeta?.version ?? CURRENT_MODEL_VERSION}</span>
-          <span className="text-text-muted/30">·</span>
-          <span>AUC {modelMeta?.auc_test != null ? modelMeta.auc_test.toFixed(3) : '0.849'}</span>
-          <span className="text-text-muted/30">·</span>
-          <span className="cursor-help border-b border-dotted border-text-muted/30" title="Label Coverage (c): proportion of corrupt contracts the model reliably detects among all known cases. Elkan & Noto (2008) PU-learning correction.">
-            c={modelMeta?.pu_correction != null ? modelMeta.pu_correction.toFixed(3) : '0.448'}
-          </span>
-          <span className="text-text-muted/30">·</span>
-          <span>{(overview?.total_contracts || 0) > 0 ? formatNumber(overview?.total_contracts || 0) : '3,110,007'} contracts · 2002–2025</span>
-        </div>
-        {/* Model Confidence Badge */}
-        <div className="mt-2 flex items-center gap-3 flex-wrap">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 cursor-help" title="AUC measures how well the model separates corrupt from clean contracts. 0.849 = ranks corrupt contracts higher 84.2% of the time. Vendor-stratified split: no vendor in both train and test.">
-            <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-xs font-mono text-emerald-400">
-              AUC {modelMeta?.auc_test != null ? modelMeta.auc_test.toFixed(3) : '0.849'} · {modelMeta?.version ?? CURRENT_MODEL_VERSION}
-            </span>
-          </div>
-          <p className="text-xs text-text-muted/70">
-            Data as of {lastUpdated
-              ? lastUpdated
-              : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-          </p>
-        </div>
-
-        {/* WHAT WE FOUND — three anchor claims before the user scrolls */}
-        {overview && (
-          <div className="mt-3 pt-2.5 border-t border-border/20 space-y-1.5">
-            <button onClick={() => navigate('/contracts?is_direct_award=true')} className="flex items-baseline gap-2.5 hover:opacity-80 transition-opacity">
-              <span className="text-sm font-black font-mono text-risk-high tabular-nums min-w-[3rem]">
-                {`${(overview.direct_award_pct || 0).toFixed(0)}%`}
-              </span>
-              <span className="text-[11px] text-text-muted">of contracts bypass competitive bidding</span>
-            </button>
-            <button onClick={() => navigate('/administrations')} className="flex items-baseline gap-2.5 hover:opacity-80 transition-opacity">
-              <span className="text-sm font-black font-mono text-risk-medium tabular-nums min-w-[3rem]">
-                {decemberSpike ? `${decemberSpike.average_spike_ratio.toFixed(2)}×` : '1.33×'}
-              </span>
-              <span className="text-[11px] text-text-muted">more contracts awarded in December vs. monthly average</span>
-            </button>
-            <button onClick={() => navigate('/contracts?risk_level=critical&risk_level=high')} className="flex items-baseline gap-2.5 hover:opacity-80 transition-opacity">
-              <span className="text-sm font-black font-mono text-risk-critical tabular-nums min-w-[3rem]">
-                {criticalHighValuePct > 0 ? `${criticalHighValuePct.toFixed(1)}%` : '~8%'}
-              </span>
-              <span className="text-[11px] text-text-muted">of total contract value linked to high/critical risk</span>
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* RIGHT COLUMN — Search */}
-      <div className="md:pt-8">
-        <p className="text-xs text-text-muted mb-2 font-mono uppercase tracking-wider">Investigate an entity</p>
-        <GlobalSearch />
-      </div>
-      </div>
-
-      {/* ================================================================ */}
-      {/* 4 KPI TILES — Live API data, replaces hardcoded stat rings      */}
-      {/* ================================================================ */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {([
-          { label: 'High / Critical Risk', value: dashLoading ? '—' : `${criticalHighContractPct.toFixed(1)}%`, sub: 'of all 3.1M contracts', color: '#f87171' },
-          { label: 'Value at Risk', value: dashLoading ? '—' : `${criticalHighValuePct.toFixed(1)}%`, sub: 'of total procurement spend', color: '#fb923c' },
-          { label: 'Model AUC', value: execLoading ? '—' : modelAuc.toFixed(3), sub: 'temporal train/test split', color: '#818cf8' },
-          { label: 'Cases Validated', value: execLoading ? '—' : String(groundTruth?.cases ?? 22), sub: 'documented corruption cases', color: '#34d399' },
-        ] as const).map(({ label, value, sub, color }) => (
-          <div key={label} className="px-4 py-3 rounded-lg border border-border/30 bg-background-elevated/20">
-            <p className="text-[10px] font-bold tracking-wider uppercase text-text-muted font-mono mb-1">{label}</p>
-            <p className="text-2xl font-black tabular-nums font-mono leading-none" style={{ color }}>{value}</p>
-            <p className="text-[10px] text-text-muted mt-1">{sub}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* ================================================================ */}
-      {/* CROSS-MODEL VALIDATION — PyOD unsupervised ML confirmation      */}
-      {/* ================================================================ */}
-      <CrossModelValidationWidget />
-
-      {/* ================================================================ */}
-      {/* TOP CRITICAL FLAGS — Immediate investigation leads for researchers */}
-      {/* ================================================================ */}
-      <TopCriticalFlags navigate={navigate} execData={execData} execLoading={execLoading} />
-
-      {/* ================================================================ */}
-      {/* TOP FINDINGS — 3 quick-access story cards for journalists       */}
-      {/* ================================================================ */}
-      <TopFindingsStrip
-        navigate={navigate}
-        sectorData={sectorData}
-        execData={execData}
-        execLoading={execLoading}
-      />
-
-      {/* ================================================================ */}
-      {/* DATA QUALITY — Compact transparency strip                       */}
-      {/* ================================================================ */}
-      <div className="flex items-center gap-2 flex-wrap px-3 py-2 rounded border border-border/20 bg-background-elevated/10">
-        <Shield className="h-3 w-3 text-text-muted flex-shrink-0" />
-        <span className="text-[11px] font-bold tracking-wider uppercase text-text-muted font-mono">{t('dataQualityLabel')}</span>
-        <span className="text-border text-[11px]">·</span>
-        <span className="text-[11px] text-text-muted font-mono">2002–10 <span className="text-risk-medium">0.1% RFC</span></span>
-        <span className="text-border text-[11px]">·</span>
-        <span className="text-[11px] text-text-muted font-mono">2010–22 <span className="text-text-secondary">15–30% RFC</span></span>
-        <span className="text-border text-[11px]">·</span>
-        <span className="text-[11px] text-text-muted font-mono">2023–25 <span className="text-risk-low">47% RFC</span></span>
-        <button
-          onClick={() => navigate('/limitations')}
-          className="ml-auto text-[11px] text-accent flex items-center gap-0.5 hover:underline font-mono"
-        >
-          See limitations <ArrowUpRight className="h-3 w-3" />
-        </button>
-      </div>
-
-      {/* ================================================================ */}
-      {/* PUBLICATION TRANSPARENCY — compact inline card                  */}
-      {/* ================================================================ */}
-      {pubDelayData && (
-        <div className="flex items-center gap-3 flex-wrap px-3 py-2 rounded border border-border/20 bg-background-elevated/10">
-          <Activity className="h-3 w-3 text-text-muted flex-shrink-0" />
-          <span className="text-[11px] font-bold tracking-wider uppercase text-text-muted font-mono">Publication Delay</span>
-          <span className="text-border text-[11px]">·</span>
-          <span className="text-[11px] text-text-muted font-mono">
-            avg <span className={pubDelayData.avg_delay_days > 30 ? 'text-risk-medium' : 'text-text-secondary'}>{pubDelayData.avg_delay_days.toFixed(0)} days</span>
-          </span>
-          <span className="text-border text-[11px]">·</span>
-          <span className="text-[11px] text-text-muted font-mono">
-            <span className={pubDelayData.timely_pct < 20 ? 'text-risk-high' : pubDelayData.timely_pct < 50 ? 'text-risk-medium' : 'text-risk-low'}>{pubDelayData.timely_pct.toFixed(0)}%</span> published within 7 days
-          </span>
-          <span className="text-border text-[11px]">·</span>
-          <span className="text-[11px] text-text-muted font-mono">
-            {pubDelayData.distribution.find(d => d.label === '>90 days')?.pct.toFixed(0)}% delayed {'>'}90 days
-          </span>
-          <button
-            onClick={() => navigate('/administrations')}
-            className="ml-auto text-[11px] text-accent flex items-center gap-0.5 hover:underline font-mono"
-          >
-            Explore cycles <ArrowUpRight className="h-3 w-3" />
-          </button>
-        </div>
-      )}
-
-      {/* ================================================================ */}
-      {/* ERA TIMELINE — 5 administration segments */}
-      {/* ================================================================ */}
-      <EraTimelineStrip />
-
-      {/* ================================================================ */}
-      {/* THREE SYSTEMIC PATTERNS — AI-found structural failures          */}
-      {/* ================================================================ */}
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <Radar className="h-4 w-4 text-risk-high" />
-          <span className="text-xs font-bold tracking-wider uppercase text-risk-high font-mono">
-            {t('systemicPatternsLabel')}
-          </span>
-        </div>
-        <h2 className="text-xl font-black text-text-primary mb-1">
-          {t('systemicPatternsTitle')}
-        </h2>
-        <p className="text-sm text-text-muted mb-4">
-          {t('systemicPatternsDesc')}
-        </p>
-        <motion.div
-          className="grid gap-3 sm:grid-cols-2 md:grid-cols-3"
-          variants={staggerContainer}
-          initial="initial"
-          whileInView="animate"
-          viewport={{ once: true, margin: '-40px' }}
-        >
-          {/* Direct Awards */}
-          <motion.button
-            variants={staggerItem}
-            onClick={() => navigate('/contracts?is_direct_award=true')}
-            className="flex flex-col gap-3 p-4 rounded-lg border border-risk-high/20 bg-risk-high/5 hover:border-risk-high/40 hover:bg-risk-high/10 transition-all text-left group"
-          >
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded bg-risk-high/10">
-                <Zap className="h-4 w-4 text-risk-high" />
-              </div>
-              <span className="text-xs font-bold tracking-wider uppercase text-risk-high font-mono">{t('directAwardCardLabel')}</span>
-            </div>
-            <div>
-              <p className="text-3xl font-black text-text-primary tabular-nums font-mono">
-                {overview ? `${(overview.direct_award_pct || 0).toFixed(0)}%` : '—'}
-              </p>
-              <p className="text-sm text-text-secondary mt-1">{t('directAwardCardDesc')}</p>
-              <p className="text-xs text-text-muted mt-1 font-mono">{t('oecdDirectAward')}</p>
-            </div>
-            <ArrowRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" />
-          </motion.button>
-
-          {/* Single Bidder */}
-          <motion.button
-            variants={staggerItem}
-            onClick={() => navigate('/contracts?is_single_bid=true')}
-            className="flex flex-col gap-3 p-4 rounded-lg border border-risk-critical/20 bg-risk-critical/5 hover:border-risk-critical/40 hover:bg-risk-critical/10 transition-all text-left group"
-          >
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded bg-risk-critical/10">
-                <Crosshair className="h-4 w-4 text-risk-critical" />
-              </div>
-              <span className="text-xs font-bold tracking-wider uppercase text-risk-critical font-mono">{t('singleBidCardLabel')}</span>
-            </div>
-            <div>
-              <p className="text-3xl font-black text-text-primary tabular-nums font-mono">
-                {overview ? `${(overview.single_bid_pct || 0).toFixed(0)}%` : '—'}
-              </p>
-              <p className="text-sm text-text-secondary mt-1">{t('singleBidCardDesc')}</p>
-              <p className="text-xs text-text-muted mt-1 font-mono">{t('singleBidEffective')}</p>
-            </div>
-            <ArrowRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" />
-          </motion.button>
-
-          {/* December Rush */}
-          <motion.button
-            variants={staggerItem}
-            onClick={() => navigate('/administrations')}
-            className="flex flex-col gap-3 p-4 rounded-lg border border-risk-medium/20 bg-risk-medium/5 hover:border-risk-medium/40 hover:bg-risk-medium/10 transition-all text-left group"
-          >
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded bg-risk-medium/10">
-                <Activity className="h-4 w-4 text-risk-medium" />
-              </div>
-              <span className="text-xs font-bold tracking-wider uppercase text-risk-medium font-mono">{t('decemberRushCardLabel')}</span>
-            </div>
-            <div>
-              <p className="text-3xl font-black text-text-primary tabular-nums font-mono">
-                {decemberSpike ? `${decemberSpike.average_spike_ratio.toFixed(1)}x` : '—'}
-              </p>
-              <p className="text-sm text-text-secondary mt-1">{t('decemberSpikeRatio')}</p>
-              {monthlyData ? (
-                <div className="mt-2">
-                  <div className="h-10">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={monthlyData.months} barCategoryGap="8%" margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                        <Bar dataKey="contracts" radius={[2, 2, 0, 0]}>
-                          {monthlyData.months.map((entry: { month: number }) => (
-                            <Cell
-                              key={entry.month}
-                              fill={entry.month === 12 ? RISK_COLORS.medium : 'rgba(148,163,184,0.40)'}
-                            />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <p className="text-[10px] text-text-muted font-mono text-center">
-                    {t('contractsPerMonth2023')}
-                  </p>
-                </div>
-              ) : (
-                <p className="text-xs text-text-muted mt-1 font-mono">
-                  {decemberSpike
-                    ? t('decemberSpikeYears', { significant: decemberSpike.years_with_significant_spike, total: decemberSpike.total_years_analyzed })
-                    : t('yearEndBudgetDump')}
-                </p>
-              )}
-            </div>
-            <ArrowRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" />
-          </motion.button>
-        </motion.div>
-      </div>
-
-      {/* ================================================================ */}
-      {/* TRANSPARENCY CONTEXT — CompraNet abolished, INAI eliminated    */}
-      {/* ================================================================ */}
-      <div className="rounded-lg border border-border/40 bg-background-card/50 p-5">
-        <div className="flex items-start gap-3">
-          <div className="p-1.5 rounded bg-border/20 shrink-0 mt-0.5">
-            <AlertTriangle className="h-4 w-4 text-text-muted" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-bold tracking-wider uppercase text-text-muted font-mono mb-1">
-              {t('compranetContextLabel')}
-            </p>
-            <p className="text-sm font-semibold text-text-primary mb-2">
-              {t('compranetContextTitle')}
-            </p>
-            <p className="text-xs text-text-muted leading-relaxed mb-3">
-              {t('compranetContextBody')}
-            </p>
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="text-[10px] font-mono text-text-muted px-2 py-0.5 rounded border border-border/40 bg-border/10">
-                {t('compranetContextDate1')}
-              </span>
-              <span className="text-[10px] font-mono text-text-muted px-2 py-0.5 rounded border border-border/40 bg-border/10">
-                {t('compranetContextDate2')}
-              </span>
-              <button
-                onClick={() => navigate('/limitations')}
-                className="text-xs text-accent flex items-center gap-1 ml-auto"
-              >
-                {t('compranetContextLink')} <ArrowUpRight className="h-3 w-3" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ================================================================ */}
-      {/* HOW THE AI WORKS — Top 4 v6.0 model predictors                */}
-      {/* ================================================================ */}
-      <Card className="border-border/40">
-        <CardContent className="pt-5 pb-4">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <div className="flex items-center gap-2 mb-0.5">
-                <Radar className="h-4 w-4 text-accent" />
-                <h2 className="text-base font-bold text-text-primary">{t('howAiWorks')}</h2>
-              </div>
-              <p className="text-xs text-text-muted">
-                {t('howAiWorksDesc')}
-              </p>
-            </div>
-            <button
-              onClick={() => navigate('/methodology')}
-              className="text-xs text-accent flex items-center gap-1"
-            >
-              {t('fullMethodologyLink')} <ArrowUpRight className="h-3 w-3" />
-            </button>
-          </div>
-          <motion.div
-            className="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-4"
-            variants={staggerContainer}
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true, margin: '-40px' }}
-          >
-            {aiSignals.map((signal) => (
-              <motion.div key={signal.label} variants={staggerItem} className={cn('rounded-lg border p-3', signal.border, signal.bg)}>
-                <div className="flex items-center gap-2 mb-2">
-                  <signal.icon className={cn('h-3.5 w-3.5', signal.color)} />
-                  <span className={cn('text-lg font-black tabular-nums font-mono leading-none', signal.color)}>
-                    {signal.coefficient}
-                  </span>
-                </div>
-                <p className="text-sm font-bold text-text-primary leading-tight">{signal.label}</p>
-                <p className="text-xs text-text-muted mt-0.5 leading-relaxed">{signal.description}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-          <p className="text-[10px] text-text-muted mt-3 font-mono">
-            Coefficient = log-odds contribution to risk score. v6.0 · Train AUC 0.849 · Test AUC 0.849
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* ================================================================ */}
-      {/* VALUE CONCENTRATION — The 10.6% that holds the money          */}
-      {/* ================================================================ */}
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-        {/* Concentration paradox */}
-        <div className="rounded-lg border border-risk-critical/20 bg-risk-critical/5 px-5 py-5">
-          <div className="flex items-center gap-2 mb-3">
-            <Zap className="h-4 w-4 text-risk-critical" />
-            <span className="text-xs font-bold tracking-wider uppercase text-risk-critical font-mono">
-              {t('valueConcentrationLabel')}
-            </span>
-          </div>
-          <div className="flex items-center gap-4 mb-3 flex-wrap">
-            <div>
-              <p className="text-[10px] text-text-muted font-mono uppercase tracking-wide mb-0.5">{t('valueConcentrationShareContracts')}</p>
-              <p className="text-4xl font-black text-text-primary tabular-nums font-mono">
-                {dashLoading ? '—' : `${criticalHighContractPct.toFixed(1)}%`}
-              </p>
-            </div>
-            <ArrowRight className="h-6 w-6 text-risk-critical flex-shrink-0" />
-            <div>
-              <p className="text-[10px] text-text-muted font-mono uppercase tracking-wide mb-0.5">{t('valueConcentrationShareValue')}</p>
-              <p className="text-4xl font-black text-risk-critical tabular-nums font-mono">
-                {dashLoading ? '—' : `${criticalHighValuePct.toFixed(1)}%`}
-              </p>
-            </div>
-            {/* Sparkline: high-risk rate trend */}
-            {riskTrajectory.length > 0 && (
-              <div className="flex flex-col items-end ml-auto">
-                <p className="text-[9px] text-text-muted font-mono uppercase tracking-wide mb-0.5">Risk trend</p>
-                <MiniSparkline
-                  data={riskTrajectory}
-                  dataKey="highRiskPct"
-                  color={RISK_COLORS.critical}
-                />
-              </div>
-            )}
-          </div>
-          <p className="text-xs text-text-muted leading-relaxed">
-            {t('valueConcentrationDesc')}
-          </p>
-          <button
-            onClick={() => navigate('/contracts?risk_level=critical')}
-            className="mt-2 text-xs text-accent flex items-center gap-1"
-          >
-            {t('viewCriticalContracts')} <ArrowUpRight className="h-3 w-3" />
-          </button>
-        </div>
-
-        {/* Where the Money Goes */}
-        <div className="rounded-lg border border-border/40 bg-surface-card/30 px-5 py-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <ArrowRight className="h-4 w-4 text-accent" />
-              <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
-                {t('whereTheMoneyGoes')}
-              </span>
-            </div>
-            <button
-              onClick={() => navigate('/categories')}
-              className="text-xs text-accent flex items-center gap-1"
-            >
-              {t('fullBreakdown')} <ArrowUpRight className="h-3 w-3" />
-            </button>
-          </div>
-          <p className="text-xs text-text-muted mb-3">{t('whereMoneyGoesSubDesc')}</p>
-          {!moneyFlowData ? (
-            <div className="space-y-2">
-              {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-9" />)}
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {topFlows.map((flow, i) => {
-                const riskColor =
-                  (flow.avg_risk ?? 0) >= 0.50 ? 'text-risk-critical' :
-                  (flow.avg_risk ?? 0) >= 0.30 ? 'text-risk-high' :
-                  (flow.avg_risk ?? 0) >= 0.10 ? 'text-risk-medium' :
-                  'text-risk-low'
-                return (
-                  <div key={i} className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-background-elevated/30 transition-colors">
-                    <span className="text-xs text-text-muted font-mono w-4 flex-shrink-0">{i + 1}</span>
-                    <div className="flex-1 min-w-0">
-                      <button onClick={() => openEntityDrawer(flow.source_id, 'institution')} className="text-xs font-semibold text-text-secondary truncate block hover:text-accent transition-colors">
-                        {toTitleCase(flow.source_name)}
-                      </button>
-                      <button onClick={() => openEntityDrawer(flow.target_id, 'vendor')} className="text-xs text-text-muted truncate block hover:text-accent transition-colors">
-                        → {toTitleCase(flow.target_name)}
-                      </button>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-xs tabular-nums font-mono text-text-secondary font-semibold">
-                        {formatCompactMXN(flow.value)}
-                      </p>
-                      <p className="text-[10px] tabular-nums font-mono text-text-muted">
-                        ≈ {formatCompactUSD(flow.value)}
-                      </p>
-                      {flow.avg_risk != null && (
-                        <p className={cn('text-[10px] font-bold tabular-nums font-mono', riskColor)}>
-                          {(flow.avg_risk * 100).toFixed(0)}% risk
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ================================================================ */}
-      {/* SECTOR SPEND TREEMAP — where the money concentrates            */}
-      {/* ================================================================ */}
-      {sectorData.length > 0 && (
-        <div className="rounded-xl bg-background-elevated/20 border border-border/30 p-4">
-          <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
-            <div>
-              <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider mb-1">Spend by Sector</h3>
-              <p className="text-xs text-text-muted">
-                {treemapViewMode === 'value' ? 'Size = total spend · Color = sector' : 'Size = total spend · Color = high-risk rate'} · Click to explore
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center rounded border border-border/30 overflow-hidden text-[10px] font-medium">
-                <button
-                  onClick={() => setTreemapViewMode('value')}
-                  className={cn('px-2 py-0.5 transition-colors', treemapViewMode === 'value' ? 'bg-accent/20 text-accent' : 'text-text-muted hover:text-text-secondary')}
-                >
-                  Value
-                </button>
-                <button
-                  onClick={() => setTreemapViewMode('risk')}
-                  className={cn('px-2 py-0.5 border-l border-border/30 transition-colors', treemapViewMode === 'risk' ? 'bg-red-500/20 text-red-400' : 'text-text-muted hover:text-text-secondary')}
-                >
-                  Risk
-                </button>
-              </div>
-              <ChartDownloadButton targetRef={sectorTreemapRef} filename="rubli-sector-spend" />
-            </div>
-          </div>
-          <div ref={sectorTreemapRef} style={{ height: 320 }} className="mt-3">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                layout="vertical"
-                data={[...sectorData].sort((a, b) => b.totalValue - a.totalValue).map((s) => ({
-                  name: s.name,
-                  size: s.totalValue,
-                  riskPct: s.riskPct,
-                  code: s.code,
-                  id: s.id,
-                }))}
-                margin={{ top: 0, right: 120, left: 0, bottom: 0 }}
-                onClick={(data: any) => {
-                  const id = data?.activePayload?.[0]?.payload?.id
-                  if (id) navigate(`/sectors/${id}`)
-                }}
-                style={{ cursor: 'pointer' }}
-              >
-                <XAxis type="number" hide />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  width={90}
-                  tick={{ fontSize: 11, fill: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)' }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Bar dataKey="size" radius={[0, 3, 3, 0]} isAnimationActive={false}>
-                  {[...sectorData].sort((a, b) => b.totalValue - a.totalValue).map((s) => (
-                    <Cell
-                      key={s.code}
-                      fill={
-                        treemapViewMode === 'risk'
-                          ? riskHeatColor(s.riskPct / 100)
-                          : (SECTOR_COLORS[s.code] ?? '#64748b')
-                      }
-                      fillOpacity={0.85}
-                    />
-                  ))}
-                  <LabelList
-                    dataKey="size"
-                    position="right"
-                    formatter={(v: unknown) => formatCompactMXN(v as number)}
-                    style={{ fontSize: 10, fontFamily: 'var(--font-mono)', fill: 'var(--color-text-muted)' }}
-                  />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 px-1">
-            {[...sectorData].sort((a, b) => b.totalValue - a.totalValue).map((s) => {
-              const riskColor =
-                s.riskPct >= 30 ? 'text-risk-critical' :
-                s.riskPct >= 10 ? 'text-risk-high' :
-                'text-risk-medium'
-              return (
-                <span key={s.code} className={`text-[10px] font-mono ${riskColor}`}>
-                  {s.name} {s.riskPct.toFixed(1)}%
-                </span>
-              )
-            })}
-          </div>
-          <p className="text-xs text-text-muted italic mt-2 px-1">
-            Energia and Infraestructura together represent over half of total procurement value — their concentration makes them the highest-priority sectors for investigation.
-          </p>
-        </div>
-      )}
-
-      {/* ================================================================ */}
-      {/* ADMINISTRATION COMPARISON — Compact link to full analysis      */}
-      {/* ================================================================ */}
-      <button
-        onClick={() => navigate('/administrations')}
-        className="w-full flex items-center gap-4 px-5 py-4 rounded-xl border border-border/30 bg-background-elevated/10 hover:border-accent/30 hover:bg-accent/5 transition-all text-left group"
-      >
-        <div className="p-2 rounded-lg bg-border/20 shrink-0 group-hover:bg-accent/10 transition-colors">
-          <Scale className="h-5 w-5 text-text-muted group-hover:text-accent transition-colors" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-text-primary">{t('adminReportCardTitle')}</p>
-          <p className="text-xs text-text-muted mt-0.5">{t('adminReportCardDesc')}</p>
-        </div>
-        <ArrowUpRight className="h-4 w-4 text-text-muted group-hover:text-accent transition-colors flex-shrink-0" />
-      </button>
-
-      {/* ================================================================ */}
-      {/* TOP FLAGGED VENDORS — Largest recipients with AI risk scores   */}
-      {/* ================================================================ */}
-      <Card className="border-border/40">
-        <CardContent className="pt-5 pb-4">
-          <div className="flex items-center justify-between mb-1">
-            <div>
-              <div className="flex items-center gap-2 mb-0.5">
-                <Target className="h-4 w-4 text-risk-critical" />
-                <h2 className="text-base font-bold text-text-primary">{t('topVendorsByValue')}</h2>
-              </div>
-              <p className="text-xs text-text-muted">{t('topVendorsByValueDesc')}</p>
-            </div>
-            <button
-              onClick={() => navigate('/network')}
-              className="text-xs text-accent flex items-center gap-1"
-            >
-              {t('network')} <ArrowUpRight className="h-3 w-3" />
-            </button>
-          </div>
-          {execLoading ? (
-            <div className="space-y-2 mt-3">
-              {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-8" />)}
-            </div>
-          ) : (
-            <div className="mt-3 space-y-0.5">
-              {(execData?.top_vendors || []).map((vendor, i) => {
-                const riskPct = vendor.avg_risk * 100
-                const riskColor = vendor.avg_risk >= 0.50 ? 'text-risk-critical' :
-                  vendor.avg_risk >= 0.30 ? 'text-risk-high' :
-                  vendor.avg_risk >= 0.10 ? 'text-risk-medium' : 'text-risk-low'
-                const riskBg = vendor.avg_risk >= 0.50 ? 'bg-risk-critical' :
-                  vendor.avg_risk >= 0.30 ? 'bg-risk-high' :
-                  vendor.avg_risk >= 0.10 ? 'bg-risk-medium' : 'bg-risk-low'
-                return (
-                  <button
-                    key={vendor.id}
-                    onClick={() => openEntityDrawer(vendor.id, 'vendor')}
-                    className="flex items-center gap-2 w-full py-2 px-2 rounded hover:bg-background-elevated/30 transition-colors text-left group"
-                  >
-                    <span className="text-xs text-text-muted font-mono w-4 flex-shrink-0">{i + 1}</span>
-                    <span className="text-sm text-text-secondary font-medium flex-1 truncate group-hover:text-text-primary transition-colors">
-                      {toTitleCase(vendor.name)}
-                    </span>
-                    <span className="text-xs tabular-nums font-mono text-text-muted w-[72px] text-right flex-shrink-0">
-                      {vendor.value_billions.toFixed(1)}B MXN
-                    </span>
-                    <span className="text-xs tabular-nums font-mono text-text-muted w-[52px] text-right flex-shrink-0">
-                      {formatNumber(vendor.contracts)}
-                    </span>
-                    <div className="w-[68px] flex items-center gap-1 flex-shrink-0">
-                      <div className="flex-1 h-1.5 rounded-full bg-background-elevated/50 overflow-hidden">
-                        <div className={cn('h-full rounded-full', riskBg)} style={{ width: `${riskPct}%`, opacity: 0.7 }} />
-                      </div>
-                      <span className={cn('text-xs font-bold tabular-nums font-mono w-[30px] text-right', riskColor)}>
-                        {riskPct.toFixed(0)}%
-                      </span>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* ================================================================ */}
-      {/* SECTORS + TRAJECTORY — 2-column grid */}
-      {/* ================================================================ */}
-      <div className="grid gap-4 grid-cols-1 lg:grid-cols-5">
-        {/* Sector Intelligence — 3 columns */}
-        <div className="lg:col-span-3 rounded-xl bg-background-elevated/20 border border-border/30 p-4">
-          <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider mb-1">{t('sectorIntelligence')}</h3>
-          <p className="text-xs text-text-muted mb-4">{t('sectorIntelligenceDesc')}</p>
-          {dashLoading ? (
-            <div className="space-y-2">{[...Array(6)].map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
-          ) : (
-            <SectorGrid data={sectorData} onSectorClick={(id) => navigate(`/sectors/${id}`)} />
-          )}
-          <p className="text-xs text-text-muted italic mt-2 px-1">
-            Salud and Infraestructura consistently lead in value-at-risk — concentrated vendors and opaque direct awards drive their elevated scores.
-          </p>
-        </div>
-
-        {/* Risk Trajectory — 2 columns */}
-        <div className="lg:col-span-2 rounded-xl bg-background-elevated/20 border border-border/30 p-4">
-          <div className="flex items-center justify-between mb-1">
-            <div>
-              <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider mb-1">{t('riskTrajectory')}</h3>
-              <p className="text-xs text-text-muted">{t('riskTrajectoryDesc')}</p>
-            </div>
-            <ChartDownloadButton targetRef={riskTrajectoryRef} filename="rubli-risk-trajectory" />
-          </div>
-          {/* Sector selector */}
-          <div className="mb-3 mt-2">
-            <select
-              className="text-xs font-mono bg-background-elevated/60 border border-border/30 rounded px-2 py-1 text-text-muted focus:outline-none focus:border-accent/60 cursor-pointer"
-              value={selectedTrajectorySectorId ?? ''}
-              onChange={(e) => setSelectedTrajectorySectorId(e.target.value === '' ? null : Number(e.target.value))}
-              aria-label="Filter risk trajectory by sector"
-            >
-              <option value="">All Sectors</option>
-              {sectorData.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
-          </div>
-          {dashLoading ? (
-            <div className="h-[340px] flex items-center justify-center"><Skeleton className="h-full w-full" /></div>
-          ) : (
-            <div ref={riskTrajectoryRef}>
-              <RiskTrajectoryChart
-                data={riskTrajectory}
-                sectorTrajectory={selectedTrajectorySectorId !== null ? sectorTrajectory : undefined}
-                sectorColor={selectedTrajectorySectorId !== null
-                  ? (SECTOR_COLORS[sectorData.find((s) => s.id === selectedTrajectorySectorId)?.code ?? ''] ?? '#64748b')
-                  : undefined}
-                yearlyTrends={fastDashboard?.yearly_trends}
-              />
-            </div>
-          )}
-          <p className="text-xs text-text-muted italic mt-2 px-1">
-            COVID-19 (2020) triggered emergency procurement exceptions that briefly elevated risk scores across all sectors.
-          </p>
-        </div>
-      </div>
-
-      {/* ================================================================ */}
-      {/* RISK DISTRIBUTION — Gauge + Full-width stacked bar             */}
-      {/* ================================================================ */}
-      <div className="rounded-xl bg-background-elevated/20 border border-border/30 p-4">
-        <div className="flex items-center justify-between mb-1">
-          <div>
-            <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider mb-1 flex items-center gap-1.5">
-              {t('riskDistribution')}
-              <RiskScoreDisclaimer />
-            </h3>
-            <p className="text-xs text-text-muted">
-              {t('riskDistLabel', { total: formatNumber(overview?.total_contracts || 0) })}
-            </p>
-          </div>
-          <ChartDownloadButton targetRef={riskDistRef} filename="rubli-risk-distribution" />
-        </div>
-        {dashLoading || !riskDist ? (
-          <div className="space-y-3 mt-3">
-            <div className="flex justify-center"><Skeleton className="h-28 w-48" /></div>
-            <Skeleton className="h-10 w-full" />
-          </div>
-        ) : (
-          <div ref={riskDistRef} className="space-y-3 mt-3">
-            {/* Donut + 4 stat cards (clickable → filtered contract list) */}
-            <div className="flex flex-col sm:flex-row items-center gap-6">
-              <RiskDonutChart data={riskDist} />
-              <div className="flex-1 grid grid-cols-2 gap-2 w-full">
-                {(['critical', 'high', 'medium', 'low'] as const).map((level) => {
-                  const d = riskDist.find((r) => r.risk_level === level)
-                  const color = DONUT_COLORS[level] ?? '#64748b'
-                  return (
-                    <button
-                      key={level}
-                      onClick={() => navigate(`/contracts?risk_level=${level}`)}
-                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-border/20 bg-background-elevated/20 hover:border-accent/30 hover:bg-accent/5 transition-all text-left group"
-                    >
-                      <div className="w-2.5 h-8 rounded-sm flex-shrink-0 group-hover:opacity-100" style={{ backgroundColor: color, opacity: 0.75 }} />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[10px] text-text-muted capitalize font-mono uppercase tracking-wide">{level}</p>
-                        <p className="text-lg font-black tabular-nums font-mono leading-tight" style={{ color }}>
-                          {(d?.percentage ?? 0).toFixed(1)}%
-                        </p>
-                        <p className="text-[10px] text-text-muted font-mono tabular-nums">{formatNumber(d?.count ?? 0)}</p>
-                      </div>
-                      <ArrowUpRight className="h-3 w-3 text-text-muted opacity-0 group-hover:opacity-100 flex-shrink-0 transition-opacity" />
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Stacked proportion bars — contracts % and value % side by side */}
-            {(() => {
-              const totalValue = riskDist.reduce((s, d) => s + (d.total_value_mxn || 0), 0)
-              return (
-                <div className="space-y-2">
-                  <div>
-                    <p className="text-[10px] font-mono text-text-muted uppercase tracking-wider mb-1">Contracts by risk level</p>
-                    <div className="flex h-7 rounded overflow-hidden gap-px">
-                      {(['critical', 'high', 'medium', 'low'] as const).map(level => {
-                        const d = riskDist.find(r => r.risk_level === level)
-                        const pct = d?.percentage ?? 0
-                        return pct > 0.5 ? (
-                          <button
-                            key={level}
-                            onClick={() => navigate(`/contracts?risk_level=${level}`)}
-                            className="flex items-center justify-center hover:opacity-90 transition-opacity"
-                            style={{ width: `${pct}%`, backgroundColor: DONUT_COLORS[level] ?? '#64748b', opacity: 0.75 }}
-                            title={`${level}: ${pct.toFixed(1)}% of contracts`}
-                          >
-                            {pct > 5 && (
-                              <span className="text-[9px] font-bold text-white font-mono tabular-nums">{pct.toFixed(0)}%</span>
-                            )}
-                          </button>
-                        ) : null
-                      })}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-[10px] font-mono text-text-muted uppercase tracking-wider">Value by risk level</p>
-                      <p className="text-[10px] font-mono text-text-muted">{formatCompactMXN(totalValue)} total</p>
-                    </div>
-                    <div className="flex h-7 rounded overflow-hidden gap-px">
-                      {(['critical', 'high', 'medium', 'low'] as const).map(level => {
-                        const d = riskDist.find(r => r.risk_level === level)
-                        const val = d?.total_value_mxn ?? 0
-                        const pct = totalValue > 0 ? (val / totalValue) * 100 : 0
-                        return pct > 0.5 ? (
-                          <button
-                            key={level}
-                            onClick={() => navigate(`/contracts?risk_level=${level}`)}
-                            className="flex items-center justify-center hover:opacity-90 transition-opacity"
-                            style={{ width: `${pct}%`, backgroundColor: DONUT_COLORS[level] ?? '#64748b', opacity: 0.75 }}
-                            title={`${level}: ${pct.toFixed(1)}% of value (${formatCompactMXN(val)})`}
-                          >
-                            {pct > 5 && (
-                              <span className="text-[9px] font-bold text-white font-mono tabular-nums">{pct.toFixed(0)}%</span>
-                            )}
-                          </button>
-                        ) : null
-                      })}
-                    </div>
-                  </div>
-                </div>
-              )
-            })()}
-
-            {/* Plain-language annotation */}
-            <RiskDistributionAnnotation data={riskDist} />
-          </div>
-        )}
-        <p className="text-xs text-text-muted italic mt-2 px-1">
-          Critical and high contracts share statistical patterns with documented corruption cases — concentrated vendors, abnormal win rates, and sector mismatches drive the score.
-        </p>
-      </div>
-
-      {/* ================================================================ */}
-      {/* HEATMAPS — 3 views: monthly · sector×year · sector×admin     */}
-      {/* ================================================================ */}
-      <HeatmapPanel />
-
-      {/* ================================================================ */}
-      {/* YEAR-END RISK SURGE CALLOUT — compact audit-insight card       */}
-      {/* ================================================================ */}
-      <div className="flex items-start gap-4 px-5 py-4 rounded-xl border border-orange-500/25 bg-orange-500/5">
-        <div className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-lg bg-orange-500/15 mt-0.5">
-          <Calendar className="h-4 w-4 text-orange-400" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-orange-400 font-mono mb-0.5">
-            Seasonal Risk Pattern · Audit Finding
-          </p>
-          <div className="flex items-baseline gap-2 flex-wrap mb-1">
-            <span className="text-2xl font-black font-mono text-orange-400 tabular-nums">46%</span>
-            <span className="text-sm font-semibold text-text-primary">higher risk score in December</span>
-          </div>
-          <p className="text-xs text-text-muted leading-relaxed">
-            Year-End Risk Surge — December and January are consistently the highest-risk months for procurement fraud.
-            December contracts average a risk score of 0.148 vs. 0.101 for the rest of the year.
-          </p>
-        </div>
-      </div>
-
-
-      {/* ================================================================ */}
-      {/* GROUND TRUTH — compact pill grid                             */}
-      {/* ================================================================ */}
-      <Card className="border-border/40">
-        <CardContent className="pt-4 pb-3">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Target className="h-4 w-4 text-accent" />
-              <h2 className="text-sm font-bold text-text-primary">{t('validatedAgainstReal')}</h2>
-              <span className="text-[10px] font-mono text-text-muted bg-background-elevated/40 px-1.5 py-0.5 rounded">
-                AUC {modelAuc.toFixed(3)} · {groundTruth?.cases ?? 390} cases
-              </span>
-            </div>
-            <button
-              onClick={() => navigate('/executive-summary')}
-              className="text-xs text-accent flex items-center gap-1 transition-colors hover:underline shrink-0"
-            >
-              {t('fullAnalysis')} <ArrowUpRight className="h-3 w-3" />
-            </button>
-          </div>
-          {execLoading ? (
-            <div className="space-y-1.5">
-              {[...Array(8)].map((_, i) => <Skeleton key={i} className="h-6" />)}
-            </div>
-          ) : (
-            <div>
-              <div className="flex items-center gap-2 mb-1.5 px-1">
-                <span className="text-[10px] font-mono text-text-muted flex-1">Case</span>
-                <span className="text-[10px] font-mono text-text-muted w-[120px]">Detection rate (high+)</span>
-                <span className="text-[10px] font-mono text-text-muted w-10 text-right">%</span>
-              </div>
-              <div className="space-y-1">
-                {[...corruptionCases]
-                  .filter(c => c.contracts >= 10)
-                  .sort((a, b) => b.high_plus_pct - a.high_plus_pct)
-                  .slice(0, 10)
-                  .map(c => {
-                    const pct = c.high_plus_pct
-                    const barColor =
-                      pct >= 90 ? '#4ade80' :
-                      pct >= 50 ? '#fbbf24' :
-                      '#f87171'
-                    const textColor =
-                      pct >= 90 ? 'text-green-400' :
-                      pct >= 50 ? 'text-amber-400' :
-                      'text-red-400'
-                    const truncatedName = c.name.length > 28 ? c.name.slice(0, 28) + '…' : c.name
-                    return (
-                      <div
-                        key={c.name}
-                        className="flex items-center gap-2 px-1 py-0.5 rounded hover:bg-background-elevated/20 transition-colors"
-                        title={`${c.name}: ${pct.toFixed(0)}% detected (${formatNumber(c.contracts)} contracts, avg score ${c.avg_score.toFixed(2)})`}
-                      >
-                        <span className="text-[11px] text-text-secondary flex-1 truncate font-mono">{truncatedName}</span>
-                        <div className="w-[120px] h-1.5 rounded-full bg-background-elevated/50 overflow-hidden shrink-0">
-                          <div
-                            className="h-full rounded-full"
-                            style={{ width: `${Math.min(pct, 100)}%`, backgroundColor: barColor, opacity: 0.8 }}
-                          />
-                        </div>
-                        <span className={cn('text-[11px] font-black font-mono tabular-nums w-10 text-right shrink-0', textColor)}>
-                          {pct.toFixed(0)}%
-                        </span>
-                      </div>
-                    )
-                  })}
-              </div>
-            </div>
-          )}
-          <p className="text-[10px] text-text-muted mt-2">
-            High+ detection rate per documented case ·{' '}
-            <button onClick={() => navigate('/executive-summary')} className="underline">full breakdown →</button>
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* ================================================================ */}
-      {/* START INVESTIGATING — 3 action cards */}
-      {/* ================================================================ */}
-      <div>
-        <h2 className="text-base font-bold text-text-primary mb-1">{t('startInvestigating')}</h2>
-        <p className="text-xs text-text-muted mb-3">
-          {t('startInvestigatingDesc')}
-        </p>
-        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-          <button
-            onClick={() => navigate('/categories')}
-            className="flex flex-col gap-3 p-5 rounded-lg border border-border/40 bg-surface-card/30 hover:border-accent/40 hover:bg-accent/5 transition-all text-left group"
-          >
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-md bg-accent/10 group-hover:bg-accent/20 transition-colors">
-                <Search className="h-5 w-5 text-accent" />
-              </div>
-              <span className="text-sm font-bold text-text-primary">{t('followTheMoney')}</span>
-            </div>
-            <p className="text-xs text-text-muted leading-relaxed">
-              {t('followTheMoneyDesc')}
-            </p>
-            <div className="flex items-center gap-1 text-xs text-accent font-medium">
-              {t('exploreCategories')} <ArrowRight className="h-3 w-3" />
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/contracts')}
-            className="flex flex-col gap-3 p-5 rounded-lg border border-border/40 bg-surface-card/30 hover:border-accent/40 hover:bg-accent/5 transition-all text-left group"
-          >
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-md bg-accent/10 group-hover:bg-accent/20 transition-colors">
-                <FileSearch className="h-5 w-5 text-accent" />
-              </div>
-              <span className="text-sm font-bold text-text-primary">{t('searchAnyContract')}</span>
-            </div>
-            <p className="text-xs text-text-muted leading-relaxed">
-              {t('searchAnyContractDesc')}
-            </p>
-            <div className="flex items-center gap-1 text-xs text-accent font-medium">
-              {t('openContractSearch')} <ArrowRight className="h-3 w-3" />
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/investigation')}
-            className="flex flex-col gap-3 p-5 rounded-lg border border-border/40 bg-surface-card/30 hover:border-accent/40 hover:bg-accent/5 transition-all text-left group"
-          >
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-md bg-accent/10 group-hover:bg-accent/20 transition-colors">
-                <Crosshair className="h-5 w-5 text-accent" />
-              </div>
-              <span className="text-sm font-bold text-text-primary">{t('openInvestigation')}</span>
-            </div>
-            <p className="text-xs text-text-muted leading-relaxed">
-              {t('openInvestigationDesc')}
-            </p>
-            <div className="flex items-center gap-1 text-xs text-accent font-medium">
-              {t('openCaseManager')} <ArrowRight className="h-3 w-3" />
-            </div>
-          </button>
-        </div>
-      </div>
-
-    </div>
-  )
-}
-
 // ============================================================================
-// STAT CARD — Bold metric display
+// KPI CARD — Large number, label, trend indicator, colored glow
 // ============================================================================
 
-interface StatCardProps {
-  loading: boolean
-  label: React.ReactNode
+interface KPICardProps {
+  label: string
   value: string
-  detail: string
+  sublabel: string
   color: string
-  borderColor: string
-  sublabel?: string
+  loading: boolean
+  icon: React.ElementType
+  trend?: { direction: 'up' | 'down' | 'neutral'; label: string }
   onClick?: () => void
+  sparkData?: Array<Record<string, number>>
+  sparkKey?: string
 }
 
-export const _StatCard = memo(function _StatCard({ loading, label, value, detail, color, borderColor, sublabel, onClick }: StatCardProps) {
+const KPICard = memo(function KPICard({
+  label, value, sublabel, color, loading, icon: Icon, trend, onClick, sparkData, sparkKey,
+}: KPICardProps) {
   return (
-    <Card
-      className={cn(
-        'border-l-4 transition-shadow hover:border-accent/30 hover:shadow-[0_0_20px_rgba(0,0,0,0.15)]',
-        borderColor,
-        onClick && 'cursor-pointer hover:shadow-lg hover:scale-[1.01] transition-all duration-200 group/sc'
-      )}
+    <button
       onClick={onClick}
-      role={onClick ? 'button' : undefined}
-      tabIndex={onClick ? 0 : undefined}
+      disabled={!onClick}
+      className={cn(
+        'relative flex flex-col justify-between p-5 rounded-xl border bg-background-card/60 text-left transition-all duration-200 overflow-hidden group',
+        onClick && 'cursor-pointer hover:shadow-lg hover:scale-[1.01]',
+        !onClick && 'cursor-default',
+      )}
+      style={{
+        borderColor: `${color}20`,
+        boxShadow: `inset 0 0 0 1px ${color}08`,
+      }}
+      tabIndex={onClick ? 0 : -1}
       onKeyDown={onClick ? (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } } : undefined}
     >
-      <CardContent className="p-4">
-        <p className="text-xs font-bold tracking-wider uppercase text-text-muted font-mono mb-1.5">
+      {/* Top glow accent */}
+      <div
+        className="absolute top-0 left-0 right-0 h-[2px] transition-opacity"
+        style={{ backgroundColor: color, opacity: 0.5 }}
+      />
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[10px] font-bold tracking-[0.12em] uppercase text-text-muted font-mono leading-none">
           {label}
         </p>
-        {loading ? (
-          <Skeleton className="h-8 w-20 mb-1" />
-        ) : (
-          <p className={cn('text-2xl md:text-3xl font-black tabular-nums tracking-tight leading-none', color)}>{value}</p>
+        <Icon className="h-4 w-4 text-text-muted/50" />
+      </div>
+      {loading ? (
+        <Skeleton className="h-10 w-28 mb-2" />
+      ) : (
+        <p
+          className="text-3xl font-black tabular-nums font-mono leading-none tracking-tight transition-colors"
+          style={{ color }}
+        >
+          {value}
+        </p>
+      )}
+      <div className="flex items-center justify-between mt-3 gap-2">
+        <p className="text-[10px] text-text-muted leading-tight flex-1">{sublabel}</p>
+        {trend && (
+          <span className={cn(
+            'text-[10px] font-bold font-mono tabular-nums flex items-center gap-0.5 flex-shrink-0',
+            trend.direction === 'up' ? 'text-risk-critical' : trend.direction === 'down' ? 'text-risk-low' : 'text-text-muted'
+          )}>
+            {trend.direction === 'up' ? <TrendingUp className="h-3 w-3" /> : trend.direction === 'down' ? <TrendingDown className="h-3 w-3" /> : null}
+            {trend.label}
+          </span>
         )}
-        <p className="text-xs text-text-muted mt-1.5">{detail}</p>
-        {sublabel && (
-          <p className="text-xs text-text-muted mt-0.5 font-mono">{sublabel}</p>
+        {sparkData && sparkKey && (
+          <div className="flex-shrink-0">
+            <MiniSparkline data={sparkData} dataKey={sparkKey} color={color} />
+          </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+      {/* Hover brightening */}
+      {onClick && (
+        <div className="absolute inset-0 bg-white/[0.02] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+      )}
+    </button>
   )
 })
 
 // ============================================================================
-// RISK DISTRIBUTION BAR — Full-width stacked bar with labels
+// ALERT BANNER — Shows when critical vendors are present
 // ============================================================================
 
-
-// ============================================================================
-// ============================================================================
-// RISK DONUT CHART — Small PieChart showing 4 risk levels
-// ============================================================================
-
-const DONUT_COLORS: Record<string, string> = {
-  critical: '#f87171',
-  high: '#fb923c',
-  medium: '#fbbf24',
-  low: '#4ade80',
+function AlertBanner({ criticalCount, onClick }: { criticalCount: number; onClick: () => void }) {
+  if (criticalCount === 0) return null
+  return (
+    <motion.button
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      onClick={onClick}
+      className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-risk-critical/30 bg-risk-critical/5 hover:bg-risk-critical/10 transition-all text-left group"
+    >
+      <div className="flex items-center gap-2">
+        <div className="h-2 w-2 rounded-full bg-risk-critical animate-pulse" />
+        <AlertTriangle className="h-4 w-4 text-risk-critical" />
+      </div>
+      <p className="text-sm text-risk-critical font-medium flex-1">
+        <span className="font-black tabular-nums">{formatNumber(criticalCount)}</span> critical-risk contracts detected
+      </p>
+      <ArrowUpRight className="h-4 w-4 text-risk-critical opacity-60 group-hover:opacity-100 transition-opacity" />
+    </motion.button>
+  )
 }
+
+// ============================================================================
+// RISK DONUT CHART — PieChart with innerRadius showing 4 risk levels
+// ============================================================================
 
 const RiskDonutChart = memo(function RiskDonutChart({
   data,
@@ -1826,20 +242,20 @@ const RiskDonutChart = memo(function RiskDonutChart({
     }
   }).filter((d) => d.value > 0)
 
-  const highCriticalCount = data
+  const highCriticalPct = data
     .filter((d) => d.risk_level === 'critical' || d.risk_level === 'high')
-    .reduce((s, d) => s + d.count, 0)
+    .reduce((s, d) => s + (d.percentage || 0), 0)
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative" style={{ width: 170, height: 170 }}>
-        <PieChart width={170} height={170} aria-label="Risk level distribution donut chart">
+      <div className="relative" style={{ width: 200, height: 200 }}>
+        <PieChart width={200} height={200} aria-label="Risk level distribution donut chart">
           <Pie
             data={chartData}
-            cx={85}
-            cy={85}
-            innerRadius={60}
-            outerRadius={80}
+            cx={100}
+            cy={100}
+            innerRadius={68}
+            outerRadius={92}
             paddingAngle={2}
             dataKey="value"
             isAnimationActive
@@ -1860,7 +276,7 @@ const RiskDonutChart = memo(function RiskDonutChart({
                   <div className="chart-tooltip text-xs">
                     <p className="font-bold text-text-primary">{d.name}</p>
                     <p className="text-text-muted tabular-nums font-mono">
-                      {d.value.toFixed(1)}% · {formatNumber(d.count)}
+                      {d.value.toFixed(1)}% ({formatNumber(d.count)})
                     </p>
                   </div>
                 )
@@ -1869,26 +285,27 @@ const RiskDonutChart = memo(function RiskDonutChart({
             }}
           />
         </PieChart>
-        {/* Center label: total high+critical contracts */}
+        {/* Center label */}
         <div
           className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
-          aria-label={`${formatNumber(highCriticalCount)} high-risk contracts`}
+          aria-label={`${highCriticalPct.toFixed(1)}% high-risk`}
         >
-          <span className="text-lg font-black tabular-nums font-mono leading-none text-white">
-            {highCriticalCount >= 1000
-              ? `${(highCriticalCount / 1000).toFixed(0)}k`
-              : formatNumber(highCriticalCount)}
+          <span className="text-2xl font-black tabular-nums font-mono leading-none text-text-primary">
+            {highCriticalPct.toFixed(1)}%
           </span>
-          <span className="text-[9px] text-white/50 font-mono uppercase tracking-wider mt-0.5 text-center leading-tight">
-            High-Risk<br />Contracts
+          <span className="text-[9px] text-text-muted font-mono uppercase tracking-wider mt-1 text-center leading-tight">
+            High-Risk
           </span>
         </div>
       </div>
-      <div className="flex items-center gap-2 flex-wrap justify-center mt-0.5">
+      {/* Legend */}
+      <div className="flex items-center gap-3 flex-wrap justify-center mt-2">
         {chartData.map((d) => (
-          <div key={d.name} className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: DONUT_COLORS[d.name.toLowerCase()] ?? '#64748b', opacity: 0.88 }} />
-            <span className="text-[10px] text-text-muted font-mono">{d.name} {d.value.toFixed(1)}%</span>
+          <div key={d.name} className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: DONUT_COLORS[d.name.toLowerCase()] ?? '#64748b', opacity: 0.88 }} />
+            <span className="text-[10px] text-text-muted font-mono">
+              {d.name} <span className="text-text-secondary font-semibold">{d.value.toFixed(1)}%</span> ({formatNumber(d.count)})
+            </span>
           </div>
         ))}
       </div>
@@ -1897,369 +314,93 @@ const RiskDonutChart = memo(function RiskDonutChart({
 })
 
 // ============================================================================
-// RISK DISTRIBUTION ANNOTATION — plain-language "what this means" block
+// TOP RISK SECTORS BAR — Horizontal bar chart sorted by high-risk rate
 // ============================================================================
 
-const RiskDistributionAnnotation = memo(function RiskDistributionAnnotation({
-  data,
-}: {
-  data: Array<{ risk_level: string; count: number; percentage: number; total_value_mxn: number }>
-}) {
-  const critical = data.find(d => d.risk_level === 'critical')
-  const high = data.find(d => d.risk_level === 'high')
-  const critPct = critical?.percentage ?? 6.5
-  const highPct = high?.percentage ?? 4.1
-  const combinedPct = (critPct + highPct).toFixed(1)
-  const critCount = critical?.count
-  const highCount = high?.count
-
-  return (
-    <div className="rounded-md border border-border/30 bg-background-elevated/20 px-4 py-3">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-mono mb-2">
-        What this means
-      </p>
-      <div className="space-y-1.5 text-xs text-text-muted leading-relaxed">
-        <p>
-          <span className="font-semibold text-risk-critical">{critPct.toFixed(1)}% Critical</span>
-          {critCount != null ? ` (${formatNumber(critCount)} contracts)` : ''}{' '}— procurement characteristics closely match documented corruption cases. Immediate investigation warranted.
-        </p>
-        <p>
-          <span className="font-semibold text-risk-high">{highPct.toFixed(1)}% High</span>
-          {highCount != null ? ` (${formatNumber(highCount)} contracts)` : ''}{' '}— strong statistical anomalies relative to sector norms. Priority review recommended.
-        </p>
-        <p className="text-text-muted/70">
-          Combined <span className="text-text-secondary font-semibold">{combinedPct}%</span> of contracts are flagged high-or-critical. Risk scores measure statistical similarity to known corruption patterns — not proof of wrongdoing.
-        </p>
-      </div>
-    </div>
-  )
-})
-
-// ============================================================================
-// TOP FINDINGS STRIP — 3 journalist-facing quick-access story cards
-// ============================================================================
-
-interface TopFindingsStripProps {
-  navigate: ReturnType<typeof useNavigate>
-  sectorData: Array<{ name: string; code: string; id: number; riskPct: number; totalValue: number; avgRisk: number }>
-  execData: ExecutiveSummaryResponse | undefined
-  execLoading: boolean
+interface SectorBarData {
+  name: string
+  code: string
+  id: number
+  riskPct: number
+  avgRisk: number
+  contracts: number
+  totalValue: number
 }
 
-const TopFindingsStrip = memo(function TopFindingsStrip({ navigate, sectorData, execData, execLoading }: TopFindingsStripProps) {
-  // Card 1: hardlink to the IMSS Ghost Company case (largest documented case)
-  const imssCase = useMemo(() => {
-    if (!execData?.ground_truth?.case_details) return null
-    return execData.ground_truth.case_details.find(
-      (c: ExecutiveCaseDetail) => c.name?.toLowerCase().includes('imss')
-    ) ?? null
-  }, [execData])
-
-  // Card 2: highest risk vendor by avg_risk score
-  const topRiskVendor = useMemo(() => {
-    if (!execData?.top_vendors?.length) return null
-    return [...execData.top_vendors].sort((a, b) => b.avg_risk - a.avg_risk)[0]
-  }, [execData])
-
-  // Card 3: most concentrated sector by avg risk score
-  const mostRiskySector = useMemo(() => {
-    if (!sectorData.length) return null
-    return [...sectorData].sort((a, b) => b.avgRisk - a.avgRisk)[0]
-  }, [sectorData])
-
-  if (execLoading && sectorData.length === 0) {
-    return (
-      <div className="grid gap-2 grid-cols-1 sm:grid-cols-3">
-        {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-[80px]" />)}
-      </div>
-    )
-  }
-
-  const cardBase = 'flex flex-col justify-between p-3 rounded-lg border bg-background-card hover:bg-background-elevated/40 transition-all text-left group cursor-pointer h-[80px]'
-
-  return (
-    <div>
-      <div className="flex items-center gap-2 mb-2">
-        <FileSearch className="h-3.5 w-3.5 text-text-muted" />
-        <span className="text-[10px] font-bold tracking-wider uppercase text-text-muted font-mono">
-          Top Findings — Start here
-        </span>
-      </div>
-      <div className="grid gap-2 grid-cols-1 sm:grid-cols-3">
-        {/* Card 1: IMSS Ghost Company Network */}
-        <button
-          className={cn(cardBase, 'border-red-500/20 hover:border-red-500/40')}
-          onClick={() => navigate('/cases/imss-ghost-company-network')}
-          aria-label="Investigate IMSS Ghost Company Network case"
-        >
-          <div className="flex items-center gap-1.5 min-w-0">
-            <AlertTriangle className="h-3 w-3 text-risk-critical flex-shrink-0" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-risk-critical font-mono truncate">
-              Largest Case
-            </span>
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-text-primary group-hover:text-accent transition-colors leading-tight truncate">
-              {imssCase?.name ?? 'IMSS Ghost Company Network'}
-            </p>
-            <p className="text-[10px] text-text-muted font-mono mt-0.5">
-              {imssCase ? `${formatNumber(imssCase.contracts ?? 9366)} contracts detected` : '9,366 contracts · ghost companies'}
-            </p>
-          </div>
-        </button>
-
-        {/* Card 2: Highest risk vendor this session */}
-        {topRiskVendor ? (
-          <button
-            className={cn(cardBase, 'border-risk-high/20 hover:border-risk-high/40')}
-            onClick={() => navigate(`/vendors/${topRiskVendor.id}`)}
-            aria-label={`View highest risk vendor: ${topRiskVendor.name}`}
-          >
-            <div className="flex items-center gap-1.5 min-w-0">
-              <Target className="h-3 w-3 text-risk-high flex-shrink-0" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-risk-high font-mono truncate">
-                Highest Risk Vendor
-              </span>
-            </div>
-            <div className="flex items-end justify-between gap-2">
-              <p className="text-xs font-semibold text-text-primary group-hover:text-accent transition-colors leading-tight truncate flex-1">
-                {toTitleCase(topRiskVendor.name)}
-              </p>
-              <span className="text-sm font-black tabular-nums font-mono text-risk-high flex-shrink-0">
-                {(topRiskVendor.avg_risk * 100).toFixed(0)}%
-              </span>
-            </div>
-          </button>
-        ) : (
-          <Skeleton className="h-[80px]" />
-        )}
-
-        {/* Card 3: Most risk-concentrated sector */}
-        {mostRiskySector ? (
-          <button
-            className={cn(cardBase, 'border-border/30 hover:border-border/60')}
-            onClick={() => navigate(`/sectors/${mostRiskySector.id}`)}
-            aria-label={`View most concentrated sector: ${mostRiskySector.name}`}
-            style={{ borderLeftWidth: '3px', borderLeftColor: SECTOR_COLORS[mostRiskySector.code] ?? '#64748b' }}
-          >
-            <div className="flex items-center gap-1.5 min-w-0">
-              <Layers className="h-3 w-3 text-text-muted flex-shrink-0" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-mono truncate">
-                Highest Risk Sector
-              </span>
-            </div>
-            <div className="flex items-end justify-between gap-2">
-              <p className="text-xs font-semibold text-text-primary group-hover:text-accent transition-colors leading-tight truncate flex-1">
-                {mostRiskySector.name}
-              </p>
-              <span className="text-sm font-black tabular-nums font-mono flex-shrink-0" style={{ color: SECTOR_COLORS[mostRiskySector.code] ?? '#64748b' }}>
-                {mostRiskySector.riskPct.toFixed(1)}%
-              </span>
-            </div>
-          </button>
-        ) : (
-          <Skeleton className="h-[80px]" />
-        )}
-      </div>
-    </div>
-  )
-})
-
-// ============================================================================
-// TOP CRITICAL FLAGS — Immediate investigation leads strip
-// ============================================================================
-
-interface TopCriticalFlagsProps {
-  navigate: ReturnType<typeof useNavigate>
-  execData: ExecutiveSummaryResponse | undefined
-  execLoading: boolean
-}
-
-const TopCriticalFlags = memo(function TopCriticalFlags({ navigate, execData, execLoading }: TopCriticalFlagsProps) {
-  // Show the top 3 vendors by risk score (critical threshold >= 0.50)
-  const criticalVendors = useMemo(() => {
-    if (!execData?.top_vendors) return []
-    return [...execData.top_vendors]
-      .filter(v => v.avg_risk >= 0.30) // high or critical
-      .sort((a, b) => b.avg_risk - a.avg_risk)
-      .slice(0, 3)
-  }, [execData])
-
-  if (execLoading) {
-    return (
-      <div className="rounded-lg border border-risk-critical/20 bg-risk-critical/5 px-4 py-3">
-        <div className="flex items-center gap-2 mb-2">
-          <Zap className="h-3.5 w-3.5 text-risk-critical" />
-          <span className="text-[10px] font-bold tracking-wider uppercase text-risk-critical font-mono">Top Flagged Entities</span>
-        </div>
-        <div className="flex gap-2">
-          {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-14 flex-1" />)}
-        </div>
-      </div>
-    )
-  }
-
-  if (criticalVendors.length === 0) return null
-
-  return (
-    <div className="rounded-lg border border-risk-critical/20 bg-risk-critical/5 px-4 py-3">
-      <div className="flex items-center justify-between mb-2.5">
-        <div className="flex items-center gap-2">
-          <Zap className="h-3.5 w-3.5 text-risk-critical" />
-          <span className="text-[10px] font-bold tracking-wider uppercase text-risk-critical font-mono">
-            Top Flagged Vendors — Start Here
-          </span>
-        </div>
-        <button
-          onClick={() => navigate('/contracts?risk_level=critical')}
-          className="text-[10px] text-accent flex items-center gap-0.5 hover:underline font-mono"
-        >
-          See all critical <ArrowUpRight className="h-3 w-3" />
-        </button>
-      </div>
-      <div className="grid gap-2 grid-cols-1 sm:grid-cols-3">
-        {criticalVendors.map((vendor, i) => {
-          const riskPct = (vendor.avg_risk * 100).toFixed(0)
-          const riskColor = vendor.avg_risk >= 0.50 ? 'text-risk-critical' : 'text-risk-high'
-          const rankColors = ['#f87171', '#fb923c', '#fbbf24']
-          return (
-            <button
-              key={vendor.id}
-              onClick={() => navigate(`/vendors/${vendor.id}`)}
-              className="flex items-start gap-2.5 p-2.5 rounded-md border border-risk-critical/15 bg-background-card/60 hover:border-risk-critical/35 hover:bg-risk-critical/8 transition-all text-left group"
-            >
-              <span
-                className="text-xs font-black font-mono flex-shrink-0 mt-0.5 tabular-nums"
-                style={{ color: rankColors[i] ?? '#64748b' }}
-              >
-                #{i + 1}
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-text-primary truncate leading-tight group-hover:text-accent transition-colors">
-                  {toTitleCase(vendor.name)}
-                </p>
-                <p className="text-[10px] text-text-muted font-mono mt-0.5">
-                  {vendor.value_billions.toFixed(1)}B MXN · {formatNumber(vendor.contracts)} contracts
-                </p>
-              </div>
-              <span className={`text-sm font-black tabular-nums font-mono flex-shrink-0 ${riskColor}`}>
-                {riskPct}%
-              </span>
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
-})
-
-// ============================================================================
-// RISK BADGE — Colored percentage badge
-// ============================================================================
-
-export function _RiskBadge({ value }: { value: number }) {
-  const pct = (value * 100).toFixed(0)
-  const color =
-    value >= 0.50 ? 'bg-risk-critical/20 text-risk-critical border-risk-critical/30' :
-    value >= 0.30 ? 'bg-risk-high/20 text-risk-high border-risk-high/30' :
-    value >= 0.10 ? 'bg-risk-medium/20 text-risk-medium border-risk-medium/30' :
-    'bg-risk-low/20 text-risk-low border-risk-low/30'
-  return (
-    <span className={cn('text-xs font-bold tabular-nums font-mono px-1.5 py-0.5 rounded border', color)}>
-      {pct}%
-    </span>
-  )
-}
-
-// ============================================================================
-// SECTOR GRID — Compact rows with colored indicators
-// ============================================================================
-
-const SectorGrid = memo(function SectorGrid({
+const TopRiskSectorsBar = memo(function TopRiskSectorsBar({
   data,
   onSectorClick,
 }: {
-  data: Array<{ name: string; code: string; id: number; valueAtRisk: number; riskPct: number; contracts: number; totalValue: number; avgRisk: number; directAwardPct: number }>
-  onSectorClick?: (id: number) => void
+  data: SectorBarData[]
+  onSectorClick: (id: number) => void
 }) {
-  const { t } = useTranslation('dashboard')
-  const { t: ts } = useTranslation('sectors')
-  const maxVal = Math.max(...data.map((d) => d.valueAtRisk), 1)
+  const sorted = useMemo(() => [...data].sort((a, b) => b.riskPct - a.riskPct), [data])
 
   return (
-    <div className="space-y-0.5">
-      {/* Column headers */}
-      <div className="flex items-center gap-2 px-2 pb-1.5 border-b border-border/20">
-        <span className="text-xs font-bold uppercase tracking-wider text-text-muted w-[80px]">{t('sector')}</span>
-        <span className="text-xs font-bold uppercase tracking-wider text-text-muted flex-1">{t('valueAtRisk')}</span>
-        <span className="text-xs font-bold uppercase tracking-wider text-text-muted w-[68px] text-right">MXN</span>
-        <span className="text-xs font-bold uppercase tracking-wider text-text-muted w-[52px] text-right">{t('highPlus')}</span>
-        <span className="text-xs font-bold uppercase tracking-wider text-text-muted w-[40px] text-right">DA%</span>
-      </div>
-      {data.map((sector) => {
-        const widthPct = (sector.valueAtRisk / maxVal) * 100
-        const sectorColor = SECTOR_COLORS[sector.code] || '#64748b'
-        return (
-          <button
-            key={sector.code}
-            className="flex items-center gap-2 w-full text-left group hover:bg-background-elevated/40 rounded px-2 py-1.5 transition-colors"
-            onClick={() => onSectorClick?.(sector.id)}
-          >
-            {/* Sector name with color dot */}
-            <div className="w-[80px] flex-shrink-0 flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: sectorColor }} />
-              <span className="text-xs text-text-secondary font-medium truncate group-hover:text-text-primary transition-colors">
-                {ts(sector.code)}
-              </span>
-            </div>
-            {/* Value at risk bar — no text inside */}
-            <div className="flex-1 relative h-5">
-              <div className="absolute inset-0 rounded bg-background-elevated/30" />
-              <div
-                className="absolute left-0 top-0 h-full rounded transition-all duration-500"
-                style={{
-                  width: `${Math.max(widthPct, 3)}%`,
-                  backgroundColor: sectorColor,
-                  opacity: 0.6,
-                }}
+    <div className="h-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          layout="vertical"
+          data={sorted}
+          margin={{ top: 0, right: 60, left: 0, bottom: 0 }}
+          onClick={(barData: Record<string, unknown>) => {
+            const payload = barData?.activePayload as Array<{ payload: SectorBarData }> | undefined
+            const id = payload?.[0]?.payload?.id
+            if (id) onSectorClick(id)
+          }}
+          style={{ cursor: 'pointer' }}
+        >
+          <XAxis type="number" hide />
+          <YAxis
+            type="category"
+            dataKey="name"
+            width={90}
+            tick={{ fontSize: 11, fill: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)' }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <RechartsTooltip
+            content={({ active, payload }) => {
+              if (active && payload && payload.length) {
+                const d = payload[0].payload as SectorBarData
+                return (
+                  <div className="chart-tooltip text-xs">
+                    <p className="font-bold text-text-primary">{d.name}</p>
+                    <p className="text-text-muted tabular-nums font-mono">
+                      High-risk: {d.riskPct.toFixed(1)}% | Avg: {(d.avgRisk * 100).toFixed(1)}%
+                    </p>
+                    <p className="text-text-muted tabular-nums font-mono">
+                      {formatNumber(d.contracts)} contracts | {formatCompactMXN(d.totalValue)}
+                    </p>
+                  </div>
+                )
+              }
+              return null
+            }}
+          />
+          <Bar dataKey="riskPct" radius={[0, 4, 4, 0]} isAnimationActive={false}>
+            {sorted.map((s) => (
+              <Cell
+                key={s.code}
+                fill={SECTOR_COLORS[s.code] ?? '#64748b'}
+                fillOpacity={0.8}
               />
-            </div>
-            {/* Value at risk — separate column, always visible */}
-            <div className="w-[68px] text-right flex-shrink-0">
-              <span className="text-xs text-text-muted tabular-nums font-mono block">
-                {sector.valueAtRisk > 0 ? formatCompactMXN(sector.valueAtRisk) : '—'}
-              </span>
-              {sector.valueAtRisk > 0 && (
-                <span className="text-[9px] text-text-muted/60 tabular-nums font-mono block">
-                  ≈{formatCompactUSD(sector.valueAtRisk)}
-                </span>
-              )}
-            </div>
-            {/* High+ rate with mini risk bar */}
-            <div className="w-[52px] flex-shrink-0 flex flex-col items-end gap-0.5">
-              <span className="text-xs text-text-muted tabular-nums font-mono">
-                {sector.riskPct.toFixed(1)}%
-              </span>
-              <div className="w-full h-1 rounded-full bg-background-elevated/40 overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-amber-500 to-red-500"
-                  style={{ width: `${Math.min(sector.riskPct, 100)}%` }}
-                />
-              </div>
-            </div>
-            {/* Direct award rate */}
-            <span className="text-xs text-text-muted tabular-nums font-mono w-[40px] text-right flex-shrink-0">
-              {sector.directAwardPct.toFixed(0)}%
-            </span>
-          </button>
-        )
-      })}
+            ))}
+            <LabelList
+              dataKey="riskPct"
+              position="right"
+              formatter={(v: unknown) => `${(v as number).toFixed(1)}%`}
+              style={{ fontSize: 10, fontFamily: 'var(--font-mono)', fill: 'var(--color-text-muted)' }}
+            />
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   )
 })
 
 // ============================================================================
-// RISK TRAJECTORY CHART — Area chart with dual lines
+// RISK TRAJECTORY CHART — Full-width area chart with administration bands
 // ============================================================================
 
 const ADMINISTRATIONS = [
@@ -2272,11 +413,8 @@ const ADMINISTRATIONS = [
 
 interface RiskTrajectoryChartProps {
   data: Array<{ year: number; highRiskPct: number; avgRisk: number; contracts: number }>
-  /** Per-sector trajectory — if set, rendered as a colored line while aggregate becomes gray reference */
   sectorTrajectory?: Array<{ year: number; highRiskPct: number; avgRisk: number; contracts: number }>
-  /** Hex color for the sector line */
   sectorColor?: string
-  /** Full yearly_trends from fast-dashboard — used to extract risk_stddev for CI bands */
   yearlyTrends?: Array<{ year: number; avg_risk: number; risk_stddev?: number }>
 }
 
@@ -2291,7 +429,6 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
 
   const hasSectorOverlay = sectorTrajectory !== undefined && sectorTrajectory.length > 0
 
-  // Merge sector data into the aggregate rows so ComposedChart can render both on same x-axis
   const mergedData = useMemo(() => {
     if (!hasSectorOverlay) return data
     const sectorMap = new Map(sectorTrajectory.map((d) => [d.year, d.highRiskPct]))
@@ -2301,7 +438,6 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
     }))
   }, [data, sectorTrajectory, hasSectorOverlay])
 
-  // Build a stddev lookup from yearlyTrends — only used when risk_stddev is present
   const hasStddev = yearlyTrends ? yearlyTrends.some((d) => d.risk_stddev != null) : false
   const stddevMap = useMemo(() => {
     if (!yearlyTrends || !hasStddev) return new Map<number, number>()
@@ -2312,7 +448,6 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
     )
   }, [yearlyTrends, hasStddev])
 
-  // Merge stddev into chart data for CI band rendering
   const chartData = useMemo(() => {
     if (!hasStddev) return mergedData
     return mergedData.map((row) => {
@@ -2329,27 +464,24 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
   const minYear = data.length > 0 ? data[0].year : 2010
   const maxYear = data.length > 0 ? data[data.length - 1].year : 2025
   const maxContracts = Math.max(...data.map((d) => d.contracts), 1)
-
-  // Aggregate line color: gray when sector overlay active, orange otherwise
   const aggregateColor = hasSectorOverlay ? 'rgba(139,148,158,0.45)' : RISK_COLORS.high
 
   return (
-    <div className="h-[340px]">
+    <div className="h-[300px]">
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={chartData}>
           <defs>
-            <linearGradient id="riskGradient" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id="riskGradient2" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={hasSectorOverlay ? 'rgba(139,148,158,0.3)' : RISK_COLORS.high} stopOpacity={hasSectorOverlay ? 0.15 : 0.4} />
               <stop offset="100%" stopColor={hasSectorOverlay ? 'rgba(139,148,158,0.1)' : RISK_COLORS.high} stopOpacity={0.02} />
             </linearGradient>
             {hasStddev && (
-              <linearGradient id="ciGradient" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="ciGradient2" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={RISK_COLORS.high} stopOpacity={0.12} />
                 <stop offset="100%" stopColor={RISK_COLORS.high} stopOpacity={0.05} />
               </linearGradient>
             )}
           </defs>
-          {/* Presidential administration bands */}
           {ADMINISTRATIONS.map((admin) => {
             const x1 = Math.max(admin.start, minYear)
             const x2 = Math.min(admin.end, maxYear)
@@ -2420,7 +552,7 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
                       )}
                       {hasStddev && d.ciLower != null && d.ciUpper != null && (
                         <p className="text-xs text-text-muted/70 tabular-nums">
-                          Confidence band: ±1 std dev [{d.ciLower.toFixed(1)}%–{d.ciUpper.toFixed(1)}%]
+                          CI: [{d.ciLower.toFixed(1)}%--{d.ciUpper.toFixed(1)}%]
                         </p>
                       )}
                       <p className="text-xs text-text-secondary tabular-nums">
@@ -2433,7 +565,6 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
               return null
             }}
           />
-          {/* COVID-19 reference line */}
           <ReferenceLine
             x={2020}
             yAxisId="left"
@@ -2442,7 +573,6 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
             strokeWidth={1.5}
             label={{ value: 'COVID-19', position: 'insideTopRight', fontSize: 10, fill: RISK_COLORS.critical }}
           />
-          {/* Contract volume bars */}
           <Bar
             yAxisId="right"
             dataKey="contracts"
@@ -2451,7 +581,6 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
             radius={[2, 2, 0, 0]}
             barSize={16}
           />
-          {/* CI band: ±1 stddev shaded area — only rendered when stddev data is present */}
           {hasStddev && (
             <Area
               yAxisId="left"
@@ -2484,19 +613,17 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
               connectNulls
             />
           )}
-          {/* Aggregate high-risk rate area (gray when sector overlay active) */}
           <Area
             yAxisId="left"
             type="monotone"
             dataKey="highRiskPct"
             stroke={aggregateColor}
             strokeWidth={hasSectorOverlay ? 1.5 : 2}
-            fill="url(#riskGradient)"
+            fill="url(#riskGradient2)"
             dot={false}
             activeDot={hasSectorOverlay ? false : { r: 4, stroke: RISK_COLORS.high, strokeWidth: 2, fill: 'var(--color-background-base)' }}
             strokeDasharray={hasSectorOverlay ? '4 3' : undefined}
           />
-          {/* Per-sector line — only rendered when a sector is selected */}
           {hasSectorOverlay && (
             <Line
               yAxisId="left"
@@ -2533,19 +660,976 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
           <div className="h-3 w-3 rounded-sm bg-text-muted opacity-15" />
           <span className="text-xs text-text-muted">{tc('contracts')}</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <div className="h-2.5 w-2.5 rounded-sm opacity-30" style={{ backgroundColor: '#8b5cf6' }} />
-          <span className="text-xs text-text-secondary">Administrations</span>
-        </div>
         {hasStddev && (
           <div className="flex items-center gap-1.5">
             <div className="h-3 w-4 rounded-sm" style={{ backgroundColor: RISK_COLORS.high, opacity: 0.12 }} />
-            <span className="text-xs text-text-muted">±1 std dev</span>
+            <span className="text-xs text-text-muted">+/-1 std dev</span>
           </div>
         )}
       </div>
     </div>
   )
 })
+
+// ============================================================================
+// SECTOR MINI CARD — Compact card for the 12-sector grid
+// ============================================================================
+
+interface SectorMiniCardProps {
+  name: string
+  code: string
+  id: number
+  contracts: number
+  riskPct: number
+  totalValue: number
+  avgRisk: number
+  directAwardPct: number
+  onClick: () => void
+}
+
+const SectorMiniCard = memo(function SectorMiniCard({
+  name, code, contracts, riskPct, totalValue, avgRisk, directAwardPct, onClick,
+}: SectorMiniCardProps) {
+  const sectorColor = SECTOR_COLORS[code] ?? '#64748b'
+  const riskColor = riskPct >= 15 ? 'text-risk-critical' : riskPct >= 10 ? 'text-risk-high' : 'text-risk-medium'
+
+  return (
+    <button
+      onClick={onClick}
+      className="flex flex-col gap-2 p-3 rounded-lg border border-border/30 bg-background-card/40 hover:border-border/60 hover:bg-background-elevated/30 transition-all text-left group"
+    >
+      <div className="flex items-center gap-2">
+        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: sectorColor }} />
+        <span className="text-xs font-semibold text-text-primary truncate group-hover:text-accent transition-colors">
+          {name}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+        <div>
+          <p className="text-[9px] text-text-muted font-mono uppercase">Contracts</p>
+          <p className="text-xs font-bold tabular-nums font-mono text-text-secondary">{formatNumber(contracts)}</p>
+        </div>
+        <div>
+          <p className="text-[9px] text-text-muted font-mono uppercase">High-risk</p>
+          <p className={cn('text-xs font-bold tabular-nums font-mono', riskColor)}>{riskPct.toFixed(1)}%</p>
+        </div>
+        <div>
+          <p className="text-[9px] text-text-muted font-mono uppercase">Value</p>
+          <p className="text-xs font-bold tabular-nums font-mono text-text-secondary">{formatCompactMXN(totalValue)}</p>
+        </div>
+        <div>
+          <p className="text-[9px] text-text-muted font-mono uppercase">DA%</p>
+          <p className="text-xs font-bold tabular-nums font-mono text-text-muted">{directAwardPct.toFixed(0)}%</p>
+        </div>
+      </div>
+      {/* Mini risk bar */}
+      <div className="w-full h-1 rounded-full bg-background-elevated/40 overflow-hidden">
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: `${Math.min(avgRisk * 100 * 3, 100)}%`,
+            backgroundColor: sectorColor,
+            opacity: 0.7,
+          }}
+        />
+      </div>
+    </button>
+  )
+})
+
+// ============================================================================
+// TOP VENDORS TABLE — Ranked list with risk scores
+// ============================================================================
+
+interface VendorRowData {
+  id: number
+  name: string
+  avg_risk: number
+  contracts: number
+  value_billions: number
+}
+
+const TopVendorsTable = memo(function TopVendorsTable({
+  vendors,
+  loading,
+  onVendorClick,
+}: {
+  vendors: VendorRowData[]
+  loading: boolean
+  onVendorClick: (id: number) => void
+}) {
+  if (loading) {
+    return (
+      <div className="space-y-2">
+        {[...Array(8)].map((_, i) => <Skeleton key={i} className="h-9" />)}
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-0.5">
+      {vendors.map((vendor, i) => {
+        const riskPct = vendor.avg_risk * 100
+        const riskColor = vendor.avg_risk >= 0.50 ? 'text-risk-critical' :
+          vendor.avg_risk >= 0.30 ? 'text-risk-high' :
+          vendor.avg_risk >= 0.10 ? 'text-risk-medium' : 'text-risk-low'
+        const riskBg = vendor.avg_risk >= 0.50 ? 'bg-risk-critical' :
+          vendor.avg_risk >= 0.30 ? 'bg-risk-high' :
+          vendor.avg_risk >= 0.10 ? 'bg-risk-medium' : 'bg-risk-low'
+        return (
+          <button
+            key={vendor.id}
+            onClick={() => onVendorClick(vendor.id)}
+            className="flex items-center gap-2 w-full py-2 px-2 rounded hover:bg-background-elevated/30 transition-colors text-left group"
+          >
+            <span className="text-xs text-text-muted font-mono w-5 flex-shrink-0 tabular-nums">{i + 1}</span>
+            <span className="text-sm text-text-secondary font-medium flex-1 truncate group-hover:text-text-primary transition-colors">
+              {toTitleCase(vendor.name)}
+            </span>
+            <span className="text-xs tabular-nums font-mono text-text-muted w-[68px] text-right flex-shrink-0">
+              {vendor.value_billions.toFixed(1)}B
+            </span>
+            <span className="text-xs tabular-nums font-mono text-text-muted w-[48px] text-right flex-shrink-0">
+              {formatNumber(vendor.contracts)}
+            </span>
+            <div className="w-[72px] flex items-center gap-1 flex-shrink-0">
+              <div className="flex-1 h-1.5 rounded-full bg-background-elevated/50 overflow-hidden">
+                <div className={cn('h-full rounded-full', riskBg)} style={{ width: `${riskPct}%`, opacity: 0.7 }} />
+              </div>
+              <span className={cn('text-xs font-bold tabular-nums font-mono w-[32px] text-right', riskColor)}>
+                {riskPct.toFixed(0)}%
+              </span>
+            </div>
+          </button>
+        )
+      })}
+    </div>
+  )
+})
+
+// ============================================================================
+// GROUND TRUTH CASES — compact grid
+// ============================================================================
+
+const GroundTruthSection = memo(function GroundTruthSection({
+  cases,
+  loading,
+  modelAuc,
+  totalCases,
+  onFullAnalysis,
+}: {
+  cases: ExecutiveCaseDetail[]
+  loading: boolean
+  modelAuc: number
+  totalCases: number
+  onFullAnalysis: () => void
+}) {
+  const { t } = useTranslation('dashboard')
+
+  if (loading) {
+    return (
+      <div className="space-y-1.5">
+        {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-6" />)}
+      </div>
+    )
+  }
+
+  const filtered = [...cases]
+    .filter(c => c.contracts >= 10)
+    .sort((a, b) => b.high_plus_pct - a.high_plus_pct)
+    .slice(0, 8)
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-1.5 px-1">
+        <span className="text-[10px] font-mono text-text-muted flex-1">Case</span>
+        <span className="text-[10px] font-mono text-text-muted w-[100px]">{t('detectionRate')}</span>
+        <span className="text-[10px] font-mono text-text-muted w-10 text-right">%</span>
+      </div>
+      <div className="space-y-1">
+        {filtered.map(c => {
+          const pct = c.high_plus_pct
+          const barColor =
+            pct >= 90 ? '#4ade80' :
+            pct >= 50 ? '#fbbf24' :
+            '#f87171'
+          const textColor =
+            pct >= 90 ? 'text-green-400' :
+            pct >= 50 ? 'text-amber-400' :
+            'text-red-400'
+          const truncatedName = c.name.length > 28 ? c.name.slice(0, 28) + '...' : c.name
+          return (
+            <div
+              key={c.name}
+              className="flex items-center gap-2 px-1 py-0.5 rounded hover:bg-background-elevated/20 transition-colors"
+              title={`${c.name}: ${pct.toFixed(0)}% detected (${formatNumber(c.contracts)} contracts, avg score ${c.avg_score.toFixed(2)})`}
+            >
+              <span className="text-[11px] text-text-secondary flex-1 truncate font-mono">{truncatedName}</span>
+              <div className="w-[100px] h-1.5 rounded-full bg-background-elevated/50 overflow-hidden shrink-0">
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: `${Math.min(pct, 100)}%`, backgroundColor: barColor, opacity: 0.8 }}
+                />
+              </div>
+              <span className={cn('text-[11px] font-black font-mono tabular-nums w-10 text-right shrink-0', textColor)}>
+                {pct.toFixed(0)}%
+              </span>
+            </div>
+          )
+        })}
+      </div>
+      <div className="flex items-center justify-between mt-2 px-1">
+        <p className="text-[10px] text-text-muted font-mono">
+          AUC {modelAuc.toFixed(3)} | {totalCases} cases
+        </p>
+        <button onClick={onFullAnalysis} className="text-[10px] text-accent hover:underline font-mono flex items-center gap-0.5">
+          {t('fullAnalysis')} <ArrowUpRight className="h-3 w-3" />
+        </button>
+      </div>
+    </div>
+  )
+})
+
+// ============================================================================
+// SECTION WRAPPER — Error boundary per section
+// ============================================================================
+
+function DashboardSection({
+  children,
+  title,
+  subtitle,
+  icon: Icon,
+  action,
+  className,
+  noPadding,
+}: {
+  children: React.ReactNode
+  title?: string
+  subtitle?: string
+  icon?: React.ElementType
+  action?: React.ReactNode
+  className?: string
+  noPadding?: boolean
+}) {
+  return (
+    <div className={cn('rounded-xl border border-border/30 bg-background-elevated/10 overflow-hidden', className)}>
+      {title && (
+        <div className={cn('flex items-center justify-between', noPadding ? 'px-5 pt-4 pb-2' : 'px-5 pt-4 pb-2')}>
+          <div>
+            <div className="flex items-center gap-2 mb-0.5">
+              {Icon && <Icon className="h-4 w-4 text-accent" />}
+              <h2 className="text-sm font-bold text-text-primary uppercase tracking-wider">{title}</h2>
+            </div>
+            {subtitle && <p className="text-xs text-text-muted">{subtitle}</p>}
+          </div>
+          {action}
+        </div>
+      )}
+      <div className={noPadding ? '' : 'px-5 pb-5'}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// MAIN DASHBOARD COMPONENT
+// ============================================================================
+
+export function Dashboard() {
+  const navigate = useNavigate()
+  const { open: openEntityDrawer } = useEntityDrawer()
+  const { t } = useTranslation('dashboard')
+
+  // ── Data fetching ─────────────────────────────────────────────────────────
+
+  const { data: fastDashboard, isLoading: dashLoading, error: dashError, refetch: dashRefetch } = useQuery({
+    queryKey: ['dashboard', 'fast'],
+    queryFn: () => analysisApi.getFastDashboard(),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const { data: execData, isLoading: execLoading } = useQuery({
+    queryKey: ['executive', 'summary'],
+    queryFn: () => analysisApi.getExecutiveSummary(),
+    staleTime: 10 * 60 * 1000,
+  })
+
+  useQuery({
+    queryKey: ['analysis', 'patterns', 'counts'],
+    queryFn: () => analysisApi.getPatternCounts(),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const { data: moneyFlowData } = useQuery({
+    queryKey: ['analysis', 'money-flow', 'dashboard'],
+    queryFn: () => analysisApi.getMoneyFlow(),
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const { data: modelMeta } = useQuery({
+    queryKey: ['analysis', 'model-metadata'],
+    queryFn: () => analysisApi.getModelMetadata(),
+    staleTime: 60 * 60 * 1000,
+    retry: 0,
+    refetchOnWindowFocus: false,
+  })
+
+  useQuery({
+    queryKey: ['investigation', 'top-1-dashboard'],
+    queryFn: () => investigationApi.getTopCases(1),
+    staleTime: 30 * 60 * 1000,
+    enabled: false,
+  })
+
+  const { data: sectorYearData } = useQuery({
+    queryKey: ['analysis', 'sector-year-breakdown'],
+    queryFn: () => analysisApi.getSectorYearBreakdown(),
+    staleTime: 10 * 60 * 1000,
+  })
+
+  // ── Derived data ──────────────────────────────────────────────────────────
+
+  const overview = fastDashboard?.overview
+  const sectors = fastDashboard?.sectors
+  const riskDist = fastDashboard?.risk_distribution
+
+  const criticalHighContractPct = useMemo(() => {
+    if (!riskDist) return 0
+    return riskDist
+      .filter(d => d.risk_level === 'critical' || d.risk_level === 'high')
+      .reduce((s, d) => s + (d.percentage || 0), 0)
+  }, [riskDist])
+
+  const criticalHighValuePct = useMemo(() => {
+    if (!riskDist) return 0
+    const totalVal = riskDist.reduce((s, d) => s + (d.total_value_mxn || 0), 0)
+    const flaggedVal = riskDist
+      .filter(d => d.risk_level === 'critical' || d.risk_level === 'high')
+      .reduce((s, d) => s + (d.total_value_mxn || 0), 0)
+    return totalVal > 0 ? (flaggedVal / totalVal) * 100 : 0
+  }, [riskDist])
+
+  const criticalCount = useMemo(() => {
+    if (!riskDist) return 0
+    return riskDist.find(d => d.risk_level === 'critical')?.count ?? 0
+  }, [riskDist])
+
+  const sectorData = useMemo(() => {
+    if (!sectors) return []
+    return sectors
+      .map((s) => {
+        const ct = s.total_contracts || 1
+        const hrRate = ((s.high_risk_count || 0) + (s.critical_risk_count || 0)) / ct
+        const daRate = (s.direct_award_count || 0) / ct
+        return {
+          name: getSectorNameEN(s.code),
+          code: s.code,
+          id: s.id,
+          valueAtRisk: hrRate * (s.total_value_mxn || 0),
+          riskPct: hrRate * 100,
+          contracts: s.total_contracts,
+          totalValue: s.total_value_mxn || 0,
+          avgRisk: s.avg_risk_score || 0,
+          directAwardPct: daRate * 100,
+        }
+      })
+      .sort((a, b) => b.valueAtRisk - a.valueAtRisk)
+  }, [sectors])
+
+  const riskTrajectory = useMemo(() => {
+    if (!fastDashboard?.yearly_trends) return []
+    return fastDashboard.yearly_trends
+      .filter((d) => d.year >= 2010)
+      .map((d) => ({
+        year: d.year,
+        highRiskPct: (d.avg_risk || 0) * 100,
+        avgRisk: (d.avg_risk || 0) * 100,
+        contracts: d.contracts,
+      }))
+  }, [fastDashboard])
+
+  const corruptionCases = useMemo(() => {
+    if (!execData?.ground_truth?.case_details) return []
+    return execData.ground_truth.case_details
+  }, [execData])
+
+  const groundTruth = execData?.ground_truth
+  const modelAuc = execData?.model?.auc ?? 0.849
+
+  const topFlows = useMemo(() => {
+    if (!moneyFlowData?.flows) return []
+    return [...moneyFlowData.flows]
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5)
+  }, [moneyFlowData])
+
+  const lastUpdated = fastDashboard?.cached_at
+    ? new Date(fastDashboard.cached_at).toLocaleString('en-US', {
+        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+      })
+    : null
+
+  // Animated KPI pulse
+  const [justLoaded, setJustLoaded] = useState(false)
+  useEffect(() => {
+    if (!dashLoading && overview) {
+      setJustLoaded(true)
+      const timer = setTimeout(() => setJustLoaded(false), 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [dashLoading, overview])
+
+  // Sector trajectory selector
+  const [selectedTrajectorySectorId, setSelectedTrajectorySectorId] = useState<number | null>(null)
+
+  const sectorTrajectory = useMemo(() => {
+    if (selectedTrajectorySectorId === null || !sectorYearData?.data) return []
+    return sectorYearData.data
+      .filter((d) => d.sector_id === selectedTrajectorySectorId && d.year >= 2010)
+      .map((d) => ({
+        year: d.year,
+        highRiskPct: (d.avg_risk || 0) * 100,
+        avgRisk: (d.avg_risk || 0) * 100,
+        contracts: d.contracts,
+      }))
+      .sort((a, b) => a.year - b.year)
+  }, [sectorYearData, selectedTrajectorySectorId])
+
+  // Refs for chart export
+  const riskTrajectoryRef = useRef<HTMLDivElement>(null)
+
+  // ── Render ────────────────────────────────────────────────────────────────
+
+  return (
+    <div className="space-y-5">
+      {/* Page Header */}
+      <PageHeader
+        title={t('title')}
+        subtitle={t('subtitle')}
+        icon={LayoutDashboard}
+        actions={
+          <div className="flex items-center gap-2">
+            {lastUpdated && (
+              <div className="flex items-center gap-1.5 text-[10px] text-text-muted font-mono">
+                <Activity className="h-3 w-3 text-signal-live" />
+                <span>{t('synced')} {lastUpdated.toUpperCase()}</span>
+              </div>
+            )}
+            <span className="text-[10px] font-mono text-text-muted/50">
+              {modelMeta?.version ?? CURRENT_MODEL_VERSION} | AUC {modelMeta?.auc_test?.toFixed(3) ?? '0.849'}
+            </span>
+          </div>
+        }
+      />
+
+      {/* Error Banner */}
+      {dashError && (
+        <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-risk-critical/30 bg-risk-critical/5">
+          <AlertTriangle className="h-4 w-4 text-risk-critical flex-shrink-0" />
+          <p className="text-sm text-risk-critical flex-1">
+            Dashboard data failed to load. Some sections may be unavailable.
+          </p>
+          <button
+            onClick={() => void dashRefetch()}
+            className="text-sm text-risk-critical underline hover:no-underline font-medium flex-shrink-0"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* ================================================================ */}
+      {/* LIVE ALERT BANNER                                                */}
+      {/* ================================================================ */}
+      <AlertBanner
+        criticalCount={criticalCount}
+        onClick={() => navigate('/contracts?risk_level=critical')}
+      />
+
+      {/* ================================================================ */}
+      {/* HEADLINE ROW: 4 KPI Cards                                        */}
+      {/* ================================================================ */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KPICard
+          label={t('contractsShowingRisk')}
+          value={dashLoading ? '--' : `${criticalHighContractPct.toFixed(1)}%`}
+          sublabel={dashLoading ? '' : t('contractsFlaggedDetail', { num: formatNumber(overview?.high_risk_contracts ?? 0) })}
+          color="#f87171"
+          loading={dashLoading}
+          icon={Gauge}
+          onClick={() => navigate('/contracts?risk_level=critical&risk_level=high')}
+          sparkData={riskTrajectory.length > 3 ? riskTrajectory : undefined}
+          sparkKey="highRiskPct"
+        />
+        <KPICard
+          label={t('criticalContracts')}
+          value={dashLoading ? '--' : formatNumber(criticalCount)}
+          sublabel={t('oecdHighRisk')}
+          color="#ef4444"
+          loading={dashLoading}
+          icon={AlertTriangle}
+          onClick={() => navigate('/contracts?risk_level=critical')}
+        />
+        <KPICard
+          label={t('valueFlagged')}
+          value={dashLoading ? '--' : formatCompactMXN(overview?.total_value_mxn ?? 0)}
+          sublabel={dashLoading ? '' : t('valueFlaggedDetail', { pct: criticalHighValuePct.toFixed(1) })}
+          color="#fb923c"
+          loading={dashLoading}
+          icon={DollarSign}
+          onClick={() => navigate('/categories')}
+        />
+        <KPICard
+          label={t('topVendors')}
+          value={dashLoading ? '--' : formatNumber(overview?.total_vendors ?? 0)}
+          sublabel={`${formatNumber(overview?.total_contracts ?? 0)} contracts | 2002-2025`}
+          color="#818cf8"
+          loading={dashLoading}
+          icon={Users}
+          onClick={() => navigate('/network')}
+        />
+      </div>
+
+      {/* ================================================================ */}
+      {/* ROW 2: RISK DISTRIBUTION (Donut) + TOP RISK SECTORS (Bar)       */}
+      {/* ================================================================ */}
+      <div className="grid gap-5 grid-cols-1 lg:grid-cols-2">
+        {/* Risk Distribution Donut */}
+        <DashboardSection
+          title={t('riskDistribution')}
+          subtitle={t('riskDistLabel', { total: formatNumber(overview?.total_contracts || 0) })}
+          icon={BarChart3}
+          action={<RiskScoreDisclaimer />}
+        >
+          {dashLoading || !riskDist ? (
+            <div className="flex justify-center py-8"><Skeleton className="h-48 w-48 rounded-full" /></div>
+          ) : (
+            <div className="space-y-4">
+              <RiskDonutChart data={riskDist} />
+              {/* Stacked proportion bar */}
+              <div>
+                <p className="text-[10px] font-mono text-text-muted uppercase tracking-wider mb-1">
+                  Contracts by risk level
+                </p>
+                <div className="flex h-6 rounded overflow-hidden gap-px">
+                  {(['critical', 'high', 'medium', 'low'] as const).map(level => {
+                    const d = riskDist.find(r => r.risk_level === level)
+                    const pct = d?.percentage ?? 0
+                    return pct > 0.5 ? (
+                      <button
+                        key={level}
+                        onClick={() => navigate(`/contracts?risk_level=${level}`)}
+                        className="flex items-center justify-center hover:opacity-90 transition-opacity"
+                        style={{ width: `${pct}%`, backgroundColor: DONUT_COLORS[level] ?? '#64748b', opacity: 0.75 }}
+                        title={`${level}: ${pct.toFixed(1)}%`}
+                      >
+                        {pct > 5 && (
+                          <span className="text-[9px] font-bold text-white font-mono tabular-nums">{pct.toFixed(0)}%</span>
+                        )}
+                      </button>
+                    ) : null
+                  })}
+                </div>
+              </div>
+              {/* Value proportion bar */}
+              {(() => {
+                const totalValue = riskDist.reduce((s, d) => s + (d.total_value_mxn || 0), 0)
+                return (
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-[10px] font-mono text-text-muted uppercase tracking-wider">Value by risk level</p>
+                      <p className="text-[10px] font-mono text-text-muted">{formatCompactMXN(totalValue)}</p>
+                    </div>
+                    <div className="flex h-6 rounded overflow-hidden gap-px">
+                      {(['critical', 'high', 'medium', 'low'] as const).map(level => {
+                        const d = riskDist.find(r => r.risk_level === level)
+                        const val = d?.total_value_mxn ?? 0
+                        const pct = totalValue > 0 ? (val / totalValue) * 100 : 0
+                        return pct > 0.5 ? (
+                          <button
+                            key={level}
+                            onClick={() => navigate(`/contracts?risk_level=${level}`)}
+                            className="flex items-center justify-center hover:opacity-90 transition-opacity"
+                            style={{ width: `${pct}%`, backgroundColor: DONUT_COLORS[level] ?? '#64748b', opacity: 0.75 }}
+                            title={`${level}: ${pct.toFixed(1)}% of value (${formatCompactMXN(val)})`}
+                          >
+                            {pct > 5 && (
+                              <span className="text-[9px] font-bold text-white font-mono tabular-nums">{pct.toFixed(0)}%</span>
+                            )}
+                          </button>
+                        ) : null
+                      })}
+                    </div>
+                  </div>
+                )
+              })()}
+            </div>
+          )}
+        </DashboardSection>
+
+        {/* Top Risk Sectors */}
+        <DashboardSection
+          title={t('sectorIntelligence')}
+          subtitle={t('sectorIntelligenceDesc')}
+          icon={Target}
+          action={
+            <button
+              onClick={() => navigate('/sectors')}
+              className="text-xs text-accent flex items-center gap-1 hover:underline"
+            >
+              {t('viewAll')} <ArrowUpRight className="h-3 w-3" />
+            </button>
+          }
+        >
+          {dashLoading || sectorData.length === 0 ? (
+            <div className="space-y-2">{[...Array(6)].map((_, i) => <Skeleton key={i} className="h-8" />)}</div>
+          ) : (
+            <div style={{ height: 360 }}>
+              <TopRiskSectorsBar
+                data={sectorData}
+                onSectorClick={(id) => navigate(`/sectors/${id}`)}
+              />
+            </div>
+          )}
+        </DashboardSection>
+      </div>
+
+      {/* ================================================================ */}
+      {/* TEMPORAL TREND — Full-width area chart                           */}
+      {/* ================================================================ */}
+      <DashboardSection
+        title={t('riskTrajectory')}
+        subtitle={t('riskTrajectoryDesc')}
+        icon={Activity}
+        action={
+          <div className="flex items-center gap-2">
+            <select
+              className="text-xs font-mono bg-background-elevated/60 border border-border/30 rounded px-2 py-1 text-text-muted focus:outline-none focus:border-accent/60 cursor-pointer"
+              value={selectedTrajectorySectorId ?? ''}
+              onChange={(e) => setSelectedTrajectorySectorId(e.target.value === '' ? null : Number(e.target.value))}
+              aria-label="Filter risk trajectory by sector"
+            >
+              <option value="">All Sectors</option>
+              {sectorData.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+            <ChartDownloadButton targetRef={riskTrajectoryRef} filename="rubli-risk-trajectory" />
+          </div>
+        }
+      >
+        {dashLoading ? (
+          <div className="h-[300px] flex items-center justify-center"><Skeleton className="h-full w-full" /></div>
+        ) : (
+          <div ref={riskTrajectoryRef}>
+            <RiskTrajectoryChart
+              data={riskTrajectory}
+              sectorTrajectory={selectedTrajectorySectorId !== null ? sectorTrajectory : undefined}
+              sectorColor={selectedTrajectorySectorId !== null
+                ? (SECTOR_COLORS[sectorData.find((s) => s.id === selectedTrajectorySectorId)?.code ?? ''] ?? '#64748b')
+                : undefined}
+              yearlyTrends={fastDashboard?.yearly_trends}
+            />
+          </div>
+        )}
+      </DashboardSection>
+
+      {/* ================================================================ */}
+      {/* ROW 4: TOP VENDORS + WHERE THE MONEY GOES                       */}
+      {/* ================================================================ */}
+      <div className="grid gap-5 grid-cols-1 lg:grid-cols-2">
+        {/* Top Vendors */}
+        <DashboardSection
+          title={t('topVendorsByValue')}
+          subtitle={t('topVendorsByValueDesc')}
+          icon={Target}
+          action={
+            <button
+              onClick={() => navigate('/network')}
+              className="text-xs text-accent flex items-center gap-1 hover:underline"
+            >
+              {t('viewNetwork')} <ArrowUpRight className="h-3 w-3" />
+            </button>
+          }
+        >
+          <TopVendorsTable
+            vendors={execData?.top_vendors ?? []}
+            loading={execLoading}
+            onVendorClick={(id) => openEntityDrawer(id, 'vendor')}
+          />
+        </DashboardSection>
+
+        {/* Where the Money Goes */}
+        <DashboardSection
+          title={t('whereTheMoneyGoes')}
+          subtitle={t('whereMoneyGoesSubDesc')}
+          icon={ArrowRight}
+          action={
+            <button
+              onClick={() => navigate('/categories')}
+              className="text-xs text-accent flex items-center gap-1 hover:underline"
+            >
+              {t('fullBreakdown')} <ArrowUpRight className="h-3 w-3" />
+            </button>
+          }
+        >
+          {!moneyFlowData ? (
+            <div className="space-y-2">
+              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10" />)}
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {topFlows.map((flow, i) => {
+                const riskColor =
+                  (flow.avg_risk ?? 0) >= 0.50 ? 'text-risk-critical' :
+                  (flow.avg_risk ?? 0) >= 0.30 ? 'text-risk-high' :
+                  (flow.avg_risk ?? 0) >= 0.10 ? 'text-risk-medium' :
+                  'text-risk-low'
+                return (
+                  <div key={i} className="flex items-center gap-2 py-2 px-2 rounded hover:bg-background-elevated/30 transition-colors">
+                    <span className="text-xs text-text-muted font-mono w-5 flex-shrink-0 tabular-nums">{i + 1}</span>
+                    <div className="flex-1 min-w-0">
+                      <button onClick={() => openEntityDrawer(flow.source_id, 'institution')} className="text-xs font-semibold text-text-secondary truncate block hover:text-accent transition-colors">
+                        {toTitleCase(flow.source_name)}
+                      </button>
+                      <button onClick={() => openEntityDrawer(flow.target_id, 'vendor')} className="text-xs text-text-muted truncate block hover:text-accent transition-colors">
+                        {toTitleCase(flow.target_name)}
+                      </button>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-xs tabular-nums font-mono text-text-secondary font-semibold">
+                        {formatCompactMXN(flow.value)}
+                      </p>
+                      {flow.avg_risk != null && (
+                        <p className={cn('text-[10px] font-bold tabular-nums font-mono', riskColor)}>
+                          {(flow.avg_risk * 100).toFixed(0)}% risk
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </DashboardSection>
+      </div>
+
+      {/* ================================================================ */}
+      {/* GROUND TRUTH VALIDATION                                          */}
+      {/* ================================================================ */}
+      <DashboardSection
+        title={t('validatedAgainstReal')}
+        subtitle={`AUC ${modelAuc.toFixed(3)} | ${groundTruth?.cases ?? 390} documented corruption cases`}
+        icon={Shield}
+        action={
+          <button
+            onClick={() => navigate('/executive-summary')}
+            className="text-xs text-accent flex items-center gap-1 hover:underline"
+          >
+            {t('fullAnalysis')} <ArrowUpRight className="h-3 w-3" />
+          </button>
+        }
+      >
+        <GroundTruthSection
+          cases={corruptionCases}
+          loading={execLoading}
+          modelAuc={modelAuc}
+          totalCases={groundTruth?.cases ?? 390}
+          onFullAnalysis={() => navigate('/executive-summary')}
+        />
+      </DashboardSection>
+
+      {/* ================================================================ */}
+      {/* SECTOR GRID: 12 cards                                            */}
+      {/* ================================================================ */}
+      {sectorData.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Layers className="h-4 w-4 text-accent" />
+            <h2 className="text-sm font-bold text-text-primary uppercase tracking-wider">
+              12 Federal Sectors
+            </h2>
+          </div>
+          <motion.div
+            className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true, margin: '-40px' }}
+          >
+            {sectorData.map((sector) => (
+              <motion.div key={sector.code} variants={staggerItem}>
+                <SectorMiniCard
+                  {...sector}
+                  onClick={() => navigate(`/sectors/${sector.id}`)}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      )}
+
+      {/* ================================================================ */}
+      {/* RESEARCH CONTEXT — CompraNet abolished                          */}
+      {/* ================================================================ */}
+      <div className="rounded-lg border border-border/40 bg-background-card/50 p-5">
+        <div className="flex items-start gap-3">
+          <div className="p-1.5 rounded bg-border/20 shrink-0 mt-0.5">
+            <AlertTriangle className="h-4 w-4 text-text-muted" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold tracking-wider uppercase text-text-muted font-mono mb-1">
+              {t('compranetContextLabel')}
+            </p>
+            <p className="text-sm font-semibold text-text-primary mb-2">
+              {t('compranetContextTitle')}
+            </p>
+            <p className="text-xs text-text-muted leading-relaxed mb-3">
+              {t('compranetContextBody')}
+            </p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-[10px] font-mono text-text-muted px-2 py-0.5 rounded border border-border/40 bg-border/10">
+                {t('compranetContextDate1')}
+              </span>
+              <span className="text-[10px] font-mono text-text-muted px-2 py-0.5 rounded border border-border/40 bg-border/10">
+                {t('compranetContextDate2')}
+              </span>
+              <button
+                onClick={() => navigate('/limitations')}
+                className="text-xs text-accent flex items-center gap-1 ml-auto"
+              >
+                {t('compranetContextLink')} <ArrowUpRight className="h-3 w-3" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ================================================================ */}
+      {/* START INVESTIGATING — 3 action cards                            */}
+      {/* ================================================================ */}
+      <div>
+        <h2 className="text-base font-bold text-text-primary mb-1">{t('startInvestigating')}</h2>
+        <p className="text-xs text-text-muted mb-3">
+          {t('startInvestigatingDesc')}
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+          <button
+            onClick={() => navigate('/categories')}
+            className="flex flex-col gap-3 p-5 rounded-lg border border-border/40 bg-surface-card/30 hover:border-accent/40 hover:bg-accent/5 transition-all text-left group"
+          >
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-md bg-accent/10 group-hover:bg-accent/20 transition-colors">
+                <Search className="h-5 w-5 text-accent" />
+              </div>
+              <span className="text-sm font-bold text-text-primary">{t('followTheMoney')}</span>
+            </div>
+            <p className="text-xs text-text-muted leading-relaxed">
+              {t('followTheMoneyDesc')}
+            </p>
+            <div className="flex items-center gap-1 text-xs text-accent font-medium">
+              {t('exploreCategories')} <ArrowRight className="h-3 w-3" />
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/contracts')}
+            className="flex flex-col gap-3 p-5 rounded-lg border border-border/40 bg-surface-card/30 hover:border-accent/40 hover:bg-accent/5 transition-all text-left group"
+          >
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-md bg-accent/10 group-hover:bg-accent/20 transition-colors">
+                <FileSearch className="h-5 w-5 text-accent" />
+              </div>
+              <span className="text-sm font-bold text-text-primary">{t('searchAnyContract')}</span>
+            </div>
+            <p className="text-xs text-text-muted leading-relaxed">
+              {t('searchAnyContractDesc')}
+            </p>
+            <div className="flex items-center gap-1 text-xs text-accent font-medium">
+              {t('openContractSearch')} <ArrowRight className="h-3 w-3" />
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/investigation')}
+            className="flex flex-col gap-3 p-5 rounded-lg border border-border/40 bg-surface-card/30 hover:border-accent/40 hover:bg-accent/5 transition-all text-left group"
+          >
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-md bg-accent/10 group-hover:bg-accent/20 transition-colors">
+                <Crosshair className="h-5 w-5 text-accent" />
+              </div>
+              <span className="text-sm font-bold text-text-primary">{t('openInvestigation')}</span>
+            </div>
+            <p className="text-xs text-text-muted leading-relaxed">
+              {t('openInvestigationDesc')}
+            </p>
+            <div className="flex items-center gap-1 text-xs text-accent font-medium">
+              {t('openCaseManager')} <ArrowRight className="h-3 w-3" />
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// Preserved exports for backward compatibility
+// ============================================================================
+
+export const _StatCard = memo(function _StatCard({ loading, label, value, detail, color, borderColor, sublabel, onClick }: {
+  loading: boolean
+  label: React.ReactNode
+  value: string
+  detail: string
+  color: string
+  borderColor: string
+  sublabel?: string
+  onClick?: () => void
+}) {
+  return (
+    <Card
+      className={cn(
+        'border-l-4 transition-shadow hover:border-accent/30 hover:shadow-[0_0_20px_rgba(0,0,0,0.15)]',
+        borderColor,
+        onClick && 'cursor-pointer hover:shadow-lg hover:scale-[1.01] transition-all duration-200 group/sc'
+      )}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } } : undefined}
+    >
+      <CardContent className="p-4">
+        <p className="text-xs font-bold tracking-wider uppercase text-text-muted font-mono mb-1.5">
+          {label}
+        </p>
+        {loading ? (
+          <Skeleton className="h-8 w-20 mb-1" />
+        ) : (
+          <p className={cn('text-2xl md:text-3xl font-black tabular-nums tracking-tight leading-none', color)}>{value}</p>
+        )}
+        <p className="text-xs text-text-muted mt-1.5">{detail}</p>
+        {sublabel && (
+          <p className="text-xs text-text-muted mt-0.5 font-mono">{sublabel}</p>
+        )}
+      </CardContent>
+    </Card>
+  )
+})
+
+export function _RiskBadge({ value }: { value: number }) {
+  const pct = (value * 100).toFixed(0)
+  const color =
+    value >= 0.50 ? 'bg-risk-critical/20 text-risk-critical border-risk-critical/30' :
+    value >= 0.30 ? 'bg-risk-high/20 text-risk-high border-risk-high/30' :
+    value >= 0.10 ? 'bg-risk-medium/20 text-risk-medium border-risk-medium/30' :
+    'bg-risk-low/20 text-risk-low border-risk-low/30'
+  return (
+    <span className={cn('text-xs font-bold tabular-nums font-mono px-1.5 py-0.5 rounded border', color)}>
+      {pct}%
+    </span>
+  )
+}
 
 export default Dashboard

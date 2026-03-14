@@ -55,29 +55,35 @@ Z_COLS = [
 ]
 FACTOR_NAMES = [c.replace('z_', '') for c in Z_COLS]
 
-# Fraud time windows per case
-CASE_WINDOWS = {
-    1: (2012, 2019),   # IMSS Ghost Companies
-    2: (2019, 2023),   # Segalmex
-    3: (2020, 2021),   # COVID-19
-    4: (2013, 2018),   # IT Overpricing
-    5: (2010, 2014),   # Odebrecht
-    6: (2013, 2014),   # Estafa Maestra
-    7: (2012, 2015),   # Grupo Higa
-    8: (2008, 2014),   # Oceanografia
-    10: (2010, 2017),  # IPN Cartel Limpieza
-    11: (2010, 2018),  # Infrastructure Fraud
-    12: (2015, 2023),  # Toka IT Monopoly
-    13: (2010, 2020),  # PEMEX-Cotemar
-    14: (2014, 2019),  # SAT SixSigma
-    15: (2010, 2023),  # Edenred Vouchers
-    22: (2010, 2023),  # SAT EFOS
-}
+# Fraud time windows are loaded from DB at runtime (ground_truth_cases.year_start/year_end).
+# 347 of 390 GT cases have explicit windows; 43 NULL cases fall back to DEFAULT_WINDOW.
+# This replaces the old hardcoded 15-case dict — massive label noise reduction.
 DEFAULT_WINDOW = (2002, 2025)
 MODEL_VERSION = 'v6.0'  # same model version slot, better calibration
 
 
-def load_enhanced_data(conn, neg_ratio=2.0, seed=42, max_per_vendor=200):
+def load_case_windows(conn):
+    """Load fraud time windows from ground_truth_cases table.
+
+    Returns dict {case_id: (year_start, year_end)} for cases that have explicit windows.
+    Cases with NULL year_start fall back to DEFAULT_WINDOW at call site.
+    """
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT case_id, year_start, year_end
+        FROM ground_truth_cases
+        WHERE year_start IS NOT NULL AND year_end IS NOT NULL
+    """)
+    windows = {}
+    for row in cur.fetchall():
+        case_id, ys, ye = row
+        windows[case_id] = (int(ys), int(ye))
+    print(f"  Loaded {len(windows)} fraud time-windows from DB "
+          f"(vs 15 hardcoded in previous version)")
+    return windows
+
+
+def load_enhanced_data(conn, neg_ratio=2.0, seed=42, max_per_vendor=200, case_windows=None):
     """Load training data with balanced sampling and sector info.
 
     Key improvements over v6.0:
@@ -122,6 +128,8 @@ def load_enhanced_data(conn, neg_ratio=2.0, seed=42, max_per_vendor=200):
     print(f"  All GT vendor contracts: {len(all_gt_rows):,}")
 
     # Step 4: Apply time-window filter for positive labels
+    # Use DB-loaded windows (347 cases) instead of hardcoded dict (15 cases).
+    windows = case_windows or {}
     positive_by_vendor = defaultdict(list)
     excluded = 0
     for row in all_gt_rows:
@@ -129,7 +137,7 @@ def load_enhanced_data(conn, neg_ratio=2.0, seed=42, max_per_vendor=200):
         year = row[len(Z_COLS) + 1] or 2015
         case_ids = vendor_cases.get(vid, [])
         in_window = any(
-            CASE_WINDOWS.get(cid, DEFAULT_WINDOW)[0] <= year <= CASE_WINDOWS.get(cid, DEFAULT_WINDOW)[1]
+            windows.get(cid, DEFAULT_WINDOW)[0] <= year <= windows.get(cid, DEFAULT_WINDOW)[1]
             for cid in case_ids
         )
         if in_window:
@@ -362,8 +370,43 @@ def train_global_and_sector_models(data, C=1.0, l1_ratio=0.5, n_bootstrap=200):
     print(f"  Test Brier: {test_brier:.4f}")
     print(f"  PU c: {pu_c:.4f}")
 
-    coefs = global_model.coef_[0]
+    coefs = global_model.coef_[0].copy()
     intercept = global_model.intercept_[0]
+
+    # Sign constraints: zero out coefficients with known wrong signs caused by
+    # labeling artifacts (GT vendor profile leakage, not corruption signal).
+    # - win_rate: GT vendors win via direct award (not formal procedures) → spuriously negative
+    # - single_bid: GT vendors use DA not single-bid competitive → spuriously negative
+    # - sector_spread: large GT vendors (Edenred, Toka) span many sectors → spuriously positive
+    SIGN_CONSTRAINTS = {
+        'win_rate': +1,      # must be >= 0 (high win rate = suspicious)
+        'single_bid': +1,    # must be >= 0 (single bid = suspicious)
+        'sector_spread': -1, # must be <= 0 (cross-sector = less suspicious for small vendors)
+    }
+    zeroed = []
+    for fname, expected_sign in SIGN_CONSTRAINTS.items():
+        if fname in FACTOR_NAMES:
+            idx_f = FACTOR_NAMES.index(fname)
+            actual = coefs[idx_f]
+            if expected_sign > 0 and actual < 0:
+                coefs[idx_f] = 0.0
+                zeroed.append(f"{fname} ({actual:+.4f}→0)")
+            elif expected_sign < 0 and actual > 0:
+                coefs[idx_f] = 0.0
+                zeroed.append(f"{fname} ({actual:+.4f}→0)")
+    if zeroed:
+        print(f"  Sign constraints zeroed: {', '.join(zeroed)}")
+        global_model.coef_[0] = coefs
+        # Recompute probabilities with corrected coefficients
+        global_proba_train = global_model.predict_proba(X_train)[:, 1]
+        global_proba_test = global_model.predict_proba(X_test)[:, 1]
+        train_auc = roc_auc_score(y_train, global_proba_train) if len(set(y_train)) > 1 else 0.0
+        test_auc = roc_auc_score(y_test, global_proba_test) if len(set(y_test)) > 1 else 0.0
+        test_brier = brier_score_loss(y_test, global_proba_test)
+        test_ap = average_precision_score(y_test, global_proba_test) if len(set(y_test)) > 1 else 0.0
+        pu_c = estimate_pu_c(global_model, X_train, y_train, X_test, y_test)
+        print(f"  Post-constraint — Train AUC: {train_auc:.4f}, Test AUC: {test_auc:.4f}, PU c: {pu_c:.4f}")
+
     print(f"  Intercept: {intercept:.4f}")
     print(f"\n  Top coefficients:")
     sorted_idx = np.argsort(np.abs(coefs))[::-1]
@@ -610,8 +653,8 @@ def save_to_db(conn, results, run_id):
                 model_version, run_id, sector_id, intercept, coefficients,
                 pu_correction_factor, auc_roc, test_auc, brier_score,
                 average_precision, bootstrap_ci, n_positive, n_negative,
-                hyperparameters, created_at, platt_a, platt_b
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                n_bootstrap, hyperparameters, created_at, platt_a, platt_b
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             MODEL_VERSION, run_id, sector_id,
             res['intercept'],
@@ -624,6 +667,7 @@ def save_to_db(conn, results, run_id):
             bootstrap_ci,
             res.get('n_pos_train', 0),
             res.get('n_train', 0) - res.get('n_pos_train', 0),
+            res.get('n_bootstrap', args.n_bootstrap),
             hyperparams,
             datetime.now().isoformat(),
             0.0, 0.0,
@@ -637,10 +681,11 @@ def save_to_db(conn, results, run_id):
 def main():
     parser = argparse.ArgumentParser(description='Risk Model v6.1 Enhanced Calibration')
     parser.add_argument('--use-optuna', action='store_true', help='Use Optuna for hyperparameter search')
-    parser.add_argument('--optuna-trials', type=int, default=100)
-    parser.add_argument('--n-bootstrap', type=int, default=200)
+    parser.add_argument('--optuna-trials', type=int, default=150)
+    parser.add_argument('--n-bootstrap', type=int, default=500)
     parser.add_argument('--neg-ratio', type=float, default=5.0, help='Negative:positive ratio')
     parser.add_argument('--max-per-vendor', type=int, default=200, help='Max contracts per GT vendor')
+    parser.add_argument('--no-db-windows', action='store_true', help='Skip DB windows, use legacy hardcoded 15-case dict')
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args()
 
@@ -658,7 +703,9 @@ def main():
     try:
         # Step 1: Load data with balanced sampling
         print("\n[1/4] Loading training data...")
-        data = load_enhanced_data(conn, neg_ratio=args.neg_ratio, max_per_vendor=args.max_per_vendor)
+        case_windows = None if args.no_db_windows else load_case_windows(conn)
+        data = load_enhanced_data(conn, neg_ratio=args.neg_ratio, max_per_vendor=args.max_per_vendor,
+                                   case_windows=case_windows)
 
         # Step 2: Hyperparameter search
         if args.use_optuna:
@@ -682,6 +729,7 @@ def main():
             results[key]['C'] = C
             results[key]['l1_ratio'] = l1_ratio
             results[key]['neg_ratio'] = args.neg_ratio
+            results[key]['n_bootstrap'] = args.n_bootstrap
 
         # Step 4: Simulate scoring
         print("\n[4/4] Simulating score distribution...")

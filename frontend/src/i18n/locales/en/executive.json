@@ -381,5 +381,8 @@
     "title": "Failed to load Executive Summary",
     "body": "The report data could not be retrieved. Check your connection and try again.",
     "retry": "Retry"
-  }
+  },
+  "share": "Share",
+  "shareCopied": "Link copied!",
+  "exportPdf": "Print / PDF"
 }

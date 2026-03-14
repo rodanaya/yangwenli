@@ -1,18 +1,43 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { motion } from 'framer-motion'
-import { ArrowRight, Search, Shield, BookOpen, AlertTriangle, Cpu, ChevronDown } from 'lucide-react'
+import { motion, useInView } from 'framer-motion'
+import {
+  ArrowRight,
+  Database,
+  Users,
+  LayoutGrid,
+  Calendar,
+  Download,
+  Cpu,
+  Search,
+  BarChart3,
+} from 'lucide-react'
 import { analysisApi } from '@/api/client'
-import { formatCompactMXN } from '@/lib/utils'
-import { NarrativeCard } from '@/components/NarrativeCard'
-import type { NarrativeParagraph } from '@/lib/narratives'
-import type { FastDashboardData, RiskDistribution } from '@/api/types'
+import type { FastDashboardData, RiskDistribution, DashboardSectorItem } from '@/api/types'
 import { staggerContainer, staggerItem, slideUp } from '@/lib/animations'
 
 // ---------------------------------------------------------------------------
-// useCountUp — animates a number from 0 to `target` over `duration` ms.
+// Sector color map (matches CLAUDE.md canonical colors)
+// ---------------------------------------------------------------------------
+const SECTOR_COLORS: Record<string, string> = {
+  salud: '#dc2626',
+  educacion: '#3b82f6',
+  infraestructura: '#ea580c',
+  energia: '#eab308',
+  defensa: '#1e3a5f',
+  tecnologia: '#8b5cf6',
+  hacienda: '#16a34a',
+  gobernacion: '#be123c',
+  agricultura: '#22c55e',
+  ambiente: '#10b981',
+  trabajo: '#f97316',
+  otros: '#64748b',
+}
+
+// ---------------------------------------------------------------------------
+// useCountUp -- animates a number from 0 to `target` over `duration` ms.
 // ---------------------------------------------------------------------------
 function useCountUp(target: number, duration = 1800, enabled = false): number {
   const [value, setValue] = useState(0)
@@ -50,13 +75,13 @@ function LangToggle() {
   const { i18n } = useTranslation()
   const isEn = i18n.language.startsWith('en')
   return (
-    <div className="flex items-center gap-0.5 bg-white/10 border border-white/20 rounded-full p-0.5 backdrop-blur-sm">
+    <div className="flex items-center gap-0.5 rounded-full p-0.5 backdrop-blur-sm" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
       <button
         onClick={() => i18n.changeLanguage('en')}
-        className="px-2.5 py-1 rounded-full text-xs font-bold transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-white/40"
+        className="px-2.5 py-1 rounded-full text-xs font-bold transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-amber-400/40"
         style={{
-          backgroundColor: isEn ? 'rgba(255,255,255,0.15)' : 'transparent',
-          color: isEn ? '#fff' : 'rgba(255,255,255,0.4)',
+          backgroundColor: isEn ? 'rgba(245,158,11,0.15)' : 'transparent',
+          color: isEn ? '#f59e0b' : 'rgba(255,255,255,0.35)',
         }}
         aria-pressed={isEn}
         aria-label="Switch to English"
@@ -65,13 +90,13 @@ function LangToggle() {
       </button>
       <button
         onClick={() => i18n.changeLanguage('es')}
-        className="px-2.5 py-1 rounded-full text-xs font-bold transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-white/40"
+        className="px-2.5 py-1 rounded-full text-xs font-bold transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-amber-400/40"
         style={{
-          backgroundColor: !isEn ? 'rgba(255,255,255,0.15)' : 'transparent',
-          color: !isEn ? '#fff' : 'rgba(255,255,255,0.4)',
+          backgroundColor: !isEn ? 'rgba(245,158,11,0.15)' : 'transparent',
+          color: !isEn ? '#f59e0b' : 'rgba(255,255,255,0.35)',
         }}
         aria-pressed={!isEn}
-        aria-label="Cambiar a Español"
+        aria-label="Cambiar a Espanol"
       >
         ES
       </button>
@@ -80,277 +105,539 @@ function LangToggle() {
 }
 
 // ---------------------------------------------------------------------------
-// ScrollReveal
+// AnimatedGrid -- subtle CSS-only background
 // ---------------------------------------------------------------------------
-function ScrollReveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    if (!ref.current) return
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true)
-          obs.disconnect()
-        }
-      },
-      { threshold: 0.15 }
-    )
-    obs.observe(ref.current)
-    return () => obs.disconnect()
-  }, [])
-
+function AnimatedGrid() {
   return (
     <div
-      ref={ref}
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(16px)',
-        transition: `opacity 0.7s ease ${delay}ms, transform 0.7s ease ${delay}ms`,
-      }}
+      aria-hidden="true"
+      className="absolute inset-0 pointer-events-none overflow-hidden"
     >
-      {children}
+      {/* Grid pattern */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(245,158,11,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(245,158,11,0.03) 1px, transparent 1px)',
+          backgroundSize: '80px 80px',
+        }}
+      />
+      {/* Radial glow */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse 50% 40% at 50% 35%, rgba(245,158,11,0.06) 0%, transparent 70%)',
+        }}
+      />
+      {/* Bottom fade */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-40"
+        style={{ background: 'linear-gradient(to top, #080c14, transparent)' }}
+      />
     </div>
   )
 }
 
 // ---------------------------------------------------------------------------
-// HeroSection — full viewport intro
+// HeroSection -- full viewport
 // ---------------------------------------------------------------------------
-function HeroSection({ onEnter, onScrollDown }: { onEnter: () => void; onScrollDown: () => void }) {
+function HeroSection({
+  onEnter,
+  onMethodology,
+  totalContracts,
+  highRiskCount,
+  totalValueMxn,
+}: {
+  onEnter: () => void
+  onMethodology: () => void
+  totalContracts: number
+  highRiskCount: number
+  totalValueMxn: number
+}) {
   const [mounted, setMounted] = useState(false)
   const { t } = useTranslation('landing')
-  const heroFindings = useHeroFindings()
+  const ref = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref, { once: true, amount: 0.3 })
 
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 80)
     return () => clearTimeout(timer)
   }, [])
 
+  const contractsAnimated = useCountUp(totalContracts, 2000, mounted)
+  const flaggedAnimated = useCountUp(highRiskCount, 2200, mounted)
+  const valueT = Math.round(totalValueMxn / 1_000_000_000_000 * 10) / 10
+  const valueTAnimated = useCountUp(Math.round(valueT * 10), 1800, mounted) / 10
+
   return (
     <section
+      ref={ref}
       className="min-h-screen flex flex-col items-center justify-center relative px-6 sm:px-12 text-center overflow-hidden"
-      style={{ background: 'linear-gradient(160deg, #080c14 0%, #0f172a 60%, #080c14 100%)' }}
+      style={{ background: '#080c14' }}
       aria-label="RUBLI platform introduction"
     >
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(59,130,246,0.07) 0%, transparent 70%)',
-        }}
-      />
+      <AnimatedGrid />
 
       <motion.div
-        className="max-w-4xl mx-auto flex flex-col items-center gap-6 z-10"
+        className="max-w-4xl mx-auto flex flex-col items-center gap-8 z-10"
         variants={staggerContainer}
         initial="initial"
         animate={mounted ? 'animate' : 'initial'}
       >
+        {/* Badge */}
         <motion.span
           variants={slideUp}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold tracking-widest uppercase bg-white/5 border border-white/10 text-white/50"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold tracking-widest uppercase"
+          style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', color: '#f59e0b' }}
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          {t('hero.badge')}
+          <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+          RUBLI v6.1
         </motion.span>
 
+        {/* Headline */}
         <motion.h1
           variants={slideUp}
           className="text-4xl sm:text-6xl lg:text-7xl font-black leading-[1.05] text-white"
         >
-          23 years.{' '}
-          <span style={{ color: '#3b82f6' }}>{t('hero.headline_part2')}</span>{' '}
-          contracts.{' '}
-          <span style={{ color: '#dc2626' }}>{t('hero.headline_part4')}</span>
+          {t('hero.headline')}{' '}
+          <span className="block sm:inline" style={{ color: '#f59e0b' }}>
+            {t('hero.headline_accent')}
+          </span>
         </motion.h1>
 
+        {/* Sub */}
         <motion.p
           variants={slideUp}
-          className="text-lg sm:text-xl text-white/55 max-w-2xl leading-relaxed"
+          className="text-lg sm:text-xl max-w-2xl leading-relaxed"
+          style={{ color: '#7d90aa' }}
         >
-          {t('hero.subheading')}
+          {t('hero.sub')}
         </motion.p>
 
-        <motion.div variants={slideUp} className="w-full max-w-2xl mt-2">
-          <NarrativeCard
-            paragraphs={heroFindings}
-            className="bg-white/[0.03] border-white/10 text-left"
+        {/* Animated counters */}
+        <motion.div
+          variants={slideUp}
+          className="grid grid-cols-3 gap-6 sm:gap-12 w-full max-w-2xl"
+        >
+          <CounterStat
+            value={mounted ? `${(contractsAnimated / 1_000_000).toFixed(1)}M` : '0'}
+            label={t('hero.stat_contracts')}
+            color="#3b82f6"
+            inView={inView}
+          />
+          <CounterStat
+            value={mounted ? flaggedAnimated.toLocaleString() : '0'}
+            label={t('hero.stat_flagged')}
+            color="#ef4444"
+            inView={inView}
+          />
+          <CounterStat
+            value={mounted ? `~${valueTAnimated.toFixed(1)}T` : '0'}
+            label={t('hero.stat_value')}
+            color="#f59e0b"
+            inView={inView}
           />
         </motion.div>
 
+        {/* CTAs */}
         <motion.div variants={slideUp} className="flex flex-wrap gap-3 justify-center mt-2">
           <button
             onClick={onEnter}
-            className="flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-sm transition-all duration-200 hover:opacity-90 hover:scale-[1.02] shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-400/60"
-            style={{ backgroundColor: '#3b82f6', color: '#fff' }}
+            className="flex items-center gap-2 px-7 py-3.5 rounded-lg font-bold text-sm transition-all duration-200 hover:brightness-110 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-amber-400/60"
+            style={{
+              backgroundColor: '#f59e0b',
+              color: '#080c14',
+              boxShadow: '0 0 30px -5px rgba(245,158,11,0.3)',
+            }}
           >
-            {t('hero.cta_enter')} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            {t('hero.cta_primary')} <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </button>
           <button
-            onClick={onScrollDown}
-            className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm border border-white/20 hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white/40"
+            onClick={onMethodology}
+            className="flex items-center gap-2 px-6 py-3.5 rounded-lg font-semibold text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-white/30"
+            style={{ border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.6)' }}
           >
-            {t('hero.cta_scroll')} <ChevronDown className="h-4 w-4" aria-hidden="true" />
+            {t('hero.cta_secondary')}
           </button>
         </motion.div>
       </motion.div>
-
-      <button
-        onClick={onScrollDown}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/20 hover:text-white/40 transition-colors focus:outline-none"
-        aria-label="Scroll to learn more"
-      >
-        <ChevronDown className="h-5 w-5 animate-bounce" aria-hidden="true" />
-      </button>
     </section>
   )
 }
 
-function useHeroFindings(): NarrativeParagraph[] {
-  const { t } = useTranslation('landing')
-  return [
-    { text: t('hero_findings.f1'), severity: 'critical' },
-    { text: t('hero_findings.f2'), severity: 'warning' },
-    { text: t('hero_findings.f3'), severity: 'info' },
-  ]
-}
-
-// ---------------------------------------------------------------------------
-// StatBomb — animated count-up stat
-// ---------------------------------------------------------------------------
-function StatBomb({ value, label, sub, color }: {
-  value: string; label: string; sub: string; color: string
+function CounterStat({ value, label, color }: {
+  value: string; label: string; color: string; inView: boolean
 }) {
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-3xl sm:text-4xl font-black tabular-nums leading-none" style={{ color }}>
+    <div className="flex flex-col items-center gap-1">
+      <span
+        className="text-2xl sm:text-4xl font-black tabular-nums leading-none"
+        style={{ color }}
+      >
         {value}
       </span>
-      <span className="text-xs text-white/60 leading-tight font-medium">{label}</span>
-      <span className="text-[10px] text-white/30 leading-tight">{sub}</span>
+      <span className="text-[11px] leading-tight font-medium" style={{ color: '#4a5d73' }}>
+        {label}
+      </span>
     </div>
   )
 }
 
 // ---------------------------------------------------------------------------
-// RiskStrip — proportional bar
+// ScaleSection -- 4 stat cards
 // ---------------------------------------------------------------------------
-function RiskStrip({ riskDistribution }: { riskDistribution?: RiskDistribution[] }) {
-  const [hov, setHov] = useState<number | null>(null)
-
-  const FALLBACK = [
-    { label: 'Critical', pct: 6.1, color: '#dc2626', contracts: '190K' },
-    { label: 'High', pct: 2.9, color: '#f97316', contracts: '89K' },
-    { label: 'Medium', pct: 13.2, color: '#eab308', contracts: '409K' },
-    { label: 'Low', pct: 77.8, color: '#16a34a', contracts: '2.4M' },
-  ]
-
-  const bands = (() => {
-    if (!riskDistribution || riskDistribution.length === 0) return FALLBACK
-    const total = riskDistribution.reduce((s, r) => s + r.count, 0)
-    const colorMap: Record<string, string> = { critical: '#dc2626', high: '#f97316', medium: '#eab308', low: '#16a34a' }
-    const order = ['critical', 'high', 'medium', 'low']
-    return order.map((level) => {
-      const row = riskDistribution.find((r) => r.risk_level === level)
-      const count = row?.count ?? 0
-      const pct = total > 0 ? (count / total) * 100 : 0
-      const label = level.charAt(0).toUpperCase() + level.slice(1)
-      const contracts = count >= 1_000_000 ? `~${(count / 1_000_000).toFixed(1)}M` : count.toLocaleString()
-      return { label, pct, color: colorMap[level] ?? '#64748b', contracts }
-    })
-  })()
-
-  return (
-    <div className="w-full" aria-label="Risk level distribution">
-      <div className="flex h-2.5 rounded-full overflow-hidden gap-px mb-2">
-        {bands.map((band, i) => (
-          <div
-            key={band.label}
-            style={{
-              width: `${band.pct}%`,
-              backgroundColor: band.color,
-              opacity: hov === null || hov === i ? 1 : 0.4,
-              transition: 'opacity 0.2s',
-            }}
-            onMouseEnter={() => setHov(i)}
-            onMouseLeave={() => setHov(null)}
-          />
-        ))}
-      </div>
-      <div className="flex gap-4 flex-wrap">
-        {bands.map((band, i) => (
-          <div
-            key={band.label}
-            className="flex items-center gap-1.5 cursor-default"
-            onMouseEnter={() => setHov(i)}
-            onMouseLeave={() => setHov(null)}
-          >
-            <span className="w-2 h-2 rounded-sm flex-shrink-0" style={{ backgroundColor: band.color }} />
-            <span className="text-[11px] leading-none" style={{ color: hov === i ? band.color : 'rgba(255,255,255,0.45)' }}>
-              {band.label} {band.pct.toFixed(1)}%
-              {hov === i && <span className="ml-1 text-white/30">· {band.contracts}</span>}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// FeaturedCasesStrip
-// ---------------------------------------------------------------------------
-const FEATURED_CASES = [
-  { name: 'IMSS Ghost Company Network', contracts: 9366, sector: 'Health', sectorColor: '#dc2626', slug: 'imss-ghost-company-network', badgeClass: 'border-red-500/60 text-red-400 bg-red-500/10', badgeLabel: 'Ghost Company' },
-  { name: 'Segalmex Food Distribution', contracts: 6326, sector: 'Agriculture', sectorColor: '#22c55e', slug: 'segalmex-food-distribution', badgeClass: 'border-yellow-500/60 text-yellow-400 bg-yellow-500/10', badgeLabel: 'Procurement Fraud' },
-  { name: 'COVID-19 Emergency Procurement', contracts: 5371, sector: 'Health', sectorColor: '#dc2626', slug: 'covid-19-emergency-procurement', badgeClass: 'border-rose-500/60 text-rose-400 bg-rose-500/10', badgeLabel: 'Embezzlement' },
-]
-
-function FeaturedCasesStrip({ onNavigate }: { onNavigate: (path: string) => void }) {
+function ScaleSection({ totalContracts, totalVendors }: { totalContracts: number; totalVendors: number }) {
   const { t } = useTranslation('landing')
+  const ref = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref, { once: true, amount: 0.3 })
+
+  const stats = useMemo(() => [
+    { icon: Database, value: `${(totalContracts / 1_000_000).toFixed(1)}M`, label: t('scale.contracts'), color: '#3b82f6' },
+    { icon: Users, value: `${Math.round(totalVendors / 1000)}K`, label: t('scale.vendors'), color: '#8b5cf6' },
+    { icon: LayoutGrid, value: '12', label: t('scale.sectors'), color: '#f59e0b' },
+    { icon: Calendar, value: '23', label: t('scale.years'), color: '#22c55e' },
+  ], [totalContracts, totalVendors, t])
+
   return (
-    <div className="w-full">
-      <p className="text-xs font-semibold tracking-widest uppercase text-white/30 mb-3">
-        {t('featured_cases.label')}
-      </p>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {FEATURED_CASES.map((cas) => (
-          <button
-            key={cas.slug}
-            onClick={() => onNavigate(`/cases/${cas.slug}`)}
-            className="group flex flex-col gap-2.5 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-200 text-left focus:outline-none focus:ring-1 focus:ring-white/30"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <span className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold leading-none ${cas.badgeClass}`}>
-                {cas.badgeLabel}
+    <section
+      ref={ref}
+      className="px-6 sm:px-12 lg:px-24 py-20"
+      style={{ background: '#080c14' }}
+    >
+      <div className="max-w-5xl mx-auto">
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5 }}
+          className="text-2xl sm:text-3xl font-black text-white mb-10 text-center"
+        >
+          {t('scale.title')}
+        </motion.h2>
+
+        <motion.div
+          className="grid grid-cols-2 sm:grid-cols-4 gap-4"
+          variants={staggerContainer}
+          initial="initial"
+          animate={inView ? 'animate' : 'initial'}
+        >
+          {stats.map((s) => (
+            <motion.div
+              key={s.label}
+              variants={staggerItem}
+              className="rounded-xl p-5 flex flex-col items-center gap-3 text-center"
+              style={{
+                background: `${s.color}06`,
+                border: `1px solid ${s.color}18`,
+              }}
+            >
+              <s.icon className="h-5 w-5" style={{ color: s.color, opacity: 0.7 }} aria-hidden="true" />
+              <span className="text-3xl sm:text-4xl font-black tabular-nums leading-none" style={{ color: s.color }}>
+                {s.value}
               </span>
-              <span className="flex-shrink-0 w-2 h-2 rounded-full" style={{ backgroundColor: cas.sectorColor }} aria-hidden="true" />
-            </div>
-            <span className="text-sm font-bold text-white/85 group-hover:text-white transition-colors leading-snug">
-              {cas.name}
-            </span>
-            <div className="flex items-center justify-between mt-auto pt-1">
-              <span className="text-[11px] text-white/35 tabular-nums">
-                {t('featured_cases.contracts', { num: cas.contracts.toLocaleString() })}
+              <span className="text-xs font-medium" style={{ color: '#7d90aa' }}>
+                {s.label}
               </span>
-              <ArrowRight className="h-3.5 w-3.5 text-white/20 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all duration-200" aria-hidden="true" />
-            </div>
-          </button>
-        ))}
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
-    </div>
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// HowItWorksSection -- 3 steps
+// ---------------------------------------------------------------------------
+function HowItWorksSection() {
+  const { t } = useTranslation('landing')
+  const ref = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref, { once: true, amount: 0.2 })
+
+  const steps = useMemo(() => [
+    { num: '01', title: t('how.step1_title'), body: t('how.step1_body'), icon: Download, color: '#3b82f6' },
+    { num: '02', title: t('how.step2_title'), body: t('how.step2_body'), icon: Cpu, color: '#f59e0b' },
+    { num: '03', title: t('how.step3_title'), body: t('how.step3_body'), icon: Search, color: '#22c55e' },
+  ], [t])
+
+  return (
+    <section
+      ref={ref}
+      className="px-6 sm:px-12 lg:px-24 py-20"
+      style={{ background: 'linear-gradient(180deg, #080c14 0%, #0a1020 100%)' }}
+    >
+      <div className="max-w-5xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-12"
+        >
+          <span
+            className="text-[11px] font-semibold tracking-widest uppercase mb-3 block"
+            style={{ color: '#f59e0b' }}
+          >
+            {t('how.tag')}
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-black text-white mb-3">
+            {t('how.title')}
+          </h2>
+          <p className="text-sm max-w-xl mx-auto" style={{ color: '#7d90aa' }}>
+            {t('how.sub')}
+          </p>
+        </motion.div>
+
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-3 gap-5"
+          variants={staggerContainer}
+          initial="initial"
+          animate={inView ? 'animate' : 'initial'}
+        >
+          {steps.map((step) => (
+            <motion.div
+              key={step.num}
+              variants={staggerItem}
+              className="rounded-xl p-6"
+              style={{
+                background: `${step.color}05`,
+                border: `1px solid ${step.color}15`,
+              }}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center"
+                  style={{ background: `${step.color}12` }}
+                >
+                  <step.icon className="h-5 w-5" style={{ color: step.color }} aria-hidden="true" />
+                </div>
+                <span className="text-xl font-black tabular-nums" style={{ color: step.color, opacity: 0.4 }}>
+                  {step.num}
+                </span>
+              </div>
+              <h3 className="text-base font-bold text-white mb-2">{step.title}</h3>
+              <p className="text-sm leading-relaxed" style={{ color: '#7d90aa' }}>
+                {step.body}
+              </p>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// RiskSnapshotSection -- live data
+// ---------------------------------------------------------------------------
+function RiskSnapshotSection({
+  riskDist,
+  sectors,
+}: {
+  riskDist: RiskDistribution[]
+  sectors: DashboardSectorItem[]
+}) {
+  const { t } = useTranslation('landing')
+  const ref = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref, { once: true, amount: 0.2 })
+
+  const total = riskDist.reduce((s, r) => s + r.count, 0)
+  const criticalPct = riskDist.find((r) => r.risk_level === 'critical')?.percentage ?? 0
+  const highPct = riskDist.find((r) => r.risk_level === 'high')?.percentage ?? 0
+  const highRiskRate = (criticalPct + highPct).toFixed(1)
+
+  const riskColors: Record<string, string> = {
+    critical: '#ef4444',
+    high: '#f97316',
+    medium: '#eab308',
+    low: '#22c55e',
+  }
+  const riskOrder = ['critical', 'high', 'medium', 'low'] as const
+
+  // Top 3 sectors by avg risk
+  const topSectors = useMemo(() => {
+    if (!sectors || sectors.length === 0) return []
+    return [...sectors]
+      .sort((a, b) => b.avg_risk_score - a.avg_risk_score)
+      .slice(0, 5)
+  }, [sectors])
+
+  if (riskDist.length === 0) return null
+
+  return (
+    <section
+      ref={ref}
+      className="px-6 sm:px-12 lg:px-24 py-20"
+      style={{ background: '#080c14' }}
+    >
+      <div className="max-w-5xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5 }}
+          className="mb-10"
+        >
+          <span className="text-[11px] font-semibold tracking-widest uppercase mb-3 block" style={{ color: '#ef4444' }}>
+            {t('snapshot.tag')}
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">
+            {t('snapshot.title')}
+          </h2>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-6"
+        >
+          {/* Risk distribution card */}
+          <div
+            className="rounded-xl p-6"
+            style={{ background: '#0e1420', border: '1px solid #1e2d45' }}
+          >
+            <div className="flex items-baseline gap-3 mb-6">
+              <span className="text-3xl font-black tabular-nums" style={{ color: '#ef4444' }}>
+                {highRiskRate}%
+              </span>
+              <span className="text-xs font-medium" style={{ color: '#7d90aa' }}>
+                {t('snapshot.high_risk_rate')}
+              </span>
+            </div>
+
+            {/* Proportional bar */}
+            <div className="flex h-3 rounded-full overflow-hidden gap-px mb-4">
+              {riskOrder.map((level) => {
+                const row = riskDist.find((r) => r.risk_level === level)
+                const pct = row ? (row.count / total) * 100 : 0
+                return (
+                  <div
+                    key={level}
+                    style={{ width: `${pct}%`, backgroundColor: riskColors[level] }}
+                  />
+                )
+              })}
+            </div>
+
+            {/* Legend */}
+            <div className="grid grid-cols-2 gap-2">
+              {riskOrder.map((level) => {
+                const row = riskDist.find((r) => r.risk_level === level)
+                const count = row?.count ?? 0
+                const tKey = `snapshot.${level}` as const
+                return (
+                  <div key={level} className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-sm flex-shrink-0" style={{ backgroundColor: riskColors[level] }} />
+                    <span className="text-[11px]" style={{ color: '#7d90aa' }}>
+                      {t(tKey)} -- {count.toLocaleString()} {t('snapshot.contracts_label')}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Top sectors card */}
+          <div
+            className="rounded-xl p-6"
+            style={{ background: '#0e1420', border: '1px solid #1e2d45' }}
+          >
+            <h3 className="text-xs font-semibold tracking-widest uppercase mb-5" style={{ color: '#7d90aa' }}>
+              {t('snapshot.top_sectors')}
+            </h3>
+            <div className="space-y-3">
+              {topSectors.map((s) => {
+                const hrPct = s.total_contracts > 0
+                  ? ((s.high_risk_count + s.critical_risk_count) / s.total_contracts * 100)
+                  : 0
+                const sectorColor = SECTOR_COLORS[s.code] ?? '#64748b'
+                return (
+                  <div key={s.id} className="flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: sectorColor }} />
+                    <span className="text-sm font-medium text-white flex-1 capitalize truncate">
+                      {s.name}
+                    </span>
+                    <span className="text-xs tabular-nums" style={{ color: '#7d90aa' }}>
+                      {hrPct.toFixed(1)}% HR
+                    </span>
+                    <div className="w-20 h-1.5 rounded-full overflow-hidden" style={{ background: '#1e2d45' }}>
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${Math.min(hrPct * 3, 100)}%`, backgroundColor: sectorColor }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// CTASection -- final call to action
+// ---------------------------------------------------------------------------
+function CTASection({ onDashboard, onExecutive }: { onDashboard: () => void; onExecutive: () => void }) {
+  const { t } = useTranslation('landing')
+  const ref = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref, { once: true, amount: 0.3 })
+
+  return (
+    <section
+      ref={ref}
+      className="px-6 sm:px-12 lg:px-24 py-24"
+      style={{ background: 'linear-gradient(180deg, #0a1020 0%, #080c14 100%)' }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={inView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.5 }}
+        className="max-w-3xl mx-auto text-center"
+      >
+        <span className="text-[11px] font-semibold tracking-widest uppercase mb-3 block" style={{ color: '#f59e0b' }}>
+          {t('cta.tag')}
+        </span>
+        <h2 className="text-3xl sm:text-4xl font-black text-white mb-3">
+          {t('cta.title')}
+        </h2>
+        <p className="text-sm mb-8" style={{ color: '#4a5d73' }}>
+          {t('cta.sub')}
+        </p>
+
+        <div className="flex flex-wrap gap-3 justify-center">
+          <button
+            onClick={onDashboard}
+            className="flex items-center gap-2 px-7 py-3.5 rounded-lg font-bold text-sm transition-all duration-200 hover:brightness-110 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-amber-400/60"
+            style={{
+              backgroundColor: '#f59e0b',
+              color: '#080c14',
+              boxShadow: '0 0 30px -5px rgba(245,158,11,0.3)',
+            }}
+          >
+            <BarChart3 className="h-4 w-4" aria-hidden="true" />
+            {t('cta.dashboard')}
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </button>
+          <button
+            onClick={onExecutive}
+            className="flex items-center gap-2 px-6 py-3.5 rounded-lg font-semibold text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-white/30"
+            style={{ border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.6)' }}
+          >
+            {t('cta.executive')}
+          </button>
+        </div>
+      </motion.div>
+    </section>
   )
 }
 
 // ===========================================================================
-// Main Intro page — condensed: Hero + Numbers + Patterns + How + CTA
+// Main Intro page
 // ===========================================================================
 export default function Intro() {
   const navigate = useNavigate()
   const { t } = useTranslation('landing')
-  const belowFoldRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (localStorage.getItem('rubli_seen_intro')) {
@@ -358,275 +645,73 @@ export default function Intro() {
     }
   }, [navigate])
 
-  const { data: fastDashboard, isError: dashboardError } = useQuery<FastDashboardData>({
+  const { data: fastDashboard } = useQuery<FastDashboardData>({
     queryKey: ['dashboard', 'fast'],
     queryFn: () => analysisApi.getFastDashboard(),
     staleTime: 10 * 60 * 1000,
-    retry: 0,
+    retry: 1,
   })
-
-  if (dashboardError) {
-    return (
-      <div className="min-h-screen bg-[#080c14] text-white flex flex-col items-center justify-center gap-4">
-        <AlertTriangle className="h-10 w-10 text-yellow-400" aria-hidden="true" />
-        <p className="text-lg font-semibold">Could not load platform data</p>
-        <p className="text-sm text-white/50">The backend may be starting up. Please wait a moment.</p>
-        <button onClick={() => window.location.reload()} className="mt-2 px-4 py-2 rounded-lg text-sm font-medium bg-white/10 hover:bg-white/20 border border-white/20 transition-colors">
-          Reload page
-        </button>
-      </div>
-    )
-  }
 
   const goToApp = useCallback((path: string = '/dashboard') => {
     localStorage.setItem('rubli_seen_intro', '1')
     navigate(path)
   }, [navigate])
 
-  const scrollDown = useCallback(() => {
-    belowFoldRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [])
-
   const overview = fastDashboard?.overview
   const totalContracts = overview?.total_contracts ?? 3_051_294
+  const totalVendors = overview?.total_vendors ?? 320_000
   const totalValueMxn = overview?.total_value_mxn ?? 9_560_000_000_000
+  const highRiskCount = overview?.high_risk_contracts ?? 301_961
   const riskDist: RiskDistribution[] = fastDashboard?.risk_distribution ?? []
-  const criticalPct = riskDist.find((r) => r.risk_level === 'critical')?.percentage ?? 6.1
-  const highPct = riskDist.find((r) => r.risk_level === 'high')?.percentage ?? 2.9
-
-  // Animated stats
-  const statsRef = useRef<HTMLDivElement>(null)
-  const [statsTriggered, setStatsTriggered] = useState(false)
-  useEffect(() => {
-    if (!statsRef.current) return
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setStatsTriggered(true); obs.disconnect() } }, { threshold: 0.3 })
-    obs.observe(statsRef.current)
-    return () => obs.disconnect()
-  }, [])
-
-  const contractCount = useCountUp(totalContracts, 1800, statsTriggered)
-  const valueB = Math.round(totalValueMxn / 1_000_000_000_000 * 10) / 10
-  const valueBAnimated = useCountUp(Math.round(valueB * 10), 2000, statsTriggered) / 10
-  const riskPctAnimated = useCountUp(Math.round((criticalPct + highPct) * 10), 1600, statsTriggered) / 10
-  const casesAnimated = useCountUp(390, 1200, statsTriggered)
-
-  const patternNarrative: NarrativeParagraph[] = [
-    { text: t('chapters.patterns.n1'), severity: 'warning' },
-    { text: t('chapters.patterns.n2'), severity: 'warning' },
-    { text: t('chapters.patterns.n3'), severity: 'critical' },
-  ]
-
-  const riskNarrative: NarrativeParagraph[] = [
-    { text: t('chapters.risk.n1', { pct: criticalPct.toFixed(1) }), severity: 'critical' },
-    { text: t('chapters.risk.n2', { pct: highPct.toFixed(1) }), severity: 'warning' },
-    { text: t('chapters.risk.n3'), severity: 'info' },
-  ]
+  const sectors: DashboardSectorItem[] = fastDashboard?.sectors ?? []
 
   return (
-    <div className="min-h-screen bg-[#080c14] text-white">
+    <div className="min-h-screen text-white" style={{ background: '#080c14' }}>
       {/* Fixed controls */}
       <div className="fixed top-4 right-4 z-50 flex items-center gap-3">
         <LangToggle />
         <button
           onClick={() => goToApp()}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-white/10 hover:bg-white/20 border border-white/20 transition-colors backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/40"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400/40"
+          style={{
+            background: 'rgba(245,158,11,0.08)',
+            border: '1px solid rgba(245,158,11,0.2)',
+            color: '#f59e0b',
+          }}
         >
           {t('skip_to_app')} <ArrowRight className="h-3 w-3" aria-hidden="true" />
         </button>
       </div>
 
-      {/* ── HERO ── */}
-      <HeroSection onEnter={() => goToApp()} onScrollDown={scrollDown} />
+      {/* Section 1: Hero */}
+      <HeroSection
+        onEnter={() => goToApp()}
+        onMethodology={() => goToApp('/methodology')}
+        totalContracts={totalContracts}
+        highRiskCount={highRiskCount}
+        totalValueMxn={totalValueMxn}
+      />
 
-      {/* ── SECTION 2: The Numbers ── */}
-      <section
-        ref={(el: HTMLDivElement | null) => { belowFoldRef.current = el; statsRef.current = el }}
-        className="px-6 sm:px-12 lg:px-24 py-20"
-        style={{ background: 'linear-gradient(135deg, #080c14 0%, #0f172a 100%)' }}
-      >
-        <div className="max-w-5xl mx-auto">
-          <ScrollReveal>
-            <span className="text-xs font-semibold tracking-widest uppercase text-blue-400 mb-3 block">
-              {t('chapters.scale.tag')}
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-white mb-8">
-              {t('chapters.scale.heading', { value: formatCompactMXN(totalValueMxn) })}
-            </h2>
-          </ScrollReveal>
+      {/* Section 2: The Scale */}
+      <ScaleSection totalContracts={totalContracts} totalVendors={totalVendors} />
 
-          {/* 4 stat bombs */}
-          <ScrollReveal delay={100}>
-            <motion.div
-              className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-8"
-              variants={staggerContainer}
-              initial="initial"
-              animate={statsTriggered ? 'animate' : 'initial'}
-            >
-              <motion.div variants={staggerItem}>
-                <StatBomb value={statsTriggered ? `${(contractCount / 1_000_000).toFixed(1)}M` : '0M'} label="Contracts tracked" sub="2002 – 2025" color="#3b82f6" />
-              </motion.div>
-              <motion.div variants={staggerItem}>
-                <StatBomb value={statsTriggered ? `~${valueBAnimated.toFixed(1)}T` : '0T'} label="MXN in procurement" sub="~$500B USD" color="#8b5cf6" />
-              </motion.div>
-              <motion.div variants={staggerItem}>
-                <StatBomb value={statsTriggered ? `${riskPctAnimated.toFixed(1)}%` : '0%'} label="Contracts high-risk" sub="OECD-calibrated model" color="#dc2626" />
-              </motion.div>
-              <motion.div variants={staggerItem}>
-                <StatBomb value={statsTriggered ? String(casesAnimated) : '0'} label="Corruption cases" sub="Ground-truth database" color="#16a34a" />
-              </motion.div>
-            </motion.div>
-          </ScrollReveal>
+      {/* Section 3: How It Works */}
+      <HowItWorksSection />
 
-          {/* Risk strip */}
-          <ScrollReveal delay={200}>
-            <RiskStrip riskDistribution={riskDist.length > 0 ? riskDist : undefined} />
-          </ScrollReveal>
-        </div>
-      </section>
+      {/* Section 4: Risk Snapshot (live data) */}
+      <RiskSnapshotSection riskDist={riskDist} sectors={sectors} />
 
-      {/* ── SECTION 3: Systemic Patterns ── */}
-      <section
-        className="px-6 sm:px-12 lg:px-24 py-20"
-        style={{ background: 'linear-gradient(135deg, #0a0f1e 0%, #080c14 100%)' }}
-      >
-        <div className="max-w-5xl mx-auto">
-          <ScrollReveal>
-            <span className="text-xs font-semibold tracking-widest uppercase text-yellow-400 mb-3 block">
-              {t('chapters.patterns.tag')}
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-white mb-4">
-              {t('chapters.patterns.heading')}
-            </h2>
-            <p className="text-base text-white/50 max-w-2xl mb-6">
-              {t('chapters.patterns.body')}
-            </p>
-          </ScrollReveal>
-          <ScrollReveal delay={100}>
-            <NarrativeCard paragraphs={patternNarrative} className="bg-white/[0.03] border-white/10 mb-8" />
-          </ScrollReveal>
-
-          {/* Risk model + narrative */}
-          <ScrollReveal delay={150}>
-            <span className="text-xs font-semibold tracking-widest uppercase text-red-400 mb-3 block">
-              {t('chapters.risk.tag')}
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-white mb-4">
-              {t('chapters.risk.heading', { pct: (criticalPct + highPct).toFixed(1) })}
-            </h2>
-            <p className="text-base text-white/50 max-w-2xl mb-6">
-              {t('chapters.risk.body', { critical: criticalPct.toFixed(1), high: highPct.toFixed(1) })}
-            </p>
-          </ScrollReveal>
-          <ScrollReveal delay={200}>
-            <NarrativeCard paragraphs={riskNarrative} className="bg-white/[0.03] border-white/10" />
-          </ScrollReveal>
-        </div>
-      </section>
-
-      {/* ── SECTION 4: How It Works ── */}
-      <section
-        className="px-6 sm:px-12 lg:px-24 py-20"
-        style={{ background: 'linear-gradient(135deg, #080c14 0%, #0f172a 100%)' }}
-      >
-        <div className="max-w-5xl mx-auto">
-          <ScrollReveal>
-            <div className="mb-10 text-center">
-              <span className="text-xs font-semibold tracking-widest uppercase text-purple-400 mb-3 block">
-                {t('how_it_works.section_label')}
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-black text-white mb-4">
-                {t('how_it_works.title')}
-              </h2>
-              <p className="text-white/50 max-w-xl mx-auto text-base">
-                {t('how_it_works.subtitle')}
-              </p>
-            </div>
-          </ScrollReveal>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {[
-              { num: '01', title: t('how_it_works.step1_title'), body: t('how_it_works.step1_body'), color: '#3b82f6' },
-              { num: '02', title: t('how_it_works.step2_title'), body: t('how_it_works.step2_body'), color: '#8b5cf6' },
-              { num: '03', title: t('how_it_works.step3_title'), body: t('how_it_works.step3_body'), color: '#eab308' },
-              { num: '04', title: t('how_it_works.step4_title'), body: t('how_it_works.step4_body'), color: '#16a34a' },
-            ].map((step, i) => (
-              <ScrollReveal key={step.num} delay={i * 80}>
-                <div
-                  className="rounded-xl p-5 h-full"
-                  style={{ backgroundColor: `${step.color}08`, border: `1px solid ${step.color}20` }}
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl font-black tabular-nums leading-none flex-shrink-0" style={{ color: step.color, opacity: 0.5 }}>
-                      {step.num}
-                    </span>
-                    <div>
-                      <h3 className="text-sm font-bold text-white mb-1.5">{step.title}</h3>
-                      <p className="text-sm text-white/50 leading-relaxed">{step.body}</p>
-                    </div>
-                  </div>
-                </div>
-              </ScrollReveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── SECTION 5: Start Investigating ── */}
-      <section
-        className="px-6 sm:px-12 lg:px-24 py-20"
-        style={{ background: 'linear-gradient(135deg, #0a0f1e 0%, #080c14 100%)' }}
-      >
-        <div className="max-w-5xl mx-auto">
-          <ScrollReveal>
-            <span className="text-xs font-semibold tracking-widest uppercase text-green-400 mb-3 block">
-              {t('chapters.yourturn.tag')}
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-white mb-4">
-              {t('chapters.yourturn.heading')}
-            </h2>
-            <p className="text-base text-white/50 max-w-2xl mb-8">
-              {t('chapters.yourturn.body')}
-            </p>
-          </ScrollReveal>
-
-          <ScrollReveal delay={100}>
-            <FeaturedCasesStrip onNavigate={goToApp} />
-          </ScrollReveal>
-
-          <ScrollReveal delay={200}>
-            <div className="flex flex-wrap gap-3 mt-8">
-              <button
-                onClick={() => goToApp('/dashboard')}
-                className="flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-sm transition-all hover:opacity-90 shadow-lg shadow-green-500/20 focus:outline-none focus:ring-2 focus:ring-green-400/60"
-                style={{ backgroundColor: '#16a34a', color: '#fff' }}
-              >
-                {t('cta.open_dashboard')} <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </button>
-              <button
-                onClick={() => goToApp('/explore?tab=vendors')}
-                className="flex items-center gap-2 px-5 py-3 rounded-lg font-semibold text-sm border border-white/20 hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white/40"
-              >
-                <Search className="h-4 w-4" aria-hidden="true" /> {t('cta.search_vendor')}
-              </button>
-              <button
-                onClick={() => goToApp('/methodology')}
-                className="flex items-center gap-2 px-5 py-3 rounded-lg font-semibold text-sm border border-white/20 hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white/40"
-              >
-                <Shield className="h-4 w-4" aria-hidden="true" /> {t('cta.see_methodology')}
-              </button>
-              <button
-                onClick={() => goToApp('/cases')}
-                className="flex items-center gap-2 px-5 py-3 rounded-lg font-semibold text-sm border border-white/20 hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white/40"
-              >
-                <BookOpen className="h-4 w-4" aria-hidden="true" /> {t('cta.browse_cases')}
-              </button>
-            </div>
-          </ScrollReveal>
-        </div>
-      </section>
+      {/* Section 5: CTA */}
+      <CTASection
+        onDashboard={() => goToApp('/dashboard')}
+        onExecutive={() => goToApp('/executive')}
+      />
 
       {/* Footer */}
-      <footer className="text-center py-8 text-xs text-white/20 border-t border-white/5">
+      <footer
+        className="text-center py-8 text-xs"
+        style={{ borderTop: '1px solid #1e2d45', color: '#4a5d73' }}
+      >
         <div className="flex items-center justify-center gap-2 mb-1">
           <Cpu className="h-3 w-3" aria-hidden="true" />
           <span>{t('footer.platform')}</span>

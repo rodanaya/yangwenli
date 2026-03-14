@@ -44,6 +44,8 @@ import {
   DollarSign,
   Zap,
   Printer,
+  Share2,
+  Check,
 } from 'lucide-react'
 
 // ============================================================================
@@ -151,6 +153,44 @@ export function ExecutiveSummary() {
 export default ExecutiveSummary
 
 // ============================================================================
+// Share Button (copies URL to clipboard)
+// ============================================================================
+
+function ShareButton() {
+  const { t } = useTranslation('executive')
+  const [copied, setCopied] = useState(false)
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Fallback for older browsers
+      const input = document.createElement('input')
+      input.value = window.location.href
+      document.body.appendChild(input)
+      input.select()
+      document.execCommand('copy')
+      document.body.removeChild(input)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  return (
+    <button
+      onClick={() => void handleShare()}
+      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white/80 transition-colors"
+      title={t('share')}
+    >
+      {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Share2 className="w-3.5 h-3.5" />}
+      {copied ? t('shareCopied') : t('share')}
+    </button>
+  )
+}
+
+// ============================================================================
 // S0: Report Header
 // ============================================================================
 
@@ -174,14 +214,17 @@ function ReportHeader({ data }: { data: ExecutiveSummaryResponse }) {
           </span>
           <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
         </div>
-        <button
-          onClick={() => window.print()}
-          className="print:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white/80 transition-colors"
-          title="Print or save as PDF"
-        >
-          <Printer className="w-3.5 h-3.5" />
-          Print / PDF
-        </button>
+        <div className="print:hidden flex items-center gap-2">
+          <ShareButton />
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white/80 transition-colors"
+            title="Print or save as PDF"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            {t('exportPdf')}
+          </button>
+        </div>
       </div>
 
       {/* Date line */}
@@ -335,7 +378,7 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
               style={{ background: `radial-gradient(ellipse at 50% 50%, ${b.color}, transparent 70%)` }}
             />
             <div
-              className={`font-black font-mono text-white tracking-tight relative z-10 leading-none ${
+              className={`stat-bomb-value font-black font-mono text-white tracking-tight relative z-10 leading-none overflow-hidden ${
                 b.value.length > 6 ? 'text-2xl sm:text-3xl' :
                 b.value.length > 4 ? 'text-3xl sm:text-4xl' :
                 'text-4xl sm:text-5xl'
@@ -411,7 +454,7 @@ function WhatWeFound({ data }: { data: ExecutiveSummaryResponse }) {
         const Icon = f.icon
         return (
           <ScrollReveal key={f.desc} delay={i * 80}>
-            <div className={`rounded-xl border p-5 transition-shadow hover:border-accent/30 hover:shadow-[0_0_20px_rgba(0,0,0,0.15)] ${f.borderColor} ${f.bgColor}`}>
+            <div className={`rounded-xl border border-l-[3px] border-l-amber-500/60 p-5 transition-shadow hover:border-accent/30 hover:border-l-amber-500/80 hover:shadow-[0_0_20px_rgba(0,0,0,0.15)] ${f.borderColor} ${f.bgColor}`}>
               <Icon className={`h-6 w-6 mb-3 ${f.iconColor}`} />
               <div className={`text-2xl font-bold mb-1 ${f.valueColor}`}>{f.value}</div>
               <div className="text-sm text-text-muted">{f.desc}</div>
@@ -2164,11 +2207,11 @@ function ModelEvolutionBars() {
       </p>
       <div className="space-y-3">
         {versions.map((v, i) => (
-          <div key={v.version} className="flex items-center gap-3">
-            <div className="flex-shrink-0 w-10 text-xs font-black font-mono text-text-muted text-right">
+          <div key={v.version} className="flex items-center gap-2 sm:gap-3">
+            <div className="flex-shrink-0 w-8 sm:w-10 text-[10px] sm:text-xs font-black font-mono text-text-muted text-right">
               {v.version}
             </div>
-            <div className="flex-1 relative h-8 rounded bg-surface-raised/30 overflow-hidden">
+            <div className="flex-1 min-w-0 relative h-7 sm:h-8 rounded bg-surface-raised/30 overflow-hidden">
               <div
                 className="absolute inset-y-0 left-0 rounded"
                 style={{
