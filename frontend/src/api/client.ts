@@ -2370,6 +2370,50 @@ export const phiApi = {
   },
 }
 
+export const scorecardApi = {
+  async getSummary() {
+    const { data } = await api.get('/scorecards/summary')
+    return data
+  },
+  async getInstitutions(params: {
+    page?: number
+    per_page?: number
+    sort_by?: string
+    order?: string
+    grade?: string
+    sector?: string
+    min_score?: number
+    max_score?: number
+    search?: string
+  } = {}) {
+    const q = buildQueryParams(params)
+    const { data } = await api.get(`/scorecards/institutions?${q}`)
+    return data
+  },
+  async getInstitution(id: number) {
+    const { data } = await api.get(`/scorecards/institutions/${id}`)
+    return data
+  },
+  async getVendors(params: {
+    page?: number
+    per_page?: number
+    sort_by?: string
+    order?: string
+    grade?: string
+    min_score?: number
+    max_score?: number
+    search?: string
+  } = {}) {
+    const q = buildQueryParams(params)
+    const { data } = await api.get(`/scorecards/vendors?${q}`)
+    return data
+  },
+  async getVendor(id: number) {
+    const { data } = await api.get(`/scorecards/vendors/${id}`)
+    return data
+  },
+}
+
 // Default export with all API modules
 export default {
   sector: sectorApi,
@@ -2394,4 +2438,5 @@ export default {
   aria: ariaApi,
   phi: phiApi,
   alerts: alertsApi,
+  scorecards: scorecardApi,
 }
