@@ -18,18 +18,13 @@ import {
   Briefcase,
   X,
   History,
-  Zap,
   Info,
   FlaskConical,
-  MapPin,
-  Code2,
   MessageSquarePlus,
-  StickyNote,
   Shield,
   ClipboardCheck,
   DollarSign,
-  Search,
-  Eye,
+  Newspaper,
 } from 'lucide-react'
 import { RubliLogoMark } from '@/components/ui/RubliLogoMark'
 import { LanguageToggle } from '@/components/LanguageToggle'
@@ -49,6 +44,8 @@ interface NavItem {
   title: string
   href: string
   icon: React.ElementType
+  isHero?: boolean
+  heroColor?: string
 }
 
 interface NavItemDef {
@@ -56,6 +53,8 @@ interface NavItemDef {
   href: string
   icon: React.ElementType
   badgeSource?: 'aria-t1' | 'watchlist' | 'cases'
+  isHero?: boolean
+  heroColor?: string
 }
 
 interface NavSectionDef {
@@ -63,46 +62,42 @@ interface NavSectionDef {
   items: NavItemDef[]
 }
 
-// 4 sections — ops-center layout
+// 4 sections -- editorial layout
 const NAV_SECTIONS: NavSectionDef[] = [
   {
-    sectionKey: 'sections.overview',
+    sectionKey: 'sections.portada',
     items: [
       { i18nKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
+      { i18nKey: 'reportCard', href: '/report-card', icon: ClipboardCheck, isHero: true, heroColor: '#c41e3a' },
       { i18nKey: 'executive', href: '/executive-summary', icon: FileText },
-      { i18nKey: 'reportCard', href: '/report-card', icon: ClipboardCheck },
+      { i18nKey: 'journalists', href: '/journalists', icon: Newspaper },
     ],
   },
   {
-    sectionKey: 'sections.investigation',
+    sectionKey: 'sections.investigar',
     items: [
       { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, badgeSource: 'aria-t1' },
       { i18nKey: 'caseLibrary', href: '/cases', icon: Library, badgeSource: 'cases' },
-      { i18nKey: 'workspace', href: '/workspace', icon: Briefcase, badgeSource: 'watchlist' },
       { i18nKey: 'investigation', href: '/investigation', icon: Crosshair },
+      { i18nKey: 'workspace', href: '/workspace', icon: Briefcase, badgeSource: 'watchlist' },
     ],
   },
   {
-    sectionKey: 'sections.analysis',
+    sectionKey: 'sections.datos',
     items: [
-      { i18nKey: 'administrations', href: '/administrations', icon: History },
       { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
-      { i18nKey: 'explore', href: '/explore', icon: Search },
       { i18nKey: 'contracts', href: '/contracts', icon: FileText },
+      { i18nKey: 'administrations', href: '/administrations', icon: History },
       { i18nKey: 'network', href: '/network', icon: Network },
       { i18nKey: 'moneyFlow', href: '/money-flow', icon: DollarSign },
-      { i18nKey: 'procurementIntelligence', href: '/procurement-intelligence', icon: Zap },
-      { i18nKey: 'mexicoMap', href: '/map', icon: MapPin },
     ],
   },
   {
-    sectionKey: 'sections.platform',
+    sectionKey: 'sections.plataforma',
     items: [
+      { i18nKey: 'model', href: '/model', icon: FlaskConical, isHero: true, heroColor: '#2563eb' },
       { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
       { i18nKey: 'limitations', href: '/limitations', icon: Info },
-      { i18nKey: 'model', href: '/model', icon: FlaskConical },
-      { i18nKey: 'annotations', href: '/annotations', icon: StickyNote },
-      { i18nKey: 'apiExplorer', href: '/api-explorer', icon: Code2 },
       { i18nKey: 'settings', href: '/settings', icon: Settings },
     ],
   },
@@ -121,13 +116,13 @@ function NavSection({
     <div>
       {!collapsed && (
         <div className="mb-1.5 px-2 flex items-center gap-2">
-          <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-text-muted/50 font-mono select-none">
+          <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-stone-500 font-mono select-none">
             {title}
           </span>
-          <div className="flex-1 h-px bg-border/20" />
+          <div className="flex-1 h-px bg-stone-800" />
         </div>
       )}
-      {collapsed && <div className="mb-1 mx-auto w-4 h-px bg-border/30" />}
+      {collapsed && <div className="mb-1 mx-auto w-4 h-px bg-stone-800" />}
       <div className="space-y-0.5">{children}</div>
     </div>
   )
@@ -195,7 +190,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 h-screen flex flex-col border-r border-border/50 bg-sidebar z-50',
+        'fixed left-0 top-0 h-screen flex flex-col border-r border-stone-800 bg-[#1a1714] z-50',
         'transition-all duration-200 ease-out',
         // Mobile: overlay -- hidden off-screen, revealed when open
         'w-64 -translate-x-full',
@@ -206,24 +201,24 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
       )}
     >
       {/* Brand header */}
-      <div className="flex h-14 items-center border-b border-border/30 px-3">
+      <div className="flex h-14 items-center border-b border-stone-800 px-3">
         <div className="flex flex-1 items-center gap-2.5 overflow-hidden">
           <div className="relative flex-shrink-0">
-            <RubliLogoMark size={22} className="text-accent" />
-            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-signal-live shadow-[0_0_6px_var(--color-signal-live)] animate-pulse" />
+            <RubliLogoMark size={22} className="text-amber-500" />
+            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981] animate-pulse" />
           </div>
           {!isCollapsed && (
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="text-sm font-bold tracking-[0.15em] uppercase text-text-primary font-mono">
+                <span className="text-sm font-bold tracking-[0.15em] uppercase text-white font-mono">
                   RUBLI
                 </span>
-                <span className="text-[8px] font-mono px-1 py-0.5 rounded border border-signal-live/30 bg-signal-live/10 text-signal-live leading-none tracking-wider uppercase">
+                <span className="text-[8px] font-mono px-1 py-0.5 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 leading-none tracking-wider uppercase">
                   LIVE
                 </span>
               </div>
-              <span className="text-[10px] tracking-[0.12em] uppercase text-text-muted/60 font-mono">
-                INTEL PLATFORM
+              <span className="text-[10px] tracking-[0.08em] text-stone-500 font-mono">
+                Transparencia Procuratoria
               </span>
             </div>
           )}
@@ -233,7 +228,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 flex-shrink-0 md:hidden"
+            className="h-7 w-7 flex-shrink-0 md:hidden text-stone-300 hover:text-white hover:bg-[#2a2420]"
             onClick={onMobileClose}
             aria-label={t('closeMenu')}
           >
@@ -249,7 +244,13 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
             <NavSection key={section.sectionKey} title={t(section.sectionKey)} collapsed={isCollapsed}>
               {section.items.map((itemDef) => {
                 const title = t(itemDef.i18nKey)
-                const item: NavItem = { title, href: itemDef.href, icon: itemDef.icon }
+                const item: NavItem = {
+                  title,
+                  href: itemDef.href,
+                  icon: itemDef.icon,
+                  isHero: itemDef.isHero,
+                  heroColor: itemDef.heroColor,
+                }
                 const isActive = getIsActive(itemDef.href, location.pathname)
                 const badge = getBadgeCount(itemDef.badgeSource)
                 const badgeStyle = getBadgeStyle(itemDef.badgeSource)
@@ -270,19 +271,13 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
       </ScrollArea>
 
       {/* System status panel */}
-      <div className="px-2 py-2 border-t border-border/20">
+      <div className="px-2 py-2 border-t border-stone-800">
         {!isCollapsed ? (
           <div className="space-y-1.5 px-1">
             <div className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-signal-live shadow-[0_0_4px_var(--color-signal-live)] flex-shrink-0" />
-              <span className="text-[10px] font-mono text-text-muted/60 tracking-wide">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_4px_#10b981] flex-shrink-0" />
+              <span className="text-[10px] font-mono text-stone-500 tracking-wide">
                 3.1M contracts indexed
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Eye className="h-3 w-3 text-text-muted/40 flex-shrink-0" />
-              <span className="text-[10px] font-mono text-text-muted/40 tracking-wide">
-                v6.1 · AUC 0.849
               </span>
             </div>
           </div>
@@ -290,10 +285,10 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           <div className="flex justify-center py-1">
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="h-1.5 w-1.5 rounded-full bg-signal-live shadow-[0_0_4px_var(--color-signal-live)]" />
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_4px_#10b981]" />
               </TooltipTrigger>
               <TooltipContent side="right" sideOffset={8}>
-                <p className="text-xs font-mono">3.1M indexed · v6.1</p>
+                <p className="text-xs font-mono">3.1M indexed</p>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -307,7 +302,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
             <TooltipTrigger asChild>
               <button
                 onClick={() => setReportOpen(true)}
-                className="w-full flex justify-center items-center rounded-md py-1.5 text-text-muted hover:text-text-primary hover:bg-sidebar-hover transition-colors"
+                className="w-full flex justify-center items-center rounded-md py-1.5 text-stone-400 hover:text-white hover:bg-[#2a2420] transition-colors"
                 aria-label="Report an issue"
               >
                 <MessageSquarePlus className="h-4 w-4" />
@@ -320,7 +315,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         ) : (
           <button
             onClick={() => setReportOpen(true)}
-            className="w-full flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-text-muted hover:text-text-primary hover:bg-sidebar-hover transition-colors"
+            className="w-full flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-stone-400 hover:text-white hover:bg-[#2a2420] transition-colors"
           >
             <MessageSquarePlus className="h-4 w-4 flex-shrink-0" />
             <span className="truncate">Report an issue</span>
@@ -329,7 +324,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
       </div>
 
       {/* Bottom bar -- language toggle + collapse button */}
-      <div className="border-t border-border/30 p-2">
+      <div className="border-t border-stone-800 p-2">
         <div className="flex items-center justify-end">
           <div className="flex items-center gap-0.5">
             {!isCollapsed && <LanguageToggle />}
@@ -338,7 +333,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
               size="icon"
               onClick={onToggle}
               className={cn(
-                'h-7 w-7 text-text-muted hover:text-text-primary hidden md:flex',
+                'h-7 w-7 text-stone-400 hover:text-white hover:bg-[#2a2420] hidden md:flex',
                 collapsed && 'mx-auto'
               )}
               aria-label={collapsed ? t('expandSidebar') : t('collapseSidebar')}
@@ -387,27 +382,41 @@ function SidebarNavItem({
   countBadge?: number
 }) {
   const Icon = item.icon
+  const isHero = item.isHero
+  const heroColor = item.heroColor
 
   const linkContent = (
     <NavLink
       to={item.href}
       className={cn(
-        'group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-all duration-150',
-        'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
+        'group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-all duration-150',
+        'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500',
         isActive
-          ? 'border-l-2 border-amber-500 bg-amber-500/[0.08] text-amber-300'
-          : 'border-l-2 border-transparent text-text-secondary hover:text-text-primary hover:bg-white/[0.04]',
-        collapsed && 'justify-center px-0 border-l-0',
-        isActive && collapsed && 'bg-amber-500/[0.08]'
+          ? 'bg-[#342e2a] text-white'
+          : 'text-stone-300 hover:text-white hover:bg-[#2a2420]',
+        isHero && !isActive && 'font-semibold',
+        isHero && isActive && 'font-semibold',
+        !isHero && 'font-medium',
+        collapsed && 'justify-center px-0',
       )}
       aria-current={isActive ? 'page' : undefined}
     >
+      {/* Hero left indicator bar */}
+      {isHero && !collapsed && (
+        <span
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full"
+          style={{ backgroundColor: heroColor }}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Icon -- show badge dot in collapsed mode */}
       <span className="relative flex-shrink-0">
         <Icon
           className={cn(
             'h-4 w-4 transition-colors',
-            isActive ? 'text-amber-400' : 'text-text-muted group-hover:text-text-secondary'
+            isActive ? 'text-white' : 'text-stone-400 group-hover:text-stone-200',
+            isHero && !isActive && 'text-stone-200',
           )}
           aria-hidden="true"
         />
@@ -431,7 +440,7 @@ function SidebarNavItem({
       {/* Count badge -- subdued, shows total items */}
       {countBadge > 0 && !collapsed && badge === 0 && (
         <span
-          className="ml-auto flex h-4 min-w-[1.25rem] items-center justify-center rounded bg-surface-alt/60 text-[10px] font-mono text-text-muted px-1 border border-border/30"
+          className="ml-auto flex h-4 min-w-[1.25rem] items-center justify-center rounded bg-stone-800 text-[10px] font-mono text-stone-400 px-1 border border-stone-700"
           aria-label={`${countBadge} items`}
         >
           {countBadge > 999 ? `${Math.round(countBadge / 1000)}k` : countBadge}
@@ -444,7 +453,7 @@ function SidebarNavItem({
     return (
       <Tooltip>
         <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-        <TooltipContent side="right" sideOffset={8} className="bg-amber-950/90 border-amber-500/20 text-amber-200">
+        <TooltipContent side="right" sideOffset={8} className="bg-[#1a1714] border-stone-700 text-stone-200">
           <p className="text-xs font-mono">{item.title}</p>
         </TooltipContent>
       </Tooltip>

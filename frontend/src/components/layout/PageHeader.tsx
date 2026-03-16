@@ -1,6 +1,7 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
 import { ChevronRight } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 interface BreadcrumbItem {
   label: string
@@ -13,30 +14,26 @@ interface PageHeaderProps {
   icon?: React.ElementType
   actions?: React.ReactNode
   breadcrumb?: BreadcrumbItem[]
+  label?: string        // e.g. "PANORAMA NACIONAL" — editorial section label
+  serif?: boolean       // use Playfair Display for title
 }
 
-export function PageHeader({ title, subtitle, icon: Icon, actions, breadcrumb }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, icon: Icon, actions, breadcrumb, label, serif }: PageHeaderProps) {
   return (
-    <div className="relative overflow-hidden mb-6 pb-5 border-b border-border/30">
-      {/* Subtle radial background */}
-      <div className="before:absolute before:inset-0 before:bg-[radial-gradient(ellipse_at_top_left,var(--color-accent)/4%,transparent_60%)] before:pointer-events-none pointer-events-none absolute inset-0" aria-hidden="true" />
-
-      {/* Version chip */}
-      <span className="absolute top-0 right-0 text-[10px] font-mono px-2 py-0.5 rounded-full border border-accent/20 bg-accent/10 text-accent">
-        v1.1
-      </span>
-
+    <motion.div
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className="mb-8"
+    >
       {/* Breadcrumb */}
       {breadcrumb && breadcrumb.length > 0 && (
-        <nav aria-label="Breadcrumb" className="flex items-center gap-1 mb-2 text-[11px] text-text-muted/60">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-1 mb-3 text-[11px] text-text-muted/60">
           {breadcrumb.map((item, index) => (
             <React.Fragment key={index}>
               {index > 0 && <ChevronRight className="h-3 w-3" />}
               {item.href ? (
-                <NavLink
-                  to={item.href}
-                  className="hover:text-text-muted transition-colors"
-                >
+                <NavLink to={item.href} className="hover:text-text-muted transition-colors">
                   {item.label}
                 </NavLink>
               ) : (
@@ -47,22 +44,36 @@ export function PageHeader({ title, subtitle, icon: Icon, actions, breadcrumb }:
         </nav>
       )}
 
-      {/* Title row */}
-      <div className="flex items-center gap-3">
-        {/* Left accent bar */}
-        <div className="w-[3px] h-7 rounded-full bg-accent shadow-[0_0_8px_var(--color-accent-glow)]" aria-hidden="true" />
-
-        {Icon && <Icon className="h-6 w-6 text-accent opacity-80" aria-hidden="true" />}
-
-        <h1 className="text-xl font-bold text-text-primary tracking-tight">{title}</h1>
-
-        {actions && <div className="ml-auto">{actions}</div>}
-      </div>
-
-      {/* Subtitle */}
-      {subtitle && (
-        <p className="mt-1.5 ml-4 text-sm text-text-muted max-w-2xl">{subtitle}</p>
+      {/* Editorial label */}
+      {label && (
+        <div className="editorial-rule mb-3">
+          <span className="editorial-label text-accent">{label}</span>
+        </div>
       )}
-    </div>
+
+      {/* Title + actions row */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-3 min-w-0">
+          {/* Crimson accent bar */}
+          <div className="w-[3px] min-h-[2rem] mt-0.5 rounded-full bg-accent flex-shrink-0" aria-hidden="true" />
+
+          <div className="min-w-0">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              {Icon && <Icon className="h-5 w-5 text-accent opacity-75 flex-shrink-0" aria-hidden="true" />}
+              <h1 className={`text-2xl font-bold text-text-primary tracking-tight leading-tight ${serif ? 'font-editorial' : ''}`}>
+                {title}
+              </h1>
+            </div>
+            {subtitle && (
+              <p className="mt-1 text-sm text-text-muted max-w-2xl leading-relaxed">{subtitle}</p>
+            )}
+          </div>
+        </div>
+
+        {actions && (
+          <div className="flex-shrink-0 mt-0.5">{actions}</div>
+        )}
+      </div>
+    </motion.div>
   )
 }

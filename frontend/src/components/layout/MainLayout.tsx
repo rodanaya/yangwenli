@@ -79,8 +79,8 @@ export function MainLayout() {
         {/* Footer — hidden on mobile (bottom nav replaces it) */}
         <footer className="hidden md:block border-t border-border/30 px-5 py-2.5">
           <div className="flex items-center justify-between text-xs text-text-muted font-mono tracking-wide">
-            <span>RUBLI // PROCUREMENT INTELLIGENCE</span>
-            <span>3.1M CONTRACTS // 2002-2025</span>
+            <span>RUBLI • Transparencia Procuratoria</span>
+            <span>3.1M contratos analizados • 2002-2025</span>
           </div>
         </footer>
       </div>

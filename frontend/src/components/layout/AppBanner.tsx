@@ -17,7 +17,7 @@ export function AppBanner() {
     <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-accent/10 via-accent/5 to-transparent border-b border-accent/20 animate-in slide-in-from-top-1 duration-300">
       <Sparkles className="h-3.5 w-3.5 text-accent flex-shrink-0" />
       <p className="flex-1 text-xs text-accent font-medium">
-        <span className="font-bold">RUBLI v1.1</span> — Enhanced presentation layer, in-app issue reporting, and performance improvements.
+        <span className="font-bold">Nueva versión disponible:</span> Reporte de Salud Procuratoria 2025.
       </p>
       <button
         onClick={dismiss}

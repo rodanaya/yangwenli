@@ -1,7 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-/* Yang Wen-li Theme — Intelligence Platform */
+/* RUBLI Editorial Design System — Investigative Journalism Platform */
 @theme {
   /* Sector Colors — CLAUDE.md spec (canonical source of truth) */
   --color-sector-salud: #dc2626;
@@ -17,47 +18,47 @@
   --color-sector-trabajo: #f97316;
   --color-sector-otros: #64748b;
 
-  /* Risk Colors — Soft Red/Yellow/Green palette */
-  --color-risk-critical: #f87171;
-  --color-risk-high: #fb923c;
-  --color-risk-medium: #fbbf24;
-  --color-risk-low: #4ade80;
+  /* Risk Colors */
+  --color-risk-critical: #dc2626;
+  --color-risk-high: #ea580c;
+  --color-risk-medium: #d97706;
+  --color-risk-low: #16a34a;
 
-  /* RUBLI 2.0 — Obsidian Intelligence Theme */
-  --color-background: #080c14;
-  --color-background-card: #0e1420;
-  --color-background-elevated: #141c2c;
-  --color-border: #1e2d45;
-  --color-border-hover: #2a4060;
+  /* Light-first editorial palette (default) */
+  --color-background: #faf9f6;
+  --color-background-card: #ffffff;
+  --color-background-elevated: #f3f1ec;
+  --color-border: #e2ddd6;
+  --color-border-hover: #ccc7be;
 
-  /* Text — warmer, less cold */
-  --color-text-primary: #e8eef6;
-  --color-text-secondary: #7d90aa;
-  --color-text-muted: #4a5d73;
+  --color-text-primary: #1a1714;
+  --color-text-secondary: #6b6560;
+  --color-text-muted: #9c9490;
 
-  /* Accent — amber/gold intelligence feel */
-  --color-accent: #f59e0b;
-  --color-accent-hover: #d97706;
-  --color-accent-glow: #f59e0b22;
+  /* Primary accent — deep crimson (corruption / civic gravity) */
+  --color-accent: #c41e3a;
+  --color-accent-hover: #a31830;
+  --color-accent-glow: #c41e3a18;
 
-  /* Secondary accent — electric blue for data */
-  --color-accent-data: #3b82f6;
-  --color-accent-data-glow: #3b82f611;
+  /* Secondary accent — blue for data & charts */
+  --color-accent-data: #2563eb;
+  --color-accent-data-glow: #2563eb11;
 
-  /* Sidebar — almost black */
-  --color-sidebar: #050810;
-  --color-sidebar-hover: #0a0f1a;
-  --color-sidebar-active: #0e1420;
+  /* Sidebar — dark editorial sidebar on light pages */
+  --color-sidebar: #1a1714;
+  --color-sidebar-hover: #2a2420;
+  --color-sidebar-active: #342e2a;
 
-  /* Signal colors for live indicators */
-  --color-signal-pulse: #f59e0b;
-  --color-signal-live: #22c55e;
-  --color-signal-warn: #f59e0b;
-  --color-signal-danger: #ef4444;
+  /* Signal colors */
+  --color-signal-pulse: #c41e3a;
+  --color-signal-live: #16a34a;
+  --color-signal-warn: #d97706;
+  --color-signal-danger: #dc2626;
 
   /* Typography */
   --font-family-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
   --font-family-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-family-serif: "Playfair Display", Georgia, "Times New Roman", serif;
 
   /* Typography Scale */
   --font-size-display: 3rem;
@@ -89,29 +90,36 @@
   }
 
   html {
-    color-scheme: dark;
+    color-scheme: light;
   }
 
-  /* Light theme */
-  html:not(.dark) {
-    color-scheme: light;
-    --color-background: #f6f8fa;
-    --color-background-card: #ffffff;
-    --color-background-elevated: #f0f2f5;
-    --color-border: #d0d7de;
-    --color-border-hover: #afb8c1;
-    --color-text-primary: #1f2328;
-    --color-text-secondary: #656d76;
-    --color-text-muted: #8b949e;
-    --color-accent: #d97706;
-    --color-accent-hover: #b45309;
-    --color-accent-glow: #d9770622;
-    --color-sidebar: #ffffff;
-    --color-sidebar-hover: #f6f8fa;
-    --color-sidebar-active: #eaeef2;
-    --color-signal-pulse: #d97706;
-    --color-signal-live: #1a7f37;
-    --color-signal-warn: #d97706;
+  /* Dark theme — refined obsidian */
+  html.dark {
+    color-scheme: dark;
+    --color-background: #0d1117;
+    --color-background-card: #161b22;
+    --color-background-elevated: #1c2128;
+    --color-border: #30363d;
+    --color-border-hover: #444c56;
+    --color-text-primary: #e6edf3;
+    --color-text-secondary: #8b949e;
+    --color-text-muted: #6e7681;
+    --color-accent: #e85d75;
+    --color-accent-hover: #ff7088;
+    --color-accent-glow: #e85d7520;
+    --color-accent-data: #58a6ff;
+    --color-accent-data-glow: #58a6ff18;
+    --color-sidebar: #010409;
+    --color-sidebar-hover: #0d1117;
+    --color-sidebar-active: #161b22;
+    --color-signal-pulse: #e85d75;
+    --color-signal-live: #3fb950;
+    --color-signal-warn: #d29922;
+    --color-signal-danger: #f85149;
+    --color-risk-critical: #f87171;
+    --color-risk-high: #fb923c;
+    --color-risk-medium: #fbbf24;
+    --color-risk-low: #4ade80;
   }
 
   body {
@@ -163,7 +171,37 @@
 
 /* Utility Classes */
 @layer utilities {
-  /* Cards — glass morphism */
+  /* Editorial serif typography */
+  .font-editorial {
+    font-family: var(--font-family-serif);
+    letter-spacing: -0.02em;
+  }
+
+  .text-editorial-display {
+    font-family: var(--font-family-serif);
+    font-size: 3.5rem;
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+  }
+
+  .text-editorial-h1 {
+    font-family: var(--font-family-serif);
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+
+  .text-editorial-h2 {
+    font-family: var(--font-family-serif);
+    font-size: 1.875rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+  }
+
+  /* Cards — clean editorial surfaces */
   .card {
     @apply bg-background-card border border-border rounded-xl;
     transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
@@ -171,29 +209,37 @@
 
   .card:hover {
     @apply border-border-hover;
+    box-shadow: 0 2px 12px -4px rgba(0,0,0,0.08);
+  }
+
+  html.dark .card:hover {
     box-shadow: 0 0 20px -5px var(--color-accent-glow);
   }
 
   .card-elevated {
     @apply bg-background-elevated border border-border rounded-xl;
+    box-shadow: 0 1px 8px -2px rgba(0,0,0,0.06);
+  }
+
+  html.dark .card-elevated {
     box-shadow: 0 4px 24px -8px rgba(0,0,0,0.3);
   }
 
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, var(--color-accent), #fbbf24);
+    background-image: linear-gradient(135deg, var(--color-accent), var(--color-accent-data));
   }
 
   /* Risk badges */
-  .risk-critical { @apply bg-risk-critical/15 text-risk-critical border border-risk-critical/30; }
-  .risk-high { @apply bg-risk-high/15 text-risk-high border border-risk-high/30; }
-  .risk-medium { @apply bg-risk-medium/20 text-risk-medium border border-risk-medium/30; }
-  .risk-low { @apply bg-risk-low/15 text-risk-low border border-risk-low/30; }
+  .risk-critical { @apply bg-risk-critical/10 text-risk-critical border border-risk-critical/25; }
+  .risk-high { @apply bg-risk-high/10 text-risk-high border border-risk-high/25; }
+  .risk-medium { @apply bg-risk-medium/10 text-risk-medium border border-risk-medium/25; }
+  .risk-low { @apply bg-risk-low/10 text-risk-low border border-risk-low/25; }
 
-  html:not(.dark) .risk-critical { @apply bg-risk-critical/10 text-[#dc2626] border-risk-critical/25; }
-  html:not(.dark) .risk-high { @apply bg-risk-high/10 text-[#ea580c] border-risk-high/25; }
-  html:not(.dark) .risk-medium { @apply bg-risk-medium/10 text-[#d97706] border-risk-medium/25; }
-  html:not(.dark) .risk-low { @apply bg-risk-low/10 text-[#16a34a] border-risk-low/25; }
+  html.dark .risk-critical { @apply bg-risk-critical/15 text-risk-critical border-risk-critical/30; }
+  html.dark .risk-high { @apply bg-risk-high/15 text-risk-high border-risk-high/30; }
+  html.dark .risk-medium { @apply bg-risk-medium/20 text-risk-medium border-risk-medium/30; }
+  html.dark .risk-low { @apply bg-risk-low/15 text-risk-low border-risk-low/30; }
 
   .sector-badge { @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium; }
   .chart-tooltip { @apply rounded-lg border border-border bg-background-card p-2 shadow-lg text-sm; }
@@ -220,7 +266,6 @@
   .glow-accent {
     box-shadow: 0 0 15px -3px var(--color-accent-glow);
   }
-
 
   /* Grid pattern for backgrounds */
   .grid-pattern {
@@ -292,10 +337,80 @@
   .interactive:hover { @apply bg-background-elevated; }
 
   .interactive-card { cursor: pointer; transition: box-shadow 0.15s, transform 0.1s; }
-  .interactive-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); transform: translateY(-1px); }
+  .interactive-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-1px); }
+
+  html.dark .interactive-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
 
   .data-cell { @apply px-3 py-2 text-sm border-b border-border; }
   .data-cell-header { @apply px-3 py-2 text-xs font-medium text-text-muted uppercase tracking-wider bg-background-elevated border-b border-border; }
+
+  /* ─── FERN EDITORIAL UTILITIES ─────────────────────────────────────────── */
+
+  /* Oversized stat number — the hero number in a Fern-style stat block */
+  .stat-hero {
+    font-family: var(--font-family-sans);
+    font-size: 3.75rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Section divider with label — "SECTION NAME ────────────────" */
+  .editorial-rule {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+  .editorial-rule::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+  }
+
+  /* Editorial label — small all-caps tracking label above sections */
+  .editorial-label {
+    font-family: var(--font-family-sans);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  /* Clean surface card — Fern uses very clean, barely-there cards */
+  .fern-card {
+    background: var(--color-background-card);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .fern-card:hover {
+    border-color: var(--color-border-hover);
+    box-shadow: 0 4px 16px -6px rgba(26,23,20,0.08);
+  }
+  html.dark .fern-card:hover {
+    box-shadow: 0 4px 20px -8px rgba(0,0,0,0.3);
+  }
+
+  /* Accent rule — thin colored rule used for section emphasis */
+  .accent-rule {
+    height: 2px;
+    background: var(--color-accent);
+    width: 2.5rem;
+    border-radius: 999px;
+  }
+
+  /* Pull quote — large contextual data point */
+  .pull-stat {
+    font-size: 1.875rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
 
 }
 
@@ -335,4 +450,3 @@
   .card { border: 1px solid #e5e7eb; background: white; }
   .stat-bomb-value::after { display: none; }
 }
-

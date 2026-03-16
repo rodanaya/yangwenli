@@ -14,6 +14,13 @@ Target: 9-12% high-risk rate (OECD benchmark), AUC > 0.93
 Usage:
     python -m scripts.calibrate_risk_model_v6_enhanced [--use-optuna] [--dry-run]
     python -m scripts.calibrate_risk_model_v6_enhanced --n-bootstrap 200
+
+Changelog:
+    2026-03-16: Apply sign constraints to per-sector models (previously global-only).
+                win_rate, single_bid, sector_spread constraints now enforced in all 12
+                sector sub-models.  Added SECTOR_SIGN_EXCEPTIONS dict for justified
+                sector-specific overrides.  See red-team finding: sector models had
+                negative win_rate in all 12 sectors and positive sector_spread in 10/12.
 """
 
 import sys
@@ -60,6 +67,32 @@ FACTOR_NAMES = [c.replace('z_', '') for c in Z_COLS]
 # This replaces the old hardcoded 15-case dict — massive label noise reduction.
 DEFAULT_WINDOW = (2002, 2025)
 MODEL_VERSION = 'v6.0'  # same model version slot, better calibration
+
+# ── Sign constraints (applied to BOTH global and per-sector models) ────────────
+# Zero out coefficients whose fitted sign contradicts domain knowledge.
+# These wrong signs are labeling artifacts — GT vendor profiles leak into the
+# logistic regression and flip expected directions.  See RISK_METHODOLOGY_v6.md.
+#   win_rate:      GT vendors win via DA (not formal procedures) → spuriously negative
+#   single_bid:    GT vendors use DA not single-bid competitive → spuriously negative
+#   sector_spread: large GT vendors (Edenred, Toka) span many sectors → spuriously positive
+SIGN_CONSTRAINTS = {
+    'win_rate': +1,       # must be >= 0 (high win rate = suspicious)
+    'single_bid': +1,     # must be >= 0 (single bid = suspicious)
+    'sector_spread': -1,  # must be <= 0 (cross-sector diversity = protective)
+}
+
+# Sector-specific exceptions to the global sign constraints.
+# Format: {(feature_name, sector_id): True}
+# When present, the global sign constraint is NOT enforced for that feature
+# in that sector's model. Must be justified with domain rationale.
+SECTOR_SIGN_EXCEPTIONS = {
+    # Agriculture (9): institution_diversity has a legitimately positive coefficient
+    # because LICONSA/DICONSA/Segalmex vendors serving many parastatal institutions
+    # IS genuinely suspicious — it indicates shell companies routing through the
+    # parastatal ecosystem, not diversified legitimate business.
+    # (Not currently in SIGN_CONSTRAINTS, but documented here for future use.)
+}
+
 
 
 def load_case_windows(conn):
@@ -373,16 +406,7 @@ def train_global_and_sector_models(data, C=1.0, l1_ratio=0.5, n_bootstrap=200):
     coefs = global_model.coef_[0].copy()
     intercept = global_model.intercept_[0]
 
-    # Sign constraints: zero out coefficients with known wrong signs caused by
-    # labeling artifacts (GT vendor profile leakage, not corruption signal).
-    # - win_rate: GT vendors win via direct award (not formal procedures) → spuriously negative
-    # - single_bid: GT vendors use DA not single-bid competitive → spuriously negative
-    # - sector_spread: large GT vendors (Edenred, Toka) span many sectors → spuriously positive
-    SIGN_CONSTRAINTS = {
-        'win_rate': +1,      # must be >= 0 (high win rate = suspicious)
-        'single_bid': +1,    # must be >= 0 (single bid = suspicious)
-        'sector_spread': -1, # must be <= 0 (cross-sector = less suspicious for small vendors)
-    }
+    # Apply sign constraints from module-level SIGN_CONSTRAINTS dict
     zeroed = []
     for fname, expected_sign in SIGN_CONSTRAINTS.items():
         if fname in FACTOR_NAMES:
@@ -465,6 +489,25 @@ def train_global_and_sector_models(data, C=1.0, l1_ratio=0.5, n_bootstrap=200):
             s_intercept = sector_model.intercept_[0]
 
             print(f"  Sector {sid:2d}: train={n_train_s:,} pos={pos_train_s:,} test_auc={s_auc:.3f} intercept={s_intercept:.3f}")
+
+            # Apply sign constraints to sector model (same as global model)
+            # Skip constraints that have a sector-specific exception
+            s_zeroed = []
+            for fname, expected_sign in SIGN_CONSTRAINTS.items():
+                if (fname, sid) in SECTOR_SIGN_EXCEPTIONS:
+                    continue  # sector-specific exception — do not enforce
+                if fname in FACTOR_NAMES:
+                    idx_f = FACTOR_NAMES.index(fname)
+                    actual = s_coefs[idx_f]
+                    if expected_sign > 0 and actual < 0:
+                        s_coefs[idx_f] = 0.0
+                        s_zeroed.append(f"{fname} ({actual:+.4f}->0)")
+                    elif expected_sign < 0 and actual > 0:
+                        s_coefs[idx_f] = 0.0
+                        s_zeroed.append(f"{fname} ({actual:+.4f}->0)")
+            if s_zeroed:
+                sector_model.coef_[0] = s_coefs
+                print(f"    Sign constraints zeroed: {', '.join(s_zeroed)}")
 
             # C3 FIX: Run bootstrap for each sector model to produce honest CIs
             # (previously sector models stored empty bootstrap_ci: {})

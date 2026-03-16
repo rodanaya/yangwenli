@@ -56,6 +56,7 @@ const MexicoMap = lazy(() => import('@/pages/MexicoMap'))
 const Annotations = lazy(() => import('@/pages/Annotations'))
 const AriaQueue = lazy(() => import('@/pages/AriaQueue'))
 const ReportCard = lazy(() => import('@/pages/ReportCard'))
+const Journalists = lazy(() => import('@/pages/Journalists'))
 
 // First-visit routing: redirect "/" to Intro for new users, Dashboard for returning users
 function FirstVisitRedirect() {
@@ -373,6 +374,14 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<DashboardSkeleton />}>
                     <MexicoMap />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="journalists"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <Journalists />
                   </SuspenseBoundary>
                 }
               />

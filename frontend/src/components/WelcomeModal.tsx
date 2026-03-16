@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   Dialog,
@@ -171,14 +171,16 @@ export function WelcomeModal() {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState(0)
   const navigate = useNavigate()
+  const location = useLocation()
   const { t } = useTranslation('common')
 
   useEffect(() => {
     const dismissed = localStorage.getItem(STORAGE_KEY)
-    if (!dismissed) {
+    const isDashboard = location.pathname === '/dashboard' || location.pathname === '/'
+    if (!dismissed && isDashboard) {
       setOpen(true)
     }
-  }, [])
+  }, [location.pathname])
 
   const handleDismiss = () => {
     localStorage.setItem(STORAGE_KEY, 'true')

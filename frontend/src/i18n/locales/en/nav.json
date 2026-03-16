@@ -12,7 +12,11 @@
     "whoAndHow": "WHO & HOW",
     "investigateSection": "INVESTIGATE",
     "understandSection": "UNDERSTAND",
-    "myWorkspace": "MY WORKSPACE"
+    "myWorkspace": "MY WORKSPACE",
+    "portada": "FRONT PAGE",
+    "investigar": "INVESTIGATE",
+    "datos": "DATA",
+    "plataforma": "PLATFORM"
   },
   "moneyFlow": "Money Flow",
   "executive": "Executive Summary",
@@ -44,6 +48,7 @@
   "mexicoMap": "Mexico Map",
   "annotations": "My Notes",
   "apiExplorer": "API Explorer",
+  "journalists": "For Journalists",
   "reportCard": "Report Card",
   "settings": "Settings",
   "expandSidebar": "Expand sidebar",

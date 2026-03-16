@@ -12,7 +12,11 @@
     "whoAndHow": "QUIÉN Y CÓMO",
     "investigateSection": "INVESTIGAR",
     "understandSection": "ENTENDER",
-    "myWorkspace": "MI ESPACIO"
+    "myWorkspace": "MI ESPACIO",
+    "portada": "PORTADA",
+    "investigar": "INVESTIGAR",
+    "datos": "DATOS",
+    "plataforma": "PLATAFORMA"
   },
   "moneyFlow": "Flujo de Dinero",
   "executive": "Resumen Ejecutivo",
@@ -44,6 +48,7 @@
   "mexicoMap": "Mapa de México",
   "annotations": "Mis Notas",
   "apiExplorer": "Explorador de API",
+  "journalists": "Para Periodistas",
   "reportCard": "Boleta",
   "settings": "Configuración",
   "expandSidebar": "Expandir barra lateral",

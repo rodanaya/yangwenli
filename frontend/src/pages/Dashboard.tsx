@@ -135,22 +135,17 @@ const KPICard = memo(function KPICard({
       onClick={onClick}
       disabled={!onClick}
       className={cn(
-        'relative flex flex-col justify-between p-5 rounded-xl border bg-background-card/60 text-left transition-all duration-200 overflow-hidden group',
-        onClick && 'cursor-pointer hover:shadow-lg hover:scale-[1.01]',
+        'fern-card relative flex flex-col justify-between p-6 text-left overflow-hidden group',
+        onClick && 'cursor-pointer hover:scale-[1.005]',
         !onClick && 'cursor-default',
       )}
       style={{
-        borderColor: `${color}20`,
-        boxShadow: `inset 0 0 0 1px ${color}08`,
+        borderTopColor: color,
+        borderTopWidth: '3px',
       }}
       tabIndex={onClick ? 0 : -1}
       onKeyDown={onClick ? (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } } : undefined}
     >
-      {/* Top glow accent */}
-      <div
-        className="absolute top-0 left-0 right-0 h-[2px] transition-opacity"
-        style={{ backgroundColor: color, opacity: 0.5 }}
-      />
       <div className="flex items-center justify-between mb-3">
         <p className="text-[10px] font-bold tracking-[0.12em] uppercase text-text-muted font-mono leading-none">
           {label}
@@ -161,8 +156,8 @@ const KPICard = memo(function KPICard({
         <Skeleton className="h-10 w-28 mb-2" />
       ) : (
         <p
-          className="text-3xl font-black tabular-nums font-mono leading-none tracking-tight transition-colors"
-          style={{ color }}
+          className="text-[2.5rem] font-black tabular-nums leading-none tracking-tight transition-colors"
+          style={{ color, letterSpacing: '-0.035em', fontVariantNumeric: 'tabular-nums' }}
         >
           {value}
         </p>
@@ -203,7 +198,7 @@ function AlertBanner({ criticalCount, onClick }: { criticalCount: number; onClic
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={onClick}
-      className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-risk-critical/30 bg-risk-critical/5 hover:bg-risk-critical/10 transition-all text-left group"
+      className="w-full flex items-center gap-3 px-5 py-3.5 rounded-lg border-l-4 border-l-accent border border-accent/15 bg-accent/5 hover:bg-accent/10 transition-all text-left group"
     >
       <div className="flex items-center gap-2">
         <div className="h-2 w-2 rounded-full bg-risk-critical animate-pulse" />
@@ -905,15 +900,15 @@ function DashboardSection({
   noPadding?: boolean
 }) {
   return (
-    <div className={cn('rounded-xl border border-border/30 bg-background-elevated/10 overflow-hidden', className)}>
+    <div className={cn('fern-card overflow-hidden', className)}>
       {title && (
-        <div className={cn('flex items-center justify-between', noPadding ? 'px-5 pt-4 pb-2' : 'px-5 pt-4 pb-2')}>
+        <div className={cn('flex items-center justify-between', noPadding ? 'px-5 pt-5 pb-3' : 'px-5 pt-5 pb-3')}>
           <div>
-            <div className="flex items-center gap-2 mb-0.5">
-              {Icon && <Icon className="h-4 w-4 text-accent" />}
-              <h2 className="text-sm font-bold text-text-primary uppercase tracking-wider">{title}</h2>
+            <div className="editorial-rule" style={{ marginBottom: subtitle ? '0.25rem' : 0 }}>
+              {Icon && <Icon className="h-3.5 w-3.5 text-accent flex-shrink-0" aria-hidden="true" />}
+              <span className="editorial-label">{title}</span>
             </div>
-            {subtitle && <p className="text-xs text-text-muted">{subtitle}</p>}
+            {subtitle && <p className="text-xs text-text-muted mt-0.5">{subtitle}</p>}
           </div>
           {action}
         </div>
@@ -1085,9 +1080,10 @@ export function Dashboard() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Page Header */}
       <PageHeader
+        label="PANORAMA NACIONAL"
         title={t('title')}
         subtitle={t('subtitle')}
         icon={LayoutDashboard}

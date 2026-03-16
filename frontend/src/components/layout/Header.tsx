@@ -36,6 +36,7 @@ const ROUTE_I18N_KEYS: Record<string, string> = {
   '/categories': 'categories',
   '/cases': 'caseLibrary',
   '/procurement-intelligence': 'procurementIntelligence',
+  '/journalists': 'journalists',
 }
 
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
