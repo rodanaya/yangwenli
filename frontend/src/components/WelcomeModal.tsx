@@ -202,10 +202,10 @@ export function WelcomeModal() {
         {/* Editorial header */}
         <DialogHeader className="border-b border-[#2a2d2c] pb-4">
           <div className="flex items-center gap-3 mb-1">
-            {/* Open arc mark */}
+            {/* Bauhaus half-circle mark */}
             <svg width="20" height="20" viewBox="0 0 32 32" fill="none" aria-hidden="true" className="flex-shrink-0">
-              <path d="M 22.5 4.74 A 13 13 0 1 1 9.5 4.74" stroke="#c41e3a" strokeWidth="2.5" strokeLinecap="round"/>
-              <circle cx="16" cy="16" r="2.5" fill="#c41e3a"/>
+              <circle cx="16" cy="16" r="13" stroke="#c41e3a" strokeWidth="2"/>
+              <path d="M 16 3 A 13 13 0 0 0 16 29 Z" fill="#c41e3a"/>
             </svg>
             <div>
               <DialogTitle className="flex items-center gap-2 leading-none">
