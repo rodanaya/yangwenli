@@ -62,19 +62,19 @@ interface PHISectorsResponse {
 const GRADE_ORDER: Record<string, number> = { F: 0, D: 1, 'D+': 2, 'C-': 3, C: 4, 'C+': 5, 'B-': 6, B: 7, 'B+': 8, 'A-': 9, A: 10, 'A+': 11 }
 
 function gradeColor(grade: string): string {
-  if (grade.startsWith('A')) return 'text-emerald-600'
-  if (grade.startsWith('B')) return 'text-blue-600'
-  if (grade.startsWith('C')) return 'text-amber-600'
-  if (grade.startsWith('D')) return 'text-orange-600'
-  return 'text-red-600'
+  if (grade.startsWith('A')) return 'text-emerald-600 dark:text-emerald-400'
+  if (grade.startsWith('B')) return 'text-blue-600 dark:text-blue-400'
+  if (grade.startsWith('C')) return 'text-amber-600 dark:text-amber-400'
+  if (grade.startsWith('D')) return 'text-orange-600 dark:text-orange-400'
+  return 'text-red-600 dark:text-red-400'
 }
 
 function gradeBg(grade: string): string {
-  if (grade.startsWith('A')) return 'bg-emerald-50 border-emerald-200'
-  if (grade.startsWith('B')) return 'bg-blue-50 border-blue-200'
-  if (grade.startsWith('C')) return 'bg-amber-50 border-amber-200'
-  if (grade.startsWith('D')) return 'bg-orange-50 border-orange-200'
-  return 'bg-red-50 border-red-200'
+  if (grade.startsWith('A')) return 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950 dark:border-emerald-800'
+  if (grade.startsWith('B')) return 'bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800'
+  if (grade.startsWith('C')) return 'bg-amber-50 border-amber-200 dark:bg-amber-950 dark:border-amber-800'
+  if (grade.startsWith('D')) return 'bg-orange-50 border-orange-200 dark:bg-orange-950 dark:border-orange-800'
+  return 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800'
 }
 
 // ---------------------------------------------------------------------------
@@ -124,7 +124,7 @@ export default function Journalists() {
     : '375,000'
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#faf9f6' }}>
+    <div className="min-h-screen bg-stone-50 dark:bg-stone-950">
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
 
         {/* ---------------------------------------------------------------- */}
@@ -140,12 +140,12 @@ export default function Journalists() {
             <span className="editorial-label" style={{ color: '#c41e3a' }}>PARA PERIODISTAS</span>
           </div>
           <h1
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-5"
-            style={{ fontFamily: "'Playfair Display', Georgia, serif", color: '#1a1714' }}
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-5 text-stone-900 dark:text-stone-50"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
             Todo lo que necesitas para investigar el gasto publico
           </h1>
-          <p className="text-lg text-stone-600 max-w-2xl mb-8 leading-relaxed">
+          <p className="text-lg text-stone-600 dark:text-stone-400 max-w-2xl mb-8 leading-relaxed">
             Datos verificados, metodologia transparente, y herramientas de analisis para investigadores y periodistas.
           </p>
           <div className="flex flex-wrap gap-3">
@@ -161,7 +161,7 @@ export default function Journalists() {
             </button>
             <button
               onClick={() => navigate('/contracts')}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold border border-stone-300 text-stone-700 hover:bg-stone-100 transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold border border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
             >
               Explorar contratos
               <ArrowRight className="h-4 w-4" />
@@ -192,8 +192,8 @@ export default function Journalists() {
             <span className="editorial-label" style={{ color: '#c41e3a' }}>GUIA RAPIDA</span>
           </div>
           <h2
-            className="text-2xl font-bold mb-8"
-            style={{ fontFamily: "'Playfair Display', Georgia, serif", color: '#1a1714' }}
+            className="text-2xl font-bold mb-8 text-stone-900 dark:text-stone-50"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
             Como usar RUBLI para tu historia
           </h2>
@@ -246,27 +246,27 @@ export default function Journalists() {
             <span className="editorial-label" style={{ color: '#c41e3a' }}>REPORTE 2025</span>
           </div>
           <h2
-            className="text-2xl font-bold mb-6"
-            style={{ fontFamily: "'Playfair Display', Georgia, serif", color: '#1a1714' }}
+            className="text-2xl font-bold mb-6 text-stone-900 dark:text-stone-50"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
             Calificaciones por Sector
           </h2>
-          <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-2xl shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-stone-200">
-                    <th className="text-left px-5 py-3 font-semibold text-stone-500 text-xs uppercase tracking-wider">Sector</th>
-                    <th className="text-center px-5 py-3 font-semibold text-stone-500 text-xs uppercase tracking-wider">Calificacion</th>
-                    <th className="text-center px-5 py-3 font-semibold text-stone-500 text-xs uppercase tracking-wider hidden sm:table-cell">Tasa de competencia</th>
-                    <th className="text-center px-5 py-3 font-semibold text-stone-500 text-xs uppercase tracking-wider hidden md:table-cell">Licitaciones con 1 postor</th>
-                    <th className="text-right px-5 py-3 font-semibold text-stone-500 text-xs uppercase tracking-wider"></th>
+                  <tr className="border-b border-stone-200 dark:border-stone-700">
+                    <th className="text-left px-5 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider">Sector</th>
+                    <th className="text-center px-5 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider">Calificacion</th>
+                    <th className="text-center px-5 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider hidden sm:table-cell">Tasa de competencia</th>
+                    <th className="text-center px-5 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider hidden md:table-cell">Licitaciones con 1 postor</th>
+                    <th className="text-right px-5 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {sortedSectors.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="px-5 py-10 text-center text-stone-400">
+                      <td colSpan={5} className="px-5 py-10 text-center text-stone-400 dark:text-stone-500">
                         Cargando datos del sector...
                       </td>
                     </tr>
@@ -278,7 +278,7 @@ export default function Journalists() {
                       <tr
                         key={sector.sector_id}
                         className={cn(
-                          'border-b border-stone-100 hover:bg-stone-50 transition-colors cursor-pointer',
+                          'border-b border-stone-100 dark:border-stone-800 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors cursor-pointer',
                           i === sortedSectors.length - 1 && 'border-b-0'
                         )}
                         onClick={() => navigate('/sectors')}
@@ -286,7 +286,7 @@ export default function Journalists() {
                         tabIndex={0}
                         onKeyDown={(e) => { if (e.key === 'Enter') navigate('/sectors') }}
                       >
-                        <td className="px-5 py-3.5 font-medium text-[#1a1714]">
+                        <td className="px-5 py-3.5 font-medium text-stone-900 dark:text-stone-100">
                           {capitalize(sector.sector_name)}
                         </td>
                         <td className="px-5 py-3.5 text-center">
@@ -300,14 +300,14 @@ export default function Journalists() {
                             {sector.grade}
                           </span>
                         </td>
-                        <td className="px-5 py-3.5 text-center font-mono text-stone-600 hidden sm:table-cell">
+                        <td className="px-5 py-3.5 text-center font-mono text-stone-600 dark:text-stone-400 hidden sm:table-cell">
                           {competitionRate != null ? `${(competitionRate * 100).toFixed(1)}%` : '--'}
                         </td>
-                        <td className="px-5 py-3.5 text-center font-mono text-stone-600 hidden md:table-cell">
+                        <td className="px-5 py-3.5 text-center font-mono text-stone-600 dark:text-stone-400 hidden md:table-cell">
                           {singleBidRate != null ? `${(singleBidRate * 100).toFixed(1)}%` : '--'}
                         </td>
                         <td className="px-5 py-3.5 text-right">
-                          <span className="text-xs text-stone-400 hover:text-stone-600 transition-colors inline-flex items-center gap-1">
+                          <span className="text-xs text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 transition-colors inline-flex items-center gap-1">
                             Ver detalles <ArrowRight className="h-3 w-3" />
                           </span>
                         </td>
@@ -333,50 +333,50 @@ export default function Journalists() {
             <span className="editorial-label" style={{ color: '#c41e3a' }}>METODOLOGIA</span>
           </div>
           <h2
-            className="text-2xl font-bold mb-6"
-            style={{ fontFamily: "'Playfair Display', Georgia, serif", color: '#1a1714' }}
+            className="text-2xl font-bold mb-6 text-stone-900 dark:text-stone-50"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
             Nota metodologica
           </h2>
-          <div className="bg-white border border-stone-200 rounded-2xl shadow-sm p-6 sm:p-8">
-            <div className="space-y-4 text-sm text-stone-600 leading-relaxed">
+          <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-2xl shadow-sm p-6 sm:p-8">
+            <div className="space-y-4 text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
               <div className="flex gap-3">
-                <BookOpen className="h-5 w-5 flex-shrink-0 text-stone-400 mt-0.5" />
+                <BookOpen className="h-5 w-5 flex-shrink-0 text-stone-400 dark:text-stone-500 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-[#1a1714] mb-1">Fuente de datos</p>
+                  <p className="font-semibold text-stone-900 dark:text-stone-100 mb-1">Fuente de datos</p>
                   <p>COMPRANET (Sistema de Informacion de Contrataciones del Sector Publico), la base de datos oficial de contratos federales del gobierno mexicano.</p>
                 </div>
               </div>
               <div className="flex gap-3">
-                <BarChart3 className="h-5 w-5 flex-shrink-0 text-stone-400 mt-0.5" />
+                <BarChart3 className="h-5 w-5 flex-shrink-0 text-stone-400 dark:text-stone-500 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-[#1a1714] mb-1">Periodo y cobertura</p>
+                  <p className="font-semibold text-stone-900 dark:text-stone-100 mb-1">Periodo y cobertura</p>
                   <p>2002-2025. Mas de 3 millones de contratos federales evaluados, cubriendo 12 sectores y 23 anios de actividad.</p>
                 </div>
               </div>
               <div className="flex gap-3">
-                <Shield className="h-5 w-5 flex-shrink-0 text-stone-400 mt-0.5" />
+                <Shield className="h-5 w-5 flex-shrink-0 text-stone-400 dark:text-stone-500 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-[#1a1714] mb-1">Modelo de riesgo</p>
+                  <p className="font-semibold text-stone-900 dark:text-stone-100 mb-1">Modelo de riesgo</p>
                   <p>v6.0, basado en metodologia OCDE e IMF CRI. 16 indicadores z-score, 12 modelos por sector, regresion logistica ElasticNet con correccion PU-learning (Elkan & Noto, 2008).</p>
                 </div>
               </div>
               <div className="flex gap-3">
-                <ExternalLink className="h-5 w-5 flex-shrink-0 text-stone-400 mt-0.5" />
+                <ExternalLink className="h-5 w-5 flex-shrink-0 text-stone-400 dark:text-stone-500 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-[#1a1714] mb-1">Verdad base</p>
+                  <p className="font-semibold text-stone-900 dark:text-stone-100 mb-1">Verdad base</p>
                   <p>289 casos documentados de corrupcion en Mexico, desde IMSS hasta Segalmex, Odebrecht, La Estafa Maestra, y mas.</p>
                 </div>
               </div>
               <div className="flex gap-3">
                 <AlertTriangle className="h-5 w-5 flex-shrink-0 text-amber-500 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-[#1a1714] mb-1">Advertencia importante</p>
+                  <p className="font-semibold text-stone-900 dark:text-stone-100 mb-1">Advertencia importante</p>
                   <p>Las puntuaciones son indicadores estadisticos de similitud con patrones documentados de corrupcion. No determinan culpabilidad. Un puntaje alto indica que el contrato se parece a casos conocidos, no que sea corrupto.</p>
                 </div>
               </div>
             </div>
-            <div className="mt-6 pt-5 border-t border-stone-100">
+            <div className="mt-6 pt-5 border-t border-stone-100 dark:border-stone-800">
               <button
                 onClick={() => navigate('/methodology')}
                 className="text-sm font-medium inline-flex items-center gap-1.5 transition-colors"
@@ -401,17 +401,17 @@ export default function Journalists() {
             <span className="editorial-label" style={{ color: '#c41e3a' }}>ATRIBUCION</span>
           </div>
           <h2
-            className="text-2xl font-bold mb-6"
-            style={{ fontFamily: "'Playfair Display', Georgia, serif", color: '#1a1714' }}
+            className="text-2xl font-bold mb-6 text-stone-900 dark:text-stone-50"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
             Usando RUBLI en tu investigacion?
           </h2>
-          <div className="bg-white border border-stone-200 rounded-2xl shadow-sm p-6 sm:p-8">
-            <p className="text-sm text-stone-600 mb-5 leading-relaxed">
+          <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-2xl shadow-sm p-6 sm:p-8">
+            <p className="text-sm text-stone-600 dark:text-stone-400 mb-5 leading-relaxed">
               Si utilizas datos o hallazgos de RUBLI en tu trabajo periodistico, te pedimos incluir la siguiente atribucion. Puedes copiar el texto directamente:
             </p>
-            <div className="bg-stone-50 border border-stone-200 rounded-xl p-4 mb-5">
-              <p className="text-sm text-stone-700 leading-relaxed italic">
+            <div className="bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl p-4 mb-5">
+              <p className="text-sm text-stone-700 dark:text-stone-300 leading-relaxed italic">
                 &ldquo;Segun datos de RUBLI (rubli.mx), plataforma de analisis de contratacion publica basada en datos de COMPRANET (2002-2025), que utiliza un modelo de aprendizaje automatico entrenado con 289 casos documentados de corrupcion.&rdquo;
               </p>
             </div>
@@ -420,8 +420,8 @@ export default function Journalists() {
               className={cn(
                 'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
                 copied
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                  : 'bg-stone-100 text-stone-700 border border-stone-200 hover:bg-stone-200'
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800'
+                  : 'bg-stone-100 text-stone-700 border border-stone-200 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:border-stone-700 dark:hover:bg-stone-700'
               )}
             >
               {copied ? (
@@ -489,7 +489,7 @@ function StoryFinderSection({ navigate, highRiskPct, highRiskCount, worstSector 
       {isLoading && (
         <div className="grid grid-cols-1 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white border border-stone-200 rounded-2xl shadow-sm p-6">
+            <div key={i} className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-2xl shadow-sm p-6">
               <div className="flex items-center gap-2 mb-3">
                 <Skeleton className="h-5 w-28 rounded-full" />
               </div>
@@ -558,9 +558,9 @@ function StoryFinderSection({ navigate, highRiskPct, highRiskCount, worstSector 
 // ---------------------------------------------------------------------------
 
 const DIFFICULTY_BADGES: Record<string, { bg: string; text: string; label: string }> = {
-  rapida:               { bg: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700', label: 'Historia rapida' },
-  requiere_solicitud:   { bg: 'bg-amber-50 border-amber-200',    text: 'text-amber-700',   label: 'Requiere solicitud' },
-  investigacion_larga:  { bg: 'bg-red-50 border-red-200',        text: 'text-red-700',     label: 'Investigacion profunda' },
+  rapida:               { bg: 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950 dark:border-emerald-800', text: 'text-emerald-700 dark:text-emerald-400', label: 'Historia rapida' },
+  requiere_solicitud:   { bg: 'bg-amber-50 border-amber-200 dark:bg-amber-950 dark:border-amber-800',       text: 'text-amber-700 dark:text-amber-400',     label: 'Requiere solicitud' },
+  investigacion_larga:  { bg: 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800',               text: 'text-red-700 dark:text-red-400',         label: 'Investigacion profunda' },
 }
 
 const DIFFICULTY_ICONS: Record<string, string> = {
@@ -583,7 +583,7 @@ function StoryPackageCard({
   const badge = DIFFICULTY_BADGES[pkg.difficulty] ?? DIFFICULTY_BADGES.rapida
 
   return (
-    <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden transition-shadow hover:shadow-md">
+    <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-2xl shadow-sm overflow-hidden transition-shadow hover:shadow-md">
       {/* Header — always visible */}
       <div className="p-5 sm:p-6">
         <div className="flex items-center gap-2 mb-3">
@@ -598,15 +598,15 @@ function StoryPackageCard({
           </span>
         </div>
         <h3
-          className="text-xl font-bold mb-2"
-          style={{ fontFamily: "'Playfair Display', Georgia, serif", color: '#1a1714' }}
+          className="text-xl font-bold mb-2 text-stone-900 dark:text-stone-50"
+          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
         >
           {pkg.title}
         </h3>
-        <p className="text-sm italic text-stone-500 mb-2">
+        <p className="text-sm italic text-stone-500 dark:text-stone-400 mb-2">
           {pkg.key_question}
         </p>
-        <p className="text-sm text-stone-600 leading-relaxed">
+        <p className="text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
           {pkg.lede}
         </p>
         <button
@@ -632,21 +632,21 @@ function StoryPackageCard({
             transition={{ duration: 0.25, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
-            <div className="px-5 pb-6 sm:px-6 border-t border-stone-100 pt-5 space-y-5">
+            <div className="px-5 pb-6 sm:px-6 border-t border-stone-100 dark:border-stone-800 pt-5 space-y-5">
               {/* Ejemplos concretos */}
               {pkg.examples.length > 0 && (
                 <div>
-                  <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-2">
+                  <p className="text-xs font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2">
                     Ejemplos concretos
                   </p>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-stone-100">
-                          <th className="text-left py-1.5 pr-3 font-semibold text-stone-500 text-xs">Proveedor</th>
-                          <th className="text-right py-1.5 px-3 font-semibold text-stone-500 text-xs">Valor</th>
-                          <th className="text-left py-1.5 px-3 font-semibold text-stone-500 text-xs hidden sm:table-cell">Sector</th>
-                          <th className="text-center py-1.5 pl-3 font-semibold text-stone-500 text-xs">Riesgo</th>
+                        <tr className="border-b border-stone-100 dark:border-stone-800">
+                          <th className="text-left py-1.5 pr-3 font-semibold text-stone-500 dark:text-stone-400 text-xs">Proveedor</th>
+                          <th className="text-right py-1.5 px-3 font-semibold text-stone-500 dark:text-stone-400 text-xs">Valor</th>
+                          <th className="text-left py-1.5 px-3 font-semibold text-stone-500 dark:text-stone-400 text-xs hidden sm:table-cell">Sector</th>
+                          <th className="text-center py-1.5 pl-3 font-semibold text-stone-500 dark:text-stone-400 text-xs">Riesgo</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -654,7 +654,7 @@ function StoryPackageCard({
                           const riskLevel = ex.avg_risk_score != null ? getRiskLevel(ex.avg_risk_score) : null
                           const vendorName = ex.vendor_name ?? 'Proveedor desconocido'
                           return (
-                            <tr key={i} className="border-b border-stone-50">
+                            <tr key={i} className="border-b border-stone-50 dark:border-stone-800/50">
                               <td className="py-1.5 pr-3">
                                 <button
                                   onClick={() =>
@@ -666,10 +666,10 @@ function StoryPackageCard({
                                   {vendorName}
                                 </button>
                               </td>
-                              <td className="py-1.5 px-3 text-right font-mono text-stone-600 text-xs">
+                              <td className="py-1.5 px-3 text-right font-mono text-stone-600 dark:text-stone-400 text-xs">
                                 {ex.total_value_mxn != null ? formatCompactMXN(ex.total_value_mxn) : '--'}
                               </td>
-                              <td className="py-1.5 px-3 text-stone-500 text-xs hidden sm:table-cell">
+                              <td className="py-1.5 px-3 text-stone-500 dark:text-stone-400 text-xs hidden sm:table-cell">
                                 {ex.primary_sector_name ? capitalize(ex.primary_sector_name) : '--'}
                               </td>
                               <td className="py-1.5 pl-3 text-center">
@@ -680,7 +680,7 @@ function StoryPackageCard({
                                     title={riskLevel}
                                   />
                                 ) : (
-                                  <span className="text-xs text-stone-300">--</span>
+                                  <span className="text-xs text-stone-300 dark:text-stone-600">--</span>
                                 )}
                               </td>
                             </tr>
@@ -695,10 +695,10 @@ function StoryPackageCard({
               {/* Defensa esperada */}
               {pkg.defense && (
                 <div>
-                  <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-2">
+                  <p className="text-xs font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2">
                     Defensa esperada
                   </p>
-                  <blockquote className="border-l-2 border-stone-300 pl-4 text-sm italic text-stone-500 leading-relaxed">
+                  <blockquote className="border-l-2 border-stone-300 dark:border-stone-600 pl-4 text-sm italic text-stone-500 dark:text-stone-400 leading-relaxed">
                     {pkg.defense}
                   </blockquote>
                 </div>
@@ -707,10 +707,10 @@ function StoryPackageCard({
               {/* Proximos pasos */}
               {pkg.next_steps.length > 0 && (
                 <div>
-                  <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-2">
+                  <p className="text-xs font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2">
                     Proximos pasos
                   </p>
-                  <ol className="list-decimal list-inside text-sm text-stone-600 space-y-1">
+                  <ol className="list-decimal list-inside text-sm text-stone-600 dark:text-stone-400 space-y-1">
                     {pkg.next_steps.map((step, i) => (
                       <li key={i}>{step}</li>
                     ))}
@@ -753,15 +753,15 @@ function StoryCard({
   return (
     <button
       onClick={onClick}
-      className="bg-white border border-stone-200 rounded-2xl shadow-sm p-5 text-left hover:shadow-md hover:border-stone-300 transition-all group"
+      className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-2xl shadow-sm p-5 text-left hover:shadow-md hover:border-stone-300 dark:hover:border-stone-600 transition-all group"
     >
       <p
-        className="text-lg font-bold mb-2"
-        style={{ fontFamily: "'Playfair Display', Georgia, serif", color: '#1a1714' }}
+        className="text-lg font-bold mb-2 text-stone-900 dark:text-stone-50"
+        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
       >
         {stat}
       </p>
-      <p className="text-sm text-stone-500 leading-relaxed">{description}</p>
+      <p className="text-sm text-stone-500 dark:text-stone-400 leading-relaxed">{description}</p>
       <span
         className="inline-flex items-center gap-1 mt-3 text-xs font-semibold transition-colors"
         style={{ color: '#c41e3a' }}
@@ -788,7 +788,7 @@ function StepCard({
   onClick: () => void
 }) {
   return (
-    <div className="bg-white border border-stone-200 rounded-2xl shadow-sm p-5 flex gap-4">
+    <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-2xl shadow-sm p-5 flex gap-4">
       <div className="flex-shrink-0">
         <div
           className="w-9 h-9 rounded-full flex items-center justify-center"
@@ -798,11 +798,11 @@ function StepCard({
         </div>
       </div>
       <div className="min-w-0">
-        <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">
+        <p className="text-xs font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-1">
           Paso {step}
         </p>
-        <p className="font-semibold text-[#1a1714] mb-1">{title}</p>
-        <p className="text-sm text-stone-500 leading-relaxed mb-3">{description}</p>
+        <p className="font-semibold text-stone-900 dark:text-stone-100 mb-1">{title}</p>
+        <p className="text-sm text-stone-500 dark:text-stone-400 leading-relaxed mb-3">{description}</p>
         <button
           onClick={onClick}
           className="text-sm font-medium inline-flex items-center gap-1 transition-colors"
