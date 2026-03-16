@@ -189,7 +189,7 @@ def overpricing_patterns():
     with get_db() as conn:
         rows = conn.execute("""
             SELECT
-                s.name                           AS sector_name,
+                s.name_es                        AS sector_name,
                 c.contract_year,
                 COUNT(*)                         AS contracts_flagged,
                 SUM(c.amount_mxn)               AS total_value_mxn,
