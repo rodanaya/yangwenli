@@ -518,52 +518,16 @@ async def phi_ml_correlation():
     with get_db() as conn:
         cached = _load_precomputed(conn, "phi_ml_correlation")
         if cached is not None:
-            # Compute live queries to supplement precomputed sector data
-            da_risk = conn.execute("""
-                SELECT CASE WHEN is_direct_award = 1 THEN 'Direct Award' ELSE 'Competitive' END as method,
-                       COUNT(*) as contracts,
-                       ROUND(AVG(risk_score), 4) as avg_risk,
-                       ROUND(SUM(amount_mxn)/1e9, 1) as value_billion
-                FROM contracts WHERE amount_mxn > 0 GROUP BY is_direct_award
-            """).fetchall()
-            sb_risk = conn.execute("""
-                SELECT CASE WHEN is_single_bid = 1 THEN 'Single Bid'
-                            WHEN is_direct_award = 0 THEN 'Multiple Bids'
-                            ELSE 'Direct Award' END as category,
-                       COUNT(*) as contracts,
-                       ROUND(AVG(risk_score), 4) as avg_risk
-                FROM contracts WHERE amount_mxn > 0
-                GROUP BY category ORDER BY avg_risk DESC
-            """).fetchall()
-            agreement = conn.execute("""
-                SELECT COUNT(*) as total_high_risk,
-                       SUM(CASE WHEN is_direct_award = 1 OR is_single_bid = 1 THEN 1 ELSE 0 END) as also_phi_flagged,
-                       ROUND(SUM(CASE WHEN is_direct_award = 1 OR is_single_bid = 1 THEN 1.0 ELSE 0.0 END)
-                             / COUNT(*) * 100, 1) as agreement_pct
-                FROM contracts WHERE risk_score >= 0.30 AND amount_mxn > 0
-            """).fetchone()
-            correlations = {
-                "by_procedure_type": [dict(r) for r in da_risk],
-                "by_competition": [dict(r) for r in sb_risk],
-                "sector_comparison": cached.get("sectors", []),
-                "ml_phi_agreement": {
-                    "high_risk_contracts": agreement["total_high_risk"],
-                    "also_flagged_by_phi": agreement["also_phi_flagged"],
-                    "agreement_rate": agreement["agreement_pct"],
-                    "interpretation": (
-                        "Percentage of ML high-risk contracts that also trigger "
-                        "at least one simple PHI red flag (direct award or single bid)"
+            # Return fully precomputed response — no live queries on 3.1M rows
+            if "correlations" in cached:
+                return {
+                    "description": (
+                        "Correlation between simple PHI indicators and ML risk scores. "
+                        "When both approaches flag the same contracts, confidence increases."
                     ),
-                },
-            }
-            return {
-                "description": (
-                    "Correlation between simple PHI indicators and ML risk scores. "
-                    "When both approaches flag the same contracts, confidence increases."
-                ),
-                "correlations": correlations,
-                "source": "precomputed",
-            }
+                    "correlations": cached["correlations"],
+                    "source": "precomputed",
+                }
 
         # Fallback: live computation
         logger.warning("PHI /ml-correlation falling back to live computation")
