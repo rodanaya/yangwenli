@@ -127,7 +127,9 @@ def _load_contract_metrics(conn: sqlite3.Connection) -> dict[int, dict]:
             "year_end_rate": r[1] or 0.0,
             "split_rate":    split_map.get(r[0], 0.0),
             "short_ad_rate": r[2] or 0.0,
-            "avg_ad_days":   r[3] or 15.0,
+            # NULL avg_ad_days means no competitive procedures → treat as 0 (worst case),
+            # not 15.0 (which was giving free points to fully-DA institutions).
+            "avg_ad_days":   r[3] if r[3] is not None else 0.0,
         }
         for r in rows
     }
@@ -184,6 +186,7 @@ def _load_institution_aria(conn: sqlite3.Connection) -> dict[int, dict]:
 
 def score_institution(inst: dict, cm: dict, hhi: float,
                       efos_count: int, aria: dict) -> dict:
+    avg_risk     = inst["avg_risk"]  or 0.0
     da_pct       = inst["da_pct"]    or 0.0
     single_pct   = inst["single_pct"] or 0.0
     high_risk    = inst["high_risk_pct"] or 0.0
@@ -208,7 +211,10 @@ def score_institution(inst: dict, cm: dict, hhi: float,
     p_price      = min(20.0, risk_pts + yearend_pts + split_pts)
 
     # Pillar 3: VENDOR INDEPENDENCE (0-20)
-    hhi_pts      = max(0.0, 10.0 - hhi * 10.0)
+    # Log-transform HHI: linear gives no discrimination in normal 0.01–0.10 range.
+    # Formula maps HHI=0→10, HHI=0.10→7.2, HHI=0.30→4.3, HHI=1.0→0
+    hhi_log      = 1.0 - math.log(1.0 + hhi * 9.0) / math.log(10.0)
+    hhi_pts      = min(10.0, max(0.0, hhi_log * 10.0))
     vd_ratio     = min(1.0, vendor_count / total_c)
     diversity_pt = min(10.0, vd_ratio * 20.0)
     p_vendors    = min(20.0, hhi_pts + diversity_pt)
@@ -219,10 +225,12 @@ def score_institution(inst: dict, cm: dict, hhi: float,
     p_process    = min(20.0, ad_pts + shortad_pts)
 
     # Pillar 5: EXTERNAL FLAGS (0-20)
-    efos_pen     = min(15.0, efos_count * 3.0)
-    t1_pen       = min(8.0,  aria["t1"] * 2.0)
-    t2_pen       = min(5.0,  aria["t2"] * 1.0)
-    p_external   = max(0.0, 20.0 - efos_pen - t1_pen - t2_pen)
+    # avg_risk drives most of the signal (>0.15 starts costing; >0.55 = -10 pts max)
+    risk_pen     = min(10.0, max(0.0, (avg_risk - 0.15) / 0.40 * 10.0))
+    efos_pen     = min(8.0,  efos_count * 2.0)
+    t1_pen       = min(5.0,  aria["t1"] * 1.5)
+    t2_pen       = min(3.0,  aria["t2"] * 0.75)
+    p_external   = max(0.0, 20.0 - risk_pen - efos_pen - t1_pen - t2_pen)
 
     total = p_openness + p_price + p_vendors + p_process + p_external
     code, label, color = get_grade(total)
@@ -377,16 +385,18 @@ def score_vendor(v: dict, sector_da_norm: float) -> dict:
     structural_exempt = is_structural_fp
 
     # Pillar 1: RISK SIGNAL (0-25) — ML model, inverted
-    # avg_risk 0 → 25 pts; avg_risk ≥ 0.67 → 0 pts
-    p_risk = min(25.0, max(0.0, 25.0 * (1.0 - avg_risk * 1.5)))
+    # Steeper nonlinear curve: avg_risk=0→25, 0.20→12.5, 0.40→0 pts
+    p_risk = min(25.0, max(0.0, 25.0 * (1.0 - min(1.0, avg_risk * 2.5))))
 
     # Pillar 2: CONDUCT (0-20) — DA rate vs sector norm
-    # Excess above sector norm penalised; structural FPs exempt
+    # Excess above sector norm penalised; structural FPs exempt.
+    # Removed +0.05 buffer (was masking mildly-excessive DA rates).
+    # Increased multiplier 40→60 for steeper slope.
     if structural_exempt:
         p_conduct = 20.0
     else:
-        da_excess = max(0.0, da_rate - min(sector_da_norm + 0.05, 0.85))
-        p_conduct = max(0.0, 20.0 - da_excess * 40.0)
+        da_excess = max(0.0, da_rate - sector_da_norm)
+        p_conduct = max(0.0, 20.0 - da_excess * 60.0)
 
     # Pillar 3: INSTITUTIONAL SPREAD (0-20) — capture indicator
     if structural_exempt:
