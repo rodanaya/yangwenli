@@ -201,7 +201,7 @@ def list_institution_scorecards(
 
         offset = (page - 1) * per_page
         rows = conn.execute(f"""
-            SELECT s.institution_id, i.name, i.ramo_code,
+            SELECT s.institution_id, i.name, i.ramo_id,
                    sec.sector_name,
                    s.total_score, s.grade, s.grade_label, s.grade_color,
                    s.national_percentile,
@@ -255,7 +255,7 @@ def get_institution_scorecard(institution_id: int = Path(..., ge=1)):
     """Full scorecard for a single institution."""
     with get_db() as conn:
         row = conn.execute("""
-            SELECT s.institution_id, i.name, i.ramo_code,
+            SELECT s.institution_id, i.name, i.ramo_id,
                    sec.sector_name,
                    s.total_score, s.grade, s.grade_label, s.grade_color,
                    s.national_percentile,
@@ -310,29 +310,33 @@ def list_vendor_scorecards(
             where_clauses.append("s.total_score <= ?")
             params.append(max_score)
         if search:
-            where_clauses.append("v.vendor_name LIKE ?")
+            where_clauses.append("v.name LIKE ?")
             params.append(f"%{search}%")
 
         where_sql = " AND ".join(where_clauses)
-        order_sql = f"s.{sort_by} {'DESC' if order == 'desc' else 'ASC'}"
+        # vendor_name sort maps to vendors.name alias
+        if sort_by == "vendor_name":
+            order_sql = f"v.name {'DESC' if order == 'desc' else 'ASC'}"
+        else:
+            order_sql = f"s.{sort_by} {'DESC' if order == 'desc' else 'ASC'}"
 
         total = conn.execute(f"""
             SELECT COUNT(*)
             FROM vendor_scorecards s
-            JOIN vendor_stats v ON s.vendor_id = v.vendor_id
+            JOIN vendors v ON s.vendor_id = v.id
             WHERE {where_sql}
         """, params).fetchone()[0]
 
         offset = (page - 1) * per_page
         rows = conn.execute(f"""
-            SELECT s.vendor_id, v.vendor_name,
+            SELECT s.vendor_id, v.name,
                    s.total_score, s.grade, s.grade_label, s.grade_color,
                    s.national_percentile, s.sector_percentile,
                    s.pillar_risk_signal, s.pillar_conduct, s.pillar_spread,
                    s.pillar_behavior, s.pillar_flags,
                    s.top_risk_driver
             FROM vendor_scorecards s
-            JOIN vendor_stats v ON s.vendor_id = v.vendor_id
+            JOIN vendors v ON s.vendor_id = v.id
             WHERE {where_sql}
             ORDER BY {order_sql}
             LIMIT ? OFFSET ?
@@ -343,7 +347,7 @@ def list_vendor_scorecards(
         dist_rows = conn.execute(f"""
             SELECT s.grade, COUNT(*)
             FROM vendor_scorecards s
-            JOIN vendor_stats v ON s.vendor_id = v.vendor_id
+            JOIN vendors v ON s.vendor_id = v.id
             WHERE {where_no_grade}
             GROUP BY s.grade
         """, filter_params_no_grade).fetchall()
@@ -378,14 +382,14 @@ def get_vendor_scorecard(vendor_id: int = Path(..., ge=1)):
     """Full scorecard for a single vendor."""
     with get_db() as conn:
         row = conn.execute("""
-            SELECT s.vendor_id, v.vendor_name,
+            SELECT s.vendor_id, v.name,
                    s.total_score, s.grade, s.grade_label, s.grade_color,
                    s.national_percentile, s.sector_percentile,
                    s.pillar_risk_signal, s.pillar_conduct, s.pillar_spread,
                    s.pillar_behavior, s.pillar_flags,
                    s.top_risk_driver, s.key_metrics
             FROM vendor_scorecards s
-            JOIN vendor_stats v ON s.vendor_id = v.vendor_id
+            JOIN vendors v ON s.vendor_id = v.id
             WHERE s.vendor_id = ?
         """, (vendor_id,)).fetchone()
 
