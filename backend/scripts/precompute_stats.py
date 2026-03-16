@@ -599,8 +599,48 @@ def precompute_stats():
             print(f"   Warning: pattern count {key} failed: {e}")
     print(f"   Done ({time.time() - start:.1f}s)")
 
-    # 7. Political cycle stats
-    print("7. Computing political cycle stats...")
+    # 7. Sector x Year breakdown (feeds /api/v1/analysis/sector-year-breakdown fast path)
+    print("7. Computing sector x year breakdown...")
+    start = time.time()
+    try:
+        cursor.execute("""
+            SELECT
+                contract_year as year, sector_id,
+                COUNT(*) as contracts,
+                COALESCE(SUM(amount_mxn), 0) as total_value,
+                COALESCE(AVG(risk_score), 0) as avg_risk,
+                SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) as direct_award_pct,
+                SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) * 100.0 /
+                    NULLIF(SUM(CASE WHEN is_direct_award = 0 THEN 1 ELSE 0 END), 0) as single_bid_pct,
+                SUM(CASE WHEN risk_level IN ('high', 'critical') THEN 1 ELSE 0 END) * 100.0 / COUNT(*) as high_risk_pct,
+                COUNT(DISTINCT vendor_id) as vendor_count,
+                COUNT(DISTINCT institution_id) as institution_count
+            FROM contracts
+            WHERE contract_year IS NOT NULL AND sector_id IS NOT NULL
+            GROUP BY contract_year, sector_id
+            ORDER BY contract_year, sector_id
+        """)
+        sector_year_rows = []
+        for row in cursor.fetchall():
+            sector_year_rows.append({
+                "year": row["year"],
+                "sector_id": row["sector_id"],
+                "contracts": row["contracts"],
+                "total_value": round(row["total_value"] or 0, 0),
+                "avg_risk": round(row["avg_risk"] or 0, 4),
+                "direct_award_pct": round(row["direct_award_pct"] or 0, 1),
+                "single_bid_pct": round(row["single_bid_pct"], 1) if row["single_bid_pct"] is not None else None,
+                "high_risk_pct": round(row["high_risk_pct"] or 0, 2),
+                "vendor_count": row["vendor_count"],
+                "institution_count": row["institution_count"],
+            })
+        stats['sector_year_breakdown'] = sector_year_rows
+        print(f"   Done ({time.time() - start:.1f}s) — {len(sector_year_rows)} rows")
+    except Exception as e:
+        print(f"   Warning: sector x year breakdown failed: {e}")
+
+    # 8. Political cycle stats
+    print("8. Computing political cycle stats...")
     start = time.time()
     try:
         rows = cursor.execute("""
@@ -636,8 +676,8 @@ def precompute_stats():
     except Exception as e:
         print(f"   Warning: political cycle stats failed: {e}")
 
-    # 8. Publication delay stats
-    print("8. Computing publication delay stats...")
+    # 9. Publication delay stats
+    print("9. Computing publication delay stats...")
     start = time.time()
     try:
         row = cursor.execute("""
@@ -664,8 +704,8 @@ def precompute_stats():
     except Exception as e:
         print(f"   Warning: publication delay stats failed: {e}")
 
-    # 9. Institution HHI (supplier diversity) per sector per year
-    print("9. Computing institution HHI stats...")
+    # 10. Institution HHI (supplier diversity) per sector per year
+    print("10. Computing institution HHI stats...")
     start = time.time()
     try:
         # HHI per institution per year: sum of squared market shares (0-10000 scale)
@@ -738,8 +778,8 @@ def precompute_stats():
         print(f"   Warning: HHI computation failed: {e}")
         import traceback; traceback.print_exc()
 
-    # 10. Data quality stats (feeds /api/v1/stats/data-quality fast path)
-    print("10. Computing data quality stats...")
+    # 11. Data quality stats (feeds /api/v1/stats/data-quality fast path)
+    print("11. Computing data quality stats...")
     start = time.time()
     try:
         dq_row = cursor.execute("""
@@ -770,8 +810,8 @@ def precompute_stats():
     except Exception as e:
         print(f"   Warning: data quality stats failed: {e}")
 
-    # 11. PHI — Procurement Health Index
-    print("11. Computing PHI (Procurement Health Index)...")
+    # 12. PHI — Procurement Health Index
+    print("12. Computing PHI (Procurement Health Index)...")
     start = time.time()
     try:
         _precompute_phi(cursor, stats)
@@ -781,7 +821,7 @@ def precompute_stats():
         import traceback; traceback.print_exc()
 
     # Save all stats to database
-    print("\n12. Saving to database...")
+    print("\n13. Saving to database...")
     for key, value in stats.items():
         cursor.execute("""
             INSERT OR REPLACE INTO precomputed_stats (stat_key, stat_value, updated_at)
