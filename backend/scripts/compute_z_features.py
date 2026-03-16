@@ -4,7 +4,7 @@ Compute Z-Score Features for Risk Model v5.0 Pipeline (16 features)
 For each contract, computes a 16-dimensional z-score vector using
 pre-computed baselines from factor_baselines table.
 
-Continuous:  z_i = (x_i - μ(s,t)) / max(σ(s,t), ε)     where ε = 0.001
+Continuous:  z_i = clamp((x_i - μ(s,t)) / max(σ(s,t), ε), ±Z_CAP)  where ε = 0.1
 Binary:      z_i = (x_i - p(s,t)) / √(p(s,t)(1-p(s,t)))  (Bernoulli z-score)
 
 Creates table: contract_z_features
@@ -12,6 +12,7 @@ Creates table: contract_z_features
 
 Usage:
     python -m scripts.compute_z_features [--batch-size 50000]
+    python -m scripts.compute_z_features --orth-only  # Only compute orthogonalized features
 """
 
 import sys
@@ -24,7 +25,9 @@ from collections import defaultdict
 
 DB_PATH = Path(__file__).parent.parent / "RUBLI_NORMALIZED.db"
 
-EPSILON = 0.001  # Minimum stddev to avoid division by zero
+EPSILON = 0.1    # Minimum stddev to avoid pathological z-scores from thin cells
+Z_SCORE_CAP = 10.0  # Winsorize z-scores at ±10 (no signal beyond this; prevents 999 SD outliers)
+MIN_CELL_SIZE = 10   # Minimum contracts in a baseline cell before forcing fallback
 
 # Factor names matching factor_baselines table
 FACTOR_COLS = [
@@ -82,7 +85,7 @@ def load_baselines(conn: sqlite3.Connection) -> dict:
     """
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT factor_name, sector_id, year, scope, mean, stddev
+        SELECT factor_name, sector_id, year, scope, mean, stddev, count
         FROM factor_baselines
         ORDER BY
             CASE scope
@@ -98,10 +101,13 @@ def load_baselines(conn: sqlite3.Connection) -> dict:
     global_baselines = {}  # factor -> (mean, stddev)
 
     for row in cursor.fetchall():
-        factor, sector_id, year, scope, mean, stddev = row
+        factor, sector_id, year, scope, mean, stddev, count = row
         stddev = max(stddev, EPSILON)
 
         if scope == 'sector_year' and sector_id and year:
+            # FIX: Skip thin cells — force fallback to sector/global baseline
+            if count is not None and count < MIN_CELL_SIZE:
+                continue
             baselines[factor][(sector_id, year)] = (mean, stddev)
         elif scope == 'sector' and sector_id:
             sector_baselines[factor][sector_id] = (mean, stddev)
@@ -578,15 +584,209 @@ def compute_raw_features(row, aux):
 
 
 def compute_z_score(raw_value, mean, stddev, is_binary=False):
-    """Compute z-score for a single value."""
+    """Compute z-score for a single value, capped at ±Z_SCORE_CAP."""
     if is_binary:
         # Bernoulli z-score: (x - p) / sqrt(p * (1-p))
         p = mean
         denom = math.sqrt(p * (1 - p)) if 0 < p < 1 else EPSILON
-        return (raw_value - p) / denom
+        z = (raw_value - p) / denom
     else:
         # Standard z-score
-        return (raw_value - mean) / max(stddev, EPSILON)
+        z = (raw_value - mean) / max(stddev, EPSILON)
+    # Winsorize: cap extreme z-scores to prevent pathological values (999 SD)
+    return max(-Z_SCORE_CAP, min(Z_SCORE_CAP, z))
+
+
+
+def ensure_orth_columns(conn: sqlite3.Connection):
+    """Add orthogonalized z-score columns if they don't exist."""
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA table_info(contract_z_features)")
+    existing = {row[1] for row in cursor.fetchall()}
+
+    for col in ['z_price_volatility_orth', 'z_vendor_concentration_orth']:
+        if col not in existing:
+            cursor.execute(f"ALTER TABLE contract_z_features ADD COLUMN {col} REAL")
+            print(f"  Added column: {col}")
+    conn.commit()
+
+
+def compute_orthogonalized_features():
+    """Compute amount-orthogonalized z-scores for price_volatility and vendor_concentration.
+
+    Residualizes each feature against log(amount_mxn) via OLS:
+        z_feature_orth = z_feature - (slope * log(amount+1) + intercept)
+    Then re-standardizes to mean=0, sd=1.
+
+    This removes the component of the feature that merely tracks contract size,
+    revealing signal BEYOND "big contracts from big vendors."
+
+    Uses batch Python processing (not correlated subqueries) for performance.
+    """
+    print("=" * 60)
+    print("ORTHOGONALIZATION: Amount-residualized z-scores")
+    print("=" * 60)
+    print(f"Database: {DB_PATH}")
+
+    if not DB_PATH.exists():
+        print(f"ERROR: Database not found: {DB_PATH}")
+        return 1
+
+    conn = sqlite3.connect(DB_PATH, timeout=60)
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA busy_timeout=60000")
+
+    try:
+        ensure_orth_columns(conn)
+        cursor = conn.cursor()
+
+        # Verify contract_z_features exists
+        cursor.execute("SELECT COUNT(*) FROM contract_z_features")
+        total = cursor.fetchone()[0]
+        if total == 0:
+            print("ERROR: contract_z_features is empty. Run full z-score computation first.")
+            return 1
+        print(f"Processing {total:,} contracts")
+
+        features_to_orth = [
+            ('z_price_volatility', 'z_price_volatility_orth', 'price_volatility'),
+            ('z_vendor_concentration', 'z_vendor_concentration_orth', 'vendor_concentration'),
+        ]
+
+        BATCH_SIZE = 100_000
+
+        for idx, (src_col, dst_col, label) in enumerate(features_to_orth, 1):
+            print(f"\n[{idx}/{len(features_to_orth)}] Orthogonalizing {src_col} against log(amount_mxn)...")
+            start_t = datetime.now()
+
+            # Step 1: Compute OLS coefficients using SQL aggregates (fast single scan)
+            cursor.execute(f"""
+                SELECT
+                    COUNT(*) as n,
+                    AVG(czf.{src_col}) as mean_y,
+                    AVG(LOG(c.amount_mxn + 1)) as mean_x,
+                    AVG(czf.{src_col} * LOG(c.amount_mxn + 1)) as avg_xy,
+                    AVG(LOG(c.amount_mxn + 1) * LOG(c.amount_mxn + 1)) as avg_xx
+                FROM contract_z_features czf
+                JOIN contracts c ON czf.contract_id = c.id
+                WHERE c.amount_mxn > 0
+                  AND czf.{src_col} IS NOT NULL
+            """)
+            row = cursor.fetchone()
+            n, mean_y, mean_x, avg_xy, avg_xx = row
+            var_x = avg_xx - mean_x * mean_x
+            cov_xy = avg_xy - mean_y * mean_x
+
+            if var_x > 0:
+                slope = cov_xy / var_x
+                intercept = mean_y - slope * mean_x
+            else:
+                slope, intercept = 0.0, 0.0
+
+            print(f"  OLS: {src_col} = {slope:.4f} * log(amt+1) + {intercept:.4f}  (n={n:,})")
+
+            # Step 2: Batch read, compute residuals in Python, batch write back
+            conn.execute("PRAGMA synchronous=OFF")
+            processed = 0
+            offset = 0
+
+            while offset < total:
+                cursor.execute(f"""
+                    SELECT czf.contract_id, czf.{src_col}, c.amount_mxn
+                    FROM contract_z_features czf
+                    JOIN contracts c ON czf.contract_id = c.id
+                    ORDER BY czf.contract_id
+                    LIMIT ? OFFSET ?
+                """, (BATCH_SIZE, offset))
+
+                rows = cursor.fetchall()
+                if not rows:
+                    break
+
+                # Compute residuals in Python
+                updates = []
+                for cid, z_val, amt in rows:
+                    if z_val is not None and amt is not None and amt > 0:
+                        log_amt = math.log(amt + 1)
+                        residual = z_val - (slope * log_amt + intercept)
+                        updates.append((residual, cid))
+                    else:
+                        updates.append((None, cid))
+
+                # Batch UPDATE
+                cursor.execute("BEGIN IMMEDIATE TRANSACTION")
+                cursor.executemany(f"""
+                    UPDATE contract_z_features SET {dst_col} = ? WHERE contract_id = ?
+                """, updates)
+                cursor.execute("COMMIT")
+
+                processed += len(rows)
+                offset += BATCH_SIZE
+                elapsed = (datetime.now() - start_t).total_seconds()
+                rate = processed / elapsed if elapsed > 0 else 0
+                print(f"    {processed:,}/{total:,} ({100*processed/total:.1f}%) - {rate:.0f}/sec")
+
+            # Step 3: Re-standardize to mean=0, sd=1
+            cursor.execute(f"""
+                SELECT AVG({dst_col}),
+                       AVG({dst_col} * {dst_col})
+                FROM contract_z_features
+                WHERE {dst_col} IS NOT NULL
+            """)
+            mean_r, avg_sq_r = cursor.fetchone()
+            sd_r = math.sqrt(max(avg_sq_r - mean_r * mean_r, 0)) if avg_sq_r else 1.0
+            sd_r = max(sd_r, 0.01)
+
+            cursor.execute("BEGIN IMMEDIATE TRANSACTION")
+            cursor.execute(f"""
+                UPDATE contract_z_features
+                SET {dst_col} = ({dst_col} - ?) / ?
+                WHERE {dst_col} IS NOT NULL
+            """, (mean_r, sd_r))
+            cursor.execute("COMMIT")
+            conn.execute("PRAGMA synchronous=NORMAL")
+            print(f"  Residual re-standardized: mean_resid={mean_r:.4f}, sd_resid={sd_r:.4f}")
+
+        # Summary
+        print(f"\n{'='*60}")
+        print("ORTHOGONALIZATION SUMMARY")
+        print(f"{'='*60}")
+        for _, dst_col, _ in features_to_orth:
+            cursor.execute(f"""
+                SELECT COUNT({dst_col}), AVG({dst_col}), MIN({dst_col}), MAX({dst_col}),
+                       AVG({dst_col} * {dst_col})
+                FROM contract_z_features
+                WHERE {dst_col} IS NOT NULL
+            """)
+            cnt, avg, mn, mx, avg_sq = cursor.fetchone()
+            var = avg_sq - avg * avg if avg_sq and avg else 0
+            sd = math.sqrt(var) if var > 0 else 0
+            print(f"  {dst_col}: n={cnt:,}, mean={avg:.4f}, sd={sd:.4f}, min={mn:.2f}, max={mx:.2f}")
+
+        # Correlation check: orth features should have ~0 correlation with log(amount)
+        for _, dst_col, label in features_to_orth:
+            cursor.execute(f"""
+                SELECT
+                    AVG(czf.{dst_col} * LOG(c.amount_mxn + 1)) -
+                    AVG(czf.{dst_col}) * AVG(LOG(c.amount_mxn + 1))
+                FROM contract_z_features czf
+                JOIN contracts c ON czf.contract_id = c.id
+                WHERE c.amount_mxn > 0 AND czf.{dst_col} IS NOT NULL
+            """)
+            cov = cursor.fetchone()[0]
+            print(f"  Cov({label}_orth, log_amt) = {cov:.6f} (should be ~0)")
+
+    except Exception as e:
+        print(f"\nFATAL ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+        return 1
+    finally:
+        conn.close()
+
+    print("\nOrthogonalization complete.")
+    return 0
+
 
 
 def main():
@@ -595,7 +795,12 @@ def main():
     )
     parser.add_argument('--batch-size', type=int, default=50000,
                         help='Batch size for processing (default: 50000)')
+    parser.add_argument('--orth-only', action='store_true',
+                        help='Only compute orthogonalized features (skip full z-score recomputation)')
     args = parser.parse_args()
+
+    if args.orth_only:
+        return compute_orthogonalized_features()
 
     print("=" * 60)
     print("RISK MODEL v5.0: Compute Z-Score Features")

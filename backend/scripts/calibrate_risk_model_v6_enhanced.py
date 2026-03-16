@@ -129,57 +129,43 @@ def load_enhanced_data(conn, neg_ratio=2.0, seed=42, max_per_vendor=200, case_wi
     z_select = ', '.join(f'zf.{c}' for c in Z_COLS)
     rng = np.random.RandomState(seed)
 
-    # Step 1: Get GT vendors with case IDs
-    cursor.execute("""
-        SELECT DISTINCT gtv.vendor_id, gtv.case_id
-        FROM ground_truth_vendors gtv
-        WHERE gtv.vendor_id IS NOT NULL
-          AND gtv.case_id NOT IN (16, 19, 20, 21)
+    # Steps 1-4: Load scoped GT contracts via VIEW (fraud-window-restricted)
+    # Uses ground_truth_contracts_scoped VIEW - see _update_gt_fraud_windows.py
+    # The VIEW handles: time-window filtering, institution scoping, inactive case exclusion
+    cursor.execute(f"""
+        SELECT zf.contract_id, {z_select}, c.contract_year, c.sector_id, c.vendor_id
+        FROM ground_truth_contracts_scoped gcs
+        JOIN contract_z_features zf ON zf.contract_id = gcs.contract_id
+        JOIN contracts c ON c.id = gcs.contract_id
     """)
-    vendor_cases = defaultdict(list)
-    for row in cursor.fetchall():
-        vendor_cases[row[0]].append(row[1])
-    gt_vendor_ids = list(vendor_cases.keys())
-    print(f"  GT vendors: {len(gt_vendor_ids)}")
+    scoped_rows = cursor.fetchall()
+    print(f"  Scoped GT contracts (from VIEW): {len(scoped_rows):,}")
 
-    # Step 2: Vendor-stratified split (70/30)
+    # Deduplicate (a contract may appear in multiple cases via the VIEW)
+    seen_ids = set()
+    positive_by_vendor = defaultdict(list)
+    for row in scoped_rows:
+        cid = row[0]
+        if cid in seen_ids:
+            continue
+        seen_ids.add(cid)
+        vid = row[-1]
+        positive_by_vendor[vid].append(row)
+
+    gt_vendor_ids = list(positive_by_vendor.keys())
+    total_before_cap = sum(len(v) for v in positive_by_vendor.values())
+    print(f"  GT vendors: {len(gt_vendor_ids)}")
+    print(f"  Positives after time-window (scoped VIEW): {total_before_cap:,}")
+
+    # Vendor-stratified split (70/30)
     rng.shuffle(gt_vendor_ids)
     split_idx = int(len(gt_vendor_ids) * 0.7)
     train_vendors = set(gt_vendor_ids[:split_idx])
     test_vendors = set(gt_vendor_ids[split_idx:])
     print(f"  Train GT vendors: {len(train_vendors)}, Test GT vendors: {len(test_vendors)}")
 
-    # Step 3: Load ALL GT vendor contracts with z-features
+    # Placeholder for negative sampling exclusion
     ph = ','.join('?' * len(gt_vendor_ids))
-    cursor.execute(f"""
-        SELECT zf.contract_id, {z_select}, c.contract_year, c.sector_id, c.vendor_id
-        FROM contract_z_features zf
-        JOIN contracts c ON zf.contract_id = c.id
-        WHERE c.vendor_id IN ({ph})
-    """, gt_vendor_ids)
-    all_gt_rows = cursor.fetchall()
-    print(f"  All GT vendor contracts: {len(all_gt_rows):,}")
-
-    # Step 4: Apply time-window filter for positive labels
-    # Use DB-loaded windows (347 cases) instead of hardcoded dict (15 cases).
-    windows = case_windows or {}
-    positive_by_vendor = defaultdict(list)
-    excluded = 0
-    for row in all_gt_rows:
-        vid = row[-1]
-        year = row[len(Z_COLS) + 1] or 2015
-        case_ids = vendor_cases.get(vid, [])
-        in_window = any(
-            windows.get(cid, DEFAULT_WINDOW)[0] <= year <= windows.get(cid, DEFAULT_WINDOW)[1]
-            for cid in case_ids
-        )
-        if in_window:
-            positive_by_vendor[vid].append(row)
-        else:
-            excluded += 1
-
-    total_before_cap = sum(len(v) for v in positive_by_vendor.values())
-    print(f"  Positives after time-window: {total_before_cap:,} (excluded {excluded:,})")
 
     # Step 4b: Per-vendor subsampling to prevent mega-vendor domination
     positive_rows = []

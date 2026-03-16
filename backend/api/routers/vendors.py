@@ -2343,3 +2343,240 @@ def get_vendor_trajectory(
     except sqlite3.Error as e:
         logger.error(f"Database error in get_vendor_trajectory: {e}")
         raise HTTPException(status_code=500, detail="Database error occurred")
+
+
+# ---------------------------------------------------------------------------
+# Vendor Similar Cases (cosine similarity to GT case centroids)
+# ---------------------------------------------------------------------------
+
+_Z_FEATURES = [
+    "z_price_volatility", "z_vendor_concentration", "z_price_ratio",
+    "z_direct_award", "z_single_bid", "z_ad_period_days", "z_same_day_count",
+    "z_network_member_count", "z_year_end", "z_industry_mismatch",
+    "z_institution_risk", "z_institution_diversity", "z_win_rate", "z_sector_spread",
+]
+
+_FEATURE_DISPLAY = [f.replace("z_", "") for f in _Z_FEATURES]
+
+
+def _cosine_sim(a: list, b: list) -> float:
+    """Cosine similarity between two vectors. Returns 0 if either has zero norm."""
+    dot = sum(x * y for x, y in zip(a, b))
+    norm_a = sum(x * x for x in a) ** 0.5
+    norm_b = sum(x * x for x in b) ** 0.5
+    if norm_a == 0 or norm_b == 0:
+        return 0.0
+    return dot / (norm_a * norm_b)
+
+
+@router.get("/{vendor_id}/similar-cases")
+def get_vendor_similar_cases(vendor_id: int = Path(..., ge=1)):
+    """
+    Find ground truth corruption cases most similar to this vendor
+    based on cosine similarity of z-score feature centroids.
+    """
+    z_cols_sql = ", ".join(f"AVG(czf.{z}) AS {z}" for z in _Z_FEATURES)
+
+    with get_db() as conn:
+        # 1. Compute vendor centroid from its contracts' z-features
+        vendor_row = conn.execute(f"""
+            SELECT {z_cols_sql}, COUNT(*) AS n
+            FROM contract_z_features czf
+            JOIN contracts c ON czf.contract_id = c.id
+            WHERE c.vendor_id = ?
+        """, (vendor_id,)).fetchone()
+
+        if vendor_row is None or vendor_row["n"] == 0:
+            return {
+                "vendor_id": vendor_id,
+                "similar_cases": [],
+                "message": "No z-score features found for this vendor.",
+            }
+
+        vendor_vec = [vendor_row[z] or 0.0 for z in _Z_FEATURES]
+
+        # 2. Compute GT case centroids
+        gt_rows = conn.execute(f"""
+            SELECT gtc.id AS case_id, gtc.case_name, gtc.case_type,
+                   {z_cols_sql}, COUNT(czf.contract_id) AS n_contracts
+            FROM ground_truth_cases gtc
+            JOIN ground_truth_vendors gtv ON gtc.id = gtv.case_id
+            JOIN contracts c ON c.vendor_id = gtv.vendor_id
+            JOIN contract_z_features czf ON czf.contract_id = c.id
+            WHERE gtv.vendor_id IS NOT NULL
+            GROUP BY gtc.id, gtc.case_name, gtc.case_type
+            HAVING COUNT(czf.contract_id) >= 10
+            LIMIT 50
+        """).fetchall()
+
+    # 3. Compute cosine similarity
+    results = []
+    for row in gt_rows:
+        case_vec = [row[z] or 0.0 for z in _Z_FEATURES]
+        sim = _cosine_sim(vendor_vec, case_vec)
+
+        # Find shared features (|diff| < 0.5) and divergent features
+        diffs = []
+        for i, fname in enumerate(_FEATURE_DISPLAY):
+            diff = abs((vendor_vec[i] or 0) - (case_vec[i] or 0))
+            diffs.append((fname, diff, vendor_vec[i], case_vec[i]))
+
+        diffs_sorted = sorted(diffs, key=lambda x: x[1])
+        shared = [d[0] for d in diffs_sorted if d[1] < 0.5][:3]
+        divergent = [d[0] for d in sorted(diffs, key=lambda x: -x[1])][:2]
+
+        results.append({
+            "case_id": row["case_id"],
+            "case_name": row["case_name"],
+            "case_type": row["case_type"],
+            "similarity_score": round(sim, 4),
+            "n_contracts": row["n_contracts"],
+            "shared_features": shared,
+            "divergent_features": divergent,
+        })
+
+    results.sort(key=lambda x: -x["similarity_score"])
+    top_results = results[:3]
+
+    return {
+        "vendor_id": vendor_id,
+        "similar_cases": top_results,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Vendor Narrative (year-by-year arc detection)
+# ---------------------------------------------------------------------------
+
+_ARC_LABELS = {
+    "explosive_entry": "Entrada explosiva: alto valor en sus primeros contratos",
+    "capture_pattern": "Captura institucional: crecimiento en una sola dependencia",
+    "single_burst": "Contratacion puntual: un ano de alto valor",
+    "steady_growth": "Crecimiento sostenido: expansion constante de contratos",
+    "disappeared": "Proveedor desaparecido: actividad interrumpida",
+    "irregular": "Patron irregular",
+}
+
+
+def _detect_arc(years_data: list) -> str:
+    """Detect the narrative arc shape from year-by-year data."""
+    if not years_data or len(years_data) < 1:
+        return "irregular"
+
+    total_value = sum(y.get("total_value_mxn") or 0 for y in years_data)
+    if total_value == 0:
+        return "irregular"
+
+    n_years = len(years_data)
+
+    # Single burst: 1 year has >60% of total value
+    for y in years_data:
+        yr_val = y.get("total_value_mxn") or 0
+        if yr_val / total_value > 0.60:
+            # Check if surrounded by low years
+            idx = years_data.index(y)
+            others = [yy.get("total_value_mxn") or 0 for yy in years_data if yy != y]
+            if not others or max(others) < yr_val * 0.3:
+                return "single_burst"
+
+    # Explosive entry: first 2 years have >50% of total value
+    if n_years >= 3:
+        first_two = sum((years_data[i].get("total_value_mxn") or 0) for i in range(min(2, n_years)))
+        if first_two / total_value > 0.50:
+            return "explosive_entry"
+
+    # Capture pattern: institution_count stays 1-2, value grows
+    if n_years >= 3:
+        all_low_inst = all((y.get("institution_count") or 0) <= 2 for y in years_data)
+        values = [y.get("total_value_mxn") or 0 for y in years_data]
+        growing = sum(1 for i in range(1, len(values)) if values[i] > values[i - 1])
+        if all_low_inst and growing >= n_years * 0.5:
+            return "capture_pattern"
+
+    # Steady growth: >10% YoY increase for 3+ consecutive years
+    if n_years >= 4:
+        values = [y.get("total_value_mxn") or 0 for y in years_data]
+        growth_streak = 0
+        max_streak = 0
+        for i in range(1, len(values)):
+            if values[i - 1] > 0 and values[i] > values[i - 1] * 1.10:
+                growth_streak += 1
+                max_streak = max(max_streak, growth_streak)
+            else:
+                growth_streak = 0
+        if max_streak >= 3:
+            return "steady_growth"
+
+    # Disappeared: active then no contracts for 3+ years
+    if n_years >= 2:
+        last_yr = years_data[-1].get("year") or 0
+        # If the last year of activity is 3+ years ago
+        if last_yr and last_yr <= 2022:
+            return "disappeared"
+
+    return "irregular"
+
+
+@router.get("/{vendor_id}/narrative")
+def get_vendor_narrative(vendor_id: int = Path(..., ge=1)):
+    """
+    Return year-by-year contract data with arc shape detection.
+    Identifies patterns like explosive entry, capture, single burst, etc.
+    """
+    with get_db() as conn:
+        # Check vendor exists
+        vendor_row = conn.execute(
+            "SELECT id, name FROM vendors WHERE id = ?", (vendor_id,)
+        ).fetchone()
+        if not vendor_row:
+            raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
+
+        rows = conn.execute("""
+            SELECT
+                contract_year AS year,
+                COUNT(*) AS contract_count,
+                SUM(amount_mxn) AS total_value_mxn,
+                ROUND(AVG(risk_score), 4) AS avg_risk_score,
+                ROUND(AVG(CASE WHEN is_direct_award=1 THEN 100.0 ELSE 0.0 END), 1) AS direct_award_pct,
+                ROUND(AVG(CASE WHEN is_single_bid=1 THEN 100.0 ELSE 0.0 END), 1) AS single_bid_pct,
+                COUNT(DISTINCT institution_id) AS institution_count
+            FROM contracts
+            WHERE vendor_id = ? AND amount_mxn > 0 AND contract_year IS NOT NULL
+            GROUP BY contract_year
+            ORDER BY contract_year
+        """, (vendor_id,)).fetchall()
+
+    cols = ["year", "contract_count", "total_value_mxn", "avg_risk_score",
+            "direct_award_pct", "single_bid_pct", "institution_count"]
+    years_data = [dict(zip(cols, r)) for r in rows]
+
+    if not years_data:
+        return {
+            "vendor_id": vendor_id,
+            "arc_shape": "irregular",
+            "arc_label": _ARC_LABELS["irregular"],
+            "peak_year": None,
+            "peak_value_mxn": 0,
+            "active_years": 0,
+            "first_year": None,
+            "last_year": None,
+            "total_value_mxn": 0,
+            "years": [],
+        }
+
+    arc_shape = _detect_arc(years_data)
+    total_value = sum(y.get("total_value_mxn") or 0 for y in years_data)
+    peak = max(years_data, key=lambda y: y.get("total_value_mxn") or 0)
+
+    return {
+        "vendor_id": vendor_id,
+        "arc_shape": arc_shape,
+        "arc_label": _ARC_LABELS.get(arc_shape, _ARC_LABELS["irregular"]),
+        "peak_year": peak.get("year"),
+        "peak_value_mxn": peak.get("total_value_mxn") or 0,
+        "active_years": len(years_data),
+        "first_year": years_data[0].get("year"),
+        "last_year": years_data[-1].get("year"),
+        "total_value_mxn": total_value,
+        "years": years_data,
+    }
