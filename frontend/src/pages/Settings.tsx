@@ -6,13 +6,10 @@ import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useTheme } from '@/hooks/useTheme'
 import { formatNumber, formatCompactMXN } from '@/lib/utils'
 import { analysisApi, exportApi, contractApi, sectorApi, statsApi } from '@/api/client'
 import type { GradeDistribution, StructureQuality, FieldCompleteness, KeyIssue } from '@/api/client'
 import {
-  Moon,
-  Sun,
   Database,
   Info,
   RefreshCw,
@@ -173,8 +170,6 @@ export function Settings() {
 // ============================================================================
 
 function GeneralTab() {
-  const { theme, toggleTheme } = useTheme()
-
   const { data: stats, isLoading, error, refetch } = useQuery<DatabaseStats>({
     queryKey: ['stats', 'database'],
     queryFn: () => statsApi.getDatabase() as Promise<DatabaseStats>,
@@ -189,48 +184,6 @@ function GeneralTab() {
       whileInView="animate"
       viewport={{ once: true, margin: '-50px' }}
     >
-      {/* Theme settings */}
-      <motion.div variants={staggerItem}>
-      <div className="card-elevated rounded-xl overflow-hidden">
-        <div className="px-6 py-4" style={{ borderLeft: '3px solid var(--color-accent)' }}>
-          <h3 className="flex items-center gap-2 text-base font-semibold text-text-primary font-mono">
-            {theme === 'dark' ? <Moon className="h-4 w-4 text-accent" /> : <Sun className="h-4 w-4 text-accent" />}
-            Appearance
-          </h3>
-          <p className="text-xs text-text-muted mt-0.5">Customize the look and feel</p>
-        </div>
-        <div className="px-6 py-4" style={{ borderTop: '1px solid var(--color-border)' }}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-text-primary">Theme</p>
-              <p className="text-xs text-text-muted">Switch between light and dark mode</p>
-            </div>
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
-              style={{
-                backgroundColor: theme === 'dark' ? 'var(--color-accent)' : 'var(--color-background-elevated)',
-                color: theme === 'dark' ? '#080c14' : 'var(--color-text-primary)',
-                border: theme === 'dark' ? 'none' : '1px solid var(--color-border)',
-              }}
-            >
-              {theme === 'dark' ? (
-                <>
-                  <Sun className="h-4 w-4" />
-                  Light Mode
-                </>
-              ) : (
-                <>
-                  <Moon className="h-4 w-4" />
-                  Dark Mode
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-      </motion.div>
 
       {/* Data info */}
       <motion.div variants={staggerItem}>
@@ -344,7 +297,7 @@ function GeneralTab() {
             irregular procurement patterns across federal sectors.
           </p>
           <div className="text-xs text-text-muted space-y-1 font-mono">
-            <p><span className="text-accent">Risk Model:</span> v6.0 Vendor-Stratified Framework (Test AUC: 0.849)</p>
+            <p><span className="text-accent">Risk Model:</span> v6.2 Vendor-Stratified Framework (Test AUC: 0.861)</p>
             <p><span className="text-accent">Sectors:</span> 12-sector taxonomy</p>
             <p><span className="text-accent">Backend:</span> FastAPI + SQLite</p>
             <p><span className="text-accent">Frontend:</span> React + TypeScript + TailwindCSS</p>

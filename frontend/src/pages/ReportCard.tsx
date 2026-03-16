@@ -90,11 +90,11 @@ interface CorrelationResponse {
 const SERIF = "'Playfair Display', Georgia, serif"
 
 const GRADE_COLORS: Record<string, { text: string; bg: string; border: string }> = {
-  A: { text: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
-  B: { text: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
-  C: { text: '#d97706', bg: '#fffbeb', border: '#fde68a' },
-  D: { text: '#ea580c', bg: '#fff7ed', border: '#fed7aa' },
-  F: { text: '#dc2626', bg: '#fef2f2', border: '#fecaca' },
+  A: { text: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.20)' },
+  B: { text: '#60a5fa', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.20)' },
+  C: { text: '#fbbf24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.20)' },
+  D: { text: '#fb923c', bg: 'rgba(251,146,60,0.08)', border: 'rgba(251,146,60,0.20)' },
+  F: { text: '#f87171', bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.20)' },
 }
 
 const LIGHT_COLORS = {
@@ -196,7 +196,7 @@ function NationalGradeHero({ national }: { national: PHINational }) {
         <SectionLabel>Reporte de Salud Procuratoria</SectionLabel>
         <h1
           className="text-editorial-h1 md:text-editorial-display mb-3"
-          style={{ fontFamily: SERIF, color: '#1a1714' }}
+          style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}
         >
           Calificaciones del Gasto P&uacute;blico Federal
         </h1>
@@ -211,8 +211,8 @@ function NationalGradeHero({ national }: { national: PHINational }) {
 
       {/* Grade card */}
       <div
-        className="bg-white border rounded-2xl shadow-sm mx-auto max-w-2xl overflow-hidden"
-        style={{ borderColor: '#e2ddd6', borderLeftWidth: 6, borderLeftColor: colors.text }}
+        className="fern-card rounded-2xl mx-auto max-w-2xl overflow-hidden"
+        style={{ borderColor: 'var(--color-border)', borderLeftWidth: 6, borderLeftColor: colors.text }}
       >
         <div className="flex flex-col items-center py-10 px-6">
           {/* Big grade letter */}
@@ -237,7 +237,7 @@ function NationalGradeHero({ national }: { national: PHINational }) {
           <div className="flex flex-wrap justify-center gap-8 text-center">
             {compRate && (
               <div>
-                <p className="text-2xl font-bold" style={{ fontFamily: SERIF, color: '#1a1714' }}>
+                <p className="text-2xl font-bold" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
                   {compRate.value}%
                 </p>
                 <p className="text-xs mt-0.5" style={{ color: '#9c9490' }}>
@@ -247,7 +247,7 @@ function NationalGradeHero({ national }: { national: PHINational }) {
             )}
             {sbRate && (
               <div>
-                <p className="text-2xl font-bold" style={{ fontFamily: SERIF, color: '#1a1714' }}>
+                <p className="text-2xl font-bold" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
                   {sbRate.value}%
                 </p>
                 <p className="text-xs mt-0.5" style={{ color: '#9c9490' }}>
@@ -257,7 +257,7 @@ function NationalGradeHero({ national }: { national: PHINational }) {
             )}
             {avgBid && (
               <div>
-                <p className="text-2xl font-bold" style={{ fontFamily: SERIF, color: '#1a1714' }}>
+                <p className="text-2xl font-bold" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
                   {avgBid.value}
                 </p>
                 <p className="text-xs mt-0.5" style={{ color: '#9c9490' }}>
@@ -300,8 +300,8 @@ function GradeLegend() {
 
   return (
     <div
-      className="bg-white border rounded-xl px-5 py-3 mb-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs"
-      style={{ borderColor: '#e2ddd6', color: '#6b6560' }}
+      className="fern-card rounded-xl px-5 py-3 mb-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs"
+      style={{ borderColor: 'var(--color-border)', color: '#6b6560' }}
     >
       <span className="font-semibold uppercase tracking-wide" style={{ color: '#9c9490' }}>
         Escala
@@ -338,8 +338,8 @@ function SectorReportCard({ sector, t }: { sector: PHISector; t: (k: string) => 
 
   return (
     <div
-      className="bg-white border rounded-xl shadow-sm overflow-hidden transition-shadow hover:shadow-md"
-      style={{ borderColor: '#e2ddd6' }}
+      className="fern-card rounded-xl overflow-hidden transition-shadow hover:shadow-md"
+      style={{ borderColor: 'var(--color-border)' }}
     >
       {/* Header */}
       <div className="p-5">
@@ -349,7 +349,7 @@ function SectorReportCard({ sector, t }: { sector: PHISector; t: (k: string) => 
             <div className="min-w-0">
               <h3
                 className="font-semibold text-sm truncate"
-                style={{ color: '#1a1714' }}
+                style={{ color: 'var(--color-text-primary)' }}
               >
                 {sectorDisplayName}
               </h3>
@@ -401,10 +401,10 @@ function SectorReportCard({ sector, t }: { sector: PHISector; t: (k: string) => 
 
       {/* Expanded indicator table */}
       {expanded && (
-        <div style={{ borderTop: '1px solid #e2ddd6' }}>
+        <div style={{ borderTop: '1px solid var(--color-border)' }}>
           <table className="w-full text-xs">
             <thead>
-              <tr style={{ backgroundColor: '#f8f6f2' }}>
+              <tr style={{ backgroundColor: 'var(--color-background-elevated)' }}>
                 <th className="text-left px-4 py-2 font-medium" style={{ color: '#6b6560' }}>
                   Indicador
                 </th>
@@ -430,10 +430,10 @@ function SectorReportCard({ sector, t }: { sector: PHISector; t: (k: string) => 
                     className="border-t"
                     style={{ borderColor: '#f0ede8' }}
                   >
-                    <td className="px-4 py-2.5" style={{ color: '#1a1714' }}>
+                    <td className="px-4 py-2.5" style={{ color: 'var(--color-text-primary)' }}>
                       {t(i18nKey)}
                     </td>
-                    <td className="px-4 py-2.5 text-right font-medium tabular-nums" style={{ color: '#1a1714' }}>
+                    <td className="px-4 py-2.5 text-right font-medium tabular-nums" style={{ color: 'var(--color-text-primary)' }}>
                       {ind.value}{!['hhi', 'avg_bidders'].includes(key) ? '%' : ''}
                     </td>
                     <td className="px-4 py-2.5 text-right" style={{ color: '#9c9490' }}>
@@ -469,7 +469,7 @@ function TrendSection({ t }: { t: (k: string) => string }) {
   return (
     <section className="mb-12">
       <SectionLabel>Tendencia Hist&oacute;rica</SectionLabel>
-      <h2 className="text-editorial-h2 mb-1" style={{ fontFamily: SERIF, color: '#1a1714' }}>
+      <h2 className="text-editorial-h2 mb-1" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
         {t('sectionTrend')}
       </h2>
       <p className="text-sm mb-6" style={{ color: '#9c9490' }}>
@@ -477,8 +477,8 @@ function TrendSection({ t }: { t: (k: string) => string }) {
       </p>
 
       <div
-        className="bg-white border rounded-2xl shadow-sm p-6"
-        style={{ borderColor: '#e2ddd6' }}
+        className="fern-card rounded-2xl p-6"
+        style={{ borderColor: 'var(--color-border)' }}
       >
         {/* Grade timeline ribbon */}
         <div className="flex items-center gap-1 mb-6 overflow-x-auto pb-2">
@@ -509,25 +509,25 @@ function TrendSection({ t }: { t: (k: string) => string }) {
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={years} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2ddd6" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis
                 dataKey="year"
                 tick={{ fill: '#9c9490', fontSize: 12 }}
-                axisLine={{ stroke: '#e2ddd6' }}
-                tickLine={{ stroke: '#e2ddd6' }}
+                axisLine={{ stroke: 'var(--color-border)' }}
+                tickLine={{ stroke: 'var(--color-border)' }}
               />
               <YAxis
                 tick={{ fill: '#9c9490', fontSize: 12 }}
                 domain={[0, 100]}
-                axisLine={{ stroke: '#e2ddd6' }}
-                tickLine={{ stroke: '#e2ddd6' }}
+                axisLine={{ stroke: 'var(--color-border)' }}
+                tickLine={{ stroke: 'var(--color-border)' }}
               />
               <RechartsTooltip
                 contentStyle={{
-                  backgroundColor: '#ffffff',
-                  border: '1px solid #e2ddd6',
+                  backgroundColor: 'var(--color-background-elevated)',
+                  border: '1px solid var(--color-border)',
                   borderRadius: '8px',
-                  color: '#1a1714',
+                  color: 'var(--color-text-primary)',
                   fontSize: 13,
                   boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                 }}
@@ -587,8 +587,8 @@ function AgreementSection({ t }: { t: (k: string, o?: Record<string, unknown>) =
     <section className="mb-12">
       <SectionLabel>Validaci&oacute;n Cruzada</SectionLabel>
       <div
-        className="bg-white border rounded-2xl shadow-sm p-8"
-        style={{ borderColor: '#e2ddd6' }}
+        className="fern-card rounded-2xl p-8"
+        style={{ borderColor: 'var(--color-border)' }}
       >
         <div className="flex flex-col md:flex-row items-center gap-8">
           {/* Big stat */}
@@ -608,7 +608,7 @@ function AgreementSection({ t }: { t: (k: string, o?: Record<string, unknown>) =
           <div className="flex-1">
             <h3
               className="font-semibold text-lg mb-2"
-              style={{ fontFamily: SERIF, color: '#1a1714' }}
+              style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}
             >
               Validaci&oacute;n cruzada con el modelo de IA
             </h3>
@@ -639,9 +639,9 @@ function MethodologyFooter({ sources }: { sources: string[] }) {
     <section className="mt-16 mb-8">
       <div
         className="bg-white border rounded-xl p-6"
-        style={{ borderColor: '#e2ddd6' }}
+        style={{ borderColor: 'var(--color-border)' }}
       >
-        <h3 className="text-sm font-semibold mb-2" style={{ color: '#1a1714' }}>
+        <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--color-text-primary)' }}>
           Nota metodol&oacute;gica
         </h3>
         <p className="text-xs leading-relaxed mb-3" style={{ color: '#6b6560' }}>
@@ -680,16 +680,16 @@ function MethodologyFooter({ sources }: { sources: string[] }) {
 // ---------------------------------------------------------------------------
 
 const GRADE10_COLORS: Record<string, { bg: string; text: string; border: string; bar: string }> = {
-  'S':  { bg: '#f0fdf4', text: '#047857', border: '#6ee7b7', bar: '#10b981' },
-  'A':  { bg: '#f0fdf4', text: '#16a34a', border: '#bbf7d0', bar: '#22c55e' },
-  'B+': { bg: '#f7fee7', text: '#4d7c0f', border: '#bef264', bar: '#84cc16' },
-  'B':  { bg: '#fefce8', text: '#854d0e', border: '#fde047', bar: '#eab308' },
-  'C+': { bg: '#fffbeb', text: '#b45309', border: '#fcd34d', bar: '#f59e0b' },
-  'C':  { bg: '#fff7ed', text: '#c2410c', border: '#fdba74', bar: '#f97316' },
-  'D':  { bg: '#fef2f2', text: '#dc2626', border: '#fca5a5', bar: '#ef4444' },
-  'D-': { bg: '#fef2f2', text: '#b91c1c', border: '#f87171', bar: '#dc2626' },
-  'F':  { bg: '#fef2f2', text: '#991b1b', border: '#ef4444', bar: '#991b1b' },
-  'F-': { bg: '#1c0505', text: '#fca5a5', border: '#991b1b', bar: '#450a0a' },
+  'S':  { bg: 'rgba(16,185,129,0.10)', text: '#34d399', border: 'rgba(52,211,153,0.25)', bar: '#10b981' },
+  'A':  { bg: 'rgba(34,197,94,0.10)', text: '#4ade80', border: 'rgba(74,222,128,0.25)', bar: '#22c55e' },
+  'B+': { bg: 'rgba(132,204,22,0.10)', text: '#a3e635', border: 'rgba(163,230,53,0.25)', bar: '#84cc16' },
+  'B':  { bg: 'rgba(234,179,8,0.10)', text: '#fbbf24', border: 'rgba(251,191,36,0.25)', bar: '#eab308' },
+  'C+': { bg: 'rgba(245,158,11,0.10)', text: '#fcd34d', border: 'rgba(252,211,77,0.25)', bar: '#f59e0b' },
+  'C':  { bg: 'rgba(249,115,22,0.10)', text: '#fb923c', border: 'rgba(251,146,60,0.25)', bar: '#f97316' },
+  'D':  { bg: 'rgba(239,68,68,0.10)', text: '#f87171', border: 'rgba(248,113,113,0.25)', bar: '#ef4444' },
+  'D-': { bg: 'rgba(220,38,38,0.10)', text: '#fca5a5', border: 'rgba(252,165,165,0.25)', bar: '#dc2626' },
+  'F':  { bg: 'rgba(153,27,27,0.15)', text: '#fca5a5', border: 'rgba(239,68,68,0.25)', bar: '#991b1b' },
+  'F-': { bg: 'rgba(28,5,5,0.80)', text: '#fca5a5', border: 'rgba(153,27,27,0.50)', bar: '#450a0a' },
 }
 
 const GRADE10_ORDER_KEYS = ['S', 'A', 'B+', 'B', 'C+', 'C', 'D', 'D-', 'F', 'F-']
@@ -809,7 +809,7 @@ function PillarBar({
         <span>{label}</span>
         <span className="font-medium tabular-nums">{score.toFixed(0)}/{maxScore}</span>
       </div>
-      <div className="h-1.5 rounded-full" style={{ backgroundColor: '#e2ddd6' }}>
+      <div className="h-1.5 rounded-full" style={{ backgroundColor: 'var(--color-border)' }}>
         <div
           className="h-1.5 rounded-full transition-all"
           style={{ width: `${pct}%`, backgroundColor: color }}
@@ -934,16 +934,16 @@ function InstitutionScorecardsTab() {
     <div>
       {/* Summary bar */}
       {summary && (
-        <div className="bg-white border rounded-2xl shadow-sm p-6 mb-6" style={{ borderColor: '#e2ddd6' }}>
+        <div className="fern-card rounded-2xl p-6 mb-6" style={{ borderColor: 'var(--color-border)' }}>
           <div className="flex flex-wrap gap-8 items-start">
             <div>
-              <p className="text-3xl font-bold" style={{ fontFamily: SERIF, color: '#1a1714' }}>
+              <p className="text-3xl font-bold" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
                 {summary.institutions_scored.toLocaleString()}
               </p>
               <p className="text-xs mt-0.5" style={{ color: '#9c9490' }}>Instituciones evaluadas</p>
             </div>
             <div>
-              <p className="text-3xl font-bold" style={{ fontFamily: SERIF, color: '#1a1714' }}>
+              <p className="text-3xl font-bold" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
                 {summary.institution_avg_score}
               </p>
               <p className="text-xs mt-0.5" style={{ color: '#9c9490' }}>Puntuación media</p>
@@ -969,13 +969,13 @@ function InstitutionScorecardsTab() {
           onChange={(e) => handleSearch(e.target.value)}
           placeholder="Buscar institución..."
           className="border rounded-lg px-3 py-2 text-sm flex-1 min-w-[180px]"
-          style={{ borderColor: '#e2ddd6', color: '#1a1714', backgroundColor: '#fff' }}
+          style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)', backgroundColor: 'var(--color-background-elevated)' }}
         />
         <select
           value={gradeFilter}
           onChange={(e) => { setGradeFilter(e.target.value); setPage(1) }}
           className="border rounded-lg px-3 py-2 text-sm"
-          style={{ borderColor: '#e2ddd6', color: '#1a1714', backgroundColor: '#fff' }}
+          style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)', backgroundColor: 'var(--color-background-elevated)' }}
         >
           <option value="">Todas las calificaciones</option>
           {GRADE10_ORDER_KEYS.map(g => <option key={g} value={g}>{g}</option>)}
@@ -984,7 +984,7 @@ function InstitutionScorecardsTab() {
           value={sectorFilter}
           onChange={(e) => { setSectorFilter(e.target.value); setPage(1) }}
           className="border rounded-lg px-3 py-2 text-sm"
-          style={{ borderColor: '#e2ddd6', color: '#1a1714', backgroundColor: '#fff' }}
+          style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)', backgroundColor: 'var(--color-background-elevated)' }}
         >
           <option value="">Todos los sectores</option>
           {Object.entries(SECTORS_ES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
@@ -992,15 +992,15 @@ function InstitutionScorecardsTab() {
       </div>
 
       {/* Table */}
-      <div className="bg-white border rounded-2xl shadow-sm overflow-hidden" style={{ borderColor: '#e2ddd6' }}>
+      <div className="fern-card rounded-2xl overflow-hidden" style={{ borderColor: 'var(--color-border)' }}>
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="animate-spin rounded-full h-8 w-8 border-2" style={{ borderColor: '#e2ddd6', borderTopColor: '#c41e3a' }} />
+            <div className="animate-spin rounded-full h-8 w-8 border-2" style={{ borderColor: 'var(--color-border)', borderTopColor: '#c41e3a' }} />
           </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr style={{ borderBottom: '1px solid #e2ddd6', backgroundColor: '#faf9f7' }}>
+              <tr style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-background-elevated)' }}>
                 <th className="px-4 py-3 text-left font-medium" style={{ color: '#6b6560' }}>Institución</th>
                 <th
                   className="px-3 py-3 text-center font-medium cursor-pointer whitespace-nowrap"
@@ -1026,13 +1026,13 @@ function InstitutionScorecardsTab() {
                   <>
                     <tr
                       key={inst.institution_id}
-                      className="border-t cursor-pointer transition-colors hover:bg-[#faf9f7]"
+                      className="border-t cursor-pointer transition-colors hover:bg-[var(--color-background-elevated)]"
                       style={{ borderColor: '#f0ede8' }}
                       onClick={() => setExpandedId(isExpanded ? null : inst.institution_id)}
                     >
                       <td className="px-4 py-3">
                         <div className="flex flex-col">
-                          <span className="font-medium text-sm leading-tight" style={{ color: '#1a1714' }}>
+                          <span className="font-medium text-sm leading-tight" style={{ color: 'var(--color-text-primary)' }}>
                             {inst.institution_name}
                           </span>
                           {inst.sector_name && (
@@ -1077,7 +1077,7 @@ function InstitutionScorecardsTab() {
                       </td>
                     </tr>
                     {isExpanded && (
-                      <tr key={`${inst.institution_id}-exp`} style={{ backgroundColor: '#faf9f7', borderTop: '1px solid #e2ddd6' }}>
+                      <tr key={`${inst.institution_id}-exp`} style={{ backgroundColor: 'var(--color-background-elevated)', borderTop: '1px solid var(--color-border)' }}>
                         <td colSpan={9} className="px-4 py-4">
                           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                             {INST_PILLARS.map((p) => (
@@ -1109,7 +1109,7 @@ function InstitutionScorecardsTab() {
         {totalPages > 1 && (
           <div
             className="flex items-center justify-between px-4 py-3"
-            style={{ borderTop: '1px solid #e2ddd6', backgroundColor: '#faf9f7' }}
+            style={{ borderTop: '1px solid var(--color-border)', backgroundColor: 'var(--color-background-elevated)' }}
           >
             <span className="text-xs" style={{ color: '#9c9490' }}>
               {total.toLocaleString()} instituciones · página {page} de {totalPages}
@@ -1119,7 +1119,7 @@ function InstitutionScorecardsTab() {
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page <= 1}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40 border transition-colors"
-                style={{ borderColor: '#e2ddd6', color: '#6b6560' }}
+                style={{ borderColor: 'var(--color-border)', color: '#6b6560' }}
               >
                 ← Anterior
               </button>
@@ -1127,7 +1127,7 @@ function InstitutionScorecardsTab() {
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40 border transition-colors"
-                style={{ borderColor: '#e2ddd6', color: '#6b6560' }}
+                style={{ borderColor: 'var(--color-border)', color: '#6b6560' }}
               >
                 Siguiente →
               </button>
@@ -1151,7 +1151,7 @@ function MiniBar({ score, max }: { score: number; max: number }) {
       <span className="text-xs font-medium tabular-nums" style={{ color }}>
         {score.toFixed(0)}
       </span>
-      <div className="w-10 h-1.5 rounded-full" style={{ backgroundColor: '#e2ddd6' }}>
+      <div className="w-10 h-1.5 rounded-full" style={{ backgroundColor: 'var(--color-border)' }}>
         <div
           className="h-1.5 rounded-full"
           style={{ width: `${pct}%`, backgroundColor: color }}
@@ -1227,16 +1227,16 @@ function VendorScorecardsTab() {
     <div>
       {/* Summary bar */}
       {summary && (
-        <div className="bg-white border rounded-2xl shadow-sm p-6 mb-6" style={{ borderColor: '#e2ddd6' }}>
+        <div className="fern-card rounded-2xl p-6 mb-6" style={{ borderColor: 'var(--color-border)' }}>
           <div className="flex flex-wrap gap-8 items-start">
             <div>
-              <p className="text-3xl font-bold" style={{ fontFamily: SERIF, color: '#1a1714' }}>
+              <p className="text-3xl font-bold" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
                 {summary.vendors_scored.toLocaleString()}
               </p>
               <p className="text-xs mt-0.5" style={{ color: '#9c9490' }}>Proveedores evaluados</p>
             </div>
             <div>
-              <p className="text-3xl font-bold" style={{ fontFamily: SERIF, color: '#1a1714' }}>
+              <p className="text-3xl font-bold" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
                 {summary.vendor_avg_score}
               </p>
               <p className="text-xs mt-0.5" style={{ color: '#9c9490' }}>Puntuación media</p>
@@ -1257,11 +1257,11 @@ function VendorScorecardsTab() {
       {/* Methodology note for vendors */}
       <div
         className="rounded-xl px-4 py-3 mb-4 text-xs flex items-start gap-2"
-        style={{ backgroundColor: '#faf9f7', border: '1px solid #e2ddd6', color: '#6b6560' }}
+        style={{ backgroundColor: 'var(--color-background-elevated)', border: '1px solid var(--color-border)', color: '#6b6560' }}
       >
         <span className="mt-0.5 text-base">ℹ</span>
         <span>
-          <strong style={{ color: '#1a1714' }}>Nota:</strong> Puntuación alta = proveedor limpio.
+          <strong style={{ color: 'var(--color-text-primary)' }}>Nota:</strong> Puntuación alta = proveedor limpio.
           Ordenado por puntuación ascendente para mostrar primero los proveedores de mayor riesgo.
           5 pilares: señal de riesgo ML (25pts), conducta vs sector (20pts), diversidad institucional (20pts),
           patrones de contratación (20pts), banderas externas (15pts).
@@ -1276,13 +1276,13 @@ function VendorScorecardsTab() {
           onChange={(e) => handleSearch(e.target.value)}
           placeholder="Buscar proveedor..."
           className="border rounded-lg px-3 py-2 text-sm flex-1 min-w-[180px]"
-          style={{ borderColor: '#e2ddd6', color: '#1a1714', backgroundColor: '#fff' }}
+          style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)', backgroundColor: 'var(--color-background-elevated)' }}
         />
         <select
           value={gradeFilter}
           onChange={(e) => { setGradeFilter(e.target.value); setPage(1) }}
           className="border rounded-lg px-3 py-2 text-sm"
-          style={{ borderColor: '#e2ddd6', color: '#1a1714', backgroundColor: '#fff' }}
+          style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)', backgroundColor: 'var(--color-background-elevated)' }}
         >
           <option value="">Todas las calificaciones</option>
           {GRADE10_ORDER_KEYS.map(g => <option key={g} value={g}>{g}</option>)}
@@ -1296,8 +1296,8 @@ function VendorScorecardsTab() {
                 ? 'text-white' : ''
             )}
             style={{
-              borderColor: '#e2ddd6',
-              backgroundColor: sortBy === 'total_score' && order === 'asc' ? '#c41e3a' : '#fff',
+              borderColor: 'var(--color-border)',
+              backgroundColor: sortBy === 'total_score' && order === 'asc' ? '#c41e3a' : 'var(--color-background-card)',
               color: sortBy === 'total_score' && order === 'asc' ? '#fff' : '#6b6560',
             }}
           >
@@ -1307,8 +1307,8 @@ function VendorScorecardsTab() {
             onClick={() => { setSortBy('total_score'); setOrder('desc'); setPage(1) }}
             className="px-3 py-2 rounded-lg text-xs font-medium border transition-colors"
             style={{
-              borderColor: '#e2ddd6',
-              backgroundColor: sortBy === 'total_score' && order === 'desc' ? '#22c55e' : '#fff',
+              borderColor: 'var(--color-border)',
+              backgroundColor: sortBy === 'total_score' && order === 'desc' ? '#22c55e' : 'var(--color-background-card)',
               color: sortBy === 'total_score' && order === 'desc' ? '#fff' : '#6b6560',
             }}
           >
@@ -1318,15 +1318,15 @@ function VendorScorecardsTab() {
       </div>
 
       {/* Table */}
-      <div className="bg-white border rounded-2xl shadow-sm overflow-hidden" style={{ borderColor: '#e2ddd6' }}>
+      <div className="fern-card rounded-2xl overflow-hidden" style={{ borderColor: 'var(--color-border)' }}>
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="animate-spin rounded-full h-8 w-8 border-2" style={{ borderColor: '#e2ddd6', borderTopColor: '#c41e3a' }} />
+            <div className="animate-spin rounded-full h-8 w-8 border-2" style={{ borderColor: 'var(--color-border)', borderTopColor: '#c41e3a' }} />
           </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr style={{ borderBottom: '1px solid #e2ddd6', backgroundColor: '#faf9f7' }}>
+              <tr style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-background-elevated)' }}>
                 <th className="px-4 py-3 text-left font-medium" style={{ color: '#6b6560' }}>Proveedor</th>
                 <th
                   className="px-3 py-3 text-center font-medium cursor-pointer whitespace-nowrap"
@@ -1352,12 +1352,12 @@ function VendorScorecardsTab() {
                   <>
                     <tr
                       key={vendor.vendor_id}
-                      className="border-t cursor-pointer transition-colors hover:bg-[#faf9f7]"
+                      className="border-t cursor-pointer transition-colors hover:bg-[var(--color-background-elevated)]"
                       style={{ borderColor: '#f0ede8' }}
                       onClick={() => setExpandedId(isExpanded ? null : vendor.vendor_id)}
                     >
                       <td className="px-4 py-3">
-                        <span className="font-medium text-sm" style={{ color: '#1a1714' }}>
+                        <span className="font-medium text-sm" style={{ color: 'var(--color-text-primary)' }}>
                           {vendor.vendor_name}
                         </span>
                       </td>
@@ -1395,7 +1395,7 @@ function VendorScorecardsTab() {
                       </td>
                     </tr>
                     {isExpanded && (
-                      <tr key={`${vendor.vendor_id}-exp`} style={{ backgroundColor: '#faf9f7', borderTop: '1px solid #e2ddd6' }}>
+                      <tr key={`${vendor.vendor_id}-exp`} style={{ backgroundColor: 'var(--color-background-elevated)', borderTop: '1px solid var(--color-border)' }}>
                         <td colSpan={9} className="px-4 py-4">
                           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                             {VENDOR_PILLARS.map((p) => (
@@ -1427,7 +1427,7 @@ function VendorScorecardsTab() {
         {totalPages > 1 && (
           <div
             className="flex items-center justify-between px-4 py-3"
-            style={{ borderTop: '1px solid #e2ddd6', backgroundColor: '#faf9f7' }}
+            style={{ borderTop: '1px solid var(--color-border)', backgroundColor: 'var(--color-background-elevated)' }}
           >
             <span className="text-xs" style={{ color: '#9c9490' }}>
               {total.toLocaleString()} proveedores · página {page} de {totalPages}
@@ -1437,7 +1437,7 @@ function VendorScorecardsTab() {
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page <= 1}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40 border"
-                style={{ borderColor: '#e2ddd6', color: '#6b6560' }}
+                style={{ borderColor: 'var(--color-border)', color: '#6b6560' }}
               >
                 ← Anterior
               </button>
@@ -1445,7 +1445,7 @@ function VendorScorecardsTab() {
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40 border"
-                style={{ borderColor: '#e2ddd6', color: '#6b6560' }}
+                style={{ borderColor: 'var(--color-border)', color: '#6b6560' }}
               >
                 Siguiente →
               </button>
@@ -1465,7 +1465,7 @@ function GradeScale10() {
   return (
     <div
       className="bg-white border rounded-xl px-5 py-3 mb-8 flex flex-wrap items-center gap-x-4 gap-y-2"
-      style={{ borderColor: '#e2ddd6' }}
+      style={{ borderColor: 'var(--color-border)' }}
     >
       <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#9c9490' }}>
         Escala 0–100
@@ -1531,7 +1531,7 @@ function PHITab({ t }: { t: (k: string, opts?: Record<string, unknown>) => strin
       <div className="flex items-center justify-center min-h-[40vh]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-10 w-10 border-2 mx-auto mb-4"
-            style={{ borderColor: '#e2ddd6', borderTopColor: '#c41e3a' }} />
+            style={{ borderColor: 'var(--color-border)', borderTopColor: '#c41e3a' }} />
           <p style={{ color: '#9c9490' }}>{t('loading')}</p>
         </div>
       </div>
@@ -1543,8 +1543,8 @@ function PHITab({ t }: { t: (k: string, opts?: Record<string, unknown>) => strin
       <div className="flex items-center justify-center min-h-[40vh]">
         <div className="text-center max-w-md">
           <div className="animate-spin rounded-full h-10 w-10 border-2 mx-auto mb-4"
-            style={{ borderColor: '#e2ddd6', borderTopColor: '#c41e3a' }} />
-          <p className="font-semibold mb-2" style={{ color: '#1a1714' }}>
+            style={{ borderColor: 'var(--color-border)', borderTopColor: '#c41e3a' }} />
+          <p className="font-semibold mb-2" style={{ color: 'var(--color-text-primary)' }}>
             {t('computing', { defaultValue: 'Computing procurement health data...' })}
           </p>
           <p className="text-sm" style={{ color: '#9c9490' }}>
@@ -1572,7 +1572,7 @@ function PHITab({ t }: { t: (k: string, opts?: Record<string, unknown>) => strin
 
       <section className="mb-12">
         <SectionLabel>Calificaciones por Sector</SectionLabel>
-        <h2 className="text-editorial-h2 mb-1" style={{ fontFamily: SERIF, color: '#1a1714' }}>
+        <h2 className="text-editorial-h2 mb-1" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
           ¿Cómo se desempeña cada sector?
         </h2>
         <p className="text-sm mb-6" style={{ color: '#9c9490' }}>
@@ -1619,7 +1619,7 @@ function ReportCard() {
         </p>
         <h1
           className="text-editorial-h1 md:text-editorial-display mb-3"
-          style={{ fontFamily: SERIF, color: '#1a1714' }}
+          style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}
         >
           Calificaciones del Gasto Público Federal
         </h1>
@@ -1631,7 +1631,7 @@ function ReportCard() {
       {/* Tab bar */}
       <div
         className="flex border-b mb-8 gap-0 overflow-x-auto"
-        style={{ borderColor: '#e2ddd6' }}
+        style={{ borderColor: 'var(--color-border)' }}
       >
         {tabs.map((tab) => (
           <button
@@ -1639,7 +1639,7 @@ function ReportCard() {
             onClick={() => setActiveTab(tab.id)}
             className={cn(
               'flex flex-col items-start px-6 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors',
-              activeTab === tab.id ? 'border-[#c41e3a]' : 'border-transparent hover:border-[#e2ddd6]'
+              activeTab === tab.id ? 'border-[#c41e3a]' : 'border-transparent hover:border-[var(--color-border)]'
             )}
             style={{
               color: activeTab === tab.id ? '#c41e3a' : '#6b6560',
@@ -1658,7 +1658,7 @@ function ReportCard() {
         <>
           <div className="mb-6">
             <SectionLabel>Integridad Institucional</SectionLabel>
-            <h2 className="text-editorial-h2 mb-1" style={{ fontFamily: SERIF, color: '#1a1714' }}>
+            <h2 className="text-editorial-h2 mb-1" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
               Ranking de Instituciones
             </h2>
             <p className="text-sm mb-4" style={{ color: '#9c9490' }}>
@@ -1676,7 +1676,7 @@ function ReportCard() {
         <>
           <div className="mb-6">
             <SectionLabel>Integridad de Proveedores</SectionLabel>
-            <h2 className="text-editorial-h2 mb-1" style={{ fontFamily: SERIF, color: '#1a1714' }}>
+            <h2 className="text-editorial-h2 mb-1" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
               Ranking de Proveedores
             </h2>
             <p className="text-sm mb-4" style={{ color: '#9c9490' }}>
