@@ -431,16 +431,10 @@ function ReportCard() {
   }, [])
 
   const { data, isLoading, error } = useQuery<PHISectorsResponse>({
-    queryKey: ['phi-sectors', 2020, 2024],
-    queryFn: () => phiApi.getSectors(2020, 2024),
-    retry: (failureCount, err) => {
-      if (is503(err)) return failureCount < 12
-      return failureCount < 3
-    },
-    retryDelay: (failureCount, err) => {
-      if (is503(err)) return 60_000
-      return Math.min(1000 * 2 ** failureCount, 30_000)
-    },
+    queryKey: ['phi-sectors'],
+    queryFn: () => phiApi.getSectors(),
+    retry: 3,
+    retryDelay: (failureCount) => Math.min(1000 * 2 ** failureCount, 30_000),
   })
 
   const sortedSectors = useMemo(() => {
