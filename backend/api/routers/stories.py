@@ -13,7 +13,6 @@ router = APIRouter(prefix="/api/v1/stories", tags=["stories"])
 def administration_comparison(conn: sqlite3.Connection = Depends(get_db)):
     """
     Compare procurement patterns across Mexico's 6-year presidential administrations.
-    Returns per-sexenio stats on direct award rates, avg risk, and total spend.
     """
     rows = conn.execute("""
         SELECT
@@ -45,8 +44,7 @@ def administration_comparison(conn: sqlite3.Connection = Depends(get_db)):
             "avg_risk_score", "high_risk_pct"]
     data = [dict(zip(cols, r)) for r in rows]
 
-    # Story context for journalists
-    story = {
+    return {
         "title": "Comparación entre Administraciones",
         "subtitle": "¿Cómo cambian los patrones de corrupción con cada gobierno?",
         "key_question": "¿Qué administración tuvo mayor concentración de adjudicaciones directas?",
@@ -57,7 +55,6 @@ def administration_comparison(conn: sqlite3.Connection = Depends(get_db)):
         ),
         "data": data,
     }
-    return story
 
 
 @router.get("/ghost-companies")
@@ -66,31 +63,32 @@ def ghost_companies(conn: sqlite3.Connection = Depends(get_db)):
     Top ghost-company suspects: new vendors with near-100% direct awards,
     few contracts, and significant value.
     """
+    # Use aria_queue as primary source (has correct direct_award_rate and vendor_name)
     rows = conn.execute("""
         SELECT
-            v.id                             AS vendor_id,
-            v.vendor_name,
+            aq.vendor_id,
+            aq.vendor_name,
             vs.first_contract_year,
             vs.last_contract_year,
-            vs.total_contracts,
-            vs.total_value_mxn,
-            ROUND(vs.direct_award_pct * 100, 1) AS direct_award_pct,
-            ROUND(vs.avg_risk_score, 4)         AS avg_risk_score,
+            aq.total_contracts,
+            aq.total_value_mxn,
+            ROUND(aq.direct_award_rate * 100.0, 1) AS direct_award_pct,
+            ROUND(aq.avg_risk_score, 4)             AS avg_risk_score,
             aq.primary_sector_name,
             aq.ips_final,
-            aq.tier,
+            aq.ips_tier                             AS tier,
             aq.new_vendor_risk
-        FROM vendors v
-        JOIN vendor_stats vs ON v.id = vs.vendor_id
-        LEFT JOIN aria_queue aq ON v.id = aq.vendor_id
+        FROM aria_queue aq
+        JOIN vendor_stats vs ON aq.vendor_id = vs.vendor_id
         WHERE vs.first_contract_year >= 2015
-          AND vs.total_contracts BETWEEN 1 AND 30
-          AND vs.total_value_mxn >= 5000000
-          AND vs.direct_award_pct >= 0.90
-          AND vs.avg_risk_score >= 0.20
-          AND (aq.fp_patent_exception = 0 OR aq.fp_patent_exception IS NULL)
-          AND (aq.fp_structural_monopoly = 0 OR aq.fp_structural_monopoly IS NULL)
-        ORDER BY vs.total_value_mxn DESC
+          AND aq.total_contracts BETWEEN 1 AND 30
+          AND aq.total_value_mxn >= 5000000
+          AND aq.direct_award_rate >= 0.90
+          AND aq.avg_risk_score >= 0.20
+          AND aq.fp_patent_exception = 0
+          AND aq.fp_structural_monopoly = 0
+          AND aq.fp_data_error = 0
+        ORDER BY aq.total_value_mxn DESC
         LIMIT 50
     """).fetchall()
 
@@ -99,11 +97,10 @@ def ghost_companies(conn: sqlite3.Connection = Depends(get_db)):
             "avg_risk_score", "primary_sector_name", "ips_final", "tier", "new_vendor_risk"]
     data = [dict(zip(cols, r)) for r in rows]
 
-    # Summary stats
     total_value = sum(r["total_value_mxn"] or 0 for r in data)
     new_vendor_count = sum(1 for r in data if r["new_vendor_risk"])
 
-    story = {
+    return {
         "title": "Empresas Fantasma: Las Nuevas Contratistas",
         "subtitle": "Empresas de reciente creación con contratos millonarios y sin licitación",
         "key_question": "¿Cuáles son las empresas más sospechosas de ser creadas para ganar contratos específicos?",
@@ -119,39 +116,36 @@ def ghost_companies(conn: sqlite3.Connection = Depends(get_db)):
         },
         "data": data,
     }
-    return story
 
 
 @router.get("/top-suspicious-vendors")
 def top_suspicious_vendors(conn: sqlite3.Connection = Depends(get_db)):
     """
-    Top vendors by ARIA IPS score (composite risk) across all tiers.
-    Excludes known structural false positives.
+    Top vendors by ARIA IPS score (composite risk) — Tier 1 and Tier 2.
     """
     rows = conn.execute("""
         SELECT
-            v.id                                   AS vendor_id,
-            v.vendor_name,
-            vs.total_contracts,
-            vs.total_value_mxn,
-            ROUND(vs.avg_risk_score, 4)            AS avg_risk_score,
-            ROUND(vs.direct_award_pct * 100, 1)    AS direct_award_pct,
+            aq.vendor_id,
+            aq.vendor_name,
+            aq.total_contracts,
+            aq.total_value_mxn,
+            ROUND(aq.avg_risk_score, 4)            AS avg_risk_score,
+            ROUND(aq.direct_award_rate * 100.0, 1) AS direct_award_pct,
             aq.ips_final,
-            aq.tier,
+            aq.ips_tier                            AS tier,
             aq.primary_sector_name,
-            aq.pattern_type,
+            aq.primary_pattern                     AS pattern_type,
             aq.review_status,
             aq.in_ground_truth,
-            ROUND(vs.first_contract_year, 0)       AS first_year,
-            ROUND(vs.last_contract_year, 0)        AS last_year
-        FROM vendors v
-        JOIN vendor_stats vs ON v.id = vs.vendor_id
-        JOIN aria_queue aq ON v.id = aq.vendor_id
+            vs.first_contract_year                 AS first_year,
+            vs.last_contract_year                  AS last_year
+        FROM aria_queue aq
+        JOIN vendor_stats vs ON aq.vendor_id = vs.vendor_id
         WHERE aq.fp_patent_exception = 0
           AND aq.fp_structural_monopoly = 0
           AND aq.fp_data_error = 0
-          AND aq.tier <= 2
-          AND vs.total_value_mxn >= 1000000
+          AND aq.ips_tier <= 2
+          AND aq.total_value_mxn >= 1000000
         ORDER BY aq.ips_final DESC
         LIMIT 100
     """).fetchall()
@@ -165,7 +159,7 @@ def top_suspicious_vendors(conn: sqlite3.Connection = Depends(get_db)):
     confirmed_gt = sum(1 for r in data if r["in_ground_truth"])
     total_value = sum(r["total_value_mxn"] or 0 for r in data)
 
-    story = {
+    return {
         "title": "Los 100 Proveedores Más Sospechosos",
         "subtitle": "Clasificados por el Índice de Priorización de Investigación (IPS) del sistema ARIA",
         "key_question": "¿Qué proveedores combinan mayor riesgo ML, anomalías financieras y alertas externas?",
@@ -184,14 +178,12 @@ def top_suspicious_vendors(conn: sqlite3.Connection = Depends(get_db)):
         },
         "data": data,
     }
-    return story
 
 
 @router.get("/overpricing-patterns")
 def overpricing_patterns(conn: sqlite3.Connection = Depends(get_db)):
     """
-    Contracts with extreme price anomalies (overpricing relative to sector median).
-    Groups by sector and administration for narrative framing.
+    Contracts with critical risk scores grouped by sector and year.
     """
     rows = conn.execute("""
         SELECT
@@ -216,7 +208,7 @@ def overpricing_patterns(conn: sqlite3.Connection = Depends(get_db)):
             "total_value_mxn", "avg_contract_value", "avg_risk_score"]
     data = [dict(zip(cols, r)) for r in rows]
 
-    story = {
+    return {
         "title": "Patrones de Sobreprecio por Sector",
         "subtitle": "Sectores y años con mayor concentración de contratos de riesgo crítico",
         "key_question": "¿Dónde se concentra el sobreprecio en la contratación pública mexicana?",
@@ -227,4 +219,3 @@ def overpricing_patterns(conn: sqlite3.Connection = Depends(get_db)):
         ),
         "data": data,
     }
-    return story
