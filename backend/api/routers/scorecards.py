@@ -176,7 +176,7 @@ def list_institution_scorecards(
             where_clauses.append("s.grade = ?")
             params.append(grade)
         if sector:
-            where_clauses.append("LOWER(sec.sector_name) = LOWER(?)")
+            where_clauses.append("LOWER(sec.name_es) = LOWER(?)")
             params.append(sector)
         if min_score is not None:
             where_clauses.append("s.total_score >= ?")
@@ -202,7 +202,7 @@ def list_institution_scorecards(
         offset = (page - 1) * per_page
         rows = conn.execute(f"""
             SELECT s.institution_id, i.name, i.ramo_id,
-                   sec.sector_name,
+                   sec.name_es AS sector_name,
                    s.total_score, s.grade, s.grade_label, s.grade_color,
                    s.national_percentile,
                    s.pillar_openness, s.pillar_price, s.pillar_vendors,
@@ -256,7 +256,7 @@ def get_institution_scorecard(institution_id: int = Path(..., ge=1)):
     with get_db() as conn:
         row = conn.execute("""
             SELECT s.institution_id, i.name, i.ramo_id,
-                   sec.sector_name,
+                   sec.name_es AS sector_name,
                    s.total_score, s.grade, s.grade_label, s.grade_color,
                    s.national_percentile,
                    s.pillar_openness, s.pillar_price, s.pillar_vendors,
