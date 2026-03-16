@@ -301,6 +301,9 @@ export default function CaseLibrary() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
+      <div className="editorial-rule mb-4">
+        <span className="editorial-label">BIBLIOTECA DE CASOS</span>
+      </div>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">

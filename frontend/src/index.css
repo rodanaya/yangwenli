@@ -93,26 +93,26 @@
     color-scheme: light;
   }
 
-  /* Dark theme — refined obsidian */
+  /* Dark theme — editorial obsidian */
   html.dark {
     color-scheme: dark;
-    --color-background: #0d1117;
-    --color-background-card: #161b22;
-    --color-background-elevated: #1c2128;
-    --color-border: #30363d;
-    --color-border-hover: #444c56;
-    --color-text-primary: #e6edf3;
-    --color-text-secondary: #8b949e;
-    --color-text-muted: #6e7681;
-    --color-accent: #e85d75;
-    --color-accent-hover: #ff7088;
-    --color-accent-glow: #e85d7520;
-    --color-accent-data: #58a6ff;
-    --color-accent-data-glow: #58a6ff18;
-    --color-sidebar: #010409;
-    --color-sidebar-hover: #0d1117;
-    --color-sidebar-active: #161b22;
-    --color-signal-pulse: #e85d75;
+    --color-background: #0d0f0e;
+    --color-background-card: #141716;
+    --color-background-elevated: #1a1d1c;
+    --color-border: #2a2d2c;
+    --color-border-hover: #3a3d3c;
+    --color-text-primary: #f0ede8;
+    --color-text-secondary: #9a9590;
+    --color-text-muted: #6a6560;
+    --color-accent: #e8253f;
+    --color-accent-hover: #ff3855;
+    --color-accent-glow: #e8253f22;
+    --color-accent-data: #4d9ef5;
+    --color-accent-data-glow: #4d9ef518;
+    --color-sidebar: #0a0c0b;
+    --color-sidebar-hover: #141716;
+    --color-sidebar-active: #1e2120;
+    --color-signal-pulse: #e8253f;
     --color-signal-live: #3fb950;
     --color-signal-warn: #d29922;
     --color-signal-danger: #f85149;
@@ -393,6 +393,28 @@
   }
   html.dark .fern-card:hover {
     box-shadow: 0 4px 20px -8px rgba(0,0,0,0.3);
+  }
+
+  /* Dark-mode editorial enhancements */
+  html.dark .fern-card {
+    background: var(--color-background-card);
+    border-color: var(--color-border);
+    box-shadow: 0 1px 0 0 rgba(255,255,255,0.03) inset;
+  }
+  html.dark .fern-card:hover {
+    border-color: var(--color-border-hover);
+    box-shadow: 0 0 20px -6px var(--color-accent-glow), 0 1px 0 0 rgba(255,255,255,0.04) inset;
+  }
+
+  /* Shimmer animation for loading states */
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .shimmer {
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
   }
 
   /* Accent rule — thin colored rule used for section emphasis */

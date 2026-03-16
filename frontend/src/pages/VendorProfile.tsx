@@ -8,7 +8,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge, Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { formatCompactMXN, formatNumber, formatPercentSafe, formatDate, toTitleCase, formatCompactUSD, getRiskLevel } from '@/lib/utils'
-import { vendorApi, networkApi } from '@/api/client'
+import { vendorApi, networkApi, scorecardApi } from '@/api/client'
+import { GradeBadge10, VendorScorecardCard } from '@/components/ui/ScorecardWidgets'
+import type { VendorScorecardData } from '@/components/ui/ScorecardWidgets'
 import { SanctionsAlertBanner } from '@/components/SanctionsAlertBanner'
 import { WaterfallRiskChart } from '@/components/WaterfallRiskChart'
 import { RedThreadPanel } from '@/components/RedThreadPanel'
@@ -74,9 +76,27 @@ import {
 import { NetworkGraphModal } from '@/components/NetworkGraphModal'
 import { ScrollReveal, useCountUp, AnimatedFill } from '@/hooks/useAnimations'
 import { cn } from '@/lib/utils'
-import { motion } from 'framer-motion'
-import { slideUp, staggerContainer, staggerItem } from '@/lib/animations'
+import { motion, useInView } from 'framer-motion'
+import { slideUp, staggerItem } from '@/lib/animations'
 import { RiskWhisker } from '@/components/ui/risk-whisker'
+
+// ============================================================================
+// ScrollSection — editorial scroll-reveal wrapper
+// ============================================================================
+function ScrollSection({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const isVisible = useInView(ref, { once: true, margin: '-60px' })
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 24 }}
+      animate={isVisible ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5, delay, ease: 'easeOut' }}
+    >
+      {children}
+    </motion.div>
+  )
+}
 
 // ============================================================================
 // Model coefficients for the waterfall chart (v6.0 global model, calibrated 2026-03-13)
@@ -851,6 +871,15 @@ export function VendorProfile() {
     retry: false, // 404 = no SHAP data for this vendor, don't retry
   })
 
+  // Procurement Integrity Score
+  const { data: scorecard } = useQuery<VendorScorecardData>({
+    queryKey: ['vendor', vendorId, 'scorecard'],
+    queryFn: () => scorecardApi.getVendor(vendorId),
+    enabled: !!vendorId,
+    staleTime: 60 * 60 * 1000,
+    retry: false,
+  })
+
   // Determine if vendor has co-bidding risk
   const hasCoBiddingRisk = coBidders?.co_bidders?.some(
     (cb) => cb.relationship_strength === 'very_strong' || cb.relationship_strength === 'strong'
@@ -994,7 +1023,7 @@ export function VendorProfile() {
       `}</style>
       {/* Hero Header — Obsidian Intelligence */}
       <motion.div
-        className="card p-5 relative overflow-hidden"
+        className="fern-card p-5 relative overflow-hidden"
         style={{
           borderLeftWidth: '4px',
           borderLeftColor: riskColor,
@@ -1179,6 +1208,11 @@ export function VendorProfile() {
               <RiskFeedbackButton entityType="vendor" entityId={vendorId} />
             </div>
           )}
+          {scorecard && (
+            <div className="flex items-center gap-1" title={`Integridad: ${scorecard.grade_label} (${scorecard.total_score.toFixed(0)}/100)`}>
+              <GradeBadge10 grade={scorecard.grade} size="md" />
+            </div>
+          )}
         </div>
       </motion.div>
       <NetworkGraphModal
@@ -1248,13 +1282,12 @@ export function VendorProfile() {
 
         return (
           <div
-            className="card p-4"
+            className="fern-card p-4"
             style={{ animation: 'vpFadeUp 500ms cubic-bezier(0.16, 1, 0.3, 1) 100ms both' }}
           >
-            <h3 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2">
-              <Shield className="h-4 w-4 text-risk-high" />
-              Why is this vendor flagged?
-            </h3>
+            <div className="editorial-rule mb-3">
+              <span className="editorial-label">POR QUE ESTA MARCADO</span>
+            </div>
             <div className="space-y-2">
               {flags.map((flag, i) => (
                 <div key={i} className={`flex items-start gap-2 text-sm ${
@@ -1277,10 +1310,9 @@ export function VendorProfile() {
       {/* KPI Row — scroll-triggered stagger + F7 Percentile Badges */}
       <motion.div
         className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
-        variants={staggerContainer}
-        initial="initial"
-        whileInView="animate"
-        viewport={{ once: true }}
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
         <motion.div variants={staggerItem}>
           <ScrollReveal delay={0} direction="up">
@@ -1509,7 +1541,7 @@ export function VendorProfile() {
             <ScrollReveal direction="up" delay={0}>
             <div className="space-y-6">
               {/* Risk Score Gauge */}
-              <Card className="hover-lift">
+              <Card className="fern-card">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="h-4 w-4" />
@@ -1532,8 +1564,23 @@ export function VendorProfile() {
                 </CardContent>
               </Card>
 
+              {/* Procurement Integrity Score */}
+              {scorecard && (
+                <Card className="fern-card">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <span>Calificación de Integridad</span>
+                      <GradeBadge10 grade={scorecard.grade} size="sm" />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <VendorScorecardCard sc={scorecard} />
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Procurement Patterns */}
-              <Card className="hover-lift">
+              <Card className="fern-card">
                 <CardHeader>
                   <CardTitle className="text-sm">{t('cards.procurementPatterns')}</CardTitle>
                 </CardHeader>
@@ -1565,7 +1612,7 @@ export function VendorProfile() {
             <ScrollReveal direction="up" delay={120} className="lg:col-span-2">
             <div className="space-y-6">
               {/* AI Pattern Analysis — lazy loaded on demand */}
-              <Card className="hover-lift">
+              <Card className="fern-card">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
@@ -1624,7 +1671,7 @@ export function VendorProfile() {
                 const scandals = linkedScandals as any
                 if (!scandals?.scandals?.length) return null
                 return (
-                  <Card className="hover-lift border-red-500/20">
+                  <Card className="fern-card border-red-500/20">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-sm">
                         <AlertTriangle className="h-4 w-4 text-red-400" />
@@ -1727,7 +1774,7 @@ export function VendorProfile() {
               })()}
 
               {/* Vendor Summary */}
-              <Card className="hover-lift">
+              <Card className="fern-card">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="h-4 w-4" />
@@ -1747,7 +1794,7 @@ export function VendorProfile() {
               </Card>
 
               {/* Recent Contracts */}
-              <Card className="hover-lift">
+              <Card className="fern-card">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="h-4 w-4" />
@@ -1799,7 +1846,7 @@ export function VendorProfile() {
               </Card>
 
               {/* Top Institutions */}
-              <Card className="hover-lift">
+              <Card className="fern-card">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Building2 className="h-4 w-4" />
@@ -1826,7 +1873,7 @@ export function VendorProfile() {
 
               {/* Institutional Tenure (Coviello & Gagliarducci 2017) */}
               {vendor.top_institutions && vendor.top_institutions.length > 0 && (
-                <Card className="hover-lift">
+                <Card className="fern-card">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Building2 className="h-4 w-4" />
@@ -1868,7 +1915,7 @@ export function VendorProfile() {
 
               {/* Sector × Institution Footprint */}
               {footprintError && (
-                <Card className="hover-lift">
+                <Card className="fern-card">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-sm">
                       <BarChart3 className="h-4 w-4" />
@@ -1884,7 +1931,7 @@ export function VendorProfile() {
                 </Card>
               )}
               {footprintData && footprintData.footprint.length > 0 && (
-              <Card className="hover-lift">
+              <Card className="fern-card">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-sm">
                     <BarChart3 className="h-4 w-4" />
@@ -1964,7 +2011,7 @@ export function VendorProfile() {
           <div className="grid gap-6 lg:grid-cols-3">
             {/* Left: Gauge + Trend */}
             <div className="space-y-6">
-              <Card className="hover-lift">
+              <Card className="fern-card">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="h-4 w-4" />
@@ -1989,7 +2036,7 @@ export function VendorProfile() {
 
               {/* Risk Trend Mini-Chart */}
               {riskTrendData.length > 1 && (
-                <Card className="hover-lift">
+                <Card className="fern-card">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <Activity className="h-4 w-4" />
@@ -2070,7 +2117,7 @@ export function VendorProfile() {
 
               {/* Vendor Lifecycle Chart */}
               {lifecycleError && (
-                <Card className="hover-lift">
+                <Card className="fern-card">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <BarChart3 className="h-4 w-4" />
@@ -2086,7 +2133,7 @@ export function VendorProfile() {
                 </Card>
               )}
               {lifecycleData && lifecycleData.timeline.length > 1 && (
-                <Card className="hover-lift">
+                <Card className="fern-card">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <BarChart3 className="h-4 w-4" />
@@ -2199,10 +2246,11 @@ export function VendorProfile() {
             </div>
 
             {/* Right: Waterfall + Factor List */}
+            <ScrollSection delay={0.15}>
             <div className="lg:col-span-2 space-y-6">
               {/* F1: WaterfallRiskChart (proper component with z-score data) */}
               {waterfallData && waterfallData.length >= 3 && (
-                <Card className="hover-lift">
+                <Card className="fern-card">
                   <CardHeader>
                     <CardTitle className="text-sm flex items-center gap-2">
                       <BarChart3 className="h-4 w-4" />
@@ -2215,7 +2263,7 @@ export function VendorProfile() {
                 </Card>
               )}
               {waterfallError && !waterfallData && (
-                <Card className="hover-lift">
+                <Card className="fern-card">
                   <CardHeader>
                     <CardTitle className="text-sm flex items-center gap-2">
                       <BarChart3 className="h-4 w-4" />
@@ -2231,7 +2279,7 @@ export function VendorProfile() {
                 </Card>
               )}
               {waterfallLoading && (
-                <Card className="hover-lift">
+                <Card className="fern-card">
                   <CardHeader>
                     <CardTitle className="text-sm flex items-center gap-2">
                       <BarChart3 className="h-4 w-4" />
@@ -2246,7 +2294,7 @@ export function VendorProfile() {
 
               {/* SHAP-based factor chart (per-vendor exact values) — preferred over global-coefficient fallback */}
               {!waterfallData?.length && !waterfallLoading && (
-              <Card className="hover-lift">
+              <Card className="fern-card">
                 <CardHeader>
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Brain className="h-4 w-4 text-accent" />
@@ -2301,11 +2349,13 @@ export function VendorProfile() {
 
               {/* Risk Radar Chart — 6-axis z-score spider */}
               {waterfallData && waterfallData.length >= 3 && (
-                <div className="bg-slate-900/50 border border-white/5 rounded-xl p-4">
-                  <p className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-1">Risk Factor Radar</p>
-                  <p className="text-xs text-white/40 mb-3">6-axis z-score profile vs. sector-year average</p>
+                <div className="fern-card p-4">
+                  <div className="editorial-rule mb-1">
+                    <span className="editorial-label">RADAR DE RIESGO</span>
+                  </div>
+                  <p className="text-xs text-text-muted mb-3">6-axis z-score profile vs. sector-year average</p>
                   <RiskRadarChart waterfallData={waterfallData} />
-                  <p className="text-xs text-white/50 italic mt-3">
+                  <p className="text-xs text-text-muted/50 italic mt-3">
                     Axes toward the outer edge = higher deviation from sector norms. Wider shape = more risk dimensions active simultaneously.
                   </p>
                 </div>
@@ -2313,11 +2363,13 @@ export function VendorProfile() {
 
               {/* Top 3 Contributing Factors — bar summary */}
               {waterfallData && waterfallData.length >= 1 && (
-                <div className="bg-slate-900/50 border border-white/5 rounded-xl p-4">
-                  <p className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-1">Top Contributing Factors</p>
-                  <p className="text-xs text-white/40 mb-3">The 3 features driving the highest model contribution to this vendor&apos;s risk score</p>
+                <div className="fern-card p-4">
+                  <div className="editorial-rule mb-1">
+                    <span className="editorial-label">FACTORES PRINCIPALES</span>
+                  </div>
+                  <p className="text-xs text-text-muted mb-3">The 3 features driving the highest model contribution to this vendor&apos;s risk score</p>
                   <TopRiskFactorBars waterfallData={waterfallData} />
-                  <p className="text-xs text-white/50 italic mt-3">
+                  <p className="text-xs text-text-muted/50 italic mt-3">
                     z-score = standard deviations above sector-year average. Values above +2 are statistically unusual for this sector.
                   </p>
                   {shapData && (
@@ -2338,7 +2390,7 @@ export function VendorProfile() {
               )}
 
               {/* Risk Factor List */}
-              <Card className="hover-lift">
+              <Card className="fern-card">
                 <CardHeader>
                   <CardTitle className="text-sm">{t('risk.riskFactorDetails')}</CardTitle>
                 </CardHeader>
@@ -2357,14 +2409,16 @@ export function VendorProfile() {
                 </CardContent>
               </Card>
             </div>
+            </ScrollSection>
           </div>
         </TabPanel>
 
         {/* TAB 3: Contract History */}
         <TabPanel tabKey="history">
+          <ScrollSection>
           <div className="space-y-6">
             {/* Activity Calendar */}
-            <Card className="hover-lift">
+            <Card className="fern-card">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="h-4 w-4" />
@@ -2387,7 +2441,9 @@ export function VendorProfile() {
 
             {/* Contract Analysis — new visualization section */}
             <div className="space-y-4 mb-6">
-              <h3 className="text-sm font-medium text-text-secondary uppercase tracking-wide">Contract Analysis</h3>
+              <div className="editorial-rule">
+                <span className="editorial-label">ANALISIS DE CONTRATOS</span>
+              </div>
 
               {/* Donut charts row */}
               <VendorContractBreakdown
@@ -2432,7 +2488,7 @@ export function VendorProfile() {
             </div>
 
             {/* Full Contracts Table with filter bar */}
-            <Card className="hover-lift">
+            <Card className="fern-card">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
@@ -2564,10 +2620,12 @@ export function VendorProfile() {
               </CardContent>
             </Card>
           </div>
+          </ScrollSection>
         </TabPanel>
 
         {/* TAB 4: Network */}
         <TabPanel tabKey="network">
+          <ScrollSection>
           <div className="space-y-6">
             {/* High Clustering Alert Banner */}
             {vendor?.cobid_clustering_coeff != null && vendor.cobid_clustering_coeff > 0.6 && (
@@ -2586,7 +2644,7 @@ export function VendorProfile() {
                 {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
               </div>
             ) : hasCoBiddingRisk ? (
-              <Card className="hover-lift border-amber-500/40 bg-amber-500/[0.02]">
+              <Card className="fern-card border-amber-500/40 bg-amber-500/[0.02]">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2 text-risk-medium">
@@ -2751,7 +2809,7 @@ export function VendorProfile() {
               </Card>
             ) : (
               !coBiddersLoading && (
-                <Card className="hover-lift">
+                <Card className="fern-card">
                   <CardContent className="p-8 text-center text-text-muted">
                     <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
                     <p className="text-sm">{t('coBidding.noPatternsTitle')}</p>
@@ -2762,7 +2820,7 @@ export function VendorProfile() {
             )}
 
             {/* Open Full Network Graph */}
-            <Card className="hover-lift">
+            <Card className="fern-card">
               <CardContent className="p-6 text-center">
                 <p className="text-sm text-text-muted mb-4">
                   {t('network.networkGraphDescription')}
@@ -2778,6 +2836,7 @@ export function VendorProfile() {
               </CardContent>
             </Card>
           </div>
+          </ScrollSection>
         </TabPanel>
 
         {/* TAB 5: External Records */}
@@ -2837,28 +2896,26 @@ function KPICard({ title, value, icon: Icon, format = 'number', subtitle, varian
     'bg-accent/10 text-accent'
 
   return (
-    <Card className={`hover-lift ${borderClass || ''}`}>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <p className="text-xs font-medium text-text-muted">{title}</p>
-            <div className="flex items-center gap-1.5">
-              <p className="text-2xl font-bold tabular-nums text-text-primary">
-                {format === 'number'
-                  ? <span ref={countRef}>{formattedValue}</span>
-                  : formattedValue
-                }
-              </p>
-              {percentileBadge}
-            </div>
-            {subtitle && <p className="text-xs text-text-muted">{subtitle}</p>}
+    <div className={`fern-card p-4 ${borderClass || ''}`}>
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <p className="editorial-label">{title}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="pull-stat tabular-nums">
+              {format === 'number'
+                ? <span ref={countRef}>{formattedValue}</span>
+                : formattedValue
+              }
+            </p>
+            {percentileBadge}
           </div>
-          <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${iconBg}`}>
-            <Icon className="h-5 w-5" />
-          </div>
+          {subtitle && <p className="text-xs text-text-muted">{subtitle}</p>}
         </div>
-      </CardContent>
-    </Card>
+        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${iconBg}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -2932,7 +2989,7 @@ function RiskGauge({
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-3xl font-bold tabular-nums">{percentage}</span>
+          <span className="stat-hero tabular-nums" style={score >= 0.40 ? { color: color, textShadow: `0 0 20px ${color}60` } : undefined}>{percentage}</span>
           <span className="text-xs text-text-muted">/ 100</span>
         </div>
       </div>
@@ -3187,9 +3244,9 @@ function ExternalFlagsPanel({ flags, qqw }: { flags: VendorExternalFlags | undef
       {/* SFP Sanctions */}
       {hasSanctions && (
         <div>
-          <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wide mb-3">
-            SFP Sanctions
-          </h3>
+          <div className="editorial-rule mb-3">
+            <span className="editorial-label">SANCIONES SFP</span>
+          </div>
           <div className="space-y-2">
             {flags.sfp_sanctions.map((s) => (
               <div key={s.id} className="p-3 rounded border border-red-500/20 bg-red-950/10">
@@ -3216,9 +3273,9 @@ function ExternalFlagsPanel({ flags, qqw }: { flags: VendorExternalFlags | undef
 
       {/* RUPC Registry */}
       <div>
-        <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wide mb-3">
-          RUPC Vendor Registry
-        </h3>
+        <div className="editorial-rule mb-3">
+          <span className="editorial-label">REGISTRO RUPC</span>
+        </div>
         {hasRUPC ? (
           <div className="p-3 rounded border border-border/50 bg-surface-2">
             <div className="grid grid-cols-2 gap-3 text-sm">
@@ -3250,9 +3307,9 @@ function ExternalFlagsPanel({ flags, qqw }: { flags: VendorExternalFlags | undef
 
       {/* ASF Cases */}
       <div>
-        <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wide mb-3">
-          ASF Audit Findings
-        </h3>
+        <div className="editorial-rule mb-3">
+          <span className="editorial-label">HALLAZGOS ASF</span>
+        </div>
         {hasASF ? (
           <div className="space-y-2">
             {flags.asf_cases.map((c) => (
@@ -3290,9 +3347,9 @@ function ExternalFlagsPanel({ flags, qqw }: { flags: VendorExternalFlags | undef
 
       {/* SAT Art. 69-B EFOS */}
       <div>
-        <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wide mb-3">
-          SAT Art. 69-B Ghost Company List
-        </h3>
+        <div className="editorial-rule mb-3">
+          <span className="editorial-label">SAT ART. 69-B EFOS</span>
+        </div>
         {hasEFOS ? (
           <div className={cn(
             "p-3 rounded border",
@@ -3337,10 +3394,9 @@ function ExternalFlagsPanel({ flags, qqw }: { flags: VendorExternalFlags | undef
 
       {/* QQW Cross-Reference */}
       <div>
-        <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wide mb-3 flex items-center gap-2">
-          <ExternalLink className="h-3.5 w-3.5" />
-          QuiénesQuién.wiki Cross-Reference
-        </h3>
+        <div className="editorial-rule mb-3">
+          <span className="editorial-label">QUIENESQUIEN.WIKI</span>
+        </div>
         {!qqw ? (
           <p className="text-sm text-text-muted italic">Loading QQW data...</p>
         ) : !qqw.has_data ? (

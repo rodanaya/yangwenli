@@ -232,19 +232,16 @@ function ReportHeader({ data }: { data: ExecutiveSummaryResponse }) {
         {t('header.dateline')}
       </p>
 
+      {/* Editorial label */}
+      <div className="editorial-rule mb-4">
+        <span className="editorial-label text-accent">{t('header.badge')}</span>
+      </div>
+
       {/* Title */}
-      <h1
-        className="text-3xl sm:text-4xl font-bold tracking-tight leading-tight mb-2"
-        style={{
-          background: 'linear-gradient(135deg, var(--color-text-primary) 0%, #fbbf24 60%, #f87171 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
-        }}
-      >
+      <h1 className="text-editorial-display text-text-primary mb-3">
         {t('header.title')}
       </h1>
-      <p className="text-lg text-text-secondary italic mb-8">
+      <p className="text-lg text-text-secondary italic mb-8 max-w-2xl">
         {t('header.subtitle')}
       </p>
 
@@ -367,7 +364,7 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
       {bombs.map((b, i) => (
         <ScrollReveal key={b.label} delay={i * 80}>
           <div
-            className="relative rounded-xl border border-border/20 bg-surface-raised/20 p-5 text-center overflow-hidden hover:border-opacity-60 transition-all duration-300"
+            className="fern-card relative p-5 text-center overflow-hidden transition-all duration-300"
             style={{ borderColor: `${b.color}33` }}
             onMouseEnter={e => (e.currentTarget.style.boxShadow = `0 0 32px 4px ${b.glow}`)}
             onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
@@ -378,16 +375,15 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
               style={{ background: `radial-gradient(ellipse at 50% 50%, ${b.color}, transparent 70%)` }}
             />
             <div
-              className={`stat-bomb-value font-black font-mono text-white tracking-tight relative z-10 leading-none overflow-hidden ${
-                b.value.length > 6 ? 'text-2xl sm:text-3xl' :
-                b.value.length > 4 ? 'text-3xl sm:text-4xl' :
-                'text-4xl sm:text-5xl'
-              }`}
-              style={{ textShadow: `0 0 40px ${b.glow}` }}
+              className="stat-bomb-value stat-hero text-white relative z-10 overflow-hidden"
+              style={{
+                textShadow: `0 0 40px ${b.glow}`,
+                fontSize: b.value.length > 6 ? '2rem' : b.value.length > 4 ? '2.5rem' : '3rem',
+              }}
             >
               {b.value}
             </div>
-            <div className="text-[10px] text-text-muted uppercase tracking-widest mt-1.5 font-mono relative z-10 leading-tight">
+            <div className="editorial-label mt-1.5 relative z-10 leading-tight">
               {b.label}
             </div>
             <div className="text-[10px] mt-0.5 font-mono relative z-10 leading-tight" style={{ color: `${b.color}99` }}>
@@ -454,9 +450,9 @@ function WhatWeFound({ data }: { data: ExecutiveSummaryResponse }) {
         const Icon = f.icon
         return (
           <ScrollReveal key={f.desc} delay={i * 80}>
-            <div className={`rounded-xl border border-l-[3px] border-l-amber-500/60 p-5 transition-shadow hover:border-accent/30 hover:border-l-amber-500/80 hover:shadow-[0_0_20px_rgba(0,0,0,0.15)] ${f.borderColor} ${f.bgColor}`}>
+            <div className={`fern-card border-l-[3px] border-l-amber-500/60 p-5 transition-shadow hover:border-l-amber-500/80 ${f.borderColor} ${f.bgColor}`}>
               <Icon className={`h-6 w-6 mb-3 ${f.iconColor}`} />
-              <div className={`text-2xl font-bold mb-1 ${f.valueColor}`}>{f.value}</div>
+              <div className={`pull-stat mb-1 ${f.valueColor}`}>{f.value}</div>
               <div className="text-sm text-text-muted">{f.desc}</div>
             </div>
           </ScrollReveal>
@@ -475,12 +471,10 @@ function KeyFindings() {
   const items = t('keyFindings.items', { returnObjects: true }) as string[]
 
   return (
-    <div className="border border-accent/30 rounded-lg bg-accent/5 px-5 py-4">
-      <div className="flex items-center gap-2 mb-3">
+    <div className="fern-card bg-accent/5 border-accent/30 px-6 py-5">
+      <div className="editorial-rule mb-3">
         <Target className="h-4 w-4 text-accent" />
-        <h3 className="text-sm font-bold uppercase tracking-wider text-accent font-mono">
-          {t('keyFindings.title')}
-        </h3>
+        <span className="editorial-label text-accent">{t('keyFindings.title')}</span>
       </div>
       <ul className="space-y-2">
         {items.map((item, i) => (
@@ -509,10 +503,10 @@ function TopFraudSignals() {
   ]
 
   return (
-    <div className="rounded-xl border border-border/30 bg-surface-raised/10 p-5">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-4">
-        {t('topFraudSignals.header')}
-      </p>
+    <div className="fern-card p-6">
+      <div className="editorial-rule mb-4">
+        <span className="editorial-label">{t('topFraudSignals.header')}</span>
+      </div>
       <div className="space-y-4">
         {signals.map((s) => (
           <div key={s.rank} className="flex items-start gap-4">
@@ -1305,7 +1299,7 @@ function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
                       {p.label}
                     </span>
                     <h4 className="text-base font-bold text-text-primary mt-0.5 mb-2">{p.name}</h4>
-                    <div className="text-3xl font-black font-mono mb-3 tabular-nums" style={{ color: p.statColor }}>
+                    <div className="pull-stat mb-3" style={{ color: p.statColor }}>
                       {p.stat}
                     </div>
                     <p className="text-sm leading-relaxed text-text-secondary mb-2">
@@ -1799,10 +1793,10 @@ function SectionNetwork({ patternCounts }: {
       </div>
 
       {patternCounts && (
-        <div className="border border-border/30 rounded-lg px-4 py-3 bg-surface-raised/20 mb-6">
-          <p className="text-xs font-bold tracking-wider uppercase text-text-muted font-mono mb-3">
-            All detection patterns — live database scan
-          </p>
+        <div className="fern-card px-5 py-4 mb-6">
+          <div className="editorial-rule mb-3">
+            <span className="editorial-label">All detection patterns — live database scan</span>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <MiniStat label="Critical risk" value={formatNumber(patternCounts.counts.critical)} color={RISK_COLORS.critical} />
             <MiniStat label="December rush" value={formatNumber(patternCounts.counts.december_rush)} color={RISK_COLORS.medium} />
@@ -1879,7 +1873,7 @@ function DataStructureRow({ period, years, quality, rfcCoverage, note }: { perio
   const qualityLower = quality.toLowerCase()
   const qualityColor = qualityLower.includes('lowest') || qualityLower.includes('baja') ? RISK_COLORS.critical : qualityLower.includes('better') || qualityLower.includes('mejor') ? RISK_COLORS.medium : qualityLower.includes('good') || qualityLower.includes('buena') ? RISK_COLORS.low : 'var(--color-accent)'
   return (
-    <div className="flex items-start gap-3 border border-border/30 rounded-lg p-4 bg-surface-raised/20">
+    <div className="flex items-start gap-3 fern-card p-4">
       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-background-elevated text-sm font-bold text-text-primary font-mono flex-shrink-0">
         {period}
       </div>
@@ -1904,16 +1898,16 @@ function DataStructureRow({ period, years, quality, rfcCoverage, note }: { perio
 function CompetitionDeclineCard() {
   const { t } = useTranslation('executive')
   return (
-    <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-5 flex flex-col sm:flex-row gap-5 items-start">
+    <div className="fern-card border-amber-500/25 bg-amber-500/5 p-6 flex flex-col sm:flex-row gap-5 items-start">
       <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg bg-amber-500/15">
         <TrendingUp className="h-5 w-5 text-amber-400" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-amber-400 font-mono mb-1">
+        <div className="editorial-label text-amber-400 mb-1">
           {t('competitionDecline.statLabel')}
-        </p>
+        </div>
         <div className="flex items-baseline gap-3 mb-1 flex-wrap">
-          <span className="text-3xl font-black font-mono text-amber-400 tracking-tight">
+          <span className="pull-stat text-amber-400">
             {t('competitionDecline.stat')}
           </span>
           <span className="text-sm font-bold text-text-primary">
@@ -1987,7 +1981,7 @@ function SectionAdministrations({ data }: { data: ExecutiveSummaryResponse }) {
         {data.administrations.map((admin) => (
           <div
             key={admin.name}
-            className="border border-border/30 rounded-lg p-5 bg-surface-raised/30"
+            className="fern-card p-5"
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
@@ -2116,7 +2110,7 @@ function KeyMomentsPanel() {
   const navigate = useNavigate()
 
   return (
-    <div className="mt-8 border border-border/20 rounded-xl bg-surface-raised/20 overflow-hidden">
+    <div className="mt-8 fern-card overflow-hidden">
       {/* Panel header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-border/20 bg-surface-raised/30">
         <div className="flex items-center gap-2">
@@ -2405,7 +2399,7 @@ function SectionLimitations() {
           return (
             <div
               key={lim.key}
-              className="border border-border/30 rounded-lg p-5 bg-surface-raised/20"
+              className="fern-card p-5"
             >
               <div className="flex items-center gap-2.5 mb-2">
                 <Icon className="h-4 w-4 text-text-muted flex-shrink-0" />
@@ -2487,7 +2481,7 @@ function SectionRecommendations({ navigate }: { navigate: (path: string) => void
             <button
               key={action.key}
               onClick={() => navigate(action.href)}
-              className="w-full text-left border border-border/30 rounded-lg p-5 bg-surface-raised/20 hover:bg-surface-raised/50 hover:border-accent/30 transition-all group"
+              className="w-full text-left fern-card p-5 hover:border-accent/30 transition-all group"
             >
               <div className="flex items-start gap-4">
                 <div className="p-2 rounded-md bg-accent/10 group-hover:bg-accent/20 transition-colors">
@@ -2510,18 +2504,18 @@ function SectionRecommendations({ navigate }: { navigate: (path: string) => void
 
       {/* Audience-specific next steps */}
       <div className="mb-2">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-4">
-          Recommended next steps — by audience
-        </p>
+        <div className="editorial-rule mb-4">
+          <span className="editorial-label">Recommended next steps — by audience</span>
+        </div>
         <div className="space-y-4">
           {policyRecommendations.map((rec) => (
             <div
               key={rec.audience}
-              className="rounded-xl border p-5"
+              className="fern-card p-5"
               style={{ borderColor: `${rec.color}30`, background: `${rec.color}06` }}
             >
               <p
-                className="text-xs font-bold uppercase tracking-widest font-mono mb-3"
+                className="editorial-label mb-3"
                 style={{ color: rec.color }}
               >
                 {rec.audience}
@@ -2557,7 +2551,11 @@ function ReportFooter({ data }: { data: ExecutiveSummaryResponse }) {
 
   return (
     <footer className="pt-12 pb-8 text-center space-y-3">
-      <div className="h-px bg-border/30 mb-8" />
+      <div className="flex items-center gap-4 mb-8">
+        <div className="h-px flex-1 bg-border/30" />
+        <div className="accent-rule" />
+        <div className="h-px flex-1 bg-border/30" />
+      </div>
       <p className="text-xs font-bold tracking-wider uppercase text-text-muted font-mono">
         {t('footer.platform')}
       </p>
@@ -2595,23 +2593,13 @@ function SectionHeading({
   icon: React.ElementType
 }) {
   return (
-    <div className="mb-5">
-      <div className="flex items-center gap-3 mb-2">
-        <div className="relative">
-          <Icon className="h-5 w-5 text-text-muted flex-shrink-0" />
-        </div>
-        <h2 className="text-xl font-bold text-text-primary">
-          <span className="text-text-muted font-mono text-sm mr-2">{number} —</span>
-          {title}
-        </h2>
+    <div className="mb-6">
+      <div className="editorial-rule">
+        <Icon className="h-4 w-4 text-accent flex-shrink-0" />
+        <span className="editorial-label text-accent">{number}</span>
       </div>
-      <div
-        className="h-px ml-8 rounded-full"
-        style={{
-          background: 'linear-gradient(90deg, var(--color-accent) 0%, transparent 60%)',
-          opacity: 0.4,
-        }}
-      />
+      <h2 className="text-editorial-h2 text-text-primary">{title}</h2>
+      <div className="accent-rule mt-3" />
     </div>
   )
 }
@@ -2627,13 +2615,13 @@ function HeadlineStat({ value, label, rawNumber, sublabel }: { value: string; la
     : value
 
   return (
-    <div className="text-center py-4 px-2 border border-border/20 rounded-lg bg-surface-raised/20 hover:bg-surface-raised/40 hover:border-accent/20 transition-all duration-300 group">
+    <div className="fern-card text-center py-5 px-3 group">
       <span ref={ref}>
-        <div className="text-xl sm:text-2xl font-bold text-text-primary font-mono tracking-tight group-hover:text-accent transition-colors duration-300">
+        <div className="stat-hero text-text-primary group-hover:text-accent transition-colors duration-300" style={{ fontSize: '2.5rem' }}>
           {displayValue}
         </div>
       </span>
-      <div className="text-xs text-text-muted uppercase tracking-wider font-mono mt-1">{label}</div>
+      <div className="editorial-label mt-2">{label}</div>
       {sublabel && (
         <div className="text-[10px] text-text-muted/60 font-mono mt-0.5 italic">{sublabel}</div>
       )}
@@ -2643,9 +2631,9 @@ function HeadlineStat({ value, label, rawNumber, sublabel }: { value: string; la
 
 function StatCallout({ value, label, color, pulse }: { value: string; label: string; color: string; pulse?: boolean }) {
   return (
-    <div className="text-center py-2">
+    <div className="fern-card text-center py-4 px-3">
       <div
-        className="text-lg font-bold font-mono"
+        className="pull-stat"
         style={{
           color,
           animation: pulse ? 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' : undefined,
@@ -2653,7 +2641,7 @@ function StatCallout({ value, label, color, pulse }: { value: string; label: str
       >
         {value}
       </div>
-      <div className="text-xs text-text-muted">{label}</div>
+      <div className="editorial-label mt-1">{label}</div>
     </div>
   )
 }
@@ -2679,12 +2667,10 @@ function MiniStat({ label, value, color, sublabel }: { label: string; value: str
 
 function MetricBadge({ label, value, description }: { label: string; value: string; description: string }) {
   return (
-    <div className="flex items-center gap-3 border border-border/30 rounded-lg px-4 py-2.5 bg-surface-raised/20">
+    <div className="fern-card flex items-center gap-3 px-4 py-3">
       <div>
-        <div className="text-lg font-bold text-accent font-mono">{value}</div>
-        <div className="text-xs text-text-muted font-mono uppercase tracking-wider">
-          {label}
-        </div>
+        <div className="pull-stat text-accent">{value}</div>
+        <div className="editorial-label mt-0.5">{label}</div>
       </div>
       <div className="text-xs text-text-secondary max-w-[80px] leading-tight">{description}</div>
     </div>
@@ -2704,7 +2690,12 @@ function SectorCallout({ name, color, text }: { name: string; color: string; tex
 }
 
 function Divider() {
-  return <div className="h-px bg-border/20" />
+  return (
+    <div className="flex items-center gap-4 py-2">
+      <div className="accent-rule" />
+      <div className="h-px flex-1 bg-border/20" />
+    </div>
+  )
 }
 
 

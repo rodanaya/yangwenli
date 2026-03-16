@@ -2,7 +2,7 @@ import { useState, memo, useMemo, useCallback, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem } from '@/lib/animations'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+// Card components replaced by fern-card editorial utility class
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import {
@@ -224,28 +224,26 @@ function CollapsibleSection({
 
   return (
     <section id={id} className="scroll-mt-20">
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">
-            <button
-              type="button"
-              className="w-full flex items-center gap-2 cursor-pointer select-none text-left"
-              onClick={() => setIsOpen(!isOpen)}
-              aria-expanded={isOpen}
-              aria-controls={`section-content-${id}`}
-            >
-              <Icon className="h-4 w-4 text-accent" aria-hidden="true" />
-              <span className="flex-1">{title}</span>
-              {isOpen ? (
-                <ChevronDown className="h-4 w-4 text-text-muted" aria-hidden="true" />
-              ) : (
-                <ChevronRight className="h-4 w-4 text-text-muted" aria-hidden="true" />
-              )}
-            </button>
-          </CardTitle>
-        </CardHeader>
-        {isOpen && <CardContent id={`section-content-${id}`}>{children}</CardContent>}
-      </Card>
+      <div className="fern-card">
+        <div className="px-5 pt-4 pb-2">
+          <button
+            type="button"
+            className="w-full flex items-center gap-2 cursor-pointer select-none text-left"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-expanded={isOpen}
+            aria-controls={`section-content-${id}`}
+          >
+            <Icon className="h-4 w-4 text-accent" aria-hidden="true" />
+            <span className="flex-1 text-sm font-semibold text-text-primary">{title}</span>
+            {isOpen ? (
+              <ChevronDown className="h-4 w-4 text-text-muted" aria-hidden="true" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-text-muted" aria-hidden="true" />
+            )}
+          </button>
+        </div>
+        {isOpen && <div id={`section-content-${id}`} className="px-5 pb-5">{children}</div>}
+      </div>
     </section>
   )
 }
@@ -436,24 +434,24 @@ function ModelEvolutionTimeline() {
   }, [])
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm flex items-center gap-2">
+    <div className="fern-card">
+      <div className="px-5 pt-4 pb-3">
+        <div className="editorial-rule mb-2">
           <GitBranch className="h-4 w-4 text-accent" aria-hidden="true" />
-          {t('evolution.title')}
-        </CardTitle>
+          <span className="editorial-label text-accent">{t('evolution.title')}</span>
+        </div>
         <p className="text-xs text-text-muted">
           {t('evolution.subtitle')}
         </p>
-      </CardHeader>
-      <CardContent>
+      </div>
+      <div className="px-5 pb-5">
         <div className="overflow-x-auto pb-1">
           <div className="flex items-stretch gap-1.5 min-w-max">
             {nodes}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 
@@ -506,9 +504,9 @@ function TableOfContents() {
   return (
     <nav className="hidden lg:block sticky top-4" aria-label="Table of contents">
       <div className="space-y-0.5">
-        <p className="text-xs font-semibold tracking-wider text-text-secondary font-mono mb-2 px-2">
-          {t('contents')}
-        </p>
+        <div className="editorial-rule mb-3 px-2">
+          <span className="editorial-label">{t('contents')}</span>
+        </div>
         {SECTIONS.map((section) => {
           const Icon = section.icon
           return (
@@ -538,13 +536,17 @@ export function Methodology() {
       {/* Page Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-bold text-text-primary tracking-tight flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-accent" />
+          <div className="editorial-rule mb-3">
+            <span className="editorial-label text-accent">FUNDAMENTOS METODOLOGICOS</span>
+          </div>
+          <h1 className="text-editorial-h1 text-text-primary flex items-center gap-3">
+            <BookOpen className="h-6 w-6 text-accent" />
             {t('pageHeadline')}
           </h1>
-          <p className="text-xs text-text-muted mt-0.5">
+          <p className="text-sm text-text-muted mt-1.5 max-w-2xl">
             {t('pageSubline')}
           </p>
+          <div className="accent-rule mt-4" />
         </div>
         <button
           onClick={() => window.print()}
@@ -845,11 +847,11 @@ export function Methodology() {
                   { label: t('body.validation.metricHighPlus'), value: '25.3%' },
                   { label: t('body.validation.metricMedPlus'), value: '88.7%' },
                 ].map((m) => (
-                  <div key={m.label} className="p-2.5 rounded-md bg-background-elevated/50">
-                    <p className="text-lg font-bold tabular-nums text-text-primary font-mono">
+                  <div key={m.label} className="fern-card p-3 text-center">
+                    <p className="pull-stat text-text-primary">
                       {m.value}
                     </p>
-                    <p className="text-xs text-text-muted">{m.label}</p>
+                    <p className="editorial-label mt-1">{m.label}</p>
                   </div>
                 ))}
               </div>
@@ -989,9 +991,9 @@ export function Methodology() {
                   { labelKey: 'statDriftFeatures', value: '16' },
                   { labelKey: 'statDualConfirmed', value: '~130K' },
                 ].map((m) => (
-                  <div key={m.labelKey} className="p-2.5 rounded-md bg-background-elevated/50 text-center">
-                    <p className="text-lg font-bold tabular-nums text-accent font-mono">{m.value}</p>
-                    <p className="text-xs text-text-muted">{t(`body.v52layer.${m.labelKey}`)}</p>
+                  <div key={m.labelKey} className="fern-card p-3 text-center">
+                    <p className="pull-stat text-accent">{m.value}</p>
+                    <p className="editorial-label mt-1">{t(`body.v52layer.${m.labelKey}`)}</p>
                   </div>
                 ))}
               </div>

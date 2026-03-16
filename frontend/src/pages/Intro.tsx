@@ -28,11 +28,11 @@ const SECTOR_COLORS: Record<string, string> = {
 const SECTOR_COLORS_ARRAY = Object.values(SECTOR_COLORS)
 
 const GRADE_COLORS: Record<string, { text: string; bg: string; border: string }> = {
-  A: { text: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
-  B: { text: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
-  C: { text: '#d97706', bg: '#fffbeb', border: '#fde68a' },
-  D: { text: '#ea580c', bg: '#fff7ed', border: '#fed7aa' },
-  F: { text: '#dc2626', bg: '#fef2f2', border: '#fecaca' },
+  A: { text: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.25)' },
+  B: { text: '#60a5fa', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.25)' },
+  C: { text: '#fbbf24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.25)' },
+  D: { text: '#fb923c', bg: 'rgba(251,146,60,0.08)', border: 'rgba(251,146,60,0.25)' },
+  F: { text: '#f87171', bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.25)' },
 }
 
 const SERIF = "'Playfair Display', Georgia, serif"
@@ -340,10 +340,10 @@ function ProcessStep({
       >
         {step}
       </span>
-      <h3 className="text-lg font-bold mb-2" style={{ color: '#1a1714' }}>
+      <h3 className="text-lg font-bold mb-2" style={{ color: '#f0ede8' }}>
         {title}
       </h3>
-      <p className="text-sm leading-relaxed" style={{ color: '#78716c' }}>
+      <p className="text-sm leading-relaxed" style={{ color: '#6a6560' }}>
         {body}
       </p>
       {/* Animated connector line on desktop */}
@@ -583,7 +583,7 @@ export default function Intro() {
         id="section-scale"
         ref={s2Ref}
         className="px-6 sm:px-12 lg:px-24 py-24 sm:py-32"
-        style={{ background: '#fff' }}
+        style={{ background: '#0d0f0e' }}
       >
         <div className="max-w-5xl mx-auto">
           {/* Header label */}
@@ -602,7 +602,7 @@ export default function Intro() {
             animate={s2InView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-3xl sm:text-4xl font-black mb-12 leading-tight"
-            style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#1a1714' }}
+            style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#f0ede8' }}
           >
             {isEn ? '23 years of public spending data' : '23 anos de datos de gasto publico'}
           </motion.h2>
@@ -641,7 +641,7 @@ export default function Intro() {
                 })}
               </div>
               {/* Year labels (first, middle, last) */}
-              <div className="flex justify-between mt-2 text-xs" style={{ color: '#a8a29e' }}>
+              <div className="flex justify-between mt-2 text-xs" style={{ color: '#6a6560' }}>
                 <span>{chartBars[0]?.year}</span>
                 <span>{chartBars[Math.floor(chartBars.length / 2)]?.year}</span>
                 <span>{chartBars[chartBars.length - 1]?.year}</span>
@@ -654,30 +654,30 @@ export default function Intro() {
             <StatCounter
               value={totalContracts}
               label={isEn ? 'contracts analyzed' : 'contratos analizados'}
-              color="#1a1714"
-              labelColor="#78716c"
+              color="#f0ede8"
+              labelColor="#6a6560"
               inView={s2InView}
               duration={2200}
             />
             <div className="flex flex-col items-center gap-1.5">
               <span
                 className="text-4xl sm:text-5xl font-black tabular-nums font-mono leading-none"
-                style={{ color: '#1a1714' }}
+                style={{ color: '#f0ede8' }}
               >
                 {yearsUp}
               </span>
-              <span className="text-sm font-medium" style={{ color: '#78716c' }}>
+              <span className="text-sm font-medium" style={{ color: '#6a6560' }}>
                 {isEn ? 'years of data (2002-2025)' : 'anos de datos (2002-2025)'}
               </span>
             </div>
             <div className="flex flex-col items-center gap-1.5">
               <span
                 className="text-4xl sm:text-5xl font-black tabular-nums font-mono leading-none"
-                style={{ color: '#1a1714' }}
+                style={{ color: '#f0ede8' }}
               >
                 ~{(valueTUp / 10).toFixed(1)}T
               </span>
-              <span className="text-sm font-medium" style={{ color: '#78716c' }}>
+              <span className="text-sm font-medium" style={{ color: '#6a6560' }}>
                 {isEn ? 'MXN evaluated value' : 'MXN valor evaluado'}
               </span>
             </div>
@@ -803,12 +803,12 @@ export default function Intro() {
       </section>
 
       {/* ================================================================= */}
-      {/* SECTION 4: HOW IT WORKS - White bg, animated steps */}
+      {/* SECTION 4: HOW IT WORKS - Dark bg, animated steps */}
       {/* ================================================================= */}
       <section
         ref={s4Ref}
         className="px-6 sm:px-12 lg:px-24 py-24 sm:py-32"
-        style={{ background: '#fff' }}
+        style={{ background: '#0d0f0e' }}
       >
         <div className="max-w-5xl mx-auto">
           <motion.span
@@ -826,7 +826,7 @@ export default function Intro() {
             animate={s4InView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-3xl sm:text-4xl font-black mb-14 leading-tight"
-            style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#1a1714' }}
+            style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#f0ede8' }}
           >
             {isEn ? 'From raw data to risk intelligence' : 'De datos crudos a inteligencia de riesgo'}
           </motion.h2>
@@ -875,8 +875,8 @@ export default function Intro() {
             initial={{ opacity: 0, y: 20 }}
             animate={s4InView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.5, delay: 0.9 }}
-            className="mt-14 rounded-xl border border-stone-200 p-5 text-sm leading-relaxed"
-            style={{ color: '#78716c', background: '#faf9f6' }}
+            className="mt-14 rounded-xl border p-5 text-sm leading-relaxed"
+            style={{ color: '#6a6560', background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.08)' }}
           >
             {isEn
               ? 'Scores are statistical risk indicators, not proof of corruption. A high score means the contract resembles documented corruption patterns.'
@@ -903,7 +903,7 @@ export default function Intro() {
       <section
         ref={s5Ref}
         className="px-6 sm:px-12 lg:px-24 py-24 sm:py-32"
-        style={{ background: '#f5f5f0' }}
+        style={{ background: '#141716' }}
       >
         <div className="max-w-5xl mx-auto text-center">
           <motion.span
@@ -921,7 +921,7 @@ export default function Intro() {
             animate={s5InView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-3xl sm:text-4xl font-black mb-10 leading-tight"
-            style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#1a1714' }}
+            style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#f0ede8' }}
           >
             {isEn
               ? 'How healthy is Mexican public procurement?'
@@ -936,7 +936,7 @@ export default function Intro() {
             className="mb-12"
           >
             <GradeSlotMachine grade={nationalGrade} trigger={s5InView} />
-            <p className="mt-4 text-base" style={{ color: '#78716c' }}>
+            <p className="mt-4 text-base" style={{ color: '#6a6560' }}>
               {isEn ? 'National average grade' : 'Calificacion promedio nacional'}
             </p>
           </motion.div>
@@ -957,14 +957,15 @@ export default function Intro() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={s5InView ? { opacity: 1, y: 0 } : {}}
                     transition={{ duration: 0.35, delay: i * 0.05 + 0.6 }}
-                    className="bg-white rounded-xl border border-stone-200 p-4 flex items-center gap-4 shadow-sm"
+                    className="rounded-xl p-4 flex items-center gap-4"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
                   >
                     <span
                       className="w-2 h-8 rounded-full flex-shrink-0"
                       style={{ backgroundColor: sectorColor }}
                     />
                     <div className="flex-1 min-w-0">
-                      <span className="text-sm font-semibold truncate block" style={{ color: '#1a1714' }}>
+                      <span className="text-sm font-semibold truncate block" style={{ color: '#f0ede8' }}>
                         {name}
                       </span>
                     </div>
@@ -988,7 +989,8 @@ export default function Intro() {
               {Array.from({ length: 12 }).map((_, i) => (
                 <div
                   key={i}
-                  className="bg-white rounded-xl border border-stone-200 p-4 h-16 animate-pulse"
+                  className="rounded-xl p-4 h-16 animate-pulse"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.04)' }}
                 />
               ))}
             </div>

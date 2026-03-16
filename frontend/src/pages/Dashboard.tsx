@@ -135,7 +135,7 @@ const KPICard = memo(function KPICard({
       onClick={onClick}
       disabled={!onClick}
       className={cn(
-        'fern-card relative flex flex-col justify-between p-6 text-left overflow-hidden group',
+        'fern-card relative flex flex-col justify-between p-7 text-left overflow-hidden group',
         onClick && 'cursor-pointer hover:scale-[1.005]',
         !onClick && 'cursor-default',
       )}

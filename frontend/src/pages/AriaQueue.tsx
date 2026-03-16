@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { staggerContainer, staggerItem } from '@/lib/animations'
+import { PageHeader } from '@/components/layout/PageHeader'
 import { ariaApi } from '@/api/client'
 import type { AriaQueueItem, AriaQueueResponse } from '@/api/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -182,18 +183,18 @@ function TierStatCard({
     <button
       onClick={onClick}
       className={cn(
-        'flex flex-col items-center gap-1 rounded-lg border px-4 py-3 text-left transition-all duration-150',
+        'fern-card flex flex-col items-center gap-1.5 px-4 py-4 text-left transition-all duration-150',
         'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
         isActive
-          ? cn('border-current', cfg.badgeClass)
-          : 'border-border/40 hover:border-border/80 bg-background-card'
+          ? cn('border-current ring-1 ring-accent/30', cfg.badgeClass)
+          : ''
       )}
       aria-pressed={isActive}
     >
-      <span className="text-xs font-mono uppercase tracking-widest text-text-muted">
+      <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted">
         T{tier} {cfg.label}
       </span>
-      <span className="text-2xl font-bold font-mono tabular-nums">{formatNumber(count)}</span>
+      <span className="pull-stat tabular-nums">{formatNumber(count)}</span>
     </button>
   )
 }
@@ -1176,84 +1177,79 @@ export default function AriaQueue() {
   return (
     <motion.div
       variants={staggerContainer}
-      initial="hidden"
-      animate="show"
+      initial="initial"
+      animate="animate"
       className="space-y-5 max-w-7xl mx-auto"
     >
       {/* Page header */}
-      <motion.div
-        variants={staggerItem}
-        className="flex flex-col sm:flex-row sm:items-start justify-between gap-3"
-      >
-        <div>
-          <div className="flex items-center gap-2.5 mb-1">
-            <Shield className="h-5 w-5 text-accent" aria-hidden="true" />
-            <h1 className="text-xl font-semibold tracking-tight text-text-primary font-mono">
-              Investigation Queue
-            </h1>
+      <PageHeader
+        title="Investigation Queue"
+        subtitle={`ARIA -- Automated Risk Investigation Algorithm${latestRun?.completed_at ? ` -- Last run: ${new Date(latestRun.completed_at).toLocaleString()}` : ''}`}
+        icon={Shield}
+        label="COLA DE INVESTIGACION"
+        actions={
+          <div className="flex gap-2 flex-shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void handleExportT1T2()}
+              disabled={exportingCsv}
+              className="gap-1.5 text-xs"
+              aria-label="Export T1 and T2 vendors to CSV"
+            >
+              {exportingCsv ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Download className="h-3.5 w-3.5" />
+              )}
+              Export T1/T2
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetch()}
+              className="gap-1.5 text-xs"
+              aria-label="Refresh queue"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Refresh
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => setConfirmOpen(true)}
+              disabled={runMutation.isPending}
+              className="gap-1.5 text-xs"
+            >
+              {runMutation.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Play className="h-3.5 w-3.5" />
+              )}
+              Run Pipeline
+            </Button>
           </div>
-          <p className="text-sm text-text-muted font-mono">
-            ARIA -- Automated Risk Investigation Algorithm
-            {latestRun?.completed_at && (
-              <span className="ml-2 text-text-muted/60">
-                -- Last run: {new Date(latestRun.completed_at).toLocaleString()}
-              </span>
-            )}
-          </p>
-        </div>
-        <div className="flex gap-2 flex-shrink-0">
-          {/* Export T1/T2 */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void handleExportT1T2()}
-            disabled={exportingCsv}
-            className="gap-1.5 text-xs"
-            aria-label="Export T1 and T2 vendors to CSV"
-          >
-            {exportingCsv ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Download className="h-3.5 w-3.5" />
-            )}
-            Export T1/T2
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => refetch()}
-            className="gap-1.5 text-xs"
-            aria-label="Refresh queue"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Refresh
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => setConfirmOpen(true)}
-            disabled={runMutation.isPending}
-            className="gap-1.5 text-xs"
-          >
-            {runMutation.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Play className="h-3.5 w-3.5" />
-            )}
-            Run Pipeline
-          </Button>
-        </div>
-      </motion.div>
+        }
+      />
 
       {/* Tier stat cards */}
-      <motion.div variants={staggerItem} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <motion.div
+        className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+        variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.06, delayChildren: 0.1 } } }}
+        initial="hidden"
+        animate="show"
+      >
         {([1, 2, 3, 4] as const).map((tier) => (
-          <TierStatCard
+          <motion.div
             key={tier}
-            tier={tier}
-            count={tierCounts[tier]}
-            isActive={selectedTier === tier}
-            onClick={() => setSelectedTier(selectedTier === tier ? null : tier)}
-          />
+            variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] } } }}
+          >
+            <TierStatCard
+              tier={tier}
+              count={tierCounts[tier]}
+              isActive={selectedTier === tier}
+              onClick={() => setSelectedTier(selectedTier === tier ? null : tier)}
+            />
+          </motion.div>
         ))}
       </motion.div>
 
@@ -1387,13 +1383,13 @@ export default function AriaQueue() {
 
       {/* Queue table */}
       <motion.div variants={staggerItem}>
-        <Card className="border-border/40">
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-sm font-mono uppercase tracking-wider text-text-muted flex items-center gap-2">
-              <Shield className="h-4 w-4" aria-hidden="true" />
-              Investigation Leads
-              {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin ml-1" />}
-            </CardTitle>
+        <div className="editorial-rule mb-4">
+          <span className="editorial-label">Investigation Leads</span>
+          {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin ml-2 inline-block text-text-muted" />}
+        </div>
+        <Card className="fern-card border-border/40">
+          <CardHeader className="pb-2 pt-4 px-4 sr-only">
+            <CardTitle>Investigation Leads</CardTitle>
           </CardHeader>
           <CardContent className="px-3 pb-4">
             {/* Column header */}
@@ -1443,19 +1439,27 @@ export default function AriaQueue() {
 
             {/* Queue rows */}
             {!isLoading && hasData && (
-              <div>
+              <motion.div
+                variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.04, delayChildren: 0.1 } } }}
+                initial="hidden"
+                animate="show"
+              >
                 {data!.data.map((item) => (
-                  <QueueRow
+                  <motion.div
                     key={item.vendor_id}
-                    item={item}
-                    onStatusUpdate={handleStatusUpdate}
-                    updatingId={updatingId}
-                    isSelected={selectedIds.has(item.vendor_id)}
-                    onSelectToggle={handleSelectToggle}
-                    onPatternClick={handlePatternClick}
-                  />
+                    variants={{ hidden: { opacity: 0, x: -12 }, show: { opacity: 1, x: 0, transition: { duration: 0.3, ease: 'easeOut' } } }}
+                  >
+                    <QueueRow
+                      item={item}
+                      onStatusUpdate={handleStatusUpdate}
+                      updatingId={updatingId}
+                      isSelected={selectedIds.has(item.vendor_id)}
+                      onSelectToggle={handleSelectToggle}
+                      onPatternClick={handlePatternClick}
+                    />
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             )}
 
             {/* Pagination */}

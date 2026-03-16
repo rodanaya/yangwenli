@@ -23,7 +23,7 @@ import { SECTOR_COLORS, SECTORS, RISK_COLORS, getRiskLevelFromScore, getSectorNa
 import { Heatmap } from '@/components/charts/Heatmap'
 import type { SectorStatistics } from '@/api/types'
 import { AlertTriangle, BarChart3, Info, Layers, X } from 'lucide-react'
-// PageHeader replaced by inline Obsidian Intelligence header
+import { PageHeader } from '@/components/layout/PageHeader'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { ScrollReveal } from '@/hooks/useAnimations'
@@ -801,41 +801,47 @@ export function Sectors() {
   return (
     <div className="space-y-5">
       {/* Hero Header */}
-      <div className="card p-6">
-        <h1 className="text-gradient text-2xl font-bold tracking-tight">Sector Intelligence</h1>
-        <p className="text-text-secondary text-sm mt-1">
-          {aggregates
-            ? `${formatNumber(aggregates.totalContracts)} contracts across ${aggregates.sectorCount} active sectors`
-            : '12-sector taxonomy with risk breakdown'}
-        </p>
-        {/* Summary stat pills */}
-        {aggregates && (
-          <div className="flex flex-wrap gap-3 mt-4">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-1.5 bg-background-elevated/40">
-              <span className="text-xs text-text-muted">Total Value</span>
-              <span className="text-sm font-bold font-mono text-text-primary">{formatCompactMXN(aggregates.totalValue)}</span>
-            </div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-1.5 bg-background-elevated/40">
-              <span className="text-xs text-text-muted">Avg Risk</span>
-              <span className={cn(
-                'text-sm font-bold font-mono',
-                aggregates.avgRisk >= 0.30 ? 'text-risk-critical' : aggregates.avgRisk >= 0.15 ? 'text-risk-high' : 'text-text-primary'
-              )}>
-                {(aggregates.avgRisk * 100).toFixed(1)}%
-              </span>
-            </div>
-            {topSector && (
-              <div className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-1.5 bg-background-elevated/40">
-                <span className="text-xs text-text-muted">Most Active</span>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: SECTOR_COLORS[topSector.sector_code] || '#64748b' }} />
-                  <span className="text-sm font-bold font-mono text-text-primary">{getSectorNameEN(topSector.sector_code)}</span>
-                </div>
-              </div>
-            )}
+      <PageHeader
+        title="Sector Intelligence"
+        subtitle={aggregates
+          ? `${formatNumber(aggregates.totalContracts)} contracts across ${aggregates.sectorCount} active sectors`
+          : '12-sector taxonomy with risk breakdown'}
+        icon={Layers}
+        label="SECTORES GUBERNAMENTALES"
+        serif
+      />
+      {/* Summary stat pills */}
+      {aggregates && (
+        <motion.div
+          className="flex flex-wrap gap-3"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+        >
+          <div className="fern-card inline-flex items-center gap-2 px-4 py-2">
+            <span className="text-[10px] uppercase tracking-wider text-text-muted">Total Value</span>
+            <span className="pull-stat !text-base">{formatCompactMXN(aggregates.totalValue)}</span>
           </div>
-        )}
-      </div>
+          <div className="fern-card inline-flex items-center gap-2 px-4 py-2">
+            <span className="text-[10px] uppercase tracking-wider text-text-muted">Avg Risk</span>
+            <span className={cn(
+              'pull-stat !text-base',
+              aggregates.avgRisk >= 0.30 ? 'text-risk-critical' : aggregates.avgRisk >= 0.15 ? 'text-risk-high' : 'text-text-primary'
+            )}>
+              {(aggregates.avgRisk * 100).toFixed(1)}%
+            </span>
+          </div>
+          {topSector && (
+            <div className="fern-card inline-flex items-center gap-2 px-4 py-2">
+              <span className="text-[10px] uppercase tracking-wider text-text-muted">Most Active</span>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: SECTOR_COLORS[topSector.sector_code] || '#64748b' }} />
+                <span className="pull-stat !text-base">{getSectorNameEN(topSector.sector_code)}</span>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      )}
 
       {/* ================================================================ */}
       {/* SECTOR RANKING STRIP — All 12 sectors by avg risk, clickable  */}
@@ -843,9 +849,9 @@ export function Sectors() {
       {data?.data && data.data.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-mono">
-              {t('page.rankedBy')}
-            </p>
+            <div className="editorial-rule flex-1 mr-3">
+              <span className="editorial-label">{t('page.rankedBy')}</span>
+            </div>
             {selectedSectorCode && (
               <button
                 onClick={() => setSelectedSectorCode(null)}
@@ -1033,45 +1039,53 @@ export function Sectors() {
       )}
 
       {/* Section 1: Stat Cards */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <ScrollReveal delay={0} direction="up">
+      <div className="editorial-rule mb-3">
+        <span className="editorial-label">Key Metrics</span>
+      </div>
+      <motion.div
+        className="grid gap-4 grid-cols-2 lg:grid-cols-4"
+        variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.06, delayChildren: 0.1 } } }}
+        initial="hidden"
+        animate="show"
+      >
+        <motion.div variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] } } }}>
           <SharedStatCard
             label={t('statCards.sectorsTracked')}
-            value={aggregates ? String(aggregates.sectorCount) : '—'}
+            value={aggregates ? String(aggregates.sectorCount) : '---'}
             detail={t('statCards.sectorsTrackedDetail')}
             borderColor="border-accent/30"
             loading={isLoading}
           />
-        </ScrollReveal>
-        <ScrollReveal delay={80} direction="up">
+        </motion.div>
+        <motion.div variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] } } }}>
           <SharedStatCard
             label={t('statCards.totalContracts')}
-            value={aggregates ? formatNumber(aggregates.totalContracts) : '—'}
+            value={aggregates ? formatNumber(aggregates.totalContracts) : '---'}
             detail={t('statCards.totalContractsDetail')}
             borderColor="border-blue-500/30"
             loading={isLoading}
           />
-        </ScrollReveal>
-        <ScrollReveal delay={160} direction="up">
+        </motion.div>
+        <motion.div variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] } } }}>
           <SharedStatCard
             label={t('statCards.totalValue')}
-            value={aggregates ? formatCompactMXN(aggregates.totalValue) : '—'}
+            value={aggregates ? formatCompactMXN(aggregates.totalValue) : '---'}
             detail={t('statCards.totalValueDetail')}
             borderColor="border-amber-500/30"
             loading={isLoading}
           />
-        </ScrollReveal>
-        <ScrollReveal delay={240} direction="up">
+        </motion.div>
+        <motion.div variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] } } }}>
           <SharedStatCard
             label={t('statCards.avgRiskScore')}
-            value={aggregates ? `${(aggregates.avgRisk * 100).toFixed(1)}%` : '—'}
+            value={aggregates ? `${(aggregates.avgRisk * 100).toFixed(1)}%` : '---'}
             detail={t('statCards.avgRiskScoreDetail')}
             borderColor="border-red-500/30"
             color={aggregates && aggregates.avgRisk >= 0.3 ? 'text-risk-high' : 'text-text-primary'}
             loading={isLoading}
           />
-        </ScrollReveal>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* System Intelligence Chips */}
       {patternCounts && (
@@ -1113,7 +1127,7 @@ export function Sectors() {
 
       {/* Section 2a: Sector Risk Heatmap — strongest signal, visible by default */}
       <ScrollReveal direction="fade">
-        <Card>
+        <Card className="fern-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Layers className="h-4 w-4" />
@@ -1167,7 +1181,7 @@ export function Sectors() {
       {/* ================================================================ */}
       {criScatterData && criScatterData.data.length > 0 && (
         <ScrollReveal direction="fade">
-          <Card className="bg-slate-900/50 border border-white/5 rounded-xl">
+          <Card className="fern-card">
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div>
@@ -1277,13 +1291,16 @@ export function Sectors() {
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
+      <div className="editorial-rule mb-3">
+        <span className="editorial-label">Sector Comparison</span>
+      </div>
       <motion.div
         variants={fadeIn}
         initial="initial"
         whileInView="animate"
         viewport={{ once: true, margin: '-50px' }}
       >
-      <Card className="overflow-hidden">
+      <Card className="fern-card overflow-hidden">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between gap-3">
             <CardTitle className="flex items-center gap-2 text-sm">
@@ -1487,10 +1504,10 @@ export function Sectors() {
                             )}
                           </div>
                         </td>
-                        <td className="data-cell text-right font-mono text-text-secondary tabular-nums">
+                        <td className="data-cell text-right font-mono text-text-primary font-bold tabular-nums">
                           {formatNumber(sector.total_contracts)}
                         </td>
-                        <td className="data-cell text-right font-mono text-text-secondary tabular-nums">
+                        <td className="data-cell text-right font-mono text-text-primary font-bold text-sm tabular-nums">
                           {formatCompactMXN(sector.total_value_mxn)}
                         </td>
                         <td className="data-cell text-right">
@@ -1531,7 +1548,7 @@ export function Sectors() {
       <ScrollReveal direction="fade">
         <div>
           {/* Contract Value by Sector */}
-          <Card className="bg-slate-900/50 border border-white/5 rounded-xl">
+          <Card className="fern-card">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold text-white/80 uppercase tracking-wider">
@@ -1675,7 +1692,7 @@ export function Sectors() {
       {/* INDUSTRY RISK CONCENTRATION — Treemap by total value             */}
       {/* ================================================================ */}
       <ScrollReveal direction="fade">
-        <Card className="bg-slate-900/50 border border-white/5 rounded-xl">
+        <Card className="fern-card">
           <CardHeader className="pb-2">
             <p className="text-sm font-semibold text-white/80 uppercase tracking-wider flex items-center gap-2">
               <Layers className="h-3.5 w-3.5 text-accent" />

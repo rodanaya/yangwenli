@@ -522,7 +522,10 @@ export default function Administrations() {
   return (
     <div className="space-y-6 p-6 max-w-[1600px] mx-auto">
       {/* Header */}
-      <div className="card p-5 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <div className="editorial-rule mb-4">
+        <span className="editorial-label">ANÁLISIS POR ADMINISTRACIÓN</span>
+      </div>
+      <div className="fern-card p-5 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
             <Landmark className="h-5 w-5 text-amber-400" />

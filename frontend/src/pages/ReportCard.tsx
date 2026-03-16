@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useRef } from 'react'
+import { motion, useInView, type Variants } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
@@ -122,6 +123,22 @@ const INDICATOR_I18N: Record<string, string> = {
 
 const GRADE_ORDER: Record<string, number> = { F: 0, D: 1, C: 2, B: 3, A: 4 }
 
+// ---------------------------------------------------------------------------
+// Animation Variants
+// ---------------------------------------------------------------------------
+
+const cardContainerVariants: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.07, delayChildren: 0.1 },
+  },
+}
+const cardItemVariants: Variants = {
+  hidden: { opacity: 0, y: 20, scale: 0.97 },
+  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: 'easeOut' } },
+}
+
 const SECTOR_NAME_ES: Record<string, string> = {
   salud: 'Salud',
   educacion: 'Educaci\u00f3n',
@@ -170,7 +187,12 @@ function NationalGradeHero({ national }: { national: PHINational }) {
   return (
     <section className="mb-10">
       {/* Page header */}
-      <div className="mb-8 text-center">
+      <motion.div
+        className="mb-8 text-center"
+        initial={{ opacity: 0, y: -16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+      >
         <SectionLabel>Reporte de Salud Procuratoria</SectionLabel>
         <h1
           className="text-editorial-h1 md:text-editorial-display mb-3"
@@ -185,7 +207,7 @@ function NationalGradeHero({ national }: { national: PHINational }) {
           </strong>{' '}
           contratos &middot; 12 sectores evaluados
         </p>
-      </div>
+      </motion.div>
 
       {/* Grade card */}
       <div
@@ -1501,6 +1523,9 @@ function PHITab({ t }: { t: (k: string, opts?: Record<string, unknown>) => strin
     )
   }, [data])
 
+  const sectorsRef = useRef<HTMLDivElement>(null)
+  const sectorsInView = useInView(sectorsRef, { once: true, margin: '-60px' })
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
@@ -1553,11 +1578,19 @@ function PHITab({ t }: { t: (k: string, opts?: Record<string, unknown>) => strin
         <p className="text-sm mb-6" style={{ color: '#9c9490' }}>
           Haz clic en cualquier tarjeta para ver los indicadores detallados y los puntos de alerta.
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <motion.div
+          ref={sectorsRef}
+          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+          variants={cardContainerVariants}
+          initial="hidden"
+          animate={sectorsInView ? 'show' : 'hidden'}
+        >
           {sortedSectors.map((sector) => (
-            <SectorReportCard key={sector.sector_id} sector={sector} t={t} />
+            <motion.div key={sector.sector_id} variants={cardItemVariants}>
+              <SectorReportCard sector={sector} t={t} />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </section>
 
       <TrendSection t={t} />

@@ -26,7 +26,6 @@ import {
   DollarSign,
   Newspaper,
 } from 'lucide-react'
-import { RubliLogoMark } from '@/components/ui/RubliLogoMark'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -200,35 +199,43 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         collapsed ? 'md:w-14' : 'md:w-56',
       )}
     >
-      {/* Brand header */}
-      <div className="flex h-14 items-center border-b border-stone-800 px-3">
-        <div className="flex flex-1 items-center gap-2.5 overflow-hidden">
-          <div className="relative flex-shrink-0">
-            <RubliLogoMark size={22} className="text-amber-500" />
-            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981] animate-pulse" />
-          </div>
-          {!isCollapsed && (
-            <div className="flex flex-col min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm font-bold tracking-[0.15em] uppercase text-white font-mono">
-                  RUBLI
-                </span>
-                <span className="text-[8px] font-mono px-1 py-0.5 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 leading-none tracking-wider uppercase">
-                  LIVE
-                </span>
-              </div>
-              <span className="text-[10px] tracking-[0.08em] text-stone-500 font-mono">
-                Transparencia Procuratoria
-              </span>
-            </div>
-          )}
+      {/* Logo — Targeting reticle mark */}
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-white/8">
+        <div className="relative flex-shrink-0">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            {/* Outer ring */}
+            <circle cx="16" cy="16" r="13" stroke="#c41e3a" strokeWidth="2"/>
+            {/* Inner ring */}
+            <circle cx="16" cy="16" r="7" stroke="#c41e3a" strokeWidth="1.5" strokeOpacity="0.6"/>
+            {/* Center dot */}
+            <circle cx="16" cy="16" r="2.5" fill="#c41e3a"/>
+            {/* Crosshair lines - top */}
+            <line x1="16" y1="1" x2="16" y2="7" stroke="#c41e3a" strokeWidth="1.5" strokeLinecap="round"/>
+            {/* Crosshair lines - bottom */}
+            <line x1="16" y1="25" x2="16" y2="31" stroke="#c41e3a" strokeWidth="1.5" strokeLinecap="round"/>
+            {/* Crosshair lines - left */}
+            <line x1="1" y1="16" x2="7" y2="16" stroke="#c41e3a" strokeWidth="1.5" strokeLinecap="round"/>
+            {/* Crosshair lines - right */}
+            <line x1="25" y1="16" x2="31" y2="16" stroke="#c41e3a" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          {/* Live pulse dot */}
+          <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-green-400 border border-[#1a1714]" aria-label="Live" />
         </div>
+        {!isCollapsed && (
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-white font-black text-lg tracking-tight leading-none">RUBLI</span>
+              <span className="text-[9px] font-bold text-[#c41e3a] bg-[#c41e3a]/15 px-1.5 py-0.5 rounded tracking-widest uppercase leading-none">2.0</span>
+            </div>
+            <p className="text-[10px] text-white/35 mt-0.5 truncate tracking-wide">Transparencia Procuratoria</p>
+          </div>
+        )}
         {/* Mobile close button */}
         {mobileOpen && (
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 flex-shrink-0 md:hidden text-stone-300 hover:text-white hover:bg-[#2a2420]"
+            className="h-7 w-7 flex-shrink-0 md:hidden text-stone-300 hover:text-white hover:bg-[#2a2420] ml-auto"
             onClick={onMobileClose}
             aria-label={t('closeMenu')}
           >

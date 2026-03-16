@@ -15,7 +15,9 @@ import {
   toTitleCase,
   cn,
 } from '@/lib/utils'
-import { institutionApi, caseLibraryApi, api } from '@/api/client'
+import { institutionApi, caseLibraryApi, api, scorecardApi } from '@/api/client'
+import { GradeBadge10, InstitutionScorecardCard } from '@/components/ui/ScorecardWidgets'
+import type { InstitutionScorecardData } from '@/components/ui/ScorecardWidgets'
 import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { NarrativeCard } from '@/components/NarrativeCard'
 import { ContractDetailModal } from '@/components/ContractDetailModal'
@@ -192,6 +194,15 @@ export function InstitutionProfile() {
     queryFn: () => institutionApi.getTopCategories(institutionId, { limit: 8 }),
     enabled: !!institutionId,
     staleTime: 30 * 60 * 1000,
+  })
+
+  // Procurement Integrity Score
+  const { data: scorecard } = useQuery<InstitutionScorecardData>({
+    queryKey: ['institution', institutionId, 'scorecard'],
+    queryFn: () => scorecardApi.getInstitution(institutionId),
+    enabled: !!institutionId,
+    staleTime: 60 * 60 * 1000,
+    retry: false,
   })
 
   // ── Derived values ──────────────────────────────────────────────────────────
@@ -415,6 +426,11 @@ export function InstitutionProfile() {
             entityName={toTitleCase(institution.name)}
           />
           <RiskBadge score={riskScore} className="text-sm px-2.5 py-1" />
+          {scorecard && (
+            <div title={`Integridad: ${scorecard.grade_label} (${scorecard.total_score.toFixed(0)}/100)`}>
+              <GradeBadge10 grade={scorecard.grade} size="md" />
+            </div>
+          )}
           <RiskFeedbackButton
             entityType="institution"
             entityId={institutionId}
@@ -642,6 +658,22 @@ export function InstitutionProfile() {
               )}
             </CardContent>
           </div>
+
+          {/* Procurement Integrity Score */}
+          {scorecard && (
+            <div className="card-elevated">
+              <CardHeader className="pb-2 pt-4">
+                <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                  <Shield className="h-3.5 w-3.5 text-accent" />
+                  Calificación de Integridad
+                  <GradeBadge10 grade={scorecard.grade} size="sm" />
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pb-4">
+                <InstitutionScorecardCard sc={scorecard} />
+              </CardContent>
+            </div>
+          )}
 
           {/* Risk Factor Breakdown (Waterfall) */}
           {(waterfallDataError || waterfallLoading || waterfallData?.features?.length > 0) && (

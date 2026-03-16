@@ -133,12 +133,9 @@ export default function Journalists() {
           transition={{ duration: 0.5 }}
           className="mb-16"
         >
-          <p
-            className="text-xs font-bold tracking-[0.2em] uppercase mb-4"
-            style={{ color: '#c41e3a' }}
-          >
-            HERRAMIENTAS PARA PERIODISTAS
-          </p>
+          <div className="editorial-rule mb-4">
+            <span className="editorial-label" style={{ color: '#c41e3a' }}>PARA PERIODISTAS</span>
+          </div>
           <h1
             className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-5"
             style={{ fontFamily: "'Playfair Display', Georgia, serif", color: '#1a1714' }}
@@ -178,12 +175,9 @@ export default function Journalists() {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="mb-16"
         >
-          <p
-            className="text-xs font-bold tracking-[0.2em] uppercase mb-6"
-            style={{ color: '#c41e3a' }}
-          >
-            IDEAS PARA TU HISTORIA
-          </p>
+          <div className="editorial-rule mb-6">
+            <span className="editorial-label" style={{ color: '#c41e3a' }}>IDEAS PARA TU HISTORIA</span>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <StoryCard
               stat={`${highRiskPct} de contratos en alto riesgo`}
@@ -225,12 +219,9 @@ export default function Journalists() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="mb-16"
         >
-          <p
-            className="text-xs font-bold tracking-[0.2em] uppercase mb-3"
-            style={{ color: '#c41e3a' }}
-          >
-            GUIA RAPIDA
-          </p>
+          <div className="editorial-rule mb-3">
+            <span className="editorial-label" style={{ color: '#c41e3a' }}>GUIA RAPIDA</span>
+          </div>
           <h2
             className="text-2xl font-bold mb-8"
             style={{ fontFamily: "'Playfair Display', Georgia, serif", color: '#1a1714' }}
@@ -282,12 +273,9 @@ export default function Journalists() {
           transition={{ duration: 0.5, delay: 0.3 }}
           className="mb-16"
         >
-          <p
-            className="text-xs font-bold tracking-[0.2em] uppercase mb-3"
-            style={{ color: '#c41e3a' }}
-          >
-            REPORTE 2025
-          </p>
+          <div className="editorial-rule mb-3">
+            <span className="editorial-label" style={{ color: '#c41e3a' }}>REPORTE 2025</span>
+          </div>
           <h2
             className="text-2xl font-bold mb-6"
             style={{ fontFamily: "'Playfair Display', Georgia, serif", color: '#1a1714' }}
@@ -372,12 +360,9 @@ export default function Journalists() {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="mb-16"
         >
-          <p
-            className="text-xs font-bold tracking-[0.2em] uppercase mb-3"
-            style={{ color: '#c41e3a' }}
-          >
-            METODOLOGIA
-          </p>
+          <div className="editorial-rule mb-3">
+            <span className="editorial-label" style={{ color: '#c41e3a' }}>METODOLOGIA</span>
+          </div>
           <h2
             className="text-2xl font-bold mb-6"
             style={{ fontFamily: "'Playfair Display', Georgia, serif", color: '#1a1714' }}
@@ -443,12 +428,9 @@ export default function Journalists() {
           transition={{ duration: 0.5, delay: 0.5 }}
           className="mb-10"
         >
-          <p
-            className="text-xs font-bold tracking-[0.2em] uppercase mb-3"
-            style={{ color: '#c41e3a' }}
-          >
-            ATRIBUCION
-          </p>
+          <div className="editorial-rule mb-3">
+            <span className="editorial-label" style={{ color: '#c41e3a' }}>ATRIBUCION</span>
+          </div>
           <h2
             className="text-2xl font-bold mb-6"
             style={{ fontFamily: "'Playfair Display', Georgia, serif", color: '#1a1714' }}

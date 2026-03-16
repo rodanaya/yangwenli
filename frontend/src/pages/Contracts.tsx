@@ -533,11 +533,8 @@ export function Contracts() {
     <div className="space-y-3">
       {/* Page Hero */}
       <motion.div className="pb-1" variants={fadeIn} initial="initial" animate="animate">
-        <div className="flex items-center gap-2 mb-1">
-          <FileText className="h-4 w-4 text-accent" />
-          <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
-            CONTRACT EXPLORER
-          </span>
+        <div className="editorial-rule mb-3">
+          <span className="editorial-label">BASE DE CONTRATOS</span>
         </div>
         <h1 className="text-3xl font-black text-text-primary tracking-tight">3.1M Contracts. Search Everything.</h1>
         <p className="text-sm text-text-muted mt-1">

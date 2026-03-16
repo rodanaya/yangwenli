@@ -492,6 +492,9 @@ export default function Limitations() {
         whileInView="animate"
         viewport={{ once: true, margin: '-50px' }}
       >
+        <div className="editorial-rule mb-4">
+          <span className="editorial-label">LIMITACIONES DEL MODELO</span>
+        </div>
         <div className="flex items-center gap-3 mb-1">
           <div className="p-2 rounded-lg bg-risk-high/10 border border-risk-high/20">
             <AlertTriangle className="h-4 w-4 text-risk-high" />
@@ -506,7 +509,7 @@ export default function Limitations() {
       </motion.div>
 
       {/* Severity summary card */}
-      <div className="card p-4">
+      <div className="fern-card p-4">
         <div className="flex items-center justify-between mb-3">
           <p className="text-sm font-semibold text-text-primary">
             {LIMITATIONS.length} known limitations across 3 severity levels

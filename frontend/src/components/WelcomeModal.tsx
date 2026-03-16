@@ -104,7 +104,6 @@ function RiskBarDemo({ t }: { t: (key: string) => string }) {
 
 // ── Step 3: Keyboard shortcut display ────────────────────────────────────────
 function SearchDemo({ t }: { t: (key: string) => string }) {
-  // Detect Mac vs non-Mac for the key label
   const isMac =
     typeof navigator !== 'undefined' &&
     /Mac|iPhone|iPad|iPod/.test(navigator.platform)
@@ -113,7 +112,7 @@ function SearchDemo({ t }: { t: (key: string) => string }) {
     <div className="w-full max-w-xs mx-auto mt-4 space-y-4">
       {/* Shortcut badge */}
       <div className="flex items-center justify-center gap-2">
-        <kbd className="flex items-center gap-1 px-2 py-1 rounded border border-border bg-muted text-xs font-mono text-text-primary">
+        <kbd className="flex items-center gap-1 px-2 py-1 rounded border border-border bg-background-elevated text-xs font-mono text-text-primary">
           {isMac ? (
             <Command className="h-3 w-3" />
           ) : (
@@ -121,13 +120,13 @@ function SearchDemo({ t }: { t: (key: string) => string }) {
           )}
         </kbd>
         <span className="text-text-muted text-xs">+</span>
-        <kbd className="px-2 py-1 rounded border border-border bg-muted text-xs font-mono text-text-primary">
+        <kbd className="px-2 py-1 rounded border border-border bg-background-elevated text-xs font-mono text-text-primary">
           K
         </kbd>
       </div>
 
       {/* Mock search bar */}
-      <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 bg-card/80">
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 bg-background-elevated/80">
         <Search className="h-3.5 w-3.5 text-text-muted shrink-0" />
         <span className="text-xs text-text-muted italic">
           {t('welcome.step3SearchPlaceholder')}
@@ -199,28 +198,42 @@ export function WelcomeModal() {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleDismiss() }}>
-      <DialogContent size="md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
-              RUBLI
-            </span>
-          </DialogTitle>
-          <DialogDescription>
-            {t('welcome.subtitle')}
+      <DialogContent size="md" className="dark bg-[#0d0f0e] border-[#2a2d2c]">
+        {/* Editorial header */}
+        <DialogHeader className="border-b border-[#2a2d2c] pb-4">
+          <div className="flex items-center gap-3 mb-1">
+            {/* Mini targeting reticle */}
+            <svg width="20" height="20" viewBox="0 0 32 32" fill="none" aria-hidden="true" className="flex-shrink-0">
+              <circle cx="16" cy="16" r="13" stroke="#c41e3a" strokeWidth="2"/>
+              <circle cx="16" cy="16" r="7" stroke="#c41e3a" strokeWidth="1.5" strokeOpacity="0.6"/>
+              <circle cx="16" cy="16" r="2.5" fill="#c41e3a"/>
+              <line x1="16" y1="1" x2="16" y2="7" stroke="#c41e3a" strokeWidth="1.5" strokeLinecap="round"/>
+              <line x1="16" y1="25" x2="16" y2="31" stroke="#c41e3a" strokeWidth="1.5" strokeLinecap="round"/>
+              <line x1="1" y1="16" x2="7" y2="16" stroke="#c41e3a" strokeWidth="1.5" strokeLinecap="round"/>
+              <line x1="25" y1="16" x2="31" y2="16" stroke="#c41e3a" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            <div>
+              <DialogTitle className="flex items-center gap-2 leading-none">
+                <span className="text-white font-black text-xl tracking-tight">RUBLI</span>
+                <span className="text-[9px] font-bold text-[#c41e3a] bg-[#c41e3a]/15 px-1.5 py-0.5 rounded tracking-widest uppercase leading-none">2.0</span>
+              </DialogTitle>
+            </div>
+          </div>
+          <DialogDescription className="text-[#6a6560] text-xs leading-relaxed font-mono mt-1">
+            Red Unificada de Búsqueda de Licitaciones Irregulares — inteligencia procuratoria impulsada por IA
           </DialogDescription>
         </DialogHeader>
 
         <div className="py-4">
           {/* Step content */}
           <div className="flex flex-col items-center text-center py-4">
-            <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${currentStep.bgColor} mb-4`}>
+            <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${currentStep.bgColor} mb-4 border border-white/5`}>
               <Icon className={`h-8 w-8 ${currentStep.color}`} />
             </div>
-            <h3 className="text-lg font-semibold text-text-primary mb-2">
+            <h3 className="text-lg font-semibold text-[#f0ede8] mb-2">
               {t(currentStep.titleKey)}
             </h3>
-            <p className="text-sm text-text-muted leading-relaxed max-w-md">
+            <p className="text-sm text-[#6a6560] leading-relaxed max-w-md">
               {t(currentStep.descKey)}
             </p>
 
@@ -237,20 +250,20 @@ export function WelcomeModal() {
                 key={i}
                 onClick={() => setStep(i)}
                 className={`h-1.5 rounded-full transition-all ${
-                  i === step ? 'w-6 bg-accent' : 'w-1.5 bg-border hover:bg-text-muted/40'
+                  i === step ? 'w-6 bg-[#c41e3a]' : 'w-1.5 bg-[#2a2d2c] hover:bg-[#6a6560]/40'
                 }`}
-                aria-label={`Step ${i + 1}`}
+                aria-label={`Paso ${i + 1}`}
               />
             ))}
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="border-t border-[#2a2d2c] pt-4">
           <div className="flex items-center justify-between w-full">
             <Button
               variant="ghost"
               onClick={handleDismiss}
-              className="text-xs text-text-muted"
+              className="text-xs text-[#6a6560] hover:text-[#9a9590] hover:bg-[#1a1d1c]"
             >
               {t('welcome.skip')}
             </Button>
@@ -260,16 +273,25 @@ export function WelcomeModal() {
                   variant="outline"
                   size="sm"
                   onClick={() => setStep(step - 1)}
+                  className="border-[#2a2d2c] bg-transparent text-[#9a9590] hover:bg-[#1a1d1c] hover:text-[#f0ede8]"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
               )}
               {isLast ? (
-                <Button onClick={handleGetStarted} size="sm">
+                <Button
+                  onClick={handleGetStarted}
+                  size="sm"
+                  className="bg-[#c41e3a] hover:bg-[#a31830] text-white border-0"
+                >
                   {t('welcome.getStarted')} <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
               ) : (
-                <Button onClick={() => setStep(step + 1)} size="sm">
+                <Button
+                  onClick={() => setStep(step + 1)}
+                  size="sm"
+                  className="bg-[#c41e3a] hover:bg-[#a31830] text-white border-0"
+                >
                   {t('welcome.next')} <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               )}

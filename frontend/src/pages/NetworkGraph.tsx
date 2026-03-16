@@ -1590,7 +1590,10 @@ export function NetworkGraph() {
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-      <div className="card p-6">
+      <div className="editorial-rule mb-3">
+        <span className="editorial-label">RED DE PROVEEDORES</span>
+      </div>
+      <div className="fern-card p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center h-10 w-10 rounded-lg" style={{ background: 'var(--color-accent-glow)', border: '1px solid var(--color-accent)', color: 'var(--color-accent)' }}>

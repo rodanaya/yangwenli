@@ -770,6 +770,9 @@ export default function ModelTransparency() {
       {/* ================================================================ */}
       {/* L0: Page Header                                                  */}
       {/* ================================================================ */}
+      <div className="editorial-rule mb-3">
+        <span className="editorial-label">TRANSPARENCIA DEL MODELO ML</span>
+      </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-4">

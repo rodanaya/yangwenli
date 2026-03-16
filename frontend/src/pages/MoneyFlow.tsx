@@ -505,7 +505,10 @@ export default function MoneyFlow() {
 
   return (
     <div className="space-y-6 p-6">
-      <div className="card p-6">
+      <div className="editorial-rule mb-3">
+        <span className="editorial-label">FLUJO DE RECURSOS</span>
+      </div>
+      <div className="fern-card p-6">
         <div className="flex items-center gap-3 mb-2">
           <div className="flex items-center justify-center h-10 w-10 rounded-lg" style={{ background: 'var(--color-accent-glow)', border: '1px solid var(--color-accent)', color: 'var(--color-accent)' }}>
             <GitBranch className="h-5 w-5" />
