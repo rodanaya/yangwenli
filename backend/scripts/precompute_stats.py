@@ -2,12 +2,13 @@
 Pre-compute dashboard statistics for instant loading.
 Run this after ETL or data updates.
 """
+import os
 import sqlite3
 import json
 import time
 from datetime import datetime
 
-DB_PATH = "RUBLI_NORMALIZED.db"
+DB_PATH = os.environ.get("DATABASE_PATH", "RUBLI_NORMALIZED.db")
 
 # ---------------------------------------------------------------------------
 # PHI helpers (mirrors procurement_health.py — keep thresholds in sync)
