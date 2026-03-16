@@ -2414,6 +2414,25 @@ export const scorecardApi = {
   },
 }
 
+export const storiesApi = {
+  async getAdministrationComparison() {
+    const { data } = await api.get('/stories/administration-comparison')
+    return data
+  },
+  async getGhostCompanies() {
+    const { data } = await api.get('/stories/ghost-companies')
+    return data
+  },
+  async getTopSuspiciousVendors() {
+    const { data } = await api.get('/stories/top-suspicious-vendors')
+    return data
+  },
+  async getOverpricingPatterns() {
+    const { data } = await api.get('/stories/overpricing-patterns')
+    return data
+  },
+}
+
 // Default export with all API modules
 export default {
   sector: sectorApi,
@@ -2439,4 +2458,5 @@ export default {
   phi: phiApi,
   alerts: alertsApi,
   scorecards: scorecardApi,
+  stories: storiesApi,
 }

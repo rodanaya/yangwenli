@@ -105,20 +105,24 @@ def _load_contract_metrics(conn: sqlite3.Connection) -> dict[int, dict]:
     """).fetchall()
 
     # Splitting proxy: vendor with >=3 contracts to same institution on same day
+    # Avoid window functions (very slow on 3.1M rows in SQLite); use two-step GROUP BY instead.
     split_rows = conn.execute("""
-        SELECT institution_id,
-               CAST(SUM(is_split) AS REAL) / COUNT(*) AS split_rate
-        FROM (
-            SELECT institution_id,
-                   CASE WHEN grp_cnt >= 3 THEN 1 ELSE 0 END AS is_split
-            FROM (
-                SELECT institution_id, vendor_id, contract_date,
-                       COUNT(*) OVER (PARTITION BY institution_id, vendor_id, contract_date) AS grp_cnt
-                FROM contracts
-                WHERE contract_date IS NOT NULL
-            )
+        WITH grp AS (
+            SELECT institution_id, vendor_id, contract_date, COUNT(*) AS cnt
+            FROM contracts
+            WHERE contract_date IS NOT NULL
+            GROUP BY institution_id, vendor_id, contract_date
+        ),
+        inst_total AS (
+            SELECT institution_id, COUNT(*) AS tc
+            FROM contracts
+            GROUP BY institution_id
         )
-        GROUP BY institution_id
+        SELECT g.institution_id,
+               CAST(SUM(CASE WHEN g.cnt >= 3 THEN g.cnt ELSE 0 END) AS REAL) / t.tc AS split_rate
+        FROM grp g
+        JOIN inst_total t ON g.institution_id = t.institution_id
+        GROUP BY g.institution_id
     """).fetchall()
     split_map = {r[0]: r[1] or 0.0 for r in split_rows}
 
