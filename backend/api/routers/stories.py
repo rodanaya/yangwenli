@@ -200,7 +200,7 @@ def overpricing_patterns():
             WHERE c.risk_level = 'critical'
               AND c.amount_mxn >= 1000000
               AND c.contract_year >= 2010
-            GROUP BY s.name, c.contract_year
+            GROUP BY s.name_es, c.contract_year
             HAVING COUNT(*) >= 5
             ORDER BY total_value_mxn DESC
             LIMIT 80
