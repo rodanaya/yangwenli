@@ -22,9 +22,10 @@ import type { IndustryClusterItem } from '@/api/client'
 import { SECTOR_COLORS, SECTORS, RISK_COLORS, getRiskLevelFromScore, getSectorNameEN } from '@/lib/constants'
 import { Heatmap } from '@/components/charts/Heatmap'
 import type { SectorStatistics } from '@/api/types'
-import { AlertTriangle, BarChart3, Layers, X } from 'lucide-react'
+import { AlertTriangle, BarChart3, Info, Layers, X } from 'lucide-react'
 // PageHeader replaced by inline Obsidian Intelligence header
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { ScrollReveal } from '@/hooks/useAnimations'
 import { StatCard as SharedStatCard } from '@/components/DashboardWidgets'
 import {
@@ -860,6 +861,22 @@ export function Sectors() {
             selectedCode={selectedSectorCode}
             onSelect={(code) => { setSelectedSectorCode(code); setCompareSectorCode(null) }}
           />
+          <div className="flex items-center gap-1.5 mt-1.5">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className="flex items-center gap-1 text-[10px] text-text-muted hover:text-text-secondary transition-colors"
+                  aria-label={t('page.modelNote')}
+                >
+                  <Info className="h-3 w-3 shrink-0" />
+                  <span className="font-mono">{t('page.modelNote').slice(0, 80)}...</span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-sm text-xs leading-relaxed">
+                {t('page.modelNote')}
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </div>
       )}
 

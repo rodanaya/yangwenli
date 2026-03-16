@@ -135,7 +135,7 @@
     },
     "agriculture": {
       "name": "Agriculture",
-      "text": "Only 3.2% of total procurement value but disproportionately represented in high-risk contracts. The Segalmex scandal (LICONSA, DICONSA) exposed systematic fraud in food distribution — a sector where oversight was historically weak."
+      "text": "Only 3.2% of total procurement value. Agriculture's elevated risk rate is partly a model artifact: 93% of contracts are direct awards (structural for food distribution), and Segalmex/DICONSA/LICONSA cases dominate the training set for this sector. After removing ground-truth vendors, the sector's high-risk rate drops from ~19% to ~8%. Health carries larger value-weighted risk exposure."
     }
   },
 

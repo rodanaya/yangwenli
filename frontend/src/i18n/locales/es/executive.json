@@ -135,7 +135,7 @@
     },
     "agriculture": {
       "name": "Agricultura",
-      "text": "Solo el 3.2% del valor total de contrataci\u00f3n, pero desproporcionadamente representado en contratos de alto riesgo. El esc\u00e1ndalo de Segalmex (LICONSA, DICONSA) expuso fraude sistem\u00e1tico en distribuci\u00f3n de alimentos \u2014 un sector donde la supervisi\u00f3n hist\u00f3ricamente fue d\u00e9bil."
+      "text": "Solo el 3.2% del valor total de contrataci\u00f3n. La tasa elevada de riesgo de Agricultura es parcialmente un artefacto del modelo: 93% de los contratos son adjudicaci\u00f3n directa (estructural para distribuci\u00f3n de alimentos), y los casos Segalmex/DICONSA/LICONSA dominan el conjunto de entrenamiento para este sector. Al remover proveedores de la verdad de campo, la tasa de alto riesgo baja de ~19% a ~8%. Salud tiene mayor exposici\u00f3n de riesgo ponderada por valor."
     }
   },
 

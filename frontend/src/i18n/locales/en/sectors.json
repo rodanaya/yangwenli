@@ -15,6 +15,7 @@
     "title": "Sectors Overview",
     "subtitle": "12 sectors covering Mexican federal procurement — click any column header to sort",
     "rankedBy": "Ranked by avg risk score — click to inspect",
+    "modelNote": "Agriculture's elevated risk rate reflects structural market concentration (93% direct awards) and training set composition (Segalmex/DICONSA/LICONSA cases), not necessarily higher corruption prevalence. Health sector carries larger value-weighted risk exposure.",
     "clear": "Clear",
     "fullProfile": "Full profile",
     "compareWith": "Compare…",

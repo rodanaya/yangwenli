@@ -1,6 +1,7 @@
-import { useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
+import type { AxiosError } from 'axios'
 import { useNavigate } from 'react-router-dom'
 import {
   LineChart,
@@ -425,9 +426,21 @@ function MethodologyFooter({ sources, t }: { sources: string[]; t: (k: string) =
 function ReportCard() {
   const { t } = useTranslation('reportcard')
 
+  const is503 = useCallback((err: unknown): boolean => {
+    return (err as AxiosError)?.response?.status === 503
+  }, [])
+
   const { data, isLoading, error } = useQuery<PHISectorsResponse>({
     queryKey: ['phi-sectors', 2020, 2024],
     queryFn: () => phiApi.getSectors(2020, 2024),
+    retry: (failureCount, err) => {
+      if (is503(err)) return failureCount < 12
+      return failureCount < 3
+    },
+    retryDelay: (failureCount, err) => {
+      if (is503(err)) return 60_000
+      return Math.min(1000 * 2 ** failureCount, 30_000)
+    },
   })
 
   const sortedSectors = useMemo(() => {
@@ -441,6 +454,25 @@ function ReportCard() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4" />
           <p className="text-text-muted">{t('loading')}</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error && is503(error)) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4" />
+          <p className="text-text-primary font-semibold mb-2">
+            {t('computing', { defaultValue: 'Computing procurement health data...' })}
+          </p>
+          <p className="text-text-muted text-sm max-w-md">
+            {t('computingDetail', {
+              defaultValue:
+                'Procurement health data is being computed. This takes ~8 minutes on first load after restart. Refreshing automatically...',
+            })}
+          </p>
         </div>
       </div>
     )

@@ -15,6 +15,7 @@
     "title": "Resumen de Sectores",
     "subtitle": "12 sectores de contratación federal mexicana — haz clic en cualquier encabezado de columna para ordenar",
     "rankedBy": "Ordenados por puntuación de riesgo promedio — haz clic para inspeccionar",
+    "modelNote": "La tasa de riesgo elevada de Agricultura refleja concentración estructural del mercado (93% adjudicación directa) y composición del conjunto de entrenamiento (casos Segalmex/DICONSA/LICONSA), no necesariamente mayor prevalencia de corrupción. El sector Salud tiene mayor exposición de riesgo ponderada por valor.",
     "clear": "Limpiar",
     "fullProfile": "Perfil completo",
     "compareWith": "Comparar…",
