@@ -3,7 +3,6 @@
  *
  * The flagship report page — reads like a NYT investigation or OECD annual report.
  * Long-scroll editorial format with rich narrative, supporting data, and qualitative insights.
- * Every section has a thesis statement, evidence, and contextual analysis.
  * Fully internationalized (ES/EN) via react-i18next 'executive' namespace.
  */
 
@@ -19,28 +18,17 @@ import { analysisApi } from '@/api/client'
 import type { ExecutiveSummaryResponse } from '@/api/types'
 import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
 import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
-import { ModelDetectionStory } from '@/components/ModelDetectionStory'
 import { ScrollReveal, useCountUp, AnimatedFill, AnimatedSegment } from '@/hooks/useAnimations'
-import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import {
   AlertTriangle,
-  Target,
   Scale,
   Users,
-  Landmark,
-  Brain,
-  EyeOff,
+  Compass,
   ArrowRight,
   Shield,
   Search,
-  Database,
-  HelpCircle,
-  Compass,
-  Network,
-  CheckCircle,
   Calendar,
   TrendingUp,
-  Globe2,
   DollarSign,
   Zap,
   Printer,
@@ -60,14 +48,6 @@ function useExecutiveSummary() {
   })
 }
 
-function usePatternCounts() {
-  return useQuery({
-    queryKey: ['analysis', 'pattern-counts'],
-    queryFn: () => analysisApi.getPatternCounts(),
-    staleTime: 10 * 60 * 1000,
-  })
-}
-
 // ============================================================================
 // Main Component
 // ============================================================================
@@ -76,7 +56,6 @@ export function ExecutiveSummary() {
   const navigate = useNavigate()
   const { t } = useTranslation('executive')
   const { data, isLoading, isError, refetch } = useExecutiveSummary()
-  const { data: patternCounts } = usePatternCounts()
 
   if (isLoading) {
     return <LoadingSkeleton />
@@ -104,44 +83,19 @@ export function ExecutiveSummary() {
     <article className="max-w-4xl mx-auto pb-20 space-y-16 print:text-black print:bg-white">
       <ScrollReveal delay={80}><ReportHeader data={data} /></ScrollReveal>
       <ScrollReveal delay={100}><StatBombs data={data} /></ScrollReveal>
-      <ScrollReveal delay={110}><CurrencyNoteBanner /></ScrollReveal>
       <ScrollReveal delay={120}><WhatWeFound data={data} /></ScrollReveal>
-      <ScrollReveal delay={140}><KeyFindings /></ScrollReveal>
-      <ScrollReveal delay={160}><TopFraudSignals /></ScrollReveal>
-      <Divider />
-      {/* 00 — CONTEXT: How the System Works & What's Changing */}
-      <ScrollReveal><SectionSystem /></ScrollReveal>
-      <Divider />
-      {/* 01 — CAN I TRUST IT: Data Foundation */}
-      <ScrollReveal><SectionData /></ScrollReveal>
       <Divider />
       {/* 02 — WHAT IT FOUND: Three Systemic Patterns */}
       <ScrollReveal><SectionThreePatterns data={data} /></ScrollReveal>
       <Divider />
-      {/* 03 — HOW IT KNOWS: AI Model */}
-      <ScrollReveal><SectionModel data={data} /></ScrollReveal>
-      <Divider />
       {/* 04 — THE THREAT: Risk Scores & Value at Risk */}
       <ScrollReveal><SectionThreat data={data} /></ScrollReveal>
-      <Divider />
-      {/* 05 — EVERY GOVT: Five Administrations */}
-      <ScrollReveal><SectionAdministrations data={data} /></ScrollReveal>
-      <ScrollReveal><CompetitionDeclineCard /></ScrollReveal>
       <Divider />
       {/* 06 — WHO BENEFITS: Top Vendors */}
       <ScrollReveal><SectionVendors data={data} navigate={navigate} /></ScrollReveal>
       <Divider />
       {/* 07 — WHICH SECTORS: Risk Concentration */}
       <ScrollReveal><SectionSectors data={data} navigate={navigate} /></ScrollReveal>
-      <Divider />
-      {/* 08 — PROOF IT WORKS: Ground Truth Validation */}
-      <ScrollReveal><SectionProof data={data} /></ScrollReveal>
-      <Divider />
-      {/* 09 — THE NETWORK: Co-bidding & Collusion */}
-      <ScrollReveal><SectionNetwork patternCounts={patternCounts} /></ScrollReveal>
-      <Divider />
-      {/* 10 — LIMITATIONS */}
-      <ScrollReveal><SectionLimitations /></ScrollReveal>
       <Divider />
       {/* 11 — NOW WHAT: Recommendations */}
       <ScrollReveal><SectionRecommendations navigate={navigate} /></ScrollReveal>
@@ -463,180 +417,138 @@ function WhatWeFound({ data }: { data: ExecutiveSummaryResponse }) {
 }
 
 // ============================================================================
-// Key Findings Hero Card
+// S2: Three Systemic Patterns — The Central Narrative
 // ============================================================================
 
-function KeyFindings() {
+function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
   const { t } = useTranslation('executive')
-  const items = t('keyFindings.items', { returnObjects: true }) as string[]
+  const navigate = useNavigate()
+  const { procedures } = data
 
-  return (
-    <div className="fern-card bg-accent/5 border-accent/30 px-6 py-5">
-      <div className="editorial-rule mb-3">
-        <Target className="h-4 w-4 text-accent" />
-        <span className="editorial-label text-accent">{t('keyFindings.title')}</span>
-      </div>
-      <ul className="space-y-2">
-        {items.map((item, i) => (
-          <ScrollReveal key={i} delay={i * 80} direction="left">
-            <li className="flex items-start gap-2.5">
-              <CheckCircle className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
-              <span className="text-sm text-text-secondary leading-relaxed">{item}</span>
-            </li>
-          </ScrollReveal>
-        ))}
-      </ul>
-    </div>
-  )
-}
-
-// ============================================================================
-// Top Fraud Signals — 3 key patterns detected across 3.1M contracts
-// ============================================================================
-
-function TopFraudSignals() {
-  const { t } = useTranslation('executive')
-  const signals = [
-    { rank: '01', signalKey: 's1', color: '#f87171' },
-    { rank: '02', signalKey: 's2', color: '#fb923c' },
-    { rank: '03', signalKey: 's3', color: '#fbbf24' },
-  ]
-
-  return (
-    <div className="fern-card p-6">
-      <div className="editorial-rule mb-4">
-        <span className="editorial-label">{t('topFraudSignals.header')}</span>
-      </div>
-      <div className="space-y-4">
-        {signals.map((s) => (
-          <div key={s.rank} className="flex items-start gap-4">
-            <div
-              className="text-2xl font-black font-mono flex-shrink-0 w-8 text-right leading-none mt-0.5"
-              style={{ color: `${s.color}60` }}
-            >
-              {s.rank}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-bold text-text-primary">{t(`topFraudSignals.${s.signalKey}.signal`)}</span>
-                <div className="h-px flex-1 rounded-full" style={{ background: `${s.color}40` }} />
-              </div>
-              <p className="text-xs leading-relaxed text-text-muted mb-1">{t(`topFraudSignals.${s.signalKey}.detail`)}</p>
-              <p className="text-[10px] font-mono" style={{ color: `${s.color}99` }}>
-                {t(`topFraudSignals.${s.signalKey}.examples`)}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ============================================================================
-// SECTION 00 — THE SYSTEM: How Public Procurement Works
-// ============================================================================
-
-function SectionSystem() {
-  const { t } = useTranslation('executive')
-
-  const procedures = [
+  const patterns = [
     {
-      nameKey: 'sSystem.proc1Name',
-      spanishKey: 'sSystem.proc1Spanish',
-      whenKey: 'sSystem.proc1When',
-      howKey: 'sSystem.proc1How',
-      badgeKey: 'sSystem.proc1Badge',
-      borderColor: 'border-green-500/25',
-      bgColor: 'bg-green-500/5',
-      labelColor: 'text-green-500',
-      badgeBg: 'bg-green-500/10 text-green-600',
-    },
-    {
-      nameKey: 'sSystem.proc2Name',
-      spanishKey: 'sSystem.proc2Spanish',
-      whenKey: 'sSystem.proc2When',
-      howKey: 'sSystem.proc2How',
-      badgeKey: 'sSystem.proc2Badge',
-      borderColor: 'border-yellow-500/25',
-      bgColor: 'bg-yellow-500/5',
-      labelColor: 'text-yellow-500',
-      badgeBg: 'bg-yellow-500/10 text-yellow-600',
-    },
-    {
-      nameKey: 'sSystem.proc3Name',
-      spanishKey: 'sSystem.proc3Spanish',
-      whenKey: 'sSystem.proc3When',
-      howKey: 'sSystem.proc3How',
-      badgeKey: 'sSystem.proc3Badge',
-      borderColor: 'border-risk-high/25',
+      label: t('sPatterns.p1DirectAward.label'),
+      name: t('sPatterns.p1DirectAward.name'),
+      stat: `${procedures.direct_award_pct}%`,
+      statColor: 'var(--color-risk-high)',
+      borderColor: 'border-risk-high/20',
       bgColor: 'bg-risk-high/5',
-      labelColor: 'text-risk-high',
-      badgeBg: 'bg-risk-high/10 text-risk-high',
+      icon: Scale,
+      iconColor: 'text-risk-high',
+      iconBg: 'bg-risk-high/10',
+      descKey: 'sPatterns.p1DirectAward.desc' as const,
+      descValues: { pct: procedures.direct_award_pct },
+      note: t('sPatterns.p1DirectAward.note'),
+      useTrans: true,
+      glowColor: 'rgba(251, 146, 60, 0.3)',
+    },
+    {
+      label: t('sPatterns.p2December.label'),
+      name: t('sPatterns.p2December.name'),
+      stat: '1.33×',
+      statColor: 'var(--color-risk-medium)',
+      borderColor: 'border-risk-medium/20',
+      bgColor: 'bg-risk-medium/5',
+      icon: Calendar,
+      iconColor: 'text-risk-medium',
+      iconBg: 'bg-risk-medium/10',
+      descKey: 'sPatterns.p2December.desc' as const,
+      descValues: {},
+      note: t('sPatterns.p2December.note'),
+      useTrans: false,
+      glowColor: 'rgba(251, 191, 36, 0.3)',
+    },
+    {
+      label: t('sPatterns.p3Concentration.label'),
+      name: t('sPatterns.p3Concentration.name'),
+      stat: '10.6%',
+      statColor: 'var(--color-risk-critical)',
+      borderColor: 'border-risk-critical/20',
+      bgColor: 'bg-risk-critical/5',
+      icon: TrendingUp,
+      iconColor: 'text-risk-critical',
+      iconBg: 'bg-risk-critical/10',
+      descKey: 'sPatterns.p3Concentration.desc' as const,
+      descValues: {},
+      note: t('sPatterns.p3Concentration.note'),
+      useTrans: false,
+      glowColor: 'rgba(248, 113, 113, 0.3)',
     },
   ]
 
   return (
     <section>
-      <SectionHeading number="00" title={t('sSystem.title')} icon={Globe2} />
+      <SectionHeading number="02" title={t('sPatterns.title')} icon={Compass} />
 
-      <p className="text-sm text-text-secondary leading-relaxed mb-6">
-        {t('sSystem.intro')}
+      <p className="text-sm leading-relaxed text-text-secondary mb-6">
+        {t('sPatterns.intro')}
       </p>
 
-      {/* Three Procedures */}
-      <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-3">
-        {t('sSystem.proceduresTitle')}
-      </p>
-      <div className="grid gap-3 sm:grid-cols-3 mb-6">
-        {procedures.map((p) => (
-          <div key={p.nameKey} className={`rounded-lg border p-4 ${p.borderColor} ${p.bgColor}`}>
-            <div className="flex items-center justify-between mb-2">
-              <span className={`text-xs font-bold font-mono uppercase ${p.labelColor}`}>
-                {t(p.nameKey)}
-              </span>
-              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${p.badgeBg}`}>
-                {t(p.badgeKey)}
-              </span>
-            </div>
-            <p className="text-sm font-bold text-text-primary mb-1 italic">{t(p.spanishKey)}</p>
-            <p className="text-xs text-text-muted leading-relaxed mb-1">{t(p.whenKey)}</p>
-            <p className="text-xs text-text-secondary leading-relaxed">{t(p.howKey)}</p>
-          </div>
-        ))}
+      <div className="space-y-4">
+        {patterns.map((p, idx) => {
+          const Icon = p.icon
+          return (
+            <ScrollReveal key={p.label} delay={idx * 120}>
+              <div
+                className={`border rounded-xl p-6 transition-all duration-500 hover:shadow-lg relative overflow-hidden ${p.borderColor} ${p.bgColor}`}
+                style={{ boxShadow: 'none' }}
+                onMouseEnter={e => (e.currentTarget.style.boxShadow = `0 0 24px 2px ${p.glowColor}`)}
+                onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
+              >
+                {/* Decorative gradient in corner */}
+                <div
+                  className="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-10"
+                  style={{ background: p.statColor }}
+                />
+                <div className="relative flex items-start gap-4">
+                  <div className={`p-2 rounded-md flex-shrink-0 ${p.iconBg}`}>
+                    <Icon className={`h-5 w-5 ${p.iconColor}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-bold tracking-wider uppercase text-text-muted font-mono">
+                      {p.label}
+                    </span>
+                    <h4 className="text-base font-bold text-text-primary mt-0.5 mb-2">{p.name}</h4>
+                    <div className="pull-stat mb-3" style={{ color: p.statColor }}>
+                      {p.stat}
+                    </div>
+                    <p className="text-sm leading-relaxed text-text-secondary mb-2">
+                      {p.useTrans ? (
+                        <Trans t={t} i18nKey={p.descKey} values={p.descValues} components={{ bold: <strong className="text-text-primary" /> }} />
+                      ) : (
+                        t(p.descKey)
+                      )}
+                    </p>
+                    <p className="text-xs italic text-text-muted border-t border-border/20 pt-2 mt-2">{p.note}</p>
+                  </div>
+                </div>
+              </div>
+            </ScrollReveal>
+          )
+        })}
       </div>
 
-      {/* The Gap */}
-      <div className="border border-risk-high/20 bg-risk-high/5 rounded-lg p-5 mb-5">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-risk-high font-mono mb-2">
-          {t('sSystem.gapTitle')}
+      {/* CASE IN POINT — one documented example to make the patterns concrete */}
+      <div className="mt-6 rounded-xl border border-accent/20 bg-accent/5 p-5">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-accent font-mono mb-2">
+          {t('caseInPoint.label')}
         </p>
-        <p className="text-sm text-text-secondary leading-relaxed">{t('sSystem.gapText')}</p>
-      </div>
-
-      {/* Oversight Architecture */}
-      <div className="mb-5">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-2">
-          {t('sSystem.oversightTitle')}
+        <p className="text-sm font-bold text-text-primary mb-2">
+          {t('caseInPoint.title')}
         </p>
-        <p className="text-sm text-text-secondary leading-relaxed">{t('sSystem.oversightText')}</p>
-      </div>
-
-      {/* Crisis Box — high visual prominence: infrastructure being dismantled */}
-      <div className="border-2 border-risk-critical/50 rounded-lg p-5 bg-risk-critical/8 shadow-[0_0_24px_rgba(248,113,113,0.12)]">
-        <div className="flex items-center gap-2 mb-2">
-          <AlertTriangle className="h-4 w-4 text-risk-critical flex-shrink-0" />
-          <p className="text-xs font-bold uppercase tracking-widest text-risk-critical font-mono">
-            {t('sSystem.crisisTitle')}
-          </p>
-        </div>
-        <p className="text-sm text-text-secondary leading-relaxed mb-4">
-          {t('sSystem.crisisText')}
+        <p className="text-sm leading-relaxed text-text-secondary">
+          {t('caseInPoint.desc1')}{' '}
+          <strong className="text-text-primary">{t('caseInPoint.contracts')}</strong>{' '}
+          {t('caseInPoint.desc2')}{' '}
+          <strong className="text-risk-critical">{t('caseInPoint.detection')}</strong>{' '}
+          {t('caseInPoint.desc3')}
         </p>
-        <div className="p-3 rounded-md bg-accent/5 border border-accent/15 mb-3">
-          <p className="text-xs text-text-muted italic leading-relaxed">{t('sSystem.crisisNote')}</p>
-        </div>
-        <p className="text-[10px] text-text-muted font-mono">{t('sSystem.sources')}</p>
+        <button
+          onClick={() => navigate('/investigation')}
+          className="mt-3 text-xs text-accent flex items-center gap-1 hover:underline font-mono"
+        >
+          {t('caseInPoint.link')} <ArrowRight className="h-3 w-3" />
+        </button>
       </div>
     </section>
   )
@@ -770,197 +682,6 @@ function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
           ? `${risk.critical_pct.toFixed(1)}% · ${(risk.critical_count).toLocaleString()} contracts · Immediate investigation`
           : ''}
       </p>
-    </div>
-  )
-}
-
-// ============================================================================
-// GRAPHIC 2: AI Detection Pipeline
-// ============================================================================
-
-function AIPipelineChart() {
-  const ref = useRef<HTMLDivElement>(null)
-  const [step, setStep] = useState(-1)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const obs = new IntersectionObserver(
-      ([e]) => {
-        if (e.isIntersecting) {
-          ;[0, 1, 2, 3, 4].forEach((i) => setTimeout(() => setStep(i), i * 220))
-          obs.disconnect()
-        }
-      },
-      { threshold: 0.2 }
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [])
-
-  const nodes: {
-    icon: React.ElementType
-    title: string
-    sub: string
-    detail: string
-    color: string
-    bg: string
-    border: string
-  }[] = [
-    {
-      icon: Database,
-      title: 'COMPRANET',
-      sub: '3.1M contracts',
-      detail: '2002–2025',
-      color: '#64748b',
-      bg: 'rgba(100,116,139,0.1)',
-      border: 'rgba(100,116,139,0.3)',
-    },
-    {
-      icon: Scale,
-      title: 'Z-SCORES',
-      sub: '16 features',
-      detail: 'per sector/year',
-      color: '#8b5cf6',
-      bg: 'rgba(139,92,246,0.1)',
-      border: 'rgba(139,92,246,0.3)',
-    },
-    {
-      icon: Compass,
-      title: 'MAHALANOBIS',
-      sub: 'Multivariate',
-      detail: 'anomaly distance',
-      color: '#3b82f6',
-      bg: 'rgba(59,130,246,0.1)',
-      border: 'rgba(59,130,246,0.3)',
-    },
-    {
-      icon: Brain,
-      title: 'LOGISTIC REG.',
-      sub: '12 sub-models',
-      detail: 'AUC 0.849',
-      color: '#f59e0b',
-      bg: 'rgba(245,158,11,0.1)',
-      border: 'rgba(245,158,11,0.3)',
-    },
-    {
-      icon: AlertTriangle,
-      title: 'RISK SCORE',
-      sub: '0 → 1.0',
-      detail: 'similarity score',
-      color: '#f87171',
-      bg: 'rgba(248,113,113,0.12)',
-      border: 'rgba(248,113,113,0.5)',
-    },
-  ]
-
-  return (
-    <div ref={ref} className="my-6">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-4">
-        Detection Pipeline — v6.0 Model Architecture
-      </p>
-
-      {/* Pipeline nodes — centered on desktop, horizontal scroll on mobile */}
-      <div className="flex justify-center overflow-x-auto pb-2">
-      <div className="flex items-stretch gap-0 flex-shrink-0">
-        {nodes.map((node, i) => (
-          <div key={node.title} className="flex items-center flex-shrink-0">
-            {/* Node box */}
-            <div
-              style={{
-                opacity: step >= i ? 1 : 0,
-                transform:
-                  step >= i ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.92)',
-                transition:
-                  'opacity 400ms ease, transform 400ms cubic-bezier(0.16,1,0.3,1)',
-                background: node.bg,
-                border: `1px solid ${node.border}`,
-                borderRadius: '8px',
-                minWidth: '96px',
-                padding: '10px 8px',
-                textAlign: 'center' as const,
-              }}
-            >
-              <div className="flex justify-center mb-1">
-                {(() => { const NodeIcon = node.icon; return <NodeIcon size={18} style={{ color: node.color }} /> })()}
-              </div>
-              <p
-                className="text-[10px] font-black tracking-wider font-mono"
-                style={{ color: node.color }}
-              >
-                {node.title}
-              </p>
-              <p className="text-[11px] font-semibold text-text-primary mt-0.5">{node.sub}</p>
-              <p className="text-[9px] text-text-muted font-mono">{node.detail}</p>
-            </div>
-
-            {/* Arrow connector — not after last */}
-            {i < nodes.length - 1 && (
-              <div
-                style={{
-                  opacity: step >= i + 1 ? 1 : 0,
-                  transition: 'opacity 300ms ease',
-                  flexShrink: 0,
-                  width: '28px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <svg width="28" height="20" viewBox="0 0 28 20">
-                  <defs>
-                    <linearGradient id={`pipeGrad${i}`} x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor={nodes[i].color} stopOpacity={0.6} />
-                      <stop offset="100%" stopColor={nodes[i + 1].color} stopOpacity={0.9} />
-                    </linearGradient>
-                  </defs>
-                  <line
-                    x1="2"
-                    y1="10"
-                    x2="20"
-                    y2="10"
-                    stroke={`url(#pipeGrad${i})`}
-                    strokeWidth="1.5"
-                    strokeDasharray="3 2"
-                    style={{
-                      animation:
-                        step >= i + 1 ? 'dashFlow 1.2s linear infinite' : 'none',
-                    }}
-                  />
-                  <polygon
-                    points="20,6 27,10 20,14"
-                    fill={nodes[i + 1].color}
-                    opacity={0.8}
-                  />
-                </svg>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-      </div>
-
-      {/* PU learning note */}
-      <div
-        style={{
-          opacity: step >= 4 ? 1 : 0,
-          transform: step >= 4 ? 'translateY(0)' : 'translateY(8px)',
-          transition: 'opacity 400ms 200ms ease, transform 400ms 200ms ease',
-        }}
-        className="mt-3 flex items-center gap-2 px-3 py-2 rounded border border-border/20 bg-background-elevated/20"
-      >
-        <span className="text-[10px] font-mono text-text-muted">
-          PU-learning correction c=0.448 (Elkan &amp; Noto 2008) · Bootstrap 95% CI per
-          contract · Vendor-stratified split (390 cases, 725 vendors)
-        </span>
-      </div>
-
-      {/* Keyframe for dashes */}
-      <style>{`
-        @keyframes dashFlow {
-          from { stroke-dashoffset: 10; }
-          to   { stroke-dashoffset: 0; }
-        }
-      `}</style>
     </div>
   )
 }
@@ -1205,346 +926,6 @@ function SectionThreat({ data }: { data: ExecutiveSummaryResponse }) {
 }
 
 // ============================================================================
-// S2 (new): Three Systemic Patterns — The Central Narrative
-// ============================================================================
-
-function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
-  const { t } = useTranslation('executive')
-  const navigate = useNavigate()
-  const { procedures } = data
-
-  const patterns = [
-    {
-      label: t('sPatterns.p1DirectAward.label'),
-      name: t('sPatterns.p1DirectAward.name'),
-      stat: `${procedures.direct_award_pct}%`,
-      statColor: 'var(--color-risk-high)',
-      borderColor: 'border-risk-high/20',
-      bgColor: 'bg-risk-high/5',
-      icon: Scale,
-      iconColor: 'text-risk-high',
-      iconBg: 'bg-risk-high/10',
-      descKey: 'sPatterns.p1DirectAward.desc' as const,
-      descValues: { pct: procedures.direct_award_pct },
-      note: t('sPatterns.p1DirectAward.note'),
-      useTrans: true,
-      glowColor: 'rgba(251, 146, 60, 0.3)',
-    },
-    {
-      label: t('sPatterns.p2December.label'),
-      name: t('sPatterns.p2December.name'),
-      stat: '1.33×',
-      statColor: 'var(--color-risk-medium)',
-      borderColor: 'border-risk-medium/20',
-      bgColor: 'bg-risk-medium/5',
-      icon: Calendar,
-      iconColor: 'text-risk-medium',
-      iconBg: 'bg-risk-medium/10',
-      descKey: 'sPatterns.p2December.desc' as const,
-      descValues: {},
-      note: t('sPatterns.p2December.note'),
-      useTrans: false,
-      glowColor: 'rgba(251, 191, 36, 0.3)',
-    },
-    {
-      label: t('sPatterns.p3Concentration.label'),
-      name: t('sPatterns.p3Concentration.name'),
-      stat: '10.6%',
-      statColor: 'var(--color-risk-critical)',
-      borderColor: 'border-risk-critical/20',
-      bgColor: 'bg-risk-critical/5',
-      icon: TrendingUp,
-      iconColor: 'text-risk-critical',
-      iconBg: 'bg-risk-critical/10',
-      descKey: 'sPatterns.p3Concentration.desc' as const,
-      descValues: {},
-      note: t('sPatterns.p3Concentration.note'),
-      useTrans: false,
-      glowColor: 'rgba(248, 113, 113, 0.3)',
-    },
-  ]
-
-  return (
-    <section>
-      <SectionHeading number="02" title={t('sPatterns.title')} icon={Compass} />
-
-      <p className="text-sm leading-relaxed text-text-secondary mb-6">
-        {t('sPatterns.intro')}
-      </p>
-
-      {/* Pattern detail cards below serve as the visual — diagram removed */}
-
-      <div className="space-y-4">
-        {patterns.map((p, idx) => {
-          const Icon = p.icon
-          return (
-            <ScrollReveal key={p.label} delay={idx * 120}>
-              <div
-                className={`border rounded-xl p-6 transition-all duration-500 hover:shadow-lg relative overflow-hidden ${p.borderColor} ${p.bgColor}`}
-                style={{ boxShadow: 'none' }}
-                onMouseEnter={e => (e.currentTarget.style.boxShadow = `0 0 24px 2px ${p.glowColor}`)}
-                onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
-              >
-                {/* Decorative gradient in corner */}
-                <div
-                  className="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-10"
-                  style={{ background: p.statColor }}
-                />
-                <div className="relative flex items-start gap-4">
-                  <div className={`p-2 rounded-md flex-shrink-0 ${p.iconBg}`}>
-                    <Icon className={`h-5 w-5 ${p.iconColor}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-[10px] font-bold tracking-wider uppercase text-text-muted font-mono">
-                      {p.label}
-                    </span>
-                    <h4 className="text-base font-bold text-text-primary mt-0.5 mb-2">{p.name}</h4>
-                    <div className="pull-stat mb-3" style={{ color: p.statColor }}>
-                      {p.stat}
-                    </div>
-                    <p className="text-sm leading-relaxed text-text-secondary mb-2">
-                      {p.useTrans ? (
-                        <Trans t={t} i18nKey={p.descKey} values={p.descValues} components={{ bold: <strong className="text-text-primary" /> }} />
-                      ) : (
-                        t(p.descKey)
-                      )}
-                    </p>
-                    <p className="text-xs italic text-text-muted border-t border-border/20 pt-2 mt-2">{p.note}</p>
-                  </div>
-                </div>
-              </div>
-            </ScrollReveal>
-          )
-        })}
-      </div>
-
-      {/* CASE IN POINT — one documented example to make the patterns concrete */}
-      <div className="mt-6 rounded-xl border border-accent/20 bg-accent/5 p-5">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-accent font-mono mb-2">
-          {t('caseInPoint.label')}
-        </p>
-        <p className="text-sm font-bold text-text-primary mb-2">
-          {t('caseInPoint.title')}
-        </p>
-        <p className="text-sm leading-relaxed text-text-secondary">
-          {t('caseInPoint.desc1')}{' '}
-          <strong className="text-text-primary">{t('caseInPoint.contracts')}</strong>{' '}
-          {t('caseInPoint.desc2')}{' '}
-          <strong className="text-risk-critical">{t('caseInPoint.detection')}</strong>{' '}
-          {t('caseInPoint.desc3')}
-        </p>
-        <button
-          onClick={() => navigate('/investigation')}
-          className="mt-3 text-xs text-accent flex items-center gap-1 hover:underline font-mono"
-        >
-          {t('caseInPoint.link')} <ArrowRight className="h-3 w-3" />
-        </button>
-      </div>
-    </section>
-  )
-}
-
-// ============================================================================
-// Corruption Cases Timeline — vertical chronological list
-// ============================================================================
-
-const TIMELINE_CASES = [
-  { year: 2004, name: 'La Estafa Maestra', sector: 'gobernacion', type: 'Ghost companies', impact: '~$7.7B MXN' },
-  { year: 2012, name: 'Grupo Higa / Casa Blanca', sector: 'infraestructura', type: 'Conflict of interest', impact: 'Undisclosed' },
-  { year: 2013, name: 'Decoaro Ghost Cleaning Company', sector: 'gobernacion', type: 'Ghost companies', impact: '$46M MXN' },
-  { year: 2014, name: 'Odebrecht-PEMEX Bribery', sector: 'energia', type: 'Bribery', impact: '$10.5M USD' },
-  { year: 2014, name: 'CONAGUA Ghost Contractor Rotation', sector: 'ambiente', type: 'Ghost companies', impact: '$29M MXN' },
-  { year: 2015, name: 'PEMEX Emilio Lozoya (Odebrecht-linked)', sector: 'energia', type: 'Bribery', impact: 'Documented / shared vendors' },
-  { year: 2015, name: 'Oceanografia PEMEX Fraud', sector: 'energia', type: 'Invoice fraud', impact: '$400M MXN' },
-  { year: 2016, name: 'IPN Cartel de la Limpieza', sector: 'educacion', type: 'Bid rigging', impact: '$180M MXN' },
-  { year: 2016, name: 'Infrastructure Fraud Network', sector: 'infraestructura', type: 'Overpricing', impact: '$191M MXN' },
-  { year: 2017, name: 'IMSS Ghost Company Network', sector: 'salud', type: 'Ghost companies', impact: '$2.8B MXN' },
-  { year: 2017, name: 'IT Procurement Overpricing (Cyber Robotic)', sector: 'tecnologia', type: 'Overpricing', impact: '$139M MXN' },
-  { year: 2018, name: 'SAT Tender Rigging (SixSigma)', sector: 'hacienda', type: 'Tender rigging', impact: '$320M MXN' },
-  { year: 2018, name: 'PEMEX-Cotemar Irregularities', sector: 'energia', type: 'Procurement fraud', impact: '$51M MXN' },
-  { year: 2019, name: 'SEGOB-Mainbit IT Monopoly', sector: 'gobernacion', type: 'Monopoly', impact: '$1.1B MXN' },
-  { year: 2019, name: 'ISSSTE Ambulance Leasing Fraud', sector: 'trabajo', type: 'Overpricing', impact: '$603M MXN' },
-  { year: 2019, name: 'Toka IT Monopoly', sector: 'tecnologia', type: 'Monopoly', impact: '$2.1B MXN' },
-  { year: 2020, name: 'COVID-19 Emergency Procurement', sector: 'salud', type: 'Embezzlement', impact: '$3.4B MXN' },
-  { year: 2020, name: 'Segalmex Food Distribution', sector: 'agricultura', type: 'Procurement fraud', impact: '$15B MXN' },
-  { year: 2020, name: 'Edenred Government Voucher Monopoly', sector: 'energia', type: 'Monopoly', impact: '$8.9B MXN' },
-  { year: 2021, name: 'IMSS Overpriced Medicines (Ethomedical Network)', sector: 'salud', type: 'Overpricing', impact: 'Under investigation' },
-  { year: 2021, name: 'Tren Maya Direct Award Irregularities', sector: 'infraestructura', type: 'Procurement fraud', impact: 'Under investigation' },
-  { year: 2022, name: 'SAT EFOS Ghost Network (Case 22)', sector: 'otros', type: 'Ghost companies', impact: '38 confirmed RFCs' },
-] as const
-
-function CorruptionTimeline() {
-  const { t } = useTranslation('executive')
-  const ref = useRef<HTMLDivElement>(null)
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } },
-      { threshold: 0.05 }
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [])
-
-  return (
-    <div ref={ref} className="mb-6">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-4">
-        {t('timeline.header')}
-      </p>
-      <div className="relative">
-        {/* Vertical line */}
-        <div className="absolute left-4 top-0 bottom-0 w-px bg-border/30" />
-        <div className="space-y-0">
-          {TIMELINE_CASES.map((c, i) => {
-            const dotColor = SECTOR_COLORS[c.sector] ?? SECTOR_COLORS.otros
-            return (
-              <div
-                key={`${c.year}-${c.name}`}
-                className="relative pl-10 pb-5"
-                style={{
-                  opacity: visible ? 1 : 0,
-                  transform: visible ? 'translateX(0)' : 'translateX(-12px)',
-                  transition: `opacity 350ms ${i * 55}ms ease, transform 350ms ${i * 55}ms ease`,
-                }}
-              >
-                {/* Dot */}
-                <div
-                  className="absolute left-2.5 top-1.5 w-3 h-3 rounded-full border-2 flex-shrink-0"
-                  style={{
-                    borderColor: dotColor,
-                    background: `${dotColor}33`,
-                    boxShadow: `0 0 6px ${dotColor}55`,
-                  }}
-                />
-                {/* Content */}
-                <div className="text-[10px] text-text-muted font-mono mb-0.5">{c.year}</div>
-                <div className="text-sm font-semibold text-text-primary leading-tight">{c.name}</div>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span
-                    className="text-[10px] font-mono px-1.5 py-0.5 rounded"
-                    style={{ color: dotColor, background: `${dotColor}18`, border: `1px solid ${dotColor}30` }}
-                  >
-                    {t(`timeline.types.${c.type}`, { defaultValue: c.type })}
-                  </span>
-                  <span className="text-[10px] text-text-muted font-mono capitalize">{c.sector}</span>
-                  <span className="text-[10px] text-text-muted font-mono">&middot; {t(`timeline.impact.${c.impact}`, { defaultValue: c.impact })}</span>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ============================================================================
-// S2: The Proof — Ground Truth Validation
-// ============================================================================
-
-function SectionProof({ data }: { data: ExecutiveSummaryResponse }) {
-  const { t } = useTranslation('executive')
-  const { ground_truth: gt } = data
-  const sortedCases = useMemo(
-    () => [...(gt.case_details ?? [])].sort((a, b) => b.high_plus_pct - a.high_plus_pct),
-    [gt.case_details]
-  )
-  const detectionChartRef = useRef<HTMLDivElement>(null)
-
-  return (
-    <section>
-      <SectionHeading number="08" title={t('s2.title')} icon={Target} />
-
-      <p className="text-sm leading-relaxed text-text-secondary mb-4">
-        <Trans
-          t={t}
-          i18nKey="s2.p1"
-          values={{
-            cases: gt.cases,
-            contracts: formatNumber(gt.contracts),
-            vendors: gt.vendors,
-          }}
-        />
-      </p>
-
-      <p className="text-sm leading-relaxed text-text-secondary mb-6">
-        <Trans
-          t={t}
-          i18nKey="s2.p2"
-          values={{
-            detectionRate: gt.detection_rate,
-            auc: gt.auc,
-            aucPct: (gt.auc * 100).toFixed(0),
-          }}
-          components={{ bold: <strong className="text-text-primary" /> }}
-        />
-      </p>
-
-      {/* Detection rate bars */}
-      <div ref={detectionChartRef} className="space-y-2 mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-bold tracking-wider uppercase text-text-muted font-mono">
-            {t('s2.detectionLabel')}
-          </p>
-          <ChartDownloadButton targetRef={detectionChartRef} filename="rubli-ground-truth-detection" />
-        </div>
-        {sortedCases.map((c, idx) => (
-          <div key={c.name} className="flex items-center gap-3">
-            <div className="w-52 sm:w-64 text-right">
-              <span className="text-xs text-text-secondary truncate block">{c.name}</span>
-            </div>
-            <div className="flex-1 h-5 bg-surface-raised rounded overflow-hidden relative">
-              <AnimatedSegment
-                pct={c.high_plus_pct}
-                color={c.high_plus_pct >= 90 ? RISK_COLORS.critical : c.high_plus_pct >= 60 ? RISK_COLORS.high : RISK_COLORS.medium}
-                delay={idx * 80}
-              />
-              <span className="absolute right-2 top-0 bottom-0 flex items-center text-xs font-bold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] font-mono z-10">
-                {c.high_plus_pct}%
-              </span>
-            </div>
-            <span className="text-xs text-text-muted w-20 text-right font-mono">
-              {t('s2.nContracts', { count: c.contracts })}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* Full detection story — all 14 ground truth cases, sortable */}
-      <ModelDetectionStory collapsible={false} />
-
-      {/* Corruption Cases Timeline */}
-      <CorruptionTimeline />
-
-      {/* Early warning callout */}
-      <div className="border-l-2 border-accent/50 bg-accent/[0.03] rounded-r-md px-5 py-4 mb-6">
-        <p className="text-sm leading-relaxed text-text-secondary">
-          <Trans
-            t={t}
-            i18nKey="s2.earlyWarning"
-            components={{
-              accent: <strong className="text-accent" />,
-              italic: <em />,
-            }}
-          />
-        </p>
-      </div>
-
-      <p className="text-sm leading-relaxed text-text-secondary">
-        <Trans
-          t={t}
-          i18nKey="s2.p3"
-          components={{ bold: <strong className="text-text-primary" /> }}
-        />
-      </p>
-    </section>
-  )
-}
-
-// ============================================================================
 // S3: Where the Risk Concentrates — Sectors
 // ============================================================================
 
@@ -1754,674 +1135,6 @@ function SectionVendors({
 }
 
 // ============================================================================
-// S5: The Network — Co-bidding and Collusion Patterns
-// ============================================================================
-
-function SectionNetwork({ patternCounts }: {
-  patternCounts?: { counts: { critical: number; december_rush: number; split_contracts: number; co_bidding: number; price_outliers: number } }
-}) {
-  const { t } = useTranslation('executive')
-
-  return (
-    <section>
-      <SectionHeading number="09" title={t('s5.title')} icon={Network} />
-
-      <p className="text-sm leading-relaxed text-text-secondary mb-4">
-        <Trans
-          t={t}
-          i18nKey="s5.p1"
-          components={{ bold: <strong className="text-text-primary" /> }}
-        />
-      </p>
-
-      <p className="text-sm leading-relaxed text-text-secondary mb-6">
-        <Trans
-          t={t}
-          i18nKey="s5.p2"
-          components={{ bold: <strong className="text-text-primary" /> }}
-        />
-      </p>
-
-      <div className="grid sm:grid-cols-3 gap-4 mb-4">
-        <StatCallout value="8,701" label={t('s5.suspiciousVendors')} color="var(--color-risk-high)" />
-        <StatCallout
-          value={patternCounts ? formatNumber(patternCounts.counts.co_bidding) : '1M+'}
-          label={t('s5.affectedContracts')}
-          color="var(--color-risk-medium)"
-        />
-        <StatCallout value="50%+" label={t('s5.coBidThreshold')} color="var(--color-text-secondary)" />
-      </div>
-
-      {patternCounts && (
-        <div className="fern-card px-5 py-4 mb-6">
-          <div className="editorial-rule mb-3">
-            <span className="editorial-label">All detection patterns — live database scan</span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <MiniStat label="Critical risk" value={formatNumber(patternCounts.counts.critical)} color={RISK_COLORS.critical} />
-            <MiniStat label="December rush" value={formatNumber(patternCounts.counts.december_rush)} color={RISK_COLORS.medium} />
-            <MiniStat label="Split contracts" value={formatNumber(patternCounts.counts.split_contracts)} />
-            <MiniStat label="Price outliers" value={formatNumber(patternCounts.counts.price_outliers)} />
-          </div>
-        </div>
-      )}
-
-      <p className="text-sm leading-relaxed text-text-secondary">
-        {t('s5.p3')}
-      </p>
-    </section>
-  )
-}
-
-// ============================================================================
-// S6: The Data — COMPRANET Data Quality
-// ============================================================================
-
-// ============================================================================
-// Currency Note Banner — data quality notice for headline KPI row
-// ============================================================================
-
-function CurrencyNoteBanner() {
-  const { t } = useTranslation('executive')
-  return (
-    <div className="flex items-start gap-2.5 px-4 py-2.5 rounded-lg border border-blue-500/20 bg-blue-500/5">
-      <HelpCircle className="h-3.5 w-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
-      <p className="text-xs text-blue-300/80 leading-relaxed">
-        {t('currencyNote.text')}
-      </p>
-    </div>
-  )
-}
-
-function SectionData() {
-  const { t } = useTranslation('executive')
-
-  return (
-    <section>
-      <SectionHeading number="01" title={t('s6.title')} icon={Database} />
-
-      <p className="text-sm leading-relaxed text-text-secondary mb-4">
-        {t('s6.p1')}
-      </p>
-
-      <div className="space-y-3 mb-6">
-        <DataStructureRow period="A" years="2002-2010" quality={t('s6.structures.a.quality')} rfcCoverage="0.1%" note={t('s6.structures.a.note')} />
-        <DataStructureRow period="B" years="2010-2017" quality={t('s6.structures.b.quality')} rfcCoverage="15.7%" note={t('s6.structures.b.note')} />
-        <DataStructureRow period="C" years="2018-2022" quality={t('s6.structures.c.quality')} rfcCoverage="30.3%" note={t('s6.structures.c.note')} />
-        <DataStructureRow period="D" years="2023-2025" quality={t('s6.structures.d.quality')} rfcCoverage="47.4%" note={t('s6.structures.d.note')} />
-      </div>
-
-      <div className="border-l-2 border-accent/50 bg-accent/[0.03] rounded-r-md px-5 py-4 mb-6">
-        <p className="text-sm leading-relaxed text-text-secondary">
-          <Trans
-            t={t}
-            i18nKey="s6.trillionLesson"
-            components={{ accent: <strong className="text-accent" /> }}
-          />
-        </p>
-      </div>
-
-      <p className="text-sm leading-relaxed text-text-secondary">
-        {t('s6.p2')}
-      </p>
-    </section>
-  )
-}
-
-function DataStructureRow({ period, years, quality, rfcCoverage, note }: { period: string; years: string; quality: string; rfcCoverage: string; note: string }) {
-  const { t } = useTranslation('executive')
-  const qualityLower = quality.toLowerCase()
-  const qualityColor = qualityLower.includes('lowest') || qualityLower.includes('baja') ? RISK_COLORS.critical : qualityLower.includes('better') || qualityLower.includes('mejor') ? RISK_COLORS.medium : qualityLower.includes('good') || qualityLower.includes('buena') ? RISK_COLORS.low : 'var(--color-accent)'
-  return (
-    <div className="flex items-start gap-3 fern-card p-4">
-      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-background-elevated text-sm font-bold text-text-primary font-mono flex-shrink-0">
-        {period}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5">
-          <span className="text-sm font-semibold text-text-primary">{years}</span>
-          <span className="text-xs px-1.5 py-0.5 rounded font-bold font-mono" style={{ color: qualityColor, background: `color-mix(in srgb, ${qualityColor} 15%, transparent)` }}>
-            {quality}
-          </span>
-          <span className="text-xs text-text-muted font-mono">{t('s6.rfc')}: {rfcCoverage}</span>
-        </div>
-        <p className="text-xs text-text-muted leading-relaxed">{note}</p>
-      </div>
-    </div>
-  )
-}
-
-// ============================================================================
-// Competition Decline Callout — audit-insight panel for SectionAdministrations
-// ============================================================================
-
-function CompetitionDeclineCard() {
-  const { t } = useTranslation('executive')
-  return (
-    <div className="fern-card border-amber-500/25 bg-amber-500/5 p-6 flex flex-col sm:flex-row gap-5 items-start">
-      <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg bg-amber-500/15">
-        <TrendingUp className="h-5 w-5 text-amber-400" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="editorial-label text-amber-400 mb-1">
-          {t('competitionDecline.statLabel')}
-        </div>
-        <div className="flex items-baseline gap-3 mb-1 flex-wrap">
-          <span className="pull-stat text-amber-400">
-            {t('competitionDecline.stat')}
-          </span>
-          <span className="text-sm font-bold text-text-primary">
-            {t('competitionDecline.title')}
-          </span>
-        </div>
-        <p className="text-xs text-text-muted leading-relaxed">
-          {t('competitionDecline.subtitle')}
-        </p>
-      </div>
-    </div>
-  )
-}
-
-// ============================================================================
-// S7: Across Administrations — Political Timeline
-// ============================================================================
-
-const PARTY_COLORS: Record<string, string> = {
-  PAN: '#1d4ed8',
-  PRI: '#16a34a',
-  MORENA: '#7c3aed',
-  PRD: '#f59e0b',
-  'N/A': '#64748b',
-}
-
-function getPartyColor(party: string): string {
-  for (const [key, color] of Object.entries(PARTY_COLORS)) {
-    if (party?.toUpperCase().includes(key)) return color
-  }
-  return PARTY_COLORS['N/A']
-}
-
-function AdminAvatar({ name, party }: { name: string; party: string }) {
-  const initials = name
-    .split(/\s+/)
-    .filter(w => w.length > 1)
-    .slice(0, 2)
-    .map(w => w[0].toUpperCase())
-    .join('')
-  const color = getPartyColor(party)
-  return (
-    <div
-      className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-sm font-black text-white select-none"
-      style={{ background: color, boxShadow: `0 0 0 2px ${color}40` }}
-      title={name}
-      aria-label={name}
-    >
-      {initials}
-    </div>
-  )
-}
-
-function SectionAdministrations({ data }: { data: ExecutiveSummaryResponse }) {
-  const { t } = useTranslation('executive')
-  const navigate = useNavigate()
-
-  return (
-    <section>
-      <SectionHeading number="05" title={t('s7.title')} icon={Landmark} />
-
-      <p className="text-sm leading-relaxed text-text-secondary mb-6">
-        <Trans
-          t={t}
-          i18nKey="s7.p1"
-          components={{ italic: <em /> }}
-        />
-      </p>
-
-      <div className="space-y-4">
-        {data.administrations.map((admin) => (
-          <div
-            key={admin.name}
-            className="fern-card p-5"
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <AdminAvatar name={admin.full_name} party={admin.party} />
-                <div>
-                  <h4 className="text-sm font-bold text-text-primary">{admin.full_name}</h4>
-                  <p className="text-xs text-text-muted font-mono">
-                    {admin.years} &middot; {admin.party}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => navigate('/administrations')}
-                className="text-[10px] text-accent hover:underline font-mono shrink-0 mt-0.5"
-              >
-                Full report →
-              </button>
-            </div>
-
-            {/* Stats row */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-3">
-              <MiniStat label={t('s7.labels.contracts')} value={formatNumber(admin.contracts)} />
-              <MiniStat
-                label={t('s7.labels.value')}
-                value={formatCompactMXN(admin.value)}
-                sublabel={admin.real_value
-                  ? `${formatCompactMXN(admin.real_value)} pesos 2024`
-                  : undefined}
-              />
-              <MiniStat
-                label={t('s7.labels.highRisk')}
-                value={`${admin.high_risk_pct}%`}
-                color={admin.high_risk_pct >= 4.5 ? RISK_COLORS.high : undefined}
-              />
-              <MiniStat
-                label={t('s7.labels.directAward')}
-                value={`${admin.direct_award_pct}%`}
-                color={admin.direct_award_pct >= 75 ? RISK_COLORS.medium : undefined}
-              />
-            </div>
-
-            {/* Narrative */}
-            <p className="text-sm leading-relaxed text-text-muted">
-              {t(`s7.narratives.${admin.name}`, '')}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      {/* Key moments excerpt */}
-      <KeyMomentsPanel />
-    </section>
-  )
-}
-
-// ============================================================================
-// Key Moments Panel — curated excerpt for Executive Summary
-// ============================================================================
-
-const KEY_MOMENTS = [
-  {
-    year: 2012,
-    title: 'Ley de Adquisiciones Reform',
-    desc: 'Modernized public procurement law, mandating electronic bidding on CompraNet for all federal agencies above threshold.',
-    type: 'reform',
-    admin: 'fox',
-    color: '#3b82f6',
-  },
-  {
-    year: 2014,
-    title: 'Casa Blanca Scandal',
-    desc: 'President Peña Nieto\'s family home built by Grupo Higa, a key government contractor — conflict of interest documented by journalists.',
-    type: 'scandal',
-    admin: 'pena',
-    color: '#dc2626',
-  },
-  {
-    year: 2017,
-    title: 'La Estafa Maestra',
-    desc: 'ASF audit uncovered $7.7B MXN funneled through public universities to shell companies. Emblematic of ghost-contractor networks.',
-    type: 'scandal',
-    admin: 'pena',
-    color: '#dc2626',
-  },
-  {
-    year: 2020,
-    title: 'COVID Emergency Procurement',
-    desc: '$45B MXN in emergency health contracts bypassed competitive bidding. RUBLI flags 81% of these as critical risk.',
-    type: 'crisis',
-    admin: 'amlo',
-    color: '#ea580c',
-  },
-  {
-    year: 2021,
-    title: 'Segalmex Scandal',
-    desc: '$9.4B MXN embezzled from the food security agency via overpriced contracts and ghost distributors — 100% detected by the model.',
-    type: 'scandal',
-    admin: 'amlo',
-    color: '#dc2626',
-  },
-  {
-    year: 2024,
-    title: 'CompraNet 5.0 Launch',
-    desc: 'New procurement platform with enhanced transparency features; 47.4% RFC coverage in 2023–2025 data vs. 0.1% in 2002–2010.',
-    type: 'reform',
-    admin: 'sheinbaum',
-    color: '#16a34a',
-  },
-] as const
-
-type MomentType = 'reform' | 'scandal' | 'crisis'
-
-const TYPE_LABELS: Record<MomentType, string> = {
-  reform: 'Reforma',
-  scandal: 'Escándalo',
-  crisis: 'Crisis',
-}
-
-const TYPE_BG: Record<MomentType, string> = {
-  reform: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  scandal: 'bg-red-500/10 text-red-400 border-red-500/20',
-  crisis: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
-}
-
-function KeyMomentsPanel() {
-  const navigate = useNavigate()
-
-  return (
-    <div className="mt-8 fern-card overflow-hidden">
-      {/* Panel header */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-border/20 bg-surface-raised/30">
-        <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-accent" />
-          <span className="text-xs font-bold uppercase tracking-widest text-text-muted font-mono">
-            Momentos Clave · 2002–2024
-          </span>
-        </div>
-        <button
-          onClick={() => navigate('/administrations')}
-          className="flex items-center gap-1 text-xs text-accent hover:text-accent/80 transition-colors font-medium"
-        >
-          Ver análisis completo <ArrowRight className="h-3 w-3" />
-        </button>
-      </div>
-
-      {/* Timeline */}
-      <div className="divide-y divide-border/10">
-        {KEY_MOMENTS.map((evt) => (
-          <div key={`${evt.year}-${evt.title}`} className="flex gap-4 px-5 py-3 hover:bg-surface-raised/20 transition-colors">
-            {/* Year + color bar */}
-            <div className="flex-shrink-0 flex flex-col items-center gap-1 pt-0.5">
-              <span className="text-xs font-black font-mono text-text-primary w-10 text-right">
-                {evt.year}
-              </span>
-              <div className="w-0.5 flex-1 rounded" style={{ backgroundColor: evt.color }} />
-            </div>
-
-            {/* Content */}
-            <div className="min-w-0 flex-1 pb-1">
-              <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                <span className="text-xs font-semibold text-text-primary">{evt.title}</span>
-                <span
-                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wide ${TYPE_BG[evt.type as MomentType]}`}
-                >
-                  {TYPE_LABELS[evt.type as MomentType]}
-                </span>
-              </div>
-              <p className="text-xs text-text-muted leading-relaxed">{evt.desc}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Footer note */}
-      <div className="px-5 py-2.5 bg-surface-raised/10 border-t border-border/10">
-        <p className="text-[10px] text-text-muted font-mono">
-          Fuentes: ASF, IMCO, Contralínea, Aristegui Noticias · Escándalos incluidos en ground truth del modelo v6.0
-        </p>
-      </div>
-    </div>
-  )
-}
-
-// ============================================================================
-// Model Evolution AUC Comparison Bars
-// ============================================================================
-
-function ModelEvolutionBars() {
-  const { t } = useTranslation('executive')
-  const ref = useRef<HTMLDivElement>(null)
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } },
-      { threshold: 0.2 }
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [])
-
-  const versions = [
-    { version: 'v3.3', label: t('modelEvolution.v33label'), auc: 0.584, barColor: '#f87171', tag: t('modelEvolution.v33tag') },
-    { version: 'v4.0', label: t('modelEvolution.v40label'), auc: 0.942, barColor: '#fbbf24', tag: t('modelEvolution.v40tag'), note: 'in-sample' },
-    { version: 'v5.1', label: t('modelEvolution.v51label'), auc: 0.957, barColor: '#86efac', tag: t('modelEvolution.v51tag'), note: 'temporal split' },
-    { version: 'v6.0', label: t('modelEvolution.v60label'), auc: 0.849, barColor: '#4ade80', tag: t('modelEvolution.v60tag'), note: 'vendor-stratified' },
-  ]
-
-  const maxAuc = 1.0
-
-  return (
-    <div ref={ref} className="mb-8">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-3">
-        {t('modelEvolution.header')}
-      </p>
-      <div className="space-y-3">
-        {versions.map((v, i) => (
-          <div key={v.version} className="flex items-center gap-2 sm:gap-3">
-            <div className="flex-shrink-0 w-8 sm:w-10 text-[10px] sm:text-xs font-black font-mono text-text-muted text-right">
-              {v.version}
-            </div>
-            <div className="flex-1 min-w-0 relative h-7 sm:h-8 rounded bg-surface-raised/30 overflow-hidden">
-              <div
-                className="absolute inset-y-0 left-0 rounded"
-                style={{
-                  width: visible ? `${(v.auc / maxAuc) * 100}%` : '0%',
-                  background: `linear-gradient(90deg, ${v.barColor}70, ${v.barColor}40)`,
-                  borderRight: `2px solid ${v.barColor}`,
-                  transition: `width 700ms ${150 + i * 130}ms cubic-bezier(0.16,1,0.3,1)`,
-                }}
-              />
-              <div className="absolute inset-0 flex items-center px-3 gap-3">
-                <span className="text-sm font-bold font-mono" style={{ color: v.barColor }}>
-                  {v.auc.toFixed(3)}
-                </span>
-                <span className="text-xs text-text-muted hidden sm:inline">{v.label}</span>
-              </div>
-            </div>
-            <div
-              className="flex-shrink-0 text-[10px] font-mono px-2 py-0.5 rounded hidden sm:block"
-              style={{
-                color: v.barColor,
-                background: `${v.barColor}14`,
-                border: `1px solid ${v.barColor}30`,
-              }}
-            >
-              {v.tag}
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="flex items-center justify-between mt-1 px-13 text-[9px] font-mono text-text-muted">
-        <span className="pl-14">{t('modelEvolution.random')}</span>
-        <span>{t('modelEvolution.perfect')}</span>
-      </div>
-    </div>
-  )
-}
-
-// ============================================================================
-// S8: How We Know — Model Transparency
-// ============================================================================
-
-function SectionModel({ data }: { data: ExecutiveSummaryResponse }) {
-  const { t } = useTranslation('executive')
-  const { model } = data
-  const maxBeta = model.top_predictors?.length > 0 ? Math.max(...model.top_predictors.map((p) => Math.abs(p.beta))) : 1
-  const coeffChartRef = useRef<HTMLDivElement>(null)
-
-  return (
-    <section>
-      <SectionHeading number="03" title={t('s8.title')} icon={Brain} />
-
-      <p className="text-sm leading-relaxed text-text-secondary mb-4">
-        <Trans
-          t={t}
-          i18nKey="s8.p1"
-          values={{ contracts: formatNumber(data.ground_truth.contracts) }}
-          components={{ bold: <strong className="text-text-primary" /> }}
-        />
-      </p>
-
-      {/* Plain-language AUC explanation for non-technical readers */}
-      <div className="mb-6 rounded-xl border border-green-500/20 bg-green-500/5 p-5">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-green-400 font-mono mb-2">
-          What does AUC 0.849 mean in plain language?
-        </p>
-        <p className="text-sm leading-relaxed text-text-secondary">
-          Imagine picking two contracts at random — one from a documented corruption case, one
-          clean. Our model ranks the corrupt contract higher{' '}
-          <strong className="text-text-primary">84.9% of the time</strong>. A coin flip would
-          achieve 50%. A model this accurate means investigators can focus on the top-flagged
-          contracts and find real wrongdoing — rather than searching blindly across 3.1 million
-          records.
-        </p>
-        <p className="text-xs text-text-muted mt-2 italic">
-          AUC = Area Under the ROC Curve. Validated with vendor-stratified splitting: no vendor
-          appears in both training and test sets.
-        </p>
-      </div>
-
-      <AIPipelineChart />
-
-      {/* Model evolution AUC comparison */}
-      <ModelEvolutionBars />
-
-      {/* Metric badges */}
-      <div className="flex flex-wrap gap-3 mb-8">
-        <MetricBadge label="AUC-ROC" value={model.auc.toFixed(3)} description={t('s8.discriminationPower')} />
-        <MetricBadge label="Brier Score" value={(model.brier ?? 0.06).toFixed(3)} description={t('s8.calibrationQuality')} />
-        <MetricBadge label="Lift" value={`${(model.lift ?? 4.04)}x`} description={t('s8.vsRandom')} />
-      </div>
-
-      {/* Coefficient chart */}
-      <div ref={coeffChartRef} className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-bold tracking-wider uppercase text-text-muted font-mono">
-            {t('s8.coeffLabel')}
-          </p>
-          <ChartDownloadButton targetRef={coeffChartRef} filename="rubli-model-coefficients" />
-        </div>
-        <div className="space-y-2">
-          {model.top_predictors.map((p) => {
-            const isPositive = p.beta > 0
-            const width = (Math.abs(p.beta) / maxBeta) * 100
-            return (
-              <div key={p.name} className="flex items-center gap-3">
-                <div className="w-40 text-right">
-                  <span className="text-xs text-text-secondary">
-                    {t(`predictors.${p.name}`, p.name)}
-                  </span>
-                </div>
-                <div className="flex-1 flex items-center gap-1">
-                  {!isPositive && (
-                    <div className="flex-1 flex justify-end">
-                      <div
-                        className="h-4 rounded"
-                        style={{
-                          width: `${width}%`,
-                          background: 'var(--color-accent)',
-                          opacity: 0.6,
-                        }}
-                      />
-                    </div>
-                  )}
-                  <div className="w-px h-6 bg-border/50" />
-                  {isPositive && (
-                    <div className="flex-1">
-                      <div
-                        className="h-4 rounded"
-                        style={{
-                          width: `${width}%`,
-                          background: RISK_COLORS.critical,
-                          opacity: 0.7,
-                        }}
-                      />
-                    </div>
-                  )}
-                  {!isPositive && <div className="flex-1" />}
-                </div>
-                <span className="text-xs font-bold text-text-secondary font-mono w-14 text-right">
-                  {isPositive ? '+' : ''}{p.beta.toFixed(3)}
-                </span>
-              </div>
-            )
-          })}
-        </div>
-        <div className="flex justify-between mt-1 text-xs text-text-muted font-mono">
-          <span className="pl-44">{t('s8.reducesRisk')}</span>
-          <span>{t('s8.increasesRisk')}</span>
-        </div>
-      </div>
-
-      <p className="text-sm leading-relaxed text-text-secondary">
-        <Trans
-          t={t}
-          i18nKey="s8.p2"
-          components={{ bold: <strong className="text-text-primary" /> }}
-        />
-      </p>
-    </section>
-  )
-}
-
-// ============================================================================
-// S9: What We Cannot See — Limitations
-// ============================================================================
-
-function SectionLimitations() {
-  const { t } = useTranslation('executive')
-
-  const limitations = [
-    { icon: Database, key: 'groundTruth' },
-    { icon: Search, key: 'dataQuality' },
-    { icon: Scale, key: 'correlation' },
-    { icon: HelpCircle, key: 'unknowns' },
-    { icon: EyeOff, key: 'executionPhase' },
-    { icon: AlertTriangle, key: 'scarViolation' },
-    { icon: Calendar, key: 'temporalLeakage' },
-  ]
-
-  return (
-    <section>
-      <SectionHeading number="10" title={t('s9.title')} icon={EyeOff} />
-
-      <p className="text-sm leading-relaxed text-text-secondary mb-6">
-        {t('s9.p1')}
-      </p>
-
-      <div className="grid sm:grid-cols-2 gap-4">
-        {limitations.map((lim) => {
-          const Icon = lim.icon
-          return (
-            <div
-              key={lim.key}
-              className="fern-card p-5"
-            >
-              <div className="flex items-center gap-2.5 mb-2">
-                <Icon className="h-4 w-4 text-text-muted flex-shrink-0" />
-                <h4 className="text-sm font-bold text-text-primary">
-                  {t(`s9.limitations.${lim.key}.title`)}
-                </h4>
-              </div>
-              <p className="text-sm leading-relaxed text-text-muted">
-                {t(`s9.limitations.${lim.key}.text`)}
-              </p>
-              <p className="text-xs italic text-text-muted mt-2">
-                {t(`s9.limitations.${lim.key}.mitigation`)}
-              </p>
-            </div>
-          )
-        })}
-      </div>
-    </section>
-  )
-}
-
-// ============================================================================
 // S10: What Comes Next — Recommendations
 // ============================================================================
 
@@ -2439,7 +1152,6 @@ function SectionRecommendations({ navigate }: { navigate: (path: string) => void
       audience: 'For Investigators (ASF / SFP)',
       color: '#f87171',
       steps: [
-        // TODO: fetch from API — hardcoded critical count should come from risk distribution endpoint
         'Start with the critical-risk contracts — filter by sector (Salud, Agricultura) and institution to triage the highest-value cases first.',
         'Cross-reference the 38 SAT-confirmed EFOS ghost vendors (Case 22) against active contracts. Any current procurement relationship warrants immediate review.',
         'Run vendor network analysis on co-bidding clusters — 8,701 vendors show suspicious co-bid rates above 50%, a hallmark of bid rotation.',
@@ -2642,37 +1354,6 @@ function StatCallout({ value, label, color, pulse }: { value: string; label: str
         {value}
       </div>
       <div className="editorial-label mt-1">{label}</div>
-    </div>
-  )
-}
-
-function MiniStat({ label, value, color, sublabel }: { label: string; value: string; color?: string; sublabel?: string }) {
-  return (
-    <div>
-      <div className="text-xs text-text-muted uppercase tracking-wider font-mono">
-        {label}
-      </div>
-      <div
-        className="text-sm font-bold font-mono"
-        style={{ color: color || 'var(--color-text-primary)' }}
-      >
-        {value}
-      </div>
-      {sublabel && (
-        <div className="text-[10px] text-text-muted/60 font-mono italic leading-tight">{sublabel}</div>
-      )}
-    </div>
-  )
-}
-
-function MetricBadge({ label, value, description }: { label: string; value: string; description: string }) {
-  return (
-    <div className="fern-card flex items-center gap-3 px-4 py-3">
-      <div>
-        <div className="pull-stat text-accent">{value}</div>
-        <div className="editorial-label mt-0.5">{label}</div>
-      </div>
-      <div className="text-xs text-text-secondary max-w-[80px] leading-tight">{description}</div>
     </div>
   )
 }

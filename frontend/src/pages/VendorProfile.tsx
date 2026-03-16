@@ -30,7 +30,7 @@ import VendorContractTimeline from '@/components/VendorContractTimeline'
 import VendorContractRiskMatrix from '@/components/VendorContractRiskMatrix'
 import VendorContractBreakdown from '@/components/VendorContractBreakdown'
 import { buildVendorNarrative } from '@/lib/narratives'
-import type { ContractListItem, VendorExternalFlags, VendorWaterfallContribution, VendorQQWResponse, VendorSHAPResponse } from '@/api/types'
+import type { ContractListItem, VendorExternalFlags, VendorWaterfallContribution, VendorQQWResponse, VendorSHAPResponse, VendorNarrativeResponse, VendorSimilarCasesResponse } from '@/api/types'
 import {
   AreaChart,
   Area,
@@ -72,6 +72,9 @@ import {
   ShieldCheck,
   Brain,
   Download,
+  Newspaper,
+  Copy,
+  Check,
 } from 'lucide-react'
 import { NetworkGraphModal } from '@/components/NetworkGraphModal'
 import { ScrollReveal, useCountUp, AnimatedFill } from '@/hooks/useAnimations'
@@ -1532,6 +1535,7 @@ export function VendorProfile() {
           { key: 'history', label: t('tabs.history'), icon: Activity },
           { key: 'network', label: t('tabs.network'), icon: Network },
           { key: 'external', label: t('tabs.external'), icon: ShieldCheck },
+          { key: 'periodista', label: 'Periodista', icon: Newspaper },
         ]}
       >
         {/* TAB 1: Overview */}
@@ -2843,6 +2847,11 @@ export function VendorProfile() {
         <TabPanel tabKey="external">
           <ExternalFlagsPanel flags={externalFlags} qqw={qqwData} />
         </TabPanel>
+
+        {/* TAB 6: Periodista */}
+        <TabPanel tabKey="periodista">
+          <PeriodistaPanel vendorId={vendorId} vendorName={vendor?.name ?? ''} avgRiskScore={vendor?.avg_risk_score} activeTab={activeTab} />
+        </TabPanel>
       </SimpleTabs>
 
       <ContractDetailModal
@@ -3486,6 +3495,272 @@ function ExternalFlagsPanel({ flags, qqw }: { flags: VendorExternalFlags | undef
         SAT Art. 69-B list updated monthly via <code className="font-mono">scripts/load_sat_efos.py</code>.
         QQW data fetched via <code className="font-mono">scripts/fetch_qqw_data.py</code> (top 200 high-risk vendors).
       </p>
+    </div>
+  )
+}
+
+// ============================================================================
+// Periodista Panel — Journalist-oriented vendor analysis tab
+// ============================================================================
+
+const ARC_ICONS: Record<string, string> = {
+  explosive_entry: '\uD83D\uDE80',
+  capture_pattern: '\uD83C\uDFDB\uFE0F',
+  single_burst: '\u26A1',
+  steady_growth: '\uD83D\uDCC8',
+  disappeared: '\uD83D\uDC7B',
+  irregular: '\u2753',
+}
+
+const ARC_LABELS: Record<string, string> = {
+  explosive_entry: 'Entrada explosiva',
+  capture_pattern: 'Patron de captura',
+  single_burst: 'Rafaga unica',
+  steady_growth: 'Crecimiento constante',
+  disappeared: 'Desaparecido',
+  irregular: 'Irregular',
+}
+
+function PeriodistaPanel({
+  vendorId,
+  avgRiskScore,
+  activeTab,
+}: {
+  vendorId: number
+  vendorName: string
+  avgRiskScore?: number
+  activeTab: string
+}) {
+  const [copiedLede, setCopiedLede] = useState(false)
+
+  const { data: narrative, isLoading: narrativeLoading } = useQuery<VendorNarrativeResponse>({
+    queryKey: ['vendor', vendorId, 'narrative'],
+    queryFn: () => vendorApi.getNarrative(vendorId),
+    enabled: !!vendorId && activeTab === 'periodista',
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const { data: similarCasesResponse, isLoading: casesLoading } = useQuery<VendorSimilarCasesResponse>({
+    queryKey: ['vendor', vendorId, 'similar-cases'],
+    queryFn: () => vendorApi.getSimilarCases(vendorId),
+    enabled: !!vendorId && activeTab === 'periodista',
+    staleTime: 5 * 60 * 1000,
+  })
+  const similarCases = similarCasesResponse?.similar_cases
+
+  // Build auto-generated lede paragraph
+  const ledeParagraph = useMemo(() => {
+    if (!narrative) return null
+    const arcLabel = narrative.arc_label || ARC_LABELS[narrative.arc_shape] || 'patron irregular'
+    const riskScore = avgRiskScore ?? 0
+    const riskLevelLabel = getRiskLevel(riskScore)
+    const riskLabelEs: Record<string, string> = {
+      critical: 'critico',
+      high: 'alto',
+      medium: 'medio',
+      low: 'bajo',
+    }
+    let text = `Este proveedor muestra una ${arcLabel.toLowerCase()}. `
+    if (similarCases && similarCases.length > 0) {
+      const topCase = similarCases[0]
+      const pct = Math.round(topCase.similarity_score * 100)
+      text += `Sus patrones de contratacion tienen un ${pct}% de similitud con el caso '${topCase.case_name}', que involucro ${topCase.case_type}. `
+    }
+    text += `Con un puntaje de riesgo promedio de ${riskScore.toFixed(2)}, esta clasificado como ${riskLabelEs[riskLevelLabel] ?? riskLevelLabel}.`
+    return text
+  }, [narrative, similarCases, avgRiskScore])
+
+  const handleCopyLede = () => {
+    if (!ledeParagraph) return
+    navigator.clipboard.writeText(ledeParagraph)
+    setCopiedLede(true)
+    setTimeout(() => setCopiedLede(false), 2000)
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* 1. Narrativa del proveedor */}
+      <div>
+        <h3 className="text-lg font-bold text-text-primary mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+          Narrativa del proveedor
+        </h3>
+
+        {narrativeLoading ? (
+          <div className="space-y-3">
+            <Skeleton className="h-8 w-60" />
+            <Skeleton className="h-[200px] w-full" />
+          </div>
+        ) : narrative ? (
+          <div className="space-y-4">
+            {/* Arc shape badge */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background-elevated border border-border text-sm font-semibold text-text-primary">
+                {ARC_ICONS[narrative.arc_shape] ?? '\u2753'} {narrative.arc_label || ARC_LABELS[narrative.arc_shape] || 'Irregular'}
+              </span>
+              {narrative.peak_year && (
+                <span className="text-xs text-text-muted">
+                  Pico: {narrative.peak_year}
+                </span>
+              )}
+              <span className="text-xs text-text-muted">
+                {narrative.active_years} anios activos
+              </span>
+              <span className="text-xs text-text-muted">
+                Total: {formatCompactMXN(narrative.total_value_mxn)}
+              </span>
+            </div>
+
+            {/* Year-by-year bar chart */}
+            {narrative.years.length > 0 && (
+              <div className="h-[220px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={narrative.years} margin={{ top: 10, right: 10, bottom: 20, left: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                    <XAxis
+                      dataKey="year"
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                      interval="preserveStartEnd"
+                    />
+                    <YAxis
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 9 }}
+                      tickFormatter={(v: number) => formatCompactMXN(v)}
+                      width={70}
+                    />
+                    <RechartsTooltip
+                      content={({ active, payload }) => {
+                        if (active && payload?.[0]) {
+                          const d = payload[0].payload as { year: number; total_value_mxn: number; contract_count: number; avg_risk_score: number | null }
+                          return (
+                            <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg">
+                              <p className="font-semibold text-text-primary mb-1">{d.year}</p>
+                              <p className="text-text-secondary">{formatCompactMXN(d.total_value_mxn)}</p>
+                              <p className="text-text-muted">{d.contract_count} contratos</p>
+                              {d.avg_risk_score != null && (
+                                <p className="text-text-muted">Riesgo: {d.avg_risk_score.toFixed(2)}</p>
+                              )}
+                            </div>
+                          )
+                        }
+                        return null
+                      }}
+                    />
+                    <Bar dataKey="total_value_mxn" radius={[2, 2, 0, 0]} barSize={14}>
+                      {narrative.years.map((entry, i) => {
+                        const riskLevel = entry.avg_risk_score != null ? getRiskLevel(entry.avg_risk_score) : 'low'
+                        return <Cell key={i} fill={RISK_COLORS[riskLevel]} fillOpacity={0.85} />
+                      })}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-text-muted">No se pudo obtener la narrativa del proveedor.</p>
+        )}
+      </div>
+
+      {/* 2. Casos similares */}
+      <div>
+        <h3 className="text-lg font-bold text-text-primary mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+          Casos similares
+        </h3>
+
+        {casesLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-32 w-full rounded-xl" />
+            ))}
+          </div>
+        ) : similarCases && similarCases.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {similarCases.slice(0, 3).map((sc) => (
+              <div
+                key={sc.case_id}
+                className="bg-background-elevated border border-border rounded-xl p-4 space-y-2"
+              >
+                <p className="font-semibold text-text-primary text-sm">{sc.case_name}</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex px-2 py-0.5 rounded-md bg-accent/10 text-accent text-xs font-medium">
+                    {sc.case_type}
+                  </span>
+                  <span className="text-xs font-bold text-text-secondary">
+                    {Math.round(sc.similarity_score * 100)}% similitud
+                  </span>
+                </div>
+                {sc.shared_features.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {sc.shared_features.map((f) => (
+                      <span key={f} className="inline-flex px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 text-[10px]">
+                        {f}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {sc.divergent_features.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {sc.divergent_features.map((f) => (
+                      <span key={f} className="inline-flex px-1.5 py-0.5 rounded-md bg-background-card text-text-muted text-[10px]">
+                        {f}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-text-muted">
+            No se encontraron casos similares con suficiente historial de datos.
+          </p>
+        )}
+      </div>
+
+      {/* 3. Parrafo para periodista */}
+      {ledeParagraph && (
+        <div>
+          <h3 className="text-lg font-bold text-text-primary mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+            Parrafo para periodista
+          </h3>
+          <div className="bg-background-elevated border border-border rounded-xl p-5">
+            <p className="text-sm text-text-secondary leading-relaxed mb-4">
+              {ledeParagraph}
+            </p>
+            <button
+              onClick={handleCopyLede}
+              className={cn(
+                'inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+                copiedLede
+                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                  : 'bg-background-card text-text-secondary border border-border hover:bg-background-elevated'
+              )}
+            >
+              {copiedLede ? (
+                <>
+                  <Check className="h-3.5 w-3.5" />
+                  Copiado
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3.5 w-3.5" />
+                  Copiar parrafo
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Descargar evidencia */}
+      <div>
+        <button
+          onClick={() => window.open(`/api/v1/vendors/${vendorId}/contracts?format=csv`, '_blank')}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-background-elevated border border-border text-text-secondary hover:bg-background-card transition-colors"
+        >
+          <Download className="h-4 w-4" />
+          Descargar evidencia CSV
+        </button>
+      </div>
     </div>
   )
 }

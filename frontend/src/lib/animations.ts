@@ -7,20 +7,20 @@ export const pageVariants: Variants = {
   exit: { opacity: 0, y: -8, transition: { duration: 0.2, ease: 'easeIn' } },
 }
 
-// Stagger container — children animate in sequence
+// Stagger container — children animate in sequence (bolder timing)
 export const staggerContainer: Variants = {
   initial: {},
-  animate: { transition: { staggerChildren: 0.07, delayChildren: 0.1 } },
+  animate: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
 }
 
-// Individual card/item that staggers in
+// Individual card/item that staggers in — dramatic entrance
 export const staggerItem: Variants = {
-  initial: { opacity: 0, y: 20, scale: 0.97 },
+  initial: { opacity: 0, y: 40, scale: 0.94 },
   animate: {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] },
+    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
   },
 }
 
@@ -30,13 +30,13 @@ export const fadeIn: Variants = {
   animate: { opacity: 1, transition: { duration: 0.4 } },
 }
 
-// Slide up from below (for hero content)
+// Slide up from below — bold hero entrance with spring
 export const slideUp: Variants = {
-  initial: { opacity: 0, y: 40 },
+  initial: { opacity: 0, y: 60 },
   animate: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
+    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
   },
 }
 
@@ -47,6 +47,37 @@ export const scaleIn: Variants = {
     opacity: 1,
     scale: 1,
     transition: { duration: 0.3, ease: 'backOut' },
+  },
+}
+
+// Count-up variant — for number reveals
+export const countUp: Variants = {
+  initial: { opacity: 0, y: 20, scale: 0.9 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+  },
+}
+
+// Split reveal — elements slide in from sides
+export const splitReveal: Variants = {
+  initial: { opacity: 0, x: -30 },
+  animate: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
+  },
+}
+
+// Scale reveal — dramatic scale-up from center
+export const scaleReveal: Variants = {
+  initial: { opacity: 0, scale: 0.85 },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.6, ease: [0.34, 1.56, 0.64, 1] },
   },
 }
 

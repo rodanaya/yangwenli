@@ -2230,3 +2230,85 @@ export interface AriaQueueResponse {
   run_summary: AriaStats | null
   message?: string
 }
+
+// ---------------------------------------------------------------------------
+// Story Packages
+// ---------------------------------------------------------------------------
+
+export interface StoryPackageExample {
+  vendor_id?: number
+  vendor_name?: string
+  total_value_mxn?: number
+  primary_sector_name?: string
+  avg_risk_score?: number
+  total_contracts?: number
+  direct_award_pct?: number
+  ips_final?: number
+  [key: string]: unknown
+}
+
+export interface StoryPackage {
+  id: string
+  title: string
+  subtitle: string
+  key_question: string
+  difficulty: 'rapida' | 'requiere_solicitud' | 'investigacion_larga'
+  difficulty_label: string
+  lede: string
+  examples: StoryPackageExample[]
+  defense: string
+  next_steps: string[]
+  summary: Record<string, unknown>
+  methodology: string
+}
+
+export interface StoryPackagesResponse {
+  packages: StoryPackage[]
+}
+
+// ---------------------------------------------------------------------------
+// Vendor Similar Cases
+// ---------------------------------------------------------------------------
+
+export interface VendorSimilarCase {
+  case_id: number
+  case_name: string
+  case_type: string
+  similarity_score: number
+  n_contracts: number
+  shared_features: string[]
+  divergent_features: string[]
+}
+
+export interface VendorSimilarCasesResponse {
+  vendor_id: number
+  similar_cases: VendorSimilarCase[]
+  message?: string
+}
+
+// ---------------------------------------------------------------------------
+// Vendor Narrative
+// ---------------------------------------------------------------------------
+
+export interface VendorNarrativeYear {
+  year: number
+  contract_count: number
+  total_value_mxn: number
+  avg_risk_score: number | null
+  direct_award_pct: number
+  single_bid_pct: number
+  institution_count: number
+}
+
+export interface VendorNarrativeResponse {
+  vendor_id: number
+  arc_shape: string
+  arc_label: string
+  peak_year: number | null
+  peak_value_mxn: number
+  active_years: number
+  first_year: number | null
+  last_year: number | null
+  total_value_mxn: number
+  years: VendorNarrativeYear[]
+}

@@ -101,6 +101,9 @@ import type {
   AriaQueueItem,
   AriaStatsResponse,
   AriaQueueResponse,
+  StoryPackagesResponse,
+  VendorSimilarCasesResponse,
+  VendorNarrativeResponse,
 } from './types'
 
 // Re-export types that were moved from client.ts to types.ts for backward compatibility
@@ -165,6 +168,13 @@ export type {
   AriaStats,
   AriaStatsResponse,
   AriaQueueResponse,
+  StoryPackageExample,
+  StoryPackage,
+  StoryPackagesResponse,
+  VendorSimilarCase,
+  VendorSimilarCasesResponse,
+  VendorNarrativeYear,
+  VendorNarrativeResponse,
 } from './types'
 
 /** Generic query parameter map — used internally by buildQueryParams */
@@ -516,6 +526,16 @@ export const vendorApi = {
    */
   async getShap(vendorId: number): Promise<VendorSHAPResponse> {
     const { data } = await api.get<VendorSHAPResponse>(`/vendors/${vendorId}/shap`)
+    return data
+  },
+
+  async getNarrative(vendorId: number): Promise<VendorNarrativeResponse> {
+    const { data } = await api.get<VendorNarrativeResponse>(`/vendors/${vendorId}/narrative`)
+    return data
+  },
+
+  async getSimilarCases(vendorId: number): Promise<VendorSimilarCasesResponse> {
+    const { data } = await api.get<VendorSimilarCasesResponse>(`/vendors/${vendorId}/similar-cases`)
     return data
   },
 }
@@ -2429,6 +2449,10 @@ export const storiesApi = {
   },
   async getOverpricingPatterns() {
     const { data } = await api.get('/stories/overpricing-patterns')
+    return data
+  },
+  async getPackages(): Promise<StoryPackagesResponse> {
+    const { data } = await api.get<StoryPackagesResponse>('/stories/packages')
     return data
   },
 }

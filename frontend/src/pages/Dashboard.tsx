@@ -1,6 +1,7 @@
 import React, { memo, useMemo, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
-import { staggerContainer, staggerItem } from '@/lib/animations'
+import { motion, type Variants } from 'framer-motion'
+// animations.ts: staggerContainer replaced by inline fernStaggerContainer
+import { ScrollReveal, useCountUp } from '@/hooks/useAnimations'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
@@ -65,6 +66,22 @@ import { LayoutDashboard } from 'lucide-react'
 // 6. SECTOR GRID: 12 sector cards with mini sparklines
 // ============================================================================
 
+// Fern-style bold stagger for cards — y:60, scale:0.94, blur:4px, spring easing
+const fernStaggerContainer: Variants = {
+  initial: {},
+  animate: { transition: { staggerChildren: 0.10, delayChildren: 0.08 } },
+}
+const fernStaggerItem: Variants = {
+  initial: { opacity: 0, y: 60, scale: 0.94, filter: 'blur(4px)' },
+  animate: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    filter: 'blur(0px)',
+    transition: { type: 'spring', stiffness: 260, damping: 24 },
+  },
+}
+
 // Risk donut colors
 const DONUT_COLORS: Record<string, string> = {
   critical: '#f87171',
@@ -127,6 +144,44 @@ interface KPICardProps {
   sparkKey?: string
 }
 
+// Animated KPI number — count-up + number-pop on scroll
+function KPINumber({ value, color }: { value: string; color: string }) {
+  // Extract numeric portion for count-up
+  const match = value.match(/^([\d,.]+)(.*)$/)
+  const numStr = match ? match[1].replace(/,/g, '') : null
+  const suffix = match ? match[2] : ''
+  const numVal = numStr ? parseFloat(numStr) : null
+  const decimals = numStr && numStr.includes('.') ? (numStr.split('.')[1]?.length ?? 0) : 0
+
+  const { ref, value: animVal } = useCountUp(numVal ?? 0, 1400, decimals)
+
+  if (numVal == null) {
+    // Non-numeric value, just render directly
+    return (
+      <p
+        className="text-[2.5rem] font-black tabular-nums leading-none tracking-tight transition-colors"
+        style={{ color, letterSpacing: '-0.035em', fontVariantNumeric: 'tabular-nums' }}
+      >
+        {value}
+      </p>
+    )
+  }
+
+  // Format with commas
+  const formatted = decimals > 0
+    ? animVal.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+    : animVal.toLocaleString('en-US')
+
+  return (
+    <p
+      className="text-[2.5rem] font-black tabular-nums leading-none tracking-tight transition-colors"
+      style={{ color, letterSpacing: '-0.035em', fontVariantNumeric: 'tabular-nums' }}
+    >
+      <span ref={ref}>{formatted}</span>{suffix}
+    </p>
+  )
+}
+
 const KPICard = memo(function KPICard({
   label, value, sublabel, color, loading, icon: Icon, trend, onClick, sparkData, sparkKey,
 }: KPICardProps) {
@@ -155,12 +210,7 @@ const KPICard = memo(function KPICard({
       {loading ? (
         <Skeleton className="h-10 w-28 mb-2" />
       ) : (
-        <p
-          className="text-[2.5rem] font-black tabular-nums leading-none tracking-tight transition-colors"
-          style={{ color, letterSpacing: '-0.035em', fontVariantNumeric: 'tabular-nums' }}
-        >
-          {value}
-        </p>
+        <KPINumber value={value} color={color} />
       )}
       <div className="flex items-center justify-between mt-3 gap-2">
         <p className="text-[10px] text-text-muted leading-tight flex-1">{sublabel}</p>
@@ -1127,47 +1177,55 @@ export function Dashboard() {
       />
 
       {/* ================================================================ */}
-      {/* HEADLINE ROW: 4 KPI Cards                                        */}
+      {/* HEADLINE ROW: 4 KPI Cards — staggered reveal                    */}
       {/* ================================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard
-          label={t('contractsShowingRisk')}
-          value={dashLoading ? '--' : `${criticalHighContractPct.toFixed(1)}%`}
-          sublabel={dashLoading ? '' : t('contractsFlaggedDetail', { num: formatNumber(overview?.high_risk_contracts ?? 0) })}
-          color="#f87171"
-          loading={dashLoading}
-          icon={Gauge}
-          onClick={() => navigate('/contracts?risk_level=critical&risk_level=high')}
-          sparkData={riskTrajectory.length > 3 ? riskTrajectory : undefined}
-          sparkKey="highRiskPct"
-        />
-        <KPICard
-          label={t('criticalContracts')}
-          value={dashLoading ? '--' : formatNumber(criticalCount)}
-          sublabel={t('oecdHighRisk')}
-          color="#ef4444"
-          loading={dashLoading}
-          icon={AlertTriangle}
-          onClick={() => navigate('/contracts?risk_level=critical')}
-        />
-        <KPICard
-          label={t('valueFlagged')}
-          value={dashLoading ? '--' : formatCompactMXN(overview?.total_value_mxn ?? 0)}
-          sublabel={dashLoading ? '' : t('valueFlaggedDetail', { pct: criticalHighValuePct.toFixed(1) })}
-          color="#fb923c"
-          loading={dashLoading}
-          icon={DollarSign}
-          onClick={() => navigate('/categories')}
-        />
-        <KPICard
-          label={t('topVendors')}
-          value={dashLoading ? '--' : formatNumber(overview?.total_vendors ?? 0)}
-          sublabel={`${formatNumber(overview?.total_contracts ?? 0)} contracts | 2002-2025`}
-          color="#818cf8"
-          loading={dashLoading}
-          icon={Users}
-          onClick={() => navigate('/network')}
-        />
+        <ScrollReveal delay={0}>
+          <KPICard
+            label={t('contractsShowingRisk')}
+            value={dashLoading ? '--' : `${criticalHighContractPct.toFixed(1)}%`}
+            sublabel={dashLoading ? '' : t('contractsFlaggedDetail', { num: formatNumber(overview?.high_risk_contracts ?? 0) })}
+            color="#f87171"
+            loading={dashLoading}
+            icon={Gauge}
+            onClick={() => navigate('/contracts?risk_level=critical&risk_level=high')}
+            sparkData={riskTrajectory.length > 3 ? riskTrajectory : undefined}
+            sparkKey="highRiskPct"
+          />
+        </ScrollReveal>
+        <ScrollReveal delay={100}>
+          <KPICard
+            label={t('criticalContracts')}
+            value={dashLoading ? '--' : formatNumber(criticalCount)}
+            sublabel={t('oecdHighRisk')}
+            color="#ef4444"
+            loading={dashLoading}
+            icon={AlertTriangle}
+            onClick={() => navigate('/contracts?risk_level=critical')}
+          />
+        </ScrollReveal>
+        <ScrollReveal delay={200}>
+          <KPICard
+            label={t('valueFlagged')}
+            value={dashLoading ? '--' : formatCompactMXN(overview?.total_value_mxn ?? 0)}
+            sublabel={dashLoading ? '' : t('valueFlaggedDetail', { pct: criticalHighValuePct.toFixed(1) })}
+            color="#fb923c"
+            loading={dashLoading}
+            icon={DollarSign}
+            onClick={() => navigate('/categories')}
+          />
+        </ScrollReveal>
+        <ScrollReveal delay={300}>
+          <KPICard
+            label={t('topVendors')}
+            value={dashLoading ? '--' : formatNumber(overview?.total_vendors ?? 0)}
+            sublabel={`${formatNumber(overview?.total_contracts ?? 0)} contracts | 2002-2025`}
+            color="#818cf8"
+            loading={dashLoading}
+            icon={Users}
+            onClick={() => navigate('/network')}
+          />
+        </ScrollReveal>
       </div>
 
       {/* ================================================================ */}
@@ -1432,13 +1490,13 @@ export function Dashboard() {
           </div>
           <motion.div
             className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
-            variants={staggerContainer}
+            variants={fernStaggerContainer}
             initial="initial"
             whileInView="animate"
             viewport={{ once: true, margin: '-40px' }}
           >
             {sectorData.map((sector) => (
-              <motion.div key={sector.code} variants={staggerItem}>
+              <motion.div key={sector.code} variants={fernStaggerItem}>
                 <SectorMiniCard
                   {...sector}
                   onClick={() => navigate(`/sectors/${sector.id}`)}

@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useMemo } from 'react'
 
 // Scroll reveal hook
 export function useReveal(threshold = 0.05) {
@@ -19,19 +19,21 @@ export function useReveal(threshold = 0.05) {
   return { ref, visible }
 }
 
-// ScrollReveal component — wraps any content with fade+slide+blur reveal
-export function ScrollReveal({ children, delay = 0, direction = 'up', className }: {
+// ScrollReveal component — bold Fern-style reveal with scale + slide + blur
+export function ScrollReveal({ children, delay = 0, direction = 'up', className, staggerIndex }: {
   children: React.ReactNode
   delay?: number
   direction?: 'up' | 'left' | 'right' | 'fade'
   className?: string
+  staggerIndex?: number
 }) {
   const { ref, visible } = useReveal()
+  const computedDelay = staggerIndex !== undefined ? staggerIndex * 80 : delay
   const transforms: Record<string, string> = {
-    up: 'translateY(36px)',
-    left: 'translateX(-36px)',
-    right: 'translateX(36px)',
-    fade: 'translateY(0)',
+    up: 'translateY(60px) scale(0.94)',
+    left: 'translateX(-60px) scale(0.94)',
+    right: 'translateX(60px) scale(0.94)',
+    fade: 'translateY(0) scale(0.97)',
   }
   return (
     <div
@@ -39,12 +41,12 @@ export function ScrollReveal({ children, delay = 0, direction = 'up', className 
       className={className}
       style={{
         transitionProperty: 'opacity, transform, filter',
-        transitionDuration: '700ms',
-        transitionDelay: `${delay}ms`,
+        transitionDuration: '800ms',
+        transitionDelay: `${computedDelay}ms`,
         transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
         opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0) translateX(0)' : transforms[direction],
-        filter: visible ? 'blur(0px)' : 'blur(4px)',
+        transform: visible ? 'translateY(0) translateX(0) scale(1)' : transforms[direction],
+        filter: visible ? 'blur(0px)' : 'blur(6px)',
       }}
     >
       {children}
@@ -52,8 +54,8 @@ export function ScrollReveal({ children, delay = 0, direction = 'up', className 
   )
 }
 
-// Count-up hook — animates a number from 0 to target on scroll-into-view
-export function useCountUp(target: number, duration = 1400, decimals = 0) {
+// Count-up hook — animates a number with elastic overshoot easing
+export function useCountUp(target: number, duration = 1800, decimals = 0) {
   const ref = useRef<HTMLSpanElement>(null)
   const [value, setValue] = useState(0)
   const startedRef = useRef(false)
@@ -69,8 +71,14 @@ export function useCountUp(target: number, duration = 1400, decimals = 0) {
           const animate = (ts: number) => {
             if (!startTime) startTime = ts
             const progress = Math.min((ts - startTime) / duration, 1)
-            const eased = 1 - Math.pow(1 - progress, 3)
-            setValue(parseFloat((target * eased).toFixed(decimals)))
+            // Elastic overshoot easing: overshoots ~8% then settles
+            const c4 = (2 * Math.PI) / 3
+            const eased = progress === 0 ? 0
+              : progress === 1 ? 1
+              : progress < 0.7
+                ? 1 - Math.pow(1 - progress / 0.7, 3) * 1.0
+                : 1 + Math.sin((progress - 0.7) * c4) * 0.08 * (1 - progress) / 0.3
+            setValue(parseFloat((target * Math.min(eased, 1.08)).toFixed(decimals)))
             if (progress < 1) frame = requestAnimationFrame(animate)
             else setValue(target)
           }
@@ -86,7 +94,32 @@ export function useCountUp(target: number, duration = 1400, decimals = 0) {
   return { ref, value }
 }
 
-// AnimatedFill — bar that fills from 0 to pct% on scroll-into-view
+// Stagger delay utility — returns an array of delays for N items
+export function useStagger(count: number, baseDelay = 0, step = 80) {
+  return useMemo(
+    () => Array.from({ length: count }, (_, i) => baseDelay + i * step),
+    [count, baseDelay, step]
+  )
+}
+
+// AnimatedNumber — standalone scroll-triggered counter component
+export function AnimatedNumber({ value, duration = 1800, decimals = 0, prefix = '', suffix = '', className }: {
+  value: number
+  duration?: number
+  decimals?: number
+  prefix?: string
+  suffix?: string
+  className?: string
+}) {
+  const { ref, value: animatedValue } = useCountUp(value, duration, decimals)
+  return (
+    <span ref={ref} className={className}>
+      {prefix}{animatedValue.toLocaleString()}{suffix}
+    </span>
+  )
+}
+
+// AnimatedFill — bar that fills with spring overshoot + shimmer sweep
 export function AnimatedFill({ pct, color, delay = 0, height = 'h-4' }: {
   pct: number
   color: string
@@ -95,13 +128,20 @@ export function AnimatedFill({ pct, color, delay = 0, height = 'h-4' }: {
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
+  const [showShimmer, setShowShimmer] = useState(false)
   useEffect(() => {
     const el = ref.current
     if (!el) return
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setTimeout(() => setWidth(pct), delay)
+          setTimeout(() => {
+            setWidth(Math.min(pct * 1.03, 100)) // overshoot 3%
+            setTimeout(() => {
+              setWidth(pct) // settle back
+              setTimeout(() => setShowShimmer(true), 300)
+            }, 600)
+          }, delay)
           observer.disconnect()
         }
       },
@@ -117,10 +157,19 @@ export function AnimatedFill({ pct, color, delay = 0, height = 'h-4' }: {
         style={{
           width: `${width}%`,
           background: color,
-          transition: `width 900ms cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
+          transition: `width 700ms cubic-bezier(0.34, 1.56, 0.64, 1) ${delay}ms`,
         }}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        {showShimmer && (
+          <div
+            className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%)',
+              animation: 'shimmerSweep 0.8s ease-out forwards',
+            }}
+          />
+        )}
       </div>
     </div>
   )
@@ -152,7 +201,7 @@ export function AnimatedSegment({ pct, color, delay }: { pct: number; color: str
       style={{
         width: `${width}%`,
         background: color,
-        transition: `width 900ms cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
+        transition: `width 700ms cubic-bezier(0.34, 1.56, 0.64, 1) ${delay}ms`,
         minWidth: width > 0 ? '2px' : '0',
       }}
     />

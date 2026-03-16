@@ -127,17 +127,25 @@ const GRADE_ORDER: Record<string, number> = { F: 0, D: 1, C: 2, B: 3, A: 4 }
 // Animation Variants
 // ---------------------------------------------------------------------------
 
+// Fern-style bold stagger — y:60, scale:0.94, blur:4px, spring easing
 const cardContainerVariants: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: { staggerChildren: 0.07, delayChildren: 0.1 },
+    transition: { staggerChildren: 0.10, delayChildren: 0.08 },
   },
 }
 const cardItemVariants: Variants = {
-  hidden: { opacity: 0, y: 20, scale: 0.97 },
-  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: 'easeOut' } },
+  hidden: { opacity: 0, y: 60, scale: 0.94, filter: 'blur(4px)' },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    filter: 'blur(0px)',
+    transition: { type: 'spring', stiffness: 260, damping: 24 },
+  },
 }
+
 
 const SECTOR_NAME_ES: Record<string, string> = {
   salud: 'Salud',
@@ -215,9 +223,9 @@ function NationalGradeHero({ national }: { national: PHINational }) {
         style={{ borderColor: 'var(--color-border)', borderLeftWidth: 6, borderLeftColor: colors.text }}
       >
         <div className="flex flex-col items-center py-10 px-6">
-          {/* Big grade letter */}
+          {/* Big grade letter — number-pop animation */}
           <span
-            className="leading-none font-bold"
+            className="leading-none font-bold anim-number-pop"
             style={{
               fontFamily: SERIF,
               fontSize: '9rem',
@@ -878,6 +886,20 @@ const INST_PILLARS = [
   { key: 'pillar_external' as const, label: 'Externo', max: 20 },
 ]
 
+// InstitutionTbody — wraps tbody, triggers row stagger animation on scroll
+function InstitutionTbody({ children }: { children: React.ReactNode }) {
+  const tbodyRef = useRef<HTMLTableSectionElement>(null)
+  const inView = useInView(tbodyRef, { once: true, margin: '-40px' })
+  return (
+    <tbody
+      ref={tbodyRef}
+      className={inView ? 'inst-tbody-visible' : 'inst-tbody-hidden'}
+    >
+      {children}
+    </tbody>
+  )
+}
+
 function InstitutionScorecardsTab() {
   const [page, setPage] = useState(1)
   const [sortBy, setSortBy] = useState('total_score')
@@ -1018,16 +1040,19 @@ function InstitutionScorecardsTab() {
                 <th className="px-3 py-3 text-center font-medium hidden xl:table-cell" style={{ color: '#6b6560' }}>Percentil</th>
               </tr>
             </thead>
-            <tbody>
-              {(data?.data ?? []).map((inst) => {
+            <InstitutionTbody>
+              {(data?.data ?? []).map((inst, rowIdx) => {
                 const c = GRADE10_COLORS[inst.grade] ?? GRADE10_COLORS['F']
                 const isExpanded = expandedId === inst.institution_id
                 return (
                   <>
                     <tr
                       key={inst.institution_id}
-                      className="border-t cursor-pointer transition-colors hover:bg-[var(--color-background-elevated)]"
-                      style={{ borderColor: '#f0ede8' }}
+                      className="border-t cursor-pointer transition-colors hover:bg-[var(--color-background-elevated)] inst-row-stagger"
+                      style={{
+                        borderColor: '#f0ede8',
+                        animationDelay: rowIdx < 10 ? `${rowIdx * 50}ms` : '0ms',
+                      }}
                       onClick={() => setExpandedId(isExpanded ? null : inst.institution_id)}
                     >
                       <td className="px-4 py-3">
@@ -1101,7 +1126,7 @@ function InstitutionScorecardsTab() {
                   </>
                 )
               })}
-            </tbody>
+            </InstitutionTbody>
           </table>
         )}
 
