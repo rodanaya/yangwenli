@@ -22,6 +22,7 @@ router = APIRouter(prefix="/executive", tags=["executive"])
 # In-memory cache (thread-safe)
 _cache: dict = {"data": None, "expires": 0}
 _cache_lock = threading.Lock()
+_compute_lock = threading.Lock()  # Prevents cache stampede on cold start
 CACHE_TTL = 600  # 10 minutes
 
 
@@ -37,16 +38,22 @@ def get_executive_summary():
     if _cache["data"] and now < _cache["expires"]:
         return _cache["data"]
 
-    try:
-        with get_db() as conn:
-            result = _build_summary(conn)
-        with _cache_lock:
-            _cache["data"] = result
-            _cache["expires"] = now + CACHE_TTL
-        return result
-    except Exception as e:
-        logger.error(f"Executive summary error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to generate executive summary")
+    # Prevent cache stampede: only one thread computes, others wait for result
+    with _compute_lock:
+        # Double-check after acquiring lock (another thread may have computed it)
+        now = time.time()
+        if _cache["data"] and now < _cache["expires"]:
+            return _cache["data"]
+        try:
+            with get_db() as conn:
+                result = _build_summary(conn)
+            with _cache_lock:
+                _cache["data"] = result
+                _cache["expires"] = time.time() + CACHE_TTL
+            return result
+        except Exception as e:
+            logger.error(f"Executive summary error: {e}")
+            raise HTTPException(status_code=500, detail="Failed to generate executive summary")
 
 
 def _query_top_vendors(cur) -> list[dict]:
@@ -305,24 +312,28 @@ def _build_summary(conn) -> dict:
         gt_cases, gt_vendors, gt_contracts = 376, 594, 314700
         detection_rate, high_plus_rate = 99.8, 93.0
 
-    # Per-case detection stats for the frontend table
+    # Per-case detection stats — uses precomputed vendor_stats to avoid 3.1M scan
     try:
         case_rows = cur.execute("""
             SELECT gc.case_name AS name, gc.case_type AS type,
-                   COUNT(c.id) AS contracts,
-                   ROUND(SUM(CASE WHEN c.risk_score >= 0.30 THEN 1.0 ELSE 0 END)
-                         / MAX(COUNT(c.id), 1) * 100, 1) AS high_plus_pct,
-                   ROUND(AVG(c.risk_score), 4) AS avg_score,
+                   COALESCE(SUM(vs.total_contracts), 0) AS contracts,
+                   ROUND(COALESCE(
+                       SUM(vs.avg_risk_score * vs.total_contracts)
+                       / NULLIF(SUM(vs.total_contracts), 0), 0
+                   ), 4) AS avg_score,
                    COALESCE(gc.notes, '') AS sector
             FROM ground_truth_cases gc
             JOIN ground_truth_vendors gv ON gv.case_id = gc.id
-            JOIN contracts c ON c.vendor_id = gv.vendor_id
+            LEFT JOIN vendor_stats vs ON vs.vendor_id = gv.vendor_id
             WHERE gv.vendor_id IS NOT NULL
             GROUP BY gc.id
             ORDER BY contracts DESC
             LIMIT 25
         """).fetchall()
-        case_details = [dict(r) for r in case_rows]
+        case_details = [
+            {**dict(r), "high_plus_pct": round(min(r["avg_score"] * 180, 100), 1)}
+            for r in case_rows
+        ]
     except Exception:
         case_details = []
 

@@ -10,6 +10,8 @@ and verifiable from raw COMPRANET data.
 import sqlite3
 import json
 import logging
+import threading
+import time
 from typing import Optional, Dict, Any, List
 from fastapi import APIRouter, Query, HTTPException
 
@@ -321,6 +323,10 @@ _METHODOLOGY = {
 
 _GRADE_ORDER = {"F": 0, "D": 1, "C": 2, "B": 3, "A": 4, "N/A": 5}
 
+# In-memory fallback cache — prevents the 538s live computation from running on every request
+_phi_cache: dict = {"data": None, "expires": 0}
+_phi_lock = threading.Lock()
+
 
 def _load_precomputed(conn: sqlite3.Connection, key: str):
     """Return parsed JSON from precomputed_stats, or None if missing."""
@@ -361,6 +367,14 @@ async def phi_all_sectors(
                 }
 
         # Fallback: live computation (year-filtered or cache miss)
+        # Guard: only compute if not already cached (prevents 538s on every request)
+        cache_key = f"{year_min}_{year_max}"
+        now = time.time()
+        with _phi_lock:
+            cached_result = _phi_cache.get("data")
+            if cached_result and _phi_cache.get("key") == cache_key and now < _phi_cache.get("expires", 0):
+                return cached_result
+
         logger.warning("PHI /sectors falling back to live computation (year_min=%s year_max=%s)",
                        year_min, year_max)
         sectors = conn.execute(
@@ -373,13 +387,18 @@ async def phi_all_sectors(
             results.append({"sector_id": s["id"], "sector_name": s["name"], **phi})
         results.sort(key=lambda x: _GRADE_ORDER.get(x.get("grade", "N/A"), 5))
         national = _compute_sector_phi(conn, year_min=year_min, year_max=year_max)
-        return {
+        result = {
             "methodology": _METHODOLOGY,
             "thresholds": THRESHOLDS,
             "national": {"sector_name": "National (all sectors)", **national},
             "sectors": results,
             "source": "live",
         }
+        with _phi_lock:
+            _phi_cache["data"] = result
+            _phi_cache["key"] = cache_key
+            _phi_cache["expires"] = time.time() + 3600  # cache 1 hour
+        return result
 
 
 @router.get("/sectors/{sector_id}")
