@@ -288,12 +288,13 @@ def _build_summary(conn) -> dict:
         gt_vendors = cur.execute(
             "SELECT COUNT(*) FROM ground_truth_vendors WHERE vendor_id IS NOT NULL"
         ).fetchone()[0]
+        # Use IN subquery instead of JOIN — avoids full contracts scan when no covering index
         gt_row = cur.execute(
             "SELECT COUNT(*) AS total, "
-            "SUM(CASE WHEN c.risk_score >= 0.10 THEN 1 ELSE 0 END) AS detected, "
-            "SUM(CASE WHEN c.risk_score >= 0.30 THEN 1 ELSE 0 END) AS high_plus "
-            "FROM contracts c INNER JOIN ground_truth_vendors g "
-            "ON c.vendor_id = g.vendor_id WHERE g.vendor_id IS NOT NULL"
+            "SUM(CASE WHEN risk_score >= 0.10 THEN 1 ELSE 0 END) AS detected, "
+            "SUM(CASE WHEN risk_score >= 0.30 THEN 1 ELSE 0 END) AS high_plus "
+            "FROM contracts WHERE vendor_id IN "
+            "(SELECT DISTINCT vendor_id FROM ground_truth_vendors WHERE vendor_id IS NOT NULL)"
         ).fetchone()
         gt_contracts = gt_row[0] or 0
         gt_detected = gt_row[1] or 0

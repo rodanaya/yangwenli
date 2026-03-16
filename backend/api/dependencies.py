@@ -18,7 +18,7 @@ def get_db_connection() -> sqlite3.Connection:
     The timeout prevents long-running queries from causing DoS.
     Default is 30 seconds, configurable via DB_QUERY_TIMEOUT env var.
     """
-    conn = sqlite3.connect(str(DB_PATH), timeout=DB_QUERY_TIMEOUT)
+    conn = sqlite3.connect(str(DB_PATH), timeout=DB_QUERY_TIMEOUT, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     # Set busy timeout to handle concurrent access (5s — short enough to fail fast,
     # long enough for normal lock contention; 30s was too long and caused cascading failures)

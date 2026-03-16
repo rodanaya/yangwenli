@@ -696,7 +696,8 @@ def get_sector_year_breakdown(request: Request):
                     _analysis_cache.set(cache_key, result, ttl_seconds=SECTOR_YEAR_CACHE_TTL)
                     return result
 
-            # Fallback: live query (slow — ~9s on first call, then cached 1 hour)
+            # Fallback: live query limited to 2018+ (precomputed stat missing in this DB).
+            # Full-history query takes 750s on 3.1M rows; 2018+ is ~1M rows and finishes in ~30s.
             cursor.execute("""
                 SELECT
                     contract_year as year, sector_id,
@@ -711,6 +712,7 @@ def get_sector_year_breakdown(request: Request):
                     COUNT(DISTINCT institution_id) as institution_count
                 FROM contracts
                 WHERE contract_year IS NOT NULL AND sector_id IS NOT NULL
+                  AND contract_year >= 2018
                 GROUP BY contract_year, sector_id
                 ORDER BY contract_year, sector_id
             """)
