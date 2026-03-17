@@ -71,11 +71,11 @@ export function PillarBar({
   const pct = Math.max(0, Math.min(100, (score / maxScore) * 100))
   return (
     <div className="space-y-1">
-      <div className="flex items-center justify-between text-[11px]" style={{ color: '#6b6560' }}>
+      <div className="flex items-center justify-between text-[11px]" style={{ color: 'var(--color-text-secondary)' }}>
         <span>{label}</span>
         <span className="font-medium tabular-nums">{score.toFixed(0)}/{maxScore}</span>
       </div>
-      <div className="h-1.5 rounded-full" style={{ backgroundColor: '#e2ddd6' }}>
+      <div className="h-1.5 rounded-full" style={{ backgroundColor: 'var(--color-border)' }}>
         <div
           className="h-1.5 rounded-full transition-all"
           style={{ width: `${pct}%`, backgroundColor: color }}
@@ -135,7 +135,7 @@ export function VendorScorecardCard({ sc }: { sc: VendorScorecardData }) {
         ))}
       </div>
       {sc.top_risk_driver && (
-        <div className="text-[11px] pt-1 border-t" style={{ borderColor: c.border, color: '#9ca3af' }}>
+        <div className="text-[11px] pt-1 border-t" style={{ borderColor: c.border, color: 'var(--color-text-muted)' }}>
           ↓ Mayor brecha: <span className="font-medium" style={{ color: c.text }}>{sc.top_risk_driver}</span>
         </div>
       )}
@@ -192,7 +192,7 @@ export function InstitutionScorecardCard({ sc }: { sc: InstitutionScorecardData 
         ))}
       </div>
       {sc.top_risk_driver && (
-        <div className="text-[11px] pt-1 border-t" style={{ borderColor: c.border, color: '#9ca3af' }}>
+        <div className="text-[11px] pt-1 border-t" style={{ borderColor: c.border, color: 'var(--color-text-muted)' }}>
           ↓ Mayor brecha: <span className="font-medium" style={{ color: c.text }}>{sc.top_risk_driver}</span>
         </div>
       )}

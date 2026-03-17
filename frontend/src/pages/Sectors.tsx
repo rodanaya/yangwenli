@@ -1318,7 +1318,7 @@ export function Sectors() {
                 className={cn(
                   'px-3 py-1 transition-colors',
                   tableViewMode === 'list'
-                    ? 'bg-accent text-black font-bold'
+                    ? 'bg-accent text-white font-bold'
                     : 'text-text-muted hover:text-text-primary hover:bg-background-elevated/40'
                 )}
                 aria-pressed={tableViewMode === 'list'}
@@ -1330,7 +1330,7 @@ export function Sectors() {
                 className={cn(
                   'px-3 py-1 transition-colors border-l border-border/50',
                   tableViewMode === 'treemap'
-                    ? 'bg-accent text-black font-bold'
+                    ? 'bg-accent text-white font-bold'
                     : 'text-text-muted hover:text-text-primary hover:bg-background-elevated/40'
                 )}
                 aria-pressed={tableViewMode === 'treemap'}

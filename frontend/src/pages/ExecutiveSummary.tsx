@@ -314,11 +314,11 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
   ]
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       {bombs.map((b, i) => (
         <ScrollReveal key={b.label} delay={i * 80}>
           <div
-            className="fern-card relative p-5 text-center overflow-hidden transition-all duration-300"
+            className="fern-card relative p-3 sm:p-4 text-center overflow-hidden transition-all duration-300"
             style={{ borderColor: `${b.color}33` }}
             onMouseEnter={e => (e.currentTarget.style.boxShadow = `0 0 32px 4px ${b.glow}`)}
             onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
@@ -329,10 +329,10 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
               style={{ background: `radial-gradient(ellipse at 50% 50%, ${b.color}, transparent 70%)` }}
             />
             <div
-              className="stat-bomb-value stat-hero text-white relative z-10 overflow-hidden"
+              className="stat-bomb-value stat-hero text-white relative z-10 whitespace-nowrap"
               style={{
                 textShadow: `0 0 40px ${b.glow}`,
-                fontSize: b.value.length > 6 ? '2rem' : b.value.length > 4 ? '2.5rem' : '3rem',
+                fontSize: b.value.length > 5 ? '1.6rem' : b.value.length > 3 ? '2rem' : '2.5rem',
               }}
             >
               {b.value}
