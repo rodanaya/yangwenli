@@ -17,7 +17,8 @@ from collections import Counter, defaultdict
 from datetime import datetime
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent.parent / "RUBLI_NORMALIZED.db"
+import os
+DB_PATH = Path(os.environ.get("DATABASE_PATH", str(Path(__file__).parent.parent / "RUBLI_NORMALIZED.db")))
 ARIA_VERSION = "1.0"
 
 # 12-Sector taxonomy mapping
@@ -1153,7 +1154,14 @@ if __name__ == "__main__":
         "--limit", type=int, default=None,
         help="Process only top N vendors by total value"
     )
+    parser.add_argument(
+        "--db", type=str, default=None,
+        help="Path to SQLite database (overrides DATABASE_PATH env var)"
+    )
     args = parser.parse_args()
+
+    if args.db:
+        DB_PATH = Path(args.db)
 
     logging.basicConfig(
         level=logging.INFO,

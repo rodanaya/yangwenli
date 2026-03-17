@@ -28,7 +28,7 @@ try:
 except ImportError:
     HAS_ANTHROPIC = False
 
-DB_PATH = Path(__file__).parent.parent / "RUBLI_NORMALIZED.db"
+DB_PATH = Path(os.environ.get("DATABASE_PATH", str(Path(__file__).parent.parent / "RUBLI_NORMALIZED.db")))
 MODEL = "claude-sonnet-4-6"
 MAX_MEMO_TOKENS = 1800
 MEMO_TEMPERATURE = 0.2
@@ -570,7 +570,14 @@ if __name__ == "__main__":
         action="store_true",
         help="Enable web search (requires API key)",
     )
+    parser.add_argument(
+        "--db", type=str, default=None,
+        help="Path to SQLite database (overrides DATABASE_PATH env var)",
+    )
     args = parser.parse_args()
+
+    if args.db:
+        DB_PATH = Path(args.db)
 
     run_memo_generation(
         tier=args.tier,
