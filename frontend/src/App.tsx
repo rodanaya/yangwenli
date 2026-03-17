@@ -57,6 +57,7 @@ const Annotations = lazy(() => import('@/pages/Annotations'))
 const AriaQueue = lazy(() => import('@/pages/AriaQueue'))
 const ReportCard = lazy(() => import('@/pages/ReportCard'))
 const Journalists = lazy(() => import('@/pages/Journalists'))
+const RedThread = lazy(() => import('@/pages/RedThread'))
 
 // First-visit routing: redirect "/" to Intro for new users, Dashboard for returning users
 function FirstVisitRedirect() {
@@ -413,6 +414,16 @@ function App() {
               <Route path="comparison" element={<Navigate to="/sectors" replace />} />
               <Route path="data-quality" element={<Navigate to="/settings?tab=quality" replace />} />
               <Route path="export" element={<Navigate to="/settings?tab=export" replace />} />
+
+              {/* Red Thread — scroll-driven investigation narrative */}
+              <Route
+                path="thread/:vendorId"
+                element={
+                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
+                    <RedThread />
+                  </SuspenseBoundary>
+                }
+              />
 
               <Route path="*" element={<NotFound />} />
             </Route>

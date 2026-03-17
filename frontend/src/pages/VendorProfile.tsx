@@ -1189,6 +1189,14 @@ export function VendorProfile() {
             <BarChart3 className="h-3.5 w-3.5" />
             Compare
           </button>
+          <button
+            onClick={() => navigate(`/thread/${vendorId}`)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#dc2626] hover:bg-red-700 text-white text-xs font-semibold transition-colors"
+            title="Open scroll-driven investigation narrative"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-white/70 flex-shrink-0" />
+            Red Thread
+          </button>
           <GenerateReportButton
             reportType="vendor"
             entityId={vendorId}

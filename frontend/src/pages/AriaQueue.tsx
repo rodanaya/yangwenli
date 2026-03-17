@@ -379,6 +379,91 @@ function MemoPanel({ memoText }: { memoText: string | null | undefined }) {
 }
 
 // ============================================================================
+// Ghost heuristic panel (new vendor risk triggers)
+// ============================================================================
+
+const TRIGGER_LABELS: Record<string, { label: string; description: string }> = {
+  DA_NEAR_EXCLUSIVE: { label: 'DA ≥95%', description: 'Near-exclusive direct award rate — no competitive bidding' },
+  SINGLE_INSTITUTION: { label: 'Single Client', description: 'Exclusively contracted by one institution' },
+  NO_RFC: { label: 'No RFC', description: 'No tax ID on record — identity unverifiable' },
+  VERY_NEW: { label: 'Debut ≥2018', description: 'Company appeared after 2018' },
+  NOT_RUPC: { label: 'Not in RUPC', description: 'Absent from government vendor registry' },
+  FEW_CONTRACTS: { label: '<8 Contracts', description: 'Very low contract volume for value received' },
+  DECEMBER_RUSH: { label: 'Dec. Rush', description: 'Year-end contract concentration' },
+}
+
+function GhostHeuristicPanel({ item }: { item: AriaQueueItem }) {
+  if (!item.new_vendor_risk) return null
+  const score = item.new_vendor_risk_score ?? 0
+  const triggers = item.new_vendor_risk_triggers
+    ? item.new_vendor_risk_triggers.split(',').map((t) => t.trim()).filter(Boolean)
+    : []
+  const pct = Math.min(100, score * 100)
+  return (
+    <div className="mt-4 rounded-lg border border-purple-700/40 bg-purple-950/20 overflow-hidden">
+      <div className="px-4 py-2.5 flex items-center gap-2 border-b border-purple-700/20">
+        <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-purple-900/70 text-purple-200 border border-purple-700/50">
+          NEW
+        </span>
+        <h4 className="text-xs font-mono uppercase tracking-wider text-purple-300 font-semibold">
+          Ghost Company Heuristic
+        </h4>
+        <span className="ml-auto text-xs text-text-muted">ML blind-spot compensator</span>
+      </div>
+      <div className="px-4 py-3 space-y-3">
+        {/* Confidence bar */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-text-muted">Heuristic confidence</span>
+            <span className="text-xs font-mono font-bold text-purple-300 tabular-nums">{pct.toFixed(0)}%</span>
+          </div>
+          <div className="h-2 bg-background-elevated rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full bg-purple-500 transition-all"
+              style={{ width: `${pct}%` }}
+              aria-hidden="true"
+            />
+          </div>
+        </div>
+        {/* Trigger chips */}
+        {triggers.length > 0 && (
+          <div>
+            <p className="text-xs text-text-muted mb-2">Signals fired ({triggers.length})</p>
+            <div className="flex flex-wrap gap-1.5">
+              {triggers.map((t) => {
+                const info = TRIGGER_LABELS[t]
+                return (
+                  <span
+                    key={t}
+                    className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono bg-purple-900/50 text-purple-200 border border-purple-700/40 cursor-default"
+                    title={info?.description ?? t}
+                  >
+                    {info?.label ?? t}
+                  </span>
+                )
+              })}
+            </div>
+            <div className="mt-2 space-y-1">
+              {triggers.map((t) => {
+                const info = TRIGGER_LABELS[t]
+                if (!info) return null
+                return (
+                  <p key={t} className="text-[10px] text-text-muted leading-relaxed">
+                    <span className="text-purple-400 font-mono">{info.label}</span>
+                    {' — '}
+                    {info.description}
+                  </p>
+                )
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
 // Score breakdown panel (expanded row)
 // ============================================================================
 
@@ -665,7 +750,10 @@ function QueueRow({
               {/* Memo panel */}
               <MemoPanel memoText={displayItem.memo_text} />
 
-              <div className="mt-3 flex justify-end">
+              {/* Ghost company heuristic — only when new_vendor_risk=true */}
+              <GhostHeuristicPanel item={displayItem} />
+
+              <div className="mt-3 flex justify-end gap-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -675,6 +763,16 @@ function QueueRow({
                   <ExternalLink className="h-3.5 w-3.5" />
                   View Vendor Profile
                 </Button>
+                {(item.ips_tier === 1 || item.ips_tier === 2) && (
+                  <Button
+                    size="sm"
+                    onClick={() => navigate(`/thread/${item.vendor_id}`)}
+                    className="gap-1.5 text-xs bg-[#dc2626] hover:bg-red-700 text-white border-0"
+                  >
+                    <Play className="h-3 w-3" />
+                    Investigate →
+                  </Button>
+                )}
               </div>
             </>
           )}
