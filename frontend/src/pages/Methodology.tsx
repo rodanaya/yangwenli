@@ -72,10 +72,10 @@ const V33_WEIGHTS = [
 ] as const
 
 const RISK_LEVELS_V6 = [
-  { level: 'Critical', threshold: '>= 0.50', meaning: 'Very high similarity to known corruption patterns', pct: '14.7%', count: '448,074', color: '#f87171' },
-  { level: 'High', threshold: '>= 0.30', meaning: 'High similarity to known corruption patterns', pct: '10.6%', count: '322,609', color: '#fb923c' },
-  { level: 'Medium', threshold: '>= 0.10', meaning: 'Moderate similarity to known corruption patterns', pct: '44.0%', count: '1,341,725', color: '#fbbf24' },
-  { level: 'Low', threshold: '< 0.10', meaning: 'Low similarity to known corruption patterns', pct: '30.8%', count: '938,886', color: '#4ade80' },
+  { level: 'Critical', threshold: '>= 0.60', meaning: 'Very high similarity to known corruption patterns', pct: '8.7%', count: '266,048', color: '#f87171' },
+  { level: 'High', threshold: '>= 0.40', meaning: 'High similarity to known corruption patterns', pct: '3.6%', count: '110,163', color: '#fb923c' },
+  { level: 'Medium', threshold: '>= 0.15', meaning: 'Moderate similarity to known corruption patterns', pct: '18.5%', count: '564,758', color: '#fbbf24' },
+  { level: 'Low', threshold: '< 0.15', meaning: 'Low similarity to known corruption patterns', pct: '69.2%', count: '2,110,325', color: '#4ade80' },
 ] as const
 
 const CORRUPTION_CASES = [

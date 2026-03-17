@@ -6,7 +6,7 @@ import { analysisApi } from '@/api/client'
 import { SankeyDiagram } from '@/components/SankeyDiagram'
 import type { SankeyNodeSelected } from '@/components/SankeyDiagram'
 import { formatCompactMXN } from '@/lib/utils'
-import { SECTORS } from '@/lib/constants'
+import { SECTORS, RISK_THRESHOLDS, getRiskLevelFromScore } from '@/lib/constants'
 import { getInstitutionGroup } from '@/lib/institution-groups'
 import {
   GitBranch, ArrowRight, Building2, Users, TrendingUp, DollarSign,
@@ -145,18 +145,14 @@ const RISK_LABELS: Record<string, string> = {
   low: 'Low',
 }
 
-function getRiskLabel(avgRisk: number): string {
-  if (avgRisk >= 0.5) return 'critical'
-  if (avgRisk >= 0.3) return 'high'
-  if (avgRisk >= 0.1) return 'medium'
-  return 'low'
-}
-
 function getRiskBadge(avgRisk: number): { color: string; badge: string } {
-  if (avgRisk >= 0.5) return { color: '#f87171', badge: 'CRIT' }
-  if (avgRisk >= 0.3) return { color: '#fb923c', badge: 'HIGH' }
-  if (avgRisk >= 0.1) return { color: '#fbbf24', badge: 'MED'  }
-  return { color: '#4ade80', badge: 'LOW' }
+  const level = getRiskLevelFromScore(avgRisk)
+  switch (level) {
+    case 'critical': return { color: '#f87171', badge: 'CRIT' }
+    case 'high': return { color: '#fb923c', badge: 'HIGH' }
+    case 'medium': return { color: '#fbbf24', badge: 'MED'  }
+    case 'low': return { color: '#4ade80', badge: 'LOW' }
+  }
 }
 
 // Skeleton placeholder that mimics Sankey shape
@@ -278,7 +274,7 @@ export default function MoneyFlow() {
     for (const f of data.flows) {
       const iKey = `inst-${f.source_id}`
       const vKey = `vend-${f.target_id}`
-      const riskLevel = f.avg_risk != null ? getRiskLabel(f.avg_risk) : 'medium'
+      const riskLevel = f.avg_risk != null ? getRiskLevelFromScore(f.avg_risk) : 'medium'
 
       const prev = instMap.get(iKey)
       instMap.set(iKey, {
@@ -413,7 +409,7 @@ export default function MoneyFlow() {
   const uniqueVendors = useMemo(() => new Set(links.map(l => l.target)).size, [links])
 
   const highRiskValue = useMemo(
-    () => links.filter(l => l.avgRisk >= 0.3).reduce((s, l) => s + l.value, 0),
+    () => links.filter(l => l.avgRisk >= RISK_THRESHOLDS.high).reduce((s, l) => s + l.value, 0),
     [links]
   )
   const highRiskPct = totalValue > 0 ? (highRiskValue / totalValue) * 100 : 0

@@ -278,7 +278,7 @@ export default function CaseDetail() {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['cases', 'detail', slug],
-    queryFn: () => caseLibraryApi.getBySlug(slug!),
+    queryFn: slug ? () => caseLibraryApi.getBySlug(slug) : () => Promise.reject(new Error('No slug')),
     enabled: !!slug,
     staleTime: 10 * 60 * 1000,
   })

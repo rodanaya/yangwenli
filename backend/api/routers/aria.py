@@ -10,7 +10,9 @@ import math
 import sqlite3
 import subprocess
 import sys
+import threading
 import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -22,6 +24,19 @@ from ..dependencies import get_db_dep
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/aria", tags=["aria"])
+
+# ---------------------------------------------------------------------------
+# In-memory run status tracker (lightweight, no DB needed)
+# ---------------------------------------------------------------------------
+
+_run_lock = threading.Lock()
+_run_status: dict = {
+    "running": False,
+    "phase": None,       # "pipeline" | "memos_tier1" | "memos_tier2" | None
+    "started_at": None,
+    "completed_at": None,
+    "error": None,
+}
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -521,15 +536,86 @@ def patch_gt_update_review(
 class RunRequest(BaseModel):
     dry_run: bool = False
     limit: Optional[int] = None
-    generate_memos: bool = False
+    generate_memos: bool = True
+    memo_tier1_limit: int = 20
+    memo_tier2_limit: int = 30
 
 
-def _launch_pipeline(cmd: list, cwd: str) -> None:
-    """Background task: run the ARIA pipeline subprocess."""
+def _run_subprocess(cmd: list, cwd: str) -> subprocess.CompletedProcess:
+    """Run a subprocess and return its result."""
+    return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=3600)
+
+
+def _launch_full_pipeline(
+    pipeline_cmd: list,
+    cwd: str,
+    generate_memos: bool,
+    memo_tier1_limit: int,
+    memo_tier2_limit: int,
+) -> None:
+    """Background task: run ARIA pipeline, then optionally generate memos for T1/T2."""
+    global _run_status
+    with _run_lock:
+        _run_status = {
+            "running": True,
+            "phase": "pipeline",
+            "started_at": datetime.now(timezone.utc).isoformat(),
+            "completed_at": None,
+            "error": None,
+        }
+
     try:
-        subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+        # Phase 1: ARIA pipeline
+        result = _run_subprocess(pipeline_cmd, cwd)
+        if result.returncode != 0:
+            stderr_tail = (result.stderr or "")[-500:]
+            logger.error("aria_pipeline_failed rc=%d: %s", result.returncode, stderr_tail)
+            with _run_lock:
+                _run_status["error"] = f"Pipeline failed (rc={result.returncode})"
+                _run_status["running"] = False
+                _run_status["completed_at"] = datetime.now(timezone.utc).isoformat()
+            return
+
+        # Phase 2: Generate memos for Tier 1
+        if generate_memos:
+            with _run_lock:
+                _run_status["phase"] = "memos_tier1"
+
+            memo_cmd_t1 = [
+                sys.executable, "-m", "scripts.aria_generate_memos",
+                "--tier", "1", "--limit", str(memo_tier1_limit),
+            ]
+            result_t1 = _run_subprocess(memo_cmd_t1, cwd)
+            if result_t1.returncode != 0:
+                stderr_tail = (result_t1.stderr or "")[-500:]
+                logger.warning("aria_memos_tier1_failed rc=%d: %s", result_t1.returncode, stderr_tail)
+
+            # Phase 3: Generate memos for Tier 2
+            with _run_lock:
+                _run_status["phase"] = "memos_tier2"
+
+            memo_cmd_t2 = [
+                sys.executable, "-m", "scripts.aria_generate_memos",
+                "--tier", "2", "--limit", str(memo_tier2_limit),
+            ]
+            result_t2 = _run_subprocess(memo_cmd_t2, cwd)
+            if result_t2.returncode != 0:
+                stderr_tail = (result_t2.stderr or "")[-500:]
+                logger.warning("aria_memos_tier2_failed rc=%d: %s", result_t2.returncode, stderr_tail)
+
+    except subprocess.TimeoutExpired:
+        logger.error("aria_pipeline_timeout after 3600s")
+        with _run_lock:
+            _run_status["error"] = "Pipeline timed out after 3600s"
     except Exception as exc:
-        logger.error("aria_pipeline_subprocess_failed", error=str(exc))
+        logger.error("aria_pipeline_subprocess_failed: %s", str(exc))
+        with _run_lock:
+            _run_status["error"] = str(exc)
+    finally:
+        with _run_lock:
+            _run_status["running"] = False
+            _run_status["phase"] = None
+            _run_status["completed_at"] = datetime.now(timezone.utc).isoformat()
 
 
 @router.post("/run", status_code=202)
@@ -538,7 +624,8 @@ def trigger_aria_run(
     background_tasks: BackgroundTasks,
     conn: sqlite3.Connection = Depends(get_db_dep),
 ):
-    """Launch the ARIA pipeline as a background subprocess. Returns immediately."""
+    """Launch the ARIA pipeline + memo generation as a background subprocess."""
+    # Check DB-level run lock
     if _table_exists(conn, "aria_runs"):
         running = conn.execute(
             "SELECT id FROM aria_runs WHERE status = 'running' ORDER BY started_at DESC LIMIT 1"
@@ -549,6 +636,14 @@ def trigger_aria_run(
                 detail=f"Run {running['id']} is already in progress.",
             )
 
+    # Check in-memory run lock
+    with _run_lock:
+        if _run_status["running"]:
+            raise HTTPException(
+                status_code=409,
+                detail="A pipeline run is already in progress.",
+            )
+
     run_id = str(uuid.uuid4())[:8]
 
     cmd = [sys.executable, "-m", "scripts.aria_pipeline"]
@@ -556,14 +651,30 @@ def trigger_aria_run(
         cmd.append("--dry-run")
     if request.limit is not None:
         cmd.extend(["--limit", str(request.limit)])
-    if request.generate_memos:
-        cmd.append("--generate-memos")
 
     backend_dir = str(Path(__file__).parent.parent.parent)
-    background_tasks.add_task(_launch_pipeline, cmd, backend_dir)
+    background_tasks.add_task(
+        _launch_full_pipeline,
+        cmd,
+        backend_dir,
+        request.generate_memos and not request.dry_run,
+        request.memo_tier1_limit,
+        request.memo_tier2_limit,
+    )
 
     return {
         "run_id": run_id,
         "status": "queued",
-        "message": "ARIA pipeline started in background.",
+        "message": "ARIA pipeline started in background. Memos will generate after pipeline completes.",
     }
+
+
+# ---------------------------------------------------------------------------
+# GET /aria/run-status
+# ---------------------------------------------------------------------------
+
+@router.get("/run-status")
+def get_aria_run_status():
+    """Check if an ARIA pipeline run is currently in progress."""
+    with _run_lock:
+        return dict(_run_status)

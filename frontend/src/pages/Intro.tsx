@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, ChevronDown } from 'lucide-react'
+import { ArrowRight, ChevronDown, Shield, Search, BarChart3, FileWarning } from 'lucide-react'
 import { analysisApi, phiApi } from '@/api/client'
 import type { FastDashboardData } from '@/api/types'
 import gsap from 'gsap'
@@ -333,7 +333,7 @@ const NetworkCanvas = memo(function NetworkCanvas() {
       const bx = 16
       const by = ch - 50
       ctx.fillText(`CONTRATOS ANALIZADOS: ${s.counterValue.toLocaleString()}`, bx, by)
-      ctx.fillText('MONTO TOTAL: $13.2T MXN', bx, by + 16)
+      ctx.fillText('MONTO TOTAL: ~$9.6T MXN', bx, by + 16)
       ctx.fillText('ALTO RIESGO: 12.33%', bx, by + 32)
 
       animFrameRef.current = requestAnimationFrame(draw)
@@ -351,7 +351,32 @@ const NetworkCanvas = memo(function NetworkCanvas() {
     <canvas
       ref={canvasRef}
       className="absolute inset-0 pointer-events-none"
-      style={{ zIndex: 0 }}
+      style={{ zIndex: 2 }}
+      aria-hidden="true"
+    />
+  )
+})
+
+// ---------------------------------------------------------------------------
+// VideoHeroBackground -- cinematic video layer under NetworkCanvas
+// ---------------------------------------------------------------------------
+const VideoHeroBackground = memo(function VideoHeroBackground() {
+  const [videoFailed, setVideoFailed] = useState(false)
+
+  return (
+    <video
+      autoPlay
+      muted
+      loop
+      playsInline
+      src="/hero.mp4"
+      onError={() => setVideoFailed(true)}
+      className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+      style={{
+        display: videoFailed ? 'none' : 'block',
+        opacity: 0.3,
+        zIndex: 0,
+      }}
       aria-hidden="true"
     />
   )
@@ -607,6 +632,7 @@ export default function Intro() {
   const [heroContracts, setHeroContracts] = useState(0)
   const [heroValueT, setHeroValueT] = useState(0)
   const [heroRiskPct, setHeroRiskPct] = useState(0)
+  const [heroCases, setHeroCases] = useState(0)
   const heroStatsRef = useRef<HTMLDivElement>(null)
 
   // Section inView states (driven by ScrollTrigger callbacks)
@@ -654,18 +680,20 @@ export default function Intro() {
     }
 
     // GSAP counter animation for hero stats
-    const counterObj = { contracts: 0, valueT: 0, risk: 0 }
+    const counterObj = { contracts: 0, valueT: 0, risk: 0, cases: 0 }
     tl.to(counterObj, {
       contracts: 3051294,
       valueT: 132,
       risk: 1233,
+      cases: 390,
       duration: 2.5,
       ease: 'power2.out',
-      snap: { contracts: 1, valueT: 1, risk: 1 },
+      snap: { contracts: 1, valueT: 1, risk: 1, cases: 1 },
       onUpdate: () => {
         setHeroContracts(Math.round(counterObj.contracts))
         setHeroValueT(Math.round(counterObj.valueT))
         setHeroRiskPct(Math.round(counterObj.risk))
+        setHeroCases(Math.round(counterObj.cases))
       },
     }, 0.6)
 
@@ -804,6 +832,16 @@ export default function Intro() {
         style={{ background: '#0a0c0b', color: '#fff' }}
         aria-label="RUBLI platform introduction"
       >
+        {/* Drop your video at frontend/public/hero.mp4 for cinematic background */}
+        <VideoHeroBackground />
+
+        {/* Dark gradient overlay between video and canvas */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(to bottom, rgba(6,6,8,0.5) 0%, rgba(6,6,8,0.3) 50%, rgba(6,6,8,0.8) 100%)',
+          pointerEvents: 'none', zIndex: 1,
+        }} />
+
         {/* Canvas network graph background */}
         <NetworkCanvas />
 
@@ -856,23 +894,23 @@ export default function Intro() {
           {/* Subtitle */}
           <p
             ref={heroSubRef}
-            className="text-lg sm:text-xl max-w-xl leading-relaxed"
+            className="text-lg sm:text-xl max-w-2xl leading-relaxed"
             style={{ color: 'rgba(255,255,255,0.55)' }}
           >
             {isEn
-              ? 'analyzed by artificial intelligence to detect corruption patterns'
-              : 'analizados por inteligencia artificial para detectar patrones de corrupcion'}
+              ? 'Mexican federal procurement data analyzed by machine learning to detect corruption patterns across 12 government sectors'
+              : 'Datos de contrataciones federales de Mexico analizados por aprendizaje automatico para detectar patrones de corrupcion en 12 sectores gubernamentales'}
           </p>
 
           {/* Hero stats - GSAP animated counters */}
-          <div ref={heroStatsRef} className="flex items-center gap-8 sm:gap-14 mt-2">
+          <div ref={heroStatsRef} className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 mt-2">
             <div className="flex flex-col items-center gap-1">
               <span className="text-2xl sm:text-3xl font-black tabular-nums font-mono" style={{ color: '#f0ede8' }}>
                 ${(heroValueT / 10).toFixed(1)}T
               </span>
               <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>MXN</span>
             </div>
-            <div className="w-px h-10" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }} />
+            <div className="hidden sm:block w-px h-10" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }} />
             <div className="flex flex-col items-center gap-1">
               <span className="text-2xl sm:text-3xl font-black tabular-nums font-mono" style={{ color: CRIMSON }}>
                 {(heroRiskPct / 100).toFixed(2)}%
@@ -881,7 +919,16 @@ export default function Intro() {
                 {isEn ? 'High risk' : 'Alto riesgo'}
               </span>
             </div>
-            <div className="w-px h-10" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }} />
+            <div className="hidden sm:block w-px h-10" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }} />
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-2xl sm:text-3xl font-black tabular-nums font-mono" style={{ color: '#f0ede8' }}>
+                {heroCases}+
+              </span>
+              <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                {isEn ? 'Documented cases' : 'Casos documentados'}
+              </span>
+            </div>
+            <div className="hidden sm:block w-px h-10" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }} />
             <div className="flex flex-col items-center gap-1">
               <span className="text-2xl sm:text-3xl font-black tabular-nums font-mono" style={{ color: '#f0ede8' }}>
                 23
@@ -893,7 +940,7 @@ export default function Intro() {
           </div>
 
           {/* CTA buttons */}
-          <div ref={heroCtaRef} className="flex flex-wrap gap-4 justify-center mt-2">
+          <div ref={heroCtaRef} className="flex flex-wrap gap-3 justify-center mt-2">
             <button
               onClick={() => goToApp('/report-card')}
               className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all duration-200 hover:brightness-125 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-red-400/40"
@@ -901,6 +948,14 @@ export default function Intro() {
             >
               {isEn ? 'See the Report' : 'Ver el Reporte'}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+            <button
+              onClick={() => goToApp('/aria')}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all duration-200 hover:brightness-125 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-purple-400/40"
+              style={{ backgroundColor: '#8b5cf6', color: '#fff' }}
+            >
+              <Shield className="h-4 w-4" aria-hidden="true" />
+              {isEn ? 'ARIA Intelligence' : 'Inteligencia ARIA'}
             </button>
             <button
               onClick={() => goToApp('/dashboard')}
@@ -1226,6 +1281,92 @@ export default function Intro() {
       </section>
 
       {/* ================================================================= */}
+      {/* SECTION 5.5: ARIA INTELLIGENCE BRIEFING - Feature spotlight */}
+      {/* ================================================================= */}
+      <section
+        className="px-6 sm:px-12 lg:px-24 py-24 sm:py-32"
+        style={{ background: '#0d0f0e' }}
+      >
+        <div className="max-w-5xl mx-auto">
+          <div className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-center">
+            {/* Left: description */}
+            <div className="flex-1 min-w-0">
+              <span
+                className="text-xs font-bold tracking-[0.2em] uppercase block mb-4"
+                style={{ color: '#8b5cf6' }}
+              >
+                {isEn ? 'AUTOMATED INVESTIGATION' : 'INVESTIGACION AUTOMATIZADA'}
+              </span>
+              <h2
+                className="text-3xl sm:text-4xl font-black mb-6 leading-tight"
+                style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#f0ede8' }}
+              >
+                ARIA {isEn ? 'Intelligence Briefing' : 'Reporte de Inteligencia'}
+              </h2>
+              <p className="text-base leading-relaxed mb-8" style={{ color: 'rgba(255,255,255,0.55)', maxWidth: '500px' }}>
+                {isEn
+                  ? 'Our 9-module Automated Risk Investigation Algorithm classifies 198K vendors into investigation tiers, detects monopoly, ghost company, and institutional capture patterns, and cross-references against SAT, SFP, and ASF registries.'
+                  : 'Nuestro algoritmo automatizado de investigacion de riesgos de 9 modulos clasifica 198K proveedores en niveles de investigacion, detecta patrones de monopolio, empresas fantasma y captura institucional, y cruza datos con registros del SAT, SFP y ASF.'}
+              </p>
+              <button
+                onClick={() => goToApp('/aria')}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all duration-200 hover:brightness-125 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-purple-400/40"
+                style={{ backgroundColor: '#8b5cf6', color: '#fff' }}
+              >
+                <Shield className="h-4 w-4" aria-hidden="true" />
+                {isEn ? 'Open ARIA Briefing' : 'Abrir Reporte ARIA'}
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+
+            {/* Right: feature cards grid */}
+            <div className="grid grid-cols-2 gap-3 lg:basis-[45%] w-full lg:w-auto">
+              {[
+                {
+                  icon: Search,
+                  stat: '198K',
+                  label: isEn ? 'Vendors screened' : 'Proveedores evaluados',
+                  color: '#8b5cf6',
+                },
+                {
+                  icon: FileWarning,
+                  stat: '16K+',
+                  label: isEn ? 'Capture patterns' : 'Patrones de captura',
+                  color: CRIMSON,
+                },
+                {
+                  icon: Shield,
+                  stat: '5',
+                  label: isEn ? 'External registries' : 'Registros externos',
+                  color: '#16a34a',
+                },
+                {
+                  icon: BarChart3,
+                  stat: '4',
+                  label: isEn ? 'Investigation tiers' : 'Niveles de investigacion',
+                  color: '#2563eb',
+                },
+              ].map((item, i) => (
+                <div
+                  key={i}
+                  className="rounded-xl p-4 flex flex-col gap-2"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                >
+                  <item.icon className="h-5 w-5" style={{ color: item.color }} aria-hidden="true" />
+                  <span className="text-2xl font-black tabular-nums font-mono" style={{ color: '#f0ede8' }}>
+                    {item.stat}
+                  </span>
+                  <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                    {item.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================= */}
       {/* SECTION 6: CALL TO ACTION - Dark, cinematic */}
       {/* ================================================================= */}
       <section
@@ -1258,6 +1399,14 @@ export default function Intro() {
             >
               {isEn ? 'See the Report' : 'Ver el Reporte'}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+            <button
+              onClick={() => goToApp('/aria')}
+              className="flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-base transition-all duration-200 hover:brightness-125 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-purple-400/40"
+              style={{ backgroundColor: '#8b5cf6', color: '#fff' }}
+            >
+              <Shield className="h-4 w-4" aria-hidden="true" />
+              {isEn ? 'ARIA Intelligence' : 'Inteligencia ARIA'}
             </button>
             <button
               onClick={() => goToApp('/dashboard')}

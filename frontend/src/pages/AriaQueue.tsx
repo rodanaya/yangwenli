@@ -9,6 +9,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -37,14 +38,17 @@ import {
 // Constants
 // ============================================================================
 
-const PATTERN_META: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  P1: { label: 'Monopoly',      color: 'text-red-300',    bg: 'bg-red-950/60',    border: 'border-red-800' },
-  P2: { label: 'Ghost Co.',     color: 'text-purple-300', bg: 'bg-purple-950/60', border: 'border-purple-800' },
-  P3: { label: 'Intermediary',  color: 'text-orange-300', bg: 'bg-orange-950/60', border: 'border-orange-800' },
-  P4: { label: 'Bid Rigging',   color: 'text-yellow-300', bg: 'bg-yellow-950/60', border: 'border-yellow-800' },
-  P5: { label: 'Overpricing',   color: 'text-blue-300',   bg: 'bg-blue-950/60',   border: 'border-blue-800' },
-  P6: { label: 'Inst. Capture', color: 'text-pink-300',   bg: 'bg-pink-950/60',   border: 'border-pink-800' },
-  P7: { label: 'Conflict',      color: 'text-gray-300',   bg: 'bg-gray-800/60',   border: 'border-gray-700' },
+// Pattern metadata (layout) - labels are populated from i18n in component
+function getPatternMeta() {
+  return {
+    P1: { color: 'text-red-300',    bg: 'bg-red-950/60',    border: 'border-red-800' },
+    P2: { color: 'text-purple-300', bg: 'bg-purple-950/60', border: 'border-purple-800' },
+    P3: { color: 'text-orange-300', bg: 'bg-orange-950/60', border: 'border-orange-800' },
+    P4: { color: 'text-yellow-300', bg: 'bg-yellow-950/60', border: 'border-yellow-800' },
+    P5: { color: 'text-blue-300',   bg: 'bg-blue-950/60',   border: 'border-blue-800' },
+    P6: { color: 'text-pink-300',   bg: 'bg-pink-950/60',   border: 'border-pink-800' },
+    P7: { color: 'text-gray-300',   bg: 'bg-gray-800/60',   border: 'border-gray-700' },
+  }
 }
 
 const IPS_COLOR = (score: number) => {
@@ -57,6 +61,16 @@ const IPS_COLOR = (score: number) => {
 // ============================================================================
 // Sub-components
 // ============================================================================
+
+function CardStatItem({ label, value }: { label: string; value: string }) {
+  const { t } = useTranslation('aria')
+  return (
+    <div className="bg-surface-2 rounded p-2">
+      <div className="text-text-muted mb-0.5">{t(label)}</div>
+      <div className="font-semibold text-text-primary">{value}</div>
+    </div>
+  )
+}
 
 function IpsBar({ score }: { score: number }) {
   const pct = Math.min(100, Math.round(score * 100))
@@ -74,20 +88,24 @@ function IpsBar({ score }: { score: number }) {
 }
 
 function PatternPill({ pattern }: { pattern: string | null }) {
-  if (!pattern || !PATTERN_META[pattern]) return null
-  const meta = PATTERN_META[pattern]
+  const { t } = useTranslation('aria')
+  if (!pattern) return null
+  const meta = getPatternMeta()[pattern as keyof ReturnType<typeof getPatternMeta>]
+  if (!meta) return null
+  const label = t(`patterns.${pattern}`)
   return (
     <span className={cn('inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border', meta.bg, meta.color, meta.border)}>
-      {meta.label}
+      {label}
     </span>
   )
 }
 
 function NewVendorBadge() {
+  const { t } = useTranslation('aria')
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-purple-950/60 text-purple-300 border border-purple-800">
       <Sparkles className="h-3 w-3" />
-      NEW
+      {t('badges.new')}
     </span>
   )
 }
@@ -96,7 +114,7 @@ function NewVendorBadge() {
 // Spotlight Card — editorial Tier 1 card
 // ============================================================================
 
-function SpotlightCard({ item, index }: { item: AriaQueueItem; index: number }) {
+function SpotlightCard({ item, index, t }: { item: AriaQueueItem; index: number; t: ReturnType<typeof useTranslation>['t'] }) {
   const navigate = useNavigate()
   const [expanded, setExpanded] = useState(false)
 
@@ -121,7 +139,7 @@ function SpotlightCard({ item, index }: { item: AriaQueueItem; index: number }) 
                 {item.new_vendor_risk && <NewVendorBadge />}
                 {item.is_efos_definitivo && (
                   <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-950/60 text-red-300 border border-red-800">
-                    EFOS
+                    {t('badges.efos')}
                   </span>
                 )}
               </div>
@@ -148,29 +166,13 @@ function SpotlightCard({ item, index }: { item: AriaQueueItem; index: number }) 
 
           {/* Key stats */}
           <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="bg-surface-2 rounded p-2">
-              <div className="text-text-muted mb-0.5">Total Value</div>
-              <div className="font-semibold text-text-primary">{formatCompactMXN(value)}</div>
-            </div>
-            <div className="bg-surface-2 rounded p-2">
-              <div className="text-text-muted mb-0.5">Contracts</div>
-              <div className="font-semibold text-text-primary">{formatNumber(contracts)}</div>
-            </div>
+            <CardStatItem label="card.totalValue" value={formatCompactMXN(value)} />
+            <CardStatItem label="card.contracts" value={formatNumber(contracts)} />
             {item.avg_risk_score != null && (
-              <div className="bg-surface-2 rounded p-2">
-                <div className="text-text-muted mb-0.5">Avg Risk</div>
-                <div className="font-semibold text-text-primary">
-                  {(item.avg_risk_score * 100).toFixed(0)}%
-                </div>
-              </div>
+              <CardStatItem label="card.avgRisk" value={`${(item.avg_risk_score * 100).toFixed(0)}%`} />
             )}
             {item.direct_award_rate != null && (
-              <div className="bg-surface-2 rounded p-2">
-                <div className="text-text-muted mb-0.5">Direct Award</div>
-                <div className="font-semibold text-text-primary">
-                  {(item.direct_award_rate * 100).toFixed(0)}%
-                </div>
-              </div>
+              <CardStatItem label="card.directAward" value={`${(item.direct_award_rate * 100).toFixed(0)}%`} />
             )}
           </div>
 
@@ -190,7 +192,7 @@ function SpotlightCard({ item, index }: { item: AriaQueueItem; index: number }) 
               className="text-xs text-accent hover:text-accent/80 flex items-center gap-1 self-start"
             >
               {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-              {expanded ? 'Less' : 'Full memo'}
+              {expanded ? t('memo.less') : t('memo.full')}
             </button>
           )}
           {expanded && memo && (
@@ -206,7 +208,7 @@ function SpotlightCard({ item, index }: { item: AriaQueueItem; index: number }) 
               className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-accent hover:text-accent/80 py-1.5 rounded hover:bg-accent/10 transition-colors"
             >
               <Eye className="h-3.5 w-3.5" />
-              Investigate vendor
+              {t('leads.investigateBtn')}
               <ExternalLink className="h-3 w-3 opacity-60" />
             </button>
           </div>
@@ -224,10 +226,12 @@ function LeadRow({
   item,
   expanded,
   onToggle,
+  t,
 }: {
   item: AriaQueueItem
   expanded: boolean
   onToggle: () => void
+  t: ReturnType<typeof useTranslation>['t']
 }) {
   const navigate = useNavigate()
   const ips = item.ips_final ?? 0
@@ -278,24 +282,24 @@ function LeadRow({
           <td colSpan={5} className="px-6 py-3">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs mb-2">
               <div>
-                <span className="text-text-muted">Contracts: </span>
+                <span className="text-text-muted">{t('rowLabels.contracts')} </span>
                 <span className="text-text-primary font-medium">{formatNumber(item.total_contracts ?? 0)}</span>
               </div>
               {item.avg_risk_score != null && (
                 <div>
-                  <span className="text-text-muted">Avg Risk: </span>
+                  <span className="text-text-muted">{t('rowLabels.avgRisk')} </span>
                   <span className="text-text-primary font-medium">{(item.avg_risk_score * 100).toFixed(0)}%</span>
                 </div>
               )}
               {item.direct_award_rate != null && (
                 <div>
-                  <span className="text-text-muted">Direct Award: </span>
+                  <span className="text-text-muted">{t('rowLabels.directAward')} </span>
                   <span className="text-text-primary font-medium">{(item.direct_award_rate * 100).toFixed(0)}%</span>
                 </div>
               )}
               {item.top_institution && (
                 <div className="col-span-2 sm:col-span-1">
-                  <span className="text-text-muted">Institution: </span>
+                  <span className="text-text-muted">{t('rowLabels.institution')} </span>
                   <span className="text-text-primary font-medium">{item.top_institution}</span>
                 </div>
               )}
@@ -350,6 +354,7 @@ function StatCard({
 // ============================================================================
 
 export default function AriaPage() {
+  const { t } = useTranslation('aria')
   const [search, setSearch] = useState('')
   const [patternFilter, setPatternFilter] = useState<string | null>(null)
   const [newVendorOnly, setNewVendorOnly] = useState(false)
@@ -400,15 +405,15 @@ export default function AriaPage() {
 
   const lastRunAt = stats?.latest_run?.completed_at
     ? new Date(stats.latest_run.completed_at).toLocaleDateString('en-US', {
-        month: 'short', day: 'numeric', year: 'numeric',
+        month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit',
       })
     : null
 
   return (
     <div className="min-h-screen bg-surface-0">
       <PageHeader
-        title="ARIA Intelligence Briefing"
-        subtitle="Automated Risk Investigation Algorithm — curated procurement risk intelligence"
+        title={t('pageTitle')}
+        subtitle={t('pageSubtitle')}
         icon={Shield}
       />
 
@@ -419,7 +424,7 @@ export default function AriaPage() {
           {lastRunAt && (
             <p className="text-xs text-text-muted mb-4 flex items-center gap-1.5">
               <FileText className="h-3.5 w-3.5" />
-              Last pipeline run: {lastRunAt}
+              {t('stats.lastRun', { date: lastRunAt })}
             </p>
           )}
           <motion.div
@@ -437,36 +442,36 @@ export default function AriaPage() {
                 <motion.div variants={staggerItem}>
                   <StatCard
                     icon={Shield}
-                    label="Total Leads"
+                    label={t('stats.totalLeads')}
                     value={formatNumber(stats?.queue_total ?? 0)}
-                    sub="vendors in pipeline"
+                    sub={t('stats.totalLeadsSub')}
                     accent="bg-red-600"
                   />
                 </motion.div>
                 <motion.div variants={staggerItem}>
                   <StatCard
                     icon={DollarSign}
-                    label="Elevated Value"
+                    label={t('stats.elevatedValue')}
                     value={formatCompactMXN(elevatedValue)}
-                    sub="Tier 1 + 2 combined"
+                    sub={t('stats.elevatedValueSub')}
                     accent="bg-orange-600"
                   />
                 </motion.div>
                 <motion.div variants={staggerItem}>
                   <StatCard
                     icon={AlertTriangle}
-                    label="EFOS Listed"
+                    label={t('stats.efosListed')}
                     value={formatNumber(efosCount)}
-                    sub={`+ ${formatNumber(sfpCount)} SFP sanctioned`}
+                    sub={t('stats.efosListedSub', { sfpCount: formatNumber(sfpCount) })}
                     accent="bg-yellow-600"
                   />
                 </motion.div>
                 <motion.div variants={staggerItem}>
                   <StatCard
                     icon={Sparkles}
-                    label="New Vendor Risk"
+                    label={t('stats.newVendorRisk')}
                     value={formatNumber(stats?.new_vendor_count ?? 0)}
-                    sub="ghost company signals"
+                    sub={t('stats.newVendorRiskSub')}
                     accent="bg-purple-600"
                   />
                 </motion.div>
@@ -475,11 +480,24 @@ export default function AriaPage() {
           </motion.div>
         </section>
 
+        {/* ── Pipeline Not Run Yet ── */}
+        {!statsLoading && !lastRunAt && (stats?.queue_total ?? 0) === 0 && (
+          <Card className="border border-surface-3 bg-surface-1">
+            <CardContent className="p-10 text-center text-text-muted">
+              <Shield className="h-10 w-10 mx-auto mb-3 opacity-20" />
+              <p className="text-sm font-medium text-text-secondary mb-1">{t('errors.notRun')}</p>
+              <p className="text-xs">
+                {t('errors.notRunDesc')}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* ── Pattern Breakdown ── */}
         {Object.keys(patternCounts).length > 0 && (
           <section>
             <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-3">
-              Filter by Pattern
+              {t('filters.byPattern')}
             </h2>
             <div className="flex flex-wrap gap-2">
               <button
@@ -491,11 +509,12 @@ export default function AriaPage() {
                     : 'bg-surface-2 text-text-secondary border-surface-3 hover:border-accent/50'
                 )}
               >
-                All
+                {t('filters.all')}
               </button>
               {Object.entries(patternCounts).map(([pattern, count]) => {
-                const meta = PATTERN_META[pattern]
+                const meta = getPatternMeta()[pattern as keyof ReturnType<typeof getPatternMeta>]
                 if (!meta) return null
+                const label = t(`patterns.${pattern}`)
                 return (
                   <button
                     key={pattern}
@@ -508,7 +527,7 @@ export default function AriaPage() {
                     )}
                   >
                     <span>{pattern}</span>
-                    <span className="font-semibold">{meta.label}</span>
+                    <span className="font-semibold">{label}</span>
                     <span className="opacity-60">({formatNumber(count)})</span>
                   </button>
                 )
@@ -523,7 +542,7 @@ export default function AriaPage() {
                 )}
               >
                 <Sparkles className="h-3 w-3" />
-                New Vendor Risk
+                {t('filters.newVendorOnly')}
                 {stats?.new_vendor_count ? <span className="opacity-60">({formatNumber(stats.new_vendor_count)})</span> : null}
               </button>
             </div>
@@ -537,10 +556,10 @@ export default function AriaPage() {
               <div>
                 <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
                   <TrendingUp className="h-5 w-5 text-red-400" />
-                  Critical Leads — Tier 1
+                  {t('tier1.heading')}
                 </h2>
                 <p className="text-xs text-text-muted mt-0.5">
-                  Highest-priority vendors by Investigation Priority Score
+                  {t('tier1.subtitle')}
                 </p>
               </div>
             </div>
@@ -555,7 +574,7 @@ export default function AriaPage() {
               <Card className="border border-surface-3 bg-surface-1">
                 <CardContent className="p-8 text-center text-text-muted">
                   <Shield className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                  <p>No Tier 1 leads found. Run the ARIA pipeline to populate.</p>
+                  <p>{t('tier1.empty')}</p>
                 </CardContent>
               </Card>
             ) : (
@@ -566,7 +585,7 @@ export default function AriaPage() {
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
               >
                 {tier1Items.map((item, i) => (
-                  <SpotlightCard key={item.vendor_id} item={item} index={i} />
+                  <SpotlightCard key={item.vendor_id} item={item} index={i} t={t} />
                 ))}
               </motion.div>
             )}
@@ -579,10 +598,10 @@ export default function AriaPage() {
             <div>
               <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
                 <Users className="h-5 w-5 text-text-muted" />
-                {patternFilter || newVendorOnly || search ? 'Filtered Results' : 'All Leads'}
+                {patternFilter || newVendorOnly || search ? t('leads.filteredResults') : t('leads.allLeads')}
               </h2>
               {totalLeads > 0 && (
-                <p className="text-xs text-text-muted mt-0.5">{formatNumber(totalLeads)} vendors</p>
+                <p className="text-xs text-text-muted mt-0.5">{formatNumber(totalLeads)} {t('leads.vendorCount')}</p>
               )}
             </div>
             {/* Search */}
@@ -590,7 +609,7 @@ export default function AriaPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
               <input
                 type="text"
-                placeholder="Search vendors…"
+                placeholder={t('leads.searchPlaceholder')}
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1) }}
                 className="pl-9 pr-3 py-2 text-sm bg-surface-2 border border-surface-3 rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/60 w-64"
@@ -608,7 +627,7 @@ export default function AriaPage() {
             ) : leadsItems.length === 0 ? (
               <div className="p-8 text-center text-text-muted">
                 <Search className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                <p>No leads match your filters.</p>
+                <p>{t('leads.empty')}</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -616,16 +635,16 @@ export default function AriaPage() {
                   <thead>
                     <tr className="border-b border-surface-3 bg-surface-2/50">
                       <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wide">
-                        Vendor
+                        {t('table.headers.vendor')}
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wide hidden md:table-cell">
-                        Pattern
+                        {t('table.headers.pattern')}
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wide hidden sm:table-cell">
-                        Value
+                        {t('table.headers.value')}
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wide hidden lg:table-cell w-36">
-                        IPS
+                        {t('table.headers.ips')}
                       </th>
                       <th className="px-4 py-3 w-10" />
                     </tr>
@@ -639,6 +658,7 @@ export default function AriaPage() {
                         onToggle={() =>
                           setExpandedId(expandedId === item.vendor_id ? null : item.vendor_id)
                         }
+                        t={t}
                       />
                     ))}
                   </tbody>
@@ -655,17 +675,17 @@ export default function AriaPage() {
                 disabled={page === 1}
                 className="px-4 py-2 text-sm border border-surface-3 rounded-lg text-text-secondary hover:border-accent/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
-                Previous
+                {t('pagination.previous')}
               </button>
               <span className="text-sm text-text-muted">
-                Page {page} of {totalPages}
+                {t('pagination.pageOf', { page, total: totalPages })}
               </span>
               <button
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page === totalPages}
                 className="px-4 py-2 text-sm border border-surface-3 rounded-lg text-text-secondary hover:border-accent/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
-                Next
+                {t('pagination.next')}
               </button>
             </div>
           )}
@@ -678,16 +698,12 @@ export default function AriaPage() {
               <div className="flex items-start gap-3">
                 <FileText className="h-4 w-4 text-text-muted shrink-0 mt-0.5" />
                 <div className="text-xs text-text-muted space-y-1">
-                  <p className="font-semibold text-text-secondary">About ARIA</p>
+                  <p className="font-semibold text-text-secondary">{t('about.title')}</p>
                   <p>
-                    The Automated Risk Investigation Algorithm (ARIA) combines ML risk scores, anomaly detection,
-                    pattern classification, and external registry cross-referencing (EFOS, SFP, RUPC) to rank
-                    vendors by Investigation Priority Score (IPS). Editorial memos are pre-generated by the
-                    analysis team using LLM-assisted synthesis of procurement signals.
+                    {t('about.description')}
                   </p>
                   <p>
-                    IPS scores are risk indicators, not corruption verdicts. High scores indicate statistical
-                    similarity to documented corruption patterns and warrant further investigation.
+                    {t('about.disclaimer')}
                   </p>
                 </div>
               </div>

@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChartSkeleton } from '@/components/LoadingSkeleton'
 import { cn, formatNumber, formatCompactMXN } from '@/lib/utils'
-import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
+import { SECTOR_COLORS, RISK_COLORS, RISK_THRESHOLDS, getRiskLevelFromScore } from '@/lib/constants'
 import { categoriesApi } from '@/api/client'
 import { StatCard as SharedStatCard } from '@/components/DashboardWidgets'
 import {
@@ -99,17 +99,13 @@ function truncate(text: string, maxLen: number): string {
 }
 
 function getRiskColor(score: number): string {
-  if (score >= 0.5) return RISK_COLORS.critical
-  if (score >= 0.3) return RISK_COLORS.high
-  if (score >= 0.1) return RISK_COLORS.medium
-  return RISK_COLORS.low
+  const level = getRiskLevelFromScore(score)
+  return RISK_COLORS[level]
 }
 
 function getRiskLabel(score: number): string {
-  if (score >= 0.5) return 'Critical'
-  if (score >= 0.3) return 'High'
-  if (score >= 0.1) return 'Medium'
-  return 'Low'
+  const level = getRiskLevelFromScore(score)
+  return level.charAt(0).toUpperCase() + level.slice(1)
 }
 
 function SortIndicator({ field, sortField, sortDir }: { field: SortField; sortField: SortField; sortDir: SortDir }) {
@@ -117,9 +113,9 @@ function SortIndicator({ field, sortField, sortDir }: { field: SortField; sortFi
   return <span className="text-accent ml-1">{sortDir === 'desc' ? '▼' : '▲'}</span>
 }
 
-/** Interpolates green→red based on risk score (0→#4ade80, 0.5+→#f87171) */
+/** Interpolates green→red based on risk score (0→#4ade80, critical→#f87171) */
 function riskToColor(score: number): string {
-  const clamped = Math.min(1, score / 0.5)
+  const clamped = Math.min(1, score / RISK_THRESHOLDS.critical)
   const r = Math.round(74  + (248 - 74)  * clamped)
   const g = Math.round(222 + (113 - 222) * clamped)
   const b = Math.round(128 + (113 - 128) * clamped)
@@ -192,9 +188,9 @@ function RiskValueScatter({ categories }: { categories: CategoryStat[] }) {
       contracts: c.total_contracts,
       riskLabel: getRiskLabel(c.avg_risk),
       sectorCode: c.sector_code,
-      fill: c.avg_risk >= 0.5 ? '#f87171'
-          : c.avg_risk >= 0.3 ? '#fb923c'
-          : c.avg_risk >= 0.1 ? '#fbbf24'
+      fill: c.avg_risk >= RISK_THRESHOLDS.critical ? '#f87171'
+          : c.avg_risk >= RISK_THRESHOLDS.high ? '#fb923c'
+          : c.avg_risk >= RISK_THRESHOLDS.medium ? '#fbbf24'
           : '#4ade80',
     }))
 
@@ -431,13 +427,13 @@ function aggregateBySector(categories: CategoryStat[]): SectorAggregate[] {
         total_contracts: cat.total_contracts,
         total_value: cat.total_value,
         avg_risk: cat.avg_risk * cat.total_contracts,
-        high_risk_count: cat.avg_risk >= 0.3 ? cat.total_contracts : 0,
+        high_risk_count: cat.avg_risk >= RISK_THRESHOLDS.high ? cat.total_contracts : 0,
       })
     } else {
       existing.total_contracts += cat.total_contracts
       existing.total_value += cat.total_value
       existing.avg_risk += cat.avg_risk * cat.total_contracts
-      existing.high_risk_count += cat.avg_risk >= 0.3 ? cat.total_contracts : 0
+      existing.high_risk_count += cat.avg_risk >= RISK_THRESHOLDS.high ? cat.total_contracts : 0
     }
   }
   // Normalize avg_risk
@@ -767,7 +763,7 @@ function SubcategoryPanel({
           {sorted.map((sub) => {
             const isHighDA = sub.direct_award_pct >= 70
             const isHighSB = sub.single_bid_pct >= 25
-            const isFlagged = !sub.is_catch_all && (isHighDA || isHighSB || sub.avg_risk >= 0.3)
+            const isFlagged = !sub.is_catch_all && (isHighDA || isHighSB || sub.avg_risk >= RISK_THRESHOLDS.high)
             const barWidth = sub.is_catch_all
               ? Math.min(sub.pct_of_category, 100)
               : Math.min((sub.total_value / maxValue) * 100, 100)
@@ -876,7 +872,7 @@ function SubcategoryPanel({
                           {[
                             isHighDA && `${sub.direct_award_pct.toFixed(0)}% direct award (low competition)`,
                             isHighSB && `${sub.single_bid_pct.toFixed(0)}% single-bid procedures`,
-                            sub.avg_risk >= 0.3 && `avg risk ${(sub.avg_risk * 100).toFixed(0)}%`,
+                            sub.avg_risk >= RISK_THRESHOLDS.high && `avg risk ${(sub.avg_risk * 100).toFixed(0)}%`,
                           ].filter(Boolean).join(' · ')}
                         </span>
                       </div>
@@ -1014,7 +1010,7 @@ export default function SpendingCategories() {
     const avgRisk = totalContracts > 0
       ? filteredCategories.reduce((s, c) => s + c.avg_risk * c.total_contracts, 0) / totalContracts
       : 0
-    const highRiskCategories = filteredCategories.filter(c => c.avg_risk >= 0.3).length
+    const highRiskCategories = filteredCategories.filter(c => c.avg_risk >= RISK_THRESHOLDS.high).length
     return { totalValue, totalContracts, avgRisk, highRiskCategories }
   }, [filteredCategories])
 
@@ -1241,7 +1237,7 @@ export default function SpendingCategories() {
           value={macroStats ? `${(macroStats.avgRisk * 100).toFixed(1)}%` : '—'}
           detail="Weighted by contract count"
           borderColor="border-red-500/30"
-          color={macroStats && macroStats.avgRisk >= 0.3 ? 'text-risk-high' : 'text-text-primary'}
+          color={macroStats && macroStats.avgRisk >= RISK_THRESHOLDS.high ? 'text-risk-high' : 'text-text-primary'}
           loading={summaryLoading}
         />
       </div>
@@ -1336,7 +1332,7 @@ export default function SpendingCategories() {
             value={stats ? `${(stats.avgRisk * 100).toFixed(1)}%` : '—'}
             detail="Weighted by contract count"
             borderColor="border-amber-500/30"
-            color={stats && stats.avgRisk >= 0.3 ? 'text-risk-high' : 'text-text-primary'}
+            color={stats && stats.avgRisk >= RISK_THRESHOLDS.high ? 'text-risk-high' : 'text-text-primary'}
             loading={summaryLoading}
           />
           <SharedStatCard

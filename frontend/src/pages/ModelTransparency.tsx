@@ -474,12 +474,8 @@ function DriftMonitorSection() {
     },
   })
 
-  const is404 = isError && (() => {
-    // narrow: axios errors carry response.status
-    const err = data as unknown
-    void err
-    return true // isError covers 404; we show a gentle message for all errors
-  })()
+  // Note: we treat all errors the same (404, 500, etc.) — show "not computed yet" message
+  const is404 = isError
 
   return (
     <Card>

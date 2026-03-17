@@ -1,8 +1,10 @@
-import React, { memo, useMemo, useRef, useState } from 'react'
+import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, type Variants } from 'framer-motion'
 // animations.ts: staggerContainer replaced by inline fernStaggerContainer
 import { ScrollReveal, useCountUp } from '@/hooks/useAnimations'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useTranslation } from 'react-i18next'
 import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
 import { useQuery } from '@tanstack/react-query'
@@ -829,12 +831,12 @@ const TopVendorsTable = memo(function TopVendorsTable({
     <div className="space-y-0.5">
       {vendors.map((vendor, i) => {
         const riskPct = vendor.avg_risk * 100
-        const riskColor = vendor.avg_risk >= 0.50 ? 'text-risk-critical' :
-          vendor.avg_risk >= 0.30 ? 'text-risk-high' :
-          vendor.avg_risk >= 0.10 ? 'text-risk-medium' : 'text-risk-low'
-        const riskBg = vendor.avg_risk >= 0.50 ? 'bg-risk-critical' :
-          vendor.avg_risk >= 0.30 ? 'bg-risk-high' :
-          vendor.avg_risk >= 0.10 ? 'bg-risk-medium' : 'bg-risk-low'
+        const riskColor = vendor.avg_risk >= 0.60 ? 'text-risk-critical' :
+          vendor.avg_risk >= 0.40 ? 'text-risk-high' :
+          vendor.avg_risk >= 0.15 ? 'text-risk-medium' : 'text-risk-low'
+        const riskBg = vendor.avg_risk >= 0.60 ? 'bg-risk-critical' :
+          vendor.avg_risk >= 0.40 ? 'bg-risk-high' :
+          vendor.avg_risk >= 0.15 ? 'bg-risk-medium' : 'bg-risk-low'
         return (
           <button
             key={vendor.id}
@@ -950,7 +952,194 @@ const GroundTruthSection = memo(function GroundTruthSection({
 })
 
 // ============================================================================
-// SECTION WRAPPER — Error boundary per section
+// RISK TICKER STRIP — Bloomberg-style scrolling vendor alerts
+// ============================================================================
+
+const TICKER_ITEMS = [
+  { name: 'GRUPO FARMACOS ESPECIALIZADOS', score: '0.995', amount: '$133.4B', sector: 'SALUD', level: 'critical' as const },
+  { name: 'LABORATORIOS PISA', score: '0.977', amount: '$9.4B', sector: 'SALUD', level: 'critical' as const },
+  { name: 'TOKA INTERNATIONAL', score: '0.964', amount: '$8.2B', sector: 'TECNOLOGIA', level: 'critical' as const },
+  { name: 'EDENRED MEXICO', score: '0.884', amount: '$46.7B', sector: 'ENERGIA', level: 'critical' as const },
+  { name: 'DIMM FARMACEUTICA', score: '0.821', amount: '$5.4B', sector: 'SALUD', level: 'critical' as const },
+  { name: 'PEMEX-COTEMAR', score: '1.000', amount: '$892M', sector: 'ENERGIA', level: 'critical' as const },
+  { name: 'SIXSIGMA NETWORKS', score: '0.756', amount: '$1.2B', sector: 'HACIENDA', level: 'critical' as const },
+  { name: 'LICONSA', score: '0.664', amount: '$6.3B', sector: 'AGRICULTURA', level: 'high' as const },
+  { name: 'CONSTRUCTORA TEYA', score: '0.359', amount: '$420M', sector: 'INFRAESTRUCTURA', level: 'high' as const },
+  { name: 'CONAGUA GHOST NETWORK', score: '0.551', amount: '$340M', sector: 'AMBIENTE', level: 'critical' as const },
+  { name: 'BRULUART', score: '0.863', amount: '$3.2B', sector: 'SALUD', level: 'critical' as const },
+  { name: 'DICONSA', score: '0.664', amount: '$4.1B', sector: 'AGRICULTURA', level: 'high' as const },
+  { name: 'SEGOB-MAINBIT IT', score: '0.551', amount: '$604M', sector: 'GOBERNACION', level: 'critical' as const },
+]
+
+function RiskTicker() {
+  const doubled = [...TICKER_ITEMS, ...TICKER_ITEMS]
+  return (
+    <div
+      style={{
+        overflow: 'hidden',
+        borderTop: '1px solid rgba(196,30,58,0.3)',
+        borderBottom: '1px solid rgba(196,30,58,0.3)',
+        background: 'rgba(10,10,10,0.95)',
+        padding: '6px 0',
+      }}
+      role="marquee"
+      aria-label="High-risk vendor alerts"
+    >
+      <div style={{ display: 'flex', whiteSpace: 'nowrap', animation: 'tickerScroll 80s linear infinite' }}>
+        {doubled.map((item, i) => (
+          <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginRight: '48px' }}>
+            <span style={{ color: '#c41e3a', fontSize: '9px', fontWeight: 700 }}>&#9650; RIESGO</span>
+            <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em', fontFamily: 'monospace' }}>{item.name}</span>
+            <span style={{ color: item.level === 'critical' ? '#ef4444' : '#f97316', fontSize: '11px', fontWeight: 700, fontFamily: 'monospace' }}>{item.score}</span>
+            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px' }}>&#183;</span>
+            <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: '10px' }}>{item.amount} MXN</span>
+            <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px' }}>&#183;</span>
+            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', letterSpacing: '0.08em' }}>{item.sector}</span>
+            <span style={{ color: 'rgba(196,30,58,0.3)', marginLeft: '24px' }}>|</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// CINEMATIC DASHBOARD HERO — dark editorial hero with GSAP timeline
+// ============================================================================
+
+function DashboardCinematicHero({ overview, criticalHighContractPct, criticalCount, loading }: {
+  overview: { total_contracts?: number; total_value_mxn?: number } | undefined
+  criticalHighContractPct: number
+  criticalCount: number
+  loading: boolean
+}) {
+  const heroRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!heroRef.current || loading) return
+    gsap.registerPlugin(ScrollTrigger)
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
+      tl.from('.dash-hero-label', { opacity: 0, y: -10, duration: 0.4 })
+        .from('.dash-hero-headline', { opacity: 0, y: 50, duration: 0.9, ease: 'power4.out' }, '-=0.2')
+        .from('.dash-hero-stat', { opacity: 0, y: 20, duration: 0.5, stagger: 0.12 }, '-=0.5')
+        .from('.dash-hero-cta', { opacity: 0, y: 10, duration: 0.4, stagger: 0.08 }, '-=0.3')
+    }, heroRef)
+    return () => ctx.revert()
+  }, [loading])
+
+  return (
+    <div ref={heroRef} style={{
+      background: 'radial-gradient(ellipse at 15% 60%, rgba(196,30,58,0.12) 0%, transparent 55%), radial-gradient(ellipse at 85% 20%, rgba(37,99,235,0.08) 0%, transparent 55%), #060608',
+      padding: '48px 32px 40px',
+      margin: '-24px -24px 0',
+      position: 'relative',
+      overflow: 'hidden',
+      borderRadius: '0 0 12px 12px',
+    }}>
+      {/* Grid texture overlay */}
+      <div style={{
+        position: 'absolute', inset: 0, opacity: 0.03,
+        backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+        backgroundSize: '40px 40px',
+        pointerEvents: 'none',
+      }} />
+
+      <div className="dash-hero-label" style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.2em', color: '#c41e3a', marginBottom: '16px', fontFamily: 'var(--font-family-mono)' }}>
+        SISTEMA DE VIGILANCIA &middot; RUBLI v6.2 &middot; ACTIVO
+      </div>
+
+      <h1 className="dash-hero-headline" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 800, color: 'white', fontFamily: 'var(--font-family-serif)', lineHeight: 1.1, marginBottom: '24px', maxWidth: '700px' }}>
+        {loading ? '\u2014' : `${(overview?.total_contracts ?? 3051294).toLocaleString('es-MX')} contratos`}
+        <br/>
+        <span style={{ color: '#c41e3a' }}>bajo vigilancia</span>
+      </h1>
+
+      <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', marginBottom: '28px' }}>
+        {[
+          { label: 'Contratos con alerta', value: loading ? '\u2014' : `${criticalHighContractPct.toFixed(1)}%`, color: '#ef4444' },
+          { label: 'Nivel critico', value: loading ? '\u2014' : criticalCount.toLocaleString('es-MX'), color: '#f97316' },
+          { label: 'Valor total analizado', value: loading ? '\u2014' : formatCompactMXN(overview?.total_value_mxn ?? 0), color: '#fbbf24' },
+        ].map((stat, i) => (
+          <div key={i} className="dash-hero-stat">
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)', letterSpacing: '0.1em', fontFamily: 'var(--font-family-mono)', marginBottom: '4px' }}>{stat.label.toUpperCase()}</div>
+            <div style={{ fontSize: 'clamp(1.4rem, 3vw, 2rem)', fontWeight: 700, color: stat.color, fontFamily: 'var(--font-family-mono)', letterSpacing: '-0.02em' }}>{stat.value}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        {[
+          { label: '\u2192 Investigar proveedores', to: '/aria' },
+          { label: '\u2192 Casos documentados', to: '/cases' },
+          { label: '\u2192 Tarjeta de calificacion', to: '/report-card' },
+        ].map((cta, i) => (
+          <Link key={i} to={cta.to} className="dash-hero-cta" style={{
+            fontSize: '12px', fontWeight: 600, color: 'rgba(255,255,255,0.7)',
+            border: '1px solid rgba(255,255,255,0.15)', padding: '6px 14px',
+            borderRadius: '4px', textDecoration: 'none', fontFamily: 'var(--font-family-mono)',
+            letterSpacing: '0.05em', transition: 'all 0.2s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = 'white'; e.currentTarget.style.borderColor = '#c41e3a' }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)' }}
+          >
+            {cta.label}
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// INVESTIGATION SPOTLIGHT — editorial "breaking news" card
+// ============================================================================
+
+function InvestigationSpotlight() {
+  return (
+    <div style={{
+      border: '1px solid rgba(196,30,58,0.4)',
+      borderLeft: '4px solid #c41e3a',
+      background: 'linear-gradient(135deg, rgba(196,30,58,0.05) 0%, transparent 60%)',
+      borderRadius: '8px',
+      padding: '20px 24px',
+      display: 'grid',
+      gridTemplateColumns: '1fr auto',
+      gap: '20px',
+      alignItems: 'center',
+    }}>
+      <div>
+        <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.2em', color: '#c41e3a', marginBottom: '8px', fontFamily: 'var(--font-family-mono)' }}>
+          &#9650; CASO DOCUMENTADO &middot; RIESGO MAXIMO REGISTRADO
+        </div>
+        <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-serif)', marginBottom: '8px', letterSpacing: '-0.01em' }}>
+          Grupo Farmacos Especializados, S.A. de C.V.
+        </div>
+        <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.6, maxWidth: '560px', marginBottom: '12px' }}>
+          Una empresa farmaceutica con 6,360 contratos y $133.4 mil millones en adjudicaciones directas al IMSS
+          registra el perfil de riesgo mas alto del sistema &mdash; una concentracion de mercado sin precedente historico.
+        </div>
+        <Link to="/vendor/29277" style={{
+          fontSize: '12px', fontWeight: 600, color: '#c41e3a', textDecoration: 'none',
+          fontFamily: 'var(--font-family-mono)', letterSpacing: '0.08em',
+        }}>
+          ABRIR PERFIL COMPLETO &rarr;
+        </Link>
+      </div>
+      <div style={{ textAlign: 'center', flexShrink: 0 }}>
+        <div style={{ fontSize: '3rem', fontWeight: 800, fontFamily: 'var(--font-family-mono)', color: '#c41e3a', lineHeight: 1, letterSpacing: '-0.04em' }}>
+          0.995
+        </div>
+        <div style={{ fontSize: '9px', letterSpacing: '0.15em', color: 'rgba(196,30,58,0.7)', fontFamily: 'var(--font-family-mono)', marginTop: '4px' }}>
+          INDICE DE RIESGO
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// SECTION WRAPPER — with GSAP ScrollTrigger reveal
 // ============================================================================
 
 function DashboardSection({
@@ -970,8 +1159,22 @@ function DashboardSection({
   className?: string
   noPadding?: boolean
 }) {
+  const sectionRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!sectionRef.current) return
+    gsap.registerPlugin(ScrollTrigger)
+    const ctx = gsap.context(() => {
+      gsap.from(sectionRef.current!, {
+        opacity: 0, y: 20, duration: 0.6, ease: 'power2.out',
+        scrollTrigger: { trigger: sectionRef.current!, start: 'top 90%', once: true },
+      })
+    })
+    return () => ctx.revert()
+  }, [])
+
   return (
-    <div className={cn('fern-card overflow-hidden', className)}>
+    <div ref={sectionRef} className={cn('fern-card overflow-hidden', className)}>
       {title && (
         <div className={cn('flex items-center justify-between', noPadding ? 'px-5 pt-5 pb-3' : 'px-5 pt-5 pb-3')}>
           <div>
@@ -1169,6 +1372,21 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {/* ================================================================ */}
+      {/* RISK TICKER STRIP — Bloomberg-style scrolling alerts             */}
+      {/* ================================================================ */}
+      <RiskTicker />
+
+      {/* ================================================================ */}
+      {/* CINEMATIC HERO — dark editorial hero with GSAP animations        */}
+      {/* ================================================================ */}
+      <DashboardCinematicHero
+        overview={overview}
+        criticalHighContractPct={criticalHighContractPct}
+        criticalCount={criticalCount}
+        loading={dashLoading}
+      />
+
       {/* Page Header */}
       <PageHeader
         label="PANORAMA NACIONAL"
@@ -1213,6 +1431,11 @@ export function Dashboard() {
         criticalCount={criticalCount}
         onClick={() => navigate('/contracts?risk_level=critical')}
       />
+
+      {/* ================================================================ */}
+      {/* INVESTIGATION SPOTLIGHT — editorial breaking news card           */}
+      {/* ================================================================ */}
+      <InvestigationSpotlight />
 
       {/* ================================================================ */}
       {/* HEADLINE ROW: 4 KPI Cards — staggered reveal                    */}
@@ -1457,9 +1680,9 @@ export function Dashboard() {
             <div className="space-y-1">
               {topFlows.map((flow, i) => {
                 const riskColor =
-                  (flow.avg_risk ?? 0) >= 0.50 ? 'text-risk-critical' :
-                  (flow.avg_risk ?? 0) >= 0.30 ? 'text-risk-high' :
-                  (flow.avg_risk ?? 0) >= 0.10 ? 'text-risk-medium' :
+                  (flow.avg_risk ?? 0) >= 0.60 ? 'text-risk-critical' :
+                  (flow.avg_risk ?? 0) >= 0.40 ? 'text-risk-high' :
+                  (flow.avg_risk ?? 0) >= 0.15 ? 'text-risk-medium' :
                   'text-risk-low'
                 return (
                   <div key={i} className="flex items-center gap-2 py-2 px-2 rounded hover:bg-background-elevated/30 transition-colors">
@@ -1696,9 +1919,9 @@ export const _StatCard = memo(function _StatCard({ loading, label, value, detail
 export function _RiskBadge({ value }: { value: number }) {
   const pct = (value * 100).toFixed(0)
   const color =
-    value >= 0.50 ? 'bg-risk-critical/20 text-risk-critical border-risk-critical/30' :
-    value >= 0.30 ? 'bg-risk-high/20 text-risk-high border-risk-high/30' :
-    value >= 0.10 ? 'bg-risk-medium/20 text-risk-medium border-risk-medium/30' :
+    value >= 0.60 ? 'bg-risk-critical/20 text-risk-critical border-risk-critical/30' :
+    value >= 0.40 ? 'bg-risk-high/20 text-risk-high border-risk-high/30' :
+    value >= 0.15 ? 'bg-risk-medium/20 text-risk-medium border-risk-medium/30' :
     'bg-risk-low/20 text-risk-low border-risk-low/30'
   return (
     <span className={cn('text-xs font-bold tabular-nums font-mono px-1.5 py-0.5 rounded border', color)}>

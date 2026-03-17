@@ -333,7 +333,7 @@ export default function Administrations() {
   }, [yoyData])
 
   const selectedAgg = adminAggs.find((a) => a.name === selectedAdmin)
-  const selectedMeta = ADMINISTRATIONS.find((a) => a.name === selectedAdmin)!
+  const selectedMeta = ADMINISTRATIONS.find((a) => a.name === selectedAdmin) ?? ADMINISTRATIONS[0]
 
   // Sector heatmap data for selected admin
   const sectorHeatmap = useMemo(() => {

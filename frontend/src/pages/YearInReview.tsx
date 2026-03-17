@@ -643,10 +643,10 @@ export default function YearInReview() {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-mono text-text-primary flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-accent" aria-hidden="true" />
-            Sector Spending Race
+            {t('racingChart.title')}
           </CardTitle>
           <p className="text-xs text-text-muted mt-0.5">
-            Top 8 sectors by annual spending — press Play to watch budgets shift across administrations
+            {t('racingChart.subtitle')}
           </p>
         </CardHeader>
         <CardContent>
@@ -659,10 +659,10 @@ export default function YearInReview() {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-mono text-text-primary flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-[#f87171]" aria-hidden="true" />
-            The December Effect
+            {t('decemberEffect.title')}
           </CardTitle>
           <p className="text-xs text-text-muted mt-0.5">
-            Risk spikes 64% every December — the year-end budget dump (23-year aggregate)
+            {t('decemberEffect.subtitle')}
           </p>
         </CardHeader>
         <CardContent>
@@ -673,8 +673,8 @@ export default function YearInReview() {
       {/* Sector contribution stacked area chart */}
       <Card className="bg-slate-900/50 border border-white/5 rounded-xl">
         <CardHeader className="pb-2">
-          <p className="text-sm font-semibold text-white/80 uppercase tracking-wider">Contract Volume by Sector</p>
-          <p className="text-xs text-text-muted mt-0.5">Annual contract value distribution across top 6 sectors (billions MXN)</p>
+          <p className="text-sm font-semibold text-white/80 uppercase tracking-wider">{t('areaChart.title')}</p>
+          <p className="text-xs text-text-muted mt-0.5">{t('areaChart.subtitle')}</p>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={260}>
@@ -706,7 +706,7 @@ export default function YearInReview() {
             </AreaChart>
           </ResponsiveContainer>
           <p className="text-xs text-white/50 italic mt-2">
-            Health (salud) spending surged 70% from 2018 to 2022, driven by COVID-19 emergency procurement — now normalizing.
+            {t('areaChart.note')}
           </p>
         </CardContent>
       </Card>

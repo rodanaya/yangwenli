@@ -660,7 +660,7 @@ export default function GroundTruth() {
         <CardContent>
           {factorLiftLoading ? (
             <Skeleton className="h-64 w-full" />
-          ) : !factorLiftData?.factors.length ? (
+          ) : !factorLiftData?.factors?.length ? (
             <p className="text-sm text-text-secondary text-center py-8">{t('groundTruth.noFactorLift')}</p>
           ) : (
             <div ref={factorLiftChartRef} className="h-[300px]">

@@ -93,6 +93,48 @@ services:
     networks:
       - rubli-network
 
+  aria-cron:
+    image: docker:cli
+    container_name: rubli-aria-cron
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    # Run ARIA pipeline daily at 03:00 UTC via docker exec into the backend container.
+    # Uses sh + while-sleep loop (no cron daemon needed, simpler than alpine/cron).
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "ARIA cron scheduler started — will run daily at 03:00 UTC"
+        while true; do
+          # Calculate seconds until next 03:00 UTC
+          now=$$(date -u +%s)
+          target=$$(date -u -d "tomorrow 03:00" +%s 2>/dev/null || date -u -d "$$(date -u +%Y-%m-%d) 03:00" +%s)
+          if [ "$$target" -le "$$now" ]; then
+            target=$$(( $$target + 86400 ))
+          fi
+          wait_secs=$$(( $$target - $$now ))
+          next_run=$$(date -u -d "@$$target" '+%Y-%m-%d %H:%M UTC' 2>/dev/null || echo "in $${wait_secs}s")
+          echo "Next ARIA run at $$next_run (sleeping $${wait_secs}s)"
+          sleep $$wait_secs
+          echo "$$(date -u '+%Y-%m-%d %H:%M:%S UTC') — Triggering ARIA daily pipeline"
+          docker exec rubli-backend sh /app/scripts/aria_cron.sh || echo "ARIA cron run failed"
+        done
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: '0.25'
+    networks:
+      - rubli-network
+
 volumes:
   caddy_data:
   caddy_config:

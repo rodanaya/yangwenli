@@ -270,7 +270,7 @@ export function SectorProfile() {
       const sectorCode = sector?.code ?? ''
       const hasStructuralConcentration = ['energia', 'defensa'].includes(sectorCode)
       if (topShare > 0.3) {
-        const vendorName = topVendors?.data[0]?.vendor_name ?? 'Top vendor'
+        const vendorName = topVendors?.data?.[0]?.vendor_name ?? 'Top vendor'
         result.push({
           type: hasStructuralConcentration ? 'info' : 'warning',
           title: 'Vendor Concentration',
@@ -546,7 +546,7 @@ export function SectorProfile() {
 
           {/* HIGHEST-RISK VENDOR CALLOUT */}
           {topRiskVendors?.data?.[0] && (() => {
-            const worstVendor = topRiskVendors.data[0]
+            const worstVendor = topRiskVendors.data[0]!
             const riskScore = worstVendor.avg_risk_score ?? 0
             const riskColor =
               riskScore >= 0.5 ? RISK_COLORS.critical :

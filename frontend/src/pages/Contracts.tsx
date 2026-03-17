@@ -950,7 +950,7 @@ export function Contracts() {
                 Retry
               </Button>
             </div>
-          ) : data?.data.length === 0 ? (
+          ) : data?.data?.length === 0 ? (
             !hasActiveFilters ? (
               <div className="p-12 text-center">
                 <FileText className="h-14 w-14 mx-auto mb-4 opacity-10" />
@@ -1026,7 +1026,7 @@ export function Contracts() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">
-                  {data?.data.map((contract) => (
+                  {data?.data?.map((contract) => (
                     <ContractRow
                       key={contract.id}
                       contract={contract}

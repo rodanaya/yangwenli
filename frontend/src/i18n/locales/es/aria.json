@@ -1,0 +1,84 @@
+{
+  "pageTitle": "Informe de Inteligencia ARIA",
+  "pageSubtitle": "Algoritmo Automatizado de Investigación de Riesgo — inteligencia de riesgo de contratación seleccionada",
+  "stats": {
+    "totalLeads": "Pistas Totales",
+    "totalLeadsSub": "proveedores en pipeline",
+    "elevatedValue": "Valor Elevado",
+    "elevatedValueSub": "Niveles 1 + 2 combinados",
+    "efosListed": "En Lista EFOS",
+    "efosListedSub": "+ {{sfpCount}} sancionados por SFP",
+    "newVendorRisk": "Riesgo de Proveedor Nuevo",
+    "newVendorRiskSub": "señales de empresa fantasma",
+    "lastRun": "Última ejecución del pipeline: {{date}}"
+  },
+  "errors": {
+    "notRun": "El pipeline aún no se ha ejecutado",
+    "notRunDesc": "Ejecuta el pipeline de ARIA para generar pistas de investigación y notas editoriales."
+  },
+  "filters": {
+    "byPattern": "Filtrar por Patrón",
+    "all": "Todos",
+    "newVendorOnly": "Riesgo de Proveedor Nuevo"
+  },
+  "tier1": {
+    "heading": "Pistas Críticas — Nivel 1",
+    "subtitle": "Proveedores prioritarios según la Puntuación de Prioridad de Investigación",
+    "empty": "No se encontraron pistas de Nivel 1. Ejecuta el pipeline de ARIA para rellenar."
+  },
+  "leads": {
+    "filteredResults": "Resultados Filtrados",
+    "allLeads": "Todas las Pistas",
+    "vendorCount": "proveedores",
+    "searchPlaceholder": "Buscar proveedores…",
+    "investigateBtn": "Investigar proveedor",
+    "empty": "No hay pistas que coincidan con tus filtros."
+  },
+  "table": {
+    "headers": {
+      "vendor": "Proveedor",
+      "pattern": "Patrón",
+      "value": "Valor",
+      "ips": "IPS"
+    }
+  },
+  "card": {
+    "totalValue": "Valor Total",
+    "contracts": "Contratos",
+    "avgRisk": "Riesgo Promedio",
+    "directAward": "Adjudicación Directa"
+  },
+  "rowLabels": {
+    "contracts": "Contratos:",
+    "avgRisk": "Riesgo Promedio:",
+    "directAward": "Adjudicación Directa:",
+    "institution": "Institución:"
+  },
+  "memo": {
+    "less": "Menos",
+    "full": "Nota completa"
+  },
+  "pagination": {
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "pageOf": "Página {{page}} de {{total}}"
+  },
+  "about": {
+    "title": "Acerca de ARIA",
+    "description": "El Algoritmo Automatizado de Investigación de Riesgo (ARIA) combina puntuaciones de riesgo de ML, detección de anomalías, clasificación de patrones y referencias cruzadas de registros externos (EFOS, SFP, RUPC) para clasificar proveedores según la Puntuación de Prioridad de Investigación (IPS). Las notas editoriales se generan previamente mediante síntesis asistida por LLM de señales de contratación.",
+    "disclaimer": "Las puntuaciones de IPS son indicadores de riesgo, no veredictos de corrupción. Las puntuaciones altas indican similitud estadística con patrones de corrupción documentados y justifican una investigación más profunda."
+  },
+  "patterns": {
+    "P1": "Monopolio",
+    "P2": "Empresa Fantasma",
+    "P3": "Intermediario",
+    "P4": "Manipulación de Licitaciones",
+    "P5": "Sobreprecio",
+    "P6": "Captura Institucional",
+    "P7": "Conflicto"
+  },
+  "badges": {
+    "new": "NUEVO",
+    "efos": "EFOS"
+  }
+}
