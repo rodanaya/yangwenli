@@ -104,6 +104,11 @@ class ContractDetail(ContractBase):
     ensemble_anomaly_score: Optional[float] = None
     pyod_is_outlier: Optional[bool] = None
 
+    # Political cycle context
+    is_election_year: Optional[bool] = None
+    publication_delay_days: Optional[int] = None
+    sexenio_year: Optional[int] = None
+
     # Metadata
     source_structure: Optional[str] = None
     source_year: Optional[int] = None

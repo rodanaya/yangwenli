@@ -18,6 +18,8 @@ import {
   FileText,
   ShieldAlert,
   User,
+  Clock,
+  Zap,
 } from 'lucide-react'
 
 interface ContractDetailModalProps {
@@ -279,6 +281,11 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                 <DetailRow label="Status" value={contract.contract_status} />
               </div>
 
+              {/* Political cycle context */}
+              {(contract.publication_delay_days != null || contract.is_election_year || contract.sexenio_year != null) && (
+                <PoliticalContextRow contract={contract} />
+              )}
+
               {contract.url && (
                 <a
                   href={contract.url}
@@ -307,6 +314,57 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
         ) : null}
       </DialogContent>
     </Dialog>
+  )
+}
+
+function getAdministration(year?: number | null): string {
+  if (!year) return ''
+  if (year <= 2000) return 'Zedillo'
+  if (year <= 2006) return 'Fox'
+  if (year <= 2012) return 'Calderón'
+  if (year <= 2018) return 'Peña Nieto'
+  if (year <= 2024) return 'AMLO'
+  return 'Sheinbaum'
+}
+
+function PoliticalContextRow({ contract }: { contract: import('@/api/types').ContractDetail }) {
+  const delay = contract.publication_delay_days
+  const isElection = contract.is_election_year
+  const sexenioYear = contract.sexenio_year
+  const admin = getAdministration(contract.contract_year)
+
+  const delayColor =
+    delay == null ? '' :
+    delay < 5 ? 'text-risk-critical' :
+    delay < 15 ? 'text-risk-high' :
+    'text-risk-low'
+
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-2 py-2 px-3 rounded-lg bg-background-elevated/30 border border-border/20">
+      <div className="flex items-center gap-1 text-text-muted">
+        <Clock className="h-3 w-3" aria-hidden="true" />
+        <span className="text-[10px] uppercase tracking-wider">Context</span>
+      </div>
+      {delay != null && (
+        <span className={`text-xs font-mono tabular-nums ${delayColor}`} title="Days between publication and award">
+          {delay}d window
+        </span>
+      )}
+      {sexenioYear != null && admin && (
+        <span className="text-xs text-text-secondary" title={`Year ${sexenioYear} of 6-year term`}>
+          Yr {sexenioYear} · {admin}
+        </span>
+      )}
+      {isElection && (
+        <span
+          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-950/40 text-amber-400 border border-amber-600/30"
+          title="Contract awarded during a federal election year"
+        >
+          <Zap className="h-2.5 w-2.5" aria-hidden="true" />
+          Election Year
+        </span>
+      )}
+    </div>
   )
 }
 

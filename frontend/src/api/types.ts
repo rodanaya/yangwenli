@@ -150,6 +150,9 @@ export interface ContractDetail extends ContractBase {
   contract_status?: string
   ensemble_anomaly_score?: number
   pyod_is_outlier?: boolean
+  is_election_year?: boolean | null
+  publication_delay_days?: number | null
+  sexenio_year?: number | null
 }
 
 export interface ContractListResponse extends PaginatedResponse<ContractListItem> {}
@@ -2196,6 +2199,8 @@ export interface AriaQueueItem {
   memo_generated_at?: string | null
   activity_span_days?: number
   reviewer_name?: string | null
+  new_vendor_risk_score?: number | null
+  new_vendor_risk_triggers?: string | null
 }
 
 export interface AriaStats {

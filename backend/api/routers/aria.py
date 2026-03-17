@@ -194,7 +194,15 @@ def get_aria_queue_vendor(
         raise HTTPException(status_code=404, detail="ARIA pipeline has not been run yet.")
 
     row = conn.execute(
-        "SELECT * FROM aria_queue WHERE vendor_id = ?", (vendor_id,)
+        """
+        SELECT q.*,
+               vs.new_vendor_risk_score,
+               vs.new_vendor_risk_triggers
+        FROM aria_queue q
+        LEFT JOIN vendor_stats vs ON q.vendor_id = vs.vendor_id
+        WHERE q.vendor_id = ?
+        """,
+        (vendor_id,),
     ).fetchone()
 
     if row is None:
@@ -210,6 +218,7 @@ def get_aria_queue_vendor(
         "fp_patent_exception",
         "fp_data_error",
         "fp_structural_monopoly",
+        "new_vendor_risk",
     )
     # Decode JSON text column
     d["pattern_confidences"] = _decode_json_field(d.get("pattern_confidences"))

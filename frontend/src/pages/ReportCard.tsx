@@ -12,6 +12,7 @@ import {
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
   CartesianGrid,
+  ReferenceArea,
 } from 'recharts'
 import { phiApi, scorecardApi } from '@/api/client'
 import { SECTORS } from '@/lib/constants'
@@ -160,6 +161,14 @@ const INDICATOR_I18N: Record<string, string> = {
 }
 
 const GRADE_ORDER: Record<string, number> = { 'F-': 0, 'F': 1, 'D-': 2, 'D': 3, 'C': 4, 'C+': 5, 'B': 6, 'B+': 7, 'A': 8, 'S': 9 }
+
+// Presidential term overlays for trend chart
+const PRESIDENCIAS = [
+  { name: 'Calderón', start: 2007, end: 2012, color: 'rgba(59,130,246,0.06)' },
+  { name: 'EPN',      start: 2013, end: 2018, color: 'rgba(251,191,36,0.06)' },
+  { name: 'AMLO',     start: 2019, end: 2024, color: 'rgba(239,68,68,0.05)' },
+  { name: 'Sheinbaum',start: 2025, end: 2030, color: 'rgba(16,185,129,0.06)' },
+]
 
 // ---------------------------------------------------------------------------
 // Animation Variants
@@ -495,6 +504,39 @@ function SectorReportCard({ sector, t }: { sector: PHISector; t: (k: string) => 
           </span>
         </div>
 
+        {/* Competition by value + composite score */}
+        {(sector.competition_by_value != null || sector.phi_composite_score != null) && (
+          <div className="flex items-center gap-4 mb-2 text-xs">
+            {sector.competition_by_value != null && (
+              <span>
+                <span
+                  className="font-bold tabular-nums"
+                  style={{
+                    color: sector.competition_by_value >= 50 ? '#22c55e'
+                         : sector.competition_by_value >= 30 ? '#f59e0b'
+                         : '#ef4444',
+                  }}
+                >
+                  {sector.competition_by_value.toFixed(1)}%
+                </span>
+                <span style={{ color: 'var(--color-text-muted)' }}> gasto competitivo</span>
+              </span>
+            )}
+            {sector.phi_composite_score != null && (
+              <span style={{ color: 'var(--color-text-muted)' }}>
+                Score: <span className="font-medium tabular-nums" style={{ color: gradeColors.text }}>{sector.phi_composite_score.toFixed(0)}</span>/100
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Risk distribution bar (compact) */}
+        {sector.risk_distribution && (
+          <div className="mb-2">
+            <RiskDistributionBar dist={sector.risk_distribution} compact />
+          </div>
+        )}
+
         {/* Traffic dots row */}
         <div className="flex items-center gap-1.5 mb-3">
           {INDICATOR_KEYS.map((key) => {
@@ -632,6 +674,17 @@ function TrendSection({ t }: { t: (k: string) => string }) {
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={years} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+              {/* Presidential term background shading */}
+              {PRESIDENCIAS.map((p) => (
+                <ReferenceArea
+                  key={p.name}
+                  x1={p.start}
+                  x2={p.end}
+                  fill={p.color}
+                  strokeOpacity={0}
+                  label={{ value: p.name, position: 'insideTopLeft', fontSize: 10, fill: 'var(--color-text-muted)', dy: 4 }}
+                />
+              ))}
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis
                 dataKey="year"
@@ -657,12 +710,23 @@ function TrendSection({ t }: { t: (k: string) => string }) {
               />
               <Line
                 type="monotone"
-                dataKey="competition_rate"
-                name={t('competitionRateYAxis')}
+                dataKey="competition_by_value"
+                name="Gasto competitivo (valor)"
                 stroke="#c41e3a"
-                strokeWidth={2.5}
+                strokeWidth={3}
                 dot={{ r: 3, fill: '#c41e3a' }}
                 activeDot={{ r: 5 }}
+                connectNulls
+              />
+              <Line
+                type="monotone"
+                dataKey="competition_rate"
+                name={t('competitionRateYAxis')}
+                stroke="#f87171"
+                strokeWidth={1.5}
+                strokeDasharray="4 3"
+                dot={false}
+                connectNulls
               />
               <Line
                 type="monotone"
@@ -672,21 +736,36 @@ function TrendSection({ t }: { t: (k: string) => string }) {
                 strokeWidth={2}
                 strokeDasharray="6 3"
                 dot={{ r: 3, fill: 'var(--color-text-muted)' }}
+                connectNulls
               />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Legend (manual, cleaner) */}
-        <div className="flex items-center justify-center gap-8 mt-4 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+        {/* Legend */}
+        <div className="flex flex-wrap items-center justify-center gap-6 mt-4 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
           <span className="flex items-center gap-2">
-            <span className="w-5 h-0.5 rounded" style={{ backgroundColor: '#c41e3a' }} />
+            <span className="w-5 h-0.5 rounded" style={{ backgroundColor: '#c41e3a', height: '3px' }} />
+            Gasto competitivo (valor)
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="w-5" style={{ borderTop: '2px dashed #f87171', height: 0 }} />
             {t('competitionRateYAxis')}
           </span>
           <span className="flex items-center gap-2">
-            <span className="w-5 h-0.5 rounded border-dashed" style={{ backgroundColor: 'var(--color-text-muted)', borderTop: '2px dashed var(--color-text-muted)', height: 0 }} />
+            <span className="w-5" style={{ borderTop: '2px dashed var(--color-text-muted)', height: 0 }} />
             {t('singleBidRateYAxis')}
           </span>
+        </div>
+
+        {/* Presidential term legend */}
+        <div className="flex flex-wrap items-center justify-center gap-4 mt-3 text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+          {PRESIDENCIAS.map((p) => (
+            <span key={p.name} className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: p.color.replace('0.06', '0.4').replace('0.05', '0.35') }} />
+              {p.name} {p.start}–{p.end}
+            </span>
+          ))}
         </div>
       </div>
     </section>

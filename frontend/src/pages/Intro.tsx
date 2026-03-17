@@ -2,10 +2,14 @@ import { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { motion, useInView, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, ChevronDown } from 'lucide-react'
 import { analysisApi, phiApi } from '@/api/client'
 import type { FastDashboardData } from '@/api/types'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+
+gsap.registerPlugin(ScrollTrigger)
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -24,8 +28,6 @@ const SECTOR_COLORS: Record<string, string> = {
   trabajo: '#f97316',
   otros: '#64748b',
 }
-
-const SECTOR_COLORS_ARRAY = Object.values(SECTOR_COLORS)
 
 const GRADE_COLORS: Record<string, { text: string; bg: string; border: string }> = {
   A: { text: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.25)' },
@@ -93,92 +95,264 @@ function useCountUp(target: number, duration = 1800, enabled = false): number {
 }
 
 // ---------------------------------------------------------------------------
-// FloatingDots -- cinematic particle background
+// NetworkCanvas -- cinematic canvas-based network graph background
 // ---------------------------------------------------------------------------
-interface DotData {
-  id: number
+interface NetNode {
   x: number
   y: number
+  vx: number
+  vy: number
+  type: 'vendor' | 'institution' | 'risk'
   size: number
-  color: string
-  durationY: number
-  durationX: number
-  delayStagger: number
-  opacity: number
-  dy: number
-  dx: number
+  pulsePhase: number
 }
 
-const FloatingDots = memo(function FloatingDots({
-  count = 200,
-  className = '',
-}: {
-  count?: number
-  className?: string
-}) {
-  const dots: DotData[] = useMemo(
-    () =>
-      Array.from({ length: count }, (_, i) => ({
-        id: i,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        size: 3 + Math.random() * 5,
-        color: SECTOR_COLORS_ARRAY[i % 12],
-        durationY: 3 + Math.random() * 5,
-        durationX: 4 + Math.random() * 6,
-        delayStagger: Math.random() * 3,
-        opacity: 0.25 + Math.random() * 0.4,
-        dy: -12 + Math.random() * 24,
-        dx: -10 + Math.random() * 20,
-      })),
-    [count],
-  )
+interface NetEdge {
+  from: number
+  to: number
+  isRisk: boolean
+}
+
+interface NetPacket {
+  edgeIdx: number
+  progress: number
+  speed: number
+  isRisk: boolean
+}
+
+const NetworkCanvas = memo(function NetworkCanvas() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const animFrameRef = useRef(0)
+  const stateRef = useRef<{
+    nodes: NetNode[]
+    edges: NetEdge[]
+    packets: NetPacket[]
+    scanY: number
+    counterValue: number
+    counterStart: number
+    w: number
+    h: number
+  } | null>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // Setup dimensions
+    const updateSize = () => {
+      const rect = canvas.parentElement?.getBoundingClientRect()
+      if (!rect) return
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      canvas.width = rect.width * dpr
+      canvas.height = rect.height * dpr
+      canvas.style.width = rect.width + 'px'
+      canvas.style.height = rect.height + 'px'
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      if (stateRef.current) {
+        stateRef.current.w = rect.width
+        stateRef.current.h = rect.height
+      }
+    }
+
+    const parent = canvas.parentElement
+    const observer = new ResizeObserver(updateSize)
+    if (parent) observer.observe(parent)
+    updateSize()
+
+    const w = canvas.parentElement?.clientWidth ?? 1200
+    const h = canvas.parentElement?.clientHeight ?? 800
+
+    // Create nodes
+    const nodeCount = 40
+    const riskCount = 8
+    const instCount = 10
+    const nodes: NetNode[] = []
+    for (let i = 0; i < nodeCount; i++) {
+      let type: NetNode['type'] = 'vendor'
+      if (i < riskCount) type = 'risk'
+      else if (i < riskCount + instCount) type = 'institution'
+      nodes.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.6,
+        vy: (Math.random() - 0.5) * 0.6,
+        type,
+        size: type === 'risk' ? 10 : type === 'institution' ? 8 : 6,
+        pulsePhase: Math.random() * Math.PI * 2,
+      })
+    }
+
+    // Create edges (vendor->institution connections)
+    const edges: NetEdge[] = []
+    for (let i = 0; i < nodeCount; i++) {
+      if (nodes[i].type === 'vendor' || nodes[i].type === 'risk') {
+        // Connect to 1-2 institutions
+        const targets = [riskCount + Math.floor(Math.random() * instCount)]
+        if (Math.random() > 0.5) targets.push(riskCount + Math.floor(Math.random() * instCount))
+        for (const t of targets) {
+          if (t < nodeCount && t !== i) {
+            edges.push({ from: i, to: t, isRisk: nodes[i].type === 'risk' })
+          }
+        }
+      }
+    }
+
+    // Data packets
+    const packets: NetPacket[] = []
+    for (let i = 0; i < edges.length; i++) {
+      if (Math.random() > 0.4) {
+        packets.push({
+          edgeIdx: i,
+          progress: Math.random(),
+          speed: 0.003 + Math.random() * 0.004,
+          isRisk: edges[i].isRisk,
+        })
+      }
+    }
+
+    stateRef.current = {
+      nodes,
+      edges,
+      packets,
+      scanY: 0,
+      counterValue: 0,
+      counterStart: performance.now(),
+      w,
+      h,
+    }
+
+    const draw = (time: number) => {
+      const s = stateRef.current
+      if (!s) return
+      const cw = s.w
+      const ch = s.h
+
+      ctx.clearRect(0, 0, cw, ch)
+      ctx.fillStyle = '#0a0c0b'
+      ctx.fillRect(0, 0, cw, ch)
+
+      const t = time * 0.001
+
+      // Move nodes
+      for (const n of s.nodes) {
+        n.x += n.vx
+        n.y += n.vy
+        if (n.x < 0 || n.x > cw) n.vx *= -1
+        if (n.y < 0 || n.y > ch) n.vy *= -1
+        n.x = Math.max(0, Math.min(cw, n.x))
+        n.y = Math.max(0, Math.min(ch, n.y))
+      }
+
+      // Draw edges
+      for (const e of s.edges) {
+        const a = s.nodes[e.from]
+        const b = s.nodes[e.to]
+        ctx.beginPath()
+        ctx.moveTo(a.x, a.y)
+        ctx.lineTo(b.x, b.y)
+        ctx.strokeStyle = e.isRisk ? 'rgba(196,30,58,0.15)' : 'rgba(255,255,255,0.06)'
+        ctx.lineWidth = 1
+        ctx.stroke()
+      }
+
+      // Draw & move packets
+      for (const p of s.packets) {
+        p.progress += p.speed
+        if (p.progress > 1) {
+          p.progress = 0
+          // Randomly reassign edge
+          if (Math.random() > 0.7) {
+            p.edgeIdx = Math.floor(Math.random() * s.edges.length)
+            p.isRisk = s.edges[p.edgeIdx].isRisk
+          }
+        }
+        const e = s.edges[p.edgeIdx]
+        const a = s.nodes[e.from]
+        const b = s.nodes[e.to]
+        const px = a.x + (b.x - a.x) * p.progress
+        const py = a.y + (b.y - a.y) * p.progress
+        ctx.beginPath()
+        ctx.arc(px, py, 2, 0, Math.PI * 2)
+        ctx.fillStyle = p.isRisk ? 'rgba(196,30,58,0.9)' : 'rgba(255,255,255,0.7)'
+        ctx.fill()
+      }
+
+      // Draw nodes
+      for (const n of s.nodes) {
+        if (n.type === 'risk') {
+          // Pulsing red glow
+          const pulse = Math.sin(t * 2 + n.pulsePhase) * 3
+          const glowR = n.size + 6 + pulse
+          const gradient = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, glowR)
+          gradient.addColorStop(0, 'rgba(196,30,58,0.4)')
+          gradient.addColorStop(1, 'rgba(196,30,58,0)')
+          ctx.beginPath()
+          ctx.arc(n.x, n.y, glowR, 0, Math.PI * 2)
+          ctx.fillStyle = gradient
+          ctx.fill()
+          // Core
+          ctx.beginPath()
+          ctx.arc(n.x, n.y, n.size + pulse * 0.3, 0, Math.PI * 2)
+          ctx.fillStyle = 'rgba(196,30,58,0.9)'
+          ctx.fill()
+        } else if (n.type === 'institution') {
+          // Square
+          const half = n.size / 2
+          ctx.fillStyle = 'rgba(100,160,255,0.5)'
+          ctx.fillRect(n.x - half, n.y - half, n.size, n.size)
+        } else {
+          // Vendor circle
+          ctx.beginPath()
+          ctx.arc(n.x, n.y, n.size / 2, 0, Math.PI * 2)
+          ctx.fillStyle = 'rgba(200,200,200,0.6)'
+          ctx.fill()
+        }
+      }
+
+      // Scan line
+      s.scanY = (s.scanY + ch / (4 * 60)) % ch
+      ctx.fillStyle = 'rgba(196,30,58,0.08)'
+      ctx.fillRect(0, s.scanY, cw, 1)
+
+      // Stats overlay (bottom-left)
+      const elapsed = (time - s.counterStart) / 1000
+      const counterProgress = Math.min(elapsed / 3, 1)
+      const eased = 1 - Math.pow(1 - counterProgress, 3)
+      s.counterValue = Math.round(eased * 3051294)
+
+      ctx.font = '11px "SF Mono", "Fira Code", "Consolas", monospace'
+      ctx.fillStyle = 'rgba(255,255,255,0.35)'
+      ctx.textAlign = 'left'
+      const bx = 16
+      const by = ch - 50
+      ctx.fillText(`CONTRATOS ANALIZADOS: ${s.counterValue.toLocaleString()}`, bx, by)
+      ctx.fillText('MONTO TOTAL: $13.2T MXN', bx, by + 16)
+      ctx.fillText('ALTO RIESGO: 12.33%', bx, by + 32)
+
+      animFrameRef.current = requestAnimationFrame(draw)
+    }
+
+    animFrameRef.current = requestAnimationFrame(draw)
+
+    return () => {
+      cancelAnimationFrame(animFrameRef.current)
+      observer.disconnect()
+    }
+  }, [])
 
   return (
-    <div className={`absolute inset-0 overflow-hidden pointer-events-none ${className}`}>
-      {dots.map((dot) => (
-        <motion.div
-          key={dot.id}
-          className="absolute rounded-full"
-          style={{
-            left: `${dot.x}%`,
-            top: `${dot.y}%`,
-            width: dot.size,
-            height: dot.size,
-            backgroundColor: dot.color,
-          }}
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{
-            opacity: dot.opacity,
-            scale: 1,
-            y: [0, dot.dy, 0],
-            x: [0, dot.dx, 0],
-          }}
-          transition={{
-            opacity: { duration: 0.8, delay: dot.delayStagger * 0.3 },
-            scale: { duration: 0.6, delay: dot.delayStagger * 0.3 },
-            y: {
-              duration: dot.durationY,
-              repeat: Infinity,
-              repeatType: 'reverse',
-              ease: 'easeInOut',
-              delay: dot.delayStagger,
-            },
-            x: {
-              duration: dot.durationX,
-              repeat: Infinity,
-              repeatType: 'reverse',
-              ease: 'easeInOut',
-              delay: dot.delayStagger + 0.5,
-            },
-          }}
-        />
-      ))}
-    </div>
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 pointer-events-none"
+      style={{ zIndex: 0 }}
+      aria-hidden="true"
+    />
   )
 })
 
-// (AnimatedSection removed -- all sections use inline ref/useInView)
+// (AnimatedSection removed -- sections use GSAP ScrollTrigger)
 
 // ---------------------------------------------------------------------------
 // StatCounter -- a single animated statistic
@@ -367,7 +541,6 @@ export default function Intro() {
   const navigate = useNavigate()
   const { i18n } = useTranslation()
   const isEn = i18n.language.startsWith('en')
-  const [mounted, setMounted] = useState(false)
 
   // Redirect if already seen
   useEffect(() => {
@@ -375,11 +548,6 @@ export default function Intro() {
       navigate('/dashboard', { replace: true })
     }
   }, [navigate])
-
-  useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 100)
-    return () => clearTimeout(timer)
-  }, [])
 
   // ---- Data fetching ----
   const { data: fastDashboard } = useQuery<FastDashboardData>({
@@ -416,25 +584,162 @@ export default function Intro() {
   const valueT = Math.round((totalValueMxn / 1_000_000_000_000) * 10) / 10
   const valueTInt = Math.round(valueT * 10)
 
-  // Section 2 inView
+  // Section refs for GSAP ScrollTrigger
   const s2Ref = useRef<HTMLDivElement>(null)
-  const s2InView = useInView(s2Ref, { once: true, amount: 0.25 })
-
-  // Section 3 inView
   const s3Ref = useRef<HTMLDivElement>(null)
-  const s3InView = useInView(s3Ref, { once: true, amount: 0.15 })
-
-  // Section 4 inView
   const s4Ref = useRef<HTMLDivElement>(null)
-  const s4InView = useInView(s4Ref, { once: true, amount: 0.15 })
-
-  // Section 5 inView
   const s5Ref = useRef<HTMLDivElement>(null)
-  const s5InView = useInView(s5Ref, { once: true, amount: 0.25 })
+  const s6Ref = useRef<HTMLDivElement>(null)
+
+  // Hero refs for GSAP timeline
+  const heroLabelRef = useRef<HTMLSpanElement>(null)
+  const heroTitleRef = useRef<HTMLHeadingElement>(null)
+  const heroSubRef = useRef<HTMLParagraphElement>(null)
+  const heroCtaRef = useRef<HTMLDivElement>(null)
+  const heroScrollRef = useRef<HTMLDivElement>(null)
+  const heroTopBarRef = useRef<HTMLDivElement>(null)
+
+  // GSAP hero stat counter state
+  const [heroContracts, setHeroContracts] = useState(0)
+  const [heroValueT, setHeroValueT] = useState(0)
+  const [heroRiskPct, setHeroRiskPct] = useState(0)
+  const heroStatsRef = useRef<HTMLDivElement>(null)
+
+  // Section inView states (driven by ScrollTrigger callbacks)
+  const [s2InView, setS2InView] = useState(false)
+  const [s3InView, setS3InView] = useState(false)
+  const [s4InView, setS4InView] = useState(false)
+  const [s5InView, setS5InView] = useState(false)
 
   // Count-up for section 2 stats
   const yearsUp = useCountUp(23, 1200, s2InView)
   const valueTUp = useCountUp(valueTInt, 1800, s2InView)
+
+  // ---- GSAP Hero Timeline ----
+  useEffect(() => {
+    const tl = gsap.timeline({ delay: 0.2 })
+
+    // Top bar
+    if (heroTopBarRef.current) {
+      gsap.set(heroTopBarRef.current, { opacity: 0, y: -20 })
+      tl.to(heroTopBarRef.current, { opacity: 1, y: 0, duration: 0.6, ease: 'power4.out' }, 0)
+    }
+
+    // Label
+    if (heroLabelRef.current) {
+      gsap.set(heroLabelRef.current, { opacity: 0, y: 15 })
+      tl.to(heroLabelRef.current, { opacity: 1, y: 0, duration: 0.5, ease: 'power4.out' }, 0.3)
+    }
+
+    // Title
+    if (heroTitleRef.current) {
+      gsap.set(heroTitleRef.current, { opacity: 0, y: 40 })
+      tl.to(heroTitleRef.current, { opacity: 1, y: 0, duration: 0.8, ease: 'power4.out' }, 0.0)
+    }
+
+    // Subtitle
+    if (heroSubRef.current) {
+      gsap.set(heroSubRef.current, { opacity: 0, y: 20 })
+      tl.to(heroSubRef.current, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, 0.3)
+    }
+
+    // Stat counters
+    if (heroStatsRef.current) {
+      gsap.set(heroStatsRef.current, { opacity: 0, y: 20 })
+      tl.to(heroStatsRef.current, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, 0.6)
+    }
+
+    // GSAP counter animation for hero stats
+    const counterObj = { contracts: 0, valueT: 0, risk: 0 }
+    tl.to(counterObj, {
+      contracts: 3051294,
+      valueT: 132,
+      risk: 1233,
+      duration: 2.5,
+      ease: 'power2.out',
+      snap: { contracts: 1, valueT: 1, risk: 1 },
+      onUpdate: () => {
+        setHeroContracts(Math.round(counterObj.contracts))
+        setHeroValueT(Math.round(counterObj.valueT))
+        setHeroRiskPct(Math.round(counterObj.risk))
+      },
+    }, 0.6)
+
+    // CTA buttons
+    if (heroCtaRef.current) {
+      gsap.set(heroCtaRef.current, { opacity: 0, scale: 0.8 })
+      tl.to(heroCtaRef.current, { opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(1.7)' }, 1.0)
+    }
+
+    // Scroll prompt
+    if (heroScrollRef.current) {
+      gsap.set(heroScrollRef.current, { opacity: 0 })
+      tl.to(heroScrollRef.current, { opacity: 1, duration: 1, ease: 'power2.out' }, 1.5)
+    }
+
+    return () => { tl.kill() }
+  }, [])
+
+  // ---- GSAP ScrollTrigger for sections ----
+  useEffect(() => {
+    const sections = [
+      { ref: s2Ref, setter: setS2InView },
+      { ref: s3Ref, setter: setS3InView },
+      { ref: s4Ref, setter: setS4InView },
+      { ref: s5Ref, setter: setS5InView },
+    ]
+
+    const triggers: ScrollTrigger[] = []
+
+    for (const { ref, setter } of sections) {
+      if (!ref.current) continue
+      const children = ref.current.querySelectorAll('.gsap-reveal')
+
+      // Fade+slide children
+      gsap.set(children, { opacity: 0, y: 80 })
+      const st = ScrollTrigger.create({
+        trigger: ref.current,
+        start: 'top 80%',
+        once: true,
+        onEnter: () => {
+          setter(true)
+          gsap.to(children, {
+            opacity: 1,
+            y: 0,
+            duration: 0.9,
+            ease: 'power3.out',
+            stagger: 0.12,
+          })
+        },
+      })
+      triggers.push(st)
+    }
+
+    // Section 6 (CTA) - separate since it uses whileInView already, just add gsap
+    if (s6Ref.current) {
+      const children6 = s6Ref.current.querySelectorAll('.gsap-reveal')
+      gsap.set(children6, { opacity: 0, y: 80 })
+      const st6 = ScrollTrigger.create({
+        trigger: s6Ref.current,
+        start: 'top 80%',
+        once: true,
+        onEnter: () => {
+          gsap.to(children6, {
+            opacity: 1,
+            y: 0,
+            duration: 0.9,
+            ease: 'power3.out',
+            stagger: 0.12,
+          })
+        },
+      })
+      triggers.push(st6)
+    }
+
+    return () => {
+      triggers.forEach(t => t.kill())
+    }
+  }, [])
 
   // Build chart data for section 2 (year-by-year bars)
   const chartBars = useMemo(() => {
@@ -469,33 +774,28 @@ export default function Intro() {
   return (
     <div className="min-h-screen" style={{ overflowX: 'hidden' }}>
       {/* ================================================================= */}
-      {/* SECTION 1: CINEMATIC OPENING - Dark, full viewport */}
+      {/* SECTION 1: CINEMATIC OPENING - Dark, full viewport, canvas bg */}
       {/* ================================================================= */}
       <section
         className="min-h-screen flex flex-col items-center justify-center relative"
-        style={{ background: '#0d1117', color: '#fff' }}
+        style={{ background: '#0a0c0b', color: '#fff' }}
         aria-label="RUBLI platform introduction"
       >
-        {/* Floating dots background */}
-        <FloatingDots count={180} />
+        {/* Canvas network graph background */}
+        <NetworkCanvas />
 
         {/* Top bar */}
-        <div className="absolute top-0 left-0 right-0 z-20 px-6 sm:px-10 py-5 flex items-center justify-between">
-          <motion.span
-            initial={{ opacity: 0, x: -20 }}
-            animate={mounted ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.2 }}
+        <div
+          ref={heroTopBarRef}
+          className="absolute top-0 left-0 right-0 z-20 px-6 sm:px-10 py-5 flex items-center justify-between"
+        >
+          <span
             className="text-xl font-black tracking-tight"
             style={{ fontFamily: SERIF, color: '#fff' }}
           >
             RUBLI
-          </motion.span>
-          <motion.div
-            className="flex items-center gap-3"
-            initial={{ opacity: 0, x: 20 }}
-            animate={mounted ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
+          </span>
+          <div className="flex items-center gap-3">
             <LangToggle dark />
             <button
               onClick={() => goToApp()}
@@ -505,53 +805,92 @@ export default function Intro() {
               {isEn ? 'Enter' : 'Entrar'}
               <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
-          </motion.div>
+          </div>
         </div>
 
         {/* Center content */}
         <div className="relative z-10 text-center px-6 max-w-4xl mx-auto flex flex-col items-center gap-6">
           {/* Crimson label */}
-          <motion.span
-            initial={{ opacity: 0, y: 10 }}
-            animate={mounted ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5, delay: 0.6 }}
+          <span
+            ref={heroLabelRef}
             className="text-xs font-bold tracking-[0.25em] uppercase"
             style={{ color: CRIMSON }}
           >
             RUBLI &bull; {isEn ? 'PROCUREMENT TRANSPARENCY' : 'TRANSPARENCIA PROCURATORIA'}
-          </motion.span>
+          </span>
 
           {/* Main title with contract count */}
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={mounted ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.7, delay: 0.9 }}
+          <h1
+            ref={heroTitleRef}
             className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.05]"
             style={{ fontFamily: SERIF, letterSpacing: '-0.03em' }}
           >
-            <span style={{ color: CRIMSON }}>3,051,294</span>
+            <span style={{ color: CRIMSON }}>{heroContracts.toLocaleString()}</span>
             <br />
             <span style={{ color: '#fff' }}>{isEn ? 'contracts' : 'contratos'}</span>
-          </motion.h1>
+          </h1>
 
           {/* Subtitle */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={mounted ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: 1.3 }}
+          <p
+            ref={heroSubRef}
             className="text-lg sm:text-xl max-w-xl leading-relaxed"
             style={{ color: 'rgba(255,255,255,0.55)' }}
           >
             {isEn
               ? 'analyzed by artificial intelligence to detect corruption patterns'
               : 'analizados por inteligencia artificial para detectar patrones de corrupcion'}
-          </motion.p>
+          </p>
+
+          {/* Hero stats - GSAP animated counters */}
+          <div ref={heroStatsRef} className="flex items-center gap-8 sm:gap-14 mt-2">
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-2xl sm:text-3xl font-black tabular-nums font-mono" style={{ color: '#f0ede8' }}>
+                ${(heroValueT / 10).toFixed(1)}T
+              </span>
+              <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>MXN</span>
+            </div>
+            <div className="w-px h-10" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }} />
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-2xl sm:text-3xl font-black tabular-nums font-mono" style={{ color: CRIMSON }}>
+                {(heroRiskPct / 100).toFixed(2)}%
+              </span>
+              <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                {isEn ? 'High risk' : 'Alto riesgo'}
+              </span>
+            </div>
+            <div className="w-px h-10" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }} />
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-2xl sm:text-3xl font-black tabular-nums font-mono" style={{ color: '#f0ede8' }}>
+                23
+              </span>
+              <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                {isEn ? 'Years' : 'Anos'}
+              </span>
+            </div>
+          </div>
+
+          {/* CTA buttons */}
+          <div ref={heroCtaRef} className="flex flex-wrap gap-4 justify-center mt-2">
+            <button
+              onClick={() => goToApp('/report-card')}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all duration-200 hover:brightness-125 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-red-400/40"
+              style={{ backgroundColor: CRIMSON, color: '#fff' }}
+            >
+              {isEn ? 'See the Report' : 'Ver el Reporte'}
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+            <button
+              onClick={() => goToApp('/dashboard')}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
+              style={{ border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.8)' }}
+            >
+              {isEn ? 'Explore' : 'Explorar'}
+            </button>
+          </div>
 
           {/* Scroll prompt */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={mounted ? { opacity: 1 } : {}}
-            transition={{ delay: 2.2, duration: 1 }}
+          <div
+            ref={heroScrollRef}
             className="mt-8 flex flex-col items-center gap-2 cursor-pointer"
             onClick={() => {
               document.getElementById('section-scale')?.scrollIntoView({ behavior: 'smooth' })
@@ -572,7 +911,7 @@ export default function Intro() {
             >
               <ChevronDown className="h-5 w-5" style={{ color: 'rgba(255,255,255,0.35)' }} />
             </motion.div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -587,34 +926,23 @@ export default function Intro() {
       >
         <div className="max-w-5xl mx-auto">
           {/* Header label */}
-          <motion.span
-            initial={{ opacity: 0, x: -20 }}
-            animate={s2InView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.5 }}
-            className="text-xs font-bold tracking-[0.2em] uppercase block mb-4"
+          <span
+            className="gsap-reveal text-xs font-bold tracking-[0.2em] uppercase block mb-4"
             style={{ color: CRIMSON }}
           >
             {isEn ? 'THE SCALE OF THE PROBLEM' : 'EL TAMANO DEL PROBLEMA'}
-          </motion.span>
+          </span>
 
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            animate={s2InView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-3xl sm:text-4xl font-black mb-12 leading-tight"
+          <h2
+            className="gsap-reveal text-3xl sm:text-4xl font-black mb-12 leading-tight"
             style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#f0ede8' }}
           >
             {isEn ? '23 years of public spending data' : '23 anos de datos de gasto publico'}
-          </motion.h2>
+          </h2>
 
           {/* Animated bar chart - custom CSS bars */}
           {chartBars.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={s2InView ? { opacity: 1 } : {}}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="mb-16"
-            >
+            <div className="gsap-reveal mb-16">
               <div className="flex items-end gap-[2px] sm:gap-1 h-40 sm:h-52">
                 {chartBars.map((bar, i) => {
                   const isHighRisk = bar.highRiskPct > 15
@@ -646,7 +974,7 @@ export default function Intro() {
                 <span>{chartBars[Math.floor(chartBars.length / 2)]?.year}</span>
                 <span>{chartBars[chartBars.length - 1]?.year}</span>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* Three animated stat counters */}
@@ -694,28 +1022,22 @@ export default function Intro() {
         style={{ background: '#1a1714', color: '#fff' }}
       >
         <div className="max-w-5xl mx-auto">
-          <motion.span
-            initial={{ opacity: 0, x: -20 }}
-            animate={s3InView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.5 }}
-            className="text-xs font-bold tracking-[0.2em] uppercase block mb-4"
+          <span
+            className="gsap-reveal text-xs font-bold tracking-[0.2em] uppercase block mb-4"
             style={{ color: CRIMSON }}
           >
             {isEn ? 'WHERE IS THE RISK?' : 'DONDE ESTA EL RIESGO?'}
-          </motion.span>
+          </span>
 
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            animate={s3InView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-3xl sm:text-4xl font-black mb-14 leading-tight"
+          <h2
+            className="gsap-reveal text-3xl sm:text-4xl font-black mb-14 leading-tight"
             style={{ fontFamily: SERIF, letterSpacing: '-0.02em' }}
           >
             {isEn ? 'Risk by sector' : 'Riesgo por sector'}
-          </motion.h2>
+          </h2>
 
           {/* Sector cards grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 mb-12">
+          <div className="gsap-reveal grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 mb-12">
             {sortedSectors.length > 0
               ? sortedSectors.map((sector, i) => {
                   const key = sector.code?.toLowerCase() ?? 'otros'
@@ -775,12 +1097,7 @@ export default function Intro() {
           </div>
 
           {/* Big stat callout */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={s3InView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: 1 }}
-            className="text-center"
-          >
+          <div className="gsap-reveal text-center">
             <span
               className="text-5xl sm:text-6xl font-black"
               style={{ fontFamily: SERIF, color: CRIMSON }}
@@ -798,7 +1115,7 @@ export default function Intro() {
               {isEn ? 'See the Full Report' : 'Ver el Reporte Completo'}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </button>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -811,27 +1128,21 @@ export default function Intro() {
         style={{ background: '#0d0f0e' }}
       >
         <div className="max-w-5xl mx-auto">
-          <motion.span
-            initial={{ opacity: 0, x: -20 }}
-            animate={s4InView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.5 }}
-            className="text-xs font-bold tracking-[0.2em] uppercase block mb-4"
+          <span
+            className="gsap-reveal text-xs font-bold tracking-[0.2em] uppercase block mb-4"
             style={{ color: CRIMSON }}
           >
             {isEn ? 'HOW WE DETECT PATTERNS' : 'COMO DETECTAMOS PATRONES'}
-          </motion.span>
+          </span>
 
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            animate={s4InView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-3xl sm:text-4xl font-black mb-14 leading-tight"
+          <h2
+            className="gsap-reveal text-3xl sm:text-4xl font-black mb-14 leading-tight"
             style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#f0ede8' }}
           >
             {isEn ? 'From raw data to risk intelligence' : 'De datos crudos a inteligencia de riesgo'}
-          </motion.h2>
+          </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-8">
+          <div className="gsap-reveal grid grid-cols-1 sm:grid-cols-4 gap-8">
             {[
               {
                 step: '01',
@@ -871,29 +1182,23 @@ export default function Intro() {
           </div>
 
           {/* Disclaimer */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={s4InView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5, delay: 0.9 }}
-            className="mt-14 rounded-xl border p-5 text-sm leading-relaxed"
+          <div
+            className="gsap-reveal mt-14 rounded-xl border p-5 text-sm leading-relaxed"
             style={{ color: '#6a6560', background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.08)' }}
           >
             {isEn
               ? 'Scores are statistical risk indicators, not proof of corruption. A high score means the contract resembles documented corruption patterns.'
               : 'Las puntuaciones son indicadores estadisticos de riesgo, no prueba de corrupcion. Una puntuacion alta significa que el contrato se parece a patrones documentados.'}
-          </motion.div>
+          </div>
 
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={s4InView ? { opacity: 1 } : {}}
-            transition={{ delay: 1 }}
+          <button
             onClick={() => goToApp('/methodology')}
-            className="mt-8 inline-flex items-center gap-2 text-base font-bold transition-colors duration-200 hover:underline focus:outline-none"
+            className="gsap-reveal mt-8 inline-flex items-center gap-2 text-base font-bold transition-colors duration-200 hover:underline focus:outline-none"
             style={{ color: CRIMSON }}
           >
             {isEn ? 'See the full methodology' : 'Ver la metodologia completa'}
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </motion.button>
+          </button>
         </div>
       </section>
 
@@ -906,45 +1211,34 @@ export default function Intro() {
         style={{ background: '#141716' }}
       >
         <div className="max-w-5xl mx-auto text-center">
-          <motion.span
-            initial={{ opacity: 0, x: -20 }}
-            animate={s5InView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.5 }}
-            className="text-xs font-bold tracking-[0.2em] uppercase block mb-4"
+          <span
+            className="gsap-reveal text-xs font-bold tracking-[0.2em] uppercase block mb-4"
             style={{ color: CRIMSON }}
           >
             {isEn ? 'OUR NATIONAL GRADE' : 'NUESTRA CALIFICACION NACIONAL'}
-          </motion.span>
+          </span>
 
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            animate={s5InView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-3xl sm:text-4xl font-black mb-10 leading-tight"
+          <h2
+            className="gsap-reveal text-3xl sm:text-4xl font-black mb-10 leading-tight"
             style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#f0ede8' }}
           >
             {isEn
               ? 'How healthy is Mexican public procurement?'
               : 'Que tan sana es la contratacion publica de Mexico?'}
-          </motion.h2>
+          </h2>
 
           {/* Grade slot machine */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={s5InView ? { opacity: 1, scale: 1 } : {}}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="mb-12"
-          >
+          <div className="gsap-reveal mb-12">
             <GradeSlotMachine grade={nationalGrade} trigger={s5InView} />
             <p className="mt-4 text-base" style={{ color: '#6a6560' }}>
               {isEn ? 'National average grade' : 'Calificacion promedio nacional'}
             </p>
-          </motion.div>
+          </div>
 
           {/* Per-sector grades */}
           {phiSectors.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 mb-10">
-              {phiSectors.map((sector, i) => {
+            <div className="gsap-reveal grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 mb-10">
+              {phiSectors.map((sector) => {
                 const key = sector.sector_name.toLowerCase().replace(/\s+/g, '')
                 const gradeStyle = GRADE_COLORS[sector.grade] || GRADE_COLORS.F
                 const sectorColor = SECTOR_COLORS[key] ?? '#64748b'
@@ -952,11 +1246,8 @@ export default function Intro() {
                 const name = displayName ? (isEn ? displayName.en : displayName.es) : sector.sector_name
 
                 return (
-                  <motion.div
+                  <div
                     key={sector.sector_id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={s5InView ? { opacity: 1, y: 0 } : {}}
-                    transition={{ duration: 0.35, delay: i * 0.05 + 0.6 }}
                     className="rounded-xl p-4 flex items-center gap-4"
                     style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
                   >
@@ -980,7 +1271,7 @@ export default function Intro() {
                     >
                       {sector.grade}
                     </div>
-                  </motion.div>
+                  </div>
                 )
               })}
             </div>
@@ -1008,46 +1299,31 @@ export default function Intro() {
       </section>
 
       {/* ================================================================= */}
-      {/* SECTION 6: CALL TO ACTION - Dark with dots */}
+      {/* SECTION 6: CALL TO ACTION - Dark, cinematic */}
       {/* ================================================================= */}
       <section
+        ref={s6Ref}
         className="relative px-6 sm:px-12 lg:px-24 py-24 sm:py-32"
-        style={{ background: '#0d1117', color: '#fff' }}
+        style={{ background: '#0a0c0b', color: '#fff' }}
       >
-        <FloatingDots count={80} className="opacity-40" />
-
         <div className="relative z-10 max-w-3xl mx-auto text-center">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-3xl sm:text-4xl lg:text-5xl font-black mb-6 leading-tight"
+          <h2
+            className="gsap-reveal text-3xl sm:text-4xl lg:text-5xl font-black mb-6 leading-tight"
             style={{ fontFamily: SERIF, letterSpacing: '-0.02em' }}
           >
             {isEn ? 'Start investigating' : 'Empieza a investigar'}
-          </motion.h2>
+          </h2>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-base sm:text-lg mb-10"
+          <p
+            className="gsap-reveal text-base sm:text-lg mb-10"
             style={{ color: 'rgba(255,255,255,0.5)' }}
           >
             {isEn
               ? 'Browse contracts, investigate vendors, and discover risk patterns.'
               : 'Navega contratos, investiga proveedores y descubre patrones de riesgo.'}
-          </motion.p>
+          </p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="flex flex-wrap gap-4 justify-center"
-          >
+          <div className="gsap-reveal flex flex-wrap gap-4 justify-center">
             <button
               onClick={() => goToApp('/report-card')}
               className="flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-base transition-all duration-200 hover:brightness-125 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-red-400/40"
@@ -1063,20 +1339,16 @@ export default function Intro() {
             >
               {isEn ? 'Explore the platform' : 'Explorar la plataforma'}
             </button>
-          </motion.div>
+          </div>
 
           {/* Attribution */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.8, duration: 0.5 }}
-            className="mt-14 text-xs"
+          <p
+            className="gsap-reveal mt-14 text-xs"
             style={{ color: 'rgba(255,255,255,0.25)' }}
           >
             {isEn ? 'Data' : 'Datos'}: COMPRANET &bull; {isEn ? 'Methodology' : 'Metodologia'}: OECD, IMF CRI &bull;{' '}
             {isEn ? 'Open-source procurement intelligence' : 'Inteligencia en contrataciones de codigo abierto'}
-          </motion.p>
+          </p>
         </div>
       </section>
     </div>
