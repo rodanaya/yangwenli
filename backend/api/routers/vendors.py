@@ -1805,7 +1805,7 @@ def get_vendor_footprint(
         cur.execute("""
             SELECT
                 c.sector_id,
-                COALESCE(sec.name, 'otros') as sector_name,
+                COALESCE(sec.name_es, 'otros') as sector_name,
                 c.institution_id,
                 COALESCE(i.name, 'Unknown') as institution_name,
                 COUNT(*) as contract_count,
