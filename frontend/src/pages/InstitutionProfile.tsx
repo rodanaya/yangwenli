@@ -66,6 +66,114 @@ import {
   Line,
 } from '@/components/charts'
 
+// ─── InstitutionNarrativeHeader ────────────────────────────────────────────────
+
+function narrativeBorderColor(score: number): string {
+  if (score >= 0.60) return '#ef4444'
+  if (score >= 0.40) return '#f97316'
+  if (score >= 0.15) return '#fbbf24'
+  return '#22c55e'
+}
+
+function buildNarrativeText(inst: {
+  avg_risk_score?: number | null
+  direct_award_pct?: number | null
+  direct_award_rate?: number | null
+  total_contracts?: number | null
+}): string {
+  const score = inst.avg_risk_score ?? 0
+  const riskLabel = score >= 0.60 ? 'perfil de riesgo critico'
+    : score >= 0.40 ? 'perfil de riesgo alto'
+    : score >= 0.15 ? 'perfil de riesgo moderado'
+    : 'perfil de riesgo bajo'
+  const daPct = inst.direct_award_pct ?? inst.direct_award_rate ?? 0
+  const daContext = daPct > 70
+    ? `con ${daPct.toFixed(0)}% de adjudicaciones directas -- significativamente por encima del promedio nacional`
+    : daPct > 50
+    ? `con ${daPct.toFixed(0)}% de adjudicaciones directas`
+    : `con ${daPct.toFixed(0)}% de adjudicaciones directas -- dentro de los rangos normales`
+  return `Esta institucion registra un ${riskLabel} con un indice de ${score.toFixed(3)} sobre 1.0. Opera ${daContext}, sobre un total de ${(inst.total_contracts ?? 0).toLocaleString('es-MX')} contratos analizados.`
+}
+
+function InstitutionNarrativeHeader({ institution }: {
+  institution: {
+    name: string
+    avg_risk_score?: number | null
+    direct_award_pct?: number | null
+    direct_award_rate?: number | null
+    total_contracts?: number | null
+    total_amount_mxn?: number | null
+    sector_id?: number | null
+    institution_type?: string | null
+  }
+}) {
+  const score = institution.avg_risk_score ?? 0
+  const borderClr = narrativeBorderColor(score)
+
+  return (
+    <div
+      style={{
+        borderLeft: `3px solid ${borderClr}`,
+        padding: '16px 20px',
+        animation: 'narrativeHeaderSlideUp 600ms cubic-bezier(0.16,1,0.3,1) both',
+      }}
+      className="card mb-4"
+    >
+      <h2
+        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+        className="text-2xl font-bold text-text-primary leading-tight"
+      >
+        {toTitleCase(institution.name)}
+      </h2>
+
+      <span
+        className="numberPop"
+        style={{
+          fontFamily: 'var(--font-family-mono)',
+          fontSize: '1.5rem',
+          fontWeight: 900,
+          color: borderClr,
+          display: 'inline-block',
+          marginTop: '4px',
+        }}
+      >
+        {score.toFixed(3)}
+      </span>
+
+      <p
+        className="text-sm text-text-secondary leading-relaxed mt-2"
+        style={{ maxWidth: '640px' }}
+      >
+        {buildNarrativeText(institution)}
+      </p>
+
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
+        {[
+          (institution.total_contracts ?? 0).toLocaleString('es-MX') + ' contratos',
+          formatCompactMXN(institution.total_amount_mxn ?? 0),
+          (institution.direct_award_pct ?? institution.direct_award_rate ?? 0).toFixed(1) + '% adj. directa',
+          institution.institution_type?.replace(/_/g, ' ') ?? '',
+        ].filter(Boolean).map((pill, i) => (
+          <span
+            key={i}
+            style={{
+              fontSize: '10px',
+              fontFamily: 'monospace',
+              padding: '3px 8px',
+              borderRadius: '3px',
+              background: 'var(--color-border)',
+              color: 'var(--color-text-secondary)',
+              letterSpacing: '0.05em',
+            }}
+          >
+            {pill}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── Risk level palette ───────────────────────────────────────────────────────
 const LEVEL_COLORS: Record<string, string> = {
   critical: '#dc2626',
@@ -334,6 +442,9 @@ export function InstitutionProfile() {
 
   return (
     <div className="space-y-5">
+      {/* ── NARRATIVE HEADER ──────────────────────────────────────────────── */}
+      <InstitutionNarrativeHeader institution={institution} />
+
       {/* ── HEADER ─────────────────────────────────────────────────────────── */}
       <motion.div
         className="card flex items-start justify-between gap-4 p-4"
