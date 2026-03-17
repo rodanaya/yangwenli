@@ -1,0 +1,44 @@
+{
+  "gt_cases": [
+    {
+      "cid": null,
+      "name": "ESTRUCTURA Y BALANCE INDUSTRIAL - ISSSTE Veracruz Ghost Renovation",
+      "type": "ghost_company",
+      "conf": "high",
+      "sector": "salud",
+      "notes": "Company founded Feb 2020, received 345M MXN ISSSTE contract for rebranding 2 childcare centers in Veracruz within 2.5 years. Grossly disproportionate value for scope. Classic new-company/single-institution/value-spike pattern. 100% concentration at single ISSSTE Veracruz delegation. Contract escalation: 21M -> 345M -> 0.4M -> 3M. RFC: EBI2002171E1.",
+      "fraud": 300000000,
+      "ys": 2021,
+      "ye": 2023,
+      "vid": 277243,
+      "vname": "ESTRUCTURA Y BALANCE INDUSTRIAL SA DE CV",
+      "ev": "high",
+      "disposition": "confirmed_corrupt",
+      "memo": "## RESUMEN EJECUTIVO\nProveedor **ESTRUCTURA Y BALANCE INDUSTRIAL SA DE CV** (RFC: EBI2002171E1) es un caso confirmado de empresa fantasma.\n\n## HALLAZGOS CLAVE\n- Empresa fundada **febrero 2020**, contrato de **345M MXN** del ISSSTE Veracruz\n- Remozamiento de 2 estancias infantiles - monto desproporcionado\n- Patron: 21M (2021) -> 345M (2022) -> 0.4M -> 3M (2023)\n- 100% concentracion ISSSTE Veracruz, 75% DA\n\n## DISPOSICION\n**confirmed_corrupt** - Fraude estimado: 300M+ MXN."
+    }
+  ],
+  "aria_updates": [
+    {
+      "vid": 313628,
+      "disposition": "false_positive",
+      "fp_patent_exception": 1,
+      "memo": "## RESUMEN EJECUTIVO\nProveedor **BMRN MEXICO S DE RL DE CV** es subsidiaria de **BioMarin Pharmaceutical** (NASDAQ: BMRN).\n\n## ANALISIS\n- Medicamentos huerfanos patentados: Sapropterin/Kuvan (PKU), Vimizim, Naglazyme\n- 100% DA es legalmente mandatoria (Art. 41 LAASSP)\n- Risk score 1.000 es artefacto del modelo\n\n## DISPOSICION\n**false_positive** - Farmaceutica de patente legitima."
+    },
+    {
+      "vid": 294526,
+      "disposition": "needs_review",
+      "memo": "## RESUMEN EJECUTIVO\nProveedor **ENSAMBLADORA LATINOAMERICANA DE MOTORES** (RFC: ELM170817QG5) gano 2B MXN en contratos de SEDENA.\n\n## HALLAZGOS\n- 4 contratos SEDENA, todos licitacion publica (no DA)\n- Contrato de 2,016M MXN (vehiculos militares) = 98.4% del valor\n- Estructura SAPI de CV, empresa de 2017\n\n## DISPOSICION\n**needs_review** - Verificar capacidad industrial y propiedad."
+    },
+    {
+      "vid": 259101,
+      "disposition": "needs_review",
+      "memo": "## RESUMEN EJECUTIVO\nProveedor **COMERCIALIZADORA ARNOLD & JELGA** (RFC: CAA1410095B1) comercializadora de insumos medicos con captura en IMSS.\n\n## HALLAZGOS\n- 179 contratos, 632M MXN, 88.3% DA, 98% IMSS\n- Fraccionamiento: hasta 15 DA por guantes en un dia\n- Crecimiento: 37 contratos (2021) -> 107 (2022)\n\n## DISPOSICION\n**needs_review** - Captura institucional, requiere benchmarking."
+    },
+    {
+      "vid": 239570,
+      "disposition": "needs_review",
+      "new_vendor_risk_fix": 0,
+      "memo": "## RESUMEN EJECUTIVO\nProveedor **CONSTRUCTORA MONTELIZ** (RFC: CMO881205669) constructora de 37 anios especializada en mantenimiento electromecanico IMSS.\n\n## HALLAZGOS\n- 9 contratos, 1,009M MXN, 44% DA, 100% IMSS\n- Contrato 968M (2021) = 96% valor, ganado por licitacion\n- Flag new_vendor_risk ERRONEO (empresa de 1988)\n\n## DISPOSICION\n**needs_review** - Verificar alcance del contrato 968M."
+    }
+  ]
+}
