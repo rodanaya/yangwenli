@@ -135,7 +135,7 @@ def get_aria_queue(
                q.primary_pattern, q.pattern_confidence, q.total_contracts,
                q.total_value_mxn, q.avg_risk_score, q.is_efos_definitivo,
                q.is_sfp_sanctioned, q.in_ground_truth, q.fp_penalty,
-               q.burst_score, q.review_status, q.primary_sector_name,
+               q.burst_score, COALESCE(q.review_status, 'pending') as review_status, q.primary_sector_name,
                q.primary_sector_id, q.years_active, q.direct_award_rate,
                q.computed_at, COALESCE(q.new_vendor_risk, 0) as new_vendor_risk
         FROM aria_queue q

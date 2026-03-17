@@ -36,6 +36,7 @@ def _phi_traffic_light(indicator: str, value: float) -> str:
 
 
 def _phi_grade(greens: int, total: int) -> str:
+    """Legacy fallback."""
     if total == 0:
         return "N/A"
     ratio = greens / total
@@ -44,6 +45,50 @@ def _phi_grade(greens: int, total: int) -> str:
     elif ratio >= 0.4: return "C"
     elif ratio >= 0.2: return "D"
     else:              return "F"
+
+
+# 10-tier weighted composite grade ----------------------------------------
+
+_PHI_NORM = {
+    "competition_by_value": (5.0,  85.0, True),
+    "single_bid_rate":      (60.0,  0.0, False),
+    "avg_bidders":          (1.0,   5.0, True),
+    "hhi":                  (6000.0, 500.0, False),
+    "short_ad_rate":        (80.0,  0.0, False),
+    "amendment_rate":       (50.0,  0.0, False),
+}
+
+_PHI_WEIGHTS = {
+    "competition_by_value": 0.40,
+    "single_bid_rate":      0.20,
+    "avg_bidders":          0.15,
+    "hhi":                  0.15,
+    "short_ad_rate":        0.05,
+    "amendment_rate":       0.05,
+}
+
+_PHI_GRADE10 = [
+    (90, "S"), (80, "A"), (70, "B+"), (60, "B"),
+    (50, "C+"), (40, "C"), (30, "D"), (20, "D-"),
+    (10, "F"), (0,  "F-"),
+]
+
+
+def _phi_normalize(key: str, value: float) -> float:
+    worst, best, higher_is_better = _PHI_NORM[key]
+    if abs(best - worst) < 1e-9:
+        return 50.0
+    raw = (value - worst) / (best - worst)
+    if not higher_is_better:
+        raw = 1.0 - raw
+    return max(0.0, min(100.0, raw * 100.0))
+
+
+def _phi_grade10(score: float) -> str:
+    for threshold, grade in _PHI_GRADE10:
+        if score >= threshold:
+            return grade
+    return "F-"
 
 
 def _compute_phi_for(cursor: sqlite3.Cursor,
@@ -75,8 +120,10 @@ def _compute_phi_for(cursor: sqlite3.Cursor,
         return {}
     direct_awards = row["direct_awards"] or 0
     total_value = row["total_value"] or 1
+    da_value = row["da_value"] or 0
     competition_rate = round((1 - direct_awards / total) * 100, 1)
-    da_rate_value = round((row["da_value"] or 0) / total_value * 100, 1)
+    competition_by_value = round((1 - da_value / total_value) * 100, 1)
+    da_rate_value = round(da_value / total_value * 100, 1)
 
     # 2. Single bid rate
     sb = cursor.execute(f"""
@@ -182,15 +229,50 @@ def _compute_phi_for(cursor: sqlite3.Cursor,
     greens = sum(1 for ind in indicators.values() if ind["light"] == "green")
     yellows = sum(1 for ind in indicators.values() if ind["light"] == "yellow")
     reds = sum(1 for ind in indicators.values() if ind["light"] == "red")
-    grade = _phi_grade(greens, len(indicators))
+
+    # Risk distribution by MXN value
+    risk_rows = cursor.execute(f"""
+        SELECT risk_level, COUNT(*) as cnt, SUM(amount_mxn) as val
+        FROM contracts c
+        WHERE {where} AND risk_level IS NOT NULL
+        GROUP BY risk_level
+    """, params).fetchall()
+    risk_total_val = sum(r["val"] or 0 for r in risk_rows)
+    risk_total_cnt = sum(r["cnt"] or 0 for r in risk_rows)
+    risk_distribution: dict = {}
+    for level in ("critical", "high", "medium", "low"):
+        matched = next((r for r in risk_rows if r["risk_level"] == level), None)
+        cnt = matched["cnt"] if matched else 0
+        val = matched["val"] if matched else 0
+        risk_distribution[level] = {
+            "count": cnt,
+            "value_mxn": round(val, 0),
+            "count_pct": round(cnt / max(risk_total_cnt, 1) * 100, 1),
+            "value_pct": round(val / max(risk_total_val, 1) * 100, 1),
+        }
+
+    # Weighted composite score + 10-tier grade
+    composite_score = round(
+        _phi_normalize("competition_by_value", competition_by_value) * _PHI_WEIGHTS["competition_by_value"]
+        + _phi_normalize("single_bid_rate", single_bid_rate) * _PHI_WEIGHTS["single_bid_rate"]
+        + _phi_normalize("avg_bidders", avg_bidders) * _PHI_WEIGHTS["avg_bidders"]
+        + _phi_normalize("hhi", hhi) * _PHI_WEIGHTS["hhi"]
+        + _phi_normalize("short_ad_rate", short_ad_rate) * _PHI_WEIGHTS["short_ad_rate"]
+        + _phi_normalize("amendment_rate", amendment_rate) * _PHI_WEIGHTS["amendment_rate"],
+        1,
+    )
+    grade = _phi_grade10(composite_score)
 
     return {
         "total_contracts": total,
-        "total_value_mxn": round(row["total_value"] or 0, 0),
+        "total_value_mxn": round(total_value, 0),
         "direct_award_rate_by_value": da_rate_value,
+        "competition_by_value": competition_by_value,
         "competitive_contracts": competitive,
         "indicators": indicators,
         "grade": grade,
+        "phi_composite_score": composite_score,
+        "risk_distribution": risk_distribution,
         "greens": greens,
         "yellows": yellows,
         "reds": reds,
@@ -232,9 +314,11 @@ def _precompute_phi(cursor: sqlite3.Cursor, stats: dict) -> None:
                 trend.append({
                     "year": yr,
                     "competition_rate": yp["indicators"]["competition_rate"]["value"],
+                    "competition_by_value": yp.get("competition_by_value"),
                     "single_bid_rate": yp["indicators"]["single_bid_rate"]["value"],
                     "avg_bidders": yp["indicators"]["avg_bidders"]["value"],
                     "grade": yp["grade"],
+                    "phi_composite_score": yp.get("phi_composite_score"),
                     "total_contracts": yp["total_contracts"],
                 })
         key = f"phi_sector_detail_{sid}"
@@ -254,9 +338,11 @@ def _precompute_phi(cursor: sqlite3.Cursor, stats: dict) -> None:
             trend_results.append({
                 "year": yr,
                 "grade": phi["grade"],
+                "phi_composite_score": phi.get("phi_composite_score"),
                 "greens": phi["greens"],
                 "reds": phi["reds"],
                 "competition_rate": phi["indicators"]["competition_rate"]["value"],
+                "competition_by_value": phi.get("competition_by_value"),
                 "single_bid_rate": phi["indicators"]["single_bid_rate"]["value"],
                 "avg_bidders": phi["indicators"]["avg_bidders"]["value"],
                 "da_rate_by_value": phi["direct_award_rate_by_value"],

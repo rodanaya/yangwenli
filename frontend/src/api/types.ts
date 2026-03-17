@@ -2189,6 +2189,7 @@ export interface AriaQueueItem {
   review_status: 'pending' | 'confirmed' | 'dismissed' | 'reviewing'
   primary_sector_name: string | null
   direct_award_rate?: number
+  years_active?: number
   // detail only:
   risk_score_norm?: number
   mahalanobis_norm?: number
@@ -2198,7 +2199,12 @@ export interface AriaQueueItem {
   memo_text?: string | null
   memo_generated_at?: string | null
   activity_span_days?: number
+  single_bid_rate?: number
+  top_institution?: string | null
+  top_institution_ratio?: number | null
   reviewer_name?: string | null
+  reviewer_notes?: string | null
+  reviewed_at?: string | null
   new_vendor_risk_score?: number | null
   new_vendor_risk_triggers?: string | null
 }

@@ -295,7 +295,7 @@ function ReviewStatusSelect({
   onUpdate: (status: AriaQueueItem['review_status']) => void
   isUpdating: boolean
 }) {
-  const cfg = REVIEW_STATUS_CONFIG[item.review_status]
+  const cfg = REVIEW_STATUS_CONFIG[item.review_status ?? 'pending'] ?? REVIEW_STATUS_CONFIG.pending
   const StatusIcon = cfg.icon
   return (
     <div className="flex items-center gap-1">
@@ -459,6 +459,100 @@ function GhostHeuristicPanel({ item }: { item: AriaQueueItem }) {
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// Vendor context panel (expanded row — key behavioral stats)
+// ============================================================================
+
+function StatCell({
+  label,
+  value,
+  sub,
+  warn,
+}: {
+  label: string
+  value: string
+  sub?: string
+  warn?: boolean
+}) {
+  return (
+    <div className="flex flex-col">
+      <span className={cn('text-sm font-mono font-semibold tabular-nums', warn ? 'text-orange-400' : 'text-text-primary')}>
+        {value}
+      </span>
+      {sub && <span className="text-[10px] text-text-muted mt-0.5">{sub}</span>}
+      <span className="text-[10px] uppercase tracking-wider text-text-muted mt-1">{label}</span>
+    </div>
+  )
+}
+
+function VendorContextPanel({ item }: { item: AriaQueueItem }) {
+  const da = item.direct_award_rate
+  const sb = item.single_bid_rate
+  const daWarn = da !== undefined && da > 0.7
+  const sbWarn = sb !== undefined && sb > 0.4
+
+  return (
+    <div className="mt-3 rounded-lg bg-background-elevated border border-border/20 overflow-hidden">
+      <div className="px-4 py-2 border-b border-border/20">
+        <h4 className="text-xs font-mono uppercase tracking-wider text-text-muted">Vendor Profile</h4>
+      </div>
+      <div className="px-4 py-3 grid grid-cols-3 sm:grid-cols-6 gap-x-4 gap-y-3">
+        <StatCell
+          label="Years Active"
+          value={item.years_active !== undefined && item.years_active !== null ? String(item.years_active) : '--'}
+        />
+        <StatCell
+          label="Contracts"
+          value={formatNumber(item.total_contracts)}
+        />
+        <StatCell
+          label="Total Value"
+          value={formatCompactMXN(item.total_value_mxn)}
+        />
+        <StatCell
+          label="Avg Risk"
+          value={item.avg_risk_score !== undefined ? item.avg_risk_score.toFixed(3) : '--'}
+          warn={item.avg_risk_score > 0.40}
+        />
+        <StatCell
+          label="Direct Award"
+          value={da !== undefined ? `${(da * 100).toFixed(0)}%` : '--'}
+          warn={daWarn}
+          sub={daWarn ? 'high DA rate' : undefined}
+        />
+        <StatCell
+          label="Single Bid"
+          value={sb !== undefined ? `${(sb * 100).toFixed(0)}%` : '--'}
+          warn={sbWarn}
+          sub={sbWarn ? 'collusion signal' : undefined}
+        />
+      </div>
+      {item.top_institution && (
+        <div className="px-4 pb-3 border-t border-border/10 pt-2">
+          <span className="text-[10px] uppercase tracking-wider text-text-muted mr-2">Top Institution</span>
+          <span className="text-xs text-text-secondary font-mono">{item.top_institution}</span>
+          {item.top_institution_ratio !== undefined && item.top_institution_ratio !== null && (
+            <span className={cn('ml-2 text-xs font-mono', item.top_institution_ratio > 0.6 ? 'text-orange-400' : 'text-text-muted')}>
+              {(item.top_institution_ratio * 100).toFixed(0)}% of awards
+            </span>
+          )}
+        </div>
+      )}
+      {(item.reviewer_name || item.reviewer_notes) && (
+        <div className="px-4 pb-3 border-t border-border/10 pt-2 flex flex-col gap-0.5">
+          <span className="text-[10px] uppercase tracking-wider text-text-muted">Reviewer</span>
+          {item.reviewer_name && (
+            <span className="text-xs text-text-secondary">{item.reviewer_name}</span>
+          )}
+          {item.reviewer_notes && (
+            <p className="text-xs text-text-muted italic mt-0.5">{item.reviewer_notes}</p>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -743,6 +837,9 @@ function QueueRow({
             <>
               {/* IPS trajectory bar */}
               <IpsTrajectoryBar score={displayItem.ips_final} />
+
+              {/* Vendor behavioral context */}
+              <VendorContextPanel item={displayItem} />
 
               {/* Score breakdown */}
               <ScoreBreakdownPanel item={displayItem} />

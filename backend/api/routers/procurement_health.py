@@ -88,9 +88,57 @@ THRESHOLDS = {
     },
 }
 
-# Grade mapping
+# ---------------------------------------------------------------------------
+# 10-tier weighted composite grading
+# ---------------------------------------------------------------------------
+
+# Normalisation ranges: (worst, best, higher_is_better)
+_NORM = {
+    "competition_by_value": (5.0,  85.0, True),
+    "single_bid_rate":      (60.0,  0.0, False),
+    "avg_bidders":          (1.0,   5.0, True),
+    "hhi":                  (6000.0, 500.0, False),
+    "short_ad_rate":        (80.0,  0.0, False),
+    "amendment_rate":       (50.0,  0.0, False),
+}
+
+# Weights must sum to 1.0
+_WEIGHTS = {
+    "competition_by_value": 0.40,
+    "single_bid_rate":      0.20,
+    "avg_bidders":          0.15,
+    "hhi":                  0.15,
+    "short_ad_rate":        0.05,
+    "amendment_rate":       0.05,
+}
+
+_GRADE10 = [
+    (90, "S"), (80, "A"), (70, "B+"), (60, "B"),
+    (50, "C+"), (40, "C"), (30, "D"), (20, "D-"),
+    (10, "F"), (0,  "F-"),
+]
+
+
+def _normalize_score(key: str, value: float) -> float:
+    """Normalise a raw indicator value to 0-100."""
+    worst, best, higher_is_better = _NORM[key]
+    if abs(best - worst) < 1e-9:
+        return 50.0
+    raw = (value - worst) / (best - worst)
+    if not higher_is_better:
+        raw = 1.0 - raw
+    return max(0.0, min(100.0, raw * 100.0))
+
+
+def _grade10(score: float) -> str:
+    for threshold, grade in _GRADE10:
+        if score >= threshold:
+            return grade
+    return "F-"
+
+
 def _grade(greens: int, total: int) -> str:
-    """Map green-indicator count to letter grade."""
+    """Legacy 5-tier grade (kept for fallback only)."""
     if total == 0:
         return "N/A"
     ratio = greens / total
@@ -164,8 +212,12 @@ def _compute_sector_phi(conn: sqlite3.Connection, sector_id: Optional[int] = Non
         return {"error": "No contracts found for this filter"}
 
     direct_awards = row["direct_awards"] or 0
+    total_value = row["total_value"] or 1
+    da_value = row["da_value"] or 0
     competition_rate = round((1 - direct_awards / total) * 100, 1)
-    da_rate_value = round((row["da_value"] or 0) / (row["total_value"] or 1) * 100, 1)
+    # PRIMARY metric: share of MXN spent through competitive procedures
+    competition_by_value = round((1 - da_value / total_value) * 100, 1)
+    da_rate_value = round(da_value / total_value * 100, 1)
 
     # 2. Single bidding rate (among competitive procedures only)
     sb_row = conn.execute(f"""
@@ -203,7 +255,6 @@ def _compute_sector_phi(conn: sqlite3.Connection, sector_id: Optional[int] = Non
         GROUP BY vendor_id
     """, params).fetchall()
 
-    total_value = row["total_value"] or 1
     hhi = 0
     for hr in hhi_rows:
         share_pct = (hr["vendor_total"] / total_value) * 100
@@ -282,17 +333,55 @@ def _compute_sector_phi(conn: sqlite3.Connection, sector_id: Optional[int] = Non
         },
     }
 
-    # Grade
+    # Risk distribution by MXN value
+    risk_rows = conn.execute(f"""
+        SELECT risk_level,
+               COUNT(*) as cnt,
+               SUM(amount_mxn) as val
+        FROM contracts c
+        WHERE {where} AND risk_level IS NOT NULL
+        GROUP BY risk_level
+    """, params).fetchall()
+
+    risk_total_val = sum(r["val"] or 0 for r in risk_rows)
+    risk_total_cnt = sum(r["cnt"] or 0 for r in risk_rows)
+    risk_distribution: Dict[str, Any] = {}
+    for level in ("critical", "high", "medium", "low"):
+        matched = next((r for r in risk_rows if r["risk_level"] == level), None)
+        cnt = matched["cnt"] if matched else 0
+        val = matched["val"] if matched else 0
+        risk_distribution[level] = {
+            "count": cnt,
+            "value_mxn": round(val, 0),
+            "count_pct": round(cnt / max(risk_total_cnt, 1) * 100, 1),
+            "value_pct": round(val / max(risk_total_val, 1) * 100, 1),
+        }
+
+    # Weighted composite score (0-100) and 10-tier grade
+    composite_score = round(
+        _normalize_score("competition_by_value", competition_by_value) * _WEIGHTS["competition_by_value"]
+        + _normalize_score("single_bid_rate", single_bid_rate) * _WEIGHTS["single_bid_rate"]
+        + _normalize_score("avg_bidders", avg_bidders) * _WEIGHTS["avg_bidders"]
+        + _normalize_score("hhi", hhi) * _WEIGHTS["hhi"]
+        + _normalize_score("short_ad_rate", short_ad_rate) * _WEIGHTS["short_ad_rate"]
+        + _normalize_score("amendment_rate", amendment_rate) * _WEIGHTS["amendment_rate"],
+        1,
+    )
+    grade = _grade10(composite_score)
+
+    # Legacy traffic-light counts
     greens = sum(1 for ind in indicators.values() if ind["light"] == "green")
-    grade = _grade(greens, len(indicators))
 
     return {
         "total_contracts": total,
-        "total_value_mxn": round(row["total_value"] or 0, 0),
+        "total_value_mxn": round(total_value, 0),
         "direct_award_rate_by_value": da_rate_value,
+        "competition_by_value": competition_by_value,
         "competitive_contracts": competitive,
         "indicators": indicators,
         "grade": grade,
+        "phi_composite_score": composite_score,
+        "risk_distribution": risk_distribution,
         "greens": greens,
         "yellows": sum(1 for ind in indicators.values() if ind["light"] == "yellow"),
         "reds": sum(1 for ind in indicators.values() if ind["light"] == "red"),
@@ -455,9 +544,11 @@ async def phi_sector_detail(
                 trend.append({
                     "year": year,
                     "competition_rate": year_phi["indicators"]["competition_rate"]["value"],
+                    "competition_by_value": year_phi.get("competition_by_value"),
                     "single_bid_rate": year_phi["indicators"]["single_bid_rate"]["value"],
                     "avg_bidders": year_phi["indicators"]["avg_bidders"]["value"],
                     "grade": year_phi["grade"],
+                    "phi_composite_score": year_phi.get("phi_composite_score"),
                     "total_contracts": year_phi["total_contracts"],
                 })
         return {
@@ -493,9 +584,11 @@ async def phi_national_trend():
                 results.append({
                     "year": year,
                     "grade": phi["grade"],
+                    "phi_composite_score": phi.get("phi_composite_score"),
                     "greens": phi["greens"],
                     "reds": phi["reds"],
                     "competition_rate": phi["indicators"]["competition_rate"]["value"],
+                    "competition_by_value": phi.get("competition_by_value"),
                     "single_bid_rate": phi["indicators"]["single_bid_rate"]["value"],
                     "avg_bidders": phi["indicators"]["avg_bidders"]["value"],
                     "da_rate_by_value": phi["direct_award_rate_by_value"],
