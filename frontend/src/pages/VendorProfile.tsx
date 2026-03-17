@@ -102,6 +102,105 @@ function ScrollSection({ children, delay = 0 }: { children: React.ReactNode; del
 }
 
 // ============================================================================
+// VendorNarrativeHeader — bold editorial lede above tabs
+// ============================================================================
+function VendorNarrativeHeader({ vendor, riskProfile }: {
+  vendor: import('@/api/types').VendorDetailResponse
+  riskProfile?: import('@/api/types').VendorRiskProfile | null
+}) {
+  const paragraphs = buildVendorNarrative(vendor, riskProfile ?? null)
+  const score = vendor.avg_risk_score ?? 0
+  const level = getRiskLevel(score)
+  const levelLabel = level.toUpperCase()
+  const riskColor = RISK_COLORS[level]
+
+  // Build stat pills
+  const pills: Array<{ label: string; value: string }> = [
+    { label: 'contratos', value: formatNumber(vendor.total_contracts) },
+    { label: 'MXN', value: formatCompactMXN(vendor.total_value_mxn) },
+  ]
+  if (vendor.direct_award_pct > 0) {
+    pills.push({ label: 'adj. directa', value: `${vendor.direct_award_pct.toFixed(0)}%` })
+  }
+  if (vendor.high_risk_pct > 0) {
+    const critLabel = level === 'critical' || level === 'high' ? level : 'high risk'
+    pills.push({ label: critLabel, value: `${vendor.high_risk_pct.toFixed(0)}%` })
+  }
+
+  return (
+    <div
+      className="relative overflow-hidden rounded-lg border"
+      style={{
+        backgroundColor: 'var(--color-background-elevated)',
+        borderColor: 'var(--color-border)',
+        animation: 'narrativeHeaderSlideUp 600ms cubic-bezier(0.16, 1, 0.3, 1) both',
+      }}
+    >
+      {/* Crimson vertical bar */}
+      <div
+        className="absolute left-0 top-0 bottom-0"
+        style={{ width: '3px', backgroundColor: riskColor }}
+      />
+      <div className="pl-6 pr-5 py-5">
+        {/* Top row: name + risk badge */}
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <h2
+            className="font-serif text-2xl font-bold leading-tight"
+            style={{ color: 'var(--color-text-primary)' }}
+          >
+            {toTitleCase(vendor.name)}
+          </h2>
+          <div className="flex flex-col items-end flex-shrink-0">
+            <span
+              className="text-2xl font-bold font-mono numberPop"
+              style={{ color: riskColor }}
+            >
+              {(score * 100).toFixed(0)}
+            </span>
+            <span
+              className="text-[10px] font-semibold uppercase tracking-widest"
+              style={{ color: riskColor, opacity: 0.8 }}
+            >
+              {levelLabel}
+            </span>
+          </div>
+        </div>
+
+        {/* Narrative prose — first 2 paragraphs */}
+        <div className="space-y-1.5 mb-4">
+          {paragraphs.slice(0, 2).map((p, i) => (
+            <p
+              key={i}
+              className="text-sm leading-relaxed"
+              style={{ color: 'var(--color-text-secondary)' }}
+            >
+              {p.text}
+            </p>
+          ))}
+        </div>
+
+        {/* Stat pills */}
+        <div className="flex flex-wrap gap-2">
+          {pills.map((pill) => (
+            <span
+              key={pill.label}
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border"
+              style={{
+                backgroundColor: 'var(--color-background-card)',
+                borderColor: 'var(--color-border)',
+                color: 'var(--color-text-secondary)',
+              }}
+            >
+              {pill.value} <span style={{ opacity: 0.6 }}>{pill.label}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
 // Model coefficients for the waterfall chart (v6.0 global model, calibrated 2026-03-13)
 // Source: RISK_METHODOLOGY_v6.md — Optuna TPE (C=1.28, l1_ratio=0.961)
 // Negative coefficients (institution_diversity, ad_period_days)
@@ -1023,6 +1122,10 @@ export function VendorProfile() {
           from { opacity: 0; transform: translateY(10px); }
           to   { opacity: 1; transform: translateY(0); }
         }
+        @keyframes narrativeHeaderSlideUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
       `}</style>
       {/* Hero Header — Obsidian Intelligence */}
       <motion.div
@@ -1233,6 +1336,9 @@ export function VendorProfile() {
         centerId={vendorId}
         centerName={toTitleCase(vendor.name)}
       />
+
+      {/* Editorial narrative header — newspaper lede */}
+      <VendorNarrativeHeader vendor={vendor} riskProfile={riskProfile} />
 
       {/* Narrative summary */}
       <NarrativeCard
