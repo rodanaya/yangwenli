@@ -146,7 +146,7 @@ export function NetworkMiniGraph({ entityId, entityType }: NetworkMiniGraphProps
   if (isError || !data || data.nodes.length === 0) {
     return (
       <div
-        className="flex items-center justify-center rounded text-xs text-slate-500"
+        className="flex items-center justify-center rounded text-xs text-text-muted"
         style={{ height: 220, backgroundColor: '#0d1117' }}
       >
         No connections found

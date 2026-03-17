@@ -237,7 +237,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                             </Badge>
                           )}
                         </div>
-                        <div className="mt-1.5 h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div className="mt-1.5 h-1 bg-background-elevated/40 rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all"
                             style={{

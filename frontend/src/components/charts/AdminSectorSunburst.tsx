@@ -177,8 +177,8 @@ export function AdminSectorSunburst() {
         })}
 
         {/* Center label */}
-        <text x={CX} y={CY - 6} textAnchor="middle" dominantBaseline="middle" fontSize={10} fill="#64748b">Total</text>
-        <text x={CX} y={CY + 8} textAnchor="middle" dominantBaseline="middle" fontSize={9} fontWeight="700" fill="#334155">
+        <text x={CX} y={CY - 6} textAnchor="middle" dominantBaseline="middle" fontSize={10} fill="var(--color-text-muted, #64748b)">Total</text>
+        <text x={CX} y={CY + 8} textAnchor="middle" dominantBaseline="middle" fontSize={9} fontWeight="700" fill="var(--color-text-primary, #0f172a)">
           {formatCompactMXN(grandTotal)}
         </text>
       </svg>
@@ -186,11 +186,11 @@ export function AdminSectorSunburst() {
       {/* Tooltip */}
       {tooltip && (
         <div
-          className="fixed z-50 bg-slate-900/95 border border-slate-700 rounded px-2.5 py-1.5 text-xs pointer-events-none shadow-xl"
+          className="fixed z-50 bg-background-card border border-border rounded px-2.5 py-1.5 text-xs pointer-events-none shadow-xl"
           style={{ left: tooltip.x + 12, top: tooltip.y - 8 }}
         >
-          <p className="font-semibold text-slate-100">{tooltip.label}</p>
-          <p className="text-slate-400">{formatCompactMXN(tooltip.value)}</p>
+          <p className="font-semibold text-text-primary">{tooltip.label}</p>
+          <p className="text-text-secondary">{formatCompactMXN(tooltip.value)}</p>
         </div>
       )}
 

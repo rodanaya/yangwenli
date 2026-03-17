@@ -155,7 +155,7 @@ function RiskLegend() {
         </span>
       ))}
       <span className="flex items-center gap-1.5 text-xs text-text-secondary">
-        <span className="h-2.5 w-2.5 rounded-full flex-shrink-0 bg-slate-500" />
+        <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--color-text-muted, #64748b)' }} />
         unknown
       </span>
     </div>
@@ -277,7 +277,7 @@ export function VendorContractRiskMatrix({
       <div style={{ height: 280 }}>
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart margin={{ top: 8, right: 24, bottom: 40, left: 16 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, rgba(255,255,255,0.06))" />
 
             {/* --- Quadrant background: top-right = "investigate now" --- */}
             <ReferenceArea
@@ -285,7 +285,7 @@ export function VendorContractRiskMatrix({
               x2={xDomain[1]}
               y1={HIGH_RISK_THRESHOLD}
               y2={1}
-              fill="#dc2626"
+              fill="var(--color-risk-critical, #dc2626)"
               fillOpacity={0.08}
               ifOverflow="extendDomain"
             />
@@ -293,13 +293,13 @@ export function VendorContractRiskMatrix({
             {/* --- Horizontal reference line: high-risk threshold --- */}
             <ReferenceLine
               y={HIGH_RISK_THRESHOLD}
-              stroke="#ea580c"
+              stroke="var(--color-risk-high, #ea580c)"
               strokeDasharray="5 4"
               strokeWidth={1.5}
               label={{
                 value: 'High Risk',
                 position: 'insideBottomLeft',
-                fill: '#ea580c',
+                fill: 'var(--color-risk-high, #ea580c)',
                 fontSize: 10,
                 dy: -4,
               }}
@@ -308,13 +308,13 @@ export function VendorContractRiskMatrix({
             {/* --- Vertical reference line: median amount --- */}
             <ReferenceLine
               x={medianLogAmount}
-              stroke="#64748b"
+              stroke="var(--color-text-muted, #64748b)"
               strokeDasharray="5 4"
               strokeWidth={1.5}
               label={{
                 value: 'Median',
                 position: 'insideBottomRight',
-                fill: '#64748b',
+                fill: 'var(--color-text-muted, #64748b)',
                 fontSize: 10,
                 dy: -4,
               }}
@@ -328,7 +328,7 @@ export function VendorContractRiskMatrix({
               label={{
                 value: '⚠ High Value + High Risk',
                 position: 'center',
-                fill: '#dc2626',
+                fill: 'var(--color-risk-critical, #dc2626)',
                 fontSize: 9,
                 fontWeight: 600,
               }}
@@ -340,14 +340,14 @@ export function VendorContractRiskMatrix({
               domain={xDomain}
               ticks={xTicks}
               tickFormatter={formatLogTick}
-              tick={{ fill: '#94a3b8', fontSize: 10 }}
-              axisLine={{ stroke: '#334155' }}
-              tickLine={{ stroke: '#334155' }}
+              tick={{ fill: 'var(--color-text-muted, #94a3b8)', fontSize: 10 }}
+              axisLine={{ stroke: 'var(--color-border, #334155)' }}
+              tickLine={{ stroke: 'var(--color-border, #334155)' }}
               label={{
                 value: 'Contract Amount (MXN)',
                 position: 'insideBottom',
                 offset: -28,
-                fill: '#94a3b8',
+                fill: 'var(--color-text-muted, #94a3b8)',
                 fontSize: 11,
               }}
             />
@@ -358,16 +358,16 @@ export function VendorContractRiskMatrix({
               domain={[0, 1]}
               ticks={yTicks}
               tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
-              tick={{ fill: '#94a3b8', fontSize: 10 }}
-              axisLine={{ stroke: '#334155' }}
-              tickLine={{ stroke: '#334155' }}
+              tick={{ fill: 'var(--color-text-muted, #94a3b8)', fontSize: 10 }}
+              axisLine={{ stroke: 'var(--color-border, #334155)' }}
+              tickLine={{ stroke: 'var(--color-border, #334155)' }}
               width={44}
               label={{
                 value: 'Risk Score',
                 angle: -90,
                 position: 'insideLeft',
                 offset: 10,
-                fill: '#94a3b8',
+                fill: 'var(--color-text-muted, #94a3b8)',
                 fontSize: 11,
               }}
             />

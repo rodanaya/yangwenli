@@ -482,7 +482,7 @@ export default function PriceIntelligence() {
 
       {/* ── 3. Sector Anomaly Map ─────────────────────────────────────────── */}
       {!summaryLoading && priceSummary?.by_sector && priceSummary.by_sector.length > 0 && (
-        <div className="bg-slate-900/50 border border-white/5 rounded-xl p-4">
+        <div className="bg-background/60 border border-border rounded-xl p-4">
           <p className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-1">
             {t('sectorMapTitle')}
           </p>
@@ -545,7 +545,7 @@ export default function PriceIntelligence() {
                 confidence_level: h.confidence_level,
               }))
             return (
-              <div className="bg-slate-900/50 border border-white/5 rounded-xl p-4">
+              <div className="bg-background/60 border border-border rounded-xl p-4">
                 <p className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-1">
                   Outlier Scatter: Amount vs. Confidence
                 </p>

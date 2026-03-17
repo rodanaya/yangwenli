@@ -160,13 +160,13 @@ export function HexMap({ states, metric }: Props) {
 
       {/* Tooltip */}
       {hoveredState && (
-        <div className="absolute top-2 right-2 bg-slate-900/95 border border-slate-700 rounded px-3 py-2 text-xs pointer-events-none shadow-xl">
-          <p className="font-semibold text-slate-100 mb-0.5">{hoveredState.state_name}</p>
-          <p className="text-slate-300">
+        <div className="absolute top-2 right-2 bg-background-card border border-border rounded px-3 py-2 text-xs pointer-events-none shadow-xl">
+          <p className="font-semibold text-text-primary mb-0.5">{hoveredState.state_name}</p>
+          <p className="text-text-secondary">
             {metric === 'amount' ? 'Spending' : metric === 'risk' ? 'Avg Risk' : 'Contracts'}:{' '}
-            <span className="text-white font-bold">{fmt(getMetricValue(hoveredState, metric))}</span>
+            <span className="text-text-primary font-bold">{fmt(getMetricValue(hoveredState, metric))}</span>
           </p>
-          <p className="text-slate-400 text-[10px] mt-0.5">
+          <p className="text-text-muted text-[10px] mt-0.5">
             Risk:{' '}
             <span style={{ color: getRiskColor(hoveredState.avg_risk_score ?? 0) }}>
               {(hoveredState.avg_risk_score ?? 0).toFixed(3)}

@@ -41,16 +41,16 @@ export function RiskExplainTooltip({ contractId, riskScore, riskLevel, children 
         <Tooltip.Trigger asChild>{children}</Tooltip.Trigger>
         <Tooltip.Portal>
           <Tooltip.Content
-            className="z-50 max-w-xs rounded-lg border border-white/10 bg-gray-900 p-3 shadow-xl"
+            className="z-50 max-w-xs rounded-lg border border-border bg-background-card p-3 shadow-xl"
             sideOffset={4}
           >
-            <div className="text-xs font-semibold text-white mb-2">
+            <div className="text-xs font-semibold text-text-primary mb-2">
               Risk Score: {(riskScore * 100).toFixed(0)}% —{' '}
               <span className="capitalize">{riskLevel}</span>
             </div>
             {topFeatures.length > 0 ? (
               <div className="space-y-1.5">
-                <div className="text-xs text-gray-400 mb-1">Top risk drivers:</div>
+                <div className="text-xs text-text-muted mb-1">Top risk drivers:</div>
                 {topFeatures.map((f) => {
                   const dir = direction(f.contribution)
                   return (
@@ -60,7 +60,7 @@ export function RiskExplainTooltip({ contractId, riskScore, riskLevel, children 
                           dir === 'high_risk' ? 'bg-red-400' : 'bg-green-400'
                         }`}
                       />
-                      <span className="text-xs text-gray-300 flex-1 truncate">{f.label}</span>
+                      <span className="text-xs text-text-secondary flex-1 truncate">{f.label}</span>
                       <span
                         className={`ml-auto text-xs font-mono ${
                           dir === 'high_risk' ? 'text-red-400' : 'text-green-400'
@@ -74,9 +74,9 @@ export function RiskExplainTooltip({ contractId, riskScore, riskLevel, children 
                 })}
               </div>
             ) : (
-              <div className="text-xs text-gray-500">Feature breakdown not available</div>
+              <div className="text-xs text-text-muted">Feature breakdown not available</div>
             )}
-            <Tooltip.Arrow className="fill-gray-900" />
+            <Tooltip.Arrow className="fill-background-card" />
           </Tooltip.Content>
         </Tooltip.Portal>
       </Tooltip.Root>

@@ -133,7 +133,7 @@ export function RiskPyramid() {
           {PYRAMID_DATA.map(d => (
             <div key={d.level} className="flex justify-center">
               <span
-                className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
+                className="text-[10px] font-bold px-2 py-0.5 rounded-full text-text-primary"
                 style={{ background: d.color }}
               >
                 {d.level.toUpperCase()}

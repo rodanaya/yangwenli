@@ -143,10 +143,10 @@ function CustomTooltip({
   if (!active || !payload || payload.length === 0) return null
   const d = payload[0].payload
   return (
-    <div className="bg-slate-900 border border-white/10 rounded-md px-3 py-2 text-xs shadow-xl">
-      <p className="text-white/80 font-medium mb-0.5">{d.axis}</p>
-      <p className="text-white font-mono">{d.rawLabel}</p>
-      <p className="text-white/40 mt-0.5">Index: {d.value}/100</p>
+    <div className="bg-background-card border border-border rounded-md px-3 py-2 text-xs shadow-xl">
+      <p className="text-text-secondary font-medium mb-0.5">{d.axis}</p>
+      <p className="text-text-primary font-mono">{d.rawLabel}</p>
+      <p className="text-text-muted mt-0.5">Index: {d.value}/100</p>
     </div>
   )
 }
@@ -159,11 +159,11 @@ function AdminRadarPanel({ admin }: { admin: (typeof ADMIN_DATA)[0] }) {
   const data = buildRadarData(admin)
 
   return (
-    <div className="flex flex-col items-center bg-slate-800/50 border border-white/10 rounded-xl p-4 gap-2">
+    <div className="flex flex-col items-center bg-background-elevated border border-border rounded-xl p-4 gap-2">
       {/* Title */}
       <div className="text-center">
-        <p className="text-sm font-bold text-white leading-tight">{admin.shortName}</p>
-        <p className="text-[10px] text-white/40 font-mono">{admin.yearRange}</p>
+        <p className="text-sm font-bold text-text-primary leading-tight">{admin.shortName}</p>
+        <p className="text-[10px] text-text-muted font-mono">{admin.yearRange}</p>
       </div>
 
       {/* Radar */}
@@ -190,14 +190,14 @@ function AdminRadarPanel({ admin }: { admin: (typeof ADMIN_DATA)[0] }) {
 
       {/* Mini stats */}
       <div className="w-full grid grid-cols-2 gap-1 mt-1">
-        <div className="text-center bg-black/20 rounded-md py-1">
-          <p className="text-[10px] text-white/40">High-Risk</p>
+        <div className="text-center bg-background-card rounded-md py-1">
+          <p className="text-[10px] text-text-muted">High-Risk</p>
           <p className="text-xs font-mono font-semibold" style={{ color: admin.color }}>
             {admin.hrPct.toFixed(1)}%
           </p>
         </div>
-        <div className="text-center bg-black/20 rounded-md py-1">
-          <p className="text-[10px] text-white/40">Direct Award</p>
+        <div className="text-center bg-background-card rounded-md py-1">
+          <p className="text-[10px] text-text-muted">Direct Award</p>
           <p className="text-xs font-mono font-semibold" style={{ color: admin.color }}>
             {admin.directAwardPct.toFixed(0)}%
           </p>
@@ -223,12 +223,12 @@ function InsightCard({
   color: string
 }) {
   return (
-    <div className="flex flex-col gap-1 bg-slate-800/40 border border-white/10 rounded-xl p-4">
-      <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider">{label}</p>
+    <div className="flex flex-col gap-1 bg-background-elevated border border-border rounded-xl p-4">
+      <p className="text-[10px] font-medium text-text-muted uppercase tracking-wider">{label}</p>
       <p className="text-base font-bold font-mono" style={{ color }}>
         {value}
       </p>
-      <p className="text-[11px] text-white/60">{note}</p>
+      <p className="text-[11px] text-text-secondary">{note}</p>
     </div>
   )
 }
@@ -244,10 +244,10 @@ export default function AdministrationFingerprints() {
     <div className="space-y-4">
       {/* Section header */}
       <div>
-        <h2 className="text-base font-bold text-white font-mono tracking-tight">
+        <h2 className="text-base font-bold text-text-primary font-mono tracking-tight">
           {t('fingerprints.title')}
         </h2>
-        <p className="text-xs text-white/50 mt-0.5">
+        <p className="text-xs text-text-muted mt-0.5">
           {t('fingerprints.subtitle')}
         </p>
       </div>

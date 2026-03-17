@@ -390,16 +390,16 @@ export function SankeyDiagram({
           className="fixed z-50 pointer-events-none"
           style={{ left: tooltip.x + 16, top: tooltip.y - 12 }}
         >
-          <div className="bg-[#0f1629] border border-white/10 rounded-md px-3 py-2 shadow-xl text-xs space-y-0.5 min-w-[180px]">
+          <div className="bg-background-card border border-border rounded-md px-3 py-2 shadow-xl text-xs space-y-0.5 min-w-[180px]">
             {tooltip.lines.map((line, i) => (
               <p
                 key={i}
                 className={
                   i === 0
-                    ? 'font-semibold text-slate-200'
+                    ? 'font-semibold text-text-primary'
                     : i === tooltip.lines.length - 1 && tooltip.riskColor
                     ? 'font-medium'
-                    : 'text-slate-400'
+                    : 'text-text-muted'
                 }
                 style={i === tooltip.lines.length - 1 && tooltip.riskColor ? { color: tooltip.riskColor } : undefined}
               >

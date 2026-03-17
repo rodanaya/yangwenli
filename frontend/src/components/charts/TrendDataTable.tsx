@@ -92,7 +92,7 @@ function SkeletonRow({ cols }: { cols: number }) {
     <TableRow>
       {Array.from({ length: cols }).map((_, i) => (
         <TableCell key={i}>
-          <div className="h-4 rounded bg-white/10 animate-pulse" style={{ width: i === 0 ? '3rem' : '100%' }} />
+          <div className="h-4 rounded bg-background-elevated/50 animate-pulse" style={{ width: i === 0 ? '3rem' : '100%' }} />
         </TableCell>
       ))}
     </TableRow>

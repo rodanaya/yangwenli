@@ -42,23 +42,23 @@ export function ContractExplainPanel({ contractId, riskLevel }: Props) {
   }
 
   return (
-    <div className="mt-3 border border-purple-500/30 rounded-lg overflow-hidden">
+    <div className="mt-3 border border-accent/30 rounded-lg overflow-hidden">
       <button
         onClick={fetchExplanation}
-        className="w-full flex items-center gap-2 px-4 py-2.5 bg-purple-950/40 hover:bg-purple-900/40 transition-colors text-left"
+        className="w-full flex items-center gap-2 px-4 py-2.5 bg-accent/10 hover:bg-accent/15 transition-colors text-left"
       >
-        <Sparkles className="w-4 h-4 text-purple-400 flex-shrink-0" />
-        <span className="text-sm text-purple-300 font-medium">Explain this risk score</span>
+        <Sparkles className="w-4 h-4 text-accent flex-shrink-0" />
+        <span className="text-sm text-accent/90 font-medium">Explain this risk score</span>
         {open ? (
-          <ChevronUp className="w-4 h-4 ml-auto text-purple-400" />
+          <ChevronUp className="w-4 h-4 ml-auto text-accent" />
         ) : (
-          <ChevronDown className="w-4 h-4 ml-auto text-purple-400" />
+          <ChevronDown className="w-4 h-4 ml-auto text-accent" />
         )}
       </button>
       {open && (
-        <div className="px-4 py-3 bg-gray-900/60">
+        <div className="px-4 py-3 bg-background-elevated/60">
           {loading && (
-            <div className="flex items-center gap-2 text-sm text-gray-400">
+            <div className="flex items-center gap-2 text-sm text-text-muted">
               <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
               Generating explanation...
             </div>
@@ -70,7 +70,7 @@ export function ContractExplainPanel({ contractId, riskLevel }: Props) {
             </div>
           )}
           {explanation && (
-            <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
+            <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-wrap">
               {explanation}
             </p>
           )}

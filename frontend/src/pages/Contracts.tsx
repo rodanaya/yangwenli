@@ -1209,7 +1209,7 @@ function ContractRow({
           {/* Mini score bar */}
           {contract.risk_score != null && (
             <div className="flex items-center gap-1.5">
-              <div className="h-1 w-14 bg-white/10 rounded-full overflow-hidden flex-shrink-0">
+              <div className="h-1 w-14 bg-background-elevated/10 rounded-full overflow-hidden flex-shrink-0">
                 <div
                   className="h-full rounded-full transition-all"
                   style={{
@@ -1452,7 +1452,7 @@ function ContractRow({
       cells={cells}
       detail={detail}
       colSpan={11}
-      className={cn('hover:bg-white/[0.02] cursor-pointer transition-colors group', rowBorder)}
+      className={cn('hover:bg-background-card/[0.02] cursor-pointer transition-colors group', rowBorder)}
     />
   )
 }

@@ -203,7 +203,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
       )}
     >
       {/* Logo — Bauhaus half-circle mark */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-white/8">
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-border">
         <div className="relative flex-shrink-0">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
             {/* Bauhaus: full circle outline */}
@@ -269,7 +269,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
       </ScrollArea>
 
       {/* System status panel */}
-      <div className="px-2 py-2 border-t border-stone-800">
+      <div className="px-2 py-2 border-t border-border">
         {!isCollapsed ? (
           <div className="space-y-1.5 px-1">
             <div className="flex items-center gap-1.5">
@@ -322,7 +322,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
       </div>
 
       {/* Bottom bar -- language toggle + collapse button */}
-      <div className="border-t border-stone-800 p-2">
+      <div className="border-t border-border p-2">
         <div className="flex items-center justify-end">
           <div className="flex items-center gap-0.5">
             {!isCollapsed && <LanguageToggle />}

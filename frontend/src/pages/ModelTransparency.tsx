@@ -410,7 +410,7 @@ function SHAPImportanceSection() {
                 </td>
                 <td className="py-2 px-3">
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden max-w-[120px]">
+                    <div className="flex-1 h-2 bg-background-elevated/30 rounded-full overflow-hidden max-w-[120px]">
                       <div
                         className="h-full rounded-full"
                         style={{

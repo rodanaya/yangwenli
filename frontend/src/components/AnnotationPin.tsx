@@ -88,7 +88,7 @@ export function AnnotationPin({ entityType, entityId, entityName, className }: A
     <Dialog.Root open={open} onOpenChange={handleOpenChange}>
       <Dialog.Trigger asChild>
         <button
-          className={`inline-flex items-center justify-center rounded transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent ${className ?? 'h-6 w-6'}`}
+          className={`inline-flex items-center justify-center rounded transition-colors hover:bg-background-elevated focus:outline-none focus-visible:ring-1 focus-visible:ring-accent ${className ?? 'h-6 w-6'}`}
           aria-label={hasAnnotation ? `Edit annotation for ${entityName ?? entityType}` : `Add annotation for ${entityName ?? entityType}`}
           title={hasAnnotation ? 'Edit note' : 'Add note'}
         >
@@ -120,7 +120,7 @@ export function AnnotationPin({ entityType, entityId, entityName, className }: A
             </div>
             <Dialog.Close asChild>
               <button
-                className="rounded p-1 text-text-muted hover:text-text-primary hover:bg-white/10 transition-colors"
+                className="rounded p-1 text-text-muted hover:text-text-primary hover:bg-background-elevated transition-colors"
                 aria-label="Close"
               >
                 <X className="h-3.5 w-3.5" />

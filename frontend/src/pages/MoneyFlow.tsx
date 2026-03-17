@@ -1003,7 +1003,7 @@ export default function MoneyFlow() {
                     return (
                       <tr
                         key={i}
-                        className={`border-b border-border/10 hover:bg-white/4 transition-colors cursor-pointer group ${
+                        className={`border-b border-border/10 hover:bg-background-elevated/20 transition-colors cursor-pointer group ${
                           isHighRisk ? 'bg-red-500/3' : ''
                         }`}
                         onClick={() => handleFlowClick(row.source, row.target)}
@@ -1120,7 +1120,7 @@ export default function MoneyFlow() {
                 <button
                   key={i}
                   onClick={() => handleFlowClick(flow.source, flow.target)}
-                  className="w-full flex items-center gap-3 rounded px-3 py-2 text-left hover:bg-white/5 transition-colors group"
+                  className="w-full flex items-center gap-3 rounded px-3 py-2 text-left hover:bg-background-elevated/30 transition-colors group"
                   aria-label={`Investigate flow from ${flow.sourceName} to ${flow.targetName}`}
                 >
                   <span className="text-xs font-mono font-bold text-text-muted w-4 flex-shrink-0">

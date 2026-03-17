@@ -671,7 +671,7 @@ export default function YearInReview() {
       </Card>
 
       {/* Sector contribution stacked area chart */}
-      <Card className="bg-slate-900/50 border border-white/5 rounded-xl">
+      <Card className="bg-background/60 border border-border rounded-xl">
         <CardHeader className="pb-2">
           <p className="text-sm font-semibold text-white/80 uppercase tracking-wider">{t('areaChart.title')}</p>
           <p className="text-xs text-text-muted mt-0.5">{t('areaChart.subtitle')}</p>

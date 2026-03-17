@@ -1544,7 +1544,7 @@ export function VendorProfile() {
                         <span className={`text-xs px-2 py-0.5 rounded-full ${
                           partner.relationship_strength === 'very_strong' ? 'bg-risk-critical/20 text-risk-critical' :
                           partner.relationship_strength === 'strong' ? 'bg-risk-medium/20 text-risk-medium' :
-                          'bg-gray-500/20 text-gray-400'
+                          'bg-background-elevated text-text-muted'
                         }`}>
                           {partner.relationship_strength.replace('_', ' ')}
                         </span>
@@ -2835,7 +2835,7 @@ export function VendorProfile() {
                                 partner.relationship_strength === 'very_strong' ? 'bg-risk-critical/20 text-risk-critical' :
                                 partner.relationship_strength === 'strong' ? 'bg-risk-high/20 text-risk-high' :
                                 partner.relationship_strength === 'moderate' ? 'bg-risk-medium/20 text-risk-medium' :
-                                'bg-gray-500/20 text-gray-400'
+                                'bg-background-elevated text-text-muted'
                               }`}>
                                 {partner.relationship_strength.replace('_', ' ')}
                               </span>

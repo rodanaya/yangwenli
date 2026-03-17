@@ -74,7 +74,7 @@ export function RiskCalendarHeatmap() {
           {MONTH_ABBR.map(m => (
             <div
               key={m}
-              className="text-[9px] text-muted-foreground text-center"
+              className="text-[9px] text-text-muted text-center"
               style={{ width: CELL_W + GAP, flexShrink: 0 }}
             >
               {m}
@@ -87,7 +87,7 @@ export function RiskCalendarHeatmap() {
           {yearData.map(({ year, months }) => (
             <div key={year} className="flex items-center gap-0">
               <span
-                className="text-[10px] text-muted-foreground text-right shrink-0"
+                className="text-[10px] text-text-muted text-right shrink-0"
                 style={{ width: LABEL_W }}
               >
                 {year}
@@ -127,21 +127,21 @@ export function RiskCalendarHeatmap() {
         {/* Tooltip */}
         {tooltip && (
           <div
-            className="fixed z-50 bg-slate-900/95 border border-slate-700 rounded px-2.5 py-1.5 text-xs pointer-events-none shadow-xl"
+            className="fixed z-50 bg-background-card border border-border rounded px-2.5 py-1.5 text-xs pointer-events-none shadow-xl"
             style={{ left: tooltip.x + 12, top: tooltip.y - 8 }}
           >
-            <p className="font-semibold text-slate-100">{MONTH_ABBR[tooltip.month - 1]} {tooltip.year}</p>
-            <p className="text-slate-400">
+            <p className="font-semibold text-text-primary">{MONTH_ABBR[tooltip.month - 1]} {tooltip.year}</p>
+            <p className="text-text-secondary">
               Risk: <span style={{ color: riskToColor(tooltip.risk) }} className="font-bold">{tooltip.risk.toFixed(3)} ({riskLabel(tooltip.risk)})</span>
             </p>
-            <p className="text-slate-400">Contracts: <span className="text-white">{tooltip.contracts.toLocaleString()}</span></p>
+            <p className="text-text-secondary">Contracts: <span className="text-text-primary">{tooltip.contracts.toLocaleString()}</span></p>
           </div>
         )}
       </div>
 
       {/* Legend */}
       <div className="mt-3 flex items-center gap-2">
-        <span className="text-[10px] text-muted-foreground">Risk:</span>
+        <span className="text-[10px] text-text-muted">Risk:</span>
         {[
           { label: 'None', color: '#f1f5f9' },
           { label: 'Low', color: '#bbf7d0' },
@@ -151,10 +151,10 @@ export function RiskCalendarHeatmap() {
         ].map(({ label, color }) => (
           <div key={label} className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-[2px]" style={{ backgroundColor: color }} />
-            <span className="text-[10px] text-muted-foreground">{label}</span>
+            <span className="text-[10px] text-text-muted">{label}</span>
           </div>
         ))}
-        <span className="text-[10px] text-muted-foreground ml-2">⬜ = December (budget year-end)</span>
+        <span className="text-[10px] text-text-muted ml-2">⬜ = December (budget year-end)</span>
       </div>
     </div>
   )

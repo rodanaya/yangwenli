@@ -222,18 +222,18 @@ export function SectorRiskHeatmap() {
       {/* Tooltip */}
       {tooltip && (
         <div
-          className="fixed z-50 bg-slate-900/95 border border-slate-700 rounded px-2.5 py-1.5 text-xs pointer-events-none shadow-xl"
+          className="fixed z-50 bg-background-card border border-border rounded px-2.5 py-1.5 text-xs pointer-events-none shadow-xl"
           style={{ left: tooltip.x + 12, top: tooltip.y - 8 }}
         >
-          <p className="font-semibold text-slate-100 capitalize">{tooltip.sector} · {tooltip.year}</p>
-          <p className="text-slate-400">
+          <p className="font-semibold text-text-primary capitalize">{tooltip.sector} · {tooltip.year}</p>
+          <p className="text-text-secondary">
             {METRIC_LABELS[metric]}:{' '}
             <span className="text-white font-bold">
               {metric === 'risk' ? tooltip.value.toFixed(3) : `${tooltip.value.toFixed(1)}%`}
             </span>
           </p>
-          <p className="text-slate-400">Contracts: <span className="text-white">{tooltip.contracts.toLocaleString()}</span></p>
-          <p className="text-slate-400">Value: <span className="text-white">{formatCompactMXN(tooltip.totalValue)}</span></p>
+          <p className="text-text-secondary">Contracts: <span className="text-white">{tooltip.contracts.toLocaleString()}</span></p>
+          <p className="text-text-secondary">Value: <span className="text-white">{formatCompactMXN(tooltip.totalValue)}</span></p>
         </div>
       )}
 

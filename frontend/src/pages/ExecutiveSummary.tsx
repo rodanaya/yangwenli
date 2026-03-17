@@ -80,7 +80,7 @@ export function ExecutiveSummary() {
   }
 
   return (
-    <article className="max-w-4xl mx-auto pb-20 space-y-16 print:text-black print:bg-white">
+    <article className="max-w-4xl mx-auto pb-20 space-y-16 print:text-black print:bg-background-card">
       <ScrollReveal delay={80}><ReportHeader data={data} /></ScrollReveal>
       <ScrollReveal delay={100}><StatBombs data={data} /></ScrollReveal>
       <ScrollReveal delay={120}><WhatWeFound data={data} /></ScrollReveal>
@@ -135,7 +135,7 @@ function ShareButton() {
   return (
     <button
       onClick={() => void handleShare()}
-      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white/80 transition-colors"
+      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-background-elevated/50 hover:bg-background-elevated border border-border text-text-muted hover:text-text-secondary transition-colors"
       title={t('share')}
     >
       {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Share2 className="w-3.5 h-3.5" />}
@@ -172,7 +172,7 @@ function ReportHeader({ data }: { data: ExecutiveSummaryResponse }) {
           <ShareButton />
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white/80 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-background-elevated/50 hover:bg-background-elevated border border-border text-text-muted hover:text-text-secondary transition-colors"
             title="Print or save as PDF"
           >
             <Printer className="w-3.5 h-3.5" />

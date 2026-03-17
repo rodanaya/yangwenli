@@ -233,7 +233,7 @@ const KPICard = memo(function KPICard({
       </div>
       {/* Hover brightening */}
       {onClick && (
-        <div className="absolute inset-0 bg-white/[0.02] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+        <div className="absolute inset-0 bg-background-card/[0.02] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
       )}
     </button>
   )
@@ -1119,7 +1119,7 @@ function InvestigationSpotlight() {
           Una empresa farmaceutica con 6,360 contratos y $133.4 mil millones en adjudicaciones directas al IMSS
           registra el perfil de riesgo mas alto del sistema &mdash; una concentracion de mercado sin precedente historico.
         </div>
-        <Link to="/vendor/29277" style={{
+        <Link to="/vendors/29277" style={{
           fontSize: '12px', fontWeight: 600, color: '#c41e3a', textDecoration: 'none',
           fontFamily: 'var(--font-family-mono)', letterSpacing: '0.08em',
         }}>

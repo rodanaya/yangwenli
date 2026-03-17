@@ -89,7 +89,7 @@ export function ProcurementCalendar({ year: initialYear = 2023 }: Props) {
         <select
           value={selectedYear}
           onChange={(e) => setSelectedYear(Number(e.target.value))}
-          className="text-xs font-mono bg-white/5 border border-white/10 rounded px-2 py-1 text-text-secondary focus:outline-none focus:border-accent/60 cursor-pointer"
+          className="text-xs font-mono bg-background-card border border-border rounded px-2 py-1 text-text-secondary focus:outline-none focus:border-accent/60 cursor-pointer"
           aria-label="Select year for procurement calendar"
         >
           {YEAR_OPTIONS.map((y) => (
@@ -102,7 +102,7 @@ export function ProcurementCalendar({ year: initialYear = 2023 }: Props) {
 
       {/* December warning label */}
       {decemberMultiple && (
-        <div className="flex items-center gap-1.5 text-xs text-amber-400 font-mono">
+        <div className="flex items-center gap-1.5 text-xs text-risk-medium font-mono">
           <span className="text-base leading-none">&#9888;</span>
           <span>
             December {selectedYear}: ~{formatNumber(decemberEstimate)} contracts estimated
@@ -124,17 +124,17 @@ export function ProcurementCalendar({ year: initialYear = 2023 }: Props) {
             >
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke="rgba(148,163,184,0.1)"
+                stroke="var(--color-border, rgba(148,163,184,0.1))"
                 vertical={false}
               />
               <XAxis
                 dataKey="name"
-                tick={{ fontSize: 10, fill: '#94a3b8' }}
+                tick={{ fontSize: 10, fill: 'var(--color-text-muted, #94a3b8)' }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
-                tick={{ fontSize: 9, fill: '#64748b' }}
+                tick={{ fontSize: 9, fill: 'var(--color-text-muted, #64748b)' }}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(v: number) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v))}
@@ -144,20 +144,20 @@ export function ProcurementCalendar({ year: initialYear = 2023 }: Props) {
               {monthlyAvg > 0 && (
                 <ReferenceLine
                   y={monthlyAvg}
-                  stroke="#64748b"
+                  stroke="var(--color-text-muted, #64748b)"
                   strokeDasharray="4 3"
                   strokeWidth={1.5}
                   label={{
                     value: `avg ${formatNumber(monthlyAvg)}`,
                     position: 'insideTopRight',
-                    fill: '#64748b',
+                    fill: 'var(--color-text-muted, #64748b)',
                     fontSize: 9,
                     fontFamily: 'var(--font-mono)',
                   }}
                 />
               )}
               <RechartsTooltip
-                cursor={{ fill: 'rgba(148,163,184,0.05)' }}
+                cursor={{ fill: 'var(--color-border, rgba(148,163,184,0.05))' }}
                 content={({ active, payload }) => {
                   if (!active || !payload?.[0]) return null
                   const d = payload[0].payload as (typeof monthlyData)[0]
@@ -173,7 +173,7 @@ export function ProcurementCalendar({ year: initialYear = 2023 }: Props) {
                         {(d.pct * 100).toFixed(0)}% of annual total
                       </p>
                       {d.isDecember && monthlyAvg > 0 && (
-                        <p className="text-amber-400 mt-1 font-mono">
+                        <p className="text-risk-medium mt-1 font-mono">
                           {(d.estimated / monthlyAvg).toFixed(1)}x monthly average
                         </p>
                       )}
@@ -187,8 +187,8 @@ export function ProcurementCalendar({ year: initialYear = 2023 }: Props) {
                     key={entry.month}
                     fill={
                       entry.isDecember
-                        ? '#f59e0b' // amber — December rush
-                        : 'rgba(148,163,184,0.35)'
+                        ? 'var(--color-risk-medium, #f59e0b)' // risk medium — December rush
+                        : 'var(--color-border, rgba(148,163,184,0.35))'
                     }
                   />
                 ))}

@@ -62,12 +62,12 @@ function BreakdownSkeleton() {
   return (
     <div className="flex flex-col sm:flex-row gap-4">
       <div className="flex-1 flex flex-col items-center gap-2">
-        <div className="h-3 w-28 rounded bg-white/10 animate-pulse" />
-        <div className="h-40 w-40 rounded-full bg-white/10 animate-pulse" />
+        <div className="h-3 w-28 rounded bg-surface-muted/50 animate-pulse" />
+        <div className="h-40 w-40 rounded-full bg-surface-muted/50 animate-pulse" />
       </div>
       <div className="flex-1 flex flex-col items-center gap-2">
-        <div className="h-3 w-28 rounded bg-white/10 animate-pulse" />
-        <div className="h-40 w-40 rounded-full bg-white/10 animate-pulse" />
+        <div className="h-3 w-28 rounded bg-surface-muted/50 animate-pulse" />
+        <div className="h-40 w-40 rounded-full bg-surface-muted/50 animate-pulse" />
       </div>
     </div>
   )
@@ -209,11 +209,11 @@ export function VendorContractBreakdown({
   }, [contracts])
 
   const tooltipStyle = {
-    backgroundColor: '#1e2030',
-    border: '1px solid rgba(255,255,255,0.1)',
+    backgroundColor: 'var(--color-background-card, #1e293b)',
+    border: '1px solid var(--color-border, rgba(255,255,255,0.1))',
     borderRadius: '6px',
     fontSize: '12px',
-    color: '#e2e8f0',
+    color: 'var(--color-text-primary, #e2e8f0)',
   }
 
   return (

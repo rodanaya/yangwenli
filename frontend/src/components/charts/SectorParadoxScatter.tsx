@@ -137,7 +137,7 @@ export function SectorParadoxScatter() {
       <div className="relative h-80">
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart margin={{ top: 16, right: 24, bottom: 36, left: 36 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, rgba(255,255,255,0.06))" />
             <XAxis
               type="number"
               dataKey="directAwardPct"
@@ -199,7 +199,7 @@ export function SectorParadoxScatter() {
         {/* Manual annotation overlays — positioned relative to chart container */}
         {/* Agricultura: DA=93.4%, HighRisk=2% → approximately x=89%, y=9% of chart area */}
         <div
-          className="absolute pointer-events-none text-[9px] text-green-400 leading-tight max-w-[110px]"
+          className="absolute pointer-events-none text-[9px] text-risk-low leading-tight max-w-[110px]"
           style={{ right: 28, bottom: 60 }}
           aria-hidden
         >
@@ -208,7 +208,7 @@ export function SectorParadoxScatter() {
 
         {/* Salud: DA=63.8%, HighRisk=12.6% → upper-left region */}
         <div
-          className="absolute pointer-events-none text-[9px] text-red-400 leading-tight max-w-[110px]"
+          className="absolute pointer-events-none text-[9px] text-risk-critical leading-tight max-w-[110px]"
           style={{ left: 120, top: 55 }}
           aria-hidden
         >

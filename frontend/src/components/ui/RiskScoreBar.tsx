@@ -58,7 +58,7 @@ export function RiskScoreBar({
         <Tooltip>
           <TooltipTrigger asChild>
             <div
-              className="rounded-full overflow-hidden bg-white/10 cursor-default"
+              className="rounded-full overflow-hidden bg-background-elevated/40 cursor-default"
               style={{ height }}
             >
               <div

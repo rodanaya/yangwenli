@@ -136,13 +136,13 @@ export function CommunityBubbles() {
       {/* Tooltip */}
       {tooltip && (
         <div
-          className="fixed z-50 bg-slate-900/95 border border-slate-700 rounded px-2.5 py-1.5 text-xs pointer-events-none shadow-xl"
+          className="fixed z-50 bg-background-card border border-border rounded px-2.5 py-1.5 text-xs pointer-events-none shadow-xl"
           style={{ left: tooltip.x + 12, top: tooltip.y - 8 }}
         >
-          <p className="font-semibold text-slate-100 truncate max-w-[180px]">{tooltip.label}</p>
-          <p className="text-slate-400">Vendors: <span className="text-white">{tooltip.vendors}</span></p>
+          <p className="font-semibold text-text-primary truncate max-w-[180px]">{tooltip.label}</p>
+          <p className="text-text-muted">Vendors: <span className="text-text-primary">{tooltip.vendors}</span></p>
           {tooltip.risk != null && (
-            <p className="text-slate-400">Avg Risk: <span style={{ color: riskColor(tooltip.risk) }}>{tooltip.risk.toFixed(3)}</span></p>
+            <p className="text-text-muted">Avg Risk: <span style={{ color: riskColor(tooltip.risk) }}>{tooltip.risk.toFixed(3)}</span></p>
           )}
         </div>
       )}

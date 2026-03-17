@@ -959,7 +959,7 @@ export default function Intro() {
             </button>
             <button
               onClick={() => goToApp('/dashboard')}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
+              className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 hover:bg-background-elevated/30 focus:outline-none focus:ring-2 focus:ring-background-elevated"
               style={{ border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.8)' }}
             >
               {isEn ? 'Explore' : 'Explorar'}
@@ -1039,7 +1039,7 @@ export default function Intro() {
                       title={`${bar.year}: ${bar.contracts.toLocaleString()} ${isEn ? 'contracts' : 'contratos'}`}
                     >
                       {/* Tooltip on hover */}
-                      <div className="absolute -top-14 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                      <div className="absolute -top-14 left-1/2 -translate-x-1/2 bg-background text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
                         {bar.year}: {bar.contracts.toLocaleString()}
                       </div>
                     </motion.div>
@@ -1410,7 +1410,7 @@ export default function Intro() {
             </button>
             <button
               onClick={() => goToApp('/dashboard')}
-              className="flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-base transition-all duration-200 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
+              className="flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-base transition-all duration-200 hover:bg-background-elevated/30 focus:outline-none focus:ring-2 focus:ring-background-elevated"
               style={{ border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.8)' }}
             >
               {isEn ? 'Explore the platform' : 'Explorar la plataforma'}

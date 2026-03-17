@@ -486,7 +486,7 @@ function CopyCitationButton() {
   return (
     <button
       onClick={() => void handleCopy()}
-      className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-text-muted hover:text-text-secondary transition-colors"
+      className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium rounded-md bg-background-elevated/50 hover:bg-background-elevated border border-border text-text-muted hover:text-text-secondary transition-colors"
       title={t('copyCitation')}
     >
       {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
@@ -550,7 +550,7 @@ export function Methodology() {
         </div>
         <button
           onClick={() => window.print()}
-          className="print:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white/80 transition-colors flex-shrink-0"
+          className="print:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-background-elevated/50 hover:bg-background-elevated border border-border text-text-muted hover:text-text-secondary transition-colors flex-shrink-0"
           title="Export as PDF"
         >
           <Printer className="w-3.5 h-3.5" />

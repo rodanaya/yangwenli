@@ -47,7 +47,7 @@ function getPatternMeta() {
     P4: { color: 'text-yellow-300', bg: 'bg-yellow-950/60', border: 'border-yellow-800' },
     P5: { color: 'text-blue-300',   bg: 'bg-blue-950/60',   border: 'border-blue-800' },
     P6: { color: 'text-pink-300',   bg: 'bg-pink-950/60',   border: 'border-pink-800' },
-    P7: { color: 'text-gray-300',   bg: 'bg-gray-800/60',   border: 'border-gray-700' },
+    P7: { color: 'text-text-muted', bg: 'bg-background-elevated/60', border: 'border-border' },
   }
 }
 
@@ -65,7 +65,7 @@ const IPS_COLOR = (score: number) => {
 function CardStatItem({ label, value }: { label: string; value: string }) {
   const { t } = useTranslation('aria')
   return (
-    <div className="bg-surface-2 rounded p-2">
+    <div className="bg-background-elevated rounded p-2">
       <div className="text-text-muted mb-0.5">{t(label)}</div>
       <div className="font-semibold text-text-primary">{value}</div>
     </div>
@@ -76,7 +76,7 @@ function IpsBar({ score }: { score: number }) {
   const pct = Math.min(100, Math.round(score * 100))
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 bg-surface-3 rounded-full overflow-hidden">
+      <div className="flex-1 h-1.5 bg-background-elevated rounded-full overflow-hidden">
         <div
           className={cn('h-full rounded-full transition-all', IPS_COLOR(score))}
           style={{ width: `${pct}%` }}
@@ -128,7 +128,7 @@ function SpotlightCard({ item, index, t }: { item: AriaQueueItem; index: number;
 
   return (
     <motion.div variants={staggerItem}>
-      <Card className="border border-surface-3 bg-surface-1 hover:border-accent/40 transition-colors group h-full flex flex-col">
+      <Card className="border border-border bg-background-card hover:border-accent/40 transition-colors group h-full flex flex-col">
         <CardContent className="p-5 flex flex-col gap-3 flex-1">
           {/* Header row */}
           <div className="flex items-start justify-between gap-2">
@@ -178,7 +178,7 @@ function SpotlightCard({ item, index, t }: { item: AriaQueueItem; index: number;
 
           {/* Memo excerpt */}
           {memoSnippet && (
-            <div className="border-t border-surface-3 pt-3">
+            <div className="border-t border-border pt-3">
               <p className="text-xs text-text-secondary italic leading-relaxed line-clamp-3">
                 "{memoSnippet}…"
               </p>
@@ -196,13 +196,13 @@ function SpotlightCard({ item, index, t }: { item: AriaQueueItem; index: number;
             </button>
           )}
           {expanded && memo && (
-            <div className="border border-surface-3 rounded p-3 bg-surface-2 text-xs text-text-secondary whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto">
+            <div className="border border-border rounded p-3 bg-background-elevated text-xs text-text-secondary whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto">
               {memo}
             </div>
           )}
 
           {/* Red Thread CTA */}
-          <div className="mt-auto pt-2 border-t border-surface-3">
+          <div className="mt-auto pt-2 border-t border-border">
             <button
               onClick={() => navigate(`/vendors/${item.vendor_id}`)}
               className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-accent hover:text-accent/80 py-1.5 rounded hover:bg-accent/10 transition-colors"
@@ -240,8 +240,8 @@ function LeadRow({
     <>
       <tr
         className={cn(
-          'border-b border-surface-3 hover:bg-surface-2/50 cursor-pointer transition-colors text-sm',
-          expanded && 'bg-surface-2/30'
+          'border-b border-border hover:bg-background-elevated/50 cursor-pointer transition-colors text-sm',
+          expanded && 'bg-background-elevated/30'
         )}
         onClick={onToggle}
       >
@@ -278,7 +278,7 @@ function LeadRow({
         </td>
       </tr>
       {expanded && (
-        <tr className="border-b border-surface-3 bg-surface-2/20">
+        <tr className="border-b border-border bg-background-elevated/20">
           <td colSpan={5} className="px-6 py-3">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs mb-2">
               <div>
@@ -305,7 +305,7 @@ function LeadRow({
               )}
             </div>
             {item.memo_text && (
-              <p className="text-xs text-text-secondary italic leading-relaxed border-t border-surface-3 pt-2 line-clamp-3">
+              <p className="text-xs text-text-secondary italic leading-relaxed border-t border-border pt-2 line-clamp-3">
                 "{item.memo_text.slice(0, 300).replace(/^#{1,3}\s+.+\n?/, '').trim()}…"
               </p>
             )}
@@ -334,7 +334,7 @@ function StatCard({
   accent?: string
 }) {
   return (
-    <Card className="border border-surface-3 bg-surface-1">
+    <Card className="border border-border bg-background-card">
       <CardContent className="p-5 flex items-start gap-3">
         <div className={cn('p-2 rounded-lg shrink-0', accent ?? 'bg-accent/10')}>
           <Icon className={cn('h-5 w-5', accent ? 'text-white' : 'text-accent')} />
@@ -410,7 +410,7 @@ export default function AriaPage() {
     : null
 
   return (
-    <div className="min-h-screen bg-surface-0">
+    <div className="min-h-screen bg-background">
       <PageHeader
         title={t('pageTitle')}
         subtitle={t('pageSubtitle')}
@@ -482,7 +482,7 @@ export default function AriaPage() {
 
         {/* ── Pipeline Not Run Yet ── */}
         {!statsLoading && !lastRunAt && (stats?.queue_total ?? 0) === 0 && (
-          <Card className="border border-surface-3 bg-surface-1">
+          <Card className="border border-border bg-background-card">
             <CardContent className="p-10 text-center text-text-muted">
               <Shield className="h-10 w-10 mx-auto mb-3 opacity-20" />
               <p className="text-sm font-medium text-text-secondary mb-1">{t('errors.notRun')}</p>
@@ -506,7 +506,7 @@ export default function AriaPage() {
                   'px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors',
                   patternFilter === null
                     ? 'bg-accent text-white border-accent'
-                    : 'bg-surface-2 text-text-secondary border-surface-3 hover:border-accent/50'
+                    : 'bg-background-elevated text-text-secondary border-border hover:border-accent/50'
                 )}
               >
                 {t('filters.all')}
@@ -523,7 +523,7 @@ export default function AriaPage() {
                       'px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors flex items-center gap-1.5',
                       patternFilter === pattern
                         ? cn(meta.bg, meta.color, meta.border)
-                        : 'bg-surface-2 text-text-secondary border-surface-3 hover:border-accent/50'
+                        : 'bg-background-elevated text-text-secondary border-border hover:border-accent/50'
                     )}
                   >
                     <span>{pattern}</span>
@@ -538,7 +538,7 @@ export default function AriaPage() {
                   'px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors flex items-center gap-1.5',
                   newVendorOnly
                     ? 'bg-purple-950/60 text-purple-300 border-purple-800'
-                    : 'bg-surface-2 text-text-secondary border-surface-3 hover:border-accent/50'
+                    : 'bg-background-elevated text-text-secondary border-border hover:border-accent/50'
                 )}
               >
                 <Sparkles className="h-3 w-3" />
@@ -571,7 +571,7 @@ export default function AriaPage() {
                 ))}
               </div>
             ) : tier1Items.length === 0 ? (
-              <Card className="border border-surface-3 bg-surface-1">
+              <Card className="border border-border bg-background-card">
                 <CardContent className="p-8 text-center text-text-muted">
                   <Shield className="h-8 w-8 mx-auto mb-2 opacity-30" />
                   <p>{t('tier1.empty')}</p>
@@ -612,12 +612,12 @@ export default function AriaPage() {
                 placeholder={t('leads.searchPlaceholder')}
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-                className="pl-9 pr-3 py-2 text-sm bg-surface-2 border border-surface-3 rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/60 w-64"
+                className="pl-9 pr-3 py-2 text-sm bg-background-elevated border border-border rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/60 w-64"
               />
             </div>
           </div>
 
-          <Card className="border border-surface-3 bg-surface-1 overflow-hidden">
+          <Card className="border border-border bg-background-card overflow-hidden">
             {leadsLoading ? (
               <div className="p-6 space-y-2">
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -633,7 +633,7 @@ export default function AriaPage() {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-surface-3 bg-surface-2/50">
+                    <tr className="border-b border-border bg-background-elevated/50">
                       <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wide">
                         {t('table.headers.vendor')}
                       </th>
@@ -673,7 +673,7 @@ export default function AriaPage() {
               <button
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 text-sm border border-surface-3 rounded-lg text-text-secondary hover:border-accent/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 text-sm border border-border rounded-lg text-text-secondary hover:border-accent/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 {t('pagination.previous')}
               </button>
@@ -683,7 +683,7 @@ export default function AriaPage() {
               <button
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page === totalPages}
-                className="px-4 py-2 text-sm border border-surface-3 rounded-lg text-text-secondary hover:border-accent/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 text-sm border border-border rounded-lg text-text-secondary hover:border-accent/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 {t('pagination.next')}
               </button>
@@ -693,7 +693,7 @@ export default function AriaPage() {
 
         {/* ── Methodology Note ── */}
         <section>
-          <Card className="border border-surface-3 bg-surface-1">
+          <Card className="border border-border bg-background-card">
             <CardContent className="p-5">
               <div className="flex items-start gap-3">
                 <FileText className="h-4 w-4 text-text-muted shrink-0 mt-0.5" />

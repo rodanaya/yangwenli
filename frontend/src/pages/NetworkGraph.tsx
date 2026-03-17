@@ -2153,24 +2153,24 @@ export function NetworkGraph() {
 
           {/* Metric grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <div className="rounded-md bg-white/5 p-3">
+            <div className="rounded-md bg-background-elevated/30 p-3">
               <div className="text-xs text-text-muted mb-0.5">Nodes</div>
               <div className="text-lg font-bold font-mono tabular-nums">{graphStats.totalNodes}</div>
               <div className="text-[10px] text-text-muted/60 mt-0.5">vendors + institutions</div>
             </div>
-            <div className="rounded-md bg-white/5 p-3">
+            <div className="rounded-md bg-background-elevated/30 p-3">
               <div className="text-xs text-text-muted mb-0.5">Connections</div>
               <div className="text-lg font-bold font-mono tabular-nums">{graphStats.edgeCount}</div>
               <div className="text-[10px] text-text-muted/60 mt-0.5">shared procurement links</div>
             </div>
-            <div className="rounded-md bg-white/5 p-3">
+            <div className="rounded-md bg-background-elevated/30 p-3">
               <div className="text-xs text-text-muted mb-0.5">Avg Degree</div>
               <div className="text-lg font-bold font-mono tabular-nums">{graphStats.avgDegree.toFixed(1)}</div>
               <div className="text-[10px] text-text-muted/60 mt-0.5">
                 {graphStats.avgDegree > 5 ? 'high connectivity — inspect clusters' : 'connections per entity'}
               </div>
             </div>
-            <div className={`rounded-md p-3 ${graphStats.highRiskNodeCount > 0 ? 'bg-red-500/10 border border-red-500/20' : 'bg-white/5'}`}>
+            <div className={`rounded-md p-3 ${graphStats.highRiskNodeCount > 0 ? 'bg-red-500/10 border border-red-500/20' : 'bg-background-elevated/30'}`}>
               <div className={`text-xs mb-0.5 ${graphStats.highRiskNodeCount > 0 ? 'text-red-400/70' : 'text-text-muted'}`}>
                 High-Risk Nodes
               </div>
