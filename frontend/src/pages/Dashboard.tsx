@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, type Variants, useInView, useReducedMotion } from 'framer-motion'
 // animations.ts: staggerContainer replaced by inline fernStaggerContainer
 import { ScrollReveal, useCountUp } from '@/hooks/useAnimations'
@@ -274,22 +274,6 @@ function SectionDivider() {
   )
 }
 
-// 5. KPI hover glow style helper
-const kpiHoverStyle: React.CSSProperties = {
-  transition: 'transform 200ms ease, box-shadow 200ms ease',
-}
-
-function useKpiHover(accentColor: string) {
-  const [hovered, setHovered] = useState(false)
-  const onMouseEnter = useCallback(() => setHovered(true), [])
-  const onMouseLeave = useCallback(() => setHovered(false), [])
-  const style: React.CSSProperties = {
-    ...kpiHoverStyle,
-    transform: hovered ? 'scale(1.02)' : 'scale(1)',
-    boxShadow: hovered ? `0 0 24px 2px ${accentColor}25, 0 0 48px 4px ${accentColor}10` : 'none',
-  }
-  return { onMouseEnter, onMouseLeave, style }
-}
 
 // Risk donut colors
 const DONUT_COLORS: Record<string, string> = {
