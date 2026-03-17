@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Search, Building2, Users, X } from 'lucide-react'
 import { vendorApi, institutionApi } from '@/api/client'
 import { cn } from '@/lib/utils'
+import { RISK_THRESHOLDS } from '@/lib/constants'
 
 interface SearchResult {
   id: number
@@ -55,9 +56,9 @@ export function GlobalSearch({ className }: { className?: string }) {
           const score = (v as any).avg_risk_score as number | undefined
           let riskLevel: string | undefined
           if (score != null) {
-            if (score >= 0.5) riskLevel = 'critical'
-            else if (score >= 0.3) riskLevel = 'high'
-            else if (score >= 0.1) riskLevel = 'medium'
+            if (score >= RISK_THRESHOLDS.critical) riskLevel = 'critical'
+            else if (score >= RISK_THRESHOLDS.high) riskLevel = 'high'
+            else if (score >= RISK_THRESHOLDS.medium) riskLevel = 'medium'
             else riskLevel = 'low'
           }
           return {

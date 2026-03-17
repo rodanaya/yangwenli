@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/utils'
 import { type DossierSummary } from '@/api/client'
+import { RISK_THRESHOLDS } from '@/lib/constants'
 
 // Re-export so callers who import DossierSummary from this file still work
 export type { DossierSummary }
@@ -23,23 +24,23 @@ const STATUS_COLORS: Record<string, string> = {
 
 function getRiskColor(score: number | null | undefined): string {
   if (score == null) return 'text-text-muted'
-  if (score >= 0.5) return 'text-risk-critical'
-  if (score >= 0.3) return 'text-risk-high'
-  if (score >= 0.1) return 'text-risk-medium'
+  if (score >= RISK_THRESHOLDS.critical) return 'text-risk-critical'
+  if (score >= RISK_THRESHOLDS.high) return 'text-risk-high'
+  if (score >= RISK_THRESHOLDS.medium) return 'text-risk-medium'
   return 'text-risk-low'
 }
 
 function getRiskLabel(score: number | null | undefined): string {
   if (score == null) return ''
-  if (score >= 0.5) return 'CRITICAL'
-  if (score >= 0.3) return 'HIGH'
-  if (score >= 0.1) return 'MEDIUM'
+  if (score >= RISK_THRESHOLDS.critical) return 'CRITICAL'
+  if (score >= RISK_THRESHOLDS.high) return 'HIGH'
+  if (score >= RISK_THRESHOLDS.medium) return 'MEDIUM'
   return 'LOW'
 }
 
 export function DossierCard({ dossier, onOpen, onDelete }: DossierCardProps) {
   const statusColor = STATUS_COLORS[dossier.status] ?? '#64748b'
-  const hasRisk = dossier.highest_risk_score != null && dossier.highest_risk_score >= 0.3
+  const hasRisk = dossier.highest_risk_score != null && dossier.highest_risk_score >= RISK_THRESHOLDS.high
 
   return (
     <Card

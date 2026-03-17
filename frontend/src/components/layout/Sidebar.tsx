@@ -145,6 +145,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
     queryFn: () => watchlistApi.checkAlerts(),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
     retry: 0,
   })
   const watchlistCount = alerts?.length ?? 0
@@ -155,6 +156,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
     queryFn: () => caseLibraryApi.getStats(),
     staleTime: 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
     retry: 0,
   })
   const caseCount = caseStats?.total_cases ?? 0
@@ -165,6 +167,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
     queryFn: () => ariaApi.getStats(),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
     retry: 0,
   })
   const ariaT1Count = ariaStats?.latest_run?.tier1_count ?? 0

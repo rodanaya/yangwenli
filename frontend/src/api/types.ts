@@ -2233,6 +2233,9 @@ export interface AriaStatsResponse {
   }
   queue_total: number
   new_vendor_count: number
+  pattern_counts: Record<string, number>
+  external_counts: { efos: number; sfp: number }
+  elevated_value_mxn: number
 }
 
 export interface AriaQueueResponse {

@@ -62,7 +62,7 @@ export function MainLayout() {
 
         {/* Page content — extra bottom padding on mobile so bottom nav doesn't cover content */}
         <main id="main-content" className="flex-1 px-3 sm:px-5 py-5 pb-20 md:pb-5" tabIndex={-1}>
-          <AnimatePresence mode="wait" initial={false}>
+          <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
               key={location.pathname}
               variants={pageVariants}

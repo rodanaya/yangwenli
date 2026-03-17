@@ -4,6 +4,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { RISK_THRESHOLDS, RISK_COLORS } from '@/lib/constants'
 
 interface RiskScoreBarProps {
   score: number           // 0-1
@@ -15,18 +16,18 @@ interface RiskScoreBarProps {
 }
 
 const getRiskColor = (score: number): string => {
-  if (score >= 0.5) return '#f87171'   // critical red
-  if (score >= 0.3) return '#fb923c'   // high orange
-  if (score >= 0.1) return '#fbbf24'   // medium amber
-  return '#4ade80'                      // low green
+  if (score >= RISK_THRESHOLDS.critical) return RISK_COLORS.critical
+  if (score >= RISK_THRESHOLDS.high) return RISK_COLORS.high
+  if (score >= RISK_THRESHOLDS.medium) return RISK_COLORS.medium
+  return RISK_COLORS.low
 }
 
 const getRiskTooltip = (score: number): string => {
-  if (score >= 0.5)
+  if (score >= RISK_THRESHOLDS.critical)
     return `Critical risk (score: ${score.toFixed(3)}) — Strong match to documented fraud patterns. This is a statistical indicator, not proof of wrongdoing.`
-  if (score >= 0.3)
+  if (score >= RISK_THRESHOLDS.high)
     return `High risk (score: ${score.toFixed(3)}) — Elevated similarity to known corruption patterns.`
-  if (score >= 0.1)
+  if (score >= RISK_THRESHOLDS.medium)
     return `Medium risk (score: ${score.toFixed(3)}) — Some procurement anomalies detected relative to sector baseline.`
   return `Low risk (score: ${score.toFixed(3)}) — Few anomalies relative to sector baseline.`
 }

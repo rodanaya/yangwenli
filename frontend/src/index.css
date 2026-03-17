@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+/* Google Fonts loaded via <link> in index.html (non-blocking) */
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 

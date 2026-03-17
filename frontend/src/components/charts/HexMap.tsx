@@ -9,7 +9,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { SubnationalStateSummary } from '@/api/types'
-import { RISK_COLORS } from '@/lib/constants'
+import { RISK_COLORS, RISK_THRESHOLDS } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 
 // ── Hex grid layout ────────────────────────────────────────────────────────────
@@ -47,9 +47,9 @@ function getMetricValue(s: SubnationalStateSummary, metric: Metric): number {
 }
 
 function getRiskColor(r: number) {
-  if (r >= 0.5) return RISK_COLORS.critical
-  if (r >= 0.3) return RISK_COLORS.high
-  if (r >= 0.1) return RISK_COLORS.medium
+  if (r >= RISK_THRESHOLDS.critical) return RISK_COLORS.critical
+  if (r >= RISK_THRESHOLDS.high) return RISK_COLORS.high
+  if (r >= RISK_THRESHOLDS.medium) return RISK_COLORS.medium
   return RISK_COLORS.low
 }
 

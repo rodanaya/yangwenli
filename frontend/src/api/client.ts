@@ -538,6 +538,22 @@ export const vendorApi = {
     const { data } = await api.get<VendorSimilarCasesResponse>(`/vendors/${vendorId}/similar-cases`)
     return data
   },
+
+  /**
+   * Get year-by-year trajectory for a vendor (spending, risk, institution count)
+   */
+  async getTrajectory(vendorId: number): Promise<unknown> {
+    const { data } = await api.get(`/vendors/${vendorId}/trajectory`)
+    return data
+  },
+
+  /**
+   * Get vendor's risk percentile rank among all vendors in the same sector
+   */
+  async getPercentile(vendorId: number): Promise<{ percentile: number; rank: number; total: number }> {
+    const { data } = await api.get(`/vendors/${vendorId}/percentile`)
+    return data
+  },
 }
 
 // ============================================================================
@@ -2318,6 +2334,7 @@ export const ariaApi = {
     pattern?: string
     search?: string
     efos_only?: boolean
+    new_vendor_only?: boolean
     page?: number
     per_page?: number
   }): Promise<AriaQueueResponse> {

@@ -111,6 +111,8 @@ export default defineConfig({
           ],
           // Icons - often large
           'vendor-icons': ['lucide-react'],
+          // GSAP — only used by Intro.tsx splash screen
+          'vendor-gsap': ['gsap'],
         },
       },
     },

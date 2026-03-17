@@ -9,7 +9,7 @@
  *   <RiskWhisker score={0.72} lower={0.58} upper={0.84} size="lg" />
  */
 
-import { RISK_COLORS } from '@/lib/constants'
+import { RISK_COLORS, RISK_THRESHOLDS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
 interface RiskWhiskerProps {
@@ -23,9 +23,9 @@ interface RiskWhiskerProps {
 }
 
 function scoreToColor(score: number): string {
-  if (score >= 0.5) return RISK_COLORS.critical
-  if (score >= 0.3) return RISK_COLORS.high
-  if (score >= 0.1) return RISK_COLORS.medium
+  if (score >= RISK_THRESHOLDS.critical) return RISK_COLORS.critical
+  if (score >= RISK_THRESHOLDS.high) return RISK_COLORS.high
+  if (score >= RISK_THRESHOLDS.medium) return RISK_COLORS.medium
   return RISK_COLORS.low
 }
 

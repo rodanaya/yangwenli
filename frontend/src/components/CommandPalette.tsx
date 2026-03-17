@@ -25,7 +25,7 @@ import {
 import { searchApi } from '@/api/client'
 import { useDebouncedValue } from '@/hooks/useDebouncedSearch'
 import { useSavedSearches } from '@/hooks/useSavedSearches'
-import { RISK_COLORS } from '@/lib/constants'
+import { RISK_COLORS, RISK_THRESHOLDS } from '@/lib/constants'
 
 // ---------------------------------------------------------------------------
 // Quick-action definitions
@@ -61,7 +61,7 @@ const RESEARCH_ACTIONS: QuickAction[] = [
   {
     id: 'critical-contracts',
     label: 'Show critical risk contracts',
-    description: 'Contracts with risk score >= 0.50',
+    description: 'Contracts with risk score >= 0.60',
     icon: AlertTriangle,
     href: '/contracts?risk_level=critical',
   },
@@ -126,9 +126,9 @@ function RiskPill({ level }: { level: string }) {
 // Derive risk level from numeric score (same thresholds as constants.ts)
 function riskLevelFromScore(score: number | null | undefined): string | null {
   if (score == null) return null
-  if (score >= 0.5) return 'critical'
-  if (score >= 0.3) return 'high'
-  if (score >= 0.1) return 'medium'
+  if (score >= RISK_THRESHOLDS.critical) return 'critical'
+  if (score >= RISK_THRESHOLDS.high) return 'high'
+  if (score >= RISK_THRESHOLDS.medium) return 'medium'
   return 'low'
 }
 
