@@ -25,7 +25,7 @@ TABLES_TO_DROP = [
     "vendor_classifications",    # 320K rows — classification data, not used in prod API
     "company_registry",          # 320K rows — shell detection registry
     "vendor_institution_tenure", # 196K rows — tenure data, not used in prod endpoints
-    "institution_top_vendors",   # 89K rows — can be recomputed from contracts
+    # institution_top_vendors is KEPT — used by analysis routes (money-flow, institution detail)
     "vendor_aliases",            # 12K rows — alias data, not used in prod
     "corporate_group_members",   # 6K rows
     "corporate_groups",          # 278 rows
@@ -146,6 +146,26 @@ def main():
 
     print(f"\n  Contracts: {n_contracts:,}")
     print(f"  Vendors: {n_vendors:,}")
+
+    # Step 6: Run ghost company companion heuristic (new_vendor_risk flags)
+    print("\nStep 6: Computing new_vendor_risk flags (ghost company heuristic)...")
+    import subprocess
+    script_path = os.path.join(os.path.dirname(__file__), "compute_new_vendor_flags.py")
+    if os.path.exists(script_path):
+        env = os.environ.copy()
+        env["RUBLI_DB_PATH"] = deploy
+        result = subprocess.run(
+            [sys.executable, script_path],
+            capture_output=True, text=True, env=env
+        )
+        if result.returncode == 0:
+            for line in result.stdout.splitlines():
+                if any(k in line for k in ["Flagged", "aria_queue", "Done"]):
+                    print(f"  {line.strip()}")
+        else:
+            print(f"  WARNING: compute_new_vendor_flags failed: {result.stderr[:200]}")
+    else:
+        print("  Skipped (compute_new_vendor_flags.py not found)")
 
     final_size = os.path.getsize(deploy)
     print(f"\nFinal deploy DB: {sizeof_fmt(final_size)}")

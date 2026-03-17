@@ -24,6 +24,7 @@ Usage:
     cd backend && python -m scripts.compute_new_vendor_flags
 """
 
+import os
 import sqlite3
 import sys
 from pathlib import Path
@@ -31,7 +32,7 @@ from datetime import datetime
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-DB_PATH = Path(__file__).parent.parent / "RUBLI_NORMALIZED.db"
+DB_PATH = Path(os.environ.get("RUBLI_DB_PATH", Path(__file__).parent.parent / "RUBLI_NORMALIZED.db"))
 
 # Thresholds — narrow ghost company / new suspicious vendor fingerprint.
 # Design intent: flag vendors the ML model structurally CANNOT detect (new/few contracts)
