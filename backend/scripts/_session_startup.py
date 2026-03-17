@@ -87,6 +87,10 @@ STRUCTURAL_FPS = {
     # === ADDITIONAL PHARMA/DEVICE OEMs ===
     238348: 'BIOGEN MEXICO - patented MS drugs OEM (Tecfidera, Avonex, Vumerity)',
     1381:   'CARL ZEISS DE MEXICO - surgical optics/microscopes OEM (brand-exclusive maintenance)',
+    313628: 'BMRN MEXICO - BioMarin ultra-orphan enzyme replacement therapies (patent-protected)',
+    248392: 'IPSEN MEXICO - Ipsen oncology/rare disease OEM (Decapeptyl, Dysport brand-exclusive)',
+    294211: 'GEDEON RICHTER MEXICO - branded generics OEM (Cabergolina, hormonal drugs)',
+    184360: 'ELEKTA MEDICAL - radiation therapy equipment OEM (brand-exclusive servicing)',
 }
 
 gt_vids = set(r2[0] for r2 in conn.execute('SELECT DISTINCT vendor_id FROM ground_truth_vendors').fetchall())
