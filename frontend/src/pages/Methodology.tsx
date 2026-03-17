@@ -72,10 +72,10 @@ const V33_WEIGHTS = [
 ] as const
 
 const RISK_LEVELS_V6 = [
-  { level: 'Critical', threshold: '>= 0.60', meaning: 'Very high similarity to known corruption patterns', pct: '8.7%', count: '266,048', color: '#f87171' },
-  { level: 'High', threshold: '>= 0.40', meaning: 'High similarity to known corruption patterns', pct: '3.6%', count: '110,163', color: '#fb923c' },
-  { level: 'Medium', threshold: '>= 0.15', meaning: 'Moderate similarity to known corruption patterns', pct: '18.5%', count: '564,758', color: '#fbbf24' },
-  { level: 'Low', threshold: '< 0.15', meaning: 'Low similarity to known corruption patterns', pct: '69.2%', count: '2,110,325', color: '#4ade80' },
+  { level: 'Critical', threshold: '>= 0.60', meaning: 'Very high similarity to known corruption patterns', pct: '4.4%', count: '133,842', color: '#f87171' },
+  { level: 'High', threshold: '>= 0.40', meaning: 'High similarity to known corruption patterns', pct: '4.6%', count: '140,723', color: '#fb923c' },
+  { level: 'Medium', threshold: '>= 0.15', meaning: 'Moderate similarity to known corruption patterns', pct: '76.7%', count: '2,339,378', color: '#fbbf24' },
+  { level: 'Low', threshold: '< 0.15', meaning: 'Low similarity to known corruption patterns', pct: '14.3%', count: '437,351', color: '#4ade80' },
 ] as const
 
 const CORRUPTION_CASES = [
@@ -122,11 +122,11 @@ const REFERENCES = [
 ] as const
 
 const MODEL_COMPARISON = [
-  { metric: 'AUC-ROC', v33: '0.584', v60: '0.849', improvement: '+44%' },
-  { metric: 'Brier Score', v33: '0.411', v60: '0.090', improvement: '-78%' },
-  { metric: 'Detection Rate (med+)', v33: '67.1%', v60: '88.7%', improvement: '+22pp' },
-  { metric: 'High+ Detection', v33: '18.3%', v60: '25.3%', improvement: '+7pp' },
-  { metric: 'Lift vs Random', v33: '1.22x', v60: '2.3x', improvement: '+1.1x' },
+  { metric: 'AUC-ROC', v33: '0.584', v60: '0.863', improvement: '+48%' },
+  { metric: 'Brier Score', v33: '0.411', v60: '0.107', improvement: '-74%' },
+  { metric: 'Detection Rate (med+)', v33: '67.1%', v60: '100%', improvement: '+33pp' },
+  { metric: 'High+ Detection', v33: '18.3%', v60: '62.8%', improvement: '+44pp' },
+  { metric: 'Lift vs Random', v33: '1.22x', v60: '3.1x', improvement: '+1.9x' },
 ] as const
 
 const MODEL_EVOLUTION_STEPS = [
@@ -168,10 +168,10 @@ const MODEL_EVOLUTION_STEPS = [
   },
   {
     version: 'v6.0',
-    date: 'Mar 10, 2026',
+    date: 'Mar 17, 2026',
     titleKey: 'v60Title',
     descKey: 'v60Desc',
-    metric: 'AUC 0.849',
+    metric: 'AUC 0.863',
     active: true,
     overlay: false,
   },

@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
-import { motion, useInView, type Variants } from 'framer-motion'
+import { motion, useInView, AnimatePresence, type Variants } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
@@ -194,6 +194,68 @@ const cardItemVariants: Variants = {
 }
 
 
+// ---------------------------------------------------------------------------
+// Cinematic Animation Helpers
+// ---------------------------------------------------------------------------
+
+function useTypewriter(text: string, speed = 30) {
+  const [displayed, setDisplayed] = useState('')
+  const [done, setDone] = useState(false)
+  useEffect(() => {
+    setDisplayed('')
+    setDone(false)
+    let i = 0
+    const interval = setInterval(() => {
+      i++
+      setDisplayed(text.slice(0, i))
+      if (i >= text.length) {
+        setDone(true)
+        clearInterval(interval)
+      }
+    }, speed)
+    return () => clearInterval(interval)
+  }, [text, speed])
+  return { displayed, done }
+}
+
+function LoadingIntro({ onComplete }: { onComplete: () => void }) {
+  useEffect(() => {
+    const timer = setTimeout(onComplete, 1500)
+    return () => clearTimeout(timer)
+  }, [onComplete])
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center"
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.92)' }}
+      initial={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5, ease: 'easeInOut' }}
+    >
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="rc-scan-line rc-scan-line-1" />
+        <div className="rc-scan-line rc-scan-line-2" />
+        <div className="rc-scan-line rc-scan-line-3" />
+      </div>
+      <motion.p
+        className="text-sm tracking-[0.3em] uppercase"
+        style={{ fontFamily: "'Courier New', monospace", color: '#c41e3a' }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0, 1, 1, 0.6, 1] }}
+        transition={{ duration: 1.2, times: [0, 0.2, 0.5, 0.7, 1] }}
+      >
+        ANALYZING PROCUREMENT DATA...
+      </motion.p>
+      <motion.div
+        className="mt-4 h-0.5 rounded-full"
+        style={{ backgroundColor: '#c41e3a', width: 0 }}
+        animate={{ width: 200 }}
+        transition={{ duration: 1.3, ease: 'easeInOut' }}
+      />
+    </motion.div>
+  )
+}
+
 const SECTOR_NAME_ES: Record<string, string> = {
   salud: 'Salud',
   educacion: 'Educaci\u00f3n',
@@ -292,6 +354,18 @@ function NationalGradeHero({ national }: { national: PHINational }) {
   const avgBid = national.indicators['avg_bidders']
   const compositeScore = national.phi_composite_score
 
+  // Grade badge drama: red fast pulse for D/F, green slow for B+/A/S
+  const gradeVal = GRADE_ORDER[national.grade] ?? 0
+  const isUrgent = gradeVal <= 3
+  const ringColor = isUrgent ? 'rgba(220, 38, 38, 0.35)' : 'rgba(34, 197, 94, 0.25)'
+  const ringDuration = isUrgent ? '1.4s' : '2.8s'
+
+  // Typewriter summary
+  const summaryText = compositeScore != null
+    ? `Calificacion Nacional: ${national.grade} (${compositeScore.toFixed(1)}/100) -- ${national.greens} indicadores bien, ${national.yellows} en alerta, ${national.reds} deficientes.`
+    : `Calificacion Nacional: ${national.grade} -- ${national.greens} indicadores bien, ${national.yellows} en alerta, ${national.reds} deficientes.`
+  const { displayed: typedSummary, done: typingDone } = useTypewriter(summaryText, 30)
+
   return (
     <section className="mb-10">
       {/* Page header */}
@@ -323,24 +397,62 @@ function NationalGradeHero({ national }: { national: PHINational }) {
         style={{ borderColor: 'var(--color-border)', borderLeftWidth: 6, borderLeftColor: colors.text }}
       >
         <div className="flex flex-col items-center py-10 px-6">
-          {/* Big grade letter — number-pop animation */}
-          <span
-            className="leading-none font-bold anim-number-pop"
-            style={{ fontFamily: SERIF, fontSize: '9rem', color: colors.text }}
-          >
-            {national.grade}
-          </span>
+          {/* Dramatic grade letter reveal with concentric pulse rings */}
+          <div className="relative flex items-center justify-center" style={{ width: '12rem', height: '12rem' }}>
+            {/* Concentric pulse rings */}
+            <span className="absolute inset-0 rounded-full rc-grade-ring" style={{ borderColor: ringColor, animationDuration: ringDuration }} />
+            <span className="absolute rounded-full rc-grade-ring" style={{ inset: '-1rem', borderColor: ringColor, animationDuration: ringDuration, animationDelay: '0.4s' }} />
+            <span className="absolute rounded-full rc-grade-ring" style={{ inset: '-2rem', borderColor: ringColor, animationDuration: ringDuration, animationDelay: '0.8s' }} />
+
+            {/* Grade letter: scale(3) blur(20px) -> scale(1) blur(0) with spring */}
+            <motion.span
+              className="leading-none font-bold relative z-10"
+              style={{ fontFamily: SERIF, fontSize: '9rem', color: colors.text }}
+              initial={{ scale: 3, opacity: 0, filter: 'blur(20px)' }}
+              animate={{ scale: 1, opacity: 1, filter: 'blur(0px)' }}
+              transition={{ duration: 1.2, type: 'spring', stiffness: 120, damping: 14 }}
+            >
+              {national.grade}
+            </motion.span>
+
+            {/* Crimson glow ring pulse after letter lands */}
+            <motion.span
+              className="absolute inset-0 rounded-full pointer-events-none"
+              style={{ boxShadow: `0 0 0 0px ${colors.text}` }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 0.6, 0], boxShadow: [`0 0 0 0px ${colors.text}`, `0 0 40px 20px ${colors.text}`, `0 0 60px 40px transparent`] }}
+              transition={{ duration: 1.0, delay: 1.0, ease: 'easeOut' }}
+            />
+          </div>
+
           {compositeScore != null && (
-            <p className="text-sm tabular-nums font-medium mt-1" style={{ color: colors.text, opacity: 0.8 }}>
+            <motion.p
+              className="text-sm tabular-nums font-medium mt-1"
+              style={{ color: colors.text, opacity: 0.8 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 0.8, y: 0 }}
+              transition={{ delay: 1.3, duration: 0.5 }}
+            >
               {compositeScore.toFixed(1)} / 100
-            </p>
+            </motion.p>
           )}
           <p
-            className="text-sm font-semibold tracking-[0.1em] uppercase mt-2 mb-6"
+            className="text-sm font-semibold tracking-[0.1em] uppercase mt-2 mb-4"
             style={{ color: 'var(--color-text-muted)' }}
           >
             Calificaci&oacute;n Nacional
           </p>
+
+          {/* Typewriter score summary */}
+          <div className="max-w-md mx-auto mb-6">
+            <p
+              className="text-xs leading-relaxed text-center"
+              style={{ fontFamily: "'Courier New', monospace", color: 'var(--color-text-secondary)', minHeight: '2.5rem' }}
+            >
+              {typedSummary}
+              {!typingDone && <span className="rc-typing-cursor">|</span>}
+            </p>
+          </div>
 
           {/* Supporting stats row */}
           <div className="flex flex-wrap justify-center gap-8 text-center">
@@ -467,11 +579,18 @@ function SectorReportCard({ sector, t }: { sector: PHISector; t: (k: string) => 
   const color = sectorMeta?.color || '#64748b'
   const gradeColors = GRADE_COLORS[sector.grade] || GRADE_COLORS.F
   const sectorDisplayName = SECTOR_NAME_ES[sector.sector_name] || sectorMeta?.name || sector.sector_name
+  const gradeOrd = GRADE_ORDER[sector.grade] ?? 5
+  const isCriticalSector = gradeOrd <= 2
 
   return (
     <div
-      className="fern-card rounded-xl overflow-hidden transition-shadow hover:shadow-md"
-      style={{ borderColor: 'var(--color-border)' }}
+      className="fern-card rounded-xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:scale-[1.01]"
+      style={{
+        borderColor: 'var(--color-border)',
+        borderLeftWidth: isCriticalSector ? 3 : undefined,
+        borderLeftColor: isCriticalSector ? '#dc2626' : undefined,
+        boxShadow: isCriticalSector ? 'inset 3px 0 12px -4px rgba(220, 38, 38, 0.25)' : undefined,
+      }}
     >
       {/* Header */}
       <div className="p-5">
@@ -997,7 +1116,7 @@ function PillarBar({
   label,
   score,
   maxScore,
-  color,
+  color: fallbackColor,
 }: {
   label: string
   score: number
@@ -1005,17 +1124,53 @@ function PillarBar({
   color: string
 }) {
   const pct = Math.max(0, Math.min(100, (score / maxScore) * 100))
+  const barColor = pct >= 70 ? '#22c55e' : pct >= 50 ? fallbackColor : pct >= 30 ? '#f97316' : '#ef4444'
+  const pillarRef = useRef<HTMLDivElement>(null)
+  const [barWidth, setBarWidth] = useState(0)
+  const [pillShimmer, setPillShimmer] = useState(false)
+
+  useEffect(() => {
+    const el = pillarRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setBarWidth(pct)
+          setTimeout(() => setPillShimmer(true), 1600)
+          obs.disconnect()
+        }
+      },
+      { threshold: 0.15 },
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [pct])
+
   return (
-    <div className="space-y-1">
+    <div ref={pillarRef} className="space-y-1">
       <div className="flex items-center justify-between text-[11px]" style={{ color: 'var(--color-text-secondary)' }}>
         <span>{label}</span>
         <span className="font-medium tabular-nums">{score.toFixed(0)}/{maxScore}</span>
       </div>
-      <div className="h-1.5 rounded-full" style={{ backgroundColor: 'var(--color-border)' }}>
+      <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--color-border)' }}>
         <div
-          className="h-1.5 rounded-full transition-all"
-          style={{ width: `${pct}%`, backgroundColor: color }}
-        />
+          className="h-1.5 rounded-full relative overflow-hidden"
+          style={{
+            width: `${barWidth}%`,
+            backgroundColor: barColor,
+            transition: 'width 1.5s cubic-bezier(0.22, 1, 0.36, 1)',
+          }}
+        >
+          {pillShimmer && (
+            <div
+              className="absolute inset-0"
+              style={{
+                background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
+                animation: 'shimmerSweep 0.8s ease-out forwards',
+              }}
+            />
+          )}
+        </div>
       </div>
     </div>
   )
@@ -2061,93 +2216,101 @@ function PHITab({ t }: { t: (k: string, opts?: Record<string, unknown>) => strin
 function ReportCard() {
   const { t } = useTranslation('reportcard')
   const [activeTab, setActiveTab] = useState<Tab>('phi')
+  const [introComplete, setIntroComplete] = useState(false)
+  const handleIntroComplete = useCallback(() => setIntroComplete(true), [])
 
   const tabs: { id: Tab; label: string; sub: string }[] = [
     { id: 'phi', label: 'Salud Procuratoria', sub: 'PHI · 12 sectores' },
-    { id: 'institutions', label: 'Instituciones', sub: 'Ranking 0–100 · 2,569 inst.' },
-    { id: 'vendors', label: 'Proveedores', sub: 'Ranking 0–100 · 139K proveed.' },
+    { id: 'institutions', label: 'Instituciones', sub: 'Ranking 0-100 · 2,569 inst.' },
+    { id: 'vendors', label: 'Proveedores', sub: 'Ranking 0-100 · 139K proveed.' },
   ]
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Page header */}
-      <div className="mb-8 text-center">
-        <p className="text-xs font-semibold tracking-[0.15em] uppercase mb-2" style={{ color: '#c41e3a' }}>
-          Reporte de Integridad Procuratoria
-        </p>
-        <h1
-          className="text-editorial-h1 md:text-editorial-display mb-3"
-          style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}
-        >
-          Calificaciones del Gasto Público Federal
-        </h1>
-        <p className="text-base" style={{ color: 'var(--color-text-muted)' }}>
-          2026 · 3.1M contratos · Sistema de 10 niveles
-        </p>
-      </div>
+    <>
+      <AnimatePresence>
+        {!introComplete && <LoadingIntro onComplete={handleIntroComplete} />}
+      </AnimatePresence>
 
-      {/* Tab bar */}
-      <div
-        className="flex border-b mb-8 gap-0 overflow-x-auto"
-        style={{ borderColor: 'var(--color-border)' }}
-      >
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={cn(
-              'flex flex-col items-start px-6 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors',
-              activeTab === tab.id ? 'border-[#c41e3a]' : 'border-transparent hover:border-[var(--color-border)]'
-            )}
-            style={{
-              color: activeTab === tab.id ? 'var(--color-accent)' : 'var(--color-text-secondary)',
-            }}
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Page header */}
+        <div className="mb-8 text-center">
+          <p className="text-xs font-semibold tracking-[0.15em] uppercase mb-2" style={{ color: '#c41e3a' }}>
+            Reporte de Integridad Procuratoria
+          </p>
+          <h1
+            className="text-editorial-h1 md:text-editorial-display mb-3"
+            style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}
           >
-            <span>{tab.label}</span>
-            <span className="text-[10px] font-normal mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{tab.sub}</span>
-          </button>
-        ))}
+            Calificaciones del Gasto Publico Federal
+          </h1>
+          <p className="text-base" style={{ color: 'var(--color-text-muted)' }}>
+            2026 · 3.1M contratos · Sistema de 10 niveles
+          </p>
+        </div>
+
+        {/* Tab bar */}
+        <div
+          className="flex border-b mb-8 gap-0 overflow-x-auto"
+          style={{ borderColor: 'var(--color-border)' }}
+        >
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                'flex flex-col items-start px-6 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors',
+                activeTab === tab.id ? 'border-[#c41e3a]' : 'border-transparent hover:border-[var(--color-border)]'
+              )}
+              style={{
+                color: activeTab === tab.id ? 'var(--color-accent)' : 'var(--color-text-secondary)',
+              }}
+            >
+              <span>{tab.label}</span>
+              <span className="text-[10px] font-normal mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{tab.sub}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Tab content */}
+        {activeTab === 'phi' && <PHITab t={t} />}
+
+        {activeTab === 'institutions' && (
+          <>
+            <div className="mb-6">
+              <SectionLabel>Integridad Institucional</SectionLabel>
+              <h2 className="text-editorial-h2 mb-1" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
+                Ranking de Instituciones
+              </h2>
+              <p className="text-sm mb-4" style={{ color: 'var(--color-text-muted)' }}>
+                Calificacion 0-100 basada en 5 dimensiones: apertura competitiva, integridad de precios,
+                independencia de proveedores, transparencia de proceso y alertas externas.
+                Haz clic en una fila para ver el detalle por pilar.
+              </p>
+              <GradeScale10 />
+            </div>
+            <InstitutionScorecardsTab />
+          </>
+        )}
+
+        {activeTab === 'vendors' && (
+          <>
+            <div className="mb-6">
+              <SectionLabel>Integridad de Proveedores</SectionLabel>
+              <h2 className="text-editorial-h2 mb-1" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
+                Ranking de Proveedores
+              </h2>
+              <p className="text-sm mb-4" style={{ color: 'var(--color-text-muted)' }}>
+                Calificacion 0-100 basada en 5 pilares: senal de riesgo ML, conducta vs norma sectorial,
+                alcance institucional, patrones de adjudicacion y banderas de registros externos.
+                Puntuacion alta = proveedor de bajo riesgo.
+              </p>
+              <GradeScale10 />
+            </div>
+            <VendorScorecardsTab />
+          </>
+        )}
       </div>
-
-      {/* Tab content */}
-      {activeTab === 'phi' && <PHITab t={t} />}
-
-      {activeTab === 'institutions' && (
-        <>
-          <div className="mb-6">
-            <SectionLabel>Integridad Institucional</SectionLabel>
-            <h2 className="text-editorial-h2 mb-1" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
-              Ranking de Instituciones
-            </h2>
-            <p className="text-sm mb-4" style={{ color: 'var(--color-text-muted)' }}>
-              Calificación 0–100 basada en 5 dimensiones: apertura competitiva, integridad de precios,
-              independencia de proveedores, transparencia de proceso y alertas externas.
-              Haz clic en una fila para ver el detalle por pilar.
-            </p>
-            <GradeScale10 />
-          </div>
-          <InstitutionScorecardsTab />
-        </>
-      )}
-
-      {activeTab === 'vendors' && (
-        <>
-          <div className="mb-6">
-            <SectionLabel>Integridad de Proveedores</SectionLabel>
-            <h2 className="text-editorial-h2 mb-1" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
-              Ranking de Proveedores
-            </h2>
-            <p className="text-sm mb-4" style={{ color: 'var(--color-text-muted)' }}>
-              Calificación 0–100 basada en 5 pilares: señal de riesgo ML, conducta vs norma sectorial,
-              alcance institucional, patrones de adjudicación y banderas de registros externos.
-              Puntuación alta = proveedor de bajo riesgo.
-            </p>
-            <GradeScale10 />
-          </div>
-          <VendorScorecardsTab />
-        </>
-      )}
-    </div>
+    </>
   )
 }
 
