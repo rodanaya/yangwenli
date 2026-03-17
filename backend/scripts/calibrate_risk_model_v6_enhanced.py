@@ -124,16 +124,32 @@ def load_enhanced_data(conn, neg_ratio=2.0, seed=42, max_per_vendor=200, case_wi
     - max_per_vendor caps contracts per GT vendor to prevent mega-vendor domination
     - Sector-proportional negative sampling
     - Vendor-stratified split preserved
+    - Curriculum learning: sample_weight by confidence_level (confirmed=1.0, high=0.8,
+      medium=0.5, low=0.2)
     """
     cursor = conn.cursor()
     z_select = ', '.join(f'zf.{c}' for c in Z_COLS)
     rng = np.random.RandomState(seed)
 
+    # Curriculum learning: map confidence_level to sample weights
+    CONFIDENCE_WEIGHTS = {
+        'confirmed_corrupt': 1.0,
+        'high': 0.8,
+        'medium': 0.5,
+        'low': 0.2,
+        None: 0.5,  # fallback
+    }
+
+    # Load confidence level per case for curriculum weighting
+    cursor.execute("SELECT id, confidence_level FROM ground_truth_cases")
+    case_confidence = {row[0]: row[1] for row in cursor.fetchall()}
+
     # Steps 1-4: Load scoped GT contracts via VIEW (fraud-window-restricted)
     # Uses ground_truth_contracts_scoped VIEW - see _update_gt_fraud_windows.py
     # The VIEW handles: time-window filtering, institution scoping, inactive case exclusion
     cursor.execute(f"""
-        SELECT zf.contract_id, {z_select}, c.contract_year, c.sector_id, c.vendor_id
+        SELECT zf.contract_id, {z_select}, c.contract_year, c.sector_id, c.vendor_id,
+               gcs.case_id
         FROM ground_truth_contracts_scoped gcs
         JOIN contract_z_features zf ON zf.contract_id = gcs.contract_id
         JOIN contracts c ON c.id = gcs.contract_id
@@ -142,15 +158,20 @@ def load_enhanced_data(conn, neg_ratio=2.0, seed=42, max_per_vendor=200, case_wi
     print(f"  Scoped GT contracts (from VIEW): {len(scoped_rows):,}")
 
     # Deduplicate (a contract may appear in multiple cases via the VIEW)
-    seen_ids = set()
-    positive_by_vendor = defaultdict(list)
+    # When deduplicating, keep the highest-confidence case assignment
+    seen_ids = {}  # contract_id -> row (best confidence)
     for row in scoped_rows:
         cid = row[0]
-        if cid in seen_ids:
-            continue
-        seen_ids.add(cid)
-        vid = row[-1]
-        positive_by_vendor[vid].append(row)
+        case_id = row[-1]  # last column = gcs.case_id
+        conf = case_confidence.get(case_id)
+        weight = CONFIDENCE_WEIGHTS.get(conf, 0.5)
+        if cid not in seen_ids or weight > seen_ids[cid][1]:
+            seen_ids[cid] = (row, weight)
+
+    positive_by_vendor = defaultdict(list)
+    for cid, (row, weight) in seen_ids.items():
+        vid = row[-2]  # vendor_id is second-to-last (before case_id)
+        positive_by_vendor[vid].append((row, weight))
 
     gt_vendor_ids = list(positive_by_vendor.keys())
     total_before_cap = sum(len(v) for v in positive_by_vendor.values())
@@ -168,21 +189,28 @@ def load_enhanced_data(conn, neg_ratio=2.0, seed=42, max_per_vendor=200, case_wi
     ph = ','.join('?' * len(gt_vendor_ids))
 
     # Step 4b: Per-vendor subsampling to prevent mega-vendor domination
-    positive_rows = []
+    # positive_by_vendor values are (row, weight) tuples
+    positive_rows = []  # list of (row, weight)
     capped_vendors = 0
-    for vid, rows in positive_by_vendor.items():
-        if len(rows) > max_per_vendor:
-            sampled = [rows[i] for i in rng.choice(len(rows), max_per_vendor, replace=False)]
+    for vid, row_weights in positive_by_vendor.items():
+        if len(row_weights) > max_per_vendor:
+            sampled = [row_weights[i] for i in rng.choice(len(row_weights), max_per_vendor, replace=False)]
             positive_rows.extend(sampled)
             capped_vendors += 1
         else:
-            positive_rows.extend(rows)
+            positive_rows.extend(row_weights)
     print(f"  Positives after per-vendor cap ({max_per_vendor}): {len(positive_rows):,} "
           f"({capped_vendors} vendors capped, {total_before_cap - len(positive_rows):,} contracts dropped)")
 
+    # Log curriculum weight distribution
+    weight_counts = defaultdict(int)
+    for _row, w in positive_rows:
+        weight_counts[w] += 1
+    print(f"  Curriculum weights: " + " | ".join(f"w={w:.1f}: {n}" for w, n in sorted(weight_counts.items(), reverse=True)))
+
     # Step 5: Count positives per sector for proportional negative sampling
     pos_by_sector = defaultdict(int)
-    for row in positive_rows:
+    for row, _w in positive_rows:
         sid = row[len(Z_COLS) + 2] or 12
         pos_by_sector[sid] += 1
 
@@ -191,7 +219,7 @@ def load_enhanced_data(conn, neg_ratio=2.0, seed=42, max_per_vendor=200, case_wi
     total_neg_target = int(total_pos * neg_ratio)
 
     rng_neg = np.random.RandomState(42)  # C4: seeded RNG for reproducible negative sampling
-    negative_rows = []
+    negative_rows = []  # plain rows (weight=1.0 for negatives)
     for sid in range(1, 13):
         sector_neg_target = max(
             int(total_neg_target * pos_by_sector.get(sid, 0) / max(total_pos, 1)),
@@ -218,17 +246,20 @@ def load_enhanced_data(conn, neg_ratio=2.0, seed=42, max_per_vendor=200, case_wi
     print(f"  Pos:Neg ratio: 1:{len(negative_rows)/max(len(positive_rows),1):.1f}")
 
     # Step 7: Split into train/test by vendor
-    train_X, train_y, train_sectors = [], [], []
-    test_X, test_y, test_sectors = [], [], []
+    # positive_rows: [(row, weight), ...]  — use row[-2] for vendor_id (before case_id)
+    train_X, train_y, train_sectors, train_weights = [], [], [], []
+    test_X, test_y, test_sectors, test_weights = [], [], [], []
 
-    for row in positive_rows:
-        vid = row[-1]
+    for row, weight in positive_rows:
+        vid = row[-2]  # vendor_id (case_id is last column)
         sid = row[len(Z_COLS) + 2] or 12
         features = [row[i + 1] if row[i + 1] is not None else 0.0 for i in range(len(Z_COLS))]
         if vid in train_vendors:
-            train_X.append(features); train_y.append(1); train_sectors.append(sid)
+            train_X.append(features); train_y.append(1)
+            train_sectors.append(sid); train_weights.append(weight)
         else:
-            test_X.append(features); test_y.append(1); test_sectors.append(sid)
+            test_X.append(features); test_y.append(1)
+            test_sectors.append(sid); test_weights.append(weight)
 
     neg_vendors = list({row[-1] for row in negative_rows})
     rng.shuffle(neg_vendors)
@@ -240,39 +271,52 @@ def load_enhanced_data(conn, neg_ratio=2.0, seed=42, max_per_vendor=200, case_wi
         sid = row[len(Z_COLS) + 2] or 12
         features = [row[i + 1] if row[i + 1] is not None else 0.0 for i in range(len(Z_COLS))]
         if vid in train_neg_vendors:
-            train_X.append(features); train_y.append(0); train_sectors.append(sid)
+            train_X.append(features); train_y.append(0)
+            train_sectors.append(sid); train_weights.append(1.0)  # negatives always weight=1.0
         else:
-            test_X.append(features); test_y.append(0); test_sectors.append(sid)
+            test_X.append(features); test_y.append(0)
+            test_sectors.append(sid); test_weights.append(1.0)
 
     X_train = np.clip(np.nan_to_num(np.array(train_X, dtype=np.float64)), -10, 10)
     y_train = np.array(train_y, dtype=np.int32)
     s_train = np.array(train_sectors, dtype=np.int32)
+    w_train = np.array(train_weights, dtype=np.float64)
     X_test = np.clip(np.nan_to_num(np.array(test_X, dtype=np.float64)), -10, 10)
     y_test = np.array(test_y, dtype=np.int32)
     s_test = np.array(test_sectors, dtype=np.int32)
+    w_test = np.array(test_weights, dtype=np.float64)
+
+    # Log weight stats
+    train_pos_mask = y_train == 1
+    if train_pos_mask.sum() > 0:
+        print(f"  Training positive sample weights: mean={w_train[train_pos_mask].mean():.3f}, "
+              f"min={w_train[train_pos_mask].min():.2f}, max={w_train[train_pos_mask].max():.2f}")
 
     print(f"\n  Final split:")
     print(f"    Train: {len(X_train):,} ({y_train.sum():,} pos, {(y_train==0).sum():,} neg)")
     print(f"    Test:  {len(X_test):,} ({y_test.sum():,} pos, {(y_test==0).sum():,} neg)")
 
     return {
-        'X_train': X_train, 'y_train': y_train, 's_train': s_train,
-        'X_test': X_test, 'y_test': y_test, 's_test': s_test,
+        'X_train': X_train, 'y_train': y_train, 's_train': s_train, 'w_train': w_train,
+        'X_test': X_test, 'y_test': y_test, 's_test': s_test, 'w_test': w_test,
     }
 
 
-def train_model(X, y, C=1.0, l1_ratio=0.5):
+def train_model(X, y, C=1.0, l1_ratio=0.5, sample_weight=None):
     """Train a single logistic regression model.
 
     No class_weight='balanced' — the natural class imbalance pushes the
     intercept to ~-3.4, matching OECD prior of ~3-5% base corruption rate.
     Using balanced weights kept intercept near 0, causing 30%+ HR.
+
+    sample_weight: per-sample curriculum weights (confidence_level → [0.2, 0.5, 0.8, 1.0])
+    Negatives use weight=1.0. Higher-confidence positives get more weight.
     """
     model = LogisticRegression(
         C=C, l1_ratio=l1_ratio,
         max_iter=3000, solver='saga', random_state=42,
     )
-    model.fit(X, y)
+    model.fit(X, y, sample_weight=sample_weight)
     return model
 
 
@@ -320,7 +364,9 @@ def optuna_search(data, n_trials=100):
     val_idx = np.concatenate([val_pos_idx, val_neg_idx])
     fit_idx = np.setdiff1d(all_idx, val_idx)
 
+    w_train_all = data.get('w_train')
     X_fit, y_fit = X_train[fit_idx], y_train[fit_idx]
+    w_fit = w_train_all[fit_idx] if w_train_all is not None else None
     X_val, y_val = X_train[val_idx], y_train[val_idx]
 
     print(f"  3-way split: fit={len(X_fit):,} val={len(X_val):,} test=held-out")
@@ -329,7 +375,7 @@ def optuna_search(data, n_trials=100):
         C = trial.suggest_float('C', 0.001, 50.0, log=True)
         l1 = trial.suggest_float('l1_ratio', 0.0, 1.0)
 
-        model = train_model(X_fit, y_fit, C=C, l1_ratio=l1)
+        model = train_model(X_fit, y_fit, C=C, l1_ratio=l1, sample_weight=w_fit)
         proba = model.predict_proba(X_val)[:, 1]
 
         if len(set(y_val)) < 2:
@@ -365,15 +411,20 @@ def optuna_search(data, n_trials=100):
 
 
 def train_global_and_sector_models(data, C=1.0, l1_ratio=0.5, n_bootstrap=200):
-    """Train global + 12 per-sector models."""
+    """Train global + 12 per-sector models with curriculum weighting."""
     X_train, y_train, s_train = data['X_train'], data['y_train'], data['s_train']
     X_test, y_test, s_test = data['X_test'], data['y_test'], data['s_test']
+    w_train = data.get('w_train')  # curriculum weights (None = uniform)
+    w_test = data.get('w_test')
 
     results = {}
 
     # Global model
     print("\n--- Global Model ---")
-    global_model = train_model(X_train, y_train, C=C, l1_ratio=l1_ratio)
+    if w_train is not None:
+        print(f"  Curriculum weighting: mean_weight={w_train.mean():.3f} "
+              f"(pos: {w_train[y_train==1].mean():.3f}, neg: {w_train[y_train==0].mean():.3f})")
+    global_model = train_model(X_train, y_train, C=C, l1_ratio=l1_ratio, sample_weight=w_train)
     global_proba_train = global_model.predict_proba(X_train)[:, 1]
     global_proba_test = global_model.predict_proba(X_test)[:, 1]
 
@@ -430,7 +481,8 @@ def train_global_and_sector_models(data, C=1.0, l1_ratio=0.5, n_bootstrap=200):
     for b in range(n_bootstrap):
         idx = rng.choice(len(X_train), len(X_train), replace=True)
         try:
-            m = train_model(X_train[idx], y_train[idx], C=C, l1_ratio=l1_ratio)
+            w_b = w_train[idx] if w_train is not None else None
+            m = train_model(X_train[idx], y_train[idx], C=C, l1_ratio=l1_ratio, sample_weight=w_b)
             boot_coefs[b] = m.coef_[0]
         except Exception:
             boot_coefs[b] = coefs
@@ -468,7 +520,9 @@ def train_global_and_sector_models(data, C=1.0, l1_ratio=0.5, n_bootstrap=200):
             continue
 
         try:
-            sector_model = train_model(X_train[train_mask], y_train[train_mask], C=C, l1_ratio=l1_ratio)
+            w_sector = w_train[train_mask] if w_train is not None else None
+            sector_model = train_model(X_train[train_mask], y_train[train_mask],
+                                       C=C, l1_ratio=l1_ratio, sample_weight=w_sector)
             s_proba_test = sector_model.predict_proba(X_test[test_mask])[:, 1] if n_test_s > 0 else np.array([])
             s_auc = roc_auc_score(y_test[test_mask], s_proba_test) if n_test_s > 20 and len(set(y_test[test_mask])) > 1 else 0.0
             s_coefs = sector_model.coef_[0]
@@ -501,11 +555,14 @@ def train_global_and_sector_models(data, C=1.0, l1_ratio=0.5, n_bootstrap=200):
             rng_s = np.random.RandomState(42 + sid)
             X_s_train = X_train[train_mask]
             y_s_train = y_train[train_mask]
+            w_s_train = w_train[train_mask] if w_train is not None else None
             s_boot_coefs = np.zeros((s_n_bootstrap, len(FACTOR_NAMES)))
             for b in range(s_n_bootstrap):
                 idx_s = rng_s.choice(len(X_s_train), len(X_s_train), replace=True)
                 try:
-                    m_s = train_model(X_s_train[idx_s], y_s_train[idx_s], C=C, l1_ratio=l1_ratio)
+                    w_s_b = w_s_train[idx_s] if w_s_train is not None else None
+                    m_s = train_model(X_s_train[idx_s], y_s_train[idx_s], C=C, l1_ratio=l1_ratio,
+                                      sample_weight=w_s_b)
                     s_boot_coefs[b] = m_s.coef_[0]
                 except Exception:
                     s_boot_coefs[b] = s_coefs
