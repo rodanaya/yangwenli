@@ -6,7 +6,7 @@
  * known limitations. All data is hardcoded from methodology documentation.
  */
 
-import { useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem, slideUp, fadeIn } from '@/lib/animations'
 import { useTranslation, Trans } from 'react-i18next'
@@ -636,6 +636,399 @@ function DriftMonitorSection() {
 // ============================================================================
 // Main Component
 // ============================================================================
+
+// ============================================================================
+// Section 1: "What Drives the Score" — Feature Weights Racetrack
+// ============================================================================
+
+const RACETRACK_FEATURES = [
+  { name: 'Price Volatility', coeff: 1.38, direction: 'risk' as const },
+  { name: 'Vendor Concentration', coeff: 0.72, direction: 'risk' as const },
+  { name: 'Institution Diversity', coeff: 0.43, direction: 'protect' as const },
+  { name: 'Price Ratio', coeff: 0.39, direction: 'risk' as const },
+  { name: 'Network Members', coeff: 0.23, direction: 'risk' as const },
+  { name: 'Direct Award', coeff: 0.13, direction: 'risk' as const },
+  { name: 'Same-Day Contracts', coeff: 0.11, direction: 'risk' as const },
+  { name: 'Ad Period Days', coeff: 0.08, direction: 'risk' as const },
+]
+
+function FeatureWeightsRacetrack() {
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const el = sectionRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect() } },
+      { threshold: 0.3 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  const maxCoeff = 1.38
+
+  return (
+    <div ref={sectionRef} className="space-y-4">
+      <style>{`
+        @keyframes barRaceIn {
+          0% { transform: scaleX(0); }
+          80% { transform: scaleX(1.03); }
+          100% { transform: scaleX(1); }
+        }
+        @keyframes fadeSlideUp {
+          0% { opacity: 0; transform: translateY(12px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
+      <div className="border-l-4 pl-4" style={{ borderColor: 'var(--color-accent)' }}>
+        <h3 className="text-lg font-bold text-text-primary" style={{ fontFamily: 'var(--font-family-serif)' }}>
+          What Drives the Score
+        </h3>
+        <p className="text-xs text-text-muted mt-1">
+          v6.0 global model coefficients — 8 active features that determine risk
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        {RACETRACK_FEATURES.map((feat, i) => {
+          const widthPct = (feat.coeff / maxCoeff) * 100
+          const isProtective = feat.direction === 'protect'
+          const barColor = isProtective ? '#3b82f6' : 'var(--color-accent)'
+          const delay = i * 80
+
+          return (
+            <div
+              key={feat.name}
+              className="grid items-center gap-3"
+              style={{
+                gridTemplateColumns: '160px 1fr 50px',
+                opacity: visible ? 1 : 0,
+                animation: visible ? `fadeSlideUp 0.4s ${delay}ms ease-out both` : 'none',
+              }}
+            >
+              <span className="text-xs font-medium text-text-primary text-right truncate">
+                {feat.name}
+              </span>
+              <div className="relative h-6 rounded bg-background-elevated overflow-hidden">
+                <div
+                  className="absolute top-0 h-full rounded"
+                  style={{
+                    width: `${widthPct}%`,
+                    backgroundColor: barColor,
+                    transformOrigin: isProtective ? 'right' : 'left',
+                    animation: visible ? `barRaceIn 0.6s ${delay + 100}ms cubic-bezier(0.34, 1.56, 0.64, 1) both` : 'none',
+                    right: isProtective ? 0 : 'auto',
+                    left: isProtective ? 'auto' : 0,
+                  }}
+                />
+              </div>
+              <span className="text-xs font-bold tabular-nums text-text-primary">
+                {isProtective ? '-' : '+'}{feat.coeff.toFixed(2)}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+
+      <p className="text-[11px] text-text-muted italic pl-[172px]">
+        Institution Diversity: more diverse vendors = LOWER risk
+      </p>
+    </div>
+  )
+}
+
+// ============================================================================
+// Section 2: "Where 3.1M Contracts Land" — Risk Distribution Strip
+// ============================================================================
+
+const DISTRIBUTION_SEGMENTS = [
+  { label: 'Low', pct: 69.2, count: 2_110_325, color: '#16a34a' },
+  { label: 'Medium', pct: 18.5, count: 564_758, color: '#eab308' },
+  { label: 'High', pct: 3.6, count: 110_163, color: '#ea580c' },
+  { label: 'Critical', pct: 8.7, count: 266_048, color: '#dc2626' },
+]
+
+function useCountUpEffect(target: number, duration: number, active: boolean): number {
+  const [value, setValue] = useState(0)
+  const rafRef = useRef<number>(0)
+
+  useEffect(() => {
+    if (!active) { setValue(0); return }
+    const start = performance.now()
+    const tick = (now: number) => {
+      const elapsed = now - start
+      const progress = Math.min(elapsed / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setValue(Math.round(target * eased * 10) / 10)
+      if (progress < 1) rafRef.current = requestAnimationFrame(tick)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [target, duration, active])
+
+  return value
+}
+
+function RiskDistributionStrip() {
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const el = sectionRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect() } },
+      { threshold: 0.3 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div ref={sectionRef} className="space-y-4">
+      <style>{`
+        @keyframes stripGrow {
+          0% { max-width: 0; opacity: 0.7; }
+          100% { max-width: 100%; opacity: 1; }
+        }
+        @keyframes countPop {
+          0% { opacity: 0; transform: scale(0.5) translateY(6px); }
+          70% { transform: scale(1.08) translateY(-1px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}</style>
+
+      <div className="border-l-4 pl-4" style={{ borderColor: 'var(--color-accent)' }}>
+        <h3 className="text-lg font-bold text-text-primary" style={{ fontFamily: 'var(--font-family-serif)' }}>
+          Where 3.1M Contracts Land
+        </h3>
+        <p className="text-xs text-text-muted mt-1">
+          Risk level distribution across all scored contracts (v6.2 OECD-calibrated)
+        </p>
+      </div>
+
+      <div className="flex" style={{ maxWidth: 600 }}>
+        {DISTRIBUTION_SEGMENTS.map((seg, i) => (
+          <div
+            key={seg.label}
+            className="text-center"
+            style={{
+              width: `${seg.pct}%`,
+              opacity: visible ? 1 : 0,
+              animation: visible ? `countPop 0.5s ${i * 150 + 200}ms ease-out both` : 'none',
+            }}
+          >
+            <span className="text-sm font-bold tabular-nums text-text-primary">
+              {visible ? <CountUpSpan target={seg.pct} active={visible} /> : '0'}%
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex rounded-lg overflow-hidden" style={{ maxWidth: 600, height: 48 }}>
+        {DISTRIBUTION_SEGMENTS.map((seg, i) => (
+          <div
+            key={seg.label}
+            className="flex items-center justify-center overflow-hidden"
+            style={{
+              width: `${seg.pct}%`,
+              backgroundColor: seg.color,
+              animation: visible ? `stripGrow 0.6s ${i * 150}ms ease-out both` : 'none',
+            }}
+          >
+            {seg.pct > 5 && (
+              <span className="text-[10px] font-bold text-white drop-shadow-sm truncate px-1">
+                {seg.label}
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap gap-4" style={{ maxWidth: 600 }}>
+        {DISTRIBUTION_SEGMENTS.map((seg) => (
+          <div key={seg.label} className="flex items-center gap-1.5 text-xs">
+            <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: seg.color }} />
+            <span className="text-text-secondary">{seg.label}:</span>
+            <span className="text-text-primary tabular-nums font-medium">
+              {seg.count.toLocaleString()}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <p className="text-[11px] text-text-muted">
+        3,051,294 contracts analyzed — HR rate 12.3% (OECD 2-15% compliant)
+      </p>
+    </div>
+  )
+}
+
+function CountUpSpan({ target, active }: { target: number; active: boolean }) {
+  const val = useCountUpEffect(target, 1200, active)
+  return <>{val.toFixed(1)}</>
+}
+
+// ============================================================================
+// Section 3: "Validated Against Real Cases" — Ground Truth Detection
+// ============================================================================
+
+const GT_CASES_DISPLAY = [
+  { name: 'IMSS Ghost Companies', contracts: 9_366, detected: 99.9, avgScore: 0.977 },
+  { name: 'Segalmex Fraud', contracts: 6_326, detected: 99.6, avgScore: 0.664 },
+  { name: 'COVID-19 Procurement', contracts: 5_371, detected: 99.9, avgScore: 0.821 },
+  { name: 'Edenred Voucher Monopoly', contracts: 2_939, detected: 100, avgScore: 0.884 },
+  { name: 'Toka IT Monopoly', contracts: 1_954, detected: 100, avgScore: 0.964 },
+]
+
+function GroundTruthDetection() {
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const el = sectionRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect() } },
+      { threshold: 0.3 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  const getBadgeColor = useCallback((score: number) => {
+    if (score >= 0.60) return '#dc2626'
+    if (score >= 0.40) return '#ea580c'
+    if (score >= 0.15) return '#eab308'
+    return '#16a34a'
+  }, [])
+
+  const getBadgeLabel = useCallback((score: number) => {
+    if (score >= 0.60) return 'Critical'
+    if (score >= 0.40) return 'High'
+    if (score >= 0.15) return 'Medium'
+    return 'Low'
+  }, [])
+
+  return (
+    <div ref={sectionRef} className="space-y-4">
+      <style>{`
+        @keyframes detectionBarFill {
+          0% { width: 0; }
+          80% { width: calc(var(--target-width) * 1.01); }
+          100% { width: var(--target-width); }
+        }
+        @keyframes dotAppear {
+          0% { opacity: 0; transform: scale(0); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
+
+      <div className="border-l-4 pl-4" style={{ borderColor: 'var(--color-accent)' }}>
+        <h3 className="text-lg font-bold text-text-primary" style={{ fontFamily: 'var(--font-family-serif)' }}>
+          Validated Against Real Cases
+        </h3>
+        <p className="text-xs text-text-muted mt-1">
+          Detection rates on 5 documented corruption cases — the model found them
+        </p>
+      </div>
+
+      <div className="space-y-5">
+        {GT_CASES_DISPLAY.map((c, idx) => {
+          const dotCount = Math.min(Math.ceil(c.contracts / 500), 30)
+          const detectedDots = Math.round(dotCount * (c.detected / 100))
+          const missedDots = dotCount - detectedDots
+          const badgeColor = getBadgeColor(c.avgScore)
+          const badgeLabel = getBadgeLabel(c.avgScore)
+
+          return (
+            <div
+              key={c.name}
+              className="space-y-1.5"
+              style={{
+                opacity: visible ? 1 : 0,
+                animation: visible ? `fadeSlideUp 0.5s ${idx * 120}ms ease-out both` : 'none',
+              }}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-sm font-bold text-text-primary truncate">{c.name}</span>
+                  <span className="text-[10px] text-text-muted tabular-nums shrink-0">
+                    {c.contracts.toLocaleString()} contracts
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span
+                    className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold"
+                    style={{ backgroundColor: `${badgeColor}20`, color: badgeColor, border: `1px solid ${badgeColor}40` }}
+                  >
+                    {badgeLabel} {(c.avgScore * 100).toFixed(0)}%
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-2 rounded-full bg-background-elevated overflow-hidden">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      ['--target-width' as string]: `${c.detected}%`,
+                      width: visible ? `${c.detected}%` : '0%',
+                      backgroundColor: 'var(--color-accent)',
+                      animation: visible ? `detectionBarFill 0.7s ${idx * 120 + 150}ms ease-out both` : 'none',
+                    }}
+                    role="progressbar"
+                    aria-valuenow={c.detected}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`${c.detected}% of ${c.name} contracts detected`}
+                  />
+                </div>
+                <span className="text-xs font-bold tabular-nums text-text-primary w-12 text-right">
+                  {c.detected}%
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1 flex-wrap">
+                {Array.from({ length: detectedDots }).map((_, di) => (
+                  <span
+                    key={`d-${di}`}
+                    className="inline-block w-2 h-2 rounded-full"
+                    style={{
+                      backgroundColor: 'var(--color-accent)',
+                      animation: visible ? `dotAppear 0.3s ${idx * 120 + 200 + di * 30}ms ease-out both` : 'none',
+                    }}
+                  />
+                ))}
+                {Array.from({ length: missedDots }).map((_, mi) => (
+                  <span
+                    key={`m-${mi}`}
+                    className="inline-block w-2 h-2 rounded-full"
+                    style={{
+                      backgroundColor: 'var(--color-border)',
+                      animation: visible ? `dotAppear 0.3s ${idx * 120 + 200 + (detectedDots + mi) * 30}ms ease-out both` : 'none',
+                    }}
+                  />
+                ))}
+                <span className="text-[10px] text-text-muted ml-1">
+                  1 dot = ~500 contracts
+                </span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      <p className="text-[11px] text-text-muted border-t border-border/30 pt-3 mt-4">
+        Detection rate = contracts scored Medium or above. The model identifies 99%+ of contracts
+        from major documented scandals — validating that learned patterns generalize to real fraud.
+      </p>
+    </div>
+  )
+}
 
 export default function ModelTransparency() {
   const { t } = useTranslation('methodology')
@@ -1533,6 +1926,27 @@ export default function ModelTransparency() {
       {/* Distribution Drift Monitor (v5.2 live)                          */}
       {/* ================================================================ */}
       <DriftMonitorSection />
+
+      {/* ================================================================ */}
+      {/* NYT-Style Animated Explainer Sections                            */}
+      {/* ================================================================ */}
+      <Card>
+        <CardContent className="p-6 sm:p-8">
+          <FeatureWeightsRacetrack />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-6 sm:p-8">
+          <RiskDistributionStrip />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-6 sm:p-8">
+          <GroundTruthDetection />
+        </CardContent>
+      </Card>
 
       {/* ================================================================ */}
       {/* L5: Known Limitations                                            */}

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { motion, useInView, type Variants } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
@@ -28,30 +28,52 @@ interface PHIIndicator {
   label: string
   description: string
   benchmark: string
+  weight?: number | null
+}
+
+interface RiskLevelEntry {
+  count: number
+  value_mxn: number
+  count_pct: number
+  value_pct: number
+}
+
+interface RiskDistribution {
+  critical: RiskLevelEntry
+  high: RiskLevelEntry
+  medium: RiskLevelEntry
+  low: RiskLevelEntry
 }
 
 interface PHISector {
   sector_id: number
   sector_name: string
   grade: string
+  phi_composite_score?: number
   greens: number
   yellows: number
   reds: number
   total_indicators: number
   total_contracts: number
   total_value_mxn: number
+  competition_by_value?: number
+  direct_award_rate_by_value?: number
+  risk_distribution?: RiskDistribution
   indicators: Record<string, PHIIndicator>
 }
 
 interface PHINational {
   sector_name: string
   grade: string
+  phi_composite_score?: number
   greens: number
   yellows: number
   reds: number
   total_indicators: number
   total_contracts: number
   total_value_mxn: number
+  competition_by_value?: number
+  risk_distribution?: RiskDistribution
   indicators: Record<string, PHIIndicator>
 }
 
@@ -67,7 +89,9 @@ interface PHISectorsResponse {
 interface TrendYear {
   year: number
   grade: string
+  phi_composite_score?: number
   competition_rate: number
+  competition_by_value?: number
   single_bid_rate: number
   avg_bidders: number
   total_contracts: number
@@ -89,13 +113,27 @@ interface CorrelationResponse {
 
 const SERIF = "'Playfair Display', Georgia, serif"
 
+// Full 10-tier grade palette
 const GRADE_COLORS: Record<string, { text: string; bg: string; border: string }> = {
-  A: { text: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.20)' },
-  B: { text: '#60a5fa', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.20)' },
-  C: { text: '#fbbf24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.20)' },
-  D: { text: '#fb923c', bg: 'rgba(251,146,60,0.08)', border: 'rgba(251,146,60,0.20)' },
-  F: { text: '#f87171', bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.20)' },
+  'S':  { text: '#34d399', bg: 'rgba(16,185,129,0.10)',  border: 'rgba(52,211,153,0.25)' },
+  'A':  { text: '#4ade80', bg: 'rgba(74,222,128,0.08)',  border: 'rgba(74,222,128,0.20)' },
+  'B+': { text: '#a3e635', bg: 'rgba(132,204,22,0.08)',  border: 'rgba(163,230,53,0.20)' },
+  'B':  { text: '#60a5fa', bg: 'rgba(96,165,250,0.08)',  border: 'rgba(96,165,250,0.20)' },
+  'C+': { text: '#fcd34d', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(252,211,77,0.20)' },
+  'C':  { text: '#fbbf24', bg: 'rgba(251,191,36,0.08)',  border: 'rgba(251,191,36,0.20)' },
+  'D':  { text: '#fb923c', bg: 'rgba(251,146,60,0.08)',  border: 'rgba(251,146,60,0.20)' },
+  'D-': { text: '#f87171', bg: 'rgba(239,68,68,0.08)',   border: 'rgba(248,113,113,0.20)' },
+  'F':  { text: '#fca5a5', bg: 'rgba(153,27,27,0.12)',   border: 'rgba(239,68,68,0.20)' },
+  'F-': { text: '#fca5a5', bg: 'rgba(28,5,5,0.75)',      border: 'rgba(153,27,27,0.40)' },
 }
+
+// Risk level visual config
+const RISK_LEVEL_CONFIG = {
+  critical: { color: '#dc2626', label: 'Crítico' },
+  high:     { color: '#ea580c', label: 'Alto' },
+  medium:   { color: '#eab308', label: 'Medio' },
+  low:      { color: '#22c55e', label: 'Bajo' },
+} as const
 
 const LIGHT_COLORS = {
   green: { dot: 'bg-emerald-500', label: 'text-emerald-700' },
@@ -121,7 +159,7 @@ const INDICATOR_I18N: Record<string, string> = {
   amendment_rate: 'amendmentRate',
 }
 
-const GRADE_ORDER: Record<string, number> = { F: 0, D: 1, C: 2, B: 3, A: 4 }
+const GRADE_ORDER: Record<string, number> = { 'F-': 0, 'F': 1, 'D-': 2, 'D': 3, 'C': 4, 'C+': 5, 'B': 6, 'B+': 7, 'A': 8, 'S': 9 }
 
 // ---------------------------------------------------------------------------
 // Animation Variants
@@ -182,15 +220,68 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   )
 }
 
+// Stacked horizontal bar: risk level distribution by MXN value
+function RiskDistributionBar({ dist, compact = false }: { dist?: RiskDistribution; compact?: boolean }) {
+  if (!dist) return null
+  const total = (dist.critical?.value_mxn ?? 0) + (dist.high?.value_mxn ?? 0) + (dist.medium?.value_mxn ?? 0) + (dist.low?.value_mxn ?? 0)
+  if (total === 0) return null
+  const levels = [
+    { key: 'critical' as const, cfg: RISK_LEVEL_CONFIG.critical },
+    { key: 'high'     as const, cfg: RISK_LEVEL_CONFIG.high },
+    { key: 'medium'   as const, cfg: RISK_LEVEL_CONFIG.medium },
+    { key: 'low'      as const, cfg: RISK_LEVEL_CONFIG.low },
+  ]
+  return (
+    <div className={compact ? '' : 'mt-3'}>
+      {!compact && (
+        <p className="text-[10px] font-medium uppercase tracking-wide mb-1.5" style={{ color: 'var(--color-text-muted)' }}>
+          Distribución de riesgo (valor MXN)
+        </p>
+      )}
+      <div className={cn('flex rounded-full overflow-hidden gap-[1px]', compact ? 'h-2' : 'h-3')}>
+        {levels.map(({ key, cfg }) => {
+          const val = dist[key]?.value_mxn ?? 0
+          const pct = (val / total) * 100
+          if (pct < 0.5) return null
+          return (
+            <div
+              key={key}
+              style={{ width: `${pct}%`, backgroundColor: cfg.color, minWidth: '3px' }}
+              title={`${cfg.label}: ${pct.toFixed(1)}% del valor`}
+            />
+          )
+        })}
+      </div>
+      {!compact && (
+        <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
+          {levels.map(({ key, cfg }) => {
+            const entry = dist[key]
+            if (!entry || entry.value_pct < 0.5) return null
+            return (
+              <span key={key} className="flex items-center gap-1 text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                <span className="w-2 h-2 rounded-sm flex-shrink-0" style={{ backgroundColor: cfg.color }} />
+                <span style={{ color: cfg.color }}>{cfg.label}</span>
+                {entry.value_pct.toFixed(0)}%
+              </span>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Hero: National Grade
 // ---------------------------------------------------------------------------
 
 function NationalGradeHero({ national }: { national: PHINational }) {
-  const colors = GRADE_COLORS[national.grade] || GRADE_COLORS.F
+  const colors = GRADE_COLORS[national.grade] ?? GRADE_COLORS['F']
+  const compByValue = national.competition_by_value
   const compRate = national.indicators['competition_rate']
   const sbRate = national.indicators['single_bid_rate']
   const avgBid = national.indicators['avg_bidders']
+  const compositeScore = national.phi_composite_score
 
   return (
     <section className="mb-10">
@@ -226,14 +317,15 @@ function NationalGradeHero({ national }: { national: PHINational }) {
           {/* Big grade letter — number-pop animation */}
           <span
             className="leading-none font-bold anim-number-pop"
-            style={{
-              fontFamily: SERIF,
-              fontSize: '9rem',
-              color: colors.text,
-            }}
+            style={{ fontFamily: SERIF, fontSize: '9rem', color: colors.text }}
           >
             {national.grade}
           </span>
+          {compositeScore != null && (
+            <p className="text-sm tabular-nums font-medium mt-1" style={{ color: colors.text, opacity: 0.8 }}>
+              {compositeScore.toFixed(1)} / 100
+            </p>
+          )}
           <p
             className="text-sm font-semibold tracking-[0.1em] uppercase mt-2 mb-6"
             style={{ color: 'var(--color-text-muted)' }}
@@ -243,14 +335,25 @@ function NationalGradeHero({ national }: { national: PHINational }) {
 
           {/* Supporting stats row */}
           <div className="flex flex-wrap justify-center gap-8 text-center">
+            {compByValue != null && (
+              <div>
+                <p className="text-2xl font-bold" style={{
+                  fontFamily: SERIF,
+                  color: compByValue >= 50 ? '#22c55e' : compByValue >= 30 ? '#f59e0b' : '#ef4444',
+                }}>
+                  {compByValue.toFixed(1)}%
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Gasto competitivo</p>
+                <p className="text-[10px]" style={{ color: 'var(--color-text-muted)', opacity: 0.7 }}>por valor MXN</p>
+              </div>
+            )}
             {compRate && (
               <div>
                 <p className="text-2xl font-bold" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
                   {compRate.value}%
                 </p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                  Tasa de competencia
-                </p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Contratos competitivos</p>
+                <p className="text-[10px]" style={{ color: 'var(--color-text-muted)', opacity: 0.7 }}>por número</p>
               </div>
             )}
             {sbRate && (
@@ -275,8 +378,15 @@ function NationalGradeHero({ national }: { national: PHINational }) {
             )}
           </div>
 
+          {/* Risk distribution */}
+          {national.risk_distribution && (
+            <div className="w-full max-w-sm mt-6 px-2">
+              <RiskDistributionBar dist={national.risk_distribution} />
+            </div>
+          )}
+
           {/* Traffic dots summary */}
-          <div className="flex items-center gap-4 mt-6 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+          <div className="flex items-center gap-4 mt-4 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
             <span className="flex items-center gap-1.5">
               <TrafficDot light="green" size="md" /> {national.greens} bien
             </span>
@@ -299,32 +409,37 @@ function NationalGradeHero({ national }: { national: PHINational }) {
 
 function GradeLegend() {
   const items = [
-    { grade: 'A', label: 'Excelente competencia' },
-    { grade: 'B', label: 'Buena' },
-    { grade: 'C', label: 'Aceptable' },
-    { grade: 'D', label: 'Deficiente' },
-    { grade: 'F', label: 'Cr\u00edtico' },
+    { grade: 'S',  label: 'Modelo' },
+    { grade: 'A',  label: 'Sólido' },
+    { grade: 'B+', label: 'Notable' },
+    { grade: 'B',  label: 'Adecuado' },
+    { grade: 'C+', label: 'Atención' },
+    { grade: 'C',  label: 'Preocupante' },
+    { grade: 'D',  label: 'Alto riesgo' },
+    { grade: 'D-', label: 'Grave' },
+    { grade: 'F',  label: 'Crítico' },
+    { grade: 'F-', label: 'Bandera roja' },
   ]
 
   return (
     <div
-      className="fern-card rounded-xl px-5 py-3 mb-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs"
+      className="fern-card rounded-xl px-5 py-3 mb-8 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs"
       style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
     >
-      <span className="font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
+      <span className="font-semibold uppercase tracking-wide text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
         Escala
       </span>
       {items.map((item) => {
         const c = GRADE_COLORS[item.grade]
         return (
-          <span key={item.grade} className="flex items-center gap-1.5">
+          <span key={item.grade} className="flex items-center gap-1">
             <span
-              className="inline-flex items-center justify-center w-6 h-6 rounded-md text-sm font-bold"
+              className="inline-flex items-center justify-center w-6 h-6 rounded-md text-xs font-bold"
               style={{ fontFamily: SERIF, color: c.text, backgroundColor: c.bg, border: `1px solid ${c.border}` }}
             >
               {item.grade}
             </span>
-            {item.label}
+            <span className="hidden sm:inline text-[10px]">{item.label}</span>
           </span>
         )
       })}
@@ -900,6 +1015,242 @@ function InstitutionTbody({ children }: { children: React.ReactNode }) {
   )
 }
 
+// ---------------------------------------------------------------------------
+// InstitutionDotScale — Bloomberg-style dot ranking on a risk axis
+// ---------------------------------------------------------------------------
+
+interface DotTooltipState {
+  id: number
+  name: string
+  score: number
+  grade: string
+  sector: string
+  x: number
+  y: number
+}
+
+const DOT_GRADE_COLORS: Record<string, string> = {
+  'S': '#10b981', 'A': '#16a34a',
+  'B+': '#22c55e', 'B': '#22c55e',
+  'C+': '#eab308', 'C': '#eab308',
+  'D': '#f97316', 'D-': '#f97316',
+  'F': '#dc2626', 'F-': '#dc2626',
+}
+
+function InstitutionDotScale({ items }: { items: InstitutionScorecardItem[] }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [containerWidth, setContainerWidth] = useState(0)
+  const [tooltip, setTooltip] = useState<DotTooltipState | null>(null)
+  const [visible, setVisible] = useState(false)
+
+  // Measure container width
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const obs = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width)
+      }
+    })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  // IntersectionObserver — trigger dot animation once
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect() } },
+      { threshold: 0.2 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  const DOT_SIZE = 10
+  const ROW_COUNT = 4
+  const ROW_HEIGHT = 18
+  const AXIS_TOP = ROW_COUNT * ROW_HEIGHT + 4
+
+  const handleDotEnter = useCallback((
+    inst: InstitutionScorecardItem,
+    e: React.MouseEvent<HTMLDivElement>
+  ) => {
+    const rect = containerRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const dotRect = e.currentTarget.getBoundingClientRect()
+    setTooltip({
+      id: inst.institution_id,
+      name: inst.institution_name,
+      score: inst.total_score,
+      grade: inst.grade,
+      sector: inst.sector_name ?? '',
+      x: dotRect.left - rect.left + DOT_SIZE / 2,
+      y: dotRect.top - rect.top,
+    })
+  }, [])
+
+  const handleDotLeave = useCallback(() => setTooltip(null), [])
+
+  // Clamp tooltip X so it doesn't overflow
+  const tooltipX = useMemo(() => {
+    if (!tooltip) return 0
+    const half = 120
+    return Math.max(half, Math.min(containerWidth - half, tooltip.x))
+  }, [tooltip, containerWidth])
+
+  if (items.length === 0) return null
+
+  // While measuring, render invisible container
+  if (containerWidth === 0) {
+    return (
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <h3 className="text-sm font-semibold" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
+            Ranking de Instituciones
+          </h3>
+          <span
+            className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+            style={{ backgroundColor: 'rgba(196,30,58,0.10)', color: '#c41e3a' }}
+          >
+            {items.length}
+          </span>
+        </div>
+        <div
+          ref={containerRef}
+          className="fern-card rounded-xl p-4"
+          style={{ borderColor: 'var(--color-border)', minHeight: 140 }}
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div className="mb-6">
+      {/* Section header */}
+      <div className="flex items-center gap-2 mb-3">
+        <h3 className="text-sm font-semibold" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
+          Ranking de Instituciones
+        </h3>
+        <span
+          className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+          style={{ backgroundColor: 'rgba(196,30,58,0.10)', color: '#c41e3a' }}
+        >
+          {items.length}
+        </span>
+      </div>
+
+      <div
+        ref={containerRef}
+        className={cn('fern-card rounded-xl p-4 relative', visible ? 'dot-scale-visible' : '')}
+        style={{ borderColor: 'var(--color-border)', minHeight: AXIS_TOP + 36 }}
+      >
+        {/* Dots */}
+        {items.map((inst, i) => {
+          const x = (inst.total_score / 100) * (containerWidth - DOT_SIZE)
+          const row = i % ROW_COUNT
+          const color = DOT_GRADE_COLORS[inst.grade] ?? '#64748b'
+          const isHovered = tooltip?.id === inst.institution_id
+          return (
+            <div
+              key={inst.institution_id}
+              className="dot-scale-dot absolute cursor-pointer"
+              role="button"
+              tabIndex={0}
+              aria-label={`${inst.institution_name}: ${inst.total_score} puntos, grado ${inst.grade}`}
+              style={{
+                left: x,
+                top: row * ROW_HEIGHT,
+                width: DOT_SIZE,
+                height: DOT_SIZE,
+                borderRadius: '50%',
+                backgroundColor: color,
+                animationDelay: `${i * 30}ms`,
+                transform: isHovered ? 'scale(1.8)' : undefined,
+                zIndex: isHovered ? 10 : 1,
+                transition: 'transform 0.15s ease',
+                boxShadow: isHovered ? `0 0 0 2px var(--color-background-card), 0 0 0 3px ${color}` : undefined,
+              }}
+              onMouseEnter={(e) => handleDotEnter(inst, e)}
+              onMouseLeave={handleDotLeave}
+              onFocus={(e) => handleDotEnter(inst, e as unknown as React.MouseEvent<HTMLDivElement>)}
+              onBlur={handleDotLeave}
+            />
+          )
+        })}
+
+        {/* Gradient axis bar */}
+        <div
+          className="absolute left-4 right-4 rounded-full"
+          style={{
+            top: AXIS_TOP,
+            height: 6,
+            background: 'linear-gradient(to right, #dc2626, #f97316, #eab308, #22c55e, #16a34a)',
+            opacity: 0.7,
+          }}
+        />
+
+        {/* Axis labels */}
+        <div
+          className="absolute left-4 right-4 flex justify-between"
+          style={{ top: AXIS_TOP + 10 }}
+        >
+          <span className="text-[10px] font-medium" style={{ color: 'var(--color-text-muted)' }}>
+            Mas Riesgo
+          </span>
+          <span className="text-[10px] font-medium" style={{ color: 'var(--color-text-muted)' }}>
+            Mas Transparente
+          </span>
+        </div>
+
+        {/* Tooltip */}
+        {tooltip && (
+          <div
+            className="absolute pointer-events-none"
+            style={{
+              left: tooltipX,
+              top: tooltip.y - 8,
+              transform: 'translate(-50%, -100%)',
+              zIndex: 50,
+            }}
+          >
+            <div
+              className="rounded-lg px-3 py-2 shadow-lg text-center whitespace-nowrap"
+              style={{
+                backgroundColor: 'var(--color-background-card)',
+                border: '1px solid var(--color-border)',
+                maxWidth: 260,
+              }}
+            >
+              <p
+                className="text-xs font-semibold leading-tight mb-1"
+                style={{ color: 'var(--color-text-primary)', whiteSpace: 'normal' }}
+              >
+                {tooltip.name}
+              </p>
+              <div className="flex items-center justify-center gap-2">
+                <span
+                  className="text-lg font-bold tabular-nums"
+                  style={{ fontFamily: SERIF, color: DOT_GRADE_COLORS[tooltip.grade] ?? '#64748b' }}
+                >
+                  {tooltip.score.toFixed(0)}
+                </span>
+                <GradeBadge10 grade={tooltip.grade} size="sm" />
+              </div>
+              {tooltip.sector && (
+                <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                  {SECTORS_ES[tooltip.sector] ?? tooltip.sector}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function InstitutionScorecardsTab() {
   const [page, setPage] = useState(1)
   const [sortBy, setSortBy] = useState('total_score')
@@ -1012,6 +1363,9 @@ function InstitutionScorecardsTab() {
           {Object.entries(SECTORS_ES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
       </div>
+
+      {/* Dot Scale visualization */}
+      {!isLoading && data?.data && <InstitutionDotScale items={data.data} />}
 
       {/* Table */}
       <div className="fern-card rounded-2xl overflow-hidden" style={{ borderColor: 'var(--color-border)' }}>
