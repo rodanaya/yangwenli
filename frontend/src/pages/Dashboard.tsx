@@ -394,18 +394,24 @@ function KPINumber({ value, color }: { value: string; color: string }) {
 const KPICard = memo(function KPICard({
   label, value, sublabel, color, loading, icon: Icon, trend, onClick, sparkData, sparkKey,
 }: KPICardProps) {
+  const [isHovered, setIsHovered] = useState(false)
   return (
     <button
       onClick={onClick}
       disabled={!onClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       className={cn(
         'fern-card relative flex flex-col justify-between p-7 text-left overflow-hidden group',
-        onClick && 'cursor-pointer hover:scale-[1.005]',
+        onClick && 'cursor-pointer',
         !onClick && 'cursor-default',
       )}
       style={{
         borderTopColor: color,
         borderTopWidth: '3px',
+        transform: isHovered && onClick ? 'scale(1.02)' : 'scale(1)',
+        boxShadow: isHovered && onClick ? `0 0 24px 2px ${color}25, 0 0 48px 4px ${color}10` : 'none',
+        transition: 'transform 200ms ease, box-shadow 200ms ease',
       }}
       tabIndex={onClick ? 0 : -1}
       onKeyDown={onClick ? (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } } : undefined}
@@ -1866,10 +1872,14 @@ export function Dashboard() {
           </div>
         )}
       </DashboardSection>
+      </ScrollReveal>
+
+      <SectionDivider />
 
       {/* ================================================================ */}
       {/* ROW 4: TOP VENDORS + WHERE THE MONEY GOES                       */}
       {/* ================================================================ */}
+      <ScrollReveal delay={0}>
       <div className="grid gap-5 grid-cols-1 lg:grid-cols-2">
         {/* Top Vendors */}
         <DashboardSection
@@ -1946,6 +1956,7 @@ export function Dashboard() {
           )}
         </DashboardSection>
       </div>
+      </ScrollReveal>
 
       {/* ================================================================ */}
       {/* GROUND TRUTH VALIDATION                                          */}

@@ -7,7 +7,7 @@
  */
 
 import React, { useMemo, useRef, useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useInView, useReducedMotion } from 'framer-motion'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -35,6 +35,130 @@ import {
   Share2,
   Check,
 } from 'lucide-react'
+
+// ============================================================================
+// Cinematic Components — Fern/NYT editorial enhancements
+// ============================================================================
+
+function CinematicHero() {
+  const reduced = useReducedMotion()
+
+  return (
+    <div className="relative overflow-hidden pt-12 pb-16 mb-8">
+      {/* Giant ghost year range */}
+      <div
+        className="select-none pointer-events-none text-center"
+        style={{
+          fontSize: 'clamp(4rem, 15vw, 14rem)',
+          fontWeight: 900,
+          lineHeight: 1,
+          WebkitTextStroke: '1px rgba(220,38,38,0.3)',
+          color: 'transparent',
+          letterSpacing: '-0.02em',
+        }}
+        aria-hidden="true"
+      >
+        2002–2025
+      </div>
+
+      {/* Overlaid subtitle */}
+      <motion.p
+        className="text-center text-sm sm:text-base tracking-[0.3em] uppercase text-text-muted/70 font-mono mt-4"
+        initial={reduced ? {} : { opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      >
+        Mexico's Procurement Record
+      </motion.p>
+
+      {/* Animated horizontal gradient line */}
+      <motion.div
+        className="mx-auto mt-6 h-px"
+        style={{
+          background: 'linear-gradient(90deg, transparent, #dc2626, transparent)',
+          maxWidth: '80%',
+        }}
+        initial={reduced ? {} : { scaleX: 0 }}
+        animate={{ scaleX: 1 }}
+        transition={{ delay: 1.0, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+      />
+    </div>
+  )
+}
+
+function EditorialStat({
+  value,
+  label,
+  delay = 0,
+}: {
+  value: string
+  label: string
+  delay?: number
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: '-60px' })
+  const reduced = useReducedMotion()
+
+  return (
+    <motion.div
+      ref={ref}
+      className="py-8 border-l-[3px] border-l-[#dc2626] pl-6"
+      initial={reduced ? {} : { opacity: 0, x: -40 }}
+      animate={isInView ? { opacity: 1, x: 0 } : {}}
+      transition={{ delay: delay / 1000, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <div
+        className="font-black text-text-primary leading-none"
+        style={{ fontSize: 'clamp(3rem, 8vw, 7rem)' }}
+      >
+        {value}
+      </div>
+      <div className="mt-2 text-xs font-bold tracking-[0.2em] uppercase text-[#dc2626]/70 font-mono">
+        {label}
+      </div>
+    </motion.div>
+  )
+}
+
+function PullQuote({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef<HTMLQuoteElement>(null)
+  const isInView = useInView(ref, { once: true, margin: '-40px' })
+  const reduced = useReducedMotion()
+
+  return (
+    <motion.blockquote
+      ref={ref}
+      className="border-l-[3px] border-l-[#dc2626] pl-6 py-4 my-10"
+      initial={reduced ? {} : { opacity: 0 }}
+      animate={isInView ? { opacity: 1 } : {}}
+      transition={{ delay: delay / 1000, duration: 0.8 }}
+    >
+      <p className="text-lg sm:text-xl italic text-text-secondary leading-relaxed">
+        {children}
+      </p>
+    </motion.blockquote>
+  )
+}
+
+function AnimatedDivider() {
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: '-20px' })
+
+  return (
+    <div ref={ref} className="py-4">
+      <div
+        className="h-px mx-auto"
+        style={{
+          background: 'linear-gradient(90deg, #dc2626, #dc262640)',
+          maxWidth: '100%',
+          transform: isInView ? 'scaleX(1)' : 'scaleX(0)',
+          transformOrigin: 'left center',
+          transition: 'transform 1200ms cubic-bezier(0.16, 1, 0.3, 1)',
+        }}
+      />
+    </div>
+  )
+}
 
 // ============================================================================
 // Data Hook
@@ -79,24 +203,51 @@ export function ExecutiveSummary() {
     )
   }
 
+  const highRiskPct = (data.risk.high_pct + data.risk.critical_pct).toFixed(1)
+  const totalValueT = (data.headline.total_value / 1e12).toFixed(1)
+
   return (
     <article className="max-w-4xl mx-auto pb-20 space-y-16 print:text-black print:bg-background-card">
+      {/* Cinematic opening hero */}
+      <CinematicHero />
+
       <ScrollReveal delay={80}><ReportHeader data={data} /></ScrollReveal>
+
+      {/* Editorial stat moments */}
+      <div className="space-y-2">
+        <EditorialStat value={formatNumber(data.headline.total_contracts)} label="Federal Contracts Analyzed" delay={0} />
+        <EditorialStat value={`${totalValueT}T MXN`} label="Total Procurement Value" delay={200} />
+        <EditorialStat value={`${highRiskPct}%`} label="High-Risk Rate" delay={400} />
+      </div>
+
       <ScrollReveal delay={100}><StatBombs data={data} /></ScrollReveal>
+
+      {/* Pull quote */}
+      <PullQuote>
+        One in eight contracts shows statistical patterns consistent with procurement fraud.
+      </PullQuote>
+
       <ScrollReveal delay={120}><WhatWeFound data={data} /></ScrollReveal>
-      <Divider />
+      <AnimatedDivider />
       {/* 02 — WHAT IT FOUND: Three Systemic Patterns */}
       <ScrollReveal><SectionThreePatterns data={data} /></ScrollReveal>
-      <Divider />
+      <AnimatedDivider />
       {/* 04 — THE THREAT: Risk Scores & Value at Risk */}
       <ScrollReveal><SectionThreat data={data} /></ScrollReveal>
-      <Divider />
+
+      {/* Pull quote before vendors */}
+      <PullQuote delay={200}>
+        The procurement system's greatest vulnerability is not any single contract — it is the
+        structural concentration of public spending in vendors that operate without meaningful competition.
+      </PullQuote>
+
+      <AnimatedDivider />
       {/* 06 — WHO BENEFITS: Top Vendors */}
       <ScrollReveal><SectionVendors data={data} navigate={navigate} /></ScrollReveal>
-      <Divider />
+      <AnimatedDivider />
       {/* 07 — WHICH SECTORS: Risk Concentration */}
       <ScrollReveal><SectionSectors data={data} navigate={navigate} /></ScrollReveal>
-      <Divider />
+      <AnimatedDivider />
       {/* 11 — NOW WHAT: Recommendations */}
       <ScrollReveal><SectionRecommendations navigate={navigate} /></ScrollReveal>
       <ScrollReveal><ReportFooter data={data} /></ScrollReveal>
@@ -291,7 +442,7 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
       color: '#22d3ee',
     },
     {
-      value: '0.849',
+      value: '0.863',
       label: 'Model AUC',
       sub: 'Vendor-stratified split · v6.0',
       glow: 'rgba(34,197,94,0.3)',
@@ -1084,7 +1235,7 @@ function SectionVendors({
               return (
                 <tr
                   key={v.id}
-                  className="border-b border-border/20 hover:bg-surface-raised/50 cursor-pointer transition-colors"
+                  className="border-b border-border/20 border-l-[0px] border-l-transparent hover:bg-surface-raised/50 hover:border-l-[3px] hover:border-l-[#dc2626] cursor-pointer transition-all duration-200"
                   onClick={() => navigate(`/vendors/${v.id}`)}
                 >
                   <td className="py-2 pr-3 text-text-muted font-mono text-xs">
@@ -1306,6 +1457,15 @@ function SectionHeading({
 }) {
   return (
     <div className="mb-6">
+      {/* Small monospace crimson number label */}
+      <div className="mb-2">
+        <span
+          className="font-mono font-bold"
+          style={{ fontSize: '11px', letterSpacing: '0.3em', color: 'rgba(220, 38, 38, 0.7)' }}
+        >
+          {number}
+        </span>
+      </div>
       <div className="editorial-rule">
         <Icon className="h-4 w-4 text-accent flex-shrink-0" />
         <span className="editorial-label text-accent">{number}</span>
@@ -1369,16 +1529,6 @@ function SectorCallout({ name, color, text }: { name: string; color: string; tex
     </div>
   )
 }
-
-function Divider() {
-  return (
-    <div className="flex items-center gap-4 py-2">
-      <div className="accent-rule" />
-      <div className="h-px flex-1 bg-border/20" />
-    </div>
-  )
-}
-
 
 function LoadingSkeleton() {
   return (

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback, useMemo, memo, forwardRef } f
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useInView, useMotionValue, animate as fmAnimate } from 'framer-motion'
 import { ArrowRight, ChevronDown, Shield, Search, BarChart3, FileWarning } from 'lucide-react'
 import { analysisApi, phiApi } from '@/api/client'
 import type { FastDashboardData } from '@/api/types'
@@ -44,6 +44,420 @@ const GRADE_COLORS: Record<string, { text: string; bg: string; border: string }>
 
 const SERIF = "'Playfair Display', Georgia, serif"
 const CRIMSON = '#c41e3a'
+
+// ---------------------------------------------------------------------------
+// GradientMeshBackground -- 3 animated radial-gradient orbs
+// ---------------------------------------------------------------------------
+const GradientMeshBackground = memo(function GradientMeshBackground() {
+  return (
+    <div
+      className="absolute inset-0 overflow-hidden pointer-events-none"
+      style={{ zIndex: 1 }}
+      aria-hidden="true"
+    >
+      {/* Crimson orb */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '15%',
+          left: '20%',
+          width: '50vw',
+          height: '50vw',
+          maxWidth: 600,
+          maxHeight: 600,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(196,30,58,0.35) 0%, transparent 70%)',
+          filter: 'blur(120px)',
+          animation: 'meshOrb1 12s ease-in-out infinite alternate',
+        }}
+      />
+      {/* Dark green orb */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '10%',
+          right: '15%',
+          width: '45vw',
+          height: '45vw',
+          maxWidth: 550,
+          maxHeight: 550,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(5,46,22,0.45) 0%, transparent 70%)',
+          filter: 'blur(120px)',
+          animation: 'meshOrb2 15s ease-in-out infinite alternate',
+        }}
+      />
+      {/* Secondary crimson orb */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '55%',
+          left: '60%',
+          width: '40vw',
+          height: '40vw',
+          maxWidth: 500,
+          maxHeight: 500,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(196,30,58,0.2) 0%, transparent 70%)',
+          filter: 'blur(120px)',
+          animation: 'meshOrb3 18s ease-in-out infinite alternate',
+        }}
+      />
+      <style>{`
+        @keyframes meshOrb1 {
+          0% { transform: translate(0, 0) scale(1); }
+          100% { transform: translate(40px, -30px) scale(1.1); }
+        }
+        @keyframes meshOrb2 {
+          0% { transform: translate(0, 0) scale(1); }
+          100% { transform: translate(-35px, 25px) scale(1.08); }
+        }
+        @keyframes meshOrb3 {
+          0% { transform: translate(0, 0) scale(1); }
+          100% { transform: translate(25px, 40px) scale(0.95); }
+        }
+      `}</style>
+    </div>
+  )
+})
+
+// ---------------------------------------------------------------------------
+// useParticles -- canvas-based upward-drifting crimson particles
+// ---------------------------------------------------------------------------
+interface Particle {
+  x: number
+  y: number
+  vx: number
+  vy: number
+  alpha: number
+  size: number
+  life: number
+  maxLife: number
+}
+
+function useParticles(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    let animId = 0
+    const particles: Particle[] = []
+    const PARTICLE_COUNT = 60
+
+    const updateSize = () => {
+      const rect = canvas.parentElement?.getBoundingClientRect()
+      if (!rect) return
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      canvas.width = rect.width * dpr
+      canvas.height = rect.height * dpr
+      canvas.style.width = rect.width + 'px'
+      canvas.style.height = rect.height + 'px'
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    }
+
+    const parent = canvas.parentElement
+    const observer = new ResizeObserver(updateSize)
+    if (parent) observer.observe(parent)
+    updateSize()
+
+    const spawnParticle = (): Particle => {
+      const w = canvas.parentElement?.clientWidth ?? 1200
+      const h = canvas.parentElement?.clientHeight ?? 800
+      return {
+        x: Math.random() * w,
+        y: h + Math.random() * 20,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: -(0.3 + Math.random() * 0.7),
+        alpha: 0.15 + Math.random() * 0.35,
+        size: 1 + Math.random() * 2,
+        life: 0,
+        maxLife: 200 + Math.random() * 300,
+      }
+    }
+
+    // Pre-populate
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const p = spawnParticle()
+      p.life = Math.random() * p.maxLife
+      p.y -= p.life * Math.abs(p.vy)
+      particles.push(p)
+    }
+
+    const draw = () => {
+      const w = canvas.parentElement?.clientWidth ?? 1200
+      const h = canvas.parentElement?.clientHeight ?? 800
+      ctx.clearRect(0, 0, w, h)
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i]
+        p.x += p.vx
+        p.y += p.vy
+        p.life++
+
+        const lifeRatio = p.life / p.maxLife
+        const fadeAlpha = lifeRatio < 0.1
+          ? p.alpha * (lifeRatio / 0.1)
+          : lifeRatio > 0.7
+            ? p.alpha * (1 - (lifeRatio - 0.7) / 0.3)
+            : p.alpha
+
+        if (p.life >= p.maxLife || p.y < -10) {
+          particles[i] = spawnParticle()
+          continue
+        }
+
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(196, 30, 58, ${fadeAlpha})`
+        ctx.fill()
+      }
+
+      animId = requestAnimationFrame(draw)
+    }
+
+    animId = requestAnimationFrame(draw)
+
+    return () => {
+      cancelAnimationFrame(animId)
+      observer.disconnect()
+    }
+  }, [canvasRef])
+}
+
+const ParticleCanvas = memo(function ParticleCanvas() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  useParticles(canvasRef)
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 pointer-events-none"
+      style={{ zIndex: 1 }}
+      aria-hidden="true"
+    />
+  )
+})
+
+// ---------------------------------------------------------------------------
+// SplitTextHero -- GSAP split-text letter animation for hero title
+// ---------------------------------------------------------------------------
+function SplitTextHero({ text, className, style }: { text: string; className?: string; style?: React.CSSProperties }) {
+  const containerRef = useRef<HTMLSpanElement>(null)
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const spans = el.querySelectorAll<HTMLSpanElement>('.split-letter')
+    if (spans.length === 0) return
+
+    gsap.from(spans, {
+      y: 60,
+      opacity: 0,
+      scale: 0.8,
+      duration: 0.7,
+      ease: 'back.out(1.7)',
+      stagger: 0.08,
+      delay: 0.1,
+    })
+  }, [text])
+
+  return (
+    <span ref={containerRef} className={className} style={style}>
+      {text.split('').map((ch, i) => (
+        <span
+          key={`${ch}-${i}`}
+          className="split-letter"
+          style={{
+            display: ch === ' ' ? 'inline' : 'inline-block',
+            textShadow: '0 0 30px rgba(196,30,58,0.4), 0 0 60px rgba(196,30,58,0.15)',
+          }}
+        >
+          {ch === ' ' ? '\u00A0' : ch}
+        </span>
+      ))}
+    </span>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// ManifestoCounters -- 3 giant count-up numbers triggered by scroll
+// ---------------------------------------------------------------------------
+function ManifestoCounterItem({ target, prefix, suffix, label }: {
+  target: number
+  prefix?: string
+  suffix?: string
+  label: string
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: '-80px' })
+  const motionVal = useMotionValue(0)
+  const [display, setDisplay] = useState('0')
+
+  useEffect(() => {
+    if (!isInView) return
+    const ctrl = fmAnimate(motionVal, target, {
+      duration: 2.5,
+      ease: [0.16, 1, 0.3, 1],
+    })
+    return () => ctrl.stop()
+  }, [isInView, target, motionVal])
+
+  useEffect(() => {
+    const unsub = motionVal.on('change', (v) => {
+      if (target >= 1000) {
+        setDisplay(Math.round(v).toLocaleString())
+      } else if (target >= 10) {
+        setDisplay(v.toFixed(1))
+      } else {
+        setDisplay(v.toFixed(1))
+      }
+    })
+    return unsub
+  }, [motionVal, target])
+
+  return (
+    <div ref={ref} className="flex flex-col items-center gap-3">
+      <span
+        className="font-black tabular-nums font-mono leading-none"
+        style={{
+          fontSize: 'clamp(3rem, 8vw, 7rem)',
+          color: '#f0ede8',
+          letterSpacing: '-0.04em',
+        }}
+      >
+        {prefix}{display}{suffix}
+      </span>
+      <span
+        className="text-sm sm:text-base font-medium tracking-wide uppercase"
+        style={{ color: 'rgba(255,255,255,0.45)', letterSpacing: '0.1em' }}
+      >
+        {label}
+      </span>
+    </div>
+  )
+}
+
+const ManifestoCounters = memo(function ManifestoCounters({ isEn }: { isEn: boolean }) {
+  return (
+    <section
+      className="relative px-6 sm:px-12 lg:px-24 py-20 sm:py-28 overflow-hidden"
+      style={{ background: '#0a0c0b' }}
+      aria-label={isEn ? 'Key statistics' : 'Estadisticas clave'}
+    >
+      {/* Subtle crimson grid pattern */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(196,30,58,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(196,30,58,0.06) 1px, transparent 1px)',
+          backgroundSize: '80px 80px',
+        }}
+        aria-hidden="true"
+      />
+      <div className="relative z-10 max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-12 sm:gap-8">
+        <ManifestoCounterItem
+          target={3051294}
+          label={isEn ? 'Contracts analyzed' : 'Contratos analizados'}
+        />
+        <ManifestoCounterItem
+          target={6.8}
+          prefix="MX$"
+          suffix="T"
+          label={isEn ? 'Total value evaluated' : 'Valor total evaluado'}
+        />
+        <ManifestoCounterItem
+          target={12.3}
+          suffix="%"
+          label={isEn ? 'Flagged high-risk' : 'Marcados alto riesgo'}
+        />
+      </div>
+    </section>
+  )
+})
+
+// ---------------------------------------------------------------------------
+// CaseMarquee -- infinite horizontal scrolling corruption case names
+// ---------------------------------------------------------------------------
+const CORRUPTION_CASES = [
+  'SEGALMEX',
+  'IMSS GHOST COMPANIES',
+  'COVID-19 PROCUREMENT',
+  'ODEBRECHT-PEMEX',
+  'LA ESTAFA MAESTRA',
+  'GRUPO HIGA',
+  'OCEANOGRAFIA',
+  'TOKA IT MONOPOLY',
+  'SAT EFOS NETWORK',
+  'PEMEX-COTEMAR',
+]
+
+const CaseMarquee = memo(function CaseMarquee() {
+  const content = CORRUPTION_CASES.map((c) => c).join('  //  ') + '  //  '
+  return (
+    <div
+      className="relative overflow-hidden py-4"
+      style={{ background: '#0a0c0b', borderTop: '1px solid rgba(196,30,58,0.15)', borderBottom: '1px solid rgba(196,30,58,0.15)' }}
+      aria-label={`Documented corruption cases: ${CORRUPTION_CASES.join(', ')}`}
+      role="marquee"
+    >
+      {/* Fade edges */}
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20" style={{ background: 'linear-gradient(to right, #0a0c0b, transparent)' }} />
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20" style={{ background: 'linear-gradient(to left, #0a0c0b, transparent)' }} />
+
+      <div
+        className="flex whitespace-nowrap"
+        style={{ animation: 'tickerScroll 30s linear infinite' }}
+      >
+        <span
+          className="text-sm font-mono font-bold tracking-[0.15em] uppercase"
+          style={{ color: 'rgba(196,30,58,0.6)' }}
+        >
+          {content}
+        </span>
+        <span
+          className="text-sm font-mono font-bold tracking-[0.15em] uppercase"
+          style={{ color: 'rgba(196,30,58,0.6)' }}
+        >
+          {content}
+        </span>
+      </div>
+    </div>
+  )
+})
+
+// ---------------------------------------------------------------------------
+// ScanLine -- CSS animated horizontal line sweeping top to bottom
+// ---------------------------------------------------------------------------
+const ScanLine = memo(function ScanLine() {
+  return (
+    <div
+      className="absolute inset-0 pointer-events-none overflow-hidden"
+      style={{ zIndex: 3 }}
+      aria-hidden="true"
+    >
+      <div
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          height: '2px',
+          background: 'linear-gradient(90deg, transparent 0%, rgba(196,30,58,0.6) 30%, rgba(196,30,58,0.8) 50%, rgba(196,30,58,0.6) 70%, transparent 100%)',
+          boxShadow: '0 0 15px 3px rgba(196,30,58,0.3), 0 0 30px 6px rgba(196,30,58,0.15)',
+          animation: 'introScanLine 4s ease-in-out infinite',
+        }}
+      />
+      <style>{`
+        @keyframes introScanLine {
+          0% { top: -2px; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+      `}</style>
+    </div>
+  )
+})
 
 const SECTOR_DISPLAY: Record<string, { es: string; en: string }> = {
   salud: { es: 'Salud', en: 'Health' },
@@ -835,6 +1249,12 @@ export default function Intro() {
         {/* Drop your video at frontend/public/hero.mp4 for cinematic background */}
         <VideoHeroBackground />
 
+        {/* Animated gradient mesh orbs */}
+        <GradientMeshBackground />
+
+        {/* Canvas particle field */}
+        <ParticleCanvas />
+
         {/* Dark gradient overlay between video and canvas */}
         <div style={{
           position: 'absolute', inset: 0,
@@ -844,6 +1264,9 @@ export default function Intro() {
 
         {/* Canvas network graph background */}
         <NetworkCanvas />
+
+        {/* Cinematic scan line */}
+        <ScanLine />
 
         {/* Top bar */}
         <div
@@ -880,16 +1303,22 @@ export default function Intro() {
             RUBLI &bull; {isEn ? 'PROCUREMENT TRANSPARENCY' : 'TRANSPARENCIA PROCURATORIA'}
           </span>
 
-          {/* Main title with contract count */}
-          <h1
-            ref={heroTitleRef}
-            className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.05]"
-            style={{ fontFamily: SERIF, letterSpacing: '-0.03em' }}
-          >
-            <span style={{ color: CRIMSON }}>{heroContracts.toLocaleString()}</span>
-            <br />
-            <span style={{ color: '#fff' }}>{isEn ? 'contracts' : 'contratos'}</span>
-          </h1>
+          {/* GSAP split-text hero title */}
+          <div ref={heroTitleRef}>
+            <SplitTextHero
+              text="RUBLI"
+              className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.05] block mb-2"
+              style={{ fontFamily: SERIF, letterSpacing: '-0.03em', color: CRIMSON }}
+            />
+            <h1
+              className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.05]"
+              style={{ fontFamily: SERIF, letterSpacing: '-0.03em' }}
+            >
+              <span style={{ color: CRIMSON }}>{heroContracts.toLocaleString()}</span>
+              <br />
+              <span style={{ color: '#fff' }}>{isEn ? 'contracts' : 'contratos'}</span>
+            </h1>
+          </div>
 
           {/* Subtitle */}
           <p
@@ -992,6 +1421,16 @@ export default function Intro() {
           </div>
         </div>
       </section>
+
+      {/* ================================================================= */}
+      {/* MANIFESTO COUNTERS -- giant count-up stats */}
+      {/* ================================================================= */}
+      <ManifestoCounters isEn={isEn} />
+
+      {/* ================================================================= */}
+      {/* CASE MARQUEE -- scrolling corruption case names */}
+      {/* ================================================================= */}
+      <CaseMarquee />
 
       {/* ================================================================= */}
       {/* SECTION 2: THE SCALE - White bg, animated bar chart */}
