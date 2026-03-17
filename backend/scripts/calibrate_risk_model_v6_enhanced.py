@@ -663,8 +663,9 @@ def simulate_population(conn, results):
     if not rows:
         print("  No z-features found!"); return
 
+    n_features = len(Z_COLS)
     Z = np.clip(np.nan_to_num(
-        np.array([[r[i+1] if r[i+1] is not None else 0.0 for i in range(16)] for r in rows], dtype=np.float64)
+        np.array([[r[i+1] if r[i+1] is not None else 0.0 for i in range(n_features)] for r in rows], dtype=np.float64)
     ), -10, 10)
     sectors = np.array([r[-1] or 12 for r in rows])
 
