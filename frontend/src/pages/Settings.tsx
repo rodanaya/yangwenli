@@ -70,11 +70,16 @@ const EXPORT_LIMITS = {
 }
 
 const GRADE_COLORS: Record<string, string> = {
-  A: '#4ade80',
-  B: '#60a5fa',
-  C: '#fbbf24',
-  D: '#fb923c',
-  F: '#f87171',
+  'S':  '#34d399',
+  'A':  '#4ade80',
+  'B+': '#a3e635',
+  'B':  '#60a5fa',
+  'C+': '#fcd34d',
+  'C':  '#fbbf24',
+  'D':  '#fb923c',
+  'D-': '#f87171',
+  'F':  '#fca5a5',
+  'F-': '#fca5a5',
 }
 
 const SEVERITY_COLORS: Record<string, string> = {

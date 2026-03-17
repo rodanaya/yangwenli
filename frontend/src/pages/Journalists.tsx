@@ -31,6 +31,8 @@ interface PHISector {
   total_indicators: number
   total_contracts: number
   total_value_mxn: number
+  competition_by_value?: number
+  phi_composite_score?: number
   indicators: Record<string, PHIIndicator>
 }
 
@@ -59,9 +61,10 @@ interface PHISectorsResponse {
 // Constants
 // ---------------------------------------------------------------------------
 
-const GRADE_ORDER: Record<string, number> = { F: 0, D: 1, 'D+': 2, 'C-': 3, C: 4, 'C+': 5, 'B-': 6, B: 7, 'B+': 8, 'A-': 9, A: 10, 'A+': 11 }
+const GRADE_ORDER: Record<string, number> = { 'F-': 0, 'F': 1, 'D-': 2, 'D': 3, 'C': 4, 'C+': 5, 'B': 6, 'B+': 7, 'A': 8, 'S': 9 }
 
 function gradeColor(grade: string): string {
+  if (grade === 'S') return 'text-emerald-500 dark:text-emerald-400'
   if (grade.startsWith('A')) return 'text-emerald-600 dark:text-emerald-400'
   if (grade.startsWith('B')) return 'text-blue-600 dark:text-blue-400'
   if (grade.startsWith('C')) return 'text-amber-600 dark:text-amber-400'
@@ -70,6 +73,7 @@ function gradeColor(grade: string): string {
 }
 
 function gradeBg(grade: string): string {
+  if (grade === 'S') return 'bg-emerald-50 border-emerald-300 dark:bg-emerald-950 dark:border-emerald-700'
   if (grade.startsWith('A')) return 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950 dark:border-emerald-800'
   if (grade.startsWith('B')) return 'bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800'
   if (grade.startsWith('C')) return 'bg-amber-50 border-amber-200 dark:bg-amber-950 dark:border-amber-800'
@@ -258,7 +262,7 @@ export default function Journalists() {
                   <tr className="border-b border-stone-200 dark:border-stone-700">
                     <th className="text-left px-5 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider">Sector</th>
                     <th className="text-center px-5 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider">Calificacion</th>
-                    <th className="text-center px-5 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider hidden sm:table-cell">Tasa de competencia</th>
+                    <th className="text-center px-5 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider hidden sm:table-cell">Gasto competitivo</th>
                     <th className="text-center px-5 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider hidden md:table-cell">Licitaciones con 1 postor</th>
                     <th className="text-right px-5 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider"></th>
                   </tr>
@@ -272,7 +276,7 @@ export default function Journalists() {
                     </tr>
                   )}
                   {sortedSectors.map((sector, i) => {
-                    const competitionRate = sector.indicators?.competition_rate?.value
+                    const competitionByValue = sector.competition_by_value
                     const singleBidRate = sector.indicators?.single_bidding?.value
                     return (
                       <tr
@@ -300,8 +304,25 @@ export default function Journalists() {
                             {sector.grade}
                           </span>
                         </td>
-                        <td className="px-5 py-3.5 text-center font-mono text-stone-600 dark:text-stone-400 hidden sm:table-cell">
-                          {competitionRate != null ? `${(competitionRate * 100).toFixed(1)}%` : '--'}
+                        <td className="px-5 py-3.5 text-center font-mono hidden sm:table-cell">
+                          {competitionByValue != null ? (
+                            <span
+                              className="font-semibold"
+                              style={{
+                                color: competitionByValue >= 50 ? '#16a34a'
+                                     : competitionByValue >= 30 ? '#b45309'
+                                     : '#dc2626'
+                              }}
+                            >
+                              {competitionByValue.toFixed(1)}%
+                            </span>
+                          ) : (
+                            <span className="text-stone-400 dark:text-stone-500">
+                              {sector.indicators?.competition_rate?.value != null
+                                ? `${(sector.indicators.competition_rate.value * 100).toFixed(1)}%`
+                                : '--'}
+                            </span>
+                          )}
                         </td>
                         <td className="px-5 py-3.5 text-center font-mono text-stone-600 dark:text-stone-400 hidden md:table-cell">
                           {singleBidRate != null ? `${(singleBidRate * 100).toFixed(1)}%` : '--'}

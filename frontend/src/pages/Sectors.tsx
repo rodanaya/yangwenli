@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
 import { cn, formatCompactMXN, formatNumber, formatPercentSafe } from '@/lib/utils'
-import { sectorApi, analysisApi, institutionApi } from '@/api/client'
+import { sectorApi, analysisApi, institutionApi, phiApi } from '@/api/client'
 import type { IndustryClusterItem } from '@/api/client'
 import { SECTOR_COLORS, SECTORS, RISK_COLORS, getRiskLevelFromScore, getSectorNameEN } from '@/lib/constants'
 import { Heatmap } from '@/components/charts/Heatmap'
@@ -76,6 +76,23 @@ const SECTOR_TOP_RAMO: Record<string, string> = {
   ambiente: '16',
   trabajo: '14',
   otros: '—',
+}
+
+// ============================================================================
+// PHI Grade Colors (dark-mode)
+// ============================================================================
+
+const GRADE_DOT_COLORS: Record<string, { text: string; bg: string; border: string }> = {
+  'S':  { text: '#34d399', bg: 'rgba(16,185,129,0.12)',  border: 'rgba(52,211,153,0.25)' },
+  'A':  { text: '#4ade80', bg: 'rgba(74,222,128,0.08)',  border: 'rgba(74,222,128,0.25)' },
+  'B+': { text: '#a3e635', bg: 'rgba(132,204,22,0.08)',  border: 'rgba(163,230,53,0.20)' },
+  'B':  { text: '#60a5fa', bg: 'rgba(96,165,250,0.08)',  border: 'rgba(96,165,250,0.25)' },
+  'C+': { text: '#fcd34d', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(252,211,77,0.20)' },
+  'C':  { text: '#fbbf24', bg: 'rgba(251,191,36,0.08)',  border: 'rgba(251,191,36,0.25)' },
+  'D':  { text: '#fb923c', bg: 'rgba(251,146,60,0.08)',  border: 'rgba(251,146,60,0.25)' },
+  'D-': { text: '#f87171', bg: 'rgba(239,68,68,0.08)',   border: 'rgba(248,113,113,0.20)' },
+  'F':  { text: '#fca5a5', bg: 'rgba(153,27,27,0.12)',   border: 'rgba(239,68,68,0.20)' },
+  'F-': { text: '#fca5a5', bg: 'rgba(28,5,5,0.75)',      border: 'rgba(153,27,27,0.40)' },
 }
 
 // ============================================================================
@@ -669,6 +686,12 @@ export function Sectors() {
     staleTime: 60 * 60 * 1000,
   })
 
+  const { data: phiSectorsData } = useQuery({
+    queryKey: ['phi', 'sectors'],
+    queryFn: () => phiApi.getSectors(),
+    staleTime: 10 * 60 * 1000,
+  })
+
   // ---- Sparkline data: per-sector avg_risk by year ----
   const sparklinesBySector = useMemo(() => {
     const items = sectorYearResp?.data ?? []
@@ -681,6 +704,17 @@ export function Sectors() {
     map.forEach((arr) => arr.sort((a, b) => a.year - b.year))
     return map
   }, [sectorYearResp])
+
+  // ---- PHI grade map: sector_name.toLowerCase() → grade ----
+  const phiGradeMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    const sectors = (phiSectorsData as { sectors?: { name?: string; name_en?: string; grade?: string }[] })?.sectors ?? []
+    sectors.forEach((s) => {
+      const key = (s.name_en ?? s.name ?? '').toLowerCase()
+      if (key && s.grade) map[key] = s.grade
+    })
+    return map
+  }, [phiSectorsData])
 
   // ---- Aggregate stats ----
   const aggregates = useMemo(() => {
@@ -1451,6 +1485,9 @@ export function Sectors() {
                       {t('table.directAwardPct')}
                       <SortIndicator field="direct_award_pct" sortField={sortField} sortDir={sortDir} />
                     </th>
+                    <th className="data-cell-header text-center whitespace-nowrap">
+                      PHI Grade
+                    </th>
                     <th className="data-cell-header text-left whitespace-nowrap hidden xl:table-cell w-[100px]">
                       Risk Levels
                     </th>
@@ -1518,6 +1555,22 @@ export function Sectors() {
                         </td>
                         <td className="data-cell text-right font-mono text-text-secondary tabular-nums">
                           {formatPercentSafe(sector.direct_award_pct, false)}
+                        </td>
+                        <td className="data-cell text-center">
+                          {(() => {
+                            const sectorEN = getSectorNameEN(sector.sector_code).toLowerCase()
+                            const grade = phiGradeMap[sectorEN]
+                            const gc = grade ? GRADE_DOT_COLORS[grade] : null
+                            if (!grade || !gc) return <span className="text-text-muted/40 font-mono text-[10px]">—</span>
+                            return (
+                              <span
+                                className="inline-block text-[11px] font-black rounded px-1.5 py-0.5 font-mono border"
+                                style={{ color: gc.text, backgroundColor: gc.bg, borderColor: gc.border }}
+                              >
+                                {grade}
+                              </span>
+                            )
+                          })()}
                         </td>
                         <td className="data-cell hidden xl:table-cell w-[100px]">
                           <RiskStackBar

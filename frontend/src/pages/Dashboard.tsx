@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
-import { analysisApi, investigationApi } from '@/api/client'
+import { analysisApi, investigationApi, phiApi } from '@/api/client'
 import type { ExecutiveCaseDetail } from '@/api/types'
 import {
   ArrowRight,
@@ -713,6 +713,19 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
 // SECTOR MINI CARD — Compact card for the 12-sector grid
 // ============================================================================
 
+const GRADE_DOT_COLORS: Record<string, { text: string; bg: string; border: string }> = {
+  'S':  { text: '#34d399', bg: 'rgba(16,185,129,0.12)',  border: 'rgba(52,211,153,0.25)' },
+  'A':  { text: '#4ade80', bg: 'rgba(74,222,128,0.10)',  border: 'rgba(74,222,128,0.22)' },
+  'B+': { text: '#a3e635', bg: 'rgba(132,204,22,0.10)',  border: 'rgba(163,230,53,0.22)' },
+  'B':  { text: '#60a5fa', bg: 'rgba(96,165,250,0.10)',  border: 'rgba(96,165,250,0.22)' },
+  'C+': { text: '#fcd34d', bg: 'rgba(245,158,11,0.10)',  border: 'rgba(252,211,77,0.22)' },
+  'C':  { text: '#fbbf24', bg: 'rgba(251,191,36,0.10)',  border: 'rgba(251,191,36,0.22)' },
+  'D':  { text: '#fb923c', bg: 'rgba(251,146,60,0.10)',  border: 'rgba(251,146,60,0.22)' },
+  'D-': { text: '#f87171', bg: 'rgba(239,68,68,0.10)',   border: 'rgba(248,113,113,0.22)' },
+  'F':  { text: '#fca5a5', bg: 'rgba(153,27,27,0.14)',   border: 'rgba(239,68,68,0.22)' },
+  'F-': { text: '#fca5a5', bg: 'rgba(28,5,5,0.40)',      border: 'rgba(153,27,27,0.40)' },
+}
+
 interface SectorMiniCardProps {
   name: string
   code: string
@@ -722,25 +735,37 @@ interface SectorMiniCardProps {
   totalValue: number
   avgRisk: number
   directAwardPct: number
+  grade?: string
   onClick: () => void
 }
 
 const SectorMiniCard = memo(function SectorMiniCard({
-  name, code, contracts, riskPct, totalValue, avgRisk, directAwardPct, onClick,
+  name, code, contracts, riskPct, totalValue, avgRisk, grade, onClick,
 }: SectorMiniCardProps) {
   const sectorColor = SECTOR_COLORS[code] ?? '#64748b'
   const riskColor = riskPct >= 15 ? 'text-risk-critical' : riskPct >= 10 ? 'text-risk-high' : 'text-risk-medium'
+  const gc = grade ? (GRADE_DOT_COLORS[grade] ?? GRADE_DOT_COLORS['D']) : null
 
   return (
     <button
       onClick={onClick}
       className="flex flex-col gap-2 p-3 rounded-lg border border-border/30 bg-background-card/40 hover:border-border/60 hover:bg-background-elevated/30 transition-all text-left group"
     >
-      <div className="flex items-center gap-2">
-        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: sectorColor }} />
-        <span className="text-xs font-semibold text-text-primary truncate group-hover:text-accent transition-colors">
-          {name}
-        </span>
+      <div className="flex items-center justify-between gap-1">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: sectorColor }} />
+          <span className="text-xs font-semibold text-text-primary truncate group-hover:text-accent transition-colors">
+            {name}
+          </span>
+        </div>
+        {gc && grade && (
+          <span
+            className="text-[10px] font-black rounded px-1.5 py-0.5 flex-shrink-0 font-mono border"
+            style={{ color: gc.text, backgroundColor: gc.bg, borderColor: gc.border }}
+          >
+            {grade}
+          </span>
+        )}
       </div>
       <div className="grid grid-cols-2 gap-x-3 gap-y-1">
         <div>
@@ -754,10 +779,6 @@ const SectorMiniCard = memo(function SectorMiniCard({
         <div>
           <p className="text-[9px] text-text-muted font-mono uppercase">Value</p>
           <p className="text-xs font-bold tabular-nums font-mono text-text-secondary">{formatCompactMXN(totalValue)}</p>
-        </div>
-        <div>
-          <p className="text-[9px] text-text-muted font-mono uppercase">DA%</p>
-          <p className="text-xs font-bold tabular-nums font-mono text-text-muted">{directAwardPct.toFixed(0)}%</p>
         </div>
       </div>
       {/* Mini risk bar */}
@@ -987,6 +1008,12 @@ export function Dashboard() {
     staleTime: 5 * 60 * 1000,
   })
 
+  const { data: phiSectorsData } = useQuery({
+    queryKey: ['phi', 'sectors'],
+    queryFn: () => phiApi.getSectors(),
+    staleTime: 10 * 60 * 1000,
+  })
+
   const { data: execData, isLoading: execLoading } = useQuery({
     queryKey: ['executive', 'summary'],
     queryFn: () => analysisApi.getExecutiveSummary(),
@@ -1053,6 +1080,16 @@ export function Dashboard() {
     return riskDist.find(d => d.risk_level === 'critical')?.count ?? 0
   }, [riskDist])
 
+  const phiGradeMap = useMemo(() => {
+    const m: Record<string, string> = {}
+    if (phiSectorsData?.sectors) {
+      for (const s of phiSectorsData.sectors) {
+        m[s.sector_name.toLowerCase()] = s.grade
+      }
+    }
+    return m
+  }, [phiSectorsData])
+
   const sectorData = useMemo(() => {
     if (!sectors) return []
     return sectors
@@ -1070,10 +1107,11 @@ export function Dashboard() {
           totalValue: s.total_value_mxn || 0,
           avgRisk: s.avg_risk_score || 0,
           directAwardPct: daRate * 100,
+          grade: phiGradeMap[s.code] as string | undefined,
         }
       })
       .sort((a, b) => b.valueAtRisk - a.valueAtRisk)
-  }, [sectors])
+  }, [sectors, phiGradeMap])
 
   const riskTrajectory = useMemo(() => {
     if (!fastDashboard?.yearly_trends) return []
