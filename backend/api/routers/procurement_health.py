@@ -120,13 +120,17 @@ _GRADE10 = [
 
 
 def _normalize_score(key: str, value: float) -> float:
-    """Normalise a raw indicator value to 0-100."""
-    worst, best, higher_is_better = _NORM[key]
+    """Normalise a raw indicator value to 0-100.
+
+    Formula (value-worst)/(best-worst) works for both directions:
+    higher_is_better=True:  worst<best, large value -> high score.
+    higher_is_better=False: worst>best, both signs cancel, large value -> low score.
+    No explicit flip needed.
+    """
+    worst, best, _ = _NORM[key]
     if abs(best - worst) < 1e-9:
         return 50.0
     raw = (value - worst) / (best - worst)
-    if not higher_is_better:
-        raw = 1.0 - raw
     return max(0.0, min(100.0, raw * 100.0))
 
 
@@ -410,7 +414,11 @@ _METHODOLOGY = {
     ),
 }
 
-_GRADE_ORDER = {"F": 0, "D": 1, "C": 2, "B": 3, "A": 4, "N/A": 5}
+_GRADE_ORDER = {
+    "F-": 0, "F": 1, "D-": 2, "D": 3,
+    "C": 4, "C+": 5, "B": 6, "B+": 7,
+    "A": 8, "S": 9, "N/A": -1,
+}
 
 # In-memory fallback cache — prevents the 538s live computation from running on every request
 _phi_cache: dict = {"data": None, "expires": 0, "computing": False}

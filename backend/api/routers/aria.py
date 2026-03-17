@@ -336,11 +336,56 @@ def get_aria_stats(conn: sqlite3.Connection = Depends(get_db_dep)):
         except Exception:
             new_vendor_count = 0
 
+        # Pattern counts and external flag counts
+        pattern_counts: dict = {}
+        external_counts: dict = {"efos": 0, "sfp": 0}
+        try:
+            pattern_rows = conn.execute(
+                """
+                SELECT primary_pattern, COUNT(*) as cnt
+                FROM aria_queue
+                WHERE primary_pattern IS NOT NULL
+                GROUP BY primary_pattern
+                ORDER BY cnt DESC
+                """
+            ).fetchall()
+            for pr in pattern_rows:
+                if pr["primary_pattern"]:
+                    pattern_counts[pr["primary_pattern"]] = pr["cnt"]
+            efos_row = conn.execute(
+                "SELECT COUNT(*) FROM aria_queue WHERE is_efos_definitivo = 1"
+            ).fetchone()
+            sfp_row = conn.execute(
+                "SELECT COUNT(*) FROM aria_queue WHERE is_sfp_sanctioned = 1"
+            ).fetchone()
+            external_counts["efos"] = efos_row[0] if efos_row else 0
+            external_counts["sfp"] = sfp_row[0] if sfp_row else 0
+        except Exception:
+            pass
+
+        # Total value at elevated risk (T1+T2)
+        elevated_value = 0.0
+        try:
+            ev_row = conn.execute(
+                "SELECT SUM(total_value_mxn) FROM aria_queue WHERE ips_tier IN (1, 2)"
+            ).fetchone()
+            elevated_value = float(ev_row[0] or 0)
+        except Exception:
+            pass
+
+    else:
+        pattern_counts = {}
+        external_counts = {"efos": 0, "sfp": 0}
+        elevated_value = 0.0
+
     return {
         "latest_run": latest_run,
         "review_stats": review_stats,
         "queue_total": queue_total,
         "new_vendor_count": new_vendor_count,
+        "pattern_counts": pattern_counts,
+        "external_counts": external_counts,
+        "elevated_value_mxn": elevated_value,
     }
 
 

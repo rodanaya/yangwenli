@@ -75,12 +75,10 @@ _PHI_GRADE10 = [
 
 
 def _phi_normalize(key: str, value: float) -> float:
-    worst, best, higher_is_better = _PHI_NORM[key]
+    worst, best, _ = _PHI_NORM[key]
     if abs(best - worst) < 1e-9:
         return 50.0
     raw = (value - worst) / (best - worst)
-    if not higher_is_better:
-        raw = 1.0 - raw
     return max(0.0, min(100.0, raw * 100.0))
 
 
