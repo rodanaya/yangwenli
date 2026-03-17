@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo, memo, forwardRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -577,7 +577,6 @@ export default function Intro() {
   const totalContracts = overview?.total_contracts ?? 3_051_294
   const totalValueMxn = overview?.total_value_mxn ?? 9_560_000_000_000
   const yearlyTrends = fastDashboard?.yearly_trends ?? []
-  const sectors = fastDashboard?.sectors ?? []
   const phiSectors = phiSectorsData?.sectors ?? []
 
   // Value in trillions
@@ -681,21 +680,46 @@ export default function Intro() {
   }, [])
 
   // ---- GSAP ScrollTrigger for sections ----
+  // Sections 2, 4, 5 get quiet fade-in (no y offset, short duration).
+  // Section 3 (featured case) and 6 (CTA) keep theatrical treatment.
   useEffect(() => {
-    const sections = [
+    const quietSections = [
       { ref: s2Ref, setter: setS2InView },
-      { ref: s3Ref, setter: setS3InView },
       { ref: s4Ref, setter: setS4InView },
       { ref: s5Ref, setter: setS5InView },
     ]
 
+    const theatricalSections = [
+      { ref: s3Ref, setter: setS3InView },
+    ]
+
     const triggers: ScrollTrigger[] = []
 
-    for (const { ref, setter } of sections) {
+    for (const { ref, setter } of quietSections) {
       if (!ref.current) continue
       const children = ref.current.querySelectorAll('.gsap-reveal')
+      gsap.set(children, { opacity: 0, y: 0 })
+      const st = ScrollTrigger.create({
+        trigger: ref.current,
+        start: 'top 80%',
+        once: true,
+        onEnter: () => {
+          setter(true)
+          gsap.to(children, {
+            opacity: 1,
+            y: 0,
+            duration: 0.4,
+            ease: 'power1.out',
+            stagger: 0.06,
+          })
+        },
+      })
+      triggers.push(st)
+    }
 
-      // Fade+slide children
+    for (const { ref, setter } of theatricalSections) {
+      if (!ref.current) continue
+      const children = ref.current.querySelectorAll('.gsap-reveal')
       gsap.set(children, { opacity: 0, y: 80 })
       const st = ScrollTrigger.create({
         trigger: ref.current,
@@ -715,7 +739,7 @@ export default function Intro() {
       triggers.push(st)
     }
 
-    // Section 6 (CTA) - separate since it uses whileInView already, just add gsap
+    // Section 6 (CTA) - theatrical
     if (s6Ref.current) {
       const children6 = s6Ref.current.querySelectorAll('.gsap-reveal')
       gsap.set(children6, { opacity: 0, y: 80 })
@@ -764,12 +788,6 @@ export default function Intro() {
     return 'F'
   }, [phiSectors])
 
-  // Sort sectors by risk for section 3
-  const sortedSectors = useMemo(() => {
-    return [...sectors].sort(
-      (a, b) => b.avg_risk_score - a.avg_risk_score,
-    )
-  }, [sectors])
 
   return (
     <div className="min-h-screen" style={{ overflowX: 'hidden' }}>
@@ -1014,110 +1032,14 @@ export default function Intro() {
       </section>
 
       {/* ================================================================= */}
-      {/* SECTION 3: THE RISK MAP - Dark bg, sector cards */}
+      {/* SECTION 3: FEATURED CASE - Dark bg, classified file feel */}
       {/* ================================================================= */}
-      <section
+      <FeaturedCase
         ref={s3Ref}
-        className="px-6 sm:px-12 lg:px-24 py-24 sm:py-32"
-        style={{ background: '#1a1714', color: '#fff' }}
-      >
-        <div className="max-w-5xl mx-auto">
-          <span
-            className="gsap-reveal text-xs font-bold tracking-[0.2em] uppercase block mb-4"
-            style={{ color: CRIMSON }}
-          >
-            {isEn ? 'WHERE IS THE RISK?' : 'DONDE ESTA EL RIESGO?'}
-          </span>
-
-          <h2
-            className="gsap-reveal text-3xl sm:text-4xl font-black mb-14 leading-tight"
-            style={{ fontFamily: SERIF, letterSpacing: '-0.02em' }}
-          >
-            {isEn ? 'Risk by sector' : 'Riesgo por sector'}
-          </h2>
-
-          {/* Sector cards grid */}
-          <div className="gsap-reveal grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 mb-12">
-            {sortedSectors.length > 0
-              ? sortedSectors.map((sector, i) => {
-                  const key = sector.code?.toLowerCase() ?? 'otros'
-                  const sectorColor = SECTOR_COLORS[key] ?? '#64748b'
-                  const displayName = SECTOR_DISPLAY[key]
-                  const name = displayName
-                    ? isEn
-                      ? displayName.en
-                      : displayName.es
-                    : sector.name
-                  const riskPct = Math.round(sector.avg_risk_score * 100)
-
-                  return (
-                    <motion.div
-                      key={sector.id}
-                      initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                      animate={s3InView ? { opacity: 1, y: 0, scale: 1 } : {}}
-                      transition={{ duration: 0.4, delay: i * 0.06 + 0.2 }}
-                      className="rounded-xl p-4 flex flex-col gap-3"
-                      style={{
-                        backgroundColor: 'rgba(255,255,255,0.06)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                      }}
-                    >
-                      <div className="flex items-center gap-2">
-                        {/* Pulsing colored dot */}
-                        <span className="relative flex h-3 w-3 flex-shrink-0">
-                          <span
-                            className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-40"
-                            style={{ backgroundColor: sectorColor }}
-                          />
-                          <span
-                            className="relative inline-flex rounded-full h-3 w-3"
-                            style={{ backgroundColor: sectorColor }}
-                          />
-                        </span>
-                        <span className="text-sm font-semibold truncate" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                          {name}
-                        </span>
-                      </div>
-                      <div className="flex items-end justify-between">
-                        <SectorRiskBar pct={riskPct} color={sectorColor} inView={s3InView} delay={i * 0.06 + 0.4} />
-                        <span className="text-xl font-black tabular-nums" style={{ color: sectorColor }}>
-                          {s3InView ? riskPct : 0}%
-                        </span>
-                      </div>
-                    </motion.div>
-                  )
-                })
-              : Array.from({ length: 12 }, (_, i) => (
-                  <div
-                    key={i}
-                    className="rounded-xl h-24 animate-pulse"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
-                  />
-                ))}
-          </div>
-
-          {/* Big stat callout */}
-          <div className="gsap-reveal text-center">
-            <span
-              className="text-5xl sm:text-6xl font-black"
-              style={{ fontFamily: SERIF, color: CRIMSON }}
-            >
-              12.3%
-            </span>
-            <p className="text-base mt-2" style={{ color: 'rgba(255,255,255,0.5)' }}>
-              {isEn ? 'of contracts flagged as high risk' : 'de contratos en alto riesgo'}
-            </p>
-            <button
-              onClick={() => goToApp('/report-card')}
-              className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-sm transition-all duration-200 hover:brightness-125 focus:outline-none focus:ring-2 focus:ring-red-400/40"
-              style={{ backgroundColor: CRIMSON, color: '#fff' }}
-            >
-              {isEn ? 'See the Full Report' : 'Ver el Reporte Completo'}
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </button>
-          </div>
-        </div>
-      </section>
+        inView={s3InView}
+        isEn={isEn}
+        goToApp={goToApp}
+      />
 
       {/* ================================================================= */}
       {/* SECTION 4: HOW IT WORKS - Dark bg, animated steps */}
@@ -1356,28 +1278,204 @@ export default function Intro() {
 }
 
 // ---------------------------------------------------------------------------
-// SectorRiskBar -- small animated horizontal bar
+// FeaturedCase -- classified-file reveal for a documented corruption case
 // ---------------------------------------------------------------------------
-function SectorRiskBar({
-  pct,
-  color,
-  inView,
-  delay,
-}: {
-  pct: number
-  color: string
-  inView: boolean
-  delay: number
-}) {
-  return (
-    <div className="flex-1 mr-3 h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}>
-      <motion.div
-        className="h-full rounded-full"
-        style={{ backgroundColor: color, opacity: 0.7 }}
-        initial={{ width: 0 }}
-        animate={inView ? { width: `${Math.min(pct * 3, 100)}%` } : { width: 0 }}
-        transition={{ duration: 0.8, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
-      />
-    </div>
-  )
+const FEATURED_CASE = {
+  vendorName: 'GRUPO FARMACOS ESPECIALIZADOS, S.A. DE C.V.',
+  vendorId: 29277,
+  riskScore: 0.995,
+  contracts: 6360,
+  totalValueB: 133.4,
+  yearStart: 2007,
+  yearEnd: 2020,
+  directAwardPct: 79.1,
+  highRiskPct: 98.4,
+  years: 13,
+} as const
+
+function useScoreCountUp(target: number, duration: number, enabled: boolean): string {
+  const [value, setValue] = useState(0)
+  const rafRef = useRef<number | null>(null)
+  const startRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (!enabled) { setValue(0); return }
+    startRef.current = null
+    const step = (timestamp: number) => {
+      if (startRef.current === null) startRef.current = timestamp
+      const elapsed = timestamp - startRef.current
+      const progress = Math.min(elapsed / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setValue(eased * target)
+      if (progress < 1) rafRef.current = requestAnimationFrame(step)
+    }
+    rafRef.current = requestAnimationFrame(step)
+    return () => { if (rafRef.current !== null) cancelAnimationFrame(rafRef.current) }
+  }, [target, duration, enabled])
+
+  return value.toFixed(3)
 }
+
+const FeaturedCase = forwardRef<
+  HTMLDivElement,
+  { inView: boolean; isEn: boolean; goToApp: (path?: string) => void }
+>(function FeaturedCase({ inView, isEn, goToApp }, ref) {
+  const fc = FEATURED_CASE
+  const scoreDisplay = useScoreCountUp(fc.riskScore, 1500, inView)
+  const barFillPct = inView ? fc.riskScore * 100 : 0
+
+  const pills = [
+    `${fc.directAwardPct}% ${isEn ? 'direct award' : 'adjudicacion directa'}`,
+    `${fc.highRiskPct}% ${isEn ? 'critical contracts' : 'contratos criticos'}`,
+    `${fc.years} ${isEn ? 'years of contracts' : 'anos de contratos'}`,
+  ]
+
+  return (
+    <section
+      ref={ref}
+      className="px-6 sm:px-12 lg:px-24 py-24 sm:py-32"
+      style={{ background: '#1a1714', color: '#fff' }}
+      aria-label={isEn ? 'Featured documented case' : 'Caso documentado destacado'}
+    >
+      <div className="max-w-5xl mx-auto">
+        <div className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-start">
+          {/* LEFT SIDE (60%) */}
+          <div className="flex-1 lg:basis-[60%] min-w-0">
+            <span
+              className="gsap-reveal text-xs font-bold tracking-[0.2em] uppercase block mb-6"
+              style={{
+                color: CRIMSON,
+                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
+              }}
+            >
+              {isEn ? 'DOCUMENTED CASE' : 'CASO DOCUMENTADO'}
+            </span>
+
+            <h2
+              className="gsap-reveal mb-6 leading-tight"
+              style={{
+                fontFamily: SERIF,
+                fontSize: 'clamp(1.8rem, 4vw, 2.8rem)',
+                letterSpacing: '-0.02em',
+                color: '#fff',
+                animation: inView ? 'fc-text-wipe 0.8s ease-out 0.2s both' : 'none',
+              }}
+            >
+              {fc.vendorName}
+            </h2>
+
+            <p
+              className="gsap-reveal text-sm font-medium mb-6"
+              style={{ color: 'rgba(255,255,255,0.45)' }}
+            >
+              {fc.contracts.toLocaleString()} {isEn ? 'contracts' : 'contratos'} &middot; ${fc.totalValueB}B MXN &middot; {fc.yearStart}&ndash;{fc.yearEnd}
+            </p>
+
+            <p
+              className="gsap-reveal text-base leading-relaxed mb-8"
+              style={{ color: 'rgba(255,255,255,0.6)', maxWidth: '480px' }}
+            >
+              {isEn
+                ? `This pharmaceutical company received government contracts with ${fc.directAwardPct}% direct awards. The risk model assigns a score of ${fc.riskScore} \u2014 the highest possible \u2014 indicating its contracting pattern almost perfectly matches documented fraud cases.`
+                : `Esta empresa farmaceutica recibio contratos gubernamentales con un ${fc.directAwardPct}% de adjudicaciones directas. El modelo de riesgo asigna una puntuacion de ${fc.riskScore} \u2014 el mas alto posible \u2014 senalando que su patron de contratacion coincide casi perfectamente con casos documentados de fraude.`}
+            </p>
+
+            <button
+              className="gsap-reveal inline-flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-sm transition-all duration-200 hover:brightness-125 focus:outline-none focus:ring-2 focus:ring-red-400/40"
+              style={{ backgroundColor: CRIMSON, color: '#fff' }}
+              onClick={() => goToApp(`/vendor/${fc.vendorId}`)}
+            >
+              {isEn ? 'See full investigation' : 'Ver investigacion completa'}
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+
+          {/* RIGHT SIDE (40%) */}
+          <div className="lg:basis-[40%] flex flex-col items-center gap-6 w-full lg:w-auto lg:pt-8">
+            {/* Big score */}
+            <div className="text-center">
+              <span
+                className="block tabular-nums font-black"
+                style={{
+                  fontFamily: SERIF,
+                  fontSize: 'clamp(3.5rem, 8vw, 5.5rem)',
+                  color: CRIMSON,
+                  lineHeight: 1,
+                }}
+              >
+                {inView ? scoreDisplay : '0.000'}
+              </span>
+              <span className="text-sm font-medium mt-2 block" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                {isEn ? 'Risk Score' : 'Puntuacion de Riesgo'}
+              </span>
+            </div>
+
+            {/* Vertical progress bar */}
+            <div
+              className="relative mx-auto"
+              style={{ width: '8px', height: '200px', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: '4px', overflow: 'hidden' }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  width: '100%',
+                  height: `${barFillPct}%`,
+                  backgroundColor: CRIMSON,
+                  borderRadius: '4px',
+                  transition: inView ? 'height 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.0s' : 'none',
+                }}
+              />
+              {/* White dot at top */}
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: `${barFillPct}%`,
+                  left: '50%',
+                  transform: 'translate(-50%, 50%)',
+                  width: '12px',
+                  height: '12px',
+                  borderRadius: '50%',
+                  backgroundColor: '#fff',
+                  boxShadow: `0 0 8px ${CRIMSON}`,
+                  opacity: inView ? 1 : 0,
+                  transition: inView ? 'opacity 0.3s ease 2.2s, bottom 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.0s' : 'none',
+                }}
+              />
+            </div>
+
+            {/* Stat pills */}
+            <div className="flex flex-col gap-2 w-full max-w-[260px]">
+              {pills.map((pill, i) => (
+                <div
+                  key={i}
+                  className="rounded-lg px-3 py-2 text-xs font-medium"
+                  style={{
+                    backgroundColor: 'rgba(255,255,255,0.04)',
+                    borderLeft: `3px solid ${CRIMSON}`,
+                    color: 'rgba(255,255,255,0.6)',
+                    opacity: inView ? 1 : 0,
+                    transform: inView ? 'translateY(0)' : 'translateY(8px)',
+                    transition: `opacity 0.4s ease ${1.4 + i * 0.08}s, transform 0.4s ease ${1.4 + i * 0.08}s`,
+                  }}
+                >
+                  {pill}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Keyframe for text wipe */}
+      <style>{`
+        @keyframes fc-text-wipe {
+          from { clip-path: inset(0 100% 0 0); }
+          to   { clip-path: inset(0 0% 0 0); }
+        }
+      `}</style>
+    </section>
+  )
+})
+
