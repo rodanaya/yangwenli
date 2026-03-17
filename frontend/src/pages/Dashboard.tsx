@@ -1,7 +1,8 @@
-import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
-import { motion, type Variants } from 'framer-motion'
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { motion, type Variants, useInView, useReducedMotion } from 'framer-motion'
 // animations.ts: staggerContainer replaced by inline fernStaggerContainer
 import { ScrollReveal, useCountUp } from '@/hooks/useAnimations'
+import { PulseRing } from '@/components/ui/CinematicComponents'
 import { Link, useNavigate } from 'react-router-dom'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -82,6 +83,212 @@ const fernStaggerItem: Variants = {
     filter: 'blur(0px)',
     transition: { type: 'spring', stiffness: 260, damping: 24 },
   },
+}
+
+// ============================================================================
+// CINEMATIC ENHANCEMENTS — Fern-style editorial components
+// ============================================================================
+
+// 1. HeroStatBar — Enormous KPI with gradient sweep animation
+function HeroStatBar({ value, loading }: { value: string; loading: boolean }) {
+  const reduced = useReducedMotion()
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true })
+  const [lineWidth, setLineWidth] = useState(0)
+
+  useEffect(() => {
+    if (isInView && !reduced) {
+      const timer = setTimeout(() => setLineWidth(100), 300)
+      return () => clearTimeout(timer)
+    } else if (isInView && reduced) {
+      setLineWidth(100)
+    }
+  }, [isInView, reduced])
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={reduced ? false : { opacity: 0, y: 20 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className="relative overflow-hidden rounded-xl px-8 py-6"
+      style={{
+        background: 'linear-gradient(135deg, rgba(10,10,10,0.97) 0%, rgba(20,10,15,0.97) 100%)',
+        border: '1px solid rgba(196,30,58,0.15)',
+      }}
+    >
+      <p className="text-[10px] font-mono font-bold tracking-[0.2em] text-text-muted/60 uppercase mb-2">
+        Total Procurement Analyzed
+      </p>
+      <p
+        className="font-black tabular-nums leading-none tracking-tighter"
+        style={{
+          fontSize: 'clamp(3rem, 8vw, 6rem)',
+          fontFamily: 'var(--font-family-mono)',
+          background: reduced
+            ? '#c41e3a'
+            : 'linear-gradient(90deg, #c41e3a 0%, #f97316 30%, #c41e3a 60%, #f97316 100%)',
+          backgroundSize: '200% 100%',
+          WebkitBackgroundClip: 'text',
+          backgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          animation: reduced ? 'none' : 'heroGradientSweep 6s ease-in-out infinite',
+        }}
+      >
+        {loading ? '\u2014' : value}
+      </p>
+      {/* Crimson line drawing from 0 to 100% */}
+      <div className="mt-4 h-[2px] w-full rounded-full overflow-hidden" style={{ background: 'rgba(196,30,58,0.1)' }}>
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: `${lineWidth}%`,
+            background: 'linear-gradient(90deg, #c41e3a, #f97316)',
+            transition: reduced ? 'none' : 'width 1.8s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+        />
+      </div>
+      <style>{`
+        @keyframes heroGradientSweep {
+          0%, 100% { background-position: 0% center; }
+          50% { background-position: 200% center; }
+        }
+      `}</style>
+    </motion.div>
+  )
+}
+
+// 2. LiveDataPulse — Small pulsing green dot with "LIVE DATA" label
+function LiveDataPulse() {
+  return (
+    <PulseRing
+      color="#22c55e"
+      size={8}
+      label="LIVE DATA"
+      className="ml-2"
+    />
+  )
+}
+
+// 3. RiskDistributionBar — Horizontal bar with staggered fill animation
+function RiskDistributionBar({ data }: {
+  data: Array<{ risk_level: string; percentage: number; count: number }>
+}) {
+  const reduced = useReducedMotion()
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: '-40px' })
+
+  const levels = useMemo(() => {
+    const order = ['critical', 'high', 'medium', 'low'] as const
+    const colors: Record<string, string> = {
+      critical: '#f87171',
+      high: '#fb923c',
+      medium: '#fbbf24',
+      low: '#4ade80',
+    }
+    return order.map((level, i) => {
+      const item = data.find(d => d.risk_level === level)
+      return {
+        level,
+        label: level.charAt(0).toUpperCase() + level.slice(1),
+        pct: item?.percentage ?? 0,
+        count: item?.count ?? 0,
+        color: colors[level],
+        delay: i * 200,
+      }
+    }).filter(d => d.pct > 0)
+  }, [data])
+
+  return (
+    <div ref={ref} className="space-y-2">
+      {/* Labels row */}
+      <div className="flex" style={{ gap: '2px' }}>
+        {levels.map(l => (
+          <div key={l.level} className="text-center" style={{ width: `${l.pct}%`, minWidth: l.pct > 3 ? '40px' : '0' }}>
+            {l.pct > 3 && (
+              <>
+                <p className="text-[10px] font-mono font-bold tabular-nums" style={{ color: l.color }}>
+                  {l.pct.toFixed(1)}%
+                </p>
+                <p className="text-[8px] font-mono text-text-muted uppercase tracking-wider">
+                  {l.label}
+                </p>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+      {/* Bar */}
+      <div className="flex h-5 rounded-lg overflow-hidden" style={{ gap: '2px', background: 'rgba(255,255,255,0.03)' }}>
+        {levels.map(l => (
+          <div
+            key={l.level}
+            className="h-full rounded-sm relative overflow-hidden"
+            style={{
+              width: isInView ? `${l.pct}%` : '0%',
+              backgroundColor: l.color,
+              opacity: 0.85,
+              transition: reduced ? 'none' : `width 700ms cubic-bezier(0.34, 1.56, 0.64, 1) ${l.delay}ms`,
+              minWidth: isInView && l.pct > 0 ? '2px' : '0',
+            }}
+          >
+            {/* Shimmer overlay */}
+            {isInView && !reduced && (
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)',
+                  animation: `shimmerSweep 0.8s ease-out ${l.delay + 700}ms forwards`,
+                  opacity: 0,
+                  animationFillMode: 'forwards',
+                }}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// 4. SectionDivider — Thin animated line that draws left-to-right on scroll
+function SectionDivider() {
+  const reduced = useReducedMotion()
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: '-20px' })
+
+  return (
+    <div ref={ref} className="py-1">
+      <div className="h-[1px] w-full rounded-full overflow-hidden" style={{ background: 'rgba(196,30,58,0.08)' }}>
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: isInView ? '100%' : '0%',
+            background: 'linear-gradient(90deg, #c41e3a 0%, #f97316 50%, transparent 100%)',
+            transition: reduced ? 'none' : 'width 1.2s cubic-bezier(0.16, 1, 0.3, 1)',
+            opacity: 0.5,
+          }}
+        />
+      </div>
+    </div>
+  )
+}
+
+// 5. KPI hover glow style helper
+const kpiHoverStyle: React.CSSProperties = {
+  transition: 'transform 200ms ease, box-shadow 200ms ease',
+}
+
+function useKpiHover(accentColor: string) {
+  const [hovered, setHovered] = useState(false)
+  const onMouseEnter = useCallback(() => setHovered(true), [])
+  const onMouseLeave = useCallback(() => setHovered(false), [])
+  const style: React.CSSProperties = {
+    ...kpiHoverStyle,
+    transform: hovered ? 'scale(1.02)' : 'scale(1)',
+    boxShadow: hovered ? `0 0 24px 2px ${accentColor}25, 0 0 48px 4px ${accentColor}10` : 'none',
+  }
+  return { onMouseEnter, onMouseLeave, style }
 }
 
 // Risk donut colors
@@ -1334,7 +1541,7 @@ export function Dashboard() {
   }, [execData])
 
   const groundTruth = execData?.ground_truth
-  const modelAuc = execData?.model?.auc ?? 0.849
+  const modelAuc = execData?.model?.auc ?? 0.863
 
   const topFlows = useMemo(() => {
     if (!moneyFlowData?.flows) return []
@@ -1378,6 +1585,14 @@ export function Dashboard() {
       <RiskTicker />
 
       {/* ================================================================ */}
+      {/* HERO STAT BAR — Enormous KPI with gradient sweep                 */}
+      {/* ================================================================ */}
+      <HeroStatBar
+        value={formatCompactMXN(overview?.total_value_mxn ?? 6_800_000_000_000)}
+        loading={dashLoading}
+      />
+
+      {/* ================================================================ */}
       {/* CINEMATIC HERO — dark editorial hero with GSAP animations        */}
       {/* ================================================================ */}
       <DashboardCinematicHero
@@ -1395,6 +1610,7 @@ export function Dashboard() {
         icon={LayoutDashboard}
         actions={
           <div className="flex items-center gap-2">
+            <LiveDataPulse />
             {lastUpdated && (
               <div className="flex items-center gap-1.5 text-[10px] text-text-muted font-mono">
                 <Activity className="h-3 w-3 text-signal-live" />
@@ -1402,7 +1618,7 @@ export function Dashboard() {
               </div>
             )}
             <span className="text-[10px] font-mono text-text-muted/50">
-              {modelMeta?.version ?? CURRENT_MODEL_VERSION} | AUC {modelMeta?.auc_test?.toFixed(3) ?? '0.849'}
+              {modelMeta?.version ?? CURRENT_MODEL_VERSION} | AUC {modelMeta?.auc_test?.toFixed(3) ?? '0.863'}
             </span>
           </div>
         }
@@ -1431,6 +1647,17 @@ export function Dashboard() {
         criticalCount={criticalCount}
         onClick={() => navigate('/contracts?risk_level=critical')}
       />
+
+      {/* ================================================================ */}
+      {/* RISK DISTRIBUTION BAR — Staggered horizontal fill               */}
+      {/* ================================================================ */}
+      {riskDist && (
+        <ScrollReveal delay={0}>
+          <RiskDistributionBar data={riskDist} />
+        </ScrollReveal>
+      )}
+
+      <SectionDivider />
 
       {/* ================================================================ */}
       {/* INVESTIGATION SPOTLIGHT — editorial breaking news card           */}
@@ -1489,9 +1716,12 @@ export function Dashboard() {
         </ScrollReveal>
       </div>
 
+      <SectionDivider />
+
       {/* ================================================================ */}
       {/* ROW 2: RISK DISTRIBUTION (Donut) + TOP RISK SECTORS (Bar)       */}
       {/* ================================================================ */}
+      <ScrollReveal delay={0}>
       <div className="grid gap-5 grid-cols-1 lg:grid-cols-2">
         {/* Risk Distribution Donut */}
         <DashboardSection
@@ -1592,10 +1822,14 @@ export function Dashboard() {
           )}
         </DashboardSection>
       </div>
+      </ScrollReveal>
+
+      <SectionDivider />
 
       {/* ================================================================ */}
       {/* TEMPORAL TREND — Full-width area chart                           */}
       {/* ================================================================ */}
+      <ScrollReveal delay={0}>
       <DashboardSection
         title={t('riskTrajectory')}
         subtitle={t('riskTrajectoryDesc')}

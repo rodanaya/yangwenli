@@ -203,13 +203,17 @@ def score_institution(inst: dict, cm: dict, hhi: float,
     avg_ad       = cm.get("avg_ad_days",   15.0)
 
     # Pillar 1: OPENNESS (0-20)
-    competitive  = 1.0 - da_pct
+    # da_pct, single_pct, high_risk stored as 0-100 percentages in institution_stats
+    da_frac     = da_pct / 100.0
+    single_frac = single_pct / 100.0
+    high_frac   = high_risk / 100.0
+    competitive  = 1.0 - da_frac
     base_open    = min(14.0, max(0.0, (competitive - 0.05) / 0.55 * 14.0))
-    single_pts   = max(0.0, 6.0 - single_pct * 30.0)
+    single_pts   = max(0.0, 6.0 - single_frac * 30.0)
     p_openness   = min(20.0, base_open + single_pts)
 
     # Pillar 2: PRICE INTEGRITY (0-20)
-    risk_pts     = max(0.0, 10.0 - high_risk * 40.0)   # 25%+ = 0
+    risk_pts     = max(0.0, 10.0 - high_frac * 40.0)   # 25%+ = 0
     yearend_pts  = max(0.0, 5.0 - max(0.0, year_end - 0.10) * 25.0)
     split_pts    = max(0.0, 5.0 - split_rate * 25.0)
     p_price      = min(20.0, risk_pts + yearend_pts + split_pts)
@@ -251,8 +255,8 @@ def score_institution(inst: dict, cm: dict, hhi: float,
 
     key_metrics = {
         "competitive_rate": round(competitive, 3),
-        "single_bid_pct":   round(single_pct, 3),
-        "high_risk_pct":    round(high_risk, 3),
+        "single_bid_pct":   round(single_frac, 3),
+        "high_risk_pct":    round(high_frac, 3),
         "year_end_rate":    round(year_end, 3),
         "hhi":              round(hhi, 3),
         "vendor_count":     vendor_count,
@@ -413,8 +417,11 @@ def score_vendor(v: dict, sector_da_norm: float) -> dict:
         p_spread     = min(20.0, inst_pts + sec_pts)
 
     # Pillar 4: BEHAVIORAL PATTERNS (0-20) — high-risk pct, single-bid
-    behavior_pts  = 20.0 * (1.0 - min(1.0, high_risk * 2.0))
-    single_pen    = min(5.0, single_pct * 10.0)
+    # high_risk and single_pct from vendor_stats are stored as 0-100 percentages
+    high_frac_v   = high_risk / 100.0
+    single_frac_v = single_pct / 100.0
+    behavior_pts  = 20.0 * (1.0 - min(1.0, high_frac_v * 2.0))
+    single_pen    = min(5.0, single_frac_v * 10.0)
     p_behavior    = max(0.0, min(20.0, behavior_pts - single_pen))
 
     # Pillar 5: EXTERNAL FLAGS (0-15)
@@ -443,10 +450,10 @@ def score_vendor(v: dict, sector_da_norm: float) -> dict:
 
     key_metrics = {
         "avg_risk_score": round(avg_risk, 3),
-        "high_risk_pct":  round(high_risk, 3),
+        "high_risk_pct":  round(high_frac_v, 3),
         "da_rate":        round(da_rate, 3),
         "sector_da_norm": round(sector_da_norm, 3),
-        "single_pct":     round(single_pct, 3),
+        "single_pct":     round(single_frac_v, 3),
         "inst_count":     inst_count,
         "sector_count":   sec_count,
         "aria_tier":      aria_tier,

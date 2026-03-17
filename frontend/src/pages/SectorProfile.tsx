@@ -228,18 +228,18 @@ export function SectorProfile() {
     const stats = sector?.statistics
     if (!stats) return result
 
-    // High-risk rate — compare against platform-wide 11.8% baseline (v6.0)
+    // High-risk rate — compare against platform-wide 9.0% baseline (v6.4)
     // Note: OECD 2-15% is a single-bid rate benchmark, not an ML output benchmark.
     // We use deviation from the platform-wide rate as the reference.
     const highRiskRate = stats.total_contracts > 0
       ? (stats.high_risk_count + stats.critical_risk_count) / stats.total_contracts
       : 0
-    const platformBaseline = 0.118 // v6.0 platform-wide high-risk rate
+    const platformBaseline = 0.090 // v6.4 platform-wide high-risk rate
     if (highRiskRate > platformBaseline * 1.5) {
       result.push({
         type: 'critical',
         title: 'Elevated High-Risk Rate',
-        body: `${(highRiskRate * 100).toFixed(1)}% high-risk rate is significantly above the platform average of 11.8%.`,
+        body: `${(highRiskRate * 100).toFixed(1)}% high-risk rate is significantly above the platform average of 9.0%.`,
         icon: 'AlertTriangle',
       })
     } else if (highRiskRate < 0.02 && stats.total_contracts > 1000) {

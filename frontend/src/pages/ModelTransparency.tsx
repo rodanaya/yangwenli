@@ -69,35 +69,35 @@ interface Coefficient {
 }
 
 const MODEL_COEFFICIENTS: Coefficient[] = [
-  { factor: 'price_volatility', beta: 1.219, raw_beta: 1.219, ci_lower: 1.016, ci_upper: 1.431, direction: 'positive', note: 'Strongest predictor' },
-  { factor: 'win_rate', beta: 0.727, raw_beta: 0.727, ci_lower: 0.648, ci_upper: 0.833, direction: 'positive', note: '' },
-  { factor: 'vendor_concentration', beta: 0.428, raw_beta: 0.428, ci_lower: 0.277, ci_upper: 0.597, direction: 'positive' },
-  { factor: 'industry_mismatch', beta: 0.305, raw_beta: 0.305, ci_lower: 0.263, ci_upper: 0.345, direction: 'positive' },
-  { factor: 'same_day_count', beta: 0.222, raw_beta: 0.222, ci_lower: 0.172, ci_upper: 0.286, direction: 'positive' },
-  { factor: 'direct_award', beta: 0.182, raw_beta: 0.182, ci_lower: 0.124, ci_upper: 0.247, direction: 'positive', note: 'Reversed from v4.0 (-0.197)' },
-  { factor: 'network_member_count', beta: 0.064, raw_beta: 0.064, ci_lower: 0.033, ci_upper: 0.097, direction: 'positive', note: 'Now positive (was zeroed in v4.0)' },
-  { factor: 'year_end', beta: 0.059, raw_beta: 0.059, ci_lower: 0.023, ci_upper: 0.098, direction: 'positive' },
-  { factor: 'institution_risk', beta: 0.057, raw_beta: 0.057, ci_lower: 0.016, ci_upper: 0.097, direction: 'positive' },
-  { factor: 'single_bid', beta: 0.013, raw_beta: 0.013, ci_lower: -0.042, ci_upper: 0.074, direction: 'neutral' },
-  { factor: 'price_hyp_confidence', beta: 0.001, raw_beta: 0.001, ci_lower: -0.049, ci_upper: 0.050, direction: 'neutral' },
-  { factor: 'co_bid_rate', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'neutral', note: 'Regularized to zero' },
-  { factor: 'price_ratio', beta: -0.015, raw_beta: -0.015, ci_lower: -0.098, ci_upper: 0.080, direction: 'neutral' },
-  { factor: 'ad_period_days', beta: -0.104, raw_beta: -0.104, ci_lower: -0.180, ci_upper: -0.032, direction: 'negative' },
-  { factor: 'sector_spread', beta: -0.374, raw_beta: -0.374, ci_lower: -0.443, ci_upper: -0.316, direction: 'negative', note: 'Cross-sector = less risky' },
-  { factor: 'institution_diversity', beta: -0.848, raw_beta: -0.848, ci_lower: -0.933, ci_upper: -0.777, direction: 'negative', note: 'Serves many institutions = less risky' },
+  { factor: 'price_volatility', beta: 1.148, raw_beta: 1.148, ci_lower: 1.081, ci_upper: 1.201, direction: 'positive', note: 'Strongest predictor' },
+  { factor: 'vendor_concentration', beta: 0.375, raw_beta: 0.375, ci_lower: 0.345, ci_upper: 0.413, direction: 'positive' },
+  { factor: 'price_ratio', beta: 0.235, raw_beta: 0.235, ci_lower: 0.211, ci_upper: 0.257, direction: 'positive' },
+  { factor: 'network_member_count', beta: 0.181, raw_beta: 0.181, ci_lower: 0.173, ci_upper: 0.189, direction: 'positive' },
+  { factor: 'same_day_count', beta: 0.095, raw_beta: 0.095, ci_lower: 0.086, ci_upper: 0.102, direction: 'positive' },
+  { factor: 'win_rate', beta: 0.049, raw_beta: 0.049, ci_lower: 0.029, ci_upper: 0.065, direction: 'positive', note: 'Sign-constrained positive' },
+  { factor: 'institution_diversity', beta: -0.382, raw_beta: -0.382, ci_lower: -0.399, ci_upper: -0.364, direction: 'negative', note: 'Serves many institutions = less risky' },
+  { factor: 'direct_award', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero (v6.4)' },
+  { factor: 'single_bid', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'Sign-constrained to zero' },
+  { factor: 'industry_mismatch', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero (v6.4)' },
+  { factor: 'year_end', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero (v6.4)' },
+  { factor: 'institution_risk', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero (v6.4)' },
+  { factor: 'ad_period_days', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero (v6.4)' },
+  { factor: 'sector_spread', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'Sign-constrained to zero' },
+  { factor: 'price_hyp_confidence', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero (v6.4)' },
+  { factor: 'co_bid_rate', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero (v6.4)' },
 ]
 
 const VALIDATION_METRICS = {
-  auc_train: 0.858,
-  auc_roc: 0.849,
-  brier_score: 0.090,
-  detection_rate_medium_plus: 0.887,
-  detection_rate_high_plus: 0.253,
-  high_risk_rate: 0.253,
-  pu_correction: 0.448,
-  ground_truth_cases: 390,
-  ground_truth_vendors: 725,
-  ground_truth_contracts: 310296,
+  auc_train: 0.867,
+  auc_roc: 0.863,
+  brier_score: 0.107,
+  detection_rate_medium_plus: 1.000,
+  detection_rate_high_plus: 0.628,
+  high_risk_rate: 0.090,
+  pu_correction: 0.321,
+  ground_truth_cases: 347,
+  ground_truth_vendors: 507,
+  ground_truth_contracts: 252072,
 } as const
 
 interface CaseDetection {
@@ -128,22 +128,22 @@ const CASE_DETECTION: CaseDetection[] = [
 
 const MODEL_COMPARISON = {
   v33: { auc: 0.584, detection: 67.1, high_plus: 18.3, brier: 0.411, lift: 1.22 },
-  v60: { auc: 0.849, detection: 88.7, high_plus: 25.3, brier: 0.090, lift: 2.3 },
+  v60: { auc: 0.863, detection: 100.0, high_plus: 62.8, brier: 0.107, lift: 3.1 },
 } as const
 
 const SECTOR_MODELS = [
-  { sector: 'Salud (1)', factors: [['vendor_concentration', '+1.39'], ['price_ratio', '+0.17'], ['same_day_count', '+0.16']] },
-  { sector: 'Educacion (2)', factors: [['vendor_concentration', '+0.71'], ['industry_mismatch', '+0.55'], ['price_hyp_confidence', '+0.48']] },
-  { sector: 'Infraestructura (3)', factors: [['vendor_concentration', '+0.97'], ['network_member_count', '+0.61'], ['industry_mismatch', '+0.52']] },
-  { sector: 'Energia (4)', factors: [['industry_mismatch', '+1.17'], ['vendor_concentration', '+0.75'], ['network_member_count', '+0.26']] },
-  { sector: 'Defensa (5)', factors: [['industry_mismatch', '+0.68'], ['vendor_concentration', '+0.21'], ['price_hyp_confidence', '+0.21']] },
-  { sector: 'Tecnologia (6)', factors: [['network_member_count', '+0.39'], ['price_hyp_confidence', '+0.27'], ['industry_mismatch', '+0.25']] },
-  { sector: 'Hacienda (7)', factors: [['network_member_count', '+0.77'], ['vendor_concentration', '+0.44'], ['price_hyp_confidence', '+0.32']] },
-  { sector: 'Gobernacion (8)', factors: [['vendor_concentration', '+0.42'], ['industry_mismatch', '+0.37'], ['price_hyp_confidence', '+0.26']] },
-  { sector: 'Agricultura (9)', factors: [['vendor_concentration', '+1.82'], ['network_member_count', '+0.26'], ['price_ratio', '+0.18']] },
-  { sector: 'Ambiente (10)', factors: [['vendor_concentration', '+0.62'], ['network_member_count', '+0.60'], ['industry_mismatch', '+0.43']] },
-  { sector: 'Trabajo (11)', factors: [['vendor_concentration', '+0.54'], ['network_member_count', '+0.37'], ['industry_mismatch', '+0.29']] },
-  { sector: 'Otros (12)', factors: [['network_member_count', '+0.40'], ['industry_mismatch', '+0.29'], ['same_day_count', '+0.15']] },
+  { sector: 'Salud (1)', factors: [['price_volatility', '+1.45'], ['vendor_concentration', '+0.46'], ['institution_diversity', '-0.18']] },
+  { sector: 'Educacion (2)', factors: [['price_volatility', '+0.43'], ['same_day_count', '+0.20'], ['network_member_count', '+0.11']] },
+  { sector: 'Infraestructura (3)', factors: [['vendor_concentration', '+0.40'], ['global model fills remainder', '']] },
+  { sector: 'Energia (4)', factors: [['network_member_count', '+0.07'], ['global model fills remainder', '']] },
+  { sector: 'Defensa (5)', factors: [['global model (sparse)', '—']] },
+  { sector: 'Tecnologia (6)', factors: [['global model fallback', '<500 GT cases']] },
+  { sector: 'Hacienda (7)', factors: [['vendor_concentration', '+0.29'], ['network_member_count', '+0.13']] },
+  { sector: 'Gobernacion (8)', factors: [['vendor_concentration', '+0.14'], ['global model fills remainder', '']] },
+  { sector: 'Agricultura (9)', factors: [['price_volatility', '+0.39'], ['same_day_count', '+0.10'], ['price_ratio', '+0.10']] },
+  { sector: 'Ambiente (10)', factors: [['global model fallback', '<500 GT cases']] },
+  { sector: 'Trabajo (11)', factors: [['global model (sparse)', '—']] },
+  { sector: 'Otros (12)', factors: [['global model fallback', '<500 GT cases']] },
 ] as const
 
 // ============================================================================
@@ -638,14 +638,13 @@ function DriftMonitorSection() {
 // ============================================================================
 
 const RACETRACK_FEATURES = [
-  { name: 'Price Volatility', coeff: 1.38, direction: 'risk' as const },
-  { name: 'Vendor Concentration', coeff: 0.72, direction: 'risk' as const },
-  { name: 'Institution Diversity', coeff: 0.43, direction: 'protect' as const },
-  { name: 'Price Ratio', coeff: 0.39, direction: 'risk' as const },
-  { name: 'Network Members', coeff: 0.23, direction: 'risk' as const },
-  { name: 'Direct Award', coeff: 0.13, direction: 'risk' as const },
-  { name: 'Same-Day Contracts', coeff: 0.11, direction: 'risk' as const },
-  { name: 'Ad Period Days', coeff: 0.08, direction: 'risk' as const },
+  { name: 'Price Volatility', coeff: 1.148, direction: 'risk' as const },
+  { name: 'Vendor Concentration', coeff: 0.375, direction: 'risk' as const },
+  { name: 'Price Ratio', coeff: 0.235, direction: 'risk' as const },
+  { name: 'Network Members', coeff: 0.181, direction: 'risk' as const },
+  { name: 'Same-Day Contracts', coeff: 0.095, direction: 'risk' as const },
+  { name: 'Win Rate', coeff: 0.049, direction: 'risk' as const },
+  { name: 'Institution Diversity', coeff: 0.382, direction: 'protect' as const },
 ]
 
 function FeatureWeightsRacetrack() {
@@ -1850,7 +1849,7 @@ export default function ModelTransparency() {
               { version: 'v3.3', date: 'Feb 2026', auc: '0.584', label: 'Weighted Checklist', desc: '8 base factors, IMF-aligned weights, interaction effects. AUC barely above random.', color: '#64748b' },
               { version: 'v4.0', date: 'Feb 2026', auc: '0.942', label: 'Statistical Framework', desc: 'Z-scores, Mahalanobis distance, Bayesian logistic regression. 12 features, PU-learning correction.', color: '#fb923c' },
               { version: 'v5.1', date: 'Feb 2026', auc: '0.957', label: 'Per-Sector Sub-Models', desc: '16 z-score features, 13 models (1 global + 12 sector). Temporal split inflated AUC due to vendor leakage.', color: '#3b82f6' },
-              { version: 'v6.1', date: 'Mar 2026', auc: '0.849', label: 'Vendor-Stratified (Active)', desc: '~390 cases, ~725 vendors. Vendor-stratified 70/30 split. OECD-calibrated intercept. Honest AUC.', color: 'var(--color-accent)', active: true },
+              { version: 'v6.4', date: 'Mar 2026', auc: '0.863', label: 'Curriculum Learning (Active)', desc: '347 GT cases, 507 vendors. Near-L1 regularization (C=0.0013), 7 active features. OECD HR=9.0%.', color: 'var(--color-accent)', active: true },
             ].map((item) => (
               <div key={item.version} className="relative flex items-start gap-4 pb-5 last:pb-0">
                 <div
