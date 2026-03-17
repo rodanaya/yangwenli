@@ -3,12 +3,61 @@ Story endpoints for journalist investigation starting-points.
 Each endpoint returns a pre-computed narrative dataset with context.
 """
 import logging
-from fastapi import APIRouter
+import threading
+import time
+from fastapi import APIRouter, HTTPException
 from ..dependencies import get_db
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/stories", tags=["stories"])
+
+# ---------------------------------------------------------------------------
+# In-memory cache — the 8 package queries take ~2 min cold on 3.1M rows.
+# First request starts a background thread; 503 is returned until ready.
+# Cache TTL: 1 hour (data is historical, changes only on rescore).
+# ---------------------------------------------------------------------------
+_stories_cache: dict = {"data": None, "expires": 0.0, "computing": False}
+_stories_lock = threading.Lock()
+
+
+def _run_packages_computation() -> None:
+    """Compute all 8 story packages in background and populate the cache."""
+    logger.info("Story packages: background computation started")
+    try:
+        with get_db() as conn:
+            packages = [
+                _build_ghost_companies_package(conn),
+                _build_top_suspicious_package(conn),
+                _build_administration_comparison_package(conn),
+                _build_efos_vendors_package(conn),
+                _build_sector_overpricing_package(conn),
+                _build_new_vendor_risk_package(conn),
+                _build_monopoly_capture_package(conn),
+                _build_direct_award_surge_package(conn),
+            ]
+        with _stories_lock:
+            _stories_cache["data"] = {"packages": packages}
+            _stories_cache["expires"] = time.time() + 3600  # 1-hour TTL
+            _stories_cache["computing"] = False
+        logger.info("Story packages: background computation complete (%d packages)", len(packages))
+    except Exception as e:
+        logger.error("Story packages: background computation failed: %s", e)
+        with _stories_lock:
+            _stories_cache["computing"] = False
+
+
+def warm_stories_cache() -> None:
+    """Trigger background cache warm-up. Safe to call multiple times (idempotent)."""
+    with _stories_lock:
+        if _stories_cache.get("computing") or (
+            _stories_cache.get("data") and time.time() < _stories_cache.get("expires", 0.0)
+        ):
+            return  # Already warm or computing
+        _stories_cache["computing"] = True
+    t = threading.Thread(target=_run_packages_computation, daemon=True)
+    t.start()
+    logger.info("Story packages: cache warm-up triggered")
 
 
 @router.get("/administration-comparison")
@@ -793,18 +842,27 @@ def _build_direct_award_surge_package(conn) -> dict:
 def story_packages():
     """
     Return all 8 pre-packaged investigation story templates with live data.
-    Each package includes title, lede, examples, defense, and next steps.
+    Served from in-memory cache (~1ms). First call after cold start returns 503
+    while background computation runs (~2 min). Retry-After: 30 header is set.
     """
-    with get_db() as conn:
-        packages = [
-            _build_ghost_companies_package(conn),
-            _build_top_suspicious_package(conn),
-            _build_administration_comparison_package(conn),
-            _build_efos_vendors_package(conn),
-            _build_sector_overpricing_package(conn),
-            _build_new_vendor_risk_package(conn),
-            _build_monopoly_capture_package(conn),
-            _build_direct_award_surge_package(conn),
-        ]
+    now = time.time()
+    with _stories_lock:
+        if _stories_cache.get("data") and now < _stories_cache.get("expires", 0.0):
+            return _stories_cache["data"]
+        if _stories_cache.get("computing"):
+            raise HTTPException(
+                status_code=503,
+                detail="Story packages are being computed. Please retry in 30-60 seconds.",
+                headers={"Retry-After": "30"},
+            )
+        # Cold start: start background computation
+        _stories_cache["computing"] = True
 
-    return {"packages": packages}
+    logger.info("Story packages: starting background computation (first request)")
+    t = threading.Thread(target=_run_packages_computation, daemon=True)
+    t.start()
+    raise HTTPException(
+        status_code=503,
+        detail="Story packages are being computed. Please retry in 30-60 seconds.",
+        headers={"Retry-After": "30"},
+    )

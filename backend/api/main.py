@@ -120,6 +120,13 @@ def _warmup_caches():
         # Breathe between requests so user requests aren't starved
         time.sleep(0.5)
 
+    # Trigger story packages background computation (2-min job; no HTTP timeout concern)
+    try:
+        from .routers.stories import warm_stories_cache
+        warm_stories_cache()
+    except Exception as e:
+        logger.debug(f"Story packages warmup skipped: {e}")
+
 
 def _startup_checks():
     """Verify critical system state at startup."""
