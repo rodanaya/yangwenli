@@ -595,7 +595,7 @@ export function Contracts() {
         )}
         <input
           type="text"
-          placeholder="Search contracts, institutions, or vendors\u2026"
+          placeholder={t('searchPlaceholder')}
           className="h-11 w-full rounded-lg border border-border bg-background-card pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-colors"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
