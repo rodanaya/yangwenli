@@ -613,38 +613,44 @@ def get_vendor(
         last_year = detail.get("last_contract_year")
 
         # Fetch name variants (QQW + other sources), excluding internal sentinel rows
-        name_variants_rows = cursor.execute(
-            """SELECT variant_name, source FROM vendor_name_variants
-               WHERE vendor_id = ? AND source NOT IN ('qqw_miss', 'qqw_empty')
-               ORDER BY source, variant_name""",
-            (vendor_id,),
-        ).fetchall()
-        name_variants = [{"variant_name": r["variant_name"], "source": r["source"]}
-                         for r in name_variants_rows]
+        try:
+            name_variants_rows = cursor.execute(
+                """SELECT variant_name, source FROM vendor_name_variants
+                   WHERE vendor_id = ? AND source NOT IN ('qqw_miss', 'qqw_empty')
+                   ORDER BY source, variant_name""",
+                (vendor_id,),
+            ).fetchall()
+            name_variants = [{"variant_name": r["variant_name"], "source": r["source"]}
+                             for r in name_variants_rows]
+        except Exception:
+            name_variants = []
 
         # Fetch top institution tenures (Coviello & Gagliarducci 2017)
-        tenure_rows = cursor.execute("""
-            SELECT vit.institution_id, i.name AS institution_name,
-                   vit.first_contract_year, vit.last_contract_year,
-                   vit.total_contracts, COALESCE(vit.total_amount_mxn, 0) AS total_amount_mxn
-            FROM vendor_institution_tenure vit
-            JOIN institutions i ON vit.institution_id = i.id
-            WHERE vit.vendor_id = ?
-            ORDER BY (vit.last_contract_year - vit.first_contract_year) DESC, vit.total_contracts DESC
-            LIMIT 10
-        """, (vendor_id,)).fetchall()
-        top_institutions = [
-            VendorTenureInstitution(
-                institution_id=r["institution_id"],
-                institution_name=r["institution_name"],
-                first_contract_year=r["first_contract_year"],
-                last_contract_year=r["last_contract_year"],
-                tenure_years=(r["last_contract_year"] - r["first_contract_year"] + 1),
-                total_contracts=r["total_contracts"],
-                total_amount_mxn=r["total_amount_mxn"],
-            )
-            for r in tenure_rows
-        ]
+        try:
+            tenure_rows = cursor.execute("""
+                SELECT vit.institution_id, i.name AS institution_name,
+                       vit.first_contract_year, vit.last_contract_year,
+                       vit.total_contracts, COALESCE(vit.total_amount_mxn, 0) AS total_amount_mxn
+                FROM vendor_institution_tenure vit
+                JOIN institutions i ON vit.institution_id = i.id
+                WHERE vit.vendor_id = ?
+                ORDER BY (vit.last_contract_year - vit.first_contract_year) DESC, vit.total_contracts DESC
+                LIMIT 10
+            """, (vendor_id,)).fetchall()
+            top_institutions = [
+                VendorTenureInstitution(
+                    institution_id=r["institution_id"],
+                    institution_name=r["institution_name"],
+                    first_contract_year=r["first_contract_year"],
+                    last_contract_year=r["last_contract_year"],
+                    tenure_years=(r["last_contract_year"] - r["first_contract_year"] + 1),
+                    total_contracts=r["total_contracts"],
+                    total_amount_mxn=r["total_amount_mxn"],
+                )
+                for r in tenure_rows
+            ]
+        except Exception:
+            top_institutions = []
 
         # Check EFOS ghost company and SFP sanctions flags via RFC match
         vendor_rfc = detail.get("rfc")
