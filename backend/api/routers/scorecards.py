@@ -156,7 +156,7 @@ def get_scorecard_summary():
         )
     except Exception as exc:
         # Tables may not exist in older deploy DBs — return empty summary
-        logger.warning("scorecard_summary_unavailable", error=str(exc))
+        logger.warning("scorecard_summary_unavailable: %s", exc)
         return ScorecardSummary(
             institutions_scored=0,
             vendors_scored=0,
