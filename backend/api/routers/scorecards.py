@@ -297,60 +297,101 @@ def list_vendor_scorecards(
 ):
     """Ranked list of vendor scorecards."""
     with get_db() as conn:
-        where_clauses = ["1=1"]
-        params: list = []
+        # Separate WHERE clauses: ones that only touch vendor_scorecards (s_*) and
+        # ones that require joining vendors (v_*). The JOIN is expensive (~900ms on
+        # 320K vendors) so we skip it when no vendor-name search is active.
+        s_where: list = ["1=1"]
+        s_params: list = []
+        needs_join = False
 
         if grade:
-            where_clauses.append("s.grade = ?")
-            params.append(grade)
+            s_where.append("s.grade = ?")
+            s_params.append(grade)
         if min_score is not None:
-            where_clauses.append("s.total_score >= ?")
-            params.append(min_score)
+            s_where.append("s.total_score >= ?")
+            s_params.append(min_score)
         if max_score is not None:
-            where_clauses.append("s.total_score <= ?")
-            params.append(max_score)
+            s_where.append("s.total_score <= ?")
+            s_params.append(max_score)
         if search:
-            where_clauses.append("v.name LIKE ?")
-            params.append(f"%{search}%")
+            s_where.append("v.name LIKE ?")
+            s_params.append(f"%{search}%")
+            needs_join = True
 
-        where_sql = " AND ".join(where_clauses)
-        # vendor_name sort maps to vendors.name alias
+        where_sql = " AND ".join(s_where)
         if sort_by == "vendor_name":
             order_sql = f"v.name {'DESC' if order == 'desc' else 'ASC'}"
+            needs_join = True
         else:
             order_sql = f"s.{sort_by} {'DESC' if order == 'desc' else 'ASC'}"
 
-        total = conn.execute(f"""
-            SELECT COUNT(*)
-            FROM vendor_scorecards s
-            JOIN vendors v ON s.vendor_id = v.id
-            WHERE {where_sql}
-        """, params).fetchone()[0]
+        join_clause = "JOIN vendors v ON s.vendor_id = v.id" if needs_join else "JOIN vendors v ON s.vendor_id = v.id"
+
+        # COUNT: avoid join when not filtering/sorting by vendor name (saves ~870ms)
+        if needs_join:
+            total = conn.execute(f"""
+                SELECT COUNT(*) FROM vendor_scorecards s
+                JOIN vendors v ON s.vendor_id = v.id WHERE {where_sql}
+            """, s_params).fetchone()[0]
+        else:
+            total = conn.execute(f"""
+                SELECT COUNT(*) FROM vendor_scorecards s WHERE {where_sql}
+            """, s_params).fetchone()[0]
 
         offset = (page - 1) * per_page
-        rows = conn.execute(f"""
-            SELECT s.vendor_id, v.name,
-                   s.total_score, s.grade, s.grade_label, s.grade_color,
-                   s.national_percentile, s.sector_percentile,
-                   s.pillar_risk_signal, s.pillar_conduct, s.pillar_spread,
-                   s.pillar_behavior, s.pillar_flags,
-                   s.top_risk_driver
-            FROM vendor_scorecards s
-            JOIN vendors v ON s.vendor_id = v.id
-            WHERE {where_sql}
-            ORDER BY {order_sql}
-            LIMIT ? OFFSET ?
-        """, params + [per_page, offset]).fetchall()
+        if needs_join:
+            # When filtering/sorting by vendor name, join must be in outer query
+            rows = conn.execute(f"""
+                SELECT s.vendor_id, v.name,
+                       s.total_score, s.grade, s.grade_label, s.grade_color,
+                       s.national_percentile, s.sector_percentile,
+                       s.pillar_risk_signal, s.pillar_conduct, s.pillar_spread,
+                       s.pillar_behavior, s.pillar_flags,
+                       s.top_risk_driver
+                FROM vendor_scorecards s
+                JOIN vendors v ON s.vendor_id = v.id
+                WHERE {where_sql}
+                ORDER BY {order_sql}
+                LIMIT ? OFFSET ?
+            """, s_params + [per_page, offset]).fetchall()
+        else:
+            # No name filter: subquery first so idx_vsc_score is used for ORDER BY,
+            # then join only the LIMIT rows to vendors for names (0ms vs 400ms).
+            # Alias inner table as s so where_sql column refs (s.grade etc.) work.
+            rows = conn.execute(f"""
+                SELECT vs.vendor_id, v.name,
+                       vs.total_score, vs.grade, vs.grade_label, vs.grade_color,
+                       vs.national_percentile, vs.sector_percentile,
+                       vs.pillar_risk_signal, vs.pillar_conduct, vs.pillar_spread,
+                       vs.pillar_behavior, vs.pillar_flags,
+                       vs.top_risk_driver
+                FROM (
+                    SELECT s.vendor_id, s.total_score, s.grade, s.grade_label, s.grade_color,
+                           s.national_percentile, s.sector_percentile,
+                           s.pillar_risk_signal, s.pillar_conduct, s.pillar_spread,
+                           s.pillar_behavior, s.pillar_flags, s.top_risk_driver
+                    FROM vendor_scorecards AS s
+                    WHERE {where_sql}
+                    ORDER BY {order_sql}
+                    LIMIT ? OFFSET ?
+                ) vs
+                JOIN vendors v ON vs.vendor_id = v.id
+            """, s_params + [per_page, offset]).fetchall()
 
-        where_no_grade = " AND ".join([c for c in where_clauses if "s.grade" not in c])
-        filter_params_no_grade = [p for p, w in zip(params, where_clauses[1:]) if "s.grade" not in w]
-        dist_rows = conn.execute(f"""
-            SELECT s.grade, COUNT(*)
-            FROM vendor_scorecards s
-            JOIN vendors v ON s.vendor_id = v.id
-            WHERE {where_no_grade}
-            GROUP BY s.grade
-        """, filter_params_no_grade).fetchall()
+        # Grade distribution: also avoid join when no name filter
+        where_no_grade = " AND ".join([c for c in s_where if "s.grade" not in c])
+        filter_params_no_grade = [p for p, w in zip(s_params, s_where[1:]) if "s.grade" not in w]
+        if needs_join:
+            dist_rows = conn.execute(f"""
+                SELECT s.grade, COUNT(*) FROM vendor_scorecards s
+                JOIN vendors v ON s.vendor_id = v.id WHERE {where_no_grade}
+                GROUP BY s.grade
+            """, filter_params_no_grade).fetchall()
+        else:
+            dist_rows = conn.execute(f"""
+                SELECT s.grade, COUNT(*) FROM vendor_scorecards s
+                WHERE {where_no_grade} GROUP BY s.grade
+            """, filter_params_no_grade).fetchall()
         grade_dist = {r[0]: r[1] for r in dist_rows}
 
     items = [
