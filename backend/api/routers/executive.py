@@ -181,8 +181,17 @@ def _build_summary(conn) -> dict:
         "max_year": 2025,
     }
 
-    # 3. Risk breakdown
-    risk_map = {r["risk_level"]: r for r in risk_dist_raw}
+    # 3. Risk breakdown — handle both list format [{risk_level, count, ...}] and
+    # dict format {critical: {count, pct}, ...} from older precomputed_stats
+    if isinstance(risk_dist_raw, dict):
+        risk_map = {
+            level: {"risk_level": level, "count": v.get("count", 0),
+                    "total_value_mxn": v.get("total_value_mxn", 0),
+                    "percentage": v.get("pct", v.get("percentage", 0))}
+            for level, v in risk_dist_raw.items()
+        }
+    else:
+        risk_map = {r["risk_level"]: r for r in risk_dist_raw}
     critical = risk_map.get("critical", {})
     high = risk_map.get("high", {})
     medium = risk_map.get("medium", {})
@@ -218,14 +227,14 @@ def _build_summary(conn) -> dict:
         "single_bid_pct": overview.get("single_bid_pct", 0),
     }
 
-    # 5. Sectors (all 12, enriched with high-risk pct)
+    # 5. Sectors (all 12, enriched with high-risk pct) — support old and new key names
     sectors = []
     for s in sectors_raw:
         t = s.get("total_contracts", 1) or 1
         hp = (s.get("high_risk_count", 0) + s.get("critical_risk_count", 0)) / t
         sectors.append({
-            "code": s.get("code", ""),
-            "name": s.get("name", ""),
+            "code": s.get("code") or s.get("sector_name_es", "").lower() or str(s.get("sector_id", "")),
+            "name": s.get("name") or s.get("sector_name_es") or s.get("sector_name", ""),
             "contracts": s.get("total_contracts", 0),
             "value": s.get("total_value_mxn", 0),
             "avg_risk": round(s.get("avg_risk_score", 0), 4),
