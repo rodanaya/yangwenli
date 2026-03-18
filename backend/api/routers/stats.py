@@ -273,12 +273,41 @@ def get_fast_dashboard(response: Response):
             if row['updated_at']:
                 cached_at = row['updated_at']
 
+        # Normalize yearly_trends: old format used 'total_contracts', new format uses 'contracts'
+        raw_yearly = stats.get('yearly_trends', [])
+        yearly_trends = []
+        for y in raw_yearly:
+            contracts = y.get('contracts') if y.get('contracts') is not None else y.get('total_contracts', 0)
+            yearly_trends.append({
+                'year': y.get('year'),
+                'contracts': contracts,
+                'value_mxn': y.get('value_mxn') or y.get('total_value_mxn', 0),
+                'avg_risk': y.get('avg_risk') or y.get('avg_risk_score', 0),
+                'risk_stddev': y.get('risk_stddev', 0),
+                'direct_award_pct': y.get('direct_award_pct', 0),
+                'single_bid_pct': y.get('single_bid_pct', 0),
+                'high_risk_pct': y.get('high_risk_pct', 0),
+            })
+
+        # Normalize sectors: old format used 'sector_id'/'sector_name_es', new uses 'id'/'code'/'name'
+        raw_sectors = stats.get('sectors', [])
+        sectors = []
+        for s in raw_sectors:
+            sid = s.get('id') if s.get('id') is not None else s.get('sector_id', 0)
+            scode = s.get('code') or (s.get('sector_name_es') or s.get('sector_name', '')).lower().replace(' ', '_')
+            sectors.append({
+                **s,
+                'id': sid,
+                'code': scode,
+                'name': s.get('name') or s.get('sector_name_es') or s.get('sector_name', ''),
+            })
+
         response.headers["Cache-Control"] = "public, max-age=300"  # 5 min browser cache
         return FastDashboardResponse(
             overview=stats.get('overview', {}),
-            sectors=stats.get('sectors', []),
+            sectors=sectors,
             risk_distribution=stats.get('risk_distribution', []),
-            yearly_trends=stats.get('yearly_trends', []),
+            yearly_trends=yearly_trends,
             december_spike=stats.get('december_spike'),
             monthly_2023=stats.get('monthly_2023'),
             cached_at=cached_at

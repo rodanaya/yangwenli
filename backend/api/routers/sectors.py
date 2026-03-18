@@ -156,11 +156,16 @@ def list_sectors(
                         total_value += val
                         high_risk = (s.get("high_risk_count", 0) or 0) + (s.get("critical_risk_count", 0) or 0)
 
+                        # Support both new format (id/code/name) and old precomputed format (sector_id/sector_name_es)
+                        sid = s.get("id") or s.get("sector_id", 0)
+                        scode = s.get("code") or str(sid)
+                        sname = s.get("name") or s.get("sector_name_es") or s.get("sector_name", "")
+
                         sectors.append(SectorStatistics(
-                            sector_id=s["id"],
-                            sector_code=s["code"],
-                            sector_name=s["name"],
-                            color=SECTOR_COLORS.get(s["id"], "#64748b"),
+                            sector_id=sid,
+                            sector_code=scode,
+                            sector_name=sname,
+                            color=SECTOR_COLORS.get(sid, "#64748b"),
                             total_contracts=total,
                             total_value_mxn=val,
                             total_vendors=s.get("total_vendors", 0),
