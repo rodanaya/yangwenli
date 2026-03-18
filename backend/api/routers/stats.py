@@ -302,11 +302,24 @@ def get_fast_dashboard(response: Response):
                 'name': s.get('name') or s.get('sector_name_es') or s.get('sector_name', ''),
             })
 
+        # Normalize risk_distribution: handle dict format {level: {count, pct}} from older precompute
+        raw_rd = stats.get('risk_distribution', [])
+        if isinstance(raw_rd, dict):
+            risk_distribution = [
+                {"risk_level": level, "count": v.get("count", 0),
+                 "percentage": v.get("percentage", v.get("pct", 0)),
+                 "total_value_mxn": v.get("total_value_mxn", v.get("value_mxn", 0))}
+                for level, v in raw_rd.items()
+                if level in ("critical", "high", "medium", "low")
+            ]
+        else:
+            risk_distribution = raw_rd
+
         response.headers["Cache-Control"] = "public, max-age=300"  # 5 min browser cache
         return FastDashboardResponse(
             overview=stats.get('overview', {}),
             sectors=sectors,
-            risk_distribution=stats.get('risk_distribution', []),
+            risk_distribution=risk_distribution,
             yearly_trends=yearly_trends,
             december_spike=stats.get('december_spike'),
             monthly_2023=stats.get('monthly_2023'),

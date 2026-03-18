@@ -168,7 +168,11 @@ def get_contract_statistics(
             ).fetchone()
             if ov_row and rd_row:
                 ov = _json.loads(ov_row[0])
-                rd = {r["risk_level"]: r["count"] for r in _json.loads(rd_row[0])}
+                rd_raw = _json.loads(rd_row[0])
+                if isinstance(rd_raw, dict):
+                    rd = {level: v.get("count", 0) for level, v in rd_raw.items()}
+                else:
+                    rd = {r["risk_level"]: r["count"] for r in rd_raw}
                 total = ov.get("total_contracts", 0)
                 total_val = ov.get("total_value_mxn", 0)
                 da_pct = ov.get("direct_award_pct", 0)

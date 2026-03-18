@@ -437,7 +437,18 @@ def get_risk_overview():
             # Get risk distribution from precomputed_stats
             cursor.execute("SELECT stat_value FROM precomputed_stats WHERE stat_key = 'risk_distribution'")
             row = cursor.fetchone()
-            risk_distribution = json.loads(row['stat_value']) if row else []
+            risk_distribution_raw = json.loads(row['stat_value']) if row else []
+            # Handle both dict and list formats
+            if isinstance(risk_distribution_raw, dict):
+                risk_distribution = [
+                    {"risk_level": level, "count": v.get("count", 0),
+                     "percentage": v.get("percentage", v.get("pct", 0)),
+                     "total_value_mxn": v.get("total_value_mxn", v.get("value_mxn", 0))}
+                    for level, v in risk_distribution_raw.items()
+                    if level in ("critical", "high", "medium", "low")
+                ]
+            else:
+                risk_distribution = risk_distribution_raw
 
             # Get yearly trends from precomputed_stats
             cursor.execute("SELECT stat_value FROM precomputed_stats WHERE stat_key = 'yearly_trends'")
@@ -607,13 +618,13 @@ def get_year_over_year(
                 data = [
                     {
                         "year": r["year"],
-                        "contracts": r["contracts"],
-                        "total_value": r.get("value_mxn", 0),
-                        "avg_risk": r.get("avg_risk", 0),
+                        "contracts": r.get("contracts") or r.get("total_contracts", 0),
+                        "total_value": r.get("value_mxn") or r.get("total_value_mxn", 0),
+                        "avg_risk": r.get("avg_risk") or r.get("avg_risk_score", 0),
                         "direct_award_pct": r.get("direct_award_pct", 0),
                         "single_bid_pct": r.get("single_bid_pct", 0),
                         "high_risk_pct": r.get("high_risk_pct", 0),
-                        "vendor_count": r.get("vendor_count", 0),
+                        "vendor_count": r.get("vendor_count") or r.get("unique_vendors", 0),
                         "institution_count": r.get("institution_count", 0),
                     }
                     for r in raw

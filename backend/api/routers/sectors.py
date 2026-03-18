@@ -659,6 +659,15 @@ def get_risk_distribution(
                 if row:
                     import json
                     dist_data = json.loads(row[0])
+                    # Handle both dict and list formats from precomputed_stats
+                    if isinstance(dist_data, dict):
+                        dist_data = [
+                            {"risk_level": level, "count": v.get("count", 0),
+                             "percentage": v.get("percentage", v.get("pct", 0)),
+                             "total_value_mxn": v.get("total_value_mxn", v.get("value_mxn", 0))}
+                            for level, v in dist_data.items()
+                            if level in ("critical", "high", "medium", "low")
+                        ]
                     # Sort by risk level order
                     level_order = {"low": 1, "medium": 2, "high": 3, "critical": 4}
                     dist_data.sort(key=lambda x: level_order.get(x.get("risk_level", ""), 5))
