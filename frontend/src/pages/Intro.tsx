@@ -1215,13 +1215,19 @@ export default function Intro() {
   // Build chart data for section 2 (year-by-year bars)
   const chartBars = useMemo(() => {
     if (yearlyTrends.length === 0) return []
-    const maxContracts = Math.max(...yearlyTrends.map((y) => y.contracts))
-    return yearlyTrends.map((y) => ({
-      year: y.year,
-      contracts: y.contracts,
-      heightPct: maxContracts > 0 ? (y.contracts / maxContracts) * 100 : 0,
-      highRiskPct: y.high_risk_pct ?? 0,
-    }))
+    // Support both new ('contracts') and old precomputed_stats ('total_contracts') API format
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const getC = (y: any) => y.contracts ?? y.total_contracts ?? 0
+    const maxContracts = Math.max(...yearlyTrends.map(getC))
+    return yearlyTrends.map((y) => {
+      const contracts = getC(y)
+      return {
+        year: y.year,
+        contracts,
+        heightPct: maxContracts > 0 ? (contracts / maxContracts) * 100 : 0,
+        highRiskPct: y.high_risk_pct ?? 0,
+      }
+    })
   }, [yearlyTrends])
 
   // National average grade for section 5
