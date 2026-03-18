@@ -127,32 +127,45 @@ class ScorecardSummary(BaseModel):
 @router.get("/summary", response_model=ScorecardSummary)
 def get_scorecard_summary():
     """Overall scorecard statistics."""
-    with get_db() as conn:
-        i_row = conn.execute("""
-            SELECT COUNT(*), AVG(total_score),
-                   MAX(computed_at)
-            FROM institution_scorecards
-        """).fetchone()
-        v_row = conn.execute("""
-            SELECT COUNT(*), AVG(total_score)
-            FROM vendor_scorecards
-        """).fetchone()
-        i_dist = {r[0]: r[1] for r in conn.execute(
-            "SELECT grade, COUNT(*) FROM institution_scorecards GROUP BY grade"
-        ).fetchall()}
-        v_dist = {r[0]: r[1] for r in conn.execute(
-            "SELECT grade, COUNT(*) FROM vendor_scorecards GROUP BY grade"
-        ).fetchall()}
+    try:
+        with get_db() as conn:
+            i_row = conn.execute("""
+                SELECT COUNT(*), AVG(total_score),
+                       MAX(computed_at)
+                FROM institution_scorecards
+            """).fetchone()
+            v_row = conn.execute("""
+                SELECT COUNT(*), AVG(total_score)
+                FROM vendor_scorecards
+            """).fetchone()
+            i_dist = {r[0]: r[1] for r in conn.execute(
+                "SELECT grade, COUNT(*) FROM institution_scorecards GROUP BY grade"
+            ).fetchall()}
+            v_dist = {r[0]: r[1] for r in conn.execute(
+                "SELECT grade, COUNT(*) FROM vendor_scorecards GROUP BY grade"
+            ).fetchall()}
 
-    return ScorecardSummary(
-        institutions_scored=i_row[0] or 0,
-        vendors_scored=v_row[0] or 0,
-        institution_grade_distribution=i_dist,
-        vendor_grade_distribution=v_dist,
-        institution_avg_score=round(i_row[1] or 0, 1),
-        vendor_avg_score=round(v_row[1] or 0, 1),
-        computed_at=i_row[2],
-    )
+        return ScorecardSummary(
+            institutions_scored=i_row[0] or 0,
+            vendors_scored=v_row[0] or 0,
+            institution_grade_distribution=i_dist,
+            vendor_grade_distribution=v_dist,
+            institution_avg_score=round(i_row[1] or 0, 1),
+            vendor_avg_score=round(v_row[1] or 0, 1),
+            computed_at=i_row[2],
+        )
+    except Exception as exc:
+        # Tables may not exist in older deploy DBs — return empty summary
+        logger.warning("scorecard_summary_unavailable", error=str(exc))
+        return ScorecardSummary(
+            institutions_scored=0,
+            vendors_scored=0,
+            institution_grade_distribution={},
+            vendor_grade_distribution={},
+            institution_avg_score=0.0,
+            vendor_avg_score=0.0,
+            computed_at=None,
+        )
 
 
 @router.get("/institutions", response_model=InstitutionScorecardListResponse)
