@@ -58,6 +58,7 @@ const AriaQueue = lazy(() => import('@/pages/AriaQueue'))
 const ReportCard = lazy(() => import('@/pages/ReportCard'))
 const Journalists = lazy(() => import('@/pages/Journalists'))
 const RedThread = lazy(() => import('@/pages/RedThread'))
+const StoryNarrative = lazy(() => import('@/pages/StoryNarrative'))
 
 // First-visit routing: redirect "/" to Intro for new users, Dashboard for returning users
 function FirstVisitRedirect() {
@@ -391,6 +392,16 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <Annotations />
+                  </SuspenseBoundary>
+                }
+              />
+
+              {/* Story narratives — investigative journalism pieces */}
+              <Route
+                path="stories/:slug"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <StoryNarrative />
                   </SuspenseBoundary>
                 }
               />

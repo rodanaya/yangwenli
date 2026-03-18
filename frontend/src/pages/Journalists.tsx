@@ -1,85 +1,249 @@
 import { useQuery } from '@tanstack/react-query'
-import { analysisApi, phiApi, storiesApi } from '@/api/client'
+import { storiesApi } from '@/api/client'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Shield, BarChart3, Download, Copy, Check, ExternalLink, ArrowRight, BookOpen, AlertTriangle, ChevronDown } from 'lucide-react'
+import { ArrowRight, BookOpen, Download } from 'lucide-react'
 import { useState, useMemo } from 'react'
-import { cn, formatCompactMXN, getRiskLevel } from '@/lib/utils'
-import { Skeleton } from '@/components/ui/skeleton'
-import { RISK_COLORS } from '@/lib/constants'
-import type { StoryPackage } from '@/api/types'
+import { cn } from '@/lib/utils'
+import { staggerContainer, slideUp, fadeIn } from '@/lib/animations'
+import { ScrollReveal, AnimatedNumber } from '@/hooks/useAnimations'
+import { StoryCard } from '@/components/stories/StoryCard'
+import type { OutletType } from '@/components/stories/OutletBadge'
+import type { StoryType } from '@/components/stories/StoryCard'
 
 // ---------------------------------------------------------------------------
-// Types
+// Story definitions (hardcoded editorial content, live stats where available)
 // ---------------------------------------------------------------------------
 
-interface PHIIndicator {
-  value: number
-  light: 'green' | 'yellow' | 'red'
+interface StoryDef {
+  slug: string
+  outlet: OutletType
+  type: StoryType
+  headline: string
+  subheadline: string
+  leadStatValue: string
+  leadStatLabel: string
+  leadStatColor?: string
+  estimatedMinutes: number
+  era?: string
+  tags: string[]
+}
+
+const STORIES: StoryDef[] = [
+  // Row 1 — AMLO themed
+  {
+    slug: 'la-cuarta-adjudicacion',
+    outlet: 'animal_politico',
+    type: 'era',
+    headline: 'La Cuarta Adjudicacion',
+    subheadline: 'Como el gobierno de AMLO llevo las adjudicaciones directas a su punto mas alto en 23 anos de datos.',
+    leadStatValue: '81.9%',
+    leadStatLabel: 'adjudicaciones directas en 2023 — record historico',
+    leadStatColor: '#dc2626',
+    estimatedMinutes: 12,
+    era: 'AMLO',
+    tags: ['AMLO', 'era'],
+  },
+  {
+    slug: 'el-granero-vacio-segalmex',
+    outlet: 'wapo',
+    type: 'case',
+    headline: 'El Granero Vacio: Segalmex',
+    subheadline: 'La historia del fraude mas grande en la distribucion de alimentos del gobierno federal.',
+    leadStatValue: '15',
+    leadStatLabel: 'mil millones MXN en fraude de distribucion alimentaria',
+    leadStatColor: '#1e3a5f',
+    estimatedMinutes: 15,
+    era: 'AMLO',
+    tags: ['AMLO', 'case'],
+  },
+  {
+    slug: 'los-nuevos-ricos-de-la-4t',
+    outlet: 'animal_politico',
+    type: 'thematic',
+    headline: 'Los Nuevos Ricos de la 4T',
+    subheadline: '1,253 empresas fantasma creadas despues de 2018 que acumulan contratos gubernamentales.',
+    leadStatValue: '1,253',
+    leadStatLabel: 'empresas fantasma post-2018',
+    leadStatColor: '#e6420e',
+    estimatedMinutes: 10,
+    era: 'AMLO',
+    tags: ['AMLO', 'thematic'],
+  },
+  // Row 2 — AMLO continued + Cross-era
+  {
+    slug: 'hemoser-el-2-de-agosto',
+    outlet: 'animal_politico',
+    type: 'case',
+    headline: 'HEMOSER: El 2 de Agosto',
+    subheadline: '17.2 mil millones de pesos en 12 contratos, adjudicados en un solo dia a un proveedor de hemoderivados.',
+    leadStatValue: '17.2',
+    leadStatLabel: 'mil millones MXN en 12 contratos, un solo dia',
+    leadStatColor: '#e6420e',
+    estimatedMinutes: 8,
+    era: 'AMLO',
+    tags: ['AMLO', 'case', 'salud'],
+  },
+  {
+    slug: 'la-austeridad-que-no-fue',
+    outlet: 'nyt',
+    type: 'era',
+    headline: 'La Austeridad que No Fue',
+    subheadline: 'En plena retorica de austeridad, el 80% de los contratos federales se entregaron sin licitacion en 2021.',
+    leadStatValue: '80.0%',
+    leadStatLabel: 'contratos sin licitacion en 2021',
+    leadStatColor: '#71717a',
+    estimatedMinutes: 14,
+    era: 'AMLO',
+    tags: ['AMLO', 'era'],
+  },
+  {
+    slug: 'cero-competencia',
+    outlet: 'nyt',
+    type: 'thematic',
+    headline: 'Cero Competencia',
+    subheadline: 'Medio millon de licitaciones donde solo se presento un oferente. La competencia que nunca llego.',
+    leadStatValue: '505,219',
+    leadStatLabel: 'contratos con un solo oferente',
+    leadStatColor: '#71717a',
+    estimatedMinutes: 11,
+    tags: ['thematic'],
+  },
+  // Row 3 — Cross-era + Cases
+  {
+    slug: 'el-triangulo-farmaceutico',
+    outlet: 'wapo',
+    type: 'thematic',
+    headline: 'El Triangulo Farmaceutico',
+    subheadline: 'Tres proveedores que se reparten 270 mil millones en contratos del sector salud.',
+    leadStatValue: '270',
+    leadStatLabel: 'mil millones MXN a 3 proveedores de salud',
+    leadStatColor: '#1e3a5f',
+    estimatedMinutes: 13,
+    tags: ['thematic', 'salud'],
+  },
+  {
+    slug: 'la-avalancha-de-diciembre',
+    outlet: 'nyt',
+    type: 'thematic',
+    headline: 'La Avalancha de Diciembre',
+    subheadline: 'Cada ano, el gobierno gasta mas en diciembre que en cualquier otro mes. En 2015, fueron 57.5 mil millones.',
+    leadStatValue: '57.5',
+    leadStatLabel: 'mil millones MXN en 31 dias — diciembre 2015',
+    leadStatColor: '#71717a',
+    estimatedMinutes: 9,
+    tags: ['thematic'],
+  },
+  {
+    slug: 'el-cartel-del-corazon',
+    outlet: 'wapo',
+    type: 'case',
+    headline: 'El Cartel del Corazon',
+    subheadline: 'Un cartel de equipo medico cardiaco que domino las compras publicas por mas de una decada.',
+    leadStatValue: '50',
+    leadStatLabel: 'mil millones MXN — cartel de equipo medico cardiaco',
+    leadStatColor: '#1e3a5f',
+    estimatedMinutes: 12,
+    tags: ['case', 'salud'],
+  },
+  // Row 4 — Infrastructure + PEN
+  {
+    slug: 'infraestructura-sin-competencia',
+    outlet: 'nyt',
+    type: 'thematic',
+    headline: 'Infraestructura Sin Competencia',
+    subheadline: '2.1 billones de pesos en contratos de infraestructura donde solo hubo una propuesta.',
+    leadStatValue: '2.1',
+    leadStatLabel: 'billones MXN en contratos con propuesta unica',
+    leadStatColor: '#71717a',
+    estimatedMinutes: 14,
+    tags: ['thematic', 'infraestructura'],
+  },
+  {
+    slug: 'la-casa-de-los-contratos',
+    outlet: 'animal_politico',
+    type: 'era',
+    headline: 'La Casa de los Contratos',
+    subheadline: 'La red de empresas vinculadas a Grupo Higa y el megaproyecto de infraestructura del sexenio pasado.',
+    leadStatValue: '85',
+    leadStatLabel: 'mil millones MXN — red de fraude en infraestructura',
+    leadStatColor: '#e6420e',
+    estimatedMinutes: 16,
+    era: 'Pena Nieto',
+    tags: ['Pena Nieto', 'era', 'infraestructura'],
+  },
+  {
+    slug: 'oceanografia-dos-fronteras',
+    outlet: 'wapo',
+    type: 'case',
+    headline: 'Oceanografia: Dos Fronteras',
+    subheadline: 'El fraude que cruzo de PEMEX a Banamex a Citibank. Una historia de facturas falsas a escala internacional.',
+    leadStatValue: '22.4',
+    leadStatLabel: 'mil millones MXN — fraude PEMEX-Banamex-Citibank',
+    leadStatColor: '#1e3a5f',
+    estimatedMinutes: 15,
+    era: 'Pena Nieto',
+    tags: ['Pena Nieto', 'case'],
+  },
+  // Row 5 — Systemic
+  {
+    slug: 'sixsigma-y-el-sat',
+    outlet: 'animal_politico',
+    type: 'case',
+    headline: 'SixSigma y el SAT',
+    subheadline: 'Como una empresa de tecnologia manipulo las licitaciones del SAT durante anos.',
+    leadStatValue: '27',
+    leadStatLabel: 'mil millones MXN — manipulacion de licitaciones, SAT',
+    leadStatColor: '#e6420e',
+    estimatedMinutes: 10,
+    tags: ['case'],
+  },
+  {
+    slug: 'sexenio-a-sexenio',
+    outlet: 'nyt',
+    type: 'era',
+    headline: 'Sexenio a Sexenio',
+    subheadline: 'De 63% a 82%: como las adjudicaciones directas crecieron sin parar durante 23 anos, sin importar quien gobernara.',
+    leadStatValue: '82%',
+    leadStatLabel: 'adjudicaciones directas — tendencia de 23 anos',
+    leadStatColor: '#71717a',
+    estimatedMinutes: 18,
+    tags: ['era'],
+  },
+  {
+    slug: 'el-ano-del-covid',
+    outlet: 'wapo',
+    type: 'year',
+    headline: 'El Ano del COVID',
+    subheadline: 'La emergencia sanitaria como justificacion para contratar sin competencia. 78.1% de los contratos de 2020.',
+    leadStatValue: '78.1%',
+    leadStatLabel: 'sin competencia, en la emergencia',
+    leadStatColor: '#1e3a5f',
+    estimatedMinutes: 11,
+    era: 'AMLO',
+    tags: ['AMLO', 'year'],
+  },
+]
+
+// ---------------------------------------------------------------------------
+// Filter config
+// ---------------------------------------------------------------------------
+
+interface FilterDef {
+  id: string
   label: string
-  description: string
-  benchmark: string
+  match: (s: StoryDef) => boolean
 }
 
-interface PHISector {
-  sector_id: number
-  sector_name: string
-  grade: string
-  greens: number
-  yellows: number
-  reds: number
-  total_indicators: number
-  total_contracts: number
-  total_value_mxn: number
-  competition_by_value?: number
-  phi_composite_score?: number
-  indicators: Record<string, PHIIndicator>
-}
-
-interface PHINational {
-  sector_name: string
-  grade: string
-  greens: number
-  yellows: number
-  reds: number
-  total_indicators: number
-  total_contracts: number
-  total_value_mxn: number
-  indicators: Record<string, PHIIndicator>
-}
-
-interface PHISectorsResponse {
-  methodology: {
-    name: string
-    based_on: string[]
-  }
-  national: PHINational
-  sectors: PHISector[]
-}
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const GRADE_ORDER: Record<string, number> = { 'F-': 0, 'F': 1, 'D-': 2, 'D': 3, 'C': 4, 'C+': 5, 'B': 6, 'B+': 7, 'A': 8, 'S': 9 }
-
-function gradeColor(grade: string): string {
-  if (grade === 'S') return 'text-emerald-500 dark:text-emerald-400'
-  if (grade.startsWith('A')) return 'text-emerald-600 dark:text-emerald-400'
-  if (grade.startsWith('B')) return 'text-blue-600 dark:text-blue-400'
-  if (grade.startsWith('C')) return 'text-amber-600 dark:text-amber-400'
-  if (grade.startsWith('D')) return 'text-orange-600 dark:text-orange-400'
-  return 'text-red-600 dark:text-red-400'
-}
-
-function gradeBg(grade: string): string {
-  if (grade === 'S') return 'bg-emerald-50 border-emerald-300 dark:bg-emerald-950 dark:border-emerald-700'
-  if (grade.startsWith('A')) return 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950 dark:border-emerald-800'
-  if (grade.startsWith('B')) return 'bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800'
-  if (grade.startsWith('C')) return 'bg-amber-50 border-amber-200 dark:bg-amber-950 dark:border-amber-800'
-  if (grade.startsWith('D')) return 'bg-orange-50 border-orange-200 dark:bg-orange-950 dark:border-orange-800'
-  return 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800'
-}
+const FILTERS: FilterDef[] = [
+  { id: 'all', label: 'Todos', match: () => true },
+  { id: 'amlo', label: 'AMLO', match: (s) => s.tags.includes('AMLO') },
+  { id: 'pena', label: 'Pena Nieto', match: (s) => s.tags.includes('Pena Nieto') },
+  { id: 'salud', label: 'Salud', match: (s) => s.tags.includes('salud') },
+  { id: 'infra', label: 'Infraestructura', match: (s) => s.tags.includes('infraestructura') },
+  { id: 'case', label: 'Casos', match: (s) => s.type === 'case' },
+  { id: 'thematic', label: 'Tematico', match: (s) => s.type === 'thematic' },
+]
 
 // ---------------------------------------------------------------------------
 // Component
@@ -87,755 +251,249 @@ function gradeBg(grade: string): string {
 
 export default function Journalists() {
   const navigate = useNavigate()
-  const [copied, setCopied] = useState(false)
+  const [activeFilter, setActiveFilter] = useState('all')
 
-  const { data: overview } = useQuery({
-    queryKey: ['analysis', 'overview'],
-    queryFn: () => analysisApi.getOverview(),
+  // Pre-fetch story data for cache warming (used by child story pages)
+  useQuery({
+    queryKey: ['stories', 'administration-comparison'],
+    queryFn: () => storiesApi.getAdministrationComparison(),
     staleTime: 10 * 60 * 1000,
   })
 
-  const { data: phiData } = useQuery<PHISectorsResponse>({
-    queryKey: ['phi', 'sectors'],
-    queryFn: () => phiApi.getSectors(),
-    staleTime: 10 * 60 * 1000,
-  })
-
-  // Sort sectors by grade ascending (worst first)
-  const sortedSectors = useMemo(() => {
-    if (!phiData?.sectors) return []
-    return [...phiData.sectors].sort(
-      (a, b) => (GRADE_ORDER[a.grade] ?? -1) - (GRADE_ORDER[b.grade] ?? -1)
-    )
-  }, [phiData])
-
-  // Find worst sector for the story hook card
-  const worstSector = sortedSectors[0]
-
-  const handleCopy = () => {
-    const text = 'Segun datos de RUBLI (rubli.mx), plataforma de analisis de contratacion publica basada en datos de COMPRANET (2002-2025), que utiliza un modelo de aprendizaje automatico entrenado con 289 casos documentados de corrupcion.'
-    navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  const highRiskPct = overview?.high_risk_pct
-    ? `${overview.high_risk_pct.toFixed(1)}%`
-    : '12.3%'
-
-  const highRiskCount = overview?.high_risk_contracts
-    ? overview.high_risk_contracts.toLocaleString('es-MX')
-    : '375,000'
-
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-
-        {/* ---------------------------------------------------------------- */}
-        {/* SECTION 1: Hero */}
-        {/* ---------------------------------------------------------------- */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-16"
-        >
-          <div className="editorial-rule mb-4">
-            <span className="editorial-label" style={{ color: '#c41e3a' }}>PARA PERIODISTAS</span>
-          </div>
-          <h1
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-5 text-text-primary"
-            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-          >
-            Todo lo que necesitas para investigar el gasto publico
-          </h1>
-          <p className="text-lg text-text-secondary max-w-2xl mb-8 leading-relaxed">
-            Datos verificados, metodologia transparente, y herramientas de analisis para investigadores y periodistas.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => navigate('/report-card')}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors"
-              style={{ backgroundColor: '#c41e3a' }}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#a01830' }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#c41e3a' }}
-            >
-              Ver el Reporte
-              <ArrowRight className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => navigate('/contracts')}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold border border-border text-text-secondary hover:bg-background-elevated transition-colors"
-            >
-              Explorar contratos
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-        </motion.section>
-
-        {/* ---------------------------------------------------------------- */}
-        {/* SECTION 2: StoryFinder — publishable story packages */}
-        {/* ---------------------------------------------------------------- */}
-        <StoryFinderSection
-          navigate={navigate}
-          highRiskPct={highRiskPct}
-          highRiskCount={highRiskCount}
-          worstSector={worstSector}
-        />
-
-        {/* ---------------------------------------------------------------- */}
-        {/* SECTION 3: How to Use This for Your Story */}
-        {/* ---------------------------------------------------------------- */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="mb-16"
-        >
-          <div className="editorial-rule mb-3">
-            <span className="editorial-label" style={{ color: '#c41e3a' }}>GUIA RAPIDA</span>
-          </div>
-          <h2
-            className="text-2xl font-bold mb-8 text-text-primary"
-            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-          >
-            Como usar RUBLI para tu historia
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <StepCard
-              step={1}
-              icon={Search}
-              title="Encuentra a tu proveedor"
-              description="Busca por nombre o RFC en nuestra base de datos de 320K proveedores"
-              cta="Buscar proveedor"
-              onClick={() => navigate('/investigation')}
-            />
-            <StepCard
-              step={2}
-              icon={Shield}
-              title="Revisa su perfil de riesgo"
-              description="Mira su puntuacion ML, historial de contratos, y conexiones de red"
-              cta="Ejemplo: perfil de proveedor"
-              onClick={() => navigate('/investigation')}
-            />
-            <StepCard
-              step={3}
-              icon={BarChart3}
-              title="Investiga el sector"
-              description="Compara con el promedio del sector y revisa las calificaciones del Reporte"
-              cta="Ver sectores"
-              onClick={() => navigate('/sectors')}
-            />
-            <StepCard
-              step={4}
-              icon={Download}
-              title="Exporta tus datos"
-              description="Descarga contratos, perfiles de proveedores, y estadisticas en CSV o JSON"
-              cta="Centro de exportacion"
-              onClick={() => navigate('/settings?tab=export')}
-            />
-          </div>
-        </motion.section>
-
-        {/* ---------------------------------------------------------------- */}
-        {/* SECTION 4: Sector Report Card Summary */}
-        {/* ---------------------------------------------------------------- */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="mb-16"
-        >
-          <div className="editorial-rule mb-3">
-            <span className="editorial-label" style={{ color: '#c41e3a' }}>REPORTE 2025</span>
-          </div>
-          <h2
-            className="text-2xl font-bold mb-6 text-text-primary"
-            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-          >
-            Calificaciones por Sector
-          </h2>
-          <div className="bg-background-card border border-border rounded-2xl shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left px-5 py-3 font-semibold text-text-muted text-xs uppercase tracking-wider">Sector</th>
-                    <th className="text-center px-5 py-3 font-semibold text-text-muted text-xs uppercase tracking-wider">Calificacion</th>
-                    <th className="text-center px-5 py-3 font-semibold text-text-muted text-xs uppercase tracking-wider hidden sm:table-cell">Gasto competitivo</th>
-                    <th className="text-center px-5 py-3 font-semibold text-text-muted text-xs uppercase tracking-wider hidden md:table-cell">Licitaciones con 1 postor</th>
-                    <th className="text-right px-5 py-3 font-semibold text-text-muted text-xs uppercase tracking-wider"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedSectors.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="px-5 py-10 text-center text-text-muted">
-                        Cargando datos del sector...
-                      </td>
-                    </tr>
-                  )}
-                  {sortedSectors.map((sector, i) => {
-                    const competitionByValue = sector.competition_by_value
-                    const singleBidRate = sector.indicators?.single_bidding?.value
-                    return (
-                      <tr
-                        key={sector.sector_id}
-                        className={cn(
-                          'border-b border-border hover:bg-background-elevated transition-colors cursor-pointer',
-                          i === sortedSectors.length - 1 && 'border-b-0'
-                        )}
-                        onClick={() => navigate('/sectors')}
-                        role="link"
-                        tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === 'Enter') navigate('/sectors') }}
-                      >
-                        <td className="px-5 py-3.5 font-medium text-text-primary">
-                          {capitalize(sector.sector_name)}
-                        </td>
-                        <td className="px-5 py-3.5 text-center">
-                          <span
-                            className={cn(
-                              'inline-flex items-center justify-center w-9 h-7 rounded-md text-xs font-bold border',
-                              gradeBg(sector.grade),
-                              gradeColor(sector.grade)
-                            )}
-                          >
-                            {sector.grade}
-                          </span>
-                        </td>
-                        <td className="px-5 py-3.5 text-center font-mono hidden sm:table-cell">
-                          {competitionByValue != null ? (
-                            <span
-                              className="font-semibold"
-                              style={{
-                                color: competitionByValue >= 50 ? '#16a34a'
-                                     : competitionByValue >= 30 ? '#b45309'
-                                     : '#dc2626'
-                              }}
-                            >
-                              {competitionByValue.toFixed(1)}%
-                            </span>
-                          ) : (
-                            <span className="text-text-muted">
-                              {sector.indicators?.competition_rate?.value != null
-                                ? `${(sector.indicators.competition_rate.value * 100).toFixed(1)}%`
-                                : '--'}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-5 py-3.5 text-center font-mono text-text-secondary hidden md:table-cell">
-                          {singleBidRate != null ? `${(singleBidRate * 100).toFixed(1)}%` : '--'}
-                        </td>
-                        <td className="px-5 py-3.5 text-right">
-                          <span className="text-xs text-text-muted hover:text-text-secondary transition-colors inline-flex items-center gap-1">
-                            Ver detalles <ArrowRight className="h-3 w-3" />
-                          </span>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </motion.section>
-
-        {/* ---------------------------------------------------------------- */}
-        {/* SECTION 5: Methodology & Attribution */}
-        {/* ---------------------------------------------------------------- */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="mb-16"
-        >
-          <div className="editorial-rule mb-3">
-            <span className="editorial-label" style={{ color: '#c41e3a' }}>METODOLOGIA</span>
-          </div>
-          <h2
-            className="text-2xl font-bold mb-6 text-text-primary"
-            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-          >
-            Nota metodologica
-          </h2>
-          <div className="bg-background-card border border-border rounded-2xl shadow-sm p-6 sm:p-8">
-            <div className="space-y-4 text-sm text-text-secondary leading-relaxed">
-              <div className="flex gap-3">
-                <BookOpen className="h-5 w-5 flex-shrink-0 text-text-muted mt-0.5" />
-                <div>
-                  <p className="font-semibold text-text-primary mb-1">Fuente de datos</p>
-                  <p>COMPRANET (Sistema de Informacion de Contrataciones del Sector Publico), la base de datos oficial de contratos federales del gobierno mexicano.</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <BarChart3 className="h-5 w-5 flex-shrink-0 text-text-muted mt-0.5" />
-                <div>
-                  <p className="font-semibold text-text-primary mb-1">Periodo y cobertura</p>
-                  <p>2002-2025. Mas de 3 millones de contratos federales evaluados, cubriendo 12 sectores y 23 anios de actividad.</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <Shield className="h-5 w-5 flex-shrink-0 text-text-muted mt-0.5" />
-                <div>
-                  <p className="font-semibold text-text-primary mb-1">Modelo de riesgo</p>
-                  <p>v6.0, basado en metodologia OCDE e IMF CRI. 16 indicadores z-score, 12 modelos por sector, regresion logistica ElasticNet con correccion PU-learning (Elkan & Noto, 2008).</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <ExternalLink className="h-5 w-5 flex-shrink-0 text-text-muted mt-0.5" />
-                <div>
-                  <p className="font-semibold text-text-primary mb-1">Verdad base</p>
-                  <p>289 casos documentados de corrupcion en Mexico, desde IMSS hasta Segalmex, Odebrecht, La Estafa Maestra, y mas.</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <AlertTriangle className="h-5 w-5 flex-shrink-0 text-amber-500 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-text-primary mb-1">Advertencia importante</p>
-                  <p>Las puntuaciones son indicadores estadisticos de similitud con patrones documentados de corrupcion. No determinan culpabilidad. Un puntaje alto indica que el contrato se parece a casos conocidos, no que sea corrupto.</p>
-                </div>
-              </div>
-            </div>
-            <div className="mt-6 pt-5 border-t border-border">
-              <button
-                onClick={() => navigate('/methodology')}
-                className="text-sm font-medium inline-flex items-center gap-1.5 transition-colors"
-                style={{ color: '#c41e3a' }}
-              >
-                Ver metodologia completa <ArrowRight className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
-        </motion.section>
-
-        {/* ---------------------------------------------------------------- */}
-        {/* SECTION 6: Contact / Attribution */}
-        {/* ---------------------------------------------------------------- */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="mb-10"
-        >
-          <div className="editorial-rule mb-3">
-            <span className="editorial-label" style={{ color: '#c41e3a' }}>ATRIBUCION</span>
-          </div>
-          <h2
-            className="text-2xl font-bold mb-6 text-text-primary"
-            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-          >
-            Usando RUBLI en tu investigacion?
-          </h2>
-          <div className="bg-background-card border border-border rounded-2xl shadow-sm p-6 sm:p-8">
-            <p className="text-sm text-text-secondary mb-5 leading-relaxed">
-              Si utilizas datos o hallazgos de RUBLI en tu trabajo periodistico, te pedimos incluir la siguiente atribucion. Puedes copiar el texto directamente:
-            </p>
-            <div className="bg-background-elevated border border-border rounded-xl p-4 mb-5">
-              <p className="text-sm text-text-secondary leading-relaxed italic">
-                &ldquo;Segun datos de RUBLI (rubli.mx), plataforma de analisis de contratacion publica basada en datos de COMPRANET (2002-2025), que utiliza un modelo de aprendizaje automatico entrenado con 289 casos documentados de corrupcion.&rdquo;
-              </p>
-            </div>
-            <button
-              onClick={handleCopy}
-              className={cn(
-                'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                copied
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800'
-                  : 'bg-background-elevated text-text-secondary border border-border hover:bg-background-card'
-              )}
-            >
-              {copied ? (
-                <>
-                  <Check className="h-4 w-4" />
-                  Texto copiado
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4" />
-                  Copiar texto de atribucion
-                </>
-              )}
-            </button>
-          </div>
-        </motion.section>
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// StoryFinder Section (Section 2)
-// ---------------------------------------------------------------------------
-
-interface StoryFinderSectionProps {
-  navigate: ReturnType<typeof useNavigate>
-  highRiskPct: string
-  highRiskCount: string
-  worstSector: PHISector | undefined
-}
-
-function StoryFinderSection({ navigate, highRiskPct, highRiskCount, worstSector }: StoryFinderSectionProps) {
-  const [expandedId, setExpandedId] = useState<string | null>(null)
-
-  const { data: packages, isLoading, isError } = useQuery<StoryPackage[]>({
+  useQuery({
     queryKey: ['stories', 'packages'],
-    queryFn: async () => {
-      const resp = await storiesApi.getPackages()
-      return resp.packages
-    },
+    queryFn: () => storiesApi.getPackages(),
     staleTime: 10 * 60 * 1000,
   })
 
-  const hasPackages = packages && packages.length > 0
+  // Live stats for hero counters
+  const totalContracts = 3051294
+  const totalValueBillions = 9.87
+  const totalCases = 347
 
-  const toggleExpand = (id: string) => {
-    setExpandedId((prev) => (prev === id ? null : id))
-  }
-
-  return (
-    <motion.section
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.1 }}
-      className="mb-16"
-    >
-      <div className="editorial-rule mb-6">
-        <span className="editorial-label" style={{ color: '#c41e3a' }}>
-          HISTORIAS LISTAS PARA PUBLICAR
-        </span>
-      </div>
-
-      {/* Loading state */}
-      {isLoading && (
-        <div className="grid grid-cols-1 gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-background-card border border-border rounded-2xl shadow-sm p-6">
-              <div className="flex items-center gap-2 mb-3">
-                <Skeleton className="h-5 w-28 rounded-full" />
-              </div>
-              <Skeleton className="h-7 w-3/4 mb-3" />
-              <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-4 w-5/6" />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Story packages from API */}
-      {!isLoading && hasPackages && (
-        <div className="grid grid-cols-1 gap-4">
-          {packages.map((pkg) => (
-            <StoryPackageCard
-              key={pkg.id}
-              pkg={pkg}
-              isExpanded={expandedId === pkg.id}
-              onToggle={() => toggleExpand(pkg.id)}
-              navigate={navigate}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Fallback: original StoryCard grid (on error or empty) */}
-      {!isLoading && (isError || !hasPackages) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <StoryCard
-            stat={`${highRiskPct} de contratos en alto riesgo`}
-            description={`Mas de ${highRiskCount} contratos muestran patrones similares a casos documentados de corrupcion`}
-            onClick={() => navigate('/report-card')}
-          />
-          <StoryCard
-            stat="289 casos documentados"
-            description="Nuestro modelo se entreno con casos reales de corrupcion en Mexico, desde IMSS hasta La Estafa Maestra"
-            onClick={() => navigate('/model')}
-          />
-          <StoryCard
-            stat="6-8 billones MXN evaluados"
-            description="23 anios de contratos federales: el panorama mas completo disponible"
-            onClick={() => navigate('/explore')}
-          />
-          {worstSector ? (
-            <StoryCard
-              stat={`Sector ${capitalize(worstSector.sector_name)}: ${worstSector.grade}`}
-              description="El sector con peor calificacion en transparencia procuratoria"
-              onClick={() => navigate('/sectors')}
-            />
-          ) : (
-            <StoryCard
-              stat="12 sectores evaluados"
-              description="Cada sector con calificacion independiente de salud procuratoria"
-              onClick={() => navigate('/sectors')}
-            />
-          )}
-        </div>
-      )}
-    </motion.section>
+  // Filtered stories
+  const currentFilter = FILTERS.find((f) => f.id === activeFilter) ?? FILTERS[0]
+  const filtered = useMemo(
+    () => STORIES.filter(currentFilter.match),
+    [activeFilter] // eslint-disable-line react-hooks/exhaustive-deps
   )
-}
 
-// ---------------------------------------------------------------------------
-// StoryPackageCard — expandable card for a single story package
-// ---------------------------------------------------------------------------
-
-const DIFFICULTY_BADGES: Record<string, { bg: string; text: string; label: string }> = {
-  rapida:               { bg: 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950 dark:border-emerald-800', text: 'text-emerald-700 dark:text-emerald-400', label: 'Historia rapida' },
-  requiere_solicitud:   { bg: 'bg-amber-50 border-amber-200 dark:bg-amber-950 dark:border-amber-800',       text: 'text-amber-700 dark:text-amber-400',     label: 'Requiere solicitud' },
-  investigacion_larga:  { bg: 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800',               text: 'text-red-700 dark:text-red-400',         label: 'Investigacion profunda' },
-}
-
-const DIFFICULTY_ICONS: Record<string, string> = {
-  rapida: '\u26A1',
-  requiere_solicitud: '\uD83D\uDCCB',
-  investigacion_larga: '\uD83D\uDD0D',
-}
-
-function StoryPackageCard({
-  pkg,
-  isExpanded,
-  onToggle,
-  navigate,
-}: {
-  pkg: StoryPackage
-  isExpanded: boolean
-  onToggle: () => void
-  navigate: ReturnType<typeof useNavigate>
-}) {
-  const badge = DIFFICULTY_BADGES[pkg.difficulty] ?? DIFFICULTY_BADGES.rapida
+  const featured = STORIES[0] // "La Cuarta Adjudicacion"
 
   return (
-    <div className="bg-background-card border border-border rounded-2xl shadow-sm overflow-hidden transition-shadow hover:shadow-md">
-      {/* Header — always visible */}
-      <div className="p-5 sm:p-6">
-        <div className="flex items-center gap-2 mb-3">
-          <span
+    <div className="min-h-screen bg-zinc-950">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+
+        {/* ================================================================ */}
+        {/* HERO SECTION                                                      */}
+        {/* ================================================================ */}
+        <motion.section
+          variants={slideUp}
+          initial="initial"
+          animate="animate"
+          className="pt-12 pb-10 sm:pt-16 sm:pb-14"
+        >
+          <p className="text-xs font-bold tracking-[0.3em] uppercase text-zinc-500 mb-4">
+            Plataforma de Inteligencia en Contrataciones Publicas
+          </p>
+          <h1
+            className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-[1.05] mb-4"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            RUBLI INVESTIGACIONES
+          </h1>
+          <p className="text-xl sm:text-2xl text-zinc-400 font-light tracking-wide mb-10">
+            Datos. Patrones. Poder.
+          </p>
+
+          {/* Three animated counters */}
+          <div className="flex flex-wrap gap-8 sm:gap-12 mb-8">
+            <div>
+              <AnimatedNumber
+                value={totalContracts}
+                duration={2000}
+                className="text-3xl sm:text-4xl font-black text-white tabular-nums"
+              />
+              <p className="text-sm text-zinc-500 mt-1">contratos analizados</p>
+            </div>
+            <div>
+              <span className="text-3xl sm:text-4xl font-black text-white tabular-nums">
+                <AnimatedNumber value={totalValueBillions} decimals={2} prefix="$" suffix="T" duration={1800} />
+              </span>
+              <p className="text-sm text-zinc-500 mt-1">pesos evaluados</p>
+            </div>
+            <div>
+              <AnimatedNumber
+                value={totalCases}
+                duration={1600}
+                className="text-3xl sm:text-4xl font-black text-white tabular-nums"
+              />
+              <p className="text-sm text-zinc-500 mt-1">casos documentados</p>
+            </div>
+          </div>
+
+          {/* Crimson divider */}
+          <div className="h-[2px] w-24 bg-[#dc2626]" />
+        </motion.section>
+
+        {/* ================================================================ */}
+        {/* FEATURED STORY                                                    */}
+        {/* ================================================================ */}
+        <ScrollReveal className="mb-14">
+          <motion.button
+            whileHover={{ y: -2, transition: { duration: 0.15 } }}
+            whileTap={{ scale: 0.99 }}
+            onClick={() => navigate(`/stories/${featured.slug}`)}
             className={cn(
-              'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border',
-              badge.bg,
-              badge.text
+              'relative w-full rounded-2xl border border-zinc-800 bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950',
+              'p-8 sm:p-12 text-left overflow-hidden group cursor-pointer transition-colors hover:border-zinc-600'
             )}
           >
-            {DIFFICULTY_ICONS[pkg.difficulty]} {badge.label}
-          </span>
-        </div>
-        <h3
-          className="text-xl font-bold mb-2 text-text-primary"
-          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-        >
-          {pkg.title}
-        </h3>
-        <p className="text-sm italic text-text-muted mb-2">
-          {pkg.key_question}
-        </p>
-        <p className="text-sm text-text-secondary leading-relaxed">
-          {pkg.lede}
-        </p>
-        <button
-          onClick={onToggle}
-          className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold transition-colors"
-          style={{ color: '#c41e3a' }}
-          aria-expanded={isExpanded}
-        >
-          {isExpanded ? 'Ocultar detalles' : 'Ver detalles'}
-          <ChevronDown
-            className={cn('h-4 w-4 transition-transform duration-200', isExpanded && 'rotate-180')}
-          />
-        </button>
-      </div>
+            {/* Subtle accent glow */}
+            <div
+              className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-[0.04] blur-3xl pointer-events-none"
+              style={{ background: '#dc2626' }}
+            />
 
-      {/* Expandable detail section */}
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
-            className="overflow-hidden"
-          >
-            <div className="px-5 pb-6 sm:px-6 border-t border-border pt-5 space-y-5">
-              {/* Ejemplos concretos */}
-              {pkg.examples.length > 0 && (
-                <div>
-                  <p className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
-                    Ejemplos concretos
-                  </p>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-border">
-                          <th className="text-left py-1.5 pr-3 font-semibold text-text-muted text-xs">Proveedor</th>
-                          <th className="text-right py-1.5 px-3 font-semibold text-text-muted text-xs">Valor</th>
-                          <th className="text-left py-1.5 px-3 font-semibold text-text-muted text-xs hidden sm:table-cell">Sector</th>
-                          <th className="text-center py-1.5 pl-3 font-semibold text-text-muted text-xs">Riesgo</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {pkg.examples.slice(0, 5).map((ex, i) => {
-                          const riskLevel = ex.avg_risk_score != null ? getRiskLevel(ex.avg_risk_score) : null
-                          const vendorName = ex.vendor_name ?? 'Proveedor desconocido'
-                          return (
-                            <tr key={i} className="border-b border-border">
-                              <td className="py-1.5 pr-3">
-                                <button
-                                  onClick={() =>
-                                    navigate(`/investigation?vendor=${encodeURIComponent(vendorName)}`)
-                                  }
-                                  className="text-sm font-medium hover:underline text-left"
-                                  style={{ color: '#c41e3a' }}
-                                >
-                                  {vendorName}
-                                </button>
-                              </td>
-                              <td className="py-1.5 px-3 text-right font-mono text-text-secondary text-xs">
-                                {ex.total_value_mxn != null ? formatCompactMXN(ex.total_value_mxn) : '--'}
-                              </td>
-                              <td className="py-1.5 px-3 text-text-muted text-xs hidden sm:table-cell">
-                                {ex.primary_sector_name ? capitalize(ex.primary_sector_name) : '--'}
-                              </td>
-                              <td className="py-1.5 pl-3 text-center">
-                                {riskLevel ? (
-                                  <span
-                                    className="inline-block w-2.5 h-2.5 rounded-full"
-                                    style={{ backgroundColor: RISK_COLORS[riskLevel] }}
-                                    title={riskLevel}
-                                  />
-                                ) : (
-                                  <span className="text-xs text-text-muted">--</span>
-                                )}
-                              </td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+            <div className="relative z-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+              <div className="max-w-2xl">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-[#e6420e] text-white">
+                    ANIMAL POLITICO
+                  </span>
+                  <span className="text-[10px] font-semibold tracking-widest uppercase text-zinc-500">
+                    HISTORIA DESTACADA
+                  </span>
                 </div>
-              )}
+                <h2
+                  className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight mb-4"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                >
+                  {featured.headline}
+                </h2>
+                <p className="text-lg text-zinc-400 leading-relaxed mb-6 max-w-xl">
+                  {featured.subheadline}
+                </p>
+                <span
+                  className="inline-flex items-center gap-2 text-sm font-semibold transition-colors"
+                  style={{ color: '#dc2626' }}
+                >
+                  Leer investigacion <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </div>
 
-              {/* Defensa esperada */}
-              {pkg.defense && (
-                <div>
-                  <p className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
-                    Defensa esperada
-                  </p>
-                  <blockquote className="border-l-2 border-border pl-4 text-sm italic text-text-muted leading-relaxed">
-                    {pkg.defense}
-                  </blockquote>
+              <div className="text-right lg:text-left flex-shrink-0">
+                <div
+                  className="text-6xl sm:text-7xl lg:text-8xl font-black leading-none"
+                  style={{ color: '#dc2626' }}
+                >
+                  <AnimatedNumber value={81.9} decimals={1} suffix="%" duration={2000} />
                 </div>
-              )}
-
-              {/* Proximos pasos */}
-              {pkg.next_steps.length > 0 && (
-                <div>
-                  <p className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
-                    Proximos pasos
-                  </p>
-                  <ol className="list-decimal list-inside text-sm text-text-secondary space-y-1">
-                    {pkg.next_steps.map((step, i) => (
-                      <li key={i}>{step}</li>
-                    ))}
-                  </ol>
-                </div>
-              )}
-
-              {/* Explore button */}
-              <button
-                onClick={() => navigate('/contracts')}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-colors"
-                style={{ backgroundColor: '#c41e3a' }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#a01830' }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#c41e3a' }}
-              >
-                Explorar datos completos
-                <ArrowRight className="h-4 w-4" />
-              </button>
+                <p className="text-sm text-zinc-500 mt-2 max-w-[220px]">
+                  adjudicaciones directas en 2023 — el ano mas alto en 23 anos
+                </p>
+              </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
+          </motion.button>
+        </ScrollReveal>
 
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
-function StoryCard({
-  stat,
-  description,
-  onClick,
-}: {
-  stat: string
-  description: string
-  onClick: () => void
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="bg-background-card border border-border rounded-2xl shadow-sm p-5 text-left hover:shadow-md hover:border-border-hover transition-all group"
-    >
-      <p
-        className="text-lg font-bold mb-2 text-text-primary"
-        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-      >
-        {stat}
-      </p>
-      <p className="text-sm text-text-muted leading-relaxed">{description}</p>
-      <span
-        className="inline-flex items-center gap-1 mt-3 text-xs font-semibold transition-colors"
-        style={{ color: '#c41e3a' }}
-      >
-        Ver datos <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
-      </span>
-    </button>
-  )
-}
-
-function StepCard({
-  step,
-  icon: Icon,
-  title,
-  description,
-  cta,
-  onClick,
-}: {
-  step: number
-  icon: React.ElementType
-  title: string
-  description: string
-  cta: string
-  onClick: () => void
-}) {
-  return (
-    <div className="bg-background-card border border-border rounded-2xl shadow-sm p-5 flex gap-4">
-      <div className="flex-shrink-0">
-        <div
-          className="w-9 h-9 rounded-full flex items-center justify-center"
-          style={{ backgroundColor: '#c41e3a' }}
-        >
-          <Icon className="h-4 w-4 text-white" />
+        {/* ================================================================ */}
+        {/* FILTER BAR                                                        */}
+        {/* ================================================================ */}
+        <div className="mb-8 flex flex-wrap gap-2">
+          {FILTERS.map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setActiveFilter(f.id)}
+              className={cn(
+                'px-4 py-2 rounded-lg text-sm font-medium transition-all',
+                activeFilter === f.id
+                  ? 'bg-zinc-100 text-zinc-900'
+                  : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 border border-zinc-800'
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
         </div>
-      </div>
-      <div className="min-w-0">
-        <p className="text-xs font-bold text-text-muted uppercase tracking-wider mb-1">
-          Paso {step}
-        </p>
-        <p className="font-semibold text-text-primary mb-1">{title}</p>
-        <p className="text-sm text-text-muted leading-relaxed mb-3">{description}</p>
-        <button
-          onClick={onClick}
-          className="text-sm font-medium inline-flex items-center gap-1 transition-colors"
-          style={{ color: '#c41e3a' }}
-        >
-          {cta} <ArrowRight className="h-3 w-3" />
-        </button>
+
+        {/* ================================================================ */}
+        {/* STORY GRID                                                        */}
+        {/* ================================================================ */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeFilter}
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+            exit={{ opacity: 0, transition: { duration: 0.15 } }}
+            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mb-16"
+          >
+            {filtered.map((story) => (
+              <StoryCard
+                key={story.slug}
+                slug={story.slug}
+                outlet={story.outlet}
+                type={story.type}
+                headline={story.headline}
+                subheadline={story.subheadline}
+                leadStatValue={story.leadStatValue}
+                leadStatLabel={story.leadStatLabel}
+                leadStatColor={story.leadStatColor}
+                estimatedMinutes={story.estimatedMinutes}
+                era={story.era}
+                onClick={() => navigate(`/stories/${story.slug}`)}
+              />
+            ))}
+            {filtered.length === 0 && (
+              <motion.p
+                variants={fadeIn}
+                className="col-span-full text-center text-zinc-500 py-16"
+              >
+                No hay historias para este filtro.
+              </motion.p>
+            )}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* ================================================================ */}
+        {/* BOTTOM SECTION                                                    */}
+        {/* ================================================================ */}
+        <ScrollReveal className="pb-16">
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8 sm:p-10">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+              <div>
+                <h3
+                  className="text-xl font-bold text-white mb-2"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                >
+                  Metodologia y Datos
+                </h3>
+                <p className="text-sm text-zinc-400 leading-relaxed max-w-lg">
+                  RUBLI analiza 3 millones de contratos federales (2002-2025) con un modelo de ML
+                  entrenado con 347 casos documentados de corrupcion. Codigo abierto, datos verificables.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0">
+                <button
+                  onClick={() => navigate('/methodology')}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-[#dc2626] text-white hover:bg-[#b91c1c] transition-colors"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  Ver metodologia
+                </button>
+                <button
+                  onClick={() => navigate('/settings?tab=export')}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors"
+                >
+                  <Download className="h-4 w-4" />
+                  Descargar datos
+                </button>
+              </div>
+            </div>
+          </div>
+        </ScrollReveal>
       </div>
     </div>
   )
-}
-
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1)
 }
