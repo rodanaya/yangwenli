@@ -310,6 +310,14 @@ def list_vendor_scorecards(
 ):
     """Ranked list of vendor scorecards."""
     with get_db() as conn:
+        exists = conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='vendor_scorecards'"
+        ).fetchone()
+        if not exists:
+            return VendorScorecardListResponse(
+                data=[], total=0, page=page, per_page=per_page,
+                total_pages=0, grade_distribution={},
+            )
         # Separate WHERE clauses: ones that only touch vendor_scorecards (s_*) and
         # ones that require joining vendors (v_*). The JOIN is expensive (~900ms on
         # 320K vendors) so we skip it when no vendor-name search is active.
@@ -434,18 +442,21 @@ def list_vendor_scorecards(
 @router.get("/vendors/{vendor_id}", response_model=VendorScorecardResponse)
 def get_vendor_scorecard(vendor_id: int = Path(..., ge=1)):
     """Full scorecard for a single vendor."""
-    with get_db() as conn:
-        row = conn.execute("""
-            SELECT s.vendor_id, v.name,
-                   s.total_score, s.grade, s.grade_label, s.grade_color,
-                   s.national_percentile, s.sector_percentile,
-                   s.pillar_risk_signal, s.pillar_conduct, s.pillar_spread,
-                   s.pillar_behavior, s.pillar_flags,
-                   s.top_risk_driver, s.key_metrics
-            FROM vendor_scorecards s
-            JOIN vendors v ON s.vendor_id = v.id
-            WHERE s.vendor_id = ?
-        """, (vendor_id,)).fetchone()
+    try:
+        with get_db() as conn:
+            row = conn.execute("""
+                SELECT s.vendor_id, v.name,
+                       s.total_score, s.grade, s.grade_label, s.grade_color,
+                       s.national_percentile, s.sector_percentile,
+                       s.pillar_risk_signal, s.pillar_conduct, s.pillar_spread,
+                       s.pillar_behavior, s.pillar_flags,
+                       s.top_risk_driver, s.key_metrics
+                FROM vendor_scorecards s
+                JOIN vendors v ON s.vendor_id = v.id
+                WHERE s.vendor_id = ?
+            """, (vendor_id,)).fetchone()
+    except Exception:
+        row = None
 
     if not row:
         raise HTTPException(status_code=404, detail="Vendor scorecard not found")

@@ -580,26 +580,29 @@ def get_vendor(
         cursor = conn.cursor()
 
         # Supplement with classification, group, mahalanobis, and primary sector from precomputed stats
-        cursor.execute("""
-            SELECT
-                v.phonetic_code, v.group_id,
-                v.cobid_clustering_coeff, v.cobid_triangle_count,
-                vc.industry_id, vc.industry_code, vc.industry_confidence,
-                vi.name_es as industry_name, vi.sector_affinity,
-                vg.canonical_name as group_name,
-                COALESCE(vs.institution_count, 0) as total_institutions,
-                vs.avg_mahalanobis, vs.max_mahalanobis,
-                vs.primary_sector_id,
-                s.name_es as primary_sector_name
-            FROM vendors v
-            LEFT JOIN vendor_classifications vc ON v.id = vc.vendor_id
-            LEFT JOIN vendor_industries vi ON vc.industry_id = vi.id
-            LEFT JOIN vendor_groups vg ON v.group_id = vg.id
-            LEFT JOIN vendor_stats vs ON v.id = vs.vendor_id
-            LEFT JOIN sectors s ON vs.primary_sector_id = s.id
-            WHERE v.id = ?
-        """, (vendor_id,))
-        extra = cursor.fetchone()
+        try:
+            cursor.execute("""
+                SELECT
+                    v.phonetic_code, v.group_id,
+                    v.cobid_clustering_coeff, v.cobid_triangle_count,
+                    vc.industry_id, vc.industry_code, vc.industry_confidence,
+                    vi.name_es as industry_name, vi.sector_affinity,
+                    vg.canonical_name as group_name,
+                    COALESCE(vs.institution_count, 0) as total_institutions,
+                    vs.avg_mahalanobis, vs.max_mahalanobis,
+                    vs.primary_sector_id,
+                    s.name_es as primary_sector_name
+                FROM vendors v
+                LEFT JOIN vendor_classifications vc ON v.id = vc.vendor_id
+                LEFT JOIN vendor_industries vi ON vc.industry_id = vi.id
+                LEFT JOIN vendor_groups vg ON v.group_id = vg.id
+                LEFT JOIN vendor_stats vs ON v.id = vs.vendor_id
+                LEFT JOIN sectors s ON vs.primary_sector_id = s.id
+                WHERE v.id = ?
+            """, (vendor_id,))
+            extra = cursor.fetchone()
+        except Exception:
+            extra = None
 
         total_contracts = detail.get("total_contracts", 0) or 0
         total_value = detail.get("total_value_mxn", 0) or 0
