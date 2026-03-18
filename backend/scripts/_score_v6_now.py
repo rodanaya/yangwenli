@@ -40,17 +40,23 @@ MIN_SECTOR_POSITIVES = 500
 
 # Fix 3: Ghost companion boost weight. A max-confidence ghost flag (score=1.0)
 # adds this much to the base risk_score, enough to push a zero-scored new vendor
-# into medium risk territory (threshold=0.15) for investigation triage.
+# into medium risk territory (threshold=0.25) for investigation triage.
 GHOST_BOOST_WEIGHT = 0.4
+
+# v6.4 thresholds — medium raised from 0.15→0.25 (audit finding: 76.7% medium at 0.15
+# provided near-zero lift over random; 0.25 gives 18.1% medium, actionable tier).
+THRESHOLD_CRITICAL = 0.60
+THRESHOLD_HIGH     = 0.40
+THRESHOLD_MEDIUM   = 0.25  # was 0.15
 
 
 def sigmoid(x):
     return np.where(x >= 0, 1.0/(1.0+np.exp(-x)), np.exp(x)/(1.0+np.exp(x)))
 
 def get_risk_level(score):
-    if score >= 0.60: return 'critical'
-    if score >= 0.40: return 'high'
-    if score >= 0.15: return 'medium'
+    if score >= THRESHOLD_CRITICAL: return 'critical'
+    if score >= THRESHOLD_HIGH:     return 'high'
+    if score >= THRESHOLD_MEDIUM:   return 'medium'
     return 'low'
 
 

@@ -28,7 +28,7 @@ DB_PATH = Path(__file__).parent.parent / "RUBLI_NORMALIZED.db"
 RISK_THRESHOLDS = {
     "critical": 0.60,
     "high": 0.40,
-    "medium": 0.15,
+    "medium": 0.25,
     "low": 0.0,
 }
 
@@ -62,7 +62,7 @@ def analyze_sfp(conn, verbose=False):
             MAX(c.risk_score) as max_risk,
             SUM(CASE WHEN c.risk_score >= 0.60 THEN 1 ELSE 0 END) as n_critical,
             SUM(CASE WHEN c.risk_score >= 0.40 THEN 1 ELSE 0 END) as n_high_plus,
-            SUM(CASE WHEN c.risk_score >= 0.15 THEN 1 ELSE 0 END) as n_medium_plus
+            SUM(CASE WHEN c.risk_score >= 0.25 THEN 1 ELSE 0 END) as n_medium_plus
         FROM sfp_sanctions s
         JOIN vendors v ON UPPER(TRIM(v.name)) = UPPER(TRIM(s.company_name))
         JOIN contracts c ON c.vendor_id = v.id
@@ -89,7 +89,7 @@ def analyze_sfp(conn, verbose=False):
     print(f"  Avg risk score: {avg_score:.4f}")
     print(f"  Detection @ critical (>=0.60): {n_critical}/{total_contracts} = {n_critical*100/total_contracts:.1f}%")
     print(f"  Detection @ high+   (>=0.40): {n_high_plus}/{total_contracts} = {n_high_plus*100/total_contracts:.1f}%")
-    print(f"  Detection @ medium+ (>=0.15): {n_medium_plus}/{total_contracts} = {n_medium_plus*100/total_contracts:.1f}%")
+    print(f"  Detection @ medium+ (>=0.25): {n_medium_plus}/{total_contracts} = {n_medium_plus*100/total_contracts:.1f}%")
 
     # GT baseline for comparison
     gt_rows = run_query(conn, """
@@ -140,7 +140,7 @@ def analyze_efos_presunto(conn, verbose=False):
             MAX(c.risk_score) as max_risk,
             SUM(CASE WHEN c.risk_score >= 0.60 THEN 1 ELSE 0 END) as n_critical,
             SUM(CASE WHEN c.risk_score >= 0.40 THEN 1 ELSE 0 END) as n_high_plus,
-            SUM(CASE WHEN c.risk_score >= 0.15 THEN 1 ELSE 0 END) as n_medium_plus
+            SUM(CASE WHEN c.risk_score >= 0.25 THEN 1 ELSE 0 END) as n_medium_plus
         FROM sat_efos_vendors e
         JOIN vendors v ON v.rfc = e.rfc
         JOIN contracts c ON c.vendor_id = v.id
@@ -167,7 +167,7 @@ def analyze_efos_presunto(conn, verbose=False):
     print(f"  Avg risk score: {avg_score:.4f}")
     print(f"  Detection @ critical (>=0.60): {n_critical}/{total_contracts} = {n_critical*100/total_contracts:.1f}%")
     print(f"  Detection @ high+   (>=0.40): {n_high_plus}/{total_contracts} = {n_high_plus*100/total_contracts:.1f}%")
-    print(f"  Detection @ medium+ (>=0.15): {n_medium_plus}/{total_contracts} = {n_medium_plus*100/total_contracts:.1f}%")
+    print(f"  Detection @ medium+ (>=0.25): {n_medium_plus}/{total_contracts} = {n_medium_plus*100/total_contracts:.1f}%")
 
     if verbose and rows:
         print("\n  All EFOS presunto vendors (small set):")
@@ -285,7 +285,7 @@ def analyze_gt_baseline(conn):
             AVG(c.risk_score) as avg_risk,
             SUM(CASE WHEN c.risk_score >= 0.60 THEN 1 ELSE 0 END)*100.0/COUNT(c.id) as critical_pct,
             SUM(CASE WHEN c.risk_score >= 0.40 THEN 1 ELSE 0 END)*100.0/COUNT(c.id) as high_plus_pct,
-            SUM(CASE WHEN c.risk_score >= 0.15 THEN 1 ELSE 0 END)*100.0/COUNT(c.id) as medium_plus_pct
+            SUM(CASE WHEN c.risk_score >= 0.25 THEN 1 ELSE 0 END)*100.0/COUNT(c.id) as medium_plus_pct
         FROM ground_truth_vendors gtv
         JOIN contracts c ON c.vendor_id = gtv.vendor_id
     """)
