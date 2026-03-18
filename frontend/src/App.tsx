@@ -29,7 +29,7 @@ const InstitutionProfile = lazy(() => import('@/pages/InstitutionProfile'))
 const Sectors = lazy(() => import('@/pages/Sectors'))
 const SectorProfile = lazy(() => import('@/pages/SectorProfile'))
 const Settings = lazy(() => import('@/pages/Settings'))
-const NetworkGraph = lazy(() => import('@/pages/NetworkGraph'))
+const RedesKnownDossier = lazy(() => import('@/pages/RedesKnownDossier'))
 const Administrations = lazy(() => import('@/pages/Administrations'))
 const ProcurementIntelligence = lazy(() => import('@/pages/ProcurementIntelligence'))
 const GroundTruth = lazy(() => import('@/pages/GroundTruth'))
@@ -43,7 +43,7 @@ const SpendingCategories = lazy(() => import('@/pages/SpendingCategories'))
 const Limitations = lazy(() => import('@/pages/Limitations'))
 const CaseLibrary = lazy(() => import('@/pages/CaseLibrary'))
 const CaseDetail = lazy(() => import('@/pages/CaseDetail'))
-const MoneyFlow = lazy(() => import('@/pages/MoneyFlow'))
+const CapturaHeatmap = lazy(() => import('@/pages/CapturaHeatmap'))
 // Workspace is the new name for Watchlist
 const Workspace = lazy(() => import('@/pages/Watchlist'))
 // StateExpenditure removed — redirects to /map
@@ -171,8 +171,8 @@ function App() {
               <Route
                 path="network"
                 element={
-                  <SuspenseBoundary fallback={<DashboardSkeleton />}>
-                    <NetworkGraph />
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <RedesKnownDossier />
                   </SuspenseBoundary>
                 }
               />
@@ -338,7 +338,7 @@ function App() {
                 path="money-flow"
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <MoneyFlow />
+                    <CapturaHeatmap />
                   </SuspenseBoundary>
                 }
               />

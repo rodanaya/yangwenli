@@ -1,0 +1,40 @@
+{
+  "trackingLabel": "ANALISIS DE CAPTURA INSTITUCIONAL",
+  "title": "Captura Institucional",
+  "subtitle": "Que instituciones estan capturadas por que proveedores en la contratacion federal mexicana",
+  "sourcePill": "datos COMPRANET analizados",
+  "loading": "Construyendo matriz de captura...",
+  "errorTitle": "Captura Institucional",
+  "errorMessage": "Error al cargar datos de flujo de dinero",
+  "errorHint": "Verifique que el servidor este en funcionamiento e intente de nuevo.",
+  "emptyTitle": "Sin Datos de Captura",
+  "emptyMessage": "Sin datos de flujo institucion-proveedor para los filtros seleccionados",
+  "emptyHint": "Intente ajustar el filtro de sector o rango de anos.",
+  "filters": {
+    "allSectors": "Todos los Sectores",
+    "bySector": "Sector",
+    "period2018": "2018-2022",
+    "period2023": "2023-2025",
+    "allYears": "Todos los Anos"
+  },
+  "heatmap": {
+    "institution": "Institucion",
+    "vendor": "Proveedor",
+    "value": "Valor",
+    "pctBudget": "del gasto institucional",
+    "contracts": "contratos",
+    "highCapture": "Alta Captura",
+    "lowCapture": "Baja Captura"
+  },
+  "methodology": {
+    "title": "Metodologia",
+    "content": "Calculado sobre 3.1M contratos de contratacion publica (2002-2025) con montos superiores a 100K MXN. Alta concentracion (>30% del presupuesto de una institucion a un solo proveedor) es indicador de riesgo segun directrices de la OCDE. La intensidad del color refleja la participacion del proveedor en el gasto total de la institucion."
+  },
+  "stats": {
+    "topFlows": "FLUJOS ANALIZADOS",
+    "capturedInstitutions": "INSTITUCIONES MOSTRADAS",
+    "dominantVendors": "PROVEEDORES MOSTRADOS",
+    "highCaptureFlows": "ALTA CAPTURA",
+    "highCaptureDesc": "Flujos donde proveedor tiene >30% del gasto institucional"
+  }
+}

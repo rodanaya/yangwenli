@@ -13,6 +13,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
+import RedaccionWidget from '@/components/ui/RedaccionWidget'
 import { analysisApi, investigationApi, phiApi } from '@/api/client'
 import type { ExecutiveCaseDetail } from '@/api/types'
 import {
@@ -2032,6 +2033,11 @@ export function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* ================================================================ */}
+      {/* REDACCION RUBLI — ARIA editorial picks sidebar                 */}
+      {/* ================================================================ */}
+      <RedaccionWidget />
 
       {/* ================================================================ */}
       {/* START INVESTIGATING — 3 action cards                            */}

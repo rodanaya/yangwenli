@@ -67,6 +67,10 @@ import esReportcard from './locales/es/reportcard.json'
 import enReportcard from './locales/en/reportcard.json'
 import esAria from './locales/es/aria.json'
 import enAria from './locales/en/aria.json'
+import esCaptura from './locales/es/captura.json'
+import enCaptura from './locales/en/captura.json'
+import esRedes from './locales/es/redes.json'
+import enRedes from './locales/en/redes.json'
 
 i18n
   .use(LanguageDetector)
@@ -91,6 +95,8 @@ i18n
         apiexplorer: esApiexplorer,
         reportcard: esReportcard,
         aria: esAria,
+        captura: esCaptura,
+        redes: esRedes,
       },
       en: {
         common: enCommon, sectors: enSectors, nav: enNav, dashboard: enDashboard,
@@ -110,6 +116,8 @@ i18n
         apiexplorer: enApiexplorer,
         reportcard: enReportcard,
         aria: enAria,
+        captura: enCaptura,
+        redes: enRedes,
       },
     },
     lng: localStorage.getItem('i18nextLng') || 'en', // Default to English when no saved preference

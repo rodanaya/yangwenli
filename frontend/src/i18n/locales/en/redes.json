@@ -1,0 +1,51 @@
+{
+  "trackingLabel": "NAMED INVESTIGATION UNITS",
+  "title": "Known Networks",
+  "subtitle": "Investigation units identified in federal procurement 2002-2025",
+  "sourceAttribution": "Based on {{count}} documented cases",
+  "sourceRegistries": "COMPRANET / EFOS SAT / SFP",
+  "loading": "Loading investigation dossiers...",
+  "errorTitle": "Known Networks",
+  "errorMessage": "Failed to load investigation data",
+  "errorHint": "Please check that the backend is running and try again.",
+  "emptyTitle": "No Investigation Dossiers",
+  "emptyMessage": "No high-priority investigation targets found",
+  "emptyHint": "The ARIA pipeline may need to run first to populate the investigation queue.",
+  "filters": {
+    "allPatterns": "All Patterns",
+    "byPattern": "Pattern Type"
+  },
+  "patterns": {
+    "P1": "Monopolistic concentration: a single vendor dominates sector procurement",
+    "P2": "Suspected shell company: no real operations detected",
+    "P3": "Possible intermediary: reseller between government and actual supplier",
+    "P6": "Institutional capture: vendor with privileged access to institution",
+    "P7": "Temporal anomaly: suspicious activity burst detected",
+    "default": "Irregularity pattern detected by risk model"
+  },
+  "patternLabels": {
+    "P1": "Monopoly",
+    "P2": "Shell Company",
+    "P3": "Intermediary",
+    "P6": "Capture",
+    "P7": "Temporal Anomaly",
+    "default": "Risk Pattern"
+  },
+  "card": {
+    "linkedVendors": "linked vendors",
+    "totalValue": "total value",
+    "contracts": "contracts",
+    "ipsScore": "IPS",
+    "viewCase": "Investigate",
+    "efos": "EFOS Listed",
+    "sfp": "SFP Sanctioned",
+    "newVendor": "NEW",
+    "riskScore": "Risk"
+  },
+  "stats": {
+    "totalDossiers": "INVESTIGATION TARGETS",
+    "tier1": "TIER 1 (CRITICAL)",
+    "tier2": "TIER 2 (HIGH)",
+    "patternsDetected": "PATTERNS DETECTED"
+  }
+}

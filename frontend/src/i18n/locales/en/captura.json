@@ -1,0 +1,40 @@
+{
+  "trackingLabel": "INSTITUTIONAL CAPTURE ANALYSIS",
+  "title": "Institutional Capture",
+  "subtitle": "Which institutions are captured by which vendors in Mexican federal procurement",
+  "sourcePill": "COMPRANET data analyzed",
+  "loading": "Building capture matrix...",
+  "errorTitle": "Institutional Capture",
+  "errorMessage": "Failed to load money flow data",
+  "errorHint": "Please check that the backend is running and try again.",
+  "emptyTitle": "No Capture Data",
+  "emptyMessage": "No institution-vendor flow data available for the selected filters",
+  "emptyHint": "Try adjusting the sector or year range filter.",
+  "filters": {
+    "allSectors": "All Sectors",
+    "bySector": "Sector",
+    "period2018": "2018-2022",
+    "period2023": "2023-2025",
+    "allYears": "All Years"
+  },
+  "heatmap": {
+    "institution": "Institution",
+    "vendor": "Vendor",
+    "value": "Value",
+    "pctBudget": "of institution spend",
+    "contracts": "contracts",
+    "highCapture": "High Capture",
+    "lowCapture": "Low Capture"
+  },
+  "methodology": {
+    "title": "Methodology",
+    "content": "Calculated from 3.1M procurement contracts (2002-2025) with amounts above 100K MXN. High concentration (>30% of an institution's budget going to a single vendor) is a risk indicator per OECD guidelines. Cell color intensity reflects the vendor's share of the institution's total procurement spend."
+  },
+  "stats": {
+    "topFlows": "TOP FLOWS ANALYZED",
+    "capturedInstitutions": "INSTITUTIONS SHOWN",
+    "dominantVendors": "VENDORS SHOWN",
+    "highCaptureFlows": "HIGH CAPTURE",
+    "highCaptureDesc": "Flows where vendor holds >30% of institution spend"
+  }
+}

@@ -29,6 +29,8 @@ import { ContractDetailModal } from '@/components/ContractDetailModal'
 import VendorContractTimeline from '@/components/VendorContractTimeline'
 import VendorContractRiskMatrix from '@/components/VendorContractRiskMatrix'
 import VendorContractBreakdown from '@/components/VendorContractBreakdown'
+import InvestigationLede from '@/components/ui/InvestigationLede'
+import CronologiaVendor from '@/components/ui/CronologiaVendor'
 import { buildVendorNarrative } from '@/lib/narratives'
 import type { ContractListItem, VendorExternalFlags, VendorWaterfallContribution, VendorQQWResponse, VendorSHAPResponse, VendorNarrativeResponse, VendorSimilarCasesResponse } from '@/api/types'
 import {
@@ -1337,6 +1339,27 @@ export function VendorProfile() {
         centerName={toTitleCase(vendor.name)}
       />
 
+      {/* Investigation Lede — newspaper-style opener */}
+      <InvestigationLede
+        vendorName={toTitleCase(vendor.name)}
+        riskLevel={riskLevel}
+        topFinding={
+          (vendor.direct_award_pct ?? 0) > 50
+            ? `${vendor.direct_award_pct?.toFixed(0)}% adjudicacion directa`
+            : riskLevel === 'critical' || riskLevel === 'high'
+              ? `Riesgo ${riskLevel} detectado por modelo v6.0`
+              : `${vendor.total_contracts.toLocaleString()} contratos analizados`
+        }
+        sector={vendor.primary_sector_name ?? ''}
+        yearsActive={
+          vendor.first_contract_year && vendor.last_contract_year
+            ? `${vendor.first_contract_year}–${vendor.last_contract_year}`
+            : ''
+        }
+        totalValue={formatCompactMXN(vendor.total_value_mxn)}
+        contractCount={vendor.total_contracts}
+      />
+
       {/* Editorial narrative header — newspaper lede */}
       <VendorNarrativeHeader vendor={vendor} riskProfile={riskProfile} />
 
@@ -2535,6 +2558,17 @@ export function VendorProfile() {
         <TabPanel tabKey="history">
           <ScrollSection>
           <div className="space-y-6">
+            {/* Cronologia — year-by-year contract bar chart */}
+            <CronologiaVendor
+              vendorName={toTitleCase(vendor.name)}
+              data={(lifecycleData?.timeline ?? []).map((y) => ({
+                year: y.year,
+                contractCount: y.contract_count,
+                totalValue: y.total_value,
+                avgRiskScore: y.avg_risk_score ?? 0,
+              }))}
+            />
+
             {/* Activity Calendar */}
             <Card className="fern-card">
               <CardHeader>
