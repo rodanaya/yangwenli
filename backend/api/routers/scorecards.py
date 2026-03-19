@@ -155,17 +155,230 @@ def get_scorecard_summary():
             computed_at=i_row[2],
         )
     except Exception as exc:
-        # Tables may not exist in older deploy DBs — return empty summary
-        logger.warning("scorecard_summary_unavailable: %s", exc)
-        return ScorecardSummary(
-            institutions_scored=0,
-            vendors_scored=0,
-            institution_grade_distribution={},
-            vendor_grade_distribution={},
-            institution_avg_score=0.0,
-            vendor_avg_score=0.0,
-            computed_at=None,
-        )
+        # Tables may not exist in older deploy DBs — compute from stats tables
+        logger.warning("scorecard_summary_fallback: %s", exc)
+        try:
+            with get_db() as conn:
+                i_count = conn.execute("SELECT COUNT(*) FROM institution_stats").fetchone()[0]
+                v_count = conn.execute("SELECT COUNT(*) FROM vendor_stats").fetchone()[0]
+                i_avg_risk = conn.execute("SELECT AVG(avg_risk_score) FROM institution_stats").fetchone()[0] or 0
+                v_avg_risk = conn.execute("SELECT AVG(avg_risk_score) FROM vendor_stats").fetchone()[0] or 0
+                i_avg_score = round(max(0, (1 - i_avg_risk)) * 100, 1)
+                v_avg_score = round(max(0, (1 - v_avg_risk)) * 100, 1)
+            return ScorecardSummary(
+                institutions_scored=i_count,
+                vendors_scored=v_count,
+                institution_grade_distribution={},
+                vendor_grade_distribution={},
+                institution_avg_score=i_avg_score,
+                vendor_avg_score=v_avg_score,
+                computed_at=None,
+            )
+        except Exception:
+            return ScorecardSummary(
+                institutions_scored=0,
+                vendors_scored=0,
+                institution_grade_distribution={},
+                vendor_grade_distribution={},
+                institution_avg_score=0.0,
+                vendor_avg_score=0.0,
+                computed_at=None,
+            )
+
+
+def _grade_from_risk(avg_risk: float) -> tuple:
+    """Compute grade, label, color from average risk score.
+
+    Returns (grade, grade_label, grade_color).
+    """
+    if avg_risk < 0.10:
+        return ("A", "Excellent", "#16a34a")
+    elif avg_risk < 0.20:
+        return ("B", "Good", "#22c55e")
+    elif avg_risk < 0.35:
+        return ("C", "Fair", "#eab308")
+    elif avg_risk < 0.50:
+        return ("D", "Poor", "#f97316")
+    else:
+        return ("F", "Critical", "#dc2626")
+
+
+def _fallback_institution_scorecards(
+    conn, page: int, per_page: int, sort_by: str, order: str,
+    grade: Optional[str], sector: Optional[str],
+    min_score: Optional[float], max_score: Optional[float],
+    search: Optional[str],
+) -> InstitutionScorecardListResponse:
+    """Build institution scorecards from institution_stats when the
+    institution_scorecards table is missing (e.g. deploy DB)."""
+    where_clauses = ["1=1"]
+    params: list = []
+
+    if search:
+        where_clauses.append("i.name LIKE ?")
+        params.append(f"%{search}%")
+    if sector:
+        where_clauses.append("LOWER(sec.name_es) = LOWER(?)")
+        params.append(sector)
+
+    where_sql = " AND ".join(where_clauses)
+    # Map sort_by to available columns; default to avg_risk_score desc
+    sort_col = "ist.avg_risk_score"
+    if sort_by == "institution_name":
+        sort_col = "i.name"
+    elif sort_by in ("total_score", "national_percentile"):
+        sort_col = "ist.avg_risk_score"
+
+    order_dir = "DESC" if order == "desc" else "ASC"
+
+    total = conn.execute(f"""
+        SELECT COUNT(*)
+        FROM institution_stats ist
+        JOIN institutions i ON i.id = ist.institution_id
+        LEFT JOIN sectors sec ON i.sector_id = sec.id
+        WHERE {where_sql}
+    """, params).fetchone()[0]
+
+    offset = (page - 1) * per_page
+    rows = conn.execute(f"""
+        SELECT ist.institution_id, i.name, i.ramo_id,
+               sec.name_es AS sector_name,
+               ist.avg_risk_score, ist.total_contracts,
+               ist.high_risk_pct, ist.direct_award_pct, ist.single_bid_pct
+        FROM institution_stats ist
+        JOIN institutions i ON i.id = ist.institution_id
+        LEFT JOIN sectors sec ON i.sector_id = sec.id
+        WHERE {where_sql}
+        ORDER BY {sort_col} {order_dir}
+        LIMIT ? OFFSET ?
+    """, params + [per_page, offset]).fetchall()
+
+    items = []
+    grade_counts: dict = {}
+    for r in rows:
+        avg_risk = r[4] or 0
+        # Convert avg_risk (0-1) to a 0-100 score (inverted: lower risk = higher score)
+        total_score = round(max(0, (1 - avg_risk)) * 100, 1)
+        g, gl, gc = _grade_from_risk(avg_risk)
+
+        if min_score is not None and total_score < min_score:
+            continue
+        if max_score is not None and total_score > max_score:
+            continue
+        if grade and g != grade:
+            continue
+
+        grade_counts[g] = grade_counts.get(g, 0) + 1
+
+        openness = round(max(0, (1 - (r[7] or 0) / 100)) * 100, 1)  # inverse DA%
+        price_pillar = round(max(0, (1 - avg_risk)) * 100, 1)
+        vendors_pillar = round(max(0, (1 - (r[8] or 0) / 100)) * 100, 1)
+
+        items.append(InstitutionScorecardListItem(
+            institution_id=r[0], institution_name=r[1], ramo_code=r[2],
+            sector_name=r[3], total_score=total_score,
+            grade=g, grade_label=gl, grade_color=gc,
+            national_percentile=0.5,
+            pillar_openness=openness,
+            pillar_price=price_pillar,
+            pillar_vendors=vendors_pillar,
+            pillar_process=50.0,
+            pillar_external=50.0,
+            top_risk_driver="direct_award" if (r[7] or 0) > 70 else "risk_score",
+        ))
+
+    filtered_total = len(items) if (grade or min_score is not None or max_score is not None) else total
+    return InstitutionScorecardListResponse(
+        data=items, total=filtered_total, page=page, per_page=per_page,
+        total_pages=max(1, -(-filtered_total // per_page)),
+        grade_distribution=grade_counts,
+    )
+
+
+def _fallback_vendor_scorecards(
+    conn, page: int, per_page: int, sort_by: str, order: str,
+    grade: Optional[str],
+    min_score: Optional[float], max_score: Optional[float],
+    search: Optional[str],
+) -> VendorScorecardListResponse:
+    """Build vendor scorecards from vendor_stats when the
+    vendor_scorecards table is missing (e.g. deploy DB)."""
+    where_clauses = ["1=1"]
+    params: list = []
+
+    if search:
+        where_clauses.append("v.name LIKE ?")
+        params.append(f"%{search}%")
+
+    where_sql = " AND ".join(where_clauses)
+    sort_col = "vs.avg_risk_score"
+    if sort_by == "vendor_name":
+        sort_col = "v.name"
+    elif sort_by in ("total_score", "national_percentile"):
+        sort_col = "vs.avg_risk_score"
+
+    order_dir = "DESC" if order == "desc" else "ASC"
+
+    total = conn.execute(f"""
+        SELECT COUNT(*)
+        FROM vendor_stats vs
+        JOIN vendors v ON v.id = vs.vendor_id
+        WHERE {where_sql}
+    """, params).fetchone()[0]
+
+    offset = (page - 1) * per_page
+    rows = conn.execute(f"""
+        SELECT vs.vendor_id, v.name,
+               vs.avg_risk_score, vs.total_contracts,
+               vs.direct_award_pct, vs.single_bid_pct,
+               vs.high_risk_pct, vs.sector_count
+        FROM vendor_stats vs
+        JOIN vendors v ON v.id = vs.vendor_id
+        WHERE {where_sql}
+        ORDER BY {sort_col} {order_dir}
+        LIMIT ? OFFSET ?
+    """, params + [per_page, offset]).fetchall()
+
+    items = []
+    grade_counts: dict = {}
+    for r in rows:
+        avg_risk = r[2] or 0
+        total_score = round(max(0, (1 - avg_risk)) * 100, 1)
+        g, gl, gc = _grade_from_risk(avg_risk)
+
+        if min_score is not None and total_score < min_score:
+            continue
+        if max_score is not None and total_score > max_score:
+            continue
+        if grade and g != grade:
+            continue
+
+        grade_counts[g] = grade_counts.get(g, 0) + 1
+
+        risk_signal = round(max(0, (1 - avg_risk)) * 100, 1)
+        conduct = round(max(0, (1 - (r[4] or 0) / 100)) * 100, 1)
+        spread = round(min((r[7] or 1) / 12 * 100, 100), 1)
+
+        items.append(VendorScorecardListItem(
+            vendor_id=r[0], vendor_name=r[1],
+            total_score=total_score,
+            grade=g, grade_label=gl, grade_color=gc,
+            national_percentile=0.5,
+            sector_percentile=0.5,
+            pillar_risk_signal=risk_signal,
+            pillar_conduct=conduct,
+            pillar_spread=spread,
+            pillar_behavior=50.0,
+            pillar_flags=50.0,
+            top_risk_driver="risk_score" if avg_risk > 0.3 else "direct_award",
+        ))
+
+    filtered_total = len(items) if (grade or min_score is not None or max_score is not None) else total
+    return VendorScorecardListResponse(
+        data=items, total=filtered_total, page=page, per_page=per_page,
+        total_pages=max(1, -(-filtered_total // per_page)),
+        grade_distribution=grade_counts,
+    )
 
 
 @router.get("/institutions", response_model=InstitutionScorecardListResponse)
@@ -182,6 +395,16 @@ def list_institution_scorecards(
 ):
     """Ranked list of institution scorecards."""
     with get_db() as conn:
+        # Check if institution_scorecards table exists
+        exists = conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='institution_scorecards'"
+        ).fetchone()
+        if not exists:
+            return _fallback_institution_scorecards(
+                conn, page, per_page, sort_by, order,
+                grade, sector, min_score, max_score, search,
+            )
+
         where_clauses = ["1=1"]
         params: list = []
 
@@ -314,9 +537,9 @@ def list_vendor_scorecards(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name='vendor_scorecards'"
         ).fetchone()
         if not exists:
-            return VendorScorecardListResponse(
-                data=[], total=0, page=page, per_page=per_page,
-                total_pages=0, grade_distribution={},
+            return _fallback_vendor_scorecards(
+                conn, page, per_page, sort_by, order,
+                grade, min_score, max_score, search,
             )
         # Separate WHERE clauses: ones that only touch vendor_scorecards (s_*) and
         # ones that require joining vendors (v_*). The JOIN is expensive (~900ms on

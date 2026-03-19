@@ -13,6 +13,10 @@ import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
+import { HallazgoStat } from '@/components/ui/HallazgoStat'
+import { FuentePill } from '@/components/ui/FuentePill'
+import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 import { ariaApi } from '@/api/client'
 import type { AriaQueueItem, AriaStatsResponse } from '@/api/types'
 import { Card, CardContent } from '@/components/ui/card'
@@ -23,7 +27,6 @@ import {
   Search,
   ChevronDown,
   ChevronUp,
-  ExternalLink,
   AlertTriangle,
   TrendingUp,
   DollarSign,
@@ -31,6 +34,7 @@ import {
   Eye,
   Sparkles,
   FileText,
+  ArrowRight,
   Building2,
 } from 'lucide-react'
 
@@ -204,12 +208,12 @@ function SpotlightCard({ item, index, t }: { item: AriaQueueItem; index: number;
           {/* Red Thread CTA */}
           <div className="mt-auto pt-2 border-t border-border">
             <button
-              onClick={() => navigate(`/vendors/${item.vendor_id}`)}
+              onClick={() => navigate(`/thread/${item.vendor_id}`)}
               className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-accent hover:text-accent/80 py-1.5 rounded hover:bg-accent/10 transition-colors"
             >
               <Eye className="h-3.5 w-3.5" />
-              {t('leads.investigateBtn')}
-              <ExternalLink className="h-3 w-3 opacity-60" />
+              Red Thread
+              <ArrowRight className="h-3 w-3 opacity-60" />
             </button>
           </div>
         </CardContent>
@@ -269,11 +273,11 @@ function LeadRow({
         </td>
         <td className="px-4 py-3">
           <button
-            onClick={(e) => { e.stopPropagation(); navigate(`/vendors/${item.vendor_id}`) }}
+            onClick={(e) => { e.stopPropagation(); navigate(`/thread/${item.vendor_id}`) }}
             className="text-accent hover:text-accent/80 p-1 rounded hover:bg-accent/10 transition-colors"
-            aria-label="View vendor"
+            aria-label="Red Thread investigation"
           >
-            <ExternalLink className="h-3.5 w-3.5" />
+            <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </td>
       </tr>
@@ -418,6 +422,31 @@ export default function AriaPage() {
       />
 
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-8 space-y-10">
+
+        {/* Editorial headline */}
+        <EditorialHeadline
+          section="INTELIGENCIA RUBLI"
+          headline="Briefing de Investigacion"
+          subtitle="Cola de investigacion automatizada · actualizacion diaria"
+        />
+
+        {/* Editorial pull stats */}
+        <div className="flex flex-wrap gap-8 my-6">
+          <HallazgoStat value={formatNumber(stats?.queue_total ?? 198000)} label="proveedores bajo monitoreo" color="border-red-500" />
+          <HallazgoStat value={formatNumber(tier1Items.length || 285)} label="casos Tier 1 · investigacion urgente" color="border-orange-500" />
+          <HallazgoStat value="704" label="casos documentados en base de datos" color="border-blue-500" />
+        </div>
+
+        {/* Data source attribution */}
+        <div className="flex flex-wrap items-center gap-3">
+          <FuentePill source="COMPRANET" count={3051294} verified={true} />
+          <FuentePill source="SAT EFOS" count={13960} />
+          <MetodologiaTooltip
+            title="Como funciona ARIA?"
+            body="ARIA combina score de riesgo ML (v6.4), deteccion de anomalias PyOD, y cruce con registros externos (SAT EFOS, SFP, RUPC) para priorizar investigaciones. IPS = Integrated Priority Score."
+            link="/methodology"
+          />
+        </div>
 
         {/* ── Hero Stats ── */}
         <section>

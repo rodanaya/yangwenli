@@ -4,7 +4,6 @@
  * formatted like a newspaper editorial sidebar.
  */
 import { useQuery } from '@tanstack/react-query'
-import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { ariaApi } from '@/api/client'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -57,8 +56,6 @@ function StoryCardSkeleton() {
 }
 
 export default function RedaccionWidget() {
-  const { t } = useTranslation('aria')
-
   const { data, isLoading, error } = useQuery({
     queryKey: ['aria', 'queue', 'redaccion-widget'],
     queryFn: () => ariaApi.getQueue({ tier: 1, per_page: 3 }),
@@ -99,7 +96,7 @@ export default function RedaccionWidget() {
             <div key={story.vendorId} className="border-t border-zinc-700/50 pt-3">
               {/* Vendor name */}
               <Link
-                to={`/vendors/${story.vendorId}`}
+                to={`/thread/${story.vendorId}`}
                 className="block text-sm font-bold text-white hover:text-zinc-200 transition-colors leading-snug"
                 style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
               >
@@ -134,10 +131,10 @@ export default function RedaccionWidget() {
 
               {/* Investigate link */}
               <Link
-                to={`/vendors/${story.vendorId}`}
+                to={`/thread/${story.vendorId}`}
                 className="inline-flex items-center gap-1 text-[11px] text-zinc-500 hover:text-zinc-300 mt-1.5 transition-colors"
               >
-                {t('leads.investigateBtn', 'Investigar')} <ArrowRight className="h-3 w-3" />
+                Red Thread <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
           ))

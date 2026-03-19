@@ -18,6 +18,10 @@ import { analysisApi } from '@/api/client'
 import type { ExecutiveSummaryResponse } from '@/api/types'
 import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
 import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
+import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
+import { HallazgoStat } from '@/components/ui/HallazgoStat'
+import { FuentePill } from '@/components/ui/FuentePill'
+import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 import { ScrollReveal, useCountUp, AnimatedFill, AnimatedSegment } from '@/hooks/useAnimations'
 import {
   AlertTriangle,
@@ -211,7 +215,21 @@ export function ExecutiveSummary() {
       {/* Cinematic opening hero */}
       <CinematicHero />
 
+      <EditorialHeadline
+        section="RESUMEN EJECUTIVO"
+        headline="Panorama de Contrataciones"
+        subtitle="Analisis integral del gasto federal mexicano · 2002–2025"
+      />
+
       <ScrollReveal delay={80}><ReportHeader data={data} /></ScrollReveal>
+
+      {/* Editorial pull stats */}
+      <div className="flex flex-wrap gap-8 my-6">
+        <HallazgoStat value={`${totalValueT}T`} label="MXN total analizado" color="border-amber-500" />
+        <HallazgoStat value={`${highRiskPct}%`} label="contratos de alto riesgo" color="border-red-500" />
+        <HallazgoStat value={formatNumber(data.headline.total_contracts)} label="contratos analizados" color="border-blue-500" />
+        <HallazgoStat value="23 anos" label="de datos federales · 2002–2025" color="border-zinc-400" />
+      </div>
 
       {/* Editorial stat moments */}
       <div className="space-y-2">
@@ -250,6 +268,16 @@ export function ExecutiveSummary() {
       <AnimatedDivider />
       {/* 11 — NOW WHAT: Recommendations */}
       <ScrollReveal><SectionRecommendations navigate={navigate} /></ScrollReveal>
+      {/* Data source attribution */}
+      <div className="flex flex-wrap items-center gap-3 mt-8">
+        <FuentePill source="COMPRANET" count={3051294} verified={true} />
+        <MetodologiaTooltip
+          title="Sobre este analisis"
+          body="Basado en el modelo de riesgo RUBLI v6.4 (AUC=0.863, HR=9.0%). Scores indican similitud con patrones de corrupcion documentados, no son prueba de irregularidad."
+          link="/methodology"
+        />
+      </div>
+
       <ScrollReveal><ReportFooter data={data} /></ScrollReveal>
     </article>
   )

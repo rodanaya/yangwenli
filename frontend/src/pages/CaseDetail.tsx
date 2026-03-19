@@ -787,6 +787,15 @@ export default function CaseDetail() {
                           <ExternalLink className="h-3 w-3" />
                         </Link>
                       )}
+                      {vendor.vendor_id && (
+                        <Link
+                          to={`/thread/${vendor.vendor_id}`}
+                          className="text-[10px] text-red-400/70 hover:text-red-400 transition-colors"
+                          title="Red Thread"
+                        >
+                          Red Thread
+                        </Link>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
                       <Badge variant="outline" className={cn(

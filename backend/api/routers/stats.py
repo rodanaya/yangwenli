@@ -315,9 +315,58 @@ def get_fast_dashboard(response: Response):
         else:
             risk_distribution = raw_rd
 
+        # Fallback: if risk_distribution is empty, compute from contracts table
+        overview = stats.get('overview', {})
+        if not risk_distribution or all(r.get("count", 0) == 0 for r in risk_distribution):
+            try:
+                rd_rows = cursor.execute("""
+                    SELECT risk_level, COUNT(*) as cnt,
+                           ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM contracts), 2) as pct,
+                           COALESCE(SUM(amount_mxn), 0) as total_value
+                    FROM contracts
+                    WHERE risk_level IS NOT NULL
+                    GROUP BY risk_level
+                """).fetchall()
+                if rd_rows:
+                    risk_distribution = [
+                        {"risk_level": r["risk_level"], "count": r["cnt"],
+                         "percentage": r["pct"], "total_value_mxn": r["total_value"]}
+                        for r in rd_rows
+                    ]
+            except Exception as e:
+                logger.warning("risk_distribution_fallback_failed: %s", e)
+
+        # Fallback: if overview is empty, compute basics from contracts table
+        if not overview or overview.get("total_contracts", 0) == 0:
+            try:
+                ov_row = cursor.execute("""
+                    SELECT COUNT(*) as tc,
+                           COALESCE(SUM(amount_mxn), 0) as tv,
+                           COUNT(DISTINCT vendor_id) as vendors,
+                           COUNT(DISTINCT institution_id) as institutions,
+                           COALESCE(AVG(risk_score), 0) as avg_risk,
+                           SUM(CASE WHEN risk_level IN ('critical', 'high') THEN 1 ELSE 0 END) as hr
+                    FROM contracts
+                """).fetchone()
+                if ov_row and ov_row["tc"] > 0:
+                    overview = {
+                        "total_contracts": ov_row["tc"],
+                        "total_value_mxn": ov_row["tv"],
+                        "total_vendors": ov_row["vendors"],
+                        "total_institutions": ov_row["institutions"],
+                        "avg_risk_score": round(ov_row["avg_risk"], 4),
+                        "high_risk_contracts": ov_row["hr"],
+                        "direct_award_pct": 0,
+                        "single_bid_pct": 0,
+                        "min_year": 2002,
+                        "max_year": 2025,
+                    }
+            except Exception as e:
+                logger.warning("overview_fallback_failed: %s", e)
+
         response.headers["Cache-Control"] = "public, max-age=300"  # 5 min browser cache
         return FastDashboardResponse(
-            overview=stats.get('overview', {}),
+            overview=overview,
             sectors=sectors,
             risk_distribution=risk_distribution,
             yearly_trends=yearly_trends,

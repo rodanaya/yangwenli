@@ -13,25 +13,32 @@ import sys
 SOURCE = os.path.join(os.path.dirname(__file__), "..", "RUBLI_NORMALIZED.db")
 DEPLOY = os.path.join(os.path.dirname(__file__), "..", "RUBLI_DEPLOY.db")
 
-# Tables to DROP (large, non-essential for production)
+# Tables to DROP — large analytical/legacy tables not needed in production.
+# IMPORTANT: If a table is used by ANY production API endpoint or frontend page,
+# it must NOT be in this list. Check api/ routes before adding tables here.
 TABLES_TO_DROP = [
-    "contract_anomaly_scores",   # 9.3M rows — PyOD ensemble, only for pyod-agreement endpoint
-    "vendor_shap_v52",           # 456K rows — SHAP explanations, analytical only
+    # --- Large analytical tables (retraining/enrichment only) ---
+    "contract_anomaly_scores",   # 9.3M rows — PyOD ensemble, analytical only
     "contract_z_features",       # 3M rows — z-score features, needed for retraining only
-    "risk_scores",               # Empty legacy table
     "contract_ml_anomalies",     # 1K rows — legacy ML anomalies
-    "co_bidding_stats",          # 352K rows — can be recomputed
+
+    # --- Deduplication/registry tables (not used in prod API) ---
     "vendor_canonical_map",      # 320K rows — dedup map, not used in prod API
-    "vendor_classifications",    # 320K rows — classification data, not used in prod API
     "company_registry",          # 320K rows — shell detection registry
-    "vendor_institution_tenure", # 196K rows — tenure data, not used in prod endpoints
-    # institution_top_vendors is KEPT — used by analysis routes (money-flow, institution detail)
     "vendor_aliases",            # 12K rows — alias data, not used in prod
+
+    # --- Corporate group tables (not surfaced in UI) ---
     "corporate_group_members",   # 6K rows
     "corporate_groups",          # 278 rows
+
+    # --- ARIA internal tables ---
     "aria_gt_updates",           # 6.5K rows — GT update log, not needed in prod
+
+    # --- Temp/scoring tables ---
     "_scoring_temp",             # Temp scoring table
-    # Empty tables — clean up
+    "risk_scores",               # Empty legacy table
+
+    # --- Empty/unused tables — safe to drop ---
     "contract_quality",
     "contracting_units",
     "exchange_rates",
@@ -44,13 +51,22 @@ TABLES_TO_DROP = [
     "sidec_complaints",
     "validation_results",
     "vendor_investigation_features",
-    "vendor_name_variants",
     "vendor_price_profiles",
     "investigation_folder_items",
     "aria_web_evidence",
     "asf_institution_findings",
     "asf_ramo_crosswalk",
 ]
+
+# Tables KEPT for production (do NOT add to TABLES_TO_DROP):
+# - vendor_classifications (320K) — VendorProfile industry classification
+# - vendor_institution_tenure (196K) — VendorProfile tenure display
+# - vendor_name_variants (0 rows but schema needed) — VendorProfile name variations
+# - vendor_scorecards (138K) — Report Card "Vendors" tab
+# - institution_scorecards (2.5K) — Report Card "Institutions" tab
+# - vendor_shap_v52 (456K) — SHAP explanations for VendorProfile
+# - co_bidding_stats (352K) — co-bidding analysis endpoints
+# - institution_top_vendors (628K) — analysis routes (money-flow, institution detail)
 
 
 def sizeof_fmt(num):

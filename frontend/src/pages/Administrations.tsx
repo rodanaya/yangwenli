@@ -53,6 +53,10 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
+import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
+import { HallazgoStat } from '@/components/ui/HallazgoStat'
+import { FuentePill } from '@/components/ui/FuentePill'
+import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 import AdministrationFingerprints from '@/components/charts/AdministrationFingerprints'
 import { AdminSectorSunburst } from '@/components/charts/AdminSectorSunburst'
 
@@ -521,10 +525,31 @@ export default function Administrations() {
 
   return (
     <div className="space-y-6 p-6 max-w-[1600px] mx-auto">
-      {/* Header */}
-      <div className="editorial-rule mb-4">
-        <span className="editorial-label">ANÁLISIS POR ADMINISTRACIÓN</span>
+      {/* Editorial headline */}
+      <EditorialHeadline
+        section="ANALISIS HISTORICO"
+        headline="Por Administracion"
+        subtitle="Patrones de contratacion por sexenio presidencial · 1994–2025"
+      />
+
+      {/* Editorial pull stats */}
+      <div className="flex flex-wrap gap-8 my-6">
+        <HallazgoStat value="5" label="administraciones analizadas" color="border-amber-500" />
+        <HallazgoStat value="23" label="anos de datos · 2002–2025" color="border-blue-500" />
+        <HallazgoStat value="3.1M" label="contratos rastreados" color="border-zinc-400" />
       </div>
+
+      {/* Data source + methodology */}
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <FuentePill source="COMPRANET" verified={true} />
+        <MetodologiaTooltip
+          title="Sobre la comparacion"
+          body="Comparacion normalizada por ano y valor total presupuestal. Diferencias entre administraciones reflejan prioridades de politica, no necesariamente irregularidades."
+          link="/methodology"
+        />
+      </div>
+
+      {/* Header */}
       <div className="fern-card p-5 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5 mb-1">

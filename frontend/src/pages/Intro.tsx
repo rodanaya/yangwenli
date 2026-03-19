@@ -1862,6 +1862,19 @@ export default function Intro() {
             </button>
           </div>
 
+          {/* Red Thread teaser */}
+          <button
+            onClick={() => goToApp('/thread/36961')}
+            className="gsap-reveal inline-flex items-center gap-2 mt-6 text-sm transition-colors hover:brightness-125"
+            style={{ color: 'rgba(196,30,58,0.75)' }}
+          >
+            <span style={{ color: CRIMSON }}>&#9679;</span>
+            {isEn
+              ? 'Follow the investigation trail on Laboratorios Pisa'
+              : 'Sigue el hilo de investigacion sobre Laboratorios Pisa'}
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+
           {/* Attribution */}
           <p
             className="gsap-reveal mt-14 text-xs"
