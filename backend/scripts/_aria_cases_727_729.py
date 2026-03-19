@@ -25,10 +25,10 @@ def insert_case_727(conn, base_id):
     case_name = "DISTRIBUIDOR MEDICO TECNOMED - IMSS Pharma DA Saturation 1.2B"
 
     conn.execute("""INSERT OR IGNORE INTO ground_truth_cases
-        (id, case_name, case_type, confidence_level, estimated_fraud_mxn,
+        (id, case_id, case_name, case_type, confidence_level, estimated_fraud_mxn,
          source_news, year_start, year_end, notes)
-        VALUES (?,?,?,?,?,?,?,?,?)""", (
-        case_id, case_name, "direct_award_abuse", "medium",
+        VALUES (?,?,?,?,?,?,?,?,?,?)""", (
+        case_id, f'CASE-{case_id}', case_name, "direct_award_abuse", "medium",
         1_200_000_000,
         "COMPRANET direct query vendor_id=281686; RFC DMT190918N50",
         2023, 2025,
@@ -77,10 +77,10 @@ def insert_case_728(conn, base_id):
     case_name = "HOLDING INFRAESTRUCTURA ESPECIALIZADA - CONAGUA SB Monopoly 646M"
 
     conn.execute("""INSERT OR IGNORE INTO ground_truth_cases
-        (id, case_name, case_type, confidence_level, estimated_fraud_mxn,
+        (id, case_id, case_name, case_type, confidence_level, estimated_fraud_mxn,
          source_news, year_start, year_end, notes)
-        VALUES (?,?,?,?,?,?,?,?,?)""", (
-        case_id, case_name, "bid_rigging", "medium",
+        VALUES (?,?,?,?,?,?,?,?,?,?)""", (
+        case_id, f'CASE-{case_id}', case_name, "bid_rigging", "medium",
         646_000_000,
         "COMPRANET direct query vendor_id=264212; RFC HIE130930TUA",
         2020, 2024,
@@ -125,10 +125,10 @@ def insert_case_729(conn, base_id):
     case_name = "TECNOLOGIAS EFICIENTES VILLA - SEP Computer Equipment Capture 298M"
 
     conn.execute("""INSERT OR IGNORE INTO ground_truth_cases
-        (id, case_name, case_type, confidence_level, estimated_fraud_mxn,
+        (id, case_id, case_name, case_type, confidence_level, estimated_fraud_mxn,
          source_news, year_start, year_end, notes)
-        VALUES (?,?,?,?,?,?,?,?,?)""", (
-        case_id, case_name, "overpricing", "medium",
+        VALUES (?,?,?,?,?,?,?,?,?,?)""", (
+        case_id, f'CASE-{case_id}', case_name, "overpricing", "medium",
         298_000_000,
         "COMPRANET direct query vendor_id=258100; RFC TEV150303HR6",
         2025, 2025,

@@ -1,0 +1,189 @@
+{
+  "cases": [
+    {
+      "case_name": "SYE SOFTWARE SAT SDMA IT Monopoly",
+      "case_type": "monopoly",
+      "confidence_level": "medium",
+      "estimated_fraud_mxn": 2561500000,
+      "source_news": "ARIA T3 investigation - COMPRANET pattern analysis",
+      "year_start": 2017,
+      "year_end": 2025,
+      "notes": "SYE SOFTWARE SA DE CV (vendor 134706). 2.6B across 17 contracts 2017-2025. SAT SDMA contracts: 915M (2022 SB) + 595M (2018 SB) = 1.51B at SAT with zero competition. ISSSTE 363M plurianual DA (2019). IMSS 504M (2022 competitive, 2025 DA). CNH 61M SB, SEPOMEX 42M SB, SE 30M SB, CONSAR 32M SB. 13 of 18 contracts are single-bid. Pattern consistent with IT systems capture.",
+      "vendors": [
+        {
+          "vendor_id": 134706,
+          "vendor_name_source": "SYE SOFTWARE SA DE CV",
+          "evidence_strength": "medium",
+          "match_method": "vendor_id",
+          "notes": "IPS=0.535, avg_risk=0.413. 13/18 contracts single-bid. SAT SDMA 1.51B SB, ISSSTE 363M DA."
+        }
+      ],
+      "contract_ids": [
+        1697731,
+        1843663,
+        1851715,
+        1846053,
+        1846301,
+        2107506,
+        2060422,
+        2093360,
+        2166369,
+        2234458,
+        2444379,
+        2605077,
+        2681823,
+        2862475,
+        3007968,
+        3007969,
+        3102108
+      ]
+    },
+    {
+      "case_name": "TECNOLOGIA SISTEMAS APOYO SEGOB-ISSSTE IT Capture",
+      "case_type": "capture",
+      "confidence_level": "medium",
+      "estimated_fraud_mxn": 377000000,
+      "source_news": "ARIA T3 investigation - COMPRANET pattern analysis",
+      "year_start": 2010,
+      "year_end": 2017,
+      "notes": "TECNOLOGIA EN SISTEMAS DE APOYO SA (vendor 63200). 377M across 23 contracts 2010-2017. SEGOB: 202M, ALL direct award (2010-2013, incl 145M single DA in 2011). ISSSTE: 153M, 75% DA (2014-2017, incl 108M DA in 2016). Institution-hopping: heavy DA at SEGOB one admin, then ISSSTE next. Post-2018 shifts to smaller competitive contracts. Also 10 SFP contracts (9M, 90% DA).",
+      "vendors": [
+        {
+          "vendor_id": 63200,
+          "vendor_name_source": "TECNOLOGIA EN SISTEMAS DE APOYO SA",
+          "evidence_strength": "medium",
+          "match_method": "vendor_id",
+          "notes": "IPS=0.537, avg_risk=0.278. SEGOB 202M all DA, ISSSTE 153M 75% DA. Institution-hopping 2010-2017."
+        }
+      ],
+      "contract_ids": [
+        506766,
+        474866,
+        492065,
+        485472,
+        426728,
+        556889,
+        851532,
+        861760,
+        1058433,
+        980187,
+        1038713,
+        934936,
+        1126604,
+        1188854,
+        1360210,
+        1740889,
+        1464166,
+        1406095,
+        1546556,
+        1671180,
+        1527542,
+        1619344,
+        1659607
+      ]
+    },
+    {
+      "case_name": "CORPORACION ASESORIA PROTECCION SEP-INBA Security Capture",
+      "case_type": "capture",
+      "confidence_level": "medium",
+      "estimated_fraud_mxn": 490600000,
+      "source_news": "ARIA T3 investigation - COMPRANET pattern analysis",
+      "year_start": 2012,
+      "year_end": 2017,
+      "notes": "CORPORACION DE ASESORIA EN PROTECCION Y SEGURIDAD (vendor 51550). 491M across 60 contracts 2012-2017. SEP: 305M, 67% DA, competitive = 100% single-bid. Incl 269M SB at SEP 2013. INBA: 120M, 75% DA, competitive = 100% SB. IMSS: 27M, 71% DA, competitive = 100% SB. EVERY competitive tender was single-bid. No other company competed. Peak 2013 (363M). Vendor disappears after 2018 admin change.",
+      "vendors": [
+        {
+          "vendor_id": 51550,
+          "vendor_name_source": "CORPORACION DE ASESORIA EN PROTECCION Y SEGURIDAD INTERNA EMPRESARIAL",
+          "evidence_strength": "medium",
+          "match_method": "vendor_id",
+          "notes": "IPS=0.535, avg_risk=0.310. 100% SB rate in competitive. SEP 305M, INBA 120M. Disappears 2018."
+        }
+      ],
+      "contract_ids": [
+        493943,
+        416403,
+        437424,
+        640650,
+        506424,
+        641312,
+        614860,
+        510259,
+        725413,
+        776334,
+        795669,
+        756236,
+        749371,
+        906710,
+        853629,
+        893881,
+        838807,
+        745010,
+        865650,
+        750291,
+        737076,
+        620453,
+        776086,
+        860433,
+        768880,
+        1125169,
+        1036447,
+        943358,
+        1125168,
+        938900,
+        996197,
+        943975,
+        996523,
+        1123999,
+        1214241,
+        1327973,
+        1154973,
+        1225629,
+        1094052,
+        1225628,
+        1196166,
+        1186642,
+        1159993,
+        1166178,
+        1274632,
+        1096798,
+        1166286,
+        1390314,
+        1390587,
+        1473134,
+        1430395,
+        1399029,
+        1642664,
+        1632581,
+        1525216,
+        1626927,
+        1695672,
+        1557470,
+        1669928,
+        1706727
+      ]
+    }
+  ],
+  "skipped": [
+    {
+      "vendor_id": 1430,
+      "note": "BATCH C SKIP: Legitimate broadcasting equipment supplier, no capture pattern"
+    },
+    {
+      "vendor_id": 17515,
+      "note": "BATCH C SKIP: High SB but spread across 8+ institutions, pre-2010 data, niche IT"
+    },
+    {
+      "vendor_id": 204789,
+      "note": "BATCH C SKIP: Moderate scale IT services across autonomous bodies"
+    },
+    {
+      "vendor_id": 34122,
+      "note": "BATCH C SKIP: Diversified IT across many institutions, no dominant capture"
+    },
+    {
+      "vendor_id": 196181,
+      "note": "BATCH C SKIP: Single 339M state-level contract, insufficient data"
+    }
+  ]
+}
