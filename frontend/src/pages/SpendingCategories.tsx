@@ -50,6 +50,9 @@ import {
 } from 'lucide-react'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { getSectorNameEN, SECTORS } from '@/lib/constants'
+import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
+import { FuentePill } from '@/components/ui/FuentePill'
+import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 
 // Helper: map sector code string to integer sector_id for API queries
 function getSectorId(code: string | null): number | null {
@@ -1169,6 +1172,13 @@ export default function SpendingCategories() {
 
   return (
     <div className="space-y-6">
+      {/* Editorial masthead */}
+      <EditorialHeadline
+        section="AN&Aacute;LISIS SECTORIAL"
+        headline="Sectores Federales"
+        subtitle="Gasto por sector en contrataciones 2002–2025"
+      />
+
       {/* Page Hero */}
       <div className="pb-1">
         <div className="flex items-center gap-2 mb-1">
@@ -1178,8 +1188,9 @@ export default function SpendingCategories() {
           </span>
         </div>
         <h1 className="text-3xl font-black text-text-primary tracking-tight">Where the Money Goes</h1>
-        <p className="text-sm text-text-muted mt-1">
-          Drill into procurement spending by category, sector, and year — with AI risk scores on every line.
+        <p className="text-sm text-text-muted mt-1 flex items-center gap-2">
+          <span>Drill into procurement spending by category, sector, and year — with AI risk scores on every line.</span>
+          <FuentePill source="COMPRANET" verified={true} />
         </p>
       </div>
 
@@ -1232,14 +1243,22 @@ export default function SpendingCategories() {
           borderColor="border-amber-500/30"
           loading={summaryLoading}
         />
-        <SharedStatCard
-          label="AVG RISK SCORE"
-          value={macroStats ? `${(macroStats.avgRisk * 100).toFixed(1)}%` : '—'}
-          detail="Weighted by contract count"
-          borderColor="border-red-500/30"
-          color={macroStats && macroStats.avgRisk >= RISK_THRESHOLDS.high ? 'text-risk-high' : 'text-text-primary'}
-          loading={summaryLoading}
-        />
+        <div className="relative">
+          <SharedStatCard
+            label="AVG RISK SCORE"
+            value={macroStats ? `${(macroStats.avgRisk * 100).toFixed(1)}%` : '—'}
+            detail="Weighted by contract count"
+            borderColor="border-red-500/30"
+            color={macroStats && macroStats.avgRisk >= RISK_THRESHOLDS.high ? 'text-risk-high' : 'text-text-primary'}
+            loading={summaryLoading}
+          />
+          <span className="absolute top-2 right-2">
+            <MetodologiaTooltip
+              title="Sobre la concentraci&oacute;n"
+              body="Alta concentraci&oacute;n (un proveedor con >30% del gasto sectorial) es indicador de riesgo per directrices OCDE 2023."
+            />
+          </span>
+        </div>
       </div>
 
       {/* Section 1: Filter Bar */}

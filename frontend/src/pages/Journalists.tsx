@@ -10,6 +10,9 @@ import { ScrollReveal, AnimatedNumber } from '@/hooks/useAnimations'
 import { StoryCard } from '@/components/stories/StoryCard'
 import type { OutletType } from '@/components/stories/OutletBadge'
 import type { StoryType } from '@/components/stories/StoryCard'
+import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
+import { FuentePill } from '@/components/ui/FuentePill'
+import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 
 // ---------------------------------------------------------------------------
 // Story definitions (hardcoded editorial content, live stats where available)
@@ -223,6 +226,133 @@ const STORIES: StoryDef[] = [
     era: 'AMLO',
     tags: ['AMLO', 'year'],
   },
+  // 10 new investigative stories
+  {
+    slug: 'el-ano-sin-excusas',
+    outlet: 'animal_politico',
+    type: 'year',
+    headline: '2023: El Año en que México Rompió Todos los Récords',
+    subheadline: 'El último año completo del sexenio registró la tasa más alta de contratos sin licitación en la historia moderna del país: 81.9% del gasto federal.',
+    leadStatValue: '81.9%',
+    leadStatLabel: 'contratos sin competencia en 2023',
+    leadStatColor: '#e6420e',
+    estimatedMinutes: 9,
+    era: 'AMLO',
+    tags: ['AMLO', 'year'],
+  },
+  {
+    slug: 'insabi-el-experimento',
+    outlet: 'animal_politico',
+    type: 'case',
+    headline: 'INSABI: El Experimento que Colapsó el Abasto',
+    subheadline: 'La disolución del Seguro Popular desmanteló los mecanismos de competencia en compras de medicamentos, disparando adjudicaciones directas al 94%.',
+    leadStatValue: '94%',
+    leadStatLabel: 'adjudicaciones directas en compras INSABI',
+    leadStatColor: '#dc2626',
+    estimatedMinutes: 11,
+    era: 'AMLO',
+    tags: ['AMLO', 'case', 'salud'],
+  },
+  {
+    slug: 'tren-maya-sin-reglas',
+    outlet: 'nyt',
+    type: 'case',
+    headline: 'Tren Maya: $180 Mil Millones Sin Una Sola Licitación',
+    subheadline: 'El proyecto de infraestructura más caro de México evitó las reglas de contratación mediante declaratorias de emergencia y contratos directos a empresas sin experiencia ferroviaria.',
+    leadStatValue: '$180B',
+    leadStatLabel: 'MXN en contratos sin licitación',
+    leadStatColor: '#1e3a5f',
+    estimatedMinutes: 13,
+    era: 'AMLO',
+    tags: ['AMLO', 'case', 'infraestructura'],
+  },
+  {
+    slug: 'fabrica-de-monopolios',
+    outlet: 'animal_politico',
+    type: 'thematic',
+    headline: 'La Fábrica de Monopolios',
+    subheadline: 'En energía y tecnología, el 10% de los proveedores se quedó con más del 70% del presupuesto. El modelo AMLO repitió el patrón priísta pero a mayor escala.',
+    leadStatValue: '70%',
+    leadStatLabel: 'del presupuesto a 10% de proveedores',
+    leadStatColor: '#e6420e',
+    estimatedMinutes: 10,
+    era: 'AMLO',
+    tags: ['AMLO', 'thematic'],
+  },
+  {
+    slug: 'el-dinero-de-todos',
+    outlet: 'wapo',
+    type: 'thematic',
+    headline: 'El Dinero de Todos: Cómo la Contratación se Concentró en Pocas Manos',
+    subheadline: 'En dos décadas, el gasto federal mexicano pasó de una competencia amplia a un oligopolio. El análisis de RUBLI sobre 3.1 millones de contratos revela un estrechamiento sistemático de quién se beneficia.',
+    leadStatValue: '1,253',
+    leadStatLabel: 'proveedores con riesgo crítico',
+    leadStatColor: '#1e3a5f',
+    estimatedMinutes: 12,
+    tags: ['thematic'],
+  },
+  {
+    slug: 'pandemia-sin-supervision',
+    outlet: 'animal_politico',
+    type: 'case',
+    headline: 'Pandemia Sin Supervisión',
+    subheadline: 'México gastó más de 40,000 millones en compras COVID sin licitación. El 73% fue a empresas creadas menos de dos años antes de recibir el contrato.',
+    leadStatValue: '73%',
+    leadStatLabel: 'a empresas recién creadas',
+    leadStatColor: '#dc2626',
+    estimatedMinutes: 10,
+    era: 'AMLO',
+    tags: ['AMLO', 'case', 'salud'],
+  },
+  {
+    slug: 'pemex-el-gigante',
+    outlet: 'nyt',
+    type: 'case',
+    headline: 'PEMEX Nunca Compite: El Agujero Negro de $2 Billones',
+    subheadline: 'PEMEX y CFE concentran el 40% de la contratación federal pero menos del 5% es competitiva. Veinte años de datos muestran que el patrón precedió a AMLO — y lo sobrevivió.',
+    leadStatValue: '$2T',
+    leadStatLabel: 'MXN en compras energéticas sin competencia',
+    leadStatColor: '#1e3a5f',
+    estimatedMinutes: 14,
+    tags: ['case'],
+  },
+  {
+    slug: 'atlas-del-riesgo',
+    outlet: 'animal_politico',
+    type: 'thematic',
+    headline: 'Atlas del Riesgo: Los Sectores Donde la Corrupción Deja Más Huellas',
+    subheadline: 'El modelo RUBLI identifica 361,000 contratos con señales de alerta crítica. Salud y agricultura concentran el riesgo más alto, pero infraestructura suma los mayores montos.',
+    leadStatValue: '361K',
+    leadStatLabel: 'contratos en nivel crítico de riesgo',
+    leadStatColor: '#dc2626',
+    estimatedMinutes: 8,
+    tags: ['thematic', 'salud', 'infraestructura'],
+  },
+  {
+    slug: 'la-herencia-envenenada',
+    outlet: 'animal_politico',
+    type: 'era',
+    headline: 'La Herencia Envenenada: Lo que AMLO Dejó en las Finanzas Públicas',
+    subheadline: 'El sexenio concluyó con tasas históricas de contratación directa, 275,670 contratos sospechosos de fraccionamiento y una deuda de transparencia que tomará años resolver.',
+    leadStatValue: '505,219',
+    leadStatLabel: 'contratos licitados en solitario',
+    leadStatColor: '#e6420e',
+    estimatedMinutes: 10,
+    era: 'AMLO',
+    tags: ['AMLO', 'era'],
+  },
+  {
+    slug: 'dividir-para-evadir',
+    outlet: 'nyt',
+    type: 'thematic',
+    headline: 'Dividir para Evadir: 275,670 Contratos Diseñados para Burlar el Escrutinio',
+    subheadline: 'La ley exige licitación pública por encima de ciertos umbrales. El análisis de RUBLI encontró 275,670 contratos agrupados justo por debajo de esos límites — un patrón que los estadísticos califican como prácticamente imposible por azar.',
+    leadStatValue: '275,670',
+    leadStatLabel: 'contratos con fraccionamiento sospechoso',
+    leadStatColor: '#1e3a5f',
+    estimatedMinutes: 11,
+    tags: ['thematic'],
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -284,6 +414,20 @@ export default function Journalists() {
     <div className="min-h-screen bg-zinc-950">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
+        {/* Editorial masthead */}
+        <div className="pt-12 sm:pt-16">
+          <EditorialHeadline
+            section="PARA PERIODISTAS"
+            headline="Herramientas de Investigaci&oacute;n"
+            subtitle="Datos, metodolog&iacute;a y gu&iacute;as para periodistas de investigaci&oacute;n"
+            className="mb-4"
+          />
+          <div className="flex flex-wrap items-center gap-3 mb-6">
+            <FuentePill source="COMPRANET" count={3051294} countLabel="contratos" verified={true} />
+            <FuentePill source="SAT EFOS" count={13960} countLabel="empresas fantasma" />
+          </div>
+        </div>
+
         {/* ================================================================ */}
         {/* HERO SECTION                                                      */}
         {/* ================================================================ */}
@@ -291,7 +435,7 @@ export default function Journalists() {
           variants={slideUp}
           initial="initial"
           animate="animate"
-          className="pt-12 pb-10 sm:pt-16 sm:pb-14"
+          className="pb-10 sm:pb-14"
         >
           <p className="text-xs font-bold tracking-[0.3em] uppercase text-zinc-500 mb-4">
             Plataforma de Inteligencia en Contrataciones Publicas
@@ -358,9 +502,6 @@ export default function Journalists() {
             <div className="relative z-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
               <div className="max-w-2xl">
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-[#e6420e] text-white">
-                    ANIMAL POLITICO
-                  </span>
                   <span className="text-[10px] font-semibold tracking-widest uppercase text-zinc-500">
                     HISTORIA DESTACADA
                   </span>
@@ -464,10 +605,15 @@ export default function Journalists() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
               <div>
                 <h3
-                  className="text-xl font-bold text-white mb-2"
+                  className="text-xl font-bold text-white mb-2 flex items-center gap-1"
                   style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
                 >
                   Metodologia y Datos
+                  <MetodologiaTooltip
+                    title="Modelo de riesgo v6.4"
+                    body="Regresi&oacute;n log&iacute;stica con 16 z-scores, 13 sub-modelos sectoriales, AUC=0.863. Entrenado con 347 casos documentados de corrupci&oacute;n. PU-learning (Elkan &amp; Noto 2008)."
+                    link="/methodology"
+                  />
                 </h3>
                 <p className="text-sm text-zinc-400 leading-relaxed max-w-lg">
                   RUBLI analiza 3 millones de contratos federales (2002-2025) con un modelo de ML

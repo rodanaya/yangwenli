@@ -65,6 +65,9 @@ import { ContractDetailModal } from '@/components/ContractDetailModal'
 import { ContractCompareModal } from '@/components/ContractCompareModal'
 import { ExpandableProvider, ExpandableRow, ExpandChevron } from '@/components/ExpandableRow'
 import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
+import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
+import { FuentePill } from '@/components/ui/FuentePill'
+import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 
 // =============================================================================
 // Configuration
@@ -531,15 +534,13 @@ export function Contracts() {
 
   return (
     <div className="space-y-3">
-      {/* Page Hero */}
+      {/* Editorial masthead */}
       <motion.div className="pb-1" variants={fadeIn} initial="initial" animate="animate">
-        <div className="editorial-rule mb-3">
-          <span className="editorial-label">BASE DE CONTRATOS</span>
-        </div>
-        <h1 className="text-3xl font-black text-text-primary tracking-tight">3.1M Contracts. Search Everything.</h1>
-        <p className="text-sm text-text-muted mt-1">
-          Every government contract from 2002\u20132025, searchable by vendor, institution, sector, or risk level.
-        </p>
+        <EditorialHeadline
+          section="BASE DE DATOS"
+          headline="Contratos Federales"
+          subtitle="3,051,294 contratos de compras gubernamentales &middot; 2002–2025"
+        />
       </motion.div>
 
       {/* Header */}
@@ -549,11 +550,14 @@ export function Contracts() {
             <FileText className="h-4.5 w-4.5 text-accent" />
             Contracts
           </h2>
-          <p className="text-xs text-text-muted mt-0.5" aria-live="polite">
-            {data ? `${formatNumber(data?.pagination?.total ?? 0)} records` : 'Loading...'}
-            {isFetching && !isLoading && (
-              <Loader2 className="inline h-3 w-3 ml-1.5 animate-spin text-accent" />
-            )}
+          <p className="text-xs text-text-muted mt-0.5 flex items-center gap-2" aria-live="polite">
+            <span>
+              {data ? `${formatNumber(data?.pagination?.total ?? 0)} records` : 'Loading...'}
+              {isFetching && !isLoading && (
+                <Loader2 className="inline h-3 w-3 ml-1.5 animate-spin text-accent" />
+              )}
+            </span>
+            <FuentePill source="COMPRANET" count={3051294} countLabel="contratos" verified={true} />
           </p>
           <p className="text-xs text-text-muted mt-1">
             {t('guidance')}
@@ -1015,6 +1019,13 @@ export function Contracts() {
                         title={col.key === 'anomaly' ? t('table.anomalyTooltip') : undefined}
                       >
                         {t(col.labelKey)}
+                        {col.key === 'risk' && (
+                          <MetodologiaTooltip
+                            title="Sobre el score de riesgo"
+                            body="El score de riesgo (0-1) mide similitud con patrones de corrupci&oacute;n documentados. No es prueba de irregularidad — es una se&ntilde;al de investigaci&oacute;n."
+                            link="/methodology"
+                          />
+                        )}
                         {col.sortField && sortBy === col.sortField && (
                           sortOrder === 'desc'
                             ? <ChevronDown className="h-3 w-3 inline ml-0.5" />

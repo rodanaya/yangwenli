@@ -18,6 +18,10 @@ import { phiApi, scorecardApi } from '@/api/client'
 import { SECTORS } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
+import { HallazgoStat } from '@/components/ui/HallazgoStat'
+import { FuentePill } from '@/components/ui/FuentePill'
+import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -2246,6 +2250,30 @@ function ReportCard() {
           <p className="text-base" style={{ color: 'var(--color-text-muted)' }}>
             2026 · 3.1M contratos · Sistema de 10 niveles
           </p>
+        </div>
+
+        {/* Editorial masthead */}
+        <EditorialHeadline
+          section="AN&Aacute;LISIS DE DESEMPE&Ntilde;O"
+          headline="Tarjeta de Reporte"
+          subtitle="Evaluaci&oacute;n institucional de contrataciones federales 2002–2025"
+          className="mb-6"
+        />
+
+        {/* Key stats row */}
+        <div className="flex flex-wrap gap-8 mb-6">
+          <HallazgoStat value="847" label="instituciones evaluadas" color="border-blue-500" />
+          <HallazgoStat value="9.0%" label="tasa de alto riesgo &middot; v6.4" color="border-red-500" />
+          <HallazgoStat value="&#8369;6.8T" label="MXN bajo an&aacute;lisis" color="border-amber-500" />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 mb-8">
+          <FuentePill source="COMPRANET" count={3051294} countLabel="contratos" verified={true} />
+          <MetodologiaTooltip
+            title="&iquest;C&oacute;mo se calcula el grado?"
+            body="El grado institucional se basa en la tasa de contratos de alto riesgo, concentraci&oacute;n de proveedores y uso de procedimientos directos vs. competitivos. Escala A-F."
+            link="/methodology"
+          />
         </div>
 
         {/* Tab bar */}
