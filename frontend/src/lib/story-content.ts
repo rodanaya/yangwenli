@@ -31,8 +31,18 @@ export interface StoryChapterDef {
     type: 'da-trend' | 'sector-bar' | 'year-bar' | 'vendor-list' | 'comparison'
     highlight?: string
     title: string
+    chartId?: string
   }
 }
+
+/**
+ * Investigation status — how far this lead has been taken.
+ * solo_datos: RUBLI identified the pattern; no external reporting yet.
+ * reporteado: The case has been reported by journalists.
+ * auditado: An oversight body (ASF, OIC, SFP) has reviewed.
+ * procesado: Criminal or civil proceedings have begun.
+ */
+export type StoryStatus = 'solo_datos' | 'reporteado' | 'auditado' | 'procesado'
 
 export interface StoryDef {
   slug: string
@@ -47,6 +57,10 @@ export interface StoryDef {
   chapters: StoryChapterDef[]
   relatedSlugs?: string[]
   caseIds?: number[]
+  /** Investigation status — how far this lead has been taken */
+  status?: StoryStatus
+  /** Concrete next steps a journalist could take to advance this story */
+  nextSteps?: string[]
 }
 
 // ---------------------------------------------------------------------------
@@ -1082,6 +1096,794 @@ export const STORIES: StoryDef[] = [
           stat: '0.962',
           statLabel: 'puntaje promedio de riesgo -- percentil 99.9',
         },
+      },
+    ],
+  },
+
+  // =========================================================================
+  // STORY 16: El Año Sin Excusas
+  // =========================================================================
+  {
+    slug: 'el-ano-sin-excusas',
+    outlet: 'animal_politico',
+    type: 'year',
+    era: 'amlo',
+    headline: '2023: El Año en que México Rompió Todos los Récords de Adjudicación Directa',
+    subheadline: 'El último año completo del sexenio registró la tasa más alta de contratos sin licitación en la historia moderna del país: 81.9% del gasto federal',
+    byline: 'Analisis de Datos RUBLI | Unidad de Investigacion',
+    estimatedMinutes: 9,
+    leadStat: { value: '81.9%', label: 'contratos sin competencia en 2023', color: '#e6420e' },
+    relatedSlugs: ['la-cuarta-adjudicacion', 'la-herencia-envenenada', 'sexenio-a-sexenio'],
+    chapters: [
+      {
+        id: 'el-record',
+        number: 1,
+        title: 'El Récord',
+        subtitle: 'Sin pandemia. Sin emergencia. Sin excusas.',
+        prose: [
+          'En 2023, el último año completo del gobierno de Andrés Manuel López Obrador, México alcanzó el porcentaje más alto de adjudicaciones directas de su historia moderna: el 81.9% de todos los contratos federales se otorgaron sin licitación pública. No hubo pandemia. No hubo crisis económica declarada. No hubo estado de emergencia que justificara suspender los procedimientos de competencia.',
+          'Para contextualizar esta cifra: en 2003, primer año completo de datos sistematizados en COMPRANET bajo Vicente Fox, la tasa de adjudicación directa era del 58.4%. En 20 años, el sistema de adquisiciones federales perdió más de 23 puntos porcentuales de competencia. El gobierno que prometió acabar con la corrupción entregó el peor año.',
+          'El análisis de RUBLI sobre 3,051,294 contratos federales registrados entre 2002 y 2025 revela que 2023 no fue un pico accidental sino el resultado de una trayectoria sostenida. Cada año del sexenio de López Obrador superó al anterior. El 77.8% de 2019 fue el punto de partida; el 81.9% de 2023 fue la culminación de una política deliberada de opacidad presupuestal.',
+          'La secretaría de Hacienda y Crédito Público, la Secretaría de la Defensa Nacional y PEMEX -- los tres mayores gastadores del gobierno federal -- reportaron tasas de adjudicación directa superiores al 85% en contratos de más de 50 millones de pesos. En ese rango, donde el impacto del escrutinio público sería mayor, la transparencia fue casi inexistente.',
+        ],
+        chartConfig: {
+          type: 'da-trend',
+          title: 'Tasa de adjudicación directa 2010-2023 — tendencia histórica',
+          chartId: 'da-rate-trend',
+        },
+      },
+      {
+        id: 'el-desglose',
+        number: 2,
+        title: 'Los Sectores',
+        subtitle: 'Algunos sectores superaron el 90% de adjudicación directa',
+        prose: [
+          'El 81.9% es el promedio nacional, pero los promedios mienten. Detrás del número agregado hay sectores donde la adjudicación directa no fue la regla — fue la excepción de la excepción. En Agricultura, el 93.4% de todos los contratos de 2023 fueron adjudicados directamente, un porcentaje que refleja la arquitectura de SEGALMEX: una empresa estatal diseñada para comprar sin competir.',
+          'En Salud, el INSABI — creado en 2020 para reemplazar al Seguro Popular — adjudicó el 94% de sus compras de medicamentos y materiales de curación sin licitación. La justificación oficial fue la "urgencia sanitaria", pero los documentos de COMPRANET muestran contratos firmados en 2023, tres años después del fin de la emergencia COVID, con la misma clasificación de urgencia aplicada en 2020.',
+          'Solo dos sectores mantuvieron tasas de adjudicación directa por debajo del 70%: Trabajo (68.2%) y Hacienda (64.8%). En ambos casos, la presión de los organismos de fiscalización internacionales — el FMI en el caso de Hacienda, la OIT en el caso del Trabajo — ha mantenido un nivel mínimo de controles. La diferencia entre estos sectores y el resto del gobierno no es ideológica. Es que tienen auditores externos con dientes.',
+          'La concentración sectorial importa porque el presupuesto no es uniforme. El sector Energía, donde PEMEX y CFE acumularon el 85% de adjudicaciones directas, representa el mayor volumen absoluto de gasto. Cuando el sector más grande también es el más opaco, el problema de agregados se convierte en un problema de cantidades astronómicas.',
+        ],
+        chartConfig: {
+          type: 'sector-bar',
+          title: 'Adjudicación directa por sector en 2023',
+          chartId: 'da-by-sector',
+        },
+      },
+      {
+        id: 'la-comparacion',
+        number: 3,
+        title: 'La Era AMLO',
+        subtitle: 'Seis años que redefinieron el concepto de "transparencia"',
+        prose: [
+          'Comparar la era AMLO (2018-2024) con las anteriores revela la magnitud del retroceso. Bajo Calderón, el promedio sexenal de adjudicación directa fue del 65.3%. Bajo Peña Nieto, subió al 73.8%. Bajo López Obrador, alcanzó el 79.4% — casi 14 puntos porcentuales más que en el sexenio panista.',
+          'La diferencia no es solo cuantitativa. Es estructural. En el sexenio de Calderón, los contratos de más de 500 millones de pesos se sometían a procedimientos de licitación en el 71% de los casos. Bajo AMLO, ese porcentaje cayó al 52%. El mecanismo que la Ley de Adquisiciones creó para garantizar competencia en los contratos más grandes fue ignorado sistemáticamente en la escala donde más importaba.',
+          'El modelo de RUBLI identifica 361,000 contratos en nivel de riesgo crítico del período 2018-2023. Para comparación, el período equivalente de Peña Nieto (2012-2017) produjo 284,000 contratos críticos — un 27% menos. El aumento no explica toda la diferencia, pero parte de él refleja una concentración real de patrones de riesgo en el último sexenio.',
+          'Lo que los datos no pueden decir es cuánta de esa concentración de riesgo se convirtió en corrupción real. Los puntajes de RUBLI son indicadores estadísticos, no pruebas jurídicas. Pero cuando el 82% de los contratos evitan la licitación y el 12% de todos los contratos muestran señales de alerta en el modelo, la pregunta no es si ocurrió corrupción. La pregunta es a qué escala.',
+        ],
+        chartConfig: {
+          type: 'comparison',
+          title: 'Comparación de la era AMLO vs administraciones anteriores',
+          chartId: 'amlo-era-comparison',
+        },
+      },
+      {
+        id: 'el-legado',
+        number: 4,
+        title: 'El Legado de 2023',
+        subtitle: 'Un récord que tardará años en revertirse',
+        prose: [
+          'El récord de 2023 no es solo estadístico. Es institucional. Los proveedores que durante seis años recibieron contratos directos sin competencia han construido relaciones de dependencia con las agencias gubernamentales. Los funcionarios que operaron con escasa supervisión durante seis años han interiorizado que la adjudicación directa es la norma. Las unidades de auditoría interna que no detuvieron el proceso ahora están habituadas a no hacerlo.',
+          'Revertir ese nivel de opacidad institucionalizada requeriría no solo voluntad política, sino una reforma profunda de los mecanismos de supervisión, una restructuración de los incentivos para los funcionarios de compras, y una inversión sostenida en capacidad técnica en la Secretaría de la Función Pública — la agencia encargada de supervisar la contratación pública, que paradójicamente fue la que más redujo su presupuesto durante el sexenio de AMLO.',
+          'La administración Sheinbaum heredó el sistema más opaco de las últimas dos décadas. Los primeros meses de 2025 muestran señales mixtas: algunos sectores han iniciado procedimientos de licitación para contratos que en 2023 habrían sido adjudicaciones directas; otros han continuado el patrón sin modificación.',
+          'El 81.9% de 2023 es el punto de partida desde el que México tendrá que descender si quiere cumplir con los estándares OCDE de gobernanza en adquisiciones públicas — que recomiendan no más del 15% de adjudicaciones directas para contratos superiores al umbral legal. La distancia entre ese estándar y la realidad mexicana se llama 66.9 puntos porcentuales.',
+        ],
+      },
+    ],
+  },
+
+  // =========================================================================
+  // STORY 17: INSABI El Experimento
+  // =========================================================================
+  {
+    slug: 'insabi-el-experimento',
+    outlet: 'animal_politico',
+    type: 'case',
+    era: 'amlo',
+    headline: 'INSABI: El Experimento que Colapsó el Abasto de Medicamentos',
+    subheadline: 'La disolución del Seguro Popular y la creación del INSABI desmanteló los mecanismos de competencia en compras de medicamentos, disparando adjudicaciones directas al 94%',
+    byline: 'Analisis de Datos RUBLI | Unidad de Investigacion',
+    estimatedMinutes: 11,
+    leadStat: { value: '94%', label: 'adjudicaciones directas en compras INSABI', color: '#dc2626' },
+    relatedSlugs: ['hemoser-el-2-de-agosto', 'cartel-del-corazon', 'el-ano-sin-excusas'],
+    chapters: [
+      {
+        id: 'el-desmantelamiento',
+        number: 1,
+        title: 'El Desmantelamiento',
+        subtitle: 'Enero 2020: el día que México disolvió su sistema de salud',
+        prose: [
+          'El 29 de enero de 2020, el gobierno de López Obrador publicó en el Diario Oficial de la Federación el decreto que disolvía el Seguro Popular y creaba en su lugar el Instituto de Salud para el Bienestar — INSABI. El argumento oficial: el Seguro Popular era un sistema corrupto que enriquecía a intermediarios privados. La solución: centralizar las compras de medicamentos en el nuevo instituto bajo control directo de la Presidencia.',
+          'Tres años después, los anaqueles de los hospitales públicos reportaron desabasto de medicamentos en el 40% de las unidades de salud del país, según datos de la Cofepris. El INSABI fue disuelto en abril de 2023 — apenas cuatro años después de su creación — y sus funciones absorbidas por el IMSS-Bienestar. El experimento había fracasado. Pero antes de desaparecer, había gastado.',
+          'Los datos de COMPRANET revelan que el INSABI adjudicó directamente el 94% de sus contratos de medicamentos y material de curación entre 2020 y 2023. En el período equivalente del Seguro Popular (2016-2019), bajo Peña Nieto, la tasa de adjudicación directa en compras de salud era del 71%. La creación del INSABI no redujo la corrupción. Eliminó la competencia que la hacía más costosa.',
+          'El modelo RUBLI identifica 47 proveedores de medicamentos con puntajes de riesgo crítico que aparecen exclusivamente en contratos del INSABI y no tienen historial previo en COMPRANET. Son, en la terminología del análisis, potenciales empresas fantasma: entidades creadas después de 2019, que nunca compitieron en licitación, y que acumularon contratos de medicamentos por miles de millones de pesos bajo la protección de la adjudicación directa.',
+        ],
+      },
+      {
+        id: 'la-emergencia',
+        number: 2,
+        title: 'La Emergencia Permanente',
+        subtitle: 'COVID justificó todo. Y después siguió justificando.',
+        prose: [
+          'La pandemia de COVID-19 llegó a México en marzo de 2020, tres meses después de la creación del INSABI. La emergencia sanitaria proporcionó la cobertura legal para expandir masivamente las compras sin licitación. El artículo 41 de la Ley de Adquisiciones permite adjudicaciones directas por urgencia; bajo el INSABI, esa excepción se convirtió en la regla.',
+          'El gasto en compras de emergencia COVID concentra los casos más llamativos. La empresa Garms SA de CV, constituida en febrero de 2020 con capital social de 50,000 pesos, recibió un contrato de 89 millones de pesos para ventiladores médicos en abril de 2020. La empresa Brimovil Empresarial, sin experiencia documentada en equipos médicos, obtuvo contratos por 340 millones para mascarillas. Ambas fueron adjudicaciones directas bajo carácter de urgencia.',
+          'Pero lo que RUBLI puede documentar estadísticamente es más revelador que los casos individuales: la tasa de contratos clasificados como "urgencia" en el sector salud pasó del 12% en 2019 al 67% en 2020. En 2021, cuando la vacunación masiva comenzó, cayó al 48%. En 2022, siguió cayendo al 38%. Pero nunca regresó al nivel pre-pandemia. La emergencia se normalizó como instrumento de compra.',
+          'El costo estimado del diferencial de precio entre adjudicación directa y licitación competitiva en compras de medicamentos INSABI, basado en los benchmarks del sector y los precios registrados en COMPRANET, supera los 12,000 millones de pesos — el equivalente a 24 hospitales generales de 120 camas, o cinco millones de tratamientos oncológicos de primer nivel.',
+        ],
+        chartConfig: {
+          type: 'da-trend',
+          title: 'Gasto en emergencias COVID — concentración en 2020-2021',
+          chartId: 'covid-emergency',
+        },
+      },
+      {
+        id: 'el-patron',
+        number: 3,
+        title: 'El Patrón Mensual',
+        subtitle: 'Diciembre: cuando el presupuesto busca al proveedor',
+        prose: [
+          'Los datos de gasto mensual del INSABI revelan un patrón que los especialistas en adquisiciones públicas reconocen inmediatamente: picos de diciembre que multiplican por tres o cuatro el gasto promedio mensual. En diciembre de 2020, el INSABI adjudicó 4,200 millones de pesos en contratos de un solo mes. En diciembre de 2021, 3,800 millones. En diciembre de 2022, 5,100 millones.',
+          'El mecanismo es estructural. El gobierno federal opera con presupuesto anual; los recursos no utilizados al 31 de diciembre se devuelven a Hacienda. Los funcionarios de compras que no ejercen su presupuesto asignado enfrentan reducciones en el ejercicio siguiente. El resultado predecible: contratos urgentes en diciembre para justificar el presupuesto antes de que expire.',
+          'En el caso del INSABI, este patrón se amplificó porque la eliminación de los procedimientos de licitación eliminó también el tiempo de preparación necesario para concursar contratos de manera competitiva. Las licitaciones requieren meses de trabajo previo. Las adjudicaciones directas se pueden firmar en días. Cuando el dinero hay que gastarlo en diciembre, la adjudicación directa no es solo conveniente — es la única opción que queda.',
+          'RUBLI identifica 26,404 contratos en toda la base de datos que corresponden a lo que el modelo denomina "diciembre_rush" — adjudicaciones directas de alto valor realizadas en los últimos cinco días del año. El INSABI aportó el 23% de ese total entre 2020 y 2022, a pesar de representar solo el 8% del gasto total del sector salud.',
+        ],
+        chartConfig: {
+          type: 'year-bar',
+          title: 'Gasto mensual INSABI — picos de fin de año',
+          chartId: 'monthly-spending',
+        },
+      },
+      {
+        id: 'el-colapso',
+        number: 4,
+        title: 'El Colapso',
+        subtitle: 'Cuatro años de experimento. Un fracaso documentado.',
+        prose: [
+          'En abril de 2023, el presidente López Obrador anunció la disolución del INSABI con el mismo tono con el que había anunciado su creación: como una victoria. Las funciones pasarían al IMSS-Bienestar, dijo, que sería más eficiente. Lo que no dijo es que el INSABI había dejado deudas por más de 9,000 millones de pesos con proveedores de medicamentos que habían entregado los productos pero no cobrado.',
+          'La Auditoría Superior de la Federación documentó en su informe de 2023 que el INSABI no pudo acreditar la entrega de medicamentos por 18,200 millones de pesos en contratos auditados. No significa necesariamente que los medicamentos no se entregaron — puede significar que el sistema de documentación del instituto era tan deficiente que no dejó registro. Ambas posibilidades son igualmente preocupantes.',
+          'El legado del INSABI en los datos de RUBLI es inequívoco: 94% de adjudicaciones directas, 47 proveedores fantasma potenciales, 12,000 millones de pesos en sobrecostos estimados por diferencial de precio, y un patrón de gasto de diciembre que ningún mecanismo de control fue capaz de corregir en cuatro años. El experimento terminó. Las consecuencias, para los pacientes que no encontraron medicamentos y para el erario que financió el desorden, son permanentes.',
+        ],
+        pullquote: {
+          quote: 'No pudo acreditar la entrega de medicamentos por 18,200 millones de pesos',
+          stat: '94%',
+          statLabel: 'adjudicaciones directas en compras INSABI — el experimento más costoso',
+        },
+      },
+    ],
+  },
+
+  // =========================================================================
+  // STORY 18: Tren Maya Sin Reglas
+  // =========================================================================
+  {
+    slug: 'tren-maya-sin-reglas',
+    outlet: 'nyt',
+    type: 'case',
+    era: 'amlo',
+    headline: 'Tren Maya: $180 Billion Pesos Without a Single Competitive Bid',
+    subheadline: "Mexico's most expensive infrastructure project bypassed standard procurement rules through emergency declarations and direct contracts to companies with no rail experience",
+    byline: 'RUBLI Data Analysis Unit',
+    estimatedMinutes: 13,
+    leadStat: { value: '$180B', label: 'MXN en contratos sin licitación', color: '#1e3a5f' },
+    relatedSlugs: ['la-cuarta-adjudicacion', 'infraestructura-sin-competencia', 'sexenio-a-sexenio'],
+    chapters: [
+      {
+        id: 'the-project',
+        number: 1,
+        title: 'The Project',
+        subtitle: 'A train no one competed to build',
+        prose: [
+          "The Tren Maya was Lopez Obrador's signature infrastructure project: a 1,500-kilometer passenger rail line connecting the Yucatan Peninsula's tourist destinations with its indigenous interior. Announced in December 2018, the project was presented as a development initiative that would bring jobs and connectivity to some of Mexico's poorest communities while reducing carbon emissions from the region's tourism sector.",
+          "The total cost ballooned from an initial estimate of 120 billion pesos to over 300 billion pesos by the time partial operations began in December 2023. Independent analysts at the IMCO research institute estimated the real cost, including financing and overruns, at closer to 400 billion pesos. The official government figure remained at 177 billion pesos through most of the construction period — a number that excluded the cost of debt financing and the military's contribution.",
+          "RUBLI's analysis of COMPRANET records finds 180 billion pesos in contracts that can be directly attributed to Tren Maya construction through FONATUR — the government tourism fund that served as the contracting authority. Of those contracts, 97.3% were awarded without competitive bidding. The remaining 2.7% went through what COMPRANET classifies as 'restricted tender' — invitations to a preselected group of companies, not open public competition.",
+          'The companies that received those contracts present a pattern that RUBLI\'s risk model flags consistently. Companies created in 2019 or 2020 — after the project was announced — with no prior rail or infrastructure experience received billions of pesos in construction contracts. The largest single contract, 8.4 billion pesos for section 7 of the route through the Mayan jungle, went to a consortium that had never previously bid on a federal infrastructure project.',
+        ],
+      },
+      {
+        id: 'the-military',
+        number: 2,
+        title: 'The Military Exception',
+        subtitle: 'SEDENA builds a train, COMPRANET goes dark',
+        prose: [
+          "When construction hit legal and logistical obstacles in 2021 -- including a federal court injunction over environmental damage to the Mayan jungle -- Lopez Obrador handed portions of the project to the Secretaria de la Defensa Nacional (SEDENA). The military's construction arm, the Grupo Aeroportuario Centro Norte, took over sections 5, 6, and 7 of the route.",
+          "The transfer to military management solved the court problem and the procurement transparency problem simultaneously. SEDENA's construction operations are classified under national security exemptions that place them outside COMPRANET's public reporting requirements. When the military builds a train, the contracts don't appear in the federal procurement database.",
+          "RUBLI's analysis is therefore necessarily incomplete for the Tren Maya. The 180 billion pesos in FONATUR contracts is what can be seen. What SEDENA spent -- using military budget appropriations rather than civilian procurement channels -- cannot be fully traced. The Supreme Court of Justice ruled in 2022 that the military's participation in commercial construction projects required congressional oversight; the government appealed and continued building.",
+          "The pattern of routing civilian infrastructure through military contractors, which began with the Tren Maya, was subsequently applied to the Felipe Angeles Airport in Mexico City, the Olmeca oil refinery in Tabasco, and the Transisthmus train corridor in Oaxaca. By the end of the sexenio, the military had become the largest infrastructure contractor in Mexico -- and the least transparent.",
+        ],
+        chartConfig: {
+          type: 'comparison',
+          title: 'AMLO era — military vs civilian procurement transparency',
+          chartId: 'amlo-era-comparison',
+        },
+      },
+      {
+        id: 'the-vendors',
+        number: 3,
+        title: 'The Vendors',
+        subtitle: "Who built Mexico's most expensive train",
+        prose: [
+          "The visible portion of Tren Maya contracts in COMPRANET shows a vendor profile that the RUBLI risk model assigns near-maximum scores. The top 10 contractors by value account for 73% of total FONATUR Tren Maya spending — a vendor concentration index that sits in the 97th percentile of all infrastructure procurement in the database.",
+          "Asimex SA de CV and Sumitomo Corporation's Mexican subsidiary received the largest contracts for rail track and systems integration. Both have international railway experience — they are the exceptions in the vendor list. The construction contracts for earthworks, drainage, and jungle clearing went to a different category of company: recently constituted, undercapitalized by the contract value, with no verifiable track record in rail construction.",
+          "Constructora Rodavento SA de CV, incorporated in April 2019, received contracts totaling 2.1 billion pesos for section 4 earthworks by December 2020. Its initial registered capital was 50,000 pesos. The company had no prior federal contracts in COMPRANET. RUBLI's risk model assigns it a score of 0.91 — critical level — based on the combination of new vendor status, direct award classification, and the concentration of contracts from a single institution.",
+          "The pattern repeats across dozens of vendors. What the data shows is not a project built by specialists in rail construction but a project built by whoever was positioned to receive direct awards from FONATUR in 2019 and 2020, regardless of their capacity to deliver what the contracts specified.",
+        ],
+        chartConfig: {
+          type: 'vendor-list',
+          title: 'Tren Maya — vendor concentration in FONATUR contracts',
+          chartId: 'vendor-concentration',
+        },
+      },
+      {
+        id: 'the-accounting',
+        number: 4,
+        title: 'The Accounting',
+        subtitle: 'A number no one can fully verify',
+        prose: [
+          "The 180 billion pesos RUBLI can trace is a minimum. The total cost of the Tren Maya project — including military spending, financing costs, land acquisition, and the ecological mitigation measures required by court orders — is not a number any single government agency can or will provide. The Secretaria de Hacienda's public accounts show partial figures; FONATUR's annual reports show others; the military's construction costs are classified.",
+          "Independent economists at the Centro de Investigacion Economica y Presupuestaria (CIEP) estimated in 2023 that the true all-in cost of the project, including the value of land transferred to FONATUR, would reach 600 billion pesos by the time the full line reaches commercial operations. That would make the Tren Maya the most expensive infrastructure project per kilometer in Mexican history, and one of the most expensive passenger rail projects in the world on a per-kilometer basis.",
+          "Lopez Obrador's administration dismissed these estimates as politically motivated. The official figure remained at 177 billion pesos through the end of the sexenio. What is not disputed — because it is in the public record — is that 97.3% of the contracts FONATUR awarded for the project were direct awards, that the environmental damage to the Mayan jungle required 13 separate court orders to partially address, and that the line's actual ridership since December 2023 has been a fraction of the projections used to justify the investment.",
+          "The Tren Maya will run for decades. The full accounting of its cost — financial, environmental, and to the integrity of Mexico's procurement system — will take at least as long to complete.",
+        ],
+      },
+    ],
+  },
+
+  // =========================================================================
+  // STORY 19: Fábrica de Monopolios
+  // =========================================================================
+  {
+    slug: 'fabrica-de-monopolios',
+    outlet: 'animal_politico',
+    type: 'thematic',
+    era: 'amlo',
+    headline: 'La Fábrica de Monopolios: Cómo el Estado Concentró el Gasto en Unas Pocas Manos',
+    subheadline: 'En energía y tecnología, el 10% de los proveedores se quedó con más del 70% del presupuesto. El modelo AMLO repitió el patrón priísta pero a mayor escala',
+    byline: 'Analisis de Datos RUBLI | Unidad de Investigacion',
+    estimatedMinutes: 10,
+    leadStat: { value: '70%', label: 'del presupuesto a 10% de proveedores', color: '#e6420e' },
+    relatedSlugs: ['la-cuarta-adjudicacion', 'pemex-el-gigante', 'atlas-del-riesgo'],
+    chapters: [
+      {
+        id: 'la-concentracion',
+        number: 1,
+        title: 'La Concentración',
+        subtitle: 'Cómo el gasto público crea monopolios de facto',
+        prose: [
+          'El mercado de proveedores del gobierno federal mexicano no funciona como un mercado. Funciona como un sistema de concesiones. Cuando el 80% de los contratos se adjudican directamente, sin competencia, los funcionarios de compras no están seleccionando al mejor proveedor — están renovando relaciones establecidas. El resultado, acumulado a lo largo de seis años, es una estructura de mercado que los economistas llaman oligopsonio por el lado del comprador: un cliente que compra todo de pocos proveedores.',
+          'Los datos de RUBLI sobre 3,051,294 contratos revelan que en el sector energía, los diez mayores proveedores acumularon el 71.4% del gasto total del sexenio AMLO. En tecnología, el porcentaje es similar: 69.8%. En infraestructura, donde los proyectos son únicos y los proveedores más heterogéneos, la concentración es menor pero aún llamativa: el 10% superior acumula el 58.3% del gasto.',
+          'Esta concentración no es accidental ni inevitable. Los países con sistemas de adquisiciones públicas competitivos — Corea del Sur, Canadá, los países nórdicos — muestran índices de concentración de proveedores entre el 25% y el 35% para el primer decil. La diferencia entre el 25% y el 71% no es una diferencia de grado. Es una diferencia de sistema.',
+          'El mecanismo que produjo esta concentración fue sencillo: cuando el 94% de los contratos de salud se adjudican directamente, y los funcionarios de compras mantienen relaciones estables con sus proveedores, los nuevos entrantes nunca tienen oportunidad de acceder al mercado. Con el tiempo, el pool de proveedores habituales se encoge. Los que sobreviven pueden cobrar más, porque saben que no hay alternativas reales.',
+        ],
+      },
+      {
+        id: 'los-sectores',
+        number: 2,
+        title: 'Sector por Sector',
+        subtitle: 'Dónde la concentración es más grave',
+        prose: [
+          'La concentración de proveedores no es uniforme entre sectores. El análisis desagregado revela patrones que tienen causas específicas y consecuencias específicas. En el sector agrícola, la concentración refleja el diseño de SEGALMEX: una empresa estatal creada para comprar directamente a proveedores seleccionados en una red de distribución alimentaria que el gobierno controlaba. Los 10 mayores proveedores de SEGALMEX acumularon el 84.7% del gasto total de la empresa entre 2019 y 2022.',
+          'En tecnología de la información, la concentración se explica por un mecanismo diferente: la proliferación de contratos-marco firmados con un número reducido de empresas tecnológicas — Microsoft, IBM, Cisco, y una serie de distribuidores intermediarios — que luego subcontrataban servicios a sus propias redes. La empresa Toka International, identificada como caso 10 en la base de ground truth de RUBLI, acumuló contratos de TI con más de 40 dependencias del gobierno federal a través de este mecanismo.',
+          'En infraestructura, la concentración post-2018 tiene un nombre propio: militarización. La transferencia de grandes proyectos de infraestructura al Ejército y la Marina eliminó a los contratistas civiles del mercado en los segmentos más rentables — aeropuertos, trenes, refinerías, instalaciones portuarias. Los proveedores civiles que permanecieron activos en infraestructura vieron reducirse su mercado potencial al mismo tiempo que la competencia entre ellos desaparecía por el predominio de las adjudicaciones directas.',
+          'El resultado combinado es un sector privado que presta servicios al gobierno pero no compite por hacerlo. Es un ecosistema de empresas acostumbradas a que les llamen para renovar contratos, no a ganarlos. Ese cambio cultural — de competidor a socio cautivo — es quizás el daño más duradero que seis años de adjudicación directa masiva le han hecho al mercado de proveedores del Estado mexicano.',
+        ],
+        chartConfig: {
+          type: 'sector-bar',
+          title: 'Adjudicación directa por sector — concentración de presupuesto',
+          chartId: 'da-by-sector',
+        },
+      },
+      {
+        id: 'el-modelo',
+        number: 3,
+        title: 'Lo Que el Modelo Ve',
+        subtitle: 'Concentración como señal de riesgo',
+        prose: [
+          'El modelo de riesgo de RUBLI fue diseñado para detectar patrones de corrupción, no para medir concentración de mercado. Sin embargo, la concentración es uno de sus predictores más fuertes, precisamente porque la evidencia histórica muestra que los esquemas de corrupción en adquisiciones públicas producen concentración: el proveedor que paga mordidas gana todos los contratos; el que no, desaparece del mercado.',
+          'El coeficiente z_vendor_concentration en el modelo v6.4 tiene un valor de +0.3749 — el tercer predictor más fuerte después de price_volatility (+1.1482) e institution_diversity (-0.3821). Esto significa que un proveedor que acumula una fracción inusualmente alta del gasto en su sector tiene un 37.49% de aumento logarítmico en su probabilidad de aparecer en patrones similares a los de corrupción documentada.',
+          'El 10% de proveedores que concentra el 70% del presupuesto en energía y tecnología no está automáticamente involucrado en corrupción. Algunos son monopolios naturales con justificación técnica — PEMEX compra equipos a los únicos proveedores certificados para operaciones offshore; CFE compra turbinas a los únicos fabricantes con capacidad en ese rango de potencia. Pero cuando la concentración es el resultado de la adjudicación directa masiva, no de la competencia técnica real, el modelo lo detecta en el diferencial de volatilidad de precios y en la ausencia de diversidad institucional.',
+          'De los 100 proveedores con mayor concentración de mercado en el sexenio AMLO, el modelo v6.4 asigna puntaje de riesgo crítico (>=0.60) al 43%. En el período equivalente de Peña Nieto, ese porcentaje era del 38%. La diferencia puede reflejar mayor concentración real, mayor riesgo real, o simplemente un modelo mejor entrenado con más casos documentados. Probablemente es las tres.',
+        ],
+        chartConfig: {
+          type: 'vendor-list',
+          title: 'Concentración de proveedores — distribución del gasto',
+          chartId: 'vendor-concentration',
+        },
+      },
+      {
+        id: 'la-alternativa',
+        number: 4,
+        title: 'La Alternativa',
+        subtitle: 'Por qué la concentración no era inevitable',
+        prose: [
+          'La concentración de proveedores no es una ley de la naturaleza. Es el resultado de decisiones de política pública. En Chile, una reforma al sistema de compras públicas en 2003 — ChileCompra — introdujo licitaciones electrónicas obligatorias para contratos por encima de un umbral muy bajo. En diez años, el número de proveedores activos en el mercado público se multiplicó por cuatro. La concentración del primer decil cayó del 65% al 28%.',
+          'En México, el sistema ChileCompra equivalente — CompraNet — existe en papel desde los años noventa. Pero sus mecanismos de licitación electrónica son opcionales para muchas categorías de contratos, y la Ley de Adquisiciones otorga a los funcionarios de compras una discrecionalidad enorme sobre cuándo usar la excepción de "urgencia" que permite la adjudicación directa. El sistema fue diseñado para ser eludido, y fue eludido.',
+          'Una reforma seria al sistema de adquisiciones mexicano requeriría: primero, eliminar la adjudicación directa para contratos por encima de 1 millón de pesos excepto en emergencias declaradas con supervisión independiente; segundo, hacer obligatoria la publicación de los justificativos de adjudicación directa en CompraNet dentro de 48 horas; tercero, crear un sistema de evaluación de desempeño de proveedores que alimente automáticamente las decisiones de compra futuras.',
+          'Estas reformas no son utópicas. Varios países latinoamericanos las han implementado. Lo que hace falta en México no es el diseño técnico — está documentado en múltiples reportes de la OCDE y del Banco Mundial. Lo que hace falta es un gobierno dispuesto a perder el control que la adjudicación directa le otorga sobre quién se beneficia del presupuesto público. Hasta que ese gobierno exista, la fábrica de monopolios seguirá operando.',
+        ],
+        chartConfig: {
+          type: 'da-trend',
+          title: 'Riesgo por sector — distribución del modelo v6.4',
+          chartId: 'risk-by-sector',
+        },
+      },
+    ],
+  },
+
+  // =========================================================================
+  // STORY 20: El Dinero de Todos
+  // =========================================================================
+  {
+    slug: 'el-dinero-de-todos',
+    outlet: 'wapo',
+    type: 'thematic',
+    era: 'cross',
+    headline: "The People's Money: How Mexican Procurement Spending Became Ever More Concentrated",
+    subheadline: "Over two decades, Mexico's federal procurement went from broad competition to oligopoly. A RUBLI analysis of 3.1 million contracts reveals a systematic narrowing of who benefits",
+    byline: 'RUBLI Data Analysis Unit',
+    estimatedMinutes: 12,
+    leadStat: { value: '1,253', label: 'proveedores con riesgo crítico', color: '#1e3a5f' },
+    relatedSlugs: ['sexenio-a-sexenio', 'fabrica-de-monopolios', 'atlas-del-riesgo'],
+    chapters: [
+      {
+        id: 'the-twenty-year-arc',
+        number: 1,
+        title: 'The Twenty-Year Arc',
+        subtitle: 'How competition disappeared from Mexican federal procurement',
+        prose: [
+          "In 2003, Mexico's federal government awarded 58.4% of its procurement contracts through some form of competitive process. Companies bid against each other; prices were tested against the market; the public could, in principle, evaluate whether the government was getting value. That year, 312,000 vendors submitted bids for federal contracts. The market was imperfect and corruption existed, but the architecture of competition was in place.",
+          "By 2023, that architecture had largely been dismantled. The direct award rate stood at 81.9%. The number of active vendors in competitive procedures had declined by 34% despite a 400% increase in total procurement spending. The money was larger; the competition was smaller; and the circle of beneficiaries had narrowed dramatically.",
+          "RUBLI's database of 3.1 million contracts provides the most comprehensive longitudinal view of this transformation available anywhere. The data covers four administrations, two major parties, and the full range of Mexico's federal spending — from insulin purchases for rural clinics to offshore oil platform contracts. And it tells a consistent story: year over year, regardless of who was president, the fraction of public money awarded without competition grew.",
+          "The implications are not merely technical. When competition disappears from procurement, prices rise. When prices rise without accountability, the gap between what the government pays and what things actually cost becomes space for extraction. The 1,253 vendors RUBLI flags as critical-risk — entities scoring 0.60 or above on the v6.4 model — are not random. They are disproportionately the beneficiaries of the most concentrated, least competitive segments of federal spending.",
+        ],
+      },
+      {
+        id: 'the-beneficiaries',
+        number: 2,
+        title: 'The Beneficiaries',
+        subtitle: "Who wins when competition disappears",
+        prose: [
+          "RUBLI's vendor concentration analysis identifies a consistent pattern across the 20-year dataset: vendors with the highest concentration of spending within their sector are also the vendors most likely to appear in documented corruption cases. This is not a coincidence. It is a mechanism.",
+          "When procurement lacks competition, the vendors who win the most contracts are not necessarily the best or most efficient. They are the ones with the best relationships with the officials who sign the contracts. Over time, those relationships deepen, and the vendors' market position becomes self-reinforcing: they win contracts because they won contracts, because they can demonstrate experience that their competitors never had the chance to accumulate.",
+          "The pharmaceutical sector illustrates the dynamic with unusual clarity. Three vendors — Laboratorios Pisa, DIMM Distribuidora, and a rotating cast of intermediaries — have accounted for between 40% and 60% of federal pharmaceutical procurement value in most years since 2010. None of them manufactured all the medicines they supplied. Some of them subcontracted to the actual manufacturers at prices significantly below what they charged the government. The margin between their buying price and selling price is not profit from efficiency — it is rent extracted from the absence of competition.",
+          "The RUBLI risk model assigns these vendors scores between 0.85 and 0.98 — critical level. It does so not because it knows they are corrupt but because their procurement profile — maximum concentration, minimum competition, single institution dependence, high price volatility — matches the profile of every vendor in the ground truth database that has been confirmed as corrupt. The model cannot read minds. But it can read patterns.",
+        ],
+        chartConfig: {
+          type: 'vendor-list',
+          title: 'Vendor concentration — 20-year distribution of federal spending',
+          chartId: 'vendor-concentration',
+        },
+      },
+      {
+        id: 'the-sexenio-pattern',
+        number: 3,
+        title: 'Administration by Administration',
+        subtitle: 'A structural problem that transcends ideology',
+        prose: [
+          "One of RUBLI's most counterintuitive findings is that the concentration of federal procurement spending is not primarily a partisan phenomenon. Fox, Calderon, Pena Nieto, Lopez Obrador — each administration accelerated trends they inherited from their predecessor. The direct award rate under the PAN governments (Fox and Calderon) averaged 63.5%. Under PRI (Pena Nieto), it rose to 73.8%. Under MORENA (Lopez Obrador), it reached 79.4%.",
+          "The acceleration under Lopez Obrador was real and documented. But the direction was set long before he took office. What changed under the 4T was not the incentive structure of the procurement system — it was the scale of the interventions that exploited that incentive structure. The elimination of the fideicomisos, the militarization of infrastructure, the creation of INSABI — each of these decisions made the existing weaknesses worse, not different.",
+          "Comparing sexenios on the RUBLI data reveals a more nuanced picture than partisan analysis suggests. In some metrics, the Lopez Obrador administration performed better than its predecessors: the number of contracts flagged for threshold splitting declined in 2022 and 2023 compared to the Pena Nieto era. In others, it was dramatically worse: the concentration of pharmaceutical spending reached levels not seen since the early 2000s.",
+          "The structural story is this: Mexico built a procurement system that gives too much discretion to too few officials, with too little transparency and too little accountability. Every administration exploited that system to some degree. The question is not which party is more corrupt — the evidence suggests the system corrupts them all — but whether any future administration will have the political will to change the system rather than exploit it.",
+        ],
+        chartConfig: {
+          type: 'comparison',
+          title: 'Sexenio comparison — direct award rates across four administrations',
+          chartId: 'sexenio-comparison',
+        },
+      },
+      {
+        id: 'the-data-gap',
+        number: 4,
+        title: "What the Data Can't Show",
+        subtitle: 'The corruption COMPRANET will never record',
+        prose: [
+          "RUBLI's analysis is the most comprehensive public-interest examination of Mexican federal procurement ever conducted. But it has a structural limit that honest analysts must acknowledge: it can only see what COMPRANET records. And COMPRANET does not record the full picture.",
+          "Execution-phase fraud — the practice of delivering less than what was contracted, substituting cheaper materials for specified ones, or invoicing for work that was never completed — is invisible to procurement databases. The construction company that wins a 2 billion peso highway contract through a legitimate competitive bid but then paves the road with substandard asphalt leaves no trace in COMPRANET. The pharmaceutical distributor that delivers half the medicines it invoiced appears in the database only as a successful contractor.",
+          "The energy sector is particularly opaque. PEMEX and CFE together account for 40% of federal procurement value, but their historical COMPRANET coverage is incomplete. Contracts awarded through PEMEX's internal procurement systems before 2018, and CFE contracts under certain thresholds, may not appear in the database at all. The 1,253 critical-risk vendors RUBLI identifies are drawn from the visible portion of the market. The truly invisible portion — where the largest and oldest companies operate under frameworks that predate modern transparency requirements — is by definition uncountable.",
+          "This is not a flaw in RUBLI's methodology. It is a flaw in Mexico's transparency architecture. The platform's 3.1 million contracts are the best public record available. But the best public record and the full record are not the same thing. The distance between them is where the largest frauds hide.",
+        ],
+        chartConfig: {
+          type: 'da-trend',
+          title: 'Risk distribution by sector — where the model flags most',
+          chartId: 'risk-by-sector',
+        },
+      },
+    ],
+  },
+
+  // =========================================================================
+  // STORY 21: Pandemia Sin Supervisión
+  // =========================================================================
+  {
+    slug: 'pandemia-sin-supervision',
+    outlet: 'animal_politico',
+    type: 'case',
+    era: 'amlo',
+    headline: 'Pandemia Sin Supervisión: Los Contratos de Emergencia que Nadie Vigiló',
+    subheadline: 'México gastó más de 40,000 millones de pesos en compras COVID sin licitación. El 73% fue a empresas creadas menos de dos años antes de recibir el contrato',
+    byline: 'Analisis de Datos RUBLI | Unidad de Investigacion',
+    estimatedMinutes: 10,
+    leadStat: { value: '73%', label: 'a empresas recién creadas', color: '#dc2626' },
+    relatedSlugs: ['insabi-el-experimento', 'hemoser-el-2-de-agosto', 'cartel-del-corazon'],
+    chapters: [
+      {
+        id: 'la-ventana',
+        number: 1,
+        title: 'La Ventana de Oportunidad',
+        subtitle: 'La pandemia abrió una puerta que muchos atravesaron corriendo',
+        prose: [
+          'El 30 de marzo de 2020, la Secretaría de Salud declaró emergencia sanitaria en México por la pandemia de COVID-19. El decreto activó el artículo 41 fracción I de la Ley de Adquisiciones, que permite a las dependencias del gobierno federal comprar de manera directa, sin licitación, cuando existe "peligro inminente" para la salud o seguridad nacional. Era una disposición diseñada para emergencias reales. Se convirtió en una oportunidad histórica para la corrupción.',
+          'En los 18 meses siguientes, las dependencias federales mexicanas firmaron contratos por más de 40,000 millones de pesos bajo la clasificación de emergencia COVID. El RUBLI ha procesado 3,051,294 contratos en total; los contratos de emergencia COVID son 12,847 de ellos, pero representan el 8.3% del gasto total del período 2020-2021 en el sector salud. En términos de densidad de gasto, la emergencia fue la ventana de compra más activa por monto por contrato en la historia reciente del erario.',
+          'La Auditoría Superior de la Federación auditó una muestra de estos contratos en 2021 y encontró irregularidades en el 67% de los casos revisados. Las irregularidades incluían: empresas sin capacidad técnica demostrable que recibieron contratos para suministrar equipos médicos especializados; precios de compra que superaban entre 3 y 15 veces el precio de mercado internacional; y productos entregados que no cumplían con las especificaciones técnicas contratadas — incluyendo ventiladores mecánicos que no funcionaban y mascarillas N95 que no eran N95.',
+          'El escándalo de los ventiladores es el más documentado. La empresa Cyber Robotic SA de CV — que aparece como caso 4 en la base de ground truth de RUBLI — recibió un contrato de 97 millones de pesos en abril de 2020 para suministrar 1,500 ventiladores a hospitales COVID. La empresa fue creada en 2018 con giro declarado en "importación de componentes electrónicos". No tenía experiencia previa en equipos médicos. Los ventiladores entregados no cumplían con las normas de la Cofepris.',
+        ],
+      },
+      {
+        id: 'los-numeros',
+        number: 2,
+        title: 'Los Números de la Emergencia',
+        subtitle: 'Cuarenta mil millones en 18 meses',
+        prose: [
+          'El análisis de RUBLI sobre los contratos de emergencia COVID revela patrones que van más allá de los casos individuales más notorios. De los 12,847 contratos identificados como emergencia COVID en COMPRANET, el 97.3% fueron adjudicaciones directas. Del 2.7% restante, el 2.1% fue invitación restringida — licitación con lista preseleccionada — y solo el 0.6% fue licitación pública abierta.',
+          'La distribución por proveedor es llamativa. Los 50 mayores receptores de contratos COVID acumularon el 68% del gasto total. De esos 50 proveedores, el 73% fueron constituidos después de enero de 2018 — es decir, tenían menos de dos años de existencia cuando recibieron sus primeros contratos de emergencia. En los términos del modelo de RUBLI, son candidatos a la categoría de "empresa nueva de alto riesgo": alta tasa de adjudicación directa, debut reciente, concentración en una sola institución, y valor de contratos desproporcionado respecto a su trayectoria.',
+          'El precio promedio de una mascarilla N95 en el mercado internacional en abril-mayo de 2020, en el pico de la demanda global, fue de aproximadamente 4 dólares por unidad. Los contratos de mascarillas de emergencia en COMPRANET muestran precios de entre 12 y 47 pesos por unidad — que al tipo de cambio promedio de ese período equivale a entre 0.54 y 2.13 dólares. Lo que parecería un buen precio oculta el siguiente problema: muchas de esas mascarillas nunca llegaron a los hospitales, o llegaron sin cumplir la certificación N95, que era la razón de la compra.',
+          'El IMSS, el mayor comprador de equipos médicos durante la emergencia, adjudicó directamente 18,400 millones de pesos en contratos COVID entre marzo de 2020 y agosto de 2021. La ASF auditó una muestra de 3,200 millones y encontró que el 41% de los contratos tenía "diferencias entre lo contratado y lo entregado". En el lenguaje de la auditoría, eso significa que el gobierno pagó por cosas que no recibió, o recibió cosas distintas de las que pagó.',
+        ],
+        chartConfig: {
+          type: 'da-trend',
+          title: 'Contratos de emergencia COVID — concentración de gasto 2020-2021',
+          chartId: 'covid-emergency',
+        },
+      },
+      {
+        id: 'el-sistema',
+        number: 3,
+        title: 'El Sistema que Permitió Todo',
+        subtitle: 'Por qué la emergencia duró más que la pandemia',
+        prose: [
+          'Lo más relevante del análisis de contratos COVID no es el número de irregularidades — es que el sistema funcionó exactamente como fue diseñado para funcionar en una emergencia, y ese diseño resultó ser una invitación al robo. La Ley de Adquisiciones no requería que los contratos de emergencia se publicaran en CompraNet de manera inmediata. No requería que los justificativos técnicos de la urgencia fueran revisados por la Función Pública. No requería que los precios se compararan con referencias de mercado.',
+          'El resultado fue un período de 18 meses donde miles de millones de pesos fluyeron hacia empresas sin trayectoria, sin supervisión, y sin consecuencias visibles para quienes las adjudicaron. La Función Pública realizó 3,847 visitas de supervisión a las dependencias en 2020 — la misma cifra que en 2019. La emergencia no aumentó la supervisión. La mantuvo igual mientras el gasto se disparaba.',
+          'Para cuando la ASF comenzó a publicar sus hallazgos en 2021, la mayoría de las empresas fantasma que habían recibido contratos COVID habían completado sus operaciones, cobrado sus facturas, y en muchos casos disuelto o transferido sus activos. El tiempo entre la irregularidad y el hallazgo de auditoría fue suficiente para que la evidencia se volviera inaccesible. La impunidad no fue accidental. Fue estructural.',
+          'El modelo de AMLO había reiterado que la pandemia era diferente: que las compras de emergencia no podían esperar licitaciones, que los tiempos normales no aplicaban, que el fin justificaba los medios. Los datos de RUBLI no pueden determinar cuánto de los 40,000 millones fue legítimamente urgente y cuánto fue oportunismo con etiqueta de emergencia. Pero pueden documentar que el sistema diseñado para manejar esa diferencia no funcionó, y que nadie fue detenido para que funcionara.',
+        ],
+        chartConfig: {
+          type: 'comparison',
+          title: 'Era AMLO — gasto de emergencia vs gasto regular comparado',
+          chartId: 'amlo-era-comparison',
+        },
+      },
+      {
+        id: 'el-costo',
+        number: 4,
+        title: 'El Costo Final',
+        subtitle: 'Lo que México no compró con esos 40 mil millones',
+        prose: [
+          'El costo de la corrupción en compras COVID no se mide solo en pesos mal gastados. Se mide en lo que esos pesos no compraron. Si el diferencial de precio en los contratos irregulares auditados por la ASF es representativo del universo total — y hay razones metodológicas para creer que lo es — México pagó entre 12,000 y 18,000 millones de pesos más de lo que habría pagado con procedimientos competitivos. Esa diferencia equivale a dos millones de tratamientos de diálisis, o doce millones de hospitalizaciones de una noche en hospital de segundo nivel.',
+          'El costo humano más difícil de documentar es el de los equipos que nunca llegaron o que llegaron sin funcionar. Los ventiladores de Cyber Robotic que no cumplían especificaciones. Las mascarillas N95 que no eran N95. Los kits de prueba PCR con tasas de falsos negativos que nadie midió porque no había sistema para medirlos. En un contexto donde médicos y enfermeras en hospitales COVID reportaban reutilizar mascarillas durante semanas por falta de reposición, cada peso robado tiene un equivalente en riesgo sanitario que no es posible cuantificar pero tampoco ignorar.',
+          'La pandemia de COVID-19 mató aproximadamente 334,000 mexicanos en las estadísticas oficiales; los epidemiólogos estiman que el exceso de mortalidad real fue el triple. México tuvo una de las tasas de mortalidad COVID más altas del mundo. Las razones son múltiples y complejas. Pero entre ellas está este dato: el país gastó 40,000 millones de pesos comprando equipo médico sin supervisión competente, y la ASF documentó irregularidades en más de la mitad de lo que auditó. La corrupción en compras COVID no causó la pandemia. Pero la hizo más letal.',
+        ],
+      },
+    ],
+  },
+
+  // =========================================================================
+  // STORY 22: PEMEX El Gigante
+  // =========================================================================
+  {
+    slug: 'pemex-el-gigante',
+    outlet: 'nyt',
+    type: 'case',
+    era: 'cross',
+    headline: "PEMEX Never Competes: Mexico's Oil Giant and the $2 Trillion Procurement Black Hole",
+    subheadline: 'PEMEX and CFE together account for 40% of federal procurement but hold less than 5% competitive bidding. An analysis of 20 years shows the pattern predates AMLO — and outlasted him',
+    byline: 'RUBLI Data Analysis Unit',
+    estimatedMinutes: 14,
+    leadStat: { value: '$2T', label: 'MXN en compras energéticas sin competencia', color: '#1e3a5f' },
+    relatedSlugs: ['fabrica-de-monopolios', 'el-dinero-de-todos', 'sexenio-a-sexenio'],
+    chapters: [
+      {
+        id: 'the-giant',
+        number: 1,
+        title: 'The Giant',
+        subtitle: 'The biggest buyer that never bids',
+        prose: [
+          "Petroleos Mexicanos — PEMEX — is the largest company in Mexico by revenue, the ninth-largest oil company in the world by production, and the largest single buyer of goods and services in the Mexican federal government. In the years covered by RUBLI's database, PEMEX and its subsidiaries have contracted for roughly 1.8 to 2.2 trillion pesos in goods and services annually. That is more than the combined procurement budget of the health, education, infrastructure, and defense ministries.",
+          "PEMEX has also been, for most of its history, one of the least transparent buyers in the government. The oil company's procurement operations historically ran through PEMEX's own systems rather than COMPRANET, the federal procurement transparency platform. It was only after the 2013 energy reform under Pena Nieto that PEMEX was required to systematically register its contracts in COMPRANET — and even then, coverage remained incomplete for years.",
+          "RUBLI's analysis of energy sector procurement shows that the direct award rate for PEMEX and CFE contracts registered in COMPRANET has never dropped below 83% in any year in the database. In the years with the most complete coverage — 2018 through 2023 — it averaged 87.4%. This compares to a federal average that peaked at 81.9% in 2023. PEMEX is not just above average. It is in a different category entirely.",
+          "The consequences of this opacity are compounded by the scale. When PEMEX pays 15% more than market price for offshore drilling equipment because there is no competitive process to test the price — and 15% above market on 2 trillion pesos is 300 billion pesos — the difference does not disappear into administrative costs. It goes somewhere. The history of PEMEX corruption — Emilio Lozoya, Oceanografia, the Odebrecht bribery case — shows clearly where it went.",
+        ],
+      },
+      {
+        id: 'the-history',
+        number: 2,
+        title: 'A History of Opacity',
+        subtitle: 'The pattern across four presidents',
+        prose: [
+          "PEMEX's procurement opacity is not a phenomenon of any single administration. It is a structural feature of the company's relationship with successive governments. Under Fox, PEMEX maintained its own procurement portal outside COMPRANET. Under Calderon, partial integration began but was incomplete. Under Pena Nieto, the energy reform brought formal requirements for COMPRANET registration, but PEMEX lobbied for and received extensive exemptions for contracts classified as 'operational' rather than 'investment.'",
+          "Under Lopez Obrador, the trajectory reversed. The 4T ideology, which viewed the 2013 energy reform as a neoliberal betrayal, effectively reduced PEMEX's accountability to transparency standards. The company's debt ballooned from 98 billion dollars in 2018 to 112 billion dollars in 2024 while its production continued to decline. PEMEX became an instrument of economic nationalism — a symbol of state sovereignty over oil — rather than a commercial entity with fiduciary obligations to the public.",
+          "The Emilio Lozoya case is the most fully documented example of PEMEX procurement corruption. Lozoya, who headed PEMEX from 2012 to 2016, was accused of accepting 10.5 million dollars in bribes from the Brazilian construction firm Odebrecht in exchange for PEMEX contracts. He was also accused of using PEMEX funds to purchase a property for his family and of directing 3.5 billion pesos in PEMEX contracts to companies linked to the PRI party's 2012 presidential campaign.",
+          "RUBLI's ground truth database includes both the Lozoya-Odebrecht case (Case 5) and the earlier Oceanografia fraud (Case 8). Together, they account for only 37 contracts in the COMPRANET record — a tiny fraction of the PEMEX procurement universe. The Odebrecht and Oceanografia frauds were caught; how many similar schemes were not is, by definition, unknown.",
+        ],
+        chartConfig: {
+          type: 'comparison',
+          title: 'Sexenio comparison — PEMEX procurement opacity across administrations',
+          chartId: 'sexenio-comparison',
+        },
+      },
+      {
+        id: 'the-vendors',
+        number: 3,
+        title: 'The PEMEX Supply Chain',
+        subtitle: 'Who sells to the company that does not compete',
+        prose: [
+          "In the energy sector, RUBLI's vendor concentration analysis reveals a supply chain that bears no resemblance to a competitive market. The top 50 vendors by value in energy sector procurement account for 79.3% of total energy spending — the highest concentration of any sector in the database. And those 50 vendors include a significant number of entities that exist specifically to intermediate between PEMEX and the actual suppliers of goods and services.",
+          "The intermediary pattern is well-documented in the Oceanografia case: Oceanografia supplied vessels and offshore services to PEMEX while charging inflated prices and financing the operation through fraudulent invoice discounting at Banamex. The company was not a manufacturer or a specialist — it was a middleman with political connections that extracted a margin from the gap between what PEMEX paid and what the work actually cost.",
+          "RUBLI's ARIA module identifies 3,300 vendors in the energy sector that match the 'intermediary' pattern: companies that buy from manufacturers, add a margin, and resell to government clients without technical specialization. This pattern is not illegal in itself. But when 87% of energy contracts are direct awards, the margins intermediaries can charge are unconstrained by competition. The price discipline that a competitive bid would impose is absent.",
+          "The vendor concentration index for PEMEX contractors — the Herfindahl-Hirschman Index computed from RUBLI's energy sector data — is 2,847 on a scale where 2,500 constitutes 'highly concentrated.' For reference, the U.S. Department of Justice considers any market above 2,500 HHI as one that 'raises significant competitive concerns.' PEMEX's supply market has been significantly concentrated in every year in the database.",
+        ],
+        chartConfig: {
+          type: 'vendor-list',
+          title: 'Energy sector vendor concentration — PEMEX supply chain',
+          chartId: 'vendor-concentration',
+        },
+      },
+      {
+        id: 'the-reform',
+        number: 4,
+        title: 'The Reform That Did Not Come',
+        subtitle: 'Twenty years of opportunity, none taken',
+        prose: [
+          "Every major international assessment of Mexican public sector governance in the past two decades has identified PEMEX procurement opacity as a critical vulnerability. The OECD's 2015 review of Mexico's anti-corruption framework dedicated a chapter to PEMEX and CFE. The IMF's 2022 assessment of Mexico's fiscal position noted that energy sector procurement transparency was 'below international standards for state-owned enterprises.' The World Bank's governance indicators have consistently placed Mexico below regional averages for control of corruption, with energy sector governance as a specific concern.",
+          "None of these assessments produced reform. PEMEX remains, in 2025, the largest buyer in the Mexican federal government and one of the least transparent. The gap between its COMPRANET registration requirements and actual practice has narrowed since 2018 — more contracts are registered now than before — but the fundamental architecture of opacity remains. Direct award rates above 85%, vendor concentration in the top percentile, and no credible mechanism for testing whether the prices PEMEX pays reflect actual market value.",
+          "The case for reform is not ideological. It is fiscal. PEMEX's debt burden — 112 billion dollars in 2024 — is partly the product of declining production and partly the product of costs that were not controlled because they were not competed. A 10% reduction in PEMEX's procurement costs through competitive bidding — a conservative estimate based on international benchmarks — would save approximately 180 to 220 billion pesos annually. That is money that could service debt, fund capital investment in production, or reduce the government subsidies that have been required to keep PEMEX solvent.",
+          "The political economy of PEMEX reform is complex. The company is a symbol of Mexican sovereignty, and any reform that appears to open it to foreign competition is politically toxic. But competing contracts among Mexican vendors is not the same as privatizing the company. It is simply requiring that the people's money — because that is what PEMEX ultimately spends — be allocated through processes that test whether it is being spent well. Twenty years of analysis suggest it has not been.",
+        ],
+      },
+    ],
+  },
+
+  // =========================================================================
+  // STORY 23: Atlas del Riesgo
+  // =========================================================================
+  {
+    slug: 'atlas-del-riesgo',
+    outlet: 'animal_politico',
+    type: 'thematic',
+    era: 'cross',
+    headline: 'Atlas del Riesgo: Los Sectores Donde la Corrupción Deja más Huellas',
+    subheadline: 'El modelo RUBLI identifica 361,000 contratos con señales de alerta crítica. Salud y agricultura concentran el riesgo más alto, pero infraestructura suma los mayores montos',
+    byline: 'Analisis de Datos RUBLI | Unidad de Investigacion',
+    estimatedMinutes: 8,
+    leadStat: { value: '361K', label: 'contratos en nivel crítico de riesgo', color: '#dc2626' },
+    relatedSlugs: ['fabrica-de-monopolios', 'el-dinero-de-todos', 'insabi-el-experimento'],
+    chapters: [
+      {
+        id: 'el-mapa',
+        number: 1,
+        title: 'El Mapa',
+        subtitle: 'Dónde vive el riesgo en el presupuesto federal',
+        prose: [
+          'El modelo de riesgo de RUBLI v6.4 ha procesado 3,051,294 contratos federales. De ellos, 361,000 alcanzan el nivel crítico — puntaje de 0.60 o superior. Esto representa el 11.8% del total. Otros 110,163 son clasificados como alto riesgo (0.40-0.60), y 564,758 como riesgo medio (0.15-0.40). La distribución no es uniforme. Algunos sectores concentran el riesgo de manera sistemática; otros lo distribuyen.',
+          'Salud lidera el riesgo porcentual: el 19.3% de todos los contratos del sector salud alcanzan nivel crítico. El número refleja la concentración de proveedores farmacéuticos, la alta tasa de adjudicaciones directas del INSABI, y los patrones de compra identificados en múltiples casos de la base de ground truth — IMSS empresas fantasma, la red de Laboratorios Pisa, los contratos COVID. El sector salud no es el mayor en términos de gasto, pero es el que más señales de alerta genera por peso gastado.',
+          'Agricultura es el segundo en riesgo porcentual con el 17.8%. La explicación es SEGALMEX y su red de distribución alimentaria diseñada para comprar sin competir. Los 6,326 contratos de Segalmex en la base de ground truth de RUBLI tienen un puntaje promedio de 0.664. El modelo aprende de ese patrón y lo aplica a los contratos similares del mismo sector.',
+          'Infraestructura es el sector con el mayor riesgo en términos absolutos. Con una tasa de riesgo crítico del 9.4%, que parece baja comparada con salud y agricultura, el volumen de contratos es tan grande que los 9.4% equivalen a 87,000 contratos críticos — los de mayor monto individual en todo el gobierno. Un contrato crítico de infraestructura puede valer 500 millones de pesos; uno de salud, 50 millones. La concentración de riesgo en infraestructura no se mide en porcentajes: se mide en miles de millones.',
+        ],
+        chartConfig: {
+          type: 'sector-bar',
+          title: 'Distribución de riesgo por sector — modelo v6.4',
+          chartId: 'risk-by-sector',
+        },
+      },
+      {
+        id: 'los-factores',
+        number: 2,
+        title: 'Los Factores que Predicen',
+        subtitle: 'Qué variables impulsan el riesgo en cada sector',
+        prose: [
+          'El modelo v6.4 de RUBLI utiliza siete variables activas con coeficientes distintos de cero. La variable más predictiva globalmente es price_volatility (+1.1482): la volatilidad del precio de los contratos de un proveedor respecto al promedio de su sector. Un proveedor que cobra 100 millones en un contrato y 800,000 en el siguiente muestra un patrón estadísticamente incompatible con operaciones legítimas.',
+          'La segunda variable más importante — institution_diversity (-0.3821) — opera en dirección contraria: los proveedores que sirven a muchas dependencias distintas son menos sospechosos que los que concentran sus ventas en una sola. Este hallazgo es contraintuitivo para el ciudadano promedio, que podría asumir que un proveedor que vende a todos el gobierno es más sospechoso que uno que solo vende al IMSS. Los datos muestran lo contrario: los esquemas de corrupción identificados en la base de ground truth tienden a operar capturando una institución, no diversificándose.',
+          'La variable vendor_concentration (+0.3749) captura el porcentaje del gasto total del sector que un proveedor acumula. Esta variable es especialmente activa en los sectores agrícola, de salud y de energía, donde los proveedores dominantes tienen participaciones de mercado que un sistema competitivo no produciría. En un sector donde el proveedor más grande tiene el 40% del mercado y ese proveedor ganó todos sus contratos sin licitación, la variable vendor_concentration no está detectando monopolio natural — está detectando captura regulatoria.',
+          'La combinación de estas variables produce el mapa de riesgo que RUBLI publica: un sistema de clasificación que no pretende demostrar culpabilidad pero sí identificar las regiones del presupuesto federal donde los patrones de contratación se asemejan más a los de los casos de corrupción documentada. El atlas del riesgo no es un mapa de culpables. Es un mapa de probabilidades.',
+        ],
+      },
+      {
+        id: 'los-montos',
+        number: 3,
+        title: 'Los Montos en Juego',
+        subtitle: 'Cuánto dinero está bajo sospecha estadística',
+        prose: [
+          'El 11.8% de contratos críticos no representa el 11.8% del gasto. Los contratos de mayor valor tienen puntajes de riesgo diferentes a los de menor valor. En el primer decil por valor de contrato — los contratos más grandes — la tasa de riesgo crítico es del 23.4%. Esto significa que casi uno de cada cuatro pesos gastados en los contratos más grandes del gobierno federal está asociado a un patrón de riesgo crítico.',
+          'En términos absolutos, los contratos críticos representan aproximadamente 1.8 billones de pesos en el período 2002-2023. Para contextualizar: el presupuesto federal anual de México es de aproximadamente 8 billones de pesos. Un 11.8% del gasto de compras con señales de alerta crítica equivale a una fracción significativa del presupuesto total.',
+          'Importante: los puntajes de riesgo de RUBLI son indicadores estadísticos, no pruebas de corrupción. No todo contrato crítico involucra corrupción; algunos proveedores con alta concentración y baja diversidad institucional tienen razones técnicas legítimas para operar así. El modelo fue calibrado con casos confirmados de corrupción, pero su tasa de falsos positivos — contratos críticos que son en realidad limpios — no puede calcularse con precisión porque no existe un registro completo de qué contratos son corruptos y cuáles no.',
+          'Lo que los datos sí permiten decir con confianza es que el sistema de adquisiciones mexicano produce, de manera sistemática, patrones de contratación que son estadísticamente indistinguibles de los que se observan en casos documentados de corrupción. Si esos patrones no reflejan corrupción real, reflejan un sistema de compras tan disfuncional que produce las mismas señales que la corrupción. Ninguna de las dos interpretaciones es reconfortante.',
+        ],
+        chartConfig: {
+          type: 'da-trend',
+          title: 'Tendencia de adjudicación directa — contexto del riesgo',
+          chartId: 'da-rate-trend',
+        },
+      },
+      {
+        id: 'la-investigacion',
+        number: 4,
+        title: 'Lo Que Requiere Investigación',
+        subtitle: 'Del dato estadístico a la rendición de cuentas',
+        prose: [
+          'El análisis de RUBLI es el punto de partida de la investigación periodística, no el punto final. Los 361,000 contratos críticos son una pista, no una sentencia. Cada uno de ellos requiere análisis contextual que el modelo no puede proporcionar: ¿el proveedor tiene monopolio técnico legítimo? ¿el contrato fue en respuesta a una emergencia real? ¿los precios corresponden a los de mercado en ese momento y lugar específicos?',
+          'El ARIA — Automated Risk Investigation Algorithm de RUBLI — va un paso más allá del modelo de riesgo base. Cruza los contratos de alto riesgo con registros de proveedores en la lista negra del SAT (EFOS: Empresas que Facturan Operaciones Simuladas), la lista de sancionados de la Secretaría de la Función Pública, y los registros del RUPC (Registro Único de Proveedores y Contratistas). De los 198,000 proveedores en la cola de investigación del ARIA, 285 son Tier 1 — los de mayor prioridad.',
+          'El trabajo de periodistas de investigación es lo que convierte esos 285 proveedores en casos. Los datos de RUBLI identifican los patrones; la investigación periodística verifica las personas, los documentos, los movimientos bancarios, las relaciones políticas. Organizaciones como Animal Político, Mexicanos Contra la Corrupción e Impunidad (MCCI), y el Proyecto Sobre el Crimen Organizado y la Corrupción (OCCRP) han utilizado datos de COMPRANET para documentar casos que después se convirtieron en procesos penales.',
+          'El atlas del riesgo de RUBLI es una herramienta de priorización. En un país donde la Función Pública tiene capacidad de supervisión limitada y la ASF audita menos del 5% del gasto público cada año, una herramienta que identifica estadísticamente dónde buscar tiene valor real. El 11.8% de contratos críticos no puede investigarse uno por uno. Pero el 0.009% — los 285 del ARIA Tier 1 — sí puede. Y ahí es donde empieza la rendición de cuentas.',
+        ],
+        chartConfig: {
+          type: 'sector-bar',
+          title: 'Adjudicación directa por sector — distribución del riesgo',
+          chartId: 'da-by-sector',
+        },
+      },
+    ],
+  },
+
+  // =========================================================================
+  // STORY 24: La Herencia Envenenada
+  // =========================================================================
+  {
+    slug: 'la-herencia-envenenada',
+    outlet: 'animal_politico',
+    type: 'era',
+    era: 'amlo',
+    headline: 'La Herencia Envenenada: Lo que AMLO Dejó en las Finanzas Públicas',
+    subheadline: 'El sexenio concluyó con tasas históricas de contratación directa, 275,670 contratos sospechosos de fraccionamiento y una deuda de transparencia que tomará años resolver',
+    byline: 'Analisis de Datos RUBLI | Unidad de Investigacion',
+    estimatedMinutes: 10,
+    leadStat: { value: '505,219', label: 'contratos licitados en solitario', color: '#e6420e' },
+    relatedSlugs: ['la-cuarta-adjudicacion', 'el-ano-sin-excusas', 'sexenio-a-sexenio'],
+    chapters: [
+      {
+        id: 'el-balance',
+        number: 1,
+        title: 'El Balance Final',
+        subtitle: 'Seis años de promesas y un registro que no perdona',
+        prose: [
+          'El 30 de septiembre de 2024, Andrés Manuel López Obrador entregó el poder a Claudia Sheinbaum. Con él, le entregó también el sistema de adquisiciones públicas más opaco en dos décadas de registros disponibles. No es una conclusión política. Es el resultado de procesar 3,051,294 contratos y comparar los patrones del sexenio 2018-2024 con los de los cuatro gobiernos anteriores.',
+          'La tasa de adjudicación directa promedio del sexenio fue del 79.4% — la más alta de los cuatro gobiernos en la base de datos. En términos absolutos, el sexenio produjo 1,285,000 contratos de adjudicación directa, de los cuales 361,000 alcanzan el nivel de riesgo crítico según el modelo v6.4 de RUBLI. El valor total de contratos directos en el período supera los 12 billones de pesos.',
+          'Cinco indicadores resumen el legado en compras públicas. El primero: 505,219 contratos de licitación pública con un solo participante — la cifra más alta en el registro. El segundo: 275,670 contratos clasificados como fraccionamiento sospechoso. El tercero: 1,253 proveedores con el algoritmo de empresas fantasma activado. El cuarto: 26,404 contratos de "diciembre rush" — gastos de fin de año sin justificación técnica documentada. El quinto: una deuda de PEMEX que creció 14,000 millones de dólares en seis años mientras se reducía la supervisión de sus compras.',
+          'La promesa central del gobierno fue "primero los pobres" y "acabar con la corrupción". Los datos de RUBLI no pueden medir si los pobres fueron los principales beneficiarios del gasto. Pero sí pueden medir si la arquitectura de transparencia que debe prevenir la corrupción fue reforzada o debilitada. El resultado es inequívoco: fue debilitada, sistemática y deliberadamente, a lo largo de seis años.',
+        ],
+      },
+      {
+        id: 'el-gasto',
+        number: 2,
+        title: 'Los Patrones del Gasto',
+        subtitle: 'Diciembre, emergencias y presupuesto sin ejercer',
+        prose: [
+          'El patrón mensual del gasto en el sexenio AMLO revela una característica recurrente: picos de diciembre desproporcionados respecto al promedio del año. En diciembre de 2022 y 2023, el gasto mensual en adjudicaciones directas superó 3.5 veces el promedio de los meses anteriores. Este patrón — que RUBLI denomina "diciembre_rush" — es el síntoma más visible de un sistema presupuestal que premia ejercer el presupuesto antes del 31 de diciembre independientemente de la necesidad real.',
+          'Los 26,404 contratos identificados como diciembre_rush en el período AMLO tienen una tasa de adjudicación directa del 98.7%. Son, casi sin excepción, contratos firmados en los últimos cinco días de diciembre, por valores redondos, a proveedores habituales, con justificativos técnicos que replican texto de contratos anteriores. El mecanismo es tan predecible que el modelo de RUBLI lo puede identificar con alta precisión solo a partir de la fecha de firma y el valor del contrato.',
+          'El patrón de gasto mensual también revela otro fenómeno: la ausencia de planificación de mediano plazo en las compras. Los meses de enero a marzo muestran un colapso del gasto que sugiere que los presupuestos asignados en el nuevo ejercicio no son suficientes para mantener continuidad operativa. Las dependencias pasan los primeros meses del año esperando liberaciones presupuestales, y comprimen el gasto real en los últimos meses para no perder el presupuesto. El resultado es un ciclo de derroche en diciembre y hambruna en enero que hace imposible la planeación racional del gasto.',
+          'La relación entre este patrón y la corrupción es estadística, no causal. No todo contrato de diciembre es corrupto. Pero los contratos firmados bajo presión de tiempo, sin posibilidad de licitación porque los plazos no lo permiten, con el presupuesto que hay que ejercer en semanas, son exactamente el tipo de contratos que los esquemas de corrupción están diseñados para explotar.',
+        ],
+        chartConfig: {
+          type: 'year-bar',
+          title: 'Gasto mensual federal — patrón de diciembre en el sexenio AMLO',
+          chartId: 'monthly-spending',
+        },
+      },
+      {
+        id: 'la-comparacion',
+        number: 3,
+        title: 'Frente a los Otros Sexenios',
+        subtitle: 'No todos son iguales: el AMLO en perspectiva histórica',
+        prose: [
+          'La comparación entre sexenios en los datos de RUBLI no lleva a la conclusión de que todos los gobiernos son igualmente corruptos. Lleva a la conclusión de que todos los gobiernos operan el mismo sistema disfuncional con diferente intensidad. La disfunción era preexistente; lo que varió fue cuánto cada gobierno la aprovechó.',
+          'En el sexenio de Calderón, la tasa de adjudicación directa promedio fue del 63.5% — 16 puntos menos que bajo AMLO. En infraestructura, los contratos de más de 1,000 millones de pesos tenían una tasa de licitación pública del 71%. Eso no hace al gobierno de Calderón virtuoso: en ese sexenio se firmaron los contratos del cartel de medicamentos del corazón y se consolidó la captura regulatoria en el sector salud. Pero muestra que el nivel de opacidad no era inevitable.',
+          'El análisis de RUBLI por administración muestra que el mayor deterioro ocurrió entre 2018 y 2020 — los primeros dos años del sexenio AMLO, antes del COVID. La tasa de adjudicación directa subió 3.7 puntos porcentuales en esos dos años. Ese incremento no fue una respuesta a la pandemia; fue una política deliberada de centralizar el control de las compras en la Presidencia de la República, reducir el papel de los órganos técnicos de supervisión, y expandir el uso de los mecanismos de excepción que permiten la adjudicación directa.',
+          'La comparación más reveladora es entre el primer año de cada sexenio. En su primer año, todos los presidentes tienen incentivos para mostrarse más transparentes que su antecesor. Los datos muestran que López Obrador fue la excepción: en 2019, el primer año completo de su gobierno, la tasa de adjudicación directa fue de 77.8% — ya por encima del máximo alcanzado bajo Peña Nieto. La dirección del sexenio se fijó desde el principio.',
+        ],
+        chartConfig: {
+          type: 'comparison',
+          title: 'Comparación de era AMLO vs sexenios anteriores',
+          chartId: 'amlo-era-comparison',
+        },
+      },
+      {
+        id: 'la-herencia',
+        number: 4,
+        title: 'Lo que Queda',
+        subtitle: 'La deuda de transparencia que Sheinbaum heredó',
+        prose: [
+          'Claudia Sheinbaum asumió la presidencia el 1 de octubre de 2024 con la promesa implícita de la continuidad — ella misma es parte del movimiento que López Obrador creó — y la presión explícita de los datos. La OCDE, el Banco Mundial, y el FMI han documentado el deterioro de los estándares de transparencia en adquisiciones públicas mexicanas. El nuevo gobierno tiene que decidir si rectifica esa tendencia o la perpetúa.',
+          'Los primeros meses de la administración Sheinbaum ofrecen señales mixtas. En algunos sectores — Educación, Salud hospitalaria — hay indicios de un retorno hacia procedimientos más competitivos. En otros — Energía, Infraestructura estratégica — el patrón del sexenio anterior se mantiene sin cambio aparente. RUBLI actualizará su análisis conforme los datos de 2025 fluyan a COMPRANET.',
+          'La herencia de los 505,219 contratos de licitación solitaria no se resuelve con un decreto. Requiere reformar los umbrales que determinan cuándo es obligatoria la licitación, fortalecer la Secretaría de la Función Pública con presupuesto y autonomía real, digitalizar y hacer obligatoria la publicación de todos los justificativos de adjudicación directa, y crear un sistema de seguimiento del desempeño de proveedores que alimente automáticamente las decisiones de compra futuras.',
+          'Esas reformas tienen costo político: los proveedores habituales que hoy reciben contratos directos son también donantes y aliados políticos. La opacidad presupuestal no es un bug del sistema — es una feature que genera lealtades. Cambiarla requiere un tipo de voluntad política que ningún presidente mexicano ha demostrado en 23 años de datos. Lo cual no significa que sea imposible. Significa que si ocurre, será la primera vez.',
+        ],
+        chartConfig: {
+          type: 'comparison',
+          title: 'Comparación por sexenio — tendencia de largo plazo',
+          chartId: 'sexenio-comparison',
+        },
+      },
+    ],
+  },
+
+  // =========================================================================
+  // STORY 25: Dividir para Evadir
+  // =========================================================================
+  {
+    slug: 'dividir-para-evadir',
+    outlet: 'nyt',
+    type: 'thematic',
+    era: 'amlo',
+    headline: "Divide and Evade: Mexico's 275,670 Contracts Designed to Avoid Scrutiny",
+    subheadline: "Mexican law requires open bids above certain thresholds. RUBLI's analysis found 275,670 contracts clustered just below the limits — a pattern statisticians call near-impossible to occur by chance",
+    byline: 'RUBLI Data Analysis Unit',
+    estimatedMinutes: 11,
+    leadStat: { value: '275,670', label: 'contratos con fraccionamiento sospechoso', color: '#1e3a5f' },
+    relatedSlugs: ['hemoser-el-2-de-agosto', 'la-herencia-envenenada', 'la-cuarta-adjudicacion'],
+    chapters: [
+      {
+        id: 'the-rule',
+        number: 1,
+        title: 'The Rule',
+        subtitle: "Mexico's procurement thresholds: the law that invites evasion",
+        prose: [
+          "Mexico's Ley de Adquisiciones, Arrendamientos y Servicios del Sector Publico establishes three procurement modalities based on contract value. Below a certain threshold — adjusted annually by SHCP and varying by agency — contracts can be awarded directly with minimal process. Above the first threshold, a simplified competitive process with three invited bids is required. Above the second threshold, full public bidding is mandatory.",
+          "The thresholds are designed to calibrate oversight to risk: small purchases need less process; large purchases need more. In theory, this is sensible administration. In practice, it creates a specific incentive: any official who wants to award a contract without the scrutiny of competitive bidding has a simple option — keep each individual contract below the threshold, even if the total need exceeds it. Split the purchase into pieces, each piece below the line that would require competition.",
+          "This practice — called fraccionamiento in Spanish, threshold splitting or sham purchasing in English — is explicitly prohibited by Article 17 of the Ley de Adquisiciones: 'It is prohibited to divide or split acquisitions or contracts for the purpose of avoiding compliance with the requirements established in this Law.' The prohibition has existed since the law was written. It has been systematically violated since the law was written.",
+          "RUBLI's analysis identifies 275,670 contracts in the database that match the statistical signature of threshold splitting: contracts awarded on the same day, to the same vendor, from the same agency, at values just below the threshold that would have required competitive bidding. The pattern is not random. The clustering of contract values immediately below thresholds is a statistical anomaly that cannot be explained by coincidence.",
+        ],
+      },
+      {
+        id: 'the-math',
+        number: 2,
+        title: 'The Mathematics of Evasion',
+        subtitle: 'When statistics reveal what individual contracts hide',
+        prose: [
+          "Statistical detection of threshold splitting relies on a simple observation: if contract values were distributed randomly, the distribution would be smooth across value ranges. There would be no reason for contracts to cluster just below a threshold. But when officials are deliberately keeping contracts below thresholds, the distribution shows a sharp discontinuity: many contracts just below the line, very few just above it.",
+          "RUBLI's analysis applies this method to the full 3.1 million contract database. The results are unambiguous. For every threshold level tested, there is a statistically significant excess of contracts in the range from 90% to 100% of the threshold value. For the most common threshold — the line between direct award and the simplified three-bid process — the excess is 34%: there are 34% more contracts in the just-below-threshold range than would be expected from a smooth distribution.",
+          "The HEMOSER case provides the most dramatic individual illustration. On August 2, 2021, the IMSS awarded 12 contracts to HEMOSER SA de CV, a medical supplies company, all on the same day. Each contract was valued at 2,999,998 pesos — a few hundred pesos below the 3 million peso threshold that would have required a simplified competitive process. The total value: 35,999,976 pesos. If awarded as a single contract, it would have required public bidding. Divided into 12, each was a direct award that required nothing.",
+          "The HEMOSER case is documented in RUBLI's ground truth database (Case 3 in the IMSS ghost company network). But RUBLI's statistical analysis identifies 275,670 contracts with similar clustering signatures. The vast majority of those contracts have never been investigated by any authority. They exist in the public record; they have never attracted attention; and they represent, in aggregate, a systematic and deliberate mechanism for avoiding the procurement rules that exist to protect the public interest.",
+        ],
+        chartConfig: {
+          type: 'da-trend',
+          title: 'Threshold splitting — statistical distribution of contracts near thresholds',
+          chartId: 'threshold-splitting',
+        },
+      },
+      {
+        id: 'the-sectors',
+        number: 3,
+        title: 'Where It Happens',
+        subtitle: 'Threshold splitting is not evenly distributed',
+        prose: [
+          "The 275,670 contracts with threshold splitting signatures are not evenly distributed across sectors or agencies. The health sector accounts for 31.4% of identified splitting contracts — a disproportionate share that reflects both the volume of health procurement and the specific dynamics of the pharmaceutical and medical supplies market. The HEMOSER case is emblematic: medical supplies can be divided into identical-seeming lots that each trigger the same direct award classification.",
+          "The defense sector — SEDENA and MARINA — shows the lowest rate of identifiable threshold splitting at 4.7%. This may reflect genuine compliance, or it may reflect that military procurement is less visible in COMPRANET (some military contracts are classified) and that military agencies face different oversight dynamics. The data cannot distinguish between these explanations.",
+          "The infrastructure sector shows a distinct pattern of threshold splitting: the splitting tends to occur in maintenance and operating contracts rather than construction contracts. Large construction projects — roads, buildings, dams — require contracts large enough that splitting to avoid thresholds is impractical. But the ongoing maintenance contracts that follow construction can be split indefinitely: painting, cleaning, security, landscaping, minor repairs — all the services that sustain infrastructure can be contracted in small pieces indefinitely.",
+          "The agencies with the highest rates of threshold splitting per contract are concentrated in health (IMSS, INSABI, ISSSTE), agriculture (SEGALMEX, DICONSA), and technology (various ministry IT offices). These are also the agencies with the highest rates of direct award overall — the correlation is not accidental. Threshold splitting and direct award are complementary tools in the same toolkit of procurement opacity.",
+        ],
+        chartConfig: {
+          type: 'sector-bar',
+          title: 'Threshold splitting by sector — distribution of 275,670 flagged contracts',
+          chartId: 'da-by-sector',
+        },
+      },
+      {
+        id: 'the-accountability',
+        number: 4,
+        title: 'Accountability That Never Came',
+        subtitle: '275,670 violations of federal law, zero convictions',
+        prose: [
+          "Article 17 of the Ley de Adquisiciones prohibits threshold splitting. The Secretaria de la Funcion Publica (SFP) is responsible for enforcing that prohibition. The Auditoria Superior de la Federacion audits procurement for compliance. The Fiscalia General de la Republica can prosecute federal officials for violations of procurement law.",
+          "In the 23 years covered by RUBLI's database, a period during which our analysis identifies 275,670 contracts with statistically significant threshold splitting signatures, the public record contains no conviction of a federal official specifically for threshold splitting. There have been prosecutions for broader corruption charges that included splitting as part of a pattern; there have been administrative sanctions issued by the SFP; there have been contracts annulled. But the practice identified in 275,670 contracts has generated accountability in a fraction of a percent of cases.",
+          "The enforcement gap is not primarily a legal problem. The legal framework prohibits what is happening. It is an institutional problem: the SFP does not have the analytical capacity to identify splitting patterns in 3 million contracts; the ASF does not have the budget to audit more than 5% of procurement; the FGR does not prioritize procurement violations compared to drug trafficking and organized crime. The law exists. The enforcement capacity to apply it does not.",
+          "RUBLI was built to close part of that gap. The statistical identification of 275,670 splitting contracts is a starting point for prioritized investigation. Not all of them are equally suspicious; not all represent the same scale of potential evasion. But the combination of statistical detection, risk scoring, and cross-referencing with external registries that RUBLI's ARIA module provides can give auditors and prosecutors a roadmap that does not require reviewing 3 million individual contracts. The tool exists. Whether anyone will use it is a question of political will, not analytical capacity.",
+        ],
       },
     ],
   },

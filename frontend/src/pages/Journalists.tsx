@@ -48,7 +48,7 @@ const STORIES: StoryDef[] = [
     tags: ['AMLO', 'era'],
   },
   {
-    slug: 'el-granero-vacio-segalmex',
+    slug: 'el-granero-vacio',
     outlet: 'wapo',
     type: 'case',
     headline: 'El Granero Vacio: Segalmex',
@@ -114,7 +114,7 @@ const STORIES: StoryDef[] = [
   },
   // Row 3 — Cross-era + Cases
   {
-    slug: 'el-triangulo-farmaceutico',
+    slug: 'triangulo-farmaceutico',
     outlet: 'wapo',
     type: 'thematic',
     headline: 'El Triangulo Farmaceutico',
@@ -126,7 +126,7 @@ const STORIES: StoryDef[] = [
     tags: ['thematic', 'salud'],
   },
   {
-    slug: 'la-avalancha-de-diciembre',
+    slug: 'avalancha-diciembre',
     outlet: 'nyt',
     type: 'thematic',
     headline: 'La Avalancha de Diciembre',
@@ -138,7 +138,7 @@ const STORIES: StoryDef[] = [
     tags: ['thematic'],
   },
   {
-    slug: 'el-cartel-del-corazon',
+    slug: 'cartel-del-corazon',
     outlet: 'wapo',
     type: 'case',
     headline: 'El Cartel del Corazon',
@@ -176,7 +176,7 @@ const STORIES: StoryDef[] = [
     tags: ['Pena Nieto', 'era', 'infraestructura'],
   },
   {
-    slug: 'oceanografia-dos-fronteras',
+    slug: 'oceanografia',
     outlet: 'wapo',
     type: 'case',
     headline: 'Oceanografia: Dos Fronteras',
@@ -190,7 +190,7 @@ const STORIES: StoryDef[] = [
   },
   // Row 5 — Systemic
   {
-    slug: 'sixsigma-y-el-sat',
+    slug: 'sixsigma-hacienda',
     outlet: 'animal_politico',
     type: 'case',
     headline: 'SixSigma y el SAT',
@@ -214,17 +214,16 @@ const STORIES: StoryDef[] = [
     tags: ['era'],
   },
   {
-    slug: 'el-ano-del-covid',
-    outlet: 'wapo',
-    type: 'year',
-    headline: 'El Ano del COVID',
-    subheadline: 'La emergencia sanitaria como justificacion para contratar sin competencia. 78.1% de los contratos de 2020.',
-    leadStatValue: '78.1%',
-    leadStatLabel: 'sin competencia, en la emergencia',
-    leadStatColor: '#1e3a5f',
-    estimatedMinutes: 11,
-    era: 'AMLO',
-    tags: ['AMLO', 'year'],
+    slug: 'red-fantasma',
+    outlet: 'animal_politico',
+    type: 'thematic',
+    headline: 'Red Fantasma: Anatomia de una Empresa Inexistente',
+    subheadline: 'El SAT confirma 13,960 empresas que facturaron operaciones simuladas al gobierno. Como se construyen, como operan, y como detectarlas.',
+    leadStatValue: '13,960',
+    leadStatLabel: 'empresas en lista EFOS del SAT — operaciones simuladas confirmadas',
+    leadStatColor: '#dc2626',
+    estimatedMinutes: 7,
+    tags: ['thematic'],
   },
   // 10 new investigative stories
   {
@@ -321,9 +320,9 @@ const STORIES: StoryDef[] = [
     outlet: 'animal_politico',
     type: 'thematic',
     headline: 'Atlas del Riesgo: Los Sectores Donde la Corrupción Deja Más Huellas',
-    subheadline: 'El modelo RUBLI identifica 361,000 contratos con señales de alerta crítica. Salud y agricultura concentran el riesgo más alto, pero infraestructura suma los mayores montos.',
-    leadStatValue: '361K',
-    leadStatLabel: 'contratos en nivel crítico de riesgo',
+    subheadline: 'El modelo RUBLI identifica 118,061 contratos con señales de alerta crítica. Salud y agricultura concentran el riesgo más alto, pero infraestructura suma los mayores montos.',
+    leadStatValue: '118,061',
+    leadStatLabel: 'contratos en nivel crítico de riesgo (v6.4, umbral ≥0.60)',
     leadStatColor: '#dc2626',
     estimatedMinutes: 8,
     tags: ['thematic', 'salud', 'infraestructura'],
@@ -333,7 +332,7 @@ const STORIES: StoryDef[] = [
     outlet: 'animal_politico',
     type: 'era',
     headline: 'La Herencia Envenenada: Lo que AMLO Dejó en las Finanzas Públicas',
-    subheadline: 'El sexenio concluyó con tasas históricas de contratación directa, 275,670 contratos sospechosos de fraccionamiento y una deuda de transparencia que tomará años resolver.',
+    subheadline: 'El sexenio concluyó con tasas históricas de contratación directa, 247,946 contratos sospechosos de fraccionamiento y una deuda de transparencia que tomará años resolver.',
     leadStatValue: '505,219',
     leadStatLabel: 'contratos licitados en solitario',
     leadStatColor: '#e6420e',
@@ -345,9 +344,9 @@ const STORIES: StoryDef[] = [
     slug: 'dividir-para-evadir',
     outlet: 'nyt',
     type: 'thematic',
-    headline: 'Dividir para Evadir: 275,670 Contratos Diseñados para Burlar el Escrutinio',
-    subheadline: 'La ley exige licitación pública por encima de ciertos umbrales. El análisis de RUBLI encontró 275,670 contratos agrupados justo por debajo de esos límites — un patrón que los estadísticos califican como prácticamente imposible por azar.',
-    leadStatValue: '275,670',
+    headline: 'Dividir para Evadir: 247,946 Contratos Diseñados para Burlar el Escrutinio',
+    subheadline: 'La ley exige licitación pública por encima de ciertos umbrales. El análisis de RUBLI encontró 247,946 contratos agrupados justo por debajo de esos límites — un patrón estadísticamente improbable por azar.',
+    leadStatValue: '247,946',
     leadStatLabel: 'contratos con fraccionamiento sospechoso',
     leadStatColor: '#1e3a5f',
     estimatedMinutes: 11,
@@ -447,7 +446,7 @@ export default function Journalists() {
             RUBLI INVESTIGACIONES
           </h1>
           <p className="text-xl sm:text-2xl text-zinc-400 font-light tracking-wide mb-10">
-            Datos. Patrones. Poder.
+            Datos. Patrones. Pistas.
           </p>
 
           {/* Three animated counters */}

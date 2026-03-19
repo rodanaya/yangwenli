@@ -20,6 +20,23 @@ import { StoryCard } from '@/components/stories/StoryCard'
 import { ScrollReveal, AnimatedNumber } from '@/hooks/useAnimations'
 import { slideUp, fadeIn, staggerContainer } from '@/lib/animations'
 import { cn } from '@/lib/utils'
+import * as StoryCharts from '@/components/stories/charts'
+
+// ---------------------------------------------------------------------------
+// Chart registry — maps chartId to component
+// ---------------------------------------------------------------------------
+
+const CHART_REGISTRY: Record<string, React.ComponentType> = {
+  'da-rate-trend': StoryCharts.DaRateTrendChart,
+  'da-by-sector': StoryCharts.DaBySectorChart,
+  'amlo-era-comparison': StoryCharts.AmloEraComparisonChart,
+  'covid-emergency': StoryCharts.CovidEmergencyChart,
+  'monthly-spending': StoryCharts.MonthlySpendingChart,
+  'risk-by-sector': StoryCharts.RiskBySectorChart,
+  'vendor-concentration': StoryCharts.VendorConcentrationChart,
+  'threshold-splitting': StoryCharts.ThresholdSplittingChart,
+  'sexenio-comparison': StoryCharts.SexenioComparisonChart,
+}
 
 // ---------------------------------------------------------------------------
 // Outlet-level accent colors
@@ -101,20 +118,25 @@ function ChapterSection({
           </ScrollReveal>
         ))}
 
-        {chapter.chartConfig && (
-          <ScrollReveal className="my-8">
-            <div
-              className="h-64 bg-zinc-800/50 rounded-lg border border-zinc-700/50 flex items-center justify-center"
-              role="img"
-              aria-label={chapter.chartConfig.title}
-            >
-              <div className="text-center px-6">
-                <p className="text-zinc-500 text-sm mb-1">Grafica</p>
-                <p className="text-zinc-400 font-medium">{chapter.chartConfig.title}</p>
-              </div>
-            </div>
-          </ScrollReveal>
-        )}
+        {chapter.chartConfig && (() => {
+          const chartId = chapter.chartConfig.chartId
+          const ChartComponent = chartId ? CHART_REGISTRY[chartId] : undefined
+          return (
+            <ScrollReveal className="my-8">
+              {ChartComponent ? (
+                <ChartComponent />
+              ) : (
+                <div
+                  className="bg-zinc-900 rounded-xl p-6 text-zinc-500 text-sm text-center"
+                  role="img"
+                  aria-label={chapter.chartConfig.title}
+                >
+                  {chapter.chartConfig.title}
+                </div>
+              )}
+            </ScrollReveal>
+          )
+        })()}
 
         {chapter.pullquote && (
           <DataPullquote

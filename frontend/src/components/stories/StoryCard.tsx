@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { OutletBadge, type OutletType } from './OutletBadge'
+import { type OutletType } from './OutletBadge'
 import { AnimatedNumber, AnimatedFill } from '@/hooks/useAnimations'
 import { staggerItem } from '@/lib/animations'
 
@@ -87,7 +87,6 @@ export function StoryCard(props: StoryCardProps) {
     >
       {/* Top badges */}
       <div className="flex items-center gap-2 flex-wrap">
-        <OutletBadge outlet={outlet} />
         <span className="text-[10px] font-semibold tracking-widest uppercase text-zinc-500">
           {TYPE_LABELS[type]}
         </span>

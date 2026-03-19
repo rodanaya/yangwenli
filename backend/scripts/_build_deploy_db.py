@@ -129,13 +129,18 @@ def main():
     print(f"  Dropped {dropped} tables")
     print(f"  Size before VACUUM: {sizeof_fmt(os.path.getsize(deploy))}")
 
-    # Step 4: VACUUM
-    print("\nStep 4: Running VACUUM (this takes a while)...")
+    # Step 4: VACUUM INTO temp file then rename (avoids 2x disk space requirement)
+    print("\nStep 4: Running VACUUM INTO temp file (this takes a while)...")
+    deploy_tmp = deploy + ".tmp"
+    if os.path.exists(deploy_tmp):
+        os.remove(deploy_tmp)
     t0 = time.time()
-    conn.execute("VACUUM")
+    conn.execute(f"VACUUM INTO '{deploy_tmp}'")
     elapsed = time.time() - t0
     conn.close()
-    print(f"  VACUUM completed in {elapsed:.1f}s")
+    print(f"  VACUUM INTO completed in {elapsed:.1f}s")
+    print(f"  Temp size: {sizeof_fmt(os.path.getsize(deploy_tmp))}")
+    os.replace(deploy_tmp, deploy)
     print(f"  Size after VACUUM: {sizeof_fmt(os.path.getsize(deploy))}")
 
     # Step 5: Verify remaining tables
