@@ -298,25 +298,33 @@ def _build_summary(conn) -> dict:
         enriched["real_value"] = round(nominal / deflator, 0)
         administrations_enriched.append(enriched)
 
-    # 10. Ground truth validation — live from DB (single aggregation query)
+    # 10. Ground truth validation — use precomputed stats if available (avoids 90s live scan)
+    gt_precomputed = precomputed.get("ground_truth")
     try:
-        gt_cases = cur.execute("SELECT COUNT(*) FROM ground_truth_cases").fetchone()[0]
-        gt_vendors = cur.execute(
-            "SELECT COUNT(*) FROM ground_truth_vendors WHERE vendor_id IS NOT NULL"
-        ).fetchone()[0]
-        # Use IN subquery instead of JOIN — avoids full contracts scan when no covering index
-        gt_row = cur.execute(
-            "SELECT COUNT(*) AS total, "
-            "SUM(CASE WHEN risk_score >= 0.10 THEN 1 ELSE 0 END) AS detected, "
-            "SUM(CASE WHEN risk_score >= 0.30 THEN 1 ELSE 0 END) AS high_plus "
-            "FROM contracts WHERE vendor_id IN "
-            "(SELECT DISTINCT vendor_id FROM ground_truth_vendors WHERE vendor_id IS NOT NULL)"
-        ).fetchone()
-        gt_contracts = gt_row[0] or 0
-        gt_detected = gt_row[1] or 0
-        gt_high = gt_row[2] or 0
-        detection_rate = round(gt_detected / gt_contracts * 100, 1) if gt_contracts else 0
-        high_plus_rate = round(gt_high / gt_contracts * 100, 1) if gt_contracts else 0
+        if gt_precomputed:
+            gt_cases = gt_precomputed.get("cases", 0)
+            gt_vendors = gt_precomputed.get("vendors", 0)
+            gt_contracts = gt_precomputed.get("contracts", 0)
+            detection_rate = gt_precomputed.get("detection_rate", 0)
+            high_plus_rate = gt_precomputed.get("high_plus_rate", 0)
+        else:
+            # Fallback: live query (slow — ~90s on cold VPS; runs if precompute_stats hasn't been run)
+            gt_cases = cur.execute("SELECT COUNT(*) FROM ground_truth_cases").fetchone()[0]
+            gt_vendors = cur.execute(
+                "SELECT COUNT(*) FROM ground_truth_vendors WHERE vendor_id IS NOT NULL"
+            ).fetchone()[0]
+            gt_row = cur.execute(
+                "SELECT COUNT(*) AS total, "
+                "SUM(CASE WHEN risk_score >= 0.10 THEN 1 ELSE 0 END) AS detected, "
+                "SUM(CASE WHEN risk_score >= 0.40 THEN 1 ELSE 0 END) AS high_plus "
+                "FROM contracts WHERE vendor_id IN "
+                "(SELECT DISTINCT vendor_id FROM ground_truth_vendors WHERE vendor_id IS NOT NULL)"
+            ).fetchone()
+            gt_contracts = gt_row[0] or 0
+            gt_detected = gt_row[1] or 0
+            gt_high = gt_row[2] or 0
+            detection_rate = round(gt_detected / gt_contracts * 100, 1) if gt_contracts else 0
+            high_plus_rate = round(gt_high / gt_contracts * 100, 1) if gt_contracts else 0
     except Exception:
         gt_cases, gt_vendors, gt_contracts = 376, 594, 314700
         detection_rate, high_plus_rate = 99.8, 93.0

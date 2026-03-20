@@ -904,6 +904,35 @@ def precompute_stats():
         print(f"   Warning: PHI computation failed: {e}")
         import traceback; traceback.print_exc()
 
+    # 13. Ground truth detection stats (was a 90s live query in executive/summary)
+    print("13. Computing ground truth detection stats...")
+    start = time.time()
+    try:
+        gt_cases = cursor.execute("SELECT COUNT(*) FROM ground_truth_cases").fetchone()[0]
+        gt_vendors = cursor.execute(
+            "SELECT COUNT(*) FROM ground_truth_vendors WHERE vendor_id IS NOT NULL"
+        ).fetchone()[0]
+        gt_row = cursor.execute(
+            "SELECT COUNT(*) AS total, "
+            "SUM(CASE WHEN risk_score >= 0.10 THEN 1 ELSE 0 END) AS detected, "
+            "SUM(CASE WHEN risk_score >= 0.40 THEN 1 ELSE 0 END) AS high_plus "
+            "FROM contracts WHERE vendor_id IN "
+            "(SELECT DISTINCT vendor_id FROM ground_truth_vendors WHERE vendor_id IS NOT NULL)"
+        ).fetchone()
+        gt_total = gt_row[0] or 0
+        gt_detected = gt_row[1] or 0
+        gt_high = gt_row[2] or 0
+        stats['ground_truth'] = {
+            'cases': gt_cases,
+            'vendors': gt_vendors,
+            'contracts': gt_total,
+            'detection_rate': round(gt_detected / gt_total * 100, 1) if gt_total else 0,
+            'high_plus_rate': round(gt_high / gt_total * 100, 1) if gt_total else 0,
+        }
+        print(f"   Done ({time.time() - start:.1f}s) — {gt_cases} cases, {gt_vendors} vendors, {gt_total:,} contracts")
+    except Exception as e:
+        print(f"   Warning: ground truth stats failed: {e}")
+
     # Save all stats to database
     print("\n13. Saving to database...")
     for key, value in stats.items():

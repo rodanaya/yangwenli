@@ -101,19 +101,19 @@ def _warmup_caches():
         "/api/v1/stats/dashboard/fast",                # Dashboard (highest priority, pre-computed)
         "/api/v1/sectors",                             # Sectors list (small table)
         "/api/v1/stats/data-quality",                  # Header quality badge (cached)
+        "/api/v1/executive/summary",                   # Executive section — warm EARLY, cold=90s on VPS
         "/api/v1/analysis/patterns/counts",            # DetectivePatterns page (LIKE queries on 3.1M rows)
         "/api/v1/analysis/year-over-year",             # Shared by Trends, Patterns, Administrations
         "/api/v1/contracts/statistics",                # Explore page (3.8s cold)
         "/api/v1/analysis/overview",                   # Patterns page (8.8s cold)
         "/api/v1/analysis/sector-year-breakdown",      # ProcurementIntelligence heatmap (slow cold)
-        "/api/v1/executive/summary",                   # Dashboard Executive section (19s cold, 15ms warm)
         "/api/v1/analysis/money-flow",                 # Dashboard money flow panel
         "/api/v1/analysis/transparency/publication-delays",  # Dashboard transparency strip (11s cold)
     ]
     for ep in endpoints:
         try:
-            # executive/summary and publication-delays need extended timeout
-            timeout = 30 if ("executive" in ep or "publication" in ep) else (20 if "data-quality" in ep else (12 if "statistics" in ep or "overview" in ep else 3))
+            # executive/summary cold on VPS = 90s; publication-delays = 11s
+            timeout = 120 if "executive" in ep else (30 if "publication" in ep else (20 if "data-quality" in ep else (12 if "statistics" in ep or "overview" in ep else 3)))
             urllib.request.urlopen(f"{base}{ep}", timeout=timeout)
         except Exception as e:
             logger.debug(f"Cache warmup skipped for {ep}: {e}")
