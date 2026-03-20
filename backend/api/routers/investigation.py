@@ -1223,7 +1223,12 @@ def get_top_anomalous_vendors(
                 vf.high_conf_hypothesis_count,
                 vf.top_features, vf.explanation,
                 vs.avg_risk_score,
-                vs.risk_level
+                CASE
+                    WHEN vs.avg_risk_score >= 0.60 THEN 'critical'
+                    WHEN vs.avg_risk_score >= 0.40 THEN 'high'
+                    WHEN vs.avg_risk_score >= 0.25 THEN 'medium'
+                    ELSE 'low'
+                END as risk_level
             FROM vendor_investigation_features vf
             JOIN vendors v ON vf.vendor_id = v.id
             JOIN sectors s ON vf.sector_id = s.id
