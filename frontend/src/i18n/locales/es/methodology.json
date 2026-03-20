@@ -298,7 +298,7 @@
   },
   "kpiBadges": {
     "contracts": "3.1M Contratos",
-    "auc": "AUC 0.849",
+    "auc": "AUC 0.840",
     "cases": "~390 Casos Validados",
     "sectors": "12 Sectores"
   },
@@ -306,7 +306,7 @@
     "overview": {
       "p1Start": "Cada puntuación de riesgo es un ",
       "p1StatisticalIndicator": "indicador estadístico de riesgo",
-      "p1End": " con intervalos de confianza del 95%. El modelo v6.0 usa validación estratificada por proveedor (ningún proveedor aparece en entrenamiento y prueba), produciendo un AUC de prueba honesto de 0.849. Una puntuación de 0.35 significa que las características de contratación del contrato se asemejan estrechamente a las de casos documentados de corrupción.",
+      "p1End": " con intervalos de confianza del 95%. El modelo v6.0 usa validación estratificada por proveedor (ningún proveedor aparece en entrenamiento y prueba), produciendo un AUC de prueba honesto de 0.840. Una puntuación de 0.35 significa que las características de contratación del contrato se asemejan estrechamente a las de casos documentados de corrupción.",
       "formulaLabel": "FÓRMULA DE PUNTUACIÓN",
       "formulaExpr": "S(z) = sigma(beta_0 + beta^T z) / c",
       "formulaDescStart": "Donde z = características z-score, beta = coeficientes aprendidos, sigma = sigmoide logística, c = corrección PU (0.448). S(z) es un ",
@@ -386,7 +386,7 @@
       "mahalanobisNote": "Covarianza estimada con contracción de Ledoit-Wolf para estabilidad en sectores pequeños. Valores p calculados contra distribución chi-cuadrado con 16 grados de libertad.",
       "logisticTitle": "Regresión Logística por Sector",
       "logisticP1": "ElasticNet optimizado con Optuna (C=1.28, l1_ratio=0.961, casi puro L1) entrenado en ~320K contratos malos conocidos de ~390 casos de corrupción con división estratificada por proveedor 70/30 (ningún proveedor en entrenamiento y prueba). 12 submodelos por sector + 1 respaldo global capturan patrones de corrupción específicos por sector.",
-      "logisticNote": "AUC Entrenamiento: 0.849, AUC Prueba: 0.849. La regularización near-L1 lleva las características no informativas a exactamente cero, produciendo un modelo más disperso y robusto que v5.1.",
+      "logisticNote": "AUC Entrenamiento: 0.880, AUC Prueba: 0.840. La regularización near-L1 lleva las características no informativas a exactamente cero, produciendo un modelo más disperso y robusto que v5.1.",
       "puTitle": "Corrección PU-Learning (Elkan y Noto 2008)",
       "puP1Start": "Como los contratos no etiquetados no son necesariamente limpios (algunos pueden ser corruptos pero no detectados), aplicamos una corrección de aprendizaje Positivo-No Etiquetado: ",
       "puNote": "v6.0 estimó c = 0.448 mediante el método holdout de Elkan & Noto en 13 modelos (1 global + 12 por sector). Esto refleja la heterogeneidad del GT ampliado (~725 proveedores con patrones diversos). Con c=0.448, las puntuaciones se reescalan ~2.3x y se limitan a 1.0. IMPORTANTE: El supuesto SCAR es estructuralmente violado — los casos conocidos son escándalos de alto perfil, no una muestra aleatoria de toda la corrupción.",

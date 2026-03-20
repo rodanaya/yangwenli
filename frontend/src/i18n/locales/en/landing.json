@@ -24,7 +24,7 @@
     "step1_title": "Ingest",
     "step1_body": "23 years of COMPRANET procurement data -- 3.1 million contracts, 320K vendors, 12 sectors. Cleaned, classified, and normalized.",
     "step2_title": "Analyze",
-    "step2_body": "ML risk scoring with 16 z-score features, per-sector logistic models, PU-learning correction. Train AUC 0.858, Test AUC 0.849.",
+    "step2_body": "ML risk scoring with 16 z-score features, per-sector logistic models, PU-learning correction. Train AUC 0.880, Test AUC 0.840.",
     "step3_title": "Investigate",
     "step3_body": "Ranked investigation queue with evidence, SHAP explanations, confidence intervals. Every score has a reason."
   },
@@ -43,12 +43,12 @@
   "cta": {
     "tag": "Start Now",
     "title": "Open-source. No account required.",
-    "sub": "Data from COMPRANET 2002-2025. Model v6.1. AUC 0.849.",
+    "sub": "Data from COMPRANET 2002-2025. Model v6.1. AUC 0.840.",
     "dashboard": "Start with the Dashboard",
     "executive": "Read the Executive Summary"
   },
   "footer": {
     "platform": "RUBLI -- Mexican Government Procurement Analysis Platform",
-    "data": "Data: COMPRANET 2002-2025 | Model: v6.1 | AUC 0.849"
+    "data": "Data: COMPRANET 2002-2025 | Model: v6.1 | AUC 0.840"
   }
 }

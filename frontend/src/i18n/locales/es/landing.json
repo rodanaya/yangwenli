@@ -24,7 +24,7 @@
     "step1_title": "Ingerir",
     "step1_body": "23 anos de datos de adquisiciones de COMPRANET -- 3.1 millones de contratos, 320K proveedores, 12 sectores. Limpiados, clasificados y normalizados.",
     "step2_title": "Analizar",
-    "step2_body": "Puntuacion de riesgo ML con 16 caracteristicas z-score, modelos logisticos por sector, correccion PU-learning. AUC entrenamiento 0.858, AUC prueba 0.849.",
+    "step2_body": "Puntuacion de riesgo ML con 16 caracteristicas z-score, modelos logisticos por sector, correccion PU-learning. AUC entrenamiento 0.880, AUC prueba 0.840.",
     "step3_title": "Investigar",
     "step3_body": "Cola de investigacion priorizada con evidencia, explicaciones SHAP, intervalos de confianza. Cada puntuacion tiene una razon."
   },
@@ -43,12 +43,12 @@
   "cta": {
     "tag": "Comienza Ahora",
     "title": "Codigo abierto. Sin cuenta requerida.",
-    "sub": "Datos de COMPRANET 2002-2025. Modelo v6.1. AUC 0.849.",
+    "sub": "Datos de COMPRANET 2002-2025. Modelo v6.1. AUC 0.840.",
     "dashboard": "Ir al Panel de Control",
     "executive": "Leer el Resumen Ejecutivo"
   },
   "footer": {
     "platform": "RUBLI -- Plataforma de Analisis de Adquisiciones del Gobierno Mexicano",
-    "data": "Datos: COMPRANET 2002-2025 | Modelo: v6.1 | AUC 0.849"
+    "data": "Datos: COMPRANET 2002-2025 | Modelo: v6.1 | AUC 0.840"
   }
 }

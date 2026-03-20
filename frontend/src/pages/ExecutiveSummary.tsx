@@ -273,7 +273,7 @@ export function ExecutiveSummary() {
         <FuentePill source="COMPRANET" count={3051294} verified={true} />
         <MetodologiaTooltip
           title="Sobre este analisis"
-          body="Basado en el modelo de riesgo RUBLI v6.4 (AUC=0.863, HR=9.0%). Scores indican similitud con patrones de corrupcion documentados, no son prueba de irregularidad."
+          body="Basado en el modelo de riesgo RUBLI v6.4 (AUC=0.840, HR ~10%). Scores indican similitud con patrones de corrupcion documentados, no son prueba de irregularidad."
           link="/methodology"
         />
       </div>
@@ -470,9 +470,9 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
       color: '#22d3ee',
     },
     {
-      value: '0.863',
+      value: '0.840',
       label: 'Model AUC',
-      sub: 'Vendor-stratified split · v6.0',
+      sub: 'Vendor-stratified split · v6.4',
       glow: 'rgba(34,197,94,0.3)',
       color: '#4ade80',
     },

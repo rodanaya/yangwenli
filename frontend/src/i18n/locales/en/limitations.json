@@ -109,7 +109,7 @@
     "temporal": {
       "title": "Temporal Stationarity — Model May Become Stale",
       "summary": "The model was trained on contracts through 2020. Corruption patterns may evolve, and new patterns in 2021–2025 data may go undetected.",
-      "body1": "The v6.0 model uses a vendor-stratified train/test split (no vendor appears in both sets). The test AUC of 0.849 is an honest estimate of generalization to unseen vendors.",
+      "body1": "The v6.0 model uses a vendor-stratified train/test split (no vendor appears in both sets). The test AUC of 0.840 is an honest estimate of generalization to unseen vendors.",
       "body2": "However, the model assumes corruption patterns are relatively stable over time — that what was corrupt in 2018 is structured similarly to what is corrupt in 2024. If a new administration introduces fundamentally different procurement fraud mechanisms, the model may be slow to detect them.",
       "body3": "Recalibration with new ground truth cases should occur when major new corruption cases are documented.",
       "workaround": "Monitor the Ground Truth page for newly added cases. After major scandals are documented, the model should be retrained to incorporate the new patterns."

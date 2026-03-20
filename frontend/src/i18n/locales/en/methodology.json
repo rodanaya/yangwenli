@@ -298,7 +298,7 @@
   },
   "kpiBadges": {
     "contracts": "3.1M Contracts",
-    "auc": "AUC 0.849",
+    "auc": "AUC 0.840",
     "cases": "~390 Cases Validated",
     "sectors": "12 Sectors"
   },
@@ -306,7 +306,7 @@
     "overview": {
       "p1Start": "Every risk score is a ",
       "p1StatisticalIndicator": "statistical risk indicator",
-      "p1End": " with 95% confidence intervals. The v6.0 model uses vendor-stratified validation (no vendor appears in both training and test sets), producing an honest test AUC of 0.849. A score of 0.35 means this contract's procurement characteristics closely resemble those from documented corruption cases.",
+      "p1End": " with 95% confidence intervals. The v6.0 model uses vendor-stratified validation (no vendor appears in both training and test sets), producing an honest test AUC of 0.840. A score of 0.35 means this contract's procurement characteristics closely resemble those from documented corruption cases.",
       "formulaLabel": "SCORE FORMULA",
       "formulaExpr": "S(z) = sigma(beta_0 + beta^T z) / c",
       "formulaDescStart": "Where z = z-score features, beta = learned coefficients, sigma = logistic sigmoid, c = PU correction (0.448). S(z) is a ",
@@ -386,7 +386,7 @@
       "mahalanobisNote": "Covariance estimated with Ledoit-Wolf shrinkage for stability in small sectors. P-values computed against chi-squared distribution with 16 degrees of freedom.",
       "logisticTitle": "Per-Sector Logistic Regression",
       "logisticP1": "Optuna-tuned ElasticNet (C=1.28, l1_ratio=0.961, near-pure L1) trained on ~320K known-bad contracts from ~390 corruption cases with vendor-stratified 70/30 split (no vendor in both train and test). 12 per-sector sub-models + 1 global fallback capture sector-specific corruption patterns.",
-      "logisticNote": "Train AUC: 0.849, Test AUC: 0.849. Near-L1 regularization drives uninformative features to exactly zero, producing a sparser and more robust model than v5.1.",
+      "logisticNote": "Train AUC: 0.880, Test AUC: 0.840. Near-L1 regularization drives uninformative features to exactly zero, producing a sparser and more robust model than v5.1.",
       "puTitle": "PU-Learning Correction (Elkan & Noto 2008)",
       "puP1Start": "Since unlabeled contracts are not necessarily clean (some may be corrupt but undetected), we apply a Positive-Unlabeled learning correction: ",
       "puNote": "v6.0 estimated c = 0.448 via Elkan & Noto holdout on 13 models (1 global + 12 per-sector). This reflects the heterogeneity of the expanded ground truth (~725 vendors with diverse patterns). With c=0.448, scores are rescaled by ~2.3x and capped at 1.0. IMPORTANT: The SCAR assumption is structurally violated — known cases are high-profile scandals, not a random sample of all corruption.",

@@ -69,32 +69,32 @@ interface Coefficient {
 }
 
 const MODEL_COEFFICIENTS: Coefficient[] = [
-  { factor: 'price_volatility', beta: 1.148, raw_beta: 1.148, ci_lower: 1.081, ci_upper: 1.201, direction: 'positive', note: 'Strongest predictor' },
-  { factor: 'vendor_concentration', beta: 0.375, raw_beta: 0.375, ci_lower: 0.345, ci_upper: 0.413, direction: 'positive' },
-  { factor: 'price_ratio', beta: 0.235, raw_beta: 0.235, ci_lower: 0.211, ci_upper: 0.257, direction: 'positive' },
-  { factor: 'network_member_count', beta: 0.181, raw_beta: 0.181, ci_lower: 0.173, ci_upper: 0.189, direction: 'positive' },
-  { factor: 'same_day_count', beta: 0.095, raw_beta: 0.095, ci_lower: 0.086, ci_upper: 0.102, direction: 'positive' },
-  { factor: 'win_rate', beta: 0.049, raw_beta: 0.049, ci_lower: 0.029, ci_upper: 0.065, direction: 'positive', note: 'Sign-constrained positive' },
-  { factor: 'institution_diversity', beta: -0.382, raw_beta: -0.382, ci_lower: -0.399, ci_upper: -0.364, direction: 'negative', note: 'Serves many institutions = less risky' },
-  { factor: 'direct_award', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero (v6.4)' },
-  { factor: 'single_bid', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'Sign-constrained to zero' },
-  { factor: 'industry_mismatch', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero (v6.4)' },
-  { factor: 'year_end', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero (v6.4)' },
-  { factor: 'institution_risk', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero (v6.4)' },
-  { factor: 'ad_period_days', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero (v6.4)' },
+  { factor: 'price_volatility', beta: 1.857, raw_beta: 1.857, ci_lower: 1.780, ci_upper: 1.930, direction: 'positive', note: 'Strongest predictor' },
+  { factor: 'institution_diversity', beta: -0.468, raw_beta: -0.468, ci_lower: -0.490, ci_upper: -0.446, direction: 'negative', note: 'Serves many institutions = less risky' },
+  { factor: 'price_ratio', beta: 0.391, raw_beta: 0.391, ci_lower: 0.365, ci_upper: 0.415, direction: 'positive' },
+  { factor: 'vendor_concentration', beta: 0.238, raw_beta: 0.238, ci_lower: 0.215, ci_upper: 0.260, direction: 'positive' },
+  { factor: 'network_member_count', beta: 0.187, raw_beta: 0.187, ci_lower: 0.178, ci_upper: 0.196, direction: 'positive' },
+  { factor: 'same_day_count', beta: 0.111, raw_beta: 0.111, ci_lower: 0.101, ci_upper: 0.121, direction: 'positive' },
+  { factor: 'single_bid', beta: 0.098, raw_beta: 0.098, ci_lower: 0.078, ci_upper: 0.118, direction: 'positive', note: 'Now active with C=0.01' },
+  { factor: 'ad_period_days', beta: 0.042, raw_beta: 0.042, ci_lower: 0.025, ci_upper: 0.059, direction: 'positive', note: 'Now active with C=0.01' },
+  { factor: 'win_rate', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'Sign-constrained to zero' },
+  { factor: 'direct_award', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero' },
   { factor: 'sector_spread', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'Sign-constrained to zero' },
-  { factor: 'price_hyp_confidence', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero (v6.4)' },
-  { factor: 'co_bid_rate', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero (v6.4)' },
+  { factor: 'industry_mismatch', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero' },
+  { factor: 'year_end', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero' },
+  { factor: 'institution_risk', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero' },
+  { factor: 'price_hyp_confidence', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero' },
+  { factor: 'co_bid_rate', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero' },
 ]
 
 const VALIDATION_METRICS = {
-  auc_train: 0.867,
-  auc_roc: 0.863,
+  auc_train: 0.880,
+  auc_roc: 0.840,
   brier_score: 0.107,
   detection_rate_medium_plus: 1.000,
-  detection_rate_high_plus: 0.628,
-  high_risk_rate: 0.090,
-  pu_correction: 0.321,
+  detection_rate_high_plus: 0.674,
+  high_risk_rate: 0.100,
+  pu_correction: 0.343,
   ground_truth_cases: 347,
   ground_truth_vendors: 507,
   ground_truth_contracts: 252072,
@@ -128,22 +128,22 @@ const CASE_DETECTION: CaseDetection[] = [
 
 const MODEL_COMPARISON = {
   v33: { auc: 0.584, detection: 67.1, high_plus: 18.3, brier: 0.411, lift: 1.22 },
-  v60: { auc: 0.863, detection: 100.0, high_plus: 62.8, brier: 0.107, lift: 3.1 },
+  v60: { auc: 0.840, detection: 100.0, high_plus: 67.4, brier: 0.107, lift: 3.1 },
 } as const
 
 const SECTOR_MODELS = [
-  { sector: 'Salud (1)', factors: [['price_volatility', '+1.45'], ['vendor_concentration', '+0.46'], ['institution_diversity', '-0.18']] },
-  { sector: 'Educacion (2)', factors: [['price_volatility', '+0.43'], ['same_day_count', '+0.20'], ['network_member_count', '+0.11']] },
-  { sector: 'Infraestructura (3)', factors: [['vendor_concentration', '+0.40'], ['global model fills remainder', '']] },
-  { sector: 'Energia (4)', factors: [['network_member_count', '+0.07'], ['global model fills remainder', '']] },
-  { sector: 'Defensa (5)', factors: [['global model (sparse)', '—']] },
-  { sector: 'Tecnologia (6)', factors: [['global model fallback', '<500 GT cases']] },
-  { sector: 'Hacienda (7)', factors: [['vendor_concentration', '+0.29'], ['network_member_count', '+0.13']] },
-  { sector: 'Gobernacion (8)', factors: [['vendor_concentration', '+0.14'], ['global model fills remainder', '']] },
-  { sector: 'Agricultura (9)', factors: [['price_volatility', '+0.39'], ['same_day_count', '+0.10'], ['price_ratio', '+0.10']] },
-  { sector: 'Ambiente (10)', factors: [['global model fallback', '<500 GT cases']] },
-  { sector: 'Trabajo (11)', factors: [['global model (sparse)', '—']] },
-  { sector: 'Otros (12)', factors: [['global model fallback', '<500 GT cases']] },
+  { sector: 'Salud (1)', factors: [['AUC 0.881', 'sector model'], ['price_volatility', '+1.45'], ['vendor_concentration', '+0.46']] },
+  { sector: 'Educacion (2)', factors: [['AUC 0.911', 'sector model'], ['price_volatility', '+0.43'], ['same_day_count', '+0.20']] },
+  { sector: 'Infraestructura (3)', factors: [['AUC 0.911', 'sector model'], ['vendor_concentration', '+0.40']] },
+  { sector: 'Energia (4)', factors: [['AUC 0.888', 'sector model'], ['network_member_count', '+0.07']] },
+  { sector: 'Defensa (5)', factors: [['AUC 0.869', 'sector model']] },
+  { sector: 'Tecnologia (6)', factors: [['AUC 0.901', 'sector model']] },
+  { sector: 'Hacienda (7)', factors: [['AUC 0.916', 'sector model'], ['vendor_concentration', '+0.29'], ['network_member_count', '+0.13']] },
+  { sector: 'Gobernacion (8)', factors: [['AUC 0.872', 'sector model'], ['vendor_concentration', '+0.14']] },
+  { sector: 'Agricultura (9)', factors: [['AUC 0.872', 'sector model'], ['price_volatility', '+0.39'], ['same_day_count', '+0.10']] },
+  { sector: 'Ambiente (10)', factors: [['AUC 0.895', 'sector model']] },
+  { sector: 'Trabajo (11)', factors: [['AUC 0.908', 'sector model']] },
+  { sector: 'Otros (12)', factors: [['AUC 0.857', 'global fallback (n<500)']] },
 ] as const
 
 // ============================================================================
@@ -1849,7 +1849,7 @@ export default function ModelTransparency() {
               { version: 'v3.3', date: 'Feb 2026', auc: '0.584', label: 'Weighted Checklist', desc: '8 base factors, IMF-aligned weights, interaction effects. AUC barely above random.', color: '#64748b' },
               { version: 'v4.0', date: 'Feb 2026', auc: '0.942', label: 'Statistical Framework', desc: 'Z-scores, Mahalanobis distance, Bayesian logistic regression. 12 features, PU-learning correction.', color: '#fb923c' },
               { version: 'v5.1', date: 'Feb 2026', auc: '0.957', label: 'Per-Sector Sub-Models', desc: '16 z-score features, 13 models (1 global + 12 sector). Temporal split inflated AUC due to vendor leakage.', color: '#3b82f6' },
-              { version: 'v6.4', date: 'Mar 2026', auc: '0.863', label: 'Curriculum Learning (Active)', desc: '347 GT cases, 507 vendors. Near-L1 regularization (C=0.0013), 7 active features. OECD HR=9.0%.', color: 'var(--color-accent)', active: true },
+              { version: 'v6.4', date: 'Mar 2026', auc: '0.840', label: 'Curriculum Learning (Active)', desc: '347 GT cases, 507 vendors. Near-L1 regularization (C=0.01), 8 active features. OECD HR ~10%.', color: 'var(--color-accent)', active: true },
             ].map((item) => (
               <div key={item.version} className="relative flex items-start gap-4 pb-5 last:pb-0">
                 <div
@@ -1897,22 +1897,22 @@ export default function ModelTransparency() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="card p-4 space-y-2">
               <p className="text-xs text-text-muted uppercase tracking-wider font-medium">Global Intercept</p>
-              <p className="text-3xl font-bold tabular-nums text-accent">-2.856</p>
+              <p className="text-3xl font-bold tabular-nums text-accent">-2.388</p>
               <p className="text-xs text-text-muted leading-relaxed">
-                This means a contract with all z-scores at zero (perfectly average for its sector and year) has a baseline logit of -2.856, corresponding to a raw probability of ~5.4% before PU correction.
+                This means a contract with all z-scores at zero (perfectly average for its sector and year) has a baseline logit of -2.388, corresponding to a raw probability of ~8.4% before PU correction.
               </p>
             </div>
             <div className="card p-4 space-y-2">
               <p className="text-xs text-text-muted uppercase tracking-wider font-medium">Baseline Risk After PU</p>
-              <p className="text-3xl font-bold tabular-nums text-accent-data">~12.5%</p>
+              <p className="text-3xl font-bold tabular-nums text-accent-data">~24.5%</p>
               <p className="text-xs text-text-muted leading-relaxed">
-                After dividing by the PU correction factor (c=0.448), an average contract scores ~12.5%. This is why the medium threshold is set at 15% -- most contracts score below it. The OECD intercept calibration (delta=-1.16) was applied post-hoc to bring the high-risk rate from 23.6% to 9.9%.
+                After dividing by the PU correction factor (c=0.343), an average contract scores ~24.5%. The OECD intercept calibration (delta=-0.31) was applied post-hoc to bring the high-risk rate from 19.2% to ~9.2%.
               </p>
             </div>
           </div>
           <div className="mt-3 p-3 rounded-md bg-accent/5 border border-accent/15 text-xs text-text-muted leading-relaxed">
             <span className="font-medium text-accent">Why this matters: </span>
-            The intercept sets the "center of gravity" for the entire score distribution. When v6.1 used a less-regularized model (C=1.0 vs v6.0's C=0.35), the intercept shifted from -2.82 to -1.69, causing the high-risk rate to balloon to 23.6%. The post-hoc calibration restored OECD compliance by shifting it back to -2.856.
+            The intercept sets the "center of gravity" for the entire score distribution. Moving from C=0.0013 to C=0.01 (less aggressive L1) activated more features (8 vs 7 active) and shifted the raw intercept from -2.077 to -2.388 after OECD calibration. HR = 9.2%, within OECD 2–15% range.
           </div>
         </CardContent>
       </Card>

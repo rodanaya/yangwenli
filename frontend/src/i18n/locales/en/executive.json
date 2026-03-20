@@ -17,7 +17,7 @@
       "71% of federal contracts skip open competition — a structural feature of Mexican procurement, not an exception",
       "Every December for 23 years, spending spikes 1.33× — budget dumping repeated across every administration",
       "10.6% of total procurement value is flagged as high or critical risk, concentrated in a handful of dominant vendors",
-      "Our AI model achieves AUC-ROC 0.849 (vendor-stratified split) — correctly ranking a corrupt contract above a clean one 84.9% of the time — and would have flagged IMSS fraud 8 years before the scandal broke"
+      "Our AI model achieves AUC-ROC 0.840 (vendor-stratified split) — correctly ranking a corrupt contract above a clean one 84.0% of the time — and would have flagged IMSS fraud 8 years before the scandal broke"
     ]
   },
 
@@ -242,7 +242,7 @@
       },
       "temporalLeakage": {
         "title": "Vendor Features Use Future Data",
-        "text": "Vendor-level features (concentration, win rate, price volatility) are currently computed using full 2002–2025 history. A 2019 contract's vendor concentration score includes 2020–2025 activity. v6.0 mitigates the validation impact with vendor-stratified splitting (AUC 0.849), but the underlying feature leakage in vendor aggregates persists.",
+        "text": "Vendor-level features (concentration, win rate, price volatility) are currently computed using full 2002–2025 history. A 2019 contract's vendor concentration score includes 2020–2025 activity. v6.0 mitigates the validation impact with vendor-stratified splitting (AUC 0.840), but the underlying feature leakage in vendor aggregates persists.",
         "mitigation": "Point-in-time rolling aggregates planned for future release. Vendor-stratified split prevents the model from memorizing individual vendor patterns."
       }
     },

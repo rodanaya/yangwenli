@@ -101,8 +101,8 @@ For detailed validation rules, see @.claude/rules/data-validation.md
 
 **Model versions** — v3.3 (weighted checklist), v4.0 (statistical), v5.1 (preserved), v6.4 (active), v5.2 (analytical engine):
 
-> **DB STATE (2026-03-17)**: All 3,051,294 contracts scored with v6.4 (`risk_model_version='v6.0'` tag in model_calibration, run ID: CAL-v6.1-202603172047).
-> v6.4 high-risk rate: **8.3%** (HR=9.0% pre-audit-fix). v5.2 adds SHAP explanations, PyOD anomaly ensemble, drift detection — enrichment layer on top of scores.
+> **DB STATE (2026-03-19)**: All 3,051,294 contracts rescored with v6.4 C=0.01 model (`risk_model_version='v6.0'` tag, run ID: CAL-v6.1-202603191034). HR=9.2%, precomputed_stats done.
+> v6.4 high-risk rate: **9.2%** OECD compliant. v5.2 adds SHAP explanations, PyOD anomaly ensemble, drift detection — enrichment layer on top of scores.
 > Cold-start fix is in place (vendor_rolling_stats point-in-time features, z_vendor_concentration capped at ±5 SD).
 > **DO NOT run `_score_v6_now.py`** without verifying calibration sanity (intercept < -0.5, PU c > 0.30).
 
@@ -115,19 +115,18 @@ For detailed validation rules, see @.claude/rules/data-validation.md
 
 ### v6.4: Vendor-Stratified Calibrated Model (ACTIVE)
 
-Per-sector calibrated risk indicators P(corrupt|z) with confidence intervals. **Train AUC: 0.867, Test AUC: 0.863** (vendor-stratified split), high-risk rate: 8.3% (OECD compliant).
+Per-sector calibrated risk indicators P(corrupt|z) with confidence intervals. **Train AUC: 0.880, Test AUC: 0.840** internal (vendor-stratified); **Population AUC: 0.728** (use for external reporting). HR=9.2% OECD compliant.
 
-- 7 active features (9 regularized to zero by extreme near-L1): price_volatility, institution_diversity, vendor_concentration, price_ratio, network_member_count, same_day_count, win_rate
-- 13 models: 1 global + 12 per-sector logistic regressions
+- 8 active features: price_volatility +1.8566, institution_diversity -0.4679, price_ratio +0.3907, vendor_concentration +0.2378, network_member_count +0.1873, same_day_count +0.1114, single_bid +0.0984, ad_period_days +0.0423
+- 13 models: 1 global + 12 per-sector logistic regressions (Otros falls back to global n<500)
 - Ground truth: **347 cases (windowed), 507 vendors, ~315K contracts across all 12 sectors**
 - Curriculum learning: confirmed_corrupt=1.0, high=0.8, medium=0.5, low=0.2 per-sample weights
-- Elkan & Noto (2008) PU-learning correction (c=0.3211)
-- Optuna TPE near-L1 (C=0.0013, l1_ratio=0.9673, 150 trials)
-- Intercept: -2.4307 (OECD delta=-0.1873 applied post-hoc)
+- Elkan & Noto (2008) PU-learning correction (c=0.3432)
+- Optuna TPE (C=0.0100, l1_ratio=0.9673, 150 trials); intercept=-2.3880 (OECD delta=-0.3105)
 
-**Top predictors**: price_volatility (+1.1482), institution_diversity (-0.3821), vendor_concentration (+0.3749), price_ratio (+0.2345), network_member_count (+0.1811)
+**Top predictors**: price_volatility (+1.8566), institution_diversity (-0.4679), price_ratio (+0.3907), vendor_concentration (+0.2378), network_member_count (+0.1873)
 **Risk Levels**: Critical (>=0.60), High (>=0.40), Medium (>=0.25), Low (<0.25)
-**Distribution**: Critical 3.87% (118K), High 4.44% (136K), Medium 18.1% (552K), Low 73.6% (2.2M)
+**Distribution**: Critical 4.38% (133K), High 4.85% (148K), Medium 16.34% (498K), Low 74.44% (2.3M)
 
 ### v4.0: Statistical Framework (preserved in risk_score_v4)
 

@@ -33,10 +33,13 @@ FACTOR_NAMES = [c.replace('z_', '') for c in Z_COLS]
 # clamp at scoring time so SHAP/PyOD enrichment layers can apply their own logic.
 ZSCORE_CAP = 5.0
 
-# Fix 2: Sectors with fewer than this many positive training examples fall back
-# to the global model. A 16-feature logistic regression with <500 observations
-# is fitting noise (e.g., Other sector: n=139, test AUC=0.758).
+# Fix 2: Sectors fall back to global model if they have too few positive training
+# examples OR if the sector model AUC is below a useful discrimination threshold.
+# Reason: extreme L1 regularization (C=0.0013) can produce sector models with
+# 0-1 active coefficients (e.g., Energia: only network_member_count=0.067 active,
+# AUC=0.680, HR=0.5%). A global model is strictly better in such cases.
 MIN_SECTOR_POSITIVES = 500
+MIN_SECTOR_AUC = 0.70  # Fallback to global if sector model AUC < this threshold
 
 # Fix 3: Ghost companion boost weight. A max-confidence ghost flag (score=1.0)
 # adds this much to the base risk_score, enough to push a zero-scored new vendor
@@ -63,7 +66,8 @@ def get_risk_level(score):
 def load_all_calibrations(conn):
     """Load global + per-sector v6.0 calibrations with n_positive for fallback logic."""
     rows = conn.execute('''
-        SELECT sector_id, intercept, coefficients, pu_correction_factor, bootstrap_ci, n_positive
+        SELECT sector_id, intercept, coefficients, pu_correction_factor, bootstrap_ci, n_positive,
+               auc_roc
         FROM model_calibration WHERE model_version='v6.0'
         ORDER BY created_at DESC
     ''').fetchall()
@@ -81,6 +85,7 @@ def load_all_calibrations(conn):
             for f in FACTOR_NAMES
         ])
         n_positive = row[5] or 0
+        auc_roc = row[6] or 0.0
         key = 'global' if sid is None else sid
         models[key] = {
             'intercept': intercept,
@@ -88,6 +93,7 @@ def load_all_calibrations(conn):
             'pu_c': pu_c,
             'ci_widths': ci_widths,
             'n_positive': n_positive,
+            'auc_roc': auc_roc,
         }
 
     return models
@@ -127,16 +133,20 @@ def main():
     g_pu_c = g["pu_c"]
     print(f'  Global: intercept={g_intercept:.4f}, pu_c={g_pu_c:.4f}', flush=True)
 
-    # Fix 2: Identify sectors that fall back to global due to small n_positive
+    # Fix 2: Identify sectors that fall back to global due to small n_positive or low AUC
     sector_ids = sorted(k for k in models if k != 'global')
     fallback_sectors = []
     for sid in sector_ids:
         n_pos = models[sid]['n_positive']
+        auc = models[sid].get('auc_roc', 1.0)
         if n_pos < MIN_SECTOR_POSITIVES:
             fallback_sectors.append(sid)
             print(f'  Sector {sid}: n_positive={n_pos} < {MIN_SECTOR_POSITIVES} -> GLOBAL FALLBACK', flush=True)
+        elif auc < MIN_SECTOR_AUC:
+            fallback_sectors.append(sid)
+            print(f'  Sector {sid}: auc={auc:.3f} < {MIN_SECTOR_AUC} -> GLOBAL FALLBACK (underpowered model)', flush=True)
         else:
-            print(f'  Sector {sid}: n_positive={n_pos} -> sector model', flush=True)
+            print(f'  Sector {sid}: n_positive={n_pos}, auc={auc:.3f} -> sector model', flush=True)
 
     print(f'  Z-score cap: +/-{ZSCORE_CAP} SD', flush=True)
     if fallback_sectors:

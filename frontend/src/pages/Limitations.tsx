@@ -178,7 +178,7 @@ const LIMITATIONS = [
     severity: 'low',
     summary: 'The model was trained on contracts through 2020. Corruption patterns may evolve, and new patterns in 2021–2025 data may go undetected.',
     body: [
-      'The v6.0 model uses a vendor-stratified 70/30 split: no vendor appears in both train and test sets. The test AUC of 0.863 (vs train 0.867) confirms honest generalization without vendor data leakage.',
+      'The v6.0 model uses a vendor-stratified 70/30 split: no vendor appears in both train and test sets. Two AUC metrics are reported: (1) internal validation AUC 0.840 — the model never saw test-set vendor contracts during training, confirming honest generalization; (2) population discrimination AUC 0.728 — computed by ranking all 295K GT-labeled contracts against all 2.7M unlabeled contracts, a harder and more realistic evaluation. Both are valid metrics measuring different things.',
       'However, the model assumes corruption patterns are relatively stable over time — that what was corrupt in 2018 is structured similarly to what is corrupt in 2024. If a new administration introduces fundamentally different procurement fraud mechanisms, the model may be slow to detect them.',
       'Recalibration with new ground truth cases should occur when major new corruption cases are documented.',
     ],
@@ -231,7 +231,7 @@ const LIMITATIONS = [
     summary: 'Vendor-level features (concentration, win rate, price volatility) are computed using full-dataset history (2002–2025). A 2019 contract uses its vendor\'s 2020–2025 activity. v6.0 mitigates this with vendor-stratified splitting but the underlying feature leakage persists.',
     body: [
       'Five features — vendor_concentration, win_rate, price_volatility, institution_diversity, sector_spread — are computed as vendor-level aggregates over all available data (2002–2025). When scoring a contract from 2019, these features include information from 2020–2025 that could not have been known at award time.',
-      'v6.0 mitigates the validation impact by using vendor-stratified splitting (no vendor in both train and test), which prevents the model from memorizing individual vendor patterns. The test AUC of 0.863 is more honest than v5.1\'s 0.957 temporal split. However, the underlying feature leakage in vendor aggregates persists.',
+      'v6.0 mitigates the validation impact by using vendor-stratified splitting (no vendor in both train and test), which prevents the model from memorizing individual vendor patterns. The internal test AUC of 0.840 is more honest than v5.1\'s 0.957 temporal split. The population discrimination AUC of 0.728 (all GT vs all non-GT) represents the real-world performance ceiling under the SCAR violation. However, the underlying feature leakage in vendor aggregates persists.',
       'Point-in-time rolling features (vendor_rolling_stats table) would fully fix this but create cold-start problems for first-year vendors. This limitation persists in v6.0.',
     ],
     workaround: 'For newly-created vendors with no historical COMPRANET activity, risk scores are less reliable because vendor-level features cannot be computed. Newly incorporated vendors should be flagged separately for manual review regardless of their risk score.',

@@ -17,7 +17,7 @@
       "El 71% de los contratos federales omiten la licitación abierta — una característica estructural, no una excepción",
       "Cada diciembre durante 23 años, el gasto aumenta 1.33× — vaciado presupuestal repetido en cada administración",
       "El 10.6% del valor total de contratación está clasificado como riesgo alto o crítico, concentrado en pocos proveedores dominantes",
-      "Nuestro modelo de IA alcanza un AUC-ROC de 0.849 (división estratificada por proveedor) — clasifica correctamente un contrato corrupto sobre uno limpio el 84.9% de las veces — y habría detectado el fraude del IMSS 8 años antes del escándalo"
+      "Nuestro modelo de IA alcanza un AUC-ROC de 0.840 (división estratificada por proveedor) — clasifica correctamente un contrato corrupto sobre uno limpio el 84.0% de las veces — y habría detectado el fraude del IMSS 8 años antes del escándalo"
     ]
   },
 
@@ -242,7 +242,7 @@
       },
       "temporalLeakage": {
         "title": "Las Variables de Proveedores Usan Datos Futuros",
-        "text": "Las variables a nivel de proveedor (concentraci\u00f3n, tasa de adjudicaci\u00f3n, volatilidad de precios) se calculan actualmente usando el historial completo 2002–2025. La concentraci\u00f3n de un contrato de 2019 incluye actividad de 2020–2025. v6.0 mitiga el impacto en validaci\u00f3n con divisi\u00f3n estratificada por proveedor (AUC 0.849), pero la filtraci\u00f3n temporal subyacente en los agregados de proveedores persiste.",
+        "text": "Las variables a nivel de proveedor (concentraci\u00f3n, tasa de adjudicaci\u00f3n, volatilidad de precios) se calculan actualmente usando el historial completo 2002–2025. La concentraci\u00f3n de un contrato de 2019 incluye actividad de 2020–2025. v6.0 mitiga el impacto en validaci\u00f3n con divisi\u00f3n estratificada por proveedor (AUC 0.840), pero la filtraci\u00f3n temporal subyacente en los agregados de proveedores persiste.",
         "mitigation": "Agregados rodantes en tiempo real planificados para versiones futuras. La divisi\u00f3n estratificada por proveedor evita que el modelo memorice patrones individuales."
       }
     },

@@ -42,22 +42,22 @@ import {
 // ============================================================================
 
 const V6_COEFFICIENTS = [
-  { nameKey: 'priceVolatility', coeff: 1.156 },
-  { nameKey: 'vendorConcentration', coeff: 0.863 },
-  { nameKey: 'priceRatio', coeff: 0.201 },
-  { nameKey: 'networkMembers', coeff: 0.199 },
-  { nameKey: 'directAward', coeff: 0.132 },
-  { nameKey: 'sectorSpread', coeff: 0.117 },
-  { nameKey: 'sameDayContracts', coeff: 0.107 },
-  { nameKey: 'adPeriodDays', coeff: 0.079 },
-  { nameKey: 'yearEnd', coeff: 0.029 },
-  { nameKey: 'industryMismatch', coeff: 0.012 },
+  { nameKey: 'priceVolatility', coeff: 1.857 },
+  { nameKey: 'institutionDiversity', coeff: -0.468 },
+  { nameKey: 'priceRatio', coeff: 0.391 },
+  { nameKey: 'vendorConcentration', coeff: 0.238 },
+  { nameKey: 'networkMembers', coeff: 0.187 },
+  { nameKey: 'sameDayContracts', coeff: 0.111 },
+  { nameKey: 'singleBid', coeff: 0.098 },
+  { nameKey: 'adPeriodDays', coeff: 0.042 },
+  { nameKey: 'winRate', coeff: 0.0 },
+  { nameKey: 'directAward', coeff: 0.0 },
+  { nameKey: 'sectorSpread', coeff: 0.0 },
   { nameKey: 'coBidRate', coeff: 0.0 },
   { nameKey: 'priceHypConfidence', coeff: 0.0 },
-  { nameKey: 'institutionRisk', coeff: -0.016 },
-  { nameKey: 'winRate', coeff: -0.056 },
-  { nameKey: 'singleBid', coeff: -0.065 },
-  { nameKey: 'institutionDiversity', coeff: -0.436 },
+  { nameKey: 'institutionRisk', coeff: 0.0 },
+  { nameKey: 'yearEnd', coeff: 0.0 },
+  { nameKey: 'industryMismatch', coeff: 0.0 },
 ] as const
 
 const V33_WEIGHTS = [
@@ -122,10 +122,10 @@ const REFERENCES = [
 ] as const
 
 const MODEL_COMPARISON = [
-  { metric: 'AUC-ROC', v33: '0.584', v60: '0.863', improvement: '+48%' },
+  { metric: 'AUC-ROC', v33: '0.584', v60: '0.840', improvement: '+44%' },
   { metric: 'Brier Score', v33: '0.411', v60: '0.107', improvement: '-74%' },
   { metric: 'Detection Rate (med+)', v33: '67.1%', v60: '100%', improvement: '+33pp' },
-  { metric: 'High+ Detection', v33: '18.3%', v60: '62.8%', improvement: '+44pp' },
+  { metric: 'High+ Detection', v33: '18.3%', v60: '67.4%', improvement: '+49pp' },
   { metric: 'Lift vs Random', v33: '1.22x', v60: '3.1x', improvement: '+1.9x' },
 ] as const
 
@@ -171,7 +171,7 @@ const MODEL_EVOLUTION_STEPS = [
     date: 'Mar 17, 2026',
     titleKey: 'v60Title',
     descKey: 'v60Desc',
-    metric: 'AUC 0.863',
+    metric: 'AUC 0.840',
     active: true,
     overlay: false,
   },

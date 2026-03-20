@@ -109,7 +109,7 @@
     "temporal": {
       "title": "Estacionariedad Temporal — El Modelo Puede Volverse Obsoleto",
       "summary": "El modelo fue entrenado con contratos hasta 2020. Los patrones de corrupción pueden evolucionar, y nuevos patrones en datos de 2021–2025 pueden no ser detectados.",
-      "body1": "El modelo v6.0 usa una división estratificada por proveedor (ningún proveedor aparece en ambos conjuntos). El AUC de prueba de 0.849 es una estimación honesta de generalización a proveedores no vistos.",
+      "body1": "El modelo v6.0 usa una división estratificada por proveedor (ningún proveedor aparece en ambos conjuntos). El AUC de prueba de 0.840 es una estimación honesta de generalización a proveedores no vistos.",
       "body2": "Sin embargo, el modelo asume que los patrones de corrupción son relativamente estables en el tiempo — que lo que era corrupto en 2018 tiene una estructura similar a lo corrupto en 2024. Si una nueva administración introduce mecanismos de fraude en contrataciones fundamentalmente diferentes, el modelo puede ser lento para detectarlos.",
       "body3": "La recalibración con nuevos casos de verdad fundamental debe ocurrir cuando se documenten nuevos casos importantes de corrupción.",
       "workaround": "Monitoree la página de Verdad Fundamental para casos recién agregados. Después de que se documenten escándalos importantes, el modelo debe reentrenarse para incorporar los nuevos patrones."
