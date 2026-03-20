@@ -1,86 +1,88 @@
+#!/usr/bin/env python3
 """
-Batch MM: PHOENIX pharma single-bid, ARYVE Tamaulipas construction SB
-Guard: max_id must be >= 829 (after KK); run AFTER LL
+GT Mining Batch MM - ARIA T3 investigation (4 vendors: PRODESA, FOJA, DIAGNOQUIM, ULTRASIST)
 
-Cases:
-  c0 = max_id+1 : PHOENIX - 520M single-bid pharma to Oaxaca state health
-  c1 = max_id+2 : ARYVE - 430M SB to Tamaulipas Obras Publicas + IMSS
+Investigated 2026-03-20:
+  v22992   PRODESA                 -> SKIP (9 contracts, 100% SB but insufficient concentration/value)
+  v28510   FOJA INGENIEROS         -> ADD (case 885: single_bid_capture, 53c/1.34B, 98% SB)
+  v5678    DIAGNOQUIM              -> SKIP (426 contracts, IMSS pharmaceutical supplier, legitimate)
+  v17136   ULTRASIST               -> SKIP (26 contracts, too dispersed across 17 institutions)
 
-Skips:
-  TECMAC handled in LL script
+Cases added: 1  |  Vendors skipped: 3
 """
-import sqlite3, sys
+import sqlite3
+import sys
+import os
 
-DB = "D:/Python/yangwenli/backend/RUBLI_NORMALIZED.db"
-conn = sqlite3.connect(DB)
-conn.execute("PRAGMA journal_mode=WAL")
-conn.execute("PRAGMA synchronous=NORMAL")
+sys.stdout.reconfigure(encoding="utf-8")
 
-max_id = conn.execute("SELECT MAX(id) FROM ground_truth_cases").fetchone()[0]
-if max_id < 829:
-    print(f"ABORT: max_id={max_id}, expected >= 829 (run after KK)")
-    sys.exit(1)
+DB = os.path.join(os.path.dirname(__file__), "..", "RUBLI_NORMALIZED.db")
 
-c0, c1 = max_id + 1, max_id + 2
-print(f"max_id={max_id} -> cases {c0}, {c1}")
 
-cases = [
-    (c0, f"CASE-{c0}", "PHOENIX FARMACEUTICA Oaxaca Single Bid Pharma", "single_bid_capture",
-     "high", 520_000_000,
-     "https://compranet.hacienda.gob.mx",
-     2012, 2014,
-     "PHOENIX FARMACEUTICA SA DE CV (v67554). "
-     "Single contract 520M to Servicios de Salud de Oaxaca — 100% single bid. "
-     "Pharma company with no prior history winning a massive uncontested state health contract."),
-    (c1, f"CASE-{c1}", "ARYVE Tamaulipas Construction Single Bid Capture", "single_bid_capture",
-     "medium", 680_000_000,
-     "https://compranet.hacienda.gob.mx",
-     2013, 2022,
-     "CONSTRUCCIONES ARYVE SA DE CV (v102564). "
-     "27 contracts, 56% single bid. Primary: 430M 100% SB to Tamaulipas Obras Publicas. "
-     "Also 131M to IMSS at 50% SB. Cross-state construction capture pattern."),
-]
+def main():
+    conn = sqlite3.connect(DB)
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA busy_timeout=60000")
 
-vendors = [
-    (c0, 67554, "PHOENIX FARMACEUTICA SA DE CV", "high", "name_match"),
-    (c1, 102564, "CONSTRUCCIONES ARYVE SA DE CV", "medium", "name_match"),
-]
+    max_id = conn.execute("SELECT MAX(id) FROM ground_truth_cases").fetchone()[0]
+    if max_id is None or max_id < 884:
+        print(f"ERROR: max_id={max_id}, expected >= 884. Aborting.")
+        conn.close()
+        return
 
-conn.executemany("""
-INSERT OR IGNORE INTO ground_truth_cases
-  (id, case_id, case_name, case_type, confidence_level, estimated_fraud_mxn,
-   source_news, year_start, year_end, notes)
-VALUES (?,?,?,?,?,?,?,?,?,?)
-""", cases)
+    c0 = max_id + 1
 
-conn.executemany("""
-INSERT OR IGNORE INTO ground_truth_vendors
-  (case_id, vendor_id, vendor_name_source, evidence_strength, match_method)
-VALUES (?,?,?,?,?)
-""", vendors)
+    # ========== CASE 1: FOJA INGENIEROS (v28510) ==========
+    print(f"Adding case {c0}: FOJA INGENIEROS (single_bid_capture)")
 
-# Tag contracts — PHOENIX: only the 520M Oaxaca contract (444609)
-conn.executemany(
-    "INSERT OR IGNORE INTO ground_truth_contracts (case_id, contract_id) VALUES (?,?)",
-    [(f"CASE-{c0}", 444609)]
-)
+    conn.execute(
+        """
+        INSERT OR IGNORE INTO ground_truth_cases
+        (id, case_id, case_name, case_type, confidence_level, 
+         year_start, year_end, estimated_fraud_mxn, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            c0,
+            f"CASE-{c0}",
+            "FOJA INGENIEROS Construction Contracts - Single-Bid Capture",
+            "single_bid_capture",
+            "high",
+            2006,
+            2020,
+            800_000_000,
+            "Construction engineering firm (FOJA INGENIEROS) with 98% single-bid rate across 53 contracts (1.34B MXN) spanning 12 institutions. Legitimate construction firms should have 30-50% SB rates. Nearly all contracts awarded through competitive procedures with only 1 bidder (impossibly no competition). Concentrated in 2006-2020 window. Likely indicates systematic capture of infrastructure procurement at multiple agencies (SCT, CONAGUA, state water boards).",
+        ),
+    )
 
-aryve_ids = [r[0] for r in conn.execute(
-    "SELECT id FROM contracts WHERE vendor_id=102564").fetchall()]
-conn.executemany(
-    "INSERT OR IGNORE INTO ground_truth_contracts (case_id, contract_id) VALUES (?,?)",
-    [(f"CASE-{c1}", cid) for cid in aryve_ids]
-)
+    # Add vendor reference for FOJA INGENIEROS
+    conn.execute(
+        """
+        INSERT OR IGNORE INTO ground_truth_vendors
+        (case_id, vendor_id, vendor_name_source, evidence_strength, match_method)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (
+            c0,
+            28510,
+            "FOJA INGENIEROS CONSTRUCTORES, S.A. DE C.V.",
+            "strong",
+            "vendor_id_direct_match",
+        ),
+    )
 
-# Mark in aria_queue
-for vid in [67554, 102564]:
-    conn.execute("""
-        UPDATE aria_queue SET in_ground_truth=1, review_status='confirmed'
-        WHERE vendor_id=?
-    """, (vid,))
+    # Mark vendor as in ground truth
+    conn.execute(
+        "UPDATE aria_queue SET in_ground_truth = 1 WHERE vendor_id = ?",
+        (28510,),
+    )
 
-conn.commit()
-conn.close()
-print(f"Done. Cases {c0}-{c1} inserted.")
-print(f"  {c0} PHOENIX: 1 contract tagged (520M Oaxaca health)")
-print(f"  {c1} ARYVE: {len(aryve_ids)} contracts tagged")
+    conn.commit()
+    print(f"Case {c0} inserted successfully.")
+    print(f"Vendors added to ground truth: 1")
+    print(f"Vendors skipped: 3 (v22992 PRODESA, v5678 DIAGNOQUIM, v17136 ULTRASIST)")
+    conn.close()
+
+
+if __name__ == "__main__":
+    main()
