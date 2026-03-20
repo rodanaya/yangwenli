@@ -19,11 +19,14 @@ from typing import Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel
 
+from ..cache import app_cache
 from ..dependencies import get_db_dep
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/aria", tags=["aria"])
+
+_STATS_CACHE_KEY = "aria_stats"
 
 # ---------------------------------------------------------------------------
 # In-memory run status tracker (lightweight, no DB needed)
@@ -308,6 +311,10 @@ def patch_aria_review(
 @router.get("/stats")
 def get_aria_stats(conn: sqlite3.Connection = Depends(get_db_dep)):
     """Latest ARIA run summary and queue review statistics."""
+    cached = app_cache.get("aria", _STATS_CACHE_KEY)
+    if cached is not None:
+        return cached
+
     latest_run = None
     if _table_exists(conn, "aria_runs"):
         run_row = conn.execute(
@@ -393,7 +400,7 @@ def get_aria_stats(conn: sqlite3.Connection = Depends(get_db_dep)):
         external_counts = {"efos": 0, "sfp": 0}
         elevated_value = 0.0
 
-    return {
+    result = {
         "latest_run": latest_run,
         "review_stats": review_stats,
         "queue_total": queue_total,
@@ -402,6 +409,8 @@ def get_aria_stats(conn: sqlite3.Connection = Depends(get_db_dep)):
         "external_counts": external_counts,
         "elevated_value_mxn": elevated_value,
     }
+    app_cache.set("aria", _STATS_CACHE_KEY, result, maxsize=4, ttl=300)
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -616,6 +625,7 @@ def _launch_full_pipeline(
             _run_status["running"] = False
             _run_status["phase"] = None
             _run_status["completed_at"] = datetime.now(timezone.utc).isoformat()
+        app_cache.invalidate("aria", _STATS_CACHE_KEY)  # invalidate after run
 
 
 @router.post("/run", status_code=202)
