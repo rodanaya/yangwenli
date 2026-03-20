@@ -180,7 +180,7 @@ backend/DUPLICATE_INVESTIGATION_REPORT.md
 .playwright-mcp/
 
 # Temp GT batch generation helpers (not insertion scripts)
-backend/scripts/_gen_batch_*.py
+backend/scripts/_gen_batch*.py
 backend/scripts/_write_batch_*.py
 backend/scripts/_build_batch_*.py
 backend/scripts/_check_*.py
