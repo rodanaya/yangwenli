@@ -1,0 +1,50 @@
+[
+  {
+    "vendor_id": 15615,
+    "vendor_name": "INTERNACIONAL DE CALZADO TEN PAC SA DE CV",
+    "case_name": "PEMEX Footwear SB+DA Capture (Ten Pac)",
+    "case_type": "institutional_capture",
+    "confidence_level": "medium",
+    "estimated_fraud_mxn": 242000000,
+    "year_start": 2005,
+    "year_end": 2013,
+    "evidence_strength": "medium",
+    "notes": "Footwear vendor concentrated at PEMEX entities (PEP 169M, Refinacion 73M). Won LP contracts at PEP with 100% single-bid rate 2005-2008 (109M on 4 contracts with zero competition), then transitioned to 100% DA at PEP 2012-2013 (60M). Pattern consistent with institutional capture: competitive tenders with no other bidders followed by direct awards. Disappeared after 2013. Total PEMEX exposure ~300M across subsidiaries."
+  },
+  {
+    "vendor_id": 18948,
+    "vendor_name": "AVANZADA TECNICA CONSTRUCTIVA SA DE CV",
+    "case_name": "ISSSTE/AICM Construction SB Capture (Avanzada Tecnica)",
+    "case_type": "institutional_capture",
+    "confidence_level": "medium",
+    "estimated_fraud_mxn": 246000000,
+    "year_start": 2011,
+    "year_end": 2017,
+    "evidence_strength": "medium",
+    "notes": "Construction firm with extreme institutional concentration. ISSSTE: 4 contracts worth 192M (60% of total value), 100% single-bid on competitive tenders, 2013-2014. AICM: 5 contracts worth 54M, 80% single-bid, 2015-2017. SAT: 8 contracts worth 53M, 100% DA, 2011-2013. Only 21 contracts total but 319M value — very high per-contract amounts. Pattern: wins massive ISSSTE construction via LP with no competition, then captures AICM similarly. Construction sector where SB on LP is a strong capture signal."
+  },
+  {
+    "vendor_id": 3837,
+    "vendor_name": "TELETEC DE MEXICO SA DE CV",
+    "case_name": "INBA + Multi-State Telecom SB Manipulation (Teletec)",
+    "case_type": "single_bid_manipulation",
+    "confidence_level": "medium",
+    "estimated_fraud_mxn": 530000000,
+    "year_start": 2005,
+    "year_end": 2010,
+    "evidence_strength": "medium",
+    "notes": "Telecom company winning LP tenders with extreme single-bid rates at INBA (329M, 67% SB) and multiple state-level institutions (Tamaulipas 71M risk=1.0, Coahuila 66M 100% SB, Yucatan 17M, Morelos 14M — all 100% SB). Peak activity 2008-2010 with 36-86% SB rates. 95% of 687M total came through LP yet 37% overall were single-bid. State obras publicas contracts from a telecom firm suggest potential industry mismatch. Pattern consistent with tender manipulation: LP filed but structured so no other vendor can bid."
+  },
+  {
+    "vendor_id": 139508,
+    "vendor_name": "P&C LIMPIEZA SA DE CV",
+    "case_name": "ISSSTE/AICM Cleaning DA Capture (P&C Limpieza)",
+    "case_type": "institutional_capture",
+    "confidence_level": "medium",
+    "estimated_fraud_mxn": 322000000,
+    "year_start": 2017,
+    "year_end": 2021,
+    "evidence_strength": "medium",
+    "notes": "Cleaning services vendor with 68% direct award rate and rapid value growth. AICM: 4 contracts worth 181M (38% of value), 100% DA, 2019-2021. ISSSTE: 9 contracts worth 142M (30%), 100% DA, 2018-2019. Combined AICM+ISSSTE = 68% of total 479M value, both at 100% DA. Only 41 contracts over 5 active years (2017-2021), but very high per-contract value. Classic P6 institutional capture pattern for cleaning services: sustained DA at major federal institutions."
+  }
+]

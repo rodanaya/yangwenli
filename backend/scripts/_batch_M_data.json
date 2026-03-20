@@ -1,0 +1,50 @@
+[
+  {
+    "case_name": "ARRENTRAC Infrastructure Single-Bid Capture (SCT/Jalisco)",
+    "case_type": "bid_rigging",
+    "confidence_level": "medium",
+    "notes": "100% single-bid rate across ALL 25 competitive contracts (19 LP + 4 IaCM3 + 2 LP) spanning 16 years (2003-2019). Zero direct awards. 56% of value concentrated at SCT, with spillover to Jalisco state infrastructure agencies. Pattern is consistent with systematic competition suppression — no other bidder ever competed against this vendor in any procedure. Infrastructure sector (road equipment rental). No official investigation found but the pattern is unambiguous.",
+    "estimated_fraud_mxn": 503562355,
+    "year_start": 2003,
+    "year_end": 2019,
+    "vendor_id": 16446,
+    "vendor_name": "ARRENTRAC, S.A. DE C.V.",
+    "evidence_strength": "medium"
+  },
+  {
+    "case_name": "DRAGAMEX Port Authority Dredging Single-Bid Pattern",
+    "case_type": "bid_rigging",
+    "confidence_level": "medium",
+    "notes": "Dredging company with 21 contracts across 10+ port authorities (APIs) totaling 1.62B MXN. 67% single-bid rate on competitive tenders, 100% SB in 2016-2018 period. Pattern similar to HIDROVIAS (case 752) — specialized dredging firms winning uncontested at port authorities. Mixed DA/LP split: 7 DA contracts (770M) + 10 LP contracts (627M) + 3 IaCM3 (126M). Spread across Lazaro Cardenas, Topolobampo, Tuxpan, Altamira, Tampico, Coatzacoalcos, and other ports. Concentration at Lazaro Cardenas (37% of value). Dredging market has limited competitors but 67% SB across multiple ports over 8 years goes beyond structural scarcity.",
+    "estimated_fraud_mxn": 1623747615,
+    "year_start": 2010,
+    "year_end": 2018,
+    "vendor_id": 81700,
+    "vendor_name": "DRAGAMEX",
+    "evidence_strength": "medium"
+  },
+  {
+    "case_name": "SERVISAN Health Services ISSSTE/INCan Institutional Capture",
+    "case_type": "institutional_capture",
+    "confidence_level": "medium",
+    "notes": "Health services vendor with 115 contracts across 23 years (2002-2025) totaling 1.12B MXN. Concentrated at ISSSTE (44 contracts, 371M, 79.5% SB) and Instituto Nacional de Cancerologia (23 contracts, 309M, 52.2% SB). Overall 63% single-bid rate. At ISSSTE, nearly 80% of competitive contracts had zero other bidders over 23 years — consistent with sustained institutional capture. Also won at PEMEX, state health agencies (Queretaro 100% SB), and other federal hospitals. Pattern persists across multiple administrations (2002-2025), suggesting deeply embedded vendor relationship rather than administration-specific corruption.",
+    "estimated_fraud_mxn": 1121858474,
+    "year_start": 2002,
+    "year_end": 2025,
+    "vendor_id": 4679,
+    "vendor_name": "SERVISAN, S.A. DE C.V.",
+    "evidence_strength": "medium"
+  },
+  {
+    "case_name": "MESALUD IMSS Medical Supply DA Concentration",
+    "case_type": "institutional_capture",
+    "confidence_level": "low",
+    "notes": "Large medical supplier with 231 contracts totaling 2.55B MXN over 2007-2021. 80% of value concentrated at IMSS (124 contracts, 2.05B, 49.2% DA). Contrast with ISSSTE performance (37 contracts, 421M, only 2.7% DA) suggests institution-specific preferential DA treatment at IMSS. Low single-bid rate (11%) — vendor mostly wins through LP. Peak activity 2016-2019 (1.86B in 4 years). Abrupt decline in 2020 (30M) and single 57K contract in 2021 suggests loss of IMSS relationship. Borderline case — large medical distributor profile, but the DA disparity between IMSS (49.2%) and ISSSTE (2.7%) for the same vendor is notable. Low confidence due to legitimate competitive wins.",
+    "estimated_fraud_mxn": 2049125950,
+    "year_start": 2007,
+    "year_end": 2021,
+    "vendor_id": 31018,
+    "vendor_name": "MESALUD, S.A. DE C.V.",
+    "evidence_strength": "low"
+  }
+]
