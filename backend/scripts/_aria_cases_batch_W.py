@@ -5,11 +5,15 @@ Investigated 4 vendors, 3 added, 1 skipped:
 
 ADDED:
   Case max+1 (medium) - MAQUINARIA INTERCONTINENTAL SA DE CV (1008)
+      922M MXN at PEMEX, 52-71% single-bid rate at PEMEX EP/Gas/Refinacion.
   Case max+2 (medium) - PUNTO PEN (61828)
+      734M MXN in 11 contracts. 448M SB at BANJERCITO (2021).
   Case max+3 (medium) - SERVICIOS TRONCALIZADOS SA DE CV (14489)
+      420M MXN at CFE (93% of value), 57.7% SB, 2010-2017.
 
 SKIPPED:
-  - CONSTRUCCIONES E INSTALACIONES MODERNAS (4253): no concentration.
+  - CONSTRUCCIONES E INSTALACIONES MODERNAS (4253): 15 contracts,
+    no institutional concentration.
 
 Guard: max_id >= 787. Run: python scripts/_aria_cases_batch_W.py
 """
@@ -22,10 +26,10 @@ from pathlib import Path
 DB = Path(__file__).resolve().parent.parent / "RUBLI_NORMALIZED.db"
 
 
-SKIP_VENDORS = [{'vendor_id': 1008, 'reason': 'SKIP: Legitimate heavy machinery supplier. 145 contracts across PEMEX/CONAGUA/CFE/CAPUFE. 10% DA, 48% SB = specialized equipment niche.'}]
+SKIP_VENDORS = [{'vendor_id': 4253, 'name': 'CONSTRUCCIONES E INSTALACIONES MODERNAS, S.A. DE C.V.', 'reason': '15 contracts across 9 institutions, 847M MXN, 2002-2018. 47pct SB is 7 single-bid wins at 7 DIFFERENT institutions (INMEGEN, Cancer Guerrero, ASA, GDF, SSP, AGS Infra, Archivo General) with 1 contract each -- no institutional concentration. SEGOB has 7 DA contracts (329M) in 2010-2011 but no SB capture pattern. Too few contracts, too scattered.'}]
 
 
-CASES = [{'case_name': 'SEGOB construccion DA saturation + multi-institution single-bid', 'case_type': 'single_bid_capture', 'year_start': 2002, 'year_end': 2018, 'confidence_level': 'medium', 'estimated_fraud_mxn': 847000000, 'source_news': 'ARIA T3 -- 53% DA, 47% SB, 6 DA contracts at SEGOB 2011 (324M)', 'notes': 'Construction company: DA at SEGOB in 2011, SB wins at 7 other institutions. 15 contracts avg 56M.', 'vendors': [{'vendor_id': 4253, 'name': 'CONSTRUCCIONES E INSTALACIONES MODERNAS, S.A. DE C.V.', 'strength': 'medium'}]}, {'case_name': 'PUNTO PEN single-bid capture at financial/military institutions', 'case_type': 'single_bid_capture', 'year_start': 2011, 'year_end': 2024, 'confidence_level': 'medium', 'estimated_fraud_mxn': 734000000, 'source_news': 'ARIA T3 -- 55% DA, 45% SB, 448M at BANJERCITO via SB, 180M at CNBV, 101M at FONATUR', 'notes': 'PUNTO PEN: massive SB contracts at BANJERCITO (448M), CNBV, FONATUR. 11 contracts, 734M total. Sector mismatch.', 'vendors': [{'vendor_id': 61828, 'name': 'PUNTO PEN', 'strength': 'medium'}]}, {'case_name': 'CFE trunked radio institutional capture', 'case_type': 'institutional_capture', 'year_start': 2003, 'year_end': 2025, 'confidence_level': 'medium', 'estimated_fraud_mxn': 420000000, 'source_news': 'ARIA T3 -- 93% of 453M at CFE, SB=57.7%, peak 220M in 2014', 'notes': 'Trunked radio 93% at CFE over 22 years. SB=57.7%. Peaks 2010 (144M) and 2014 (220M). Also IMSS 22M 80% SB.', 'vendors': [{'vendor_id': 14489, 'name': 'SERVICIOS TRONCALIZADOS, S.A. DE C.V.', 'strength': 'medium'}]}]
+CASES = [{'offset': 0, 'case_name': 'PEMEX Machinery Single-Bid Capture - Maquinaria Intercontinental', 'case_type': 'institutional_capture', 'confidence_level': 'medium', 'notes': 'MAQUINARIA INTERCONTINENTAL SA DE CV (vendor 1008) - 1.13B MXN in 145 contracts (2002-2017), concentrated at PEMEX subsidiaries totaling 922M MXN. PEMEX EP: 844M (38 contracts, 52.6pct SB, 0pct DA), PEMEX Gas: 44M (13 contracts, 69.2pct SB), PEMEX Refinacion: 16M (7 contracts, 71.4pct SB). 86pct of all contracts are Licitacion Publica -- the vendor participates exclusively in competitive tenders, yet wins 48pct of them as the only bidder. Activity peaks 2002-2012, drops sharply after energy reform 2013+.', 'estimated_fraud_mxn': 500000000, 'year_start': 2002, 'year_end': 2012, 'vendors': [{'vendor_id': 1008, 'evidence_strength': 'medium', 'match_method': 'aria_queue_t3'}]}, {'offset': 1, 'case_name': 'Anomalous High-Value Single-Bid Contracts - Punto Pen', 'case_type': 'overpricing', 'confidence_level': 'medium', 'notes': 'PUNTO PEN (vendor 61828) - 734M MXN in only 11 contracts (2011-2024), avg 67M per contract. BANJERCITO: 448M (1 contract, 100pct SB, 2021), CNBV: 180M (2 contracts, 50pct SB/50pct DA, 2024), FONATUR: 101M (3 contracts, 33pct SB/67pct DA, 2020-2023). Pattern shows a company that started with small health contracts (2011-2016, 5.6M) then suddenly wins massive contracts at FONATUR, BANJERCITO, and CNBV (2020-2024). 448M SB at a military bank from a company called Punto Pen is highly anomalous.', 'estimated_fraud_mxn': 600000000, 'year_start': 2020, 'year_end': 2024, 'vendors': [{'vendor_id': 61828, 'evidence_strength': 'medium', 'match_method': 'aria_queue_t3'}]}, {'offset': 2, 'case_name': 'CFE Trunked Radio Single-Bid Capture - Servicios Troncalizados', 'case_type': 'institutional_capture', 'confidence_level': 'medium', 'notes': 'SERVICIOS TRONCALIZADOS SA DE CV (vendor 14489) - 453M MXN in 61 contracts (2003-2025). 93pct of value concentrated at CFE: 420M MXN in 26 contracts (2010-2017), 57.7pct SB, 34.6pct DA. Trunked radio/telecommunications systems provider. 15 of 26 CFE contracts won via single bid. Outside CFE, only 35 contracts worth 32M. Classic institutional capture.', 'estimated_fraud_mxn': 250000000, 'year_start': 2010, 'year_end': 2017, 'vendors': [{'vendor_id': 14489, 'evidence_strength': 'medium', 'match_method': 'aria_queue_t3'}]}]
 
 
 def main():
@@ -36,7 +40,7 @@ def main():
     max_id = conn.execute("SELECT MAX(id) FROM ground_truth_cases").fetchone()[0] or 0
     print(f"Current max GT case ID: {max_id}")
     if max_id < 787:
-        print(f"ERROR: Expected max_id >= 780, got {max_id}. Aborting.")
+        print(f"ERROR: Expected max_id >= 787, got {max_id}. Aborting.")
         conn.close()
         sys.exit(1)
 
@@ -121,7 +125,7 @@ def main():
             conn.execute(
                 "UPDATE aria_queue SET review_status = 'dismissed', "
                 "reviewer_notes = ? WHERE vendor_id = ?",
-                (f"Batch U skip: {reason[:500]}", vid)
+                (f"Batch W skip: {reason[:500]}", vid)
             )
             print(f"  aria_queue: vendor {vid} -> dismissed")
 
