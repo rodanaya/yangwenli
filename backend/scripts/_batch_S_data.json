@@ -1,0 +1,38 @@
+{
+  "cases": [
+    {
+      "case_name": "SCT Road Construction 100pct Single-Bid Capture - Constructora Eunice",
+      "case_type": "institutional_capture",
+      "confidence_level": "medium",
+      "sector": "infraestructura",
+      "notes": "CONSTRUCTORA EUNICE SA DE CV (vendor 10319) - 721M MXN in 46 contracts, 2002-2019. 100pct single-bid rate across ALL contracts - every single LP won as sole bidder. 83pct of value at SCT (38 contracts, 540M). Also won at SEDATU (98M, 1 contract), SEDESOL (50M, 2 contracts), Michoacan Junta de Caminos (20M, 3 contracts), Guanajuato state (14M, 2 contracts). Road construction (carreteras Uruapan-Zamora, Francisco I. Madero). Active across 3 sexenios (Fox/Calderon/EPN). A company that wins 100pct of competitive bids as sole bidder for 17 years at SCT is consistent with institutional capture through bid specification tailoring.",
+      "estimated_fraud_mxn": 500000000,
+      "year_start": 2002,
+      "year_end": 2019,
+      "vendor_id": 10319,
+      "evidence_strength": "medium"
+    },
+    {
+      "case_name": "IMSS Hospital Construction Desert Manipulation - NC Remodelaciones",
+      "case_type": "institutional_capture",
+      "confidence_level": "medium",
+      "sector": "salud",
+      "notes": "NC REMODELACIONES Y COMERCIALIZADORA SA DE CV (vendor 135804) - 407M MXN in 12 contracts, all at IMSS, 2014-2025. The company did small remodeling contracts (0.7M-1.7M) from 2014-2022, then received a 399.8M hospital construction contract in 2024 via ADJUDICACION DIRECTA POR LICITACIONES PUBLICAS DESIERTAS (direct award after LP went desert). This is 98pct of the vendor total value in a single contract. The jump from 1.7M max to 399.8M in one step, justified by a conveniently deserted LP, is consistent with desert manipulation - a known fraud pattern where the LP is designed to fail so that the DA can be awarded to a pre-selected vendor. Contract description: TRABAJOS DE OBRA CIVIL, ACABADOS E INSTALACIONES - HOSPITAL GENERAL. The pre-existing IMSS relationship (8 small contracts over 10 years) establishes the vendor as an insider with institutional access.",
+      "estimated_fraud_mxn": 400000000,
+      "year_start": 2024,
+      "year_end": 2025,
+      "vendor_id": 135804,
+      "evidence_strength": "medium"
+    }
+  ],
+  "skips": [
+    {
+      "vendor_id": 8098,
+      "reason": "Only 2 contracts at PEMEX (1.65B, 2002 and 2006). Both single-bid LP. Fails minimum viable case threshold (>=3 contracts). Structure A data (lowest quality, 0.1pct RFC). Insufficient contract volume despite high value."
+    },
+    {
+      "vendor_id": 44168,
+      "reason": "Legitimate furniture supplier (mobiliario, bancas, sillas). 507 contracts, 344M MXN. DA rate only 36pct, SB only 4pct. Diversified across IMSS (224M), INSABI (49M), ISSSTE (25M), INEGI (25M), SEDENA (3.6M) and 10+ others. 81pct concentration at IMSS by value is expected for health-sector furniture vendor - IMSS is the largest buyer. No institutional capture signal."
+    }
+  ]
+}

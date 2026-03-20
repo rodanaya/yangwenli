@@ -1,0 +1,50 @@
+[
+  {
+    "id": 783,
+    "case_id": "CASE-783",
+    "case_name": "Culture/Arts DA Capture - Grupo Farla at SEGOB/SecCultura/CasaMoneda",
+    "case_type": "institutional_capture",
+    "year_start": 2010,
+    "year_end": 2024,
+    "confidence_level": "medium",
+    "estimated_fraud_mxn": 564000000,
+    "source_news": "ARIA T3 scan. 68 contracts, 709M MXN. 190M at SEGOB in 100% DA (2010-2011), 222M at Secretaria de Cultura (55% DA, 45% SB), 153M at Casa de Moneda (82% DA). Three separate cultural institutions all awarding heavy DA to same vendor over 14 years. Pattern: diversified capture across cultural sector institutions.",
+    "notes": "No RFC on file. No EFOS/SFP hits. Pattern flags: high DA at SEGOB and Casa de Moneda, single-bid wins at INAH (86% SB). Sector classified as educacion (cultural institutions). Fraud estimate = SEGOB 190M + SecCultura 222M + CasaMoneda 153M = 564M in DA/SB contracts.",
+    "vendor_id": 14713,
+    "vendor_name": "GRUPO FARLA, S.A. DE C.V.",
+    "evidence_strength": "medium",
+    "match_method": "aria_queue_t3"
+  },
+  {
+    "id": 784,
+    "case_id": "CASE-784",
+    "case_name": "IT Single-Bid Monopoly Across Multiple Institutions - INNDOT",
+    "case_type": "single_bid_abuse",
+    "year_start": 2015,
+    "year_end": 2025,
+    "confidence_level": "high",
+    "estimated_fraud_mxn": 460000000,
+    "source_news": "ARIA T3 scan. 23 contracts, 460M MXN. 61% overall single-bid rate. 100% SB at CONAVI (135M), BANOBRAS (113M), Gob Nuevo Leon (56M), CAPUFE (34M), Agua y Drenaje Monterrey (22M), FIRA (17M), FONATUR (6M). IT company that enters LP procedures across 10+ federal/state institutions and never faces competition. Only non-SB contracts are DA at IMPI (86% DA) and CONAGUA (100% DA). Pattern: systematic single-bid dominance in technology procurement across unrelated institutions.",
+    "notes": "No RFC on file. No EFOS/SFP hits. Hacienda sector classification. Unlike structural monopolies (pharma patents), IT services have many competitors. Winning SB across CONAVI, BANOBRAS, CAPUFE, state government, FONATUR - all different procurement offices, all failing to attract competing bidders. Strong pattern of specifications tailored to exclude competitors.",
+    "vendor_id": 163535,
+    "vendor_name": "INNDOT SA DE CV",
+    "evidence_strength": "high",
+    "match_method": "aria_queue_t3"
+  },
+  {
+    "id": 785,
+    "case_id": "CASE-785",
+    "case_name": "ISSSTE Pharma DA Capture + Anomalous Airport Contract - Liber Salus",
+    "case_type": "institutional_capture",
+    "year_start": 2014,
+    "year_end": 2020,
+    "confidence_level": "medium",
+    "estimated_fraud_mxn": 196000000,
+    "source_news": "ARIA T3 scan. 128 contracts, 226M MXN. 93M at ISSSTE (44% DA, 52 contracts, 2014-2019), 11M at IMSS (74% DA, 27 contracts). Also: single 103M contract at Aeropuerto Internacional de la Ciudad de Mexico (100% SB, 2020) - pharma company winning airport infrastructure-class contract is sector mismatch anomaly.",
+    "notes": "No RFC on file. No EFOS/SFP hits. Salud sector. The airport contract (103M, single LP bid) is the strongest anomaly - a pharma supplier winning at an airport. ISSSTE DA concentration (44%) moderate but sustained over 6 years (2014-2019). IMSS DA rate (74%) on smaller contracts. Fraud estimate = ISSSTE 93M + airport 103M.",
+    "vendor_id": 112569,
+    "vendor_name": "LIBER SALUS SA DE CV",
+    "evidence_strength": "medium",
+    "match_method": "aria_queue_t3"
+  }
+]
