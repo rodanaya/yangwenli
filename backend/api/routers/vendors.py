@@ -474,6 +474,8 @@ class VendorTrajectoryResponse(BaseModel):
     vendor_id: int
     vendor_name: str
     scores: Dict[str, Optional[float]]
+    model_versions: List[str] = ["v3.3", "v4.0", "v5.1", "v6.4"]
+    trajectory: List[Optional[float]] = []
 
 
 @router.get("/export")
@@ -2343,10 +2345,14 @@ def get_vendor_trajectory(
                 "v6": round(row["avg_v6"], 4) if row["avg_v6"] is not None else None,
             }
 
+            trajectory = [scores["v3"], scores["v4"], scores["v5"], scores["v6"]]
+
             return VendorTrajectoryResponse(
                 vendor_id=vendor_id,
                 vendor_name=vendor_row["name"],
                 scores=scores,
+                model_versions=["v3.3", "v4.0", "v5.1", "v6.4"],
+                trajectory=trajectory,
             )
 
     except sqlite3.Error as e:

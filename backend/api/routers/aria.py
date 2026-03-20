@@ -240,6 +240,21 @@ def get_aria_queue_vendor(
     )
     # Decode JSON text column
     d["pattern_confidences"] = _decode_json_field(d.get("pattern_confidences"))
+
+    # Include memo if available
+    d["memo"] = None
+    if _table_exists(conn, "aria_memos"):
+        memo_row = conn.execute(
+            "SELECT memo_text, memo_type, created_at FROM aria_memos WHERE vendor_id = ? ORDER BY created_at DESC LIMIT 1",
+            (vendor_id,),
+        ).fetchone()
+        if memo_row:
+            d["memo"] = {
+                "memo_text": memo_row["memo_text"],
+                "memo_type": memo_row["memo_type"],
+                "created_at": memo_row["created_at"],
+            }
+
     return d
 
 
@@ -688,3 +703,125 @@ def get_aria_run_status():
     """Check if an ARIA pipeline run is currently in progress."""
     with _run_lock:
         return dict(_run_status)
+
+
+# ---------------------------------------------------------------------------
+# GET /aria/memos/{vendor_id}
+# ---------------------------------------------------------------------------
+
+class AriaMemoResponse(BaseModel):
+    vendor_id: int
+    vendor_name: Optional[str] = None
+    memo_text: str
+    memo_type: Optional[str] = None
+    generated_by: Optional[str] = None
+    created_at: Optional[str] = None
+    case_id: Optional[str] = None
+
+
+class AriaMemoListItem(BaseModel):
+    vendor_id: int
+    vendor_name: Optional[str] = None
+    memo_type: Optional[str] = None
+    generated_by: Optional[str] = None
+    created_at: Optional[str] = None
+    case_id: Optional[str] = None
+    memo_text: str
+    ips_tier: Optional[int] = None
+
+
+class AriaMemoListResponse(BaseModel):
+    data: list
+    pagination: dict
+
+
+@router.get("/memos/{vendor_id}", response_model=AriaMemoResponse)
+def get_aria_memo(
+    vendor_id: int,
+    conn: sqlite3.Connection = Depends(get_db_dep),
+):
+    """Get the ARIA investigation memo for a specific vendor."""
+    if not _table_exists(conn, "aria_memos"):
+        raise HTTPException(status_code=404, detail="No ARIA memos have been generated yet.")
+
+    row = conn.execute(
+        """
+        SELECT m.vendor_id, m.memo_text, m.memo_type, m.generated_by,
+               m.created_at, m.case_id,
+               COALESCE(q.vendor_name, v.name) AS vendor_name
+        FROM aria_memos m
+        LEFT JOIN aria_queue q ON m.vendor_id = q.vendor_id
+        LEFT JOIN vendors v ON m.vendor_id = v.id
+        WHERE m.vendor_id = ?
+        ORDER BY m.created_at DESC
+        LIMIT 1
+        """,
+        (vendor_id,),
+    ).fetchone()
+
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"No memo found for vendor {vendor_id}.")
+
+    d = _row_to_dict(row)
+    return AriaMemoResponse(**d)
+
+
+@router.get("/memos", response_model=AriaMemoListResponse)
+def list_aria_memos(
+    tier: Optional[int] = Query(None, ge=1, le=2, description="Filter by ARIA tier (1 or 2)"),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    conn: sqlite3.Connection = Depends(get_db_dep),
+):
+    """List ARIA investigation memos with pagination, optionally filtered by tier."""
+    if not _table_exists(conn, "aria_memos"):
+        return AriaMemoListResponse(
+            data=[],
+            pagination={"limit": limit, "offset": offset, "total": 0},
+        )
+
+    conditions = []
+    params: list = []
+
+    if tier is not None:
+        if not _table_exists(conn, "aria_queue"):
+            return AriaMemoListResponse(
+                data=[],
+                pagination={"limit": limit, "offset": offset, "total": 0},
+            )
+        conditions.append("q.ips_tier = ?")
+        params.append(tier)
+
+    where_sql = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+
+    # Join with aria_queue for tier info and vendor name
+    join_sql = "LEFT JOIN aria_queue q ON m.vendor_id = q.vendor_id"
+    vendor_join = "LEFT JOIN vendors v ON m.vendor_id = v.id"
+
+    total = conn.execute(
+        f"SELECT COUNT(*) FROM aria_memos m {join_sql} {where_sql}",
+        params,
+    ).fetchone()[0]
+
+    rows = conn.execute(
+        f"""
+        SELECT m.vendor_id, m.memo_text, m.memo_type, m.generated_by,
+               m.created_at, m.case_id,
+               COALESCE(q.vendor_name, v.name) AS vendor_name,
+               q.ips_tier
+        FROM aria_memos m
+        {join_sql}
+        {vendor_join}
+        {where_sql}
+        ORDER BY m.created_at DESC
+        LIMIT ? OFFSET ?
+        """,
+        params + [limit, offset],
+    ).fetchall()
+
+    data = [_row_to_dict(r) for r in rows]
+
+    return AriaMemoListResponse(
+        data=data,
+        pagination={"limit": limit, "offset": offset, "total": total},
+    )

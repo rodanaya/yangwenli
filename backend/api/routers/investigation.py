@@ -263,6 +263,10 @@ class TopAnomalousVendorItem(BaseModel):
     price_anomalies: int
     top_features: List[Dict[str, Any]]
     explanation: Optional[str] = None
+    risk_score: Optional[float] = None
+    risk_level: Optional[str] = None
+    both_flagged: bool = False
+    anomaly_percentile: Optional[float] = None
 
 
 class TopAnomalousVendorsResponse(BaseModel):
@@ -1179,19 +1183,35 @@ def get_model_comparison(
 @router.get("/top-anomalous-vendors", response_model=TopAnomalousVendorsResponse)
 def get_top_anomalous_vendors(
     sector_id: Optional[int] = Query(None, description="Filter by sector"),
-    limit: int = Query(20, ge=1, le=100, description="Number of vendors to return"),
+    limit: int = Query(50, ge=1, le=200, description="Number of vendors to return"),
     include_explanation: bool = Query(True, description="Include SHAP explanations"),
+    both_flagged_only: bool = Query(False, description="Only vendors flagged by BOTH supervised risk model (>=0.40) AND unsupervised anomaly"),
 ):
     """
     Get top anomalous vendors with optional SHAP explanations.
 
     Returns vendors sorted by ensemble score with their top contributing features.
+    Enriched with risk_score, risk_level, both_flagged indicator, and anomaly_percentile.
     """
     with get_db() as conn:
         cursor = conn.cursor()
 
-        where_sql = "WHERE vf.sector_id = ?" if sector_id else ""
-        params = [sector_id] if sector_id else []
+        conditions = []
+        params: list = []
+
+        if sector_id is not None:
+            conditions.append("vf.sector_id = ?")
+            params.append(sector_id)
+
+        if both_flagged_only:
+            conditions.append("vs.avg_risk_score >= 0.40")
+
+        where_sql = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+
+        # Compute percentile denominator
+        cursor.execute("SELECT COUNT(DISTINCT vendor_id) FROM vendor_investigation_features")
+        total_vendors_row = cursor.fetchone()
+        total_vendors = total_vendors_row[0] if total_vendors_row else 1
 
         cursor.execute(f"""
             SELECT
@@ -1201,10 +1221,13 @@ def get_top_anomalous_vendors(
                 vf.total_contracts, vf.total_value_mxn,
                 vf.single_bid_ratio, vf.direct_award_ratio,
                 vf.high_conf_hypothesis_count,
-                vf.top_features, vf.explanation
+                vf.top_features, vf.explanation,
+                vs.avg_risk_score,
+                vs.risk_level
             FROM vendor_investigation_features vf
             JOIN vendors v ON vf.vendor_id = v.id
             JOIN sectors s ON vf.sector_id = s.id
+            LEFT JOIN vendor_stats vs ON vf.vendor_id = vs.vendor_id
             {where_sql}
             ORDER BY vf.ensemble_score DESC
             LIMIT ?
@@ -1212,31 +1235,54 @@ def get_top_anomalous_vendors(
 
         vendors = []
         for row in cursor.fetchall():
+            risk_score_val = row["avg_risk_score"]
+            risk_level_val = row["risk_level"]
+            ensemble_val = row["ensemble_score"]
+
+            is_both_flagged = (
+                risk_score_val is not None
+                and risk_score_val >= 0.40
+                and ensemble_val is not None
+                and ensemble_val > 0.5
+            )
+
+            # Compute anomaly_percentile via rank
+            rank_row = cursor.execute(
+                "SELECT COUNT(*) FROM vendor_investigation_features WHERE ensemble_score <= ?",
+                (ensemble_val,),
+            ).fetchone()
+            rank_count = rank_row[0] if rank_row else 0
+            anomaly_pctl = round(rank_count / total_vendors * 100, 1) if total_vendors > 0 else None
+
             vendor_data = {
-                "vendor_id": row['vendor_id'],
-                "vendor_name": row['vendor_name'],
-                "sector_id": row['sector_id'],
-                "sector_code": row['sector_code'],
-                "sector_name": row['sector_name'],
-                "ensemble_score": row['ensemble_score'],
-                "isolation_forest_score": row['isolation_forest_score'],
-                "total_contracts": row['total_contracts'],
-                "total_value_mxn": row['total_value_mxn'],
-                "single_bid_ratio": row['single_bid_ratio'],
-                "direct_award_ratio": row['direct_award_ratio'],
-                "price_anomalies": row['high_conf_hypothesis_count'],
+                "vendor_id": row["vendor_id"],
+                "vendor_name": row["vendor_name"],
+                "sector_id": row["sector_id"],
+                "sector_code": row["sector_code"],
+                "sector_name": row["sector_name"],
+                "ensemble_score": ensemble_val,
+                "isolation_forest_score": row["isolation_forest_score"],
+                "total_contracts": row["total_contracts"],
+                "total_value_mxn": row["total_value_mxn"],
+                "single_bid_ratio": row["single_bid_ratio"],
+                "direct_award_ratio": row["direct_award_ratio"],
+                "price_anomalies": row["high_conf_hypothesis_count"],
+                "risk_score": round(risk_score_val, 4) if risk_score_val is not None else None,
+                "risk_level": risk_level_val,
+                "both_flagged": is_both_flagged,
+                "anomaly_percentile": anomaly_pctl,
             }
 
-            if include_explanation and row['top_features']:
+            if include_explanation and row["top_features"]:
                 try:
-                    top_features = json.loads(row['top_features'])
-                    vendor_data["top_features"] = top_features[:3]  # Top 3 only
-                    vendor_data["explanation"] = row['explanation']
+                    top_features = json.loads(row["top_features"])
+                    vendor_data["top_features"] = top_features[:3]
+                    vendor_data["explanation"] = row["explanation"]
                 except json.JSONDecodeError:
                     vendor_data["top_features"] = []
                     vendor_data["explanation"] = None
             else:
-                vendor_data["top_features"] = None
+                vendor_data["top_features"] = []
                 vendor_data["explanation"] = None
 
             vendors.append(vendor_data)

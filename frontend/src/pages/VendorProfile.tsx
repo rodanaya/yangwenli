@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge, Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { formatCompactMXN, formatNumber, formatPercentSafe, formatDate, toTitleCase, formatCompactUSD, getRiskLevel } from '@/lib/utils'
-import { vendorApi, networkApi, scorecardApi } from '@/api/client'
+import { vendorApi, networkApi, scorecardApi, ariaApi } from '@/api/client'
 import { GradeBadge10, VendorScorecardCard } from '@/components/ui/ScorecardWidgets'
 import type { VendorScorecardData } from '@/components/ui/ScorecardWidgets'
 import { SanctionsAlertBanner } from '@/components/SanctionsAlertBanner'
@@ -31,8 +31,9 @@ import VendorContractRiskMatrix from '@/components/VendorContractRiskMatrix'
 import VendorContractBreakdown from '@/components/VendorContractBreakdown'
 import InvestigationLede from '@/components/ui/InvestigationLede'
 import CronologiaVendor from '@/components/ui/CronologiaVendor'
+import { AriaMemoPanel } from '@/components/widgets/AriaMemoPanel'
 import { buildVendorNarrative } from '@/lib/narratives'
-import type { ContractListItem, VendorExternalFlags, VendorWaterfallContribution, VendorQQWResponse, VendorSHAPResponse, VendorNarrativeResponse, VendorSimilarCasesResponse } from '@/api/types'
+import type { ContractListItem, VendorExternalFlags, VendorWaterfallContribution, VendorQQWResponse, VendorSHAPResponse, VendorNarrativeResponse, VendorSimilarCasesResponse, AriaQueueItem } from '@/api/types'
 import {
   AreaChart,
   Area,
@@ -50,11 +51,8 @@ import {
   ReferenceLine,
   ReferenceArea,
   Legend as RechartsLegend,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  Radar,
 } from '@/components/charts'
+import VendorFingerprintChart from '@/components/charts/VendorFingerprintChart'
 import {
   Users,
   Building2,
@@ -77,6 +75,10 @@ import {
   Newspaper,
   Copy,
   Check,
+  Crosshair,
+  ChevronLeft,
+  ChevronRight,
+  Target,
 } from 'lucide-react'
 import { NetworkGraphModal } from '@/components/NetworkGraphModal'
 import { ScrollReveal, useCountUp, AnimatedFill } from '@/hooks/useAnimations'
@@ -106,101 +108,6 @@ function ScrollSection({ children, delay = 0 }: { children: React.ReactNode; del
 // ============================================================================
 // VendorNarrativeHeader — bold editorial lede above tabs
 // ============================================================================
-function VendorNarrativeHeader({ vendor, riskProfile }: {
-  vendor: import('@/api/types').VendorDetailResponse
-  riskProfile?: import('@/api/types').VendorRiskProfile | null
-}) {
-  const paragraphs = buildVendorNarrative(vendor, riskProfile ?? null)
-  const score = vendor.avg_risk_score ?? 0
-  const level = getRiskLevel(score)
-  const levelLabel = level.toUpperCase()
-  const riskColor = RISK_COLORS[level]
-
-  // Build stat pills
-  const pills: Array<{ label: string; value: string }> = [
-    { label: 'contratos', value: formatNumber(vendor.total_contracts) },
-    { label: 'MXN', value: formatCompactMXN(vendor.total_value_mxn) },
-  ]
-  if (vendor.direct_award_pct > 0) {
-    pills.push({ label: 'adj. directa', value: `${vendor.direct_award_pct.toFixed(0)}%` })
-  }
-  if (vendor.high_risk_pct > 0) {
-    const critLabel = level === 'critical' || level === 'high' ? level : 'high risk'
-    pills.push({ label: critLabel, value: `${vendor.high_risk_pct.toFixed(0)}%` })
-  }
-
-  return (
-    <div
-      className="relative overflow-hidden rounded-lg border"
-      style={{
-        backgroundColor: 'var(--color-background-elevated)',
-        borderColor: 'var(--color-border)',
-        animation: 'narrativeHeaderSlideUp 600ms cubic-bezier(0.16, 1, 0.3, 1) both',
-      }}
-    >
-      {/* Crimson vertical bar */}
-      <div
-        className="absolute left-0 top-0 bottom-0"
-        style={{ width: '3px', backgroundColor: riskColor }}
-      />
-      <div className="pl-6 pr-5 py-5">
-        {/* Top row: name + risk badge */}
-        <div className="flex items-start justify-between gap-4 mb-3">
-          <h2
-            className="font-serif text-2xl font-bold leading-tight"
-            style={{ color: 'var(--color-text-primary)' }}
-          >
-            {toTitleCase(vendor.name)}
-          </h2>
-          <div className="flex flex-col items-end flex-shrink-0">
-            <span
-              className="text-2xl font-bold font-mono numberPop"
-              style={{ color: riskColor }}
-            >
-              {(score * 100).toFixed(0)}
-            </span>
-            <span
-              className="text-[10px] font-semibold uppercase tracking-widest"
-              style={{ color: riskColor, opacity: 0.8 }}
-            >
-              {levelLabel}
-            </span>
-          </div>
-        </div>
-
-        {/* Narrative prose — first 2 paragraphs */}
-        <div className="space-y-1.5 mb-4">
-          {paragraphs.slice(0, 2).map((p, i) => (
-            <p
-              key={i}
-              className="text-sm leading-relaxed"
-              style={{ color: 'var(--color-text-secondary)' }}
-            >
-              {p.text}
-            </p>
-          ))}
-        </div>
-
-        {/* Stat pills */}
-        <div className="flex flex-wrap gap-2">
-          {pills.map((pill) => (
-            <span
-              key={pill.label}
-              className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border"
-              style={{
-                backgroundColor: 'var(--color-background-card)',
-                borderColor: 'var(--color-border)',
-                color: 'var(--color-text-secondary)',
-              }}
-            >
-              {pill.value} <span style={{ opacity: 0.6 }}>{pill.label}</span>
-            </span>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
 
 // ============================================================================
 // Model coefficients for the waterfall chart (v6.0 global model, calibrated 2026-03-13)
@@ -547,147 +454,6 @@ function ActivityCalendar({
 }
 
 // ============================================================================
-// Risk Factor Radar Chart
-// ============================================================================
-
-// The 6 factors we want to surface on the radar, mapped from waterfall feature keys
-const RADAR_FACTOR_KEYS = [
-  {
-    key: 'price_volatility',
-    label: 'Price Volatility',
-    plainEnglish: 'How wildly the vendor\'s contract amounts jump around. High volatility is the strongest predictor of corruption in the model.',
-  },
-  {
-    key: 'vendor_concentration',
-    label: 'Concentration',
-    plainEnglish: 'What share of the sector\'s total spending goes to this vendor. Dominant market share is a major red flag.',
-  },
-  {
-    key: 'win_rate',
-    label: 'Win Rate',
-    plainEnglish: 'How often this vendor wins when it bids, compared to the sector norm. Abnormally high win rates suggest unfair advantage.',
-  },
-  {
-    key: 'direct_award',
-    label: 'Direct Award',
-    plainEnglish: 'Fraction of contracts awarded without a competitive tender. Direct awards bypass normal competitive safeguards.',
-  },
-  {
-    key: 'industry_mismatch',
-    label: 'Sector Mismatch',
-    plainEnglish: 'Whether the vendor\'s business type matches the sector it contracts in. Out-of-sector vendors suggest industry mismatch fraud.',
-  },
-  {
-    key: 'single_bid',
-    label: 'Single Bid',
-    plainEnglish: 'Fraction of competitive procedures where this vendor was the only bidder. Single-bid wins can indicate deterred competition.',
-  },
-]
-
-function RiskRadarChart({ waterfallData }: { waterfallData: VendorWaterfallContribution[] }) {
-  const radarData = useMemo(() => {
-    // Build a lookup by feature key from the waterfall data
-    const lookup = new Map<string, VendorWaterfallContribution>()
-    for (const item of waterfallData) {
-      lookup.set(item.feature, item)
-    }
-
-    return RADAR_FACTOR_KEYS.map(({ key, label, plainEnglish }) => {
-      const item = lookup.get(key)
-      if (!item) return { factor: label, plainEnglish, value: 0, rawZ: 0 }
-
-      // Contribution is already coefficient × z_score. Normalise to [0,1] for the chart
-      // by clamping to [-3, 3] z-score range and mapping to 0–1.
-      const clampedZ = Math.max(-3, Math.min(3, item.z_score))
-      // For negative-coefficient factors (like direct_award when negative), use absolute
-      // z-score magnitude as the "presence" signal, but direction is shown via contribution
-      const presence = (clampedZ + 3) / 6   // 0 = z=-3, 0.5 = z=0, 1 = z=+3
-      return { factor: label, plainEnglish, value: Math.round(presence * 100) / 100, rawZ: item.z_score }
-    })
-  }, [waterfallData])
-
-  const hasData = radarData.some((d) => d.value > 0)
-  if (!hasData) {
-    return (
-      <p className="text-xs text-text-muted text-center py-4">
-        No z-score data available for radar chart
-      </p>
-    )
-  }
-
-  return (
-    <div>
-      <p className="text-xs text-text-muted mb-2">
-        Each axis shows how this vendor&apos;s z-score compares across 6 key risk dimensions.
-        Values toward the edge = higher deviation from sector norms. Hover an axis label to learn what it measures.
-      </p>
-      {/*
-       * Responsive height wrapper for the radar chart.
-       * On small screens (< 640px) 250px gives enough room for the 6 axis
-       * labels without cramping. On larger viewports the full 300px is used.
-       * ResponsiveContainer fills its parent when height="100%".
-       */}
-      <div className="h-[250px] sm:h-[300px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <RadarChart data={radarData} margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
-          <PolarGrid stroke="rgba(255,255,255,0.1)" />
-          <PolarAngleAxis
-            dataKey="factor"
-            tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.65)' }}
-          />
-          <RechartsTooltip
-            content={({ active, payload }) => {
-              if (active && payload?.[0]) {
-                const d = payload[0].payload as { factor: string; plainEnglish: string; value: number; rawZ: number }
-                const zLabel = d.rawZ > 0
-                  ? `${d.rawZ.toFixed(2)} SDs above sector average`
-                  : d.rawZ < 0
-                  ? `${Math.abs(d.rawZ).toFixed(2)} SDs below sector average`
-                  : 'At sector average (z = 0)'
-                return (
-                  <div className="rounded border border-border bg-background-card px-3 py-2.5 text-xs shadow-lg max-w-[230px]">
-                    <p className="font-semibold text-text-primary mb-1">{d.factor}</p>
-                    <p className="text-text-muted mb-2 leading-relaxed">{d.plainEnglish}</p>
-                    <p className="font-mono">
-                      <span className="text-text-muted">z-score: </span>
-                      <span className={d.rawZ > 1 ? 'text-risk-high font-semibold' : d.rawZ < -1 ? 'text-risk-low' : 'text-text-secondary'}>
-                        {d.rawZ.toFixed(2)}
-                      </span>
-                    </p>
-                    <p className="text-text-muted/70 mt-0.5 italic">{zLabel}</p>
-                  </div>
-                )
-              }
-              return null
-            }}
-          />
-          <Radar
-            dataKey="value"
-            stroke="#06b6d4"
-            fill="#06b6d4"
-            fillOpacity={0.2}
-            strokeWidth={2}
-          />
-        </RadarChart>
-      </ResponsiveContainer>
-      </div>
-      {/* Axis legend */}
-      <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
-        {RADAR_FACTOR_KEYS.map(({ label, plainEnglish }) => (
-          <div key={label} className="flex items-start gap-1.5 group">
-            <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-cyan-500/60 flex-shrink-0" />
-            <div>
-              <span className="text-[10px] font-medium text-text-secondary">{label}: </span>
-              <span className="text-[10px] text-text-muted/70">{plainEnglish.split('.')[0]}.</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ============================================================================
 // Top Risk Factor Bars (top 3 contributing factors)
 // ============================================================================
 
@@ -830,6 +596,89 @@ function SHAPPanel({ shapData }: { shapData: VendorSHAPResponse }) {
 }
 
 // ============================================================================
+// P15: Counterfactual "What If?" panel
+// Shows estimated score if each top factor were at sector average (z=0)
+// Math: sigmoid(logit_current - beta_i * z_i) / PU_c
+// ============================================================================
+const PU_C = 0.3432
+const INTERCEPT = -2.3880
+
+function sigmoid(x: number): number {
+  return 1 / (1 + Math.exp(-x))
+}
+
+function CounterfactualPanel({
+  currentScore,
+  waterfallData,
+}: {
+  currentScore: number
+  waterfallData: VendorWaterfallContribution[]
+}) {
+  // Reconstruct logit from current score: score = sigmoid(logit) / PU_c
+  // so sigmoid(logit) = score * PU_c, logit = log(s/(1-s)) where s = score * PU_c
+  const s = Math.min(Math.max(currentScore * PU_C, 0.001), 0.999)
+  const currentLogit = Math.log(s / (1 - s))
+
+  // Get top contributing factors (those with positive contribution)
+  const topFactors = waterfallData
+    .filter((f) => f.contribution > 0 && MODEL_COEFFICIENTS[f.feature] != null)
+    .sort((a, b) => b.contribution - a.contribution)
+    .slice(0, 5)
+
+  if (topFactors.length === 0) {
+    return <p className="text-xs text-text-muted">No hay factores significativos para analizar.</p>
+  }
+
+  return (
+    <div className="space-y-2">
+      {topFactors.map((f) => {
+        const coeff = MODEL_COEFFICIENTS[f.feature] ?? 0
+        // z_value approx = contribution / coeff (since contribution = coeff * z_i approximately)
+        const zApprox = coeff !== 0 ? f.contribution / Math.abs(coeff) : 0
+        const factorLogitContribution = coeff * zApprox
+        const counterfactualLogit = currentLogit - factorLogitContribution
+        const cfScore = Math.min(sigmoid(counterfactualLogit) / PU_C, 1.0)
+        const delta = cfScore - currentScore
+        const cfLevel = getRiskLevel(cfScore)
+        const cfColor = RISK_COLORS[cfLevel]
+
+        return (
+          <div
+            key={f.feature}
+            className="flex items-center gap-3 py-1.5 px-2 rounded border border-border/30 bg-background-elevated/30"
+          >
+            <div className="flex-1 min-w-0">
+              <span className="text-xs text-text-secondary font-medium truncate block">
+                {parseFactorLabel(f.feature).label}
+              </span>
+              <span className="text-[9px] text-text-muted">
+                Si z = 0 (promedio del sector)
+              </span>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span className="text-xs font-mono tabular-nums" style={{ color: cfColor }}>
+                {(cfScore * 100).toFixed(0)}
+              </span>
+              <span
+                className={cn(
+                  'text-[10px] font-mono tabular-nums',
+                  delta < -0.02 ? 'text-risk-low' : delta > 0.02 ? 'text-risk-critical' : 'text-text-muted'
+                )}
+              >
+                {delta >= 0 ? '+' : ''}{(delta * 100).toFixed(0)}pp
+              </span>
+            </div>
+          </div>
+        )
+      })}
+      <p className="text-[9px] text-text-muted/50 pt-1 border-t border-border/20">
+        Simulacion basada en modelo v6.4 (PU c={PU_C}, intercept={INTERCEPT})
+      </p>
+    </div>
+  )
+}
+
+// ============================================================================
 // Main VendorProfile component
 // ============================================================================
 
@@ -854,6 +703,8 @@ export function VendorProfile() {
   const [contractYearFilter, setContractYearFilter] = useState<string>('all')
   const [contractRiskFilter, setContractRiskFilter] = useState<string>('all')
   const [contractSort, setContractSort] = useState<'date_desc' | 'amount_desc' | 'risk_desc'>('date_desc')
+  const [contractPage, setContractPage] = useState(1)
+  const CONTRACTS_PER_PAGE = 50
 
   // Fetch vendor details
   const { data: vendor, isLoading: vendorLoading, error: vendorError } = useQuery({
@@ -871,12 +722,20 @@ export function VendorProfile() {
     staleTime: 5 * 60 * 1000,
   })
 
-  // Fetch vendor's contracts
+  // Fetch vendor's contracts — server-side paginated
   const { data: contracts, isLoading: contractsLoading } = useQuery({
-    queryKey: ['vendor', vendorId, 'contracts'],
-    queryFn: () => vendorApi.getContracts(vendorId, { per_page: 100 }),
+    queryKey: ['vendor', vendorId, 'contracts', contractPage],
+    queryFn: () => vendorApi.getContracts(vendorId, { per_page: CONTRACTS_PER_PAGE, page: contractPage }),
     enabled: !!vendorId,
     staleTime: 2 * 60 * 1000,
+  })
+
+  // Fetch larger batch for chart visualizations (separate from table pagination)
+  const { data: contractsForCharts } = useQuery({
+    queryKey: ['vendor', vendorId, 'contracts-charts'],
+    queryFn: () => vendorApi.getContracts(vendorId, { per_page: 500 }),
+    enabled: !!vendorId,
+    staleTime: 5 * 60 * 1000,
   })
 
   // Fetch vendor's institutions
@@ -975,6 +834,29 @@ export function VendorProfile() {
     retry: false, // 404 = no SHAP data for this vendor, don't retry
   })
 
+  // P9: Model evolution trajectory — deferred until Risk tab
+  interface TrajectoryResponse {
+    vendor_id: number
+    vendor_name: string
+    scores: Record<string, number | null>
+  }
+  const { data: trajectoryData } = useQuery<TrajectoryResponse>({
+    queryKey: ['vendor', vendorId, 'trajectory'],
+    queryFn: () => vendorApi.getTrajectory(vendorId) as Promise<TrajectoryResponse>,
+    enabled: !!vendorId && activeTab === 'risk',
+    staleTime: 60 * 60 * 1000,
+    retry: false,
+  })
+
+  // P14: ARIA investigation data — deferred until ARIA tab
+  const { data: ariaData, isLoading: ariaLoading } = useQuery<AriaQueueItem>({
+    queryKey: ['vendor', vendorId, 'aria-detail'],
+    queryFn: () => ariaApi.getVendorDetail(vendorId),
+    enabled: !!vendorId && activeTab === 'aria',
+    staleTime: 10 * 60 * 1000,
+    retry: false,
+  })
+
   // Procurement Integrity Score
   const { data: scorecard } = useQuery<VendorScorecardData>({
     queryKey: ['vendor', vendorId, 'scorecard'],
@@ -989,11 +871,19 @@ export function VendorProfile() {
     (cb) => cb.relationship_strength === 'very_strong' || cb.relationship_strength === 'strong'
   ) || (coBidders?.suspicious_patterns?.length ?? 0) > 0
 
-  // Compute yearly risk trend from contracts
+  // Compute yearly risk trend from lifecycle data (covers all years, not paginated)
   const riskTrendData = useMemo(() => {
-    if (!contracts?.data?.length) return []
+    if (lifecycleData?.timeline?.length) {
+      return lifecycleData.timeline
+        .filter((y) => y.avg_risk_score != null)
+        .map((y) => ({ year: y.year, avg: y.avg_risk_score as number }))
+        .sort((a, b) => a.year - b.year)
+    }
+    // Fallback to chart contracts
+    const src = contractsForCharts?.data ?? contracts?.data
+    if (!src?.length) return []
     const yearMap = new Map<number, { sum: number; count: number }>()
-    for (const c of contracts.data) {
+    for (const c of src) {
       const yr = c.contract_year
       if (!yr || c.risk_score == null) continue
       const entry = yearMap.get(yr) || { sum: 0, count: 0 }
@@ -1004,16 +894,20 @@ export function VendorProfile() {
     return Array.from(yearMap.entries())
       .map(([year, { sum, count }]) => ({ year, avg: sum / count }))
       .sort((a, b) => a.year - b.year)
-  }, [contracts])
+  }, [lifecycleData, contractsForCharts, contracts])
 
-  // Unique years from contracts data for the year filter dropdown
+  // Unique years from lifecycle or chart contracts for the year filter dropdown
   const contractYears = useMemo<number[]>(() => {
-    if (!contracts?.data?.length) return []
+    if (lifecycleData?.timeline?.length) {
+      return lifecycleData.timeline.map((y) => y.year).sort((a, b) => b - a)
+    }
+    const src = contractsForCharts?.data ?? contracts?.data
+    if (!src?.length) return []
     const years = Array.from(
-      new Set(contracts.data.map((c) => c.contract_year).filter((y): y is number => y != null))
+      new Set(src.map((c) => c.contract_year).filter((y): y is number => y != null))
     )
     return years.sort((a, b) => b - a)
-  }, [contracts])
+  }, [lifecycleData, contractsForCharts, contracts])
 
   // Risk level counts for the risk filter tabs
   const riskLevelCounts = useMemo(() => {
@@ -1062,28 +956,58 @@ export function VendorProfile() {
     [filteredContracts]
   )
 
-  // CSV export helper for filtered contracts
-  const exportContractsCSV = () => {
-    const headers = ['contract_id', 'title', 'amount_mxn', 'procedure_type', 'institution_name', 'contract_date', 'risk_score', 'risk_level']
-    const rows = filteredContracts.map((c) => [
-      c.id,
-      `"${(c.title ?? '').replace(/"/g, '""')}"`,
-      c.amount_mxn ?? '',
-      `"${(c.procedure_type ?? '').replace(/"/g, '""')}"`,
-      `"${(c.institution_name ?? '').replace(/"/g, '""')}"`,
-      c.contract_date ?? c.contract_year ?? '',
-      c.risk_score ?? '',
-      c.risk_level ?? '',
-    ])
-    const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `vendor-${vendorId}-contracts.csv`
-    a.click()
-    setTimeout(() => URL.revokeObjectURL(url), 100)
-  }
+  // Total pages for contract pagination
+  const contractTotalPages = contracts?.pagination
+    ? Math.ceil((contracts.pagination as { total: number }).total / CONTRACTS_PER_PAGE)
+    : 1
+  const contractTotal = (contracts?.pagination as { total: number } | undefined)?.total ?? contracts?.data?.length ?? 0
+
+  // CSV export helper — exports ALL contracts (not just current page)
+  const exportContractsCSV = useCallback(async () => {
+    try {
+      const allData = await vendorApi.getContracts(vendorId, { per_page: 5000 })
+      const headers = ['contract_id', 'title', 'amount_mxn', 'procedure_type', 'institution_name', 'contract_date', 'risk_score', 'risk_level']
+      const rows = allData.data.map((c: ContractListItem) => [
+        c.id,
+        `"${(c.title ?? '').replace(/"/g, '""')}"`,
+        c.amount_mxn ?? '',
+        `"${(c.procedure_type ?? '').replace(/"/g, '""')}"`,
+        `"${(c.institution_name ?? '').replace(/"/g, '""')}"`,
+        c.contract_date ?? c.contract_year ?? '',
+        c.risk_score ?? '',
+        c.risk_level ?? '',
+      ])
+      const csv = [headers.join(','), ...rows.map((r: unknown[]) => r.join(','))].join('\n')
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `vendor-${vendorId}-contracts.csv`
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(url), 100)
+    } catch {
+      // Fallback to current page data
+      const headers = ['contract_id', 'title', 'amount_mxn', 'procedure_type', 'institution_name', 'contract_date', 'risk_score', 'risk_level']
+      const rows = filteredContracts.map((c) => [
+        c.id,
+        `"${(c.title ?? '').replace(/"/g, '""')}"`,
+        c.amount_mxn ?? '',
+        `"${(c.procedure_type ?? '').replace(/"/g, '""')}"`,
+        `"${(c.institution_name ?? '').replace(/"/g, '""')}"`,
+        c.contract_date ?? c.contract_year ?? '',
+        c.risk_score ?? '',
+        c.risk_level ?? '',
+      ])
+      const csv = [headers.join(','), ...rows.map((r: unknown[]) => r.join(','))].join('\n')
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `vendor-${vendorId}-contracts.csv`
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(url), 100)
+    }
+  }, [vendorId, filteredContracts])
 
   if (vendorLoading) {
     return <VendorProfileSkeleton />
@@ -1360,8 +1284,7 @@ export function VendorProfile() {
         contractCount={vendor.total_contracts}
       />
 
-      {/* Editorial narrative header — newspaper lede */}
-      <VendorNarrativeHeader vendor={vendor} riskProfile={riskProfile} />
+      {/* VendorNarrativeHeader removed — InvestigationLede above replaces it */}
 
       {/* Narrative summary */}
       <NarrativeCard
@@ -1672,6 +1595,7 @@ export function VendorProfile() {
           { key: 'history', label: t('tabs.history'), icon: Activity },
           { key: 'network', label: t('tabs.network'), icon: Network },
           { key: 'external', label: t('tabs.external'), icon: ShieldCheck },
+          { key: 'aria', label: 'ARIA', icon: Target },
           { key: 'periodista', label: 'Periodista', icon: Newspaper },
         ]}
       >
@@ -2384,6 +2308,87 @@ export function VendorProfile() {
                   </CardContent>
                 </Card>
               )}
+
+              {/* P9: Model Evolution Badge — v3.3 → v4.0 → v5.1 → v6.4 trajectory */}
+              {trajectoryData?.scores && (
+                <Card className="fern-card">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4" />
+                      Evolucion del Modelo
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-0">
+                      {[
+                        { key: 'v3', label: 'v3.3' },
+                        { key: 'v4', label: 'v4.0' },
+                        { key: 'v5', label: 'v5.1' },
+                        { key: 'v6', label: 'v6.4' },
+                      ].map((model, idx, arr) => {
+                        const rawVal = trajectoryData.scores[model.key]
+                        const score = rawVal != null ? rawVal : null
+                        const level = score != null ? getRiskLevel(score) : null
+                        const color = level ? RISK_COLORS[level] : 'var(--color-text-muted)'
+                        const isLast = idx === arr.length - 1
+                        return (
+                          <div key={model.key} className="flex items-center">
+                            <div className="flex flex-col items-center gap-1">
+                              <span className="text-[9px] text-text-muted font-mono">{model.label}</span>
+                              <div
+                                className={cn(
+                                  'w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold border-2',
+                                  isLast && 'ring-2 ring-offset-1 ring-offset-background-card'
+                                )}
+                                style={{
+                                  borderColor: color,
+                                  color: color,
+                                  backgroundColor: score != null ? `${color}15` : 'transparent',
+                                  ...(isLast ? { ringColor: color } : {}),
+                                }}
+                              >
+                                {score != null ? (score * 100).toFixed(0) : '—'}
+                              </div>
+                              {score != null && level && (
+                                <span className="text-[8px] font-semibold uppercase tracking-wider" style={{ color }}>
+                                  {level === 'critical' ? 'CRIT' : level === 'high' ? 'ALTO' : level === 'medium' ? 'MED' : 'BAJO'}
+                                </span>
+                              )}
+                            </div>
+                            {!isLast && (
+                              <div className="w-4 h-px mx-0.5 bg-border/60" />
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                    {/* Verdict badge */}
+                    {(() => {
+                      const v3 = trajectoryData.scores['v3']
+                      const v6 = trajectoryData.scores['v6']
+                      if (v3 == null || v6 == null) return null
+                      const delta = v6 - v3
+                      const absDelta = Math.abs(delta)
+                      const verdict = absDelta < 0.05 ? 'stable' : delta > 0 ? 'worsening' : 'improving'
+                      const verdictLabel = verdict === 'worsening' ? 'Riesgo creciente' : verdict === 'improving' ? 'Riesgo decreciente' : 'Riesgo estable'
+                      const verdictColor = verdict === 'worsening' ? '#f87171' : verdict === 'improving' ? '#4ade80' : 'var(--color-text-muted)'
+                      return (
+                        <div className="flex items-center gap-1.5 mt-3 pt-2 border-t border-border/30">
+                          {verdict === 'worsening' && <TrendingUp className="h-3 w-3" style={{ color: verdictColor }} />}
+                          {verdict === 'improving' && <TrendingDown className="h-3 w-3" style={{ color: verdictColor }} />}
+                          {verdict === 'stable' && <Minus className="h-3 w-3" style={{ color: verdictColor }} />}
+                          <span className="text-[10px] font-semibold" style={{ color: verdictColor }}>
+                            {verdictLabel}
+                          </span>
+                          <span className="text-[9px] text-text-muted ml-auto">
+                            {delta > 0 ? '+' : ''}{(delta * 100).toFixed(0)}pp v3→v6
+                          </span>
+                        </div>
+                      )
+                    })()}
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {/* Right: Waterfall + Factor List */}
@@ -2488,16 +2493,26 @@ export function VendorProfile() {
               </Card>
               )}
 
-              {/* Risk Radar Chart — 6-axis z-score spider */}
-              {waterfallData && waterfallData.length >= 3 && (
+              {/* La Huella Digital — Nightingale rose corruption fingerprint */}
+              {shapData && (
                 <div className="fern-card p-4">
                   <div className="editorial-rule mb-1">
-                    <span className="editorial-label">RADAR DE RIESGO</span>
+                    <span className="editorial-label">LA HUELLA DIGITAL</span>
                   </div>
-                  <p className="text-xs text-text-muted mb-3">6-axis z-score profile vs. sector-year average</p>
-                  <RiskRadarChart waterfallData={waterfallData} />
-                  <p className="text-xs text-text-muted/50 italic mt-3">
-                    Axes toward the outer edge = higher deviation from sector norms. Wider shape = more risk dimensions active simultaneously.
+                  <p className="text-xs text-text-muted mb-3">
+                    Firma única de riesgo · Área proporcional a la contribución SHAP de cada factor
+                  </p>
+                  <div className="flex justify-center">
+                    <VendorFingerprintChart
+                      shapValues={shapData.shap_values}
+                      riskScore={shapData.risk_score}
+                      vendorName={vendor?.name}
+                      size={300}
+                      animate={true}
+                    />
+                  </div>
+                  <p className="text-xs text-text-muted/50 italic mt-3 text-center">
+                    Pétalos rojos = factores de riesgo · Pétalos azules = factores protectores · Área proporcional al valor SHAP
                   </p>
                 </div>
               )}
@@ -2549,6 +2564,28 @@ export function VendorProfile() {
                   )}
                 </CardContent>
               </Card>
+
+              {/* P15: Counterfactual "What If?" panel */}
+              {waterfallData && waterfallData.length >= 2 && riskProfile?.avg_risk_score != null && (
+                <Card className="fern-card">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Crosshair className="h-4 w-4 text-accent" />
+                      Que Pasaria Si...?
+                      <span className="text-[9px] bg-accent/10 text-accent px-1.5 py-0.5 rounded ml-1">Contrafactual</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-[10px] text-text-muted mb-3">
+                      Score estimado si cada factor estuviera en el promedio del sector (z=0).
+                    </p>
+                    <CounterfactualPanel
+                      currentScore={riskProfile.avg_risk_score}
+                      waterfallData={waterfallData}
+                    />
+                  </CardContent>
+                </Card>
+              )}
             </div>
             </ScrollSection>
           </div>
@@ -2578,11 +2615,11 @@ export function VendorProfile() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {contractsLoading ? (
+                {contractsLoading && !contractsForCharts ? (
                   <Skeleton className="h-[220px]" />
-                ) : contracts?.data?.length ? (
+                ) : (contractsForCharts?.data ?? contracts?.data)?.length ? (
                   <ActivityCalendar
-                    contracts={contracts.data}
+                    contracts={contractsForCharts?.data ?? contracts?.data ?? []}
                     sectorColor={sectorColor}
                   />
                 ) : (
@@ -2597,20 +2634,20 @@ export function VendorProfile() {
                 <span className="editorial-label">ANALISIS DE CONTRATOS</span>
               </div>
 
-              {/* Donut charts row */}
+              {/* Donut charts row — uses larger chart dataset */}
               <VendorContractBreakdown
-                contracts={filteredContracts.map((c) => ({
+                contracts={(contractsForCharts?.data ?? contracts?.data ?? []).map((c) => ({
                   procedure_type: c.procedure_type ?? null,
                   risk_level: c.risk_level ?? null,
                   amount_mxn: c.amount_mxn ?? 0,
                 }))}
-                loading={contractsLoading}
+                loading={contractsLoading && !contractsForCharts}
               />
 
-              {/* Timeline + Risk Matrix side by side */}
+              {/* Timeline + Risk Matrix side by side — uses larger chart dataset */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <VendorContractTimeline
-                  contracts={(filteredContracts).map((c) => ({
+                  contracts={(contractsForCharts?.data ?? contracts?.data ?? []).map((c) => ({
                     id: c.id,
                     title: c.title ?? '',
                     amount_mxn: c.amount_mxn ?? 0,
@@ -2624,7 +2661,7 @@ export function VendorProfile() {
                   vendorName={vendor?.name ?? ''}
                 />
                 <VendorContractRiskMatrix
-                  contracts={(filteredContracts).map((c) => ({
+                  contracts={(contractsForCharts?.data ?? contracts?.data ?? []).map((c) => ({
                     id: c.id,
                     title: c.title ?? '',
                     amount_mxn: c.amount_mxn ?? 0,
@@ -2728,20 +2765,20 @@ export function VendorProfile() {
                   {/* Results summary + export */}
                   <div className="flex items-center justify-between text-xs text-text-muted">
                     <span>
-                      Showing{' '}
+                      Pagina {contractPage} de {contractTotalPages} &middot;{' '}
                       <span className="font-medium text-text-secondary">{filteredContracts.length}</span>
-                      {' '}of{' '}
-                      <span className="font-medium text-text-secondary">{contracts?.data?.length ?? 0}</span>
-                      {' '}contracts — Total:{' '}
+                      {' '}mostrados de{' '}
+                      <span className="font-medium text-text-secondary">{contractTotal.toLocaleString()}</span>
+                      {' '}contratos — Total pagina:{' '}
                       <span className="font-medium text-text-secondary tabular-nums">{formatCompactMXN(filteredTotalValue)}</span>
                     </span>
                     <button
                       onClick={exportContractsCSV}
-                      aria-label="Export filtered contracts as CSV"
+                      aria-label="Export all contracts as CSV"
                       className="flex items-center gap-1 px-2 py-1 rounded border border-border/40 bg-transparent hover:bg-background-elevated hover:border-accent/40 hover:text-accent transition-colors"
                     >
                       <Download className="h-3 w-3" />
-                      Export CSV
+                      Export CSV (All)
                     </button>
                   </div>
                 </div>
@@ -2770,6 +2807,57 @@ export function VendorProfile() {
                   <div className="p-8 text-center text-text-muted">{t('cards.noContractsFound')}</div>
                 )}
               </CardContent>
+
+              {/* Pagination controls */}
+              {contractTotalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 py-3 px-4 border-t border-border/40">
+                  <button
+                    onClick={() => setContractPage((p) => Math.max(1, p - 1))}
+                    disabled={contractPage <= 1}
+                    aria-label="Previous page"
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-medium border border-border/40 bg-transparent hover:bg-background-elevated hover:border-accent/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronLeft className="h-3.5 w-3.5" />
+                    Anterior
+                  </button>
+                  {/* Page number buttons */}
+                  {(() => {
+                    const pages: number[] = []
+                    const total = contractTotalPages
+                    const current = contractPage
+                    const maxVisible = 5
+                    let start = Math.max(1, current - Math.floor(maxVisible / 2))
+                    const end = Math.min(total, start + maxVisible - 1)
+                    if (end - start + 1 < maxVisible) start = Math.max(1, end - maxVisible + 1)
+                    for (let i = start; i <= end; i++) pages.push(i)
+                    return pages.map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => setContractPage(p)}
+                        aria-label={`Page ${p}`}
+                        aria-current={p === current ? 'page' : undefined}
+                        className={cn(
+                          'px-2.5 py-1.5 rounded text-xs font-medium border transition-colors',
+                          p === current
+                            ? 'border-accent/60 bg-accent/10 text-accent'
+                            : 'border-border/40 bg-transparent text-text-muted hover:text-text-secondary hover:border-border'
+                        )}
+                      >
+                        {p}
+                      </button>
+                    ))
+                  })()}
+                  <button
+                    onClick={() => setContractPage((p) => Math.min(contractTotalPages, p + 1))}
+                    disabled={contractPage >= contractTotalPages}
+                    aria-label="Next page"
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-medium border border-border/40 bg-transparent hover:bg-background-elevated hover:border-accent/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Siguiente
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
             </Card>
           </div>
           </ScrollSection>
@@ -2996,7 +3084,185 @@ export function VendorProfile() {
           <ExternalFlagsPanel flags={externalFlags} qqw={qqwData} />
         </TabPanel>
 
-        {/* TAB 6: Periodista */}
+        {/* TAB 6: ARIA Investigation Workbench */}
+        <TabPanel tabKey="aria">
+          <ScrollSection>
+          <div className="space-y-6">
+            {ariaLoading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20" />)}
+              </div>
+            ) : ariaData ? (
+              <>
+                {/* Tier + IPS banner */}
+                <div className="flex items-start gap-4 p-4 rounded-lg border border-border bg-background-elevated/50">
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-[10px] text-text-muted uppercase tracking-wider">Tier</span>
+                    <div
+                      className={cn(
+                        'w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold border-2',
+                        ariaData.ips_tier === 1 ? 'border-risk-critical text-risk-critical bg-risk-critical/10' :
+                        ariaData.ips_tier === 2 ? 'border-risk-high text-risk-high bg-risk-high/10' :
+                        ariaData.ips_tier === 3 ? 'border-risk-medium text-risk-medium bg-risk-medium/10' :
+                        'border-border text-text-muted bg-background-card'
+                      )}
+                    >
+                      T{ariaData.ips_tier}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span className="text-xl font-bold font-mono tabular-nums text-text-primary">
+                        {(ariaData.ips_final ?? ariaData.ips_raw ?? 0).toFixed(3)}
+                      </span>
+                      <span className="text-xs text-text-muted">IPS (Investigation Priority Score)</span>
+                    </div>
+                    {ariaData.primary_pattern && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full border border-accent/40 bg-accent/10 text-accent">
+                          {ariaData.primary_pattern}
+                        </span>
+                        {ariaData.pattern_confidence != null && (
+                          <span className="text-[10px] text-text-muted">
+                            conf: {(ariaData.pattern_confidence * 100).toFixed(0)}%
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {ariaData.review_status && (
+                      <span className={cn(
+                        'inline-block text-[10px] font-medium px-2 py-0.5 rounded mt-1.5 uppercase tracking-wider',
+                        ariaData.review_status === 'confirmed' ? 'bg-risk-critical/15 text-risk-critical' :
+                        ariaData.review_status === 'dismissed' ? 'bg-zinc-500/15 text-zinc-400' :
+                        ariaData.review_status === 'reviewing' ? 'bg-accent/15 text-accent' :
+                        'bg-amber-500/15 text-amber-400'
+                      )}>
+                        {ariaData.review_status}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* IPS Breakdown */}
+                <Card className="fern-card">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <SlidersHorizontal className="h-4 w-4" />
+                      IPS Breakdown
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { label: 'Risk Score', value: ariaData.new_vendor_risk_score, weight: 0.40, color: '#f87171' },
+                        { label: 'Ensemble Anomaly', value: (ariaData as unknown as Record<string, unknown>)['ensemble_anomaly_avg'] as number | undefined, weight: 0.20, color: '#818cf8' },
+                        { label: 'Financial Impact', value: (ariaData as unknown as Record<string, unknown>)['financial_score'] as number | undefined, weight: 0.20, color: '#fbbf24' },
+                        { label: 'External Flags', value: (ariaData as unknown as Record<string, unknown>)['external_score'] as number | undefined, weight: 0.20, color: '#34d399' },
+                      ].map((dim) => (
+                        <div key={dim.label} className="p-2 rounded border border-border/30 bg-background-card/50">
+                          <div className="flex justify-between text-[10px] text-text-muted mb-1">
+                            <span>{dim.label}</span>
+                            <span className="font-mono">w={dim.weight}</span>
+                          </div>
+                          <div className="text-sm font-bold font-mono tabular-nums" style={{ color: dim.color }}>
+                            {dim.value != null ? dim.value.toFixed(3) : '—'}
+                          </div>
+                          <div className="h-1 bg-white/5 rounded-full mt-1 overflow-hidden">
+                            <div
+                              className="h-full rounded-full"
+                              style={{ width: `${Math.min((dim.value ?? 0) * 100, 100)}%`, backgroundColor: dim.color }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Pattern confidences + burst + FP */}
+                <div className="grid gap-4 md:grid-cols-2">
+                  {/* Pattern confidences */}
+                  {ariaData.pattern_confidences && Object.keys(ariaData.pattern_confidences).length > 0 && (
+                    <Card className="fern-card">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">Pattern Confidences</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        {Object.entries(ariaData.pattern_confidences)
+                          .sort(([, a], [, b]) => (b as number) - (a as number))
+                          .map(([pattern, conf]) => (
+                            <div key={pattern} className="flex items-center justify-between text-xs">
+                              <span className="text-text-secondary">{pattern}</span>
+                              <div className="flex items-center gap-2">
+                                <div className="w-16 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full bg-accent"
+                                    style={{ width: `${(conf as number) * 100}%` }}
+                                  />
+                                </div>
+                                <span className="font-mono text-[10px] w-8 text-right">{((conf as number) * 100).toFixed(0)}%</span>
+                              </div>
+                            </div>
+                          ))}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Burst score + FP penalty */}
+                  <Card className="fern-card">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Signals</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-text-muted">Burst Score</span>
+                        <span className={cn(
+                          'font-mono tabular-nums',
+                          (ariaData.burst_score ?? 0) > 0.5 ? 'text-risk-high' : 'text-text-secondary'
+                        )}>
+                          {ariaData.burst_score?.toFixed(3) ?? '—'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-text-muted">FP Penalty</span>
+                        <span className={cn(
+                          'font-mono tabular-nums',
+                          (ariaData.fp_penalty ?? 0) > 0 ? 'text-amber-400' : 'text-text-secondary'
+                        )}>
+                          {ariaData.fp_penalty != null ? ariaData.fp_penalty.toFixed(3) : '0.000'}
+                        </span>
+                      </div>
+                      {ariaData.new_vendor_risk_score != null && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-text-muted">Risk Score (v6.4)</span>
+                          <span className="font-mono tabular-nums" style={{ color: RISK_COLORS[getRiskLevel(ariaData.new_vendor_risk_score)] }}>
+                            {(ariaData.new_vendor_risk_score * 100).toFixed(1)}
+                          </span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* P18: ARIA Memo Panel — LLM-generated investigation brief */}
+                <AriaMemoPanel
+                  vendorId={vendorId}
+                  vendorName={vendor?.name ?? ''}
+                  tier={ariaData.ips_tier}
+                />
+              </>
+            ) : (
+              <div className="p-8 text-center text-text-muted">
+                <Target className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                <p className="text-sm">Este vendedor no se encuentra en la cola de investigacion ARIA.</p>
+                <p className="text-xs mt-1 text-text-muted/60">Solo vendedores con IPS significativo aparecen aqui.</p>
+              </div>
+            )}
+          </div>
+          </ScrollSection>
+        </TabPanel>
+
+        {/* TAB 7: Periodista */}
         <TabPanel tabKey="periodista">
           <PeriodistaPanel vendorId={vendorId} vendorName={vendor?.name ?? ''} avgRiskScore={vendor?.avg_risk_score} activeTab={activeTab} />
         </TabPanel>

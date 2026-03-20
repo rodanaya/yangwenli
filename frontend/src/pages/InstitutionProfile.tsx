@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -49,6 +49,11 @@ import {
   Brain,
   ChevronRight,
   GitCompare,
+  Calendar,
+  UserCheck,
+  BarChart3,
+  Clock,
+  Globe,
 } from 'lucide-react'
 import { NetworkGraphModal } from '@/components/NetworkGraphModal'
 import { motion } from 'framer-motion'
@@ -64,7 +69,56 @@ import {
   ComposedChart,
   Bar,
   Line,
+  ReferenceLine,
 } from '@/components/charts'
+
+// ─── SimpleTabs (same pattern as VendorProfile) ─────────────────────────────
+
+interface TabsProps {
+  defaultTab: string
+  tabs: Array<{ key: string; label: string; icon?: React.ElementType }>
+  children: React.ReactNode
+  onTabChange?: (tab: string) => void
+}
+
+function SimpleTabs({ defaultTab, tabs, children, onTabChange }: TabsProps) {
+  const [active, setActive] = useState(defaultTab)
+  const handleTabChange = (key: string) => {
+    setActive(key)
+    onTabChange?.(key)
+  }
+  return (
+    <div>
+      <div className="flex gap-1 border-b border-border mb-6 overflow-x-auto">
+        {tabs.map((tab) => {
+          const Icon = tab.icon
+          return (
+            <button
+              key={tab.key}
+              onClick={() => handleTabChange(tab.key)}
+              className={cn(
+                'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-all',
+                active === tab.key
+                  ? 'border-accent text-accent bg-accent/5'
+                  : 'border-transparent text-text-muted hover:text-text-secondary hover:bg-background-elevated/30'
+              )}
+            >
+              {Icon && <Icon className="h-3.5 w-3.5" />}
+              {tab.label}
+            </button>
+          )
+        })}
+      </div>
+      {Array.isArray(children)
+        ? (children as React.ReactElement[]).find((c) => (c?.props as any)?.tabKey === active)
+        : children}
+    </div>
+  )
+}
+
+function TabPanel({ tabKey: _tabKey, children }: { tabKey: string; children: React.ReactNode }) {
+  return <div>{children}</div>
+}
 
 // ─── InstitutionNarrativeHeader ────────────────────────────────────────────────
 
@@ -191,6 +245,27 @@ const LEVEL_LABELS: Record<string, string> = {
   unknown: 'Unknown',
 }
 
+// ─── Officials types ─────────────────────────────────────────────────────────
+interface OfficialProfile {
+  official_name: string
+  total_contracts: number
+  first_contract_year: number
+  last_contract_year: number
+  single_bid_pct: number
+  direct_award_pct: number
+  avg_risk_score: number
+  vendor_diversity: number
+  hhi_vendors: number
+  interpretation: string
+}
+
+interface OfficialsResponse {
+  institution_id: number
+  officials: OfficialProfile[]
+  note: string
+  data_available: boolean
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function InstitutionProfile() {
@@ -199,8 +274,14 @@ export function InstitutionProfile() {
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [networkOpen, setNetworkOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState('overview')
   const riskTimelineChartRef = useRef<HTMLDivElement>(null)
   const vendorLoyaltyChartRef = useRef<HTMLDivElement>(null)
+  const spendingChartRef = useRef<HTMLDivElement>(null)
+
+  // Sort state for officials table
+  const [officialSortKey, setOfficialSortKey] = useState<keyof OfficialProfile>('total_contracts')
+  const [officialSortDesc, setOfficialSortDesc] = useState(true)
 
   const { data: institution, isLoading: institutionLoading, error: institutionError } = useQuery({
     queryKey: ['institution', institutionId],
@@ -265,11 +346,10 @@ export function InstitutionProfile() {
   const { data: asfData, isLoading: asfLoading, error: asfDataError } = useQuery({
     queryKey: ['institution-asf-findings', institutionId],
     queryFn: () => institutionApi.getASFFindings(institutionId),
-    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    staleTime: 24 * 60 * 60 * 1000,
     enabled: !!institutionId,
   })
 
-  // Known scandals for this institution's sector
   const { data: sectorCases, error: sectorCasesError } = useQuery({
     queryKey: ['cases', 'by-sector', institution?.sector_id],
     queryFn: () => caseLibraryApi.getBySector(institution!.sector_id!),
@@ -277,7 +357,6 @@ export function InstitutionProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
-  // Ground truth status: does this institution have contracts from known-bad vendors?
   const { data: groundTruthStatus, error: groundTruthStatusError } = useQuery({
     queryKey: ['institution', institutionId, 'ground-truth-status'],
     queryFn: () => institutionApi.getGroundTruthStatus(institutionId),
@@ -285,7 +364,6 @@ export function InstitutionProfile() {
     staleTime: 30 * 60 * 1000,
   })
 
-  // Waterfall risk breakdown
   const { data: waterfallData, isLoading: waterfallLoading, error: waterfallDataError } = useQuery({
     queryKey: ['institution-risk-waterfall', institutionId],
     queryFn: async () => {
@@ -296,7 +374,6 @@ export function InstitutionProfile() {
     staleTime: 30 * 60 * 1000,
   })
 
-  // Top procurement categories (partida codes)
   const { data: topCategories, isLoading: categoriesLoading } = useQuery({
     queryKey: ['institution', institutionId, 'top-categories'],
     queryFn: () => institutionApi.getTopCategories(institutionId, { limit: 8 }),
@@ -304,7 +381,6 @@ export function InstitutionProfile() {
     staleTime: 30 * 60 * 1000,
   })
 
-  // Procurement Integrity Score
   const { data: scorecard } = useQuery<InstitutionScorecardData>({
     queryKey: ['institution', institutionId, 'scorecard'],
     queryFn: () => scorecardApi.getInstitution(institutionId),
@@ -313,13 +389,20 @@ export function InstitutionProfile() {
     retry: false,
   })
 
+  // Officials data — only fetched when Officials tab is active
+  const { data: officialsData, isLoading: officialsLoading, error: officialsError } = useQuery<OfficialsResponse>({
+    queryKey: ['institution', institutionId, 'officials'],
+    queryFn: () => institutionApi.getOfficials(institutionId) as Promise<OfficialsResponse>,
+    enabled: !!institutionId && activeTab === 'officials',
+    staleTime: 30 * 60 * 1000,
+  })
+
   // ── Derived values ──────────────────────────────────────────────────────────
 
   const riskScore = institution?.risk_baseline ?? institution?.avg_risk_score ?? 0
   const riskLevel = getRiskLevelFromScore(riskScore)
   const riskColor = RISK_COLORS[riskLevel] ?? '#64748b'
 
-  // Timeline trend: compare last 3 years to previous 3 years
   const timelineTrend = useMemo(() => {
     const pts = riskTimeline?.timeline ?? []
     if (pts.length < 4) return null
@@ -333,7 +416,6 @@ export function InstitutionProfile() {
     return { direction: delta > 0 ? 'up' : 'down', delta }
   }, [riskTimeline])
 
-  // Risk distribution from profile
   const riskDistribution = useMemo(() => {
     const byLevel = (riskProfile?.contracts_by_risk_level ?? {}) as Record<string, number>
     const total = Object.values(byLevel).reduce((s: number, n: number) => s + n, 0)
@@ -349,7 +431,6 @@ export function InstitutionProfile() {
       }))
   }, [riskProfile])
 
-  // Red thread items for investigation leads
   const redThreadItems = useMemo(() => {
     const items: Array<{
       type: 'co_bidder' | 'investigation_case' | 'sanctions' | 'scandal' | 'high_risk_vendor' | 'asf_finding'
@@ -359,7 +440,6 @@ export function InstitutionProfile() {
       riskLevel?: 'critical' | 'high' | 'medium' | 'low'
     }> = []
 
-    // High-risk vendors
     const highRiskVendors = vendors?.data?.filter(
       (v) => v.avg_risk_score != null && v.avg_risk_score >= 0.3
     )
@@ -373,7 +453,6 @@ export function InstitutionProfile() {
       })
     }
 
-    // Known scandals in sector
     if (sectorCases && sectorCases.length > 0) {
       items.push({
         type: 'scandal',
@@ -383,7 +462,6 @@ export function InstitutionProfile() {
       })
     }
 
-    // ASF findings
     if (asfData && asfData.findings.length > 0) {
       items.push({
         type: 'asf_finding',
@@ -394,7 +472,6 @@ export function InstitutionProfile() {
       })
     }
 
-    // Vendor concentration (from peer comparison if available)
     if (peerComparison?.metrics) {
       const concMetric = peerComparison.metrics.find((m) => m.metric === 'vendor_concentration' || m.metric === 'hhi')
       if (concMetric && concMetric.percentile > 75) {
@@ -409,6 +486,34 @@ export function InstitutionProfile() {
 
     return items
   }, [vendors, sectorCases, asfData, peerComparison])
+
+  // Sorted officials
+  const sortedOfficials = useMemo(() => {
+    if (!officialsData?.officials) return []
+    const sorted = [...officialsData.officials]
+    sorted.sort((a, b) => {
+      const aVal = a[officialSortKey]
+      const bVal = b[officialSortKey]
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return officialSortDesc ? bVal - aVal : aVal - bVal
+      }
+      const aStr = String(aVal ?? '')
+      const bStr = String(bVal ?? '')
+      return officialSortDesc ? bStr.localeCompare(aStr) : aStr.localeCompare(bStr)
+    })
+    return sorted
+  }, [officialsData, officialSortKey, officialSortDesc])
+
+  // HHI trend badge
+  const hhiTrendBadge = useMemo(() => {
+    const history = institution?.supplier_diversity?.history
+    if (!history || history.length < 3) return null
+    const last3 = history.slice(-3)
+    const slope = (last3[last3.length - 1].hhi - last3[0].hhi) / (last3.length - 1)
+    if (slope > 50) return { label: 'Concentrando', color: '#dc2626' }
+    if (slope < -50) return { label: 'Diversificando', color: '#16a34a' }
+    return { label: 'Estable', color: '#eab308' }
+  }, [institution?.supplier_diversity?.history])
 
   // ── Loading / error states ──────────────────────────────────────────────────
 
@@ -586,870 +691,911 @@ export function InstitutionProfile() {
         </div>
       )}
 
-      {/* ── KPI STRIP ──────────────────────────────────────────────────────── */}
-      {(() => {
-        // Build a map of metric -> percentile from peer comparison
-        const peerPercentiles = new Map<string, number>()
-        peerComparison?.metrics?.forEach((m) => {
-          peerPercentiles.set(m.metric, m.percentile)
-        })
+      {/* ── TABBED CONTENT ──────────────────────────────────────────────── */}
+      <SimpleTabs
+        defaultTab="overview"
+        onTabChange={setActiveTab}
+        tabs={[
+          { key: 'overview', label: 'Overview', icon: BarChart3 },
+          { key: 'risk', label: 'Risk', icon: Shield },
+          { key: 'vendors', label: 'Vendors', icon: Users },
+          { key: 'officials', label: 'Officials', icon: UserCheck },
+          { key: 'history', label: 'History', icon: Clock },
+          { key: 'external', label: 'External', icon: Globe },
+        ]}
+      >
 
-        // Risk rank among peers: P90 = top 10% riskiest (worst), P10 = bottom 10% (best)
-        const riskPercentile = peerPercentiles.get('avg_risk_score')
-        const riskRankLabel = riskPercentile != null
-          ? riskPercentile >= 90 ? 'Top 10% riskiest'
-          : riskPercentile >= 75 ? 'Top 25% riskiest'
-          : riskPercentile >= 50 ? 'Above median risk'
-          : riskPercentile >= 25 ? 'Below median risk'
-          : 'Bottom 25% risk'
-          : null
-        const riskRankColor = riskPercentile != null
-          ? riskPercentile >= 75 ? 'text-risk-critical'
-          : riskPercentile >= 50 ? 'text-risk-high'
-          : 'text-risk-low'
-          : 'text-text-muted'
+        {/* ═══════════════ TAB 1: OVERVIEW ═══════════════ */}
+        <TabPanel tabKey="overview">
+          <div className="space-y-5">
+            {/* KPI STRIP */}
+            {(() => {
+              const peerPercentiles = new Map<string, number>()
+              peerComparison?.metrics?.forEach((m) => {
+                peerPercentiles.set(m.metric, m.percentile)
+              })
+              const riskPercentile = peerPercentiles.get('avg_risk_score')
+              const riskRankLabel = riskPercentile != null
+                ? riskPercentile >= 90 ? 'Top 10% riskiest'
+                : riskPercentile >= 75 ? 'Top 25% riskiest'
+                : riskPercentile >= 50 ? 'Above median risk'
+                : riskPercentile >= 25 ? 'Below median risk'
+                : 'Bottom 25% risk'
+                : null
+              const riskRankColor = riskPercentile != null
+                ? riskPercentile >= 75 ? 'text-risk-critical'
+                : riskPercentile >= 50 ? 'text-risk-high'
+                : 'text-risk-low'
+                : 'text-text-muted'
 
-        return (
-          <motion.div
-            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"
-            variants={staggerContainer}
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true }}
-          >
-            <motion.div variants={staggerItem}>
-              <KpiChip
-                label="Total Contracts"
-                value={formatNumber(totalContracts)}
-                icon={FileText}
-                iconColor="text-accent"
-                badge={peerPercentiles.has('contract_count')
-                  ? <PercentileBadge percentile={peerPercentiles.get('contract_count')!} metric="Contracts" />
-                  : undefined}
+              return (
+                <motion.div
+                  className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"
+                  variants={staggerContainer}
+                  initial="initial"
+                  whileInView="animate"
+                  viewport={{ once: true }}
+                >
+                  <motion.div variants={staggerItem}>
+                    <KpiChip label="Total Contracts" value={formatNumber(totalContracts)} icon={FileText} iconColor="text-accent"
+                      badge={peerPercentiles.has('contract_count') ? <PercentileBadge percentile={peerPercentiles.get('contract_count')!} metric="Contracts" /> : undefined}
+                    />
+                  </motion.div>
+                  <motion.div variants={staggerItem}>
+                    <KpiChip label="Total Spending" value={formatCompactMXN(totalValue)} sub={formatCompactUSD(totalValue)} icon={DollarSign} iconColor="text-accent"
+                      badge={peerPercentiles.has('total_value') ? <PercentileBadge percentile={peerPercentiles.get('total_value')!} metric="Spending" /> : undefined}
+                    />
+                  </motion.div>
+                  <motion.div variants={staggerItem}>
+                    <KpiChip label="High-Risk %" value={highRiskPct != null ? formatPercentSafe(highRiskPct, false) : '—'} icon={AlertTriangle}
+                      iconColor={(highRiskPct ?? 0) > 20 ? 'text-risk-critical' : (highRiskPct ?? 0) > 10 ? 'text-risk-high' : 'text-text-muted'}
+                      highlight={(highRiskPct ?? 0) > 20}
+                      badge={peerPercentiles.has('high_risk_pct') ? <PercentileBadge percentile={peerPercentiles.get('high_risk_pct')!} metric="High-Risk %" /> : undefined}
+                    />
+                  </motion.div>
+                  <motion.div variants={staggerItem}>
+                    <KpiChip label="Risk Baseline" value={formatPercentSafe(riskScore, true)} icon={Shield} iconColor={riskColor} style={{ color: riskColor }}
+                      badge={peerPercentiles.has('avg_risk_score') ? <PercentileBadge percentile={peerPercentiles.get('avg_risk_score')!} metric="Risk" /> : undefined}
+                    />
+                  </motion.div>
+                  <motion.div variants={staggerItem}>
+                    <KpiChip label="Risk Rank" value={riskPercentile != null ? `P${riskPercentile}` : peerLoading ? '...' : '—'} sub={riskRankLabel ?? undefined} icon={TrendingUp} iconColor={riskRankColor}
+                      style={riskPercentile != null ? { color: `var(--color-${riskPercentile >= 75 ? 'risk-critical' : riskPercentile >= 50 ? 'risk-high' : 'risk-low'})` } : undefined}
+                    />
+                  </motion.div>
+                  <motion.div variants={staggerItem}>
+                    <KpiChip label="Unique Vendors" value={formatNumber(vendorCount)} icon={Users} iconColor="text-text-muted"
+                      badge={peerPercentiles.has('vendor_count') ? <PercentileBadge percentile={peerPercentiles.get('vendor_count')!} metric="Vendors" /> : undefined}
+                    />
+                  </motion.div>
+                </motion.div>
+              )
+            })()}
+
+            {/* AI Intelligence Brief */}
+            <div className="flex items-center gap-2 px-1">
+              <Brain className="h-3.5 w-3.5 text-accent" />
+              <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
+                AI Intelligence Brief
+              </span>
+            </div>
+            <NarrativeCard
+              paragraphs={buildInstitutionNarrative(institution, vendors?.data ?? null)}
+              compact
+            />
+
+            {/* Red Thread Panel */}
+            {redThreadItems.length > 0 && (
+              <RedThreadPanel
+                items={redThreadItems}
+                entityName={toTitleCase(institution.name)}
               />
-            </motion.div>
-            <motion.div variants={staggerItem}>
-              <KpiChip
-                label="Total Spending"
-                value={formatCompactMXN(totalValue)}
-                sub={formatCompactUSD(totalValue)}
-                icon={DollarSign}
-                iconColor="text-accent"
-                badge={peerPercentiles.has('total_value')
-                  ? <PercentileBadge percentile={peerPercentiles.get('total_value')!} metric="Spending" />
-                  : undefined}
-              />
-            </motion.div>
-            <motion.div variants={staggerItem}>
-              <KpiChip
-                label="High-Risk %"
-                value={highRiskPct != null ? formatPercentSafe(highRiskPct, false) : '—'}
-                icon={AlertTriangle}
-                iconColor={(highRiskPct ?? 0) > 20 ? 'text-risk-critical' : (highRiskPct ?? 0) > 10 ? 'text-risk-high' : 'text-text-muted'}
-                highlight={(highRiskPct ?? 0) > 20}
-                badge={peerPercentiles.has('high_risk_pct')
-                  ? <PercentileBadge percentile={peerPercentiles.get('high_risk_pct')!} metric="High-Risk %" />
-                  : undefined}
-              />
-            </motion.div>
-            <motion.div variants={staggerItem}>
-              <KpiChip
-                label="Risk Baseline"
-                value={formatPercentSafe(riskScore, true)}
-                icon={Shield}
-                iconColor={riskColor}
-                style={{ color: riskColor }}
-                badge={peerPercentiles.has('avg_risk_score')
-                  ? <PercentileBadge percentile={peerPercentiles.get('avg_risk_score')!} metric="Risk" />
-                  : undefined}
-              />
-            </motion.div>
-            {/* Risk rank among all institutions */}
-            <motion.div variants={staggerItem}>
-              <KpiChip
-                label="Risk Rank"
-                value={riskPercentile != null ? `P${riskPercentile}` : peerLoading ? '…' : '—'}
-                sub={riskRankLabel ?? undefined}
-                icon={TrendingUp}
-                iconColor={riskRankColor}
-                style={riskPercentile != null ? { color: `var(--color-${riskPercentile >= 75 ? 'risk-critical' : riskPercentile >= 50 ? 'risk-high' : 'risk-low'})` } : undefined}
-              />
-            </motion.div>
-            <motion.div variants={staggerItem}>
-              <KpiChip
-                label="Unique Vendors"
-                value={formatNumber(vendorCount)}
-                icon={Users}
-                iconColor="text-text-muted"
-                badge={peerPercentiles.has('vendor_count')
-                  ? <PercentileBadge percentile={peerPercentiles.get('vendor_count')!} metric="Vendors" />
-                  : undefined}
-              />
-            </motion.div>
-          </motion.div>
-        )
-      })()}
+            )}
 
-      {/* ── AI INTELLIGENCE BRIEF ─────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 px-1">
-        <Brain className="h-3.5 w-3.5 text-accent" />
-        <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
-          AI Intelligence Brief
-        </span>
-      </div>
-      <NarrativeCard
-        paragraphs={buildInstitutionNarrative(institution, vendors?.data ?? null)}
-        compact
-      />
-
-      {/* ── RED THREAD PANEL ──────────────────────────────────────────────── */}
-      {redThreadItems.length > 0 && (
-        <RedThreadPanel
-          items={redThreadItems}
-          entityName={toTitleCase(institution.name)}
-        />
-      )}
-
-      {/* ── MAIN GRID ──────────────────────────────────────────────────────── */}
-      <div className="grid gap-5 lg:grid-cols-3">
-
-        {/* LEFT COLUMN */}
-        <div className="space-y-4">
-
-          {/* Risk Distribution */}
-          <div className="card-elevated">
-            <CardHeader className="pb-2 pt-4">
-              <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                <Shield className="h-3.5 w-3.5 text-accent" />
-                Risk Distribution
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pb-4">
-              {riskProfileLoading ? (
-                <div className="space-y-2">
-                  {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-6" />)}
+            {/* Risk Distribution */}
+            <div className="grid gap-5 lg:grid-cols-3">
+              <div className="space-y-4">
+                <div className="card-elevated">
+                  <CardHeader className="pb-2 pt-4">
+                    <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                      <Shield className="h-3.5 w-3.5 text-accent" />
+                      Risk Distribution
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pb-4">
+                    {riskProfileLoading ? (
+                      <div className="space-y-2">
+                        {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-6" />)}
+                      </div>
+                    ) : riskProfileError ? (
+                      <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load risk data.</p>
+                    ) : riskDistribution.length > 0 ? (
+                      <div className="space-y-2.5">
+                        {riskDistribution.map((r) => (
+                          <div key={r.level}>
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-center gap-1.5">
+                                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: r.color }} />
+                                <span className="text-xs text-text-secondary">{r.label}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-mono text-text-muted">{formatNumber(r.count)}</span>
+                                <span className="text-xs font-bold font-mono" style={{ color: r.color }}>{r.pct.toFixed(0)}%</span>
+                              </div>
+                            </div>
+                            <div className="h-1.5 rounded-full bg-background-elevated overflow-hidden">
+                              <div className="h-full rounded-full transition-all duration-500" style={{ width: `${r.pct}%`, backgroundColor: r.color }} />
+                            </div>
+                          </div>
+                        ))}
+                        {riskProfile?.effective_risk != null && (
+                          <div className="mt-3 pt-3 border-t border-border/30 flex justify-between text-xs">
+                            <span className="text-text-muted">Effective Risk Score</span>
+                            <span className="font-bold font-mono" style={{ color: riskColor }}>{formatPercentSafe(riskProfile.effective_risk, true)}</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-text-muted">No risk data available</p>
+                    )}
+                  </CardContent>
                 </div>
-              ) : riskProfileError ? (
-                <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load risk data.</p>
-              ) : riskDistribution.length > 0 ? (
-                <div className="space-y-2.5">
-                  {riskDistribution.map((r) => (
-                    <div key={r.level}>
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: r.color }} />
-                          <span className="text-xs text-text-secondary">{r.label}</span>
+
+                {/* Procurement Integrity Score */}
+                {scorecard && (
+                  <div className="card-elevated">
+                    <CardHeader className="pb-2 pt-4">
+                      <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                        <Shield className="h-3.5 w-3.5 text-accent" />
+                        Calificacion de Integridad
+                        <GradeBadge10 grade={scorecard.grade} size="sm" />
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pb-4">
+                      <InstitutionScorecardCard sc={scorecard} />
+                    </CardContent>
+                  </div>
+                )}
+
+                {/* Institution Details */}
+                <div className="card-elevated">
+                  <CardHeader className="pb-2 pt-4">
+                    <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                      <Building2 className="h-3.5 w-3.5 text-accent" />
+                      Institution Details
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pb-4 space-y-2">
+                    <DetailRow label="Type" value={institution.institution_type?.replace(/_/g, ' ')} />
+                    <DetailRow label="Size Tier" value={institution.size_tier} />
+                    <DetailRow label="Autonomy" value={institution.autonomy_level} />
+                    <DetailRow label="Scope" value={institution.geographic_scope} />
+                    <DetailRow label="Data Quality" value={institution.data_quality_grade} />
+                    {institution.avg_contract_value != null && (
+                      <DetailRow label="Avg Contract" value={formatCompactMXN(institution.avg_contract_value)} />
+                    )}
+                    {riskProfile != null && (
+                      <>
+                        <div className="pt-1 border-t border-border/30" />
+                        <DetailRow label="Risk Baseline" value={formatPercentSafe(riskProfile.risk_baseline, true)} valueColor={riskColor} />
+                        <DetailRow label="Size Adjustment" value={`${riskProfile.size_risk_adjustment >= 0 ? '+' : ''}${(riskProfile.size_risk_adjustment * 100).toFixed(0)}pp`} />
+                        <DetailRow label="Autonomy Risk" value={formatPercentSafe(riskProfile.autonomy_risk_baseline, true)} />
+                      </>
+                    )}
+                  </CardContent>
+                </div>
+              </div>
+
+              {/* Right side — top vendors quick peek + most suspicious */}
+              <div className="lg:col-span-2 space-y-5">
+                {/* Top Vendors quick list */}
+                <div className="card-elevated">
+                  <CardHeader className="pb-2 pt-4">
+                    <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                      <Users className="h-3.5 w-3.5 text-accent" />
+                      Top Vendors by Spending
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pb-4">
+                    {vendorsLoading ? (
+                      <div className="space-y-2">{[...Array(6)].map((_, i) => <Skeleton key={i} className="h-8" />)}</div>
+                    ) : vendorsError ? (
+                      <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load vendor data.</p>
+                    ) : vendors?.data?.length ? (
+                      <VendorRankedList vendors={vendors.data.slice(0, 10)} totalValue={totalValue} />
+                    ) : (
+                      <p className="text-sm text-text-muted">No vendor data available</p>
+                    )}
+                  </CardContent>
+                </div>
+
+                {/* Most Suspicious Contract */}
+                {(() => {
+                  const topContract = highRiskContracts?.data?.[0]
+                  if (!topContract) return null
+                  const contractRiskScore = topContract.risk_score ?? 0
+                  const contractRiskLevel = getRiskLevelFromScore(contractRiskScore)
+                  const contractColor = RISK_COLORS[contractRiskLevel] ?? '#64748b'
+                  return (
+                    <div
+                      className="card-elevated border-l-4 cursor-pointer hover:bg-background-elevated/20 transition-colors"
+                      style={{ borderLeftColor: contractColor }}
+                      onClick={() => { setSelectedContractId(topContract.id); setIsDetailOpen(true) }}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Most suspicious contract: ${(topContract as any).description ?? (topContract as any).procedure_number ?? topContract.title}`}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setSelectedContractId(topContract.id); setIsDetailOpen(true) } }}
+                    >
+                      <CardHeader className="pb-2 pt-4">
+                        <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase font-mono" style={{ color: contractColor }}>
+                          <AlertTriangle className="h-3.5 w-3.5" />
+                          Most Suspicious Contract
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pb-4 space-y-2">
+                        <p className="text-sm font-semibold text-text-primary leading-tight line-clamp-2">
+                          {topContract.title ?? `Contract #${topContract.id}`}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
+                          <span className="font-bold" style={{ color: contractColor }}>Risk: {(contractRiskScore * 100).toFixed(1)}%</span>
+                          {topContract.amount_mxn != null && <span className="text-text-secondary">{formatCompactMXN(topContract.amount_mxn)}</span>}
+                          {topContract.vendor_name && <span className="text-text-muted truncate max-w-[200px]" title={topContract.vendor_name}>{topContract.vendor_name}</span>}
+                          {topContract.contract_year && <span className="text-text-muted">{topContract.contract_year}</span>}
+                          {topContract.is_direct_award && <span className="text-risk-high">Direct Award</span>}
+                          {topContract.is_single_bid && <span className="text-risk-critical">Single Bid</span>}
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-mono text-text-muted">{formatNumber(r.count)}</span>
-                          <span className="text-xs font-bold font-mono" style={{ color: r.color }}>
-                            {r.pct.toFixed(0)}%
-                          </span>
-                        </div>
-                      </div>
-                      <div className="h-1.5 rounded-full bg-background-elevated overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{ width: `${r.pct}%`, backgroundColor: r.color }}
-                        />
-                      </div>
+                        <p className="text-[10px] text-text-muted/60 italic">Click to view full contract details</p>
+                      </CardContent>
                     </div>
-                  ))}
-                  {riskProfile?.effective_risk != null && (
-                    <div className="mt-3 pt-3 border-t border-border/30 flex justify-between text-xs">
-                      <span className="text-text-muted">Effective Risk Score</span>
-                      <span className="font-bold font-mono" style={{ color: riskColor }}>
-                        {formatPercentSafe(riskProfile.effective_risk, true)}
-                      </span>
+                  )
+                })()}
+              </div>
+            </div>
+          </div>
+        </TabPanel>
+
+        {/* ═══════════════ TAB 2: RISK ═══════════════ */}
+        <TabPanel tabKey="risk">
+          <div className="space-y-5">
+            {/* Risk Trajectory */}
+            <div className="card-elevated">
+              <CardHeader className="pb-2 pt-4">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                    <TrendingUp className="h-3.5 w-3.5 text-accent" />
+                    Risk Trajectory — Year over Year
+                  </CardTitle>
+                  {timelineTrend && (
+                    <div className={cn(
+                      'flex items-center gap-1 text-xs font-mono font-bold px-2 py-0.5 rounded-full',
+                      timelineTrend.direction === 'up' ? 'bg-risk-critical/10 text-risk-critical' :
+                      timelineTrend.direction === 'down' ? 'bg-green-500/10 text-green-500' :
+                      'bg-text-muted/10 text-text-muted'
+                    )}>
+                      {timelineTrend.direction === 'up' ? <TrendingUp className="h-3 w-3" /> :
+                       timelineTrend.direction === 'down' ? <TrendingDown className="h-3 w-3" /> :
+                       <Minus className="h-3 w-3" />}
+                      {timelineTrend.direction === 'up' ? 'Worsening' :
+                       timelineTrend.direction === 'down' ? 'Improving' : 'Stable'}
                     </div>
                   )}
                 </div>
-              ) : (
-                <p className="text-xs text-text-muted">No risk data available</p>
-              )}
-            </CardContent>
-          </div>
+              </CardHeader>
+              <CardContent className="pb-4">
+                {timelineLoading ? (
+                  <Skeleton className="h-40" />
+                ) : timelineError ? (
+                  <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load risk timeline.</p>
+                ) : (riskTimeline?.timeline?.length ?? 0) > 1 ? (
+                  <div className="relative" ref={riskTimelineChartRef}>
+                    <ChartDownloadButton
+                      targetRef={riskTimelineChartRef}
+                      filename={`institution-${institutionId}-risk-timeline`}
+                      className="absolute top-0 right-0 z-10"
+                    />
+                    <RiskTimelineChart data={riskTimeline!.timeline} riskColor={riskColor} />
+                  </div>
+                ) : (
+                  <div className="h-40 flex items-center justify-center text-sm text-text-muted">
+                    Insufficient timeline data
+                  </div>
+                )}
+              </CardContent>
+            </div>
 
-          {/* Procurement Integrity Score */}
-          {scorecard && (
+            {/* Risk Factor Breakdown (Waterfall) */}
+            {(waterfallDataError || waterfallLoading || waterfallData?.features?.length > 0) && (
             <div className="card-elevated">
               <CardHeader className="pb-2 pt-4">
                 <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <Shield className="h-3.5 w-3.5 text-accent" />
-                  Calificación de Integridad
-                  <GradeBadge10 grade={scorecard.grade} size="sm" />
+                  Risk Factor Breakdown
                 </CardTitle>
               </CardHeader>
               <CardContent className="pb-4">
-                <InstitutionScorecardCard sc={scorecard} />
+                {waterfallDataError ? (
+                  <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load risk breakdown.</p>
+                ) : waterfallLoading ? (
+                  <Skeleton className="h-48" />
+                ) : waterfallData?.features?.length > 0 ? (
+                  <WaterfallRiskChart
+                    features={waterfallData.features}
+                    baseScore={waterfallData.base_score}
+                    finalScore={waterfallData.final_score}
+                  />
+                ) : null}
               </CardContent>
             </div>
-          )}
+            )}
 
-          {/* Risk Factor Breakdown (Waterfall) */}
-          {(waterfallDataError || waterfallLoading || waterfallData?.features?.length > 0) && (
-          <div className="card-elevated">
-            <CardHeader className="pb-2 pt-4">
-              <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                <Shield className="h-3.5 w-3.5 text-accent" />
-                Risk Factor Breakdown
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pb-4">
-              {waterfallDataError ? (
-                <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load risk breakdown.</p>
-              ) : waterfallLoading ? (
-                <Skeleton className="h-48" />
-              ) : waterfallData?.features?.length > 0 ? (
-                <WaterfallRiskChart
-                  features={waterfallData.features}
-                  baseScore={waterfallData.base_score}
-                  finalScore={waterfallData.final_score}
-                />
-              ) : null}
-            </CardContent>
-          </div>
-          )}
-
-          {/* Institution Details */}
-          <div className="card-elevated">
-            <CardHeader className="pb-2 pt-4">
-              <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                <Building2 className="h-3.5 w-3.5 text-accent" />
-                Institution Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pb-4 space-y-2">
-              <DetailRow label="Type" value={institution.institution_type?.replace(/_/g, ' ')} />
-              <DetailRow label="Size Tier" value={institution.size_tier} />
-              <DetailRow label="Autonomy" value={institution.autonomy_level} />
-              <DetailRow label="Scope" value={institution.geographic_scope} />
-              <DetailRow label="Data Quality" value={institution.data_quality_grade} />
-              {institution.avg_contract_value != null && (
-                <DetailRow label="Avg Contract" value={formatCompactMXN(institution.avg_contract_value)} />
-              )}
-              {riskProfile != null && (
-                <>
-                  <div className="pt-1 border-t border-border/30" />
-                  <DetailRow label="Risk Baseline" value={formatPercentSafe(riskProfile.risk_baseline, true)} valueColor={riskColor} />
-                  <DetailRow label="Size Adjustment" value={`${riskProfile.size_risk_adjustment >= 0 ? '+' : ''}${(riskProfile.size_risk_adjustment * 100).toFixed(0)}pp`} />
-                  <DetailRow label="Autonomy Risk" value={formatPercentSafe(riskProfile.autonomy_risk_baseline, true)} />
-                </>
-              )}
-            </CardContent>
-          </div>
-
-          {/* Peer Comparison */}
-          {(peerLoading || peerComparison) && (
-          <div className="card-elevated">
-            <CardHeader className="pb-2 pt-4">
-              <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                <Users className="h-3.5 w-3.5 text-accent" />
-                Peer Comparison
-                {peerComparison && (
-                  <span className="ml-auto text-[10px] font-normal text-text-muted normal-case">
-                    vs {peerComparison.peer_count} peers
-                  </span>
+            {/* Peer Comparison */}
+            {(peerLoading || peerComparison) && (
+            <div className="card-elevated">
+              <CardHeader className="pb-2 pt-4">
+                <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                  <Users className="h-3.5 w-3.5 text-accent" />
+                  Peer Comparison
+                  {peerComparison && (
+                    <span className="ml-auto text-[10px] font-normal text-text-muted normal-case">
+                      vs {peerComparison.peer_count} peers
+                    </span>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pb-4">
+                {peerLoading ? (
+                  <div className="space-y-3">
+                    {[...Array(3)].map((_, i) => <div key={i} className="space-y-1"><div className="h-3 w-24 bg-background-elevated rounded" /><div className="h-2 bg-background-elevated rounded" /></div>)}
+                  </div>
+                ) : peerError ? (
+                  <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load peer data.</p>
+                ) : peerComparison?.metrics?.length ? (
+                  <div className="space-y-3.5">
+                    {peerComparison.metrics.map((m) => {
+                      const pct = m.percentile
+                      const isWorse = pct > 75
+                      const isBetter = pct < 25
+                      const markerColor = isWorse ? '#dc2626' : isBetter ? '#16a34a' : '#eab308'
+                      return (
+                        <div key={m.metric}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-text-secondary">{m.label}</span>
+                            <span className="text-xs font-mono font-bold" style={{ color: markerColor }}>P{pct}</span>
+                          </div>
+                          <div className="relative h-2 rounded-full bg-background-elevated overflow-visible">
+                            <div className="absolute top-0 h-full rounded-full bg-text-muted/20" style={{ left: `${m.peer_p25}%`, width: `${m.peer_p75 - m.peer_p25}%` }} />
+                            <div className="absolute top-0 h-full w-px bg-text-muted/50" style={{ left: `${m.peer_median}%` }} />
+                            <div className="absolute top-1/2 -translate-y-1/2 h-3 w-1.5 rounded-sm" style={{ left: `${pct}%`, backgroundColor: markerColor }} />
+                          </div>
+                          <div className="flex justify-between mt-0.5 text-[10px] text-text-muted/60 font-mono">
+                            <span>min</span><span>median</span><span>max</span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-text-muted">Insufficient peers for comparison</p>
                 )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pb-4">
-              {peerLoading ? (
-                <div className="space-y-3">
-                  {[...Array(3)].map((_, i) => <div key={i} className="space-y-1"><div className="h-3 w-24 bg-background-elevated rounded" /><div className="h-2 bg-background-elevated rounded" /></div>)}
+              </CardContent>
+            </div>
+            )}
+
+            {/* Direct Award Rate vs Benchmark */}
+            {(() => {
+              const directAwardPct = institution.direct_award_pct ?? institution.direct_award_rate
+              const singleBidPct = institution.single_bid_pct
+              if (directAwardPct == null && singleBidPct == null) return null
+              const NATIONAL_DA_BENCHMARK = 74
+              const NATIONAL_SB_BENCHMARK = 12
+              const daDiff = directAwardPct != null ? directAwardPct - NATIONAL_DA_BENCHMARK : null
+              const sbDiff = singleBidPct != null ? singleBidPct - NATIONAL_SB_BENCHMARK : null
+              return (
+                <div className="card-elevated">
+                  <CardHeader className="pb-2 pt-4">
+                    <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                      <AlertTriangle className="h-3.5 w-3.5 text-accent" />
+                      Procurement Method vs National Avg
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pb-4 space-y-3">
+                    {directAwardPct != null && (
+                      <BenchmarkBar label="Direct Award Rate" value={directAwardPct} benchmark={NATIONAL_DA_BENCHMARK} diff={daDiff} highThreshold={10} />
+                    )}
+                    {singleBidPct != null && (
+                      <BenchmarkBar label="Single Bid Rate" value={singleBidPct} benchmark={NATIONAL_SB_BENCHMARK} diff={sbDiff} highThreshold={5} />
+                    )}
+                    <p className="text-[10px] text-text-muted/60 pt-1 border-t border-border/20">
+                      Vertical line = national average across all institutions. Higher than average direct awards or single bids increase corruption risk.
+                    </p>
+                  </CardContent>
                 </div>
-              ) : peerError ? (
-                <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load peer data.</p>
-              ) : peerComparison?.metrics?.length ? (
-                <div className="space-y-3.5">
-                  {peerComparison.metrics.map((m) => {
-                    const pct = m.percentile
-                    const isWorse = pct > 75
-                    const isBetter = pct < 25
-                    const markerColor = isWorse ? '#dc2626' : isBetter ? '#16a34a' : '#eab308'
-                    return (
-                      <div key={m.metric}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-text-secondary">{m.label}</span>
-                          <span className="text-xs font-mono font-bold" style={{ color: markerColor }}>
-                            P{pct}
-                          </span>
-                        </div>
-                        {/* Strip: full width = peer range, shaded band = p25-p75, marker = this institution */}
-                        <div className="relative h-2 rounded-full bg-background-elevated overflow-visible">
-                          {/* IQR band */}
-                          <div
-                            className="absolute top-0 h-full rounded-full bg-text-muted/20"
-                            style={{
-                              left: `${m.peer_p25}%`,
-                              width: `${m.peer_p75 - m.peer_p25}%`,
-                            }}
-                          />
-                          {/* Median line */}
-                          <div
-                            className="absolute top-0 h-full w-px bg-text-muted/50"
-                            style={{ left: `${m.peer_median}%` }}
-                          />
-                          {/* This institution marker */}
-                          <div
-                            className="absolute top-1/2 -translate-y-1/2 h-3 w-1.5 rounded-sm"
-                            style={{ left: `${pct}%`, backgroundColor: markerColor }}
-                          />
-                        </div>
-                        <div className="flex justify-between mt-0.5 text-[10px] text-text-muted/60 font-mono">
-                          <span>min</span>
-                          <span>median</span>
-                          <span>max</span>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : (
-                <p className="text-xs text-text-muted">Insufficient peers for comparison</p>
-              )}
-            </CardContent>
+              )
+            })()}
           </div>
-          )}
+        </TabPanel>
 
-          {/* Direct Award Rate vs Benchmark */}
-          {(() => {
-            const directAwardPct = institution.direct_award_pct ?? institution.direct_award_rate
-            const singleBidPct = institution.single_bid_pct
-            if (directAwardPct == null && singleBidPct == null) return null
-            // National average benchmark ~74% for direct award (from COMPRANET data)
-            const NATIONAL_DA_BENCHMARK = 74
-            const NATIONAL_SB_BENCHMARK = 12
-            const daDiff = directAwardPct != null ? directAwardPct - NATIONAL_DA_BENCHMARK : null
-            const sbDiff = singleBidPct != null ? singleBidPct - NATIONAL_SB_BENCHMARK : null
-            return (
-              <div className="card-elevated">
-                <CardHeader className="pb-2 pt-4">
-                  <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                    <AlertTriangle className="h-3.5 w-3.5 text-accent" />
-                    Procurement Method vs National Avg
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pb-4 space-y-3">
-                  {directAwardPct != null && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-text-secondary">Direct Award Rate</span>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-bold font-mono" style={{ color: daDiff != null && daDiff > 10 ? '#dc2626' : daDiff != null && daDiff > 0 ? '#ea580c' : '#16a34a' }}>
-                            {directAwardPct.toFixed(1)}%
-                          </span>
-                          {daDiff != null && (
-                            <span className={cn('text-[10px] font-mono', daDiff > 0 ? 'text-risk-high' : 'text-risk-low')}>
-                              {daDiff > 0 ? '+' : ''}{daDiff.toFixed(1)}pp vs avg
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="relative h-2 bg-background-elevated rounded-full overflow-hidden">
-                        <div
-                          className="absolute top-0 left-0 h-full rounded-full"
-                          style={{
-                            width: `${Math.min(100, directAwardPct)}%`,
-                            backgroundColor: daDiff != null && daDiff > 10 ? '#dc2626' : daDiff != null && daDiff > 0 ? '#ea580c' : '#16a34a',
-                          }}
-                        />
-                        {/* Benchmark marker */}
-                        <div
-                          className="absolute top-0 h-full w-0.5 bg-text-muted/60"
-                          style={{ left: `${NATIONAL_DA_BENCHMARK}%` }}
-                          title={`National avg: ${NATIONAL_DA_BENCHMARK}%`}
-                        />
-                      </div>
-                      <div className="flex justify-between mt-0.5 text-[10px] text-text-muted/60">
-                        <span>0%</span>
-                        <span>Avg {NATIONAL_DA_BENCHMARK}%</span>
-                        <span>100%</span>
-                      </div>
-                    </div>
-                  )}
-                  {singleBidPct != null && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-text-secondary">Single Bid Rate</span>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-bold font-mono" style={{ color: sbDiff != null && sbDiff > 5 ? '#dc2626' : sbDiff != null && sbDiff > 0 ? '#ea580c' : '#16a34a' }}>
-                            {singleBidPct.toFixed(1)}%
-                          </span>
-                          {sbDiff != null && (
-                            <span className={cn('text-[10px] font-mono', sbDiff > 0 ? 'text-risk-high' : 'text-risk-low')}>
-                              {sbDiff > 0 ? '+' : ''}{sbDiff.toFixed(1)}pp vs avg
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="relative h-2 bg-background-elevated rounded-full overflow-hidden">
-                        <div
-                          className="absolute top-0 left-0 h-full rounded-full"
-                          style={{
-                            width: `${Math.min(100, singleBidPct)}%`,
-                            backgroundColor: sbDiff != null && sbDiff > 5 ? '#dc2626' : sbDiff != null && sbDiff > 0 ? '#ea580c' : '#16a34a',
-                          }}
-                        />
-                        <div
-                          className="absolute top-0 h-full w-0.5 bg-text-muted/60"
-                          style={{ left: `${NATIONAL_SB_BENCHMARK}%` }}
-                          title={`National avg: ${NATIONAL_SB_BENCHMARK}%`}
-                        />
-                      </div>
-                      <div className="flex justify-between mt-0.5 text-[10px] text-text-muted/60">
-                        <span>0%</span>
-                        <span>Avg {NATIONAL_SB_BENCHMARK}%</span>
-                        <span>100%</span>
-                      </div>
-                    </div>
-                  )}
-                  <p className="text-[10px] text-text-muted/60 pt-1 border-t border-border/20">
-                    Vertical line = national average across all institutions. Higher than average direct awards or single bids increase corruption risk.
-                  </p>
-                </CardContent>
-              </div>
-            )
-          })()}
+        {/* ═══════════════ TAB 3: VENDORS ═══════════════ */}
+        <TabPanel tabKey="vendors">
+          <div className="space-y-5">
+            {/* P16: Vendor Concentration Treemap */}
+            <div className="card-elevated">
+              <CardHeader className="pb-2 pt-4">
+                <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                  <BarChart3 className="h-3.5 w-3.5 text-accent" />
+                  Concentracion de proveedores
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pb-4">
+                {vendorsLoading ? (
+                  <Skeleton className="h-64" />
+                ) : vendorsError ? (
+                  <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load vendor data.</p>
+                ) : vendors?.data?.length ? (
+                  <VendorTreemapLazy vendors={vendors.data} totalInstitutionValue={totalValue} />
+                ) : (
+                  <p className="text-xs text-text-muted">No vendor data available</p>
+                )}
+              </CardContent>
+            </div>
 
-        </div>
-
-        {/* RIGHT COLUMN (2/3) */}
-        <div className="lg:col-span-2 space-y-5">
-
-          {/* Risk Trajectory */}
-          <div className="card-elevated">
-            <CardHeader className="pb-2 pt-4">
-              <div className="flex items-center justify-between">
+            {/* Vendor Loyalty Heatmap */}
+            {(loyaltyLoading || (vendorLoyalty?.vendors?.length ?? 0) > 0) && (
+            <div className="card-elevated">
+              <CardHeader className="pb-2 pt-4">
                 <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <TrendingUp className="h-3.5 w-3.5 text-accent" />
-                  Risk Trajectory — Year over Year
+                  Vendor Loyalty — Long-term Relationships
                 </CardTitle>
-                {timelineTrend && (
-                  <div className={cn(
-                    'flex items-center gap-1 text-xs font-mono font-bold px-2 py-0.5 rounded-full',
-                    timelineTrend.direction === 'up' ? 'bg-risk-critical/10 text-risk-critical' :
-                    timelineTrend.direction === 'down' ? 'bg-green-500/10 text-green-500' :
-                    'bg-text-muted/10 text-text-muted'
-                  )}>
-                    {timelineTrend.direction === 'up' ? <TrendingUp className="h-3 w-3" /> :
-                     timelineTrend.direction === 'down' ? <TrendingDown className="h-3 w-3" /> :
-                     <Minus className="h-3 w-3" />}
-                    {timelineTrend.direction === 'up' ? 'Worsening' :
-                     timelineTrend.direction === 'down' ? 'Improving' : 'Stable'}
+              </CardHeader>
+              <CardContent className="pb-4">
+                {loyaltyLoading ? (
+                  <Skeleton className="h-32" />
+                ) : loyaltyError ? (
+                  <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load loyalty data.</p>
+                ) : vendorLoyalty && vendorLoyalty.vendors.length > 0 ? (
+                  <div className="relative overflow-x-auto" ref={vendorLoyaltyChartRef}>
+                    <ChartDownloadButton targetRef={vendorLoyaltyChartRef} filename={`institution-${institutionId}-vendor-loyalty`} className="absolute top-0 right-0 z-10" />
+                    <VendorLoyaltyHeatmap vendorLoyalty={vendorLoyalty} />
+                    <p className="mt-2 text-[10px] text-text-muted/50 italic">Cells show contract count; color = avg risk score</p>
                   </div>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="pb-4">
-              {timelineLoading ? (
-                <Skeleton className="h-40" />
-              ) : timelineError ? (
-                <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load risk timeline.</p>
-              ) : (riskTimeline?.timeline?.length ?? 0) > 1 ? (
-                <div className="relative" ref={riskTimelineChartRef}>
-                  <ChartDownloadButton
-                    targetRef={riskTimelineChartRef}
-                    filename={`institution-${institutionId}-risk-timeline`}
-                    className="absolute top-0 right-0 z-10"
-                  />
-                  <RiskTimelineChart
-                    data={riskTimeline!.timeline}
-                    riskColor={riskColor}
-                  />
-                </div>
-              ) : (
-                <div className="h-40 flex items-center justify-center text-sm text-text-muted">
-                  Insufficient timeline data
-                </div>
-              )}
-            </CardContent>
-          </div>
+                ) : null}
+              </CardContent>
+            </div>
+            )}
 
-          {/* Top Vendors */}
-          <div className="card-elevated">
-            <CardHeader className="pb-2 pt-4">
-              <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                <Users className="h-3.5 w-3.5 text-accent" />
-                Top Vendors by Spending
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pb-4">
-              {vendorsLoading ? (
-                <div className="space-y-2">
-                  {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-8" />)}
-                </div>
-              ) : vendorsError ? (
-                <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load vendor data.</p>
-              ) : vendors?.data?.length ? (
-                <VendorRankedList
-                  vendors={vendors.data.slice(0, 10)}
-                  totalValue={totalValue}
-                />
-              ) : (
-                <p className="text-sm text-text-muted">No vendor data available</p>
-              )}
-            </CardContent>
-          </div>
-
-          {/* Top Procurement Categories */}
-          {(categoriesLoading || (topCategories?.data?.length ?? 0) > 0) && (
-          <div className="card-elevated">
-            <CardHeader className="pb-2 pt-4">
-              <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                <FileText className="h-3.5 w-3.5 text-accent" />
-                Top Procurement Categories
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pb-4">
-              {categoriesLoading ? (
-                <div className="space-y-2">
-                  {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-7" />)}
-                </div>
-              ) : (topCategories?.data ?? []).length === 0 ? (
-                <p className="text-sm text-text-muted">No category data available</p>
-              ) : (
-                <div className="space-y-1.5">
-                  {(topCategories?.data ?? []).map((cat: { category_id: number; name_en: string; name_es: string; code: string; contract_count: number; total_value_mxn: number; avg_risk_score: number; direct_award_pct: number }) => {
-                    const level = getRiskLevelFromScore(cat.avg_risk_score)
-                    const riskCol = RISK_COLORS[level] ?? '#64748b'
-                    return (
-                      <div key={cat.category_id} className="flex items-center gap-2 text-xs py-1 border-b border-border/10 last:border-0">
-                        <span className="font-mono text-text-muted w-10 shrink-0">{cat.code}</span>
-                        <span className="flex-1 text-text-primary truncate" title={cat.name_en}>{cat.name_en}</span>
-                        <span className="text-text-secondary shrink-0">{formatCompactMXN(cat.total_value_mxn)}</span>
-                        <span className="w-12 text-right shrink-0" style={{ color: riskCol }}>
-                          {(cat.avg_risk_score * 100).toFixed(0)}%
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </div>
-          )}
-
-          {/* Vendor Loyalty Heatmap */}
-          {(loyaltyLoading || (vendorLoyalty?.vendors?.length ?? 0) > 0) && (
-          <div className="card-elevated">
-            <CardHeader className="pb-2 pt-4">
-              <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                <TrendingUp className="h-3.5 w-3.5 text-accent" />
-                Vendor Loyalty — Long-term Relationships
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pb-4">
-              {loyaltyLoading ? (
-                <Skeleton className="h-32" />
-              ) : loyaltyError ? (
-                <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load loyalty data.</p>
-              ) : vendorLoyalty && vendorLoyalty.vendors.length > 0 ? (
-                <div className="relative overflow-x-auto" ref={vendorLoyaltyChartRef}>
-                  <ChartDownloadButton
-                    targetRef={vendorLoyaltyChartRef}
-                    filename={`institution-${institutionId}-vendor-loyalty`}
-                    className="absolute top-0 right-0 z-10"
-                  />
-                  {/* Show last 8 years as columns */}
-                  {(() => {
-                    const allYears = vendorLoyalty.year_range ?? []
-                    const displayYears = allYears.slice(-8)
-                    const topVendors = vendorLoyalty.vendors.slice(0, 8)
-                    return (
-                      <table className="w-full border-separate" style={{ borderSpacing: 2 }}>
-                        <thead>
-                          <tr>
-                            <th className="text-left text-[10px] text-text-muted font-normal pb-1 pr-2 min-w-[100px]">Vendor</th>
-                            {displayYears.map((yr) => (
-                              <th key={yr} className="text-center text-[10px] text-text-muted font-mono font-normal pb-1 min-w-[28px]">{yr}</th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {topVendors.map((v) => {
-                            const yearMap = new Map(v.years.map((y) => [y.year, y]))
-                            return (
-                              <tr key={v.vendor_id}>
-                                <td className="pr-2 py-0.5">
-                                  <Link to={`/vendors/${v.vendor_id}`} className="text-[10px] text-text-secondary hover:text-accent truncate block max-w-[100px]" title={v.vendor_name}>
-                                    {v.vendor_name.length > 16 ? v.vendor_name.slice(0, 16) + '…' : v.vendor_name}
-                                  </Link>
-                                </td>
-                                {displayYears.map((yr) => {
-                                  const cell = yearMap.get(yr)
-                                  const risk = cell?.avg_risk ?? 0
-                                  const count = cell?.contract_count ?? 0
-                                  const intensity = Math.min(1, risk / 0.5)
-                                  const r = Math.round(74 + (248 - 74) * intensity)
-                                  const g = Math.round(222 + (113 - 222) * intensity)
-                                  const b = Math.round(128 + (113 - 128) * intensity)
-                                  const color = `rgb(${r},${g},${b})`
-                                  return (
-                                    <td key={yr} className="p-0">
-                                      <div
-                                        className="h-6 w-full rounded flex items-center justify-center text-[9px] font-mono"
-                                        style={{
-                                          backgroundColor: count > 0 ? `${color}30` : 'transparent',
-                                          border: count > 0 ? `1px solid ${color}50` : '1px solid transparent',
-                                          color: count > 0 ? color : 'transparent',
-                                        }}
-                                        title={count > 0 ? `${count} contracts · risk ${(risk * 100).toFixed(0)}%` : 'No contracts'}
-                                      >
-                                        {count > 0 ? count : ''}
-                                      </div>
-                                    </td>
-                                  )
-                                })}
-                              </tr>
-                            )
-                          })}
-                        </tbody>
-                      </table>
-                    )
-                  })()}
-                  <p className="mt-2 text-[10px] text-text-muted/50 italic">Cells show contract count · color = avg risk score</p>
-                </div>
-              ) : null}
-            </CardContent>
-          </div>
-          )}
-
-          {/* Most Suspicious Contract — spotlight card */}
-          {(() => {
-            const topContract = highRiskContracts?.data?.[0]
-            if (!topContract) return null
-            const contractRiskScore = topContract.risk_score ?? 0
-            const contractRiskLevel = getRiskLevelFromScore(contractRiskScore)
-            const contractColor = RISK_COLORS[contractRiskLevel] ?? '#64748b'
-            return (
-              <div
-                className="card-elevated border-l-4 cursor-pointer hover:bg-background-elevated/20 transition-colors"
-                style={{ borderLeftColor: contractColor }}
-                onClick={() => { setSelectedContractId(topContract.id); setIsDetailOpen(true) }}
-                role="button"
-                tabIndex={0}
-                aria-label={`Most suspicious contract: ${(topContract as any).description ?? (topContract as any).procedure_number ?? topContract.title}`}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setSelectedContractId(topContract.id); setIsDetailOpen(true) } }}
-              >
-                <CardHeader className="pb-2 pt-4">
-                  <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase font-mono" style={{ color: contractColor }}>
-                    <AlertTriangle className="h-3.5 w-3.5" />
-                    Most Suspicious Contract
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pb-4 space-y-2">
-                  <p className="text-sm font-semibold text-text-primary leading-tight line-clamp-2">
-                    {topContract.title ?? `Contract #${topContract.id}`}
-                  </p>
-                  <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
-                    <span className="font-bold" style={{ color: contractColor }}>
-                      Risk: {(contractRiskScore * 100).toFixed(1)}%
-                    </span>
-                    {topContract.amount_mxn != null && (
-                      <span className="text-text-secondary">{formatCompactMXN(topContract.amount_mxn)}</span>
-                    )}
-                    {topContract.vendor_name && (
-                      <span className="text-text-muted truncate max-w-[200px]" title={topContract.vendor_name}>
-                        {topContract.vendor_name}
-                      </span>
-                    )}
-                    {topContract.contract_year && (
-                      <span className="text-text-muted">{topContract.contract_year}</span>
-                    )}
-                    {topContract.is_direct_award && (
-                      <span className="text-risk-high">Direct Award</span>
-                    )}
-                    {topContract.is_single_bid && (
-                      <span className="text-risk-critical">Single Bid</span>
-                    )}
-                  </div>
-                  <p className="text-[10px] text-text-muted/60 italic">Click to view full contract details</p>
-                </CardContent>
-              </div>
-            )
-          })()}
-
-          {/* High-Risk Contracts */}
-          <div className="card-elevated">
-            <CardHeader className="pb-2 pt-4">
-              <div className="flex items-center justify-between">
+            {/* P4: Longest-Tenured Vendors */}
+            {institution.longest_tenured_vendors && institution.longest_tenured_vendors.length > 0 && (
+            <div className="card-elevated">
+              <CardHeader className="pb-2 pt-4">
                 <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                  <AlertTriangle className="h-3.5 w-3.5 text-risk-high" />
-                  Highest Risk Contracts
+                  <Calendar className="h-3.5 w-3.5 text-accent" />
+                  Proveedores de larga data
                 </CardTitle>
-                <Link
-                  to={`/contracts?institution_id=${institutionId}&sort_by=risk_score&sort_order=desc`}
-                  className="text-xs text-accent hover:underline flex items-center gap-1"
-                >
-                  View all
-                  <ExternalLink className="h-3 w-3" />
-                </Link>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0 pb-1">
-              {highRiskContractsError ? (
-                <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load high-risk contracts.</p>
-              ) : highRiskLoading ? (
-                <div className="p-4 space-y-2">
-                  {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10" />)}
-                </div>
-              ) : highRiskContracts?.data?.length ? (
-                <div className="divide-y divide-border/30">
-                  {highRiskContracts.data.slice(0, 8).map((contract) => (
-                    <ContractRow
-                      key={contract.id}
-                      contract={contract}
-                      onView={(cid) => { setSelectedContractId(cid); setIsDetailOpen(true) }}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <p className="p-4 text-sm text-text-muted">No contracts found</p>
-              )}
-            </CardContent>
-          </div>
+              </CardHeader>
+              <CardContent className="pb-4">
+                <LongestTenuredGantt vendors={institution.longest_tenured_vendors} />
+              </CardContent>
+            </div>
+            )}
 
-          {/* Recent Contracts */}
-          <div className="card-elevated">
-            <CardHeader className="pb-2 pt-4">
-              <div className="flex items-center justify-between">
+            {/* P3: HHI Trend Chart */}
+            {institution.supplier_diversity && institution.supplier_diversity.history.length > 0 && (
+            <div className="card-elevated">
+              <CardHeader className="pb-2 pt-4">
+                <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                  <BarChart3 className="h-3.5 w-3.5 text-accent" />
+                  Diversidad de Proveedores (HHI)
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 ml-2">
+                    {institution.supplier_diversity.concentration_level.toUpperCase()}
+                  </Badge>
+                  {hhiTrendBadge && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1" style={{ color: hhiTrendBadge.color, backgroundColor: `${hhiTrendBadge.color}15` }}>
+                      {hhiTrendBadge.label}
+                    </span>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pb-4">
+                <HHITrendChart history={institution.supplier_diversity.history} />
+              </CardContent>
+            </div>
+            )}
+
+            {/* EFOS/SFP cross-ref note */}
+            <div className="px-3 py-2 rounded border border-border/30 bg-background-elevated/30">
+              <p className="text-[10px] text-text-muted leading-relaxed">
+                Cross-reference with EFOS (SAT Art. 69-B) and SFP sanctions available in vendor profiles.
+                Click any vendor above to check their external registry status.
+              </p>
+            </div>
+
+            {/* Top Procurement Categories */}
+            {(categoriesLoading || (topCategories?.data?.length ?? 0) > 0) && (
+            <div className="card-elevated">
+              <CardHeader className="pb-2 pt-4">
                 <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <FileText className="h-3.5 w-3.5 text-accent" />
-                  Recent Contracts
+                  Top Procurement Categories
                 </CardTitle>
-                <Link
-                  to={`/contracts?institution_id=${institutionId}`}
-                  className="text-xs text-accent hover:underline flex items-center gap-1"
-                >
-                  View all
-                  <ExternalLink className="h-3 w-3" />
-                </Link>
+              </CardHeader>
+              <CardContent className="pb-4">
+                {categoriesLoading ? (
+                  <div className="space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-7" />)}</div>
+                ) : (topCategories?.data ?? []).length === 0 ? (
+                  <p className="text-sm text-text-muted">No category data available</p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {(topCategories?.data ?? []).map((cat: { category_id: number; name_en: string; name_es: string; code: string; contract_count: number; total_value_mxn: number; avg_risk_score: number; direct_award_pct: number }) => {
+                      const level = getRiskLevelFromScore(cat.avg_risk_score)
+                      const riskCol = RISK_COLORS[level] ?? '#64748b'
+                      return (
+                        <div key={cat.category_id} className="flex items-center gap-2 text-xs py-1 border-b border-border/10 last:border-0">
+                          <span className="font-mono text-text-muted w-10 shrink-0">{cat.code}</span>
+                          <span className="flex-1 text-text-primary truncate" title={cat.name_en}>{cat.name_en}</span>
+                          <span className="text-text-secondary shrink-0">{formatCompactMXN(cat.total_value_mxn)}</span>
+                          <span className="w-12 text-right shrink-0" style={{ color: riskCol }}>{(cat.avg_risk_score * 100).toFixed(0)}%</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </div>
+            )}
+          </div>
+        </TabPanel>
+
+        {/* ═══════════════ TAB 4: OFFICIALS ═══════════════ */}
+        <TabPanel tabKey="officials">
+          <div className="space-y-4">
+            <p className="text-[11px] text-text-muted italic leading-relaxed max-w-2xl">
+              Based on Coviello &amp; Gagliarducci (2017) — official tenure correlates with single-bid rates.
+              Data available for 2018+ contracts (COMPRANET Structure C/D).
+            </p>
+
+            {officialsLoading ? (
+              <div className="space-y-2">
+                {[...Array(8)].map((_, i) => <Skeleton key={i} className="h-10" />)}
               </div>
-            </CardHeader>
-            <CardContent className="p-0 pb-1">
-              {recentLoading ? (
-                <div className="p-4 space-y-2">
-                  {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10" />)}
+            ) : officialsError ? (
+              <div className="card-elevated p-6 text-center">
+                <p className="text-xs text-rose-400/80">Failed to load official data.</p>
+              </div>
+            ) : !officialsData?.data_available || sortedOfficials.length === 0 ? (
+              <div className="card-elevated p-8 text-center">
+                <UserCheck className="h-8 w-8 text-text-muted mx-auto mb-3" />
+                <p className="text-sm text-text-muted">No official data available for this institution</p>
+                {officialsData?.note && (
+                  <p className="text-[10px] text-text-muted/60 mt-2 max-w-md mx-auto">{officialsData.note}</p>
+                )}
+              </div>
+            ) : (
+              <div className="card-elevated overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-border/50">
+                        {([
+                          { key: 'official_name' as const, label: 'Official Name', align: 'left' },
+                          { key: 'first_contract_year' as const, label: 'Tenure', align: 'center' },
+                          { key: 'total_contracts' as const, label: 'Contracts', align: 'right' },
+                          { key: 'single_bid_pct' as const, label: 'Single Bid %', align: 'right' },
+                          { key: 'direct_award_pct' as const, label: 'Direct Award %', align: 'right' },
+                          { key: 'vendor_diversity' as const, label: 'Vendors', align: 'right' },
+                          { key: 'avg_risk_score' as const, label: 'Avg Risk', align: 'right' },
+                        ]).map((col) => (
+                          <th
+                            key={col.key}
+                            className={cn(
+                              'px-3 py-2 font-semibold text-text-muted uppercase tracking-wider cursor-pointer hover:text-accent transition-colors whitespace-nowrap',
+                              col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'
+                            )}
+                            onClick={() => {
+                              if (officialSortKey === col.key) {
+                                setOfficialSortDesc(!officialSortDesc)
+                              } else {
+                                setOfficialSortKey(col.key)
+                                setOfficialSortDesc(true)
+                              }
+                            }}
+                          >
+                            {col.label}
+                            {officialSortKey === col.key && (
+                              <span className="ml-1">{officialSortDesc ? '\u25BC' : '\u25B2'}</span>
+                            )}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sortedOfficials.map((off, idx) => {
+                        const isRedRow = off.single_bid_pct > 50 || off.vendor_diversity <= 3
+                        const riskLvl = getRiskLevelFromScore(off.avg_risk_score)
+                        const rClr = RISK_COLORS[riskLvl] ?? '#64748b'
+                        return (
+                          <tr
+                            key={`${off.official_name}-${idx}`}
+                            className={cn(
+                              'border-b border-border/20 transition-colors',
+                              isRedRow ? 'bg-risk-critical/5' : 'hover:bg-background-elevated/30'
+                            )}
+                          >
+                            <td className="px-3 py-2 font-medium text-text-primary max-w-[200px] truncate" title={off.official_name}>
+                              {toTitleCase(off.official_name)}
+                            </td>
+                            <td className="px-3 py-2 text-center font-mono text-text-muted">
+                              {off.first_contract_year}–{off.last_contract_year}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono">{formatNumber(off.total_contracts)}</td>
+                            <td className="px-3 py-2 text-right font-mono" style={{ color: off.single_bid_pct > 40 ? '#dc2626' : undefined }}>
+                              {off.single_bid_pct.toFixed(1)}%
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono" style={{ color: off.direct_award_pct > 80 ? '#dc2626' : undefined }}>
+                              {off.direct_award_pct.toFixed(1)}%
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono">{off.vendor_diversity}</td>
+                            <td className="px-3 py-2 text-right">
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold font-mono" style={{ color: rClr, backgroundColor: `${rClr}15` }}>
+                                {(off.avg_risk_score * 100).toFixed(0)}%
+                              </span>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
                 </div>
-              ) : contractsError ? (
-                <p className="text-xs text-rose-400/80 p-4 text-center">Failed to load contracts.</p>
-              ) : recentContracts?.data?.length ? (
-                <ScrollArea className="max-h-[280px]">
+                {officialsData.note && (
+                  <p className="px-3 py-2 text-[10px] text-text-muted/60 border-t border-border/20">{officialsData.note}</p>
+                )}
+              </div>
+            )}
+          </div>
+        </TabPanel>
+
+        {/* ═══════════════ TAB 5: HISTORY ═══════════════ */}
+        <TabPanel tabKey="history">
+          <div className="space-y-5">
+            {/* P8: Spending Over Time */}
+            <div className="card-elevated">
+              <CardHeader className="pb-2 pt-4">
+                <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                  <DollarSign className="h-3.5 w-3.5 text-accent" />
+                  Evolucion del gasto
+                  {riskTimeline?.timeline?.length && riskTimeline.timeline.length > 1 && (
+                    <span className="ml-auto text-[10px] font-normal text-text-muted normal-case">
+                      {riskTimeline.timeline[0].year}–{riskTimeline.timeline[riskTimeline.timeline.length - 1].year}
+                    </span>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pb-4">
+                {timelineLoading ? (
+                  <Skeleton className="h-56" />
+                ) : timelineError ? (
+                  <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load timeline.</p>
+                ) : (riskTimeline?.timeline?.length ?? 0) > 1 ? (
+                  <div className="relative" ref={spendingChartRef}>
+                    <ChartDownloadButton targetRef={spendingChartRef} filename={`institution-${institutionId}-spending`} className="absolute top-0 right-0 z-10" />
+                    <SpendingOverTimeChart data={riskTimeline!.timeline} />
+                  </div>
+                ) : (
+                  <div className="h-40 flex items-center justify-center text-sm text-text-muted">Insufficient data</div>
+                )}
+              </CardContent>
+            </div>
+
+            {/* High-Risk Contracts */}
+            <div className="card-elevated">
+              <CardHeader className="pb-2 pt-4">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                    <AlertTriangle className="h-3.5 w-3.5 text-risk-high" />
+                    Highest Risk Contracts
+                  </CardTitle>
+                  <Link to={`/contracts?institution_id=${institutionId}&sort_by=risk_score&sort_order=desc`} className="text-xs text-accent hover:underline flex items-center gap-1">
+                    View all <ExternalLink className="h-3 w-3" />
+                  </Link>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0 pb-1">
+                {highRiskContractsError ? (
+                  <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load high-risk contracts.</p>
+                ) : highRiskLoading ? (
+                  <div className="p-4 space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
+                ) : highRiskContracts?.data?.length ? (
                   <div className="divide-y divide-border/30">
-                    {recentContracts.data.map((contract) => (
-                      <ContractRow
-                        key={contract.id}
-                        contract={contract}
-                        onView={(cid) => { setSelectedContractId(cid); setIsDetailOpen(true) }}
-                      />
+                    {highRiskContracts.data.slice(0, 8).map((contract) => (
+                      <ContractRow key={contract.id} contract={contract} onView={(cid) => { setSelectedContractId(cid); setIsDetailOpen(true) }} />
                     ))}
                   </div>
-                </ScrollArea>
-              ) : (
-                <p className="p-4 text-sm text-text-muted">No contracts found</p>
-              )}
-            </CardContent>
-          </div>
+                ) : (
+                  <p className="p-4 text-sm text-text-muted">No contracts found</p>
+                )}
+              </CardContent>
+            </div>
 
-          {/* ASF Audit Findings */}
-          <div className="card-elevated">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
-                ASF Audit Findings
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {asfDataError ? (
-                <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load ASF findings.</p>
-              ) : asfLoading ? (
-                <div className="space-y-2">
-                  <Skeleton className="h-12" />
-                  <Skeleton className="h-12" />
-                  <Skeleton className="h-8" />
+            {/* Recent Contracts */}
+            <div className="card-elevated">
+              <CardHeader className="pb-2 pt-4">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                    <FileText className="h-3.5 w-3.5 text-accent" />
+                    Recent Contracts
+                  </CardTitle>
+                  <Link to={`/contracts?institution_id=${institutionId}`} className="text-xs text-accent hover:underline flex items-center gap-1">
+                    View all <ExternalLink className="h-3 w-3" />
+                  </Link>
                 </div>
-              ) : !asfData || asfData.findings.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No ASF audit findings on record</p>
-              ) : (
-                <div className="space-y-4">
-                  {/* KPI strip */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-center">
-                    <div>
-                      <div className="text-lg font-semibold">{formatCompactMXN(asfData.total_amount_mxn)}</div>
-                      <div className="text-xs text-muted-foreground">Total Questioned</div>
+              </CardHeader>
+              <CardContent className="p-0 pb-1">
+                {recentLoading ? (
+                  <div className="p-4 space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
+                ) : contractsError ? (
+                  <p className="text-xs text-rose-400/80 p-4 text-center">Failed to load contracts.</p>
+                ) : recentContracts?.data?.length ? (
+                  <ScrollArea className="max-h-[280px]">
+                    <div className="divide-y divide-border/30">
+                      {recentContracts.data.map((contract) => (
+                        <ContractRow key={contract.id} contract={contract} onView={(cid) => { setSelectedContractId(cid); setIsDetailOpen(true) }} />
+                      ))}
                     </div>
-                    <div>
-                      <div className="text-lg font-semibold">{asfData.years_audited}</div>
-                      <div className="text-xs text-muted-foreground">Years Audited</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-semibold">
-                        {asfData.findings[asfData.findings.length - 1]?.recovery_rate != null
-                          ? `${((asfData.findings[asfData.findings.length - 1].recovery_rate ?? 0) * 100).toFixed(0)}%`
-                          : 'N/A'}
-                      </div>
-                      <div className="text-xs text-muted-foreground">Solved Rate</div>
-                    </div>
+                  </ScrollArea>
+                ) : (
+                  <p className="p-4 text-sm text-text-muted">No contracts found</p>
+                )}
+              </CardContent>
+            </div>
+          </div>
+        </TabPanel>
+
+        {/* ═══════════════ TAB 6: EXTERNAL ═══════════════ */}
+        <TabPanel tabKey="external">
+          <div className="space-y-5">
+            {/* ASF Audit Findings */}
+            <div className="card-elevated">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                  ASF Audit Findings
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {asfDataError ? (
+                  <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load ASF findings.</p>
+                ) : asfLoading ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-12" />
+                    <Skeleton className="h-12" />
+                    <Skeleton className="h-8" />
                   </div>
-                  {/* Bar + line chart */}
-                  <ResponsiveContainer width="100%" height={160}>
-                    <ComposedChart data={asfData.findings} margin={{ top: 4, right: 8, bottom: 4, left: 8 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
-                      <XAxis dataKey="year" tick={{ fontSize: 10 }} />
-                      <YAxis yAxisId="left" tickFormatter={(v: number) => `${(v / 1e9).toFixed(1)}B`} tick={{ fontSize: 10 }} />
-                      <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
-                      <RechartsTooltip
-                        formatter={(value: any, name: any) => {
-                          const num = value as number
-                          if (name === 'amount_mxn') return [formatCompactMXN(num), 'Amount']
-                          return [num, name === 'observations_total' ? 'Observations' : 'Solved']
-                        }}
-                      />
-                      <Bar yAxisId="left" dataKey="amount_mxn" fill="hsl(var(--muted))" opacity={0.8} name="amount_mxn" />
-                      <Line yAxisId="right" type="monotone" dataKey="observations_total" stroke="#f59e0b" dot={false} name="observations_total" />
-                    </ComposedChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-            </CardContent>
-          </div>
+                ) : !asfData || asfData.findings.length === 0 ? (
+                  <p className="text-sm text-text-muted">No ASF audit findings on record</p>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-center">
+                      <div>
+                        <div className="text-lg font-semibold">{formatCompactMXN(asfData.total_amount_mxn)}</div>
+                        <div className="text-xs text-text-muted">Total Questioned</div>
+                      </div>
+                      <div>
+                        <div className="text-lg font-semibold">{asfData.years_audited}</div>
+                        <div className="text-xs text-text-muted">Years Audited</div>
+                      </div>
+                      <div>
+                        <div className="text-lg font-semibold">
+                          {asfData.findings[asfData.findings.length - 1]?.recovery_rate != null
+                            ? `${((asfData.findings[asfData.findings.length - 1].recovery_rate ?? 0) * 100).toFixed(0)}%`
+                            : 'N/A'}
+                        </div>
+                        <div className="text-xs text-text-muted">Solved Rate</div>
+                      </div>
+                    </div>
+                    <ResponsiveContainer width="100%" height={160}>
+                      <ComposedChart data={asfData.findings} margin={{ top: 4, right: 8, bottom: 4, left: 8 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
+                        <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                        <YAxis yAxisId="left" tickFormatter={(v: number) => `${(v / 1e9).toFixed(1)}B`} tick={{ fontSize: 10 }} />
+                        <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
+                        <RechartsTooltip
+                          formatter={(value: any, name: any) => {
+                            const num = value as number
+                            if (name === 'amount_mxn') return [formatCompactMXN(num), 'Amount']
+                            return [num, name === 'observations_total' ? 'Observations' : 'Solved']
+                          }}
+                        />
+                        <Bar yAxisId="left" dataKey="amount_mxn" fill="hsl(var(--muted))" opacity={0.8} name="amount_mxn" />
+                        <Line yAxisId="right" type="monotone" dataKey="observations_total" stroke="#f59e0b" dot={false} name="observations_total" />
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </CardContent>
+            </div>
 
-        </div>
-      </div>
-
-      {/* Known Scandals in this sector */}
-      {(sectorCasesError || (sectorCases && sectorCases.length > 0)) && (
-        <div className="card-elevated">
-          <CardContent className="pt-5 pb-4">
-            {sectorCasesError ? (
-              <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load sector scandals.</p>
-            ) : (
-              <>
-                <div className="flex items-center gap-2 mb-3">
-                  <AlertTriangle className="h-4 w-4 text-risk-high opacity-70" />
-                  <h2 className="text-sm font-bold text-text-primary">Known Scandals in Sector</h2>
-                  <span className="text-xs text-text-muted">({sectorCases!.length})</span>
-                </div>
-                <div className="space-y-1.5">
-                  {sectorCases!.slice(0, 5).map((c) => (
-                    <Link
-                      key={c.slug}
-                      to={`/cases/${c.slug}`}
-                      className="flex items-center justify-between p-2 rounded hover:bg-background-elevated/30 transition-colors group"
-                    >
-                      <span className="text-xs font-medium text-text-secondary group-hover:text-accent transition-colors truncate">
-                        {c.name_en || c.name_es}
-                      </span>
-                      <ChevronRight className="h-3 w-3 text-text-muted flex-shrink-0" />
-                    </Link>
-                  ))}
-                </div>
-              </>
+            {/* Ground Truth Link */}
+            {groundTruthStatus?.is_ground_truth_related && (
+              <div className="card-elevated border-l-4 border-l-risk-critical">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Shield className="h-4 w-4 text-risk-critical" />
+                    <h3 className="text-sm font-bold text-risk-critical">Documented Corruption Case</h3>
+                  </div>
+                  <p className="text-xs text-text-secondary leading-relaxed">
+                    This institution is linked to <span className="font-semibold">{groundTruthStatus.case_name}</span>
+                    {groundTruthStatus.case_type && <> ({groundTruthStatus.case_type.replace(/_/g, ' ')})</>}.
+                    {groundTruthStatus.contract_count != null && groundTruthStatus.contract_count > 0 && (
+                      <> {formatNumber(groundTruthStatus.contract_count)} contracts flagged.</>
+                    )}
+                  </p>
+                  <Link to="/cases" className="text-xs text-accent hover:underline mt-2 inline-flex items-center gap-1">
+                    View Case Library <ExternalLink className="h-3 w-3" />
+                  </Link>
+                </CardContent>
+              </div>
             )}
-          </CardContent>
-        </div>
-      )}
+
+            {/* Known Scandals in sector */}
+            {(sectorCasesError || (sectorCases && sectorCases.length > 0)) && (
+              <div className="card-elevated">
+                <CardContent className="pt-5 pb-4">
+                  {sectorCasesError ? (
+                    <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load sector scandals.</p>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2 mb-3">
+                        <AlertTriangle className="h-4 w-4 text-risk-high opacity-70" />
+                        <h2 className="text-sm font-bold text-text-primary">Known Scandals in Sector</h2>
+                        <span className="text-xs text-text-muted">({sectorCases!.length})</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {sectorCases!.slice(0, 5).map((c) => (
+                          <Link
+                            key={c.slug}
+                            to={`/cases/${c.slug}`}
+                            className="flex items-center justify-between p-2 rounded hover:bg-background-elevated/30 transition-colors group"
+                          >
+                            <span className="text-xs font-medium text-text-secondary group-hover:text-accent transition-colors truncate">
+                              {c.name_en || c.name_es}
+                            </span>
+                            <ChevronRight className="h-3 w-3 text-text-muted flex-shrink-0" />
+                          </Link>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </div>
+            )}
+
+            {/* P19: Cross-Registry Timeline */}
+            <div className="card-elevated">
+              <CardHeader className="pb-2 pt-4">
+                <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                  <Calendar className="h-3.5 w-3.5 text-accent" />
+                  Cross-Registry Timeline
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pb-4">
+                <CrossRegistryTimeline
+                  timeline={riskTimeline?.timeline ?? []}
+                  asfFindings={(asfData?.findings ?? []).map(f => ({ year: f.year, amount_mxn: f.amount_mxn ?? undefined, observations_total: f.observations_total ?? undefined }))}
+                />
+              </CardContent>
+            </div>
+
+            {/* Cross-registry note */}
+            <div className="px-3 py-2 rounded border border-border/30 bg-background-elevated/30">
+              <p className="text-[10px] text-text-muted leading-relaxed">
+                External registries: SAT EFOS (Art. 69-B), SFP sanctions, RUPC vendor registry, ASF audit findings.
+                Check individual vendor profiles for EFOS/SFP status. Timeline shows contract activity overlaid with known audit/sanction periods.
+              </p>
+            </div>
+          </div>
+        </TabPanel>
+
+      </SimpleTabs>
 
       <ContractDetailModal
         contractId={selectedContractId}
@@ -1513,6 +1659,34 @@ function DetailRow({ label, value, valueColor }: { label: string; value?: string
   )
 }
 
+function BenchmarkBar({ label, value, benchmark, diff, highThreshold }: {
+  label: string; value: number; benchmark: number; diff: number | null; highThreshold: number
+}) {
+  const barColor = diff != null && diff > highThreshold ? '#dc2626' : diff != null && diff > 0 ? '#ea580c' : '#16a34a'
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs text-text-secondary">{label}</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-bold font-mono" style={{ color: barColor }}>{value.toFixed(1)}%</span>
+          {diff != null && (
+            <span className={cn('text-[10px] font-mono', diff > 0 ? 'text-risk-high' : 'text-risk-low')}>
+              {diff > 0 ? '+' : ''}{diff.toFixed(1)}pp vs avg
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="relative h-2 bg-background-elevated rounded-full overflow-hidden">
+        <div className="absolute top-0 left-0 h-full rounded-full" style={{ width: `${Math.min(100, value)}%`, backgroundColor: barColor }} />
+        <div className="absolute top-0 h-full w-0.5 bg-text-muted/60" style={{ left: `${benchmark}%` }} title={`National avg: ${benchmark}%`} />
+      </div>
+      <div className="flex justify-between mt-0.5 text-[10px] text-text-muted/60">
+        <span>0%</span><span>Avg {benchmark}%</span><span>100%</span>
+      </div>
+    </div>
+  )
+}
+
 // ─── Risk Timeline Chart ───────────────────────────────────────────────────────
 
 function RiskTimelineChart({
@@ -1540,20 +1714,8 @@ function RiskTimelineChart({
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.2} />
-          <XAxis
-            dataKey="year"
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-            tickLine={false}
-            axisLine={false}
-          />
-          <YAxis
-            domain={[0, 100]}
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={(v) => `${v}%`}
-            width={32}
-          />
+          <XAxis dataKey="year" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} />
+          <YAxis domain={[0, 100]} tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={32} />
           <RechartsTooltip
             content={({ active, payload, label }) => {
               if (active && payload?.length) {
@@ -1572,11 +1734,7 @@ function RiskTimelineChart({
               return null
             }}
           />
-          <Area
-            type="monotone"
-            dataKey="risk"
-            stroke={riskColor}
-            strokeWidth={2}
+          <Area type="monotone" dataKey="risk" stroke={riskColor} strokeWidth={2}
             fill={`url(#riskGrad-${riskColor.replace('#', '')})`}
             dot={{ fill: riskColor, r: 3, strokeWidth: 0 }}
             activeDot={{ r: 5, strokeWidth: 0 }}
@@ -1588,15 +1746,68 @@ function RiskTimelineChart({
   )
 }
 
+// ─── P8: Spending Over Time ComposedChart ────────────────────────────────────
+
+function SpendingOverTimeChart({ data }: {
+  data: Array<{ year: number; avg_risk_score: number | null; contract_count: number; total_value: number }>
+}) {
+  const chartData = data.map((pt) => ({
+    year: pt.year,
+    valueBillions: pt.total_value / 1e9,
+    contracts: pt.contract_count,
+    riskPct: pt.avg_risk_score != null ? pt.avg_risk_score * 100 : 0,
+  }))
+
+  function barColor(riskPct: number): string {
+    if (riskPct >= 60) return RISK_COLORS.critical
+    if (riskPct >= 40) return RISK_COLORS.high
+    if (riskPct >= 25) return RISK_COLORS.medium
+    return RISK_COLORS.low
+  }
+
+  return (
+    <div className="h-56">
+      <ResponsiveContainer width="100%" height="100%">
+        <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 4 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.2} />
+          <XAxis dataKey="year" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} />
+          <YAxis yAxisId="left" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v.toFixed(1)}B`} width={40} />
+          <YAxis yAxisId="right" orientation="right" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} width={40} />
+          <RechartsTooltip
+            content={({ active, payload, label }) => {
+              if (active && payload?.length) {
+                const valB = payload.find((p) => p.dataKey === 'valueBillions')?.value as number | undefined
+                const ct = payload.find((p) => p.dataKey === 'contracts')?.value as number | undefined
+                const risk = payload[0]?.payload?.riskPct
+                return (
+                  <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg space-y-1">
+                    <p className="font-bold text-text-primary">{label}</p>
+                    {valB != null && <p className="text-text-secondary">Gasto: {formatCompactMXN(valB * 1e9)}</p>}
+                    {ct != null && <p className="text-text-muted">Contratos: {formatNumber(ct)}</p>}
+                    {risk != null && <p className="text-text-muted">Riesgo promedio: {risk.toFixed(1)}%</p>}
+                  </div>
+                )
+              }
+              return null
+            }}
+          />
+          <ReferenceLine yAxisId="left" x={2018} stroke="#8b5cf6" strokeDasharray="4 4" opacity={0.5} label={{ value: 'AMLO', position: 'top', fontSize: 9, fill: '#8b5cf6' }} />
+          <ReferenceLine yAxisId="left" x={2020} stroke="#dc2626" strokeDasharray="4 4" opacity={0.5} label={{ value: 'COVID', position: 'top', fontSize: 9, fill: '#dc2626' }} />
+          <Bar yAxisId="left" dataKey="valueBillions" name="Gasto (B MXN)" radius={[2, 2, 0, 0]}>
+            {chartData.map((entry, idx) => (
+              <rect key={idx} fill={barColor(entry.riskPct)} />
+            ))}
+          </Bar>
+          <Line yAxisId="right" type="monotone" dataKey="contracts" stroke="var(--color-accent-data)" strokeWidth={2} dot={{ r: 2 }} name="Contratos" />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
 // ─── Vendor Ranked List ────────────────────────────────────────────────────────
 
-function VendorRankedList({
-  vendors,
-  totalValue,
-}: {
-  vendors: InstitutionVendorItem[]
-  totalValue: number
-}) {
+function VendorRankedList({ vendors, totalValue }: { vendors: InstitutionVendorItem[]; totalValue: number }) {
   const maxValue = vendors[0]?.total_value_mxn ?? 1
   return (
     <div className="space-y-1">
@@ -1606,52 +1817,311 @@ function VendorRankedList({
         const riskLvl = v.avg_risk_score != null ? getRiskLevelFromScore(v.avg_risk_score) : null
         const riskClr = riskLvl ? RISK_COLORS[riskLvl] : null
         return (
-          <Link
-            key={v.vendor_id}
-            to={`/vendors/${v.vendor_id}`}
-            className="group flex items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-background-elevated/50 transition-colors"
-          >
-            <span className="text-xs font-mono text-text-muted w-4 text-right flex-shrink-0">
-              {i + 1}
-            </span>
+          <Link key={v.vendor_id} to={`/vendors/${v.vendor_id}`} className="group flex items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-background-elevated/50 transition-colors">
+            <span className="text-xs font-mono text-text-muted w-4 text-right flex-shrink-0">{i + 1}</span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2 mb-0.5">
-                <span className="text-xs font-medium text-text-primary truncate group-hover:text-accent transition-colors">
-                  {toTitleCase(v.vendor_name)}
-                </span>
+                <span className="text-xs font-medium text-text-primary truncate group-hover:text-accent transition-colors">{toTitleCase(v.vendor_name)}</span>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="text-xs font-mono text-text-muted">{formatCompactMXN(v.total_value_mxn)}</span>
                   <span className="text-xs font-mono text-text-muted w-8 text-right">{pct.toFixed(0)}%</span>
                   {riskClr && v.avg_risk_score != null && (
-                    <span
-                      className="text-xs font-bold font-mono w-8 text-right"
-                      style={{ color: riskClr }}
-                    >
-                      {(v.avg_risk_score * 100).toFixed(0)}%
-                    </span>
+                    <span className="text-xs font-bold font-mono w-8 text-right" style={{ color: riskClr }}>{(v.avg_risk_score * 100).toFixed(0)}%</span>
                   )}
                   <ChevronRight className="h-3 w-3 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               </div>
               <div className="h-1 rounded-full bg-background-elevated overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-accent/40 group-hover:bg-accent/60 transition-colors"
-                  style={{ width: `${barW}%` }}
-                />
+                <div className="h-full rounded-full bg-accent/40 group-hover:bg-accent/60 transition-colors" style={{ width: `${barW}%` }} />
               </div>
             </div>
           </Link>
         )
       })}
       <div className="pt-2 text-xs text-text-muted text-right font-mono">
-        {vendors.length > 0 && (
-          <span>
-            Top {vendors.length} of {formatNumber(vendors.length)} shown
-          </span>
-        )}
+        {vendors.length > 0 && <span>Top {vendors.length} shown</span>}
       </div>
     </div>
   )
+}
+
+// ─── Vendor Loyalty Heatmap ──────────────────────────────────────────────────
+
+function VendorLoyaltyHeatmap({ vendorLoyalty }: {
+  vendorLoyalty: {
+    vendors: Array<{
+      vendor_id: number; vendor_name: string
+      years: Array<{ year: number; contract_count: number; avg_risk: number | null }>
+    }>
+    year_range: number[]
+  }
+}) {
+  const allYears = vendorLoyalty.year_range ?? []
+  const displayYears = allYears.slice(-8)
+  const topVendors = vendorLoyalty.vendors.slice(0, 8)
+  return (
+    <table className="w-full border-separate" style={{ borderSpacing: 2 }}>
+      <thead>
+        <tr>
+          <th className="text-left text-[10px] text-text-muted font-normal pb-1 pr-2 min-w-[100px]">Vendor</th>
+          {displayYears.map((yr) => (
+            <th key={yr} className="text-center text-[10px] text-text-muted font-mono font-normal pb-1 min-w-[28px]">{yr}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {topVendors.map((v) => {
+          const yearMap = new Map(v.years.map((y) => [y.year, y]))
+          return (
+            <tr key={v.vendor_id}>
+              <td className="pr-2 py-0.5">
+                <Link to={`/vendors/${v.vendor_id}`} className="text-[10px] text-text-secondary hover:text-accent truncate block max-w-[100px]" title={v.vendor_name}>
+                  {v.vendor_name.length > 16 ? v.vendor_name.slice(0, 16) + '\u2026' : v.vendor_name}
+                </Link>
+              </td>
+              {displayYears.map((yr) => {
+                const cell = yearMap.get(yr)
+                const risk = cell?.avg_risk ?? 0
+                const count = cell?.contract_count ?? 0
+                const intensity = Math.min(1, risk / 0.5)
+                const r = Math.round(74 + (248 - 74) * intensity)
+                const g = Math.round(222 + (113 - 222) * intensity)
+                const b = Math.round(128 + (113 - 128) * intensity)
+                const color = `rgb(${r},${g},${b})`
+                return (
+                  <td key={yr} className="p-0">
+                    <div
+                      className="h-6 w-full rounded flex items-center justify-center text-[9px] font-mono"
+                      style={{
+                        backgroundColor: count > 0 ? `${color}30` : 'transparent',
+                        border: count > 0 ? `1px solid ${color}50` : '1px solid transparent',
+                        color: count > 0 ? color : 'transparent',
+                      }}
+                      title={count > 0 ? `${count} contracts \u00B7 risk ${(risk * 100).toFixed(0)}%` : 'No contracts'}
+                    >
+                      {count > 0 ? count : ''}
+                    </div>
+                  </td>
+                )
+              })}
+            </tr>
+          )
+        })}
+      </tbody>
+    </table>
+  )
+}
+
+// ─── P4: Longest-Tenured Vendors Gantt ──────────────────────────────────────
+
+function LongestTenuredGantt({ vendors }: {
+  vendors: Array<{
+    vendor_id: number; vendor_name: string
+    first_contract_year: number; last_contract_year: number
+    tenure_years: number; total_contracts: number
+    avg_risk_score?: number
+  }>
+}) {
+  const navigate = useNavigate()
+  const allYears = vendors.flatMap((v) => [v.first_contract_year, v.last_contract_year])
+  const minYear = Math.min(...allYears)
+  const maxYear = Math.max(...allYears)
+  const range = maxYear - minYear || 1
+
+  function riskGradientColor(score: number): string {
+    if (score >= 0.6) return RISK_COLORS.critical
+    if (score >= 0.4) return RISK_COLORS.high
+    if (score >= 0.25) return RISK_COLORS.medium
+    return RISK_COLORS.low
+  }
+
+  return (
+    <div className="space-y-1.5">
+      {/* Year axis */}
+      <div className="flex items-center pl-[140px]">
+        <div className="flex-1 flex justify-between text-[9px] text-text-muted/60 font-mono">
+          <span>{minYear}</span>
+          <span>{Math.round((minYear + maxYear) / 2)}</span>
+          <span>{maxYear}</span>
+        </div>
+      </div>
+
+      {vendors.map((v) => {
+        const leftPct = ((v.first_contract_year - minYear) / range) * 100
+        const widthPct = Math.max(2, ((v.last_contract_year - v.first_contract_year) / range) * 100)
+        const riskScore = v.avg_risk_score ?? 0
+        const barColor = riskGradientColor(riskScore)
+        const isWarning = v.tenure_years > 10 && riskScore > 0.3
+
+        return (
+          <div
+            key={v.vendor_id}
+            className="flex items-center gap-2 group cursor-pointer"
+            onClick={() => navigate(`/vendors/${v.vendor_id}`)}
+          >
+            <div className="w-[140px] flex-shrink-0 truncate text-[10px] text-text-secondary group-hover:text-accent transition-colors pr-2 text-right" title={v.vendor_name}>
+              {v.vendor_name.length > 20 ? v.vendor_name.slice(0, 18) + '\u2026' : v.vendor_name}
+            </div>
+            <div className="flex-1 relative h-5 bg-background-elevated/30 rounded">
+              <div
+                className="absolute top-0 h-full rounded flex items-center justify-end pr-1 gap-1"
+                style={{
+                  left: `${leftPct}%`,
+                  width: `${widthPct}%`,
+                  backgroundColor: `${barColor}40`,
+                  borderLeft: `2px solid ${barColor}`,
+                }}
+              >
+                <span className="text-[8px] font-mono font-bold" style={{ color: barColor }}>
+                  {v.tenure_years}y / {v.total_contracts}c
+                </span>
+                {isWarning && (
+                  <AlertTriangle className="h-2.5 w-2.5 text-risk-critical flex-shrink-0" />
+                )}
+              </div>
+            </div>
+          </div>
+        )
+      })}
+      <p className="text-[10px] text-text-muted/50 italic mt-2">
+        Bar color = avg risk score (green to red). Warning icon = tenure {'>'}10yr AND risk {'>'}30%.
+      </p>
+    </div>
+  )
+}
+
+// ─── P3: HHI Trend Chart ───────────────────────────────────────────────────
+
+function HHITrendChart({ history }: {
+  history: Array<{ year: number; hhi: number; unique_vendors: number }>
+}) {
+  const chartData = history.map((pt) => ({
+    year: pt.year,
+    hhi: pt.hhi,
+    vendors: pt.unique_vendors,
+  }))
+
+  return (
+    <div className="h-48">
+      <ResponsiveContainer width="100%" height="100%">
+        <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 4 }}>
+          <defs>
+            <linearGradient id="hhiAreaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#eab308" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="#eab308" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.2} />
+          <XAxis dataKey="year" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} />
+          <YAxis yAxisId="left" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} width={40} />
+          <YAxis yAxisId="right" orientation="right" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} width={40} />
+          <RechartsTooltip
+            content={({ active, payload, label }) => {
+              if (active && payload?.length) {
+                const hhi = payload.find((p) => p.dataKey === 'hhi')?.value as number | undefined
+                const vendors = payload.find((p) => p.dataKey === 'vendors')?.value as number | undefined
+                return (
+                  <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg space-y-1">
+                    <p className="font-bold text-text-primary">{label}</p>
+                    {hhi != null && <p className="text-text-secondary">HHI: {hhi.toFixed(0)}</p>}
+                    {vendors != null && <p className="text-text-muted">Proveedores: {vendors}</p>}
+                  </div>
+                )
+              }
+              return null
+            }}
+          />
+          <ReferenceLine yAxisId="left" y={2500} stroke="#dc2626" strokeDasharray="4 4" opacity={0.5} label={{ value: 'Mercado concentrado', position: 'right', fontSize: 9, fill: '#dc2626' }} />
+          <Area yAxisId="left" type="monotone" dataKey="hhi" stroke="#eab308" strokeWidth={2} fill="url(#hhiAreaGrad)" dot={{ r: 2, fill: '#eab308' }} />
+          <Line yAxisId="right" type="monotone" dataKey="vendors" stroke="var(--color-accent-data)" strokeWidth={2} dot={{ r: 2 }} />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
+// ─── P19: Cross-Registry Timeline ──────────────────────────────────────────
+
+function CrossRegistryTimeline({ timeline, asfFindings }: {
+  timeline: Array<{ year: number; contract_count: number; total_value: number }>
+  asfFindings: Array<{ year: number; amount_mxn?: number; observations_total?: number }>
+}) {
+  if (timeline.length === 0 && asfFindings.length === 0) {
+    return <p className="text-xs text-text-muted py-4 text-center">No external registry events found</p>
+  }
+
+  // Merge into single timeline
+  const allYears = new Set<number>()
+  timeline.forEach((t) => allYears.add(t.year))
+  asfFindings.forEach((a) => allYears.add(a.year))
+  const sortedYears = Array.from(allYears).sort((a, b) => a - b)
+
+  const timelineMap = new Map(timeline.map((t) => [t.year, t]))
+  const asfMap = new Map(asfFindings.map((a) => [a.year, a]))
+
+  const chartData = sortedYears.map((yr) => ({
+    year: yr,
+    contracts: timelineMap.get(yr)?.contract_count ?? 0,
+    asfObs: asfMap.get(yr)?.observations_total ?? 0,
+  }))
+
+  return (
+    <div className="h-40">
+      <ResponsiveContainer width="100%" height="100%">
+        <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 4 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.2} />
+          <XAxis dataKey="year" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} />
+          <YAxis yAxisId="left" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} width={36} />
+          <YAxis yAxisId="right" orientation="right" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} width={36} />
+          <RechartsTooltip
+            content={({ active, payload, label }) => {
+              if (active && payload?.length) {
+                const ct = payload.find((p) => p.dataKey === 'contracts')?.value as number | undefined
+                const asf = payload.find((p) => p.dataKey === 'asfObs')?.value as number | undefined
+                return (
+                  <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg space-y-1">
+                    <p className="font-bold text-text-primary">{label}</p>
+                    {ct != null && ct > 0 && <p style={{ color: 'var(--color-accent-data)' }}>Contratos: {ct}</p>}
+                    {asf != null && asf > 0 && <p style={{ color: '#f59e0b' }}>ASF observaciones: {asf}</p>}
+                  </div>
+                )
+              }
+              return null
+            }}
+          />
+          <Bar yAxisId="left" dataKey="contracts" fill="var(--color-accent-data)" opacity={0.4} name="Contracts" radius={[2, 2, 0, 0]} />
+          <Line yAxisId="right" type="monotone" dataKey="asfObs" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3, fill: '#f59e0b' }} name="ASF Observations" />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
+// ─── Treemap Lazy Wrapper (avoids echarts bundle on initial load) ────────────
+
+function VendorTreemapLazy({ vendors, totalInstitutionValue }: {
+  vendors: InstitutionVendorItem[]
+  totalInstitutionValue?: number
+}) {
+  // Lazy import to avoid bundling echarts on pages that don't need it
+  const [TreemapComp, setTreemapComp] = useState<React.ComponentType<any> | null>(null)
+  const [loadError, setLoadError] = useState(false)
+
+  useMemo(() => {
+    import('@/components/charts/VendorConcentrationTreemap')
+      .then((mod) => setTreemapComp(() => mod.VendorConcentrationTreemap))
+      .catch(() => setLoadError(true))
+  }, [])
+
+  if (loadError) {
+    return <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load treemap chart.</p>
+  }
+
+  if (!TreemapComp) {
+    return <Skeleton className="h-64" />
+  }
+
+  return <TreemapComp vendors={vendors} totalInstitutionValue={totalInstitutionValue} />
 }
 
 // ─── Contract Row ──────────────────────────────────────────────────────────────

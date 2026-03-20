@@ -5419,3 +5419,175 @@ def get_drift_report():
     )
     _analysis_cache.set(cache_key, result, ttl_seconds=3600)
     return result
+
+
+# =============================================================================
+# FACTOR BASELINES — P17
+# =============================================================================
+
+class FactorBaselineItem(BaseModel):
+    """A single factor baseline row."""
+    sector_id: Optional[int] = None
+    sector_name: Optional[str] = None
+    year: Optional[int] = None
+    factor_name: str
+    mean: float
+    stddev: float
+    sample_count: int
+
+
+class FactorBaselineListResponse(BaseModel):
+    """Paginated list of factor baselines."""
+    data: List[FactorBaselineItem]
+    total: int
+
+
+class FactorBaselineSectorYearResponse(BaseModel):
+    """All 16 features for a specific sector+year combination."""
+    sector_id: int
+    sector_name: str
+    year: int
+    features: Dict[str, Dict[str, Any]]
+    count: int
+
+
+@router.get("/factor-baselines", response_model=FactorBaselineListResponse)
+def get_factor_baselines(
+    sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector"),
+    year: Optional[int] = Query(None, ge=2002, le=2030, description="Filter by year"),
+    factor: Optional[str] = Query(None, description="Filter by factor name"),
+):
+    """
+    List factor baselines (sector/year mean and stddev for z-score features).
+
+    The factor_baselines table contains ~4,500 rows of per-sector, per-year
+    statistics that define what is 'normal' for each z-score feature. This data
+    makes z-scores interpretable: e.g., 'in Salud 2020, the average single_bid
+    rate was 0.65 with stddev 0.48'.
+    """
+    cache_key = f"factor_baselines:{sector_id}:{year}:{factor}"
+    cached = _analysis_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    try:
+        with get_db() as conn:
+            conditions = []
+            params: list = []
+
+            if sector_id is not None:
+                conditions.append("fb.sector_id = ?")
+                params.append(sector_id)
+            if year is not None:
+                conditions.append("fb.year = ?")
+                params.append(year)
+            if factor is not None:
+                conditions.append("fb.factor_name = ?")
+                params.append(factor)
+
+            where_sql = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+
+            rows = conn.execute(
+                f"""
+                SELECT fb.sector_id, s.name_es AS sector_name, fb.year,
+                       fb.factor_name, fb.mean, fb.stddev, fb.count AS sample_count
+                FROM factor_baselines fb
+                LEFT JOIN sectors s ON fb.sector_id = s.id
+                {where_sql}
+                ORDER BY fb.sector_id, fb.year, fb.factor_name
+                """,
+                params,
+            ).fetchall()
+
+            data = [
+                FactorBaselineItem(
+                    sector_id=r["sector_id"],
+                    sector_name=r["sector_name"],
+                    year=r["year"],
+                    factor_name=r["factor_name"],
+                    mean=round(r["mean"], 6),
+                    stddev=round(r["stddev"], 6),
+                    sample_count=r["sample_count"],
+                )
+                for r in rows
+            ]
+
+            result = FactorBaselineListResponse(data=data, total=len(data))
+            _analysis_cache.set(cache_key, result, ttl_seconds=3600)
+            return result
+
+    except Exception as e:
+        logger.error("factor_baselines_error: %s", str(e))
+        raise HTTPException(status_code=500, detail="Failed to fetch factor baselines")
+
+
+@router.get(
+    "/factor-baselines/{sector_id}/{year}",
+    response_model=FactorBaselineSectorYearResponse,
+)
+def get_factor_baselines_sector_year(
+    sector_id: int = Path(..., ge=1, le=12, description="Sector ID"),
+    year: int = Path(..., ge=2002, le=2030, description="Year"),
+):
+    """
+    Get all 16 feature baselines for a specific sector+year combination.
+
+    Primary use case: given a contract's sector and year, retrieve the
+    benchmarks (mean, stddev, sample_count) for every z-score feature.
+    """
+    cache_key = f"factor_baselines_sy:{sector_id}:{year}"
+    cached = _analysis_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    try:
+        with get_db() as conn:
+            sector_row = conn.execute(
+                "SELECT name_es FROM sectors WHERE id = ?", (sector_id,)
+            ).fetchone()
+            if not sector_row:
+                raise HTTPException(status_code=404, detail=f"Sector {sector_id} not found")
+
+            rows = conn.execute(
+                """
+                SELECT factor_name, mean, stddev, count AS sample_count,
+                       min_val, max_val
+                FROM factor_baselines
+                WHERE sector_id = ? AND year = ?
+                ORDER BY factor_name
+                """,
+                (sector_id, year),
+            ).fetchall()
+
+            if not rows:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"No baselines found for sector {sector_id}, year {year}",
+                )
+
+            features: Dict[str, Dict[str, Any]] = {}
+            for r in rows:
+                features[r["factor_name"]] = {
+                    "mean": round(r["mean"], 6),
+                    "stddev": round(r["stddev"], 6),
+                    "sample_count": r["sample_count"],
+                    "min_val": r["min_val"],
+                    "max_val": r["max_val"],
+                }
+
+            sector_name = sector_row["name_es"]
+            result = FactorBaselineSectorYearResponse(
+                sector_id=sector_id,
+                sector_name=sector_name,
+                year=year,
+                features=features,
+                count=len(features),
+            )
+            _analysis_cache.set(cache_key, result, ttl_seconds=3600)
+            return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("factor_baselines_sector_year_error: %s", str(e))
+        raise HTTPException(status_code=500, detail="Failed to fetch factor baselines")

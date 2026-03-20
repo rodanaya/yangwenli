@@ -15,7 +15,8 @@ import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
 import RedaccionWidget from '@/components/ui/RedaccionWidget'
 import StoryInfographic from '@/components/ui/StoryInfographic'
-import { analysisApi, investigationApi, phiApi } from '@/api/client'
+import { analysisApi, investigationApi, phiApi, ariaApi } from '@/api/client'
+import type { AriaQueueItem } from '@/api/types'
 import type { ExecutiveCaseDetail } from '@/api/types'
 import {
   ArrowRight,
@@ -34,6 +35,8 @@ import {
   Users,
   DollarSign,
   Gauge,
+  Calendar,
+  Scissors,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -48,8 +51,6 @@ import {
   Cell,
   Line,
   ComposedChart,
-  PieChart,
-  Pie,
   ReferenceLine,
   ReferenceArea,
   LabelList,
@@ -58,6 +59,8 @@ import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN, CURRENT_MODEL_VERSION } fr
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { LayoutDashboard } from 'lucide-react'
+import { AnomalyLeadsWidget } from '@/components/widgets/AnomalyLeadsWidget'
+import { PoliticalIntelligenceStrip } from '@/components/widgets/PoliticalIntelligenceStrip'
 
 // ============================================================================
 // Dashboard 2.0: Situation Room
@@ -120,7 +123,7 @@ function HeroStatBar({ value, loading }: { value: string; loading: boolean }) {
       }}
     >
       <p className="text-[10px] font-mono font-bold tracking-[0.2em] text-text-muted/60 uppercase mb-2">
-        Total Procurement Analyzed
+        En contratos de alto riesgo
       </p>
       <p
         className="font-black tabular-nums leading-none tracking-tighter"
@@ -463,94 +466,6 @@ function AlertBanner({ criticalCount, onClick }: { criticalCount: number; onClic
   )
 }
 
-// ============================================================================
-// RISK DONUT CHART — PieChart with innerRadius showing 4 risk levels
-// ============================================================================
-
-const RiskDonutChart = memo(function RiskDonutChart({
-  data,
-}: {
-  data: Array<{ risk_level: string; count: number; percentage: number; total_value_mxn: number }>
-}) {
-  const chartData = ['critical', 'high', 'medium', 'low'].map((level) => {
-    const item = data.find((d) => d.risk_level === level)
-    return {
-      name: level.charAt(0).toUpperCase() + level.slice(1),
-      value: item?.percentage ?? 0,
-      count: item?.count ?? 0,
-    }
-  }).filter((d) => d.value > 0)
-
-  const highCriticalPct = data
-    .filter((d) => d.risk_level === 'critical' || d.risk_level === 'high')
-    .reduce((s, d) => s + (d.percentage || 0), 0)
-
-  return (
-    <div className="flex flex-col items-center">
-      <div className="relative" style={{ width: 200, height: 200 }}>
-        <PieChart width={200} height={200} aria-label="Risk level distribution donut chart">
-          <Pie
-            data={chartData}
-            cx={100}
-            cy={100}
-            innerRadius={68}
-            outerRadius={92}
-            paddingAngle={2}
-            dataKey="value"
-            isAnimationActive
-          >
-            {chartData.map((entry) => (
-              <Cell
-                key={entry.name}
-                fill={DONUT_COLORS[entry.name.toLowerCase()] ?? '#64748b'}
-                opacity={0.88}
-              />
-            ))}
-          </Pie>
-          <RechartsTooltip
-            content={({ active, payload }) => {
-              if (active && payload && payload.length) {
-                const d = payload[0].payload as { name: string; value: number; count: number }
-                return (
-                  <div className="chart-tooltip text-xs">
-                    <p className="font-bold text-text-primary">{d.name}</p>
-                    <p className="text-text-muted tabular-nums font-mono">
-                      {d.value.toFixed(1)}% ({formatNumber(d.count)})
-                    </p>
-                  </div>
-                )
-              }
-              return null
-            }}
-          />
-        </PieChart>
-        {/* Center label */}
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
-          aria-label={`${highCriticalPct.toFixed(1)}% high-risk`}
-        >
-          <span className="text-2xl font-black tabular-nums font-mono leading-none text-text-primary">
-            {highCriticalPct.toFixed(1)}%
-          </span>
-          <span className="text-[9px] text-text-muted font-mono uppercase tracking-wider mt-1 text-center leading-tight">
-            High-Risk
-          </span>
-        </div>
-      </div>
-      {/* Legend */}
-      <div className="flex items-center gap-3 flex-wrap justify-center mt-2">
-        {chartData.map((d) => (
-          <div key={d.name} className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: DONUT_COLORS[d.name.toLowerCase()] ?? '#64748b', opacity: 0.88 }} />
-            <span className="text-[10px] text-text-muted font-mono">
-              {d.name} <span className="text-text-secondary font-semibold">{d.value.toFixed(1)}%</span> ({formatNumber(d.count)})
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-})
 
 // ============================================================================
 // TOP RISK SECTORS BAR — Horizontal bar chart sorted by high-risk rate
@@ -651,10 +566,11 @@ const ADMINISTRATIONS = [
 ]
 
 interface RiskTrajectoryChartProps {
-  data: Array<{ year: number; highRiskPct: number; avgRisk: number; contracts: number }>
+  data: Array<{ year: number; highRiskPct: number; avgRisk: number; contracts: number; directAwardPct?: number }>
   sectorTrajectory?: Array<{ year: number; highRiskPct: number; avgRisk: number; contracts: number }>
   sectorColor?: string
-  yearlyTrends?: Array<{ year: number; avg_risk: number; risk_stddev?: number }>
+  yearlyTrends?: Array<{ year: number; avg_risk: number; risk_stddev?: number; direct_award_pct?: number }>
+  onYearClick?: (year: number) => void
 }
 
 const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
@@ -662,6 +578,7 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
   sectorTrajectory,
   sectorColor,
   yearlyTrends,
+  onYearClick,
 }: RiskTrajectoryChartProps) {
   const { t } = useTranslation('dashboard')
   const { t: tc } = useTranslation('common')
@@ -687,18 +604,28 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
     )
   }, [yearlyTrends, hasStddev])
 
+  const daPctMap = useMemo(() => {
+    if (!yearlyTrends) return new Map<number, number>()
+    return new Map(
+      yearlyTrends
+        .filter(d => d.direct_award_pct != null)
+        .map(d => [d.year, d.direct_award_pct as number])
+    )
+  }, [yearlyTrends])
+
   const chartData = useMemo(() => {
-    if (!hasStddev) return mergedData
-    return mergedData.map((row) => {
-      const sd = stddevMap.get(row.year)
-      if (sd == null) return row
-      return {
-        ...row,
-        ciLower: Math.max(0, row.highRiskPct - sd),
-        ciUpper: row.highRiskPct + sd,
-      }
-    })
-  }, [mergedData, stddevMap, hasStddev])
+    const base = hasStddev
+      ? mergedData.map((row) => {
+          const sd = stddevMap.get(row.year)
+          if (sd == null) return row
+          return { ...row, ciLower: Math.max(0, row.highRiskPct - sd), ciUpper: row.highRiskPct + sd }
+        })
+      : mergedData
+    return base.map(row => ({
+      ...row,
+      directAwardPct: daPctMap.get(row.year) ?? undefined,
+    }))
+  }, [mergedData, stddevMap, hasStddev, daPctMap])
 
   const minYear = data.length > 0 ? data[0].year : 2010
   const maxYear = data.length > 0 ? data[data.length - 1].year : 2025
@@ -708,7 +635,10 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
   return (
     <div className="h-[300px]">
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={chartData}>
+        <ComposedChart data={chartData} onClick={(e: Record<string, unknown>) => {
+          const label = e?.activeLabel as number | undefined
+          if (label && onYearClick) onYearClick(label)
+        }}>
           <defs>
             <linearGradient id="riskGradient2" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={hasSectorOverlay ? 'rgba(139,148,158,0.3)' : RISK_COLORS.high} stopOpacity={hasSectorOverlay ? 0.15 : 0.4} />
@@ -774,6 +704,7 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
                   sectorHighRiskPct?: number | null
                   ciLower?: number
                   ciUpper?: number
+                  directAwardPct?: number
                 }
                 return (
                   <div className="chart-tooltip">
@@ -792,6 +723,12 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
                       {hasStddev && d.ciLower != null && d.ciUpper != null && (
                         <p className="text-xs text-text-muted/70 tabular-nums">
                           CI: [{d.ciLower.toFixed(1)}%--{d.ciUpper.toFixed(1)}%]
+                        </p>
+                      )}
+                      {d.directAwardPct != null && (
+                        <p className="text-xs text-text-muted tabular-nums">
+                          <span className="inline-block w-2.5 h-0.5 rounded mr-1.5" style={{ backgroundColor: '#f97316', borderTop: '1.5px dashed #f97316' }} />
+                          Direct award: <strong className="text-text-secondary">{d.directAwardPct.toFixed(1)}%</strong>
                         </p>
                       )}
                       <p className="text-xs text-text-secondary tabular-nums">
@@ -875,6 +812,18 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
               connectNulls
             />
           )}
+          {/* Direct award rate overlay */}
+          <Line
+            yAxisId="left"
+            type="monotone"
+            dataKey="directAwardPct"
+            stroke="#f97316"
+            strokeWidth={1.5}
+            strokeDasharray="5 3"
+            dot={false}
+            activeDot={{ r: 3, stroke: '#f97316', strokeWidth: 2, fill: 'var(--color-background-base)' }}
+            connectNulls
+          />
         </ComposedChart>
       </ResponsiveContainer>
       <div className="flex items-center justify-center gap-4 mt-1 flex-wrap">
@@ -905,6 +854,10 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
             <span className="text-xs text-text-muted">+/-1 std dev</span>
           </div>
         )}
+        <div className="flex items-center gap-1.5">
+          <div className="h-0.5 w-4 rounded" style={{ borderTop: '1.5px dashed #f97316' }} />
+          <span className="text-xs text-text-muted">Direct award %</span>
+        </div>
       </div>
     </div>
   )
@@ -1154,24 +1107,51 @@ const GroundTruthSection = memo(function GroundTruthSection({
 // RISK TICKER STRIP — Bloomberg-style scrolling vendor alerts
 // ============================================================================
 
-const TICKER_ITEMS = [
-  { name: 'GRUPO FARMACOS ESPECIALIZADOS', score: '0.995', amount: '$133.4B', sector: 'SALUD', level: 'critical' as const },
-  { name: 'LABORATORIOS PISA', score: '0.977', amount: '$9.4B', sector: 'SALUD', level: 'critical' as const },
-  { name: 'TOKA INTERNATIONAL', score: '0.964', amount: '$8.2B', sector: 'TECNOLOGIA', level: 'critical' as const },
-  { name: 'EDENRED MEXICO', score: '0.884', amount: '$46.7B', sector: 'ENERGIA', level: 'critical' as const },
-  { name: 'DIMM FARMACEUTICA', score: '0.821', amount: '$5.4B', sector: 'SALUD', level: 'critical' as const },
-  { name: 'PEMEX-COTEMAR', score: '1.000', amount: '$892M', sector: 'ENERGIA', level: 'critical' as const },
-  { name: 'SIXSIGMA NETWORKS', score: '0.756', amount: '$1.2B', sector: 'HACIENDA', level: 'critical' as const },
-  { name: 'LICONSA', score: '0.664', amount: '$6.3B', sector: 'AGRICULTURA', level: 'high' as const },
-  { name: 'CONSTRUCTORA TEYA', score: '0.359', amount: '$420M', sector: 'INFRAESTRUCTURA', level: 'high' as const },
-  { name: 'CONAGUA GHOST NETWORK', score: '0.551', amount: '$340M', sector: 'AMBIENTE', level: 'critical' as const },
-  { name: 'BRULUART', score: '0.863', amount: '$3.2B', sector: 'SALUD', level: 'critical' as const },
-  { name: 'DICONSA', score: '0.664', amount: '$4.1B', sector: 'AGRICULTURA', level: 'high' as const },
-  { name: 'SEGOB-MAINBIT IT', score: '0.551', amount: '$604M', sector: 'GOBERNACION', level: 'critical' as const },
-]
+const PATTERN_COLORS: Record<string, string> = {
+  P1: '#dc2626', P2: '#8b5cf6', P3: '#f97316', P6: '#eab308', P7: '#3b82f6',
+}
 
 function RiskTicker() {
-  const doubled = [...TICKER_ITEMS, ...TICKER_ITEMS]
+  const { data: ariaData } = useQuery({
+    queryKey: ['aria', 'queue', 'ticker'],
+    queryFn: () => ariaApi.getQueue({ tier: 1, per_page: 15 }),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const items = useMemo(() => {
+    if (!ariaData?.data || ariaData.data.length === 0) return null
+    return ariaData.data.map((v: AriaQueueItem) => ({
+      name: v.vendor_name,
+      score: v.ips_final.toFixed(3),
+      amount: formatCompactMXN(v.total_value_mxn),
+      sector: (v.primary_sector_name ?? 'N/A').toUpperCase(),
+      pattern: v.primary_pattern ?? '',
+      level: v.avg_risk_score >= 0.60 ? 'critical' as const : 'high' as const,
+    }))
+  }, [ariaData])
+
+  if (!items) {
+    return (
+      <div
+        style={{
+          overflow: 'hidden',
+          borderTop: '1px solid rgba(196,30,58,0.3)',
+          borderBottom: '1px solid rgba(196,30,58,0.3)',
+          background: 'rgba(10,10,10,0.95)',
+          padding: '6px 0',
+          textAlign: 'center',
+        }}
+        role="marquee"
+        aria-label="High-risk vendor alerts"
+      >
+        <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+          ARIA pipeline loading...
+        </span>
+      </div>
+    )
+  }
+
+  const doubled = [...items, ...items]
   return (
     <div
       style={{
@@ -1190,8 +1170,16 @@ function RiskTicker() {
             <span style={{ color: '#c41e3a', fontSize: '9px', fontWeight: 700 }}>&#9650; RIESGO</span>
             <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em', fontFamily: 'monospace' }}>{item.name}</span>
             <span style={{ color: item.level === 'critical' ? '#ef4444' : '#f97316', fontSize: '11px', fontWeight: 700, fontFamily: 'monospace' }}>{item.score}</span>
+            {item.pattern && (
+              <span style={{
+                fontSize: '8px', fontWeight: 700, letterSpacing: '0.08em', fontFamily: 'monospace',
+                padding: '1px 4px', borderRadius: '3px',
+                backgroundColor: `${PATTERN_COLORS[item.pattern] ?? '#64748b'}30`,
+                color: PATTERN_COLORS[item.pattern] ?? '#64748b',
+              }}>{item.pattern}</span>
+            )}
             <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px' }}>&#183;</span>
-            <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: '10px' }}>{item.amount} MXN</span>
+            <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: '10px' }}>{item.amount}</span>
             <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px' }}>&#183;</span>
             <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', letterSpacing: '0.08em' }}>{item.sector}</span>
             <span style={{ color: 'rgba(196,30,58,0.3)', marginLeft: '24px' }}>|</span>
@@ -1295,6 +1283,22 @@ function DashboardCinematicHero({ overview, criticalHighContractPct, criticalCou
 // ============================================================================
 
 function InvestigationSpotlight() {
+  const { data: ariaT1 } = useQuery({
+    queryKey: ['aria', 'queue', 'spotlight'],
+    queryFn: () => ariaApi.getQueue({ tier: 1, per_page: 1 }),
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const top = ariaT1?.data?.[0] as AriaQueueItem | undefined
+
+  const vendorName = top?.vendor_name ?? 'Loading...'
+  const vendorId = top?.vendor_id ?? 0
+  const ipsScore = top?.ips_final ?? 0
+  const totalValue = top?.total_value_mxn ?? 0
+  const totalContracts = top?.total_contracts ?? 0
+  const pattern = top?.primary_pattern ?? ''
+  const sector = top?.primary_sector_name ?? ''
+
   return (
     <div style={{
       border: '1px solid rgba(196,30,58,0.4)',
@@ -1309,28 +1313,45 @@ function InvestigationSpotlight() {
     }}>
       <div>
         <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.2em', color: '#c41e3a', marginBottom: '8px', fontFamily: 'var(--font-family-mono)' }}>
-          &#9650; CASO DOCUMENTADO &middot; RIESGO MAXIMO REGISTRADO
+          &#9650; ARIA T1 &middot; PRIORIDAD MAXIMA
+          {pattern && (
+            <span style={{
+              marginLeft: '8px', fontSize: '8px', padding: '1px 5px', borderRadius: '3px',
+              backgroundColor: `${PATTERN_COLORS[pattern] ?? '#64748b'}25`,
+              color: PATTERN_COLORS[pattern] ?? '#64748b',
+            }}>{pattern}</span>
+          )}
         </div>
         <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-serif)', marginBottom: '8px', letterSpacing: '-0.01em' }}>
-          Grupo Farmacos Especializados, S.A. de C.V.
+          {toTitleCase(vendorName)}
         </div>
         <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.6, maxWidth: '560px', marginBottom: '12px' }}>
-          Una empresa farmaceutica con 6,360 contratos y $133.4 mil millones en adjudicaciones directas al IMSS
-          registra el perfil de riesgo mas alto del sistema &mdash; una concentracion de mercado sin precedente historico.
+          {formatNumber(totalContracts)} contratos &middot; {formatCompactMXN(totalValue)}
+          {sector && <> &middot; {toTitleCase(sector)}</>}
         </div>
-        <Link to="/vendors/29277" style={{
-          fontSize: '12px', fontWeight: 600, color: '#c41e3a', textDecoration: 'none',
-          fontFamily: 'var(--font-family-mono)', letterSpacing: '0.08em',
-        }}>
-          ABRIR PERFIL COMPLETO &rarr;
-        </Link>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {vendorId > 0 && (
+            <Link to={`/vendors/${vendorId}`} style={{
+              fontSize: '12px', fontWeight: 600, color: '#c41e3a', textDecoration: 'none',
+              fontFamily: 'var(--font-family-mono)', letterSpacing: '0.08em',
+            }}>
+              ABRIR PERFIL &rarr;
+            </Link>
+          )}
+          <Link to="/aria" style={{
+            fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', textDecoration: 'none',
+            fontFamily: 'var(--font-family-mono)', letterSpacing: '0.08em',
+          }}>
+            VER INVESTIGACION &rarr;
+          </Link>
+        </div>
       </div>
       <div style={{ textAlign: 'center', flexShrink: 0 }}>
         <div style={{ fontSize: '3rem', fontWeight: 800, fontFamily: 'var(--font-family-mono)', color: '#c41e3a', lineHeight: 1, letterSpacing: '-0.04em' }}>
-          0.995
+          {ipsScore.toFixed(3)}
         </div>
         <div style={{ fontSize: '9px', letterSpacing: '0.15em', color: 'rgba(196,30,58,0.7)', fontFamily: 'var(--font-family-mono)', marginTop: '4px' }}>
-          INDICE DE RIESGO
+          IPS SCORE
         </div>
       </div>
     </div>
@@ -1422,7 +1443,7 @@ export function Dashboard() {
     staleTime: 10 * 60 * 1000,
   })
 
-  useQuery({
+  const { data: patternCountsData } = useQuery({
     queryKey: ['analysis', 'patterns', 'counts'],
     queryFn: () => analysisApi.getPatternCounts(),
     staleTime: 5 * 60 * 1000,
@@ -1442,17 +1463,31 @@ export function Dashboard() {
     refetchOnWindowFocus: false,
   })
 
-  useQuery({
+  const { data: _topInvestigationCase } = useQuery({
     queryKey: ['investigation', 'top-1-dashboard'],
     queryFn: () => investigationApi.getTopCases(1),
     staleTime: 30 * 60 * 1000,
-    enabled: false,
   })
 
   const { data: sectorYearData } = useQuery({
     queryKey: ['analysis', 'sector-year-breakdown'],
     queryFn: () => analysisApi.getSectorYearBreakdown(),
     staleTime: 10 * 60 * 1000,
+  })
+
+  const { data: seasonalRiskData } = useQuery({
+    queryKey: ['analysis', 'seasonal-risk'],
+    queryFn: () => analysisApi.getSeasonalRisk(12),
+    staleTime: 10 * 60 * 1000,
+  })
+
+  // Year drill-down state
+  const [selectedYear, setSelectedYear] = useState<number | null>(null)
+  const { data: yearSummaryData, isLoading: yearSummaryLoading } = useQuery({
+    queryKey: ['analysis', 'year-summary', selectedYear],
+    queryFn: () => analysisApi.getYearSummary(selectedYear!),
+    staleTime: 10 * 60 * 1000,
+    enabled: selectedYear !== null,
   })
 
   // ── Derived data ──────────────────────────────────────────────────────────
@@ -1480,6 +1515,13 @@ export function Dashboard() {
   const criticalCount = useMemo(() => {
     if (!riskDist) return 0
     return riskDist.find(d => d.risk_level === 'critical')?.count ?? 0
+  }, [riskDist])
+
+  const criticalHighValue = useMemo(() => {
+    if (!riskDist) return 0
+    return riskDist
+      .filter(d => d.risk_level === 'critical' || d.risk_level === 'high')
+      .reduce((s, d) => s + (d.total_value_mxn || 0), 0)
   }, [riskDist])
 
   const phiGradeMap = useMemo(() => {
@@ -1524,6 +1566,7 @@ export function Dashboard() {
         highRiskPct: (d.avg_risk || 0) * 100,
         avgRisk: (d.avg_risk || 0) * 100,
         contracts: d.contracts,
+        directAwardPct: d.direct_award_pct ?? undefined,
       }))
   }, [fastDashboard])
 
@@ -1577,10 +1620,10 @@ export function Dashboard() {
       <RiskTicker />
 
       {/* ================================================================ */}
-      {/* HERO STAT BAR — Enormous KPI with gradient sweep                 */}
+      {/* HERO STAT BAR — Enormous KPI: critical+high risk value           */}
       {/* ================================================================ */}
       <HeroStatBar
-        value={formatCompactMXN(overview?.total_value_mxn ?? 6_800_000_000_000)}
+        value={formatCompactMXN(criticalHighValue || overview?.total_value_mxn || 0)}
         loading={dashLoading}
       />
 
@@ -1717,6 +1760,37 @@ export function Dashboard() {
         </ScrollReveal>
       </div>
 
+      {/* ================================================================ */}
+      {/* RED FLAG PATTERNS — 5 compact KPI cards from patternCounts       */}
+      {/* ================================================================ */}
+      {patternCountsData?.counts && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {([
+            { key: 'critical' as const, label: 'Critical Risk', icon: AlertTriangle, color: '#f87171', route: '/contracts?risk_level=critical' },
+            { key: 'december_rush' as const, label: 'December Rush', icon: Calendar, color: '#fbbf24', route: '/detective?pattern=december_rush' },
+            { key: 'split_contracts' as const, label: 'Split Contracts', icon: Scissors, color: '#fb923c', route: '/detective?pattern=split_contracts' },
+            { key: 'co_bidding' as const, label: 'Co-Bidding', icon: Users, color: '#8b5cf6', route: '/detective?pattern=co_bidding' },
+            { key: 'price_outliers' as const, label: 'Price Outliers', icon: TrendingUp, color: '#3b82f6', route: '/detective?pattern=price_outliers' },
+          ] as const).map(({ key, label, icon: PatIcon, color, route }) => (
+            <button
+              key={key}
+              onClick={() => navigate(route)}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-border/30 bg-background-card/40 hover:border-border/60 hover:bg-background-elevated/30 transition-all text-left group"
+            >
+              <div className="p-1.5 rounded" style={{ backgroundColor: `${color}15` }}>
+                <PatIcon className="h-3.5 w-3.5" style={{ color }} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[9px] font-mono text-text-muted uppercase tracking-wider leading-none mb-0.5">{label}</p>
+                <p className="text-sm font-black tabular-nums font-mono" style={{ color }}>
+                  {formatNumber(patternCountsData.counts[key])}
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
       <SectionDivider />
 
       {/* ================================================================ */}
@@ -1735,7 +1809,6 @@ export function Dashboard() {
             <div className="flex justify-center py-8"><Skeleton className="h-48 w-48 rounded-full" /></div>
           ) : (
             <div className="space-y-4">
-              <RiskDonutChart data={riskDist} />
               {/* Stacked proportion bar */}
               <div>
                 <p className="text-[10px] font-mono text-text-muted uppercase tracking-wider mb-1">
@@ -1863,11 +1936,136 @@ export function Dashboard() {
                 ? (SECTOR_COLORS[sectorData.find((s) => s.id === selectedTrajectorySectorId)?.code ?? ''] ?? '#64748b')
                 : undefined}
               yearlyTrends={fastDashboard?.yearly_trends}
+              onYearClick={(year) => setSelectedYear(year)}
             />
           </div>
         )}
       </DashboardSection>
       </ScrollReveal>
+
+      {/* ================================================================ */}
+      {/* YEAR SUMMARY PANEL — slide-out on trajectory chart click (P12)  */}
+      {/* ================================================================ */}
+      {selectedYear !== null && (
+        <div className="fern-card p-5 animate-fade-in">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="editorial-rule" style={{ marginBottom: '0.25rem' }}>
+                <BarChart3 className="h-3.5 w-3.5 text-accent flex-shrink-0" />
+                <span className="editorial-label">Year Summary: {selectedYear}</span>
+              </div>
+            </div>
+            <button
+              onClick={() => setSelectedYear(null)}
+              className="text-xs text-text-muted hover:text-text-primary font-mono"
+            >
+              Close
+            </button>
+          </div>
+          {yearSummaryLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-16" />)}
+            </div>
+          ) : yearSummaryData ? (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="p-2 rounded-lg bg-background-elevated/30">
+                  <p className="text-[9px] font-mono text-text-muted uppercase">Contracts</p>
+                  <p className="text-lg font-black tabular-nums font-mono text-text-primary">{formatNumber(yearSummaryData.overview.total_contracts)}</p>
+                </div>
+                <div className="p-2 rounded-lg bg-background-elevated/30">
+                  <p className="text-[9px] font-mono text-text-muted uppercase">Total Value</p>
+                  <p className="text-lg font-black tabular-nums font-mono text-text-primary">{formatCompactMXN(yearSummaryData.overview.total_value_mxn)}</p>
+                </div>
+                <div className="p-2 rounded-lg bg-background-elevated/30">
+                  <p className="text-[9px] font-mono text-text-muted uppercase">High-Risk Rate</p>
+                  <p className="text-lg font-black tabular-nums font-mono text-risk-high">{(yearSummaryData.overview.high_risk_pct ?? 0).toFixed(1)}%</p>
+                </div>
+                <div className="p-2 rounded-lg bg-background-elevated/30">
+                  <p className="text-[9px] font-mono text-text-muted uppercase">Direct Award</p>
+                  <p className="text-lg font-black tabular-nums font-mono text-text-primary">{(yearSummaryData.direct_award_pct ?? 0).toFixed(1)}%</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {yearSummaryData.top_vendors_by_value.length > 0 && (
+                  <div>
+                    <p className="text-[9px] font-mono text-text-muted uppercase mb-1">Top Vendors</p>
+                    {yearSummaryData.top_vendors_by_value.slice(0, 5).map((v, i) => (
+                      <button key={v.id} onClick={() => openEntityDrawer(v.id, 'vendor')} className="flex items-center gap-1.5 w-full py-0.5 hover:bg-background-elevated/20 rounded transition-colors text-left">
+                        <span className="text-[10px] text-text-muted font-mono w-4">{i + 1}</span>
+                        <span className="text-xs text-text-secondary truncate flex-1">{toTitleCase(v.name)}</span>
+                        <span className="text-[10px] font-mono text-text-muted tabular-nums">{formatCompactMXN(v.total_value_mxn)}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {yearSummaryData.top_institutions_by_spend.length > 0 && (
+                  <div>
+                    <p className="text-[9px] font-mono text-text-muted uppercase mb-1">Top Institutions</p>
+                    {yearSummaryData.top_institutions_by_spend.slice(0, 5).map((inst, i) => (
+                      <button key={inst.id} onClick={() => openEntityDrawer(inst.id, 'institution')} className="flex items-center gap-1.5 w-full py-0.5 hover:bg-background-elevated/20 rounded transition-colors text-left">
+                        <span className="text-[10px] text-text-muted font-mono w-4">{i + 1}</span>
+                        <span className="text-xs text-text-secondary truncate flex-1">{toTitleCase(inst.name)}</span>
+                        <span className="text-[10px] font-mono text-text-muted tabular-nums">{formatCompactMXN(inst.total_value_mxn)}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs text-text-muted">No data available for this year</p>
+          )}
+        </div>
+      )}
+
+      {/* ================================================================ */}
+      {/* SEASONAL RISK WIDGET (P13)                                       */}
+      {/* ================================================================ */}
+      {seasonalRiskData?.data && seasonalRiskData.data.length > 0 && (
+        <DashboardSection
+          title="Seasonal Patterns"
+          subtitle="Monthly risk premium vs rest-of-year average"
+          icon={Calendar}
+        >
+          <div className="space-y-2">
+            <div className="grid grid-cols-6 sm:grid-cols-12 gap-1">
+              {Array.from({ length: 12 }, (_, i) => i + 1).map(month => {
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                const allSectors = seasonalRiskData.data
+                const avgPremium = allSectors.length > 0
+                  ? allSectors.reduce((s, d) => s + d.risk_premium_pct, 0) / allSectors.length
+                  : 0
+                const intensity = Math.min(Math.abs(avgPremium) / 30, 1)
+                const bgColor = avgPremium > 0
+                  ? `rgba(248,113,113,${0.1 + intensity * 0.5})`
+                  : `rgba(74,222,128,${0.1 + intensity * 0.3})`
+                const textColor = avgPremium > 5 ? '#f87171' : avgPremium > 0 ? '#fbbf24' : '#4ade80'
+                const isDecember = month === 12
+                return (
+                  <div
+                    key={month}
+                    className={cn(
+                      'flex flex-col items-center p-1.5 rounded',
+                      isDecember && 'ring-1 ring-risk-critical/50',
+                    )}
+                    style={{ backgroundColor: bgColor }}
+                    title={`${monthNames[month - 1]}: ${avgPremium > 0 ? '+' : ''}${avgPremium.toFixed(1)}% risk premium`}
+                  >
+                    <span className="text-[8px] font-mono text-text-muted">{monthNames[month - 1]}</span>
+                    <span className="text-[10px] font-bold font-mono tabular-nums" style={{ color: textColor }}>
+                      {avgPremium > 0 ? '+' : ''}{avgPremium.toFixed(0)}%
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+            <p className="text-[10px] text-text-muted font-mono">
+              December contracts show elevated risk — budget pressure drives year-end spending
+            </p>
+          </div>
+        </DashboardSection>
+      )}
 
       <SectionDivider />
 
@@ -1954,6 +2152,11 @@ export function Dashboard() {
       </ScrollReveal>
 
       {/* ================================================================ */}
+      {/* POLITICAL INTELLIGENCE — Top vendors by administration          */}
+      {/* ================================================================ */}
+      <PoliticalIntelligenceStrip />
+
+      {/* ================================================================ */}
       {/* GROUND TRUTH VALIDATION                                          */}
       {/* ================================================================ */}
       <DashboardSection
@@ -1977,6 +2180,11 @@ export function Dashboard() {
           onFullAnalysis={() => navigate('/executive-summary')}
         />
       </DashboardSection>
+
+      {/* ================================================================ */}
+      {/* P21: ANOMALY LEADS — Convergent signals (supervised + PyOD)     */}
+      {/* ================================================================ */}
+      <AnomalyLeadsWidget className="animate-fade-in" />
 
       {/* ================================================================ */}
       {/* SECTOR GRID: 12 cards                                            */}

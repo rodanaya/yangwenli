@@ -542,8 +542,8 @@ export const vendorApi = {
   /**
    * Get year-by-year trajectory for a vendor (spending, risk, institution count)
    */
-  async getTrajectory(vendorId: number): Promise<unknown> {
-    const { data } = await api.get(`/vendors/${vendorId}/trajectory`)
+  async getTrajectory(vendorId: number): Promise<VendorTrajectoryResponse> {
+    const { data } = await api.get<VendorTrajectoryResponse>(`/vendors/${vendorId}/trajectory`)
     return data
   },
 
@@ -1235,6 +1235,14 @@ export const analysisApi = {
     const { data } = await api.get<DriftReportResponse>('/analysis/drift')
     return data
   },
+
+  /**
+   * Get factor baselines (mean/stddev) for a given sector and year
+   */
+  async getFactorBaselines(sectorId: number, year: number): Promise<FactorBaselineResponse> {
+    const { data } = await api.get<FactorBaselineResponse>(`/analysis/factor-baselines/${sectorId}/${year}`)
+    return data
+  },
 }
 
 // ============================================================================
@@ -1728,8 +1736,8 @@ export const investigationApi = {
     return data
   },
 
-  async getTopAnomalousVendors(limit = 20, sectorId?: number): Promise<unknown> {
-    const { data } = await api.get(`/investigation/top-anomalous-vendors?limit=${limit}${sectorId ? `&sector_id=${sectorId}` : ''}`)
+  async getTopAnomalousVendors(limit = 20, sectorId?: number): Promise<TopAnomalousVendorsResponse> {
+    const { data } = await api.get<TopAnomalousVendorsResponse>(`/investigation/top-anomalous-vendors?limit=${limit}${sectorId ? `&sector_id=${sectorId}` : ''}`)
     return data
   },
 
@@ -1961,6 +1969,72 @@ export interface FlashVendorsResponse {
   total: number
   max_active_years: number
   min_value: number
+}
+
+// Vendor Trajectory
+export interface VendorTrajectoryYear {
+  year: number
+  total_contracts: number
+  total_value_mxn: number
+  avg_risk_score: number | null
+  institution_count: number
+}
+
+export interface VendorTrajectoryResponse {
+  vendor_id: number
+  vendor_name?: string
+  scores?: Record<string, number | null>
+  data?: VendorTrajectoryYear[]
+}
+
+// Top Anomalous Vendors
+export interface AnomalousVendorItem {
+  vendor_id: number
+  vendor_name: string
+  sector_id: number | null
+  sector_name: string | null
+  risk_score: number
+  risk_level: string
+  anomaly_score: number
+  ensemble_score: number | null
+  both_flagged: boolean
+  total_contracts: number
+  total_value_mxn: number
+}
+
+export interface TopAnomalousVendorsResponse {
+  data: AnomalousVendorItem[]
+  total: number
+  agreement_rate: number
+}
+
+// Factor Baselines
+export interface FactorBaselineItem {
+  factor_name: string
+  mean: number
+  stddev: number
+  count: number
+}
+
+export interface FactorBaselineResponse {
+  sector_id: number
+  year: number
+  baselines: FactorBaselineItem[]
+}
+
+// ARIA Memos
+export interface AriaMemoResponse {
+  vendor_id: number
+  vendor_name: string
+  tier: number | null
+  memo_text: string
+  generated_at: string
+  model_used: string | null
+}
+
+export interface AriaMemoListResponse {
+  data: AriaMemoResponse[]
+  total: number
 }
 
 // Value Concentration
@@ -2378,6 +2452,27 @@ export const ariaApi = {
    */
   async runPipeline(): Promise<{ message: string; run_id: string }> {
     const { data } = await api.post<{ message: string; run_id: string }>('/aria/run')
+    return data
+  },
+
+  /**
+   * Get LLM-generated investigation memo for a vendor
+   */
+  async getMemo(vendorId: number): Promise<AriaMemoResponse | null> {
+    try {
+      const { data } = await api.get<AriaMemoResponse>(`/aria/memos/${vendorId}`)
+      return data
+    } catch {
+      return null
+    }
+  },
+
+  /**
+   * Get paginated list of ARIA memos
+   */
+  async getMemos(params: { tier?: number; limit?: number; offset?: number } = {}): Promise<AriaMemoListResponse> {
+    const queryParams = buildQueryParams(params as QueryParams)
+    const { data } = await api.get<AriaMemoListResponse>(`/aria/memos?${queryParams}`)
     return data
   },
 }
