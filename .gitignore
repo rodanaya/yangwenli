@@ -171,3 +171,22 @@ docs/RISK_METHODOLOGY_v5.1_EXPLORATION.md
 scripts/headless-pipeline.sh
 backend/scripts/_subcategory_results.json
 backend/DUPLICATE_INVESTIGATION_REPORT.md
+
+# Screenshots and visual artifacts (root-level)
+*.png
+*.pdf
+*.b64
+.audit_report.txt
+.playwright-mcp/
+
+# Temp GT batch generation helpers (not insertion scripts)
+backend/scripts/_gen_batch_*.py
+backend/scripts/_write_batch_*.py
+backend/scripts/_build_batch_*.py
+backend/scripts/_check_*.py
+backend/scripts/_tmp_*.py
+backend/scripts/_tmp_*.txt
+backend/scripts/_write_batch*_helper.py
+backend/precompute_log*.txt
+backend/precompute_err*.txt
+fix_accents.py
