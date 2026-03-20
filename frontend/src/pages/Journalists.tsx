@@ -610,7 +610,7 @@ export default function Journalists() {
                   Metodologia y Datos
                   <MetodologiaTooltip
                     title="Modelo de riesgo v6.4"
-                    body="Regresi&oacute;n log&iacute;stica con 16 z-scores, 13 sub-modelos sectoriales, AUC=0.863. Entrenado con 347 casos documentados de corrupci&oacute;n. PU-learning (Elkan &amp; Noto 2008)."
+                    body="Regresi&oacute;n log&iacute;stica con 16 z-scores, 13 sub-modelos sectoriales, AUC=0.840. Entrenado con 347 casos documentados de corrupci&oacute;n. PU-learning (Elkan &amp; Noto 2008)."
                     link="/methodology"
                   />
                 </h3>

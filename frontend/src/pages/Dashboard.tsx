@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
 import RedaccionWidget from '@/components/ui/RedaccionWidget'
+import StoryInfographic from '@/components/ui/StoryInfographic'
 import { analysisApi, investigationApi, phiApi } from '@/api/client'
 import type { ExecutiveCaseDetail } from '@/api/types'
 import {
@@ -1532,7 +1533,7 @@ export function Dashboard() {
   }, [execData])
 
   const groundTruth = execData?.ground_truth
-  const modelAuc = execData?.model?.auc ?? 0.863
+  const modelAuc = execData?.model?.auc ?? 0.840
 
   const topFlows = useMemo(() => {
     if (!moneyFlowData?.flows) return []
@@ -1609,7 +1610,7 @@ export function Dashboard() {
               </div>
             )}
             <span className="text-[10px] font-mono text-text-muted/50">
-              {modelMeta?.version ?? CURRENT_MODEL_VERSION} | AUC {modelMeta?.auc_test?.toFixed(3) ?? '0.863'}
+              {modelMeta?.version ?? CURRENT_MODEL_VERSION} | AUC {modelMeta?.auc_test?.toFixed(3) ?? '0.840'}
             </span>
           </div>
         }
@@ -1706,6 +1707,15 @@ export function Dashboard() {
           />
         </ScrollReveal>
       </div>
+
+      <SectionDivider />
+
+      {/* ================================================================ */}
+      {/* STORY INFOGRAPHIC — "La Historia en Datos"                       */}
+      {/* ================================================================ */}
+      <ScrollReveal delay={0}>
+        <StoryInfographic />
+      </ScrollReveal>
 
       <SectionDivider />
 

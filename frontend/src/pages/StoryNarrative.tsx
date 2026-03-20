@@ -9,9 +9,9 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Clock, ArrowLeft, ExternalLink, Share2, ArrowRight } from 'lucide-react'
+import { Clock, ArrowLeft, ExternalLink, Share2, ArrowRight, ChevronRight } from 'lucide-react'
 import { getStoryBySlug, getRelatedStories } from '@/lib/story-content'
-import type { StoryChapterDef, StoryDef } from '@/lib/story-content'
+import type { StoryChapterDef, StoryDef, StoryStatus } from '@/lib/story-content'
 import { OutletBadge } from '@/components/stories/OutletBadge'
 import ChapterBanner from '@/components/stories/ChapterBanner'
 import DataPullquote from '@/components/stories/DataPullquote'
@@ -301,13 +301,30 @@ function ChapterNav({ chapters, accentColor }: { chapters: StoryChapterDef[]; ac
 // Methodology footer
 // ---------------------------------------------------------------------------
 
-function MethodologySection({ story: _story }: { story: StoryDef }) { void _story;
+const STATUS_CONFIG: Record<StoryStatus, { label: string; color: string; bg: string; border: string }> = {
+  solo_datos:  { label: 'Solo datos — pista sin reportear', color: 'text-amber-400',  bg: 'bg-amber-950/40',  border: 'border-amber-800/60' },
+  reporteado:  { label: 'Reporteado por medios',           color: 'text-sky-400',     bg: 'bg-sky-950/40',    border: 'border-sky-800/60'   },
+  auditado:    { label: 'Auditado por ASF / SFP',          color: 'text-violet-400',  bg: 'bg-violet-950/40', border: 'border-violet-800/60' },
+  procesado:   { label: 'Proceso penal abierto',           color: 'text-red-400',     bg: 'bg-red-950/40',    border: 'border-red-800/60'   },
+}
+
+function MethodologySection({ story }: { story: StoryDef }) {
+  const statusCfg = story.status ? STATUS_CONFIG[story.status] : null
+
   return (
     <ScrollReveal>
       <section
         className="max-w-prose mx-auto px-4 sm:px-0 my-16 py-8 border-t border-zinc-800"
         aria-label="Metodologia"
       >
+        {/* Investigation status badge */}
+        {statusCfg && (
+          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold mb-6 ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color}`}>
+            <span className="w-2 h-2 rounded-full bg-current opacity-80" />
+            Estado de la investigacion: {statusCfg.label}
+          </div>
+        )}
+
         <h3
           className="text-xl font-bold text-zinc-200 mb-4"
           style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
@@ -321,7 +338,7 @@ function MethodologySection({ story: _story }: { story: StoryDef }) { void _stor
             contratos federales registrados en COMPRANET entre 2002 y 2025.
           </p>
           <p>
-            Los puntajes de riesgo son generados por el modelo v6.4 (AUC 0.863, split por proveedor),
+            Los puntajes de riesgo son generados por el modelo v6.4 (AUC 0.840, split por proveedor),
             entrenado con 347 casos documentados de corrupcion y 507 proveedores vinculados.
             Los puntajes miden similitud con patrones de corrupcion documentada — no constituyen
             prueba de irregularidad.
@@ -332,6 +349,25 @@ function MethodologySection({ story: _story }: { story: StoryDef }) { void _stor
             sectoriales usan la taxonomia de 12 sectores de RUBLI basada en codigos de ramo presupuestal.
           </p>
         </div>
+
+        {/* Next steps for journalists */}
+        {story.nextSteps && story.nextSteps.length > 0 && (
+          <div className="mt-8 p-4 rounded-lg border border-zinc-700/60 bg-zinc-900/60">
+            <h4 className="text-sm font-semibold text-zinc-300 mb-3 flex items-center gap-2">
+              <ChevronRight className="h-4 w-4 text-red-400" />
+              Proximos pasos para periodistas
+            </h4>
+            <ul className="space-y-2">
+              {story.nextSteps.map((step, i) => (
+                <li key={i} className="flex gap-2 text-xs text-zinc-400 leading-relaxed">
+                  <span className="text-red-500 font-bold shrink-0 mt-0.5">{i + 1}.</span>
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <div className="flex gap-3 mt-6">
           <Link
             to="/methodology"

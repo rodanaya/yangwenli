@@ -3,7 +3,7 @@
  *
  * All statistics are real, pulled from the RUBLI database (3,051,294 contracts,
  * 2002-2025, COMPRANET federal procurement records). Risk scores produced by
- * the v6.4 calibrated model (AUC 0.863, vendor-stratified split).
+ * the v6.4 calibrated model (AUC 0.840, vendor-stratified split).
  */
 
 // ---------------------------------------------------------------------------
@@ -81,6 +81,12 @@ export const STORIES: StoryDef[] = [
     byline: 'Analisis de Datos RUBLI | Unidad de Investigacion',
     estimatedMinutes: 12,
     leadStat: { value: '81.9%', label: 'contratos sin licitacion en 2023', sublabel: 'el ano mas alto desde 2002', color: 'text-red-500' },
+    status: 'reporteado',
+    nextSteps: [
+      'Solicitar via InfoMex el desglose anual de adjudicaciones directas por dependencia y justificacion legal.',
+      'Comparar las tasas por dependencia: ¿cuales superan el 90%? ¿Coinciden con escándalos documentados?',
+      'Cruzar con datos de la ASF: ¿las dependencias mas opacas recibieron mas observaciones de auditoria?',
+    ],
     relatedSlugs: ['el-granero-vacio', 'los-nuevos-ricos-de-la-4t', 'hemoser-el-2-de-agosto'],
     chapters: [
       {
@@ -193,6 +199,12 @@ export const STORIES: StoryDef[] = [
     byline: 'Analisis de Datos RUBLI | Unidad de Investigacion',
     estimatedMinutes: 10,
     leadStat: { value: '$15B', label: 'fraude estimado en SEGALMEX', sublabel: '22 proveedores | 93.4% adjudicacion directa en agricultura', color: 'text-red-500' },
+    status: 'procesado',
+    nextSteps: [
+      'Solicitar vía InfoMex los contratos individuales de cada uno de los 22 proveedores y sus justificaciones de adjudicacion directa.',
+      'Verificar en el Registro de Empresas Sancionadas (SFP) si los proveedores identificados ya estan inhabilitados.',
+      'Consultar los expedientes del proceso penal abierto por la FGR en 2023 para identificar flujos adicionales no documentados.',
+    ],
     relatedSlugs: ['la-cuarta-adjudicacion', 'los-nuevos-ricos-de-la-4t', 'red-fantasma'],
     caseIds: [2],
     chapters: [
@@ -285,6 +297,12 @@ export const STORIES: StoryDef[] = [
     byline: 'Analisis de Datos RUBLI | Unidad de Investigacion',
     estimatedMinutes: 8,
     leadStat: { value: '1,253', label: 'empresas fantasma post-2018', sublabel: '95%+ adjudicaciones directas', color: 'text-orange-500' },
+    status: 'solo_datos',
+    nextSteps: [
+      'Solicitar el acta constitutiva y socios de las 10 empresas con mayor monto contratado (Registro Público de Comercio).',
+      'Verificar si los representantes legales coinciden con funcionarios públicos o sus familiares (cruce con declaraciones patrimoniales en Plataforma Nacional de Transparencia).',
+      'Identificar qué funcionario firmó cada contrato (campo "funcionario_firmante" en COMPRANET) y mapear patrones de repetición.',
+    ],
     relatedSlugs: ['la-cuarta-adjudicacion', 'red-fantasma', 'el-granero-vacio'],
     chapters: [
       {
@@ -363,6 +381,12 @@ export const STORIES: StoryDef[] = [
     byline: 'Analisis de Datos RUBLI | Unidad de Investigacion',
     estimatedMinutes: 6,
     leadStat: { value: '$17.2B', label: 'en un solo dia -- 2 de agosto de 2023', sublabel: '12 contratos | fraccionamiento ilegal | IMSS', color: 'text-red-600' },
+    status: 'solo_datos',
+    nextSteps: [
+      'Solicitar al IMSS via InfoMex los 12 expedientes de contratación del 2 de agosto de 2023 con HEMOSER, incluyendo las justificaciones de excepción a licitación.',
+      'Verificar en el RFC de HEMOSER su fecha de constitución y capital social en el SAT (comparar con el monto contratado).',
+      'Presentar denuncia ante la SFP citando el artículo 27 de la LAASSP que prohíbe el fraccionamiento de contratos.',
+    ],
     relatedSlugs: ['la-cuarta-adjudicacion', 'triangulo-farmaceutico', 'cero-competencia'],
     chapters: [
       {
@@ -761,6 +785,12 @@ export const STORIES: StoryDef[] = [
     byline: 'Analisis de Datos RUBLI | Unidad de Investigacion',
     estimatedMinutes: 7,
     leadStat: { value: '13,960', label: 'empresas en lista EFOS del SAT', sublabel: 'operaciones simuladas confirmadas', color: 'text-red-400' },
+    status: 'auditado',
+    nextSteps: [
+      'Cruzar la lista EFOS definitivo completa (art. 69-B CFF, disponible en sat.gob.mx) con todos los proveedores de COMPRANET 2018-2024.',
+      'Solicitar al SAT cuántos de los 13,960 RFC en EFOS tienen contratos gubernamentales activos después de su inclusión en la lista.',
+      'Identificar qué Órganos Internos de Control (OICs) de las dependencias contratantes abrieron expedientes por haber contratado con EFOS.',
+    ],
     relatedSlugs: ['los-nuevos-ricos-de-la-4t', 'el-granero-vacio', 'la-cuarta-adjudicacion'],
     chapters: [
       {
@@ -790,14 +820,14 @@ export const STORIES: StoryDef[] = [
           'El modelo de deteccion de RUBLI no busca una sola anomalia. Busca constelaciones de senales que, combinadas, producen un perfil de riesgo elevado.',
           'Primera senal: alta tasa de adjudicacion directa. Las empresas fantasma no necesitan competir porque alguien dentro del gobierno se asegura de que reciban el contrato. Segunda senal: baja diversificacion institucional. Una empresa legitima vende a multiples clientes. Una fantasma opera con una sola dependencia -- la que la creo. Tercera senal: patron temporal corto. Las fantasmas nacen, reciben contratos durante 2-3 anos, y desaparecen.',
           'Cuando RUBLI combina estas senales con las 16 variables z-score de su modelo v6.4 -- incluyendo price_volatility, vendor_concentration, e institution_diversity --, puede distinguir entre un proveedor pequeno legitimo y una operacion disenada para extraer dinero publico.',
-          'La precision no es perfecta. El modelo tiene un AUC de 0.863 -- detecta correctamente la mayoria de los patrones, pero no todos. Las empresas fantasma mas pequenas y de vida mas corta son las mas dificiles de detectar, porque generan pocos datos para analizar.',
+          'La precision no es perfecta. El modelo tiene un AUC de 0.840 -- detecta correctamente la mayoria de los patrones, pero no todos. Las empresas fantasma mas pequenas y de vida mas corta son las mas dificiles de detectar, porque generan pocos datos para analizar.',
           'Pero cuando 1,253 empresas comparten el mismo perfil -- debuto post-2018, 95%+ adjudicacion directa, una sola institucion, vida corta -- la probabilidad de que todas sean coincidencias inocentes es estadisticamente nula.',
         ],
         pullquote: {
           quote: '1,253 empresas con el mismo perfil no son coincidencia',
-          stat: 'AUC 0.863',
+          stat: 'AUC 0.840',
           statLabel: 'precision del modelo de deteccion v6.4',
-          barValue: 86.3,
+          barValue: 84.0,
           barLabel: 'Area bajo la curva ROC',
         },
       },
