@@ -1,0 +1,62 @@
+{
+  "skip_vendors": [
+    {
+      "vendor_id": 88413,
+      "name": "OBRAS MARITIMAS HB",
+      "reason": "Specialized maritime/dredging contractor. 17 contracts, 1.8B MXN across 9+ institutions over 13 years (2012-2025). SCT 1.2B (1 large infra contract, 2013), CFE 350M (2 contracts), and 7 port authorities (Salina Cruz, Ensenada, Tuxpan, Coatzacoalcos, Tampico). Top institution ratio only 29pct - no concentration. 76pct SB reflects structural market concentration in maritime niche (dredging, breakwater, port engineering) with very few qualified firms, not institutional capture."
+    }
+  ],
+  "cases": [
+    {
+      "offset": 0,
+      "case_name": "IMSS Pharma DA Saturation - AL.CO Salud Inteligente",
+      "case_type": "institutional_capture",
+      "confidence_level": "medium",
+      "notes": "AL.CO SALUD INTELIGENTE SA DE CV (vendor 197399) - 1,442M MXN in 526 contracts (2017-2025). 95pct of value (1,366M) concentrated at IMSS with 93.6pct direct award rate. 2018 spike: 985M in a single year including a 492M DA for medications, plus 186M and 166M DAs. Value collapses after 2018 to 37-82M annually. Wins LP/I3P at SEDENA (15M, 9 contracts, 0pct DA) and state governments via competitive procedures. The ability to compete legitimately elsewhere while receiving 93.6pct DA at IMSS is the classic IMSS pharma institutional capture pattern (P6 confirmed at 0.60 confidence). Average risk score 0.445.",
+      "estimated_fraud_mxn": 1366000000,
+      "year_start": 2017,
+      "year_end": 2024,
+      "vendors": [
+        {
+          "vendor_id": 197399,
+          "evidence_strength": "medium",
+          "match_method": "aria_queue_t3"
+        }
+      ]
+    },
+    {
+      "offset": 1,
+      "case_name": "Chiapas/SAT Construction 100pct Single-Bid Ring - Raima Construcciones",
+      "case_type": "bid_rigging",
+      "confidence_level": "medium",
+      "notes": "RAIMA CONSTRUCCIONES SA DE CV (vendor 2680) - 836M MXN in 28 contracts (2002-2015). Every single contract (100pct) is a single-bid LP - formally competitive procedures with zero actual competition. Concentrated in Chiapas state infrastructure: SEINFRA 277M (4 contracts, 2008-2010), Secretaria de Obra Publica 239M (3 contracts, 2010). SAT 241M (15 contracts, 2003-2015). Also ISSSTE 39M (1 contract, 2014), IMSS 10M (1 contract, 2007). Average contract size 30M MXN. The 100pct single-bid rate across 28 contracts spanning 13 years is statistically extraordinary. Consistent with bid-rigging or specification manipulation to exclude competitors. Active during Calderon/early Pena Nieto era in Chiapas.",
+      "estimated_fraud_mxn": 836000000,
+      "year_start": 2002,
+      "year_end": 2015,
+      "vendors": [
+        {
+          "vendor_id": 2680,
+          "evidence_strength": "medium",
+          "match_method": "aria_queue_t3"
+        }
+      ]
+    },
+    {
+      "offset": 2,
+      "case_name": "IMSS Medical Equipment SB Capture - Medica Ideas",
+      "case_type": "institutional_capture",
+      "confidence_level": "medium",
+      "notes": "MEDICA IDEAS, S.A. DE C.V. (vendor 20254) - 449M MXN in 16 contracts (2005-2020). 93.75pct of contracts and 99.99pct of value at IMSS. 66.7pct single-bid at IMSS - LP procedures with no competing vendors. Massive escalation: steady 10-18M/yr (2005-2009, all SB), then 191M DA in 2012 (10x jump) and 116M SB in 2015. P6 capture confirmed (0.75 confidence) with 94pct top institution ratio. Only non-IMSS contract is a 48K ISSSTE DA in 2020 - token diversification. Average risk score 0.452. The combination of near-total IMSS concentration, 67pct SB, and dramatic value escalation via DA is consistent with medical equipment procurement capture.",
+      "estimated_fraud_mxn": 449000000,
+      "year_start": 2005,
+      "year_end": 2019,
+      "vendors": [
+        {
+          "vendor_id": 20254,
+          "evidence_strength": "medium",
+          "match_method": "aria_queue_t3"
+        }
+      ]
+    }
+  ]
+}
