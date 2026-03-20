@@ -1,0 +1,36 @@
+<svg width="800" height="500" xmlns="http://www.w3.org/2000/svg" version="1.1" baseProfile="full" viewBox="0 0 800 500">
+<rect width="800" height="500" x="0" y="0" fill="rgb(4,8,16)"></rect>
+<!-- Donut chart: Bajo 74.44%, Medio 16.34%, Alto 4.85%, Crítico 4.38% -->
+<!-- Center at 400,250, outer R=175, inner R=97 -->
+<!-- Bajo: 74.44% = 267.98° (start 0°, end 267.98°) -->
+<!-- Medio: 16.34% = 58.82° (start 267.98°, end 326.8°) -->
+<!-- Alto: 4.85% = 17.46° (start 326.8°, end 344.26°) -->
+<!-- Crítico: 4.38% = 15.77° (start 344.26°, end 360.03°) -->
+<!-- Using pre-computed paths -->
+<path d="M400 75A175 175 0 1 1 225.1 256.2L262.6 254.9A137.5 137.5 0 1 0 400 112.5Z" fill="#3b82f6"></path>
+<path d="M225.1 256.2A175 175 0 0 1 304.1 103.6L324.7 135A137.5 137.5 0 0 0 262.6 254.9Z" fill="#fbbf24"></path>
+<path d="M304.1 103.6A175 175 0 0 1 352.5 81.6L362.7 117.7A137.5 137.5 0 0 0 324.7 135Z" fill="#fb923c"></path>
+<path d="M352.5 81.6A175 175 0 0 1 400 75L400 112.5A137.5 137.5 0 0 0 362.7 117.7Z" fill="#f87171"></path>
+<!-- Center text -->
+<text text-anchor="middle" dominant-baseline="middle" style="font-size:22px;font-weight:bold;font-family:sans-serif;" transform="translate(400 240)" fill="rgb(223,223,225)">3,051,294</text>
+<text text-anchor="middle" dominant-baseline="middle" style="font-size:13px;font-family:sans-serif;" transform="translate(400 263)" fill="rgb(150,150,160)">contratos analizados</text>
+<!-- Labels -->
+<polyline points="525.9 371.5 556.7 391.9 586.7 391.9" fill="none" stroke="#3b82f6" stroke-width="1.5"></polyline>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:sans-serif;" transform="translate(591 392)" fill="#ccc">Bajo (74.44%) — 2,271,247</text>
+<polyline points="244.6 169.5 221.3 152.6 191.3 152.6" fill="none" stroke="#fbbf24" stroke-width="1.5"></polyline>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(186 153)" fill="#ccc">Medio (16.34%) — 498,432</text>
+<polyline points="327.4 90.7 311.2 67.1 281.2 67.1" fill="none" stroke="#fb923c" stroke-width="1.5"></polyline>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(276 67)" fill="#ccc">Alto (4.85%) — 148,043</text>
+<polyline points="376 76.7 364 51.8 334 51.8" fill="none" stroke="#f87171" stroke-width="1.5"></polyline>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(329 52)" fill="#ccc">Crítico (4.38%) — 133,572</text>
+<!-- Legend -->
+<rect x="40" y="461" width="25" height="14" rx="3" fill="#3b82f6"></rect>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:sans-serif;" x="70" y="468" fill="rgb(203,203,206)">Bajo</text>
+<rect x="150" y="461" width="25" height="14" rx="3" fill="#fbbf24"></rect>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:sans-serif;" x="180" y="468" fill="rgb(203,203,206)">Medio</text>
+<rect x="260" y="461" width="25" height="14" rx="3" fill="#fb923c"></rect>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:sans-serif;" x="290" y="468" fill="rgb(203,203,206)">Alto</text>
+<rect x="360" y="461" width="25" height="14" rx="3" fill="#f87171"></rect>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:sans-serif;" x="390" y="468" fill="rgb(203,203,206)">Crítico</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:18px;font-family:sans-serif;font-weight:bold;" y="9" transform="translate(400 20)" fill="rgb(223,223,225)">Distribución de Riesgo — 3,051,294 Contratos Federales</text>
+</svg>

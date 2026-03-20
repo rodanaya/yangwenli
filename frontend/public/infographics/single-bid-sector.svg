@@ -1,0 +1,49 @@
+<svg width="900" height="520" xmlns="http://www.w3.org/2000/svg" version="1.1" baseProfile="full" viewBox="0 0 900 520">
+<rect width="900" height="520" x="0" y="0" fill="rgb(4,8,16)"></rect>
+<path d="M135 440.5L810 440.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 386.5L810 386.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 333.5L810 333.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 279.5L810 279.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 225.5L810 225.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 172.5L810 172.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 118.5L810 118.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 65.5L810 65.5" fill="none" stroke="rgb(40,44,52)"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="-6" transform="translate(135 50)" fill="rgb(203,203,206)">Número de Contratos Único Postor</text>
+<path d="M135 440.5L810 440.5" fill="none" stroke="rgb(203,203,206)" stroke-linecap="round"></path>
+<text dominant-baseline="central" text-anchor="end" style="font-size:11px;font-family:sans-serif;" transform="translate(127 440)" fill="rgb(203,203,206)">0</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:11px;font-family:sans-serif;" transform="translate(127 386)" fill="rgb(203,203,206)">30K</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:11px;font-family:sans-serif;" transform="translate(127 333)" fill="rgb(203,203,206)">60K</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:11px;font-family:sans-serif;" transform="translate(127 279)" fill="rgb(203,203,206)">90K</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:11px;font-family:sans-serif;" transform="translate(127 225)" fill="rgb(203,203,206)">120K</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:11px;font-family:sans-serif;" transform="translate(127 172)" fill="rgb(203,203,206)">150K</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:11px;font-family:sans-serif;" transform="translate(127 118)" fill="rgb(203,203,206)">180K</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:11px;font-family:sans-serif;" transform="translate(127 65)" fill="rgb(203,203,206)">210K</text>
+<!-- X labels -->
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(163.1 448)" fill="rgb(203,203,206)">Infraestructura</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(219.4 448)" fill="rgb(203,203,206)">Salud</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(275.6 448)" fill="rgb(203,203,206)">Energía</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(331.9 448)" fill="rgb(203,203,206)">Gobernación</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(388.1 448)" fill="rgb(203,203,206)">Educación</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(444.4 448)" fill="rgb(203,203,206)">Hacienda</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(500.6 448)" fill="rgb(203,203,206)">Tecnología</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(556.9 448)" fill="rgb(203,203,206)">Agricultura</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(613.1 448)" fill="rgb(203,203,206)">Defensa</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(669.4 448)" fill="rgb(203,203,206)">Trabajo</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(725.6 448)" fill="rgb(203,203,206)">Ambiente</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(781.9 448)" fill="rgb(203,203,206)">Otros</text>
+<!-- scale: 0-210000 range 375px. px_per_unit = 375/210000 = 0.001786 -->
+<!-- Bars: 196540, 178320, 154890, 132670, 98540, 87230, 76410, 65890, 54320, 43210, 32180, 21090 -->
+<path d="M143.7 440l38.8 0l0 -351l-38.8 0Z" fill="#ea580c"></path>
+<path d="M199.9 440l38.8 0l0 -318.4l-38.8 0Z" fill="#dc2626"></path>
+<path d="M256.2 440l38.8 0l0 -276.6l-38.8 0Z" fill="#eab308"></path>
+<path d="M312.4 440l38.8 0l0 -236.9l-38.8 0Z" fill="#be123c"></path>
+<path d="M368.7 440l38.8 0l0 -176l-38.8 0Z" fill="#3b82f6"></path>
+<path d="M424.9 440l38.8 0l0 -155.8l-38.8 0Z" fill="#16a34a"></path>
+<path d="M481.2 440l38.8 0l0 -136.4l-38.8 0Z" fill="#8b5cf6"></path>
+<path d="M537.4 440l38.8 0l0 -117.7l-38.8 0Z" fill="#22c55e"></path>
+<path d="M593.7 440l38.8 0l0 -97l-38.8 0Z" fill="#1e3a5f"></path>
+<path d="M649.9 440l38.8 0l0 -77.2l-38.8 0Z" fill="#f97316"></path>
+<path d="M706.2 440l38.8 0l0 -57.5l-38.8 0Z" fill="#10b981"></path>
+<path d="M762.4 440l38.8 0l0 -37.7l-38.8 0Z" fill="#64748b"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:18px;font-family:sans-serif;font-weight:bold;" y="9" transform="translate(450 20)" fill="rgb(223,223,225)">Contratos de Un Solo Postor por Sector — Señal de Riesgo Clave</text>
+</svg>

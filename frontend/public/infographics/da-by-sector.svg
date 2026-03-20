@@ -1,0 +1,46 @@
+<svg width="900" height="520" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="full" viewBox="0 0 900 520">
+<rect width="900" height="520" x="0" y="0" fill="rgb(4,8,16)"></rect>
+<path d="M135 440.5L810 440.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 365.5L810 365.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 290.5L810 290.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 215.5L810 215.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 140.5L810 140.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 65.5L810 65.5" fill="none" stroke="rgb(40,44,52)"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="-6" transform="translate(135 50)" fill="rgb(203,203,206)">% Adjudicación Directa</text>
+<path d="M135 440.5L810 440.5" fill="none" stroke="rgb(203,203,206)" stroke-linecap="round"></path>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 440)" fill="rgb(203,203,206)">0</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 365)" fill="rgb(203,203,206)">20</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 290)" fill="rgb(203,203,206)">40</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 215)" fill="rgb(203,203,206)">60</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 140)" fill="rgb(203,203,206)">80</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 65)" fill="rgb(203,203,206)">100</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(160.9615 448)" fill="rgb(203,203,206)">Agricultura</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(212.8 448)" fill="rgb(203,203,206)">Defensa</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(264.8077 448)" fill="rgb(203,203,206)">Trabajo</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(316.7 448)" fill="rgb(203,203,206)">Gobernación</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(368.6538 448)" fill="rgb(203,203,206)">Hacienda</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(420.5 448)" fill="rgb(203,203,206)">Ambiente</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(472.5 448)" fill="rgb(203,203,206)">Otros</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(524.4 448)" fill="rgb(203,203,206)">Salud</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(576.3462 448)" fill="rgb(203,203,206)">Educación</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(628.3 448)" fill="rgb(203,203,206)">Infraestructura</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(680.1923 448)" fill="rgb(203,203,206)">Tecnología</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(732.1 448)" fill="rgb(203,203,206)">Energía</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:sans-serif;" y="6" transform="translate(784.0385 448)" fill="rgb(203,203,206)">Límite OCDE</text>
+<!-- Bars: 93.4, 88.2, 85.7, 84.1, 82.6, 81.3, 79.8, 78.5, 76.2, 74.9, 71.4, 68.7, 25 -->
+<path d="M143 440l35.8 0l0 -350.2l-35.8 0Z" fill="#dc2626"></path>
+<path d="M195 440l35.8 0l0 -330.7l-35.8 0Z" fill="#1e3a5f"></path>
+<path d="M246.9 440l35.8 0l0 -321.4l-35.8 0Z" fill="#f97316"></path>
+<path d="M298.8 440l35.8 0l0 -315.4l-35.8 0Z" fill="#be123c"></path>
+<path d="M350.7 440l35.8 0l0 -309.7l-35.8 0Z" fill="#16a34a"></path>
+<path d="M402.7 440l35.8 0l0 -304.9l-35.8 0Z" fill="#10b981"></path>
+<path d="M454.6 440l35.8 0l0 -299.2l-35.8 0Z" fill="#64748b"></path>
+<path d="M506.5 440l35.8 0l0 -294.4l-35.8 0Z" fill="#dc2626"></path>
+<path d="M558.4 440l35.8 0l0 -285.7l-35.8 0Z" fill="#3b82f6"></path>
+<path d="M610.4 440l35.8 0l0 -280.9l-35.8 0Z" fill="#ea580c"></path>
+<path d="M662.3 440l35.8 0l0 -267.8l-35.8 0Z" fill="#8b5cf6"></path>
+<path d="M714.2 440l35.8 0l0 -257.6l-35.8 0Z" fill="#eab308"></path>
+<path d="M766.1 440l35.8 0l0 -93.7l-35.8 0Z" fill="#b6d634" opacity="0.7"></path>
+<line x1="135" y1="252" x2="810" y2="252" stroke="#b6d634" stroke-width="1.5" stroke-dasharray="6,4" opacity="0.6"></line>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:18px;font-family:sans-serif;font-weight:bold;" y="9" transform="translate(450 20)" fill="rgb(223,223,225)">Adjudicación Directa por Sector — Porcentaje de Contratos</text>
+</svg>

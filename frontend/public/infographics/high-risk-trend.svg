@@ -1,0 +1,64 @@
+<svg width="900" height="500" xmlns="http://www.w3.org/2000/svg" version="1.1" baseProfile="full" viewBox="0 0 900 500">
+<rect width="900" height="500" x="0" y="0" fill="rgb(4,8,16)"></rect>
+<path d="M135 420.5L810 420.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 369.5L810 369.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 318.5L810 318.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 268.5L810 268.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 217.5L810 217.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 166.5L810 166.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 115.5L810 115.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 65.5L810 65.5" fill="none" stroke="rgb(40,44,52)"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="-6" transform="translate(135 50)" fill="rgb(203,203,206)">% Contratos Alto/Crítico Riesgo</text>
+<path d="M135 420.5L810 420.5" fill="none" stroke="rgb(203,203,206)" stroke-linecap="round"></path>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 420)" fill="rgb(203,203,206)">0</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 369)" fill="rgb(203,203,206)">3</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 318)" fill="rgb(203,203,206)">6</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 268)" fill="rgb(203,203,206)">9</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 217)" fill="rgb(203,203,206)">12</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 166)" fill="rgb(203,203,206)">15</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 116)" fill="rgb(203,203,206)">18</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 65)" fill="rgb(203,203,206)">21</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(135 428)" fill="rgb(203,203,206)">2013</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(257.7 428)" fill="rgb(203,203,206)">2015</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(380.5 428)" fill="rgb(203,203,206)">2017</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(503.2 428)" fill="rgb(203,203,206)">2019</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(625.9 428)" fill="rgb(203,203,206)">2021</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(748.6 428)" fill="rgb(203,203,206)">2023</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(810 428)" fill="rgb(203,203,206)">2024</text>
+<!-- OCDE 15% threshold = 166.5 px -->
+<path d="M135 166.5L810 166.5L810 420L135 420Z" fill="#b6d634" fill-opacity="0.25"></path>
+<path d="M135 166.5L810 166.5" stroke="#b6d634" stroke-width="1.5" stroke-dasharray="6,4"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:11px;font-family:sans-serif;" transform="translate(815 166)" fill="#b6d634">15% OCDE</text>
+<!-- scale: 0-21%, range 355px. px per % = 355/21 = 16.9 -->
+<!-- Data: 3.2, 3.8, 4.5, 5.1, 6.3, 7.8, 12.4, 18.2, 15.6, 13.1, 10.8, 9.2 -->
+<!-- y = 420 - val * 16.9 -->
+<!-- x spacing: (810-135)/11 = 61.36 per point -->
+<!-- points: 135,365.9  196.4,355.8  257.7,343.9  319.1,333.8  380.5,313.5  441.8,288.1  503.2,210.4  564.5,112.3  625.9,156.3  687.3,198.5  748.6,237.4  810,264.5 -->
+<clipPath id="clip-hr"><rect x="134" y="64" width="677" height="357"/></clipPath>
+<g clip-path="url(#clip-hr)">
+<path d="M135 365.9C165.8 361.2 196.4 355.8 227.1 350.3C257.7 344.9 288.3 338.4 319.1 333.8C350.4 326 380.5 313.5 411.6 301.9C441.8 288.1 478.6 257.3 503.2 210.4C536.2 163 527.4 112.3 564.5 112.3C595 134.6 625.9 156.3 656.4 177.7C687.3 198.5 717.6 218.6 748.6 237.4C778.1 253.3 810 264.5 810 264.5L810 420L135 420Z" fill="#f87171" fill-opacity="0.35"></path>
+<path d="M135 365.9C165.8 361.2 196.4 355.8 227.1 350.3C257.7 344.9 288.3 338.4 319.1 333.8C350.4 326 380.5 313.5 411.6 301.9C441.8 288.1 478.6 257.3 503.2 210.4C536.2 163 527.4 112.3 564.5 112.3C595 134.6 625.9 156.3 656.4 177.7C687.3 198.5 717.6 218.6 748.6 237.4C778.1 253.3 810 264.5 810 264.5" fill="none" stroke="#f87171" stroke-width="2.5"></path>
+</g>
+<!-- Dots -->
+<circle cx="135" cy="365.9" r="4" fill="#f87171"></circle>
+<circle cx="196.4" cy="355.8" r="4" fill="#f87171"></circle>
+<circle cx="257.7" cy="343.9" r="4" fill="#f87171"></circle>
+<circle cx="319.1" cy="333.8" r="4" fill="#f87171"></circle>
+<circle cx="380.5" cy="313.5" r="4" fill="#f87171"></circle>
+<circle cx="441.8" cy="288.1" r="4" fill="#f87171"></circle>
+<circle cx="503.2" cy="210.4" r="4" fill="#f87171"></circle>
+<circle cx="564.5" cy="112.3" r="6" fill="#dc2626" stroke="white" stroke-width="2"></circle>
+<circle cx="625.9" cy="156.3" r="4" fill="#f87171"></circle>
+<circle cx="687.3" cy="198.5" r="4" fill="#f87171"></circle>
+<circle cx="748.6" cy="237.4" r="4" fill="#f87171"></circle>
+<circle cx="810" cy="264.5" r="4" fill="#f87171"></circle>
+<!-- Peak annotation -->
+<text text-anchor="middle" style="font-size:11px;font-family:sans-serif;" transform="translate(564.5 98)" fill="#dc2626">🔴 18.2% (2020)</text>
+<!-- Legend -->
+<path d="M0 7L25 7" transform="translate(330 473)" fill="none" stroke="#f87171" stroke-width="2"></path>
+<circle cx="318" cy="480" r="4" fill="#f87171"></circle>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:sans-serif;" x="360" y="480" fill="rgb(203,203,206)">Alto/Crítico Riesgo %</text>
+<rect x="475" y="474" width="20" height="10" fill="#b6d634" opacity="0.5"></rect>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:sans-serif;" x="500" y="480" fill="rgb(203,203,206)">Umbral OCDE (15%)</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:18px;font-family:sans-serif;font-weight:bold;" y="9" transform="translate(450 20)" fill="rgb(223,223,225)">Contratos de Alto Riesgo 2013–2024 — Evolución Anual</text>
+</svg>

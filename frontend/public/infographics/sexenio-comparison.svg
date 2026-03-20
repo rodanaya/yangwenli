@@ -1,0 +1,48 @@
+<svg width="900" height="500" xmlns="http://www.w3.org/2000/svg" version="1.1" baseProfile="full" viewBox="0 0 900 500">
+<rect width="900" height="500" x="0" y="0" fill="rgb(4,8,16)"></rect>
+<path d="M135 420.5L810 420.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 349.5L810 349.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 278.5L810 278.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 207.5L810 207.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 136.5L810 136.5" fill="none" stroke="rgb(40,44,52)"></path>
+<path d="M135 65.5L810 65.5" fill="none" stroke="rgb(40,44,52)"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="-6" transform="translate(135 50)" fill="rgb(203,203,206)">% Contratos sin Licitación</text>
+<path d="M135 420.5L810 420.5" fill="none" stroke="rgb(203,203,206)" stroke-linecap="round"></path>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 420)" fill="rgb(203,203,206)">0</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 349)" fill="rgb(203,203,206)">20</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 278)" fill="rgb(203,203,206)">40</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 207)" fill="rgb(203,203,206)">60</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 136)" fill="rgb(203,203,206)">80</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 65)" fill="rgb(203,203,206)">100</text>
+<!-- X axis labels -->
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(219.375 428)" fill="rgb(203,203,206)">Fox 2001–06</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(388.125 428)" fill="rgb(203,203,206)">Calderón 2007–12</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(556.875 428)" fill="rgb(203,203,206)">Peña Nieto 2013–18</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(725.625 428)" fill="rgb(203,203,206)">AMLO 2019–24</text>
+<!-- DA% bars: Fox 61.2, Calderon 69.8, Pena 75.4, AMLO 82.1 -->
+<!-- scale: 0-100 → 420 to 65, range 355px -->
+<!-- Fox: 420 - 61.2*3.55 = 420-217.3=202.7 h=217.3 -->
+<path d="M157.8 420l58.7 0l0 -217.3l-58.7 0Z" fill="#5070dd"></path>
+<!-- Calderon: 420-247.8=172.2 h=247.8 -->
+<path d="M326.5 420l58.7 0l0 -247.8l-58.7 0Z" fill="#5070dd"></path>
+<!-- Pena: 420-267.7=152.3 h=267.7 -->
+<path d="M495.3 420l58.7 0l0 -267.7l-58.7 0Z" fill="#5070dd"></path>
+<!-- AMLO: 420-291.5=128.5 h=291.5 -->
+<path d="M664 420l58.7 0l0 -291.5l-58.7 0Z" fill="#dc2626"></path>
+<!-- OCDE 25% bars: all h=88.75 -->
+<path d="M222.3 420l58.7 0l0 -88.7l-58.7 0Z" fill="#b6d634" opacity="0.6"></path>
+<path d="M391.1 420l58.7 0l0 -88.7l-58.7 0Z" fill="#b6d634" opacity="0.6"></path>
+<path d="M559.8 420l58.7 0l0 -88.7l-58.7 0Z" fill="#b6d634" opacity="0.6"></path>
+<path d="M728.6 420l58.7 0l0 -88.7l-58.7 0Z" fill="#b6d634" opacity="0.6"></path>
+<!-- Value labels -->
+<text text-anchor="middle" style="font-size:13px;font-family:sans-serif;font-weight:bold;" transform="translate(187.2 195)" fill="white">61.2%</text>
+<text text-anchor="middle" style="font-size:13px;font-family:sans-serif;font-weight:bold;" transform="translate(355.9 165)" fill="white">69.8%</text>
+<text text-anchor="middle" style="font-size:13px;font-family:sans-serif;font-weight:bold;" transform="translate(524.7 144)" fill="white">75.4%</text>
+<text text-anchor="middle" style="font-size:13px;font-family:sans-serif;font-weight:bold;" transform="translate(693.4 120)" fill="white">82.1%</text>
+<!-- Legend -->
+<rect x="337" y="461" width="18" height="12" rx="2" fill="#5070dd"></rect>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:sans-serif;" x="360" y="467" fill="rgb(203,203,206)">DA %</text>
+<rect x="408" y="461" width="18" height="12" rx="2" fill="#b6d634" opacity="0.8"></rect>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:sans-serif;" x="431" y="467" fill="rgb(203,203,206)">Límite OCDE (25%)</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:18px;font-family:sans-serif;font-weight:bold;" y="9" transform="translate(450 20)" fill="rgb(223,223,225)">Adjudicación Directa por Sexenio — vs Estándar OCDE</text>
+</svg>

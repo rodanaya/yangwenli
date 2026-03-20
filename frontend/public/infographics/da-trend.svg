@@ -1,0 +1,42 @@
+<svg width="900" height="500" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="full" viewBox="0 0 900 500">
+<rect width="900" height="500" x="0" y="0" fill="rgb(4,8,16)"></rect>
+<path d="M135 420.5L810 420.5" fill="none" pointer-events="visible" stroke="rgb(40,44,52)"></path>
+<path d="M135 349.5L810 349.5" fill="none" pointer-events="visible" stroke="rgb(40,44,52)"></path>
+<path d="M135 278.5L810 278.5" fill="none" pointer-events="visible" stroke="rgb(40,44,52)"></path>
+<path d="M135 207.5L810 207.5" fill="none" pointer-events="visible" stroke="rgb(40,44,52)"></path>
+<path d="M135 136.5L810 136.5" fill="none" pointer-events="visible" stroke="rgb(40,44,52)"></path>
+<path d="M135 65.5L810 65.5" fill="none" pointer-events="visible" stroke="rgb(40,44,52)"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" xml:space="preserve" y="-6" transform="translate(135 50)" fill="rgb(203,203,206)">% Contratos por Adjudicación Directa</text>
+<path d="M135 420.5L810 420.5" fill="none" stroke="rgb(203,203,206)" stroke-linecap="round"></path>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 420)" fill="rgb(203,203,206)">0</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 349)" fill="rgb(203,203,206)">20</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 278)" fill="rgb(203,203,206)">40</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 207)" fill="rgb(203,203,206)">60</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 136)" fill="rgb(203,203,206)">80</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(127 65)" fill="rgb(203,203,206)">100</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(135 428)" fill="rgb(203,203,206)">2002</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(257.7273 428)" fill="rgb(203,203,206)">2006</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(380.4545 428)" fill="rgb(203,203,206)">2010</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(503.1818 428)" fill="rgb(203,203,206)">2014</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(625.9091 428)" fill="rgb(203,203,206)">2018</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(748.6364 428)" fill="rgb(203,203,206)">2022</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(810 428)" fill="rgb(203,203,206)">2024</text>
+<clipPath id="clip0"><rect x="134" y="64" width="677" height="357"/></clipPath>
+<g clip-path="url(#clip0)">
+<path d="M135 199.9C135 199.9 150.2 192.8 165.7 192.8C180.9 192.8 181.2 196.4 196.4 196.4C211.9 196.4 211.6 191.9 227 189.3C242.2 186.6 242.5 188.3 257.7 185.7C273.2 183 272.9 178.6 288.4 178.6C303.6 178.6 304.1 182.1 319.1 182.1C334.8 182.1 334 171.5 349.8 171.5C364.7 171.5 365.3 175.1 380.5 175.1C395.9 175.1 395.6 170.6 411.1 167.9C426.3 165.3 426.6 167 441.8 164.4C457.3 161.7 457 160 472.5 157.3C487.7 154.7 487.8 153.8 503.2 153.8C518.5 153.8 518.7 157.3 533.9 157.3C549.4 157.3 549.1 152.9 564.5 150.2C579.7 147.6 579.9 148.4 595.2 146.6C610.6 144.9 611.3 146.6 625.9 143.1C641.9 139.2 640.9 135.2 656.6 128.9C671.6 122.8 671.7 118.3 687.3 118.3C702.4 118.3 702.6 121.8 718 125.3C733.3 128.9 733.3 128.9 748.6 132.4C764 136 763.8 139.6 779.3 139.6C794.5 139.6 810 136 810 136L810 420L779.3 420L748.6 420L718 420L687.3 420L656.6 420L625.9 420L595.2 420L564.5 420L533.9 420L503.2 420L472.5 420L441.8 420L411.1 420L380.5 420L349.8 420L319.1 420L288.4 420L257.7 420L227 420L196.4 420L165.7 420L135 420Z" fill="#5070dd" fill-opacity="0.7"></path>
+<path d="M135 199.9C135 199.9 150.2 192.8 165.7 192.8C180.9 192.8 181.2 196.4 196.4 196.4C211.9 196.4 211.6 191.9 227 189.3C242.2 186.6 242.5 188.3 257.7 185.7C273.2 183 272.9 178.6 288.4 178.6C303.6 178.6 304.1 182.1 319.1 182.1C334.8 182.1 334 171.5 349.8 171.5C364.7 171.5 365.3 175.1 380.5 175.1C395.9 175.1 395.6 170.6 411.1 167.9C426.3 165.3 426.6 167 441.8 164.4C457.3 161.7 457 160 472.5 157.3C487.7 154.7 487.8 153.8 503.2 153.8C518.5 153.8 518.7 157.3 533.9 157.3C549.4 157.3 549.1 152.9 564.5 150.2C579.7 147.6 579.9 148.4 595.2 146.6C610.6 144.9 611.3 146.6 625.9 143.1C641.9 139.2 640.9 135.2 656.6 128.9C671.6 122.8 671.7 118.3 687.3 118.3C702.4 118.3 702.6 121.8 718 125.3C733.3 128.9 733.3 128.9 748.6 132.4C764 136 763.8 139.6 779.3 139.6C794.5 139.6 810 136 810 136" fill="none" stroke="#5070dd" stroke-width="2.5"></path>
+</g>
+<clipPath id="clip1"><rect x="134" y="64" width="677" height="357"/></clipPath>
+<g clip-path="url(#clip1)">
+<path d="M135 331.3L810 331.3L810 420L135 420Z" fill="#b6d634" fill-opacity="0.4"></path>
+<path d="M135 331.3L810 331.3" fill="none" stroke="#b6d634" stroke-width="2" stroke-dasharray="6,4"></path>
+</g>
+<text dominant-baseline="central" text-anchor="start" style="font-size:11px;font-family:sans-serif;" transform="translate(815 331)" fill="#b6d634">25% OCDE</text>
+<path d="M0 7L25 7" transform="translate(317.6 472)" fill="none" stroke="#5070dd" stroke-width="2" stroke-linecap="butt"></path>
+<circle cx="18.1" cy="7" r="5.6" transform="translate(317.6 472)" fill="#5070dd"></circle>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:sans-serif;" x="30" y="7" transform="translate(317.6 472)" fill="rgb(203,203,206)">México (DA%)</text>
+<path d="M0 7L25 7" transform="translate(438.56 472)" fill="none" stroke="#b6d634" stroke-width="2" stroke-linecap="butt"></path>
+<circle cx="18.1" cy="7" r="5.6" transform="translate(438.56 472)" fill="#b6d634"></circle>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:sans-serif;" x="30" y="7" transform="translate(438.56 472)" fill="rgb(203,203,206)">Límite OCDE (25%)</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:18px;font-family:sans-serif;font-weight:bold;" y="9" transform="translate(450 20)" fill="rgb(223,223,225)">Adjudicación Directa: 23 Años de Opacidad Creciente</text>
+</svg>

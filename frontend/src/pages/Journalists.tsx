@@ -13,6 +13,7 @@ import type { StoryType } from '@/components/stories/StoryCard'
 import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
+import { DataInfographics } from '@/components/ui/DataInfographics'
 
 // ---------------------------------------------------------------------------
 // Story definitions (hardcoded editorial content, live stats where available)
@@ -595,6 +596,11 @@ export default function Journalists() {
             )}
           </motion.div>
         </AnimatePresence>
+
+        {/* ================================================================ */}
+        {/* INFOGRAPHICS GALLERY                                              */}
+        {/* ================================================================ */}
+        <DataInfographics />
 
         {/* ================================================================ */}
         {/* BOTTOM SECTION                                                    */}
