@@ -38,6 +38,15 @@ const CHART_REGISTRY: Record<string, React.ComponentType> = {
   'sexenio-comparison': StoryCharts.SexenioComparisonChart,
 }
 
+// Fallback map: chapter.chartConfig.type → chartId when no chartId is specified
+const TYPE_TO_CHART_ID: Record<string, string> = {
+  'da-trend':    'da-rate-trend',
+  'sector-bar':  'da-by-sector',
+  'comparison':  'amlo-era-comparison',
+  'year-bar':    'monthly-spending',
+  'vendor-list': 'vendor-concentration',
+}
+
 // ---------------------------------------------------------------------------
 // Outlet-level accent colors
 // ---------------------------------------------------------------------------
@@ -119,7 +128,7 @@ function ChapterSection({
         ))}
 
         {chapter.chartConfig && (() => {
-          const chartId = chapter.chartConfig.chartId
+          const chartId = chapter.chartConfig.chartId || TYPE_TO_CHART_ID[chapter.chartConfig.type]
           const ChartComponent = chartId ? CHART_REGISTRY[chartId] : undefined
           return (
             <ScrollReveal className="my-8">
