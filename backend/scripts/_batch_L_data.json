@@ -1,0 +1,62 @@
+[
+  {
+    "case_name": "LIAD PRODUCTOS - SEDENA Uniform Supply Monopoly",
+    "case_type": "institutional_capture",
+    "confidence_level": "medium",
+    "notes": "Clothing/footwear company with 100%% institutional concentration at SEDENA. 92 contracts totaling 3.19B MXN (2014-2025). 25%% DA rate -- most contracts won via licitacion publica, which mitigates somewhat. However, 100%% concentration at a single defense institution for 11 years with steadily growing contract values (4.5M in 2014 to 591M in 2024) is consistent with institutional capture pattern. P6 capture (0.8) + P1 monopoly (0.65) flags. ARIA IPS=0.532, T3.",
+    "estimated_fraud_mxn": 1500000000,
+    "year_start": 2014,
+    "year_end": 2025,
+    "vendor_id": 136992,
+    "vendor_name": "LIAD PRODUCTOS PARA ROPA Y CALZADO SA DE CV",
+    "evidence_strength": "medium"
+  },
+  {
+    "case_name": "CONTROLES ELECTROMECANICOS - CAPUFE Toll Systems Capture",
+    "case_type": "institutional_capture",
+    "confidence_level": "medium",
+    "notes": "Electromechanical controls company with 99%% value concentration at CAPUFE (Caminos y Puentes Federales). 71 contracts totaling 1.57B MXN (2002-2025). 74.6%% direct award rate over 23 years. Specialized toll plaza control systems supplier -- could be legitimate technical monopoly, but 74%% DA to a single institution over two decades with no competitive pressure is consistent with long-term vendor lock-in/capture. P6 capture flag (0.6). ARIA IPS=0.531, T3.",
+    "estimated_fraud_mxn": 800000000,
+    "year_start": 2010,
+    "year_end": 2025,
+    "vendor_id": 975,
+    "vendor_name": "CONTROLES ELECTROMECANICOS S.A. DE C.V.",
+    "evidence_strength": "medium"
+  },
+  {
+    "case_name": "CUSTODIA VEILLEUR - Multi-Institution Security Single-Bid Pattern",
+    "case_type": "single_bid_capture",
+    "confidence_level": "medium",
+    "notes": "Private security company winning contracts at AEFCM (130.6M), SEP (96.8M), SAT (56.7M), IMSS (30M), CNBV (12.1M) and others. 344M MXN total across 54 contracts (2012-2020). 57%% single-bid rate on competitive tenders -- security services licitaciones where only this vendor bids. 43%% DA rate. Concentrated burst in 2019-2020 (50 of 54 contracts). SB on competitive security tenders is a classic bid-rigging indicator -- competitors may be discouraged from bidding. ARIA IPS=0.532, T3.",
+    "estimated_fraud_mxn": 150000000,
+    "year_start": 2018,
+    "year_end": 2020,
+    "vendor_id": 109221,
+    "vendor_name": "CUSTODIA DE SEGURIDAD PRIVADA VEILLEUR SA DE CV",
+    "evidence_strength": "medium"
+  },
+  {
+    "case_name": "I+D MEXICO - CAPUFE Direct Award Spike 2013",
+    "case_type": "overpricing",
+    "confidence_level": "high",
+    "notes": "R and D company that normally handles small contracts (0.1-2M MXN) at research centers (IMTA, INSP, CIDETEQ) suddenly received 649.7M MXN in direct awards from CAPUFE in 2013 alone -- 98.5%% of lifetime value in a single year. 10 contracts at CAPUFE totaling 651.3M, all 100%% direct award. Before and after the 2013 spike, contracts are 0.1-2.8M. A research/tech company receiving 650M in DA from a toll road authority in one year is a clear procurement anomaly. ARIA IPS=0.532, T3. High confidence -- temporal spike + DA + value mismatch is unambiguous.",
+    "estimated_fraud_mxn": 600000000,
+    "year_start": 2013,
+    "year_end": 2013,
+    "vendor_id": 49812,
+    "vendor_name": "I + D MEXICO SA DE CV",
+    "evidence_strength": "strong"
+  },
+  {
+    "case_name": "MARIA ARACELI VARGAS ZARCO - Persona Fisica IMSS Licitacion Capture",
+    "case_type": "institutional_capture",
+    "confidence_level": "medium",
+    "notes": "Individual person (persona fisica) winning 226.4M MXN in IMSS contracts (2020-2025). 55.6%% single-bid rate at IMSS. Value driven by large licitacion publica wins: 165.2M in 2024 and 51.7M in 2025. A persona fisica winning 217M in public tenders at IMSS is inherently unusual -- individuals rarely have the operational capacity for large institutional supply contracts. 90%% institutional concentration at IMSS. Pattern is consistent with front-person for a larger operation. ARIA IPS=0.531, T3.",
+    "estimated_fraud_mxn": 200000000,
+    "year_start": 2020,
+    "year_end": 2025,
+    "vendor_id": 263927,
+    "vendor_name": "MARIA ARACELI VARGAS ZARCO",
+    "evidence_strength": "medium"
+  }
+]
