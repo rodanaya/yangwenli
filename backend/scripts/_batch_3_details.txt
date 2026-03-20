@@ -1,0 +1,448 @@
+=== VID 69288: SOLUCIONES INTEGRALES EN CLIMATIZACION SA DE CV ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.658 | Pattern: None | Sector: hacienda
+Value: 550M MXN | AvgRisk: 0.227 | DA: 39% | SB: 61% | 23c | 9yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (30%) | Years: 2010-2018
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **SOLUCIONES INTEGRALES EN CLIMATIZACION SA DE CV** (RFC: No registrado) opera en el sector **hacienda** con 23 contratos por un valor total de **$549,533,272 MXN**. Puntuación IPS: **0.658** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | SOLUCIONES INTEGRALES EN CLIMATIZACION S
+Top contracts:
+  2014 | 489.7M | DA | AO-018TOQ996-N196-2014 REHABILITACIÓN DE FACHADA CAR | COMISIÓN FEDERAL DE ELECTRICIDAD | medium
+  2016 | 34.7M | SB | OPERACION Y MANTENIMIENTO  PREVENTIVO, CORECTIVO Y CORR | SERVICIO DE ADMINISTRACIÓN TRIBUTARIA | medium
+  2013 | 6.0M | DA | Servicio de Mantenimiento Preventivo. Correctivo y Corr | SERVICIO DE ADMINISTRACIÓN TRIBUTARIA | medium
+  2017 | 2.7M | SB | MANTENIMIENTO PREVENTIVO Y CORRECTIVO A SUBESTACIONES E | SECRETARÍA DE COMUNICACIONES Y TRANSPORT | medium
+  2016 | 2.7M | SB | MANTENIMIENTO PREVENTIVO Y CORRECTIVO A SUBESTACIONES E | SECRETARÍA DE COMUNICACIONES Y TRANSPORT | medium
+  2013 | 2.0M | SB | MANTENIMIENTO A INSTALACIONES Y EQUIPOS DE AIRE ACONDIC | SERVICIO DE ADMINISTRACIÓN TRIBUTARIA | medium
+Institutions:
+  COMISIÓN FEDERAL DE ELECTRICIDAD: 4c, 492.8M
+  SERVICIO DE ADMINISTRACIÓN TRIBUTARIA: 7c, 42.9M
+  SECRETARÍA DE COMUNICACIONES Y TRANSPORTES: 7c, 11.5M
+  SECRETARÍA DE GOBERNACIÓN: 2c, 1.9M
+  FONDO NACIONAL DE FOMENTO AL TURISMO: 1c, 0.4M
+
+=== VID 54210: DETROIT DIESEL ALLISON DE MÉXICO, S. de R. L. de C. V. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.658 | Pattern: None | Sector: defensa
+Value: 542M MXN | AvgRisk: 0.271 | DA: 24% | SB: 45% | 49c | 8yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (22%) | Years: 2010-2019
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **DETROIT DIESEL ALLISON DE MÉXICO, S. de R. L. de C. V.** (RFC: No registrado) opera en el sector **defensa** con 49 contratos por un valor total de **$389,743,655 MXN**. Puntuación IPS: **0.657** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | DETROIT DIESEL ALLISON DE MÉXICO, 
+Top contracts:
+  2015 | 175.9M | DA | A.D. para la Adquisición de 215 Camiones Freightliner | SECRETARÍA DE LA DEFENSA NACIONAL | medium
+  2014 | 152.5M | DA | A.D. para la Adquisición de 200 Camiones Freightliner M | SECRETARÍA DE LA DEFENSA NACIONAL | medium
+  2010 | 60.9M | CP | ADQUISICIÓN DE VEHÍCULOS TERRESTRES PARA DICONSA, S.A.  | Diconsa, S.A. de C.V. | medium
+  2015 | 14.8M | DA | A.D. para la Adquisición de 14 autobuses para transport | SECRETARÍA DE LA DEFENSA NACIONAL | medium
+  2014 | 14.2M | SB | DDJ Grua Hidraulica 2 canastillas de 69 kv. | COMISIÓN FEDERAL DE ELECTRICIDAD | medium
+  2013 | 11.0M | SB | Adquisición de Camiones Recolectores de   Basura del H. | TAB-Presidencia Municipal de Centro | medium
+Institutions:
+  SECRETARÍA DE LA DEFENSA NACIONAL: 11c, 360.3M
+  Diconsa, S.A. de C.V.: 1c, 60.9M
+  COMISIÓN FEDERAL DE ELECTRICIDAD: 4c, 34.1M
+  TAB-Presidencia Municipal de Centro: 1c, 11.0M
+  QRO-Oficialía Mayor: 1c, 10.5M
+
+=== VID 259293: SUMACORTEC SA DE CV ===
+RFC: SUM110816MR0 | Individual: 0 | EFOS_RFC: None
+IPS: 0.658 | Pattern: P3 | Sector: gobernacion
+Value: 524M MXN | AvgRisk: 0.190 | DA: 46% | SB: 31% | 13c | 5yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (23%) | Years: 2020-2024
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **SUMACORTEC SA DE CV** (RFC: No registrado) opera en el sector **gobernacion** con 13 contratos por un valor total de **$523,670,370 MXN**. Puntuación IPS: **0.658** (Tier 2). Patrón detectado: **Intermediario de paso único** (confianza 46%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | SUMACORTEC SA DE CV |
+| RFC | No registrado |
+| Sec
+Top contracts:
+  2021 | 363.2M | DA | ADQUISICIÓN DE “UNIDADES MÉDICAS MÓVILES (UMM) TIPO 0 Y | Instituto de Salud para el Bienestar | medium
+  2021 | 89.0M | DA | ADQUISICIÓN DE 54 AMBULANCIA DE TRASLADO DE URGENCIAS B | Instituto de Salud para el Bienestar | medium
+  2020 | 36.1M | DA | AA-E105-AMB-INSABI-01-2020 | Instituto de Salud para el Bienestar | medium
+  2024 | 17.2M | CP | ADQUISICIÓN DE CAMIONETAS PICK UP Y MOTOCICLETAS, EQUIP | SECRETARÍA DE ADMINISTRACIÓN | low
+  2022 | 4.1M | DA | VEHS.EQ.TERREST.EJEC.PROG.SEG. | Secretaría de Marina | low
+  2022 | 3.3M | CP | "VEHICULOS TERRESTRES PARA EJECUCIÓN DE PROGRAMAS DE SE | Secretaría de Marina | low
+Institutions:
+  Instituto de Salud para el Bienestar: 3c, 488.3M
+  SECRETARÍA DE ADMINISTRACIÓN: 2c, 18.1M
+  Secretaría de Marina: 3c, 10.5M
+  EXPORTADORA DE SAL, S.A. DE C.V.: 1c, 1.5M
+  _Gobierno del Estado de Nuevo León: 1c, 1.4M
+
+=== VID 217: COMPUCENTRO, S.A. DE C.V. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.658 | Pattern: None | Sector: educacion
+Value: 1044M MXN | AvgRisk: 0.295 | DA: 5% | SB: 12% | 98c | 23yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (9%) | Years: 2002-2024
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **COMPUCENTRO, S.A. DE C.V.** (RFC: No registrado) opera en el sector **educacion** con 98 contratos por un valor total de **$971,382,194 MXN**. Puntuación IPS: **0.658** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | COMPUCENTRO, S.A. DE C.V. |
+| RFC | No registrado |
+| Sector 
+Top contracts:
+  2022 | 462.6M | CP | 975E02122-001-IA-050GYR975-E21-2022, “Programa Nacional | INSTITUTO MEXICANO DEL SEGURO SOCIAL | critical
+  2022 | 231.0M | SB | 975E02022-001, IA-050GYR975-E20-2022, para la “Adquisic | INSTITUTO MEXICANO DEL SEGURO SOCIAL | critical
+  2016 | 76.8M | SB | LICITACIÓN PÚBLICA Contratación del Aprovisionamiento d | Instituto Nacional de Electricidad y Ene | critical
+  2014 | 52.4M | DA | ARRENDAMIENTO DE  EQUIPOS DE IMPRESION ART. 41 F. III | SERVICIO NACIONAL DE SANIDAD, INOCUIDAD  | medium
+  2010 | 48.0M | SB | CONTRATO PLURIANUAL ABIERTO PARA LA PRESTACIÓN DEL SERV | Instituto Nacional de Electricidad y Ene | critical
+  2024 | 32.2M | CP | PROGRAMA NACIONAL DE ADQUISICIÓN DE EQUIPO DE CÓMPUTO ( | INSTITUTO MEXICANO DEL SEGURO SOCIAL | critical
+Institutions:
+  INSTITUTO MEXICANO DEL SEGURO SOCIAL: 4c, 726.4M
+  Instituto Nacional de Electricidad y Energías Limpias: 3c, 124.8M
+  SERVICIO NACIONAL DE SANIDAD, INOCUIDAD Y CALIDAD AGROA: 2c, 54.5M
+  FONDO NACIONAL DE FOMENTO AL TURISMO: 3c, 29.9M
+  INSTITUTO DE INVESTIGACIONES ELÉCTRICAS: 5c, 27.4M
+
+=== VID 118991: FICOT SA DE CV ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.658 | Pattern: None | Sector: educacion
+Value: 474M MXN | AvgRisk: 0.331 | DA: 32% | SB: 52% | 31c | 6yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (29%) | Years: 2013-2018
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **FICOT SA DE CV** (RFC: No registrado) opera en el sector **educacion** con 35 contratos por un valor total de **$475,564,871 MXN**. Puntuación IPS: **0.658** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | FICOT SA DE CV |
+| RFC | No registrado |
+| Sector principal | educacion 
+Top contracts:
+  2013 | 220.9M | DA | SERVICIO DE LIMPIEZA INTEGRAL (MONTO MÍNIMO $145´926,84 | Secretaría de Agricultura y Desarrollo R | medium
+  2016 | 122.9M | DA | SERVICIOS DE LIMPIEZA INTEGRAL A BIENES MUEBLES E INMUE | PROCURADURÍA GENERAL DE LA REPÚBLICA | medium
+  2013 | 25.9M | SB | SERVICIO DE LIMPIEZA INTEGRAL EN LOS INMUEBLES DEL INBA | Instituto Nacional de Bellas Artes y Lit | medium
+  2016 | 19.9M | SB | SERVICIO DE LIMPIEZA INTEGRAL | FIDEICOMISO DE FORMACIÓN Y CAPACITACIÓN  | medium
+  2014 | 18.9M | SB | LIMPIEZA INTEGRAL DE INMUEBLES EN EL DISTRITO FEDERAL | SISTEMA NACIONAL PARA EL DESARROLLO INTE | medium
+  2013 | 18.1M | SB | Contrato Ficot | Secretaría de Cultura | medium
+Institutions:
+  Secretaría de Agricultura y Desarrollo Rural: 1c, 220.9M
+  PROCURADURÍA GENERAL DE LA REPÚBLICA: 1c, 122.9M
+  Instituto Nacional de Bellas Artes y Literatura: 2c, 28.5M
+  FIDEICOMISO DE FORMACIÓN Y CAPACITACIÓN PARA EL PERSONA: 5c, 22.1M
+  INSTITUTO NACIONAL DE ANTROPOLOGÍA E HISTORIA: 9c, 20.3M
+
+=== VID 131365: COMERCIALIZADORA MORELOS, SERVICIOS Y SISTEMAS INSTITUCIONALES PARA INMUEBLES SA DE CV ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.658 | Pattern: None | Sector: ambiente
+Value: 467M MXN | AvgRisk: 0.238 | DA: 49% | SB: 46% | 80c | 10yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (19%) | Years: 2014-2023
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **COMERCIALIZADORA MORELOS, SERVICIOS Y SISTEMAS INSTITUCIONALES PARA INMUEBLES SA DE CV** (RFC: No registrado) opera en el sector **ambiente** con 81 contratos por un valor total de **$471,785,705 MXN**. Puntuación IPS: **0.658** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | C
+Top contracts:
+  2021 | 321.5M | SB | SERVICIO DE LIMPIEZA | INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIA | medium
+  2021 | 33.2M | SB | Servicio Integral de Limpieza de Inmuebles de Banjercit | BANCO NACIONAL DEL EJÉRCITO, FUERZA AÉRE | medium
+  2021 | 11.9M | DA | SERVCIOS DE LIMPIEZA EN INMUEBLES DEL INSTITUTO NACIONA | INSTITUTO NACIONAL DE ANTROPOLOGÍA E HIS | medium
+  2018 | 10.3M | SB | SERVICIO DE MANTENIMIENTO DE LIMPIEZA Y EXTRACCIÓN DE B | INSTITUTO NACIONAL DE SALUD PÚBLICA | medium
+  2021 | 8.6M | SB | Servicio Integral de Limpieza | INSTITUTO NACIONAL DE PEDIATRÍA | medium
+  2018 | 6.9M | SB | LA-019GYR001-E314-2017 CONV LPN MANTTO AREAS VERDES Y P | INSTITUTO MEXICANO DEL SEGURO SOCIAL | medium
+Institutions:
+  INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIALES DE LOS TRAB: 2c, 327.5M
+  INSTITUTO MEXICANO DEL SEGURO SOCIAL: 13c, 38.4M
+  BANCO NACIONAL DEL EJÉRCITO, FUERZA AÉREA Y ARMADA, S.N: 1c, 33.2M
+  INSTITUTO NACIONAL DE SALUD PÚBLICA: 4c, 13.8M
+  INSTITUTO NACIONAL DE ANTROPOLOGÍA E HISTORIA: 2c, 12.1M
+
+=== VID 15679: CAMIONES ESPECIALES S.A. DE C.V. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.657 | Pattern: None | Sector: energia
+Value: 407M MXN | AvgRisk: 0.229 | DA: 5% | SB: 25% | 20c | 18yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (45%) | Years: 2003-2020
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **CAMIONES ESPECIALES S.A. DE C.V.** (RFC: No registrado) opera en el sector **energia** con 20 contratos por un valor total de **$407,490,087 MXN**. Puntuación IPS: **0.657** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | CAMIONES ESPECIALES S.A. DE C.V. |
+| RFC | No registrado
+Top contracts:
+  2009 | 125.0M | CP | ADQUISICION CONSOLIDADA DE VEHICULOS TERRESTRES PARA LI | SECRETARÍA DE DESARROLLO SOCIAL | medium
+  2010 | 102.0M | CP | ADQUISICIÓN DE VEHÍCULOS TERRESTRES PARA DICONSA, S.A.  | Diconsa, S.A. de C.V. | medium
+  2008 | 70.3M | CP | ADQUISICION CONSOLIDADA DE VEHICULOS TERRESTRES | SECRETARÍA DE DESARROLLO SOCIAL | medium
+  2006 | 62.9M | SB | 50 autotanques completos con capacidad de 20,000 litros | PEMEX REFINACIÓN | medium
+  2010 | 18.2M | CP | ADQUISICIÓN DE VEHÍCULOS TERRESTRES PARA DICONSA, S.A.  | Diconsa, S.A. de C.V. | medium
+  2019 | 5.4M | SB | UNIDADES CHASIS PARA EL DEPARTAMENTO DE LIMPIEZA | _Gobierno Municipal del Estado de Coahui | medium
+Institutions:
+  SECRETARÍA DE DESARROLLO SOCIAL: 2c, 195.3M
+  Diconsa, S.A. de C.V.: 2c, 120.2M
+  PEMEX REFINACIÓN: 9c, 74.8M
+  _Gobierno Municipal del Estado de Coahuila de Zaragoza: 1c, 5.4M
+  _Gobierno Municipal del Estado de Nayarit: 1c, 4.7M
+
+=== VID 26038: TELMARK CONTACT LINE, S. A. DE C. V. ===
+RFC: None | Individual: 1 | EFOS_RFC: None
+IPS: 0.657 | Pattern: P3 | Sector: trabajo
+Value: 665M MXN | AvgRisk: 0.251 | DA: 0% | SB: 94% | 17c | 5yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (18%) | Years: 2006-2010
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **TELMARK CONTACT LINE, S. A. DE C. V.** (RFC: No registrado) opera en el sector **trabajo** con 17 contratos por un valor total de **$665,189,254 MXN**. Puntuación IPS: **0.657** (Tier 2). Patrón detectado: **Intermediario de paso único** (confianza 59%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | TELMARK CONTACT LINE, S. A. DE C. V. |
+Top contracts:
+  2008 | 260.9M | SB | Otorgamiento de Cita Mýdica de consulta externa general | INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIA | medium
+  2010 | 175.3M | SB | Contrataciýn del servicio del programa de citas Mexitel | SECRETARÍA DE RELACIONES EXTERIORES | medium
+  2006 | 63.8M | SB | SERVICIO DEL CENTRO DE CONTACTO IMSS (C.C. IMSS) | INSTITUTO MEXICANO DEL SEGURO SOCIAL | medium
+  2007 | 55.1M | SB | OTORGAMIENTO DE CITA MýDICA DE CONSULTA EXTERNA GENERAL | INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIA | medium
+  2006 | 47.8M | SB | Otorgamiento de cita mýdica de consulta externa general | INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIA | medium
+  2008 | 34.4M | SB | Servicios de un Centro de Atenciýn a Clientes para Naci | NACIONAL FINANCIERA, S.N.C. | medium
+Institutions:
+  INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIALES DE LOS TRAB: 3c, 363.8M
+  SECRETARÍA DE RELACIONES EXTERIORES: 1c, 175.3M
+  INSTITUTO MEXICANO DEL SEGURO SOCIAL: 1c, 63.8M
+  NACIONAL FINANCIERA, S.N.C.: 1c, 34.4M
+  INSTITUTO NACIONAL DE LAS MUJERES: 3c, 8.0M
+
+=== VID 94179: DIMENSION DATA COMMERCE CENTRE MEXICO SA DE CV ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.657 | Pattern: None | Sector: educacion
+Value: 391M MXN | AvgRisk: 0.376 | DA: 27% | SB: 64% | 11c | 8yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (55%) | Years: 2011-2018
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **DIMENSION DATA COMMERCE CENTRE MEXICO SA DE CV** (RFC: No registrado) opera en el sector **educacion** con 11 contratos por un valor total de **$391,040,394 MXN**. Puntuación IPS: **0.657** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | DIMENSION DATA COMMERCE CENTRE MEXICO SA
+Top contracts:
+  2015 | 174.4M | SB | SERVICIOS DE TECNOLOGÍA DE INFORMACIÓN Y COMUNICACIONES | CENTRO DE INVESTIGACIÓN Y SEGURIDAD NACI | medium
+  2018 | 115.8M | SB | Proyecto Integral de servicios administrados de Computo | Instituto Federal de Telecomunicaciones | critical
+  2015 | 48.7M | SB | Servicio administrado para la continuidad operativa de  | Instituto Federal de Telecomunicaciones | high
+  2014 | 28.0M | SB | EQUIPOS Y APARATOS DE COMUNICACIONES Y TELECOMUNICACION | CENTRO DE INVESTIGACIÓN Y SEGURIDAD NACI | medium
+  2013 | 14.8M | CP | BIENES INFORMÁTICOS, CÁMARAS FOTOGRÁFICAS Y DE VIDEO Y  | CENTRO DE INVESTIGACIÓN Y SEGURIDAD NACI | medium
+  2014 | 3.7M | SB | SUMINISTRO DE CONMUTADOR IP Y TELEFONOS | Centro de Investigación Científica y de  | medium
+Institutions:
+  CENTRO DE INVESTIGACIÓN Y SEGURIDAD NACIONAL: 6c, 220.8M
+  Instituto Federal de Telecomunicaciones: 2c, 164.4M
+  Centro de Investigación Científica y de Educación Super: 1c, 3.7M
+  SECRETARÍA DE LA DEFENSA NACIONAL: 1c, 2.0M
+  BANCO NACIONAL DE OBRAS Y SERVICIOS PÚBLICOS, S.N.C.: 1c, 0.2M
+
+=== VID 813: SEPSA, S.A. DE C.V. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.657 | Pattern: None | Sector: agricultura
+Value: 901M MXN | AvgRisk: 0.220 | DA: 52% | SB: 40% | 111c | 24yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (20%) | Years: 2002-2025
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **SEPSA, S.A. DE C.V.** (RFC: No registrado) opera en el sector **agricultura** con 111 contratos por un valor total de **$901,422,763 MXN**. Puntuación IPS: **0.657** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | SEPSA, S.A. DE C.V. |
+| RFC | No registrado |
+| Sector principal
+Top contracts:
+  2021 | 202.0M | DA | Servicio de Traslado de Valores. | BANCO NACIONAL DEL EJÉRCITO, FUERZA AÉRE | medium
+  2017 | 85.4M | SB | contratación de los servicios de traslado de valores | BANCO NACIONAL DEL EJÉRCITO, FUERZA AÉRE | medium
+  2016 | 55.0M | SB | Contratación de Servicio de Traslado de Valores | BANCO NACIONAL DEL EJÉRCITO, FUERZA AÉRE | medium
+  2007 | 44.1M | CP | Servicio de Traslado de Valores | SISTEMA INTEGRAL DE TIENDAS Y FARMACIAS  | medium
+  2012 | 40.0M | CP | TRASLADO DE VALORES | BANCO NACIONAL DEL EJÉRCITO, FUERZA AÉRE | medium
+  2010 | 40.0M | SB | CONTRATACION DE LOS SERVICIOS DE TRASLADO DE VALORES, A | BANCO NACIONAL DEL EJÉRCITO, FUERZA AÉRE | medium
+Institutions:
+  BANCO NACIONAL DEL EJÉRCITO, FUERZA AÉREA Y ARMADA, S.N: 17c, 628.1M
+  SISTEMA INTEGRAL DE TIENDAS Y FARMACIAS DEL ISSSTE: 7c, 186.2M
+  CAMINOS Y PUENTES FEDERALES DE INGRESOS Y SERVICIOS CON: 19c, 58.5M
+  INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIALES DE LOS TRAB: 5c, 17.4M
+  LICONSA, S.A. DE C.V.: 22c, 3.5M
+
+=== VID 49253: SEGUROS SURA SA DE CV ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.657 | Pattern: None | Sector: salud
+Value: 1270M MXN | AvgRisk: 0.296 | DA: 43% | SB: 34% | 313c | 15yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (4%) | Years: 2010-2025
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **SEGUROS SURA SA DE CV** (RFC: No registrado) opera en el sector **salud** con 313 contratos por un valor total de **$1,268,655,760 MXN**. Puntuación IPS: **0.657** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | SEGUROS SURA SA DE CV |
+| RFC | No registrado |
+| Sector principal
+Top contracts:
+  2019 | 104.2M | DA | CONTRATO PARA SERVICIO DEL PROGRAMA DE ASEGURAMIENTO SI | COMISIÓN NACIONAL FORESTAL | critical
+  2020 | 92.9M | CP | ASEGURAMIENTO DE LOS BIENES PATRIMONIALES DE DICONSA S. | Diconsa, S.A. de C.V. | high
+  2024 | 78.9M | SB | PROGRAMA INTEGRAL DE SEGUROS DEL TREN INTERURBANO MÉXIC | BANCO NACIONAL DE OBRAS Y SERVICIOS PÚBL | critical
+  2017 | 68.0M | DA | PROGRAMA DE SEGUROS DE DAÑOS PARA LOS BIENES PATRIMONIA | Diconsa, S.A. de C.V. | medium
+  2021 | 55.2M | SB | Contratación para la prestación del servicio para la em | INSTITUTO DE SEGURIDAD SOCIAL PARA LAS F | medium
+  2015 | 48.5M | CP | CONTRATO PARA EL SERVICIO DEL PROGRAMA DE ASEGURAMIENTO | COMISIÓN NACIONAL FORESTAL | critical
+Institutions:
+  COMISIÓN NACIONAL FORESTAL: 5c, 190.6M
+  Diconsa, S.A. de C.V.: 3c, 165.8M
+  LICONSA, S.A. DE C.V.: 13c, 122.9M
+  BANCO NACIONAL DE OBRAS Y SERVICIOS PÚBLICOS, S.N.C.: 4c, 85.9M
+  INSTITUTO DE SEGURIDAD SOCIAL PARA LAS FUERZAS ARMADAS : 2c, 74.1M
+
+=== VID 8127: AEROSERVICIOS ESPECIALIZADOS S.A. DE C.V. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.657 | Pattern: None | Sector: energia
+Value: 3245M MXN | AvgRisk: 0.231 | DA: 8% | SB: 17% | 12c | 14yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (33%) | Years: 2002-2015
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **AEROSERVICIOS ESPECIALIZADOS S.A. DE C.V.** (RFC: No registrado) opera en el sector **energia** con 13 contratos por un valor total de **$4,120,714,659 MXN**. Puntuación IPS: **0.658** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | AEROSERVICIOS ESPECIALIZADOS S.A. DE C.V. |
+|
+Top contracts:
+  2008 | 1064.3M | SB | Transporte Aereo de Personal y/o Carga con Helicopteros | PEMEX EXPLORACIÓN Y PRODUCCIÓN | medium
+  2003 | 878.7M | CP | "Transporte Aéreo de personal y/o carga con helicóptero | PEMEX EXPLORACIÓN Y PRODUCCIÓN | medium
+  2003 | 878.7M | CP | "Transporte Aéreo de personal y/o carga con helicóptero | PEMEX EXPLORACIÓN Y PRODUCCIÓN | medium
+  2002 | 223.8M | CP | SERVICIO DE "TRANSPORTE AEREO DE PERSONAL Y/O CARGA CON | PEMEX EXPLORACIÓN Y PRODUCCIÓN | medium
+  2010 | 146.0M | CP | SERVICIO DE ARRENDAMIENTO DE HELICOPTEROS | COMISIÓN FEDERAL DE ELECTRICIDAD | medium
+  2015 | 28.0M | CP | Servicio de Transportación Aérea de Personal Carga Inte | COMISIÓN FEDERAL DE ELECTRICIDAD | medium
+Institutions:
+  PEMEX EXPLORACIÓN Y PRODUCCIÓN: 4c, 3045.6M
+  COMISIÓN FEDERAL DE ELECTRICIDAD: 3c, 175.1M
+  NL-Secretaría de Administración: 1c, 8.2M
+  OFICIALÍA MAYOR DEL GOBIERNO DEL ESTADO DE NUEVO LEÓN: 2c, 7.0M
+  SECRETARÍA DE FINANZAS Y TESORERÍA GENERAL DEL ESTADO D: 1c, 5.9M
+
+=== VID 190895: SERVICIOS INTEGRALES DE SALUD NOVA SA DE CV ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.657 | Pattern: None | Sector: salud
+Value: 533M MXN | AvgRisk: 0.345 | DA: 58% | SB: 26% | 19c | 7yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (16%) | Years: 2016-2022
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **SERVICIOS INTEGRALES DE SALUD NOVA SA DE CV** (RFC: No registrado) opera en el sector **salud** con 19 contratos por un valor total de **$533,312,725 MXN**. Puntuación IPS: **0.657** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | SERVICIOS INTEGRALES DE SALUD NOVA SA DE CV |
+|
+Top contracts:
+  2021 | 178.0M | CP | Contratación de los servicios del Programa de Asegurami | Fiscalía General de la República | medium
+  2022 | 155.2M | CP | PRESTACIÓN DE LOS SERVICIOS DEL PROGRAMA DE ASEGURAMIEN | Fiscalía General de la República | high
+  2017 | 60.0M | SB | Seguro de Personas | SERVICIO GEOLÓGICO MEXICANO | critical
+  2021 | 58.9M | SB | Servicio relativo al Seguro Colectivo de Gastos Médicos | Prevención y Readaptación Social | medium
+  2018 | 31.5M | DA | SERVICIO DE ASEGURAMIENTO DE GASTOS MÉDICOS MAYORES CON | COMISIÓN NACIONAL DE CULTURA FÍSICA Y DE | medium
+  2016 | 21.8M | DA | PÓLIZA DE GASTOS MÉDICOS MAYORES Y PÓLIZA DE  SEGURO DE | SERVICIO GEOLÓGICO MEXICANO | medium
+Institutions:
+  Fiscalía General de la República: 2c, 333.2M
+  SERVICIO GEOLÓGICO MEXICANO: 2c, 81.8M
+  Prevención y Readaptación Social: 1c, 58.9M
+  COMISIÓN NACIONAL DE CULTURA FÍSICA Y DEPORTE: 1c, 31.5M
+  COLEGIO NACIONAL DE EDUCACIÓN PROFESIONAL TÉCNICA: 1c, 12.1M
+
+=== VID 251825: DSTI MEXICO SA DE CV ===
+RFC: DME181029QW6 | Individual: 0 | EFOS_RFC: None
+IPS: 0.657 | Pattern: None | Sector: hacienda
+Value: 346M MXN | AvgRisk: 0.309 | DA: 32% | SB: 18% | 22c | 7yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (14%) | Years: 2019-2025
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **DSTI MEXICO SA DE CV** (RFC: No registrado) opera en el sector **hacienda** con 22 contratos por un valor total de **$345,625,344 MXN**. Puntuación IPS: **0.657** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | DSTI MEXICO SA DE CV |
+| RFC | No registrado |
+| Sector principal |
+Top contracts:
+  2021 | 218.7M | CP | SERVICIO DE ARRENDAMIENTO DE EQUIPO DE CÓMPUTO PERSONAL | SECRETARÍA DE EDUCACIÓN PÚBLICA | critical
+  2024 | 24.9M | DA | SERVICIO DE ARRENDAMIENTO DE EQUIPO DE CÓMPUTO PERSONAL | SECRETARÍA DE EDUCACIÓN PÚBLICA | critical
+  2021 | 23.7M | SB | SERVICIO ADMINISTRADO DE SEGURIDAD DE LA INFORMACIÓN Y  | HOSPITAL REGIONAL DE ALTA ESPECIALIDAD D | medium
+  2021 | 22.2M | SB | Arrendamiento de Equipo de Cómputo Personal y Periféric | COMISIÓN NACIONAL PARA LA PROTECCIÓN Y D | medium
+  2021 | 16.3M | CP | Arrendamiento de Equipo de Cómputo Personal y Periféric | Instituto Nacional de Neurología y Neuro | medium
+  2021 | 8.8M | CP | ARRENDAMIENTO DE EQUIPO DE CÓMPUTO PERSONAL Y PERIFÉRIC | SECRETARÍA DE MEDIO AMBIENTE Y RECURSOS  | medium
+Institutions:
+  SECRETARÍA DE EDUCACIÓN PÚBLICA: 2c, 243.6M
+  COMISIÓN NACIONAL PARA LA PROTECCIÓN Y DEFENSA DE LOS U: 3c, 31.5M
+  HOSPITAL REGIONAL DE ALTA ESPECIALIDAD DEL BAJÍO: 1c, 23.7M
+  Instituto Nacional de Neurología y Neurocirugía Manuel : 1c, 16.3M
+  SECRETARÍA DE MEDIO AMBIENTE Y RECURSOS NATURALES: 1c, 8.8M
+
+=== VID 198361: LORE SOLUCIONES INTEGRALES EMPRESARIALES DE SINALOA, S.C. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.657 | Pattern: P6 | Sector: agricultura
+Value: 328M MXN | AvgRisk: 0.289 | DA: 95% | SB: 5% | 38c | 4yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (84%) | Years: 2017-2020
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **LORE SOLUCIONES INTEGRALES EMPRESARIALES DE SINALOA, S.C.** (RFC: No registrado) opera en el sector **agricultura** con 41 contratos por un valor total de **$328,074,798 MXN**. Puntuación IPS: **0.657** (Tier 2). Patrón detectado: **Captura institucional** (confianza 60%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | LORE SOLUCIONES INT
+Top contracts:
+  2018 | 203.3M | DA | PREPA EN LINEA | Centro de Investigación y de Estudios Av | critical
+  2018 | 79.6M | SB | SERVICIOS DE ASESORÍA TÉCNICO PERIODO DEL 25 DE FEBRERO | COMISIÓN NACIONAL DEL AGUA | high
+  2018 | 12.0M | DA | SERVICIO DE OUTSORCING | Centro de Investigación y de Estudios Av | critical
+  2018 | 11.7M | DA | SERVICIOS PROFESIONALES | Centro de Investigación y de Estudios Av | critical
+  2018 | 11.7M | DA | CONTRATACIÓN DE OUTSORCING | Centro de Investigación y de Estudios Av | critical
+  2017 | 4.4M | SB | SERVICIOS DE APOYO TÉCNICO, DE CAMPO Y ADMINISTRATIVO E | INSTITUTO NACIONAL DE INVESTIGACIONES FO | medium
+Institutions:
+  Centro de Investigación y de Estudios Avanzados del Ins: 5c, 242.6M
+  COMISIÓN NACIONAL DEL AGUA: 1c, 79.6M
+  INSTITUTO NACIONAL DE INVESTIGACIONES FORESTALES, AGRÍC: 32c, 5.7M
+

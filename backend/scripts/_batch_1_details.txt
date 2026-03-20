@@ -1,0 +1,432 @@
+=== VID 13949: PRODUCTOS SEREL S.A. DE C.V. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.665 | Pattern: None | Sector: salud
+Value: 4798M MXN | AvgRisk: 0.313 | DA: 34% | SB: 32% | 269c | 23yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (30%) | Years: 2003-2025
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **PRODUCTOS SEREL S.A. DE C.V.** (RFC: No registrado) opera en el sector **salud** con 269 contratos por un valor total de **$4,797,741,123 MXN**. Puntuación IPS: **0.665** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | PRODUCTOS SEREL S.A. DE C.V. |
+| RFC | No registrado |
+| Se
+Top contracts:
+  2024 | 311.4M | DA | SERVICIO INTEGRAL DE ALIMENTOS PARA UNIDADES MÉDICAS | INSTITUTO DE SALUD DEL ESTADO DE MÉXICO | critical
+  2025 | 159.3M | DA | SERVICIO DE SUMINISTRO DE VÍVERES PARA LOS HOSPITALES Y | SERVICIOS DE SALUD DEL INSTITUTO MEXICAN | medium
+  2015 | 130.1M | SB | Adquisición de Despensas y otros productos alimenticios | DGO-Sistema Estatal para el Desarrollo I | critical
+  2024 | 129.3M | CP | SERVICIO DE DIETAS (COMEDOR) PARA EL EJERCICIO FISCAL 2 | COMISIÓN NACIONAL DE SALUD MENTAL Y ADIC | critical
+  2025 | 127.4M | CP | SERVICIO DE SUMINISTRO DE VÍVERES PARA LOS HOSP. Y/O UN | SERVICIOS DE SALUD DEL INSTITUTO MEXICAN | medium
+  2016 | 123.7M | SB | SERVICIO DE ALIMENTACION PARA DEPORTISTAS, ENTRENADORES | COMISIÓN NACIONAL DE CULTURA FÍSICA Y DE | medium
+Institutions:
+  SERVICIOS DE SALUD DEL INSTITUTO MEXICANO DEL SEGURO SO: 7c, 528.1M
+  INSTITUTO MEXICANO DEL SEGURO SOCIAL: 80c, 408.1M
+  HOSPITAL JUÁREZ DE MÉXICO: 10c, 386.4M
+  COMISIÓN NACIONAL DE CULTURA FÍSICA Y DEPORTE: 11c, 352.8M
+  INSTITUTO DE SALUD DEL ESTADO DE MÉXICO: 1c, 311.4M
+
+=== VID 43890: AXA SEGUROS ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.664 | Pattern: None | Sector: educacion
+Value: 3724M MXN | AvgRisk: 0.331 | DA: 32% | SB: 43% | 379c | 16yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (7%) | Years: 2010-2025
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **AXA SEGUROS** (RFC: No registrado) opera en el sector **educacion** con 381 contratos por un valor total de **$3,714,001,983 MXN**. Puntuación IPS: **0.664** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | AXA SEGUROS |
+| RFC | No registrado |
+| Sector principal | educacion |
+|
+Top contracts:
+  2018 | 556.6M | SB | Contratación del servicio de aseguramiento del usuario  | CAMINOS Y PUENTES FEDERALES DE INGRESOS  | medium
+  2019 | 404.0M | SB | Contratación del servicio de aseguramiento del usuario  | CAMINOS Y PUENTES FEDERALES DE INGRESOS  | medium
+  2017 | 351.6M | CP | CONTRATO NO. C119 LA-926011996-E10-2017 | SON-Universidad de Sonora | medium
+  2014 | 224.0M | DA | REQ. ADMO0001OR ASEGURAMIENTO DE BIENES PATRIMONIALES. | Secretaría de Marina | medium
+  2010 | 215.0M | DA | REQ. 5574 Seguro de bienes patrimoniales | Secretaría de Marina | medium
+  2016 | 202.6M | SB | LPN CONSOLIDADA ELECT SERVICIO DE ASEGURAMIENTO DE LOS  | FONDO NACIONAL DE FOMENTO AL TURISMO | medium
+Institutions:
+  CAMINOS Y PUENTES FEDERALES DE INGRESOS Y SERVICIOS CON: 25c, 1260.8M
+  Secretaría de Marina: 2c, 439.0M
+  SON-Universidad de Sonora: 1c, 351.6M
+  FONDO NACIONAL DE FOMENTO AL TURISMO: 2c, 343.5M
+  NL-Servicios de Agua y Drenaje de Monterrey, I.P.D.: 11c, 102.4M
+
+=== VID 11799: ACCESORIOS Y SUMINISTROS INFORMATICOS, S.C. DE P. DE R.L. DE C.V. ===
+RFC: None | Individual: 1 | EFOS_RFC: None
+IPS: 0.663 | Pattern: P3 | Sector: salud
+Value: 2792M MXN | AvgRisk: 0.327 | DA: 0% | SB: 6% | 35c | 4yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (20%) | Years: 2003-2006
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **ACCESORIOS Y SUMINISTROS INFORMATICOS, S.C. DE P. DE R.L. DE C.V.** (RFC: No registrado) opera en el sector **salud** con 36 contratos por un valor total de **$2,791,701,688 MXN**. Puntuación IPS: **0.663** (Tier 2). Patrón detectado: **Intermediario de paso único** (confianza 81%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | ACCESORIO
+Top contracts:
+  2005 | 2757.6M | CP | SERVICIO PARA PONER A DISPOSICION DE ESTA SECRETARIA, L | SECRETARÍA DE EDUCACIÓN PÚBLICA | critical
+  2006 | 6.3M | CP | ADQUISICION DE CONSUMIBLES PARA EQUIPO DE COMPUTO | PROCURADURÍA GENERAL DE LA REPÚBLICA | medium
+  2005 | 5.2M | CP | Adquisiciýn de Equipo de Computo | CONSEJO NACIONAL DE FOMENTO EDUCATIVO | critical
+  2006 | 3.9M | CP | ADQUISICIýN DE BIENES INFORMýTICOS | INSTITUTO MEXICANO DE LA PROPIEDAD INDUS | medium
+  2003 | 3.7M | CP | DIVERSOS BIENES INFORMATICOS | SECRETARÍA DE EDUCACIÓN PÚBLICA | medium
+  2006 | 2.7M | CP | Adquisiciýn de Bienes Informaticos | TELECOMUNICACIONES DE MÉXICO | medium
+Institutions:
+  SECRETARÍA DE EDUCACIÓN PÚBLICA: 2c, 2761.3M
+  PROCURADURÍA GENERAL DE LA REPÚBLICA: 2c, 7.7M
+  CONSEJO NACIONAL DE FOMENTO EDUCATIVO: 1c, 5.2M
+  TELECOMUNICACIONES DE MÉXICO: 4c, 5.0M
+  INSTITUTO MEXICANO DE LA PROPIEDAD INDUSTRIAL: 2c, 4.1M
+
+=== VID 31833: IMPRESORES EN OFFSET Y SERIGRAFIA SC DE RL DE CV ===
+RFC: None | Individual: 1 | EFOS_RFC: None
+IPS: 0.662 | Pattern: P1 | Sector: salud
+Value: 2799M MXN | AvgRisk: 0.298 | DA: 26% | SB: 24% | 108c | 19yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (27%) | Years: 2007-2025
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **IMPRESORES EN OFFSET Y SERIGRAFIA SC DE RL DE CV** (RFC: No registrado) opera en el sector **salud** con 108 contratos por un valor total de **$2,798,805,687 MXN**. Puntuación IPS: **0.662** (Tier 2). Patrón detectado: **Monopolio concentrado** (confianza 50%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | IMPRESORES EN OFFSET Y SERIGRAF
+Top contracts:
+  2022 | 496.4M | SB | Servicio de Impresión para la Promoción y Operación de  | Secretaria de Bienestar | medium
+  2025 | 429.5M | SB | SERVICIO DE IMPRESIÓN PARA LA PROMOCIÓN Y OPERACIÓN DE  | Secretaria de Bienestar | critical
+  2023 | 417.3M | SB | SERVICIO DE IMPRESIÓN PARA LA PROMOCIÓN Y OPERACIÓN DE  | Secretaria de Bienestar | critical
+  2021 | 416.1M | SB | “Servicio de impresión para la promoción y operación de | Secretaria de Bienestar | medium
+  2020 | 381.6M | SB | SERVICIO DE IMPRESIÓN PARA LA PROMOCIÓN Y OPERACIÓN DE  | Secretaria de Bienestar | medium
+  2024 | 170.6M | SB | SERVICIO DE IMPRESIÓN PARA LA PROMOCIÓN Y OPERACIÓN DE  | Secretaria de Bienestar | critical
+Institutions:
+  Secretaria de Bienestar: 10c, 2477.6M
+  INSTITUTO MEXICANO DEL SEGURO SOCIAL: 29c, 184.7M
+  Impresora y Encuadernadora Progreso, S.A. de C.V.: 9c, 46.9M
+  FONATUR Tren Maya, S.A. de C.V.: 3c, 35.5M
+  Seguridad Alimentaria Mexicana: 1c, 30.0M
+
+=== VID 12412: IMAGEN DE INMUEBLES S.A. DE C.V. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.662 | Pattern: None | Sector: energia
+Value: 1916M MXN | AvgRisk: 0.306 | DA: 36% | SB: 44% | 73c | 17yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (22%) | Years: 2003-2019
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **IMAGEN DE INMUEBLES S.A. DE C.V.** (RFC: No registrado) opera en el sector **energia** con 74 contratos por un valor total de **$1,915,758,317 MXN**. Puntuación IPS: **0.662** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | IMAGEN DE INMUEBLES S.A. DE C.V. |
+| RFC | No registra
+Top contracts:
+  2016 | 779.0M | SB | SERVICIO DE LIMPIEZA | INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIA | critical
+  2015 | 671.5M | SB | SERVICIO DE LIMPIEZA | INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIA | critical
+  2016 | 99.0M | DA | Servicio integral de aseo y limpieza en los inmuebles q | SECRETARÍA DE RELACIONES EXTERIORES | medium
+  2018 | 51.5M | DA | SERVICIO INTEGRAL DE LIMPIEZA | Instituto Nacional de Perinatología Isid | critical
+  2007 | 43.7M | SB | "Limpieza de Edificios y ýreas Comunes" | SECRETARÍA DE COMUNICACIONES Y TRANSPORT | medium
+  2005 | 39.3M | SB | "Limpieza de Edificios y ýreas comunes" | SECRETARÍA DE COMUNICACIONES Y TRANSPORT | medium
+Institutions:
+  INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIALES DE LOS TRAB: 3c, 1463.9M
+  SECRETARÍA DE COMUNICACIONES Y TRANSPORTES: 4c, 131.7M
+  SECRETARÍA DE RELACIONES EXTERIORES: 1c, 99.0M
+  Instituto Nacional de Perinatología Isidro Espinosa de : 2c, 51.6M
+  COMISIÓN NACIONAL BANCARIA Y DE VALORES: 3c, 26.3M
+
+=== VID 13010: CONSTRUCCIONES Y SERVICIOS DEL NORESTE, S.A. DE C.V. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.662 | Pattern: None | Sector: infraestructura
+Value: 1714M MXN | AvgRisk: 0.307 | DA: 10% | SB: 90% | 30c | 22yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (17%) | Years: 2003-2024
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **CONSTRUCCIONES Y SERVICIOS DEL NORESTE, S.A. DE C.V.** (RFC: No registrado) opera en el sector **infraestructura** con 30 contratos por un valor total de **$1,713,661,330 MXN**. Puntuación IPS: **0.662** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | CONSTRUCCIONES Y SERVICIOS
+Top contracts:
+  2013 | 852.6M | SB | TERCERA LÍNEA DE CONDUCCIÓN, DE LA TORRE DE OSCILACIÓN  | COMISIÓN NACIONAL DEL AGUA | critical
+  2022 | 311.0M | DA | CONSTRUCCIÓN, EQUIPAMIENTO Y PUESTA EN MARCHA DE LA LÍN | COMISIÓN NACIONAL DEL AGUA | medium
+  2008 | 118.2M | SB | SUMINISTRO E INSTALACION PARA LA INTERCONEXION DE AGUA  | SERVICIOS DE AGUA Y DRENAJE DE MONTERREY | medium
+  2024 | 60.3M | DA | RECONSTRUCCIÓN VIAL E HIDRÁULICA BAJO PUENTE EN AV. CON | SECRETARÍA DE INFRAESTRUCTURA | medium
+  2008 | 44.4M | SB | Construcciýn de Accesos al puente Norte-Sur para el pas | H. AYUNTAMIENTO MUNICIPAL DE GUADALUPE,  | medium
+  2020 | 42.7M | SB | LO-E25 TRABAJOS PREPARATIVOS ENTRE EL ACUEDUCTO DE OBRA | _Gobierno del Estado de Nuevo León | medium
+Institutions:
+  COMISIÓN NACIONAL DEL AGUA: 5c, 1225.7M
+  SERVICIOS DE AGUA Y DRENAJE DE MONTERREY: 3c, 136.2M
+  SECRETARÍA DE INFRAESTRUCTURA: 1c, 60.3M
+  _Gobierno del Estado de Nuevo León: 3c, 57.8M
+  SECRETARÍA DE OBRAS PÚBLICAS DEL ESTADO DE NUEVO LEÓN: 3c, 51.6M
+
+=== VID 4363: POLIETILENOS DEL SUR, SA DE C.V ===
+RFC: None | Individual: 1 | EFOS_RFC: None
+IPS: 0.661 | Pattern: P1 | Sector: salud
+Value: 3730M MXN | AvgRisk: 0.302 | DA: 21% | SB: 8% | 282c | 24yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (21%) | Years: 2002-2025
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **POLIETILENOS DEL SUR, SA DE C.V** (RFC: No registrado) opera en el sector **salud** con 282 contratos por un valor total de **$3,729,773,909 MXN**. Puntuación IPS: **0.661** (Tier 2). Patrón detectado: **Monopolio concentrado** (confianza 50%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | POLIETILENOS DEL SUR, SA DE C.V |
+| RFC | No reg
+Top contracts:
+  2007 | 3373.5M | SB | Bolsas de Polietileno Negra | SECRETARÍA DE DESARROLLO AGROPECUARIO, R | medium
+  2008 | 36.2M | SB | Material de Operaciýn | SERVICIO POSTAL MEXICANO | medium
+  2013 | 23.8M | SB | ADQUISICIÓN DE BOLSA FORESTAL PARA LA PRODUCCIÓN DE ÁRB | COMISIÓN NACIONAL FORESTAL | high
+  2014 | 17.3M | SB | ADQUISICIÓN DE CANASTILLAS DE POLIETILENO DE ALTA DENSI | LICONSA, S.A. DE C.V. | critical
+  2019 | 16.5M | SB | ADQUISICIÓN DE CANASTILLAS DE POLIETILENO DE ALTA DENSI | LICONSA, S.A. DE C.V. | critical
+  2021 | 16.0M | SB | ADQUISICION DE CANASTLLAS DE POLIETILENO DE ALTA DENSID | LICONSA, S.A. DE C.V. | critical
+Institutions:
+  SECRETARÍA DE DESARROLLO AGROPECUARIO, RURAL, FORESTAL : 1c, 3373.5M
+  LICONSA, S.A. DE C.V.: 28c, 146.7M
+  SERVICIO POSTAL MEXICANO: 28c, 95.9M
+  COMISIÓN NACIONAL FORESTAL: 4c, 23.9M
+  Secretaria de Bienestar: 4c, 15.7M
+
+=== VID 31116: SUMINISTROS PROMOCIONES Y SUPERVISION DE OBRAS S.A. DE C.V. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.661 | Pattern: None | Sector: infraestructura
+Value: 1582M MXN | AvgRisk: 0.182 | DA: 24% | SB: 71% | 21c | 19yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (19%) | Years: 2007-2025
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **SUMINISTROS PROMOCIONES Y SUPERVISION DE OBRAS S.A. DE C.V.** (RFC: No registrado) opera en el sector **infraestructura** con 21 contratos por un valor total de **$1,581,804,166 MXN**. Puntuación IPS: **0.661** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | SUMINISTROS PROMOCI
+Top contracts:
+  2024 | 780.3M | DA | CONSTR. Y EQUIPAMIENTO DEL HOSP. GRAL. DE ATENCO DE 60  | SERVICIOS DE SALUD DEL INSTITUTO MEXICAN | high
+  2025 | 602.6M | SB | ANTEPROYECTO Y PROYECTO EJECUTIVO Y OBRAS EXTERIORES CH | INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIA | medium
+  2019 | 50.8M | SB | Construcción de Ptar para una capacidad de 40 LPS media | _Gobierno del Estado de Quintana Roo | medium
+  2025 | 38.0M | DA | CONTINUIDAD DE LOS TRABAJOS DE OBRA (CH33), CONSTITUCIÓ | INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIA | low
+  2010 | 23.8M | SB | Remodelaciýn del Centro de Convenciones y Exposiciones, | INSTITUTO PARA LA CONSTRUCCIÓN Y CONSERV | medium
+  2025 | 16.9M | DA | DESARROLLO DEL ANTEPROYECTO, PROYECTO EJECUTIVO Y OBRA  | INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIA | low
+Institutions:
+  SERVICIOS DE SALUD DEL INSTITUTO MEXICANO DEL SEGURO SO: 2c, 787.6M
+  INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIALES DE LOS TRAB: 4c, 658.2M
+  _Gobierno del Estado de Quintana Roo: 2c, 58.3M
+  INSTITUTO PARA LA CONSTRUCCIÓN Y CONSERVACIÓN DE OBRA P: 1c, 23.8M
+  Administración del Sistema Portuario Nacional Progreso,: 1c, 10.9M
+
+=== VID 19314: PALO FIERRO CONSTRUCCIONES, S.A. DE C.V. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.661 | Pattern: None | Sector: infraestructura
+Value: 1554M MXN | AvgRisk: 0.224 | DA: 0% | SB: 100% | 27c | 6yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (44%) | Years: 2005-2010
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **PALO FIERRO CONSTRUCCIONES, S.A. DE C.V.** (RFC: No registrado) opera en el sector **infraestructura** con 27 contratos por un valor total de **$1,553,846,795 MXN**. Puntuación IPS: **0.661** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | PALO FIERRO CONSTRUCCIONES, S.A. DE C.
+Top contracts:
+  2010 | 1392.6M | SB | Adecuaciýn de Laboratorio de Investigaciýn en Anýlisis  | UNIVERSIDAD DE SONORA | medium
+  2008 | 81.5M | SB | CONSTRUCCION DE MUSEO Y OBRA EXTERIOR, COMPLEJO CULTURA | GOBIERNO DEL ESTADO DE SONORA | medium
+  2006 | 8.5M | SB | CONSTRUCCION DE RECINTO FISCAL PERIMETRO LIBRE, EN EL K | GOBIERNO DEL ESTADO DE SONORA | medium
+  2010 | 6.9M | SB | Construcción de Parque Tecnológico Tx TEC de la Univers | UNIVERSIDAD DE SONORA | medium
+  2006 | 6.2M | SB | REMODELACION DE EDIFICIO COMUNICACION SOCIAL Y SALA DE  | GOBIERNO DEL ESTADO DE SONORA | medium
+  2009 | 5.8M | SB | Construcción de Edificio de Ciencias e Ingenierías, Dep | UNIVERSIDAD DE SONORA | medium
+Institutions:
+  UNIVERSIDAD DE SONORA: 6c, 1416.8M
+  GOBIERNO DEL ESTADO DE SONORA: 12c, 118.8M
+  INSTITUTO SONORENSE DE INFRAESTRUCTURA EDUCATIVA: 5c, 9.4M
+  H. AYUNTAMIENTO MUNICIPAL DE HERMOSILLO SONORA: 4c, 8.8M
+
+=== VID 27544: SERVICIOS INTEGRALES GSM, S DE R. L. DE C.V. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.661 | Pattern: None | Sector: energia
+Value: 5074M MXN | AvgRisk: 0.220 | DA: 0% | SB: 100% | 3c | 11yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (67%) | Years: 2006-2016
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **SERVICIOS INTEGRALES GSM, S DE R. L. DE C.V.** (RFC: No registrado) opera en el sector **energia** con 3 contratos por un valor total de **$5,074,497,323 MXN**. Puntuación IPS: **0.661** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | SERVICIOS INTEGRALES GSM, S DE R. L. DE C.V
+Top contracts:
+  2006 | 4490.4M | SB | TRABAJOS INTEGRADOS DE PERFORACIýN Y TERMINACIýN DE POZ | PEMEX EXPLORACIÓN Y PRODUCCIÓN | medium
+  2016 | 300.0M | SB | Perforación e intervención de pozos en el campo geotérm | COMISIÓN FEDERAL DE ELECTRICIDAD | medium
+  2014 | 284.1M | SB | Perforación e Intervención de Pozos Productores e Inyec | COMISIÓN FEDERAL DE ELECTRICIDAD | medium
+Institutions:
+  PEMEX EXPLORACIÓN Y PRODUCCIÓN: 1c, 4490.4M
+  COMISIÓN FEDERAL DE ELECTRICIDAD: 2c, 584.1M
+
+=== VID 35911: TORDEC S.A. DE C.V. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.661 | Pattern: None | Sector: infraestructura
+Value: 1676M MXN | AvgRisk: 0.263 | DA: 19% | SB: 69% | 26c | 18yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (23%) | Years: 2008-2025
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **TORDEC S.A. DE C.V.** (RFC: No registrado) opera en el sector **infraestructura** con 26 contratos por un valor total de **$1,676,305,292 MXN**. Puntuación IPS: **0.661** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | TORDEC S.A. DE C.V. |
+| RFC | No registrado |
+| Sector prin
+Top contracts:
+  2025 | 724.7M | DA | CONSTRUCCIÓN DE LA LÍNEA DE BOMBEO DEL ACUEDUCTO AGUA P | COMISIÓN NACIONAL DEL AGUA | critical
+  2022 | 245.1M | DA | CONSTRUCCIÓN, EQUIPAMIENTO Y PUESTA EN MARCHA DE LA LÍN | COMISIÓN NACIONAL DEL AGUA | medium
+  2013 | 194.7M | DA | " PROYECTO DE INFRAESTRUCTURA PARA EL FOMENTO INDUSTRIA | PUE-Secretaría De Finanzas y Administrac | medium
+  2024 | 126.0M | SB | DEMOLICIÓN DE EDIFICACIONES | BANCO NACIONAL DE OBRAS Y SERVICIOS PÚBL | medium
+  2022 | 71.6M | CP | CONTRATACIÓN DE LA PRESTACIÓN DE LOS SERVICIOS DE MANTE | _Gobierno del Estado de México | medium
+  2018 | 44.1M | CP | REPARACION Y MANTENIMIENTO DE INMUEBLES | MEX-Servicios Educativos Integrados al E | medium
+Institutions:
+  COMISIÓN NACIONAL DEL AGUA: 2c, 969.8M
+  PUE-Secretaría De Finanzas y Administración: 6c, 212.4M
+  BANCO NACIONAL DE OBRAS Y SERVICIOS PÚBLICOS, S.N.C.: 1c, 126.0M
+  NL-Servicios de Agua y Drenaje de Monterrey, I.P.D.: 4c, 73.9M
+  _Gobierno del Estado de México: 1c, 71.6M
+
+=== VID 12091: SEGUROS INBURSA, S.A. GRUPO FINANCIERO INBURSA ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.661 | Pattern: None | Sector: infraestructura
+Value: 1344M MXN | AvgRisk: 0.237 | DA: 20% | SB: 51% | 76c | 20yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (12%) | Years: 2003-2022
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **SEGUROS INBURSA, S.A. GRUPO FINANCIERO INBURSA** (RFC: No registrado) opera en el sector **infraestructura** con 76 contratos por un valor total de **$1,343,867,481 MXN**. Puntuación IPS: **0.661** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | SEGUROS INBURSA, S.A. GRUPO FINA
+Top contracts:
+  2003 | 632.1M | CP | Contratación del Programa Integral de Aseguramiento de  | COMISIÓN FEDERAL DE ELECTRICIDAD | medium
+  2017 | 238.8M | SB | ASEGURAMIENTO INTEGRAL DE BIENES MUEBLES E INMUEBLES Y  | ADMINISTRACIÓN PORTUARIA INTEGRAL DE COA | medium
+  2016 | 158.7M | SB | SEGURO VIVIENDA | INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIA | medium
+  2007 | 77.0M | CP | PROGRAMA INTEGRAL DE ASEGURAMIENTO 2007-2008. | COMISIÓN FEDERAL DE ELECTRICIDAD | medium
+  2020 | 50.7M | DA | ASEGURAMIENTO INTEGRAL DE BIENES MUEBLES, INMUEBLES Y O | Administración del Sistema Portuario Nac | medium
+  2022 | 32.1M | SB | Contratación de la poliza de seguro de daños de otros r | BANCO NACIONAL DEL EJÉRCITO, FUERZA AÉRE | medium
+Institutions:
+  COMISIÓN FEDERAL DE ELECTRICIDAD: 3c, 716.2M
+  ADMINISTRACIÓN PORTUARIA INTEGRAL DE COATZACOALCOS, S.A: 1c, 238.8M
+  INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIALES DE LOS TRAB: 2c, 163.0M
+  Administración del Sistema Portuario Nacional Manzanill: 1c, 50.7M
+  SERVICIOS A LA NAVEGACIÓN EN EL ESPACIO AÉREO MEXICANO: 7c, 49.1M
+
+=== VID 21091: PROYECTOS Y CONSTRUCCIONES VIRGO S.A. DE C.V. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.661 | Pattern: None | Sector: infraestructura
+Value: 1322M MXN | AvgRisk: 0.209 | DA: 8% | SB: 92% | 51c | 21yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (20%) | Years: 2005-2025
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **PROYECTOS Y CONSTRUCCIONES VIRGO S.A. DE C.V.** (RFC: No registrado) opera en el sector **infraestructura** con 51 contratos por un valor total de **$1,322,388,959 MXN**. Puntuación IPS: **0.661** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | PROYECTOS Y CONSTRUCCIONES VIRGO 
+Top contracts:
+  2022 | 155.3M | SB | Modernizar Camino A. Prieta - Bavispe meta 9.5 kms y 9  | Secretaría de Infraestructura, Comunicac | low
+  2024 | 124.8M | SB | CONSTRUCCIÓN DEL CANAL LATERAL 17+518, DEL KM 14+000 AL | SECRETARIA DE AGRICULTURA, GANADERÍA, RE | medium
+  2022 | 110.5M | DA | ACCESIBILIDAD AL PUERTO, VIALIDADES CONTIGUAS PARA INGR | Secretaría de Marina | low
+  2023 | 102.0M | SB | CONSTRUCCIÓN DEL CANAL PRINCIPAL DE LA AMPLIACIÓN DEL D | SECRETARIA DE AGRICULTURA, GANADERÍA, RE | low
+  2025 | 84.3M | SB | REVESTIMIENTO CON CONCRETO HIDRÁULICO EN 3.21 KM CANAL  | COMISIÓN NACIONAL DEL AGUA | low
+  2016 | 47.2M | SB | reciclado en caliente (un solo paso) tramo: Hillo–Lím.  | SECRETARÍA DE COMUNICACIONES Y TRANSPORT | medium
+Institutions:
+  Secretaría de Infraestructura, Comunicaciones y Transpo: 10c, 304.5M
+  SECRETARIA DE AGRICULTURA, GANADERÍA, RECURSOS HIDRÁULI: 2c, 226.8M
+  SECRETARÍA DE COMUNICACIONES Y TRANSPORTES: 9c, 220.1M
+  SON-Junta de Caminos del Estado de Sonora: 7c, 139.9M
+  Secretaría de Marina: 1c, 110.5M
+
+=== VID 660: VIAJES KOKAI S.A. DE C.V. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.661 | Pattern: None | Sector: hacienda
+Value: 1196M MXN | AvgRisk: 0.275 | DA: 54% | SB: 42% | 204c | 20yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (15%) | Years: 2002-2021
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **VIAJES KOKAI S.A. DE C.V.** (RFC: No registrado) opera en el sector **hacienda** con 206 contratos por un valor total de **$1,199,283,883 MXN**. Puntuación IPS: **0.661** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | VIAJES KOKAI S.A. DE C.V. |
+| RFC | No registrado |
+| Secto
+Top contracts:
+  2015 | 224.3M | DA | RESERVACIÓN Y EXPEDICIÓN DE BOLETOS DE TRANSPORTACIÓN A | COMISIÓN FEDERAL DE ELECTRICIDAD | medium
+  2016 | 95.9M | SB | SERVICIO DE PASAJES AEREOS NACIONALES E INTRNACIONALES | SECRETARÍA DE LA DEFENSA NACIONAL | medium
+  2002 | 45.0M | SB | Servicio de Reservación, Expedición y Envío de Pasajes  | SECRETARÍA DE RELACIONES EXTERIORES | high
+  2005 | 43.5M | SB | CONTRATACIÓN DEL SERVICIO DE PASAJES AÉREOS NACIONALES  | SECRETARÍA DE RELACIONES EXTERIORES | high
+  2007 | 43.5M | SB | contrataciýn del servicio de pasajes aýreos nacionales  | SECRETARÍA DE RELACIONES EXTERIORES | high
+  2013 | 35.5M | DA | SERVICIOS INTEGRALES DE RESERVACIÓN, EXPEDICIÓN Y ENTRE | BANCO NACIONAL DE COMERCIO EXTERIOR, S.N | medium
+Institutions:
+  COMISIÓN FEDERAL DE ELECTRICIDAD: 2c, 227.6M
+  SECRETARÍA DE RELACIONES EXTERIORES: 6c, 202.4M
+  SECRETARÍA DE LA DEFENSA NACIONAL: 3c, 143.8M
+  NACIONAL FINANCIERA, S.N.C.: 17c, 127.7M
+  BANCO NACIONAL DE COMERCIO EXTERIOR, S.N.C.: 7c, 84.8M
+
+=== VID 10852: ASEGURADORA HIDALGO,S.A. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.660 | Pattern: P1 | Sector: trabajo
+Value: 1187M MXN | AvgRisk: 0.291 | DA: 0% | SB: 100% | 1c | 1yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (100%) | Years: 2002-2002
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **ASEGURADORA HIDALGO,S.A.** (RFC: No registrado) opera en el sector **trabajo** con 1 contratos por un valor total de **$1,187,100,000 MXN**. Puntuación IPS: **0.660** (Tier 2). Patrón detectado: **Monopolio concentrado** (confianza 75%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | ASEGURADORA HIDALGO,S.A. |
+| RFC | No registrado |
+| Se
+Top contracts:
+  2002 | 1187.1M | SB | Póliza de accidentes personales | SECRETARÍA DEL TRABAJO Y PREVISIÓN SOCIA | medium
+Institutions:
+  SECRETARÍA DEL TRABAJO Y PREVISIÓN SOCIAL: 1c, 1187.1M
+

@@ -1,0 +1,425 @@
+=== VID 17326: EXCELENCIA EN EVENTOS GASTRONOMICOS, S.A. DE C.V. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.660 | Pattern: P3 | Sector: infraestructura
+Value: 1181M MXN | AvgRisk: 0.204 | DA: 0% | SB: 91% | 11c | 3yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (27%) | Years: 2005-2007
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **EXCELENCIA EN EVENTOS GASTRONOMICOS, S.A. DE C.V.** (RFC: No registrado) opera en el sector **infraestructura** con 11 contratos por un valor total de **$1,180,517,195 MXN**. Puntuación IPS: **0.660** (Tier 2). Patrón detectado: **Intermediario de paso único** (confianza 73%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | EXCELENCIA EN E
+Top contracts:
+  2007 | 923.1M | SB | servicio de limpieza | INSTITUTO NACIONAL DE PERINATOLOGÍA ISID | medium
+  2007 | 93.3M | SB | Servicio de limpieza | AEROPUERTO INTERNACIONAL DE LA CIUDAD DE | medium
+  2007 | 75.9M | SB | Limpieza Integral en Inmuebles | SERVICIO DE ADMINISTRACIÓN TRIBUTARIA | medium
+  2006 | 43.3M | SB | Servicio de limpieza partida uno | AEROPUERTO INTERNACIONAL DE LA CIUDAD DE | medium
+  2007 | 12.5M | SB | Servicio de Limpieza en los diferentes centros de traba | INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIA | medium
+  2006 | 11.5M | SB | Servicio de Limpieza en los diferentes centros de traba | INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIA | medium
+Institutions:
+  INSTITUTO NACIONAL DE PERINATOLOGÍA ISIDRO ESPINOSA DE : 1c, 923.1M
+  AEROPUERTO INTERNACIONAL DE LA CIUDAD DE MÉXICO S.A. DE: 3c, 142.2M
+  SERVICIO DE ADMINISTRACIÓN TRIBUTARIA: 1c, 75.9M
+  INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIALES DE LOS TRAB: 2c, 24.0M
+  CONSEJO NACIONAL PARA LA CULTURA Y LAS ARTES: 1c, 8.7M
+
+=== VID 69896: DESARROLLOS DE TI ===
+RFC: None | Individual: 1 | EFOS_RFC: None
+IPS: 0.660 | Pattern: None | Sector: gobernacion
+Value: 916M MXN | AvgRisk: 0.206 | DA: 8% | SB: 24% | 49c | 15yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (31%) | Years: 2010-2025
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **DESARROLLOS DE TI** (RFC: No registrado) opera en el sector **gobernacion** con 49 contratos por un valor total de **$916,336,219 MXN**. Puntuación IPS: **0.660** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | DESARROLLOS DE TI |
+| RFC | No registrado |
+| Sector principal | go
+Top contracts:
+  2024 | 735.1M | CP | PROGRAMA NACIONAL DE ADQUISICIÓN DE EQUIPO DE CÓMPUTO ( | INSTITUTO MEXICANO DEL SEGURO SOCIAL | critical
+  2014 | 82.8M | SB | Adquisición, instalación y puesta en operación de equip | CAMINOS Y PUENTES FEDERALES DE INGRESOS  | medium
+  2010 | 37.2M | CP | IA03890Y999-N6-2011-B DTI | CIATEQ, A.C. Centro de Tecnología Avanza | medium
+  2015 | 22.5M | SB | Servicio integral para el apoyo logístico e informático | INSTITUTO NACIONAL PARA LA EVALUACIÓN DE | high
+  2022 | 5.7M | CP | Inv a c menos 3 - Suministro de Equipos de Tecnolog. de | INSTITUTO MEXICANO DEL SEGURO SOCIAL | low
+  2015 | 5.6M | SB | Adquisición de ups 125 kva para Caminos y Puentes Feder | CAMINOS Y PUENTES FEDERALES DE INGRESOS  | medium
+Institutions:
+  INSTITUTO MEXICANO DEL SEGURO SOCIAL: 3c, 745.4M
+  CAMINOS Y PUENTES FEDERALES DE INGRESOS Y SERVICIOS CON: 2c, 88.4M
+  CIATEQ, A.C. Centro de Tecnología Avanzada: 1c, 37.2M
+  INSTITUTO NACIONAL PARA LA EVALUACIÓN DE LA EDUCACIÓN: 1c, 22.5M
+  Fiscalía General de la República: 3c, 5.2M
+
+=== VID 1320: PROFESIONALES EN MANTENIMIENTO Y LIMPIEZA S.A. DE C.V. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.660 | Pattern: None | Sector: gobernacion
+Value: 1989M MXN | AvgRisk: 0.260 | DA: 24% | SB: 35% | 272c | 24yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (24%) | Years: 2002-2025
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **PROFESIONALES EN MANTENIMIENTO Y LIMPIEZA S.A. DE C.V.** (RFC: No registrado) opera en el sector **gobernacion** con 277 contratos por un valor total de **$1,990,180,061 MXN**. Puntuación IPS: **0.660** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | PROFESIONALES EN MANTENIMIE
+Top contracts:
+  2025 | 859.9M | CP | SERVICIO INTEGRAL DE LIMPIEZA EN INT Y EXT PARA HOSPITA | SERVICIOS DE SALUD DEL INSTITUTO MEXICAN | high
+  2025 | 215.9M | CP | 40004001-026-24 | SECRETARÍA DE FINANZAS Y ADMINISTRACIÓN | medium
+  2025 | 166.1M | DA | SERVICIO INTEGRAL DE LIMPIEZA EN INTERIORES Y EXTERIORE | SERVICIOS DE SALUD DEL INSTITUTO MEXICAN | medium
+  2024 | 146.3M | CP | 40004001-003-24 | SECRETARÍA DE FINANZAS Y ADMINISTRACIÓN | critical
+  2014 | 48.8M | CP | SERVICIOS DE LIMPIEZA EN DIVERSOS INMUEBLES DEL D.F., Á | INSTITUTO NACIONAL DE ANTROPOLOGÍA E HIS | medium
+  2018 | 27.1M | CP | SERVICIOS DE LIMPIEZA EN INMUEBLES DEL INSTITUTO NACION | INSTITUTO NACIONAL DE ANTROPOLOGÍA E HIS | medium
+Institutions:
+  SERVICIOS DE SALUD DEL INSTITUTO MEXICANO DEL SEGURO SO: 2c, 1026.0M
+  SECRETARÍA DE FINANZAS Y ADMINISTRACIÓN: 2c, 362.2M
+  INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIALES DE LOS TRAB: 23c, 158.3M
+  INSTITUTO NACIONAL DE ANTROPOLOGÍA E HISTORIA: 15c, 106.8M
+  INSTITUTO POLITÉCNICO NACIONAL: 28c, 49.5M
+
+=== VID 117798: HERPAY SA DE CV ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.660 | Pattern: None | Sector: defensa
+Value: 1085M MXN | AvgRisk: 0.351 | DA: 31% | SB: 44% | 16c | 12yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (25%) | Years: 2013-2024
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **HERPAY SA DE CV** (RFC: No registrado) opera en el sector **defensa** con 17 contratos por un valor total de **$1,400,307,917 MXN**. Puntuación IPS: **0.660** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | HERPAY SA DE CV |
+| RFC | No registrado |
+| Sector principal | defensa 
+Top contracts:
+  2021 | 481.1M | CP | Adquisición de Vestuario y Equipo de Campaña para el pe | Guardia Nacional | medium
+  2020 | 315.6M | SB | Adquisicion de equipamiento y obra publica del cuerpo d | SECRETARÍA DE LA DEFENSA NACIONAL | medium
+  2024 | 97.8M | SB | ADQUISICION DE UNIFORMES DEPORTIVOS | Guardia Nacional | medium
+  2020 | 81.7M | SB | Adquisición de uniforme deportivo para diversos Organis | SECRETARÍA DE LA DEFENSA NACIONAL | medium
+  2019 | 74.9M | SB | Adquisicion de uniforme deportivo para diversos organis | SECRETARÍA DE LA DEFENSA NACIONAL | medium
+  2020 | 7.9M | DA | ADQUISICION DE VESTUARIO Y UNIFORMES PARA PERSONAL OPER | _Gobierno del Estado de Tabasco | medium
+Institutions:
+  Guardia Nacional: 3c, 579.4M
+  SECRETARÍA DE LA DEFENSA NACIONAL: 4c, 474.9M
+  TAB-Secretaría de Seguridad Pública: 2c, 11.8M
+  _Gobierno del Estado de Tabasco: 1c, 7.9M
+  _Gobierno Municipal del Estado de México: 1c, 5.0M
+
+=== VID 19665: GVICOA S.A. DE C.V. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.659 | Pattern: None | Sector: salud
+Value: 1018M MXN | AvgRisk: 0.179 | DA: 53% | SB: 15% | 128c | 21yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (77%) | Years: 2005-2025
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **GVICOA S.A. DE C.V.** (RFC: No registrado) opera en el sector **salud** con 134 contratos por un valor total de **$1,061,148,951 MXN**. Puntuación IPS: **0.660** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | GVICOA S.A. DE C.V. |
+| RFC | No registrado |
+| Sector principal | s
+Top contracts:
+  2015 | 247.9M | DA | SERVICIO DE SUMINISTRO DE DIVERSO MATERIAL CONSUMIBLE E | SECRETARÍA DE LA DEFENSA NACIONAL | medium
+  2024 | 41.4M | CP | SERVICIO MÉDICO INTEGRALPARA CENTROS DE EXCELENCIA OFTA | INSTITUTO MEXICANO DEL SEGURO SOCIAL | medium
+  2024 | 31.4M | CP | SERVICIO MÉDICO INTEGRAL PARACENTROS DE EXCELENCIA OFTA | INSTITUTO MEXICANO DEL SEGURO SOCIAL | medium
+  2024 | 26.8M | CP | SERVICIO MÉDICO INTEGRAL PARACENTROS DE EXCELENCIA OFTA | INSTITUTO MEXICANO DEL SEGURO SOCIAL | medium
+  2019 | 26.1M | CP | Servicio Médico Integral para Centros de Excelencia Oft | INSTITUTO MEXICANO DEL SEGURO SOCIAL | medium
+  2017 | 22.3M | CP | CONTRATACION DEL SERV. DE HEMODIALISIS Y HEMODIAFILTRAC | SECRETARÍA DE LA DEFENSA NACIONAL | medium
+Institutions:
+  INSTITUTO MEXICANO DEL SEGURO SOCIAL: 99c, 655.1M
+  SECRETARÍA DE LA DEFENSA NACIONAL: 3c, 288.0M
+  Hospital General de México "Dr. Eduardo Liceaga": 13c, 51.6M
+  MEX-Secretaría de Salud: 3c, 20.9M
+  INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIALES DE LOS TRAB: 4c, 2.0M
+
+=== VID 46363: Lacandonia Operadora de Viajes S.A. de C.V. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.659 | Pattern: None | Sector: ambiente
+Value: 805M MXN | AvgRisk: 0.257 | DA: 56% | SB: 43% | 61c | 6yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (29%) | Years: 2010-2016
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **Lacandonia Operadora de Viajes S.A. de C.V.** (RFC: No registrado) opera en el sector **ambiente** con 62 contratos por un valor total de **$804,775,465 MXN**. Puntuación IPS: **0.659** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | Lacandonia Operadora de Viajes S.A. de C.V. 
+Top contracts:
+  2014 | 752.6M | SB | Alimentación y Hospedaje en el Estado de Quintana Roo | Q ROO-Servicios Educativos de Quintana R | medium
+  2013 | 12.4M | SB | SERVICIOS DE HOSPEDAJE, ALIMENTOS Y RELACIONADOS XVIII  | COMISIÓN NACIONAL DEL AGUA | medium
+  2015 | 10.0M | SB | SERVICIO DE AGENCIA DE VIAJES PARA PROPORCIONAR LOS SER | INSTITUTO MEXICANO DE TECNOLOGÍA DEL AGU | high
+  2014 | 4.8M | SB | SUMINISTRO DE BOLETOS DE AVION 2014 OCRB | COMISIÓN NACIONAL DEL AGUA | high
+  2015 | 3.5M | SB | SERVICIO DE BOLETOS DE AVIÓN PARA PACIENTES 2015 | INSTITUTO MEXICANO DEL SEGURO SOCIAL | medium
+  2013 | 2.4M | SB | Alimentación y hospedaje en el Estado de Quintana Roo | Q ROO-Servicios Educativos de Quintana R | medium
+Institutions:
+  Q ROO-Servicios Educativos de Quintana Roo: 6c, 758.2M
+  COMISIÓN NACIONAL DEL AGUA: 5c, 17.4M
+  INSTITUTO MEXICANO DEL SEGURO SOCIAL: 17c, 14.2M
+  INSTITUTO MEXICANO DE TECNOLOGÍA DEL AGUA: 14c, 11.6M
+  COMISIÓN FEDERAL DE ELECTRICIDAD: 6c, 1.3M
+
+=== VID 58855: MCKINSEY & COMPANY INC.MEXICO ===
+RFC: None | Individual: 1 | EFOS_RFC: None
+IPS: 0.659 | Pattern: None | Sector: energia
+Value: 816M MXN | AvgRisk: 0.242 | DA: 70% | SB: 30% | 20c | 14yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (30%) | Years: 2010-2024
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **MCKINSEY & COMPANY INC.MEXICO** (RFC: No registrado) opera en el sector **energia** con 20 contratos por un valor total de **$763,733,891 MXN**. Puntuación IPS: **0.659** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | MCKINSEY & COMPANY INC.MEXICO |
+| RFC | No registrado |
+| S
+Top contracts:
+  2012 | 330.7M | DA | Asistencia Técnica Especializada a Pemex Exploración y  | Pemex-Exploración y Producción | medium
+  2016 | 106.9M | DA | SERVICIO PARA LA ELABORACIÓN DE UN DIAGNÓSTICO INTEGRAL | PRONÓSTICOS PARA LA ASISTENCIA PÚBLICA | medium
+  2016 | 95.7M | DA | CONTRATACIÓN CONSOLIDADA DE SERVICIO DE CONSULTORIA PAR | SECRETARÍA DE EDUCACIÓN PÚBLICA | high
+  2015 | 33.6M | SB | Contratación del Estudio “Plan Estratégico para el Desa | SECRETARÍA DE ECONOMÍA | medium
+  2016 | 32.2M | DA | SERVICIO DE CONSULTORÍA PARA LA REVISIÓN DEL PROGRAMA Y | Comisión Nacional de Libros de Texto Gra | high
+  2011 | 31.0M | DA | Asistencia Técnica para asegurar el proceso de document | COMPAÑÍA MEXICANA DE EXPLORACIONES, S.A. | medium
+Institutions:
+  Pemex-Exploración y Producción: 1c, 330.7M
+  SECRETARÍA DE EDUCACIÓN PÚBLICA: 2c, 123.0M
+  PRONÓSTICOS PARA LA ASISTENCIA PÚBLICA: 1c, 106.9M
+  AEROPUERTOS Y SERVICIOS AUXILIARES: 6c, 70.2M
+  COMPAÑÍA MEXICANA DE EXPLORACIONES, S.A. DE C.V.: 3c, 61.0M
+
+=== VID 1742: QUALITAS COMPAÑÍA DE SEGUROS S.A.B. DE C.V. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.659 | Pattern: None | Sector: educacion
+Value: 1100M MXN | AvgRisk: 0.287 | DA: 8% | SB: 44% | 66c | 20yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (6%) | Years: 2002-2021
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **QUALITAS COMPAÑÍA DE SEGUROS S.A.B. DE C.V.** (RFC: No registrado) opera en el sector **educacion** con 66 contratos por un valor total de **$1,099,892,916 MXN**. Puntuación IPS: **0.659** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | QUALITAS COMPAÑÍA DE SEGUROS S.A.B. DE C.
+Top contracts:
+  2007 | 613.0M | CP | contrataciýn del programa de aseguramiento integral de  | CAMINOS Y PUENTES FEDERALES DE INGRESOS  | medium
+  2005 | 92.2M | SB | Contratacion de Servicios | PETRÓLEOS MEXICANOS | medium
+  2007 | 90.8M | SB | Poliza de seguro de equipo automotor | PETRÓLEOS MEXICANOS | medium
+  2006 | 43.0M | CP | contrataciýn del programa integral de aseguramiento de  | CAMINOS Y PUENTES FEDERALES DE INGRESOS  | medium
+  2009 | 23.1M | CP | contrataciýn del seguro del usuario de Caminos y Puente | CAMINOS Y PUENTES FEDERALES DE INGRESOS  | medium
+  2009 | 20.9M | SB | Contratación de Pólizas de Seguros de Vehículos solicit | SECRETARÍA DE ADMINISTRACIÓN DEL ESTADO  | medium
+Institutions:
+  CAMINOS Y PUENTES FEDERALES DE INGRESOS Y SERVICIOS CON: 4c, 689.7M
+  PETRÓLEOS MEXICANOS: 2c, 183.1M
+  SECRETARÍA DE ADMINISTRACIÓN DEL ESTADO DE OAXACA: 4c, 63.4M
+  COMISIÓN FEDERAL DE ELECTRICIDAD: 4c, 37.6M
+  COMISIÓN NACIONAL DEL AGUA: 2c, 22.5M
+
+=== VID 108584: CAMIONES, REPUESTOS Y ACCESORIOS SA DE CV ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.659 | Pattern: None | Sector: defensa
+Value: 758M MXN | AvgRisk: 0.251 | DA: 33% | SB: 24% | 21c | 13yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (33%) | Years: 2013-2025
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **CAMIONES, REPUESTOS Y ACCESORIOS SA DE CV** (RFC: No registrado) opera en el sector **defensa** con 21 contratos por un valor total de **$757,541,884 MXN**. Puntuación IPS: **0.659** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | CAMIONES, REPUESTOS Y ACCESORIOS SA DE CV |
+| R
+Top contracts:
+  2016 | 308.1M | SB | ADQUISICIÓN DE VEHÍCULOS TERRESTRES 2016 PARA DICONSA,  | Diconsa, S.A. de C.V. | critical
+  2020 | 184.7M | SB | L.P. PARA LA ADQUISICIÓN DE CAMIONES 6.5 TONELADAS. | SECRETARÍA DE LA DEFENSA NACIONAL | medium
+  2014 | 81.3M | CP | VEHÍCULOS TERRESTRES PARA DICONSA, S.A. DE C.V. | Diconsa, S.A. de C.V. | medium
+  2014 | 43.8M | CP | GRÚAS DE DOBLE CANASTILLA | COMISIÓN FEDERAL DE ELECTRICIDAD | medium
+  2013 | 38.8M | CP | Adquisición de vehículos terrestres para Diconsa, S.A.  | Diconsa, S.A. de C.V. | medium
+  2019 | 38.2M | CP | VEHICULOS TERRESTRES, AEREOS, MARITIMOS | Secretaría de Marina | medium
+Institutions:
+  Diconsa, S.A. de C.V.: 3c, 428.3M
+  SECRETARÍA DE LA DEFENSA NACIONAL: 7c, 200.8M
+  Secretaría de Marina: 4c, 81.5M
+  COMISIÓN FEDERAL DE ELECTRICIDAD: 1c, 43.8M
+  CDMX-Secretaría del Medio Ambiente: 1c, 1.6M
+
+=== VID 105072: ALMACENADORA KAVE SA DE CV ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.659 | Pattern: None | Sector: energia
+Value: 1189M MXN | AvgRisk: 0.270 | DA: 27% | SB: 65% | 141c | 12yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (32%) | Years: 2013-2024
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **ALMACENADORA KAVE SA DE CV** (RFC: No registrado) opera en el sector **energia** con 141 contratos por un valor total de **$1,188,799,094 MXN**. Puntuación IPS: **0.659** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | ALMACENADORA KAVE SA DE CV |
+| RFC | No registrado |
+| Sect
+Top contracts:
+  2019 | 54.0M | SB | LA-050GYR028-E428-2018 DIESEL | INSTITUTO MEXICANO DEL SEGURO SOCIAL | medium
+  2019 | 50.5M | SB | ADQUISICION DE DIESEL Y GASOLINA | SECRETARÍA DE LA DEFENSA NACIONAL | medium
+  2022 | 44.3M | SB | LA-050GYR028-E748-2021 | INSTITUTO MEXICANO DEL SEGURO SOCIAL | medium
+  2020 | 41.5M | SB | ADQUISICION DE COMBUSTIBLE DIESEL | SECRETARÍA DE LA DEFENSA NACIONAL | medium
+  2022 | 38.9M | SB | Suministro de Combustible para motores diésel de las Pl | COMISIÓN NACIONAL DEL AGUA | medium
+  2021 | 38.7M | SB | LA-050GYR028-E1109-2020 | INSTITUTO MEXICANO DEL SEGURO SOCIAL | medium
+Institutions:
+  INSTITUTO MEXICANO DEL SEGURO SOCIAL: 45c, 518.3M
+  SECRETARÍA DE LA DEFENSA NACIONAL: 11c, 231.9M
+  COMISIÓN NACIONAL DEL AGUA: 6c, 129.3M
+  HOSPITAL INFANTIL DE MÉXICO FEDERICO GÓMEZ: 12c, 83.4M
+  INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIALES DE LOS TRAB: 6c, 40.5M
+
+=== VID 38250: JOBAMEX SEGURIDAD PRIVADA, S.A. DE C.V. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.659 | Pattern: None | Sector: hacienda
+Value: 690M MXN | AvgRisk: 0.331 | DA: 55% | SB: 35% | 51c | 11yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (22%) | Years: 2008-2018
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **JOBAMEX SEGURIDAD PRIVADA, S.A. DE C.V.** (RFC: No registrado) opera en el sector **hacienda** con 52 contratos por un valor total de **$690,746,512 MXN**. Puntuación IPS: **0.659** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | JOBAMEX SEGURIDAD PRIVADA, S.A. DE C.V. |
+| RFC 
+Top contracts:
+  2013 | 659.8M | SB | servicio de vigilancia | INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIA | medium
+  2016 | 6.4M | SB | servicio de vigilancia para los centros de trabajo del  | INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIA | critical
+  2015 | 1.9M | DA | SERVICIO DE VIGILANCIA | INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIA | critical
+  2016 | 1.8M | SB | SERVICIO DE VIGILANCIA | SECRETARÍA DE COMUNICACIONES Y TRANSPORT | medium
+  2009 | 1.7M | SB | Licitaciòn Pùblica Nacional  para la Contratación  del  | INSTITUTO MEXICANO DEL SEGURO SOCIAL | medium
+  2016 | 1.6M | SB | SERVICIO DE VIGILANCIA | SECRETARÍA DE COMUNICACIONES Y TRANSPORT | medium
+Institutions:
+  INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIALES DE LOS TRAB: 8c, 673.1M
+  SECRETARÍA DE COMUNICACIONES Y TRANSPORTES: 5c, 7.6M
+  SERVICIO DE ADMINISTRACIÓN TRIBUTARIA: 11c, 2.9M
+  INSTITUTO MEXICANO DEL SEGURO SOCIAL: 1c, 1.7M
+  COLEGIO SUPERIOR AGROPECUARIO DEL ESTADO DE GUERRERO: 5c, 1.4M
+
+=== VID 157175: SEA DESARROLLO DE INFRAESTRUCTURA SA DE CV ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.659 | Pattern: None | Sector: gobernacion
+Value: 675M MXN | AvgRisk: 0.201 | DA: 26% | SB: 70% | 23c | 11yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (17%) | Years: 2015-2025
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **SEA DESARROLLO DE INFRAESTRUCTURA SA DE CV** (RFC: No registrado) opera en el sector **gobernacion** con 23 contratos por un valor total de **$674,691,459 MXN**. Puntuación IPS: **0.659** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | SEA DESARROLLO DE INFRAESTRUCTURA SA DE CV
+Top contracts:
+  2016 | 302.9M | CP | SEA DESARROLLO DE INFRAESTRUCTURA, S.A. DE C.V. | MEX-Secretaría de Finanzas | medium
+  2017 | 58.0M | DA | AMPLIACIÓN Y REMODELACIÓN DEL SERVICIO DE URGENCIAS EN  | INSTITUTO MEXICANO DEL SEGURO SOCIAL | medium
+  2017 | 55.0M | SB | TERMINACIÓN DE LA SUSTITUCIÓN DE LA CENTRAL DE SERVICIO | INSTITUTO MEXICANO DEL SEGURO SOCIAL | medium
+  2018 | 40.6M | DA | Construcción de drenaje sanitario en varias localidades | HGO-Secretaria de Obras Públicas y Orden | medium
+  2023 | 33.9M | SB | GENERACIÓN ELÉCTRICA SOLAR FOTOVOLTAICA PARA POZOS DE A | RÍO GRANDE | critical
+  2021 | 30.3M | SB | Mantenimiento preventivo, correctivo y mejoras a inmueb | Fiscalía General de la República | medium
+Institutions:
+  MEX-Secretaría de Finanzas: 1c, 302.9M
+  INSTITUTO MEXICANO DEL SEGURO SOCIAL: 3c, 121.7M
+  _Gobierno del Estado de Zacatecas: 3c, 43.7M
+  HGO-Secretaria de Obras Públicas y Ordenamiento Territo: 1c, 40.6M
+  Fiscalía General de la República: 4c, 38.7M
+
+=== VID 52127: CASILDA CONSTRUCCIONES SA DE CV ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.659 | Pattern: None | Sector: salud
+Value: 665M MXN | AvgRisk: 0.185 | DA: 34% | SB: 46% | 35c | 14yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (49%) | Years: 2010-2023
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **CASILDA CONSTRUCCIONES SA DE CV** (RFC: No registrado) opera en el sector **salud** con 35 contratos por un valor total de **$665,225,197 MXN**. Puntuación IPS: **0.659** (Tier 2). Patrón detectado: **No clasificado** (confianza 0%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | CASILDA CONSTRUCCIONES SA DE CV |
+| RFC | No registrado |
+|
+Top contracts:
+  2023 | 475.3M | SB | SUSTITUCIÓN DE HOSPITAL GENERAL DE 120 CAMAS, EN LA LOC | SERVICIOS DE SALUD DEL INSTITUTO MEXICAN | critical
+  2022 | 62.8M | SB | Construcción y Equipamiento del Hospital de la Mujer | _Gobierno del Estado de Nayarit | low
+  2010 | 22.3M | SB | 918004999-002-12 | NAY-Secretaría de Obras Públicas | medium
+  2015 | 20.9M | SB | Construccion de Salas de Oralidad Penal y Mediacion Reg | NAY-Secretaría de Obras Públicas | medium
+  2016 | 13.7M | SB | REHABILITACIÓN Y REMODELACIÓN DE LA EX FABRICA TEXTIL D | NAY-Secretaría de Obras Públicas | medium
+  2013 | 11.6M | SB | AMPLIACIÓN, REMODELACIÓN Y MANTENIMIENTO DE HOSPITAL GE | NAY-Secretaría de Obras Públicas | medium
+Institutions:
+  SERVICIOS DE SALUD DEL INSTITUTO MEXICANO DEL SEGURO SO: 1c, 475.3M
+  NAY-Secretaría de Obras Públicas: 6c, 81.6M
+  _Gobierno del Estado de Nayarit: 2c, 66.9M
+  INSTITUTO MEXICANO DEL SEGURO SOCIAL: 17c, 24.4M
+  Secretaria de Bienestar: 3c, 10.0M
+
+=== VID 166285: "GRUPO DAXME" SA DE CV ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.659 | Pattern: P1 | Sector: trabajo
+Value: 646M MXN | AvgRisk: 0.291 | DA: 0% | SB: 0% | 1c | 1yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (100%) | Years: 2015-2015
+Top contracts:
+  2015 | 645.8M | CP | ADQUISICIÓN, DISTRIBUCIÓN E INSTALACIÓN DE SISTEMAS PAR | Secretaria de Bienestar | medium
+Institutions:
+  Secretaria de Bienestar: 1c, 645.8M
+
+=== VID 124009: BPG INGENIERIA, S.A. DE C.V. ===
+RFC: None | Individual: 0 | EFOS_RFC: None
+IPS: 0.659 | Pattern: P3 | Sector: trabajo
+Value: 647M MXN | AvgRisk: 0.204 | DA: 50% | SB: 0% | 2c | 3yrs
+EFOS: 0 | SFP: 0 | NewVendor: 0
+TopInst: None (50%) | Years: 2013-2015
+Memo: ## RESUMEN EJECUTIVO
+Proveedor **BPG INGENIERIA, S.A. DE C.V.** (RFC: No registrado) opera en el sector **trabajo** con 2 contratos por un valor total de **$646,849,567 MXN**. Puntuación IPS: **0.659** (Tier 2). Patrón detectado: **Intermediario de paso único** (confianza 48%).
+
+
+
+## PERFIL DEL PROVEEDOR
+| Campo | Valor |
+|-------|-------|
+| Nombre | BPG INGENIERIA, S.A. DE C.V. |
+| RFC | No regis
+Top contracts:
+  2015 | 645.8M | CP | ADQUISICIÓN, DISTRIBUCIÓN E INSTALACIÓN DE SISTEMAS DE  | Secretaria de Bienestar | medium
+  2013 | 1.1M | DA | DELIMITACION DE LA ZONA FEDERAL DEL RIO SANABRIA, EN UN | COMISIÓN NACIONAL DEL AGUA | low
+Institutions:
+  Secretaria de Bienestar: 1c, 645.8M
+  COMISIÓN NACIONAL DEL AGUA: 1c, 1.1M
+

@@ -1,0 +1,159 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - link "Skip to main content" [ref=e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - complementary [ref=e5]:
+      - generic [ref=e7]:
+        - img "RUBLI" [ref=e9]
+        - generic [ref=e12]:
+          - generic [ref=e13]:
+            - generic [ref=e14]: RUBLI
+            - generic [ref=e15]: LIVE
+          - generic [ref=e16]: INTEL PLATFORM
+      - navigation "Main navigation" [ref=e20]:
+        - generic [ref=e21]:
+          - generic [ref=e23]: OVERVIEW
+          - generic [ref=e25]:
+            - link "Dashboard" [ref=e26] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e28]
+              - generic [ref=e33]: Dashboard
+            - link "Executive Summary" [ref=e34] [cursor=pointer]:
+              - /url: /executive-summary
+              - img [ref=e36]
+              - generic [ref=e39]: Executive Summary
+            - link "Report Card" [ref=e40] [cursor=pointer]:
+              - /url: /report-card
+              - img [ref=e42]
+              - generic [ref=e46]: Report Card
+        - generic [ref=e47]:
+          - generic [ref=e49]: INVESTIGATION
+          - generic [ref=e51]:
+            - link "Investigation Queue" [ref=e52] [cursor=pointer]:
+              - /url: /aria
+              - img [ref=e54]
+              - generic [ref=e56]: Investigation Queue
+            - link "Cases" [ref=e57] [cursor=pointer]:
+              - /url: /cases
+              - img [ref=e59]
+              - generic [ref=e61]: Cases
+            - link "Workspace" [ref=e62] [cursor=pointer]:
+              - /url: /workspace
+              - img [ref=e64]
+              - generic [ref=e67]: Workspace
+            - link "Investigation" [ref=e68] [cursor=pointer]:
+              - /url: /investigation
+              - img [ref=e70]
+              - generic [ref=e72]: Investigation
+        - generic [ref=e73]:
+          - generic [ref=e75]: ANALYSIS
+          - generic [ref=e77]:
+            - link "By Administration" [ref=e78] [cursor=pointer]:
+              - /url: /administrations
+              - img [ref=e80]
+              - generic [ref=e84]: By Administration
+            - link "Sectors" [ref=e85] [cursor=pointer]:
+              - /url: /sectors
+              - img [ref=e87]
+              - generic [ref=e89]: Sectors
+            - link "Explore" [ref=e90] [cursor=pointer]:
+              - /url: /explore
+              - img [ref=e92]
+              - generic [ref=e95]: Explore
+            - link "Contracts" [ref=e96] [cursor=pointer]:
+              - /url: /contracts
+              - img [ref=e98]
+              - generic [ref=e101]: Contracts
+            - link "Network" [ref=e102] [cursor=pointer]:
+              - /url: /network
+              - img [ref=e104]
+              - generic [ref=e109]: Network
+            - link "Money Flow" [ref=e110] [cursor=pointer]:
+              - /url: /money-flow
+              - img [ref=e112]
+              - generic [ref=e114]: Money Flow
+            - link "Procurement Intelligence" [ref=e115] [cursor=pointer]:
+              - /url: /procurement-intelligence
+              - img [ref=e117]
+              - generic [ref=e119]: Procurement Intelligence
+            - link "Mexico Map" [ref=e120] [cursor=pointer]:
+              - /url: /map
+              - img [ref=e122]
+              - generic [ref=e125]: Mexico Map
+        - generic [ref=e126]:
+          - generic [ref=e128]: PLATFORM
+          - generic [ref=e130]:
+            - link "Methodology" [ref=e131] [cursor=pointer]:
+              - /url: /methodology
+              - img [ref=e133]
+              - generic [ref=e135]: Methodology
+            - link "Limitations" [ref=e136] [cursor=pointer]:
+              - /url: /limitations
+              - img [ref=e138]
+              - generic [ref=e140]: Limitations
+            - link "Model Transparency" [ref=e141] [cursor=pointer]:
+              - /url: /model
+              - img [ref=e143]
+              - generic [ref=e145]: Model Transparency
+            - link "My Notes" [ref=e146] [cursor=pointer]:
+              - /url: /annotations
+              - img [ref=e148]
+              - generic [ref=e151]: My Notes
+            - link "API Explorer" [ref=e152] [cursor=pointer]:
+              - /url: /api-explorer
+              - img [ref=e154]
+              - generic [ref=e158]: API Explorer
+            - link "Settings" [ref=e159] [cursor=pointer]:
+              - /url: /settings
+              - img [ref=e161]
+              - generic [ref=e164]: Settings
+      - generic [ref=e166]:
+        - generic [ref=e169]: 3.1M contracts indexed
+        - generic [ref=e170]:
+          - img [ref=e171]
+          - generic [ref=e174]: v6.1 · AUC 0.849
+      - button "Report an issue" [ref=e176]:
+        - img [ref=e177]
+        - generic [ref=e179]: Report an issue
+      - generic [ref=e182]:
+        - button "ES" [ref=e183]:
+          - img
+          - text: ES
+        - button "Collapse sidebar" [ref=e184]:
+          - img
+    - generic [ref=e185]:
+      - banner [ref=e186]:
+        - generic [ref=e187]:
+          - generic [ref=e188]: Home
+          - generic [ref=e189]: /
+          - generic [ref=e190]: Report-card
+        - generic [ref=e191]:
+          - button "Open search (Ctrl+K)" [ref=e192]:
+            - img [ref=e193]
+            - generic [ref=e196]: Search vendors, cases...
+            - generic [ref=e197]: ⌘K
+          - button "0 high-risk alerts" [ref=e199]:
+            - img
+          - generic [ref=e200]:
+            - img [ref=e201]
+            - generic [ref=e203]: LIVE
+          - button "Switch to light mode" [ref=e205]:
+            - img
+      - generic [ref=e206]:
+        - img [ref=e207]
+        - paragraph [ref=e210]: RUBLI v1.1 — Enhanced presentation layer, in-app issue reporting, and performance improvements.
+        - button "Dismiss banner" [ref=e211]:
+          - img [ref=e212]
+      - main [ref=e215]:
+        - paragraph [ref=e258]: Loading procurement health data...
+      - contentinfo [ref=e238]:
+        - generic [ref=e239]:
+          - generic [ref=e240]: RUBLI // PROCUREMENT INTELLIGENCE
+          - generic [ref=e241]: 3.1M CONTRACTS // 2002-2025
+  - dialog "Entity profile" [ref=e242]:
+    - generic [ref=e243]:
+      - generic [ref=e244]:
+        - img [ref=e245]
+        - generic [ref=e249]: Institution Profile
+      - button "Close profile drawer" [ref=e250]:
+        - img [ref=e251]
