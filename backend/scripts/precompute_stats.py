@@ -783,7 +783,25 @@ def precompute_stats():
             {"label": "31–90 days", "count": int(row["b_31_90"] or 0), "pct": round(int(row["b_31_90"] or 0) / total_d * 100, 2) if total_d else 0},
             {"label": ">90 days", "count": int(row["b_over_90"] or 0), "pct": round(int(row["b_over_90"] or 0) / total_d * 100, 2) if total_d else 0},
         ]
-        stats['publication_delays'] = {"total": total_d, "avg_delay_days": float(row["avg_delay"] or 0), "timely_pct": float(row["timely_pct"] or 0), "distribution": buckets}
+        # by_year breakdown (required by validation check in analysis.py)
+        by_year_rows = cursor.execute("""
+            SELECT contract_year AS year,
+                   COUNT(*) AS total,
+                   ROUND(AVG(publication_delay_days), 1) AS avg_delay
+            FROM contracts
+            WHERE publication_delay_days IS NOT NULL AND publication_delay_days > 0
+              AND contract_year BETWEEN 2010 AND 2025
+            GROUP BY contract_year ORDER BY contract_year
+        """).fetchall()
+        by_year = [{"year": r["year"], "total": int(r["total"] or 0), "avg_delay_days": float(r["avg_delay"] or 0)} for r in by_year_rows]
+        stats['publication_delays'] = {
+            "total_with_delay_data": total_d,  # key expected by validation
+            "total": total_d,
+            "avg_delay_days": float(row["avg_delay"] or 0),
+            "timely_pct": float(row["timely_pct"] or 0),
+            "distribution": buckets,
+            "by_year": by_year,
+        }
         print(f"   Done ({time.time() - start:.1f}s)")
     except Exception as e:
         print(f"   Warning: publication delay stats failed: {e}")
