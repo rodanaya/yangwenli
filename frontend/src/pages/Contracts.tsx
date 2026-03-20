@@ -65,7 +65,6 @@ import { ContractDetailModal } from '@/components/ContractDetailModal'
 import { ContractCompareModal } from '@/components/ContractCompareModal'
 import { ExpandableProvider, ExpandableRow, ExpandChevron } from '@/components/ExpandableRow'
 import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
-import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 
@@ -534,35 +533,36 @@ export function Contracts() {
 
   return (
     <div className="space-y-3">
-      {/* Editorial masthead */}
-      <motion.div className="pb-1" variants={fadeIn} initial="initial" animate="animate">
-        <EditorialHeadline
-          section="BASE DE DATOS"
-          headline="Contratos Federales"
-          subtitle="3,051,294 contratos de compras gubernamentales &middot; 2002–2025"
-        />
+      {/* ── EL REGISTRO NEGRO HEADER ── */}
+      <motion.div className="border-b border-border pb-6 mb-3" variants={fadeIn} initial="initial" animate="animate">
+        <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted mb-2">
+          Registro Nacional de Contratos Federales &middot; 2001–2025
+        </div>
+        <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-4xl font-bold text-text-primary mb-2">
+          El Registro Negro
+        </h1>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-muted">
+          <span><strong className="text-text-primary font-mono">3,049,988</strong> contratos</span>
+          <span><strong className="text-text-primary font-mono">$9.87T</strong> MXN auditados</span>
+          <span><strong className="text-risk-critical font-mono">133,522</strong> en riesgo cr&iacute;tico</span>
+          <span><strong className="text-risk-high font-mono">65.3%</strong> adjudicaci&oacute;n directa</span>
+          <FuentePill source="COMPRANET" count={3049988} countLabel="contratos" verified={true} />
+        </div>
       </motion.div>
 
-      {/* Header */}
+      {/* Subheader: live count + actions */}
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
-            <FileText className="h-4.5 w-4.5 text-accent" />
-            Contracts
-          </h2>
-          <p className="text-xs text-text-muted mt-0.5 flex items-center gap-2" aria-live="polite">
-            <span>
-              {data ? `${formatNumber(data?.pagination?.total ?? 0)} records` : 'Loading...'}
-              {isFetching && !isLoading && (
-                <Loader2 className="inline h-3 w-3 ml-1.5 animate-spin text-accent" />
-              )}
-            </span>
-            <FuentePill source="COMPRANET" count={3051294} countLabel="contratos" verified={true} />
-          </p>
-          <p className="text-xs text-text-muted mt-1">
-            {t('guidance')}
-          </p>
-        </div>
+        <p className="text-xs text-text-muted flex items-center gap-2" aria-live="polite">
+          <FileText className="h-3.5 w-3.5 text-accent" />
+          <span>
+            {data ? `${formatNumber(data?.pagination?.total ?? 0)} resultados` : 'Cargando...'}
+            {isFetching && !isLoading && (
+              <Loader2 className="inline h-3 w-3 ml-1.5 animate-spin text-accent" />
+            )}
+          </span>
+          <span className="text-text-muted/50">&middot;</span>
+          <span>{t('guidance')}</span>
+        </p>
         <div className="flex items-center gap-1.5">
           <Button
             variant="outline"
@@ -641,6 +641,10 @@ export function Contracts() {
       </div>
 
       {/* Filter bar */}
+      <div className="bg-background-elevated border border-border rounded-lg p-4 mb-2">
+        <div className="text-[10px] uppercase tracking-wide text-text-muted mb-3 font-semibold">
+          Filtros de B&uacute;squeda
+        </div>
       <div className="flex items-center gap-2 flex-wrap">
         {/* Risk level chips — Fix 2: labels via t() */}
         <div className="flex items-center gap-1" role="group" aria-label="Filter by risk level">
@@ -867,6 +871,7 @@ export function Contracts() {
           </div>
         )}
       </div>
+      </div>{/* end filter container */}
 
       {/* Risk distribution mini-histogram */}
       {riskHistogram && (
@@ -1183,8 +1188,9 @@ function ContractRow({
   const sector = contract.sector_id ? SECTORS.find((s) => s.id === contract.sector_id) : null
 
   const rowBorder =
-    riskLevel === 'critical' ? 'border-l-2 border-l-red-400/60'
-    : riskLevel === 'high' ? 'border-l-2 border-l-orange-400/40'
+    riskLevel === 'critical' ? 'border-l-4 border-l-risk-critical'
+    : riskLevel === 'high' ? 'border-l-4 border-l-risk-high'
+    : riskLevel === 'medium' ? 'border-l-4 border-l-risk-medium'
     : ''
 
   const cells = (

@@ -14,7 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { TableExportButton } from '@/components/TableExportButton'
 import { CaseLeadButton } from '@/components/CaseLeadDialog'
-import { AlertCircle, Search, X, Eye, EyeOff, Activity, BarChart3, Library } from 'lucide-react'
+import { AlertCircle, Search, X, Eye, EyeOff, Activity, BarChart3 } from 'lucide-react'
 import { RISK_COLORS, SECTORS } from '@/lib/constants'
 import { staggerContainer, staggerItem, slideUp } from '@/lib/animations'
 
@@ -24,6 +24,13 @@ const SEVERITY_COLORS: Record<number, string> = {
   2: 'bg-risk-medium/15 text-risk-medium border border-risk-medium/20',
   3: 'bg-risk-high/15 text-risk-high border border-risk-high/20',
   4: 'bg-risk-critical/15 text-risk-critical border border-risk-critical/20',
+}
+
+const SEVERITY_LABELS: Record<number, string> = {
+  1: 'BAJO',
+  2: 'MODERADO',
+  3: 'ALTO',
+  4: 'CRITICO',
 }
 
 const LEGAL_STATUS_COLORS: Record<string, string> = {
@@ -50,6 +57,19 @@ const FRAUD_TYPE_COLORS: Record<string, string> = {
   tender_rigging:      'border-indigo-500/60 text-indigo-400 bg-indigo-500/10',
 }
 
+const FRAUD_TYPE_ACCENT: Record<string, string> = {
+  ghost_company:       'border-l-red-500',
+  bid_rigging:         'border-l-orange-500',
+  overpricing:         'border-l-amber-500',
+  conflict_of_interest:'border-l-purple-500',
+  embezzlement:        'border-l-rose-500',
+  bribery:             'border-l-pink-500',
+  procurement_fraud:   'border-l-yellow-500',
+  monopoly:            'border-l-blue-500',
+  emergency_fraud:     'border-l-cyan-500',
+  tender_rigging:      'border-l-indigo-500',
+}
+
 // ── COMPRANET visibility config ───────────────────────────────────────────────
 type CompranetVisibility = 'high' | 'partial' | 'invisible'
 
@@ -66,8 +86,8 @@ function formatMXN(n?: number | null): string {
   return `$${n.toLocaleString()}`
 }
 
-// ── Case Card ────────────────────────────────────────────────────────────────
-function CaseCard({ cas, onClick, onNavigate }: { cas: ScandalListItem; onClick: () => void; onNavigate: (path: string) => void }) {
+// ── Case Card — Evidence File ─────────────────────────────────────────────────
+function CaseCard({ cas, onClick, onNavigate, index }: { cas: ScandalListItem; onClick: () => void; onNavigate: (path: string) => void; index: number }) {
   const { t, i18n } = useTranslation('cases')
   const name = i18n.language === 'es' ? cas.name_es : cas.name_en
 
@@ -79,31 +99,28 @@ function CaseCard({ cas, onClick, onNavigate }: { cas: ScandalListItem; onClick:
   // Derive year display
   const yearLabel = cas.contract_year_start
     ? cas.contract_year_end && cas.contract_year_end !== cas.contract_year_start
-      ? `${cas.contract_year_start}–${cas.contract_year_end}`
+      ? `${cas.contract_year_start}--${cas.contract_year_end}`
       : String(cas.contract_year_start)
     : null
 
-  // Left border color by fraud type
-  const fraudBorderColor: Record<string, string> = {
-    ghost_company: 'border-l-red-500',
-    bid_rigging: 'border-l-orange-500',
-    overpricing: 'border-l-amber-500',
-    conflict_of_interest: 'border-l-purple-500',
-    embezzlement: 'border-l-rose-500',
-    bribery: 'border-l-pink-500',
-    procurement_fraud: 'border-l-yellow-500',
-    monopoly: 'border-l-blue-500',
-    emergency_fraud: 'border-l-cyan-500',
-    tender_rigging: 'border-l-indigo-500',
-  }
-  const leftBorder = fraudBorderColor[cas.fraud_type] ?? 'border-l-border'
+  const leftBorder = FRAUD_TYPE_ACCENT[cas.fraud_type] ?? 'border-l-border'
+  const caseNum = String(index + 1).padStart(3, '0')
 
   return (
     <motion.div
       variants={staggerItem}
       whileHover={{ y: -2, transition: { duration: 0.15 } }}
-      className={`card hover-lift border-l-[3px] ${leftBorder} group flex flex-col overflow-hidden`}
+      className={`relative group flex flex-col overflow-hidden rounded-sm border border-border/60 border-l-[4px] ${leftBorder} hover:border-border transition-all duration-200`}
+      style={{ backgroundColor: '#faf9f6' }}
     >
+      {/* Case number stamp */}
+      <div
+        className="absolute top-2 right-2 z-10 text-[9px] font-mono tracking-wider text-text-muted/40 select-none"
+        style={{ fontVariantNumeric: 'tabular-nums' }}
+      >
+        N.{caseNum}
+      </div>
+
       {/* ML training data banner */}
       {isMLLinked && (
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-accent/10 border-b border-accent/20">
@@ -121,32 +138,44 @@ function CaseCard({ cas, onClick, onNavigate }: { cas: ScandalListItem; onClick:
       {/* Clickable body */}
       <button
         onClick={onClick}
-        className="w-full text-left flex-1 p-4"
+        className="w-full text-left flex-1 p-4 pt-3"
       >
-        {/* Header row */}
-        <div className="flex items-start justify-between gap-3 mb-2">
-          <span className="text-sm font-semibold text-text-primary group-hover:text-accent transition-colors leading-snug">
-            {name}
-          </span>
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded flex-shrink-0 ${SEVERITY_COLORS[cas.severity] ?? SEVERITY_COLORS[2]}`}>
-            {t(`severity.${cas.severity}`)}
+        {/* Fraud type — prominent */}
+        <div className="flex items-center gap-2 mb-2">
+          <Badge
+            variant="outline"
+            className={`text-[10px] px-2 py-0.5 font-bold uppercase tracking-wide ${FRAUD_TYPE_COLORS[cas.fraud_type] ?? ''}`}
+          >
+            {t(`fraudTypes.${cas.fraud_type}`)}
+          </Badge>
+          {/* Severity as damage level */}
+          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider ${SEVERITY_COLORS[cas.severity] ?? SEVERITY_COLORS[2]}`}>
+            {SEVERITY_LABELS[cas.severity] ?? t(`severity.${cas.severity}`)}
           </span>
         </div>
 
+        {/* Case name */}
+        <h3
+          className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors leading-snug mb-1.5 pr-10"
+          style={{ fontFamily: 'var(--font-family-serif)' }}
+        >
+          {name}
+        </h3>
+
         {/* Summary */}
-        <p className="text-xs text-text-muted line-clamp-2 mb-3">
+        <p className="text-[11px] text-text-muted line-clamp-2 mb-3 leading-relaxed">
           {cas.summary_en}
         </p>
 
-        {/* KPI row — year range, compranet visibility, amount */}
+        {/* KPI row */}
         <div className="flex items-center gap-2 mb-3 text-[10px] text-text-muted font-mono">
           {yearLabel && (
             <span className="flex items-center gap-1">
-              <span className="opacity-60">⧗</span>
+              <span className="opacity-60">&#x29D7;</span>
               {yearLabel}
             </span>
           )}
-          {yearLabel && <span className="opacity-30">·</span>}
+          {yearLabel && <span className="opacity-30">|</span>}
           <span className={`flex items-center gap-1 ${visCfg.cls}`} title={t(`compranetVisibility.${visibility}`)}>
             <VisIcon className="h-3 w-3" />
             {visibility === 'high' ? t('card.compranetFull')
@@ -155,31 +184,25 @@ function CaseCard({ cas, onClick, onNavigate }: { cas: ScandalListItem; onClick:
           </span>
           {cas.amount_mxn_low && (
             <>
-              <span className="opacity-30">·</span>
-              <span className="ml-auto">
+              <span className="opacity-30">|</span>
+              <span className="ml-auto font-bold text-text-secondary">
                 {formatMXN(cas.amount_mxn_low)}
-                {cas.amount_mxn_high ? `–${formatMXN(cas.amount_mxn_high)}` : '+'}
+                {cas.amount_mxn_high ? `--${formatMXN(cas.amount_mxn_high)}` : '+'}
               </span>
             </>
           )}
         </div>
 
-        {/* Tags row */}
+        {/* Legal status pill */}
         <div className="flex flex-wrap gap-1.5 items-center">
-          <Badge
-            variant="outline"
-            className={`text-[10px] px-1.5 py-0 ${FRAUD_TYPE_COLORS[cas.fraud_type] ?? ''}`}
-          >
-            {t(`fraudTypes.${cas.fraud_type}`)}
-          </Badge>
-          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${LEGAL_STATUS_COLORS[cas.legal_status] ?? ''}`}>
+          <Badge variant="outline" className={`text-[10px] px-2 py-0.5 font-semibold ${LEGAL_STATUS_COLORS[cas.legal_status] ?? ''}`}>
             {t(`legalStatuses.${cas.legal_status}`)}
           </Badge>
         </div>
       </button>
 
       {/* Footer: quick-link actions */}
-      <div className="flex items-center justify-between px-4 py-2 border-t border-border/30 gap-2">
+      <div className="flex items-center justify-between px-4 py-2 border-t border-border/30 gap-2" style={{ backgroundColor: 'rgba(0,0,0,0.015)' }}>
         <div className="flex items-center gap-1.5">
           {/* View contracts filtered to this case's sector + year */}
           {(cas.sector_ids?.length > 0 || cas.contract_year_start) && (
@@ -225,8 +248,8 @@ function CaseCard({ cas, onClick, onNavigate }: { cas: ScandalListItem; onClick:
   )
 }
 
-// ── Stats Bar ────────────────────────────────────────────────────────────────
-function StatsBar() {
+// ── Evidence Manifest (Stats Bar) ────────────────────────────────────────────
+function EvidenceManifest() {
   const { t } = useTranslation('cases')
   const { data } = useQuery({
     queryKey: ['cases', 'stats'],
@@ -234,24 +257,35 @@ function StatsBar() {
     staleTime: 10 * 60 * 1000,
   })
 
-  const totalBn = data ? (data.total_amount_mxn_low / 1e9).toFixed(0) : '–'
+  const totalBn = data ? (data.total_amount_mxn_low / 1e9).toFixed(0) : '--'
+
+  const stats = [
+    { label: t('statsBar.totalCases'), value: data?.total_cases ?? '--', accent: true },
+    { label: t('statsBar.totalAmount'), value: data ? `$${totalBn}B+` : '--', accent: true },
+    { label: t('statsBar.gtLinked'), value: data?.gt_linked_count ?? '--', accent: false },
+    { label: t('statsBar.compranetVisible'), value: data?.compranet_visible_count ?? '--', accent: false },
+  ]
 
   return (
     <motion.div
-      className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6"
+      className="grid grid-cols-2 sm:grid-cols-4 gap-0 mb-8 border border-border/60 rounded-sm overflow-hidden"
       variants={staggerContainer}
       initial="initial"
       animate="animate"
     >
-      {[
-        { label: t('statsBar.totalCases'), value: data?.total_cases ?? '–' },
-        { label: t('statsBar.totalAmount'), value: data ? `$${totalBn}B+` : '–' },
-        { label: t('statsBar.gtLinked'), value: data?.gt_linked_count ?? '–' },
-        { label: t('statsBar.compranetVisible'), value: data?.compranet_visible_count ?? '–' },
-      ].map(({ label, value }) => (
-        <motion.div key={label} variants={slideUp} className="card px-4 py-3">
-          <div className="text-xl font-bold font-mono text-accent">{value}</div>
-          <div className="text-[11px] text-text-muted mt-0.5">{label}</div>
+      {stats.map(({ label, value, accent }, i) => (
+        <motion.div
+          key={label}
+          variants={slideUp}
+          className={`px-4 py-3 border-l-[3px] ${accent ? 'border-l-red-500' : 'border-l-border'} ${i > 0 ? 'border-l-[3px] sm:border-l-[3px]' : ''}`}
+          style={{ backgroundColor: '#f8f7f4' }}
+        >
+          <div
+            className={`text-2xl font-black font-mono tracking-tight ${accent ? 'text-red-500' : 'text-text-primary'}`}
+          >
+            {value}
+          </div>
+          <div className="text-[10px] text-text-muted mt-0.5 uppercase tracking-wider font-medium">{label}</div>
         </motion.div>
       ))}
     </motion.div>
@@ -301,118 +335,133 @@ export default function CaseLibrary() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <div className="editorial-rule mb-4">
-        <span className="editorial-label">BIBLIOTECA DE CASOS</span>
-      </div>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
-            <Library className="h-4 w-4 text-accent" />
-          </div>
+      {/* ── Page Header: La Galeria de Crimenes ── */}
+      <div className="border-b border-border pb-6 mb-0">
+        <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold tracking-tight">{t('pageTitle', { defaultValue: 'Case Library' })}</h2>
-            <p className="text-xs text-text-muted">{t('pageSubtitle', { defaultValue: 'Documented corruption cases' })}</p>
+            <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted font-semibold mb-2">
+              Archivo de Corrupcion &middot; Mexico 2001--2025
+            </div>
+            <h1
+              style={{ fontFamily: 'var(--font-family-serif)' }}
+              className="text-4xl font-bold text-text-primary mb-2"
+            >
+              La Galeria de Crimenes
+            </h1>
+            <p className="text-sm text-text-secondary max-w-lg">
+              {data?.length ?? '...'} casos documentados de corrupcion en contratacion publica federal.
+              Cada expediente representa miles de millones de pesos desviados del erario.
+            </p>
           </div>
+          <CaseLeadButton className="shrink-0" />
         </div>
-        <CaseLeadButton className="shrink-0" />
       </div>
 
-      <StatsBar />
+      {/* Spacing after header */}
+      <div className="h-6" />
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2 mb-5 items-center">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-text-muted" />
-          <Input
-            value={search ?? ''}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t('filters.search')}
-            className="pl-8 h-8 text-sm bg-card"
-          />
-          {search && (
-            <button className="absolute right-2 top-2" onClick={() => setSearch(null)}>
-              <X className="h-3.5 w-3.5 text-text-muted" />
-            </button>
+      {/* ── Evidence Manifest ── */}
+      <EvidenceManifest />
+
+      {/* ── Filters: FILTRAR ARCHIVOS ── */}
+      <div className="mb-6">
+        <div className="text-[9px] tracking-[0.25em] uppercase text-text-muted font-bold mb-2">
+          FILTRAR ARCHIVOS
+        </div>
+        <div className="flex flex-wrap gap-2 items-center">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-text-muted" />
+            <Input
+              value={search ?? ''}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t('filters.search')}
+              className="pl-8 h-8 text-sm bg-card border-border/60"
+            />
+            {search && (
+              <button className="absolute right-2 top-2" onClick={() => setSearch(null)}>
+                <X className="h-3.5 w-3.5 text-text-muted" />
+              </button>
+            )}
+          </div>
+
+          <Select
+            value={filters.fraud_type ?? 'all'}
+            onValueChange={(v) => setFilters((f) => ({ ...f, fraud_type: v === 'all' ? undefined : v as FraudType }))}
+          >
+            <SelectTrigger className="w-[160px] h-8 text-xs bg-card border-border/60">
+              <SelectValue placeholder={t('filters.fraudType')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('filters.all')}</SelectItem>
+              {['ghost_company','bid_rigging','overpricing','conflict_of_interest','embezzlement','bribery','procurement_fraud','monopoly','emergency_fraud','tender_rigging'].map((ft) => (
+                <SelectItem key={ft} value={ft}>{t(`fraudTypes.${ft}`)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={filters.administration ?? 'all'}
+            onValueChange={(v) => setFilters((f) => ({ ...f, administration: v === 'all' ? undefined : v as Administration }))}
+          >
+            <SelectTrigger className="w-[180px] h-8 text-xs bg-card border-border/60">
+              <SelectValue placeholder={t('filters.administration')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('filters.all')}</SelectItem>
+              {['fox','calderon','epn','amlo','sheinbaum'].map((a) => (
+                <SelectItem key={a} value={a}>{t(`administrations.${a}`)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={filters.legal_status ?? 'all'}
+            onValueChange={(v) => setFilters((f) => ({ ...f, legal_status: v === 'all' ? undefined : v as LegalStatus }))}
+          >
+            <SelectTrigger className="w-[170px] h-8 text-xs bg-card border-border/60">
+              <SelectValue placeholder={t('filters.legalStatus')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('filters.all')}</SelectItem>
+              {['investigation','prosecuted','convicted','acquitted','dismissed','impunity','unresolved'].map((ls) => (
+                <SelectItem key={ls} value={ls}>{t(`legalStatuses.${ls}`)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={filters.sector_id != null ? String(filters.sector_id) : 'all'}
+            onValueChange={(v) => setFilters((f) => ({ ...f, sector_id: v === 'all' ? undefined : Number(v) }))}
+          >
+            <SelectTrigger className="w-[150px] h-8 text-xs bg-card border-border/60">
+              <SelectValue placeholder={t('filters.sector')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('filters.all')}</SelectItem>
+              {SECTORS.map((s) => (
+                <SelectItem key={s.id} value={String(s.id)}>{ts(s.code)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {hasFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-xs text-text-muted"
+              onClick={() => { setFilters({}); setSearch(null) }}
+            >
+              <X className="h-3 w-3 mr-1" /> {t('filters.clearFilters')}
+            </Button>
           )}
         </div>
-
-        <Select
-          value={filters.fraud_type ?? 'all'}
-          onValueChange={(v) => setFilters((f) => ({ ...f, fraud_type: v === 'all' ? undefined : v as FraudType }))}
-        >
-          <SelectTrigger className="w-[160px] h-8 text-xs bg-card">
-            <SelectValue placeholder={t('filters.fraudType')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('filters.all')}</SelectItem>
-            {['ghost_company','bid_rigging','overpricing','conflict_of_interest','embezzlement','bribery','procurement_fraud','monopoly','emergency_fraud','tender_rigging'].map((ft) => (
-              <SelectItem key={ft} value={ft}>{t(`fraudTypes.${ft}`)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={filters.administration ?? 'all'}
-          onValueChange={(v) => setFilters((f) => ({ ...f, administration: v === 'all' ? undefined : v as Administration }))}
-        >
-          <SelectTrigger className="w-[180px] h-8 text-xs bg-card">
-            <SelectValue placeholder={t('filters.administration')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('filters.all')}</SelectItem>
-            {['fox','calderon','epn','amlo','sheinbaum'].map((a) => (
-              <SelectItem key={a} value={a}>{t(`administrations.${a}`)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={filters.legal_status ?? 'all'}
-          onValueChange={(v) => setFilters((f) => ({ ...f, legal_status: v === 'all' ? undefined : v as LegalStatus }))}
-        >
-          <SelectTrigger className="w-[170px] h-8 text-xs bg-card">
-            <SelectValue placeholder={t('filters.legalStatus')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('filters.all')}</SelectItem>
-            {['investigation','prosecuted','convicted','acquitted','dismissed','impunity','unresolved'].map((ls) => (
-              <SelectItem key={ls} value={ls}>{t(`legalStatuses.${ls}`)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={filters.sector_id != null ? String(filters.sector_id) : 'all'}
-          onValueChange={(v) => setFilters((f) => ({ ...f, sector_id: v === 'all' ? undefined : Number(v) }))}
-        >
-          <SelectTrigger className="w-[150px] h-8 text-xs bg-card">
-            <SelectValue placeholder={t('filters.sector')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('filters.all')}</SelectItem>
-            {SECTORS.map((s) => (
-              <SelectItem key={s.id} value={String(s.id)}>{ts(s.code)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {hasFilters && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 text-xs text-text-muted"
-            onClick={() => { setFilters({}); setSearch(null) }}
-          >
-            <X className="h-3 w-3 mr-1" /> {t('filters.clearFilters')}
-          </Button>
-        )}
       </div>
 
-      {/* Results */}
+      {/* ── Results ── */}
       {isLoading && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {Array.from({ length: 9 }).map((_, i) => (
-            <Skeleton key={i} className="h-40 rounded-lg" />
+            <Skeleton key={i} className="h-48 rounded-sm" />
           ))}
         </div>
       )}
@@ -427,7 +476,9 @@ export default function CaseLibrary() {
       {!isLoading && !error && data && (
         <>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-text-muted">{t('resultCount', { count: data.length })}</p>
+            <p className="text-xs text-text-muted font-mono">
+              {t('resultCount', { count: data.length })} &middot; ordenados por impacto
+            </p>
             <TableExportButton
               data={data.map((c) => ({
                 title: c.name_en,
@@ -458,15 +509,16 @@ export default function CaseLibrary() {
             </div>
           ) : (
             <motion.div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
               variants={staggerContainer}
               initial="initial"
               animate="animate"
             >
-              {data.map((cas) => (
+              {data.map((cas, idx) => (
                 <CaseCard
                   key={cas.id}
                   cas={cas}
+                  index={idx}
                   onClick={() => navigate(`/cases/${cas.slug}`)}
                   onNavigate={navigate}
                 />

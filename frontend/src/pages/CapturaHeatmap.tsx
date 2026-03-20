@@ -10,12 +10,11 @@ import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { PageHeader } from '@/components/layout/PageHeader'
 import { Skeleton } from '@/components/ui/skeleton'
 import { analysisApi } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
 import { SECTORS } from '@/lib/constants'
-import { Building2, ArrowUpRight } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -172,14 +171,20 @@ export default function CapturaHeatmap() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Editorial header */}
-      <PageHeader
-        title={t('title')}
-        subtitle={t('subtitle')}
-        icon={Building2}
-        serif
-        label={t('trackingLabel')}
-      />
+      {/* Editorial header — "TERRITORIOS OCUPADOS" */}
+      <div className="border-b border-border pb-6 mb-8">
+        <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted mb-2">
+          Captura Institucional &middot; {t('trackingLabel', 'An\u00e1lisis de Concentraci\u00f3n')}
+        </div>
+        <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-4xl font-bold text-text-primary mb-2">
+          Territorios Ocupados
+        </h1>
+        <p className="text-sm text-text-secondary max-w-2xl">
+          Mapa de captura institucional: cu\u00e1ndo un proveedor controla el presupuesto de contrataci\u00f3n
+          de una instituci\u00f3n. Guerrero SDUYOP: <strong className="text-risk-critical">96.4%</strong> de
+          sus contratos van a un solo proveedor &mdash; $2.55B MXN.
+        </p>
+      </div>
 
       {/* Source pill + stats row */}
       {flowData && !isLoading && (
@@ -201,30 +206,47 @@ export default function CapturaHeatmap() {
         </motion.div>
       )}
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
-        <select
-          value={sectorId ?? ''}
-          onChange={(e) => setSectorId(e.target.value ? Number(e.target.value) : undefined)}
-          className="bg-surface-card border border-white/10 rounded-md px-3 py-1.5 text-sm text-text-primary"
-          aria-label={t('filters.bySector')}
-        >
-          <option value="">{t('filters.allSectors')}</option>
-          {SECTORS.map((s) => (
-            <option key={s.id} value={s.id}>{s.name}</option>
-          ))}
-        </select>
+      {/* "CASO EXTREMO" callout */}
+      <div className="border border-risk-critical/30 bg-risk-critical/5 rounded p-4">
+        <div className="text-[10px] uppercase tracking-wide text-risk-critical font-semibold mb-2">
+          Caso Extremo Documentado
+        </div>
+        <p className="text-sm text-text-primary">
+          <strong>GUERRERO &mdash; SDUYOP</strong>: 96.4% de su presupuesto de obra p\u00fablica
+          adjudicado a CONSTRUCTORA ARHNOS. Monto: $2.55B MXN.
+          Esto equivale a la captura total de una instituci\u00f3n p\u00fablica.
+        </p>
+      </div>
 
-        <select
-          value={yearRange}
-          onChange={(e) => setYearRange(e.target.value)}
-          className="bg-surface-card border border-white/10 rounded-md px-3 py-1.5 text-sm text-text-primary"
-          aria-label="Year range"
-        >
-          <option value="all">{t('filters.allYears')}</option>
-          <option value="2018">{t('filters.period2018')}</option>
-          <option value="2023">{t('filters.period2023')}</option>
-        </select>
+      {/* Filters — "FILTRAR TERRITORIO" */}
+      <div>
+        <div className="text-[10px] tracking-[0.2em] uppercase text-text-muted/50 mb-2">
+          Filtrar Territorio
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <select
+            value={sectorId ?? ''}
+            onChange={(e) => setSectorId(e.target.value ? Number(e.target.value) : undefined)}
+            className="bg-surface-card border border-white/10 rounded-md px-3 py-1.5 text-sm text-text-primary"
+            aria-label={t('filters.bySector')}
+          >
+            <option value="">{t('filters.allSectors')}</option>
+            {SECTORS.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+
+          <select
+            value={yearRange}
+            onChange={(e) => setYearRange(e.target.value)}
+            className="bg-surface-card border border-white/10 rounded-md px-3 py-1.5 text-sm text-text-primary"
+            aria-label="Year range"
+          >
+            <option value="all">{t('filters.allYears')}</option>
+            <option value="2018">{t('filters.period2018')}</option>
+            <option value="2023">{t('filters.period2023')}</option>
+          </select>
+        </div>
       </div>
 
       {/* Loading */}
@@ -265,23 +287,28 @@ export default function CapturaHeatmap() {
           transition={{ duration: 0.5 }}
           className="bg-surface-card border border-white/10 rounded-xl p-4 md:p-6 overflow-x-auto"
         >
-          {/* Legend */}
-          <div className="flex items-center gap-4 mb-4 text-[10px] text-text-muted/60">
+          {/* Section label */}
+          <div className="text-[10px] tracking-[0.2em] uppercase text-text-muted/50 mb-4">
+            Mapa de Concentraci\u00f3n
+          </div>
+
+          {/* Legend — editorial labels */}
+          <div className="flex flex-wrap items-center gap-4 mb-4 text-[10px] text-text-muted/60">
             <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-sm" style={{ background: 'rgba(255,255,255,0.05)' }} />
-              {t('heatmap.lowCapture')}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-sm" style={{ background: 'rgba(234,179,8,0.55)' }} />
-              15-30%
+              <span className="w-3 h-3 rounded-sm" style={{ background: 'rgba(220,38,38,0.85)' }} />
+              Captura Total (&gt;50%)
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-sm" style={{ background: 'rgba(234,88,12,0.75)' }} />
-              30-50%
+              Alto Riesgo (30-50%)
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-sm" style={{ background: 'rgba(220,38,38,0.85)' }} />
-              {t('heatmap.highCapture')} (&gt;50%)
+              <span className="w-3 h-3 rounded-sm" style={{ background: 'rgba(234,179,8,0.55)' }} />
+              Moderado (15-30%)
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-sm" style={{ background: 'rgba(255,255,255,0.05)' }} />
+              Bajo (&lt;15%)
             </span>
           </div>
 
@@ -292,7 +319,7 @@ export default function CapturaHeatmap() {
               gridTemplateColumns: `200px repeat(${vendors.length}, minmax(100px, 1fr))`,
             }}
             role="table"
-            aria-label={t('title')}
+            aria-label="Territorios Ocupados"
           >
             {/* Header row: empty corner + vendor names */}
             <div role="columnheader" className="text-[10px] text-text-muted/40 font-medium" />

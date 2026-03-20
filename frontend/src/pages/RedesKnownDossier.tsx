@@ -1,16 +1,14 @@
 /**
- * RedesKnownDossier — Known Networks Investigation Dossier
+ * RedesKnownDossier — "LA RED INVISIBLE"
  *
- * Replaces the old NetworkGraph page. Instead of a force-directed graph,
- * presents named investigation dossiers as editorial cards sourced from
- * the ARIA investigation queue (Tier 1 + Tier 2).
+ * Intelligence dossier of known corruption networks in Mexico's procurement system.
+ * Presents ARIA Tier 1 + Tier 2 vendors as investigation dossiers.
  */
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { motion, type Variants } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { PageHeader } from '@/components/layout/PageHeader'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ariaApi } from '@/api/client'
 import type { AriaQueueItem } from '@/api/types'
@@ -56,6 +54,37 @@ const PATTERN_BORDER_COLORS: Record<string, string> = {
   P7: 'border-l-yellow-500',
 }
 
+const PATTERN_PILL_COLORS: Record<string, { active: string; inactive: string }> = {
+  P1: {
+    active: 'bg-red-500 text-white border-red-500',
+    inactive: 'bg-red-500/10 text-red-400 border-red-500/30 hover:bg-red-500/20',
+  },
+  P2: {
+    active: 'bg-amber-500 text-black border-amber-500',
+    inactive: 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20',
+  },
+  P3: {
+    active: 'bg-orange-500 text-white border-orange-500',
+    inactive: 'bg-orange-500/10 text-orange-400 border-orange-500/30 hover:bg-orange-500/20',
+  },
+  P6: {
+    active: 'bg-rose-600 text-white border-rose-600',
+    inactive: 'bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500/20',
+  },
+  P7: {
+    active: 'bg-yellow-500 text-black border-yellow-500',
+    inactive: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/20',
+  },
+}
+
+const PATTERN_PILL_LABELS: Record<string, string> = {
+  P1: 'P1 MONOPOLIO',
+  P2: 'P2 FANTASMA',
+  P3: 'P3 INTERMEDIARIO',
+  P6: 'P6 CAPTURA',
+  P7: 'P7 RIESGO EXTREMO',
+}
+
 function getTierBadgeColor(tier: number): string {
   switch (tier) {
     case 1: return 'bg-red-500/20 text-red-400 border-red-500/30'
@@ -64,8 +93,24 @@ function getTierBadgeColor(tier: number): string {
   }
 }
 
-// All known patterns for filter dropdown
+function getIpsColor(ips: number): string {
+  if (ips >= 0.8) return 'bg-red-500/20 text-red-300 border-red-500/30'
+  if (ips >= 0.6) return 'bg-orange-500/20 text-orange-300 border-orange-500/30'
+  if (ips >= 0.4) return 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+  return 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30'
+}
+
+// All known patterns for filter
 const ALL_PATTERNS = ['P1', 'P2', 'P3', 'P6', 'P7']
+
+// Pattern summary data (known counts from ARIA)
+const PATTERN_SUMMARY = [
+  { code: 'P1', name: 'Monopolio', desc: 'Dominio de mercado exclusivo', vendors: '26', value: '$703B', borderColor: 'border-red-500' },
+  { code: 'P2', name: 'Fantasma', desc: 'Empresas sin operaciones reales', vendors: '3.3K', value: '-', borderColor: 'border-amber-500' },
+  { code: 'P3', name: 'Intermediario', desc: 'Intermediarios de papel', vendors: '3.3K', value: '-', borderColor: 'border-orange-400' },
+  { code: 'P6', name: 'Captura', desc: 'Captura de instituciones', vendors: '15.8K', value: '$922B', borderColor: 'border-rose-600' },
+  { code: 'P7', name: 'Riesgo Extremo', desc: 'Patrones de riesgo extremo', vendors: '108', value: '$374B', borderColor: 'border-yellow-500' },
+]
 
 // ---------------------------------------------------------------------------
 // Component
@@ -139,14 +184,19 @@ export default function RedesKnownDossier() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      {/* Editorial header */}
-      <PageHeader
-        title={t('title')}
-        subtitle={t('subtitle')}
-        icon={Shield}
-        serif
-        label={t('trackingLabel')}
-      />
+      {/* Editorial header — "LA RED INVISIBLE" */}
+      <div className="border-b border-border pb-6 mb-8">
+        <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted mb-2">
+          Analisis de Redes &middot; ARIA Tier 1 y Tier 2
+        </div>
+        <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-4xl font-bold text-text-primary mb-2">
+          La Red Invisible
+        </h1>
+        <p className="text-sm text-text-secondary max-w-2xl">
+          Redes de corrupcion documentadas en contratacion publica federal.{' '}
+          285 proveedores en vigilancia maxima (Nivel 1). Patrones identificados por sistema ARIA.
+        </p>
+      </div>
 
       {/* Source attribution + stats */}
       <div className="flex flex-wrap items-center gap-4 text-[11px] text-text-muted/60">
@@ -161,38 +211,69 @@ export default function RedesKnownDossier() {
         )}
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      {/* Pattern summary grid */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        {PATTERN_SUMMARY.map((p) => (
+          <button
+            key={p.code}
+            onClick={() => setPatternFilter(patternFilter === p.code ? '' : p.code)}
+            className={cn(
+              'border-l-4 pl-3 py-2 rounded-r text-left transition-all',
+              p.borderColor,
+              patternFilter === p.code
+                ? 'bg-white/10 ring-1 ring-white/20'
+                : 'bg-background-elevated hover:bg-white/5',
+            )}
+          >
+            <div className="text-xs font-mono font-bold text-text-primary">{p.code}</div>
+            <div className="text-xs text-text-muted">{p.name}</div>
+            <div className="text-sm font-semibold text-text-primary mt-1">{p.vendors} proveedores</div>
+            <div className="text-xs text-text-muted">{p.value}</div>
+          </button>
+        ))}
+      </div>
+
+      {/* Filters — search + pattern pills */}
+      <div className="flex flex-wrap items-center gap-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted/40" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={t('loading').replace('...', '')}
+            placeholder="Buscar proveedor..."
             className="bg-surface-card border border-white/10 rounded-md pl-8 pr-3 py-1.5 text-sm text-text-primary w-64 placeholder:text-text-muted/30"
             aria-label="Search vendors"
           />
         </div>
 
-        <select
-          value={patternFilter}
-          onChange={(e) => setPatternFilter(e.target.value)}
-          className="bg-surface-card border border-white/10 rounded-md px-3 py-1.5 text-sm text-text-primary"
-          aria-label={t('filters.byPattern')}
-        >
-          <option value="">{t('filters.allPatterns')}</option>
-          {ALL_PATTERNS.map((p) => (
-            <option key={p} value={p}>{t(`patternLabels.${p}`)}</option>
-          ))}
-        </select>
+        <div className="flex flex-wrap gap-1.5">
+          {ALL_PATTERNS.map((p) => {
+            const isActive = patternFilter === p
+            const colors = PATTERN_PILL_COLORS[p]
+            return (
+              <button
+                key={p}
+                onClick={() => setPatternFilter(isActive ? '' : p)}
+                className={cn(
+                  'text-[10px] font-mono font-semibold tracking-wider px-2.5 py-1 rounded border transition-all',
+                  isActive ? colors?.active : colors?.inactive,
+                )}
+                aria-pressed={isActive}
+                aria-label={`Filter by pattern ${p}`}
+              >
+                {PATTERN_PILL_LABELS[p] || p}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* Loading */}
       {isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-40 rounded-xl" />
+            <Skeleton key={i} className="h-44 rounded-xl" />
           ))}
         </div>
       )}
@@ -218,7 +299,7 @@ export default function RedesKnownDossier() {
       {/* Filter yields nothing */}
       {!isLoading && !error && filtered.length === 0 && dossiers.length > 0 && (
         <div className="bg-surface-card border border-white/10 rounded-xl p-6 text-center">
-          <p className="text-text-muted text-sm">No dossiers match the current filters.</p>
+          <p className="text-text-muted text-sm">No se encontraron expedientes con los filtros actuales.</p>
         </div>
       )}
 
@@ -231,7 +312,7 @@ export default function RedesKnownDossier() {
           className="grid grid-cols-1 md:grid-cols-2 gap-4"
         >
           {filtered.map((item) => (
-            <DossierCard key={item.vendor_id} item={item} t={t} />
+            <DossierCard key={item.vendor_id} item={item} />
           ))}
         </motion.div>
       )}
@@ -239,7 +320,7 @@ export default function RedesKnownDossier() {
       {/* Count */}
       {!isLoading && filtered.length > 0 && (
         <p className="text-[11px] text-text-muted/40 text-center">
-          {filtered.length} / {dossiers.length} {t('stats.totalDossiers').toLowerCase()}
+          {filtered.length} / {dossiers.length} expedientes
         </p>
       )}
     </div>
@@ -247,15 +328,14 @@ export default function RedesKnownDossier() {
 }
 
 // ---------------------------------------------------------------------------
-// Dossier Card
+// Dossier Card — intelligence dossier style
 // ---------------------------------------------------------------------------
 
 interface DossierCardProps {
   item: AriaQueueItem
-  t: (key: string, opts?: Record<string, unknown>) => string
 }
 
-function DossierCard({ item, t }: DossierCardProps) {
+function DossierCard({ item }: DossierCardProps) {
   const pattern = item.primary_pattern || 'default'
   const PatternIcon = PATTERN_ICONS[pattern] || AlertTriangle
   const borderClass = PATTERN_BORDER_COLORS[pattern] || 'border-l-zinc-500'
@@ -263,9 +343,7 @@ function DossierCard({ item, t }: DossierCardProps) {
     ? SECTOR_COLORS[item.primary_sector_name.toLowerCase()] || '#64748b'
     : '#64748b'
 
-  const patternKey = pattern as string
-  const patternLabel = t(`patternLabels.${patternKey}`, { defaultValue: t('patternLabels.default') })
-  const patternDesc = t(`patterns.${patternKey}`, { defaultValue: t('patterns.default') })
+  const patternLabel = PATTERN_PILL_LABELS[pattern] || pattern.toUpperCase()
 
   return (
     <motion.div
@@ -277,45 +355,48 @@ function DossierCard({ item, t }: DossierCardProps) {
         'hover:border-white/20 transition-colors group',
       )}
     >
-      <div className="p-4 space-y-3">
-        {/* Top row: pattern badge + tier */}
+      <div className="p-5 space-y-3">
+        {/* Top row: pattern badge + tier + flags */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <PatternIcon className="w-3.5 h-3.5 text-text-muted/50" />
-            <span className="text-[10px] font-medium uppercase tracking-wider text-text-muted/60">
+            <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-text-muted/70">
               {patternLabel}
             </span>
           </div>
 
           <div className="flex items-center gap-1.5">
             {item.is_efos_definitivo && (
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/20">
-                {t('card.efos')}
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/20 font-mono">
+                EFOS
               </span>
             )}
             {item.is_sfp_sanctioned && (
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/20">
-                {t('card.sfp')}
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/20 font-mono">
+                SFP
               </span>
             )}
             {item.new_vendor_risk && (
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 border border-purple-500/20">
-                {t('card.newVendor')}
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 border border-purple-500/20 font-mono">
+                NUEVO
               </span>
             )}
             <span
               className={cn(
-                'text-[9px] px-1.5 py-0.5 rounded border font-medium',
+                'text-[9px] px-1.5 py-0.5 rounded border font-mono font-bold',
                 getTierBadgeColor(item.ips_tier),
               )}
             >
-              T{item.ips_tier}
+              TIER {item.ips_tier}
             </span>
           </div>
         </div>
 
         {/* Vendor name (bold serif) */}
-        <h3 className="font-serif text-base text-text-primary font-semibold leading-tight">
+        <h3
+          style={{ fontFamily: 'var(--font-family-serif)' }}
+          className="text-lg text-text-primary font-bold leading-tight"
+        >
           {item.vendor_name}
         </h3>
 
@@ -328,38 +409,46 @@ function DossierCard({ item, t }: DossierCardProps) {
             </span>
           )}
           {item.years_active !== undefined && item.years_active > 0 && (
-            <span>&middot; {item.years_active} {item.years_active === 1 ? 'year' : 'years'} active</span>
+            <span>
+              &middot; {item.years_active} {item.years_active === 1 ? 'anio' : 'anios'} activo
+            </span>
           )}
         </div>
 
-        {/* Key stats */}
-        <div className="flex items-center gap-4 text-[11px]">
-          <span className="text-text-muted/70">
-            {formatNumber(item.total_contracts)} {t('card.contracts')}
+        {/* Key stats row — IPS prominent + contracts + value */}
+        <div className="flex items-center gap-3">
+          <span
+            className={cn(
+              'text-xs font-mono font-bold px-2 py-0.5 rounded border',
+              getIpsColor(item.ips_final),
+            )}
+          >
+            IPS {item.ips_final.toFixed(2)}
           </span>
-          <span className="text-text-muted/70">
+          <span className="text-[11px] text-text-muted/70">
+            {formatNumber(item.total_contracts)} contratos
+          </span>
+          <span className="text-[11px] font-semibold text-text-primary">
             {formatCompactMXN(item.total_value_mxn)}
           </span>
-          <span className="text-text-muted/70">
-            {t('card.riskScore')}: {formatPercent(item.avg_risk_score, 0)}
-          </span>
-          <span className="text-text-muted/50">
-            {t('card.ipsScore')}: {item.ips_final.toFixed(2)}
+          <span className="text-[11px] text-text-muted/50">
+            Riesgo: {formatPercent(item.avg_risk_score, 0)}
           </span>
         </div>
 
-        {/* Pattern description */}
-        <p className="text-[11px] text-text-muted/50 leading-relaxed line-clamp-2">
-          {patternDesc}
-        </p>
-
         {/* Action link */}
-        <div className="pt-1">
+        <div className="pt-1 flex items-center justify-between">
           <Link
             to={`/thread/${item.vendor_id}`}
-            className="inline-flex items-center gap-1 text-[11px] font-medium text-accent-primary hover:text-accent-primary/80 transition-colors group-hover:underline"
+            className="inline-flex items-center gap-1 text-[11px] font-mono font-semibold uppercase tracking-wider text-accent-primary hover:text-accent-primary/80 transition-colors group-hover:underline"
           >
-            {t('card.viewCase')} <ArrowRight className="w-3 h-3" />
+            Abrir Expediente <ArrowRight className="w-3 h-3" />
+          </Link>
+          <Link
+            to={`/vendors/${item.vendor_id}`}
+            className="text-[10px] text-text-muted/40 hover:text-text-muted/70 transition-colors"
+          >
+            Perfil
           </Link>
         </div>
       </div>

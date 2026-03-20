@@ -49,12 +49,9 @@ import {
   Banknote,
   FileText,
   Activity,
-  Info,
   ChevronDown,
 } from 'lucide-react'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
-import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
-import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 import AdministrationFingerprints from '@/components/charts/AdministrationFingerprints'
@@ -524,46 +521,42 @@ export default function Administrations() {
   }
 
   return (
-    <div className="space-y-6 p-6 max-w-[1600px] mx-auto">
-      {/* Editorial headline */}
-      <EditorialHeadline
-        section="ANALISIS HISTORICO"
-        headline="Por Administracion"
-        subtitle="Patrones de contratacion por sexenio presidencial · 1994–2025"
-      />
-
-      {/* Editorial pull stats */}
-      <div className="flex flex-wrap gap-8 my-6">
-        <HallazgoStat value="5" label="administraciones analizadas" color="border-amber-500" />
-        <HallazgoStat value="23" label="anos de datos · 2002–2025" color="border-blue-500" />
-        <HallazgoStat value="3.1M" label="contratos rastreados" color="border-zinc-400" />
+    <div className="space-y-8 p-6 max-w-[1600px] mx-auto">
+      {/* ── CLASSIFIED HEADER ── */}
+      <div className="border-b border-border pb-6 mb-2">
+        <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted font-semibold mb-3">
+          Informe Clasificado · RUBLI · Sistema Nacional de Transparencia
+        </div>
+        <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-4xl md:text-5xl font-bold text-text-primary leading-tight mb-2">
+          Los Sexenios de la Sombra
+        </h1>
+        <p className="text-base text-text-secondary leading-relaxed max-w-2xl">
+          Analisis comparativo de riesgo en contratacion publica federal · 2001-2025 · {formatNumber(3049988)} contratos · $9.87T MXN auditados
+        </p>
+        <div className="mt-4 flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2 text-xs text-text-muted">
+            <span className="w-2 h-2 rounded-full bg-risk-critical animate-pulse" />
+            <span>AMLO registro la tasa mas alta de riesgo: <strong className="text-risk-critical">15.82%</strong></span>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-text-muted">
+            <span className="w-2 h-2 rounded-full bg-risk-low" />
+            <span>EPN registro la mas baja: <strong className="text-risk-low">3.84%</strong></span>
+          </div>
+        </div>
       </div>
 
       {/* Data source + methodology */}
-      <div className="flex flex-wrap items-center gap-3 mb-4">
+      <div className="flex flex-wrap items-center gap-3 mb-2">
         <FuentePill source="COMPRANET" verified={true} />
         <MetodologiaTooltip
           title="Sobre la comparacion"
-          body="Comparacion normalizada por ano y valor total presupuestal. Diferencias entre administraciones reflejan prioridades de politica, no necesariamente irregularidades."
+          body="Comparacion normalizada por ano y valor total presupuestal. Diferencias entre administraciones reflejan prioridades de politica, no necesariamente irregularidades. La mayor calidad de datos en 2018+ puede contribuir a tasas de riesgo mas altas."
           link="/methodology"
         />
       </div>
 
-      {/* Header */}
-      <div className="fern-card p-5 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5 mb-1">
-            <Landmark className="h-5 w-5 text-amber-400" />
-            <h1 className="text-xl font-bold font-mono tracking-tight text-gradient">
-              {t('title')}
-            </h1>
-          </div>
-          <p className="text-sm text-text-muted mt-1">
-            {t('subtitle')}
-          </p>
-        </div>
-        {/* Tab Switcher */}
-        <div className="flex flex-wrap items-center gap-1 rounded-lg border border-border/50 p-0.5 bg-background-elevated/30 sm:flex-shrink-0">
+      {/* Tab Switcher — standalone row */}
+      <div className="flex flex-wrap items-center gap-1 rounded-lg border border-border/50 p-0.5 bg-background-elevated/30 w-fit">
           <button
             onClick={() => setActiveTab('overview')}
             className={cn(
@@ -608,7 +601,6 @@ export default function Administrations() {
           >
             {t('tabs.compare')}
           </button>
-        </div>
       </div>
 
       {activeTab === 'patterns' && (
@@ -622,9 +614,16 @@ export default function Administrations() {
       {activeTab === 'overview' && (
       <>
 
-      {/* L0: Admin Selector */}
+      {/* L0: EXPEDIENTES PRESIDENCIALES */}
+      <div className="mb-2">
+        <div className="text-[10px] tracking-[0.2em] uppercase text-text-muted font-semibold mb-3 flex items-center gap-2">
+          <span className="h-px flex-1 bg-border" />
+          Expedientes Presidenciales
+          <span className="h-px flex-1 bg-border" />
+        </div>
+      </div>
       <motion.div
-        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3"
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4"
         variants={staggerContainer}
         initial="initial"
         animate="animate"
@@ -632,79 +631,97 @@ export default function Administrations() {
         {ADMINISTRATIONS.map((admin, idx) => {
           const agg = adminAggs.find((a) => a.name === admin.name)
           const isSelected = selectedAdmin === admin.name
+          const partyColor = PARTY_COLORS[admin.party] || '#64748b'
           return (
             <ScrollReveal key={admin.name} delay={idx * 80} direction="up">
             <button
-              key={admin.name}
               onClick={() => setSelectedAdmin(admin.name)}
               className={cn(
-                'interactive-card hover-lift relative text-left rounded-xl p-2.5 overflow-hidden w-full',
+                'relative text-left w-full rounded-lg overflow-hidden transition-all duration-300',
                 isSelected
-                  ? 'card-elevated border-amber-500/50 shadow-[0_0_20px_-5px_rgba(245,158,11,0.3)]'
-                  : 'card'
+                  ? 'bg-background-card shadow-lg ring-1'
+                  : 'bg-background-card/60 hover:bg-background-card hover:shadow-md'
               )}
+              style={{
+                borderLeft: `4px solid ${isSelected ? partyColor : `${partyColor}40`}`,
+                ...(isSelected ? { boxShadow: `0 0 24px -6px ${partyColor}30`, ringColor: `${partyColor}40` } : {}),
+              }}
             >
-              {/* Party color stripe at top */}
-              <span
-                className="absolute top-0 left-0 right-0 h-[3px] rounded-t"
-                style={{ backgroundColor: PARTY_COLORS[admin.party] || '#64748b' }}
-              />
-              {isSelected && (
-                <span className="absolute top-[3px] left-3 right-3 h-[2px] rounded-b" style={{ backgroundColor: admin.color }} />
-              )}
-              {/* President avatar + name row */}
-              <div className="flex items-center gap-2 mb-1 mt-1">
-                <PresidentAvatar
-                  wikiArticle={admin.wikiArticle}
-                  fullName={admin.fullName}
-                  color={admin.color}
-                  size={28}
-                />
-                <div className="flex-1 min-w-0">
-                  <span className={cn(
-                    'text-xs font-semibold block truncate leading-tight',
-                    isSelected ? 'text-text-primary' : 'text-text-secondary'
-                  )}>
-                    {admin.name}
-                  </span>
+              <div className="p-3.5">
+                {/* EXPEDIENTE label */}
+                <div className="text-[9px] tracking-[0.25em] uppercase text-text-muted font-semibold mb-2">
+                  Expediente
                 </div>
-                <span
-                  className="text-[9px] font-mono px-1 py-0.5 rounded flex-shrink-0"
-                  style={{
-                    backgroundColor: `${PARTY_COLORS[admin.party] || '#64748b'}25`,
-                    color: PARTY_COLORS[admin.party] || '#64748b',
-                    border: `1px solid ${PARTY_COLORS[admin.party] || '#64748b'}50`,
-                  }}
-                >
-                  {admin.party}
-                </span>
-              </div>
-              <div className="text-xs text-text-muted font-mono">
-                {admin.dataStart}–{Math.min(admin.end, 2025)}
-              </div>
-              <div className="mt-2 text-xs font-mono text-text-secondary">
-                {agg ? formatNumber(agg.contracts) : '0'} {t('contracts')}
-              </div>
-              {isSelected && (
-                <div className="mt-1 text-xs text-accent font-mono">{t('selected')}</div>
-              )}
-              {/* Mini sparkline */}
-              {agg && agg.years.length > 1 && (
-                <div className="mt-1.5 h-6">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={agg.years} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                      <Line
-                        type="monotone"
-                        dataKey="contracts"
-                        stroke={admin.color}
-                        strokeWidth={1.5}
-                        dot={false}
-                        isAnimationActive={false}
-                      />
-                    </ComposedChart>
-                  </ResponsiveContainer>
+                {/* President avatar + name row */}
+                <div className="flex items-center gap-2.5 mb-2">
+                  <PresidentAvatar
+                    wikiArticle={admin.wikiArticle}
+                    fullName={admin.fullName}
+                    color={admin.color}
+                    size={36}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <span style={{ fontFamily: 'var(--font-family-serif)' }} className={cn(
+                      'text-sm font-bold block truncate leading-tight',
+                      isSelected ? 'text-text-primary' : 'text-text-secondary'
+                    )}>
+                      {admin.fullName.split(' ').slice(0, 2).join(' ')}
+                    </span>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[10px] text-text-muted font-mono">
+                        {admin.dataStart}–{Math.min(admin.end, 2025)}
+                      </span>
+                      <span
+                        className="text-[9px] font-mono font-bold px-1.5 py-0 rounded"
+                        style={{
+                          backgroundColor: `${partyColor}20`,
+                          color: partyColor,
+                          border: `1px solid ${partyColor}40`,
+                        }}
+                      >
+                        {admin.party}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              )}
+                {/* Quick stats */}
+                <div className="border-t border-border/30 pt-2 mt-1 space-y-1">
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-text-muted">Contratos</span>
+                    <span className="font-mono font-semibold text-text-secondary">{agg ? formatNumber(agg.contracts) : '0'}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-text-muted">Gasto total</span>
+                    <span className="font-mono font-semibold text-text-secondary">{agg ? formatCompactMXN(agg.totalValue) : '$0'}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-text-muted">Alto riesgo</span>
+                    <span className={cn(
+                      'font-mono font-bold',
+                      agg && agg.highRiskPct > 10 ? 'text-risk-critical' : agg && agg.highRiskPct > 6 ? 'text-risk-high' : 'text-risk-low'
+                    )}>
+                      {agg ? agg.highRiskPct.toFixed(1) + '%' : '--'}
+                    </span>
+                  </div>
+                </div>
+                {/* Mini sparkline */}
+                {agg && agg.years.length > 1 && (
+                  <div className="mt-2 h-6">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ComposedChart data={agg.years} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                        <Line
+                          type="monotone"
+                          dataKey="contracts"
+                          stroke={admin.color}
+                          strokeWidth={1.5}
+                          dot={false}
+                          isAnimationActive={false}
+                        />
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </div>
             </button>
             </ScrollReveal>
           )
@@ -737,21 +754,20 @@ export default function Administrations() {
       {/* Administration Fingerprints — radar comparison */}
       <AdministrationFingerprints />
 
-      {/* Editorial Narrative */}
+      {/* Editorial Narrative — INVESTIGACION */}
       <motion.div
-        className="card flex items-start gap-3 px-4 py-3"
+        className="relative border-l-4 border-accent bg-background-card rounded-r-lg px-5 py-4"
         variants={fadeIn}
         initial="initial"
         whileInView="animate"
         viewport={{ once: true, margin: '-50px' }}
       >
-        <Info className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
-        <div>
-          <span className="text-xs font-semibold text-accent uppercase tracking-wider mr-2">{t('narrative')}</span>
-          <span className="text-sm text-text-secondary leading-relaxed">
-            {ADMIN_NARRATIVES[selectedAdmin]}
-          </span>
+        <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-2">
+          Investigacion
         </div>
+        <p style={{ fontFamily: 'var(--font-family-serif)' }} className="text-sm text-text-secondary leading-relaxed">
+          {ADMIN_NARRATIVES[selectedAdmin]}
+        </p>
       </motion.div>
 
       {/* Incomplete data warning for Sheinbaum */}
@@ -799,7 +815,66 @@ export default function Administrations() {
         </motion.div>
       )}
 
-      {/* L2 + L3 side by side */}
+      {/* ── EL REGISTRO ── */}
+      <div className="mb-2 mt-4">
+        <div className="text-[10px] tracking-[0.2em] uppercase text-text-muted font-semibold mb-1 flex items-center gap-2">
+          <span className="h-px flex-1 bg-border" />
+          Evidencia
+          <span className="h-px flex-1 bg-border" />
+        </div>
+      </div>
+
+      {/* High-risk rate comparison — dramatic bar visualization */}
+      <div className="bg-background-card rounded-lg border border-border/40 p-5 mb-4">
+        <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-3">
+          El Registro — Tasa de Alto Riesgo por Sexenio
+        </div>
+        <div className="space-y-2.5">
+          {adminAggs.map((a) => {
+            const maxHrPct = Math.max(...adminAggs.map(ag => ag.highRiskPct), 1)
+            const barWidth = (a.highRiskPct / maxHrPct) * 100
+            const isAmlo = a.name === 'AMLO'
+            const adminMeta = ADMINISTRATIONS.find(ad => ad.name === a.name)
+            const partyColor = PARTY_COLORS[adminMeta?.party || ''] || '#64748b'
+            return (
+              <div key={a.name} className="group">
+                <div className="flex items-center gap-3">
+                  <span className={cn(
+                    'text-xs font-mono w-24 text-right',
+                    a.name === selectedAdmin ? 'font-bold text-text-primary' : 'text-text-muted'
+                  )}>
+                    {a.name}
+                  </span>
+                  <div className="flex-1 h-6 bg-background-elevated/50 rounded overflow-hidden relative">
+                    <div
+                      className="h-full rounded transition-all duration-700 ease-out"
+                      style={{
+                        width: `${barWidth}%`,
+                        backgroundColor: isAmlo ? 'var(--color-risk-critical)' : `${partyColor}80`,
+                      }}
+                    />
+                    {isAmlo && (
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-risk-critical animate-pulse">
+                        4x vs EPN
+                      </span>
+                    )}
+                  </div>
+                  <span className={cn(
+                    'text-xs font-mono font-bold w-14 text-right',
+                    isAmlo ? 'text-risk-critical' : a.highRiskPct < 5 ? 'text-risk-low' : 'text-text-secondary'
+                  )}>
+                    {a.highRiskPct.toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+        <p className="mt-3 text-[10px] text-text-muted italic leading-relaxed">
+          Nota: la mayor cobertura de RFC en datos 2018+ puede contribuir a tasas de deteccion de riesgo mas altas en administraciones recientes.
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* L2: Administration Comparison Table */}
         <div className="card-elevated">
@@ -1021,6 +1096,7 @@ export default function Administrations() {
         <ScrollReveal direction="fade">
         <div className="card-elevated">
           <CardHeader className="pb-2">
+            <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">Evidencia · Perfil Sectorial</div>
             <CardTitle className="text-sm font-mono text-text-primary">
               {t('sectorProfile', { admin: selectedAdmin })}
             </CardTitle>
@@ -1153,6 +1229,7 @@ export default function Administrations() {
       {/* L6: Events Timeline */}
       <div className="card">
         <CardHeader className="pb-2">
+          <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">Cronologia · Hechos Documentados</div>
           <CardTitle className="text-sm font-mono text-text-primary">
             {t('keyEvents', { admin: selectedAdmin, start: selectedMeta.dataStart, end: Math.min(selectedMeta.end - 1, 2025) })}
           </CardTitle>

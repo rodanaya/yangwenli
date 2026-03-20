@@ -1,9 +1,14 @@
 /**
- * Sectors Overview — Investigation Workbench
+ * El Diagnostico Nacional — Sector Health Assessment
  *
- * Section 1: 4 StatCards (total sectors, contracts, value, avg risk)
- * Section 2: Sortable sector comparison table (primary)
- * Section 3: Charts gallery (collapsed in <details>)
+ * A medical diagnostic report on the health of each sector in Mexico's
+ * procurement system. Each sector is a "patient" with test results.
+ * Reads top-to-bottom: overview → vital signs → detailed breakdown → diagnosis.
+ *
+ * Section 1: Diagnostic header + Hallazgo Principal callout
+ * Section 2: 4 StatCards (vital signs)
+ * Section 3: Sortable sector comparison table (primary diagnostic panel)
+ * Section 4: Charts gallery (detailed test results)
  */
 
 import { memo, useMemo, useState, useRef } from 'react'
@@ -23,7 +28,7 @@ import { SECTOR_COLORS, SECTORS, RISK_COLORS, getRiskLevelFromScore, getSectorNa
 import { Heatmap } from '@/components/charts/Heatmap'
 import type { SectorStatistics } from '@/api/types'
 import { AlertTriangle, BarChart3, Info, Layers, X } from 'lucide-react'
-import { PageHeader } from '@/components/layout/PageHeader'
+
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { ScrollReveal } from '@/hooks/useAnimations'
@@ -834,17 +839,45 @@ export function Sectors() {
 
   return (
     <div className="space-y-5">
-      {/* Hero Header */}
-      <PageHeader
-        title="Sector Intelligence"
-        subtitle={aggregates
-          ? `${formatNumber(aggregates.totalContracts)} contracts across ${aggregates.sectorCount} active sectors`
-          : '12-sector taxonomy with risk breakdown'}
-        icon={Layers}
-        label="SECTORES GUBERNAMENTALES"
-        serif
-      />
-      {/* Summary stat pills */}
+      {/* ================================================================ */}
+      {/* DIAGNOSTIC HEADER — "El Diagnostico Nacional"                  */}
+      {/* ================================================================ */}
+      <motion.div
+        className="border-b border-border pb-6 mb-8"
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+      >
+        <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted mb-2">
+          Informe de Diagnostico &middot; 12 Sectores &middot; 2001&ndash;2025
+        </div>
+        <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-4xl font-bold text-text-primary mb-2">
+          El Diagnostico Nacional
+        </h1>
+        <p className="text-sm text-text-secondary max-w-2xl">
+          {aggregates
+            ? `Analisis sistemico de riesgo por sector en contratacion publica federal. ${aggregates.sectorCount} sectores bajo vigilancia. Resultados basados en ${formatNumber(aggregates.totalContracts)} contratos.`
+            : 'Analisis sistemico de riesgo por sector en contratacion publica federal. 12 sectores bajo vigilancia. Resultados basados en 3.05 millones de contratos.'}
+        </p>
+      </motion.div>
+
+      {/* ================================================================ */}
+      {/* HALLAZGO PRINCIPAL — Editorial callout                          */}
+      {/* ================================================================ */}
+      <motion.div
+        className="border-l-4 border-accent pl-4 py-2 mb-6 bg-accent-glow rounded-r"
+        initial={{ opacity: 0, x: -12 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.45, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+      >
+        <div className="text-xs uppercase tracking-wide text-accent font-semibold mb-1">Hallazgo Principal</div>
+        <p className="text-sm text-text-primary">
+          El sector <strong>Salud</strong> concentra el mayor riesgo absoluto: redes de empresas fantasma en IMSS,
+          ISSSTE y compras de emergencia COVID-19 representan mas de $200B MXN en contratos de alto riesgo.
+        </p>
+      </motion.div>
+
+      {/* Summary stat pills — vital signs */}
       {aggregates && (
         <motion.div
           className="flex flex-wrap gap-3"
@@ -853,11 +886,11 @@ export function Sectors() {
           transition={{ duration: 0.4, delay: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
           <div className="fern-card inline-flex items-center gap-2 px-4 py-2">
-            <span className="text-[10px] uppercase tracking-wider text-text-muted">Total Value</span>
+            <span className="text-[10px] uppercase tracking-wider text-text-muted">Gasto Total</span>
             <span className="pull-stat !text-base">{formatCompactMXN(aggregates.totalValue)}</span>
           </div>
           <div className="fern-card inline-flex items-center gap-2 px-4 py-2">
-            <span className="text-[10px] uppercase tracking-wider text-text-muted">Avg Risk</span>
+            <span className="text-[10px] uppercase tracking-wider text-text-muted">Riesgo Promedio</span>
             <span className={cn(
               'pull-stat !text-base',
               aggregates.avgRisk >= 0.30 ? 'text-risk-critical' : aggregates.avgRisk >= 0.15 ? 'text-risk-high' : 'text-text-primary'
@@ -867,7 +900,7 @@ export function Sectors() {
           </div>
           {topSector && (
             <div className="fern-card inline-flex items-center gap-2 px-4 py-2">
-              <span className="text-[10px] uppercase tracking-wider text-text-muted">Most Active</span>
+              <span className="text-[10px] uppercase tracking-wider text-text-muted">Mayor Gasto</span>
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: SECTOR_COLORS[topSector.sector_code] || '#64748b' }} />
                 <span className="pull-stat !text-base">{getSectorNameEN(topSector.sector_code)}</span>
@@ -1072,9 +1105,9 @@ export function Sectors() {
         </Card>
       )}
 
-      {/* Section 1: Stat Cards */}
+      {/* Section 1: Stat Cards — Vital Signs */}
       <div className="editorial-rule mb-3">
-        <span className="editorial-label">Key Metrics</span>
+        <span className="editorial-label">SIGNOS VITALES</span>
       </div>
       <motion.div
         className="grid gap-4 grid-cols-2 lg:grid-cols-4"
@@ -1160,6 +1193,9 @@ export function Sectors() {
       )}
 
       {/* Section 2a: Sector Risk Heatmap — strongest signal, visible by default */}
+      <div className="editorial-rule mb-3">
+        <span className="editorial-label">MATRIZ DE RIESGO</span>
+      </div>
       <ScrollReveal direction="fade">
         <Card className="fern-card">
           <CardHeader>
@@ -1206,6 +1242,9 @@ export function Sectors() {
                   />
                 )
               })()}
+            <p className="mt-3 text-[10px] text-text-muted/60 font-mono border-t border-border/20 pt-2">
+              Fuente: COMPRANET 2002-2025, modelo de riesgo v6.4 &middot; Valores normalizados min-max por metrica
+            </p>
           </CardContent>
         </Card>
       </ScrollReveal>
@@ -1214,6 +1253,10 @@ export function Sectors() {
       {/* CRI SCATTER — Institution Risk Landscape (Fazekas-style)         */}
       {/* ================================================================ */}
       {criScatterData && criScatterData.data.length > 0 && (
+        <>
+        <div className="editorial-rule mb-3">
+          <span className="editorial-label">PAISAJE INSTITUCIONAL</span>
+        </div>
         <ScrollReveal direction="fade">
           <Card className="fern-card">
             <CardHeader className="pb-2">
@@ -1313,9 +1356,13 @@ export function Sectors() {
               <p className="text-xs text-white/50 italic mt-2">
                 Institutions in the top-right quadrant (high direct award + high risk) warrant priority investigation.
               </p>
+              <p className="mt-2 text-[10px] text-text-muted/60 font-mono border-t border-border/20 pt-2">
+                Fuente: COMPRANET &middot; Instituciones con min. 200 contratos &middot; Metodologia Fazekas CRI
+              </p>
             </CardContent>
           </Card>
         </ScrollReveal>
+        </>
       )}
 
       {/* Section 2b: Sortable Comparison Table */}
@@ -1326,7 +1373,7 @@ export function Sectors() {
         }
       `}</style>
       <div className="editorial-rule mb-3">
-        <span className="editorial-label">Sector Comparison</span>
+        <span className="editorial-label">PANEL COMPARATIVO</span>
       </div>
       <motion.div
         variants={fadeIn}
@@ -1525,7 +1572,7 @@ export function Sectors() {
                             />
                             <Link
                               to={`/sectors/${sector.sector_id}`}
-                              className="font-medium text-text-primary hover:text-accent transition-colors"
+                              className="font-bold text-text-primary hover:text-accent transition-colors text-[13px]"
                               onClick={(e) => e.stopPropagation()}
                             >
                               {getSectorNameEN(sector.sector_code)}
@@ -1550,7 +1597,13 @@ export function Sectors() {
                         <td className="data-cell text-right">
                           <RiskBadge score={sector.avg_risk_score} className="text-xs px-1.5 py-0" />
                         </td>
-                        <td className="data-cell text-right font-mono text-text-secondary tabular-nums">
+                        <td className="data-cell text-right font-mono tabular-nums" style={{
+                          color: sector.high_risk_pct >= 15 ? RISK_COLORS.critical
+                            : sector.high_risk_pct >= 10 ? RISK_COLORS.high
+                            : sector.high_risk_pct >= 5 ? RISK_COLORS.medium
+                            : RISK_COLORS.low,
+                          fontWeight: sector.high_risk_pct >= 10 ? 700 : 400,
+                        }}>
                           {formatPercentSafe(sector.high_risk_pct, false)}
                         </td>
                         <td className="data-cell text-right font-mono text-text-secondary tabular-nums">
@@ -1598,6 +1651,9 @@ export function Sectors() {
       </motion.div>
 
       {/* Section 3: Contract Value by Sector */}
+      <div className="editorial-rule mb-3">
+        <span className="editorial-label">DISTRIBUCION DE GASTO</span>
+      </div>
       <ScrollReveal direction="fade">
         <div>
           {/* Contract Value by Sector */}
@@ -1670,6 +1726,9 @@ export function Sectors() {
                   {getSectorNameEN(topSector.sector_code)} accounts for {((topSector.total_value_mxn / (data?.total_value_mxn || 1)) * 100).toFixed(0)}% of total procurement value — concentration in a single sector warrants close monitoring.
                 </p>
               )}
+              <p className="mt-3 text-[10px] text-text-muted/60 font-mono border-t border-border/20 pt-2">
+                Fuente: COMPRANET 2002-2025 &middot; Valores en pesos mexicanos nominales &middot; Clasificacion por taxonomia de 12 sectores RUBLI
+              </p>
             </CardContent>
           </Card>
 
@@ -1680,6 +1739,10 @@ export function Sectors() {
       {/* MARKET HEALTH — Supplier Diversity (HHI)                        */}
       {/* ================================================================ */}
       {concentrationData && concentrationData.most_concentrated.length > 0 && (
+        <>
+        <div className="editorial-rule mb-3">
+          <span className="editorial-label">SALUD DEL MERCADO</span>
+        </div>
         <ScrollReveal direction="fade">
           <Card className="bg-card border-border/40">
             <CardHeader className="pb-2">
@@ -1739,11 +1802,15 @@ export function Sectors() {
             </CardContent>
           </Card>
         </ScrollReveal>
+        </>
       )}
 
       {/* ================================================================ */}
       {/* INDUSTRY RISK CONCENTRATION — Treemap by total value             */}
       {/* ================================================================ */}
+      <div className="editorial-rule mb-3">
+        <span className="editorial-label">CONCENTRACION DE RIESGO</span>
+      </div>
       <ScrollReveal direction="fade">
         <Card className="fern-card">
           <CardHeader className="pb-2">
@@ -1776,6 +1843,9 @@ export function Sectors() {
             )}
             <p className="text-xs text-white/50 italic mt-2">
               Red cells indicate industries where vendors similar to known corruption cases concentrate — these warrant cross-referencing with network analysis.
+            </p>
+            <p className="mt-3 text-[10px] text-text-muted/60 font-mono border-t border-border/20 pt-2">
+              Fuente: COMPRANET &middot; Agrupacion por industria (min. 100 contratos/proveedor) &middot; Color = riesgo promedio v6.4
             </p>
           </CardContent>
         </Card>

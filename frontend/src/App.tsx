@@ -59,6 +59,8 @@ const ReportCard = lazy(() => import('@/pages/ReportCard'))
 const Journalists = lazy(() => import('@/pages/Journalists'))
 const RedThread = lazy(() => import('@/pages/RedThread'))
 const StoryNarrative = lazy(() => import('@/pages/StoryNarrative'))
+const Telescope = lazy(() => import('@/pages/Telescope'))
+const Seismograph = lazy(() => import('@/pages/Seismograph'))
 
 // First-visit routing: redirect "/" to Intro for new users, Dashboard for returning users
 function FirstVisitRedirect() {
@@ -411,6 +413,24 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <InstitutionCompare />
+                  </SuspenseBoundary>
+                }
+              />
+
+              <Route
+                path="telescope"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <Telescope />
+                  </SuspenseBoundary>
+                }
+              />
+
+              <Route
+                path="seismograph"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <Seismograph />
                   </SuspenseBoundary>
                 }
               />

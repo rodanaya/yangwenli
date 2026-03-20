@@ -10,7 +10,7 @@ import { useQuery } from '@tanstack/react-query'
 import {
   AlertTriangle, BarChart3, BookOpen, Building2, FileText, Filter,
   FlaskConical, GitBranch, Globe, LayoutDashboard, Network, Scale,
-  Shield, TrendingUp, Users, Zap, Bookmark, X as XIcon,
+  Shield, TrendingUp, Users, Zap, Bookmark, X as XIcon, Activity, Telescope,
 } from 'lucide-react'
 import {
   CommandDialog,
@@ -51,6 +51,8 @@ const QUICK_ACTIONS: QuickAction[] = [
   { id: 'cases',        label: 'Case Library',             icon: BookOpen,        href: '/cases',                            shortcut: 'G L' },
   { id: 'intelligence', label: 'Procurement Intelligence', icon: Zap,             href: '/procurement-intelligence' },
   { id: 'temporal',     label: 'Temporal Patterns',        icon: GitBranch,       href: '/administrations' },
+  { id: 'seismograph',  label: 'El Sismógrafo',            description: 'Multi-channel risk tremor visualization 2010–2025', icon: Activity, href: '/seismograph' },
+  { id: 'telescope',    label: 'El Telescopio',            description: 'Contract universe — all sectors as nebulae in space', icon: Telescope, href: '/telescope' },
   { id: 'methodology',  label: 'Risk Methodology',         icon: FlaskConical,    href: '/methodology' },
   { id: 'model',        label: 'Model Transparency',       icon: Scale,           href: '/model' },
   { id: 'ground-truth', label: 'Ground Truth Cases',       icon: Globe,           href: '/ground-truth' },
