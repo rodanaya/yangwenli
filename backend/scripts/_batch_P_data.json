@@ -1,0 +1,26 @@
+[
+  {
+    "vendor_id": 108982,
+    "vendor_name": "GRUPO CORPORATIVO URBIS SA DE CV",
+    "case_name": "Port Infrastructure SB Capture (Grupo Urbis)",
+    "case_type": "institutional_capture",
+    "confidence_level": "high",
+    "estimated_fraud_mxn": 1983000000,
+    "year_start": 2013,
+    "year_end": 2018,
+    "evidence_strength": "high",
+    "notes": "Construction firm concentrated at federal port authorities during Pena Nieto sexenio (2013-2018). API Veracruz: 913M across 4 contracts (50% SB, 50% DA including 2 direct awards totaling 462M for port construction). API Topolobampo: 145M single contract, 100% SB. API Lazaro Cardenas: 122M single contract, 100% SB. SCT: 76M across 11 contracts, 100% SB. Veracruz state infrastructure: 631M single contract, 100% SB. Total 1.98B across 19 contracts, entirely within 2013-2018. No RFC on file. Two massive direct awards at API Veracruz (333M and 129M) are extreme for port construction. Pattern: dominates port construction procurement via sole-bidder LP tenders and large DA at a single port authority. Consistent with institutional capture at federal port authorities."
+  },
+  {
+    "vendor_id": 50171,
+    "vendor_name": "GROBSON S DE RL",
+    "case_name": "CONAGUA Water Infrastructure Capture (Grobson)",
+    "case_type": "institutional_capture",
+    "confidence_level": "high",
+    "estimated_fraud_mxn": 1316000000,
+    "year_start": 2022,
+    "year_end": 2025,
+    "evidence_strength": "high",
+    "notes": "Small Sonora-based construction firm (11M in state contracts 2010-2018) that suddenly captures 1.316B in CONAGUA water infrastructure contracts 2022-2025. 6 contracts at CONAGUA, 83% single-bid rate. Contracts are for 'Agua Saludable para La Laguna' mega-project: canal construction, irrigation networks, distribution systems. Risk scores jump from 0.22 (state contracts) to 0.56-1.0 (CONAGUA contracts). Classic P6 capture: regional firm with minimal track record suddenly winning massive federal sole-bidder tenders at a single institution. SRL structure (not SA) unusual for 1B+ federal contractor. No RFC on file. The 4-year CONAGUA concentration represents 95% of all-time value."
+  }
+]
