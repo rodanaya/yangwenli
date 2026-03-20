@@ -1,88 +1,89 @@
 #!/usr/bin/env python3
 """
-GT Mining Batch MM - ARIA T3 investigation (4 vendors: PRODESA, FOJA, DIAGNOQUIM, ULTRASIST)
-
-Investigated 2026-03-20:
-  v22992   PRODESA                 -> SKIP (9 contracts, 100% SB but insufficient concentration/value)
-  v28510   FOJA INGENIEROS         -> ADD (case 885: single_bid_capture, 53c/1.34B, 98% SB)
-  v5678    DIAGNOQUIM              -> SKIP (426 contracts, IMSS pharmaceutical supplier, legitimate)
-  v17136   ULTRASIST               -> SKIP (26 contracts, too dispersed across 17 institutions)
-
-Cases added: 1  |  Vendors skipped: 3
+Ground Truth Insertion Script: Batch MM
+Vendors: v42990 (COMERLAT), v35501 (LA CIMA), v53089 (MEXTYPSA), v10229 (CANTERAS)
+Decision: All 4 SKIPPED - legitimate infrastructure/materials suppliers
+Status: Not added to ground truth
 """
-import sqlite3
+
 import sys
-import os
+import sqlite3
+from datetime import datetime
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-DB = os.path.join(os.path.dirname(__file__), "..", "RUBLI_NORMALIZED.db")
-
+DATABASE_PATH = "D:/Python/yangwenli/backend/RUBLI_NORMALIZED.db"
 
 def main():
-    conn = sqlite3.connect(DB)
-    conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA busy_timeout=60000")
-
-    max_id = conn.execute("SELECT MAX(id) FROM ground_truth_cases").fetchone()[0]
-    if max_id is None or max_id < 884:
-        print(f"ERROR: max_id={max_id}, expected >= 884. Aborting.")
+    try:
+        conn = sqlite3.connect(DATABASE_PATH)
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        
+        # Query max case id to ensure proper sequencing
+        c.execute("SELECT MAX(id) as max_id FROM ground_truth_cases")
+        result = c.fetchone()
+        max_id = result['max_id'] if result and result['max_id'] else 0
+        
+        if max_id is None or max_id < 901:
+            print("ERROR: Could not get valid ground_truth_cases max_id")
+            return
+        
+        print(f"Ground truth state: {max_id} cases exist")
+        print()
+        
+        # Decision decisions for all 4 vendors
+        vendors_to_skip = [
+            {
+                'vendor_id': 42990,
+                'vendor_name': 'COMERLAT SA DE CV',
+                'reason': 'Legitimate pharmaceutical/medical distributor. High DA (86.7%) and concentration at IMSS/ISSSTE (96.2%) is normal for health sector suppliers. Risk score 0.068. No corruption indicators.'
+            },
+            {
+                'vendor_id': 35501,
+                'vendor_name': 'LA CIMA TERRACEROS SA DE CV',
+                'reason': 'Specialized infrastructure contractor (earth-moving). 100% single-bid rate in competitive procedures is normal for specialized services. All contracts via SCT for highway work. Risk score 0.173.'
+            },
+            {
+                'vendor_id': 53089,
+                'vendor_name': 'MEXTYPSA SA DE CV',
+                'reason': 'Infrastructure specialist with high single-bid rate (87.5%) in competitive procedures. 62.5% concentrated at SCT but multi-year, multi-project pattern. Risk score 0.128.'
+            },
+            {
+                'vendor_id': 10229,
+                'vendor_name': 'CANTERAS PENINSULARES SA DE CV',
+                'reason': 'Construction materials supplier (quarries/gravel). 87.8% single-bid rate but distributed across multiple state institutions and regions (not concentrated at one institution). No concentration signal. Inactive since 2023. Risk score 0.171.'
+            }
+        ]
+        
+        # Update aria_queue to mark as reviewed/skipped
+        for vendor in vendors_to_skip:
+            vid = vendor['vendor_id']
+            vname = vendor['vendor_name']
+            reason = vendor['reason']
+            
+            c.execute("""
+                UPDATE aria_queue
+                SET review_status = 'skipped',
+                    in_ground_truth = 0,
+                    reviewer_notes = ?
+                WHERE vendor_id = ?
+            """, (reason, vid))
+            
+            print(f"SKIP: v{vid} {vname}")
+            print(f"  Reason: {reason}")
+            print()
+        
+        conn.commit()
+        print(f"Completed: All 4 vendors marked as skipped in aria_queue")
+        print(f"No ground truth cases added (all are legitimate suppliers)")
+        
         conn.close()
-        return
-
-    c0 = max_id + 1
-
-    # ========== CASE 1: FOJA INGENIEROS (v28510) ==========
-    print(f"Adding case {c0}: FOJA INGENIEROS (single_bid_capture)")
-
-    conn.execute(
-        """
-        INSERT OR IGNORE INTO ground_truth_cases
-        (id, case_id, case_name, case_type, confidence_level, 
-         year_start, year_end, estimated_fraud_mxn, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        (
-            c0,
-            f"CASE-{c0}",
-            "FOJA INGENIEROS Construction Contracts - Single-Bid Capture",
-            "single_bid_capture",
-            "high",
-            2006,
-            2020,
-            800_000_000,
-            "Construction engineering firm (FOJA INGENIEROS) with 98% single-bid rate across 53 contracts (1.34B MXN) spanning 12 institutions. Legitimate construction firms should have 30-50% SB rates. Nearly all contracts awarded through competitive procedures with only 1 bidder (impossibly no competition). Concentrated in 2006-2020 window. Likely indicates systematic capture of infrastructure procurement at multiple agencies (SCT, CONAGUA, state water boards).",
-        ),
-    )
-
-    # Add vendor reference for FOJA INGENIEROS
-    conn.execute(
-        """
-        INSERT OR IGNORE INTO ground_truth_vendors
-        (case_id, vendor_id, vendor_name_source, evidence_strength, match_method)
-        VALUES (?, ?, ?, ?, ?)
-        """,
-        (
-            c0,
-            28510,
-            "FOJA INGENIEROS CONSTRUCTORES, S.A. DE C.V.",
-            "strong",
-            "vendor_id_direct_match",
-        ),
-    )
-
-    # Mark vendor as in ground truth
-    conn.execute(
-        "UPDATE aria_queue SET in_ground_truth = 1 WHERE vendor_id = ?",
-        (28510,),
-    )
-
-    conn.commit()
-    print(f"Case {c0} inserted successfully.")
-    print(f"Vendors added to ground truth: 1")
-    print(f"Vendors skipped: 3 (v22992 PRODESA, v5678 DIAGNOQUIM, v17136 ULTRASIST)")
-    conn.close()
+        
+    except Exception as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        raise
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
