@@ -56,6 +56,7 @@ import { FuentePill } from '@/components/ui/FuentePill'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 import AdministrationFingerprints from '@/components/charts/AdministrationFingerprints'
 import { AdminSectorSunburst } from '@/components/charts/AdminSectorSunburst'
+import { AdminSectorHeatmap } from '@/components/charts/AdminSectorHeatmap'
 
 // =============================================================================
 // Constants
@@ -753,6 +754,27 @@ export default function Administrations() {
 
       {/* Administration Fingerprints — radar comparison */}
       <AdministrationFingerprints />
+
+      {/* ── PROCUREMENT INTENSITY HEATMAP ── */}
+      {sectorYearData.length > 0 && (
+        <ScrollReveal direction="fade">
+          <div className="card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-mono flex items-center gap-2">
+                <Activity className="h-4 w-4 text-accent" />
+                Procurement Intensity Heatmap
+              </CardTitle>
+              <p className="text-xs text-text-muted">
+                % of each administration's total spend allocated per sector.
+                Darker cells = higher concentration of procurement spend in that sector.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <AdminSectorHeatmap sectorYearData={sectorYearData} />
+            </CardContent>
+          </div>
+        </ScrollReveal>
+      )}
 
       {/* Editorial Narrative — INVESTIGACION */}
       <motion.div

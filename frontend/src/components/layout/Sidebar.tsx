@@ -130,6 +130,7 @@ function NavSection({
 export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: SidebarProps) {
   const location = useLocation()
   const { t } = useTranslation('nav')
+  const { t: tc } = useTranslation('common')
 
   // Close mobile sidebar on any navigation
   useEffect(() => {
@@ -218,7 +219,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
               <span className="text-white font-black text-lg tracking-tight leading-none">RUBLI</span>
               <span className="text-[9px] font-bold text-[#c41e3a] bg-[#c41e3a]/15 px-1.5 py-0.5 rounded tracking-widest uppercase leading-none">2.0</span>
             </div>
-            <p className="text-[10px] text-white/35 mt-0.5 truncate tracking-wide">Transparencia Procuratoria</p>
+            <p className="text-[10px] text-white/35 mt-0.5 truncate tracking-wide">{tc('tagline')}</p>
           </div>
         )}
         {/* Mobile close button */}
@@ -275,7 +276,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
             <div className="flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_4px_#10b981] flex-shrink-0" />
               <span className="text-[10px] font-mono text-stone-500 tracking-wide">
-                3.1M contracts indexed
+                {tc('contractsIndexed')}
               </span>
             </div>
           </div>
@@ -286,7 +287,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_4px_#10b981]" />
               </TooltipTrigger>
               <TooltipContent side="right" sideOffset={8}>
-                <p className="text-xs font-mono">3.1M indexed</p>
+                <p className="text-xs font-mono">{tc('contractsIndexedShort')}</p>
               </TooltipContent>
             </Tooltip>
           </div>

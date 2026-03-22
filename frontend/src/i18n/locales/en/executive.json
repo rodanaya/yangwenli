@@ -1,4 +1,20 @@
 {
+  "lede": "RUBLI has analyzed 23 years of Mexican federal procurement — 3.1 million contracts worth 9.9 trillion pesos. Our risk model flags {{highRiskPct}}% of all contracts as high-risk, representing an estimated {{valueAtRisk}} in potentially irregular spending. What follows is the full intelligence picture.",
+  "editorialSection": "EXECUTIVE SUMMARY",
+  "editorialHeadline": "Procurement Intelligence",
+  "editorialSubtitle": "Comprehensive analysis of Mexican federal spending, 2002-2025",
+  "kpi": {
+    "totalContracts": "Total Contracts Analyzed",
+    "totalContractsContext": "Federal procurement records spanning 23 years (2002-2025)",
+    "totalValue": "Total Value (MXN T)",
+    "totalValueContext": "Total validated procurement spend (2002-2025)",
+    "highRiskRate": "High-Risk Rate",
+    "highRiskRateContext": "Contracts flagged as high or critical risk (OECD-calibrated)",
+    "valueAtRisk": "Estimated At-Risk Value",
+    "valueAtRiskContext": "Total value of contracts flagged as high or critical risk"
+  },
+  "seeFullBreakdown": "See full breakdown",
+  "hideBreakdown": "Hide breakdown",
   "header": {
     "badge": "EXECUTIVE INTELLIGENCE SUMMARY",
     "dateline": "February 2026  |  RUBLI Intelligence Platform",
@@ -369,6 +385,46 @@
     "ariaLabel": "Pattern web: direct award, December rush, and vendor concentration reinforce each other into amplified risk"
   },
 
+  "statBombs": {
+    "highRiskRate": "High-Risk Rate",
+    "highRiskRateSub": "OECD-calibrated · v6.0",
+    "highCritical": "High/Critical Contracts",
+    "highCriticalSub": "{{pct}}% of all 3.1M contracts",
+    "yearsCovered": "Years Covered",
+    "yearsCoveredSub": "2002 - 2025 · 3.1M contracts",
+    "modelAuc": "Model AUC",
+    "modelAucSub": "Vendor-stratified split · v6.4",
+    "documentedCases": "Documented Cases",
+    "documentedCasesSub": "Ground truth for corruption detection",
+    "dualConfirmed": "Dual-Confirmed",
+    "dualConfirmedSub": "v6.0 model AND PyOD ML · unsupervised cross-validation"
+  },
+  "funnel": {
+    "title": "Risk Stratification — 3.1M Contracts",
+    "allContracts": "All Federal Contracts",
+    "allContractsSub": "2002-2025",
+    "mediumRisk": "Medium+ Risk",
+    "mediumRiskSub": "Statistical anomaly detected",
+    "highRisk": "High Risk",
+    "highRiskSub": "Priority investigation",
+    "criticalRisk": "Critical Risk",
+    "criticalRiskSub": "Immediate action required",
+    "criticalNote": "{{pct}}% · {{contracts}} contracts · Immediate investigation"
+  },
+  "heroSubtitle": "Mexico's Procurement Record",
+  "pullQuote1": "One in eight contracts shows statistical patterns consistent with procurement fraud.",
+  "pullQuote2": "The procurement system's greatest vulnerability is not any single contract — it is the structural concentration of public spending in vendors that operate without meaningful competition.",
+  "sourceLabel": "About this analysis",
+  "sourceBody": "Based on the RUBLI v6.4 risk model (AUC=0.840, HR ~10%). Scores indicate similarity to documented corruption patterns, not proof of irregularity.",
+  "tableHeader": "Investigation records",
+  "filterLabel": "Investigation filters",
+  "riskInfographic": {
+    "title": "Risk Level Distribution — 3.1M Contracts",
+    "immediate": "Immediate investigation",
+    "priority": "Priority review",
+    "watchList": "Watch list",
+    "standard": "Standard monitoring"
+  },
   "footer": {
     "platform": "RUBLI Intelligence Platform",
     "compranet": "COMPRANET 2002-2025",

@@ -1,4 +1,20 @@
 {
+  "lede": "RUBLI ha analizado 23 anos de contratacion publica federal mexicana — 3.1 millones de contratos por un valor de 9.9 billones de pesos. Nuestro modelo de riesgo senala el {{highRiskPct}}% de todos los contratos como de alto riesgo, representando un estimado de {{valueAtRisk}} en gasto potencialmente irregular. Lo que sigue es el panorama completo de inteligencia.",
+  "editorialSection": "RESUMEN EJECUTIVO",
+  "editorialHeadline": "Inteligencia de Contrataciones",
+  "editorialSubtitle": "Analisis integral del gasto federal mexicano, 2002-2025",
+  "kpi": {
+    "totalContracts": "Contratos Analizados",
+    "totalContractsContext": "Registros de contratacion publica federal abarcando 23 anos (2002-2025)",
+    "totalValue": "Valor Total (MXN B)",
+    "totalValueContext": "Gasto total validado de contratacion publica (2002-2025)",
+    "highRiskRate": "Tasa de Alto Riesgo",
+    "highRiskRateContext": "Contratos senalados como de riesgo alto o critico (calibrado OCDE)",
+    "valueAtRisk": "Valor Estimado en Riesgo",
+    "valueAtRiskContext": "Valor total de contratos senalados como riesgo alto o critico"
+  },
+  "seeFullBreakdown": "Ver desglose completo",
+  "hideBreakdown": "Ocultar desglose",
   "header": {
     "badge": "RESUMEN EJECUTIVO DE INTELIGENCIA",
     "dateline": "Febrero 2026  |  Plataforma de Inteligencia RUBLI",
@@ -369,6 +385,46 @@
     "ariaLabel": "Red de patrones: adjudicación directa, carrera de diciembre y concentración de proveedores se refuerzan mutuamente amplificando el riesgo"
   },
 
+  "statBombs": {
+    "highRiskRate": "Tasa de Alto Riesgo",
+    "highRiskRateSub": "Calibrado OCDE · v6.0",
+    "highCritical": "Contratos Alto/Critico",
+    "highCriticalSub": "{{pct}}% de los 3.1M contratos",
+    "yearsCovered": "Anos Cubiertos",
+    "yearsCoveredSub": "2002 - 2025 · 3.1M contratos",
+    "modelAuc": "AUC del Modelo",
+    "modelAucSub": "Division estratificada · v6.4",
+    "documentedCases": "Casos Documentados",
+    "documentedCasesSub": "Verdad base para deteccion de corrupcion",
+    "dualConfirmed": "Doble Confirmacion",
+    "dualConfirmedSub": "Modelo v6.0 Y PyOD ML · validacion cruzada no supervisada"
+  },
+  "funnel": {
+    "title": "Estratificacion de Riesgo — 3.1M Contratos",
+    "allContracts": "Todos los Contratos Federales",
+    "allContractsSub": "2002-2025",
+    "mediumRisk": "Riesgo Medio+",
+    "mediumRiskSub": "Anomalia estadistica detectada",
+    "highRisk": "Riesgo Alto",
+    "highRiskSub": "Investigacion prioritaria",
+    "criticalRisk": "Riesgo Critico",
+    "criticalRiskSub": "Accion inmediata requerida",
+    "criticalNote": "{{pct}}% · {{contracts}} contratos · Investigacion inmediata"
+  },
+  "heroSubtitle": "Registro de Contrataciones de Mexico",
+  "pullQuote1": "Uno de cada ocho contratos muestra patrones estadisticos consistentes con fraude en contrataciones.",
+  "pullQuote2": "La mayor vulnerabilidad del sistema de contrataciones no es ningun contrato individual — es la concentracion estructural del gasto publico en proveedores que operan sin competencia real.",
+  "sourceLabel": "Sobre este analisis",
+  "sourceBody": "Basado en el modelo de riesgo RUBLI v6.4 (AUC=0.840, HR ~10%). Las puntuaciones indican similitud con patrones de corrupcion documentados, no son prueba de irregularidad.",
+  "tableHeader": "Registro de investigaciones",
+  "filterLabel": "Filtros de investigacion",
+  "riskInfographic": {
+    "title": "Distribucion de Niveles de Riesgo — 3.1M Contratos",
+    "immediate": "Investigacion inmediata",
+    "priority": "Revision prioritaria",
+    "watchList": "Lista de vigilancia",
+    "standard": "Monitoreo estandar"
+  },
   "footer": {
     "platform": "Plataforma de Inteligencia RUBLI",
     "compranet": "COMPRANET 2002-2025",

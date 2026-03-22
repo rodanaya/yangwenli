@@ -5,7 +5,7 @@
  * Like a printed intelligence bulletin from an anti-corruption unit.
  */
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -32,8 +32,10 @@ import {
   Sparkles,
   FileText,
   ArrowRight,
+  ArrowDown,
   Building2,
   Crosshair,
+  X,
 } from 'lucide-react'
 
 // ============================================================================
@@ -439,6 +441,15 @@ function LeadRow({
 // Main Page
 // ============================================================================
 
+// Pattern filter options for the search bar dropdown
+const PATTERN_FILTER_OPTIONS = [
+  { value: 'P1', label: 'patternFilter.P1' },
+  { value: 'P2', label: 'patternFilter.P2' },
+  { value: 'P3', label: 'patternFilter.P3' },
+  { value: 'P6', label: 'patternFilter.P6' },
+  { value: 'P7', label: 'patternFilter.P7' },
+] as const
+
 export default function AriaPage() {
   const { t } = useTranslation('aria')
   const [search, setSearch] = useState('')
@@ -446,6 +457,15 @@ export default function AriaPage() {
   const [newVendorOnly, setNewVendorOnly] = useState(false)
   const [page, setPage] = useState(1)
   const [expandedId, setExpandedId] = useState<number | null>(null)
+
+  // Task 1: Primer dismissible state
+  const [primerDismissed, setPrimerDismissed] = useState(() =>
+    localStorage.getItem('rubli_aria_intro_seen') === '1'
+  )
+  const dismissPrimer = useCallback(() => {
+    localStorage.setItem('rubli_aria_intro_seen', '1')
+    setPrimerDismissed(true)
+  }, [])
 
   const PER_PAGE = 50
 
@@ -527,6 +547,68 @@ export default function AriaPage() {
       </div>
 
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-8 space-y-10">
+
+        {/* ================================================================ */}
+        {/* ARIA ONBOARDING PRIMER (Task 1)                                  */}
+        {/* ================================================================ */}
+        {!primerDismissed && (
+          <div className="relative border-l-4 border-[#dc2626] bg-zinc-900 rounded-r-lg p-5">
+            <button
+              onClick={dismissPrimer}
+              className="absolute top-3 right-3 text-zinc-500 hover:text-zinc-300 transition-colors"
+              aria-label={t('primer.dismiss')}
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <p className="text-sm text-zinc-300 leading-relaxed pr-8 mb-3">
+              {t('primer.text')}
+            </p>
+            <button
+              onClick={() => {
+                dismissPrimer()
+                const tier1Section = document.getElementById('aria-tier1-section')
+                tier1Section?.scrollIntoView({ behavior: 'smooth' })
+              }}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-400 hover:text-red-300 transition-colors"
+            >
+              {t('primer.cta')} <ArrowDown className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+
+        {/* ================================================================ */}
+        {/* SEARCH / FILTER BAR (Task 2)                                     */}
+        {/* ================================================================ */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+            <input
+              type="text"
+              placeholder={t('searchBar.placeholder')}
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+              className="w-full pl-10 pr-3 py-2.5 text-sm bg-zinc-900 border border-zinc-700 rounded-lg text-text-primary placeholder-zinc-500 focus:outline-none focus:border-accent/60 font-mono"
+            />
+            {search && (
+              <button
+                onClick={() => { setSearch(''); setPage(1) }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+          <select
+            value={patternFilter ?? ''}
+            onChange={(e) => { setPatternFilter(e.target.value || null); setPage(1) }}
+            className="px-3 py-2.5 text-sm bg-zinc-900 border border-zinc-700 rounded-lg text-text-primary focus:outline-none focus:border-accent/60 font-mono min-w-[200px]"
+          >
+            <option value="">{t('searchBar.allPatterns')}</option>
+            {PATTERN_FILTER_OPTIONS.map(({ value, label }) => (
+              <option key={value} value={value}>{t(label)}</option>
+            ))}
+          </select>
+        </div>
 
         <EditorialHeadline
           section="INTELIGENCIA RUBLI"
@@ -690,7 +772,7 @@ export default function AriaPage() {
         {/* TIER 1 SPOTLIGHT — critical targets                              */}
         {/* ================================================================ */}
         {!patternFilter && !newVendorOnly && !search && (
-          <section>
+          <section id="aria-tier1-section">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <div className="flex items-center gap-2 mb-1">

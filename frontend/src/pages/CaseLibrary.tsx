@@ -110,12 +110,11 @@ function CaseCard({ cas, onClick, onNavigate, index }: { cas: ScandalListItem; o
     <motion.div
       variants={staggerItem}
       whileHover={{ y: -2, transition: { duration: 0.15 } }}
-      className={`relative group flex flex-col overflow-hidden rounded-sm border border-border/60 border-l-[4px] ${leftBorder} hover:border-border transition-all duration-200`}
-      style={{ backgroundColor: '#faf9f6' }}
+      className={`relative group flex flex-col overflow-hidden rounded-sm border border-border/60 border-l-[4px] ${leftBorder} hover:border-border transition-all duration-200 bg-zinc-900 text-white`}
     >
       {/* Case number stamp */}
       <div
-        className="absolute top-2 right-2 z-10 text-[9px] font-mono tracking-wider text-text-muted/40 select-none"
+        className="absolute top-2 right-2 z-10 text-[9px] font-mono tracking-wider text-zinc-500 select-none"
         style={{ fontVariantNumeric: 'tabular-nums' }}
       >
         N.{caseNum}
@@ -123,7 +122,7 @@ function CaseCard({ cas, onClick, onNavigate, index }: { cas: ScandalListItem; o
 
       {/* ML training data banner */}
       {isMLLinked && (
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-accent/10 border-b border-accent/20">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-950/30 border-b border-red-900/40">
           <span className="relative flex h-2 w-2 flex-shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: RISK_COLORS.high }} />
             <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: RISK_COLORS.high }} />
@@ -156,19 +155,19 @@ function CaseCard({ cas, onClick, onNavigate, index }: { cas: ScandalListItem; o
 
         {/* Case name */}
         <h3
-          className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors leading-snug mb-1.5 pr-10"
+          className="text-sm font-bold text-zinc-100 group-hover:text-accent transition-colors leading-snug mb-1.5 pr-10"
           style={{ fontFamily: 'var(--font-family-serif)' }}
         >
           {name}
         </h3>
 
         {/* Summary */}
-        <p className="text-[11px] text-text-muted line-clamp-2 mb-3 leading-relaxed">
+        <p className="text-[11px] text-zinc-400 line-clamp-4 mb-3 leading-relaxed">
           {cas.summary_en}
         </p>
 
         {/* KPI row */}
-        <div className="flex items-center gap-2 mb-3 text-[10px] text-text-muted font-mono">
+        <div className="flex items-center gap-2 mb-3 text-[10px] text-zinc-400 font-mono">
           {yearLabel && (
             <span className="flex items-center gap-1">
               <span className="opacity-60">&#x29D7;</span>
@@ -185,7 +184,7 @@ function CaseCard({ cas, onClick, onNavigate, index }: { cas: ScandalListItem; o
           {cas.amount_mxn_low && (
             <>
               <span className="opacity-30">|</span>
-              <span className="ml-auto font-bold text-text-secondary">
+              <span className="ml-auto font-bold text-zinc-300">
                 {formatMXN(cas.amount_mxn_low)}
                 {cas.amount_mxn_high ? `--${formatMXN(cas.amount_mxn_high)}` : '+'}
               </span>
@@ -202,7 +201,7 @@ function CaseCard({ cas, onClick, onNavigate, index }: { cas: ScandalListItem; o
       </button>
 
       {/* Footer: quick-link actions */}
-      <div className="flex items-center justify-between px-4 py-2 border-t border-border/30 gap-2" style={{ backgroundColor: 'rgba(0,0,0,0.015)' }}>
+      <div className="flex items-center justify-between px-4 py-2 border-t border-zinc-800 gap-2 bg-zinc-950/50">
         <div className="flex items-center gap-1.5">
           {/* View contracts filtered to this case's sector + year */}
           {(cas.sector_ids?.length > 0 || cas.contract_year_start) && (
@@ -215,7 +214,7 @@ function CaseCard({ cas, onClick, onNavigate, index }: { cas: ScandalListItem; o
                 params.set('risk_level', 'high')
                 onNavigate(`/contracts?${params}`)
               }}
-              className="flex items-center gap-1 text-[10px] text-text-muted hover:text-accent border border-border/40 hover:border-accent/50 rounded px-2 py-1 transition-colors"
+              className="flex items-center gap-1 text-[10px] text-zinc-400 hover:text-accent border border-zinc-700 hover:border-accent/50 rounded px-2 py-1 transition-colors"
               title="View high-risk contracts in this sector/year"
             >
               <Search className="h-3 w-3" />
@@ -229,7 +228,7 @@ function CaseCard({ cas, onClick, onNavigate, index }: { cas: ScandalListItem; o
                 e.stopPropagation()
                 onNavigate(`/categories?sector_id=${cas.sector_ids[0]}`)
               }}
-              className="flex items-center gap-1 text-[10px] text-text-muted hover:text-accent border border-border/40 hover:border-accent/50 rounded px-2 py-1 transition-colors"
+              className="flex items-center gap-1 text-[10px] text-zinc-400 hover:text-accent border border-zinc-700 hover:border-accent/50 rounded px-2 py-1 transition-colors"
               title="View spending categories for this sector"
             >
               <BarChart3 className="h-3 w-3" />
@@ -277,8 +276,7 @@ function EvidenceManifest() {
         <motion.div
           key={label}
           variants={slideUp}
-          className={`px-4 py-3 border-l-[3px] ${accent ? 'border-l-red-500' : 'border-l-border'} ${i > 0 ? 'border-l-[3px] sm:border-l-[3px]' : ''}`}
-          style={{ backgroundColor: '#f8f7f4' }}
+          className={`px-4 py-3 border-l-[3px] bg-background-elevated ${accent ? 'border-l-red-500' : 'border-l-border'} ${i > 0 ? 'border-l-[3px] sm:border-l-[3px]' : ''}`}
         >
           <div
             className={`text-2xl font-black font-mono tracking-tight ${accent ? 'text-red-500' : 'text-text-primary'}`}
@@ -335,22 +333,21 @@ export default function CaseLibrary() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      {/* ── Page Header: La Galeria de Crimenes ── */}
+      {/* ── Page Header ── */}
       <div className="border-b border-border pb-6 mb-0">
         <div className="flex items-center justify-between">
           <div>
             <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted font-semibold mb-2">
-              Archivo de Corrupcion &middot; Mexico 2001--2025
+              {t('pageSubhead')}
             </div>
             <h1
               style={{ fontFamily: 'var(--font-family-serif)' }}
               className="text-4xl font-bold text-text-primary mb-2"
             >
-              La Galeria de Crimenes
+              {t('pageTitle')}
             </h1>
             <p className="text-sm text-text-secondary max-w-lg">
-              {data?.length ?? '...'} casos documentados de corrupcion en contratacion publica federal.
-              Cada expediente representa miles de millones de pesos desviados del erario.
+              {t('pageDesc', { count: data?.length ?? 0 })}
             </p>
           </div>
           <CaseLeadButton className="shrink-0" />
@@ -366,7 +363,7 @@ export default function CaseLibrary() {
       {/* ── Filters: FILTRAR ARCHIVOS ── */}
       <div className="mb-6">
         <div className="text-[9px] tracking-[0.25em] uppercase text-text-muted font-bold mb-2">
-          FILTRAR ARCHIVOS
+          {t('filterArchives')}
         </div>
         <div className="flex flex-wrap gap-2 items-center">
           <div className="relative flex-1 min-w-[200px]">
@@ -459,8 +456,8 @@ export default function CaseLibrary() {
 
       {/* ── Results ── */}
       {isLoading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {Array.from({ length: 9 }).map((_, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-48 rounded-sm" />
           ))}
         </div>
@@ -477,7 +474,7 @@ export default function CaseLibrary() {
         <>
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs text-text-muted font-mono">
-              {t('resultCount', { count: data.length })} &middot; ordenados por impacto
+              {t('resultCount', { count: data.length })} &middot; {t('sortedByImpact')}
             </p>
             <TableExportButton
               data={data.map((c) => ({
@@ -509,7 +506,7 @@ export default function CaseLibrary() {
             </div>
           ) : (
             <motion.div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+              className="grid grid-cols-1 md:grid-cols-2 gap-4"
               variants={staggerContainer}
               initial="initial"
               animate="animate"

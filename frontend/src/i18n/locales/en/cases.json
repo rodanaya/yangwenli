@@ -1,5 +1,10 @@
 {
   "title": "Case Library",
+  "pageTitle": "Documented Corruption Cases",
+  "pageSubhead": "Corruption Archive — Mexico 2001-2025",
+  "pageDesc": "{{count}} documented cases of corruption in federal public procurement. Each file represents billions of pesos diverted from the public treasury.",
+  "sortedByImpact": "sorted by impact",
+  "filterArchives": "FILTER ARCHIVES",
   "subtitle": "43 documented corruption cases — from investigation to conviction",
   "statsBar": {
     "totalCases": "Documented cases",

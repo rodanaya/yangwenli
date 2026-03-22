@@ -19,7 +19,8 @@ import type { ExecutiveSummaryResponse } from '@/api/types'
 import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
 import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
 import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
-import { HallazgoStat } from '@/components/ui/HallazgoStat'
+// HallazgoStat available if needed for additional breakdowns
+// import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 import { ScrollReveal, useCountUp, AnimatedFill, AnimatedSegment } from '@/hooks/useAnimations'
@@ -38,6 +39,7 @@ import {
   Printer,
   Share2,
   Check,
+  ChevronDown,
 } from 'lucide-react'
 
 // ============================================================================
@@ -46,6 +48,7 @@ import {
 
 function CinematicHero() {
   const reduced = useReducedMotion()
+  const { t } = useTranslation('executive')
 
   return (
     <div className="relative overflow-hidden pt-12 pb-16 mb-8">
@@ -72,7 +75,7 @@ function CinematicHero() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       >
-        Mexico's Procurement Record
+        {t('heroSubtitle')}
       </motion.p>
 
       {/* Animated horizontal gradient line */}
@@ -87,40 +90,6 @@ function CinematicHero() {
         transition={{ delay: 1.0, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
       />
     </div>
-  )
-}
-
-function EditorialStat({
-  value,
-  label,
-  delay = 0,
-}: {
-  value: string
-  label: string
-  delay?: number
-}) {
-  const ref = useRef<HTMLDivElement>(null)
-  const isInView = useInView(ref, { once: true, margin: '-60px' })
-  const reduced = useReducedMotion()
-
-  return (
-    <motion.div
-      ref={ref}
-      className="py-8 border-l-[3px] border-l-[#dc2626] pl-6"
-      initial={reduced ? {} : { opacity: 0, x: -40 }}
-      animate={isInView ? { opacity: 1, x: 0 } : {}}
-      transition={{ delay: delay / 1000, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-    >
-      <div
-        className="font-black text-text-primary leading-none"
-        style={{ fontSize: 'clamp(3rem, 8vw, 7rem)' }}
-      >
-        {value}
-      </div>
-      <div className="mt-2 text-xs font-bold tracking-[0.2em] uppercase text-[#dc2626]/70 font-mono">
-        {label}
-      </div>
-    </motion.div>
   )
 }
 
@@ -207,8 +176,11 @@ export function ExecutiveSummary() {
     )
   }
 
+  const [showFullBreakdown, setShowFullBreakdown] = useState(false)
+
   const highRiskPct = (data.risk.high_pct + data.risk.critical_pct).toFixed(1)
   const totalValueT = (data.headline.total_value / 1e12).toFixed(1)
+  const valueAtRiskFormatted = formatCompactMXN((data.risk.high_value ?? 0) + (data.risk.critical_value ?? 0))
 
   return (
     <article className="max-w-4xl mx-auto pb-20 space-y-16 print:text-black print:bg-background-card">
@@ -216,33 +188,95 @@ export function ExecutiveSummary() {
       <CinematicHero />
 
       <EditorialHeadline
-        section="RESUMEN EJECUTIVO"
-        headline="Panorama de Contrataciones"
-        subtitle="Analisis integral del gasto federal mexicano · 2002–2025"
+        section={t('editorialSection')}
+        headline={t('editorialHeadline')}
+        subtitle={t('editorialSubtitle')}
       />
 
-      <ScrollReveal delay={80}><ReportHeader data={data} /></ScrollReveal>
+      {/* ── Editorial Lede ── */}
+      <motion.blockquote
+        className="border-l-4 border-l-[#dc2626] pl-6 py-4 my-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3, duration: 0.8 }}
+      >
+        <p className="text-xl sm:text-2xl italic text-text-secondary leading-relaxed font-serif">
+          {t('lede', { highRiskPct, valueAtRisk: valueAtRiskFormatted })}
+        </p>
+      </motion.blockquote>
 
-      {/* Editorial pull stats */}
-      <div className="flex flex-wrap gap-8 my-6">
-        <HallazgoStat value={`${totalValueT}T`} label="MXN total analizado" color="border-amber-500" />
-        <HallazgoStat value={`${highRiskPct}%`} label="contratos de alto riesgo" color="border-red-500" />
-        <HallazgoStat value={formatNumber(data.headline.total_contracts)} label="contratos analizados" color="border-blue-500" />
-        <HallazgoStat value="23 anos" label="de datos federales · 2002–2025" color="border-zinc-400" />
+      {/* ── 4 Primary KPI Cards ── */}
+      <motion.div
+        className="grid grid-cols-2 sm:grid-cols-4 gap-4"
+        variants={staggerContainer}
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true, margin: '-40px' }}
+      >
+        <motion.div variants={staggerItem}>
+          <div className="fern-card p-4 border-l-[3px] border-l-blue-500">
+            <div className="font-black text-2xl sm:text-3xl font-mono text-text-primary tabular-nums">
+              {formatNumber(data.headline.total_contracts)}
+            </div>
+            <div className="text-xs font-bold uppercase tracking-wider text-blue-500/70 mt-1">{t('kpi.totalContracts')}</div>
+            <div className="text-[11px] text-text-muted mt-1 leading-snug">{t('kpi.totalContractsContext')}</div>
+          </div>
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <div className="fern-card p-4 border-l-[3px] border-l-amber-500">
+            <div className="font-black text-2xl sm:text-3xl font-mono text-text-primary tabular-nums">
+              {totalValueT}T
+            </div>
+            <div className="text-xs font-bold uppercase tracking-wider text-amber-500/70 mt-1">{t('kpi.totalValue')}</div>
+            <div className="text-[11px] text-text-muted mt-1 leading-snug">{t('kpi.totalValueContext')}</div>
+          </div>
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <div className="fern-card p-4 border-l-[3px] border-l-red-500">
+            <div className="font-black text-2xl sm:text-3xl font-mono text-text-primary tabular-nums">
+              {highRiskPct}%
+            </div>
+            <div className="text-xs font-bold uppercase tracking-wider text-red-500/70 mt-1">{t('kpi.highRiskRate')}</div>
+            <div className="text-[11px] text-text-muted mt-1 leading-snug">{t('kpi.highRiskRateContext')}</div>
+          </div>
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <div className="fern-card p-4 border-l-[3px] border-l-orange-500">
+            <div className="font-black text-2xl sm:text-3xl font-mono text-text-primary tabular-nums">
+              {valueAtRiskFormatted}
+            </div>
+            <div className="text-xs font-bold uppercase tracking-wider text-orange-500/70 mt-1">{t('kpi.valueAtRisk')}</div>
+            <div className="text-[11px] text-text-muted mt-1 leading-snug">{t('kpi.valueAtRiskContext')}</div>
+          </div>
+        </motion.div>
+      </motion.div>
+
+      {/* ── Expandable Full Breakdown ── */}
+      <div>
+        <button
+          onClick={() => setShowFullBreakdown(!showFullBreakdown)}
+          className="flex items-center gap-2 text-sm text-accent hover:text-accent/80 font-medium transition-colors"
+        >
+          {showFullBreakdown ? t('hideBreakdown') : t('seeFullBreakdown')}
+          <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showFullBreakdown ? 'rotate-180' : ''}`} />
+        </button>
+        {showFullBreakdown && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="mt-4 space-y-6"
+          >
+            <ScrollReveal delay={80}><ReportHeader data={data} /></ScrollReveal>
+            <ScrollReveal delay={100}><StatBombs data={data} /></ScrollReveal>
+          </motion.div>
+        )}
       </div>
-
-      {/* Editorial stat moments */}
-      <div className="space-y-2">
-        <EditorialStat value={formatNumber(data.headline.total_contracts)} label="Federal Contracts Analyzed" delay={0} />
-        <EditorialStat value={`${totalValueT}T MXN`} label="Total Procurement Value" delay={200} />
-        <EditorialStat value={`${highRiskPct}%`} label="High-Risk Rate" delay={400} />
-      </div>
-
-      <ScrollReveal delay={100}><StatBombs data={data} /></ScrollReveal>
 
       {/* Pull quote */}
       <PullQuote>
-        One in eight contracts shows statistical patterns consistent with procurement fraud.
+        {t('pullQuote1')}
       </PullQuote>
 
       <ScrollReveal delay={120}><WhatWeFound data={data} /></ScrollReveal>
@@ -255,8 +289,7 @@ export function ExecutiveSummary() {
 
       {/* Pull quote before vendors */}
       <PullQuote delay={200}>
-        The procurement system's greatest vulnerability is not any single contract — it is the
-        structural concentration of public spending in vendors that operate without meaningful competition.
+        {t('pullQuote2')}
       </PullQuote>
 
       <AnimatedDivider />
@@ -272,8 +305,8 @@ export function ExecutiveSummary() {
       <div className="flex flex-wrap items-center gap-3 mt-8">
         <FuentePill source="COMPRANET" count={3051294} verified={true} />
         <MetodologiaTooltip
-          title="Sobre este analisis"
-          body="Basado en el modelo de riesgo RUBLI v6.4 (AUC=0.840, HR ~10%). Scores indican similitud con patrones de corrupcion documentados, no son prueba de irregularidad."
+          title={t('sourceLabel')}
+          body={t('sourceBody')}
           link="/methodology"
         />
       </div>
@@ -432,6 +465,7 @@ function ReportHeader({ data }: { data: ExecutiveSummaryResponse }) {
 // ============================================================================
 
 function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
+  const { t } = useTranslation('executive')
   const { risk } = data
   const highRiskRate = (risk.high_pct + risk.critical_pct).toFixed(1)
 
@@ -450,43 +484,43 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
   const bombs = [
     {
       value: `${highRiskRate}%`,
-      label: 'High-Risk Rate',
-      sub: 'OECD-calibrated · v6.0',
+      label: t('statBombs.highRiskRate'),
+      sub: t('statBombs.highRiskRateSub'),
       glow: 'rgba(248,113,113,0.3)',
       color: '#f87171',
     },
     {
       value: highCriticalFormatted,
-      label: 'High/Critical Contracts',
-      sub: `${highRiskRate}% of all 3.1M contracts`,
+      label: t('statBombs.highCritical'),
+      sub: t('statBombs.highCriticalSub', { pct: highRiskRate }),
       glow: 'rgba(251,146,60,0.3)',
       color: '#fb923c',
     },
     {
       value: '23',
-      label: 'Years Covered',
-      sub: '2002 – 2025 · 3.1M contracts',
+      label: t('statBombs.yearsCovered'),
+      sub: t('statBombs.yearsCoveredSub'),
       glow: 'rgba(6,182,212,0.3)',
       color: '#22d3ee',
     },
     {
       value: '0.840',
-      label: 'Model AUC',
-      sub: 'Vendor-stratified split · v6.4',
+      label: t('statBombs.modelAuc'),
+      sub: t('statBombs.modelAucSub'),
       glow: 'rgba(34,197,94,0.3)',
       color: '#4ade80',
     },
     {
       value: '22',
-      label: 'Documented Cases',
-      sub: 'Ground truth for corruption detection',
+      label: t('statBombs.documentedCases'),
+      sub: t('statBombs.documentedCasesSub'),
       glow: 'rgba(251,191,36,0.3)',
       color: '#fbbf24',
     },
     {
       value: pyodData ? `${Math.round(pyodData.both_flagged / 1000)}K` : '130K',
-      label: 'Dual-Confirmed',
-      sub: 'v6.0 model AND PyOD ML · unsupervised cross-validation',
+      label: t('statBombs.dualConfirmed'),
+      sub: t('statBombs.dualConfirmedSub'),
       glow: 'rgba(139,92,246,0.3)',
       color: '#a78bfa',
     },
@@ -738,6 +772,7 @@ function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
 // ============================================================================
 
 function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
+  const { t } = useTranslation('executive')
   const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
   useEffect(() => {
@@ -755,8 +790,8 @@ function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
   const mediumPlusPct = ((risk.medium_pct ?? 0) + risk.high_pct + risk.critical_pct) || 54.5
   const layers = [
     {
-      label: 'All Federal Contracts',
-      sub: '2002–2025',
+      label: t('funnel.allContracts'),
+      sub: t('funnel.allContractsSub'),
       value: '3.1M',
       pct: 100,
       color: 'rgba(148,163,184,0.12)',
@@ -764,8 +799,8 @@ function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
       text: '#cbd5e1',
     },
     {
-      label: 'Medium+ Risk',
-      sub: 'Statistical anomaly detected',
+      label: t('funnel.mediumRisk'),
+      sub: t('funnel.mediumRiskSub'),
       value: `${mediumPlusPct.toFixed(1)}%`,
       pct: 72,
       color: 'rgba(251,191,36,0.12)',
@@ -773,8 +808,8 @@ function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
       text: '#fbbf24',
     },
     {
-      label: 'High Risk',
-      sub: 'Priority investigation',
+      label: t('funnel.highRisk'),
+      sub: t('funnel.highRiskSub'),
       value: `${(risk.high_pct + risk.critical_pct).toFixed(1)}%`,
       pct: 48,
       color: 'rgba(251,146,60,0.14)',
@@ -782,8 +817,8 @@ function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
       text: '#fb923c',
     },
     {
-      label: 'Critical Risk',
-      sub: 'Immediate action required',
+      label: t('funnel.criticalRisk'),
+      sub: t('funnel.criticalRiskSub'),
       value: `${risk.critical_pct.toFixed(1)}%`,
       pct: 28,
       color: 'rgba(248,113,113,0.18)',
@@ -795,7 +830,7 @@ function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
   return (
     <div ref={ref} className="my-8">
       <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-4 text-center">
-        Risk Stratification — 3.1M Contracts
+        {t('funnel.title')}
       </p>
       <div className="flex flex-col items-center gap-1">
         {layers.map((layer, i) => {
@@ -858,7 +893,7 @@ function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
       </div>
       <p className="text-center text-[10px] text-risk-critical font-mono mt-1">
         {visible
-          ? `${risk.critical_pct.toFixed(1)}% · ${(risk.critical_count).toLocaleString()} contracts · Immediate investigation`
+          ? t('funnel.criticalNote', { pct: risk.critical_pct.toFixed(1), contracts: risk.critical_count.toLocaleString() })
           : ''}
       </p>
     </div>
@@ -870,6 +905,7 @@ function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
 // ============================================================================
 
 function RiskLevelInfographic({ data }: { data: ExecutiveSummaryResponse }) {
+  const { t } = useTranslation('executive')
   const { risk } = data
   const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
@@ -894,7 +930,7 @@ function RiskLevelInfographic({ data }: { data: ExecutiveSummaryResponse }) {
       pct: `${risk.critical_pct.toFixed(1)}%`,
       count: (201_745).toLocaleString(),
       contracts: '201,745 contracts',
-      action: 'Immediate investigation',
+      action: t('riskInfographic.immediate'),
       barWidth: risk.critical_pct,
     },
     {
@@ -905,7 +941,7 @@ function RiskLevelInfographic({ data }: { data: ExecutiveSummaryResponse }) {
       pct: `${risk.high_pct.toFixed(1)}%`,
       count: (126_553).toLocaleString(),
       contracts: '126,553 contracts',
-      action: 'Priority review',
+      action: t('riskInfographic.priority'),
       barWidth: risk.high_pct,
     },
     {
@@ -916,7 +952,7 @@ function RiskLevelInfographic({ data }: { data: ExecutiveSummaryResponse }) {
       pct: `${risk.medium_pct.toFixed(1)}%`,
       count: '~1.36M',
       contracts: '~1.36M contracts',
-      action: 'Watch list',
+      action: t('riskInfographic.watchList'),
       barWidth: risk.medium_pct,
     },
     {
@@ -927,7 +963,7 @@ function RiskLevelInfographic({ data }: { data: ExecutiveSummaryResponse }) {
       pct: `${risk.low_pct.toFixed(1)}%`,
       count: '~1.42M',
       contracts: '~1.42M contracts',
-      action: 'Standard monitoring',
+      action: t('riskInfographic.standard'),
       barWidth: risk.low_pct,
     },
   ]
@@ -937,7 +973,7 @@ function RiskLevelInfographic({ data }: { data: ExecutiveSummaryResponse }) {
   return (
     <div ref={ref} className="my-6">
       <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono mb-3">
-        Risk Level Distribution — 3.1M Contracts
+        {t('riskInfographic.title')}
       </p>
       <div className="space-y-2">
         {tiers.map((tier, i) => (

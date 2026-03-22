@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
@@ -13,6 +14,7 @@ export function MainLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const location = useLocation()
+  const { t } = useTranslation('common')
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -79,8 +81,8 @@ export function MainLayout() {
         {/* Footer — hidden on mobile (bottom nav replaces it) */}
         <footer className="hidden md:block border-t border-border/30 px-5 py-2.5">
           <div className="flex items-center justify-between text-xs text-text-muted font-mono tracking-wide">
-            <span>RUBLI • Transparencia Procuratoria</span>
-            <span>3.1M contratos analizados • 2002-2025</span>
+            <span>{t('footerBrand')} • {t('footerTagline')}</span>
+            <span>{t('footerStats')}</span>
           </div>
         </footer>
       </div>

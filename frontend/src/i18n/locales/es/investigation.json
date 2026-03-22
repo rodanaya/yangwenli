@@ -251,6 +251,24 @@
     "yearTo": "Hasta año",
     "browseExisting": "O explora los casos existentes"
   },
+  "entryTiles": {
+    "bySector": "Por Sector",
+    "bySectorSub": "Riesgo de contratacion en 12 sectores",
+    "byAdmin": "Por Administracion",
+    "byAdminSub": "Gasto por regimen, 2000-2024",
+    "networks": "Redes de Proveedores",
+    "networksSub": "Co-licitacion y empresas fantasma",
+    "capture": "Patrones de Captura",
+    "captureSub": "Patrones de control institucional"
+  },
+  "entrySearch": "Buscar contratos, proveedores o casos...",
+  "headerTracking": "Sistema ARIA · Investigaciones Activas · Generado por ML",
+  "headerTitle": "El Archivo",
+  "headerDesc": "Investigaciones generadas por algoritmo. Cada caso representa un patron estadistico de riesgo que requiere corroboracion periodistica.",
+  "headerPipeline": "En curso: deteccion automatizada \u2192 investigacion \u2192 corroboracion \u2192 archivo definitivo",
+  "filterHeader": "Filtros de investigacion",
+  "searchPlaceholder": "Buscar caso, proveedor, sector...",
+  "tableHeader": "Registro de investigaciones",
   "asfLookup": {
     "button": "Buscar en ASF",
     "newsSearch": "Buscar Noticias",

@@ -69,16 +69,37 @@
     "disclaimer": "IPS scores are risk indicators, not corruption verdicts. High scores indicate statistical similarity to documented corruption patterns and warrant further investigation."
   },
   "patterns": {
-    "P1": "Monopoly",
-    "P2": "Ghost Co.",
-    "P3": "Intermediary",
+    "P1": "Market Monopoly",
+    "P2": "Ghost Company",
+    "P3": "Contract Intermediary",
     "P4": "Bid Rigging",
     "P5": "Overpricing",
-    "P6": "Inst. Capture",
-    "P7": "Conflict"
+    "P6": "Institutional Capture",
+    "P7": "Suspicious Bidding Network"
+  },
+  "patternFilter": {
+    "P1": "Monopoly",
+    "P2": "Ghost Company",
+    "P3": "Intermediary",
+    "P6": "Institutional Capture",
+    "P7": "Suspicious Network"
   },
   "badges": {
     "new": "NEW",
     "efos": "EFOS"
+  },
+  "primer": {
+    "text": "ARIA is RUBLI's automated risk investigation algorithm. It analyzes 198,000 vendors across 4 threat tiers — start with Tier 1 for the highest-priority cases.",
+    "cta": "Start here",
+    "dismiss": "Dismiss"
+  },
+  "searchBar": {
+    "placeholder": "Search vendors by name...",
+    "patternLabel": "Filter by pattern",
+    "allPatterns": "All patterns"
+  },
+  "tierCollapse": {
+    "show": "Show {{count}} vendors",
+    "hide": "Collapse"
   }
 }

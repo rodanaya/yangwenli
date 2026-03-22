@@ -38,6 +38,10 @@ import {
   List,
   ShieldAlert,
   Search,
+  Factory,
+  Landmark,
+  Network,
+  Target,
 } from 'lucide-react'
 
 // ============================================================================
@@ -54,27 +58,22 @@ type SortDir = 'asc' | 'desc'
 const STATUS_CONFIG: Record<InvestigationValidationStatus, {
   icon: React.ElementType
   className: string
-  label: string
 }> = {
   pending: {
     icon: Clock,
     className: 'bg-amber-500/10 text-amber-500 border border-amber-500/30',
-    label: 'PENDIENTE',
   },
   corroborated: {
     icon: CheckCircle2,
     className: 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/30',
-    label: 'CORROBORADO',
   },
   refuted: {
     icon: XCircle,
     className: 'bg-red-500/10 text-red-500 border border-red-500/30',
-    label: 'REFUTADO',
   },
   inconclusive: {
     icon: HelpCircle,
     className: 'bg-slate-500/10 text-slate-400 border border-slate-500/30',
-    label: 'INCONCLUSO',
   },
 }
 
@@ -197,7 +196,7 @@ function CaseCard({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <span className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-text-muted/40">
-              CASO
+              {t('table.case')}
             </span>
             <span className="text-lg font-black font-mono text-text-muted/15 tabular-nums leading-none">
               {rankNum}
@@ -280,7 +279,7 @@ function CaseCard({
           {caseItem.vendor_count > 0 && (
             <>
               <span className="text-border/60">·</span>
-              <span>{caseItem.vendor_count} vendor{caseItem.vendor_count !== 1 ? 's' : ''}</span>
+              <span>{caseItem.vendor_count} {t('vendors')}</span>
             </>
           )}
         </div>
@@ -582,6 +581,45 @@ export function Investigation() {
     return counts
   }, [allCases])
 
+  const entryTiles = [
+    {
+      icon: Factory,
+      title: t('entryTiles.bySector'),
+      subtitle: t('entryTiles.bySectorSub'),
+      href: '/sectors',
+      color: '#dc2626',
+      bg: 'rgba(220,38,38,0.06)',
+      border: 'rgba(220,38,38,0.25)',
+    },
+    {
+      icon: Landmark,
+      title: t('entryTiles.byAdmin'),
+      subtitle: t('entryTiles.byAdminSub'),
+      href: '/administrations',
+      color: '#eab308',
+      bg: 'rgba(234,179,8,0.06)',
+      border: 'rgba(234,179,8,0.25)',
+    },
+    {
+      icon: Network,
+      title: t('entryTiles.networks'),
+      subtitle: t('entryTiles.networksSub'),
+      href: '/network',
+      color: '#8b5cf6',
+      bg: 'rgba(139,92,246,0.06)',
+      border: 'rgba(139,92,246,0.25)',
+    },
+    {
+      icon: Target,
+      title: t('entryTiles.capture'),
+      subtitle: t('entryTiles.captureSub'),
+      href: '/money-flow',
+      color: '#be123c',
+      bg: 'rgba(190,18,60,0.06)',
+      border: 'rgba(190,18,60,0.25)',
+    },
+  ]
+
   return (
     <div className="space-y-0">
       {/* ================================================================
@@ -589,17 +627,16 @@ export function Investigation() {
           ================================================================ */}
       <div className="border-b border-border pb-6 mb-8">
         <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted mb-2 font-mono">
-          Sistema ARIA · Investigaciones Activas · ML-Generado
+          {t('headerTracking')}
         </div>
         <h1
           style={{ fontFamily: 'var(--font-family-serif)' }}
           className="text-4xl font-bold text-text-primary mb-2"
         >
-          El Archivo
+          {t('headerTitle')}
         </h1>
         <p className="text-sm text-text-secondary max-w-2xl leading-relaxed">
-          Investigaciones generadas por algoritmo. Cada caso representa un patron estadistico
-          de riesgo que requiere corroboracion periodistica.
+          {t('headerDesc')}
         </p>
         <div className="mt-3 flex items-center gap-2 text-xs text-text-muted">
           <span
@@ -607,9 +644,76 @@ export function Investigation() {
             style={{ backgroundColor: 'var(--color-signal-warn)' }}
           />
           <span className="font-mono">
-            En curso: deteccion automatizada &rarr; investigacion &rarr; corroboracion &rarr; archivo definitivo
+            {t('headerPipeline')}
           </span>
         </div>
+      </div>
+
+      {/* ================================================================
+          ENTRY TILES — 2x2 investigation pathways
+          ================================================================ */}
+      <motion.div
+        className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8"
+        variants={staggerContainer}
+        initial="initial"
+        animate="animate"
+      >
+        {entryTiles.map((tile) => {
+          const TileIcon = tile.icon
+          return (
+            <motion.div key={tile.href} variants={staggerItem}>
+              <button
+                onClick={() => navigate(tile.href)}
+                className="w-full text-left min-h-[160px] rounded-xl border p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg group relative overflow-hidden"
+                style={{
+                  background: tile.bg,
+                  borderColor: tile.border,
+                }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = tile.color)}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = tile.border)}
+              >
+                {/* Corner gradient */}
+                <div
+                  className="absolute top-0 right-0 w-24 h-24 rounded-bl-full opacity-10 pointer-events-none"
+                  style={{ background: tile.color }}
+                />
+                <TileIcon className="h-8 w-8 mb-3" style={{ color: tile.color }} />
+                <h3
+                  style={{ fontFamily: 'var(--font-family-serif)' }}
+                  className="text-lg font-bold text-text-primary group-hover:text-accent transition-colors mb-1"
+                >
+                  {tile.title}
+                </h3>
+                <p className="text-sm text-text-muted">{tile.subtitle}</p>
+                <ChevronRight
+                  className="absolute bottom-4 right-4 h-4 w-4 text-text-muted/30 group-hover:text-accent transition-colors"
+                />
+              </button>
+            </motion.div>
+          )
+        })}
+      </motion.div>
+
+      {/* ================================================================
+          SEARCH BAR — investigation search entry point
+          ================================================================ */}
+      <div className="mb-10">
+        <button
+          onClick={() => {
+            // Trigger Ctrl+K command palette
+            const event = new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true })
+            document.dispatchEvent(event)
+          }}
+          className="w-full flex items-center gap-3 px-5 py-4 rounded-xl border border-border/50 bg-background-elevated/30 hover:border-accent/40 hover:bg-background-elevated/60 transition-all group cursor-pointer"
+        >
+          <Search className="h-5 w-5 text-text-muted/50 group-hover:text-accent transition-colors" />
+          <span className="text-sm text-text-muted/60 group-hover:text-text-secondary transition-colors">
+            {t('entrySearch')}
+          </span>
+          <span className="ml-auto text-[10px] font-mono text-text-muted/40 border border-border/40 rounded px-1.5 py-0.5">
+            Ctrl+K
+          </span>
+        </button>
       </div>
 
       {/* ================================================================
@@ -645,7 +749,7 @@ export function Investigation() {
           ================================================================ */}
       <div className="mb-6 space-y-3">
         <div className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-text-muted/50">
-          Filtros de investigacion
+          {t('filterHeader')}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -680,10 +784,10 @@ export function Investigation() {
           {(
             [
               { key: 'all', label: t('filters.allStatuses'), icon: null },
-              { key: 'pending', label: 'Pendiente', icon: Clock },
-              { key: 'corroborated', label: 'Corroborado', icon: CheckCircle2 },
-              { key: 'refuted', label: 'Refutado', icon: XCircle },
-              { key: 'inconclusive', label: 'Inconcluso', icon: HelpCircle },
+              { key: 'pending', label: t('status.pending'), icon: Clock },
+              { key: 'corroborated', label: t('status.corroborated'), icon: CheckCircle2 },
+              { key: 'refuted', label: t('status.refuted'), icon: XCircle },
+              { key: 'inconclusive', label: t('status.inconclusive'), icon: HelpCircle },
             ] as const
           ).map((pill) => {
             const Icon = pill.icon
@@ -714,7 +818,7 @@ export function Investigation() {
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted/50" />
             <input
               type="text"
-              placeholder="Buscar caso, vendor, sector..."
+              placeholder={t('searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-8 pr-3 py-1.5 text-xs bg-background-elevated border border-border/40 rounded text-text-primary placeholder:text-text-muted/40 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-colors"
@@ -818,7 +922,7 @@ export function Investigation() {
               {/* Table section header */}
               <div className="px-4 py-2.5 bg-background-elevated/40 border-b border-border/30">
                 <span className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-text-muted/50">
-                  Registro de investigaciones
+                  {t('tableHeader', 'Investigation records')}
                 </span>
               </div>
               <div className="overflow-x-auto">

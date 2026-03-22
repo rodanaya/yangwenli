@@ -251,6 +251,24 @@
     "yearTo": "To year",
     "browseExisting": "Or browse existing cases"
   },
+  "entryTiles": {
+    "bySector": "By Sector",
+    "bySectorSub": "Procurement risk across 12 sectors",
+    "byAdmin": "By Administration",
+    "byAdminSub": "Spending by regime, 2000-2024",
+    "networks": "Vendor Networks",
+    "networksSub": "Co-bidding and shell companies",
+    "capture": "Capture Patterns",
+    "captureSub": "Institutional control patterns"
+  },
+  "entrySearch": "Search contracts, vendors, or cases...",
+  "headerTracking": "ARIA System · Active Investigations · ML-Generated",
+  "headerTitle": "The Archive",
+  "headerDesc": "Algorithmically generated investigations. Each case represents a statistical risk pattern that requires journalistic corroboration.",
+  "headerPipeline": "In progress: automated detection \u2192 investigation \u2192 corroboration \u2192 definitive archive",
+  "filterHeader": "Investigation filters",
+  "searchPlaceholder": "Search case, vendor, sector...",
+  "tableHeader": "Investigation records",
   "asfLookup": {
     "button": "ASF Lookup",
     "newsSearch": "News Search",

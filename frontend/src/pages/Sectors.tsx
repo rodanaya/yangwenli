@@ -26,6 +26,8 @@ import { sectorApi, analysisApi, institutionApi, phiApi } from '@/api/client'
 import type { IndustryClusterItem } from '@/api/client'
 import { SECTOR_COLORS, SECTORS, RISK_COLORS, getRiskLevelFromScore, getSectorNameEN } from '@/lib/constants'
 import { Heatmap } from '@/components/charts/Heatmap'
+import { SectorSlopeChart } from '@/components/charts/SectorSlopeChart'
+import { AnnotatedAreaChart } from '@/components/charts/AnnotatedAreaChart'
 import type { SectorStatistics } from '@/api/types'
 import { AlertTriangle, BarChart3, Info, Layers, X } from 'lucide-react'
 
@@ -1649,6 +1651,55 @@ export function Sectors() {
         </CardContent>
       </Card>
       </motion.div>
+
+      {/* ================================================================ */}
+      {/* SLOPE CHART — High-risk rate change by sector, 2018-2020 vs 2022-2024 */}
+      {/* ================================================================ */}
+      {sectorYearResp && sectorYearResp.data.length > 0 && (
+        <>
+        <div className="editorial-rule mb-3">
+          <span className="editorial-label">EVOLUCION DEL RIESGO</span>
+        </div>
+        <ScrollReveal direction="fade">
+          <Card className="fern-card">
+            <CardHeader className="pb-2">
+              <p className="text-sm font-semibold text-white/80 uppercase tracking-wider">
+                Slope Chart: High-Risk Rate by Sector
+              </p>
+              <CardDescription className="text-xs text-text-muted">
+                Each line connects a sector's high-risk contract rate in 2018-2020 to 2022-2024.
+                Rising lines indicate worsening procurement risk; falling lines indicate improvement.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SectorSlopeChart sectorYearData={sectorYearResp.data} />
+            </CardContent>
+          </Card>
+        </ScrollReveal>
+
+        {/* ANNOTATED AREA CHART — Temporal high-risk trend */}
+        <ScrollReveal direction="fade">
+          <Card className="fern-card mt-5">
+            <CardHeader className="pb-2">
+              <p className="text-sm font-semibold text-white/80 uppercase tracking-wider">
+                High-Risk Rate Over Time
+              </p>
+              <CardDescription className="text-xs text-text-muted">
+                Aggregate high-risk contract percentage across all sectors, 2002-2025.
+                Vertical lines mark key policy events.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AnnotatedAreaChart
+                sectorYearData={sectorYearResp.data}
+                metric="high_risk_pct"
+                height={280}
+              />
+            </CardContent>
+          </Card>
+        </ScrollReveal>
+        </>
+      )}
 
       {/* Section 3: Contract Value by Sector */}
       <div className="editorial-rule mb-3">

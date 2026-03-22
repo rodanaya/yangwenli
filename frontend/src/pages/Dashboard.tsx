@@ -12,7 +12,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
-import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
+// RiskScoreDisclaimer import removed — distribution section removed
 import RedaccionWidget from '@/components/ui/RedaccionWidget'
 import StoryInfographic from '@/components/ui/StoryInfographic'
 import { analysisApi, investigationApi, phiApi, ariaApi } from '@/api/client'
@@ -40,7 +40,6 @@ import {
 } from 'lucide-react'
 import {
   ResponsiveContainer,
-  BarChart,
   XAxis,
   YAxis,
   Tooltip as RechartsTooltip,
@@ -48,19 +47,16 @@ import {
   Area,
   AreaChart,
   Bar,
-  Cell,
   Line,
   ComposedChart,
   ReferenceLine,
   ReferenceArea,
-  LabelList,
 } from '@/components/charts'
 import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN, CURRENT_MODEL_VERSION } from '@/lib/constants'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { LayoutDashboard } from 'lucide-react'
-import { AnomalyLeadsWidget } from '@/components/widgets/AnomalyLeadsWidget'
-import { PoliticalIntelligenceStrip } from '@/components/widgets/PoliticalIntelligenceStrip'
+// AnomalyLeadsWidget and PoliticalIntelligenceStrip removed — API 500 errors
 
 // ============================================================================
 // Dashboard 2.0: Situation Room
@@ -94,8 +90,9 @@ const fernStaggerItem: Variants = {
 // CINEMATIC ENHANCEMENTS — Fern-style editorial components
 // ============================================================================
 
-// 1. HeroStatBar — Enormous KPI with gradient sweep animation
+// 1. HeroStatBar — KPI with gradient sweep animation
 function HeroStatBar({ value, loading }: { value: string; loading: boolean }) {
+  const { t } = useTranslation('dashboard')
   const reduced = useReducedMotion()
   const ref = useRef<HTMLDivElement>(null)
   const isInView = useInView(ref, { once: true })
@@ -123,12 +120,12 @@ function HeroStatBar({ value, loading }: { value: string; loading: boolean }) {
       }}
     >
       <p className="text-[10px] font-mono font-bold tracking-[0.2em] text-text-muted/60 uppercase mb-2">
-        En contratos de alto riesgo
+        {t('heroHighRiskLabel')}
       </p>
       <p
         className="font-black tabular-nums leading-none tracking-tighter"
         style={{
-          fontSize: 'clamp(3rem, 8vw, 6rem)',
+          fontSize: 'clamp(2rem, 5vw, 3.5rem)',
           fontFamily: 'var(--font-family-mono)',
           background: reduced
             ? '#c41e3a'
@@ -280,13 +277,7 @@ function SectionDivider() {
 }
 
 
-// Risk donut colors
-const DONUT_COLORS: Record<string, string> = {
-  critical: '#f87171',
-  high: '#fb923c',
-  medium: '#fbbf24',
-  low: '#4ade80',
-}
+// DONUT_COLORS removed — distribution section removed
 
 // ============================================================================
 // MINI SPARKLINE — 120x24px area chart for KPI trend embedding
@@ -446,6 +437,7 @@ const KPICard = memo(function KPICard({
 // ============================================================================
 
 function AlertBanner({ criticalCount, onClick }: { criticalCount: number; onClick: () => void }) {
+  const { t } = useTranslation('dashboard')
   if (criticalCount === 0) return null
   return (
     <motion.button
@@ -459,7 +451,7 @@ function AlertBanner({ criticalCount, onClick }: { criticalCount: number; onClic
         <AlertTriangle className="h-4 w-4 text-risk-critical" />
       </div>
       <p className="text-sm text-risk-critical font-medium flex-1">
-        <span className="font-black tabular-nums">{formatNumber(criticalCount)}</span> critical-risk contracts detected
+        {t('criticalContractsDetected', { num: formatNumber(criticalCount) })}
       </p>
       <ArrowUpRight className="h-4 w-4 text-risk-critical opacity-60 group-hover:opacity-100 transition-opacity" />
     </motion.button>
@@ -467,91 +459,7 @@ function AlertBanner({ criticalCount, onClick }: { criticalCount: number; onClic
 }
 
 
-// ============================================================================
-// TOP RISK SECTORS BAR — Horizontal bar chart sorted by high-risk rate
-// ============================================================================
-
-interface SectorBarData {
-  name: string
-  code: string
-  id: number
-  riskPct: number
-  avgRisk: number
-  contracts: number
-  totalValue: number
-}
-
-const TopRiskSectorsBar = memo(function TopRiskSectorsBar({
-  data,
-  onSectorClick,
-}: {
-  data: SectorBarData[]
-  onSectorClick: (id: number) => void
-}) {
-  const sorted = useMemo(() => [...data].sort((a, b) => b.riskPct - a.riskPct), [data])
-
-  return (
-    <div className="h-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          layout="vertical"
-          data={sorted}
-          margin={{ top: 0, right: 60, left: 0, bottom: 0 }}
-          onClick={(barData: Record<string, unknown>) => {
-            const payload = barData?.activePayload as Array<{ payload: SectorBarData }> | undefined
-            const id = payload?.[0]?.payload?.id
-            if (id) onSectorClick(id)
-          }}
-          style={{ cursor: 'pointer' }}
-        >
-          <XAxis type="number" hide />
-          <YAxis
-            type="category"
-            dataKey="name"
-            width={90}
-            tick={{ fontSize: 11, fill: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)' }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <RechartsTooltip
-            content={({ active, payload }) => {
-              if (active && payload && payload.length) {
-                const d = payload[0].payload as SectorBarData
-                return (
-                  <div className="chart-tooltip text-xs">
-                    <p className="font-bold text-text-primary">{d.name}</p>
-                    <p className="text-text-muted tabular-nums font-mono">
-                      High-risk: {d.riskPct.toFixed(1)}% | Avg: {(d.avgRisk * 100).toFixed(1)}%
-                    </p>
-                    <p className="text-text-muted tabular-nums font-mono">
-                      {formatNumber(d.contracts)} contracts | {formatCompactMXN(d.totalValue)}
-                    </p>
-                  </div>
-                )
-              }
-              return null
-            }}
-          />
-          <Bar dataKey="riskPct" radius={[0, 4, 4, 0]} isAnimationActive={false}>
-            {sorted.map((s) => (
-              <Cell
-                key={s.code}
-                fill={SECTOR_COLORS[s.code] ?? '#64748b'}
-                fillOpacity={0.8}
-              />
-            ))}
-            <LabelList
-              dataKey="riskPct"
-              position="right"
-              formatter={(v: unknown) => `${(v as number).toFixed(1)}%`}
-              style={{ fontSize: 10, fontFamily: 'var(--font-mono)', fill: 'var(--color-text-muted)' }}
-            />
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  )
-})
+// TopRiskSectorsBar removed — sector intelligence section removed from dashboard
 
 // ============================================================================
 // RISK TRAJECTORY CHART — Full-width area chart with administration bands
@@ -831,11 +739,11 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
           <>
             <div className="flex items-center gap-1.5">
               <div className="h-0.5 w-4 rounded" style={{ backgroundColor: sectorColor }} />
-              <span className="text-xs text-text-muted">Sector</span>
+              <span className="text-xs text-text-muted">{t('chartLegendSector')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="h-0.5 w-4 rounded opacity-50" style={{ borderTop: '1.5px dashed rgba(139,148,158,0.6)' }} />
-              <span className="text-xs text-text-muted">All sectors (ref)</span>
+              <span className="text-xs text-text-muted">{t('chartLegendAllSectors')}</span>
             </div>
           </>
         ) : (
@@ -851,12 +759,12 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
         {hasStddev && (
           <div className="flex items-center gap-1.5">
             <div className="h-3 w-4 rounded-sm" style={{ backgroundColor: RISK_COLORS.high, opacity: 0.12 }} />
-            <span className="text-xs text-text-muted">+/-1 std dev</span>
+            <span className="text-xs text-text-muted">{t('chartLegendStdDev')}</span>
           </div>
         )}
         <div className="flex items-center gap-1.5">
           <div className="h-0.5 w-4 rounded" style={{ borderTop: '1.5px dashed #f97316' }} />
-          <span className="text-xs text-text-muted">Direct award %</span>
+          <span className="text-xs text-text-muted">{t('chartLegendDirectAward')}</span>
         </div>
       </div>
     </div>
@@ -896,6 +804,7 @@ interface SectorMiniCardProps {
 const SectorMiniCard = memo(function SectorMiniCard({
   name, code, contracts, riskPct, totalValue, avgRisk, grade, onClick,
 }: SectorMiniCardProps) {
+  const { t } = useTranslation('dashboard')
   const sectorColor = SECTOR_COLORS[code] ?? '#64748b'
   const riskColor = riskPct >= 15 ? 'text-risk-critical' : riskPct >= 10 ? 'text-risk-high' : 'text-risk-medium'
   const gc = grade ? (GRADE_DOT_COLORS[grade] ?? GRADE_DOT_COLORS['D']) : null
@@ -923,15 +832,15 @@ const SectorMiniCard = memo(function SectorMiniCard({
       </div>
       <div className="grid grid-cols-2 gap-x-3 gap-y-1">
         <div>
-          <p className="text-[9px] text-text-muted font-mono uppercase">Contracts</p>
+          <p className="text-[9px] text-text-muted font-mono uppercase">{t('sectorCardContracts')}</p>
           <p className="text-xs font-bold tabular-nums font-mono text-text-secondary">{formatNumber(contracts)}</p>
         </div>
         <div>
-          <p className="text-[9px] text-text-muted font-mono uppercase">High-risk</p>
+          <p className="text-[9px] text-text-muted font-mono uppercase">{t('sectorCardHighRisk')}</p>
           <p className={cn('text-xs font-bold tabular-nums font-mono', riskColor)}>{riskPct.toFixed(1)}%</p>
         </div>
         <div>
-          <p className="text-[9px] text-text-muted font-mono uppercase">Value</p>
+          <p className="text-[9px] text-text-muted font-mono uppercase">{t('sectorCardValue')}</p>
           <p className="text-xs font-bold tabular-nums font-mono text-text-secondary">{formatCompactMXN(totalValue)}</p>
         </div>
       </div>
@@ -1112,6 +1021,7 @@ const PATTERN_COLORS: Record<string, string> = {
 }
 
 function RiskTicker() {
+  const { t } = useTranslation('dashboard')
   const { data: ariaData } = useQuery({
     queryKey: ['aria', 'queue', 'ticker'],
     queryFn: () => ariaApi.getQueue({ tier: 1, per_page: 15 }),
@@ -1145,7 +1055,7 @@ function RiskTicker() {
         aria-label="High-risk vendor alerts"
       >
         <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
-          ARIA pipeline loading...
+          {t('ariaTickerLoading')}
         </span>
       </div>
     )
@@ -1167,7 +1077,7 @@ function RiskTicker() {
       <div style={{ display: 'flex', whiteSpace: 'nowrap', animation: 'tickerScroll 80s linear infinite' }}>
         {doubled.map((item, i) => (
           <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginRight: '48px' }}>
-            <span style={{ color: '#c41e3a', fontSize: '9px', fontWeight: 700 }}>&#9650; RIESGO</span>
+            <span style={{ color: '#c41e3a', fontSize: '9px', fontWeight: 700 }}>&#9650; {t('ariaRisk')}</span>
             <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em', fontFamily: 'monospace' }}>{item.name}</span>
             <span style={{ color: item.level === 'critical' ? '#ef4444' : '#f97316', fontSize: '11px', fontWeight: 700, fontFamily: 'monospace' }}>{item.score}</span>
             {item.pattern && (
@@ -1200,6 +1110,7 @@ function DashboardCinematicHero({ overview, criticalHighContractPct, criticalCou
   criticalCount: number
   loading: boolean
 }) {
+  const { t } = useTranslation('dashboard')
   const heroRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -1233,20 +1144,20 @@ function DashboardCinematicHero({ overview, criticalHighContractPct, criticalCou
       }} />
 
       <div className="dash-hero-label" style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.2em', color: '#c41e3a', marginBottom: '16px', fontFamily: 'var(--font-family-mono)' }}>
-        SISTEMA DE VIGILANCIA &middot; RUBLI v6.2 &middot; ACTIVO
+        {t('heroSurveillanceLabel')} &middot; RUBLI v6.4 &middot; {t('heroSurveillanceActive')}
       </div>
 
       <h1 className="dash-hero-headline" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 800, color: 'white', fontFamily: 'var(--font-family-serif)', lineHeight: 1.1, marginBottom: '24px', maxWidth: '700px' }}>
-        {loading ? '\u2014' : `${(overview?.total_contracts ?? 3051294).toLocaleString('es-MX')} contratos`}
+        {loading ? '\u2014' : `${(overview?.total_contracts ?? 3051294).toLocaleString('en-US')} ${t('heroContracts')}`}
         <br/>
-        <span style={{ color: '#c41e3a' }}>bajo vigilancia</span>
+        <span style={{ color: '#c41e3a' }}>{t('heroUnderSurveillance')}</span>
       </h1>
 
       <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', marginBottom: '28px' }}>
         {[
-          { label: 'Contratos con alerta', value: loading ? '\u2014' : `${criticalHighContractPct.toFixed(1)}%`, color: '#ef4444' },
-          { label: 'Nivel critico', value: loading ? '\u2014' : criticalCount.toLocaleString('es-MX'), color: '#f97316' },
-          { label: 'Valor total analizado', value: loading ? '\u2014' : formatCompactMXN(overview?.total_value_mxn ?? 0), color: '#fbbf24' },
+          { label: t('heroAlertContracts'), value: loading ? '\u2014' : `${criticalHighContractPct.toFixed(1)}%`, color: '#ef4444' },
+          { label: t('heroCriticalLevel'), value: loading ? '\u2014' : criticalCount.toLocaleString('en-US'), color: '#f97316' },
+          { label: t('heroTotalValueAnalyzed'), value: loading ? '\u2014' : formatCompactMXN(overview?.total_value_mxn ?? 0), color: '#fbbf24' },
         ].map((stat, i) => (
           <div key={i} className="dash-hero-stat">
             <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)', letterSpacing: '0.1em', fontFamily: 'var(--font-family-mono)', marginBottom: '4px' }}>{stat.label.toUpperCase()}</div>
@@ -1257,9 +1168,9 @@ function DashboardCinematicHero({ overview, criticalHighContractPct, criticalCou
 
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
         {[
-          { label: '\u2192 Investigar proveedores', to: '/aria' },
-          { label: '\u2192 Casos documentados', to: '/cases' },
-          { label: '\u2192 Tarjeta de calificacion', to: '/report-card' },
+          { label: `\u2192 ${t('heroInvestigateVendors')}`, to: '/aria' },
+          { label: `\u2192 ${t('heroDocumentedCases')}`, to: '/cases' },
+          { label: `\u2192 ${t('heroReportCard')}`, to: '/report-card' },
         ].map((cta, i) => (
           <Link key={i} to={cta.to} className="dash-hero-cta" style={{
             fontSize: '12px', fontWeight: 600, color: 'rgba(255,255,255,0.7)',
@@ -1283,6 +1194,7 @@ function DashboardCinematicHero({ overview, criticalHighContractPct, criticalCou
 // ============================================================================
 
 function InvestigationSpotlight() {
+  const { t } = useTranslation('dashboard')
   const { data: ariaT1 } = useQuery({
     queryKey: ['aria', 'queue', 'spotlight'],
     queryFn: () => ariaApi.getQueue({ tier: 1, per_page: 1 }),
@@ -1313,7 +1225,7 @@ function InvestigationSpotlight() {
     }}>
       <div>
         <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.2em', color: '#c41e3a', marginBottom: '8px', fontFamily: 'var(--font-family-mono)' }}>
-          &#9650; ARIA T1 &middot; PRIORIDAD MAXIMA
+          &#9650; {t('heroAriaT1Label')}
           {pattern && (
             <span style={{
               marginLeft: '8px', fontSize: '8px', padding: '1px 5px', borderRadius: '3px',
@@ -1326,7 +1238,7 @@ function InvestigationSpotlight() {
           {toTitleCase(vendorName)}
         </div>
         <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.6, maxWidth: '560px', marginBottom: '12px' }}>
-          {formatNumber(totalContracts)} contratos &middot; {formatCompactMXN(totalValue)}
+          {formatNumber(totalContracts)} {t('heroContractsLabel')} &middot; {formatCompactMXN(totalValue)}
           {sector && <> &middot; {toTitleCase(sector)}</>}
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
@@ -1335,14 +1247,14 @@ function InvestigationSpotlight() {
               fontSize: '12px', fontWeight: 600, color: '#c41e3a', textDecoration: 'none',
               fontFamily: 'var(--font-family-mono)', letterSpacing: '0.08em',
             }}>
-              ABRIR PERFIL &rarr;
+              {t('heroOpenProfile')} &rarr;
             </Link>
           )}
           <Link to="/aria" style={{
             fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', textDecoration: 'none',
             fontFamily: 'var(--font-family-mono)', letterSpacing: '0.08em',
           }}>
-            VER INVESTIGACION &rarr;
+            {t('heroViewInvestigation')} &rarr;
           </Link>
         </div>
       </div>
@@ -1422,6 +1334,7 @@ export function Dashboard() {
   const navigate = useNavigate()
   const { open: openEntityDrawer } = useEntityDrawer()
   const { t } = useTranslation('dashboard')
+  const { t: tc } = useTranslation('common')
 
   // ── Data fetching ─────────────────────────────────────────────────────────
 
@@ -1639,7 +1552,7 @@ export function Dashboard() {
 
       {/* Page Header */}
       <PageHeader
-        label="PANORAMA NACIONAL"
+        label={t('panoramaLabel')}
         title={t('title')}
         subtitle={t('subtitle')}
         icon={LayoutDashboard}
@@ -1664,13 +1577,13 @@ export function Dashboard() {
         <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-risk-critical/30 bg-risk-critical/5">
           <AlertTriangle className="h-4 w-4 text-risk-critical flex-shrink-0" />
           <p className="text-sm text-risk-critical flex-1">
-            Dashboard data failed to load. Some sections may be unavailable.
+            {t('dashboardLoadError')}
           </p>
           <button
             onClick={() => void dashRefetch()}
             className="text-sm text-risk-critical underline hover:no-underline font-medium flex-shrink-0"
           >
-            Retry
+            {tc('retry')}
           </button>
         </div>
       )}
@@ -1751,7 +1664,7 @@ export function Dashboard() {
           <KPICard
             label={t('topVendors')}
             value={dashLoading ? '--' : formatNumber(overview?.total_vendors ?? 0)}
-            sublabel={`${formatNumber(overview?.total_contracts ?? 0)} contracts | 2002-2025`}
+            sublabel={`${formatNumber(overview?.total_contracts ?? 0)} ${tc('contracts').toLowerCase()} | 2002-2025`}
             color="#818cf8"
             loading={dashLoading}
             icon={Users}
@@ -1766,11 +1679,11 @@ export function Dashboard() {
       {patternCountsData?.counts && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {([
-            { key: 'critical' as const, label: 'Critical Risk', icon: AlertTriangle, color: '#f87171', route: '/contracts?risk_level=critical' },
-            { key: 'december_rush' as const, label: 'December Rush', icon: Calendar, color: '#fbbf24', route: '/detective?pattern=december_rush' },
-            { key: 'split_contracts' as const, label: 'Split Contracts', icon: Scissors, color: '#fb923c', route: '/detective?pattern=split_contracts' },
-            { key: 'co_bidding' as const, label: 'Co-Bidding', icon: Users, color: '#8b5cf6', route: '/detective?pattern=co_bidding' },
-            { key: 'price_outliers' as const, label: 'Price Outliers', icon: TrendingUp, color: '#3b82f6', route: '/detective?pattern=price_outliers' },
+            { key: 'critical' as const, label: t('criticalRisk'), icon: AlertTriangle, color: '#f87171', route: '/contracts?risk_level=critical' },
+            { key: 'december_rush' as const, label: t('decemberRush'), icon: Calendar, color: '#fbbf24', route: '/detective?pattern=december_rush' },
+            { key: 'split_contracts' as const, label: t('splitContracts'), icon: Scissors, color: '#fb923c', route: '/detective?pattern=split_contracts' },
+            { key: 'co_bidding' as const, label: t('coBidding'), icon: Users, color: '#8b5cf6', route: '/detective?pattern=co_bidding' },
+            { key: 'price_outliers' as const, label: t('priceOutliers'), icon: TrendingUp, color: '#3b82f6', route: '/detective?pattern=price_outliers' },
           ] as const).map(({ key, label, icon: PatIcon, color, route }) => (
             <button
               key={key}
@@ -1793,110 +1706,7 @@ export function Dashboard() {
 
       <SectionDivider />
 
-      {/* ================================================================ */}
-      {/* ROW 2: RISK DISTRIBUTION (Donut) + TOP RISK SECTORS (Bar)       */}
-      {/* ================================================================ */}
-      <ScrollReveal delay={0}>
-      <div className="grid gap-5 grid-cols-1 lg:grid-cols-2">
-        {/* Risk Distribution Donut */}
-        <DashboardSection
-          title={t('riskDistribution')}
-          subtitle={t('riskDistLabel', { total: formatNumber(overview?.total_contracts || 0) })}
-          icon={BarChart3}
-          action={<RiskScoreDisclaimer />}
-        >
-          {dashLoading || !riskDist ? (
-            <div className="flex justify-center py-8"><Skeleton className="h-48 w-48 rounded-full" /></div>
-          ) : (
-            <div className="space-y-4">
-              {/* Stacked proportion bar */}
-              <div>
-                <p className="text-[10px] font-mono text-text-muted uppercase tracking-wider mb-1">
-                  Contracts by risk level
-                </p>
-                <div className="flex h-6 rounded overflow-hidden gap-px">
-                  {(['critical', 'high', 'medium', 'low'] as const).map(level => {
-                    const d = riskDist.find(r => r.risk_level === level)
-                    const pct = d?.percentage ?? 0
-                    return pct > 0.5 ? (
-                      <button
-                        key={level}
-                        onClick={() => navigate(`/contracts?risk_level=${level}`)}
-                        className="flex items-center justify-center hover:opacity-90 transition-opacity"
-                        style={{ width: `${pct}%`, backgroundColor: DONUT_COLORS[level] ?? '#64748b', opacity: 0.75 }}
-                        title={`${level}: ${pct.toFixed(1)}%`}
-                      >
-                        {pct > 5 && (
-                          <span className="text-[9px] font-bold text-white font-mono tabular-nums">{pct.toFixed(0)}%</span>
-                        )}
-                      </button>
-                    ) : null
-                  })}
-                </div>
-              </div>
-              {/* Value proportion bar */}
-              {(() => {
-                const totalValue = riskDist.reduce((s, d) => s + (d.total_value_mxn || 0), 0)
-                return (
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-[10px] font-mono text-text-muted uppercase tracking-wider">Value by risk level</p>
-                      <p className="text-[10px] font-mono text-text-muted">{formatCompactMXN(totalValue)}</p>
-                    </div>
-                    <div className="flex h-6 rounded overflow-hidden gap-px">
-                      {(['critical', 'high', 'medium', 'low'] as const).map(level => {
-                        const d = riskDist.find(r => r.risk_level === level)
-                        const val = d?.total_value_mxn ?? 0
-                        const pct = totalValue > 0 ? (val / totalValue) * 100 : 0
-                        return pct > 0.5 ? (
-                          <button
-                            key={level}
-                            onClick={() => navigate(`/contracts?risk_level=${level}`)}
-                            className="flex items-center justify-center hover:opacity-90 transition-opacity"
-                            style={{ width: `${pct}%`, backgroundColor: DONUT_COLORS[level] ?? '#64748b', opacity: 0.75 }}
-                            title={`${level}: ${pct.toFixed(1)}% of value (${formatCompactMXN(val)})`}
-                          >
-                            {pct > 5 && (
-                              <span className="text-[9px] font-bold text-white font-mono tabular-nums">{pct.toFixed(0)}%</span>
-                            )}
-                          </button>
-                        ) : null
-                      })}
-                    </div>
-                  </div>
-                )
-              })()}
-            </div>
-          )}
-        </DashboardSection>
-
-        {/* Top Risk Sectors */}
-        <DashboardSection
-          title={t('sectorIntelligence')}
-          subtitle={t('sectorIntelligenceDesc')}
-          icon={Target}
-          action={
-            <button
-              onClick={() => navigate('/sectors')}
-              className="text-xs text-accent flex items-center gap-1 hover:underline"
-            >
-              {t('viewAll')} <ArrowUpRight className="h-3 w-3" />
-            </button>
-          }
-        >
-          {dashLoading || sectorData.length === 0 ? (
-            <div className="space-y-2">{[...Array(6)].map((_, i) => <Skeleton key={i} className="h-8" />)}</div>
-          ) : (
-            <div style={{ height: 360 }}>
-              <TopRiskSectorsBar
-                data={sectorData}
-                onSectorClick={(id) => navigate(`/sectors/${id}`)}
-              />
-            </div>
-          )}
-        </DashboardSection>
-      </div>
-      </ScrollReveal>
+      {/* ROW 2: Risk Distribution + Sector Intelligence — REMOVED for cleaner layout */}
 
       <SectionDivider />
 
@@ -1916,7 +1726,7 @@ export function Dashboard() {
               onChange={(e) => setSelectedTrajectorySectorId(e.target.value === '' ? null : Number(e.target.value))}
               aria-label="Filter risk trajectory by sector"
             >
-              <option value="">All Sectors</option>
+              <option value="">{t('allSectorsOption')}</option>
               {sectorData.map((s) => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
@@ -1952,14 +1762,14 @@ export function Dashboard() {
             <div>
               <div className="editorial-rule" style={{ marginBottom: '0.25rem' }}>
                 <BarChart3 className="h-3.5 w-3.5 text-accent flex-shrink-0" />
-                <span className="editorial-label">Year Summary: {selectedYear}</span>
+                <span className="editorial-label">{t('yearSummaryTitle', { year: selectedYear })}</span>
               </div>
             </div>
             <button
               onClick={() => setSelectedYear(null)}
               className="text-xs text-text-muted hover:text-text-primary font-mono"
             >
-              Close
+              {t('yearSummaryClose')}
             </button>
           </div>
           {yearSummaryLoading ? (
@@ -1970,26 +1780,26 @@ export function Dashboard() {
             <div className="space-y-3">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="p-2 rounded-lg bg-background-elevated/30">
-                  <p className="text-[9px] font-mono text-text-muted uppercase">Contracts</p>
+                  <p className="text-[9px] font-mono text-text-muted uppercase">{t('yearSummaryContracts')}</p>
                   <p className="text-lg font-black tabular-nums font-mono text-text-primary">{formatNumber(yearSummaryData.overview.total_contracts)}</p>
                 </div>
                 <div className="p-2 rounded-lg bg-background-elevated/30">
-                  <p className="text-[9px] font-mono text-text-muted uppercase">Total Value</p>
+                  <p className="text-[9px] font-mono text-text-muted uppercase">{t('yearSummaryTotalValue')}</p>
                   <p className="text-lg font-black tabular-nums font-mono text-text-primary">{formatCompactMXN(yearSummaryData.overview.total_value_mxn)}</p>
                 </div>
                 <div className="p-2 rounded-lg bg-background-elevated/30">
-                  <p className="text-[9px] font-mono text-text-muted uppercase">High-Risk Rate</p>
+                  <p className="text-[9px] font-mono text-text-muted uppercase">{t('yearSummaryHighRiskRate')}</p>
                   <p className="text-lg font-black tabular-nums font-mono text-risk-high">{(yearSummaryData.overview.high_risk_pct ?? 0).toFixed(1)}%</p>
                 </div>
                 <div className="p-2 rounded-lg bg-background-elevated/30">
-                  <p className="text-[9px] font-mono text-text-muted uppercase">Direct Award</p>
+                  <p className="text-[9px] font-mono text-text-muted uppercase">{t('yearSummaryDirectAward')}</p>
                   <p className="text-lg font-black tabular-nums font-mono text-text-primary">{(yearSummaryData.direct_award_pct ?? 0).toFixed(1)}%</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {yearSummaryData.top_vendors_by_value.length > 0 && (
                   <div>
-                    <p className="text-[9px] font-mono text-text-muted uppercase mb-1">Top Vendors</p>
+                    <p className="text-[9px] font-mono text-text-muted uppercase mb-1">{t('yearSummaryTopVendors')}</p>
                     {yearSummaryData.top_vendors_by_value.slice(0, 5).map((v, i) => (
                       <button key={v.id} onClick={() => openEntityDrawer(v.id, 'vendor')} className="flex items-center gap-1.5 w-full py-0.5 hover:bg-background-elevated/20 rounded transition-colors text-left">
                         <span className="text-[10px] text-text-muted font-mono w-4">{i + 1}</span>
@@ -2001,7 +1811,7 @@ export function Dashboard() {
                 )}
                 {yearSummaryData.top_institutions_by_spend.length > 0 && (
                   <div>
-                    <p className="text-[9px] font-mono text-text-muted uppercase mb-1">Top Institutions</p>
+                    <p className="text-[9px] font-mono text-text-muted uppercase mb-1">{t('yearSummaryTopInstitutions')}</p>
                     {yearSummaryData.top_institutions_by_spend.slice(0, 5).map((inst, i) => (
                       <button key={inst.id} onClick={() => openEntityDrawer(inst.id, 'institution')} className="flex items-center gap-1.5 w-full py-0.5 hover:bg-background-elevated/20 rounded transition-colors text-left">
                         <span className="text-[10px] text-text-muted font-mono w-4">{i + 1}</span>
@@ -2014,7 +1824,7 @@ export function Dashboard() {
               </div>
             </div>
           ) : (
-            <p className="text-xs text-text-muted">No data available for this year</p>
+            <p className="text-xs text-text-muted">{t('yearSummaryNoData')}</p>
           )}
         </div>
       )}
@@ -2024,8 +1834,8 @@ export function Dashboard() {
       {/* ================================================================ */}
       {seasonalRiskData?.data && seasonalRiskData.data.length > 0 && (
         <DashboardSection
-          title="Seasonal Patterns"
-          subtitle="Monthly risk premium vs rest-of-year average"
+          title={t('seasonalPatternsTitle')}
+          subtitle={t('seasonalPatternsDesc')}
           icon={Calendar}
         >
           <div className="space-y-2">
@@ -2061,7 +1871,7 @@ export function Dashboard() {
               })}
             </div>
             <p className="text-[10px] text-text-muted font-mono">
-              December contracts show elevated risk — budget pressure drives year-end spending
+              {t('seasonalPatternsNote')}
             </p>
           </div>
         </DashboardSection>
@@ -2089,7 +1899,7 @@ export function Dashboard() {
           }
         >
           <TopVendorsTable
-            vendors={execData?.top_vendors ?? []}
+            vendors={(execData?.top_vendors ?? []).slice(0, 5)}
             loading={execLoading}
             onVendorClick={(id) => openEntityDrawer(id, 'vendor')}
           />
@@ -2151,10 +1961,7 @@ export function Dashboard() {
       </div>
       </ScrollReveal>
 
-      {/* ================================================================ */}
-      {/* POLITICAL INTELLIGENCE — Top vendors by administration          */}
-      {/* ================================================================ */}
-      <PoliticalIntelligenceStrip />
+      {/* POLITICAL INTELLIGENCE — removed (API errors) */}
 
       {/* ================================================================ */}
       {/* GROUND TRUTH VALIDATION                                          */}
@@ -2181,10 +1988,7 @@ export function Dashboard() {
         />
       </DashboardSection>
 
-      {/* ================================================================ */}
-      {/* P21: ANOMALY LEADS — Convergent signals (supervised + PyOD)     */}
-      {/* ================================================================ */}
-      <AnomalyLeadsWidget className="animate-fade-in" />
+      {/* P21: ANOMALY LEADS — removed (API 500 errors) */}
 
       {/* ================================================================ */}
       {/* SECTOR GRID: 12 cards                                            */}
@@ -2194,7 +1998,7 @@ export function Dashboard() {
           <div className="flex items-center gap-2 mb-3">
             <Layers className="h-4 w-4 text-accent" />
             <h2 className="text-sm font-bold text-text-primary uppercase tracking-wider">
-              12 Federal Sectors
+              {t('sectorGridTitle')}
             </h2>
           </div>
           <motion.div

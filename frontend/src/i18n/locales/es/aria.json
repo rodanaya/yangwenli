@@ -69,16 +69,37 @@
     "disclaimer": "Las puntuaciones de IPS son indicadores de riesgo, no veredictos de corrupción. Las puntuaciones altas indican similitud estadística con patrones de corrupción documentados y justifican una investigación más profunda."
   },
   "patterns": {
-    "P1": "Monopolio",
+    "P1": "Monopolio de Mercado",
     "P2": "Empresa Fantasma",
-    "P3": "Intermediario",
+    "P3": "Intermediario de Contratos",
     "P4": "Manipulación de Licitaciones",
     "P5": "Sobreprecio",
     "P6": "Captura Institucional",
-    "P7": "Conflicto"
+    "P7": "Red de Licitaciones Sospechosas"
+  },
+  "patternFilter": {
+    "P1": "Monopolio",
+    "P2": "Empresa Fantasma",
+    "P3": "Intermediario",
+    "P6": "Captura Institucional",
+    "P7": "Red Sospechosa"
   },
   "badges": {
     "new": "NUEVO",
     "efos": "EFOS"
+  },
+  "primer": {
+    "text": "ARIA es el algoritmo automatizado de investigación de riesgo de RUBLI. Analiza 198,000 proveedores en 4 niveles de amenaza — comienza con el Nivel 1 para los casos de mayor prioridad.",
+    "cta": "Comenzar aquí",
+    "dismiss": "Descartar"
+  },
+  "searchBar": {
+    "placeholder": "Buscar proveedores por nombre...",
+    "patternLabel": "Filtrar por patrón",
+    "allPatterns": "Todos los patrones"
+  },
+  "tierCollapse": {
+    "show": "Mostrar {{count}} proveedores",
+    "hide": "Colapsar"
   }
 }

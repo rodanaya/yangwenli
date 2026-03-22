@@ -1,4 +1,5 @@
 {
+  "banner": "Rediseno editorial completo. Modelo de riesgo v6.4. 3.1M contratos analizados.",
   "loading": "Cargando...",
   "error": "Error",
   "retry": "Reintentar",
@@ -64,6 +65,14 @@
     "create": "Crear expediente",
     "creating": "Creando\u2026"
   },
+  "tagline": "Transparencia Procuratoria",
+  "contractsIndexed": "3.1M contratos indexados",
+  "contractsIndexedShort": "3.1M indexados",
+  "contractsAnalyzed": "3.1M contratos analizados",
+  "footerBrand": "RUBLI",
+  "footerTagline": "Transparencia Procuratoria",
+  "footerStats": "3.1M contratos analizados \u2022 2002-2025",
+  "dismissBanner": "Cerrar banner",
   "welcome": {
     "subtitle": "Red Unificada de Búsqueda de Licitaciones Irregulares — Detección de Corrupción con IA para Contrataciones del Gobierno de México",
     "step1Title": "Sigue el Dinero",
