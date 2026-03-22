@@ -241,7 +241,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 flex-shrink-0 md:hidden text-stone-300 hover:text-white hover:bg-[#2a2420] ml-auto"
+            className="h-10 w-10 flex-shrink-0 md:hidden text-stone-300 hover:text-white hover:bg-[#2a2420] ml-auto"
             onClick={onMobileClose}
             aria-label={t('closeMenu')}
           >

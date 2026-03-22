@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { analysisApi } from '@/api/client'
 import type { SectorYearItem } from '@/api/types'
 import { SECTORS } from '@/lib/constants'
@@ -36,11 +37,11 @@ for (const s of SECTORS) {
   SECTOR_ID_TO_COLOR[s.id] = s.color
 }
 
-const SCANDAL_EVENTS = [
-  { year: 2017, label: 'La Estafa\nMaestra', color: '#ef4444' },
-  { year: 2019, label: 'Caso Lozoya\nOdebrecht', color: '#ef4444' },
-  { year: 2020, label: 'Compras\nCOVID-19', color: '#f97316' },
-  { year: 2021, label: 'Segalmex\nEscandalo', color: '#ef4444' },
+const SCANDAL_EVENTS_BASE = [
+  { year: 2017, labelKey: 'scandalEvents.laEstafaMaestra', color: '#ef4444' },
+  { year: 2019, labelKey: 'scandalEvents.casoLozoya', color: '#ef4444' },
+  { year: 2020, labelKey: 'scandalEvents.comprasCovid', color: '#f97316' },
+  { year: 2021, labelKey: 'scandalEvents.segalmexEscandalo', color: '#ef4444' },
 ] as const
 
 const BG_COLOR = '#060a12'
@@ -216,6 +217,7 @@ interface TooltipData {
 // ---------------------------------------------------------------------------
 
 export default function Seismograph() {
+  const { t } = useTranslation('seismograph')
   const containerRef = useRef<HTMLDivElement>(null)
   const [svgWidth, setSvgWidth] = useState(900)
   const [tooltip, setTooltip] = useState<TooltipData | null>(null)
@@ -310,7 +312,7 @@ export default function Seismograph() {
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
           <p className="font-mono text-xs text-white/40 tracking-widest uppercase">
-            Cargando datos sismicos...
+            {t('loading')}
           </p>
         </div>
       </div>
@@ -320,7 +322,7 @@ export default function Seismograph() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: BG_COLOR }}>
-        <p className="font-mono text-sm text-red-400">Error al cargar datos</p>
+        <p className="font-mono text-sm text-red-400">{t('error')}</p>
       </div>
     )
   }
@@ -338,15 +340,15 @@ export default function Seismograph() {
             className="font-mono text-2xl md:text-3xl font-bold tracking-[0.3em] text-white/90"
             style={{ letterSpacing: '0.3em' }}
           >
-            EL SISMOGRAFO
+            {t('title')}
           </h1>
           <div className="mt-2 h-px bg-gradient-to-r from-white/30 via-white/10 to-transparent" />
           <p className="mt-3 font-mono text-[11px] text-white/35 tracking-[0.15em] uppercase leading-relaxed">
-            Monitoreo de anomalias en contratacion publica
+            {t('subtitle')}
             <span className="text-white/15 mx-2">&middot;</span>
-            2010-2025
+            {t('dateRange')}
             <span className="text-white/15 mx-2">&middot;</span>
-            Sistema de deteccion temporal de riesgo RUBLI
+            {t('system')}
           </p>
         </motion.div>
 
@@ -370,7 +372,7 @@ export default function Seismograph() {
           ))}
           <div className="flex items-center gap-1.5 ml-3">
             <div className="w-3 h-3 rounded-sm bg-red-500/15 border border-red-500/30" />
-            <span className="font-mono text-[10px] tracking-wider text-red-400/50">ESCANDALO</span>
+            <span className="font-mono text-[10px] tracking-wider text-red-400/50">{t('legend.scandal')}</span>
           </div>
         </motion.div>
       </div>
@@ -390,7 +392,7 @@ export default function Seismograph() {
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             role="img"
-            aria-label="Seismograph visualization of procurement risk anomalies across sectors from 2010 to 2025"
+            aria-label={t('aria.chartLabel')}
           >
             {/* Glow filter definitions */}
             <defs>
@@ -409,9 +411,10 @@ export default function Seismograph() {
             </defs>
 
             {/* Scandal bands */}
-            {SCANDAL_EVENTS.map((evt) => {
+            {SCANDAL_EVENTS_BASE.map((evt) => {
               const cx = yearX(evt.year)
               const bandWidth = chartWidth / (YEAR_MAX - YEAR_MIN) * 0.7
+              const evtLabel = t(evt.labelKey)
               return (
                 <g key={evt.year}>
                   <rect
@@ -434,7 +437,7 @@ export default function Seismograph() {
                     strokeDasharray="4 4"
                   />
                   {/* Event label */}
-                  {evt.label.split('\n').map((line, li) => (
+                  {evtLabel.split('\n').map((line, li) => (
                     <text
                       key={li}
                       x={cx + 5}
@@ -717,7 +720,7 @@ export default function Seismograph() {
                 ))}
                 <div className="mt-1.5 pt-1.5 border-t border-white/5">
                   <div className="flex justify-between">
-                    <span className="font-mono text-[9px] text-white/25 uppercase">Total contratos</span>
+                    <span className="font-mono text-[9px] text-white/25 uppercase">{t('tooltip.totalContracts')}</span>
                     <span className="font-mono text-[10px] text-white/40 tabular-nums">
                       {tooltip.entries.reduce((s, e) => s + e.contracts, 0).toLocaleString()}
                     </span>
@@ -737,9 +740,7 @@ export default function Seismograph() {
         >
           <div className="w-1 h-1 rounded-full bg-emerald-500/40" />
           <p className="font-mono text-[10px] text-white/20 tracking-wider leading-relaxed">
-            Cada canal muestra la desviacion del porcentaje de contratos de alto riesgo respecto a la
-            media historica del sector. Oscilaciones ascendentes indican periodos con anomalias por
-            encima del promedio.
+            {t('footer')}
           </p>
         </motion.div>
       </div>

@@ -101,5 +101,44 @@
   "tierCollapse": {
     "show": "Show {{count}} vendors",
     "hide": "Collapse"
-  }
+  },
+  "status": {
+    "pending": "Pending",
+    "reviewing": "Reviewing",
+    "confirmed": "Confirmed",
+    "dismissed": "Dismissed"
+  },
+  "reviewPopover": {
+    "reviewStatus": "Review Status",
+    "save": "Save",
+    "saving": "Saving…",
+    "close": "Close",
+    "error": "Error saving. Please try again.",
+    "updateTitle": "Update review status"
+  },
+  "intelligenceDetails": "Intelligence Details",
+  "header": {
+    "systemLabel": "ARIA System · Procurement Intelligence",
+    "live": "LIVE",
+    "title": "The War Room",
+    "subtitle": "{{count}} vendors under active surveillance. Automated risk detection system for federal public contracting."
+  },
+  "editorial": {
+    "section": "RUBLI INTELLIGENCE",
+    "headline": "Investigation Briefing",
+    "subtitle": "Automated investigation queue with threat-level prioritization"
+  },
+  "situationReport": "Situation Report",
+  "stats": {
+    "vendorsSurveillance": "vendors under surveillance",
+    "elevatedValueRisk": "value at elevated risk",
+    "efosOnList": "on EFOS List (SAT)",
+    "efosAnnotation": "+ {{count}} SFP sanctions",
+    "newVendorRisk": "new high-risk vendors"
+  },
+  "methodology": {
+    "title": "How does ARIA work?",
+    "body": "ARIA combines ML risk score (v6.4), PyOD anomaly detection, and cross-referencing with external registries (SAT EFOS, SFP, RUPC) to prioritize investigations. IPS = Integrated Priority Score."
+  },
+  "threatLevels": "Threat Levels"
 }

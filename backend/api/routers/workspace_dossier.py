@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 
 from ..dependencies import get_db
@@ -9,10 +9,10 @@ router = APIRouter(prefix="/workspace/dossiers", tags=["dossiers"])
 # ── Models ──────────────────────────────────────────────────────────────────
 
 class DossierIn(BaseModel):
-    name: str
-    description: Optional[str] = None
+    name: str = Field(..., max_length=200)
+    description: Optional[str] = Field(default=None, max_length=5000)
     status: str = "active"
-    color: str = "#64748b"
+    color: str = Field(default="#64748b", pattern=r'^#[0-9A-Fa-f]{6}$')
 
 class DossierOut(BaseModel):
     id: int
@@ -29,9 +29,9 @@ class DossierOut(BaseModel):
 class DossierItemIn(BaseModel):
     item_type: str  # vendor | institution | contract | note
     item_id: Optional[int] = None
-    item_name: str
-    annotation: Optional[str] = None
-    color: str = "#64748b"
+    item_name: str = Field(..., max_length=200)
+    annotation: Optional[str] = Field(default=None, max_length=2000)
+    color: str = Field(default="#64748b", pattern=r'^#[0-9A-Fa-f]{6}$')
 
 class DossierItemOut(BaseModel):
     id: int

@@ -72,6 +72,7 @@ export function RiskLevelPill({
         <span
           className="h-1.5 w-1.5 rounded-full flex-shrink-0"
           style={{ backgroundColor: s.dot }}
+          aria-hidden="true"
         />
       )}
       {level.charAt(0).toUpperCase() + level.slice(1)}

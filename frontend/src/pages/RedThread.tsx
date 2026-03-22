@@ -80,9 +80,9 @@ const RISK_DOT_COLORS: Record<string, string> = {
 
 function ChapterLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="editorial-label text-[var(--color-accent)] mb-4 tracking-[0.18em]">
+    <h2 className="editorial-label text-[var(--color-accent)] mb-4 tracking-[0.18em]">
       {children}
-    </p>
+    </h2>
   )
 }
 

@@ -176,10 +176,17 @@
     "addEvidence": "Add Evidence",
     "changeStatus": "Change Status",
     "promoteToGroundTruth": "Promote to Ground Truth",
+    "loadError": "Could not load case. It may not exist.",
+    "untitledSource": "Untitled source",
     "promote": {
       "confirm": "This will add the case to the ground truth database and use it to retrain the risk model in the next cycle. This action cannot be undone. Are you sure?",
       "success": "Case promoted to ground truth successfully."
     }
+  },
+  "statusModal": {
+    "notesPlaceholder": "Optional notes...",
+    "reviewerPlaceholder": "Your name (optional)",
+    "save": "Save"
   },
   "card": {
     "priority": "PRIORITY {{n}}",

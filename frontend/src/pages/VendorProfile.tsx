@@ -479,6 +479,7 @@ const FACTOR_EXPLANATIONS: Record<string, string> = {
 }
 
 function TopRiskFactorBars({ waterfallData }: { waterfallData: VendorWaterfallContribution[] }) {
+  const { t } = useTranslation('vendors')
   const topFactors = useMemo(() => {
     return [...waterfallData]
       .filter((f) => f.contribution > 0)
@@ -732,10 +733,11 @@ export function VendorProfile() {
   })
 
   // Fetch larger batch for chart visualizations (separate from table pagination)
+  // Gated behind the history tab — deferred until user navigates there.
   const { data: contractsForCharts } = useQuery({
     queryKey: ['vendor', vendorId, 'contracts-charts'],
     queryFn: () => vendorApi.getContracts(vendorId, { per_page: 500 }),
-    enabled: !!vendorId,
+    enabled: !!vendorId && activeTab === 'history',
     staleTime: 5 * 60 * 1000,
   })
 

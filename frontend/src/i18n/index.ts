@@ -71,6 +71,12 @@ import esCaptura from './locales/es/captura.json'
 import enCaptura from './locales/en/captura.json'
 import esRedes from './locales/es/redes.json'
 import enRedes from './locales/en/redes.json'
+import esSeismograph from './locales/es/seismograph.json'
+import enSeismograph from './locales/en/seismograph.json'
+import esTelescope from './locales/es/telescope.json'
+import enTelescope from './locales/en/telescope.json'
+import esJournalists from './locales/es/journalists.json'
+import enJournalists from './locales/en/journalists.json'
 
 i18n
   .use(LanguageDetector)
@@ -97,6 +103,9 @@ i18n
         aria: esAria,
         captura: esCaptura,
         redes: esRedes,
+        seismograph: esSeismograph,
+        telescope: esTelescope,
+        journalists: esJournalists,
       },
       en: {
         common: enCommon, sectors: enSectors, nav: enNav, dashboard: enDashboard,
@@ -118,6 +127,9 @@ i18n
         aria: enAria,
         captura: enCaptura,
         redes: enRedes,
+        seismograph: enSeismograph,
+        telescope: enTelescope,
+        journalists: enJournalists,
       },
     },
     lng: localStorage.getItem('i18nextLng') || 'en', // Default to English when no saved preference
@@ -126,5 +138,14 @@ i18n
     defaultNS: 'common',
     interpolation: { escapeValue: false },
   })
+
+// Sync <html lang="..."> on init and on every language change so screen readers
+// and browser spell-check pick up the correct language immediately.
+i18n.on('initialized', () => {
+  document.documentElement.lang = i18n.language
+})
+i18n.on('languageChanged', (lng: string) => {
+  document.documentElement.lang = lng
+})
 
 export default i18n

@@ -8,6 +8,7 @@ export function LanguageToggle() {
   const toggle = () => {
     const next = i18n.language === 'es' ? 'en' : 'es'
     i18n.changeLanguage(next)
+    document.documentElement.lang = next
   }
 
   return (

@@ -5,6 +5,28 @@ from pathlib import Path
 from contextlib import contextmanager
 from typing import Generator
 
+from fastapi import Header, HTTPException, status
+
+# Write-key auth — set RUBLI_WRITE_KEY env var to enable.
+# If the variable is empty/unset the check is bypassed (dev mode).
+WRITE_API_KEY = os.environ.get("RUBLI_WRITE_KEY", "")
+
+
+def require_write_key(x_rubli_key: str = Header(default="")) -> None:
+    """Require API key for state-changing endpoints.
+
+    If RUBLI_WRITE_KEY env var is not set, auth is disabled (dev mode).
+    In production set RUBLI_WRITE_KEY to a strong random string and send
+    the value in the ``X-Rubli-Key`` request header.
+    """
+    if not WRITE_API_KEY:
+        return  # Dev mode: key not configured, skip auth
+    if x_rubli_key != WRITE_API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing API key. Set X-Rubli-Key header.",
+        )
+
 # Database path - configurable via env var, defaults to RUBLI_NORMALIZED.db
 DB_PATH = Path(os.environ.get("DATABASE_PATH", str(Path(__file__).parent.parent / "RUBLI_NORMALIZED.db")))
 

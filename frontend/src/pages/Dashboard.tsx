@@ -1344,10 +1344,15 @@ export function Dashboard() {
     staleTime: 5 * 60 * 1000,
   })
 
+  // Secondary queries — deferred until fastDashboard data arrives to reduce
+  // initial page load from ~11 simultaneous requests to 2 (fastDashboard + execData).
+  const fastLoaded = fastDashboard?.overview != null
+
   const { data: phiSectorsData } = useQuery({
     queryKey: ['phi', 'sectors'],
     queryFn: () => phiApi.getSectors(),
     staleTime: 10 * 60 * 1000,
+    enabled: fastLoaded,
   })
 
   const { data: execData, isLoading: execLoading } = useQuery({
@@ -1360,12 +1365,14 @@ export function Dashboard() {
     queryKey: ['analysis', 'patterns', 'counts'],
     queryFn: () => analysisApi.getPatternCounts(),
     staleTime: 5 * 60 * 1000,
+    enabled: fastLoaded,
   })
 
   const { data: moneyFlowData } = useQuery({
     queryKey: ['analysis', 'money-flow', 'dashboard'],
     queryFn: () => analysisApi.getMoneyFlow(),
     staleTime: 10 * 60 * 1000,
+    enabled: fastLoaded,
   })
 
   const { data: modelMeta } = useQuery({
@@ -1374,24 +1381,28 @@ export function Dashboard() {
     staleTime: 60 * 60 * 1000,
     retry: 0,
     refetchOnWindowFocus: false,
+    enabled: fastLoaded,
   })
 
   const { data: _topInvestigationCase } = useQuery({
     queryKey: ['investigation', 'top-1-dashboard'],
     queryFn: () => investigationApi.getTopCases(1),
     staleTime: 30 * 60 * 1000,
+    enabled: fastLoaded,
   })
 
   const { data: sectorYearData } = useQuery({
     queryKey: ['analysis', 'sector-year-breakdown'],
     queryFn: () => analysisApi.getSectorYearBreakdown(),
     staleTime: 10 * 60 * 1000,
+    enabled: fastLoaded,
   })
 
   const { data: seasonalRiskData } = useQuery({
     queryKey: ['analysis', 'seasonal-risk'],
     queryFn: () => analysisApi.getSeasonalRisk(12),
     staleTime: 10 * 60 * 1000,
+    enabled: fastLoaded,
   })
 
   // Year drill-down state

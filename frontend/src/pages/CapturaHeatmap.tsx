@@ -5,7 +5,7 @@
  * concentration: rows = top institutions, columns = top vendors, cells = value.
  * High concentration = "captura institucional" (institutional capture).
  */
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
@@ -15,6 +15,23 @@ import { analysisApi } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
 import { SECTORS } from '@/lib/constants'
 import { ArrowUpRight } from 'lucide-react'
+
+// ---------------------------------------------------------------------------
+// Hook: detect mobile viewport (below md = 768px)
+// ---------------------------------------------------------------------------
+function useIsMobile(): boolean {
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.innerWidth < 768
+  })
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+  return isMobile
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -56,12 +73,21 @@ function captureTextColor(pct: number): string {
   return 'text-white/40'
 }
 
+/** Human-readable risk label for a capture percentage */
+function captureRiskLabel(pct: number): { label: string; className: string } {
+  if (pct >= 0.5) return { label: 'Captura Total', className: 'text-risk-critical' }
+  if (pct >= 0.3) return { label: 'Alto Riesgo', className: 'text-risk-high' }
+  if (pct >= 0.15) return { label: 'Moderado', className: 'text-risk-medium' }
+  return { label: 'Bajo', className: 'text-text-muted' }
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
 export default function CapturaHeatmap() {
   const { t } = useTranslation('captura')
+  const isMobile = useIsMobile()
 
   // Filters
   const [sectorId, setSectorId] = useState<number | undefined>(undefined)
@@ -163,6 +189,14 @@ export default function CapturaHeatmap() {
       map.set(`${c.institution}||${c.vendor}`, c)
     }
     return map
+  }, [cells])
+
+  // Mobile: top 20 institution-vendor pairs sorted by capture percentage
+  const mobileRankedPairs = useMemo(() => {
+    return [...cells]
+      .filter((c) => c.pctOfInstitution > 0)
+      .sort((a, b) => b.pctOfInstitution - a.pctOfInstitution)
+      .slice(0, 20)
   }, [cells])
 
   // ---------------------------------------------------------------------------
@@ -279,8 +313,67 @@ export default function CapturaHeatmap() {
         </div>
       )}
 
-      {/* Heatmap */}
-      {!isLoading && !error && institutions.length > 0 && vendors.length > 0 && (
+      {/* Mobile fallback: ranked list (shown on screens below md breakpoint) */}
+      {!isLoading && !error && isMobile && mobileRankedPairs.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="space-y-2"
+        >
+          <div className="text-[10px] tracking-[0.2em] uppercase text-text-muted/50 mb-3">
+            Top Concentraciones — Lista
+          </div>
+          <ol className="space-y-2" aria-label="Ranked institution-vendor capture pairs">
+            {mobileRankedPairs.map((cell, idx) => {
+              const risk = captureRiskLabel(cell.pctOfInstitution)
+              return (
+                <li
+                  key={`${cell.institution}||${cell.vendor}`}
+                  className="bg-surface-card border border-white/10 rounded-lg px-4 py-3 flex items-center gap-3"
+                >
+                  {/* Rank */}
+                  <span className="text-[13px] font-mono text-text-muted/50 w-5 shrink-0 text-right">
+                    {idx + 1}
+                  </span>
+                  {/* Capture bar */}
+                  <div
+                    className="w-1 self-stretch rounded-full shrink-0"
+                    style={{ background: captureColor(cell.pctOfInstitution) }}
+                    aria-hidden="true"
+                  />
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[11px] text-text-muted/60 truncate mb-0.5" title={cell.institution}>
+                      {truncName(cell.institution, 32)}
+                    </div>
+                    <Link
+                      to={`/vendors/${cell.vendorId}`}
+                      className="text-sm font-medium text-text-primary hover:text-primary truncate block"
+                      title={cell.vendor}
+                    >
+                      {truncName(cell.vendor, 32)}
+                      <ArrowUpRight className="inline ml-1 w-3 h-3 opacity-50" />
+                    </Link>
+                  </div>
+                  {/* Capture score + meta */}
+                  <div className="text-right shrink-0">
+                    <div className={cn('text-sm font-semibold tabular-nums', risk.className)}>
+                      {formatPercent(cell.pctOfInstitution, 1)}
+                    </div>
+                    <div className="text-[10px] text-text-muted/50">{risk.label}</div>
+                    <div className="text-[10px] text-text-muted/40">{formatCompactMXN(cell.value)}</div>
+                    <div className="text-[10px] text-text-muted/40">{formatNumber(cell.contracts)} contratos</div>
+                  </div>
+                </li>
+              )
+            })}
+          </ol>
+        </motion.div>
+      )}
+
+      {/* Heatmap (desktop only when on mobile, always shown on md+) */}
+      {!isLoading && !error && institutions.length > 0 && vendors.length > 0 && !isMobile && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

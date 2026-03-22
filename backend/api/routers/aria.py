@@ -20,7 +20,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from ..cache import app_cache
-from ..dependencies import get_db_dep
+from ..dependencies import get_db_dep, require_write_key
 
 logger = logging.getLogger(__name__)
 
@@ -648,6 +648,7 @@ def trigger_aria_run(
     request: RunRequest,
     background_tasks: BackgroundTasks,
     conn: sqlite3.Connection = Depends(get_db_dep),
+    _: None = Depends(require_write_key),
 ):
     """Launch the ARIA pipeline + memo generation as a background subprocess."""
     # Check DB-level run lock

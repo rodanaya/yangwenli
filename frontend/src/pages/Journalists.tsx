@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, BookOpen, Download } from 'lucide-react'
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { staggerContainer, slideUp, fadeIn } from '@/lib/animations'
 import { ScrollReveal, AnimatedNumber } from '@/hooks/useAnimations'
@@ -361,18 +362,18 @@ const STORIES: StoryDef[] = [
 
 interface FilterDef {
   id: string
-  label: string
+  labelKey: string
   match: (s: StoryDef) => boolean
 }
 
 const FILTERS: FilterDef[] = [
-  { id: 'all', label: 'Todos', match: () => true },
-  { id: 'amlo', label: 'AMLO', match: (s) => s.tags.includes('AMLO') },
-  { id: 'pena', label: 'Pena Nieto', match: (s) => s.tags.includes('Pena Nieto') },
-  { id: 'salud', label: 'Salud', match: (s) => s.tags.includes('salud') },
-  { id: 'infra', label: 'Infraestructura', match: (s) => s.tags.includes('infraestructura') },
-  { id: 'case', label: 'Casos', match: (s) => s.type === 'case' },
-  { id: 'thematic', label: 'Tematico', match: (s) => s.type === 'thematic' },
+  { id: 'all', labelKey: 'filters.all', match: () => true },
+  { id: 'amlo', labelKey: 'filters.amlo', match: (s) => s.tags.includes('AMLO') },
+  { id: 'pena', labelKey: 'filters.pena', match: (s) => s.tags.includes('Pena Nieto') },
+  { id: 'salud', labelKey: 'filters.salud', match: (s) => s.tags.includes('salud') },
+  { id: 'infra', labelKey: 'filters.infra', match: (s) => s.tags.includes('infraestructura') },
+  { id: 'case', labelKey: 'filters.case', match: (s) => s.type === 'case' },
+  { id: 'thematic', labelKey: 'filters.thematic', match: (s) => s.type === 'thematic' },
 ]
 
 // ---------------------------------------------------------------------------
@@ -380,6 +381,7 @@ const FILTERS: FilterDef[] = [
 // ---------------------------------------------------------------------------
 
 export default function Journalists() {
+  const { t } = useTranslation('journalists')
   const navigate = useNavigate()
   const [activeFilter, setActiveFilter] = useState('all')
 
@@ -417,17 +419,17 @@ export default function Journalists() {
         {/* Editorial masthead */}
         <div className="pt-12 sm:pt-16">
           <EditorialHeadline
-            section="PARA PERIODISTAS"
-            headline="Herramientas de Investigaci&oacute;n"
-            subtitle="Datos, metodolog&iacute;a y gu&iacute;as para periodistas de investigaci&oacute;n"
+            section={t('masthead.section')}
+            headline={t('masthead.headline')}
+            subtitle={t('masthead.subtitle')}
             className="mb-4"
           />
           <div className="flex flex-wrap items-center gap-3 mb-3">
-            <FuentePill source="COMPRANET" count={3051294} countLabel="contratos" verified={true} />
-            <FuentePill source="SAT EFOS" count={13960} countLabel="empresas fantasma" />
+            <FuentePill source="COMPRANET" count={3051294} countLabel={t('masthead.compranetLabel')} verified={true} />
+            <FuentePill source="SAT EFOS" count={13960} countLabel={t('masthead.satEfosLabel')} />
           </div>
           <p className="text-xs text-zinc-500 mb-6">
-            Última actualización de datos: marzo 2026
+            {t('masthead.lastUpdated')}
           </p>
         </div>
 
@@ -441,7 +443,7 @@ export default function Journalists() {
           className="pb-10 sm:pb-14"
         >
           <p className="text-xs font-bold tracking-[0.3em] uppercase text-zinc-500 mb-4">
-            Plataforma de Inteligencia en Contrataciones Publicas
+            {t('hero.platform')}
           </p>
           <h1
             className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-[1.05] mb-4"
@@ -450,7 +452,7 @@ export default function Journalists() {
             RUBLI INVESTIGACIONES
           </h1>
           <p className="text-xl sm:text-2xl text-zinc-400 font-light tracking-wide mb-10">
-            Datos. Patrones. Pistas.
+            {t('hero.tagline')}
           </p>
 
           {/* Three animated counters */}
@@ -461,13 +463,13 @@ export default function Journalists() {
                 duration={2000}
                 className="text-3xl sm:text-4xl font-black text-white tabular-nums"
               />
-              <p className="text-sm text-zinc-500 mt-1">contratos analizados</p>
+              <p className="text-sm text-zinc-500 mt-1">{t('hero.contractsLabel')}</p>
             </div>
             <div>
               <span className="text-3xl sm:text-4xl font-black text-white tabular-nums">
                 <AnimatedNumber value={totalValueBillions} decimals={2} prefix="$" suffix="T" duration={1800} />
               </span>
-              <p className="text-sm text-zinc-500 mt-1">pesos evaluados</p>
+              <p className="text-sm text-zinc-500 mt-1">{t('hero.valueLabel')}</p>
             </div>
             <div>
               <AnimatedNumber
@@ -475,7 +477,7 @@ export default function Journalists() {
                 duration={1600}
                 className="text-3xl sm:text-4xl font-black text-white tabular-nums"
               />
-              <p className="text-sm text-zinc-500 mt-1">casos documentados</p>
+              <p className="text-sm text-zinc-500 mt-1">{t('hero.casesLabel')}</p>
             </div>
           </div>
 
@@ -506,7 +508,7 @@ export default function Journalists() {
               <div className="max-w-2xl">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-[10px] font-semibold tracking-widest uppercase text-zinc-500">
-                    HISTORIA DESTACADA
+                    {t('featured.label')}
                   </span>
                 </div>
                 <h2
@@ -522,7 +524,7 @@ export default function Journalists() {
                   className="inline-flex items-center gap-2 text-sm font-semibold transition-colors"
                   style={{ color: '#dc2626' }}
                 >
-                  Leer investigacion <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  {t('featured.readMore')} <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </span>
               </div>
 
@@ -534,7 +536,7 @@ export default function Journalists() {
                   <AnimatedNumber value={81.9} decimals={1} suffix="%" duration={2000} />
                 </div>
                 <p className="text-sm text-zinc-500 mt-2 max-w-[220px]">
-                  adjudicaciones directas en 2023 — el ano mas alto en 23 anos
+                  {t('featured.statSuffix')}
                 </p>
               </div>
             </div>
@@ -556,7 +558,7 @@ export default function Journalists() {
                   : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 border border-zinc-800'
               )}
             >
-              {f.label}
+              {t(f.labelKey)}
             </button>
           ))}
         </div>
@@ -594,7 +596,7 @@ export default function Journalists() {
                 variants={fadeIn}
                 className="col-span-full text-center text-zinc-500 py-16"
               >
-                No hay historias para este filtro.
+                {t('grid.noStories')}
               </motion.p>
             )}
           </motion.div>
@@ -616,16 +618,15 @@ export default function Journalists() {
                   className="text-xl font-bold text-white mb-2 flex items-center gap-1"
                   style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
                 >
-                  Metodologia y Datos
+                  {t('methodology.title')}
                   <MetodologiaTooltip
-                    title="Modelo de riesgo v6.4"
-                    body="Regresi&oacute;n log&iacute;stica con 16 z-scores, 13 sub-modelos sectoriales, AUC=0.840. Entrenado con 748 casos documentados de corrupci&oacute;n. PU-learning (Elkan &amp; Noto 2008)."
+                    title={t('methodology.tooltipTitle')}
+                    body={t('methodology.tooltipBody')}
                     link="/methodology"
                   />
                 </h3>
                 <p className="text-sm text-zinc-400 leading-relaxed max-w-lg">
-                  RUBLI analiza 3 millones de contratos federales (2002-2025) con un modelo de ML
-                  entrenado con 748 casos documentados de corrupcion. Codigo abierto, datos verificables.
+                  {t('methodology.description')}
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0">
@@ -634,14 +635,14 @@ export default function Journalists() {
                   className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-[#dc2626] text-white hover:bg-[#b91c1c] transition-colors"
                 >
                   <BookOpen className="h-4 w-4" />
-                  Ver metodologia
+                  {t('methodology.viewMethodology')}
                 </button>
                 <button
                   onClick={() => navigate('/settings?tab=export')}
                   className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors"
                 >
                   <Download className="h-4 w-4" />
-                  Descargar datos
+                  {t('methodology.downloadData')}
                 </button>
               </div>
             </div>

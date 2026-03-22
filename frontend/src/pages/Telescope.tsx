@@ -9,6 +9,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { analysisApi } from '@/api/client'
 import type { SectorYearItem } from '@/api/types'
 import { SECTOR_COLORS, SECTORS } from '@/lib/constants'
@@ -73,16 +74,16 @@ const ADMINISTRATIONS = [
 
 const MARGIN = { top: 100, right: 60, bottom: 140, left: 70 }
 
-const Y_LABELS: Record<YAxisMetric, string> = {
-  avg_risk: 'Riesgo Promedio',
-  high_risk_pct: '% Alto Riesgo',
-  direct_award_pct: '% Adjudicacion Directa',
+const Y_LABEL_KEYS: Record<YAxisMetric, string> = {
+  avg_risk: 'yLabels.avg_risk',
+  high_risk_pct: 'yLabels.high_risk_pct',
+  direct_award_pct: 'yLabels.direct_award_pct',
 }
 
-const SIZE_LABELS: Record<SizeMetric, string> = {
-  total_value: 'Valor Total',
-  contracts: 'No. Contratos',
-  vendor_count: 'No. Proveedores',
+const SIZE_LABEL_KEYS: Record<SizeMetric, string> = {
+  total_value: 'sizeLabels.total_value',
+  contracts: 'sizeLabels.contracts',
+  vendor_count: 'sizeLabels.vendor_count',
 }
 
 // ---------------------------------------------------------------------------
@@ -140,6 +141,7 @@ function computeRadius(value: number, metric: SizeMetric): number {
 // ---------------------------------------------------------------------------
 
 export default function Telescope() {
+  const { t } = useTranslation('telescope')
   const containerRef = useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = useState({ width: 1200, height: 700 })
   const [hoveredId, setHoveredId] = useState<string | null>(null)
@@ -396,7 +398,7 @@ export default function Telescope() {
     return (
       <div className="flex h-screen w-full items-center justify-center" style={{ background: '#030509' }}>
         <div className="text-center">
-          <div className="mb-4 text-sm tracking-[0.3em] text-white/40 uppercase">Calibrando telescopio...</div>
+          <div className="mb-4 text-sm tracking-[0.3em] text-white/40 uppercase">{t('loading')}</div>
           <div className="mx-auto h-1 w-48 overflow-hidden rounded-full bg-white/10">
             <motion.div
               className="h-full rounded-full bg-white/30"
@@ -425,15 +427,15 @@ export default function Telescope() {
           className="text-2xl font-light tracking-[0.4em] text-white/90 uppercase"
           style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
         >
-          El Telescopio
+          {t('title')}
         </h1>
         <div className="mt-1 h-px bg-gradient-to-r from-white/30 via-white/10 to-transparent" />
         <p className="mt-2 text-xs tracking-[0.2em] text-white/40 uppercase">
-          El universo de contratos publicos mexicanos
+          {t('subtitle')}
           <span className="mx-3 text-white/20">|</span>
-          {nebulae.length} nebulosas
+          {nebulae.length} {t('nebulaeCount')}
           <span className="mx-2 text-white/20">.</span>
-          {formatNumber(totalContracts)} contratos
+          {formatNumber(totalContracts)} {t('contractsCount')}
           <span className="mx-2 text-white/20">.</span>
           {years.length > 0 ? `${years[0]}-${years[years.length - 1]}` : ''}
         </p>
@@ -553,7 +555,7 @@ export default function Telescope() {
               letterSpacing="0.1em"
               transform={`rotate(-90, ${MARGIN.left - 50}, ${MARGIN.top + (svgH - MARGIN.top - MARGIN.bottom) / 2})`}
             >
-              {Y_LABELS[yMetric]}
+              {t(Y_LABEL_KEYS[yMetric])}
             </text>
             {yTicks.map((tick, i) => (
               <g key={i}>
@@ -794,19 +796,19 @@ export default function Telescope() {
                 </div>
                 <div className="h-px mb-2" style={{ background: hoveredNebula.color + '20' }} />
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                  <span className="text-white/40">Contratos</span>
+                  <span className="text-white/40">{t('tooltip.contracts')}</span>
                   <span className="text-right font-mono text-white/80">{formatNumber(hoveredNebula.contracts)}</span>
-                  <span className="text-white/40">Valor</span>
+                  <span className="text-white/40">{t('tooltip.value')}</span>
                   <span className="text-right font-mono text-white/80">{formatCompactMXN(hoveredNebula.totalValue)}</span>
-                  <span className="text-white/40">Riesgo prom.</span>
+                  <span className="text-white/40">{t('tooltip.avgRisk')}</span>
                   <span className="text-right font-mono text-white/80">{(hoveredNebula.avgRisk * 100).toFixed(1)}%</span>
-                  <span className="text-white/40">Alto riesgo</span>
+                  <span className="text-white/40">{t('tooltip.highRisk')}</span>
                   <span className="text-right font-mono text-white/80">{(hoveredNebula.highRiskPct * 100).toFixed(1)}%</span>
-                  <span className="text-white/40">Adj. directa</span>
+                  <span className="text-white/40">{t('tooltip.directAward')}</span>
                   <span className="text-right font-mono text-white/80">{(hoveredNebula.directAwardPct * 100).toFixed(1)}%</span>
-                  <span className="text-white/40">Proveedores</span>
+                  <span className="text-white/40">{t('tooltip.vendors')}</span>
                   <span className="text-right font-mono text-white/80">{formatNumber(hoveredNebula.vendorCount)}</span>
-                  <span className="text-white/40">Instituciones</span>
+                  <span className="text-white/40">{t('tooltip.institutions')}</span>
                   <span className="text-right font-mono text-white/80">{formatNumber(hoveredNebula.institutionCount)}</span>
                 </div>
               </div>
@@ -824,7 +826,7 @@ export default function Telescope() {
               onClick={toggleAll}
               className="mr-1 rounded px-2 py-0.5 text-[10px] tracking-wider text-white/40 uppercase transition-colors hover:bg-white/5 hover:text-white/60"
             >
-              {visibleSectors.size === SECTORS.length ? 'Ninguno' : 'Todos'}
+              {visibleSectors.size === SECTORS.length ? t('controls.none') : t('controls.all')}
             </button>
             {SECTORS.map(s => {
               const active = visibleSectors.has(s.id)
@@ -858,8 +860,8 @@ export default function Telescope() {
 
           {/* Y-axis metric */}
           <div className="flex items-center gap-1.5">
-            <span className="text-[9px] tracking-wider text-white/30 uppercase">Eje Y</span>
-            {(Object.entries(Y_LABELS) as [YAxisMetric, string][]).map(([key, label]) => (
+            <span className="text-[9px] tracking-wider text-white/30 uppercase">{t('controls.yAxis')}</span>
+            {(Object.keys(Y_LABEL_KEYS) as YAxisMetric[]).map((key) => (
               <button
                 key={key}
                 onClick={() => setYMetric(key)}
@@ -869,7 +871,7 @@ export default function Telescope() {
                   color: yMetric === key ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)',
                 }}
               >
-                {label}
+                {t(Y_LABEL_KEYS[key])}
               </button>
             ))}
           </div>
@@ -879,8 +881,8 @@ export default function Telescope() {
 
           {/* Size metric */}
           <div className="flex items-center gap-1.5">
-            <span className="text-[9px] tracking-wider text-white/30 uppercase">Tamano</span>
-            {(Object.entries(SIZE_LABELS) as [SizeMetric, string][]).map(([key, label]) => (
+            <span className="text-[9px] tracking-wider text-white/30 uppercase">{t('controls.size')}</span>
+            {(Object.keys(SIZE_LABEL_KEYS) as SizeMetric[]).map((key) => (
               <button
                 key={key}
                 onClick={() => setSizeMetric(key)}
@@ -890,7 +892,7 @@ export default function Telescope() {
                   color: sizeMetric === key ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)',
                 }}
               >
-                {label}
+                {t(SIZE_LABEL_KEYS[key])}
               </button>
             ))}
           </div>
@@ -900,7 +902,7 @@ export default function Telescope() {
 
           {/* Zoom controls */}
           <div className="flex items-center gap-1.5">
-            <span className="text-[9px] tracking-wider text-white/30 uppercase">Zoom</span>
+            <span className="text-[9px] tracking-wider text-white/30 uppercase">{t('controls.zoom')}</span>
             <button
               onClick={() => setZoom(z => Math.max(z * 0.8, 0.5))}
               className="rounded px-2 py-0.5 text-[11px] text-white/40 transition-colors hover:bg-white/5 hover:text-white/70"
@@ -920,7 +922,7 @@ export default function Telescope() {
               onClick={resetView}
               className="rounded px-2 py-0.5 text-[10px] tracking-wider text-white/30 uppercase transition-colors hover:bg-white/5 hover:text-white/50"
             >
-              Reset
+              {t('controls.reset')}
             </button>
           </div>
         </div>
@@ -929,9 +931,9 @@ export default function Telescope() {
       {/* Legend — bottom-right floating */}
       <div className="pointer-events-none absolute right-6 bottom-20 z-20">
         <div className="rounded-lg border border-white/5 bg-black/50 px-3 py-2 text-[9px] text-white/30 backdrop-blur-sm">
-          <div className="mb-1 tracking-wider uppercase">Tamano = {SIZE_LABELS[sizeMetric]}</div>
-          <div className="mb-1 tracking-wider uppercase">Brillo = % Alto Riesgo</div>
-          <div className="tracking-wider uppercase">Posicion Y = {Y_LABELS[yMetric]}</div>
+          <div className="mb-1 tracking-wider uppercase">{t('legend.size')} = {t(SIZE_LABEL_KEYS[sizeMetric])}</div>
+          <div className="mb-1 tracking-wider uppercase">{t('legend.brightness')} = {t('legend.highRisk')}</div>
+          <div className="tracking-wider uppercase">{t('legend.positionY')} = {t(Y_LABEL_KEYS[yMetric])}</div>
         </div>
       </div>
     </div>

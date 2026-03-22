@@ -381,10 +381,24 @@ export function Contracts() {
   }, [setSearchParams, setSearchInput])
 
   const [isExporting, setIsExporting] = useState(false)
+  // The export endpoint uses `limit` (max 100,000) and ignores pagination params.
+  // Strip per_page/page/sort_by/sort_order before calling it to avoid confusion.
+  const EXPORT_MAX_ROWS = 10_000 // backend default for /export/contracts/csv
   const handleExport = async () => {
     setIsExporting(true)
+    const total = data?.pagination.total ?? 0
+    // Warn the user before exporting if the filtered set exceeds the export cap
+    if (total > EXPORT_MAX_ROWS) {
+      toast.warning(
+        'Export capped',
+        `Your filters match ${total.toLocaleString()} contracts. Only the first ${EXPORT_MAX_ROWS.toLocaleString()} will be exported. Narrow your filters to get the full set.`
+      )
+    }
     try {
-      const blob = await exportApi.exportContracts(filters)
+      // Build export params: omit pagination fields (page, per_page, sort_by, sort_order)
+      // The export endpoint does not accept per_page — it uses its own `limit` param.
+      const { page: _page, per_page: _perPage, sort_by: _sortBy, sort_order: _sortOrder, ...exportFilters } = filters
+      const blob = await exportApi.exportContracts(exportFilters)
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -393,7 +407,15 @@ export function Contracts() {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
-      toast.success('Export complete', `Downloaded ${data?.pagination.total || 0} contracts`)
+      const exported = Math.min(total, EXPORT_MAX_ROWS)
+      if (total > EXPORT_MAX_ROWS) {
+        toast.success(
+          'Export complete',
+          `Downloaded ${exported.toLocaleString()} of ${total.toLocaleString()} matching contracts (capped at ${EXPORT_MAX_ROWS.toLocaleString()}).`
+        )
+      } else {
+        toast.success('Export complete', `Downloaded ${exported.toLocaleString()} contracts`)
+      }
     } catch {
       toast.error('Export failed', 'Unable to export contracts')
     } finally {

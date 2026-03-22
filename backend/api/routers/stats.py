@@ -56,12 +56,18 @@ class DatabaseStatsResponse(BaseModel):
 
 
 @router.get("/database", response_model=DatabaseStatsResponse)
-def get_database_stats():
+def get_database_stats(response: Response):
     """
     Get database-wide statistics.
 
     Returns total counts of contracts, vendors, institutions, and other key metrics.
+    Cached for 5 minutes — these counts change only when new data is ingested.
     """
+    cached = _stats_cache.get("database_stats")
+    if cached is not None:
+        response.headers["Cache-Control"] = "public, max-age=300"
+        return cached
+
     with get_db() as conn:
         cursor = conn.cursor()
 
@@ -97,7 +103,7 @@ def get_database_stats():
         min_year = row["min_year"] or 2002
         max_year = row["max_year"] or 2025
 
-        return DatabaseStatsResponse(
+        result = DatabaseStatsResponse(
             total_contracts=total_contracts,
             total_vendors=total_vendors,
             total_institutions=total_institutions,
@@ -106,6 +112,9 @@ def get_database_stats():
             min_year=min_year,
             max_year=max_year,
         )
+        _stats_cache.set("database_stats", result, ttl=300)
+        response.headers["Cache-Control"] = "public, max-age=300"
+        return result
 
 # Sector name mapping
 SECTOR_NAMES = {

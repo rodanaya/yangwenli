@@ -176,10 +176,17 @@
     "addEvidence": "Agregar Evidencia",
     "changeStatus": "Cambiar Estado",
     "promoteToGroundTruth": "Promover a Verdad Base",
+    "loadError": "No se pudo cargar el caso. Es posible que no exista.",
+    "untitledSource": "Fuente sin título",
     "promote": {
       "confirm": "Esto agregará el caso a la base de datos de verdad base y se usará para reentrenar el modelo de riesgo en el próximo ciclo. Esta acción no se puede deshacer. ¿Estás seguro?",
       "success": "Caso promovido a verdad base exitosamente."
     }
+  },
+  "statusModal": {
+    "notesPlaceholder": "Notas opcionales...",
+    "reviewerPlaceholder": "Tu nombre (opcional)",
+    "save": "Guardar"
   },
   "card": {
     "priority": "PRIORIDAD {{n}}",

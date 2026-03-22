@@ -351,6 +351,7 @@ function RiskDistributionBar({ dist, compact = false }: { dist?: RiskDistributio
 // ---------------------------------------------------------------------------
 
 function NationalGradeHero({ national }: { national: PHINational }) {
+  const { t } = useTranslation('reportcard')
   const colors = GRADE_COLORS[national.grade] ?? GRADE_COLORS['F']
   const compByValue = national.competition_by_value
   const compRate = national.indicators['competition_rate']
@@ -379,19 +380,15 @@ function NationalGradeHero({ national }: { national: PHINational }) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
-        <SectionLabel>Reporte de Salud Procuratoria</SectionLabel>
+        <SectionLabel>{t('nationalGradeTitle')}</SectionLabel>
         <h1
           className="text-editorial-h1 md:text-editorial-display mb-3"
           style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}
         >
-          Calificaciones del Gasto P&uacute;blico Federal
+          {t('pageTitle')}
         </h1>
         <p className="text-base" style={{ color: 'var(--color-text-muted)' }}>
-          {new Date().getFullYear()} &middot; Basado en{' '}
-          <strong style={{ color: 'var(--color-text-secondary)' }}>
-            {(national.total_contracts / 1_000_000).toFixed(1)}M
-          </strong>{' '}
-          contratos &middot; 12 sectores evaluados
+          {new Date().getFullYear()} &middot; {(national.total_contracts / 1_000_000).toFixed(1)}M {t('contractsOf')} &middot; 12 {t('sectorEvaluated')}
         </p>
       </motion.div>
 
@@ -444,7 +441,7 @@ function NationalGradeHero({ national }: { national: PHINational }) {
             className="text-sm font-semibold tracking-[0.1em] uppercase mt-2 mb-4"
             style={{ color: 'var(--color-text-muted)' }}
           >
-            Calificaci&oacute;n Nacional
+            {t('nationalGradeSubtitle')}
           </p>
 
           {/* Typewriter score summary */}
@@ -468,8 +465,8 @@ function NationalGradeHero({ national }: { national: PHINational }) {
                 }}>
                   {compByValue.toFixed(1)}%
                 </p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Gasto competitivo</p>
-                <p className="text-[10px]" style={{ color: 'var(--color-text-muted)', opacity: 0.7 }}>por valor MXN</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{t('statCompetitiveSpend')}</p>
+                <p className="text-[10px]" style={{ color: 'var(--color-text-muted)', opacity: 0.7 }}>{t('statByValue')}</p>
               </div>
             )}
             {compRate && (
@@ -477,8 +474,8 @@ function NationalGradeHero({ national }: { national: PHINational }) {
                 <p className="text-2xl font-bold" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
                   {compRate.value}%
                 </p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Contratos competitivos</p>
-                <p className="text-[10px]" style={{ color: 'var(--color-text-muted)', opacity: 0.7 }}>por número</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{t('statCompetitiveContracts')}</p>
+                <p className="text-[10px]" style={{ color: 'var(--color-text-muted)', opacity: 0.7 }}>{t('statByCount')}</p>
               </div>
             )}
             {sbRate && (
@@ -487,7 +484,7 @@ function NationalGradeHero({ national }: { national: PHINational }) {
                   {sbRate.value}%
                 </p>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                  Licitaci&oacute;n &uacute;nica
+                  {t('statSingleBid')}
                 </p>
               </div>
             )}
@@ -497,7 +494,7 @@ function NationalGradeHero({ national }: { national: PHINational }) {
                   {avgBid.value}
                 </p>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                  Postores promedio
+                  {t('statAvgBidders')}
                 </p>
               </div>
             )}
@@ -513,13 +510,13 @@ function NationalGradeHero({ national }: { national: PHINational }) {
           {/* Traffic dots summary */}
           <div className="flex items-center gap-4 mt-4 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
             <span className="flex items-center gap-1.5">
-              <TrafficDot light="green" size="md" /> {national.greens} bien
+              <TrafficDot light="green" size="md" /> {national.greens} {t('trafficGood')}
             </span>
             <span className="flex items-center gap-1.5">
-              <TrafficDot light="yellow" size="md" /> {national.yellows} alerta
+              <TrafficDot light="yellow" size="md" /> {national.yellows} {t('trafficAlert')}
             </span>
             <span className="flex items-center gap-1.5">
-              <TrafficDot light="red" size="md" /> {national.reds} deficiente
+              <TrafficDot light="red" size="md" /> {national.reds} {t('trafficPoor')}
             </span>
           </div>
         </div>
@@ -533,17 +530,18 @@ function NationalGradeHero({ national }: { national: PHINational }) {
 // ---------------------------------------------------------------------------
 
 function GradeLegend() {
+  const { t } = useTranslation('reportcard')
   const items = [
-    { grade: 'S',  label: 'Modelo' },
-    { grade: 'A',  label: 'Sólido' },
-    { grade: 'B+', label: 'Notable' },
-    { grade: 'B',  label: 'Adecuado' },
-    { grade: 'C+', label: 'Atención' },
-    { grade: 'C',  label: 'Preocupante' },
-    { grade: 'D',  label: 'Alto riesgo' },
-    { grade: 'D-', label: 'Grave' },
-    { grade: 'F',  label: 'Crítico' },
-    { grade: 'F-', label: 'Bandera roja' },
+    { grade: 'S',  label: t('gradeLabelS') },
+    { grade: 'A',  label: t('gradeLabelA') },
+    { grade: 'B+', label: t('gradeLabelBPlus') },
+    { grade: 'B',  label: t('gradeLabelB') },
+    { grade: 'C+', label: t('gradeLabelCPlus') },
+    { grade: 'C',  label: t('gradeLabelC') },
+    { grade: 'D',  label: t('gradeLabelD') },
+    { grade: 'D-', label: t('gradeLabelDMinus') },
+    { grade: 'F',  label: t('gradeLabelF') },
+    { grade: 'F-', label: t('gradeLabelFMinus') },
   ]
 
   return (
@@ -552,7 +550,7 @@ function GradeLegend() {
       style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
     >
       <span className="font-semibold uppercase tracking-wide text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
-        Escala
+        {t('gradeScale')}
       </span>
       {items.map((item) => {
         const c = GRADE_COLORS[item.grade]
@@ -756,7 +754,7 @@ function TrendSection({ t }: { t: (k: string) => string }) {
 
   return (
     <section className="mb-12">
-      <SectionLabel>Tendencia Hist&oacute;rica</SectionLabel>
+      <SectionLabel>{t('historicalTrend')}</SectionLabel>
       <h2 className="text-editorial-h2 mb-1" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
         {t('sectionTrend')}
       </h2>
@@ -910,7 +908,7 @@ function AgreementSection({ t }: { t: (k: string, o?: Record<string, unknown>) =
 
   return (
     <section className="mb-12">
-      <SectionLabel>Validaci&oacute;n Cruzada</SectionLabel>
+      <SectionLabel>{t('crossValidation')}</SectionLabel>
       <div
         className="fern-card rounded-2xl p-8"
         style={{ borderColor: 'var(--color-border)' }}
@@ -935,7 +933,7 @@ function AgreementSection({ t }: { t: (k: string, o?: Record<string, unknown>) =
               className="font-semibold text-lg mb-2"
               style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}
             >
-              Validaci&oacute;n cruzada con el modelo de IA
+              {t('sectionAgreement')}
             </h3>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
               {t('agreementStat', { pct: agreement.agreement_rate })}
@@ -2188,7 +2186,7 @@ function PHITab({ t }: { t: (k: string, opts?: Record<string, unknown>) => strin
       <GradeLegend />
 
       <section className="mb-12">
-        <SectionLabel>Calificaciones por Sector</SectionLabel>
+        <SectionLabel>{t('sectorGrades')}</SectionLabel>
         <h2 className="text-editorial-h2 mb-1" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
           ¿Cómo se desempeña cada sector?
         </h2>

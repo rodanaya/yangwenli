@@ -23,7 +23,7 @@ export function AppBanner() {
       </p>
       <button
         onClick={dismiss}
-        className="flex-shrink-0 h-5 w-5 flex items-center justify-center rounded hover:bg-accent/10 text-accent/60 hover:text-accent transition-colors"
+        className="flex-shrink-0 h-8 w-8 sm:h-5 sm:w-5 flex items-center justify-center rounded hover:bg-accent/10 text-accent/60 hover:text-accent transition-colors"
         aria-label={t('dismissBanner')}
       >
         <X className="h-3 w-3" />

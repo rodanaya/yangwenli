@@ -91,6 +91,9 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
         {/* Content */}
         <div
           ref={ref}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="dialog-title"
           style={{
             position: 'relative',
             zIndex: 1,
@@ -103,6 +106,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
             'border bg-background p-6 shadow-lg rounded-lg',
             className
           )}
+          onKeyDown={(e) => { if (e.key === 'Escape') onOpenChange(false) }}
           {...props}
         >
           {children}
@@ -146,9 +150,10 @@ DialogFooter.displayName = 'DialogFooter'
 const DialogTitle = React.forwardRef<
   HTMLHeadingElement,
   React.HTMLAttributes<HTMLHeadingElement>
->(({ className, ...props }, ref) => (
+>(({ className, id, ...props }, ref) => (
   <h2
     ref={ref}
+    id={id ?? 'dialog-title'}
     className={cn('text-lg font-semibold leading-none tracking-tight', className)}
     {...props}
   />

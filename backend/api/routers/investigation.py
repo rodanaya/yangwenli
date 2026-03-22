@@ -10,11 +10,11 @@ import json
 import logging
 from typing import Optional, List, Dict, Any
 from pathlib import Path as FilePath
-from fastapi import APIRouter, HTTPException, Query, Path
+from fastapi import APIRouter, Depends, HTTPException, Query, Path
 from pydantic import BaseModel, Field
 from datetime import datetime
 
-from ..dependencies import get_db_connection, get_db
+from ..dependencies import get_db_connection, get_db, require_write_key
 from ..config.constants import get_risk_level
 from ..models.asf import ASFCase, ASFMatchesResponse
 
@@ -649,6 +649,7 @@ def get_stats():
 def review_case(
     case_id: str = Path(..., description="Case ID"),
     request: ReviewRequest = ...,
+    _: None = Depends(require_write_key),
 ):
     """
     Update case review status (for human validation).
@@ -689,7 +690,10 @@ def review_case(
 
 
 @router.post("/run", response_model=RunAnalysisResponse)
-def run_analysis(request: RunAnalysisRequest):
+def run_analysis(
+    request: RunAnalysisRequest,
+    _: None = Depends(require_write_key),
+):
     """
     Run the investigation case generator pipeline.
 
@@ -865,6 +869,7 @@ def get_dashboard_summary():
 def add_evidence(
     case_id: str = Path(..., description="Case ID"),
     request: AddEvidenceRequest = ...,
+    _: None = Depends(require_write_key),
 ):
     """
     Append external evidence (news articles, ASF audits, legal docs) to a case.
@@ -931,6 +936,7 @@ def add_evidence(
 def promote_to_ground_truth(
     case_id: str = Path(..., description="Case ID"),
     request: PromoteRequest = ...,
+    _: None = Depends(require_write_key),
 ):
     """
     Promote a corroborated investigation case to ground_truth_cases + ground_truth_vendors.

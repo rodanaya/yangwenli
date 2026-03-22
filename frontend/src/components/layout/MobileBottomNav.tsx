@@ -4,7 +4,7 @@
  */
 
 import { NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Layers, BarChart3, Network, Menu } from 'lucide-react'
+import { LayoutDashboard, Shield, BarChart3, Network, Menu } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -12,8 +12,8 @@ interface Props {
 }
 
 const NAV_ITEMS = [
-  { label: 'Home',    href: '/',        icon: LayoutDashboard },
-  { label: 'Explore', href: '/explore', icon: Layers },
+  { label: 'Home',    href: '/',      icon: LayoutDashboard },
+  { label: 'ARIA',   href: '/aria',  icon: Shield },
   { label: 'Sectors', href: '/sectors', icon: BarChart3 },
   { label: 'Network', href: '/network', icon: Network },
 ]

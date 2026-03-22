@@ -113,6 +113,10 @@ export default defineConfig({
           'vendor-icons': ['lucide-react'],
           // GSAP — only used by Intro.tsx splash screen
           'vendor-gsap': ['gsap'],
+          // Framer Motion — used by RedThread and editorial components
+          'vendor-motion': ['framer-motion'],
+          // react-simple-maps — used by geographic visualizations
+          'vendor-maps': ['react-simple-maps'],
         },
       },
     },

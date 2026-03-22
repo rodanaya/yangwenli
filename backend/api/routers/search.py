@@ -126,6 +126,17 @@ def _search_institutions(q: str, limit: int) -> list[InstitutionResult]:
         return []
 
 
+def sanitize_fts_query(q: str) -> str:
+    """Escape FTS5 special operators by wrapping in double quotes.
+
+    This treats the input as a literal phrase, preventing operator injection
+    via FTS5 keywords such as AND, OR, NOT, NEAR, and column filters.
+    """
+    # Escape any existing double quotes to prevent escaping issues
+    sanitized = q.replace('"', '""')
+    return f'"{sanitized}"'
+
+
 def _search_contracts(q: str, limit: int) -> list[ContractResult]:
     """Search contracts by title using FTS5 if available, falling back to LIKE.
 
@@ -150,7 +161,7 @@ def _search_contracts(q: str, limit: int) -> list[ContractResult]:
                     ORDER BY c.risk_score DESC
                     LIMIT ?
                     """,
-                    (q, limit),
+                    (sanitize_fts_query(q), limit),
                 )
                 rows = cur.fetchall()
             except Exception:
